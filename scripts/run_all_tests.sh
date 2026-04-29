@@ -99,6 +99,9 @@ python3 "${SCRIPT_DIR}/check_sifr_driver_maintainability_guardrails.py"
 echo "Running diagnostic schema sync check"
 python3 "${SCRIPT_DIR}/check_diagnostic_schema_sync.py"
 
+echo "Running diagnostic docs sync check"
+python3 "${SCRIPT_DIR}/check_diagnostic_docs_sync.py"
+
 echo "Running sifr_diagnostics tests"
 cargo test -p sifr_diagnostics
 

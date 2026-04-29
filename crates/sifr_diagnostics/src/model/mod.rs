@@ -629,14 +629,11 @@ mod tests {
 
     #[test]
     fn builder_renders_message_from_template_and_args() {
-        let diag = DiagnosticBuilder::source(
-            DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-            Severity::Error,
-            span(),
-        )
-        .message_template("undefined variable: {name}")
-        .arg("name", "answer")
-        .build();
+        let diag =
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span())
+                .message_template("undefined variable: {name}")
+                .arg("name", "answer")
+                .build();
         assert_eq!(diag.message(), "undefined variable: answer");
         assert_eq!(diag.message_template(), "undefined variable: {name}");
         diag.cancel();
@@ -644,7 +641,7 @@ mod tests {
 
     #[test]
     fn builder_cancel_consumes_without_emission() {
-        DiagnosticBuilder::internal(DiagnosticCode::INTERNAL_COMPILER_PANIC, Severity::Error)
+        DiagnosticBuilder::internal(DiagnosticCode::TEST_INTERNAL_ERROR, Severity::Error)
             .message_template("internal compiler error")
             .cancel();
     }
@@ -652,7 +649,7 @@ mod tests {
     #[test]
     fn diagnostic_cancel_consumes_built_diagnostic() {
         let diag =
-            DiagnosticBuilder::internal(DiagnosticCode::INTERNAL_COMPILER_PANIC, Severity::Error)
+            DiagnosticBuilder::internal(DiagnosticCode::TEST_INTERNAL_ERROR, Severity::Error)
                 .message_template("internal compiler error")
                 .build();
         diag.cancel();
@@ -661,14 +658,11 @@ mod tests {
     #[test]
     fn sink_records_errors_with_insertion_order() {
         let mut sink = DiagnosticSink::new();
-        let diag = DiagnosticBuilder::source(
-            DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-            Severity::Error,
-            span(),
-        )
-        .message_template("undefined variable: {name}")
-        .arg("name", "x")
-        .build();
+        let diag =
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span())
+                .message_template("undefined variable: {name}")
+                .arg("name", "x")
+                .build();
         let _proof = sink.emit_error(diag);
         assert!(sink.has_errors());
         assert_eq!(sink.diagnostics()[0].insertion_order(), 0);
@@ -693,7 +687,7 @@ mod tests {
     fn emit_rejects_errors() {
         let mut sink = DiagnosticSink::new();
         let diag =
-            DiagnosticBuilder::internal(DiagnosticCode::INTERNAL_COMPILER_PANIC, Severity::Error)
+            DiagnosticBuilder::internal(DiagnosticCode::TEST_INTERNAL_ERROR, Severity::Error)
                 .message_template("internal compiler error")
                 .build();
         sink.emit(diag);
@@ -722,7 +716,7 @@ mod tests {
     #[should_panic(expected = "diagnostic builder was dropped without build or cancel")]
     fn dropping_builder_without_consumption_panics_in_debug() {
         let _builder =
-            DiagnosticBuilder::internal(DiagnosticCode::INTERNAL_COMPILER_PANIC, Severity::Error)
+            DiagnosticBuilder::internal(DiagnosticCode::TEST_INTERNAL_ERROR, Severity::Error)
                 .message_template("internal compiler error");
     }
 
@@ -733,7 +727,7 @@ mod tests {
     )]
     fn dropping_diagnostic_without_consumption_panics_in_debug() {
         let _diag =
-            DiagnosticBuilder::internal(DiagnosticCode::INTERNAL_COMPILER_PANIC, Severity::Error)
+            DiagnosticBuilder::internal(DiagnosticCode::TEST_INTERNAL_ERROR, Severity::Error)
                 .message_template("internal compiler error")
                 .build();
     }
@@ -747,7 +741,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "duplicate diagnostic arg")]
     fn duplicate_args_are_rejected() {
-        DiagnosticBuilder::internal(DiagnosticCode::INTERNAL_COMPILER_PANIC, Severity::Error)
+        DiagnosticBuilder::internal(DiagnosticCode::TEST_INTERNAL_ERROR, Severity::Error)
             .message_template("{name}")
             .arg("name", "x")
             .arg("name", "y")

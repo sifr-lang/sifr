@@ -355,14 +355,10 @@ mod tests {
         );
         let mut sink = DiagnosticSink::new();
         sink.emit_error(
-            DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-                Severity::Error,
-                span,
-            )
-            .message_template("undefined variable: {name}")
-            .arg("name", "crab")
-            .build(),
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span)
+                .message_template("undefined variable: {name}")
+                .arg("name", "crab")
+                .build(),
         );
         let envelope = render_sink(&sink, &source_map).unwrap();
         let span = &envelope.diagnostics[0].spans[0];
@@ -381,14 +377,10 @@ mod tests {
         );
         let mut sink = DiagnosticSink::new();
         sink.emit_error(
-            DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-                Severity::Error,
-                span,
-            )
-            .message_template("undefined variable: {name}")
-            .arg("name", "x")
-            .build(),
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span)
+                .message_template("undefined variable: {name}")
+                .arg("name", "x")
+                .build(),
         );
         let envelope = render_sink(&sink, &source_map).unwrap();
         assert_eq!(envelope.diagnostics[0].spans[0].lines.len(), 2);
@@ -403,14 +395,10 @@ mod tests {
         );
         let mut sink = DiagnosticSink::new();
         sink.emit_error(
-            DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-                Severity::Error,
-                span,
-            )
-            .message_template("undefined variable: {name}")
-            .arg("name", "x")
-            .build(),
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span)
+                .message_template("undefined variable: {name}")
+                .arg("name", "x")
+                .build(),
         );
         let envelope = render_sink(&sink, &source_map).unwrap();
         let lines = &envelope.diagnostics[0].spans[0].lines;
@@ -429,14 +417,10 @@ mod tests {
         );
         let mut sink = DiagnosticSink::new();
         sink.emit_error(
-            DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-                Severity::Error,
-                span,
-            )
-            .message_template("undefined variable: {name}")
-            .arg("name", "x")
-            .build(),
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span)
+                .message_template("undefined variable: {name}")
+                .arg("name", "x")
+                .build(),
         );
         let envelope = render_sink(&sink, &source_map).unwrap();
         let span = &envelope.diagnostics[0].spans[0];
@@ -457,14 +441,10 @@ mod tests {
         );
         let mut sink = DiagnosticSink::new();
         sink.emit_error(
-            DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-                Severity::Error,
-                span,
-            )
-            .message_template("undefined variable: {name}")
-            .arg("name", "b")
-            .build(),
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span)
+                .message_template("undefined variable: {name}")
+                .arg("name", "b")
+                .build(),
         );
         let envelope = render_sink(&sink, &source_map).unwrap();
         let span = &envelope.diagnostics[0].spans[0];
@@ -482,15 +462,11 @@ mod tests {
         );
         let mut sink = DiagnosticSink::new();
         sink.emit_error(
-            DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-                Severity::Error,
-                span,
-            )
-            .message_template("undefined variable: {name} {count}")
-            .arg("name", "x")
-            .arg("count", 5_u64)
-            .build(),
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span)
+                .message_template("undefined variable: {name} {count}")
+                .arg("name", "x")
+                .arg("count", 5_u64)
+                .build(),
         );
         let envelope = render_sink(&sink, &source_map).unwrap();
         let json = serde_json::to_string(&envelope).unwrap();
@@ -508,7 +484,7 @@ mod tests {
         let mut sink = DiagnosticSink::new();
         sink.emit_error(
             DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
+                DiagnosticCode::TEST_SOURCE_ERROR,
                 Severity::Error,
                 SourceSpan::new(
                     right_source,
@@ -521,7 +497,7 @@ mod tests {
         );
         sink.emit_error(
             DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
+                DiagnosticCode::TEST_SOURCE_ERROR,
                 Severity::Error,
                 SourceSpan::new(
                     left_source,
@@ -547,7 +523,7 @@ mod tests {
         let mut sink = DiagnosticSink::new();
         sink.emit_error(
             DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
+                DiagnosticCode::TEST_SOURCE_ERROR,
                 Severity::Error,
                 span.clone(),
             )
@@ -556,14 +532,10 @@ mod tests {
             .build(),
         );
         sink.emit_error(
-            DiagnosticBuilder::source(
-                DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-                Severity::Error,
-                span,
-            )
-            .message_template("undefined variable: {name}")
-            .arg("name", "a")
-            .build(),
+            DiagnosticBuilder::source(DiagnosticCode::TEST_SOURCE_ERROR, Severity::Error, span)
+                .message_template("undefined variable: {name}")
+                .arg("name", "a")
+                .build(),
         );
         let envelope = render_sink(&sink, &source_map).unwrap();
         assert_eq!(envelope.diagnostics[0].args["name"], "a".into());
