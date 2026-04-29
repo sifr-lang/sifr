@@ -20,7 +20,7 @@ Current wave: `milestone_diag_2a` diagnostic registry skeleton.
 - [x] Added the checked-in diagnostic registry skeleton and registry validation tests.
 - [x] Added generated diagnostic-code docs plus docs drift validation.
 - [x] Claude review for `milestone_diag_2a` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-2a-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2a-review-pass-2.md`.
-- [ ] `milestone_diag_2a` PR opened and merged.
+- [ ] `milestone_diag_2a` PR opened at https://github.com/sifr-lang/sifr/pull/1668; merge pending.
 
 Validation evidence for the current wave:
 
