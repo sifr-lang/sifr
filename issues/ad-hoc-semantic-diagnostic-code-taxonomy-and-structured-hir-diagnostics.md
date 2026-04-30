@@ -33,7 +33,7 @@ Current wave: `milestone_diag_4a` renderer integration, split into reviewable tr
 - [x] `milestone_diag_2b` PR opened and merged: https://github.com/sifr-lang/sifr/pull/1670.
 - [x] `milestone_diag_4a` slice 1 merged: canonical renderer presentation helpers plus explicit workspace diagnostic identity transport. PR: https://github.com/sifr-lang/sifr/pull/1671.
 - [x] `milestone_diag_4a` slice 2a merged: additive HIR `LoweringError` structured diagnostic-code transport plumbing. PR: https://github.com/sifr-lang/sifr/pull/1672.
-- [ ] `milestone_diag_4a` slice 2b.1 implementation complete and reviewer-satisfied: decimal-family HIR/type-system call-site migration to active `SIFR-DECIMAL-*` codes with fixture and verification baseline re-keying; PR pending.
+- [ ] `milestone_diag_4a` slice 2b.1 implementation complete and reviewer-satisfied: decimal-family HIR/type-system call-site migration to active `SIFR-DECIMAL-*` codes with fixture and verification baseline re-keying. PR: https://github.com/sifr-lang/sifr/pull/1673.
 - [x] Deferred `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` bridge deletion and affected fixture re-keying to later `milestone_diag_4a` slice-2 sub-PRs, where HIR call sites will be migrated by domain before the bridge is removed.
 - [x] Claude pre-implementation review for `milestone_diag_4a` slice 2 completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2a completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-2.md`.
