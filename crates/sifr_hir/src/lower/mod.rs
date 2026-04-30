@@ -61,6 +61,7 @@ mod own_mut_param_tests;
 #[cfg(test)]
 mod own_mut_semantics_tests;
 mod ownership_diagnostics;
+mod protocol_diagnostics;
 mod scope_helpers;
 mod sequence_guard_detection;
 mod sequence_guard_updates;
@@ -96,7 +97,6 @@ pub struct LoweringError {
     pub line: Option<u32>,
     pub col: Option<u32>,
 }
-
 impl std::fmt::Display for LoweringError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let (Some(line), Some(col)) = (self.line, self.col) {
