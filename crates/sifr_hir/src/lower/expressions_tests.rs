@@ -305,6 +305,19 @@ fn test_map_callable_arity_mismatch_has_call_code() {
 }
 
 #[test]
+fn test_hash_unhashable_argument_has_proto_code() {
+    let result = lower_source(
+        "class Measurement:\n    value: float\n\n    def __init__(self, value: float):\n        self.value = value\n\ndef main():\n    m: Measurement = Measurement(3.14)\n    print(hash(m))\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "hash() argument must be hashable, got 'Measurement'"
+            && error.code == Some(DiagnosticCode::PROTO_HASHABLE_OR_COMPARABLE_REQUIRED)
+    }));
+}
+
+#[test]
 fn test_defaultdict_accepts_counter_initial_mapping() {
     let result = lower_source(
         "class Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",

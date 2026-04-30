@@ -9,8 +9,8 @@ Hashable or comparable protocol is required.
 | Code | `SIFR-PROTO-0004` |
 | Family | `PROTO` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
-| Message template | `type {type_name} must satisfy {protocol}` |
-| Representative fixture | `crates/sifr/tests/e2e/fail/generic_counter_unhashable.sifr` |
-| Declared args | `type_name (message+json)`, `protocol (message+json)` |
-| Dedupe args | `type_name`, `protocol` |
+| Owner | `sifr_hir::lower::expressions` |
+| Message template | `hash() argument must be hashable, got '{type_name}'` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/unhashable_dict_key.sifr` |
+| Declared args | `type_name (message+json)` |
+| Dedupe args | `type_name` |
