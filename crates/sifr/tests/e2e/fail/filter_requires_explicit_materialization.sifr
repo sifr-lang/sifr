@@ -1,5 +1,5 @@
 # Reference: phase_psp_iter_fix_5_filter_requires_explicit_materialization
-# expect-error: SIFR-TYPE-0001: expected 'list[int]', got 'Iterator[int]'
+# expect-error: SIFR-TYPE-0002: expected 'list[int]', got 'Iterator[int]'
 def main() -> None:
     nums: list[int] = [1, 2, 3, 4]
     evens: list[int] = filter(lambda x: x % 2 == 0, nums)

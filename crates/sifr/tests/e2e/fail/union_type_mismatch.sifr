@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: type mismatch: expected 'int | str', got 'float'
+# expect-error: SIFR-TYPE-0002: type mismatch: expected 'int | str', got 'float'
 # Assigning incompatible type to union
 
 def main():

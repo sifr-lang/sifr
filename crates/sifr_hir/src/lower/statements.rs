@@ -42,6 +42,7 @@ use crate::hir_nodes::{
     HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirMatchArm, HirParam, HirPattern,
     HirStmt, MethodKind,
 };
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     BoolOp, CmpOp, ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign,
     StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
@@ -1136,11 +1137,14 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         // int literals are assignable to bigint (coercion: 42 -> BigInt::from(42))
         let is_int_to_bigint = final_ty == Type::Int && declared_type == Type::BigInt;
         if !is_int_to_bigint && !final_ty.is_assignable_to(&declared_type) {
-            ctx.error(format!(
-                "type mismatch: expected '{}', got '{}'",
-                declared_type.display_name(),
-                final_ty.display_name()
-            ));
+            ctx.error_with_code(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "type mismatch: expected '{}', got '{}'",
+                    declared_type.display_name(),
+                    final_ty.display_name()
+                ),
+            );
         }
         expr
     } else {
@@ -1640,11 +1644,14 @@ pub(super) fn lower_return(
         }
 
         if !expr_ty.is_assignable_to(&func_type.return_type) {
-            ctx.error(format!(
-                "return type mismatch: expected '{}', got '{}'",
-                func_type.return_type.display_name(),
-                expr_ty.display_name()
-            ));
+            ctx.error_with_code(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "return type mismatch: expected '{}', got '{}'",
+                    func_type.return_type.display_name(),
+                    expr_ty.display_name()
+                ),
+            );
         }
         Some(expr)
     } else {
