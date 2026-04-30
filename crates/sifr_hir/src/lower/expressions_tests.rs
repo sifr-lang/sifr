@@ -1,4 +1,5 @@
 use crate::{lower_module, HirExpr, HirModule, HirStmt, LoweringError};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
 
@@ -1762,7 +1763,8 @@ fn test_generic_class_subscript_requires_declared_type_params() {
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
-        .any(|e| e.message.contains("does not declare type parameters")));
+        .any(|e| e.message.contains("does not declare type parameters")
+            && e.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)));
 }
 
 #[test]
@@ -1774,7 +1776,8 @@ fn test_generic_class_subscript_arity_mismatch_errors() {
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
-        .any(|e| e.message.contains("expects 1 type argument(s), got 2")));
+        .any(|e| e.message.contains("expects 1 type argument(s), got 2")
+            && e.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)));
 }
 
 #[test]
