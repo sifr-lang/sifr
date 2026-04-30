@@ -1115,10 +1115,10 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Unsupported standard-library constructor, method, or surface.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr",
-        "unsupported standard-library surface {symbol}",
-        "sifr_hir::lower",
-        [arg!("symbol")],
-        ["symbol"]
+        "defaultdict() does not support keyword arguments",
+        "sifr_hir::lower::builtin_calls",
+        [],
+        []
     ),
     active_entry!(
         "SIFR-STDLIB-0002",
