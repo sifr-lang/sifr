@@ -16,6 +16,15 @@ pub(super) fn bound_not_satisfied(
     );
 }
 
+pub(super) fn context_manager_missing(ctx: &mut LowerCtx, type_name: &str) {
+    ctx.error_with_code(
+        DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING,
+        format!(
+            "type '{type_name}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)"
+        ),
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{lower_module, LoweringError};
@@ -53,6 +62,19 @@ mod tests {
             error.message
                 == "type 'U' does not implement protocol 'Readable' required by type parameter 'T'"
                 && error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+        }));
+    }
+
+    #[test]
+    fn missing_context_manager_has_proto_code() {
+        let errors = lower_errors(
+            "class PlainClass:\n    value: int\n\ndef main():\n    with PlainClass(42) as p:\n        print(p.value)\n",
+        );
+
+        assert!(errors.iter().any(|error| {
+            error.message
+                == "type 'PlainClass' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)"
+                && error.code == Some(DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING)
         }));
     }
 }
