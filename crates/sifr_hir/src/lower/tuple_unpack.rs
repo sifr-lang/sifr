@@ -1,4 +1,5 @@
 use crate::hir_nodes::{HirStmt, HirTupleTarget, HirTupleTargetBinding};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprAttribute, ExprTuple};
 
 use super::assignment_widening::reconcile_optional_reassignment;
@@ -60,19 +61,22 @@ pub(super) fn lower_tuple_unpack_assign(
 
     let elem_types = if let sifr_type_system::Type::Tuple(elems) = &value_ty {
         if elems.len() != targets.len() {
-            ctx.error(format!(
-                "tuple unpacking: expected {} values, got {}",
-                targets.len(),
-                elems.len()
-            ));
+            ctx.error_with_code(
+                DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                format!(
+                    "tuple unpacking: expected {} values, got {}",
+                    targets.len(),
+                    elems.len()
+                ),
+            );
             return None;
         }
         elems.clone()
     } else {
-        ctx.error(format!(
-            "cannot unpack non-tuple type '{}'",
-            value_ty.display_name()
-        ));
+        ctx.error_with_code(
+            DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+            format!("cannot unpack non-tuple type '{}'", value_ty.display_name()),
+        );
         return None;
     };
 
@@ -109,12 +113,15 @@ pub(super) fn lower_tuple_unpack_assign(
                     let info_ty = info.ty.clone();
                     let can_widen = info.is_inferred_local_binding();
                     if !reconcile_optional_reassignment(ctx, &name, &info_ty, &ty, can_widen) {
-                        ctx.error(format!(
-                            "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
-                            ty.display_name(),
-                            name,
-                            info_ty.display_name()
-                        ));
+                        ctx.error_with_code(
+                            DiagnosticCode::TYPE_MISMATCH,
+                            format!(
+                                "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
+                                ty.display_name(),
+                                name,
+                                info_ty.display_name()
+                            ),
+                        );
                     }
                     ctx.scope.reset_moved(&name);
                     ctx.scope.clear_narrowing(&name);

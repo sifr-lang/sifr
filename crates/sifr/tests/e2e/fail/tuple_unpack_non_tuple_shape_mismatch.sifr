@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0009: cannot unpack non-tuple type 'list[int]'
+
+def main():
+    left, right = [1, 2]
+    print(left + right)
