@@ -34,6 +34,8 @@ impl DiagnosticCode {
     pub const TYPE_INVALID_ANNOTATION: Self = Self::new("SIFR-TYPE-0007", Severity::Error);
     pub const TYPE_CONTAINER_ELEMENT_CONFLICT: Self = Self::new("SIFR-TYPE-0008", Severity::Error);
     pub const TYPE_UNPACK_SHAPE_MISMATCH: Self = Self::new("SIFR-TYPE-0009", Severity::Error);
+    pub const TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED: Self =
+        Self::new("SIFR-TYPE-0010", Severity::Error);
     pub const TYPE_ARITHMETIC_OVERFLOW_RISK: Self = Self::new("SIFR-TYPE-0901", Severity::Warning);
     pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
 
@@ -657,6 +659,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::tuple_unpack",
         [arg!("expected_count"), arg!("actual_count")],
         ["expected_count", "actual_count"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0010",
+        "TYPE",
+        "TypeVar constraints are not satisfied by the inferred concrete type.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/typevar_constraints_violation.sifr",
+        "type '{actual}' does not satisfy constraints ({constraints}) required by type parameter '{type_param}'",
+        "sifr_hir::lower::expressions",
+        [arg!("actual"), arg!("constraints"), arg!("type_param")],
+        ["actual", "constraints", "type_param"]
     ),
     active_entry!(
         "SIFR-TYPE-0901",
@@ -1344,6 +1357,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_INVALID_ANNOTATION,
     DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
     DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+    DiagnosticCode::TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED,
     DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
     DiagnosticCode::TYPE_REVEAL_TYPE,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
