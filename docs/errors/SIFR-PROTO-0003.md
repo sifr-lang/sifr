@@ -10,7 +10,7 @@ Context-manager protocol is missing.
 | Family | `PROTO` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::statements` |
-| Message template | `type {type_name} is not a context manager` |
+| Message template | `type '{type_name}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/with_non_context_manager.sifr` |
 | Declared args | `type_name (message+json)` |
 | Dedupe args | `type_name` |

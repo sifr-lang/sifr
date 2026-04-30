@@ -998,7 +998,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Context-manager protocol is missing.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/with_non_context_manager.sifr",
-        "type {type_name} is not a context manager",
+        "type '{type_name}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
         "sifr_hir::lower::statements",
         [arg!("type_name")],
         ["type_name"]

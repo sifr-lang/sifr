@@ -26,6 +26,7 @@ use super::numeric_sentinels::{
     numeric_sentinel_kind,
 };
 use super::ownership_diagnostics;
+use super::protocol_diagnostics;
 use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
     detect_while_sequence_guards,
@@ -292,19 +293,20 @@ pub(super) fn lower_stmt(
                     };
                     let val_ty = value.ty().clone();
                     // Check if the type implements the ContextManager protocol (__enter__/__exit__)
-                    let has_context_manager = if let Type::Class { methods, .. } = &val_ty {
-                        let has_enter = methods.iter().any(|(name, _)| name == "__enter__");
-                        let has_exit = methods.iter().any(|(name, _)| name == "__exit__");
+                    let has_context_manager = if let Type::Class { name, methods, .. } = &val_ty {
+                        let has_enter = methods
+                            .iter()
+                            .any(|(method_name, _)| method_name == "__enter__");
+                        let has_exit = methods
+                            .iter()
+                            .any(|(method_name, _)| method_name == "__exit__");
                         if has_enter && has_exit {
                             true
                         } else if has_enter || has_exit {
                             ctx.error("type used in 'with' statement must implement both __enter__ and __exit__ methods".to_string());
                             false
                         } else {
-                            ctx.error(format!(
-                                "type '{}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
-                                match &val_ty { Type::Class { name, .. } => name.clone(), _ => "unknown".to_string() }
-                            ));
+                            protocol_diagnostics::context_manager_missing(ctx, name);
                             false
                         }
                     } else {
