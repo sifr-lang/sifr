@@ -1,0 +1,6 @@
+# expect-error: SIFR-TYPE-0002: type mismatch: cannot assign 'str' to variable 'left' of type 'int'
+
+def main():
+    left = 1
+    left, label = ("not an int", "name")
+    print(label)

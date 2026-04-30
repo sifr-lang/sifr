@@ -1548,12 +1548,15 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         let info_ty = info.ty.clone();
         let can_widen = info.is_inferred_local_binding();
         if !reconcile_optional_reassignment(ctx, &name, &info_ty, &value_ty, can_widen) {
-            ctx.error(format!(
-                "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
-                value_ty.display_name(),
-                name,
-                info_ty.display_name()
-            ));
+            ctx.error_with_code(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
+                    value_ty.display_name(),
+                    name,
+                    info_ty.display_name()
+                ),
+            );
         }
         // Reset moved state on reassignment
         ctx.scope.reset_moved(&name);
