@@ -810,10 +810,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             let ty = arg.ty().clone();
             // Check if the type is hashable
             if !is_hashable_type(&ty) {
-                ctx.error(format!(
-                    "hash() argument must be hashable, got '{}'",
-                    ty.display_name()
-                ));
+                let type_name = ty.display_name();
+                ctx.error_with_code(
+                    DiagnosticCode::PROTO_HASHABLE_OR_COMPARABLE_REQUIRED,
+                    format!("hash() argument must be hashable, got '{type_name}'"),
+                );
                 return None;
             }
             return Some(HirExpr::Call {

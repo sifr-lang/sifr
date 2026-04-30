@@ -1026,11 +1026,11 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "PROTO",
         "Hashable or comparable protocol is required.",
         Severity::Error,
-        "crates/sifr/tests/e2e/fail/generic_counter_unhashable.sifr",
-        "type {type_name} must satisfy {protocol}",
-        "sifr_hir::lower",
-        [arg!("type_name"), arg!("protocol")],
-        ["type_name", "protocol"]
+        "crates/sifr/tests/e2e/fail/unhashable_dict_key.sifr",
+        "hash() argument must be hashable, got '{type_name}'",
+        "sifr_hir::lower::expressions",
+        [arg!("type_name")],
+        ["type_name"]
     ),
     active_entry!(
         "SIFR-CLASS-0001",
