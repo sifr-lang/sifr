@@ -6,6 +6,7 @@ use crate::hir_nodes::{HirExpr, HirStmt};
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::container_literal_specialization::validate_subscript_augassign_target;
 use super::expressions::lower_expr;
+use super::name_diagnostics;
 use super::statements::resolve_object_field_type;
 use super::subscript_type::resolve_subscript_result_type;
 use super::LowerCtx;
@@ -295,7 +296,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         ctx.scope.lookup(&name)
     };
     let Some(var_info) = var_info else {
-        ctx.error(format!("undefined variable: '{name}'"));
+        name_diagnostics::undefined_variable(ctx, &name);
         return None;
     };
     if var_info.is_parameter_binding() && !var_info.is_mutable_binding() {

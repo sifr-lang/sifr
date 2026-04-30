@@ -6,6 +6,7 @@ use super::assignment_widening::reconcile_optional_reassignment;
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::expressions::lower_expr;
 use super::len_aliases::record_tuple_unpack_len_alias_facts;
+use super::name_diagnostics;
 use super::sequence_pointers::record_tuple_unpack_pointer_facts;
 use super::LowerCtx;
 
@@ -98,7 +99,7 @@ pub(super) fn lower_tuple_unpack_assign(
 
                 if rebind_existing {
                     let Some(info) = ctx.scope.lookup(&name) else {
-                        ctx.error(format!("undefined variable: '{name}'"));
+                        name_diagnostics::undefined_variable(ctx, &name);
                         return None;
                     };
                     if info.is_parameter_binding() && !info.is_mutable_binding() {

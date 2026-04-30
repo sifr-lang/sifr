@@ -36,6 +36,7 @@ mod generic_receiver_specialization;
 mod guarded_index;
 mod if_branch_bindings;
 mod if_expression;
+mod import_diagnostics;
 mod imported_defaults;
 mod imports;
 mod len_aliases;
@@ -46,6 +47,9 @@ mod method_call_args;
 mod min_max_validation;
 mod module_function_registry;
 mod mutating_methods;
+mod name_diagnostics;
+#[cfg(test)]
+mod name_import_diagnostics_tests;
 mod nested_function_inference;
 #[cfg(test)]
 mod nested_function_tests;
@@ -788,7 +792,7 @@ fn lower_module_impl(
             // Stdlib .sifr files are allowed to import from _sifr.*
             if is_absolute_import && module_name.starts_with("_sifr.") {
                 if !ctx.allow_intrinsic_imports {
-                    ctx.error(format!("cannot import from '{module_name}' — _sifr.* modules are internal compiler intrinsics"));
+                    import_diagnostics::forbidden_intrinsic(&mut ctx, &module_name);
                     continue;
                 }
                 // Resolve intrinsic imports for stdlib .sifr files
@@ -800,9 +804,7 @@ fn lower_module_impl(
                         } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
                             ctx.scope.define(local, const_ty.clone());
                         } else {
-                            ctx.error(format!(
-                                "intrinsic module '{module_name}' has no member '{name}'"
-                            ));
+                            name_diagnostics::missing_member(&mut ctx, &module_name, name);
                         }
                     }
                     imports.push(HirImport {
@@ -812,7 +814,7 @@ fn lower_module_impl(
                     });
                     continue;
                 }
-                ctx.error(format!("unknown intrinsic module '{module_name}'"));
+                import_diagnostics::unknown_import_target(&mut ctx, &module_name);
                 continue;
             }
 
@@ -962,7 +964,7 @@ fn lower_module_impl(
                             }
                         }
                         if !found {
-                            ctx.error(format!("module '{module_name}' has no member '{name}'"));
+                            name_diagnostics::missing_member(&mut ctx, &module_name, name);
                         }
                     }
                     imports.push(HirImport {
@@ -973,7 +975,7 @@ fn lower_module_impl(
                     continue;
                 }
                 // Module doesn't exist in stdlib — emit clear error at the import site
-                ctx.error(format!("unknown stdlib module '{module_name}'"));
+                import_diagnostics::unknown_import_target(&mut ctx, &module_name);
                 continue;
             }
 
@@ -982,7 +984,7 @@ fn lower_module_impl(
                 || externals.classes.contains_key(&module_name)
                 || externals.constants.contains_key(&module_name);
             if !has_local_module {
-                ctx.error(format!("unknown module '{module_name}'"));
+                import_diagnostics::unknown_import_target(&mut ctx, &module_name);
                 continue;
             }
 
@@ -1100,7 +1102,7 @@ fn lower_module_impl(
                     }
                 }
                 if !found {
-                    ctx.error(format!("module '{module_name}' has no member '{name}'"));
+                    name_diagnostics::missing_member(&mut ctx, &module_name, name);
                 }
             }
 

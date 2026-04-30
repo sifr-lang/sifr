@@ -3,6 +3,7 @@ use crate::{
     assemble_project_main_rs, check, collect_project_hir_modules, compile_frontend_modules,
     compile_stdlib, compute_module_compile_order, FrontendDiagnosticStyle,
 };
+use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
@@ -379,9 +380,10 @@ def get() -> int:
     let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .err()
         .expect("project lowering should fail when non-main imports missing module");
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("unknown module 'missing_mod'")));
+    assert!(errors.iter().any(|e| {
+        e.message.contains("unknown import target: 'missing_mod'")
+            && e.code == Some(DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE)
+    }));
 }
 
 #[test]

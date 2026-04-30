@@ -10,7 +10,7 @@ Forbidden intrinsic import.
 | Family | `IMPORT` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `cannot import forbidden intrinsic module {module}` |
+| Message template | `cannot import from '{module}' — _sifr.* modules are internal compiler intrinsics` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/stdlib_intrinsic_direct_import.sifr` |
 | Declared args | `module (message+json)` |
 | Dedupe args | `module` |

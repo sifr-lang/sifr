@@ -1,0 +1,3 @@
+# expect-error: SIFR-NAME-0002: undefined function: 'foo'
+def main():
+    foo()

@@ -510,7 +510,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Undefined variable.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/undefined_var.sifr",
-        "undefined variable: {name}",
+        "undefined variable: '{name}'",
         "sifr_hir::lower",
         [arg!("name")],
         ["name"]
@@ -520,8 +520,8 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "NAME",
         "Undefined function or callable.",
         Severity::Error,
-        "crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr",
-        "undefined function: {name}",
+        "crates/sifr/tests/e2e/fail/undefined_function.sifr",
+        "undefined function: '{name}'",
         "sifr_hir::lower",
         [arg!("name")],
         ["name"]
@@ -543,7 +543,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Missing module or class member.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr",
-        "member {member} does not exist on {container}",
+        "module '{container}' has no member '{member}'",
         "sifr_hir::lower",
         [arg!("member"), arg!("container")],
         ["member", "container"]
@@ -554,7 +554,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Forbidden intrinsic import.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/stdlib_intrinsic_direct_import.sifr",
-        "cannot import forbidden intrinsic module {module}",
+        "cannot import from '{module}' — _sifr.* modules are internal compiler intrinsics",
         "sifr_hir::lower",
         [arg!("module")],
         ["module"]
@@ -565,7 +565,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Unknown source module import target.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr",
-        "unknown import target: {module}",
+        "unknown import target: '{module}'",
         "sifr_hir::lower",
         [arg!("module")],
         ["module"]

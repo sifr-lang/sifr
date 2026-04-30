@@ -17,6 +17,7 @@ use super::if_branch_bindings::{
     predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,
 };
 use super::len_aliases::record_len_alias_fact;
+use super::name_diagnostics;
 use super::nonlocal_support::{
     collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
 };
@@ -1538,7 +1539,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     // Check if variable already exists
     if should_treat_as_existing_binding {
         let Some(info) = ctx.scope.lookup(&name) else {
-            ctx.error(format!("undefined variable: '{name}'"));
+            name_diagnostics::undefined_variable(ctx, &name);
             return None;
         };
         if info.is_parameter_binding() && !info.is_mutable_binding() {
