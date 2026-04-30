@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: raise requires an Error class instance — `raise "message"` is not allowed, use e.g. `raise ValueError("message")`
+# expect-error: SIFR-RESULT-0003: raise requires an Error class instance — `raise "message"` is not allowed, use e.g. `raise ValueError("message")`
 
 def broken() -> Result[int, ValueError]:
     raise "this is a string"

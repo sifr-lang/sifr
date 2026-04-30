@@ -187,10 +187,13 @@ pub(super) fn lower_stmt(
             // #[must_use] enforcement: Result values must not be silently discarded
             let expr_ty = expr.ty();
             if matches!(expr_ty, Type::Result(_, _)) {
-                ctx.error(format!(
-                    "unused Result value of type '{}' must be used. Use 'let _ = expr' to explicitly discard",
-                    expr_ty.display_name()
-                ));
+                ctx.error_with_code(
+                    DiagnosticCode::RESULT_UNUSED_VALUE,
+                    format!(
+                        "unused Result value of type '{}' must be used. Use 'let _ = expr' to explicitly discard",
+                        expr_ty.display_name()
+                    ),
+                );
             }
             Some(HirStmt::Expr { expr })
         }
@@ -241,7 +244,10 @@ pub(super) fn lower_stmt(
             if let Some(ref exc) = raise_stmt.exc {
                 // Check if the raise expression is a string literal — disallow raise "message"
                 if matches!(exc.as_ref(), Expr::StringLiteral(_) | Expr::FString(_)) {
-                    ctx.error("raise requires an Error class instance — `raise \"message\"` is not allowed, use e.g. `raise ValueError(\"message\")`".to_string());
+                    ctx.error_with_code(
+                        DiagnosticCode::RESULT_INVALID_RAISE,
+                        "raise requires an Error class instance — `raise \"message\"` is not allowed, use e.g. `raise ValueError(\"message\")`".to_string(),
+                    );
                     return None;
                 }
                 let value = lower_expr(exc, ctx)?;
@@ -249,9 +255,12 @@ pub(super) fn lower_stmt(
                 let raised_ty = value.ty();
                 if !is_valid_error_type(raised_ty, ctx) {
                     let ty_name = format_type_name(raised_ty);
-                    ctx.error(format!(
-                        "raise requires an Error class instance — `{ty_name}` is not an Error class"
-                    ));
+                    ctx.error_with_code(
+                        DiagnosticCode::RESULT_INVALID_RAISE,
+                        format!(
+                            "raise requires an Error class instance — `{ty_name}` is not an Error class"
+                        ),
+                    );
                     return None;
                 }
                 Some(HirStmt::Raise { value })

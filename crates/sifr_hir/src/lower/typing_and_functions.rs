@@ -513,11 +513,14 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         // Enforce: E must be a class extending Error
                         if !is_valid_error_type(&err_ty, ctx) {
                             let err_name = format_type_name(&err_ty);
-                            ctx.error(format!(
+                            ctx.error_with_code(
+                                DiagnosticCode::RESULT_INVALID_ERROR_TYPE,
+                                format!(
                                 "`{}` is not a valid error type in Result — use a class extending Error, e.g. `Result[{}, ValueError]`",
                                 err_name,
                                 format_type_name(&ok_ty),
-                            ));
+                                ),
+                            );
                             return Type::Any;
                         }
                         Type::Result(Box::new(ok_ty), Box::new(err_ty))
