@@ -1,0 +1,9 @@
+# expect-error: SIFR-TYPE-0004: parameter 'amount' in UserId.add is missing a type annotation
+
+class UserId(int):
+    def add(self, amount) -> int:
+        return 0
+
+def main():
+    user_id: UserId = UserId(1)
+    print(user_id)

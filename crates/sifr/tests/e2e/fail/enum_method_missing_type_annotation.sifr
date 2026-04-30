@@ -1,0 +1,13 @@
+# expect-error: SIFR-TYPE-0004: parameter 'other' in Direction.same is missing a type annotation
+
+from enum import Enum
+
+class Direction(Enum):
+    NORTH = 1
+    SOUTH = 2
+
+    def same(self, other) -> bool:
+        return True
+
+def main():
+    print(Direction.NORTH.same(Direction.SOUTH))

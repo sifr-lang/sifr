@@ -50,6 +50,20 @@ fn option_member_type(ty: &Type) -> Option<Type> {
     }
 }
 
+fn missing_method_param_annotation(
+    ctx: &mut LowerCtx,
+    class_name: &str,
+    method_name: &str,
+    param_name: &str,
+) {
+    ctx.error_with_code(
+        DiagnosticCode::TYPE_MISSING_ANNOTATION,
+        format!(
+            "parameter '{param_name}' in {class_name}.{method_name} is missing a type annotation"
+        ),
+    );
+}
+
 fn class_next_element_type(class_name: &str, methods: &[(String, FunctionType)]) -> Option<Type> {
     let next_ft = class_method_signature(methods, "__next__")?;
     if !next_ft.params.is_empty() {
@@ -265,6 +279,12 @@ pub(super) fn collect_class_type(
                     let param_ty = if let Some(ref ann) = param.parameter.annotation {
                         resolve_annotation_expr(ann, ctx)
                     } else {
+                        missing_method_param_annotation(
+                            ctx,
+                            &class_name,
+                            &method_name,
+                            &param_name,
+                        );
                         Type::Any
                     };
                     params.push((param_name, param_ty));
@@ -299,6 +319,12 @@ pub(super) fn collect_class_type(
                     let param_ty = if let Some(ref ann) = param.parameter.annotation {
                         resolve_annotation_expr(ann, ctx)
                     } else {
+                        missing_method_param_annotation(
+                            ctx,
+                            &class_name,
+                            &method_name,
+                            &param_name,
+                        );
                         Type::Any
                     };
                     params.push((param_name, param_ty));
@@ -402,11 +428,11 @@ pub(super) fn collect_class_type(
                         let param_ty = if let Some(ref ann) = param.parameter.annotation {
                             resolve_annotation_expr(ann, ctx)
                         } else {
-                            ctx.error_with_code(
-                                DiagnosticCode::TYPE_MISSING_ANNOTATION,
-                                format!(
-                                    "parameter '{param_name}' in {class_name}.__init__ is missing a type annotation"
-                                ),
+                            missing_method_param_annotation(
+                                ctx,
+                                &class_name,
+                                "__init__",
+                                &param_name,
                             );
                             Type::Any
                         };
@@ -454,11 +480,11 @@ pub(super) fn collect_class_type(
                         let param_ty = if let Some(ref ann) = param.parameter.annotation {
                             resolve_annotation_expr(ann, ctx)
                         } else {
-                            ctx.error_with_code(
-                                DiagnosticCode::TYPE_MISSING_ANNOTATION,
-                                format!(
-                                    "parameter '{param_name}' in {class_name}.{method_name} is missing a type annotation"
-                                ),
+                            missing_method_param_annotation(
+                                ctx,
+                                &class_name,
+                                &method_name,
+                                &param_name,
                             );
                             Type::Any
                         };
@@ -736,6 +762,12 @@ pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Optio
                     let param_ty = if let Some(ref ann) = param.parameter.annotation {
                         resolve_annotation_expr(ann, ctx)
                     } else {
+                        missing_method_param_annotation(
+                            ctx,
+                            &class_name,
+                            &method_name,
+                            &param_name,
+                        );
                         Type::Any
                     };
                     ctx.scope.define(param_name.clone(), param_ty.clone());
