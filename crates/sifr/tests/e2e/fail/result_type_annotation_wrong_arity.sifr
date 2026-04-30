@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: Result type annotation requires exactly 2 type parameters
+
+def consume(value: Result[int, ValueError, ValueError]) -> int:
+    return 0
+
+def main():
+    print(consume(1))

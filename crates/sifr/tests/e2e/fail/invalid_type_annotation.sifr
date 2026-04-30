@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: dict type annotation requires [K, V] syntax
+
+def consume(value: dict[int]) -> int:
+    return 0
+
+def main():
+    print(consume({}))

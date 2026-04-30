@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: only integer literals are supported in type annotations
+
+def consume(value: 1.5) -> int:
+    return 0
+
+def main():
+    print(consume(1))

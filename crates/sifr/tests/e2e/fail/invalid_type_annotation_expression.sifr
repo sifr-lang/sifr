@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: unsupported type annotation expression
+
+def consume(value: int + str) -> int:
+    return 0
+
+def main():
+    print(consume(1))

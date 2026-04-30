@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: Result type annotation requires [T, E] syntax
+
+def consume(value: Result[int]) -> int:
+    return 0
+
+def main():
+    print(consume(1))

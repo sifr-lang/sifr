@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: dict type annotation requires exactly 2 type parameters
+
+def consume(value: dict[int, str, bool]) -> int:
+    return 0
+
+def main():
+    print(consume({}))
