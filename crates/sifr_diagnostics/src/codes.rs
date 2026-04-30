@@ -874,7 +874,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Break outside a loop.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/break_outside_loop.sifr",
-        "break outside of loop",
+        "'break' outside of loop",
         "sifr_hir::lower::statements",
         [],
         []
@@ -885,7 +885,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Continue outside a loop.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/continue_outside_loop.sifr",
-        "continue outside of loop",
+        "'continue' outside of loop",
         "sifr_hir::lower::statements",
         [],
         []
@@ -896,10 +896,10 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Invalid nonlocal or nested-function flow.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr",
-        "invalid nested function flow: {reason}",
+        "recursive nested function '{function}' cannot mutate captured state with nonlocal yet",
         "sifr_hir::lower",
-        [arg!("reason")],
-        ["reason"]
+        [arg!("function")],
+        ["function"]
     ),
     active_entry!(
         "SIFR-FLOW-0901",

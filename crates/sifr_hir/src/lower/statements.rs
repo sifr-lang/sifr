@@ -203,14 +203,14 @@ pub(super) fn lower_stmt(
         Stmt::For(for_stmt) => lower_for(for_stmt, func_type, ctx),
         Stmt::Break(_) => {
             if !ctx.in_loop() {
-                ctx.error("'break' outside of loop".to_string());
+                super::flow_diagnostics::break_outside_loop(ctx);
                 return None;
             }
             Some(HirStmt::Break)
         }
         Stmt::Continue(_) => {
             if !ctx.in_loop() {
-                ctx.error("'continue' outside of loop".to_string());
+                super::flow_diagnostics::continue_outside_loop(ctx);
                 return None;
             }
             Some(HirStmt::Continue)
@@ -592,10 +592,7 @@ pub(super) fn lower_stmt(
 
             if !declared_nonlocals.is_empty() && hir_body_calls_function(&body, func.name.as_str())
             {
-                ctx.error(format!(
-                    "recursive nested function '{}' cannot mutate captured state with `nonlocal` yet",
-                    func.name
-                ));
+                super::flow_diagnostics::recursive_nonlocal_nested_function(ctx, &func.name);
             }
 
             let inferred_return_type = infer_function_return_type(

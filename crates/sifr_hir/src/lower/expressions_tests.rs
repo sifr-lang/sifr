@@ -1691,7 +1691,8 @@ fn test_break_outside_loop() {
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
-        .any(|e| e.message.contains("'break' outside of loop")));
+        .any(|e| e.message.contains("'break' outside of loop")
+            && e.code == Some(DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP)));
 }
 
 #[test]
@@ -1701,7 +1702,8 @@ fn test_continue_outside_loop() {
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
-        .any(|e| e.message.contains("'continue' outside of loop")));
+        .any(|e| e.message.contains("'continue' outside of loop")
+            && e.code == Some(DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP)));
 }
 
 #[test]

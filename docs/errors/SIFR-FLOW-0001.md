@@ -10,7 +10,7 @@ Break outside a loop.
 | Family | `FLOW` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::statements` |
-| Message template | `break outside of loop` |
+| Message template | `'break' outside of loop` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/break_outside_loop.sifr` |
 | Declared args | n/a |
 | Dedupe args | n/a |

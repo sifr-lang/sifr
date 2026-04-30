@@ -57,22 +57,18 @@ fn collect_declared_nonlocals_into(stmts: &[Stmt], out: &mut HashSet<String>) {
 
 pub(super) fn lower_nonlocal(nonlocal: &StmtNonlocal, ctx: &mut LowerCtx) {
     if ctx.function_scopes.len() < 2 {
-        ctx.error("nonlocal declaration requires an enclosing function binding".to_string());
+        super::flow_diagnostics::nonlocal_requires_enclosing_binding(ctx);
         return;
     }
 
     for name in &nonlocal.names {
         let name = name.to_string();
         if ctx.lookup_current_function_binding(&name).is_some() {
-            ctx.error(format!(
-                "nonlocal name '{name}' conflicts with a binding in the current function scope"
-            ));
+            super::flow_diagnostics::nonlocal_conflicts_with_current_binding(ctx, &name);
             continue;
         }
         if ctx.lookup_outer_function_binding(&name).is_none() {
-            ctx.error(format!(
-                "nonlocal name '{name}' does not resolve to an enclosing function binding"
-            ));
+            super::flow_diagnostics::nonlocal_missing_enclosing_binding(ctx, &name);
         }
     }
 }

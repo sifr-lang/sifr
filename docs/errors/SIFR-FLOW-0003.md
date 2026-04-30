@@ -10,7 +10,7 @@ Invalid nonlocal or nested-function flow.
 | Family | `FLOW` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `invalid nested function flow: {reason}` |
+| Message template | `recursive nested function '{function}' cannot mutate captured state with nonlocal yet` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr` |
-| Declared args | `reason (message+json)` |
-| Dedupe args | `reason` |
+| Declared args | `function (message+json)` |
+| Dedupe args | `function` |
