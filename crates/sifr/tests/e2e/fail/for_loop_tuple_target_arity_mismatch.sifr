@@ -1,0 +1,6 @@
+# expect-error: SIFR-TYPE-0009: for loop tuple target expects 2 element(s), iterable yields 3
+
+def main():
+    triples: list[tuple[int, int, int]] = [(1, 2, 3)]
+    for left, right in triples:
+        print(left + right)

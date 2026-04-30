@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0009: star unpacking requires a list type
+
+def main():
+    first, *rest = (1, 2, 3)
+    print(first)

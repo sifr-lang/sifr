@@ -2102,11 +2102,14 @@ pub(super) fn lower_for(
         let names: Vec<&str> = target_name.split(',').collect();
         if let Type::Tuple(elem_types) = &elem_ty {
             if elem_types.len() != names.len() {
-                ctx.error(format!(
-                    "for loop tuple target expects {} element(s), iterable yields {}",
-                    names.len(),
-                    elem_types.len()
-                ));
+                ctx.error_with_code(
+                    DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                    format!(
+                        "for loop tuple target expects {} element(s), iterable yields {}",
+                        names.len(),
+                        elem_types.len()
+                    ),
+                );
                 ctx.scope.pop();
                 return None;
             }
@@ -2115,10 +2118,13 @@ pub(super) fn lower_for(
                 ctx.scope.define((*name).to_string(), ty);
             }
         } else {
-            ctx.error(format!(
-                "for loop tuple target expects iterable elements of tuple type, got '{}'",
-                elem_ty.display_name()
-            ));
+            ctx.error_with_code(
+                DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                format!(
+                    "for loop tuple target expects iterable elements of tuple type, got '{}'",
+                    elem_ty.display_name()
+                ),
+            );
             ctx.scope.pop();
             return None;
         }

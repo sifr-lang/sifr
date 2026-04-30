@@ -166,7 +166,10 @@ pub(super) fn lower_star_unpack_assign(
     let elem_ty = if let sifr_type_system::Type::List(elem) = &value_ty {
         *elem.clone()
     } else {
-        ctx.error("star unpacking requires a list type".to_string());
+        ctx.error_with_code(
+            DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+            "star unpacking requires a list type".to_string(),
+        );
         return None;
     };
 
