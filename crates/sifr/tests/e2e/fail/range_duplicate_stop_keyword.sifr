@@ -1,5 +1,5 @@
 # Reference: phase_psp_a1_range_duplicate_stop_keyword
-# expect-error: SIFR-TYPE-0001: range(): 'stop' was provided both positionally and as a keyword
+# expect-error: SIFR-CALL-0003: range() got multiple values for argument 'stop'
 
 def main():
     print(list(range(10, stop=20)))

@@ -243,6 +243,68 @@ fn test_defaultdict_keyword_constructor_unsupported_has_stdlib_code() {
 }
 
 #[test]
+fn test_builtin_sum_wrong_arity_has_call_code() {
+    let result =
+        lower_source("def main():\n    data: list[int] = [1, 2, 3]\n    print(sum(data, data))\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "sum() takes exactly 1 argument(s), got 2"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+    }));
+}
+
+#[test]
+fn test_sorted_unexpected_keyword_has_call_code() {
+    let result = lower_source(
+        "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(nums, bogus=True)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "sorted() got an unexpected keyword argument 'bogus'"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+    }));
+}
+
+#[test]
+fn test_keyword_after_positional_has_call_code() {
+    let result = lower_source(
+        "def greet(name: str, greeting: str) -> str:\n    return greeting\n\ndef main():\n    print(greet(\"Alice\", name=\"Bob\"))\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "greet() got multiple values for argument 'name'"
+            && error.code == Some(DiagnosticCode::CALL_DUPLICATE_ARGUMENT)
+    }));
+}
+
+#[test]
+fn test_range_duplicate_stop_keyword_has_call_code() {
+    let result = lower_source("def main():\n    print(list(range(10, stop=20)))\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "range() got multiple values for argument 'stop'"
+            && error.code == Some(DiagnosticCode::CALL_DUPLICATE_ARGUMENT)
+    }));
+}
+
+#[test]
+fn test_map_callable_arity_mismatch_has_call_code() {
+    let result = lower_source(
+        "def inc(x: int) -> int:\n    return x + 1\n\ndef main():\n    values: list[int] = map(inc, [1, 2], [3, 4])\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "map() callable expects 1 argument(s), got 2 iterable(s)"
+            && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+    }));
+}
+
+#[test]
 fn test_defaultdict_accepts_counter_initial_mapping() {
     let result = lower_source(
         "class Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",

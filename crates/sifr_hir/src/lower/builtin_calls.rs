@@ -798,9 +798,9 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
         match name.as_str() {
             "start" => {
                 if start_expr.is_some() {
-                    ctx.error(
-                        "range(): 'start' was provided both positionally and as a keyword"
-                            .to_string(),
+                    ctx.error_with_code(
+                        DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
+                        "range() got multiple values for argument 'start'".to_string(),
                     );
                     return None;
                 }
@@ -808,9 +808,9 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
             }
             "stop" => {
                 if stop_expr.is_some() {
-                    ctx.error(
-                        "range(): 'stop' was provided both positionally and as a keyword"
-                            .to_string(),
+                    ctx.error_with_code(
+                        DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
+                        "range() got multiple values for argument 'stop'".to_string(),
                     );
                     return None;
                 }
@@ -818,9 +818,9 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
             }
             "step" => {
                 if step_expr.is_some() {
-                    ctx.error(
-                        "range(): 'step' was provided both positionally and as a keyword"
-                            .to_string(),
+                    ctx.error_with_code(
+                        DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
+                        "range() got multiple values for argument 'step'".to_string(),
                     );
                     return None;
                 }

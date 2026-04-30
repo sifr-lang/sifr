@@ -787,14 +787,15 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Wrong positional argument count.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr",
-        "{callable} expects {expected_count} argument(s), got {actual_count}",
+        "{callable} takes {quantifier} {expected_count} argument(s), got {actual_count}",
         "sifr_hir::lower",
         [
             arg!("callable"),
+            arg!("quantifier"),
             arg!("expected_count"),
             arg!("actual_count")
         ],
-        ["callable", "expected_count", "actual_count"]
+        ["callable", "quantifier", "expected_count", "actual_count"]
     ),
     active_entry!(
         "SIFR-CALL-0002",
@@ -802,7 +803,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Unexpected keyword argument.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/sorted_unexpected_keyword.sifr",
-        "{callable} got unexpected keyword argument {keyword}",
+        "{callable} got an unexpected keyword argument '{keyword}'",
         "sifr_hir::lower",
         [arg!("callable"), arg!("keyword")],
         ["callable", "keyword"]
@@ -813,7 +814,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Duplicate argument from positional and keyword overlap.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/keyword_after_positional_error.sifr",
-        "{callable} got multiple values for argument {argument}",
+        "{callable} got multiple values for argument '{argument}'",
         "sifr_hir::lower",
         [arg!("callable"), arg!("argument")],
         ["callable", "argument"]
@@ -835,10 +836,14 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Callable arity failure or expression is not callable.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/map_callable_arity_mismatch.sifr",
-        "{callee} is not callable with the provided arguments",
+        "{callable} callable expects {expected_count} argument(s), got {actual_count} iterable(s)",
         "sifr_hir::lower",
-        [arg!("callee")],
-        ["callee"]
+        [
+            arg!("callable"),
+            arg!("expected_count"),
+            arg!("actual_count")
+        ],
+        ["callable", "expected_count", "actual_count"]
     ),
     active_entry!(
         "SIFR-OWN-0001",

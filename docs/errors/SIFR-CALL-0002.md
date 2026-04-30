@@ -10,7 +10,7 @@ Unexpected keyword argument.
 | Family | `CALL` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `{callable} got unexpected keyword argument {keyword}` |
+| Message template | `{callable} got an unexpected keyword argument '{keyword}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/sorted_unexpected_keyword.sifr` |
 | Declared args | `callable (message+json)`, `keyword (message+json)` |
 | Dedupe args | `callable`, `keyword` |
