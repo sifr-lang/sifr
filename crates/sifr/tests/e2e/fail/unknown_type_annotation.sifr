@@ -1,0 +1,7 @@
+# expect-error: SIFR-NAME-0003: unknown type: 'MissingType'
+
+def consume(value: MissingType) -> int:
+    return 0
+
+def main():
+    print(consume(1))

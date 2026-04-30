@@ -381,6 +381,13 @@ fn invalid_type_annotation(ctx: &mut LowerCtx, message: impl Into<String>) {
     ctx.error_with_code(DiagnosticCode::TYPE_INVALID_ANNOTATION, message.into());
 }
 
+fn unknown_type(ctx: &mut LowerCtx, name: &str) {
+    ctx.error_with_code(
+        DiagnosticCode::NAME_UNKNOWN_TYPE,
+        format!("unknown type: '{name}'"),
+    );
+}
+
 pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
@@ -397,7 +404,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                 return class_ty.clone();
             }
             resolve_type_annotation(&name.id).unwrap_or_else(|| {
-                ctx.error(format!("unknown type: '{}'", name.id));
+                unknown_type(ctx, &name.id);
                 Type::Any
             })
         }
@@ -689,7 +696,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         }
                         class_ty
                     } else {
-                        ctx.error(format!("unknown generic type: '{base_name}'"));
+                        unknown_type(ctx, &base_name);
                         Type::Any
                     }
                 }
