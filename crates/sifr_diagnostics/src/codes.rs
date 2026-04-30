@@ -1033,10 +1033,10 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Class fields require an initializer or super initializer.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/auto_init_inheritance_missing_super.sifr",
-        "class {class_name} requires an initializer for field {field}",
+        "class '{class_name}' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)",
         "sifr_hir::lower::classes",
-        [arg!("class_name"), arg!("field")],
-        ["class_name", "field"]
+        [arg!("class_name")],
+        ["class_name"]
     ),
     active_entry!(
         "SIFR-CLASS-0002",
@@ -1044,10 +1044,10 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Required field declared after a defaulted field.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/auto_init_required_after_default.sifr",
-        "required field {field} cannot follow a defaulted field",
+        "class '{class_name}': required field '{field}' declared after field with default value",
         "sifr_hir::lower::classes",
-        [arg!("field")],
-        ["field"]
+        [arg!("class_name"), arg!("field")],
+        ["class_name", "field"]
     ),
     active_entry!(
         "SIFR-CLASS-0003",
@@ -1055,21 +1055,26 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Duplicate enum or class value, or invalid variant.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/enum_duplicate_value.sifr",
-        "duplicate or invalid class value {value}",
+        "enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'",
         "sifr_hir::lower::classes",
-        [arg!("value")],
-        ["value"]
+        [
+            arg!("enum_name"),
+            arg!("value"),
+            arg!("existing_variant"),
+            arg!("duplicate_variant")
+        ],
+        ["enum_name", "value", "existing_variant", "duplicate_variant"]
     ),
     active_entry!(
         "SIFR-CLASS-0004",
         "CLASS",
-        "Missing class field or member.",
+        "Missing class field.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/missing_field.sifr",
-        "class {class_name} has no member {member}",
-        "sifr_hir::lower::classes",
-        [arg!("class_name"), arg!("member")],
-        ["class_name", "member"]
+        "type '{type_name}' has no field '{field}'",
+        "sifr_hir::lower::expressions",
+        [arg!("type_name"), arg!("field")],
+        ["type_name", "field"]
     ),
     active_entry!(
         "SIFR-RESULT-0001",

@@ -10,7 +10,7 @@ Required field declared after a defaulted field.
 | Family | `CLASS` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::classes` |
-| Message template | `required field {field} cannot follow a defaulted field` |
+| Message template | `class '{class_name}': required field '{field}' declared after field with default value` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/auto_init_required_after_default.sifr` |
-| Declared args | `field (message+json)` |
-| Dedupe args | `field` |
+| Declared args | `class_name (message+json)`, `field (message+json)` |
+| Dedupe args | `class_name`, `field` |

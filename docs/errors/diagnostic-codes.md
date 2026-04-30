@@ -90,7 +90,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-CLASS-0001`](SIFR-CLASS-0001.md) | Error | Class fields require an initializer or super initializer. |
 | [`SIFR-CLASS-0002`](SIFR-CLASS-0002.md) | Error | Required field declared after a defaulted field. |
 | [`SIFR-CLASS-0003`](SIFR-CLASS-0003.md) | Error | Duplicate enum or class value, or invalid variant. |
-| [`SIFR-CLASS-0004`](SIFR-CLASS-0004.md) | Error | Missing class field or member. |
+| [`SIFR-CLASS-0004`](SIFR-CLASS-0004.md) | Error | Missing class field. |
 | [`SIFR-RESULT-0001`](SIFR-RESULT-0001.md) | Error | Unused Result value. |
 | [`SIFR-RESULT-0002`](SIFR-RESULT-0002.md) | Error | Invalid Result error type. |
 | [`SIFR-RESULT-0003`](SIFR-RESULT-0003.md) | Error | Invalid raise expression. |

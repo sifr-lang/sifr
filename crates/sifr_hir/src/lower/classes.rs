@@ -252,9 +252,16 @@ pub(super) fn collect_class_type(
                 let val = vval.unwrap_or(0);
                 if let Some(existing) = seen_values.get(&val) {
                     if vval.is_some() {
-                        ctx.error(format!(
-                            "enum '{class_name}' has duplicate value {val}: variants '{existing}' and '{vname}'"
-                        ));
+                        ctx.error_with_code(
+                            DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE,
+                            format!(
+                                "enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'",
+                                enum_name = class_name,
+                                value = val,
+                                existing_variant = existing,
+                                duplicate_variant = vname
+                            ),
+                        );
                     }
                 } else if vval.is_some() {
                     seen_values.insert(val, vname.clone());
@@ -564,9 +571,14 @@ pub(super) fn collect_class_type(
             if default_indices.contains(&i) {
                 seen_default = true;
             } else if seen_default {
-                ctx.error(format!(
-                    "class '{class_name}': required field '{fname}' declared after field with default value"
-                ));
+                ctx.error_with_code(
+                    DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
+                    format!(
+                        "class '{class_name}': required field '{field}' declared after field with default value",
+                        class_name = class_name,
+                        field = fname
+                    ),
+                );
             }
         }
 
@@ -585,10 +597,14 @@ pub(super) fn collect_class_type(
             };
             let has_own_fields = fields.len() > parent_field_count;
             if has_own_fields {
-                ctx.error(format!(
-                    "class '{class_name}' has fields but no __init__; parent fields will not be initialized. \
-                     Define an explicit __init__ with super().__init__(...)"
-                ));
+                ctx.error_with_code(
+                    DiagnosticCode::CLASS_MISSING_INITIALIZER,
+                    format!(
+                        "class '{class_name}' has fields but no __init__; parent fields will not be initialized. \
+                         Define an explicit __init__ with super().__init__(...)",
+                        class_name = class_name
+                    ),
+                );
             }
         }
 

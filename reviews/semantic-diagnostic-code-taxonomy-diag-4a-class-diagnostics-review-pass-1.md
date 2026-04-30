@@ -1,0 +1,179 @@
+# `milestone_diag_4a` slice 2b.24 — class diagnostics migration
+
+Review of uncommitted changes on `codex/semantic-diagnostics-diag-4a-class-diagnostics`.
+
+Scope under review: migration of class initializer (`SIFR-CLASS-0001`),
+required-after-default (`SIFR-CLASS-0002`), enum duplicate-value (`SIFR-CLASS-0003`),
+and missing-field/member (`SIFR-CLASS-0004`) HIR diagnostics off the
+`CompilePhase::TypeCheck → SIFR-TYPE-0001` bridge to active codes, plus registry
+template/args/docs alignment, fixture re-keying, focused HIR unit coverage, and
+issue-tracker bookkeeping.
+
+## Verdict
+
+Approved with two non-blocking observations (one scope/wording nit on
+`SIFR-CLASS-0004`, one stale internal-doc cross-reference). No correctness
+bugs, behavioral regressions, or missing in-scope tests.
+
+## What I verified
+
+### Registry ↔ emitted-message alignment
+
+For each migrated code I confirmed the registry template byte-equals the string
+produced by `format!` after Rust line-continuation processing.
+
+- **SIFR-CLASS-0001** ([crates/sifr_hir/src/lower/classes.rs:600-605](crates/sifr_hir/src/lower/classes.rs:600))
+  - Emitted (post line-continuation):
+    `class '{class_name}' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)`
+  - Registry template ([codes.rs:1036](crates/sifr_diagnostics/src/codes.rs:1036)): identical.
+  - Args/dedupe: `class_name` only — matches the single capture in the format string.
+  - Owner: `sifr_hir::lower::classes` ✓
+  - Fixture: `auto_init_inheritance_missing_super.sifr` ✓
+- **SIFR-CLASS-0002** ([classes.rs:574-580](crates/sifr_hir/src/lower/classes.rs:574))
+  - Emitted: `class '{class_name}': required field '{field}' declared after field with default value`
+  - Registry template ([codes.rs:1047](crates/sifr_diagnostics/src/codes.rs:1047)): identical.
+  - Args/dedupe: `class_name`, `field` ✓ (template uses both).
+  - Owner: `sifr_hir::lower::classes` ✓
+- **SIFR-CLASS-0003** ([classes.rs:255-264](crates/sifr_hir/src/lower/classes.rs:255))
+  - Emitted: `enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'`
+  - Registry template ([codes.rs:1058](crates/sifr_diagnostics/src/codes.rs:1058)): identical.
+  - Args/dedupe: `enum_name`, `value`, `existing_variant`, `duplicate_variant` ✓ — all four placeholders appear in the template.
+  - Owner: `sifr_hir::lower::classes` ✓
+- **SIFR-CLASS-0004** ([crates/sifr_hir/src/lower/expressions.rs:2269-2276](crates/sifr_hir/src/lower/expressions.rs:2269))
+  - Emitted: `type '{type_name}' has no field '{field}'`
+  - Registry template ([codes.rs:1074](crates/sifr_diagnostics/src/codes.rs:1074)): identical.
+  - Args/dedupe: `type_name`, `field` ✓.
+  - Owner correctly updated to `sifr_hir::lower::expressions` to reflect the new emission site (this was previously the stale `sifr_hir::lower::classes`).
+  - Fixture: `missing_field.sifr` ✓.
+
+### Bridge bypass
+
+Confirmed at [crates/sifr_driver/src/diagnostics.rs:125-141](crates/sifr_driver/src/diagnostics.rs:125)
+that `CompileError::diagnostic_code` short-circuits to `code.code()` whenever
+`Some(code)` is present, so the four migrated diagnostics no longer fall
+through to the `TypeCheck → SIFR-TYPE-0001` legacy fallback. After this slice
+no in-tree class-related fixture relies on the bridge for these four
+phenomena (verified by grepping `expect-error: SIFR-TYPE-0001` against the
+class-related messages of interest — only `unhashable_dict_key.sifr` remains,
+and it is an out-of-scope hashability protocol fixture).
+
+### Fixture re-keying
+
+All four `.sifr` fixtures' `# expect-error:` comments updated from
+`SIFR-TYPE-0001` to the corresponding `SIFR-CLASS-000{1..4}` and the message
+substring matches what the lower path now emits. The e2e harness
+([crates/sifr/tests/e2e.rs:2552-2581](crates/sifr/tests/e2e.rs:2552)) requires
+both `failure.code == expected.code` and that the rendered message contains
+the comment substring; both conditions hold for each fixture.
+
+No verification baselines or other fixtures reference these filenames or
+old messages — `grep` across `verification/` and the rest of `crates/`
+turned up no stale assertions to update.
+
+### HIR unit coverage
+
+Four new tests in [crates/sifr_hir/src/lower/expressions_tests.rs:1869-1921](crates/sifr_hir/src/lower/expressions_tests.rs:1869),
+one per migrated code. Each:
+
+- Compiles a minimal source that triggers exactly the targeted diagnostic
+  (constructor arities and variant references chosen so no competing error
+  fires — verified by walking the lowering paths).
+- Asserts both `e.message == "<exact rendered message>"` and
+  `e.code == Some(DiagnosticCode::CLASS_*)` via `errors.iter().any(...)`,
+  giving us regression coverage on both dimensions.
+
+The tests live alongside the existing `*_has_*_code` cluster and follow the
+established style.
+
+### Generated docs and registry index
+
+`docs/errors/SIFR-CLASS-0001.md` … `0004.md` regenerated by
+`gen-error-docs` reflect the new templates, args, and (for `0004`) the new
+owner. `internal_docs/diagnostic_codes.md` rows updated in lockstep, and
+`docs/errors/diagnostic-codes.md` index unchanged (descriptions were already
+in sync). Sync scripts the user listed will pass against this state.
+
+### Issue tracker
+
+[issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:55-59](issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:55)
+flips slice 2b.23 to `[x] merged` with the existing PR link and adds a
+new `[ ] in progress` line for slice 2b.24. Wording matches the convention
+established by 2b.20–2b.23.
+
+## Findings
+
+### 1. (Low) `SIFR-CLASS-0004` has a name/description ↔ template scope mismatch
+
+The constant is named `CLASS_MISSING_MEMBER`
+([codes.rs:91](crates/sifr_diagnostics/src/codes.rs:91)) and the registry
+description still reads "Missing class field or member.", but the migrated
+template only covers attribute-access for fields:
+`type '{type_name}' has no field '{field}'`. The "missing method" emission
+sites in `expressions.rs` remain untagged on the bridge:
+
+- [expressions.rs:2384](crates/sifr_hir/src/lower/expressions.rs:2384) — `type '{class_name}' has no class/static method '{method_name}'`
+- [expressions.rs:3198](crates/sifr_hir/src/lower/expressions.rs:3198) — `class '{name}' has no method '{method}'`
+- builtin `has no method` strings at [expressions.rs:2694](crates/sifr_hir/src/lower/expressions.rs:2694), [:2867](crates/sifr_hir/src/lower/expressions.rs:2867), [:2981](crates/sifr_hir/src/lower/expressions.rs:2981), [:3087](crates/sifr_hir/src/lower/expressions.rs:3087), [:3123](crates/sifr_hir/src/lower/expressions.rs:3123)
+
+This is not a regression — those sites were already untagged and stay on the
+bridge — but the broad `MEMBER`/"field or member" framing creates a future
+ambiguity: if a follow-up wants method-lookup to share `SIFR-CLASS-0004`, the
+current scope is fine; if it wants a separate code, the description should be
+narrowed to "Missing class field." here so reviewers don't assume coverage
+already exists. Either resolution is a one-line tweak; flagging it so a
+direction is consciously chosen rather than drifting.
+
+### 2. (Nit) Stale source-area attribution in emission inventory
+
+[internal_docs/diagnostic_emission_inventory.md:342](internal_docs/diagnostic_emission_inventory.md:342)
+still records `SIFR-CLASS-0004` as emitted from "class lowering", but the
+emission site is now `expressions.rs::lower_attribute`. This file is a hand-
+maintained feature-area roadmap (not generated, no `Generated by` marker),
+and the wording is at the categorization level, but other slices have
+historically tightened the area column when emission moved (e.g. statement
+vs. lowering). Worth a one-word pass to "attribute lowering" or "class member
+access" for consistency, especially since the matching docs/Owner field in
+`internal_docs/diagnostic_codes.md` now points at `sifr_hir::lower::expressions`.
+
+### 3. (Nit) Format-string capture style is mixed
+
+The four migration sites use three different `format!` capture conventions:
+fully implicit at [classes.rs:602](crates/sifr_hir/src/lower/classes.rs:602),
+implicit + one explicit `field = fname` at [classes.rs:577](crates/sifr_hir/src/lower/classes.rs:577),
+and fully explicit named at [classes.rs:258](crates/sifr_hir/src/lower/classes.rs:258)
+and [expressions.rs:2272](crates/sifr_hir/src/lower/expressions.rs:2272). All
+produce correct output. Picking one convention (explicit-named is what other
+2b.* slices have favored when the local binding name doesn't already match
+the placeholder) would make later wording changes less error-prone, but this
+is purely cosmetic.
+
+## Things explicitly checked and not flagged
+
+- No competing call sites still emit any of the four messages with `ctx.error`
+  (untagged) — the only "has no field" string outside this PR lives in
+  `match_diagnostics.rs` under `MATCH_INVALID_CLASS_PATTERN_FIELD` with the
+  trailing "— available fields: …" suffix, which is a separately-coded
+  diagnostic and does not collide.
+- No `verification/` or other test baselines reference the old fixtures'
+  `SIFR-TYPE-0001` codes or the old `class … requires an initializer for field …`
+  / `required field … cannot follow a defaulted field` /
+  `duplicate or invalid class value …` / `class … has no member …` template
+  strings — those wordings now appear nowhere outside this diff.
+- `e.code == Some(DiagnosticCode::CLASS_*)` assertions match the wrapping
+  done by `LowerCtx::error_with_code` ([mod.rs:237-244](crates/sifr_hir/src/lower/mod.rs:237)).
+- The fixture for `SIFR-CLASS-0001` constructs `Dog("Rex", "Labrador")` with
+  exactly the two args the auto-generated constructor expects (parent
+  `name` + own `breed`), so the diagnostic of interest fires without a
+  competing arity error muddying the assertion.
+- Registry argument order matches placeholder order in templates for all four
+  codes (`gen-error-docs --check` would catch a mismatch but the manual diff
+  also confirms it).
+
+## Suggested follow-ups (optional, out of slice 2b.24 scope)
+
+- Decide whether `CLASS_MISSING_MEMBER`/`SIFR-CLASS-0004` should also cover
+  the method-lookup paths listed under finding 1, and either migrate those
+  call sites in a follow-up slice or narrow the registry description to
+  "Missing class field" so the scope is unambiguous.
+- Sync the emission-inventory area column for `SIFR-CLASS-0004` next time
+  that doc is touched.

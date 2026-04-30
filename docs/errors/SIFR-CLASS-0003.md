@@ -10,7 +10,7 @@ Duplicate enum or class value, or invalid variant.
 | Family | `CLASS` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::classes` |
-| Message template | `duplicate or invalid class value {value}` |
+| Message template | `enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/enum_duplicate_value.sifr` |
-| Declared args | `value (message+json)` |
-| Dedupe args | `value` |
+| Declared args | `enum_name (message+json)`, `value (message+json)`, `existing_variant (message+json)`, `duplicate_variant (message+json)` |
+| Dedupe args | `enum_name`, `value`, `existing_variant`, `duplicate_variant` |

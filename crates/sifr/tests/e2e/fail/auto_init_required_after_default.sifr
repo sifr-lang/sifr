@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: class 'BadConfig': required field 'name' declared after field with default value
+# expect-error: SIFR-CLASS-0002: class 'BadConfig': required field 'name' declared after field with default value
 
 class BadConfig:
     debug: bool = False
