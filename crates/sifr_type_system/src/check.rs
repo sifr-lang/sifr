@@ -59,7 +59,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             || (left == &Type::BigInt && right == &Type::Int)
         {
             return Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_INT_BIGINT_MIXED),
                 message: "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly".to_string(),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
@@ -125,7 +125,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Bytes);
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "unsupported operand type(s) for +: '{}' and '{}'",
                     left.display_name(),
@@ -187,7 +187,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 }
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -226,7 +226,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Float);
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "unsupported operand type(s) for /: '{}' and '{}'",
                     left.display_name(),
@@ -268,7 +268,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Float);
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -300,7 +300,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Float);
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "unsupported operand type(s) for **: '{}' and '{}'",
                     left.display_name(),
@@ -322,7 +322,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Bool);
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -340,7 +340,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Int);
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -353,7 +353,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         _ => Err(TypeError {
-            code: None,
+            code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
             message: format!("unknown binary operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
@@ -399,7 +399,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 || (left == &Type::BigInt && right == &Type::Int)
             {
                 return Err(TypeError {
-                    code: None,
+                    code: Some(DiagnosticCode::TYPE_INT_BIGINT_MIXED),
                     message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
                     kind: crate::TypeErrorKind::TypeMismatch {
                         expected: Box::new(left.clone()),
@@ -437,7 +437,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 }
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_MISMATCH),
                 message: format!(
                     "cannot compare '{}' and '{}' with {op}",
                     left.display_name(),
@@ -455,7 +455,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 || (left == &Type::BigInt && right == &Type::Int)
             {
                 return Err(TypeError {
-                    code: None,
+                    code: Some(DiagnosticCode::TYPE_INT_BIGINT_MIXED),
                     message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
                     kind: crate::TypeErrorKind::TypeMismatch {
                         expected: Box::new(left.clone()),
@@ -488,7 +488,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 }
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "'{op}' not supported between instances of '{}' and '{}'",
                     left.display_name(),
@@ -501,7 +501,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
             })
         }
         _ => Err(TypeError {
-            code: None,
+            code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
             message: format!("unknown comparison operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
@@ -551,7 +551,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 return Ok(operand.clone());
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "bad operand type for unary {op}: '{}'",
                     operand.display_name()
@@ -584,7 +584,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 _ => {}
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "bad operand type for unary not: '{}'",
                     operand.display_name()
@@ -601,7 +601,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 return Ok(Type::Int);
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!("bad operand type for unary ~: '{}'", operand.display_name()),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
@@ -610,7 +610,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
             })
         }
         _ => Err(TypeError {
-            code: None,
+            code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
             message: format!("unknown unary operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
@@ -647,7 +647,7 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
                 return Ok(Type::Bool);
             }
             Err(TypeError {
-                code: None,
+                code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -660,7 +660,7 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
             })
         }
         _ => Err(TypeError {
-            code: None,
+            code: Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR),
             message: format!("unknown boolean operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
@@ -728,15 +728,31 @@ mod tests {
 
     #[test]
     fn test_invalid_binary_op() {
-        assert!(type_check_binary_op(&Type::Str, "-", &Type::Str).is_err());
-        assert!(type_check_binary_op(&Type::Int, "+", &Type::Str).is_err());
-        assert!(type_check_binary_op(&Type::Bool, "+", &Type::Bool).is_err());
+        let str_sub = type_check_binary_op(&Type::Str, "-", &Type::Str).unwrap_err();
+        assert_eq!(
+            str_sub.code,
+            Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+        );
+        let int_str_add = type_check_binary_op(&Type::Int, "+", &Type::Str).unwrap_err();
+        assert_eq!(
+            int_str_add.code,
+            Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+        );
+        let bool_add = type_check_binary_op(&Type::Bool, "+", &Type::Bool).unwrap_err();
+        assert_eq!(
+            bool_add.code,
+            Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+        );
     }
 
     #[test]
     fn test_optional_arithmetic_requires_narrowing() {
         let optional_int = Type::Union(vec![Type::None, Type::Int]);
-        assert!(type_check_binary_op(&optional_int, "+", &Type::Int).is_err());
+        let optional_plus_int = type_check_binary_op(&optional_int, "+", &Type::Int).unwrap_err();
+        assert_eq!(
+            optional_plus_int.code,
+            Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+        );
         assert!(type_check_binary_op(&Type::Int, "+", &optional_int).is_err());
         assert!(type_check_binary_op(&optional_int, "-", &Type::Int).is_err());
         assert!(type_check_binary_op(&optional_int, "*", &Type::Int).is_err());
@@ -793,7 +809,11 @@ mod tests {
 
     #[test]
     fn test_mixed_int_bigint_comparison_blocked() {
-        assert!(type_check_comparison(&Type::Int, "==", &Type::BigInt).is_err());
+        let int_bigint_eq = type_check_comparison(&Type::Int, "==", &Type::BigInt).unwrap_err();
+        assert_eq!(
+            int_bigint_eq.code,
+            Some(DiagnosticCode::TYPE_INT_BIGINT_MIXED)
+        );
         assert!(type_check_comparison(&Type::BigInt, "==", &Type::Int).is_err());
         assert!(type_check_comparison(&Type::Int, "<", &Type::BigInt).is_err());
         assert!(type_check_comparison(&Type::BigInt, ">", &Type::Int).is_err());

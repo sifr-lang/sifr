@@ -33,11 +33,13 @@ Current wave: `milestone_diag_4a` renderer integration, split into reviewable tr
 - [x] `milestone_diag_2b` PR opened and merged: https://github.com/sifr-lang/sifr/pull/1670.
 - [x] `milestone_diag_4a` slice 1 merged: canonical renderer presentation helpers plus explicit workspace diagnostic identity transport. PR: https://github.com/sifr-lang/sifr/pull/1671.
 - [x] `milestone_diag_4a` slice 2a merged: additive HIR `LoweringError` structured diagnostic-code transport plumbing. PR: https://github.com/sifr-lang/sifr/pull/1672.
-- [ ] `milestone_diag_4a` slice 2b.1 implementation complete and reviewer-satisfied: decimal-family HIR/type-system call-site migration to active `SIFR-DECIMAL-*` codes with fixture and verification baseline re-keying. PR: https://github.com/sifr-lang/sifr/pull/1673.
+- [x] `milestone_diag_4a` slice 2b.1 merged: decimal-family HIR/type-system call-site migration to active `SIFR-DECIMAL-*` codes with fixture and verification baseline re-keying. PR: https://github.com/sifr-lang/sifr/pull/1673.
+- [ ] `milestone_diag_4a` slice 2b.2 implementation complete and reviewer-satisfied: type-system operator diagnostic migration to active `SIFR-TYPE-0005` and `SIFR-TYPE-0006` codes with fixture re-keying; PR pending.
 - [x] Deferred `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` bridge deletion and affected fixture re-keying to later `milestone_diag_4a` slice-2 sub-PRs, where HIR call sites will be migrated by domain before the bridge is removed.
 - [x] Claude pre-implementation review for `milestone_diag_4a` slice 2 completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2a completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-2.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.1 completed and reviewer is satisfied. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-2.md`.
+- [x] Claude implementation review for `milestone_diag_4a` slice 2b.2 completed and reviewer is satisfied: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-type-system-operators-review-pass-1.md`.
 - [x] Claude pre-implementation review for `milestone_diag_4a` completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 1 completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-3.md`.
 
@@ -99,6 +101,15 @@ Validation evidence for current `milestone_diag_4a` slice 2b.1:
 - `cargo clippy --workspace -- -D warnings` passed.
 - `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` and wall time `84.52s`.
 - `scripts/run_e2e_pass.sh` was also attempted; it failed in the PR-profile pass corpus on unrelated generated Rust/codegen failures (`map`/`list`/`filter` missing plus borrow/mutability errors), while the authoritative quick lane and diagnostic fail-corpus gate passed.
+
+Validation evidence for current `milestone_diag_4a` slice 2b.2:
+
+- `cargo fmt --check` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `cargo test -p sifr_type_system` passed.
+- `cargo test -p sifr -- --skip test_e2e_pass` passed.
+- `cargo clippy --workspace -- -D warnings` passed.
+- `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` and wall time `172.32s`.
 
 ## Relationship to Existing Roadmap
 
