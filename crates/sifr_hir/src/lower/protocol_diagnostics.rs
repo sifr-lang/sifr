@@ -25,6 +25,17 @@ pub(super) fn context_manager_missing(ctx: &mut LowerCtx, type_name: &str) {
     );
 }
 
+pub(super) fn iterator_invalid_return_signature(
+    ctx: &mut LowerCtx,
+    type_name: &str,
+    expected: &str,
+) {
+    ctx.error_with_code(
+        DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
+        format!("class '{type_name}' must return {expected}"),
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{lower_module, LoweringError};
@@ -75,6 +86,42 @@ mod tests {
             error.message
                 == "type 'PlainClass' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)"
                 && error.code == Some(DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING)
+        }));
+    }
+
+    #[test]
+    fn invalid_iter_signature_has_proto_code() {
+        let errors =
+            lower_errors("class BadIter:\n    def __iter__(self) -> int:\n        return 1\n");
+
+        assert!(errors.iter().any(|error| {
+            error.message == "class 'BadIter.__iter__' must return 'Iterator[T]' or 'Iterable[T]'"
+                && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
+        }));
+    }
+
+    #[test]
+    fn invalid_next_signature_has_proto_code() {
+        let errors = lower_errors(
+            "class BadNext:\n    def __iter__(self) -> Iterator[int]:\n        return iter([1])\n\n    def __next__(self) -> int:\n        return 1\n",
+        );
+
+        assert!(errors.iter().any(|error| {
+            error.message == "class 'BadNext.__next__' must return 'T | None'"
+                && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
+        }));
+    }
+
+    #[test]
+    fn invalid_reversed_signature_has_proto_code() {
+        let errors = lower_errors(
+            "class BadReversed:\n    def __iter__(self) -> Iterator[int]:\n        return iter([1, 2])\n\n    def __reversed__(self) -> int:\n        return 0\n",
+        );
+
+        assert!(errors.iter().any(|error| {
+            error.message
+                == "class 'BadReversed.__reversed__' must return 'Iterator[T]' or 'Iterable[T]'"
+                && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
         }));
     }
 }

@@ -12,6 +12,7 @@ use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
     is_error_class, is_operator_dunder, is_protocol_class,
 };
+use super::protocol_diagnostics;
 use super::statements::lower_stmts;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{parse_typevar_bound_expr, LowerCtx};
@@ -119,9 +120,11 @@ fn validate_iteration_protocol_methods(
             ));
         }
         if class_iter_element_type(class_name, methods).is_none() {
-            ctx.error(format!(
-                "class '{class_name}.__iter__' must return 'Iterator[T]' or 'Iterable[T]'"
-            ));
+            protocol_diagnostics::iterator_invalid_return_signature(
+                ctx,
+                &format!("{class_name}.__iter__"),
+                "'Iterator[T]' or 'Iterable[T]'",
+            );
         }
     }
 
@@ -132,9 +135,11 @@ fn validate_iteration_protocol_methods(
             ));
         }
         if class_next_element_type(class_name, methods).is_none() {
-            ctx.error(format!(
-                "class '{class_name}.__next__' must return 'T | None'"
-            ));
+            protocol_diagnostics::iterator_invalid_return_signature(
+                ctx,
+                &format!("{class_name}.__next__"),
+                "'T | None'",
+            );
         }
     }
 
@@ -145,9 +150,11 @@ fn validate_iteration_protocol_methods(
             ));
         }
         if class_reversed_element_type(class_name, methods).is_none() {
-            ctx.error(format!(
-                "class '{class_name}.__reversed__' must return 'Iterator[T]' or 'Iterable[T]'"
-            ));
+            protocol_diagnostics::iterator_invalid_return_signature(
+                ctx,
+                &format!("{class_name}.__reversed__"),
+                "'Iterator[T]' or 'Iterable[T]'",
+            );
         }
     }
 
