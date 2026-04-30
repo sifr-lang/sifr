@@ -318,6 +318,19 @@ fn test_hash_unhashable_argument_has_proto_code() {
 }
 
 #[test]
+fn test_function_wrong_arg_count_has_call_code() {
+    let result = lower_source(
+        "def takes_one(x: int) -> int:\n    return x\n\ndef main():\n    print(takes_one(1, 2))\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "takes_one() takes at most 1 argument(s), got 2"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+    }));
+}
+
+#[test]
 fn test_defaultdict_accepts_counter_initial_mapping() {
     let result = lower_source(
         "class Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",

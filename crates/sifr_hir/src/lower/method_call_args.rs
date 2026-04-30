@@ -68,11 +68,14 @@ pub(super) fn lower_function_call_args(
 
     if keyword_args.is_empty() {
         if positional_args.len() > ft.params.len() {
-            ctx.error(format!(
-                "{callable_name}() takes at most {} argument(s), got {}",
-                ft.params.len(),
-                positional_args.len()
-            ));
+            let expected_count = ft.params.len();
+            let actual_count = positional_args.len();
+            ctx.error_with_code(
+                DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
+                format!(
+                    "{callable_name}() takes at most {expected_count} argument(s), got {actual_count}"
+                ),
+            );
             return None;
         }
         if positional_args.len() < ft.params.len() {
