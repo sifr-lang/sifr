@@ -2,7 +2,7 @@
 use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 use crate::scope::Scope;
 use sifr_python_ast::{Expr, ExprCall, Stmt};
-use sifr_type_system::{make_union, FunctionType, Type};
+use sifr_type_system::{make_union, FunctionType, Type, TypeError};
 use std::collections::HashMap;
 mod append_growth_shapes;
 mod arithmetic_warnings;
@@ -217,12 +217,14 @@ impl LowerCtx {
         });
     }
 
-    // TODO(diag_4a slice 2b): remove this allow when the first domain
-    // migration calls `error_with_code`.
-    #[allow(
-        dead_code,
-        reason = "diag_4a slice 2a adds transport before per-domain HIR call-site migration"
-    )]
+    fn type_error(&mut self, error: TypeError) {
+        if let Some(code) = error.code {
+            self.error_with_code(code, error.message);
+        } else {
+            self.error(error.message);
+        }
+    }
+
     fn error_with_code(&mut self, code: DiagnosticCode, message: String) {
         self.errors.push(LoweringError {
             code: Some(code),

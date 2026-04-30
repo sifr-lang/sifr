@@ -21,6 +21,7 @@ pub use types::{
 pub mod narrow;
 pub use literal::{widen as widen_literal, LiteralValue};
 pub use narrow::{narrow_type, NarrowingCondition};
+use sifr_diagnostics::DiagnosticCode;
 pub use union::{
     intersect_with_union, make_union, remove_none_from_union, subtract_from_union, union_contains,
     union_contains_none,
@@ -29,6 +30,7 @@ pub use union::{
 /// A type error produced during type checking.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeError {
+    pub code: Option<DiagnosticCode>,
     pub message: String,
     pub kind: TypeErrorKind,
 }
