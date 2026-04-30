@@ -838,10 +838,10 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     active_entry!(
         "SIFR-OWN-0002",
         "OWN",
-        "Double mutable borrow.",
+        "Same-call borrow conflict.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/double_mut_borrow.sifr",
-        "cannot borrow {binding} as mutable more than once",
+        "borrow conflict for {binding} in the same call",
         "sifr_hir::lower",
         [arg!("binding")],
         ["binding"]

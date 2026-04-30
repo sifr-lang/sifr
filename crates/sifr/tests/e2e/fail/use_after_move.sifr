@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: use of moved value: 's'
+# expect-error: SIFR-OWN-0001: use of moved value: 's'
 def consume(own s: str) -> str:
     return s
 

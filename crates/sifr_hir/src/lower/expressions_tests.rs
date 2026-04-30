@@ -89,7 +89,77 @@ fn test_use_after_move() {
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e.message.contains("moved value")));
+    assert!(errors.iter().any(|e| {
+        e.message.contains("moved value") && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+    }));
+}
+
+#[test]
+fn test_double_mutable_borrow_has_ownership_code() {
+    let result = lower_source(
+        "def swap(mut a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    swap(items, items)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("cannot borrow 'items' as mutable more than once")
+            && e.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+    }));
+}
+
+#[test]
+fn test_mutable_after_immutable_borrow_has_ownership_code() {
+    let result = lower_source(
+        "def read_then_mutate(a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    read_then_mutate(items, items)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains(
+            "cannot borrow 'items' as mutable because it is already borrowed as immutable",
+        ) && e.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+    }));
+}
+
+#[test]
+fn test_immutable_after_mutable_borrow_has_ownership_code() {
+    let result = lower_source(
+        "def mutate_then_read(mut a: list[int], b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    mutate_then_read(items, items)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains(
+            "cannot borrow 'items' as immutable because it is already borrowed as mutable",
+        ) && e.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+    }));
+}
+
+#[test]
+fn test_for_loop_move_has_ownership_code() {
+    let result = lower_source(
+        "def consume(own s: str) -> int:\n    return len(s)\n\ndef main():\n    s: str = \"hello\"\n    for i in range(3):\n        result: int = consume(s)\n        print(result)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("is moved inside loop body")
+            && e.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP)
+    }));
+}
+
+#[test]
+fn test_while_loop_move_has_ownership_code() {
+    let result = lower_source(
+        "def consume(own s: str) -> int:\n    return len(s)\n\ndef main():\n    s: str = \"hello\"\n    i: int = 0\n    while i < 3:\n        result: int = consume(s)\n        i = i + 1\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("is moved inside loop body")
+            && e.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP)
+    }));
 }
 
 #[test]

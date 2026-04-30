@@ -38,6 +38,7 @@ use super::numeric_sentinels::{
     maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
     retag_numeric_sentinel_name_expr,
 };
+use super::ownership_diagnostics;
 use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_true_sequence_guards,
 };
@@ -222,7 +223,7 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
         // Use effective type (narrowed if available)
         let ty = info.effective_type().clone();
         if is_moved {
-            ctx.error(format!("use of moved value: '{var_name}'"));
+            ownership_diagnostics::use_after_move(ctx, &var_name);
         }
         return Some(HirExpr::Name { name: var_name, ty });
     }
@@ -1824,20 +1825,18 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         .unwrap_or(ParamConvention::borrow());
                     if convention.is_mut_borrow() {
                         if mut_borrowed.contains(name) {
-                            ctx.error(format!(
-                                "cannot borrow '{name}' as mutable more than once in the same call to '{func_name}'"
-                            ));
+                            ownership_diagnostics::double_mutable_borrow(ctx, name, &func_name);
                         } else if immut_borrowed.contains(name) {
-                            ctx.error(format!(
-                                "cannot borrow '{name}' as mutable because it is already borrowed as immutable in the same call to '{func_name}'"
-                            ));
+                            ownership_diagnostics::mutable_borrow_after_immutable(
+                                ctx, name, &func_name,
+                            );
                         }
                         mut_borrowed.push(name.clone());
                     } else if convention.is_shared_borrow() {
                         if mut_borrowed.contains(name) {
-                            ctx.error(format!(
-                                "cannot borrow '{name}' as immutable because it is already borrowed as mutable in the same call to '{func_name}'"
-                            ));
+                            ownership_diagnostics::immutable_borrow_after_mutable(
+                                ctx, name, &func_name,
+                            );
                         }
                         immut_borrowed.push(name.clone());
                     } else {

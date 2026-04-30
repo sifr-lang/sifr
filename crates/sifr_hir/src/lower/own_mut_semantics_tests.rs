@@ -1,4 +1,5 @@
 use crate::{lower_module, HirModule, LoweringError};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 
 fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
@@ -6,9 +7,12 @@ fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
     lower_module(parsed.suite()).map(|result| result.module)
 }
 
+fn lower_errors(source: &str) -> Vec<LoweringError> {
+    lower_source(source).expect_err("expected lowering error")
+}
+
 fn lower_error_messages(source: &str) -> Vec<String> {
-    lower_source(source)
-        .expect_err("expected lowering error")
+    lower_errors(source)
         .into_iter()
         .map(|error| error.message)
         .collect()
@@ -28,25 +32,26 @@ fn test_own_mut_parameter_allows_mutation_and_return() {
 
 #[test]
 fn test_mut_borrow_parameter_cannot_escape_via_return() {
-    let errors = lower_error_messages(
-        "def borrowed_return(mut items: list[int]) -> list[int]:\n    return items\n",
-    );
+    let errors =
+        lower_errors("def borrowed_return(mut items: list[int]) -> list[int]:\n    return items\n");
 
-    assert!(errors.iter().any(|message| {
-        message
+    assert!(errors.iter().any(|error| {
+        error.message
             == "cannot return borrowed parameter `items`: borrowed parameters cannot escape -- add `own` at the signature boundary or return `items.clone()`"
+            && error.code == Some(DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES)
     }));
 }
 
 #[test]
 fn test_mut_borrow_parameter_cannot_escape_via_local_binding() {
-    let errors = lower_error_messages(
+    let errors = lower_errors(
         "def borrowed_store(mut items: list[int]) -> int:\n    captured: list[int] = items\n    return len(captured)\n",
     );
 
-    assert!(errors.iter().any(|message| {
-        message
+    assert!(errors.iter().any(|error| {
+        error.message
             == "cannot store borrowed parameter `items`: borrowed parameters cannot escape -- add `own` at the signature boundary or store `items.clone()`"
+            && error.code == Some(DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES)
     }));
 }
 
