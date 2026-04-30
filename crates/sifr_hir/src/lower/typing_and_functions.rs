@@ -599,11 +599,14 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                             single => vec![resolve_annotation_expr(single, ctx)],
                         };
                         if alias_params.len() != type_args.len() {
-                            ctx.error(format!(
+                            invalid_type_annotation(
+                                ctx,
+                                format!(
                                 "generic type alias '{base_name}' expects {} type argument(s), got {}",
                                 alias_params.len(),
                                 type_args.len()
-                            ));
+                                ),
+                            );
                             return Type::Any;
                         }
                         let mut bindings = HashMap::new();
@@ -640,17 +643,23 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                                 .unwrap_or_default();
                             if !type_args.is_empty() {
                                 if class_type_params.is_empty() {
-                                    ctx.error(format!(
+                                    invalid_type_annotation(
+                                        ctx,
+                                        format!(
                                         "class '{base_name}' does not declare type parameters; use `class {base_name}[T]: ...`"
-                                    ));
+                                        ),
+                                    );
                                     return Type::Any;
                                 }
                                 if class_type_params.len() != type_args.len() {
-                                    ctx.error(format!(
+                                    invalid_type_annotation(
+                                        ctx,
+                                        format!(
                                         "generic class '{base_name}' expects {} type argument(s), got {}",
                                         class_type_params.len(),
                                         type_args.len()
-                                    ));
+                                        ),
+                                    );
                                     return Type::Any;
                                 }
                                 let mut bindings = HashMap::new();

@@ -1,4 +1,5 @@
 use crate::{lower_module, HirModule, HirStmt, LoweringError};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
 
@@ -183,5 +184,6 @@ fn test_generic_type_alias_wrong_arity_still_errors() {
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "generic type alias 'Pair' expects 1 type argument(s), got 2"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
     }));
 }
