@@ -1,4 +1,5 @@
 use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     AstParamConvention, AstParamMutability, AstParamOwnership, Expr, Number, Operator,
     StmtFunctionDef,
@@ -312,10 +313,13 @@ pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) 
         let ty = if let Some(annotation) = &param.parameter.annotation {
             resolve_annotation_expr(annotation, ctx)
         } else {
-            ctx.error(format!(
-                "parameter '{}' in function '{}' is missing a type annotation",
-                name, func.name
-            ));
+            ctx.error_with_code(
+                DiagnosticCode::TYPE_MISSING_ANNOTATION,
+                format!(
+                    "parameter '{}' in function '{}' is missing a type annotation",
+                    name, func.name
+                ),
+            );
             Type::Any
         };
         let conv = ast_convention_to_param(param.parameter.convention, &ty);
@@ -328,10 +332,13 @@ pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) 
         let elem_ty = if let Some(ref annotation) = vararg.annotation {
             resolve_annotation_expr(annotation, ctx)
         } else {
-            ctx.error(format!(
-                "vararg parameter '{}' in function '{}' is missing a type annotation",
-                name, func.name
-            ));
+            ctx.error_with_code(
+                DiagnosticCode::TYPE_MISSING_ANNOTATION,
+                format!(
+                    "vararg parameter '{}' in function '{}' is missing a type annotation",
+                    name, func.name
+                ),
+            );
             Type::Any
         };
         let list_ty = Type::List(Box::new(elem_ty));
@@ -345,10 +352,13 @@ pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) 
         let ty = if let Some(annotation) = &param.parameter.annotation {
             resolve_annotation_expr(annotation, ctx)
         } else {
-            ctx.error(format!(
-                "parameter '{}' in function '{}' is missing a type annotation",
-                name, func.name
-            ));
+            ctx.error_with_code(
+                DiagnosticCode::TYPE_MISSING_ANNOTATION,
+                format!(
+                    "parameter '{}' in function '{}' is missing a type annotation",
+                    name, func.name
+                ),
+            );
             Type::Any
         };
         let conv = ast_convention_to_param(param.parameter.convention, &ty);

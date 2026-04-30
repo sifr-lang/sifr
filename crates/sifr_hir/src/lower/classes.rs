@@ -2,6 +2,7 @@ use crate::hir_nodes::{
     HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
     HirTupleTargetBinding, MethodKind,
 };
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Number, Stmt, StmtClassDef, UnaryOp};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::HashMap;
@@ -401,9 +402,12 @@ pub(super) fn collect_class_type(
                         let param_ty = if let Some(ref ann) = param.parameter.annotation {
                             resolve_annotation_expr(ann, ctx)
                         } else {
-                            ctx.error(format!(
-                                "parameter '{param_name}' in {class_name}.__init__ is missing a type annotation"
-                            ));
+                            ctx.error_with_code(
+                                DiagnosticCode::TYPE_MISSING_ANNOTATION,
+                                format!(
+                                    "parameter '{param_name}' in {class_name}.__init__ is missing a type annotation"
+                                ),
+                            );
                             Type::Any
                         };
                         constructor_locals.insert(param_name.clone(), param_ty.clone());
@@ -450,9 +454,12 @@ pub(super) fn collect_class_type(
                         let param_ty = if let Some(ref ann) = param.parameter.annotation {
                             resolve_annotation_expr(ann, ctx)
                         } else {
-                            ctx.error(format!(
-                                "parameter '{param_name}' in {class_name}.{method_name} is missing a type annotation"
-                            ));
+                            ctx.error_with_code(
+                                DiagnosticCode::TYPE_MISSING_ANNOTATION,
+                                format!(
+                                    "parameter '{param_name}' in {class_name}.{method_name} is missing a type annotation"
+                                ),
+                            );
                             Type::Any
                         };
                         method_locals.insert(param_name.clone(), param_ty.clone());

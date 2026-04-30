@@ -1,0 +1,9 @@
+# expect-error: SIFR-TYPE-0004: parameter 'value' in Tool.scale is missing a type annotation
+
+class Tool:
+    def scale(self, value) -> int:
+        return value
+
+def main():
+    tool = Tool()
+    print(tool.scale(1))

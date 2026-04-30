@@ -1,0 +1,10 @@
+# expect-error: SIFR-TYPE-0004: vararg parameter 'values' in function 'total' is missing a type annotation
+
+def total(*values) -> int:
+    acc = 0
+    for value in values:
+        acc = acc + value
+    return acc
+
+def main():
+    print(total(1, 2, 3))
