@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: TypeVar constraints must be simple type names
+
+def echo[T: (int, 1)](x: T) -> T:
+    return x
+
+def main():
+    print(echo(1))

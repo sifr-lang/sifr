@@ -1,0 +1,11 @@
+# expect-error: SIFR-TYPE-0007: TypeVar bound must be a simple type name
+
+from typing import TypeVar
+
+T = TypeVar("T", bound=1)
+
+def echo(x: T) -> T:
+    return x
+
+def main():
+    print(echo(1))
