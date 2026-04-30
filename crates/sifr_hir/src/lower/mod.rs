@@ -257,6 +257,10 @@ fn decode_typevar_constraint(encoded: &str) -> Option<&str> {
     encoded.strip_prefix(TYPEVAR_CONSTRAINT_PREFIX)
 }
 
+fn invalid_typevar_shape(ctx: &mut LowerCtx, message: impl Into<String>) {
+    ctx.error_with_code(DiagnosticCode::TYPE_INVALID_ANNOTATION, message.into());
+}
+
 /// Parse a `TypeVar` bound/constraint expression from PEP 695 syntax.
 /// `T: Bound` is treated as a hard bound; `T: (A, B)` is treated as constraints.
 fn parse_typevar_bound_expr(expr: &Expr, ctx: &mut LowerCtx) -> Vec<String> {
@@ -268,13 +272,16 @@ fn parse_typevar_bound_expr(expr: &Expr, ctx: &mut LowerCtx) -> Vec<String> {
                 if let Expr::Name(name) = elt {
                     specs.push(encode_typevar_constraint(&name.id));
                 } else {
-                    ctx.error("TypeVar constraints must be simple type names".to_string());
+                    invalid_typevar_shape(ctx, "TypeVar constraints must be simple type names");
                 }
             }
             specs
         }
         _ => {
-            ctx.error("TypeVar bound must be a type name or tuple of type names".to_string());
+            invalid_typevar_shape(
+                ctx,
+                "TypeVar bound must be a type name or tuple of type names",
+            );
             Vec::new()
         }
     }
@@ -296,7 +303,10 @@ fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<S
         saw_constraints = true;
         match arg {
             Expr::Name(name) => specs.push(encode_typevar_constraint(&name.id)),
-            _ => ctx.error("TypeVar positional constraints must be simple type names".to_string()),
+            _ => invalid_typevar_shape(
+                ctx,
+                "TypeVar positional constraints must be simple type names",
+            ),
         }
     }
 
@@ -310,7 +320,7 @@ fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<S
                 match &kw.value {
                     Expr::Name(name) => specs.push(name.id.to_string()),
                     _ => {
-                        ctx.error("TypeVar bound must be a simple type name".to_string());
+                        invalid_typevar_shape(ctx, "TypeVar bound must be a simple type name");
                     }
                 }
             }
@@ -322,8 +332,9 @@ fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<S
                             if let Expr::Name(name) = elt {
                                 specs.push(encode_typevar_constraint(&name.id));
                             } else {
-                                ctx.error(
-                                    "TypeVar constraints must be simple type names".to_string(),
+                                invalid_typevar_shape(
+                                    ctx,
+                                    "TypeVar constraints must be simple type names",
                                 );
                             }
                         }
@@ -332,9 +343,9 @@ fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<S
                         specs.push(encode_typevar_constraint(&name.id));
                     }
                     _ => {
-                        ctx.error(
-                            "TypeVar constraints must be a type name or tuple of type names"
-                                .to_string(),
+                        invalid_typevar_shape(
+                            ctx,
+                            "TypeVar constraints must be a type name or tuple of type names",
                         );
                     }
                 }
@@ -344,7 +355,7 @@ fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<S
     }
 
     if saw_bound && saw_constraints {
-        ctx.error("TypeVar cannot declare both 'bound' and 'constraints'".to_string());
+        invalid_typevar_shape(ctx, "TypeVar cannot declare both 'bound' and 'constraints'");
     }
 
     specs

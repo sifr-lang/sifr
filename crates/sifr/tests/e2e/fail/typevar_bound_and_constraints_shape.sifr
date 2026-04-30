@@ -1,0 +1,11 @@
+# expect-error: SIFR-TYPE-0007: TypeVar cannot declare both 'bound' and 'constraints'
+
+from typing import TypeVar
+
+T = TypeVar("T", int, bound=str)
+
+def echo(x: T) -> T:
+    return x
+
+def main():
+    print(echo(1))

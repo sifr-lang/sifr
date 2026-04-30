@@ -1,0 +1,11 @@
+# expect-error: SIFR-TYPE-0007: TypeVar constraints must be a type name or tuple of type names
+
+from typing import TypeVar
+
+T = TypeVar("T", constraints=1)
+
+def echo(x: T) -> T:
+    return x
+
+def main():
+    print(echo(1))
