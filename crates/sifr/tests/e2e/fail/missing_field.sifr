@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: type 'Point' has no field 'z'
+# expect-error: SIFR-CLASS-0004: type 'Point' has no field 'z'
 
 class Point:
     x: float

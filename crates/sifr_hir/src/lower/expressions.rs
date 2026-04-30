@@ -2266,11 +2266,14 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
                 ty: field_ty.clone(),
             });
         }
-        ctx.error(format!(
-            "type '{}' has no field '{}'",
-            object_ty.display_name(),
-            field_name
-        ));
+        ctx.error_with_code(
+            DiagnosticCode::CLASS_MISSING_MEMBER,
+            format!(
+                "type '{type_name}' has no field '{field}'",
+                type_name = object_ty.display_name(),
+                field = field_name
+            ),
+        );
         return None;
     }
 

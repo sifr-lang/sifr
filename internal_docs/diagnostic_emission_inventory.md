@@ -339,7 +339,7 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-CLASS-0001` | class has fields but no required initializer/super initializer | class lowering | `crates/sifr/tests/e2e/fail/auto_init_inheritance_missing_super.sifr` |
 | `SIFR-CLASS-0002` | required field declared after default | class lowering | `crates/sifr/tests/e2e/fail/auto_init_required_after_default.sifr` |
 | `SIFR-CLASS-0003` | duplicate enum/class value or invalid variant | class/enum lowering | enum duplicate/invalid variant fixtures |
-| `SIFR-CLASS-0004` | missing class field/member | class lowering | `crates/sifr/tests/e2e/fail/missing_field.sifr` |
+| `SIFR-CLASS-0004` | missing class field | attribute lowering | `crates/sifr/tests/e2e/fail/missing_field.sifr` |
 | `SIFR-RESULT-0001` | unused `Result` value | result/error-flow checking | `crates/sifr/tests/e2e/fail/unused_result.sifr` |
 | `SIFR-RESULT-0002` | invalid `Result` error type | result/error type lowering | `crates/sifr/tests/e2e/fail/error_str_not_allowed.sifr` |
 | `SIFR-RESULT-0003` | invalid `raise` expression | statement lowering | `crates/sifr/tests/e2e/fail/error_raise_str.sifr` |

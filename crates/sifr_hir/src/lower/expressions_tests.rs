@@ -1867,6 +1867,60 @@ fn test_typevar_constraints_violation_has_type_code() {
 }
 
 #[test]
+fn test_auto_init_inheritance_missing_super_has_class_code() {
+    let result = lower_source(
+        "class Animal:\n    name: str\n\n    def __init__(self, name: str):\n        self.name = name\n\nclass Dog(Animal):\n    breed: str\n\ndef main():\n    d: Dog = Dog(\"Rex\", \"Labrador\")\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            == "class 'Dog' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)"
+            && e.code == Some(DiagnosticCode::CLASS_MISSING_INITIALIZER)
+    }));
+}
+
+#[test]
+fn test_auto_init_required_after_default_has_class_code() {
+    let result = lower_source(
+        "class BadConfig:\n    debug: bool = False\n    name: str\n\ndef main():\n    c: BadConfig = BadConfig(True, \"test\")\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            == "class 'BadConfig': required field 'name' declared after field with default value"
+            && e.code == Some(DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT)
+    }));
+}
+
+#[test]
+fn test_enum_duplicate_value_has_class_code() {
+    let result = lower_source(
+        "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n    SUCCESS = 200\n    NOT_FOUND = 404\n\ndef main():\n    s: Status = Status.OK\n    print(s)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "enum 'Status' has duplicate value 200: variants 'OK' and 'SUCCESS'"
+            && e.code == Some(DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE)
+    }));
+}
+
+#[test]
+fn test_missing_field_has_class_code() {
+    let result = lower_source(
+        "class Point:\n    x: float\n    y: float\n\n    def __init__(self, x: float, y: float):\n        self.x = x\n        self.y = y\n\ndef main():\n    p: Point = Point(1.0, 2.0)\n    print(p.z)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "type 'Point' has no field 'z'"
+            && e.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)
+    }));
+}
+
+#[test]
 fn test_match_tuple_pattern_requires_tuple_subject() {
     let result = lower_source(
         "def main():\n    x: int = 1\n    match x:\n        case (a, b):\n            print(a)\n",

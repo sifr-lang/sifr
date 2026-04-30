@@ -10,7 +10,7 @@ Class fields require an initializer or super initializer.
 | Family | `CLASS` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::classes` |
-| Message template | `class {class_name} requires an initializer for field {field}` |
+| Message template | `class '{class_name}' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/auto_init_inheritance_missing_super.sifr` |
-| Declared args | `class_name (message+json)`, `field (message+json)` |
-| Dedupe args | `class_name`, `field` |
+| Declared args | `class_name (message+json)` |
+| Dedupe args | `class_name` |
