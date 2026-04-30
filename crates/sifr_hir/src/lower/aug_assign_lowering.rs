@@ -286,9 +286,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         } else if ctx.is_declared_nonlocal(&name) {
             ctx.lookup_outer_function_binding(&name)
         } else if ctx.scope.lookup(&name).is_some() {
-            ctx.error(format!(
-                "captured variable `{name}` must be declared with `nonlocal` before augmented assignment"
-            ));
+            super::flow_diagnostics::captured_augassign_requires_nonlocal(ctx, &name);
             return None;
         } else {
             None

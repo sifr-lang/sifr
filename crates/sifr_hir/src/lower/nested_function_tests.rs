@@ -1,4 +1,5 @@
 use crate::{lower_module, HirExpr, HirModule, HirStmt, LoweringError};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 
@@ -127,6 +128,7 @@ fn test_nonlocal_tuple_unpack_fails_explicitly() {
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "tuple unpacking cannot rebind captured state with `nonlocal` yet"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
     }));
 }
 
@@ -140,6 +142,7 @@ fn test_augassign_to_capture_requires_nonlocal() {
     assert!(errors.iter().any(|error| {
         error.message
             == "captured variable `total` must be declared with `nonlocal` before augmented assignment"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
     }));
 }
 
@@ -153,6 +156,45 @@ fn test_recursive_nonlocal_nested_helper_fails_explicitly() {
     assert!(errors.iter().any(|error| {
         error.message
             == "recursive nested function 'visit' cannot mutate captured state with `nonlocal` yet"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+    }));
+}
+
+#[test]
+fn test_top_level_nonlocal_requires_enclosing_binding_code() {
+    let result = lower_source("def main() -> None:\n    nonlocal total\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "nonlocal declaration requires an enclosing function binding"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+    }));
+}
+
+#[test]
+fn test_unresolved_nonlocal_has_flow_code() {
+    let result = lower_source(
+        "def outer() -> int:\n    def inner() -> None:\n        nonlocal missing\n    inner()\n    return 0\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "nonlocal name 'missing' does not resolve to an enclosing function binding"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+    }));
+}
+
+#[test]
+fn test_nonlocal_current_binding_conflict_has_flow_code() {
+    let result = lower_source(
+        "def outer(value: int) -> int:\n    def inner(value: int) -> None:\n        nonlocal value\n    inner(1)\n    return value\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "nonlocal name 'value' conflicts with a binding in the current function scope"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
     }));
 }
 

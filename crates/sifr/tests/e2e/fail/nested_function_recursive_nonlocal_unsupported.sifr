@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001
+# expect-error: SIFR-FLOW-0003
 
 def outer(limit: int) -> int:
     total = 0

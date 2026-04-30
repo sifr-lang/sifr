@@ -10,7 +10,7 @@ Continue outside a loop.
 | Family | `FLOW` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::statements` |
-| Message template | `continue outside of loop` |
+| Message template | `'continue' outside of loop` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/continue_outside_loop.sifr` |
 | Declared args | n/a |
 | Dedupe args | n/a |

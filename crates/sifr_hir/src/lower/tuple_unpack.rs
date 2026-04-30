@@ -87,10 +87,7 @@ pub(super) fn lower_tuple_unpack_assign(
         match target {
             TupleAssignTarget::Name(name) => {
                 if ctx.is_declared_nonlocal(&name) {
-                    ctx.error(
-                        "tuple unpacking cannot rebind captured state with `nonlocal` yet"
-                            .to_string(),
-                    );
+                    super::flow_diagnostics::tuple_unpack_nonlocal_rebind(ctx);
                     return None;
                 }
                 let rebind_existing = if ctx.current_function_frame_start().is_some() {

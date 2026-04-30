@@ -24,6 +24,7 @@ mod empty_collection_refinement;
 mod expressions;
 #[cfg(test)]
 mod expressions_tests;
+mod flow_diagnostics;
 mod flow_helpers;
 mod for_loop_safety;
 mod fstring_support;
