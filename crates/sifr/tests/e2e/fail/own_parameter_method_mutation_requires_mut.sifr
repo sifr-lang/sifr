@@ -1,3 +1,4 @@
+# expect-error: SIFR-OWN-0005: cannot mutate through immutable parameter `items`: add `mut` to the parameter declaration
 # Test: owned parameters cannot use mutating methods unless explicitly marked mut.
 
 def owned_immutable_append(own items: list[int]) -> list[int]:

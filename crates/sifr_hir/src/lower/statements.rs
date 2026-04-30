@@ -1361,7 +1361,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.error("attribute assignment target must be a simple name".to_string());
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
                 return None;
             }
             let field_name = inner_attr.attr.to_string();
@@ -1385,7 +1385,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.error("attribute assignment target must be a simple name".to_string());
             return None;
         };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+        if !ensure_mutable_parameter_binding(ctx, &obj_name) {
             return None;
         }
         let field_name = attr.attr.to_string();
@@ -1409,7 +1409,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.error("nested subscript assignment target must be a simple name".to_string());
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
                 return None;
             }
             let obj_ty = ctx
@@ -1440,7 +1440,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.error("subscript assignment target must be a simple name".to_string());
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
                 return None;
             }
             let field_name = attr.attr.to_string();
@@ -1465,7 +1465,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.error("subscript assignment target must be a simple name".to_string());
             return None;
         };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+        if !ensure_mutable_parameter_binding(ctx, &obj_name) {
             return None;
         }
         let obj_ty = ctx
@@ -1544,9 +1544,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             return None;
         };
         if info.is_parameter_binding() && !info.is_mutable_binding() {
-            ctx.error(format!(
-                "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
-            ));
+            super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name);
             return None;
         }
         // Reassignment: check type compatibility

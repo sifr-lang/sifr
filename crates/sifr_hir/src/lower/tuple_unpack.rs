@@ -26,7 +26,7 @@ fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarge
                 return None;
             };
             let object = object_name.id.to_string();
-            if !ensure_mutable_parameter_binding(ctx, &object, "mutate through") {
+            if !ensure_mutable_parameter_binding(ctx, &object) {
                 return None;
             }
             Some(TupleAssignTarget::Field {
@@ -102,9 +102,7 @@ pub(super) fn lower_tuple_unpack_assign(
                         return None;
                     };
                     if info.is_parameter_binding() && !info.is_mutable_binding() {
-                        ctx.error(format!(
-                            "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
-                        ));
+                        super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name);
                         return None;
                     }
                     let info_ty = info.ty.clone();

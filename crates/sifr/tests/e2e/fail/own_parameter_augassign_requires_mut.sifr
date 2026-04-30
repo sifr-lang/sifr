@@ -1,0 +1,9 @@
+# expect-error: SIFR-OWN-0006: cannot reassign immutable parameter `count`: add `mut` to the parameter declaration
+# Test: borrowed parameters cannot be augmented unless explicitly marked mut.
+
+def borrowed_augassign(count: int) -> int:
+    count += 1
+    return count
+
+def main():
+    print("unreachable")

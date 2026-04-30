@@ -18,9 +18,7 @@ pub(super) fn reject_immutable_parameter_method_mutation(
             .lookup(name)
             .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding())
         {
-            ctx.error(format!(
-                "cannot mutate through immutable parameter `{name}`: add `mut` to the parameter declaration"
-            ));
+            super::ownership_diagnostics::immutable_parameter_mutation(ctx, name);
             return true;
         }
     }
