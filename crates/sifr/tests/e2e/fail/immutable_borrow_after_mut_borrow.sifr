@@ -1,0 +1,8 @@
+# expect-error: SIFR-OWN-0002: cannot borrow 'items' as immutable because it is already borrowed as mutable in the same call to 'mutate_then_read'
+
+def mutate_then_read(mut a: list[int], b: list[int]):
+    pass
+
+def main():
+    items: list[int] = [1, 2, 3]
+    mutate_then_read(items, items)

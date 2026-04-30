@@ -70,7 +70,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-CALL-0004`](SIFR-CALL-0004.md) | Error | Missing required argument. |
 | [`SIFR-CALL-0005`](SIFR-CALL-0005.md) | Error | Callable arity failure or expression is not callable. |
 | [`SIFR-OWN-0001`](SIFR-OWN-0001.md) | Error | Use after move. |
-| [`SIFR-OWN-0002`](SIFR-OWN-0002.md) | Error | Double mutable borrow. |
+| [`SIFR-OWN-0002`](SIFR-OWN-0002.md) | Error | Same-call borrow conflict. |
 | [`SIFR-OWN-0003`](SIFR-OWN-0003.md) | Error | Borrowed parameter escapes by return or store. |
 | [`SIFR-OWN-0004`](SIFR-OWN-0004.md) | Error | Moved value is reused across loop iterations. |
 | [`SIFR-FLOW-0001`](SIFR-FLOW-0001.md) | Error | Break outside a loop. |

@@ -52,6 +52,7 @@ mod numeric_sentinels;
 mod own_mut_param_tests;
 #[cfg(test)]
 mod own_mut_semantics_tests;
+mod ownership_diagnostics;
 mod scope_helpers;
 mod sequence_guard_detection;
 mod sequence_guard_updates;

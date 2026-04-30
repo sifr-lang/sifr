@@ -24,6 +24,7 @@ use super::numeric_sentinels::{
     apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
     numeric_sentinel_kind,
 };
+use super::ownership_diagnostics;
 use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
     detect_while_sequence_guards,
@@ -1172,9 +1173,7 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
             // Escape analysis: cannot store a borrowed parameter into a new binding
             if ctx.borrowed_params.contains(src_name.as_str()) {
-                ctx.error(format!(
-                    "cannot store borrowed parameter `{src_name}`: borrowed parameters cannot escape -- add `own` at the signature boundary or store `{src_name}.clone()`"
-                ));
+                ownership_diagnostics::borrowed_parameter_store_escape(ctx, src_name);
             } else {
                 ctx.scope.mark_moved(src_name);
             }
@@ -1636,9 +1635,7 @@ pub(super) fn lower_return(
         if let HirExpr::Name { name, ty } = &expr {
             if ctx.borrowed_params.contains(name.as_str()) && ty.ownership() == OwnershipKind::Move
             {
-                ctx.error(format!(
-                    "cannot return borrowed parameter `{name}`: borrowed parameters cannot escape -- add `own` at the signature boundary or return `{name}.clone()`"
-                ));
+                ownership_diagnostics::borrowed_parameter_return_escape(ctx, name);
             }
         }
 
@@ -2010,9 +2007,7 @@ pub(super) fn lower_while(
     // Check for outer-scope variables moved inside the loop body
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);
     for var_name in &newly_moved {
-        ctx.error(format!(
-            "value '{var_name}' is moved inside loop body; it would be unavailable on subsequent iterations"
-        ));
+        ownership_diagnostics::moved_across_loop(ctx, var_name);
     }
 
     let else_body = if while_stmt.orelse.is_empty() {
@@ -2167,9 +2162,7 @@ pub(super) fn lower_for(
     // Check for outer-scope variables moved inside the loop body
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);
     for var_name in &newly_moved {
-        ctx.error(format!(
-            "value '{var_name}' is moved inside loop body; it would be unavailable on subsequent iterations"
-        ));
+        ownership_diagnostics::moved_across_loop(ctx, var_name);
     }
 
     let else_body = if for_stmt.orelse.is_empty() {
