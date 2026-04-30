@@ -3,6 +3,7 @@
 use crate::types::Type;
 use crate::union::{remove_none_from_union, union_contains_none};
 use crate::TypeError;
+use sifr_diagnostics::DiagnosticCode;
 
 fn is_decimal_type(ty: &Type) -> bool {
     matches!(ty, Type::Decimal)
@@ -28,6 +29,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
         || (is_bigdecimal_type(left) && is_decimal_type(right))
     {
         return Err(TypeError {
+            code: Some(DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL),
             message: "[E2504] cannot mix 'decimal' and 'bigdecimal' in arithmetic; use explicit Decimal(...) or BigDecimal(...) conversion".to_string(),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
@@ -40,6 +42,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
         || (right == &Type::Float && is_decimal_family_type(left))
     {
         return Err(TypeError {
+            code: Some(DiagnosticCode::DECIMAL_FLOAT_MIXED),
             message: "[E2503] cannot mix 'float' with decimal numeric types in arithmetic"
                 .to_string(),
             kind: crate::TypeErrorKind::InvalidOperator {
@@ -56,6 +59,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             || (left == &Type::BigInt && right == &Type::Int)
         {
             return Err(TypeError {
+                code: None,
                 message: "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly".to_string(),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
@@ -121,6 +125,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Bytes);
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "unsupported operand type(s) for +: '{}' and '{}'",
                     left.display_name(),
@@ -182,6 +187,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 }
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -220,6 +226,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Float);
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "unsupported operand type(s) for /: '{}' and '{}'",
                     left.display_name(),
@@ -261,6 +268,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Float);
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -292,6 +300,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Float);
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "unsupported operand type(s) for **: '{}' and '{}'",
                     left.display_name(),
@@ -313,6 +322,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Bool);
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -330,6 +340,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 return Ok(Type::Int);
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -342,6 +353,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         _ => Err(TypeError {
+            code: None,
             message: format!("unknown binary operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
@@ -357,6 +369,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
         || (is_bigdecimal_type(left) && is_decimal_type(right))
     {
         return Err(TypeError {
+            code: Some(DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL),
             message:
                 "[E2504] cannot compare 'decimal' and 'bigdecimal' without explicit conversion"
                     .to_string(),
@@ -370,6 +383,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
         || (right == &Type::Float && is_decimal_family_type(left))
     {
         return Err(TypeError {
+            code: Some(DiagnosticCode::DECIMAL_FLOAT_MIXED),
             message: "[E2503] cannot compare 'float' with decimal numeric types".to_string(),
             kind: crate::TypeErrorKind::TypeMismatch {
                 expected: Box::new(left.clone()),
@@ -385,6 +399,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 || (left == &Type::BigInt && right == &Type::Int)
             {
                 return Err(TypeError {
+                    code: None,
                     message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
                     kind: crate::TypeErrorKind::TypeMismatch {
                         expected: Box::new(left.clone()),
@@ -422,6 +437,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 }
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "cannot compare '{}' and '{}' with {op}",
                     left.display_name(),
@@ -439,6 +455,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 || (left == &Type::BigInt && right == &Type::Int)
             {
                 return Err(TypeError {
+                    code: None,
                     message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
                     kind: crate::TypeErrorKind::TypeMismatch {
                         expected: Box::new(left.clone()),
@@ -471,6 +488,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 }
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "'{op}' not supported between instances of '{}' and '{}'",
                     left.display_name(),
@@ -483,6 +501,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
             })
         }
         _ => Err(TypeError {
+            code: None,
             message: format!("unknown comparison operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
@@ -532,6 +551,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 return Ok(operand.clone());
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "bad operand type for unary {op}: '{}'",
                     operand.display_name()
@@ -564,6 +584,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 _ => {}
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "bad operand type for unary not: '{}'",
                     operand.display_name()
@@ -580,6 +601,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 return Ok(Type::Int);
             }
             Err(TypeError {
+                code: None,
                 message: format!("bad operand type for unary ~: '{}'", operand.display_name()),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
@@ -588,6 +610,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
             })
         }
         _ => Err(TypeError {
+            code: None,
             message: format!("unknown unary operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
@@ -624,6 +647,7 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
                 return Ok(Type::Bool);
             }
             Err(TypeError {
+                code: None,
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
@@ -636,6 +660,7 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
             })
         }
         _ => Err(TypeError {
+            code: None,
             message: format!("unknown boolean operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),

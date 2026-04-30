@@ -1,7 +1,10 @@
 use crate::hir_nodes::HirExpr;
+use sifr_diagnostics::DiagnosticCode;
+use sifr_python_ast::{Expr, ExprCall};
 use sifr_type_system::Type;
 use std::str::FromStr;
 
+use super::expressions::lower_expr;
 use super::LowerCtx;
 
 const DECIMAL_MAX_SCALE: i64 = 28;
@@ -11,6 +14,14 @@ fn decimal_diag_code(receiver_name: &str) -> &'static str {
         "decimal" => "E2507",
         "bigdecimal" => "E2508",
         _ => "E2508",
+    }
+}
+
+fn decimal_scale_diagnostic_code(receiver_name: &str) -> DiagnosticCode {
+    match receiver_name {
+        "decimal" => DiagnosticCode::DECIMAL_SCALE_INVALID,
+        "bigdecimal" => DiagnosticCode::DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID,
+        _ => DiagnosticCode::DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID,
     }
 }
 
@@ -38,15 +49,21 @@ fn validate_decimal_context_scale(
         return Some(());
     };
     if receiver_name == "decimal" && !(0..=DECIMAL_MAX_SCALE).contains(&scale) {
-        ctx.error(format!(
-            "[E2507] decimal.{method}() scale must be between 0 and {DECIMAL_MAX_SCALE}, got {scale}"
-        ));
+        ctx.error_with_code(
+            DiagnosticCode::DECIMAL_SCALE_INVALID,
+            format!(
+                "[E2507] decimal.{method}() scale must be between 0 and {DECIMAL_MAX_SCALE}, got {scale}"
+            ),
+        );
         return None;
     }
     if receiver_name == "bigdecimal" && scale < 0 {
-        ctx.error(format!(
-            "[E2508] bigdecimal.{method}() scale must be >= 0 for default context, got {scale}"
-        ));
+        ctx.error_with_code(
+            DiagnosticCode::DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID,
+            format!(
+                "[E2508] bigdecimal.{method}() scale must be >= 0 for default context, got {scale}"
+            ),
+        );
         return None;
     }
     Some(())
@@ -66,9 +83,10 @@ pub(super) fn decimal_conversion_error_type(ctx: &LowerCtx) -> Type {
 
 pub(super) fn validate_decimal_string_literal(value: &str, ctx: &mut LowerCtx) -> Option<()> {
     if rust_decimal::Decimal::from_str_exact(value).is_err() {
-        ctx.error(format!(
-            "[E2501] Decimal() received invalid exact literal '{value}'"
-        ));
+        ctx.error_with_code(
+            DiagnosticCode::DECIMAL_INVALID_LITERAL,
+            format!("[E2501] Decimal() received invalid exact literal '{value}'"),
+        );
         return None;
     }
     Some(())
@@ -76,12 +94,129 @@ pub(super) fn validate_decimal_string_literal(value: &str, ctx: &mut LowerCtx) -
 
 pub(super) fn validate_bigdecimal_string_literal(value: &str, ctx: &mut LowerCtx) -> Option<()> {
     if bigdecimal::BigDecimal::from_str(value).is_err() {
-        ctx.error(format!(
-            "[E2502] BigDecimal() received invalid decimal literal '{value}'"
-        ));
+        ctx.error_with_code(
+            DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
+            format!("[E2502] BigDecimal() received invalid decimal literal '{value}'"),
+        );
         return None;
     }
     Some(())
+}
+
+pub(super) fn lower_decimal_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    if call.arguments.args.len() != 1 {
+        ctx.error_with_code(
+            DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+            format!(
+                "[E2505] Decimal() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ),
+        );
+        return None;
+    }
+    let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    let arg_ty = arg.ty().clone();
+    let result_ty = match arg_ty {
+        Type::Str => {
+            if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
+                validate_decimal_string_literal(lit.value.to_str(), ctx)?;
+            } else {
+                ctx.error_with_code(
+                    DiagnosticCode::DECIMAL_INVALID_LITERAL,
+                    "[E2501] Decimal() string construction requires a string literal".to_string(),
+                );
+                return None;
+            }
+            Type::Decimal
+        }
+        Type::Int | Type::LiteralInt(_) | Type::Decimal => Type::Decimal,
+        Type::BigInt | Type::BigDecimal => Type::Result(
+            Box::new(Type::Decimal),
+            Box::new(decimal_conversion_error_type(ctx)),
+        ),
+        Type::Float => {
+            ctx.error_with_code(
+                DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+                "[E2505] Decimal(float_value) is not allowed; use Decimal(\"...\") for exact construction"
+                    .to_string(),
+            );
+            return None;
+        }
+        _ => {
+            ctx.error_with_code(
+                DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+                format!(
+                    "[E2505] Decimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
+                    arg_ty.display_name()
+                ),
+            );
+            return None;
+        }
+    };
+    Some(HirExpr::Call {
+        func: "Decimal".to_string(),
+        args: vec![arg],
+        ty: result_ty,
+    })
+}
+
+pub(super) fn lower_bigdecimal_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    if call.arguments.args.len() != 1 {
+        ctx.error_with_code(
+            DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+            format!(
+                "[E2506] BigDecimal() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ),
+        );
+        return None;
+    }
+    let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    let arg_ty = arg.ty().clone();
+    match arg_ty {
+        Type::Str => {
+            if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
+                validate_bigdecimal_string_literal(lit.value.to_str(), ctx)?;
+            } else {
+                ctx.error_with_code(
+                    DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
+                    "[E2502] BigDecimal() string construction requires a string literal"
+                        .to_string(),
+                );
+                return None;
+            }
+        }
+        Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal => {}
+        Type::Float => {
+            ctx.error_with_code(
+                DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+                "[E2506] BigDecimal(float_value) is not allowed; use BigDecimal(\"...\") for exact construction"
+                    .to_string(),
+            );
+            return None;
+        }
+        _ => {
+            ctx.error_with_code(
+                DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+                format!(
+                    "[E2506] BigDecimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
+                    arg_ty.display_name()
+                ),
+            );
+            return None;
+        }
+    }
+    Some(HirExpr::Call {
+        func: "BigDecimal".to_string(),
+        args: vec![arg],
+        ty: Type::BigDecimal,
+    })
 }
 
 pub(super) fn validate_decimal_scale_argument(
@@ -91,18 +226,25 @@ pub(super) fn validate_decimal_scale_argument(
     ctx: &mut LowerCtx,
 ) -> Option<()> {
     let diag_code = decimal_diag_code(receiver_name);
+    let code = decimal_scale_diagnostic_code(receiver_name);
     if args.len() != 1 {
-        ctx.error(format!(
-            "[{diag_code}] {receiver_name}.{method}() takes exactly 1 argument, got {}",
-            args.len()
-        ));
+        ctx.error_with_code(
+            code,
+            format!(
+                "[{diag_code}] {receiver_name}.{method}() takes exactly 1 argument, got {}",
+                args.len()
+            ),
+        );
         return None;
     }
     if !matches!(args[0].ty(), Type::Int | Type::LiteralInt(_)) {
-        ctx.error(format!(
-            "[{diag_code}] {receiver_name}.{method}() scale argument must be 'int', got '{}'",
-            args[0].ty().display_name()
-        ));
+        ctx.error_with_code(
+            code,
+            format!(
+                "[{diag_code}] {receiver_name}.{method}() scale argument must be 'int', got '{}'",
+                args[0].ty().display_name()
+            ),
+        );
         return None;
     }
     validate_decimal_context_scale(receiver_name, method, &args[0], ctx)?;
@@ -133,17 +275,23 @@ pub(super) fn resolve_decimal_method_type(
             }
             "round" => {
                 if args.len() > 1 {
-                    ctx.error(format!(
-                        "[E2507] decimal.round() takes at most 1 argument, got {}",
-                        args.len()
-                    ));
+                    ctx.error_with_code(
+                        DiagnosticCode::DECIMAL_SCALE_INVALID,
+                        format!(
+                            "[E2507] decimal.round() takes at most 1 argument, got {}",
+                            args.len()
+                        ),
+                    );
                     return None;
                 }
                 if args.len() == 1 && !matches!(args[0].ty(), Type::Int | Type::LiteralInt(_)) {
-                    ctx.error(format!(
-                        "[E2507] decimal.round() scale argument must be 'int', got '{}'",
-                        args[0].ty().display_name()
-                    ));
+                    ctx.error_with_code(
+                        DiagnosticCode::DECIMAL_SCALE_INVALID,
+                        format!(
+                            "[E2507] decimal.round() scale argument must be 'int', got '{}'",
+                            args[0].ty().display_name()
+                        ),
+                    );
                     return None;
                 }
                 if args.len() == 1 {
@@ -187,17 +335,23 @@ pub(super) fn resolve_decimal_method_type(
             }
             "round" => {
                 if args.len() > 1 {
-                    ctx.error(format!(
-                        "[E2508] bigdecimal.round() takes at most 1 argument, got {}",
-                        args.len()
-                    ));
+                    ctx.error_with_code(
+                        DiagnosticCode::DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID,
+                        format!(
+                            "[E2508] bigdecimal.round() takes at most 1 argument, got {}",
+                            args.len()
+                        ),
+                    );
                     return None;
                 }
                 if args.len() == 1 && !matches!(args[0].ty(), Type::Int | Type::LiteralInt(_)) {
-                    ctx.error(format!(
-                        "[E2508] bigdecimal.round() scale argument must be 'int', got '{}'",
-                        args[0].ty().display_name()
-                    ));
+                    ctx.error_with_code(
+                        DiagnosticCode::DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID,
+                        format!(
+                            "[E2508] bigdecimal.round() scale argument must be 'int', got '{}'",
+                            args[0].ty().display_name()
+                        ),
+                    );
                     return None;
                 }
                 if args.len() == 1 {

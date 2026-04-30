@@ -14,8 +14,8 @@ use super::compat_imports::{
     resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
 };
 use super::decimal_methods::{
-    decimal_conversion_error_type, resolve_decimal_method_type, validate_bigdecimal_string_literal,
-    validate_decimal_string_literal,
+    decimal_conversion_error_type, lower_bigdecimal_constructor_call,
+    lower_decimal_constructor_call, resolve_decimal_method_type,
 };
 use super::defaultdict_refinement::refine_defaultdict_binding_expr;
 use super::empty_collection_refinement::{
@@ -50,6 +50,7 @@ use super::{
     LowerCtx,
 };
 use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
     ExprCompare, ExprDict, ExprDictComp, ExprGenerator, ExprLambda, ExprList, ExprListComp,
@@ -366,7 +367,7 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
                     }
                 }
             }
-            ctx.error(e.message);
+            ctx.type_error(e);
             None
         }
     }
@@ -389,7 +390,7 @@ pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<H
             ty: result_ty,
         }),
         Err(e) => {
-            ctx.error(e.message);
+            ctx.type_error(e);
             None
         }
     }
@@ -511,7 +512,7 @@ pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<Hir
                     _ => false,
                 };
                 if !has_overload {
-                    ctx.error(e.message);
+                    ctx.type_error(e);
                     return None;
                 }
             }
@@ -561,7 +562,7 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
     // Check all values are Bool
     for val in &values {
         if let Err(e) = type_check_bool_op(val.ty(), op_str, &Type::Bool) {
-            ctx.error(e.message);
+            ctx.type_error(e);
             return None;
         }
     }
@@ -868,115 +869,12 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             });
         }
 
-        // Decimal("...") / Decimal(int|bigint|bigdecimal)
         if func_name == "Decimal" {
-            if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "[E2505] Decimal() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
-                return None;
-            }
-            let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let arg_ty = arg.ty().clone();
-            let decimal_conversion_error_ty = ctx
-                .class_types
-                .get("DecimalConversionError")
-                .cloned()
-                .unwrap_or(Type::Class {
-                    name: "DecimalConversionError".to_string(),
-                    fields: vec![("message".to_string(), Type::Str)],
-                    methods: vec![],
-                    parent_class: None,
-                });
-            let result_ty = match arg_ty {
-                Type::Str => {
-                    if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
-                        validate_decimal_string_literal(lit.value.to_str(), ctx)?;
-                    } else {
-                        ctx.error(
-                            "[E2501] Decimal() string construction requires a string literal"
-                                .to_string(),
-                        );
-                        return None;
-                    }
-                    Type::Decimal
-                }
-                Type::Int | Type::LiteralInt(_) | Type::Decimal => Type::Decimal,
-                Type::BigInt | Type::BigDecimal => Type::Result(
-                    Box::new(Type::Decimal),
-                    Box::new(decimal_conversion_error_ty),
-                ),
-                Type::Float => {
-                    ctx.error(
-                    "[E2505] Decimal(float_value) is not allowed; use Decimal(\"...\") for exact construction"
-                        .to_string(),
-                );
-                    return None;
-                }
-                _ => {
-                    ctx.error(format!(
-                    "[E2505] Decimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
-                    arg_ty.display_name()
-                ));
-                    return None;
-                }
-            };
-            return Some(HirExpr::Call {
-                func: "Decimal".to_string(),
-                args: vec![arg],
-                ty: result_ty,
-            });
+            return lower_decimal_constructor_call(call, ctx);
         }
 
-        // BigDecimal("...") / BigDecimal(int|bigint|decimal)
         if func_name == "BigDecimal" {
-            if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "[E2506] BigDecimal() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
-                return None;
-            }
-            let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let arg_ty = arg.ty().clone();
-            match arg_ty {
-                Type::Str => {
-                    if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
-                        validate_bigdecimal_string_literal(lit.value.to_str(), ctx)?;
-                    } else {
-                        ctx.error(
-                            "[E2502] BigDecimal() string construction requires a string literal"
-                                .to_string(),
-                        );
-                        return None;
-                    }
-                }
-                Type::Int
-                | Type::LiteralInt(_)
-                | Type::BigInt
-                | Type::Decimal
-                | Type::BigDecimal => {}
-                Type::Float => {
-                    ctx.error(
-                    "[E2506] BigDecimal(float_value) is not allowed; use BigDecimal(\"...\") for exact construction"
-                        .to_string(),
-                );
-                    return None;
-                }
-                _ => {
-                    ctx.error(format!(
-                    "[E2506] BigDecimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
-                    arg_ty.display_name()
-                ));
-                    return None;
-                }
-            }
-            return Some(HirExpr::Call {
-                func: "BigDecimal".to_string(),
-                args: vec![arg],
-                ty: Type::BigDecimal,
-            });
+            return lower_bigdecimal_constructor_call(call, ctx);
         }
 
         // Special handling for int() conversion
@@ -1093,16 +991,18 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         });
                 Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
             } else if arg_ty == Type::Decimal {
-                ctx.error(
-                "[E2505] float(decimal_value) is not allowed; decimal values are exact and cannot be converted to float"
-                    .to_string(),
-            );
+                ctx.error_with_code(
+                    DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+                    "[E2505] float(decimal_value) is not allowed; decimal values are exact and cannot be converted to float"
+                        .to_string(),
+                );
                 return None;
             } else if arg_ty == Type::BigDecimal {
-                ctx.error(
-                "[E2506] float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float"
-                    .to_string(),
-            );
+                ctx.error_with_code(
+                    DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+                    "[E2506] float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float"
+                        .to_string(),
+                );
                 return None;
             } else {
                 Type::Float

@@ -316,13 +316,13 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             (Type::Bytes, Type::Bytes) => {}
             _ => {
                 if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-                    ctx.error(e.message);
+                    ctx.type_error(e);
                     return None;
                 }
             }
         }
     } else if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-        ctx.error(e.message);
+        ctx.type_error(e);
         return None;
     }
 

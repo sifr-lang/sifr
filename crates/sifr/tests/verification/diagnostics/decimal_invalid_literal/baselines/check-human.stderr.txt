@@ -1,1 +1,1 @@
-type error: [main] [E2501] Decimal() received invalid exact literal '12.34.56'
+error: [main] [E2501] Decimal() received invalid exact literal '12.34.56'
