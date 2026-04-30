@@ -252,14 +252,14 @@ pub(super) fn collect_class_type(
                 let val = vval.unwrap_or(0);
                 if let Some(existing) = seen_values.get(&val) {
                     if vval.is_some() {
+                        let enum_name = class_name.as_str();
+                        let value = val;
+                        let existing_variant = existing;
+                        let duplicate_variant = vname;
                         ctx.error_with_code(
                             DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE,
                             format!(
-                                "enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'",
-                                enum_name = class_name,
-                                value = val,
-                                existing_variant = existing,
-                                duplicate_variant = vname
+                                "enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'"
                             ),
                         );
                     }
@@ -571,12 +571,11 @@ pub(super) fn collect_class_type(
             if default_indices.contains(&i) {
                 seen_default = true;
             } else if seen_default {
+                let field = fname.as_str();
                 ctx.error_with_code(
                     DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
                     format!(
-                        "class '{class_name}': required field '{field}' declared after field with default value",
-                        class_name = class_name,
-                        field = fname
+                        "class '{class_name}': required field '{field}' declared after field with default value"
                     ),
                 );
             }
@@ -601,8 +600,7 @@ pub(super) fn collect_class_type(
                     DiagnosticCode::CLASS_MISSING_INITIALIZER,
                     format!(
                         "class '{class_name}' has fields but no __init__; parent fields will not be initialized. \
-                         Define an explicit __init__ with super().__init__(...)",
-                        class_name = class_name
+                         Define an explicit __init__ with super().__init__(...)"
                     ),
                 );
             }

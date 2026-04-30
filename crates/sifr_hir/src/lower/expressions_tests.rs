@@ -230,6 +230,19 @@ fn test_defaultdict_list_call_resolves_without_import() {
 }
 
 #[test]
+fn test_defaultdict_keyword_constructor_unsupported_has_stdlib_code() {
+    let result = lower_source(
+        "def main():\n    groups = defaultdict(default_factory=list)\n    _ = groups\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "defaultdict() does not support keyword arguments"
+            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+    }));
+}
+
+#[test]
 fn test_defaultdict_accepts_counter_initial_mapping() {
     let result = lower_source(
         "class Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",

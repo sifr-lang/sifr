@@ -1,4 +1,5 @@
 use crate::hir_nodes::HirExpr;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprAttribute, ExprCall, Number};
 use sifr_type_system::{make_union, IterationCapability, Type};
 
@@ -404,7 +405,10 @@ pub(super) fn lower_defaultdict_constructor_call(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error("defaultdict() does not support keyword arguments".to_string());
+        ctx.error_with_code(
+            DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+            "defaultdict() does not support keyword arguments".to_string(),
+        );
         return None;
     }
     if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {

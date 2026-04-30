@@ -9,8 +9,8 @@ Unsupported standard-library constructor, method, or surface.
 | Code | `SIFR-STDLIB-0001` |
 | Family | `STDLIB` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
-| Message template | `unsupported standard-library surface {symbol}` |
+| Owner | `sifr_hir::lower::builtin_calls` |
+| Message template | `defaultdict() does not support keyword arguments` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr` |
-| Declared args | `symbol (message+json)` |
-| Dedupe args | `symbol` |
+| Declared args | n/a |
+| Dedupe args | n/a |
