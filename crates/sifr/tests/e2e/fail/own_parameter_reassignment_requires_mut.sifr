@@ -1,0 +1,9 @@
+# expect-error: SIFR-OWN-0006: cannot reassign immutable parameter `items`: add `mut` to the parameter declaration
+# Test: borrowed parameters cannot be rebound unless explicitly marked mut.
+
+def borrowed_reassign(items: list[int]) -> int:
+    items = [1, 2, 3]
+    return len(items)
+
+def main():
+    print("unreachable")

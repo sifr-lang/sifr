@@ -61,3 +61,19 @@ pub(super) fn moved_across_loop(ctx: &mut LowerCtx, name: &str) {
         ),
     );
 }
+
+pub(super) fn immutable_parameter_mutation(ctx: &mut LowerCtx, name: &str) {
+    ctx.error_with_code(
+        DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION,
+        format!("cannot mutate through immutable parameter `{name}`: add `mut` to the parameter declaration"),
+    );
+}
+
+pub(super) fn immutable_parameter_reassignment(ctx: &mut LowerCtx, name: &str) {
+    ctx.error_with_code(
+        DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT,
+        format!(
+            "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
+        ),
+    );
+}

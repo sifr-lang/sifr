@@ -73,6 +73,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-OWN-0002`](SIFR-OWN-0002.md) | Error | Same-call borrow conflict. |
 | [`SIFR-OWN-0003`](SIFR-OWN-0003.md) | Error | Borrowed parameter escapes by return or store. |
 | [`SIFR-OWN-0004`](SIFR-OWN-0004.md) | Error | Moved value is reused across loop iterations. |
+| [`SIFR-OWN-0005`](SIFR-OWN-0005.md) | Error | Immutable parameter is mutated. |
+| [`SIFR-OWN-0006`](SIFR-OWN-0006.md) | Error | Immutable parameter is reassigned. |
 | [`SIFR-FLOW-0001`](SIFR-FLOW-0001.md) | Error | Break outside a loop. |
 | [`SIFR-FLOW-0002`](SIFR-FLOW-0002.md) | Error | Continue outside a loop. |
 | [`SIFR-FLOW-0003`](SIFR-FLOW-0003.md) | Error | Invalid nonlocal or nested-function flow. |

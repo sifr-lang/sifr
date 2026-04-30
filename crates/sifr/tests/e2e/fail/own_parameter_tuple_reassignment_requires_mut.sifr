@@ -1,0 +1,9 @@
+# expect-error: SIFR-OWN-0006: cannot reassign immutable parameter `items`: add `mut` to the parameter declaration
+# Test: borrowed parameters cannot be tuple-rebound unless explicitly marked mut.
+
+def borrowed_tuple_reassign(items: list[int], other: list[int]) -> int:
+    items, other = other, items
+    return len(items)
+
+def main():
+    print("unreachable")

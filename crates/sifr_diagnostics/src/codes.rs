@@ -60,6 +60,9 @@ impl DiagnosticCode {
     pub const OWN_DOUBLE_MUTABLE_BORROW: Self = Self::new("SIFR-OWN-0002", Severity::Error);
     pub const OWN_BORROWED_PARAMETER_ESCAPES: Self = Self::new("SIFR-OWN-0003", Severity::Error);
     pub const OWN_MOVED_ACROSS_LOOP: Self = Self::new("SIFR-OWN-0004", Severity::Error);
+    pub const OWN_IMMUTABLE_PARAMETER_MUTATION: Self = Self::new("SIFR-OWN-0005", Severity::Error);
+    pub const OWN_IMMUTABLE_PARAMETER_REASSIGNMENT: Self =
+        Self::new("SIFR-OWN-0006", Severity::Error);
 
     pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
@@ -869,6 +872,28 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["binding"]
     ),
     active_entry!(
+        "SIFR-OWN-0005",
+        "OWN",
+        "Immutable parameter is mutated.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/own_parameter_mutation_requires_mut.sifr",
+        "cannot mutate through immutable parameter {binding}",
+        "sifr_hir::lower",
+        [arg!("binding")],
+        ["binding"]
+    ),
+    active_entry!(
+        "SIFR-OWN-0006",
+        "OWN",
+        "Immutable parameter is reassigned.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/own_parameter_reassignment_requires_mut.sifr",
+        "cannot reassign immutable parameter {binding}",
+        "sifr_hir::lower",
+        [arg!("binding")],
+        ["binding"]
+    ),
+    active_entry!(
         "SIFR-FLOW-0001",
         "FLOW",
         "Break outside a loop.",
@@ -1338,6 +1363,8 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
     DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
     DiagnosticCode::OWN_MOVED_ACROSS_LOOP,
+    DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION,
+    DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT,
     DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,

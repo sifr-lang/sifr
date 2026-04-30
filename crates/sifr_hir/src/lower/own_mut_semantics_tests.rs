@@ -11,13 +11,6 @@ fn lower_errors(source: &str) -> Vec<LoweringError> {
     lower_source(source).expect_err("expected lowering error")
 }
 
-fn lower_error_messages(source: &str) -> Vec<String> {
-    lower_errors(source)
-        .into_iter()
-        .map(|error| error.message)
-        .collect()
-}
-
 #[test]
 fn test_own_mut_parameter_allows_mutation_and_return() {
     let result = lower_source(
@@ -57,36 +50,65 @@ fn test_mut_borrow_parameter_cannot_escape_via_local_binding() {
 
 #[test]
 fn test_own_parameter_cannot_be_mutated_without_mut() {
-    let errors = lower_error_messages(
+    let errors = lower_errors(
         "def owned_immutable_mutation(own items: list[int]) -> list[int]:\n    items[0] = 7\n    return items\n",
     );
 
-    assert!(errors.iter().any(|message| {
-        message
+    assert!(errors.iter().any(|error| {
+        error.message
             == "cannot mutate through immutable parameter `items`: add `mut` to the parameter declaration"
+            && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION)
     }));
 }
 
 #[test]
 fn test_own_parameter_mutating_method_requires_mut() {
-    let errors = lower_error_messages(
+    let errors = lower_errors(
         "def owned_immutable_append(own items: list[int] = [1]) -> list[int]:\n    items.append(5)\n    return items\n",
     );
 
-    assert!(errors.iter().any(|message| {
-        message
+    assert!(errors.iter().any(|error| {
+        error.message
             == "cannot mutate through immutable parameter `items`: add `mut` to the parameter declaration"
+            && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION)
     }));
 }
 
 #[test]
 fn test_borrowed_parameter_cannot_be_reassigned_without_mut() {
-    let errors = lower_error_messages(
+    let errors = lower_errors(
         "def borrowed_reassign(items: list[int]) -> int:\n    items = [1, 2, 3]\n    return len(items)\n",
     );
 
-    assert!(errors.iter().any(|message| {
-        message
+    assert!(errors.iter().any(|error| {
+        error.message
             == "cannot reassign immutable parameter `items`: add `mut` to the parameter declaration"
+            && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT)
+    }));
+}
+
+#[test]
+fn test_borrowed_parameter_cannot_be_augassigned_without_mut() {
+    let errors = lower_errors(
+        "def borrowed_augassign(count: int) -> int:\n    count += 1\n    return count\n",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "cannot reassign immutable parameter `count`: add `mut` to the parameter declaration"
+            && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT)
+    }));
+}
+
+#[test]
+fn test_borrowed_parameter_cannot_be_tuple_reassigned_without_mut() {
+    let errors = lower_errors(
+        "def borrowed_tuple_reassign(items: list[int], other: list[int]) -> int:\n    items, other = other, items\n    return len(items)\n",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "cannot reassign immutable parameter `items`: add `mut` to the parameter declaration"
+            && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT)
     }));
 }

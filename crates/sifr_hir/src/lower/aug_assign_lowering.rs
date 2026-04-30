@@ -40,7 +40,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             ctx.error("augmented attribute assignment target must be a simple name".to_string());
             return None;
         };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+        if !ensure_mutable_parameter_binding(ctx, &obj_name) {
             return None;
         }
         let field_name = attr.attr.to_string();
@@ -97,7 +97,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
                 );
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
                 return None;
             }
             if matches!(obj_ty.resolve_alias(), Type::Bytes) {
@@ -176,7 +176,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
                 );
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
                 return None;
             }
             let field_name = attr.attr.to_string();
@@ -234,7 +234,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             ctx.error("augmented subscript assignment target must be a simple name".to_string());
             return None;
         };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+        if !ensure_mutable_parameter_binding(ctx, &obj_name) {
             return None;
         }
         let obj_ty = ctx
@@ -299,9 +299,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         return None;
     };
     if var_info.is_parameter_binding() && !var_info.is_mutable_binding() {
-        ctx.error(format!(
-            "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
-        ));
+        super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name);
         return None;
     }
     let var_ty = var_info.ty.clone();
