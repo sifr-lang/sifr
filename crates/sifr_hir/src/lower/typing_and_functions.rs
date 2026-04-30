@@ -377,6 +377,10 @@ pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) 
     }
 }
 
+fn invalid_type_annotation(ctx: &mut LowerCtx, message: impl Into<String>) {
+    ctx.error_with_code(DiagnosticCode::TYPE_INVALID_ANNOTATION, message.into());
+}
+
 pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
@@ -412,11 +416,14 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                 if let Some(val) = i.as_i64() {
                     Type::LiteralInt(val)
                 } else {
-                    ctx.error("integer literal too large for type annotation".to_string());
+                    invalid_type_annotation(ctx, "integer literal too large for type annotation");
                     Type::Any
                 }
             } else {
-                ctx.error("only integer literals are supported in type annotations".to_string());
+                invalid_type_annotation(
+                    ctx,
+                    "only integer literals are supported in type annotations",
+                );
                 Type::Any
             }
         }
@@ -427,7 +434,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
             let base_name = if let Expr::Name(n) = sub.value.as_ref() {
                 n.id.to_string()
             } else {
-                ctx.error("unsupported type annotation base".to_string());
+                invalid_type_annotation(ctx, "unsupported type annotation base");
                 return Type::Any;
             };
             match base_name.as_str() {
@@ -443,9 +450,9 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     // dict[K, V] -- the slice is a Tuple expression
                     if let Expr::Tuple(tuple) = sub.slice.as_ref() {
                         if tuple.elts.len() != 2 {
-                            ctx.error(
-                                "dict type annotation requires exactly 2 type parameters"
-                                    .to_string(),
+                            invalid_type_annotation(
+                                ctx,
+                                "dict type annotation requires exactly 2 type parameters",
                             );
                             return Type::Any;
                         }
@@ -453,7 +460,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         let val_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
                         Type::Dict(Box::new(key_ty), Box::new(val_ty))
                     } else {
-                        ctx.error("dict type annotation requires [K, V] syntax".to_string());
+                        invalid_type_annotation(ctx, "dict type annotation requires [K, V] syntax");
                         Type::Any
                     }
                 }
@@ -488,9 +495,9 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     // Result[T, E] -- the slice is a Tuple expression
                     if let Expr::Tuple(tuple) = sub.slice.as_ref() {
                         if tuple.elts.len() != 2 {
-                            ctx.error(
-                                "Result type annotation requires exactly 2 type parameters"
-                                    .to_string(),
+                            invalid_type_annotation(
+                                ctx,
+                                "Result type annotation requires exactly 2 type parameters",
                             );
                             return Type::Any;
                         }
@@ -508,7 +515,10 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         }
                         Type::Result(Box::new(ok_ty), Box::new(err_ty))
                     } else {
-                        ctx.error("Result type annotation requires [T, E] syntax".to_string());
+                        invalid_type_annotation(
+                            ctx,
+                            "Result type annotation requires [T, E] syntax",
+                        );
                         Type::Any
                     }
                 }
@@ -529,7 +539,10 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     // The slice is a Tuple of [List[param_types], return_type]
                     if let Expr::Tuple(tuple) = sub.slice.as_ref() {
                         if tuple.elts.len() != 2 {
-                            ctx.error("Callable type requires exactly 2 type parameters: [[param_types], return_type]".to_string());
+                            invalid_type_annotation(
+                                ctx,
+                                "Callable type requires exactly 2 type parameters: [[param_types], return_type]",
+                            );
                             return Type::Any;
                         }
                         // First element should be a list of parameter types
@@ -539,7 +552,10 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                                 .map(|e| resolve_annotation_expr(e, ctx))
                                 .collect::<Vec<_>>()
                         } else {
-                            ctx.error("Callable parameter types must be a list: Callable[[int, str], bool]".to_string());
+                            invalid_type_annotation(
+                                ctx,
+                                "Callable parameter types must be a list: Callable[[int, str], bool]",
+                            );
                             return Type::Any;
                         };
                         let return_type = resolve_annotation_expr(&tuple.elts[1], ctx);
@@ -555,9 +571,9 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                             .collect();
                         Type::Callable(param_types, conventions, Box::new(return_type))
                     } else {
-                        ctx.error(
-                            "Callable type requires [[param_types], return_type] syntax"
-                                .to_string(),
+                        invalid_type_annotation(
+                            ctx,
+                            "Callable type requires [[param_types], return_type] syntax",
                         );
                         Type::Any
                     }
@@ -680,7 +696,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
             }
         }
         _ => {
-            ctx.error("unsupported type annotation expression".to_string());
+            invalid_type_annotation(ctx, "unsupported type annotation expression");
             Type::Any
         }
     }

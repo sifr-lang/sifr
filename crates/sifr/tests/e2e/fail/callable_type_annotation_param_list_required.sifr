@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: Callable parameter types must be a list: Callable[[int, str], bool]
+
+def consume(callback: Callable[int, str]) -> int:
+    return 0
+
+def main():
+    print(consume(print))

@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0007: integer literal too large for type annotation
+
+def consume(value: 999999999999999999999999999999) -> int:
+    return 0
+
+def main():
+    print(consume(1))
