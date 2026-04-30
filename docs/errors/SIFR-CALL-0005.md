@@ -10,7 +10,7 @@ Callable arity failure or expression is not callable.
 | Family | `CALL` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `{callee} is not callable with the provided arguments` |
+| Message template | `{callable} callable expects {expected_count} argument(s), got {actual_count} iterable(s)` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/map_callable_arity_mismatch.sifr` |
-| Declared args | `callee (message+json)` |
-| Dedupe args | `callee` |
+| Declared args | `callable (message+json)`, `expected_count (message+json)`, `actual_count (message+json)` |
+| Dedupe args | `callable`, `expected_count`, `actual_count` |

@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: greet() got multiple values for argument 'name'
+# expect-error: SIFR-CALL-0003: greet() got multiple values for argument 'name'
 def greet(name: str, greeting: str) -> str:
     return f"{greeting}, {name}!"
 

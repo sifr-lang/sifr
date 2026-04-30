@@ -1130,7 +1130,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         }
         if func_name == "sum" {
             if call.arguments.args.len() != 1 {
-                ctx.error("sum() takes exactly 1 argument".to_string());
+                let actual_count = call.arguments.args.len();
+                ctx.error_with_code(
+                    DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
+                    format!("sum() takes exactly 1 argument(s), got {actual_count}"),
+                );
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -1192,9 +1196,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         reverse_keyword = Some(keyword);
                     }
                     other => {
-                        ctx.error(format!(
-                            "sorted() got an unexpected keyword argument '{other}'"
-                        ));
+                        let keyword = other;
+                        ctx.error_with_code(
+                            DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+                            format!("sorted() got an unexpected keyword argument '{keyword}'"),
+                        );
                         return None;
                     }
                 }
@@ -1448,11 +1454,14 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             return None;
         };
         if param_types.len() != context_types.len() {
-            ctx.error(format!(
-                "map() callable expects {} argument(s), got {} iterable(s)",
-                param_types.len(),
-                context_types.len()
-            ));
+            let expected_count = param_types.len();
+            let actual_count = context_types.len();
+            ctx.error_with_code(
+                DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY,
+                format!(
+                    "map() callable expects {expected_count} argument(s), got {actual_count} iterable(s)"
+                ),
+            );
             return None;
         }
         let result_ty = Type::Iterator(Box::new(result_elem_ty));

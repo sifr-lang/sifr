@@ -1,4 +1,5 @@
 use crate::hir_nodes::HirExpr;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::ExprCall;
 use sifr_type_system::{make_union, FunctionType, Type};
 
@@ -274,9 +275,10 @@ fn keyword_arg_expr<'a>(keywords: &'a LoweredKeywords, name: &str) -> Option<&'a
 }
 
 fn duplicate_argument_error<T>(callable_name: &str, arg: &str, ctx: &mut LowerCtx) -> Option<T> {
-    ctx.error(format!(
-        "{callable_name}() got multiple values for argument '{arg}'"
-    ));
+    ctx.error_with_code(
+        DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
+        format!("{callable_name}() got multiple values for argument '{arg}'"),
+    );
     None
 }
 
