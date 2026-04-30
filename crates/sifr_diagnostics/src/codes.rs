@@ -986,11 +986,11 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "PROTO",
         "Invalid iterator or reversible protocol signature.",
         Severity::Error,
-        "crates/sifr/tests/e2e/fail/reversed_iterator_not_reversible.sifr",
-        "invalid {protocol} protocol signature for {type_name}",
+        "crates/sifr/tests/e2e/fail/invalid_iter_signature.sifr",
+        "class '{type_name}' must return {expected}",
         "sifr_hir::lower::classes",
-        [arg!("protocol"), arg!("type_name")],
-        ["protocol", "type_name"]
+        [arg!("type_name"), arg!("expected")],
+        ["type_name", "expected"]
     ),
     active_entry!(
         "SIFR-PROTO-0003",

@@ -10,7 +10,7 @@ Invalid iterator or reversible protocol signature.
 | Family | `PROTO` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::classes` |
-| Message template | `invalid {protocol} protocol signature for {type_name}` |
-| Representative fixture | `crates/sifr/tests/e2e/fail/reversed_iterator_not_reversible.sifr` |
-| Declared args | `protocol (message+json)`, `type_name (message+json)` |
-| Dedupe args | `protocol`, `type_name` |
+| Message template | `class '{type_name}' must return {expected}` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/invalid_iter_signature.sifr` |
+| Declared args | `type_name (message+json)`, `expected (message+json)` |
+| Dedupe args | `type_name`, `expected` |

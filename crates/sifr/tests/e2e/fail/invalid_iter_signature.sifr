@@ -1,5 +1,5 @@
 # Reference: phase_psp_iter_fix_7_invalid_iter_signature
-# expect-error: SIFR-TYPE-0001: class 'BadIter.__iter__' must return 'Iterator[T]' or 'Iterable[T]'
+# expect-error: SIFR-PROTO-0002: class 'BadIter.__iter__' must return 'Iterator[T]' or 'Iterable[T]'
 class BadIter:
     def __iter__(self) -> int:
         return 1
