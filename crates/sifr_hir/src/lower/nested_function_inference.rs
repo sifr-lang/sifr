@@ -1,3 +1,4 @@
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{AstParamConvention, CmpOp, Expr, ExprCall, Operator, Stmt, StmtFunctionDef};
 use sifr_type_system::{type_check_binary_op, FunctionType, Type};
 use std::collections::{HashMap, HashSet};
@@ -435,10 +436,13 @@ fn finalize_nested_function_types(
         for param in &mut state.params {
             if !param.explicit && param.ty.is_unknown() {
                 state.inference_failed = true;
-                ctx.error(format!(
-                    "parameter '{}' in function '{}' is missing a type annotation and could not be inferred",
-                    param.name, state.func.name
-                ));
+                ctx.error_with_code(
+                    DiagnosticCode::TYPE_MISSING_ANNOTATION,
+                    format!(
+                        "parameter '{}' in function '{}' is missing a type annotation and could not be inferred",
+                        param.name, state.func.name
+                    ),
+                );
                 param.ty = Type::Any;
             }
         }

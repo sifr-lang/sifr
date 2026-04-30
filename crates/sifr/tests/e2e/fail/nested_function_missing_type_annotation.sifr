@@ -1,0 +1,10 @@
+# expect-error: SIFR-TYPE-0004: parameter 'n' in function 'helper' is missing a type annotation and could not be inferred
+
+def power_two(exp: int) -> int:
+    def helper(n):
+        return 1
+
+    return 0
+
+def main():
+    print(power_two(4))

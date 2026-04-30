@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0004: parameter 'value' in function 'identity' is missing a type annotation
+
+def identity(value) -> int:
+    return value
+
+def main():
+    print(identity(1))
