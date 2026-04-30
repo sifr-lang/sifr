@@ -943,10 +943,10 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Non-exhaustive match.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/enum_match_non_exhaustive.sifr",
-        "non-exhaustive match for {subject_type}",
+        "non-exhaustive match: enum {enum_name} has uncovered variants: {uncovered}",
         "sifr_hir::lower::statements",
-        [arg!("subject_type")],
-        ["subject_type"]
+        [arg!("enum_name"), arg!("uncovered")],
+        ["enum_name", "uncovered"]
     ),
     active_entry!(
         "SIFR-MATCH-0002",
@@ -954,7 +954,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Match guard must be bool.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/match_type_mismatch_guard.sifr",
-        "match guard must be bool, got {actual}",
+        "match guard must be a bool expression, got {actual}",
         "sifr_hir::lower::statements",
         [arg!("actual")],
         ["actual"]
@@ -965,7 +965,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Invalid class pattern field.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/match_invalid_field_name.sifr",
-        "class pattern field {field} does not exist on {class_name}",
+        "class {class_name} has no field {field}",
         "sifr_hir::lower::statements",
         [arg!("field"), arg!("class_name")],
         ["field", "class_name"]
