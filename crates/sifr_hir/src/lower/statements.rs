@@ -661,10 +661,7 @@ pub(super) fn lower_match(
                 let guard_expr = lower_expr(g, ctx)?;
                 let guard_ty = guard_expr.ty();
                 if *guard_ty != Type::Bool && *guard_ty != Type::Any {
-                    ctx.error(format!(
-                        "match guard must be a bool expression, got '{}'",
-                        guard_ty.display_name()
-                    ));
+                    super::match_diagnostics::guard_not_bool(ctx, &guard_ty.display_name());
                 }
                 Some(guard_expr)
             } else {
@@ -803,11 +800,11 @@ pub(super) fn lower_match(
             }
 
             if !uncovered.is_empty() {
-                ctx.error(format!(
-                    "non-exhaustive match: type '{}' has uncovered variants: {} — add matching case(s) or `case _:`",
-                    subject_ty.display_name(),
-                    uncovered.join(", ")
-                ));
+                super::match_diagnostics::non_exhaustive_union(
+                    ctx,
+                    &subject_ty.display_name(),
+                    &uncovered.join(", "),
+                );
             }
         }
 
@@ -841,11 +838,15 @@ pub(super) fn lower_match(
                 .filter(|v| !covered_variants.contains(*v))
                 .collect();
             if !uncovered.is_empty() {
-                ctx.error(format!(
-                    "non-exhaustive match: enum '{}' has uncovered variants: {} — add matching case(s) or `case _:`",
+                super::match_diagnostics::non_exhaustive_enum(
+                    ctx,
                     name,
-                    uncovered.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")
-                ));
+                    &uncovered
+                        .iter()
+                        .map(|s| s.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                );
             }
         }
 
@@ -857,10 +858,7 @@ pub(super) fn lower_match(
                     || arm.guard.is_some()
             });
             if all_literal_or_guarded {
-                ctx.error(format!(
-                    "non-exhaustive match: type '{}' cannot be fully covered by literal patterns — add `case _:` to handle remaining values",
-                    subject_ty.display_name()
-                ));
+                super::match_diagnostics::non_exhaustive_literal(ctx, &subject_ty.display_name());
             }
         }
     }
@@ -966,16 +964,16 @@ pub(super) fn lower_pattern(
                         .find(|(n, _)| n == &field_name)
                         .map(|(_, t)| t.clone())
                     else {
-                        ctx.error(format!(
-                            "class '{}' has no field '{}' — available fields: {}",
-                            class_name,
-                            field_name,
-                            class_fields
+                        super::match_diagnostics::invalid_class_pattern_field(
+                            ctx,
+                            &class_name,
+                            &field_name,
+                            &class_fields
                                 .iter()
                                 .map(|(n, _)| n.as_str())
                                 .collect::<Vec<_>>()
-                                .join(", ")
-                        ));
+                                .join(", "),
+                        );
                         return None;
                     };
                     field_ty

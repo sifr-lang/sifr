@@ -10,7 +10,7 @@ Invalid class pattern field.
 | Family | `MATCH` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::statements` |
-| Message template | `class pattern field {field} does not exist on {class_name}` |
+| Message template | `class {class_name} has no field {field}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/match_invalid_field_name.sifr` |
 | Declared args | `field (message+json)`, `class_name (message+json)` |
 | Dedupe args | `field`, `class_name` |
