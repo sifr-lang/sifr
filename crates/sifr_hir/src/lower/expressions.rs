@@ -1976,6 +1976,22 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     }
 }
 
+fn container_literal_type_conflict(
+    ctx: &mut LowerCtx,
+    element_kind: &str,
+    expected: &Type,
+    actual: &Type,
+) {
+    ctx.error_with_code(
+        DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
+        format!(
+            "container literal has conflicting {element_kind} types: {} and {}",
+            expected.display_name(),
+            actual.display_name()
+        ),
+    );
+}
+
 pub(super) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut elements = Vec::new();
     let mut elem_ty: Option<Type> = None;
@@ -1985,11 +2001,7 @@ pub(super) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<
         let ty = expr.ty().clone();
         if let Some(ref expected) = elem_ty {
             if !ty.is_assignable_to(expected) {
-                ctx.error(format!(
-                    "list element type mismatch: expected '{}', got '{}'",
-                    expected.display_name(),
-                    ty.display_name()
-                ));
+                container_literal_type_conflict(ctx, "list element", expected, &ty);
             }
         } else {
             elem_ty = Some(ty);
@@ -2015,11 +2027,7 @@ pub(super) fn lower_set_literal(set: &ExprSet, ctx: &mut LowerCtx) -> Option<Hir
         let ty = expr.ty().clone();
         if let Some(ref expected) = elem_ty {
             if !ty.is_assignable_to(expected) {
-                ctx.error(format!(
-                    "set element type mismatch: expected '{}', got '{}'",
-                    expected.display_name(),
-                    ty.display_name()
-                ));
+                container_literal_type_conflict(ctx, "set element", expected, &ty);
             }
         } else {
             elem_ty = Some(ty);
@@ -2048,11 +2056,7 @@ pub(super) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) -> Option<
             let kt = key.ty().clone();
             if let Some(ref expected) = key_ty {
                 if !kt.is_assignable_to(expected) {
-                    ctx.error(format!(
-                        "dict key type mismatch: expected '{}', got '{}'",
-                        expected.display_name(),
-                        kt.display_name()
-                    ));
+                    container_literal_type_conflict(ctx, "dict key", expected, &kt);
                 }
             } else {
                 key_ty = Some(kt);
@@ -2067,11 +2071,7 @@ pub(super) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) -> Option<
         let vt = val.ty().clone();
         if let Some(ref expected) = val_ty {
             if !vt.is_assignable_to(expected) {
-                ctx.error(format!(
-                    "dict value type mismatch: expected '{}', got '{}'",
-                    expected.display_name(),
-                    vt.display_name()
-                ));
+                container_literal_type_conflict(ctx, "dict value", expected, &vt);
             }
         } else {
             val_ty = Some(vt);
