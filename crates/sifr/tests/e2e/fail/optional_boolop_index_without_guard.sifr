@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001
+# expect-error: SIFR-TYPE-0002
 # Test: bool short-circuit without explicit length guard keeps index optional
 
 def requires_guard(values: list[int], i: int) -> int:

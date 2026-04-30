@@ -2,6 +2,7 @@ use super::expressions::lower_expr;
 use super::sequence_guard_detection::detect_true_sequence_guards;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::ExprIf;
 
 pub(super) fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -35,11 +36,14 @@ pub(super) fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirE
     let else_ty = else_expr.ty().clone();
 
     if !then_ty.is_assignable_to(&else_ty) && !else_ty.is_assignable_to(&then_ty) {
-        ctx.error(format!(
-            "if expression branches have incompatible types: '{}' and '{}'",
-            then_ty.display_name(),
-            else_ty.display_name()
-        ));
+        ctx.error_with_code(
+            DiagnosticCode::TYPE_IF_BRANCH_MISMATCH,
+            format!(
+                "if expression branches have incompatible types: '{}' and '{}'",
+                then_ty.display_name(),
+                else_ty.display_name()
+            ),
+        );
         return None;
     }
 
