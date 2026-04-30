@@ -649,11 +649,11 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "TYPE",
         "Tuple or list unpacking shape mismatch.",
         Severity::Error,
-        "crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr",
-        "cannot unpack {actual_count} value(s) into {expected_count} target(s)",
+        "crates/sifr/tests/e2e/fail/tuple_unpack_shape_mismatch.sifr",
+        "tuple unpacking: expected {expected_count} values, got {actual_count}",
         "sifr_hir::lower::tuple_unpack",
-        [arg!("actual_count"), arg!("expected_count")],
-        ["actual_count", "expected_count"]
+        [arg!("expected_count"), arg!("actual_count")],
+        ["expected_count", "actual_count"]
     ),
     active_entry!(
         "SIFR-TYPE-0901",

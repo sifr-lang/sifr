@@ -10,7 +10,7 @@ Tuple or list unpacking shape mismatch.
 | Family | `TYPE` |
 | Severity | Error |
 | Owner | `sifr_hir::lower::tuple_unpack` |
-| Message template | `cannot unpack {actual_count} value(s) into {expected_count} target(s)` |
-| Representative fixture | `crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr` |
-| Declared args | `actual_count (message+json)`, `expected_count (message+json)` |
-| Dedupe args | `actual_count`, `expected_count` |
+| Message template | `tuple unpacking: expected {expected_count} values, got {actual_count}` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/tuple_unpack_shape_mismatch.sifr` |
+| Declared args | `expected_count (message+json)`, `actual_count (message+json)` |
+| Dedupe args | `expected_count`, `actual_count` |
