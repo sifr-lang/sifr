@@ -1853,6 +1853,20 @@ fn test_generic_class_subscript_arity_mismatch_errors() {
 }
 
 #[test]
+fn test_typevar_constraints_violation_has_type_code() {
+    let result = lower_source(
+        "from typing import TypeVar\n\nT = TypeVar(\"T\", int, str)\n\ndef echo(x: T) -> T:\n    return x\n\ndef main():\n    bad: float = echo(1.5)\n    print(bad)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            == "type 'float' does not satisfy constraints (int, str) required by type parameter 'T'"
+            && e.code == Some(DiagnosticCode::TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED)
+    }));
+}
+
+#[test]
 fn test_match_tuple_pattern_requires_tuple_subject() {
     let result = lower_source(
         "def main():\n    x: int = 1\n    match x:\n        case (a, b):\n            print(a)\n",

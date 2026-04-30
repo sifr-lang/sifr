@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: type 'float' does not satisfy constraints (int, str) required by type parameter 'T'
+# expect-error: SIFR-TYPE-0010: type 'float' does not satisfy constraints (int, str) required by type parameter 'T'
 # Test: TypeVar constraints reject unsupported concrete type
 from typing import TypeVar
 

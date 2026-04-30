@@ -1937,12 +1937,15 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                             type_satisfies_constraint(concrete_ty, constraint, ctx)
                         })
                     {
-                        ctx.error(format!(
-                            "type '{}' does not satisfy constraints ({}) required by type parameter '{}'",
-                            concrete_ty.display_name(),
-                            constraints.join(", "),
-                            tv_name
-                        ));
+                        ctx.error_with_code(
+                            DiagnosticCode::TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED,
+                            format!(
+                                "type '{actual}' does not satisfy constraints ({constraints}) required by type parameter '{type_param}'",
+                                actual = concrete_ty.display_name(),
+                                constraints = constraints.join(", "),
+                                type_param = tv_name
+                            ),
+                        );
                     }
                 }
             }
