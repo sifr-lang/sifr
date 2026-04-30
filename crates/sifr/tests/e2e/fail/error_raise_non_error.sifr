@@ -1,0 +1,7 @@
+# expect-error: SIFR-RESULT-0003: raise requires an Error class instance — `int` is not an Error class
+
+def broken() -> Result[int, ValueError]:
+    raise 1
+
+def main():
+    _ = broken()
