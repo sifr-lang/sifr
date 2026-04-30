@@ -10,7 +10,7 @@ Protocol bound or conformance failure.
 | Family | `PROTO` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `type {actual} does not implement protocol {protocol}` |
+| Message template | `type '{actual}' does not implement protocol '{protocol}' required by type parameter '{type_param}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/generic_bounds_not_satisfied.sifr` |
-| Declared args | `actual (message+json)`, `protocol (message+json)` |
-| Dedupe args | `actual`, `protocol` |
+| Declared args | `actual (message+json)`, `protocol (message+json)`, `type_param (message+json)` |
+| Dedupe args | `actual`, `protocol`, `type_param` |

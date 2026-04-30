@@ -976,10 +976,10 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Protocol bound or conformance failure.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/generic_bounds_not_satisfied.sifr",
-        "type {actual} does not implement protocol {protocol}",
+        "type '{actual}' does not implement protocol '{protocol}' required by type parameter '{type_param}'",
         "sifr_hir::lower",
-        [arg!("actual"), arg!("protocol")],
-        ["actual", "protocol"]
+        [arg!("actual"), arg!("protocol"), arg!("type_param")],
+        ["actual", "protocol", "type_param"]
     ),
     active_entry!(
         "SIFR-PROTO-0002",

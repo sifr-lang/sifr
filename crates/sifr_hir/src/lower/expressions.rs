@@ -40,6 +40,7 @@ use super::numeric_sentinels::{
     retag_numeric_sentinel_name_expr,
 };
 use super::ownership_diagnostics;
+use super::protocol_diagnostics;
 use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_true_sequence_guards,
 };
@@ -1906,8 +1907,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             }
         }
         // Check protocol bounds on type parameters (scoped to this function)
-        let mut bound_errors: Vec<String> = Vec::new();
         if let Some(owner_bounds) = ctx.type_param_bounds.get(&func_name) {
+            let owner_bounds = owner_bounds.clone();
             for (tv_name, concrete_ty) in &bindings {
                 if let Some(specs) = owner_bounds.get(tv_name) {
                     let mut required_bounds = Vec::new();
@@ -1922,12 +1923,12 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
                     for bound in required_bounds {
                         if !type_satisfies_bound(concrete_ty, &bound, ctx) {
-                            bound_errors.push(format!(
-                                "type '{}' does not implement protocol '{}' required by type parameter '{}'",
-                                concrete_ty.display_name(),
-                                bound,
-                                tv_name
-                            ));
+                            protocol_diagnostics::bound_not_satisfied(
+                                ctx,
+                                &concrete_ty.display_name(),
+                                &bound,
+                                tv_name,
+                            );
                         }
                     }
 
@@ -1936,7 +1937,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                             type_satisfies_constraint(concrete_ty, constraint, ctx)
                         })
                     {
-                        bound_errors.push(format!(
+                        ctx.error(format!(
                             "type '{}' does not satisfy constraints ({}) required by type parameter '{}'",
                             concrete_ty.display_name(),
                             constraints.join(", "),
@@ -1945,9 +1946,6 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     }
                 }
             }
-        }
-        for err in bound_errors {
-            ctx.error(err);
         }
         if bindings.is_empty() {
             ft.return_type.as_ref().clone()

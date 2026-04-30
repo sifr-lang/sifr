@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: type 'U' does not implement protocol 'Readable' required by type parameter 'T'
+# expect-error: SIFR-PROTO-0001: type 'U' does not implement protocol 'Readable' required by type parameter 'T'
 # Test: forwarding TypeVars must preserve protocol conformance requirements
 
 class Readable(Protocol):
