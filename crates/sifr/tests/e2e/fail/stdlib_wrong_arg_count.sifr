@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: sqrt() takes at most 1 argument(s), got 2
+# expect-error: SIFR-CALL-0001: sqrt() takes at most 1 argument(s), got 2
 # Test that calling a stdlib function with wrong number of arguments fails
 from sifr.math import sqrt
 
