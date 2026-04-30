@@ -10,7 +10,7 @@ Undefined function or callable.
 | Family | `NAME` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `undefined function: {name}` |
-| Representative fixture | `crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr` |
+| Message template | `undefined function: '{name}'` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/undefined_function.sifr` |
 | Declared args | `name (message+json)` |
 | Dedupe args | `name` |

@@ -32,6 +32,7 @@ use super::min_max_validation::validate_variadic_min_max_operands;
 use super::mutating_methods::{
     invalidate_collection_flow_facts_for_method, reject_immutable_parameter_method_mutation,
 };
+use super::name_diagnostics;
 use super::nonempty_method_narrowing::refine_nonempty_method_return_type;
 use super::numeric_sentinels::{
     float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
@@ -244,7 +245,7 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
         _ => {}
     }
 
-    ctx.error(format!("undefined variable: '{var_name}'"));
+    name_diagnostics::undefined_variable(ctx, &var_name);
     None
 }
 
@@ -1714,7 +1715,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     }
 
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
-        ctx.error(format!("undefined function: '{func_name}'"));
+        name_diagnostics::undefined_function(ctx, &func_name);
         None
     })?;
 

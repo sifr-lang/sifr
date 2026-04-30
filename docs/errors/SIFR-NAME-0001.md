@@ -10,7 +10,7 @@ Undefined variable.
 | Family | `NAME` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `undefined variable: {name}` |
+| Message template | `undefined variable: '{name}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/undefined_var.sifr` |
 | Declared args | `name (message+json)` |
 | Dedupe args | `name` |

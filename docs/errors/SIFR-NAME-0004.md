@@ -10,7 +10,7 @@ Missing module or class member.
 | Family | `NAME` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `member {member} does not exist on {container}` |
+| Message template | `module '{container}' has no member '{member}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr` |
 | Declared args | `member (message+json)`, `container (message+json)` |
 | Dedupe args | `member`, `container` |
