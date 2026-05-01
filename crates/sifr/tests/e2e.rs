@@ -82,6 +82,12 @@ struct CompileFailureExpectation {
     column: Option<u32>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct LocatedCompileFailureExpectation {
+    line_number: usize,
+    expectation: CompileFailureExpectation,
+}
+
 #[derive(Clone, Debug)]
 struct CompiledFailure {
     code: String,
@@ -633,26 +639,119 @@ fn parse_expect_error_line(line: &str) -> Option<Result<CompileFailureExpectatio
     Some(parse_expected_error_parts(Some(column), raw_code))
 }
 
+fn expectation_locations_overlap(
+    left: &LocatedCompileFailureExpectation,
+    right: &LocatedCompileFailureExpectation,
+) -> bool {
+    // Unqualified markers assert code existence only; they do not claim every column.
+    // Contradictions require both markers to name the same explicit assertion point.
+    match (left.expectation.column, right.expectation.column) {
+        (Some(left_column), Some(right_column)) => left_column == right_column,
+        _ => false,
+    }
+}
+
+fn expectation_location_label(expectation: &LocatedCompileFailureExpectation) -> String {
+    match expectation.expectation.column {
+        Some(column) => format!("column {column}"),
+        None => "any column".to_string(),
+    }
+}
+
+fn validate_expectation_contradictions(
+    expectations: &[LocatedCompileFailureExpectation],
+) -> Result<(), Vec<String>> {
+    let mut errors = Vec::new();
+    for (left_index, left) in expectations.iter().enumerate() {
+        for right in &expectations[left_index + 1..] {
+            if expectation_locations_overlap(left, right)
+                && left.expectation.code != right.expectation.code
+            {
+                let left_location = expectation_location_label(left);
+                let right_location = expectation_location_label(right);
+                let location_suffix = if left_location == right_location {
+                    left_location
+                } else {
+                    format!("{left_location} overlapping {right_location}")
+                };
+                errors.push(format!(
+                    "contradictory expect-error markers: {} at marker line {} conflicts with {} at marker line {} for {}",
+                    left.expectation.code,
+                    left.line_number,
+                    right.expectation.code,
+                    right.line_number,
+                    location_suffix,
+                ));
+            }
+        }
+    }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
+    }
+}
+
+fn parse_compile_failure_expectations(
+    source: &str,
+    fixture_path: &Path,
+) -> Result<Vec<CompileFailureExpectation>, Vec<String>> {
+    let mut errors = Vec::new();
+    let mut located = Vec::new();
+    for (line_index, line) in source.lines().enumerate() {
+        if let Some(result) = parse_expect_error_line(line) {
+            match result {
+                Ok(expectation) => {
+                    located.push(LocatedCompileFailureExpectation {
+                        line_number: line_index + 1,
+                        expectation,
+                    });
+                }
+                Err(error) => {
+                    errors.push(format!(
+                        "{}:{} invalid expect-error marker: {}",
+                        fixture_path.display(),
+                        line_index + 1,
+                        error
+                    ));
+                }
+            }
+        }
+    }
+
+    if let Err(contradiction_errors) = validate_expectation_contradictions(&located) {
+        errors.extend(
+            contradiction_errors
+                .into_iter()
+                .map(|error| format!("{}: {error}", fixture_path.display())),
+        );
+    }
+
+    if errors.is_empty() {
+        Ok(located
+            .into_iter()
+            .map(|located_expectation| located_expectation.expectation)
+            .collect())
+    } else {
+        Err(errors)
+    }
+}
+
+fn format_expectation_contract_errors(errors: &[String]) -> String {
+    errors
+        .iter()
+        .map(|error| format!("FAIL {error}"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 fn extract_compile_failure_expectations(
     source: &str,
     fixture_path: &Path,
 ) -> Vec<CompileFailureExpectation> {
-    source
-        .lines()
-        .enumerate()
-        .filter_map(|(line_index, line)| {
-            parse_expect_error_line(line).map(|result| {
-                result.unwrap_or_else(|error| {
-                    panic!(
-                        "FAIL {}:{} invalid expect-error marker: {}",
-                        fixture_path.display(),
-                        line_index + 1,
-                        error
-                    );
-                })
-            })
-        })
-        .collect()
+    parse_compile_failure_expectations(source, fixture_path).unwrap_or_else(|errors| {
+        panic!("{}", format_expectation_contract_errors(&errors));
+    })
 }
 
 fn validate_expected_error_code(code: &str) -> Result<(), String> {
@@ -2634,11 +2733,24 @@ fn test_e2e_fail() {
         return;
     }
 
-    let mut failures = 0usize;
+    let mut fail_cases = Vec::new();
+    let mut contract_errors = Vec::new();
     for path in read_dir_file_paths_sorted(fail_dir) {
         let source = std::fs::read_to_string(&path).unwrap();
-        let expected = extract_compile_failure_expectations(&source, &path);
+        match parse_compile_failure_expectations(&source, &path) {
+            Ok(expected) => fail_cases.push((path, source, expected)),
+            Err(mut errors) => contract_errors.append(&mut errors),
+        }
+    }
+    if !contract_errors.is_empty() {
+        panic!(
+            "fail fixture expectation contract violations:\n{}",
+            format_expectation_contract_errors(&contract_errors)
+        );
+    }
 
+    let mut failures = 0usize;
+    for (path, source, expected) in fail_cases {
         match compile_source(&source) {
             Ok(rust_source) => {
                 panic!(
@@ -2929,6 +3041,128 @@ fn test_expected_error_contract_rejects_malformed_grammar() {
     assert!(invalid_column
         .expect_err("non-positive column must be rejected")
         .contains("invalid expect-error column"));
+}
+
+#[test]
+fn test_expected_error_contract_rejects_contradictory_overlapping_locations() {
+    let same_location = vec![
+        LocatedCompileFailureExpectation {
+            line_number: 12,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-TYPE-0002".to_string(),
+                column: Some(4),
+            },
+        },
+        LocatedCompileFailureExpectation {
+            line_number: 12,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-NAME-0001".to_string(),
+                column: Some(4),
+            },
+        },
+    ];
+    let errors = validate_expectation_contradictions(&same_location)
+        .expect_err("same assertion column cannot claim incompatible codes");
+    let err = errors.join("\n");
+    assert!(err.contains("contradictory expect-error markers"));
+    assert!(err.contains("marker line 12"));
+    assert!(err.contains("for column 4"));
+    assert!(err.contains("SIFR-TYPE-0002"));
+    assert!(err.contains("SIFR-NAME-0001"));
+
+    let extracted_errors = parse_compile_failure_expectations(
+        "# expect-error[col=4]: SIFR-TYPE-0002\n# expect-error[col=4]: SIFR-NAME-0001\n",
+        Path::new("unit.sifr"),
+    )
+    .expect_err("extractor must reject real contradictory marker lines");
+    let extracted_error = extracted_errors.join("\n");
+    assert!(extracted_error.contains("marker line 1"));
+    assert!(extracted_error.contains("marker line 2"));
+    assert!(extracted_error.contains("for column 4"));
+
+    let multiple_errors = parse_compile_failure_expectations(
+        "\
+# expect-error[col=4]: SIFR-TYPE-0002
+# expect-error[col=4]: SIFR-NAME-0001
+# expect-error[col=9]: SIFR-TYPE-0002
+# expect-error[col=9]: SIFR-NAME-0001
+",
+        Path::new("unit.sifr"),
+    )
+    .expect_err("extractor must accumulate all contradiction errors");
+    assert_eq!(multiple_errors.len(), 2);
+
+    let unqualified_marker_does_not_claim_column = vec![
+        LocatedCompileFailureExpectation {
+            line_number: 5,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-TYPE-0002".to_string(),
+                column: None,
+            },
+        },
+        LocatedCompileFailureExpectation {
+            line_number: 5,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-NAME-0001".to_string(),
+                column: Some(9),
+            },
+        },
+    ];
+    assert!(validate_expectation_contradictions(&unqualified_marker_does_not_claim_column).is_ok());
+
+    let unqualified_markers_do_not_conflict = vec![
+        LocatedCompileFailureExpectation {
+            line_number: 5,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-TYPE-0002".to_string(),
+                column: None,
+            },
+        },
+        LocatedCompileFailureExpectation {
+            line_number: 6,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-NAME-0001".to_string(),
+                column: None,
+            },
+        },
+    ];
+    assert!(validate_expectation_contradictions(&unqualified_markers_do_not_conflict).is_ok());
+
+    let disjoint_columns = vec![
+        LocatedCompileFailureExpectation {
+            line_number: 5,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-TYPE-0002".to_string(),
+                column: Some(4),
+            },
+        },
+        LocatedCompileFailureExpectation {
+            line_number: 5,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-NAME-0001".to_string(),
+                column: Some(9),
+            },
+        },
+    ];
+    assert!(validate_expectation_contradictions(&disjoint_columns).is_ok());
+
+    let repeated_same_code = vec![
+        LocatedCompileFailureExpectation {
+            line_number: 8,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-TYPE-0002".to_string(),
+                column: None,
+            },
+        },
+        LocatedCompileFailureExpectation {
+            line_number: 8,
+            expectation: CompileFailureExpectation {
+                code: "SIFR-TYPE-0002".to_string(),
+                column: Some(9),
+            },
+        },
+    ];
+    assert!(validate_expectation_contradictions(&repeated_same_code).is_ok());
 }
 
 #[test]
