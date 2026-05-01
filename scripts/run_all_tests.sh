@@ -102,6 +102,9 @@ python3 "${SCRIPT_DIR}/check_diagnostic_schema_sync.py"
 echo "Running diagnostic docs sync check"
 python3 "${SCRIPT_DIR}/check_diagnostic_docs_sync.py"
 
+echo "Running verification hardening script self-tests"
+python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
+
 echo "Running sifr_diagnostics tests"
 cargo test -p sifr_diagnostics
 
