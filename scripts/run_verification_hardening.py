@@ -25,6 +25,7 @@ STRING_LITERAL_PATTERN = re.compile(r"(\"[^\n\"]*\"|'[^\n']*')")
 INTEGER_LITERAL_PATTERN = re.compile(r"(?<![A-Za-z0-9_])\d+(?![A-Za-z0-9_])")
 FUNCTION_SIGNATURE_PATTERN = re.compile(r"^\s*def\s+\w+\s*\(")
 ARTIFACT_CACHE_LINE_PATTERN = re.compile(r"^\[sifr-artifact-cache\].*$")
+BASELINE_COMMANDS = {"check", "run", "build", "test"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -78,6 +79,11 @@ def parse_args() -> argparse.Namespace:
         "--quarantine-file",
         default="verification/flake/quarantine.json",
         help="Path to quarantine metadata file.",
+    )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="Run verification harness self-tests without executing suites.",
     )
     return parser.parse_args()
 
@@ -204,6 +210,47 @@ def parse_formats(raw: Any) -> list[str | None]:
     return [str(item) for item in raw]
 
 
+def validate_unique_diagnostic_formats(
+    *,
+    suite_name: str,
+    case_id: str,
+    formats: list[str | None],
+) -> None:
+    seen: set[str | None] = set()
+    for diagnostic_format in formats:
+        if diagnostic_format in seen:
+            display = "default" if diagnostic_format is None else diagnostic_format
+            raise SystemExit(
+                f"suite '{suite_name}' case '{case_id}' lists diagnostic_format "
+                f"'{display}' more than once"
+            )
+        seen.add(diagnostic_format)
+
+
+def baseline_variant_label(command_name: str, diagnostic_format: str | None) -> str:
+    return f"{command_name}-{diagnostic_format}" if diagnostic_format else command_name
+
+
+def baseline_artifact_paths(entry_path: Path, label: str) -> tuple[Path, Path, Path]:
+    baseline_dir = entry_path.parent / "baselines"
+    return (
+        baseline_dir / f"{label}.stdout.txt",
+        baseline_dir / f"{label}.stderr.txt",
+        baseline_dir / f"{label}.exit-code.txt",
+    )
+
+
+def baseline_artifact_key(path: Path) -> Path:
+    return path.resolve()
+
+
+def format_repo_relative_path(path: Path, repo_root: Path) -> str:
+    try:
+        return str(path.relative_to(repo_root))
+    except ValueError:
+        return str(path)
+
+
 def load_index(path: Path) -> list[dict[str, Any]]:
     if not path.is_file():
         raise SystemExit(f"verification index not found: {path}")
@@ -221,6 +268,182 @@ def required_missing(entry: dict[str, Any], keys: tuple[str, ...]) -> list[str]:
         if not isinstance(value, str) or not value.strip():
             missing.append(key)
     return missing
+
+
+def baseline_case_metadata(
+    *,
+    suite_name: str,
+    case: Any,
+    repo_root: Path,
+) -> tuple[str, Path, str, list[str | None]]:
+    if not isinstance(case, dict):
+        raise SystemExit(f"suite '{suite_name}' has non-object case entry")
+    case_id = case.get("id")
+    case_entry = case.get("entry")
+    command_name = case.get("command")
+    diagnostic_formats = case.get("diagnostic_formats")
+    if not isinstance(case_id, str):
+        raise SystemExit(f"suite '{suite_name}' has case without valid 'id'")
+    if not isinstance(case_entry, str):
+        raise SystemExit(f"suite '{suite_name}' case '{case_id}' missing string 'entry'")
+    if Path(case_entry).is_absolute():
+        raise SystemExit(f"suite '{suite_name}' case '{case_id}' entry must be repo-relative")
+    if command_name not in BASELINE_COMMANDS:
+        raise SystemExit(
+            f"suite '{suite_name}' case '{case_id}' has unsupported command '{command_name}'"
+        )
+    formats = parse_formats(diagnostic_formats)
+    if not formats:
+        raise SystemExit(f"suite '{suite_name}' case '{case_id}' has invalid diagnostic_formats")
+    validate_unique_diagnostic_formats(
+        suite_name=suite_name,
+        case_id=case_id,
+        formats=formats,
+    )
+
+    entry_path = (repo_root / case_entry).resolve()
+    try:
+        entry_path.relative_to(repo_root)
+    except ValueError as error:
+        raise SystemExit(
+            f"suite '{suite_name}' case '{case_id}' entry must stay under repo root"
+        ) from error
+    return case_id, entry_path, command_name, formats
+
+
+def validate_unique_baseline_artifact_paths(
+    *,
+    suite_name: str,
+    cases: list[Any],
+    repo_root: Path,
+) -> None:
+    seen: dict[Path, str] = {}
+    for case in cases:
+        case_id, entry_path, command_name, formats = baseline_case_metadata(
+            suite_name=suite_name,
+            case=case,
+            repo_root=repo_root,
+        )
+        for diagnostic_format in formats:
+            label = baseline_variant_label(command_name, diagnostic_format)
+            for artifact_path in baseline_artifact_paths(entry_path, label):
+                key = baseline_artifact_key(artifact_path)
+                previous = seen.get(key)
+                owner = f"{case_id}:{label}"
+                if previous is not None:
+                    rel = format_repo_relative_path(key, repo_root)
+                    raise SystemExit(
+                        f"suite '{suite_name}' baseline artifact path collision for {rel}: "
+                        f"{previous} and {owner}"
+                    )
+                seen[key] = owner
+
+
+def assert_self_test_failure(description: str, expected: str, callback: Any) -> None:
+    try:
+        callback()
+    except SystemExit as error:
+        message = str(error)
+        if expected not in message:
+            raise AssertionError(
+                f"{description}: expected failure containing {expected!r}, got {message!r}"
+            ) from error
+        return
+    raise AssertionError(f"{description}: expected SystemExit")
+
+
+def run_self_tests() -> int:
+    repo_root = Path("/tmp/sifr-verification-hardening-self-test").resolve()
+    validate_unique_baseline_artifact_paths(
+        suite_name="self-test",
+        repo_root=repo_root,
+        cases=[
+            {
+                "id": "a",
+                "entry": "fixtures/a/main.sifr",
+                "command": "check",
+                "diagnostic_formats": ["human", "json"],
+            },
+            {
+                "id": "b",
+                "entry": "fixtures/b/main.sifr",
+                "command": "check",
+                "diagnostic_formats": ["human", "json"],
+            },
+        ],
+    )
+    assert_self_test_failure(
+        "normalized duplicate baseline artifact paths",
+        "fixtures/a/baselines/check-json.stdout.txt",
+        lambda: validate_unique_baseline_artifact_paths(
+            suite_name="self-test",
+            repo_root=repo_root,
+            cases=[
+                {
+                    "id": "canonical",
+                    "entry": "fixtures/a/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json"],
+                },
+                {
+                    "id": "prefixed",
+                    "entry": "./fixtures/a/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json"],
+                },
+            ],
+        ),
+    )
+    assert_self_test_failure(
+        "duplicate diagnostic formats",
+        "lists diagnostic_format 'json' more than once",
+        lambda: validate_unique_baseline_artifact_paths(
+            suite_name="self-test",
+            repo_root=repo_root,
+            cases=[
+                {
+                    "id": "duplicate-format",
+                    "entry": "fixtures/c/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json", "json"],
+                }
+            ],
+        ),
+    )
+    assert_self_test_failure(
+        "absolute baseline entry",
+        "entry must be repo-relative",
+        lambda: validate_unique_baseline_artifact_paths(
+            suite_name="self-test",
+            repo_root=repo_root,
+            cases=[
+                {
+                    "id": "absolute",
+                    "entry": "/tmp/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json"],
+                }
+            ],
+        ),
+    )
+    assert_self_test_failure(
+        "repo-relative baseline entry escape",
+        "entry must stay under repo root",
+        lambda: validate_unique_baseline_artifact_paths(
+            suite_name="self-test",
+            repo_root=repo_root,
+            cases=[
+                {
+                    "id": "escape",
+                    "entry": "../escape/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json"],
+                }
+            ],
+        ),
+    )
+    print("verification hardening self-tests ok")
+    return 0
 
 
 def latest_project_revision(repo_root: Path, project_root: str) -> str | None:
@@ -250,30 +473,17 @@ def baseline_case_result(
     repo_root: Path,
     actual_root: Path,
 ) -> tuple[dict[str, Any], bool, int]:
-    case_id = case.get("id")
-    case_entry = case.get("entry")
-    command_name = case.get("command")
+    case_id, entry_path, command_name, formats = baseline_case_metadata(
+        suite_name=suite_name,
+        case=case,
+        repo_root=repo_root,
+    )
     expected_exit = case.get("expect_exit_code")
-    diagnostic_formats = case.get("diagnostic_formats")
 
-    if not isinstance(case_id, str):
-        raise SystemExit(f"suite '{suite_name}' has case without valid 'id'")
-    if not isinstance(case_entry, str):
-        raise SystemExit(f"suite '{suite_name}' case '{case_id}' missing string 'entry'")
-    if command_name not in {"check", "run", "build", "test"}:
-        raise SystemExit(
-            f"suite '{suite_name}' case '{case_id}' has unsupported command '{command_name}'"
-        )
     if not isinstance(expected_exit, int):
         raise SystemExit(f"suite '{suite_name}' case '{case_id}' missing integer 'expect_exit_code'")
-
-    entry_path = repo_root / case_entry
     if not entry_path.is_file():
         raise SystemExit(f"suite '{suite_name}' case '{case_id}' entry does not exist: {entry_path}")
-
-    formats = parse_formats(diagnostic_formats)
-    if not formats:
-        raise SystemExit(f"suite '{suite_name}' case '{case_id}' has invalid diagnostic_formats")
 
     case_failed = False
     failed_variants = 0
@@ -285,7 +495,7 @@ def baseline_case_result(
     }
 
     for diagnostic_format in formats:
-        label = f"{command_name}-{diagnostic_format}" if diagnostic_format else command_name
+        label = baseline_variant_label(command_name, diagnostic_format)
         exit_code, stdout, stderr, elapsed_ms, argv = run_variant(
             repo_root=repo_root,
             command_name=command_name,
@@ -305,10 +515,7 @@ def baseline_case_result(
             stream="stderr",
         )
 
-        baseline_dir = entry_path.parent / "baselines"
-        stdout_file = baseline_dir / f"{label}.stdout.txt"
-        stderr_file = baseline_dir / f"{label}.stderr.txt"
-        exit_file = baseline_dir / f"{label}.exit-code.txt"
+        stdout_file, stderr_file, exit_file = baseline_artifact_paths(entry_path, label)
 
         mismatches: list[str] = []
 
@@ -377,6 +584,11 @@ def run_baseline_suite(
     cases = suite.get("cases", [])
     if not isinstance(cases, list) or not cases:
         raise SystemExit(f"suite '{suite_name}' has no cases")
+    validate_unique_baseline_artifact_paths(
+        suite_name=suite_name,
+        cases=cases,
+        repo_root=repo_root,
+    )
     print(f"  suite={suite_name} owner={suite.get('owner', 'unknown')} cases={len(cases)}")
 
     result = {
@@ -467,7 +679,7 @@ def run_fixedbugs_suite(
         metadata_mismatches = list(missing)
         if not isinstance(expected_exit, int):
             metadata_mismatches.append("expect_exit_code")
-        if command_name not in {"check", "run", "build", "test"}:
+        if command_name not in BASELINE_COMMANDS:
             metadata_mismatches.append("command")
         entry_path = repo_root / str(entry_path_raw) if isinstance(entry_path_raw, str) else None
         if entry_path is None or not entry_path.is_file():
@@ -490,7 +702,7 @@ def run_fixedbugs_suite(
 
         assert entry_path is not None
         for diagnostic_format in formats:
-            label = f"{command_name}-{diagnostic_format}" if diagnostic_format else str(command_name)
+            label = baseline_variant_label(str(command_name), diagnostic_format)
             exit_code, stdout, stderr, elapsed_ms, argv = run_variant(
                 repo_root=repo_root,
                 command_name=str(command_name),
@@ -1543,6 +1755,9 @@ def main() -> int:
         raise SystemExit("--rerun-failures must be >= 0")
 
     repo_root = Path(__file__).resolve().parent.parent
+    if args.self_test:
+        return run_self_tests()
+
     manifest_path = (repo_root / args.manifest).resolve()
     result_json_path = (repo_root / args.result_json).resolve()
     quarantine_path = (repo_root / args.quarantine_file).resolve()
