@@ -268,6 +268,19 @@ fn test_sorted_unexpected_keyword_has_call_code() {
 }
 
 #[test]
+fn test_function_unexpected_keyword_has_call_code() {
+    let result = lower_source(
+        "def greet(name: str) -> str:\n    return \"hello\"\n\ndef main():\n    print(greet(\"Alice\", punctuation=\"!\"))\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "greet() got an unexpected keyword argument 'punctuation'"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+    }));
+}
+
+#[test]
 fn test_keyword_after_positional_has_call_code() {
     let result = lower_source(
         "def greet(name: str, greeting: str) -> str:\n    return greeting\n\ndef main():\n    print(greet(\"Alice\", name=\"Bob\"))\n",
@@ -1773,9 +1786,10 @@ fn test_unexpected_method_keyword_is_rejected() {
     let result = lower_source("def main():\n    xs: list[int] = [1]\n    xs.append(value=2)\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("append() got an unexpected keyword argument 'value'")));
+    assert!(errors.iter().any(|error| {
+        error.message == "append() got an unexpected keyword argument 'value'"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+    }));
 }
 
 #[test]
