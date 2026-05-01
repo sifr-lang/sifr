@@ -18,6 +18,7 @@ mod compat_imports;
 mod container_literal_specialization;
 mod control_flow_conditions;
 mod decimal_methods;
+mod default_args;
 mod defaultdict_refinement;
 mod diagnostics;
 mod empty_collection_refinement;
@@ -78,6 +79,7 @@ mod type_bounds;
 mod type_var_collection;
 mod typing_and_functions;
 use classes::{collect_class_type, lower_class, lower_expr_simple};
+use default_args::collect_function_defaults;
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
 use len_aliases::LenAliasFact;
@@ -684,41 +686,7 @@ fn lower_module_impl(
                 }
             }
 
-            // Collect default values for parameters
-            let mut defaults = Vec::new();
-            for (i, param) in func.parameters.args.iter().enumerate() {
-                if let Some(ref default_expr) = param.default {
-                    if let Some(hir_default) = lower_expr_simple(default_expr) {
-                        defaults.push((i, hir_default));
-                    } else {
-                        ctx.error(format!(
-                            "function '{}': unsupported default argument expression for parameter '{}'",
-                            func.name,
-                            param.parameter.name
-                        ));
-                    }
-                }
-            }
-            // Also collect defaults for keyword-only args
-            let regular_count =
-                func.parameters.args.len() + usize::from(func.parameters.vararg.is_some());
-            for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
-                if let Some(ref default_expr) = param.default {
-                    if let Some(hir_default) = lower_expr_simple(default_expr) {
-                        defaults.push((regular_count + i, hir_default));
-                    } else {
-                        ctx.error(format!(
-                            "function '{}': unsupported default argument expression for parameter '{}'",
-                            func.name,
-                            param.parameter.name
-                        ));
-                    }
-                }
-            }
-            if !defaults.is_empty() {
-                ctx.function_defaults
-                    .insert(function_name.clone(), defaults);
-            }
+            collect_function_defaults(&mut ctx, &function_name, func);
             ctx.functions.insert(function_name.clone(), ft);
             // Track vararg functions
             if func.parameters.vararg.is_some() {

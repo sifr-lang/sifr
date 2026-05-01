@@ -186,27 +186,6 @@ fn public_index() -> String {
         ));
     }
 
-    out.push_str("\n## Retired Codes\n\n");
-    let retired_entries = DIAGNOSTIC_REGISTRY
-        .iter()
-        .filter(|entry| entry.state == DiagnosticState::Retired)
-        .collect::<Vec<_>>();
-    if retired_entries.is_empty() {
-        out.push_str("No retired public diagnostic codes are registered yet.\n");
-    } else {
-        out.push_str("| Code | Family | Summary | Replacement |\n");
-        out.push_str("| --- | --- | --- | --- |\n");
-        for entry in retired_entries {
-            out.push_str(&format!(
-                "| `{}` | `{}` | {} | {} |\n",
-                entry.id,
-                entry.family,
-                entry.summary,
-                optional_code(entry.replacement)
-            ));
-        }
-    }
-
     out
 }
 
@@ -219,7 +198,7 @@ fn internal_reference() -> String {
     out.push_str(
         "- `Reserved`: allocated for a future or structural purpose and cannot be emitted.\n",
     );
-    out.push_str("- `Retired`: kept for stability history and cannot be emitted.\n\n");
+    out.push('\n');
     out.push_str("Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false`, and machine-applicable suggestion availability is derived from emitted suggestions rather than authored manually.\n\n");
 
     out.push_str("## Families\n\n");
@@ -233,19 +212,16 @@ fn internal_reference() -> String {
     }
 
     out.push_str("\n## Registry\n\n");
-    out.push_str("| ID | Family | State | Severity | Docs path | Replacement | Fixture | Owner | Template | Declared args | Dedupe args | Tool actions | Fix all |\n");
-    out.push_str(
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n",
-    );
+    out.push_str("| ID | Family | State | Severity | Docs path | Fixture | Owner | Template | Declared args | Dedupe args | Tool actions | Fix all |\n");
+    out.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
     for entry in DIAGNOSTIC_REGISTRY {
         out.push_str(&format!(
-            "| `{}` | `{}` | {} | {} | `{}` | {} | {} | {} | {} | {} | {} | {} | {} |\n",
+            "| `{}` | `{}` | {} | {} | `{}` | {} | {} | {} | {} | {} | {} | {} |\n",
             entry.id,
             entry.family,
             entry.state.as_str(),
             severity(entry),
             entry.docs_path,
-            optional_code(entry.replacement),
             optional_code(entry.representative_fixture_path),
             optional_code(entry.owner_module),
             optional_code(entry.message_template),

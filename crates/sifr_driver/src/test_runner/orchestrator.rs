@@ -108,12 +108,9 @@ pub(crate) fn build_test_runner_project(
                 let compile_errors: Vec<CompileError> = errors
                     .into_iter()
                     .map(|error| CompileError {
+                        code: error.code,
                         message: format!("[{}] {}", test_file.display(), error.message),
                         phase: CompilePhase::TypeCheck,
-                        // Forwards `LoweringError.code` faithfully: `None`
-                        // for legacy call sites and `Some(_)` after upcoming
-                        // diag_4a slice-2b migrations.
-                        code: error.code,
                     })
                     .collect();
                 return Err(compile_errors);

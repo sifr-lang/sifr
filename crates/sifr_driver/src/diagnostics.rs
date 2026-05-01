@@ -27,7 +27,7 @@ pub enum CompileResultFull {
 pub struct CompileError {
     pub message: String,
     pub phase: CompilePhase,
-    pub code: Option<DiagnosticCode>,
+    pub code: DiagnosticCode,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -95,20 +95,7 @@ pub struct CompilerDiagnostic {
 }
 
 impl CompileError {
-    /// Creates a temporary legacy phase-bucket error for unmigrated paths.
-    ///
-    /// Do not use this for workspace diagnostics or any newly migrated emission
-    /// site; those must use [`Self::with_code`] with an active `DiagnosticCode`.
-    #[must_use]
-    pub fn new(message: impl Into<String>, phase: CompilePhase) -> Self {
-        Self {
-            message: message.into(),
-            phase,
-            code: None,
-        }
-    }
-
-    /// Creates a legacy transport error that already carries canonical identity.
+    /// Creates a compile error with canonical diagnostic identity.
     #[must_use]
     pub fn with_code(
         message: impl Into<String>,
@@ -118,26 +105,12 @@ impl CompileError {
         Self {
             message: message.into(),
             phase,
-            code: Some(code),
+            code,
         }
     }
 
     fn diagnostic_code(&self) -> &'static str {
-        if let Some(code) = self.code {
-            return code.code();
-        }
-        // Transitional legacy bridge for unmigrated non-workspace paths in
-        // diag_4a slice 1. Slice 2 removes the TypeCheck fallback after HIR
-        // LoweringError carries structured DiagnosticCode values and affected
-        // fixtures are re-keyed.
-        // Workspace diagnostics must use `with_code`; this function no longer
-        // infers identity from rendered message text.
-        match self.phase {
-            CompilePhase::Parse => "SIFR-PARSE-0001",
-            CompilePhase::TypeCheck => "SIFR-TYPE-0001",
-            CompilePhase::Codegen => "SIFR-CODEGEN-0001",
-            CompilePhase::Build => "SIFR-BUILD-0001",
-        }
+        self.code.code()
     }
 
     fn diagnostic_severity() -> Severity {

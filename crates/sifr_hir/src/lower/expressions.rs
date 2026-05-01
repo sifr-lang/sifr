@@ -683,7 +683,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             }
             let Some(elem_ty) = callable_builtin_element_type(iterable.ty()) else {
                 if matches!(iterable.ty().resolve_alias(), Type::Tuple(_)) {
-                    ctx.error(
+                    ctx.error_with_code(
+                        DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
                         "iter() tuple argument must have one statically provable element type"
                             .to_string(),
                     );
@@ -1814,14 +1815,17 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 }
             }
             if !arg.ty().is_assignable_to(param_ty) {
-                ctx.error(format!(
-                    "argument {} ('{}') of function '{}': expected '{}', got '{}'",
-                    i + 1,
-                    param_name,
-                    func_name,
-                    param_ty.display_name(),
-                    arg.ty().display_name()
-                ));
+                ctx.error_with_code(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "argument {} ('{}') of function '{}': expected '{}', got '{}'",
+                        i + 1,
+                        param_name,
+                        func_name,
+                        param_ty.display_name(),
+                        arg.ty().display_name()
+                    ),
+                );
             }
         }
     }
@@ -1897,26 +1901,32 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 collect_type_vars(&concrete_param_ty, &mut unresolved_type_vars);
                 if !unresolved_type_vars.is_empty() {
                     if !is_compatible_with_unresolved_typevars(arg.ty(), &concrete_param_ty) {
-                        ctx.error(format!(
+                        ctx.error_with_code(
+                            DiagnosticCode::TYPE_MISMATCH,
+                            format!(
+                                "argument {} ('{}') of function '{}': expected '{}', got '{}'",
+                                i + 1,
+                                param_name,
+                                func_name,
+                                concrete_param_ty.display_name(),
+                                arg.ty().display_name()
+                            ),
+                        );
+                    }
+                    continue;
+                }
+                if !arg.ty().is_assignable_to(&concrete_param_ty) {
+                    ctx.error_with_code(
+                        DiagnosticCode::TYPE_MISMATCH,
+                        format!(
                             "argument {} ('{}') of function '{}': expected '{}', got '{}'",
                             i + 1,
                             param_name,
                             func_name,
                             concrete_param_ty.display_name(),
                             arg.ty().display_name()
-                        ));
-                    }
-                    continue;
-                }
-                if !arg.ty().is_assignable_to(&concrete_param_ty) {
-                    ctx.error(format!(
-                        "argument {} ('{}') of function '{}': expected '{}', got '{}'",
-                        i + 1,
-                        param_name,
-                        func_name,
-                        concrete_param_ty.display_name(),
-                        arg.ty().display_name()
-                    ));
+                        ),
+                    );
                 }
             }
         }

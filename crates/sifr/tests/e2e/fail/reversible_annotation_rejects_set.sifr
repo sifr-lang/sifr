@@ -1,5 +1,5 @@
 # Reference: phase_psp_iter_fix_1_reversible_annotation_rejects_set
-# expect-error: SIFR-TYPE-0001: argument 1 ('xs') of function 'consume': expected 'Reversible[int]', got 'set[int]'
+# expect-error: SIFR-TYPE-0002: argument 1 ('xs') of function 'consume': expected 'Reversible[int]', got 'set[int]'
 def consume(xs: Reversible[int]) -> int:
     rev: Iterator[int] = reversed(xs)
     first: int | None = next(rev)

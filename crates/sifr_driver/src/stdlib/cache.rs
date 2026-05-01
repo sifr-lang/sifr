@@ -17,6 +17,7 @@ mod tests {
     use super::*;
     use crate::stdlib::compile_stdlib_uncached;
     use crate::{CompileError, CompilePhase};
+    use sifr_diagnostics::DiagnosticCode;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[test]
@@ -50,9 +51,10 @@ mod tests {
 
         let first = match get_or_init_stdlib_cache(&cache, || {
             build_calls.fetch_add(1, Ordering::SeqCst);
-            Err(vec![CompileError::new(
+            Err(vec![CompileError::with_code(
                 "sentinel stdlib cache error",
                 CompilePhase::Build,
+                DiagnosticCode::STDLIB_CACHE_FAILURE,
             )])
         }) {
             Ok(_) => panic!("sentinel error should be cached"),

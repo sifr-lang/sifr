@@ -85,10 +85,10 @@ fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
     let mut diagnostics = Vec::new();
     for idx in 0..8 {
         diagnostics.push(CompilerDiagnostic {
-            code: "SIFR-TYPE-0001".to_string(),
+            code: "SIFR-TYPE-0002".to_string(),
             severity: Severity::Error,
             message: "type mismatch: expected 'int', got 'str'".to_string(),
-            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
+            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
             primary_span: Some(DiagnosticSpan {
                 file: Some("main.sifr".to_string()),
                 line: Some(idx + 1),
@@ -116,7 +116,7 @@ fn test_apply_diagnostic_recovery_limits_caps_top_level_diagnostics() {
             code: format!("SIFR-TYPE-{:04}", idx),
             severity: Severity::Error,
             message: format!("error {idx}"),
-            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
+            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
             primary_span: None,
             related_spans: Vec::new(),
             children: Vec::new(),
