@@ -11,4 +11,4 @@ def main():
     assert str(b.round(2)) == '20.75000000000000000000000000'
     assert str(b.quantize(2)) == '20.75000000000000000000000000'
 
-    print("diagnostic range E2501-E2508 is reserved and enforced")
+    print("diagnostic range SIFR-DECIMAL-0001 through SIFR-DECIMAL-0008 is reserved and enforced")

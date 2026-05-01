@@ -1,4 +1,4 @@
-# expect-error: [SIFR-DECIMAL-0003] [E2503] cannot mix 'float' with decimal numeric types in arithmetic
+# expect-error: SIFR-DECIMAL-0003: cannot mix 'float' with decimal numeric types in arithmetic
 def main():
     d: decimal = Decimal("1.0")
     x: decimal = d + 1.0

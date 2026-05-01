@@ -31,5 +31,7 @@ fn main() {
         "20.75000000000000000000000000"
     );
 
-    println!("diagnostic range E2501-E2508 is reserved and enforced");
+    println!(
+        "diagnostic range SIFR-DECIMAL-0001 through SIFR-DECIMAL-0008 is reserved and enforced"
+    );
 }

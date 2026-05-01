@@ -30,7 +30,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
     {
         return Err(TypeError {
             code: Some(DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL),
-            message: "[E2504] cannot mix 'decimal' and 'bigdecimal' in arithmetic; use explicit Decimal(...) or BigDecimal(...) conversion".to_string(),
+            message: "cannot mix 'decimal' and 'bigdecimal' in arithmetic; use explicit Decimal(...) or BigDecimal(...) conversion".to_string(),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
                 ty: Box::new(left.clone()),
@@ -43,8 +43,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
     {
         return Err(TypeError {
             code: Some(DiagnosticCode::DECIMAL_FLOAT_MIXED),
-            message: "[E2503] cannot mix 'float' with decimal numeric types in arithmetic"
-                .to_string(),
+            message: "cannot mix 'float' with decimal numeric types in arithmetic".to_string(),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
                 ty: Box::new(left.clone()),
@@ -370,9 +369,8 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
     {
         return Err(TypeError {
             code: Some(DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL),
-            message:
-                "[E2504] cannot compare 'decimal' and 'bigdecimal' without explicit conversion"
-                    .to_string(),
+            message: "cannot compare 'decimal' and 'bigdecimal' without explicit conversion"
+                .to_string(),
             kind: crate::TypeErrorKind::TypeMismatch {
                 expected: Box::new(left.clone()),
                 actual: Box::new(right.clone()),
@@ -384,7 +382,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
     {
         return Err(TypeError {
             code: Some(DiagnosticCode::DECIMAL_FLOAT_MIXED),
-            message: "[E2503] cannot compare 'float' with decimal numeric types".to_string(),
+            message: "cannot compare 'float' with decimal numeric types".to_string(),
             kind: crate::TypeErrorKind::TypeMismatch {
                 expected: Box::new(left.clone()),
                 actual: Box::new(right.clone()),

@@ -4,7 +4,7 @@
 //! an exact decimal value from a floating-point literal.
 //!
 //! This fixture exists to preserve the phase-28 exact-construction rule and its
-//! deterministic `[E2505]` diagnostic directing users to `Decimal("...")`. The
+//! deterministic `SIFR-DECIMAL-0005` diagnostic directing users to `Decimal("...")`. The
 //! Rust-side analogue depends on Sifr's exact-construction policy rather than a
 //! direct Rust type error, so this file remains a contract scaffold.
 

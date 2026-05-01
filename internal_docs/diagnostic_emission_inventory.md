@@ -117,7 +117,7 @@ Current public-code mechanisms to remove:
 | Phase-derived `CompilePhase` mapping and display labels | `crates/sifr_driver/src/diagnostics.rs` | removed; diagnostics now carry active code strings, and human labels are code-derived | domain helpers construct `SifrDiagnostic` with the canonical code before driver rendering |
 | Workspace prefix classifier | legacy `CompileError::workspace_diagnostic_code` | removed before `milestone_diag_4b`; workspace identities are explicit at construction | typed workspace/project discovery constructors with structured path/module args |
 | Type-error string forwarding | HIR sites that call `ctx.error(e.message)` or `ctx.error(error.message)` | loses `TypeErrorKind`, source relation, expected/actual/operator args, and decimal identity | HIR call site emits the target `TYPE-*`, `DECIMAL-*`, `NAME-*`, `CALL-*`, or `OWN-*` diagnostic directly with the AST span |
-| Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | keeps `[E25xx]` as text inside a broader `SIFR-TYPE-0001` diagnostic | top-level `SIFR-DECIMAL-*` diagnostic code and no secondary message code |
+| Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | removed in `milestone_diag_6` slice 1; decimal diagnostics now carry top-level `SIFR-DECIMAL-*` codes with no secondary message code | keep top-level `SIFR-DECIMAL-*` identity and no message-embedded pseudo-code |
 | Test-only hard-coded diagnostics | CLI renderer and driver diagnostics tests | locks renderer behavior to legacy phase buckets and pseudo-code text | renderer/harness tests construct canonical diagnostics through `sifr_diagnostics` fixtures |
 
 Workspace code review for `milestone_diag_2b`:
@@ -133,9 +133,9 @@ Workspace code review for `milestone_diag_2b`:
 
 ## E2E Expectation And Baseline Surface
 
-Current harness behavior in `crates/sifr/tests/e2e.rs` treats `# expect-error:` as substring matching. Harness sample tests now use active `SIFR-*` sample codes but still accept `[E2507]`-style pseudo-code text. That remaining legacy state is tightened in `milestone_diag_6`.
+Current harness behavior in `crates/sifr/tests/e2e.rs` treats `# expect-error:` as substring matching. Decimal diagnostic messages and fail-fixture expectations stop carrying `[E25xx]` pseudo-code text in `milestone_diag_6`; the harness still accepts `[E2507]`-style pseudo-code text until the stricter `milestone_diag_5` contract cleanup rejects it.
 
-Current fail-fixture and harness-sample code markers:
+Original fail-fixture and harness-sample pseudo-code markers:
 
 | Marker | Count | Migration action |
 | --- | ---: | --- |
@@ -259,7 +259,7 @@ Checked-in verification baselines under `crates/sifr/tests/verification` are a s
 
 | Verification case | Current baseline markers | Target / owner |
 | --- | --- | --- |
-| `diagnostics/decimal_invalid_literal` | `SIFR-TYPE-0001` plus message-embedded `[E2501]` in compact/json/human output | `SIFR-DECIMAL-0001`; regenerate in decimal migration and renderer integration |
+| `diagnostics/decimal_invalid_literal` | `SIFR-DECIMAL-0001` in compact/json/human output with no message-embedded pseudo-code | Done in `milestone_diag_6` slice 1; keep as decimal renderer regression coverage |
 | `project/missing_import_reports_error` | `SIFR-WORKSPACE-0101` in compact/json output | keep `SIFR-WORKSPACE-0101`; renderer integration regenerates schema shape only |
 | `project/workspace_unresolved_import` | `SIFR-WORKSPACE-0101` in compact/json output | keep `SIFR-WORKSPACE-0101`; add related searched paths |
 | `project/workspace_ambiguous_import` | `SIFR-WORKSPACE-0102` in compact/json output | keep `SIFR-WORKSPACE-0102`; add related candidate paths |

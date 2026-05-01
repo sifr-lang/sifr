@@ -1,4 +1,4 @@
-# expect-error: [SIFR-DECIMAL-0006] [E2506] float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float
+# expect-error: SIFR-DECIMAL-0006: float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float
 def main():
     d: bigdecimal = BigDecimal("1.5")
     x: float = float(d)

@@ -184,16 +184,16 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 ### milestone_28_4: Decimal Diagnostics Contract
 - Scope:
   - Add decimal-specific diagnostics with stable codes and precise spans for both types.
-  - Reserve decimal diagnostic range `E2501-E2599`.
+  - Reserve decimal diagnostic range `SIFR-DECIMAL-0001` through `SIFR-DECIMAL-0099`.
   - Initial required codes:
-    - `E2501` invalid `Decimal` input literal/string
-    - `E2502` invalid `BigDecimal` input literal/string
-    - `E2503` invalid mixed numeric arithmetic (`float` with `decimal`/`bigdecimal`)
-    - `E2504` invalid mixed numeric arithmetic (`decimal` with `bigdecimal` without explicit conversion)
-    - `E2505` invalid decimal conversion/construction
-    - `E2506` invalid bigdecimal conversion/construction
-    - `E2507` decimal precision/overflow condition
-    - `E2508` bigdecimal context error
+    - `SIFR-DECIMAL-0001` invalid `Decimal` input literal/string
+    - `SIFR-DECIMAL-0002` invalid `BigDecimal` input literal/string
+    - `SIFR-DECIMAL-0003` invalid mixed numeric arithmetic (`float` with `decimal`/`bigdecimal`)
+    - `SIFR-DECIMAL-0004` invalid mixed numeric arithmetic (`decimal` with `bigdecimal` without explicit conversion)
+    - `SIFR-DECIMAL-0005` invalid decimal conversion/construction
+    - `SIFR-DECIMAL-0006` invalid bigdecimal conversion/construction
+    - `SIFR-DECIMAL-0007` decimal precision/overflow condition
+    - `SIFR-DECIMAL-0008` bigdecimal context error
 - Definition of done:
   - Decimal diagnostics are stable and regression-locked.
 

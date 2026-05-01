@@ -4,7 +4,7 @@
 //! `bigdecimal` without an explicit conversion.
 //!
 //! This fixture exists to preserve the phase-28 mixed-precision arithmetic rule
-//! and its deterministic `[E2504]` diagnostic. The Rust-side analogue is still a
+//! and its deterministic `SIFR-DECIMAL-0004` diagnostic. The Rust-side analogue is still a
 //! policy-level semantic error owned by Sifr's decimal checker, so this file
 //! documents the contract rather than inventing a synthetic Rust compile-fail.
 
