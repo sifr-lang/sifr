@@ -16,5 +16,7 @@ fn main() {
 }, rust_decimal::RoundingStrategy::MidpointNearestEven)) == "10.50".to_string());
     assert!(format!("{}", bigdecimal::Context::default().with_rounding_mode(bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| bigdecimal::Context::default().with_rounding_mode(bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(b.with_scale_round(2 as i64, bigdecimal::RoundingMode::HalfEven)))) == "20.75000000000000000000000000".to_string());
     assert!(format!("{}", bigdecimal::Context::default().with_rounding_mode(bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| bigdecimal::Context::default().with_rounding_mode(bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(b.with_scale_round(2 as i64, bigdecimal::RoundingMode::HalfEven)))) == "20.75000000000000000000000000".to_string());
-    println!("diagnostic range E2501-E2508 is reserved and enforced");
+    println!(
+        "diagnostic range SIFR-DECIMAL-0001 through SIFR-DECIMAL-0008 is reserved and enforced"
+    );
 }

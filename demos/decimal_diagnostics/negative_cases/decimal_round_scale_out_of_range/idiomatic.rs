@@ -4,7 +4,7 @@
 //! scale `29`, outside the supported `0..=28` range.
 //!
 //! This fixture exists to preserve the exact phase-28 diagnostic contract,
-//! including the explicit bound check and deterministic `[E2507]` error. The
+//! including the explicit bound check and deterministic `SIFR-DECIMAL-0007` error. The
 //! Rust-side analogue would depend on Sifr-specific decimal policy rather than a
 //! standard library failure, so this file records the contract instead.
 

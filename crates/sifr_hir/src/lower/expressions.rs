@@ -998,14 +998,14 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             } else if arg_ty == Type::Decimal {
                 ctx.error_with_code(
                     DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
-                    "[E2505] float(decimal_value) is not allowed; decimal values are exact and cannot be converted to float"
+                    "float(decimal_value) is not allowed; decimal values are exact and cannot be converted to float"
                         .to_string(),
                 );
                 return None;
             } else if arg_ty == Type::BigDecimal {
                 ctx.error_with_code(
                     DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
-                    "[E2506] float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float"
+                    "float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float"
                         .to_string(),
                 );
                 return None;

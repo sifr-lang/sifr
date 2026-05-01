@@ -2588,6 +2588,35 @@ fn test_e2e_fail() {
 }
 
 #[test]
+fn test_decimal_fail_fixtures_do_not_emit_legacy_pseudo_codes() {
+    let fail_dir = Path::new("tests/e2e/fail");
+    if !fail_dir.exists() {
+        return;
+    }
+
+    let mut checked = 0usize;
+    for path in read_dir_file_paths_sorted(fail_dir) {
+        let source = std::fs::read_to_string(&path).unwrap();
+        if !source.contains("SIFR-DECIMAL-") {
+            continue;
+        }
+
+        let errors = compile_source(&source).expect_err("decimal fail fixture should fail");
+        assert!(
+            errors.iter().all(
+                |failure| !failure.code.starts_with("E25") && !failure.message.contains("[E25")
+            ),
+            "decimal fixture {} emitted a legacy pseudo-code:\n{}",
+            path.display(),
+            compile_failures_to_messages(&errors).join("\n")
+        );
+        checked += 1;
+    }
+
+    assert!(checked > 0, "No decimal fail fixtures found");
+}
+
+#[test]
 fn test_e2e_runtime_fail() {
     let runtime_fail_dir = Path::new("tests/e2e/runtime_fail");
     if !runtime_fail_dir.exists() {

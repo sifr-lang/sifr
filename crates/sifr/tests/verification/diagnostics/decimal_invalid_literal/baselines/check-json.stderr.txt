@@ -2,12 +2,12 @@
   {
     "code": "SIFR-DECIMAL-0001",
     "severity": "Error",
-    "message": "[main] [E2501] Decimal() received invalid exact literal '12.34.56'",
+    "message": "[main] Decimal() received invalid exact literal '12.34.56'",
     "message_template": "{message}",
     "args": {
       "message": {
         "kind": "string",
-        "value": "[main] [E2501] Decimal() received invalid exact literal '12.34.56'"
+        "value": "[main] Decimal() received invalid exact literal '12.34.56'"
       }
     },
     "url": "https://sifr.sh/docs/errors/SIFR-DECIMAL-0001",
