@@ -40,7 +40,7 @@ Eliminate semantic drift between `check`, `build`, `run`, and `test` by enforcin
 
 #### Frontend Failure Contract (milestone_22_3)
 - Frontend failures in `check`, `build`, `run`, and `test` exit with code `1`.
-- Frontend errors render via the shared `CompileError` formatter (`{phase}: {message}`) with no mode-specific suffixes.
+- Frontend errors render via shared diagnostic formatting with code-derived human labels and no mode-specific suffixes.
 - For equivalent frontend failures in `check`/`build`/`run`, diagnostic line content must be byte-identical.
 - Diagnostic ordering is deterministic:
   - project modes use module compile order from the shared dependency graph;

@@ -5,7 +5,7 @@ use super::project_codegen::{
     generated_project_binary_project, generated_single_file_binary_project, GeneratedBinaryProject,
 };
 use super::ArtifactCacheReport;
-use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompilePhase, CompileResult};
+use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompileResult};
 use crate::frontend::{parse_source, FrontendCompiled, FrontendDiagnosticStyle};
 use crate::project::{
     collect_project_hir_modules, compile_frontend_modules, emit_project_frontend_diagnostics,
@@ -165,7 +165,6 @@ impl RootedEntrypointPlan {
                 else {
                     return Err(vec![CompileError::with_code(
                         format!("invalid project entrypoint path '{}'", main_file.display()),
-                        CompilePhase::Build,
                         DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
                     )]);
                 };
@@ -207,7 +206,6 @@ impl RootedEntrypointPlan {
         if self.shape != RootedEntrypointShape::SingleFile {
             return Err(vec![CompileError::with_code(
                 "internal error: rooted project entrypoint cannot be converted into a single-file frontend result",
-                CompilePhase::Build,
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
         }
@@ -216,7 +214,6 @@ impl RootedEntrypointPlan {
         let main_module = project_lowering.hir_modules.remove("main").ok_or_else(|| {
             vec![CompileError::with_code(
                 "internal error: frontend lowering missing 'main' module",
-                CompilePhase::Build,
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]
         })?;

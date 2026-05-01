@@ -1,4 +1,4 @@
-use crate::diagnostics::{write_stderr_line, CompileError, CompilePhase};
+use crate::diagnostics::{write_stderr_line, CompileError};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult};
 use sifr_python_ast::Stmt;
@@ -54,7 +54,7 @@ fn lowering_error_to_compile_error(
     } else {
         message
     };
-    CompileError::with_code(message, CompilePhase::TypeCheck, code)
+    CompileError::with_code(message, code)
 }
 
 pub(crate) fn lowering_error_code_or_internal(error: &LoweringError) -> DiagnosticCode {

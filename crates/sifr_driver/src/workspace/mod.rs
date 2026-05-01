@@ -1,4 +1,4 @@
-use crate::diagnostics::{CompileError, CompilePhase};
+use crate::diagnostics::CompileError;
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Component, Path, PathBuf};
 
@@ -165,7 +165,6 @@ fn parse_manifest_error(path: &Path, reason: impl std::fmt::Display) -> CompileE
             "could not parse sifr.toml at '{}': {reason}",
             path.display()
         ),
-        CompilePhase::Build,
         DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
     )
 }
@@ -202,7 +201,6 @@ impl SourceRootErrorKind {
 fn source_root_error(source_root: &str, kind: SourceRootErrorKind) -> CompileError {
     CompileError::with_code(
         format!("[source].roots entry '{source_root}' {}", kind.reason()),
-        CompilePhase::Build,
         kind.code(),
     )
 }

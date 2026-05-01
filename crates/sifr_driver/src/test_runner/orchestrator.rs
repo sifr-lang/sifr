@@ -1,7 +1,5 @@
 use super::execution::execute_test_runner_project;
-use crate::diagnostics::{
-    run_codegen_with_boundary, write_stderr_line, CompileError, CompilePhase,
-};
+use crate::diagnostics::{run_codegen_with_boundary, write_stderr_line, CompileError};
 use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle};
 use crate::project::{
     collect_project_hir_modules, discover_test_root_modules, parse_import_closure_modules,
@@ -92,7 +90,6 @@ pub(crate) fn build_test_runner_project(
                     module_name,
                     test_file.display()
                 ),
-                CompilePhase::Build,
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
         };
@@ -110,7 +107,6 @@ pub(crate) fn build_test_runner_project(
                     .map(|error| CompileError {
                         code: error.code,
                         message: format!("[{}] {}", test_file.display(), error.message),
-                        phase: CompilePhase::TypeCheck,
                     })
                     .collect();
                 return Err(compile_errors);

@@ -1,7 +1,8 @@
 use crate::{
     check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,
-    CompilePhase, CompileResult, CompileResultFull,
+    CompileResult, CompileResultFull,
 };
+use sifr_diagnostics::DiagnosticCode;
 
 #[test]
 fn test_parse_source_returns_suite_for_valid_program() {
@@ -14,7 +15,10 @@ fn test_parse_source_returns_suite_for_valid_program() {
 fn test_parse_source_returns_parse_error_for_invalid_program() {
     let errors = parse_source("def main(:\n").expect_err("invalid source should fail parsing");
     assert!(!errors.is_empty());
-    assert!(matches!(errors[0].phase, CompilePhase::Parse));
+    assert_eq!(
+        errors[0].code,
+        DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY
+    );
 }
 
 #[test]
@@ -26,7 +30,7 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
     assert!(!errors.is_empty());
     assert!(errors
         .iter()
-        .all(|error| matches!(error.phase, CompilePhase::TypeCheck)));
+        .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH));
 
     let check_errors = type_check_source("def main():\n    x: int = \"bad\"\n");
     assert_eq!(errors.len(), check_errors.len());
@@ -126,7 +130,7 @@ def main():
 }
 
 #[test]
-fn test_check_only_reports_frontend_phases() {
+fn test_check_reports_structured_frontend_diagnostics() {
     let source = r#"
 def main():
     x: int = "hello"
@@ -135,7 +139,7 @@ def main():
     assert!(!errors.is_empty());
     assert!(errors
         .iter()
-        .all(|e| matches!(e.phase, CompilePhase::Parse | CompilePhase::TypeCheck)));
+        .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH));
 }
 
 #[test]

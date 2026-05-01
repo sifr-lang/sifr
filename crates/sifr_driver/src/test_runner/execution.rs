@@ -1,7 +1,7 @@
 use super::artifacts::{compose_test_runner_lib, generate_test_runner_cargo_toml};
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{prepare_cached_artifact, ArtifactCacheReport, PreparedArtifactCache};
-use crate::diagnostics::{write_stderr, write_stderr_line, CompileError, CompilePhase};
+use crate::diagnostics::{write_stderr, write_stderr_line, CompileError};
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::Path;
@@ -41,7 +41,6 @@ pub(crate) fn execute_test_runner_project(
         std::fs::create_dir_all(&src_dir).map_err(|error| {
             vec![CompileError::with_code(
                 format!("failed to create test directory: {error}"),
-                CompilePhase::Build,
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
         })?;
@@ -49,7 +48,6 @@ pub(crate) fn execute_test_runner_project(
         std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|error| {
             vec![CompileError::with_code(
                 format!("failed to write Cargo.toml: {error}"),
-                CompilePhase::Build,
                 DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
             )]
         })?;
@@ -65,7 +63,6 @@ pub(crate) fn execute_test_runner_project(
                                 "failed to create test support module directory '{}': {error}",
                                 parent.display()
                             ),
-                            CompilePhase::Build,
                             DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
                         )]
                     })?;
@@ -76,7 +73,6 @@ pub(crate) fn execute_test_runner_project(
                             "failed to write test support module '{}': {error}",
                             output_path.display()
                         ),
-                        CompilePhase::Build,
                         DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
                     )]
                 })?;
@@ -92,7 +88,6 @@ pub(crate) fn execute_test_runner_project(
                             "failed to create test support namespace directory '{}': {error}",
                             parent.display()
                         ),
-                        CompilePhase::Build,
                         DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
                     )]
                 })?;
@@ -109,7 +104,6 @@ pub(crate) fn execute_test_runner_project(
                         "failed to write test support namespace '{}': {error}",
                         output_path.display()
                     ),
-                    CompilePhase::Build,
                     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
                 )]
             })?;
@@ -118,7 +112,6 @@ pub(crate) fn execute_test_runner_project(
         std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|error| {
             vec![CompileError::with_code(
                 format!("failed to write lib.rs: {error}"),
-                CompilePhase::Build,
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
         })?;
@@ -131,7 +124,6 @@ pub(crate) fn execute_test_runner_project(
         .map_err(|error| {
             vec![CompileError::with_code(
                 format!("failed to run cargo test: {error}"),
-                CompilePhase::Build,
                 DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
             )]
         })?;

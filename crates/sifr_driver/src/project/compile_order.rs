@@ -1,4 +1,4 @@
-use crate::diagnostics::{CompileError, CompilePhase};
+use crate::diagnostics::CompileError;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -191,7 +191,6 @@ pub(crate) fn compute_module_compile_order(
     );
     Err(vec![CompileError::with_code(
         message,
-        CompilePhase::Build,
         DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
     )])
 }

@@ -1,4 +1,4 @@
-use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompilePhase};
+use crate::diagnostics::{run_codegen_with_boundary, CompileError};
 use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
 use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
@@ -35,7 +35,6 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                         .map(|e| {
                             CompileError::with_code(
                                 format!("[stdlib:{module_name}] {e}"),
-                                CompilePhase::Parse,
                                 DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                             )
                         })
@@ -49,7 +48,6 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                 // the precise active parse-code buckets.
                 return Err(vec![CompileError::with_code(
                     format!("[stdlib:{module_name}] failed to parse: {e}"),
-                    CompilePhase::Parse,
                     DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                 )]);
             }
@@ -67,7 +65,6 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                         // diagnostics.
                         CompileError::with_code(
                             format!("[stdlib:{}] {}", module_name, e.message),
-                            CompilePhase::TypeCheck,
                             DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                         )
                     })
@@ -206,7 +203,6 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                 vec![CompileError {
                     code: e.code,
                     message: format!("[stdlib:{module_name}] {}", e.message),
-                    phase: e.phase,
                 }]
             })?;
             stdlib_code

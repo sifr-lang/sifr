@@ -1,4 +1,4 @@
-use crate::diagnostics::{CompileError, CompilePhase};
+use crate::diagnostics::CompileError;
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Path, PathBuf};
@@ -30,7 +30,6 @@ pub(crate) fn create_invocation_workspace(prefix: &str) -> Result<PathBuf, Vec<C
                 let workspace_display = workspace.display();
                 return Err(vec![CompileError::with_code(
                     format!("failed to create invocation workspace '{workspace_display}': {error}"),
-                    CompilePhase::Build,
                     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
                 )]);
             }
@@ -38,7 +37,6 @@ pub(crate) fn create_invocation_workspace(prefix: &str) -> Result<PathBuf, Vec<C
     }
     Err(vec![CompileError::with_code(
         format!("failed to allocate unique invocation workspace for prefix '{prefix}'"),
-        CompilePhase::Build,
         DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     )])
 }
@@ -126,7 +124,6 @@ impl PendingCachedArtifact {
                         "generated artifact cache staging directory is missing required path '{}'",
                         absolute.display()
                     ),
-                    CompilePhase::Build,
                     DiagnosticCode::BUILD_ARTIFACT_MISSING,
                 )]);
             }
@@ -166,7 +163,6 @@ impl PendingCachedArtifact {
                     self.staging_root.display(),
                     self.final_root.display()
                 ),
-                CompilePhase::Build,
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]),
         }
@@ -212,7 +208,6 @@ pub(crate) fn prepare_cached_artifact(
                 "failed to create generated artifact cache root '{}': {error}",
                 cache_root.display()
             ),
-            CompilePhase::Build,
             DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
         )]
     })?;
@@ -293,14 +288,12 @@ fn write_cache_metadata(
     let content = serde_json::to_string_pretty(metadata).map_err(|error| {
         vec![CompileError::with_code(
             format!("failed to serialize generated artifact cache metadata: {error}"),
-            CompilePhase::Build,
             DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
         )]
     })?;
     std::fs::write(workspace_root.join(ARTIFACT_CACHE_METADATA_FILE), content).map_err(|error| {
         vec![CompileError::with_code(
             format!("failed to write generated artifact cache metadata: {error}"),
-            CompilePhase::Build,
             DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
         )]
     })

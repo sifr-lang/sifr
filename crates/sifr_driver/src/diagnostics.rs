@@ -26,16 +26,7 @@ pub enum CompileResultFull {
 #[derive(Debug, Clone)]
 pub struct CompileError {
     pub message: String,
-    pub phase: CompilePhase,
     pub code: DiagnosticCode,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum CompilePhase {
-    Parse,
-    TypeCheck,
-    Codegen,
-    Build,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -97,14 +88,9 @@ pub struct CompilerDiagnostic {
 impl CompileError {
     /// Creates a compile error with canonical diagnostic identity.
     #[must_use]
-    pub fn with_code(
-        message: impl Into<String>,
-        phase: CompilePhase,
-        code: DiagnosticCode,
-    ) -> Self {
+    pub fn with_code(message: impl Into<String>, code: DiagnosticCode) -> Self {
         Self {
             message: message.into(),
-            phase,
             code,
         }
     }
@@ -196,13 +182,36 @@ pub fn apply_diagnostic_recovery_limits(
 
 impl std::fmt::Display for CompileError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let phase = match self.phase {
-            CompilePhase::Parse => "parse error",
-            CompilePhase::TypeCheck => "type error",
-            CompilePhase::Codegen => "codegen error",
-            CompilePhase::Build => "build error",
-        };
-        write!(f, "{}: {}", phase, self.message)
+        write!(
+            f,
+            "{}: {}",
+            compile_error_label_for_code(self.code),
+            self.message
+        )
+    }
+}
+
+#[must_use]
+pub fn compile_error_label_for_code(code: DiagnosticCode) -> &'static str {
+    compile_error_label_for_code_str(code.code())
+}
+
+#[must_use]
+pub fn compile_error_label_for_code_str(code: &str) -> &'static str {
+    if code == DiagnosticCode::INTERNAL_COMPILER_PANIC.code() {
+        "internal compiler error"
+    } else if code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code()
+        || code == DiagnosticCode::STDLIB_CACHE_FAILURE.code()
+    {
+        "build error"
+    } else if code.starts_with("SIFR-PARSE-") {
+        "parse error"
+    } else if code.starts_with("SIFR-CODEGEN-") {
+        "codegen error"
+    } else if code.starts_with("SIFR-BUILD-") || code.starts_with("SIFR-WORKSPACE-") {
+        "build error"
+    } else {
+        "type error"
     }
 }
 
@@ -235,7 +244,6 @@ pub(crate) fn run_codegen_with_boundary<T>(
         Ok(value) => Ok(value),
         Err(payload) => Err(CompileError::with_code(
             format!("{context}: {}", panic_payload_message(payload.as_ref())),
-            CompilePhase::Codegen,
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         )),
     }

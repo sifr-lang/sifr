@@ -1,6 +1,6 @@
 use crate::{
-    apply_diagnostic_recovery_limits, compile_errors_to_diagnostics, CompileError, CompilePhase,
-    CompilerDiagnostic, DiagnosticSpan, Severity,
+    apply_diagnostic_recovery_limits, compile_error_label_for_code, compile_errors_to_diagnostics,
+    CompileError, CompilerDiagnostic, DiagnosticSpan, Severity,
 };
 use sifr_diagnostics::DiagnosticCode;
 
@@ -8,7 +8,6 @@ use sifr_diagnostics::DiagnosticCode;
 fn test_compile_error_to_diagnostic_has_stable_code_and_url() {
     let err = CompileError::with_code(
         "unexpected token",
-        CompilePhase::Parse,
         DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
     );
     let diag = err.to_diagnostic();
@@ -19,18 +18,46 @@ fn test_compile_error_to_diagnostic_has_stable_code_and_url() {
 }
 
 #[test]
+fn test_compile_error_labels_are_derived_from_diagnostic_codes() {
+    let cases = [
+        (
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            "internal compiler error",
+        ),
+        (DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE, "build error"),
+        (DiagnosticCode::STDLIB_CACHE_FAILURE, "build error"),
+        (DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE, "type error"),
+        (DiagnosticCode::STDLIB_ARGUMENT_TYPE_MISMATCH, "type error"),
+        (DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST, "build error"),
+        (DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT, "build error"),
+        (DiagnosticCode::WORKSPACE_IMPORT_CYCLE, "build error"),
+        (
+            DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
+            "parse error",
+        ),
+        (DiagnosticCode::CODEGEN_BACKEND_FAILURE, "codegen error"),
+        (DiagnosticCode::BUILD_MATERIALIZATION_FAILURE, "build error"),
+        (DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE, "build error"),
+        (DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE, "build error"),
+        (DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE, "build error"),
+        (DiagnosticCode::BUILD_ARTIFACT_MISSING, "build error"),
+        (DiagnosticCode::TYPE_MISMATCH, "type error"),
+    ];
+
+    for (code, label) in cases {
+        assert_eq!(compile_error_label_for_code(code), label);
+        assert_eq!(
+            CompileError::with_code("message", code).to_string(),
+            format!("{label}: message")
+        );
+    }
+}
+
+#[test]
 fn test_compile_errors_to_diagnostics_preserves_order() {
     let errors = vec![
-        CompileError::with_code(
-            "first",
-            CompilePhase::TypeCheck,
-            DiagnosticCode::TYPE_MISMATCH,
-        ),
-        CompileError::with_code(
-            "second",
-            CompilePhase::Codegen,
-            DiagnosticCode::CODEGEN_BACKEND_FAILURE,
-        ),
+        CompileError::with_code("first", DiagnosticCode::TYPE_MISMATCH),
+        CompileError::with_code("second", DiagnosticCode::CODEGEN_BACKEND_FAILURE),
     ];
     let diagnostics = compile_errors_to_diagnostics(&errors);
     assert_eq!(diagnostics.len(), 2);
@@ -58,8 +85,7 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
     ];
 
     for (message, code) in cases {
-        let diagnostic =
-            CompileError::with_code(message, CompilePhase::Build, code).to_diagnostic();
+        let diagnostic = CompileError::with_code(message, code).to_diagnostic();
         assert_eq!(diagnostic.code, code.code());
         assert_eq!(
             diagnostic.url,
@@ -72,7 +98,6 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
 fn test_workspace_codes_do_not_derive_from_message_prefixes() {
     let diagnostic = CompileError::with_code(
         "could not resolve import 'helper'; this looks like a workspace diagnostic",
-        CompilePhase::Build,
         DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     )
     .to_diagnostic();

@@ -21,9 +21,10 @@ pub use build::{
     emit_project, CachedBinaryArtifact,
 };
 pub use diagnostics::{
-    apply_diagnostic_recovery_limits, compile_errors_to_diagnostics, CompileError, CompilePhase,
-    CompileResult, CompileResultFull, CompilerDiagnostic, DiagnosticChild, DiagnosticSpan,
-    DiagnosticSuggestion, RelatedSpan, Severity, SuggestionKind,
+    apply_diagnostic_recovery_limits, compile_error_label_for_code,
+    compile_error_label_for_code_str, compile_errors_to_diagnostics, CompileError, CompileResult,
+    CompileResultFull, CompilerDiagnostic, DiagnosticChild, DiagnosticSpan, DiagnosticSuggestion,
+    RelatedSpan, Severity, SuggestionKind,
 };
 pub use frontend::{
     check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,
