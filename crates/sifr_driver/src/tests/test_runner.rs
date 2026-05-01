@@ -2,6 +2,7 @@ use crate::{
     build_test_runner_project, compose_test_runner_lib, discover_test_root_modules,
     execute_test_runner_project, generate_test_runner_cargo_toml, run_tests,
 };
+use sifr_diagnostics::DiagnosticCode;
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::{Arc, Barrier};
@@ -348,6 +349,18 @@ fn test_run_tests_frontend_type_errors_use_single_path_prefix() {
     assert!(messages
         .iter()
         .all(|message| !message.contains("] [test_bad] return type mismatch")));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code()),
+        "test module frontend diagnostics should preserve semantic code identity: {errors:?}"
+    );
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != DiagnosticCode::INTERNAL_COMPILER_PANIC.code()),
+        "test module frontend diagnostics must not be reclassified as internal compiler failures: {errors:?}"
+    );
 
     let _ = std::fs::remove_dir_all(&test_dir);
 }

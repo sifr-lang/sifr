@@ -1,5 +1,5 @@
 use super::execution::execute_test_runner_project;
-use crate::diagnostics::{run_codegen_with_boundary, write_stderr_line, CompileError};
+use crate::diagnostics::{run_codegen_with_boundary, write_stderr_line, CompilerDiagnostic};
 use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle};
 use crate::project::{
     collect_project_hir_modules, discover_test_root_modules, parse_import_closure_modules,
@@ -22,7 +22,7 @@ pub(crate) struct GeneratedTestRunnerProject {
     pub(crate) all_required_crates: HashSet<String>,
 }
 
-pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
+pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompilerDiagnostic>> {
     let test_files_by_module = discover_test_root_modules(test_dir);
 
     if test_files_by_module.is_empty() {
@@ -42,7 +42,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
 pub(crate) fn build_test_runner_project(
     test_dir: &Path,
     test_files_by_module: &BTreeMap<String, PathBuf>,
-) -> Result<GeneratedTestRunnerProject, Vec<CompileError>> {
+) -> Result<GeneratedTestRunnerProject, Vec<CompilerDiagnostic>> {
     let test_roots: BTreeSet<String> = test_files_by_module.keys().cloned().collect();
     let resolver = ModuleResolver::entry_parent(test_dir);
     let parsed_modules =
@@ -76,7 +76,7 @@ pub(crate) fn build_test_runner_project(
         "internal compiler panic during support-module code generation",
         || generate_rust_multi_with_metadata(&support_module_refs, &stdlib_compiled.code),
     )
-    .map_err(|error| vec![error])?;
+    .map_err(|error| vec![*error])?;
 
     let mut all_rust_code = String::new();
     let mut all_stdlib_modules = support_codegen.used_stdlib_modules;
@@ -84,7 +84,7 @@ pub(crate) fn build_test_runner_project(
 
     for (module_name, test_file) in test_files_by_module {
         let Some(parsed) = test_modules.get(module_name.as_str()) else {
-            return Err(vec![CompileError::with_code(
+            return Err(vec![CompilerDiagnostic::with_code(
                 format!(
                     "missing parsed test module '{}' from '{}'",
                     module_name,
@@ -102,14 +102,14 @@ pub(crate) fn build_test_runner_project(
         ) {
             Ok(result) => result,
             Err(errors) => {
-                let compile_errors: Vec<CompileError> = errors
+                let diagnostics: Vec<CompilerDiagnostic> = errors
                     .into_iter()
-                    .map(|error| CompileError {
-                        code: error.code,
-                        message: format!("[{}] {}", test_file.display(), error.message),
+                    .map(|mut error| {
+                        error.message = format!("[{}] {}", test_file.display(), error.message);
+                        error
                     })
                     .collect();
-                return Err(compile_errors);
+                return Err(diagnostics);
             }
         };
 
@@ -120,7 +120,7 @@ pub(crate) fn build_test_runner_project(
             ),
             || generate_rust_test(&lowering_result.module),
         )
-        .map_err(|error| vec![error])?;
+        .map_err(|error| vec![*error])?;
         all_rust_code.push_str("// Tests from: ");
         if let Some(file_name) = test_file.file_name() {
             all_rust_code.push_str(&file_name.to_string_lossy());

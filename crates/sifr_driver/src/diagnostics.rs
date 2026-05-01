@@ -8,7 +8,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 #[derive(Debug)]
 pub enum CompileResult {
     Success { rust_source: String },
-    Errors { errors: Vec<CompileError> },
+    Errors { errors: Vec<CompilerDiagnostic> },
 }
 
 pub enum CompileResultFull {
@@ -19,14 +19,8 @@ pub enum CompileResultFull {
         lowering_stats: sifr_codegen::LoweringStats,
     },
     Errors {
-        errors: Vec<CompileError>,
+        errors: Vec<CompilerDiagnostic>,
     },
-}
-
-#[derive(Debug, Clone)]
-pub struct CompileError {
-    pub message: String,
-    pub code: DiagnosticCode,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -85,31 +79,16 @@ pub struct CompilerDiagnostic {
     pub suggestions: Vec<DiagnosticSuggestion>,
 }
 
-impl CompileError {
-    /// Creates a compile error with canonical diagnostic identity.
+impl CompilerDiagnostic {
+    /// Creates an error diagnostic with canonical diagnostic identity.
     #[must_use]
     pub fn with_code(message: impl Into<String>, code: DiagnosticCode) -> Self {
+        let code = code.code().to_string();
         Self {
-            message: message.into(),
-            code,
-        }
-    }
-
-    fn diagnostic_code(&self) -> &'static str {
-        self.code.code()
-    }
-
-    fn diagnostic_severity() -> Severity {
-        Severity::Error
-    }
-
-    pub fn to_diagnostic(&self) -> CompilerDiagnostic {
-        let code = self.diagnostic_code().to_string();
-        CompilerDiagnostic {
             url: format!("https://sifr.sh/docs/errors/{code}"),
             code,
-            severity: Self::diagnostic_severity(),
-            message: self.message.clone(),
+            severity: Severity::Error,
+            message: message.into(),
             primary_span: None,
             related_spans: Vec::new(),
             children: Vec::new(),
@@ -117,10 +96,6 @@ impl CompileError {
             suggestions: Vec::new(),
         }
     }
-}
-
-pub fn compile_errors_to_diagnostics(errors: &[CompileError]) -> Vec<CompilerDiagnostic> {
-    errors.iter().map(CompileError::to_diagnostic).collect()
 }
 
 const MAX_TOP_LEVEL_DIAGNOSTICS: usize = 50;
@@ -180,24 +155,24 @@ pub fn apply_diagnostic_recovery_limits(
     bounded
 }
 
-impl std::fmt::Display for CompileError {
+impl std::fmt::Display for CompilerDiagnostic {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "{}: {}",
-            compile_error_label_for_code(self.code),
+            diagnostic_label_for_code_str(&self.code),
             self.message
         )
     }
 }
 
 #[must_use]
-pub fn compile_error_label_for_code(code: DiagnosticCode) -> &'static str {
-    compile_error_label_for_code_str(code.code())
+pub fn diagnostic_label_for_code(code: DiagnosticCode) -> &'static str {
+    diagnostic_label_for_code_str(code.code())
 }
 
 #[must_use]
-pub fn compile_error_label_for_code_str(code: &str) -> &'static str {
+pub fn diagnostic_label_for_code_str(code: &str) -> &'static str {
     if code == DiagnosticCode::INTERNAL_COMPILER_PANIC.code() {
         "internal compiler error"
     } else if code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code()
@@ -238,13 +213,13 @@ fn panic_payload_message(payload: &(dyn Any + Send)) -> String {
 pub(crate) fn run_codegen_with_boundary<T>(
     context: impl Into<String>,
     f: impl FnOnce() -> T,
-) -> Result<T, CompileError> {
+) -> Result<T, Box<CompilerDiagnostic>> {
     let context = context.into();
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Ok(value),
-        Err(payload) => Err(CompileError::with_code(
+        Err(payload) => Err(Box::new(CompilerDiagnostic::with_code(
             format!("{context}: {}", panic_payload_message(payload.as_ref())),
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
-        )),
+        ))),
     }
 }

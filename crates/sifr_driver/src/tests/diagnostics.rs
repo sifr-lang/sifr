@@ -1,24 +1,26 @@
 use crate::{
-    apply_diagnostic_recovery_limits, compile_error_label_for_code, compile_errors_to_diagnostics,
-    CompileError, CompilerDiagnostic, DiagnosticSpan, Severity,
+    apply_diagnostic_recovery_limits, diagnostic_label_for_code, CompilerDiagnostic,
+    DiagnosticSpan, Severity,
 };
 use sifr_diagnostics::DiagnosticCode;
 
 #[test]
-fn test_compile_error_to_diagnostic_has_stable_code_and_url() {
-    let err = CompileError::with_code(
+fn test_compiler_diagnostic_has_stable_code_and_url() {
+    let diagnostic = CompilerDiagnostic::with_code(
         "unexpected token",
         DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
     );
-    let diag = err.to_diagnostic();
-    assert_eq!(diag.code, "SIFR-PARSE-0002");
-    assert_eq!(diag.severity, Severity::Error);
-    assert_eq!(diag.url, "https://sifr.sh/docs/errors/SIFR-PARSE-0002");
-    assert_eq!(diag.message, "unexpected token");
+    assert_eq!(diagnostic.code, "SIFR-PARSE-0002");
+    assert_eq!(diagnostic.severity, Severity::Error);
+    assert_eq!(
+        diagnostic.url,
+        "https://sifr.sh/docs/errors/SIFR-PARSE-0002"
+    );
+    assert_eq!(diagnostic.message, "unexpected token");
 }
 
 #[test]
-fn test_compile_error_labels_are_derived_from_diagnostic_codes() {
+fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
     let cases = [
         (
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
@@ -45,21 +47,20 @@ fn test_compile_error_labels_are_derived_from_diagnostic_codes() {
     ];
 
     for (code, label) in cases {
-        assert_eq!(compile_error_label_for_code(code), label);
+        assert_eq!(diagnostic_label_for_code(code), label);
         assert_eq!(
-            CompileError::with_code("message", code).to_string(),
+            CompilerDiagnostic::with_code("message", code).to_string(),
             format!("{label}: message")
         );
     }
 }
 
 #[test]
-fn test_compile_errors_to_diagnostics_preserves_order() {
-    let errors = vec![
-        CompileError::with_code("first", DiagnosticCode::TYPE_MISMATCH),
-        CompileError::with_code("second", DiagnosticCode::CODEGEN_BACKEND_FAILURE),
+fn test_compiler_diagnostics_preserve_order() {
+    let diagnostics = [
+        CompilerDiagnostic::with_code("first", DiagnosticCode::TYPE_MISMATCH),
+        CompilerDiagnostic::with_code("second", DiagnosticCode::CODEGEN_BACKEND_FAILURE),
     ];
-    let diagnostics = compile_errors_to_diagnostics(&errors);
     assert_eq!(diagnostics.len(), 2);
     assert_eq!(diagnostics[0].message, "first");
     assert_eq!(diagnostics[1].message, "second");
@@ -85,7 +86,7 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
     ];
 
     for (message, code) in cases {
-        let diagnostic = CompileError::with_code(message, code).to_diagnostic();
+        let diagnostic = CompilerDiagnostic::with_code(message, code);
         assert_eq!(diagnostic.code, code.code());
         assert_eq!(
             diagnostic.url,
@@ -96,11 +97,10 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
 
 #[test]
 fn test_workspace_codes_do_not_derive_from_message_prefixes() {
-    let diagnostic = CompileError::with_code(
+    let diagnostic = CompilerDiagnostic::with_code(
         "could not resolve import 'helper'; this looks like a workspace diagnostic",
         DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
-    )
-    .to_diagnostic();
+    );
 
     assert_eq!(diagnostic.code, "SIFR-BUILD-0003");
 }

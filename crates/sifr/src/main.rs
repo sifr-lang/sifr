@@ -10,9 +10,9 @@ use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
-    build_project, check, check_project, compile, compile_error_label_for_code_str,
-    compile_errors_to_diagnostics, emit_project, find_workspace_root, run_tests,
-    CachedBinaryArtifact, CompileError, CompileResult, CompilerDiagnostic, Severity,
+    build_project, check, check_project, compile, diagnostic_label_for_code_str, emit_project,
+    find_workspace_root, run_tests, CachedBinaryArtifact, CompileResult, CompilerDiagnostic,
+    Severity,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -106,7 +106,7 @@ fn run_cli(cli: Cli) -> i32 {
     }
 }
 
-fn resolve_compilation_mode(file: &Path) -> Result<CompilationMode, Vec<CompileError>> {
+fn resolve_compilation_mode(file: &Path) -> Result<CompilationMode, Vec<CompilerDiagnostic>> {
     if find_workspace_root(file)?.is_some() {
         return Ok(CompilationMode::Project);
     }
@@ -244,23 +244,23 @@ fn panic_payload_message(payload: &(dyn std::any::Any + Send)) -> String {
 fn run_with_panic_boundary<T>(
     context: impl Into<String>,
     f: impl FnOnce() -> T,
-) -> Result<T, CompileError> {
+) -> Result<T, Box<CompilerDiagnostic>> {
     let context = context.into();
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Ok(value),
-        Err(payload) => Err(CompileError::with_code(
+        Err(payload) => Err(Box::new(CompilerDiagnostic::with_code(
             format!("{context}: {}", panic_payload_message(payload.as_ref())),
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
-        )),
+        ))),
     }
 }
 
-fn is_internal_compile_error(error: &CompileError) -> bool {
-    error.code == DiagnosticCode::INTERNAL_COMPILER_PANIC
+fn is_internal_diagnostic(error: &CompilerDiagnostic) -> bool {
+    error.code == DiagnosticCode::INTERNAL_COMPILER_PANIC.code()
 }
 
-fn compile_error_exit_code(errors: &[CompileError]) -> i32 {
-    if errors.iter().any(is_internal_compile_error) {
+fn diagnostic_exit_code(errors: &[CompilerDiagnostic]) -> i32 {
+    if errors.iter().any(is_internal_diagnostic) {
         EXIT_INTERNAL_COMPILER_FAILURE
     } else {
         EXIT_USER_DIAGNOSTIC
@@ -364,13 +364,13 @@ fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
     output
 }
 
-fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) -> i32 {
-    let diagnostics = apply_diagnostic_recovery_limits(&compile_errors_to_diagnostics(errors));
+fn render_diagnostics(errors: &[CompilerDiagnostic], format: DiagnosticFormat) -> i32 {
+    let diagnostics = apply_diagnostic_recovery_limits(errors);
     match format {
         DiagnosticFormat::Human => {
             for diagnostic in diagnostics {
                 let label = if diagnostic.code.starts_with("SIFR-") {
-                    compile_error_label_for_code_str(&diagnostic.code)
+                    diagnostic_label_for_code_str(&diagnostic.code)
                 } else {
                     match diagnostic.severity {
                         Severity::Error => "error",
@@ -403,7 +403,7 @@ fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) -> i
             let _ = write!(io::stderr(), "{compact_output}");
         }
     }
-    compile_error_exit_code(errors)
+    diagnostic_exit_code(errors)
 }
 
 fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
@@ -412,7 +412,7 @@ fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) ->
         || compile_entrypoint(file, output),
     ) {
         Ok(result) => result,
-        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
     };
 
     match result {
@@ -424,7 +424,7 @@ fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) ->
             );
             EXIT_SUCCESS
         }
-        Err(errors) => render_compile_errors(&errors, diagnostic_format),
+        Err(errors) => render_diagnostics(&errors, diagnostic_format),
     }
 }
 
@@ -434,7 +434,7 @@ fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
         || build_run_artifact(file),
     ) {
         Ok(result) => result,
-        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
     };
 
     match result {
@@ -456,7 +456,7 @@ fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
             }
             EXIT_SUCCESS
         }
-        Err(errors) => render_compile_errors(&errors, diagnostic_format),
+        Err(errors) => render_diagnostics(&errors, diagnostic_format),
     }
 }
 
@@ -466,7 +466,7 @@ fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
         || check_entrypoint(file),
     ) {
         Ok(errors) => errors,
-        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
     };
 
     if errors.is_empty() {
@@ -486,7 +486,7 @@ fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
         }
         EXIT_SUCCESS
     } else {
-        render_compile_errors(&errors, diagnostic_format)
+        render_diagnostics(&errors, diagnostic_format)
     }
 }
 
@@ -496,7 +496,7 @@ fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
         || run_tests(dir),
     ) {
         Ok(result) => result,
-        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
     };
     match run_result {
         Ok(success) => {
@@ -506,7 +506,7 @@ fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
                 EXIT_USER_DIAGNOSTIC
             }
         }
-        Err(errors) => render_compile_errors(&errors, diagnostic_format),
+        Err(errors) => render_diagnostics(&errors, diagnostic_format),
     }
 }
 
@@ -516,18 +516,18 @@ fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
         || emit_entrypoint(file),
     ) {
         Ok(result) => result,
-        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
     };
     match compile_result {
         CompileResult::Success { rust_source } => {
             let _ = write!(io::stdout(), "{rust_source}");
             EXIT_SUCCESS
         }
-        CompileResult::Errors { errors } => render_compile_errors(&errors, diagnostic_format),
+        CompileResult::Errors { errors } => render_diagnostics(&errors, diagnostic_format),
     }
 }
 
-fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<CompileError>> {
+fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<CompilerDiagnostic>> {
     match resolve_compilation_mode(file)? {
         CompilationMode::Project => build_project(file, output),
         CompilationMode::SingleFile => {
@@ -537,7 +537,7 @@ fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<Compile
     }
 }
 
-fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<CompileError>> {
+fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<CompilerDiagnostic>> {
     match resolve_compilation_mode(file)? {
         CompilationMode::Project => build_cached_project(file),
         CompilationMode::SingleFile => {
@@ -547,7 +547,7 @@ fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<CompileEr
     }
 }
 
-fn check_entrypoint(file: &Path) -> Vec<CompileError> {
+fn check_entrypoint(file: &Path) -> Vec<CompilerDiagnostic> {
     match resolve_compilation_mode(file) {
         Err(errors) => errors,
         Ok(CompilationMode::Project) => check_project(file),
@@ -1193,16 +1193,17 @@ mod tests {
     }
 
     #[test]
-    fn test_compile_error_exit_code_contract_user_vs_internal() {
-        let user_error = CompileError::with_code("type mismatch", DiagnosticCode::TYPE_MISMATCH);
-        assert_eq!(compile_error_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
+    fn test_diagnostic_exit_code_contract_user_vs_internal() {
+        let user_error =
+            CompilerDiagnostic::with_code("type mismatch", DiagnosticCode::TYPE_MISMATCH);
+        assert_eq!(diagnostic_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
 
-        let internal_error = CompileError::with_code(
+        let internal_error = CompilerDiagnostic::with_code(
             "internal compiler panic during single-file code generation: boom",
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         );
         assert_eq!(
-            compile_error_exit_code(&[internal_error]),
+            diagnostic_exit_code(&[internal_error]),
             EXIT_INTERNAL_COMPILER_FAILURE
         );
     }
@@ -1235,17 +1236,18 @@ mod tests {
     }
 
     #[test]
-    fn test_run_with_panic_boundary_converts_panic_to_internal_compile_error() {
+    fn test_run_with_panic_boundary_converts_panic_to_internal_diagnostic() {
         let error = run_with_panic_boundary(
             "internal compiler panic during test boundary",
             || -> usize { panic!("boom") },
         )
-        .expect_err("panic should convert to compile error");
+        .expect_err("panic should convert to an internal compiler diagnostic");
         assert!(error
             .message
             .contains("internal compiler panic during test boundary: boom"));
+        let error = *error;
         assert_eq!(
-            compile_error_exit_code(&[error]),
+            diagnostic_exit_code(&[error]),
             EXIT_INTERNAL_COMPILER_FAILURE
         );
     }

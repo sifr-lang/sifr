@@ -1,4 +1,4 @@
-use crate::diagnostics::CompileError;
+use crate::diagnostics::CompilerDiagnostic;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -143,7 +143,7 @@ fn find_dependency_cycle_path(
 
 pub(crate) fn compute_module_compile_order(
     parsed_modules: &HashMap<String, Vec<Stmt>>,
-) -> Result<Vec<String>, Vec<CompileError>> {
+) -> Result<Vec<String>, Vec<CompilerDiagnostic>> {
     let graph = build_module_dependency_graph(parsed_modules);
     let mut indegree: BTreeMap<String, usize> = graph
         .dependencies
@@ -189,7 +189,7 @@ pub(crate) fn compute_module_compile_order(
     let message = format!(
         "module dependency cycle detected: {cycle_render}; import chain: {edge_render}. Break the cycle by moving shared declarations into a separate module."
     );
-    Err(vec![CompileError::with_code(
+    Err(vec![CompilerDiagnostic::with_code(
         message,
         DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
     )])

@@ -573,9 +573,8 @@ fn compile_source(source: &str) -> Result<String, Vec<CompiledFailure>> {
     match sifr_driver::compile(source) {
         sifr_driver::CompileResult::Success { rust_source } => Ok(rust_source),
         sifr_driver::CompileResult::Errors { errors } => {
-            let diagnostics = sifr_driver::compile_errors_to_diagnostics(&errors);
             let mut failures = Vec::new();
-            for diagnostic in diagnostics {
+            for diagnostic in errors {
                 let message = diagnostic.message.clone();
                 failures.push(CompiledFailure {
                     code: diagnostic.code,
