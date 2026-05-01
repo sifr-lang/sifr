@@ -1,5 +1,5 @@
 use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_file_frontend};
-use crate::diagnostics::{CompileResult, CompileResultFull, CompilerDiagnostic};
+use crate::diagnostics::{CompileResult, CompileResultFull, RenderedDiagnostic};
 use crate::frontend::module_lowering::emit_frontend_diagnostics;
 use crate::stdlib::StdlibCompiled;
 use sifr_diagnostics::DiagnosticCode;
@@ -12,17 +12,17 @@ pub(crate) struct FrontendCompiled {
     pub(crate) lowering_result: LoweringResult,
 }
 
-pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<CompilerDiagnostic>> {
+pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<RenderedDiagnostic>> {
     match parse_module(source) {
         Ok(parsed) => {
             if !parsed.has_valid_syntax() {
                 // TODO(diag_4a slice 2): classify Ruff parse failures into
                 // the precise active parse-code buckets.
-                let errors: Vec<CompilerDiagnostic> = parsed
+                let errors: Vec<RenderedDiagnostic> = parsed
                     .errors()
                     .iter()
                     .map(|e| {
-                        CompilerDiagnostic::with_code(
+                        crate::diagnostics::diagnostic_with_code(
                             format!("{e}"),
                             DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
                         )
@@ -34,22 +34,22 @@ pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<CompilerDiagnostic>> 
         }
         // TODO(diag_4a slice 2): classify Ruff parse failures into the
         // precise active parse-code buckets.
-        Err(e) => Err(vec![CompilerDiagnostic::with_code(
+        Err(e) => Err(vec![crate::diagnostics::diagnostic_with_code(
             format!("failed to parse: {e}"),
             DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
         )]),
     }
 }
 
-fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompilerDiagnostic>> {
+fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
     compile_single_file_frontend(source)
 }
 
-pub fn lower_source(source: &str) -> Result<LoweringResult, Vec<CompilerDiagnostic>> {
+pub fn lower_source(source: &str) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
     compile_frontend(source).map(|frontend| frontend.lowering_result)
 }
 
-pub fn type_check_source(source: &str) -> Vec<CompilerDiagnostic> {
+pub fn type_check_source(source: &str) -> Vec<RenderedDiagnostic> {
     match lower_source(source) {
         Ok(lowering_result) => {
             emit_frontend_diagnostics(&lowering_result);
@@ -81,6 +81,6 @@ pub fn compile(source: &str) -> CompileResult {
     }
 }
 
-pub fn check(source: &str) -> Vec<CompilerDiagnostic> {
+pub fn check(source: &str) -> Vec<RenderedDiagnostic> {
     type_check_source(source)
 }

@@ -1,12 +1,44 @@
-use crate::{
-    apply_diagnostic_recovery_limits, diagnostic_label_for_code, CompilerDiagnostic,
-    DiagnosticSpan, Severity,
-};
+use crate::{apply_diagnostic_recovery_limits, diagnostic_label_for_code};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
+
+fn test_diagnostic(
+    code: &str,
+    message: String,
+    span: Option<DiagnosticSpan>,
+) -> RenderedDiagnostic {
+    RenderedDiagnostic {
+        code: code.to_string(),
+        severity: Severity::Error,
+        message,
+        message_template: "{message}".to_string(),
+        args: std::collections::BTreeMap::new(),
+        url: format!("https://sifr.sh/docs/errors/{code}"),
+        spans: span.into_iter().collect(),
+        children: Vec::new(),
+        help: None,
+        suggestions: Vec::new(),
+    }
+}
+
+fn primary_test_span(file: &str, line: u32, column: u32) -> DiagnosticSpan {
+    DiagnosticSpan {
+        file: Some(file.to_string()),
+        byte_start: 0,
+        byte_end: 0,
+        line: Some(line),
+        column: Some(column),
+        end_line: Some(line),
+        end_column: Some(column),
+        is_primary: true,
+        label: None,
+        lines: Vec::new(),
+    }
+}
 
 #[test]
 fn test_compiler_diagnostic_has_stable_code_and_url() {
-    let diagnostic = CompilerDiagnostic::with_code(
+    let diagnostic = crate::diagnostics::diagnostic_with_code(
         "unexpected token",
         DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
     );
@@ -49,7 +81,9 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
     for (code, label) in cases {
         assert_eq!(diagnostic_label_for_code(code), label);
         assert_eq!(
-            CompilerDiagnostic::with_code("message", code).to_string(),
+            crate::diagnostics::diagnostic_legacy_display(
+                &crate::diagnostics::diagnostic_with_code("message", code)
+            ),
             format!("{label}: message")
         );
     }
@@ -58,8 +92,8 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
 #[test]
 fn test_compiler_diagnostics_preserve_order() {
     let diagnostics = [
-        CompilerDiagnostic::with_code("first", DiagnosticCode::TYPE_MISMATCH),
-        CompilerDiagnostic::with_code("second", DiagnosticCode::CODEGEN_BACKEND_FAILURE),
+        crate::diagnostics::diagnostic_with_code("first", DiagnosticCode::TYPE_MISMATCH),
+        crate::diagnostics::diagnostic_with_code("second", DiagnosticCode::CODEGEN_BACKEND_FAILURE),
     ];
     assert_eq!(diagnostics.len(), 2);
     assert_eq!(diagnostics[0].message, "first");
@@ -86,7 +120,7 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
     ];
 
     for (message, code) in cases {
-        let diagnostic = CompilerDiagnostic::with_code(message, code);
+        let diagnostic = crate::diagnostics::diagnostic_with_code(message, code);
         assert_eq!(diagnostic.code, code.code());
         assert_eq!(
             diagnostic.url,
@@ -97,7 +131,7 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
 
 #[test]
 fn test_workspace_codes_do_not_derive_from_message_prefixes() {
-    let diagnostic = CompilerDiagnostic::with_code(
+    let diagnostic = crate::diagnostics::diagnostic_with_code(
         "could not resolve import 'helper'; this looks like a workspace diagnostic",
         DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     );
@@ -109,21 +143,11 @@ fn test_workspace_codes_do_not_derive_from_message_prefixes() {
 fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
     let mut diagnostics = Vec::new();
     for idx in 0..8 {
-        diagnostics.push(CompilerDiagnostic {
-            code: "SIFR-TYPE-0002".to_string(),
-            severity: Severity::Error,
-            message: "type mismatch: expected 'int', got 'str'".to_string(),
-            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
-            primary_span: Some(DiagnosticSpan {
-                file: Some("main.sifr".to_string()),
-                line: Some(idx + 1),
-                column: Some(1),
-            }),
-            related_spans: Vec::new(),
-            children: Vec::new(),
-            help: None,
-            suggestions: Vec::new(),
-        });
+        diagnostics.push(test_diagnostic(
+            "SIFR-TYPE-0002",
+            "type mismatch: expected 'int', got 'str'".to_string(),
+            Some(primary_test_span("main.sifr", idx + 1, 1)),
+        ));
     }
     let bounded = apply_diagnostic_recovery_limits(&diagnostics);
     assert_eq!(bounded.len(), 6);
@@ -136,18 +160,8 @@ fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
 
 #[test]
 fn test_apply_diagnostic_recovery_limits_caps_top_level_diagnostics() {
-    let diagnostics: Vec<CompilerDiagnostic> = (0..60)
-        .map(|idx| CompilerDiagnostic {
-            code: format!("SIFR-TYPE-{:04}", idx),
-            severity: Severity::Error,
-            message: format!("error {idx}"),
-            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
-            primary_span: None,
-            related_spans: Vec::new(),
-            children: Vec::new(),
-            help: None,
-            suggestions: Vec::new(),
-        })
+    let diagnostics: Vec<RenderedDiagnostic> = (0..60)
+        .map(|idx| test_diagnostic(&format!("SIFR-TYPE-{idx:04}"), format!("error {idx}"), None))
         .collect();
     let bounded = apply_diagnostic_recovery_limits(&diagnostics);
     assert_eq!(bounded.len(), 50);

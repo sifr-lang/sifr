@@ -1,4 +1,4 @@
-use crate::diagnostics::{run_codegen_with_boundary, CompilerDiagnostic};
+use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
 use crate::project::{
     assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path, ProjectLowering,
 };
@@ -48,7 +48,7 @@ pub(super) fn generated_single_file_binary_project(
 pub(super) fn generated_project_binary_project(
     stdlib_code: &StdlibCode,
     project_lowering: ProjectLowering,
-) -> Result<GeneratedBinaryProject, Vec<CompilerDiagnostic>> {
+) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
     let ProjectLowering {
         hir_modules,
         compile_order,

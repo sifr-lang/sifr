@@ -1,4 +1,4 @@
-use crate::diagnostics::CompilerDiagnostic;
+use crate::diagnostics::RenderedDiagnostic;
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Component, Path, PathBuf};
 
@@ -22,7 +22,7 @@ struct SifrManifest {
     source_roots: Vec<String>,
 }
 
-pub fn find_workspace_root(entry: &Path) -> Result<Option<WorkspaceRoot>, Vec<CompilerDiagnostic>> {
+pub fn find_workspace_root(entry: &Path) -> Result<Option<WorkspaceRoot>, Vec<RenderedDiagnostic>> {
     let Some(mut current) = entry.parent().map(Path::to_path_buf) else {
         return Ok(None);
     };
@@ -45,7 +45,7 @@ pub fn find_workspace_root(entry: &Path) -> Result<Option<WorkspaceRoot>, Vec<Co
 fn parse_workspace_config(
     workspace_root: &Path,
     manifest_path: &Path,
-) -> Result<SifrWorkspaceConfig, Vec<CompilerDiagnostic>> {
+) -> Result<SifrWorkspaceConfig, Vec<RenderedDiagnostic>> {
     let source = std::fs::read_to_string(manifest_path)
         .map_err(|error| vec![parse_manifest_error(manifest_path, error)])?;
     let manifest = parse_manifest(manifest_path, &source)?;
@@ -64,7 +64,7 @@ fn parse_workspace_config(
 fn parse_manifest(
     manifest_path: &Path,
     source: &str,
-) -> Result<SifrManifest, Vec<CompilerDiagnostic>> {
+) -> Result<SifrManifest, Vec<RenderedDiagnostic>> {
     let value = source
         .parse::<toml::Table>()
         .map(toml::Value::Table)
@@ -98,7 +98,7 @@ fn parse_manifest(
 fn parse_source_roots(
     manifest_path: &Path,
     roots: &toml::Value,
-) -> Result<Vec<String>, Vec<CompilerDiagnostic>> {
+) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
     let Some(entries) = roots.as_array() else {
         return Err(parse_manifest_schema_error(
             manifest_path,
@@ -118,7 +118,7 @@ fn parse_source_roots(
 fn validate_source_root(
     workspace_root: &Path,
     source_root: &str,
-) -> Result<PathBuf, Vec<CompilerDiagnostic>> {
+) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let raw = Path::new(source_root);
     if source_root.is_empty() || raw.is_absolute() {
         return Err(vec![source_root_error(
@@ -162,8 +162,8 @@ fn validate_source_root(
     Ok(relative)
 }
 
-fn parse_manifest_error(path: &Path, reason: impl std::fmt::Display) -> CompilerDiagnostic {
-    CompilerDiagnostic::with_code(
+fn parse_manifest_error(path: &Path, reason: impl std::fmt::Display) -> RenderedDiagnostic {
+    crate::diagnostics::diagnostic_with_code(
         format!(
             "could not parse sifr.toml at '{}': {reason}",
             path.display()
@@ -172,7 +172,7 @@ fn parse_manifest_error(path: &Path, reason: impl std::fmt::Display) -> Compiler
     )
 }
 
-fn parse_manifest_schema_error(path: &Path, reason: &'static str) -> Vec<CompilerDiagnostic> {
+fn parse_manifest_schema_error(path: &Path, reason: &'static str) -> Vec<RenderedDiagnostic> {
     vec![parse_manifest_error(path, reason)]
 }
 
@@ -201,8 +201,8 @@ impl SourceRootErrorKind {
     }
 }
 
-fn source_root_error(source_root: &str, kind: SourceRootErrorKind) -> CompilerDiagnostic {
-    CompilerDiagnostic::with_code(
+fn source_root_error(source_root: &str, kind: SourceRootErrorKind) -> RenderedDiagnostic {
+    crate::diagnostics::diagnostic_with_code(
         format!("[source].roots entry '{source_root}' {}", kind.reason()),
         kind.code(),
     )

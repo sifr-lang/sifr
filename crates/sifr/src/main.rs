@@ -7,12 +7,13 @@
 //!   sifr emit <file.sifr>     Show generated Rust code
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 use clap::{Parser, Subcommand, ValueEnum};
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{
+    DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
+};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
     build_project, check, check_project, compile, diagnostic_label_for_code_str, emit_project,
-    find_workspace_root, run_tests, CachedBinaryArtifact, CompileResult, CompilerDiagnostic,
-    Severity,
+    find_workspace_root, run_tests, CachedBinaryArtifact, CompileResult,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -90,6 +91,27 @@ const EXIT_USAGE_OR_CONFIG: i32 = 2;
 const EXIT_INTERNAL_COMPILER_FAILURE: i32 = 3;
 const MAX_COMPACT_REPRESENTATIVE_LOCATIONS: usize = 5;
 
+fn diagnostic_with_code(message: impl Into<String>, code: DiagnosticCode) -> RenderedDiagnostic {
+    let message = message.into();
+    let mut args = BTreeMap::new();
+    args.insert(
+        "message".to_string(),
+        DiagnosticArg::String(message.clone()),
+    );
+    RenderedDiagnostic {
+        code: code.code().to_string(),
+        severity: code.declared_severity(),
+        message,
+        message_template: "{message}".to_string(),
+        args,
+        url: code.docs_url(),
+        spans: Vec::new(),
+        children: Vec::new(),
+        help: None,
+        suggestions: Vec::new(),
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
     process::exit(run_cli(cli));
@@ -106,7 +128,7 @@ fn run_cli(cli: Cli) -> i32 {
     }
 }
 
-fn resolve_compilation_mode(file: &Path) -> Result<CompilationMode, Vec<CompilerDiagnostic>> {
+fn resolve_compilation_mode(file: &Path) -> Result<CompilationMode, Vec<RenderedDiagnostic>> {
     if find_workspace_root(file)?.is_some() {
         return Ok(CompilationMode::Project);
     }
@@ -218,7 +240,6 @@ fn severity_rank(severity: Severity) -> u8 {
         Severity::Error => 0,
         Severity::Warning => 1,
         Severity::Note => 2,
-        Severity::Help => 3,
     }
 }
 
@@ -227,7 +248,6 @@ fn severity_label(severity: Severity) -> &'static str {
         Severity::Error => "error",
         Severity::Warning => "warning",
         Severity::Note => "note",
-        Severity::Help => "help",
     }
 }
 
@@ -244,22 +264,22 @@ fn panic_payload_message(payload: &(dyn std::any::Any + Send)) -> String {
 fn run_with_panic_boundary<T>(
     context: impl Into<String>,
     f: impl FnOnce() -> T,
-) -> Result<T, Box<CompilerDiagnostic>> {
+) -> Result<T, Box<RenderedDiagnostic>> {
     let context = context.into();
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Ok(value),
-        Err(payload) => Err(Box::new(CompilerDiagnostic::with_code(
+        Err(payload) => Err(Box::new(diagnostic_with_code(
             format!("{context}: {}", panic_payload_message(payload.as_ref())),
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         ))),
     }
 }
 
-fn is_internal_diagnostic(error: &CompilerDiagnostic) -> bool {
+fn is_internal_diagnostic(error: &RenderedDiagnostic) -> bool {
     error.code == DiagnosticCode::INTERNAL_COMPILER_PANIC.code()
 }
 
-fn diagnostic_exit_code(errors: &[CompilerDiagnostic]) -> i32 {
+fn diagnostic_exit_code(errors: &[RenderedDiagnostic]) -> i32 {
     if errors.iter().any(is_internal_diagnostic) {
         EXIT_INTERNAL_COMPILER_FAILURE
     } else {
@@ -267,7 +287,16 @@ fn diagnostic_exit_code(errors: &[CompilerDiagnostic]) -> i32 {
     }
 }
 
-fn compact_severity_summary(diagnostics: &[CompilerDiagnostic]) -> String {
+#[cfg(test)]
+fn legacy_diagnostic_display(diagnostic: &RenderedDiagnostic) -> String {
+    format!(
+        "{}: {}",
+        diagnostic_label_for_code_str(&diagnostic.code),
+        diagnostic.message
+    )
+}
+
+fn compact_severity_summary(diagnostics: &[RenderedDiagnostic]) -> String {
     let mut error_count = 0usize;
     let mut warning_count = 0usize;
     let mut note_count = 0usize;
@@ -277,7 +306,9 @@ fn compact_severity_summary(diagnostics: &[CompilerDiagnostic]) -> String {
             Severity::Error => error_count += 1,
             Severity::Warning => warning_count += 1,
             Severity::Note => note_count += 1,
-            Severity::Help => help_count += 1,
+        }
+        if diagnostic.help.is_some() {
+            help_count += 1;
         }
     }
     format!(
@@ -285,7 +316,7 @@ fn compact_severity_summary(diagnostics: &[CompilerDiagnostic]) -> String {
     )
 }
 
-fn compact_location_label(span: &sifr_driver::DiagnosticSpan) -> String {
+fn compact_location_label(span: &DiagnosticSpan) -> String {
     match (&span.file, span.line, span.column) {
         (Some(file), Some(line), Some(column)) => format!("{file}:{line}:{column}"),
         (Some(file), Some(line), None) => format!("{file}:{line}"),
@@ -297,8 +328,8 @@ fn compact_location_label(span: &sifr_driver::DiagnosticSpan) -> String {
     }
 }
 
-fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
-    let mut grouped: BTreeMap<(u8, String, bool, String), Vec<&CompilerDiagnostic>> =
+fn render_compact_diagnostics(diagnostics: &[RenderedDiagnostic]) -> String {
+    let mut grouped: BTreeMap<(u8, String, bool, String), Vec<&RenderedDiagnostic>> =
         BTreeMap::new();
     for diagnostic in diagnostics {
         let is_summary_group = diagnostic.message.starts_with("... +")
@@ -327,7 +358,7 @@ fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
 
         let mut locations: BTreeSet<String> = BTreeSet::new();
         for diagnostic in &group {
-            if let Some(span) = &diagnostic.primary_span {
+            if let Some(span) = diagnostic.spans.iter().find(|span| span.is_primary) {
                 locations.insert(compact_location_label(span));
             }
         }
@@ -364,7 +395,7 @@ fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
     output
 }
 
-fn render_diagnostics(errors: &[CompilerDiagnostic], format: DiagnosticFormat) -> i32 {
+fn render_diagnostics(errors: &[RenderedDiagnostic], format: DiagnosticFormat) -> i32 {
     let diagnostics = apply_diagnostic_recovery_limits(errors);
     match format {
         DiagnosticFormat::Human => {
@@ -376,7 +407,6 @@ fn render_diagnostics(errors: &[CompilerDiagnostic], format: DiagnosticFormat) -
                         Severity::Error => "error",
                         Severity::Warning => "warning",
                         Severity::Note => "note",
-                        Severity::Help => "help",
                     }
                 };
                 let _ = writeln!(
@@ -527,7 +557,7 @@ fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     }
 }
 
-fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<CompilerDiagnostic>> {
+fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     match resolve_compilation_mode(file)? {
         CompilationMode::Project => build_project(file, output),
         CompilationMode::SingleFile => {
@@ -537,7 +567,7 @@ fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<Compile
     }
 }
 
-fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<CompilerDiagnostic>> {
+fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     match resolve_compilation_mode(file)? {
         CompilationMode::Project => build_cached_project(file),
         CompilationMode::SingleFile => {
@@ -547,7 +577,7 @@ fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<CompilerD
     }
 }
 
-fn check_entrypoint(file: &Path) -> Vec<CompilerDiagnostic> {
+fn check_entrypoint(file: &Path) -> Vec<RenderedDiagnostic> {
     match resolve_compilation_mode(file) {
         Err(errors) => errors,
         Ok(CompilationMode::Project) => check_project(file),
@@ -592,6 +622,63 @@ mod tests {
 
     fn resolved_mode(file: &Path) -> CompilationMode {
         resolve_compilation_mode(file).expect("compilation mode should resolve")
+    }
+
+    fn test_diagnostic(
+        code: &str,
+        severity: Severity,
+        message: &str,
+        span: Option<DiagnosticSpan>,
+        help: Option<&str>,
+    ) -> RenderedDiagnostic {
+        RenderedDiagnostic {
+            code: code.to_string(),
+            severity,
+            message: message.to_string(),
+            message_template: "{message}".to_string(),
+            args: BTreeMap::new(),
+            url: format!("https://sifr.sh/docs/errors/{code}"),
+            spans: span.into_iter().collect(),
+            children: Vec::new(),
+            help: help.map(str::to_string),
+            suggestions: Vec::new(),
+        }
+    }
+
+    fn primary_test_span(file: &str, line: u32, column: u32) -> DiagnosticSpan {
+        DiagnosticSpan {
+            file: Some(file.to_string()),
+            byte_start: 0,
+            byte_end: 0,
+            line: Some(line),
+            column: Some(column),
+            end_line: Some(line),
+            end_column: Some(column),
+            is_primary: true,
+            label: None,
+            lines: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn test_json_diagnostic_format_uses_canonical_rendered_schema() {
+        let diagnostics = vec![diagnostic_with_code(
+            "sample diagnostic",
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        )];
+        let json = serde_json::to_value(&diagnostics)
+            .expect("diagnostics should serialize to canonical JSON");
+        let first = json
+            .as_array()
+            .and_then(|items| items.first())
+            .and_then(serde_json::Value::as_object)
+            .expect("diagnostic JSON should be an object");
+
+        assert!(first.contains_key("message_template"));
+        assert!(first.contains_key("args"));
+        assert!(first.contains_key("spans"));
+        assert!(!first.contains_key("primary_span"));
+        assert!(!first.contains_key("related_spans"));
     }
 
     struct TestProject {
@@ -945,8 +1032,8 @@ mod tests {
         let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
         let build_err =
             compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
-        let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
-        let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
+        let run_messages: Vec<String> = run_err.iter().map(legacy_diagnostic_display).collect();
+        let build_messages: Vec<String> = build_err.iter().map(legacy_diagnostic_display).collect();
         assert_eq!(run_messages, build_messages);
 
         let _ = std::fs::remove_dir_all(run_out);
@@ -969,8 +1056,8 @@ mod tests {
         let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
         let build_err =
             compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
-        let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
-        let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
+        let run_messages: Vec<String> = run_err.iter().map(legacy_diagnostic_display).collect();
+        let build_messages: Vec<String> = build_err.iter().map(legacy_diagnostic_display).collect();
         assert_eq!(run_messages, build_messages);
         assert!(run_messages
             .iter()
@@ -996,8 +1083,8 @@ mod tests {
         let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
         let build_err =
             compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
-        let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
-        let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
+        let run_messages: Vec<String> = run_err.iter().map(legacy_diagnostic_display).collect();
+        let build_messages: Vec<String> = build_err.iter().map(legacy_diagnostic_display).collect();
         assert_eq!(run_messages, build_messages);
         assert!(run_messages
             .iter()
@@ -1023,8 +1110,8 @@ mod tests {
         let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
         let build_err =
             compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
-        let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
-        let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
+        let run_messages: Vec<String> = run_err.iter().map(legacy_diagnostic_display).collect();
+        let build_messages: Vec<String> = build_err.iter().map(legacy_diagnostic_display).collect();
         assert_eq!(run_messages, build_messages);
         assert!(run_messages
             .iter()
@@ -1076,8 +1163,10 @@ mod tests {
             .err()
             .expect("build path should fail for helper type mismatch");
 
-        let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.to_string()).collect();
-        let build_messages: Vec<String> = build_errors.into_iter().map(|e| e.to_string()).collect();
+        let check_messages: Vec<String> =
+            check_errors.iter().map(legacy_diagnostic_display).collect();
+        let build_messages: Vec<String> =
+            build_errors.iter().map(legacy_diagnostic_display).collect();
         assert_eq!(check_messages, build_messages);
         assert!(check_messages
             .iter()
@@ -1181,9 +1270,11 @@ mod tests {
             .err()
             .expect("build path should fail on helper type error");
 
-        let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.to_string()).collect();
-        let run_messages: Vec<String> = run_errors.into_iter().map(|e| e.to_string()).collect();
-        let build_messages: Vec<String> = build_errors.into_iter().map(|e| e.to_string()).collect();
+        let check_messages: Vec<String> =
+            check_errors.iter().map(legacy_diagnostic_display).collect();
+        let run_messages: Vec<String> = run_errors.iter().map(legacy_diagnostic_display).collect();
+        let build_messages: Vec<String> =
+            build_errors.iter().map(legacy_diagnostic_display).collect();
         assert_eq!(check_messages, run_messages);
         assert_eq!(run_messages, build_messages);
 
@@ -1194,11 +1285,10 @@ mod tests {
 
     #[test]
     fn test_diagnostic_exit_code_contract_user_vs_internal() {
-        let user_error =
-            CompilerDiagnostic::with_code("type mismatch", DiagnosticCode::TYPE_MISMATCH);
+        let user_error = diagnostic_with_code("type mismatch", DiagnosticCode::TYPE_MISMATCH);
         assert_eq!(diagnostic_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
 
-        let internal_error = CompilerDiagnostic::with_code(
+        let internal_error = diagnostic_with_code(
             "internal compiler panic during single-file code generation: boom",
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         );
@@ -1256,21 +1346,13 @@ mod tests {
     fn test_compact_renderer_invariants_summary_grouping_and_bounds() {
         let mut diagnostics = Vec::new();
         for idx in 0..8 {
-            diagnostics.push(CompilerDiagnostic {
-                code: "SIFR-TYPE-0002".to_string(),
-                severity: Severity::Error,
-                message: "type mismatch: expected 'int', got 'str'".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
-                primary_span: Some(sifr_driver::DiagnosticSpan {
-                    file: Some("main.sifr".to_string()),
-                    line: Some(idx + 1),
-                    column: Some(1),
-                }),
-                related_spans: Vec::new(),
-                children: Vec::new(),
-                help: Some("fix assignment type".to_string()),
-                suggestions: Vec::new(),
-            });
+            diagnostics.push(test_diagnostic(
+                "SIFR-TYPE-0002",
+                Severity::Error,
+                "type mismatch: expected 'int', got 'str'",
+                Some(primary_test_span("main.sifr", idx + 1, 1)),
+                Some("fix assignment type"),
+            ));
         }
         let compact = render_compact_diagnostics(&diagnostics);
         let mut lines = compact.lines();
@@ -1295,39 +1377,21 @@ mod tests {
     #[test]
     fn test_compact_renderer_never_drops_or_invents_relative_to_json_count() {
         let diagnostics = vec![
-            CompilerDiagnostic {
-                code: "SIFR-TYPE-0002".to_string(),
-                severity: Severity::Error,
-                message: "mismatch one".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
-                primary_span: None,
-                related_spans: Vec::new(),
-                children: Vec::new(),
-                help: None,
-                suggestions: Vec::new(),
-            },
-            CompilerDiagnostic {
-                code: "SIFR-TYPE-0002".to_string(),
-                severity: Severity::Error,
-                message: "mismatch one".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
-                primary_span: None,
-                related_spans: Vec::new(),
-                children: Vec::new(),
-                help: None,
-                suggestions: Vec::new(),
-            },
-            CompilerDiagnostic {
-                code: "SIFR-PARSE-0002".to_string(),
-                severity: Severity::Error,
-                message: "parse fail".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-PARSE-0002".to_string(),
-                primary_span: None,
-                related_spans: Vec::new(),
-                children: Vec::new(),
-                help: None,
-                suggestions: Vec::new(),
-            },
+            test_diagnostic(
+                "SIFR-TYPE-0002",
+                Severity::Error,
+                "mismatch one",
+                None,
+                None,
+            ),
+            test_diagnostic(
+                "SIFR-TYPE-0002",
+                Severity::Error,
+                "mismatch one",
+                None,
+                None,
+            ),
+            test_diagnostic("SIFR-PARSE-0002", Severity::Error, "parse fail", None, None),
         ];
         let compact = render_compact_diagnostics(&diagnostics);
         let grouped_total: usize = compact
@@ -1347,29 +1411,21 @@ mod tests {
     fn test_compact_renderer_snapshot_repeated_diagnostics_summary_group_last() {
         let mut diagnostics = Vec::new();
         for _ in 0..5 {
-            diagnostics.push(CompilerDiagnostic {
-                code: "SIFR-TYPE-0002".to_string(),
-                severity: Severity::Error,
-                message: "type mismatch: expected 'int', got 'str'".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
-                primary_span: None,
-                related_spans: Vec::new(),
-                children: Vec::new(),
-                help: None,
-                suggestions: Vec::new(),
-            });
+            diagnostics.push(test_diagnostic(
+                "SIFR-TYPE-0002",
+                Severity::Error,
+                "type mismatch: expected 'int', got 'str'",
+                None,
+                None,
+            ));
         }
-        diagnostics.push(CompilerDiagnostic {
-            code: "SIFR-TYPE-0002".to_string(),
-            severity: Severity::Error,
-            message: "... +3 more similar diagnostics".to_string(),
-            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
-            primary_span: None,
-            related_spans: Vec::new(),
-            children: Vec::new(),
-            help: None,
-            suggestions: Vec::new(),
-        });
+        diagnostics.push(test_diagnostic(
+            "SIFR-TYPE-0002",
+            Severity::Error,
+            "... +3 more similar diagnostics",
+            None,
+            None,
+        ));
 
         let expected = concat!(
             "summary: 6 error(s), 0 warning(s), 0 note(s), 0 help item(s)\n",
@@ -1384,49 +1440,37 @@ mod tests {
     #[test]
     fn test_compact_renderer_snapshot_multi_severity_group_order() {
         let diagnostics = vec![
-            CompilerDiagnostic {
-                code: "SIFR-TYPE-0002".to_string(),
-                severity: Severity::Warning,
-                message: "unused value".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
-                primary_span: None,
-                related_spans: Vec::new(),
-                children: Vec::new(),
-                help: Some("remove the assignment".to_string()),
-                suggestions: Vec::new(),
-            },
-            CompilerDiagnostic {
-                code: "SIFR-PARSE-0002".to_string(),
-                severity: Severity::Error,
-                message: "parse failure".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-PARSE-0002".to_string(),
-                primary_span: None,
-                related_spans: Vec::new(),
-                children: Vec::new(),
-                help: None,
-                suggestions: Vec::new(),
-            },
-            CompilerDiagnostic {
-                code: "SIFR-CODEGEN-0002".to_string(),
-                severity: Severity::Help,
-                message: "consider adding a type annotation".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-CODEGEN-0002".to_string(),
-                primary_span: None,
-                related_spans: Vec::new(),
-                children: Vec::new(),
-                help: None,
-                suggestions: Vec::new(),
-            },
+            test_diagnostic(
+                "SIFR-TYPE-0002",
+                Severity::Warning,
+                "unused value",
+                None,
+                Some("remove the assignment"),
+            ),
+            test_diagnostic(
+                "SIFR-PARSE-0002",
+                Severity::Error,
+                "parse failure",
+                None,
+                None,
+            ),
+            test_diagnostic(
+                "SIFR-CODEGEN-0002",
+                Severity::Note,
+                "consider adding a type annotation",
+                None,
+                None,
+            ),
         ];
 
         let expected = concat!(
-            "summary: 1 error(s), 1 warning(s), 0 note(s), 1 help item(s)\n",
+            "summary: 1 error(s), 1 warning(s), 1 note(s), 1 help item(s)\n",
             "error [SIFR-PARSE-0002] parse failure (x1)\n",
             "  url: https://sifr.sh/docs/errors/SIFR-PARSE-0002\n",
             "warning [SIFR-TYPE-0002] unused value (x1)\n",
             "  help: remove the assignment\n",
             "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0002\n",
-            "help [SIFR-CODEGEN-0002] consider adding a type annotation (x1)\n",
+            "note [SIFR-CODEGEN-0002] consider adding a type annotation (x1)\n",
             "  url: https://sifr.sh/docs/errors/SIFR-CODEGEN-0002\n",
         );
         assert_eq!(render_compact_diagnostics(&diagnostics), expected);

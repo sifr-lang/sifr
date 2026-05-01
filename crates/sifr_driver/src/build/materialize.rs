@@ -1,7 +1,7 @@
 use super::cargo_manifest::generate_dependency_cargo_toml;
 use super::project_codegen::GeneratedBinaryProject;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
-use crate::diagnostics::CompilerDiagnostic;
+use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::BTreeSet;
@@ -12,7 +12,7 @@ pub(super) fn materialize_binary_project(
     output_dir: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
-) -> Result<PathBuf, Vec<CompilerDiagnostic>> {
+) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let project_path = output_dir.join(project_name);
     materialize_binary_project_at_path(&project_path, project_name, generated_project)?;
     Ok(cached_binary_path(output_dir, project_name))
@@ -23,7 +23,7 @@ pub(super) fn materialize_cached_binary_project(
     cache_scope: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
-) -> Result<CachedArtifactEntry, Vec<CompilerDiagnostic>> {
+) -> Result<CachedArtifactEntry, Vec<RenderedDiagnostic>> {
     let cache_key = binary_project_cache_key(project_name, &generated_project);
     let required_paths = [
         Path::new(project_name).join("target"),
@@ -62,7 +62,7 @@ fn materialize_binary_project_at_path(
     project_path: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
-) -> Result<(), Vec<CompilerDiagnostic>> {
+) -> Result<(), Vec<RenderedDiagnostic>> {
     let src_dir = project_path.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|error| {
         vec![build_error(format!(
@@ -132,7 +132,7 @@ fn write_project_file(
     path: &Path,
     contents: impl AsRef<[u8]>,
     label: &str,
-) -> Result<(), Vec<CompilerDiagnostic>> {
+) -> Result<(), Vec<RenderedDiagnostic>> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)
             .map_err(|error| vec![build_error(format!("failed to create {label}: {error}"))])?;
@@ -141,12 +141,12 @@ fn write_project_file(
         .map_err(|error| vec![build_error(format!("failed to write {label}: {error}"))])
 }
 
-fn build_error(message: String) -> CompilerDiagnostic {
-    CompilerDiagnostic::with_code(message, DiagnosticCode::BUILD_MATERIALIZATION_FAILURE)
+fn build_error(message: String) -> RenderedDiagnostic {
+    crate::diagnostics::diagnostic_with_code(message, DiagnosticCode::BUILD_MATERIALIZATION_FAILURE)
 }
 
-fn cargo_build_error(message: String) -> CompilerDiagnostic {
-    CompilerDiagnostic::with_code(message, DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE)
+fn cargo_build_error(message: String) -> RenderedDiagnostic {
+    crate::diagnostics::diagnostic_with_code(message, DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE)
 }
 
 fn binary_project_cache_key(

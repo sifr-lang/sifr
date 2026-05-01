@@ -1,4 +1,4 @@
-use crate::diagnostics::CompilerDiagnostic;
+use crate::diagnostics::RenderedDiagnostic;
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Path, PathBuf};
@@ -6,7 +6,7 @@ use std::sync::OnceLock;
 
 pub(crate) fn create_invocation_workspace(
     prefix: &str,
-) -> Result<PathBuf, Vec<CompilerDiagnostic>> {
+) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let base_nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -30,14 +30,14 @@ pub(crate) fn create_invocation_workspace(
             Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
             Err(error) => {
                 let workspace_display = workspace.display();
-                return Err(vec![CompilerDiagnostic::with_code(
+                return Err(vec![crate::diagnostics::diagnostic_with_code(
                     format!("failed to create invocation workspace '{workspace_display}': {error}"),
                     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
                 )]);
             }
         }
     }
-    Err(vec![CompilerDiagnostic::with_code(
+    Err(vec![crate::diagnostics::diagnostic_with_code(
         format!("failed to allocate unique invocation workspace for prefix '{prefix}'"),
         DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     )])
@@ -117,11 +117,11 @@ impl PendingCachedArtifact {
     pub(crate) fn commit(
         self,
         required_paths: &[&Path],
-    ) -> Result<CachedArtifactEntry, Vec<CompilerDiagnostic>> {
+    ) -> Result<CachedArtifactEntry, Vec<RenderedDiagnostic>> {
         for required_path in required_paths {
             let absolute = self.staging_root.join(required_path);
             if !absolute.exists() {
-                return Err(vec![CompilerDiagnostic::with_code(
+                return Err(vec![crate::diagnostics::diagnostic_with_code(
                     format!(
                         "generated artifact cache staging directory is missing required path '{}'",
                         absolute.display()
@@ -159,7 +159,7 @@ impl PendingCachedArtifact {
                     },
                 })
             }
-            Err(error) => Err(vec![CompilerDiagnostic::with_code(
+            Err(error) => Err(vec![crate::diagnostics::diagnostic_with_code(
                 format!(
                     "failed to promote generated artifact cache directory '{}' into '{}': {error}",
                     self.staging_root.display(),
@@ -196,7 +196,7 @@ pub(crate) fn prepare_cached_artifact(
     scope: &Path,
     key_material: &str,
     required_paths: &[&Path],
-) -> Result<PreparedArtifactCache, Vec<CompilerDiagnostic>> {
+) -> Result<PreparedArtifactCache, Vec<RenderedDiagnostic>> {
     let scope_path = scope.canonicalize().unwrap_or_else(|_| scope.to_path_buf());
     let cache_key = deterministic_hash(&format!(
         "schema={ARTIFACT_CACHE_SCHEMA_VERSION}\0namespace={namespace}\0scope={}\0toolchain={}\0{key_material}",
@@ -205,7 +205,7 @@ pub(crate) fn prepare_cached_artifact(
     ));
     let cache_root = artifact_cache_root().join(namespace);
     std::fs::create_dir_all(&cache_root).map_err(|error| {
-        vec![CompilerDiagnostic::with_code(
+        vec![crate::diagnostics::diagnostic_with_code(
             format!(
                 "failed to create generated artifact cache root '{}': {error}",
                 cache_root.display()
@@ -286,15 +286,15 @@ fn load_cache_metadata(workspace_root: &Path) -> Option<ArtifactCacheMetadata> {
 fn write_cache_metadata(
     workspace_root: &Path,
     metadata: &ArtifactCacheMetadata,
-) -> Result<(), Vec<CompilerDiagnostic>> {
+) -> Result<(), Vec<RenderedDiagnostic>> {
     let content = serde_json::to_string_pretty(metadata).map_err(|error| {
-        vec![CompilerDiagnostic::with_code(
+        vec![crate::diagnostics::diagnostic_with_code(
             format!("failed to serialize generated artifact cache metadata: {error}"),
             DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
         )]
     })?;
     std::fs::write(workspace_root.join(ARTIFACT_CACHE_METADATA_FILE), content).map_err(|error| {
-        vec![CompilerDiagnostic::with_code(
+        vec![crate::diagnostics::diagnostic_with_code(
             format!("failed to write generated artifact cache metadata: {error}"),
             DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
         )]

@@ -1,5 +1,5 @@
 use super::execution::execute_test_runner_project;
-use crate::diagnostics::{run_codegen_with_boundary, write_stderr_line, CompilerDiagnostic};
+use crate::diagnostics::{run_codegen_with_boundary, write_stderr_line, RenderedDiagnostic};
 use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle};
 use crate::project::{
     collect_project_hir_modules, discover_test_root_modules, parse_import_closure_modules,
@@ -22,7 +22,7 @@ pub(crate) struct GeneratedTestRunnerProject {
     pub(crate) all_required_crates: HashSet<String>,
 }
 
-pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompilerDiagnostic>> {
+pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<RenderedDiagnostic>> {
     let test_files_by_module = discover_test_root_modules(test_dir);
 
     if test_files_by_module.is_empty() {
@@ -42,7 +42,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompilerDiagnostic>> {
 pub(crate) fn build_test_runner_project(
     test_dir: &Path,
     test_files_by_module: &BTreeMap<String, PathBuf>,
-) -> Result<GeneratedTestRunnerProject, Vec<CompilerDiagnostic>> {
+) -> Result<GeneratedTestRunnerProject, Vec<RenderedDiagnostic>> {
     let test_roots: BTreeSet<String> = test_files_by_module.keys().cloned().collect();
     let resolver = ModuleResolver::entry_parent(test_dir);
     let parsed_modules =
@@ -84,7 +84,7 @@ pub(crate) fn build_test_runner_project(
 
     for (module_name, test_file) in test_files_by_module {
         let Some(parsed) = test_modules.get(module_name.as_str()) else {
-            return Err(vec![CompilerDiagnostic::with_code(
+            return Err(vec![crate::diagnostics::diagnostic_with_code(
                 format!(
                     "missing parsed test module '{}' from '{}'",
                     module_name,
@@ -102,7 +102,7 @@ pub(crate) fn build_test_runner_project(
         ) {
             Ok(result) => result,
             Err(errors) => {
-                let diagnostics: Vec<CompilerDiagnostic> = errors
+                let diagnostics: Vec<RenderedDiagnostic> = errors
                     .into_iter()
                     .map(|mut error| {
                         error.message = format!("[{}] {}", test_file.display(), error.message);
