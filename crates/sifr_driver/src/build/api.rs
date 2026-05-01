@@ -3,14 +3,17 @@ use crate::build::{
     emit_project_entrypoint, resolve_project_entrypoint_plan, CachedBinaryArtifact,
     RootedEntrypoint,
 };
-use crate::diagnostics::{CompileError, CompileResult};
+use crate::diagnostics::{CompileResult, CompilerDiagnostic};
 use std::path::{Path, PathBuf};
 
-pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
+pub fn build_project(
+    main_file: &Path,
+    output_dir: &Path,
+) -> Result<PathBuf, Vec<CompilerDiagnostic>> {
     build_rooted_entrypoint_binary(&RootedEntrypoint::Project { main_file }, output_dir)
 }
 
-pub fn check_project(main_file: &Path) -> Vec<CompileError> {
+pub fn check_project(main_file: &Path) -> Vec<CompilerDiagnostic> {
     match resolve_project_entrypoint_plan(main_file) {
         Ok(project_plan) => {
             project_plan.emit_frontend_diagnostics();
@@ -24,17 +27,19 @@ pub fn emit_project(main_file: &Path) -> CompileResult {
     emit_project_entrypoint(main_file)
 }
 
-pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
+pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompilerDiagnostic>> {
     build_rooted_entrypoint_binary(&RootedEntrypoint::SingleFile { source }, output_dir)
 }
 
-pub fn build_cached_project(main_file: &Path) -> Result<CachedBinaryArtifact, Vec<CompileError>> {
+pub fn build_cached_project(
+    main_file: &Path,
+) -> Result<CachedBinaryArtifact, Vec<CompilerDiagnostic>> {
     build_cached_project_binary(main_file)
 }
 
 pub fn build_cached_single_file(
     source: &str,
     entrypoint_file: &Path,
-) -> Result<CachedBinaryArtifact, Vec<CompileError>> {
+) -> Result<CachedBinaryArtifact, Vec<CompilerDiagnostic>> {
     build_cached_single_file_binary(source, entrypoint_file)
 }

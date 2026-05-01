@@ -382,7 +382,7 @@ def get() -> int:
         .expect("project lowering should fail when non-main imports missing module");
     assert!(errors.iter().any(|e| {
         e.message.contains("unknown import target: 'missing_mod'")
-            && e.code == DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE
+            && e.code == DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code()
     }));
 }
 

@@ -1,4 +1,4 @@
-use crate::diagnostics::{write_stderr_line, CompileError};
+use crate::diagnostics::{write_stderr_line, CompilerDiagnostic};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult};
 use sifr_python_ast::Stmt;
@@ -20,25 +20,25 @@ pub(crate) fn lower_frontend_module(
     stmts: &[Stmt],
     external_defs: &ExternalDefs,
     diagnostic_style: FrontendDiagnosticStyle,
-) -> Result<LoweringResult, Vec<CompileError>> {
+) -> Result<LoweringResult, Vec<CompilerDiagnostic>> {
     let result = match lower_module_with_externals(stmts, external_defs) {
         Ok(result) => result,
         Err(errors) => {
-            let compile_errors: Vec<CompileError> = errors
+            let diagnostics: Vec<CompilerDiagnostic> = errors
                 .into_iter()
-                .map(|error| lowering_error_to_compile_error(module_name, diagnostic_style, error))
+                .map(|error| lowering_error_to_diagnostic(module_name, diagnostic_style, error))
                 .collect();
-            return Err(compile_errors);
+            return Err(diagnostics);
         }
     };
     Ok(result)
 }
 
-fn lowering_error_to_compile_error(
+fn lowering_error_to_diagnostic(
     module_name: &str,
     diagnostic_style: FrontendDiagnosticStyle,
     error: LoweringError,
-) -> CompileError {
+) -> CompilerDiagnostic {
     let code = lowering_error_code_or_internal(&error);
     let uncoded = error.code.is_none();
     let message = match diagnostic_style {
@@ -54,7 +54,7 @@ fn lowering_error_to_compile_error(
     } else {
         message
     };
-    CompileError::with_code(message, code)
+    CompilerDiagnostic::with_code(message, code)
 }
 
 pub(crate) fn lowering_error_code_or_internal(error: &LoweringError) -> DiagnosticCode {
@@ -74,7 +74,7 @@ pub(crate) fn emit_frontend_diagnostics(lowering_result: &LoweringResult) {
 
 #[cfg(test)]
 mod tests {
-    use super::{lowering_error_to_compile_error, FrontendDiagnosticStyle};
+    use super::{lowering_error_to_diagnostic, FrontendDiagnosticStyle};
     use sifr_diagnostics::DiagnosticCode;
     use sifr_hir::LoweringError;
 
@@ -91,11 +91,8 @@ mod tests {
     fn coded_lowering_error_uses_active_diagnostic_code() {
         let error = lowering_error(Some(DiagnosticCode::TYPE_MISMATCH), "expected int, got str");
 
-        let compile_error =
-            lowering_error_to_compile_error("main", FrontendDiagnosticStyle::Bare, error);
-        let diagnostic = compile_error.to_diagnostic();
+        let diagnostic = lowering_error_to_diagnostic("main", FrontendDiagnosticStyle::Bare, error);
 
-        assert_eq!(compile_error.code, DiagnosticCode::TYPE_MISMATCH);
         assert_eq!(diagnostic.code, "SIFR-TYPE-0002");
         assert_eq!(diagnostic.url, "https://sifr.sh/docs/errors/SIFR-TYPE-0002");
     }
@@ -104,13 +101,11 @@ mod tests {
     fn codeless_lowering_error_is_internal_compiler_diagnostic() {
         let error = lowering_error(None, "expected int, got str");
 
-        let compile_error =
-            lowering_error_to_compile_error("main", FrontendDiagnosticStyle::ModulePrefixed, error);
-        let diagnostic = compile_error.to_diagnostic();
+        let diagnostic =
+            lowering_error_to_diagnostic("main", FrontendDiagnosticStyle::ModulePrefixed, error);
 
-        assert_eq!(compile_error.code, DiagnosticCode::INTERNAL_COMPILER_PANIC);
         assert_eq!(
-            compile_error.message,
+            diagnostic.message,
             "internal compiler error: HIR lowering emitted a diagnostic without canonical code: [main] expected int, got str"
         );
         assert_eq!(diagnostic.code, "SIFR-INTERNAL-0001");

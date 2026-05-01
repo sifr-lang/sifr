@@ -5,7 +5,7 @@ This inventory is the `milestone_diag_3` handoff into diagnostic registry popula
 Coverage snapshot from April 29, 2026:
 
 - `rg "ctx\\.error\\(" crates/sifr_hir/src -g '*.rs'` finds 489 raw HIR lowering emissions across 22 files.
-- `rg "CompileError \\{" crates/sifr_driver/src crates/sifr/src -g '*.rs'` has 54 raw textual matches, including `struct`, `impl`, and return-type lines. The actual legacy driver/CLI construction surface is 47 sites: 43 production `CompileError { ... }` literals plus 4 test-only diagnostic construction sites.
+- The legacy public `CompileError` abstraction has been deleted. `CompilerDiagnostic` remains as the transitional driver/CLI transport until the residual driver renderer moves to `DiagnosticSink` directly.
 - `rg "TypeErrorKind::" crates/sifr_type_system/src crates/sifr_hir/src -g '*.rs'` finds 24 current type-system typed-error construction sites.
 - `rg "# expect-error" crates/sifr/tests/e2e/fail crates/sifr/tests/e2e.rs -g '*.sifr' -g '*.rs'` finds 92 fail-fixture expectations plus 8 harness test samples.
 
@@ -81,11 +81,11 @@ Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `t
 
 ## Driver And CLI Surface
 
-Legacy `CompileError` is the current outer transport, but it no longer carries or assigns public diagnostic identity from `CompilePhase`; it carries an active `DiagnosticCode`, and legacy human labels are derived from canonical code families. The migration target is `DiagnosticSink` plus `ErrorEmitted`; `CompileError` and `CompilerDiagnostic` should disappear by residual cleanup.
+The public `CompileError` abstraction has been deleted. The driver and CLI currently pass the transitional `CompilerDiagnostic` envelope with active `SIFR-*` identity and code-derived human labels. The remaining migration target is `DiagnosticSink` plus `ErrorEmitted`; `CompilerDiagnostic` should disappear by residual cleanup once the driver reports canonical diagnostics directly.
 
 | Surface | Current construction count | Current code source | Target handling |
 | --- | ---: | --- | --- |
-| `crates/sifr_driver/src/diagnostics.rs` | 1 | `CompileError` carries active `DiagnosticCode`; one actual construction is the codegen panic boundary | Route already-structured diagnostics through shared renderer; delete the residual `CompileError` abstraction once `DiagnosticSink` is authoritative. |
+| `crates/sifr_driver/src/diagnostics.rs` | 1 | `CompilerDiagnostic::with_code` constructs the panic-boundary diagnostic with active `SIFR-INTERNAL-0001` identity | Route already-structured diagnostics through shared renderer; delete the transitional `CompilerDiagnostic` abstraction once `DiagnosticSink` is authoritative. |
 | `crates/sifr_driver/src/frontend/api.rs` | 2 | parser frontend errors carry active `PARSE-*`; HIR lowering errors carry the HIR-provided active code | Parser adapter emits `PARSE-*`; HIR returns `LoweringOutcome` diagnostics. |
 | `crates/sifr_driver/src/frontend/module_lowering.rs` | 1 | module lowering errors preserve the HIR-provided active code; uncoded lowering diagnostics are surfaced as internal compiler diagnostics | Preserve module/source span and direct HIR diagnostic identity. |
 | `crates/sifr_driver/src/project/discovery.rs` | 6 | workspace discovery and reachable parse failures | Keep workspace discovery in `WORKSPACE-*`; reachable source parse failures are `PARSE-*`. |
@@ -101,7 +101,7 @@ Legacy `CompileError` is the current outer transport, but it no longer carries o
 | `crates/sifr_driver/src/test_runner/orchestrator.rs` | 2 | test orchestration failure and frontend error forwarding | `BUILD-*` for orchestration; forwarded frontend diagnostics retain original identity. |
 | `crates/sifr/src/main.rs` | 1 | CLI panic boundary carries `SIFR-INTERNAL-0001` | CLI should render diagnostics from driver; direct construction should disappear. |
 
-The test-only `CompileError` construction sites in `crates/sifr_driver/src/tests/diagnostics.rs` intentionally exercise diagnostic-code transport and recovery-limit behavior. They should be rewritten or deleted with the legacy diagnostic abstraction rather than treated as runtime emission sites.
+The former test-only `CompileError` construction sites in `crates/sifr_driver/src/tests/diagnostics.rs` now exercise transitional `CompilerDiagnostic` transport and recovery-limit behavior. They should be rewritten or deleted with the legacy driver renderer rather than treated as runtime emission sites.
 
 CLI and renderer tests also manually construct `CompilerDiagnostic` values. These are test-only surfaces but must be updated in `milestone_diag_5` when the harness and renderer contracts stop accepting phase-bucket and pseudo-code strings:
 
@@ -114,8 +114,8 @@ Current public-code mechanisms to remove:
 
 | Mechanism | Current owner | Current effect | Replacement |
 | --- | --- | --- | --- |
-| Phase-derived `CompilePhase` mapping and display labels | `crates/sifr_driver/src/diagnostics.rs` | removed; `CompileError` now requires an active `DiagnosticCode`, and human labels are code-derived | domain helpers construct `SifrDiagnostic` with the canonical code before driver rendering |
-| Workspace prefix classifier | `CompileError::workspace_diagnostic_code` | infers some `SIFR-WORKSPACE-*` identities from rendered message prefixes | typed workspace/project discovery constructors with structured path/module args |
+| Phase-derived `CompilePhase` mapping and display labels | `crates/sifr_driver/src/diagnostics.rs` | removed; diagnostics now carry active code strings, and human labels are code-derived | domain helpers construct `SifrDiagnostic` with the canonical code before driver rendering |
+| Workspace prefix classifier | legacy `CompileError::workspace_diagnostic_code` | removed before `milestone_diag_4b`; workspace identities are explicit at construction | typed workspace/project discovery constructors with structured path/module args |
 | Type-error string forwarding | HIR sites that call `ctx.error(e.message)` or `ctx.error(error.message)` | loses `TypeErrorKind`, source relation, expected/actual/operator args, and decimal identity | HIR call site emits the target `TYPE-*`, `DECIMAL-*`, `NAME-*`, `CALL-*`, or `OWN-*` diagnostic directly with the AST span |
 | Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | keeps `[E25xx]` as text inside a broader `SIFR-TYPE-0001` diagnostic | top-level `SIFR-DECIMAL-*` diagnostic code and no secondary message code |
 | Test-only hard-coded diagnostics | CLI renderer and driver diagnostics tests | locks renderer behavior to legacy phase buckets and pseudo-code text | renderer/harness tests construct canonical diagnostics through `sifr_diagnostics` fixtures |

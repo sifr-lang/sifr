@@ -1,14 +1,14 @@
-use crate::diagnostics::CompileError;
+use crate::diagnostics::CompilerDiagnostic;
 use crate::stdlib::StdlibCompiled;
 use std::sync::OnceLock;
 
-pub(super) static STDLIB_COMPILED_CACHE: OnceLock<Result<StdlibCompiled, Vec<CompileError>>> =
+pub(super) static STDLIB_COMPILED_CACHE: OnceLock<Result<StdlibCompiled, Vec<CompilerDiagnostic>>> =
     OnceLock::new();
 
 pub(crate) fn get_or_init_stdlib_cache(
-    cache: &OnceLock<Result<StdlibCompiled, Vec<CompileError>>>,
-    build: impl FnOnce() -> Result<StdlibCompiled, Vec<CompileError>>,
-) -> Result<StdlibCompiled, Vec<CompileError>> {
+    cache: &OnceLock<Result<StdlibCompiled, Vec<CompilerDiagnostic>>>,
+    build: impl FnOnce() -> Result<StdlibCompiled, Vec<CompilerDiagnostic>>,
+) -> Result<StdlibCompiled, Vec<CompilerDiagnostic>> {
     cache.get_or_init(build).clone()
 }
 
@@ -16,13 +16,13 @@ pub(crate) fn get_or_init_stdlib_cache(
 mod tests {
     use super::*;
     use crate::stdlib::compile_stdlib_uncached;
-    use crate::CompileError;
+    use crate::CompilerDiagnostic;
     use sifr_diagnostics::DiagnosticCode;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[test]
     fn test_get_or_init_stdlib_cache_reuses_successful_compilation() {
-        let cache: OnceLock<Result<StdlibCompiled, Vec<CompileError>>> = OnceLock::new();
+        let cache: OnceLock<Result<StdlibCompiled, Vec<CompilerDiagnostic>>> = OnceLock::new();
         let build_calls = AtomicUsize::new(0);
 
         let first = get_or_init_stdlib_cache(&cache, || {
@@ -46,12 +46,12 @@ mod tests {
 
     #[test]
     fn test_get_or_init_stdlib_cache_reuses_error_without_fallback_rebuild() {
-        let cache: OnceLock<Result<StdlibCompiled, Vec<CompileError>>> = OnceLock::new();
+        let cache: OnceLock<Result<StdlibCompiled, Vec<CompilerDiagnostic>>> = OnceLock::new();
         let build_calls = AtomicUsize::new(0);
 
         let first = match get_or_init_stdlib_cache(&cache, || {
             build_calls.fetch_add(1, Ordering::SeqCst);
-            Err(vec![CompileError::with_code(
+            Err(vec![CompilerDiagnostic::with_code(
                 "sentinel stdlib cache error",
                 DiagnosticCode::STDLIB_CACHE_FAILURE,
             )])

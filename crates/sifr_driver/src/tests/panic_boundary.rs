@@ -7,7 +7,7 @@ fn test_run_codegen_with_boundary_reports_string_panic_as_internal_compiler_pani
         panic!("boom");
     })
     .expect_err("panic should be converted into an internal compiler panic");
-    assert_eq!(err.code, DiagnosticCode::INTERNAL_COMPILER_PANIC);
+    assert_eq!(err.code, DiagnosticCode::INTERNAL_COMPILER_PANIC.code());
     assert!(err.message.contains("panic boundary test: boom"));
 }
 
@@ -17,7 +17,7 @@ fn test_run_codegen_with_boundary_reports_non_string_payload_as_internal_compile
         std::panic::panic_any(42_u8);
     })
     .expect_err("panic should be converted into an internal compiler panic");
-    assert_eq!(err.code, DiagnosticCode::INTERNAL_COMPILER_PANIC);
+    assert_eq!(err.code, DiagnosticCode::INTERNAL_COMPILER_PANIC.code());
     assert!(err
         .message
         .contains("panic boundary test: non-string panic payload"));

@@ -17,7 +17,7 @@ fn test_parse_source_returns_parse_error_for_invalid_program() {
     assert!(!errors.is_empty());
     assert_eq!(
         errors[0].code,
-        DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY
+        DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY.code()
     );
 }
 
@@ -30,7 +30,7 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
     assert!(!errors.is_empty());
     assert!(errors
         .iter()
-        .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH));
+        .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code()));
 
     let check_errors = type_check_source("def main():\n    x: int = \"bad\"\n");
     assert_eq!(errors.len(), check_errors.len());
@@ -139,7 +139,7 @@ def main():
     assert!(!errors.is_empty());
     assert!(errors
         .iter()
-        .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH));
+        .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code()));
 }
 
 #[test]

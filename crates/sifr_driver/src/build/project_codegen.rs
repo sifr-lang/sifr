@@ -1,4 +1,4 @@
-use crate::diagnostics::{run_codegen_with_boundary, CompileError};
+use crate::diagnostics::{run_codegen_with_boundary, CompilerDiagnostic};
 use crate::project::{
     assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path, ProjectLowering,
 };
@@ -48,7 +48,7 @@ pub(super) fn generated_single_file_binary_project(
 pub(super) fn generated_project_binary_project(
     stdlib_code: &StdlibCode,
     project_lowering: ProjectLowering,
-) -> Result<GeneratedBinaryProject, Vec<CompileError>> {
+) -> Result<GeneratedBinaryProject, Vec<CompilerDiagnostic>> {
     let ProjectLowering {
         hir_modules,
         compile_order,
@@ -66,7 +66,7 @@ pub(super) fn generated_project_binary_project(
         "internal compiler panic during project code generation",
         || generate_rust_multi_with_metadata(&module_refs, stdlib_code),
     )
-    .map_err(|error| vec![error])?;
+    .map_err(|error| vec![*error])?;
 
     let main_rs = assemble_project_main_rs(&compile_order, &codegen_result.rust_files);
     let support_modules = ordered_non_main_module_names(&compile_order, &codegen_result.rust_files)

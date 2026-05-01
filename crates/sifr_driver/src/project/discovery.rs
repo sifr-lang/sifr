@@ -1,4 +1,4 @@
-use crate::diagnostics::CompileError;
+use crate::diagnostics::CompilerDiagnostic;
 use crate::workspace::WorkspaceRoot;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Stmt;
@@ -192,13 +192,13 @@ enum ResolutionFailureKind {
 }
 
 impl ResolutionError {
-    fn to_compile_error(&self, resolver: &ModuleResolver) -> CompileError {
+    fn to_diagnostic(&self, resolver: &ModuleResolver) -> CompilerDiagnostic {
         match &self.kind {
-            ResolutionFailureKind::Unresolved => CompileError::with_code(
+            ResolutionFailureKind::Unresolved => CompilerDiagnostic::with_code(
                 unresolved_import_message(&self.module_name, &self.tried_paths),
                 DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
             ),
-            ResolutionFailureKind::Ambiguous => CompileError::with_code(
+            ResolutionFailureKind::Ambiguous => CompilerDiagnostic::with_code(
                 ambiguous_import_message(&self.module_name, resolver, &self.matches),
                 DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
             ),
@@ -213,7 +213,7 @@ impl ResolutionError {
                     .get(1)
                     .cloned()
                     .unwrap_or_else(|| resolver.module_source_path(parent_name));
-                CompileError::with_code(
+                CompilerDiagnostic::with_code(
                     namespace_collision_message(
                         &self.module_name,
                         &resolved_path,
@@ -368,7 +368,7 @@ pub(crate) fn parse_import_closure_modules(
     resolver: &ModuleResolver,
     root_modules: &BTreeSet<String>,
     diagnostic_style: DiscoveryDiagnosticStyle,
-) -> Result<HashMap<String, Vec<Stmt>>, Vec<CompileError>> {
+) -> Result<HashMap<String, Vec<Stmt>>, Vec<CompilerDiagnostic>> {
     let mut parsed_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
     let mut parsed_names: BTreeSet<String> = BTreeSet::new();
     let mut pending = root_modules.clone();
@@ -381,7 +381,7 @@ pub(crate) fn parse_import_closure_modules(
         let path = match resolver.resolve(&module_name) {
             Ok(resolved) => resolved.path,
             Err(error) if resolver.has_workspace() => {
-                return Err(vec![error.to_compile_error(resolver)]);
+                return Err(vec![error.to_diagnostic(resolver)]);
             }
             Err(error) => error
                 .tried_paths
@@ -390,7 +390,7 @@ pub(crate) fn parse_import_closure_modules(
                 .unwrap_or_else(|| resolver.module_source_path(&module_name)),
         };
         let source = std::fs::read_to_string(&path).map_err(|e| {
-            vec![CompileError::with_code(
+            vec![CompilerDiagnostic::with_code(
                 format!("failed to read '{}': {}", path.display(), e),
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
@@ -401,11 +401,11 @@ pub(crate) fn parse_import_closure_modules(
                 if !parsed.has_valid_syntax() {
                     // TODO(diag_4a slice 2): classify Ruff parse failures
                     // into the precise active parse-code buckets.
-                    let errors: Vec<CompileError> = parsed
+                    let errors: Vec<CompilerDiagnostic> = parsed
                         .errors()
                         .iter()
                         .map(|e| {
-                            CompileError::with_code(
+                            CompilerDiagnostic::with_code(
                                 format!("[{label}] {e}"),
                                 DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
                             )
@@ -418,7 +418,7 @@ pub(crate) fn parse_import_closure_modules(
             Err(e) => {
                 // TODO(diag_4a slice 2): classify Ruff parse failures into
                 // the precise active parse-code buckets.
-                return Err(vec![CompileError::with_code(
+                return Err(vec![CompilerDiagnostic::with_code(
                     format!("[{label}] failed to parse: {e}"),
                     DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
                 )]);
@@ -434,7 +434,7 @@ pub(crate) fn parse_import_closure_modules(
                     pending.insert(dependency);
                 }
                 Err(error) if resolver.has_workspace() => {
-                    return Err(vec![error.to_compile_error(resolver)]);
+                    return Err(vec![error.to_diagnostic(resolver)]);
                 }
                 Err(_) => {}
             }
