@@ -1,0 +1,8 @@
+# expect-error: SIFR-CALL-0004: display() missing required argument 'verbose'
+def display(name: str, *, verbose: bool) -> str:
+    if verbose:
+        return "verbose"
+    return "quiet"
+
+def main():
+    print(display("Alice"))

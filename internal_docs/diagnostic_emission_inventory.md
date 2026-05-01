@@ -320,7 +320,7 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-CALL-0001` | wrong positional argument count | call/method validation | `crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr` |
 | `SIFR-CALL-0002` | unexpected keyword argument | call/method validation | `crates/sifr/tests/e2e/fail/sorted_unexpected_keyword.sifr` |
 | `SIFR-CALL-0003` | duplicate argument from positional/keyword overlap | call/method validation | `crates/sifr/tests/e2e/fail/keyword_after_positional_error.sifr` |
-| `SIFR-CALL-0004` | missing required argument | call/method validation | `crates/sifr/tests/e2e/fail/missing_keyword_only_arg.sifr` |
+| `SIFR-CALL-0004` | missing required argument | call/method validation | `crates/sifr/tests/e2e/fail/missing_required_argument.sifr` |
 | `SIFR-CALL-0005` | callable arity/non-callable mismatch | call/method validation | `crates/sifr/tests/e2e/fail/map_callable_arity_mismatch.sifr` |
 | `SIFR-OWN-0001` | use after move | ownership tracking | use-after-move fixtures |
 | `SIFR-OWN-0002` | double mutable borrow | ownership/borrow checker | `crates/sifr/tests/e2e/fail/double_mut_borrow.sifr` |
