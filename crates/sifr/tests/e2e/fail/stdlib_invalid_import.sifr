@@ -1,4 +1,4 @@
-# expect-error: SIFR-NAME-0004: module 'sifr.io' has no member 'nonexistent_function'
+# expect-error: SIFR-NAME-0004
 # Test that importing a non-existent name from a stdlib module fails
 from sifr.io import nonexistent_function
 

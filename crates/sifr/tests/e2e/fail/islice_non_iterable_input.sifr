@@ -1,5 +1,5 @@
 # Reference: phase_psp_iter_fix_6_islice_non_iterable_input
-# expect-error: SIFR-TYPE-0002: argument 1 ('data') of function 'islice': expected 'Iterable[T]', got 'int'
+# expect-error: SIFR-TYPE-0002
 from sifr.itertools import islice
 
 

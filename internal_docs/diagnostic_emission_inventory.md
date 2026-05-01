@@ -7,7 +7,7 @@ Coverage snapshot from April 29, 2026:
 - `rg "ctx\\.error\\(" crates/sifr_hir/src -g '*.rs'` finds 489 raw HIR lowering emissions across 22 files.
 - The legacy public `CompileError` abstraction and the custom driver `CompilerDiagnostic` transport have been deleted. Driver and CLI APIs now carry `sifr_diagnostics::RenderedDiagnostic` directly as the rendered diagnostic envelope until the residual driver renderer moves to `DiagnosticSink` directly.
 - `rg "TypeErrorKind::" crates/sifr_type_system/src crates/sifr_hir/src -g '*.rs'` finds 24 current type-system typed-error construction sites.
-- `rg "# expect-error" crates/sifr/tests/e2e/fail crates/sifr/tests/e2e.rs -g '*.sifr' -g '*.rs'` finds 92 fail-fixture expectations plus 8 harness test samples.
+- `rg "# expect-error" crates/sifr/tests/e2e/fail crates/sifr/tests/e2e.rs -g '*.sifr' -g '*.rs'` finds 155 fail-fixture expectations plus harness parser samples.
 
 ## HIR Lowering Surface
 
@@ -133,7 +133,7 @@ Workspace code review for `milestone_diag_2b`:
 
 ## E2E Expectation And Baseline Surface
 
-Current harness behavior in `crates/sifr/tests/e2e.rs` treats `# expect-error:` as substring matching. Decimal diagnostic messages and fail-fixture expectations stop carrying `[E25xx]` pseudo-code text in `milestone_diag_6`; the harness still accepts `[E2507]`-style pseudo-code text until the stricter `milestone_diag_5` contract cleanup rejects it.
+Current harness behavior in `crates/sifr/tests/e2e.rs` validates `# expect-error:` markers as active registry-backed `SIFR-<FAMILY>-dddd` codes. `milestone_diag_5` slice 1 removes message-substring matching, `[Edddd]` pseudo-code acceptance, and secondary-code extraction from diagnostic messages; fail-fixture expectations are code-only and duplicate-code expectations consume distinct emitted failures. The accepted grammar is `expect-error: SIFR-<FAMILY>-dddd`, plus `expect-error[col=<1-based-column>]: SIFR-<FAMILY>-dddd` for span-backed disambiguation when one source line intentionally expects multiple diagnostics.
 
 Original fail-fixture and harness-sample pseudo-code markers:
 
@@ -150,7 +150,7 @@ Original fail-fixture and harness-sample pseudo-code markers:
 | `[E2507]` | 5 | `SIFR-DECIMAL-0007`. |
 | `[E2508]` | 2 | `SIFR-DECIMAL-0008`. |
 
-Unannotated fail fixtures are also part of the migration surface. There are 88 fail fixtures with no `# expect-error` today; they currently assert only "compilation must fail". They should gain code assertions in the milestone that migrates the owning family, using the target-family grouping below.
+Unannotated fail fixtures are also part of the migration surface. There are 86 fail fixtures with no `# expect-error` today; they currently assert only "compilation must fail". They should gain code assertions in the milestone that migrates the owning family, using the target-family grouping below.
 
 | Group | Files | Target family/code plan |
 | --- | --- | --- |
@@ -218,8 +218,6 @@ operator_attrgetter_unsupported.sifr
 operator_methodcaller_unsupported.sifr
 ordered_counter_kwargs_constructor_unsupported.sifr
 os_mkdir_non_string_path.sifr
-own_parameter_method_mutation_requires_mut.sifr
-own_parameter_mutation_requires_mut.sifr
 pathlib_iterator_materialization_required.sifr
 pyio_inheritance_unsupported.sifr
 random_choices_weights_unsupported.sifr

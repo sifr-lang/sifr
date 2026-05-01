@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: TypeVar constraints must be simple type names
+# expect-error: SIFR-TYPE-0007
 
 def echo[T: (int, 1)](x: T) -> T:
     return x

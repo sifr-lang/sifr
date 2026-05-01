@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: TypeVar cannot declare both 'bound' and 'constraints'
+# expect-error: SIFR-TYPE-0007
 
 from typing import TypeVar
 

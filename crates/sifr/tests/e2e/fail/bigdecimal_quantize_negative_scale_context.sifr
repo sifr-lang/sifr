@@ -1,4 +1,4 @@
-# expect-error: SIFR-DECIMAL-0008: bigdecimal.quantize() scale must be >= 0 for default context, got -1
+# expect-error: SIFR-DECIMAL-0008
 def main():
     d: bigdecimal = BigDecimal("1.2345")
     x: bigdecimal = d.quantize(-1)

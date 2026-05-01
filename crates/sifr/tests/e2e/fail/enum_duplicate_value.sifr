@@ -1,4 +1,4 @@
-# expect-error: SIFR-CLASS-0003: enum 'Status' has duplicate value 200: variants 'OK' and 'SUCCESS'
+# expect-error: SIFR-CLASS-0003
 # Test: enum with duplicate integer values
 from enum import Enum
 

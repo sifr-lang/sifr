@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004: parameter 'verbose' in function 'display' is missing a type annotation
+# expect-error: SIFR-TYPE-0004
 
 def display(*, verbose) -> int:
     if verbose:

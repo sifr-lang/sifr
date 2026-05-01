@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0009: for loop tuple target expects iterable elements of tuple type, got 'int'
+# expect-error: SIFR-TYPE-0009
 
 def main():
     values: list[int] = [1, 2, 3]

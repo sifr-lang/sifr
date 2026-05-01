@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: generic type alias 'Pair' expects 1 type argument(s), got 2
+# expect-error: SIFR-TYPE-0007
 # Test: generic type aliases reject the wrong number of type arguments.
 
 type Pair[T] = tuple[T, T]

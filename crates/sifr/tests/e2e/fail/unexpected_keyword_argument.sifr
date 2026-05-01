@@ -1,4 +1,4 @@
-# expect-error: SIFR-CALL-0002: greet() got an unexpected keyword argument 'punctuation'
+# expect-error: SIFR-CALL-0002
 def greet(name: str) -> str:
     return "hello"
 

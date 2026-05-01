@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0002: argument 1 ('x') of function 'sqrt': expected 'float', got 'str'
+# expect-error: SIFR-TYPE-0002
 # Test that passing wrong type to a stdlib function fails
 from sifr.math import sqrt
 

@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0008: container literal has conflicting dict value types: int and str
+# expect-error: SIFR-TYPE-0008
 
 def main():
     values = {"one": 1, "two": "two"}

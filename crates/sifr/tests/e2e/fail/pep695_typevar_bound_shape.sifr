@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: TypeVar bound must be a type name or tuple of type names
+# expect-error: SIFR-TYPE-0007
 
 def echo[T: 1](x: T) -> T:
     return x

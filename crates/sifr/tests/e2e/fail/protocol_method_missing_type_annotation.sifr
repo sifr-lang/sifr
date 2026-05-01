@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004: parameter 'value' in Sink.accept is missing a type annotation
+# expect-error: SIFR-TYPE-0004
 
 class Sink(Protocol):
     def accept(self, value) -> None:

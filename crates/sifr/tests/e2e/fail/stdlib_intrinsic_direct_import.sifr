@@ -1,5 +1,5 @@
 # Reference: stdlib_intrinsic_direct_v2
-# expect-error: SIFR-IMPORT-0001: cannot import from '_sifr.fs' — _sifr.* modules are internal compiler intrinsics
+# expect-error: SIFR-IMPORT-0001
 # Test that direct import from _sifr.fs is blocked for user code
 from _sifr.fs import read_text
 

@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0005: unsupported operand type(s) for +: 'None | int' and 'int'
+# expect-error: SIFR-TYPE-0005
 # Test: narrowing in one branch does not permit optional arithmetic after a join
 
 def bad_increment(x: int | None, flag: bool) -> int:

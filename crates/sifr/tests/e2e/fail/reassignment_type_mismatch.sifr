@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0002: type mismatch: cannot assign 'str' to variable 'value' of type 'int'
+# expect-error: SIFR-TYPE-0002
 
 def main():
     value = 1

@@ -1,4 +1,4 @@
-# expect-error: SIFR-DECIMAL-0005: float(decimal_value) is not allowed; decimal values are exact and cannot be converted to float
+# expect-error: SIFR-DECIMAL-0005
 def main():
     d: decimal = Decimal("1.5")
     x: float = float(d)

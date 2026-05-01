@@ -1,4 +1,4 @@
-# expect-error: SIFR-NAME-0003: unknown type: 'MissingType'
+# expect-error: SIFR-NAME-0003
 
 def consume(value: MissingType) -> int:
     return 0

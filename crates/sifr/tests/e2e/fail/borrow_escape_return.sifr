@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0003: cannot return borrowed parameter `items`: borrowed parameters cannot escape -- add `own` at the signature boundary or return `items.clone()`
+# expect-error: SIFR-OWN-0003
 # Test: returning a borrowed parameter should produce a compile error.
 # The parameter `items` is borrowed by default (&Vec<i64>),
 # so it cannot be returned (would escape the borrow).

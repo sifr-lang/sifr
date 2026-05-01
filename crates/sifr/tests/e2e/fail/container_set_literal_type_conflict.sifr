@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0008: container literal has conflicting set element types: int and str
+# expect-error: SIFR-TYPE-0008
 
 def main():
     values = {1, "two"}

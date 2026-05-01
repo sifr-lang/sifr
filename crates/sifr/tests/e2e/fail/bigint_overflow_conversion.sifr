@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0002: type mismatch: expected 'int', got 'Result[int, OverflowError]'
+# expect-error: SIFR-TYPE-0002
 # Test that bigint-to-int conversion without error handling is a compile error
 def main():
     big: bigint = bigint(10) ** 20

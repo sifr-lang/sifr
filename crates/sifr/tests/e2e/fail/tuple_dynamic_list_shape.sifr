@@ -1,5 +1,5 @@
 # Reference: phase_psp_a1_tuple_dynamic_list_shape
-# expect-error: SIFR-STDLIB-0001: tuple() currently requires a tuple, list literal, or string literal because Sifr tuples are fixed-length typed values
+# expect-error: SIFR-STDLIB-0001
 
 def main():
     nums: list[int] = [1, 2, 3]

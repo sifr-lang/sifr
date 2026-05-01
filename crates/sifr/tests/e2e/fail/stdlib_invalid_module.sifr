@@ -1,4 +1,4 @@
-# expect-error: SIFR-IMPORT-0002: unknown import target: 'sifr.nonexistent'
+# expect-error: SIFR-IMPORT-0002
 # Test that importing from a nonexistent stdlib module fails
 from sifr.nonexistent import foo
 

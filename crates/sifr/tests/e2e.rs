@@ -16,6 +16,7 @@
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
 use serde::{Deserialize, Serialize};
+use sifr_diagnostics::codes::{active_registry_entries, registry_entry, DiagnosticState};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::env;
 use std::fmt::Write as _;
@@ -73,19 +74,19 @@ struct FixtureCase {
     source_hash: String,
     expected_stdout: Option<String>,
     _expected_stderr: Vec<String>,
-    _expected_errors: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct CompileFailureExpectation {
     code: String,
-    message_contains: Option<String>,
+    column: Option<u32>,
 }
 
 #[derive(Clone, Debug)]
 struct CompiledFailure {
     code: String,
     message: String,
+    column: Option<u32>,
 }
 
 #[derive(Clone, Debug)]
@@ -416,17 +417,6 @@ fn extract_expect_stderr(source: &str) -> Vec<String> {
         .collect()
 }
 
-/// Extract expected error substrings from `# expect-error: <value>` comments.
-fn extract_expect_errors(source: &str) -> Vec<String> {
-    source
-        .lines()
-        .filter_map(|line| {
-            line.strip_prefix("# expect-error:")
-                .map(|rest| rest.trim().to_string())
-        })
-        .collect()
-}
-
 fn path_to_name(path: &Path) -> String {
     path.file_stem()
         .and_then(|name| name.to_str())
@@ -575,62 +565,143 @@ fn compile_source(source: &str) -> Result<String, Vec<CompiledFailure>> {
         sifr_driver::CompileResult::Errors { errors } => {
             let mut failures = Vec::new();
             for diagnostic in errors {
-                let message = diagnostic.message.clone();
-                failures.push(CompiledFailure {
-                    code: diagnostic.code,
-                    message: message.clone(),
-                });
-                if let Some(message_code) = diagnostic_error_code(&message) {
-                    failures.push(CompiledFailure {
-                        code: message_code,
-                        message,
-                    });
-                }
+                failures.push(compiled_failure_from_rendered(diagnostic));
             }
             Err(failures)
         }
     }
 }
 
-fn parse_expected_error(raw: &str) -> Option<CompileFailureExpectation> {
-    let normalized = raw.trim();
-    if normalized.is_empty() {
-        return None;
+fn compiled_failure_from_rendered(
+    diagnostic: sifr_diagnostics::RenderedDiagnostic,
+) -> CompiledFailure {
+    CompiledFailure {
+        code: diagnostic.code,
+        message: diagnostic.message,
+        column: diagnostic
+            .spans
+            .iter()
+            .find(|span| span.is_primary)
+            .and_then(|span| span.column),
+    }
+}
+
+fn parse_expected_error(raw: &str) -> Result<CompileFailureExpectation, String> {
+    parse_expected_error_parts(None, raw)
+}
+
+fn parse_expected_error_parts(
+    column: Option<u32>,
+    raw_code: &str,
+) -> Result<CompileFailureExpectation, String> {
+    let code = raw_code.trim();
+    validate_expected_error_code(code)?;
+    Ok(CompileFailureExpectation {
+        code: code.to_string(),
+        column,
+    })
+}
+
+fn parse_expect_error_line(line: &str) -> Option<Result<CompileFailureExpectation, String>> {
+    if let Some(raw_code) = line.strip_prefix("# expect-error:") {
+        return Some(parse_expected_error_parts(None, raw_code));
     }
 
-    let (raw_code, raw_message) = if let Some(inner) = normalized.strip_prefix('[') {
-        let end = inner.find(']')?;
-        let code = inner[..end].trim();
-        let message = inner[end + 1..]
-            .trim()
-            .trim_start_matches(':')
-            .trim()
-            .to_string();
-        (code, message)
-    } else {
-        let split =
-            normalized.find(|character: char| character == ':' || character.is_whitespace());
-        match split {
-            Some(index) => {
-                let (code, raw_message) = normalized.split_at(index);
-                let message = raw_message
-                    .trim_start_matches(':')
-                    .trim_start()
-                    .trim_start_matches('-')
-                    .trim()
-                    .to_string();
-                (code, message)
-            }
-            None => (normalized, String::new()),
+    let rest = line.strip_prefix("# expect-error[")?;
+    let (qualifier, raw_code) = match rest.split_once("]:") {
+        Some(parts) => parts,
+        None => {
+            return Some(Err(
+                "expected expect-error qualifier syntax '# expect-error[col=<column>]: <code>'"
+                    .to_string(),
+            ));
         }
     };
+    let Some(raw_column) = qualifier.strip_prefix("col=") else {
+        return Some(Err(format!(
+            "unknown expect-error qualifier '{qualifier}'; only col=<column> is supported"
+        )));
+    };
+    let column = match raw_column.parse::<u32>() {
+        Ok(value) if value > 0 => value,
+        _ => {
+            return Some(Err(format!(
+                "invalid expect-error column '{raw_column}'; expected a positive 1-based column"
+            )));
+        }
+    };
+    Some(parse_expected_error_parts(Some(column), raw_code))
+}
 
-    let code = normalize_error_code(raw_code);
-    let is_valid = is_diagnostic_code(&code) || is_message_error_code(&code);
-    is_valid.then_some(CompileFailureExpectation {
-        code,
-        message_contains: (!raw_message.is_empty()).then_some(raw_message),
-    })
+fn extract_compile_failure_expectations(
+    source: &str,
+    fixture_path: &Path,
+) -> Vec<CompileFailureExpectation> {
+    source
+        .lines()
+        .enumerate()
+        .filter_map(|(line_index, line)| {
+            parse_expect_error_line(line).map(|result| {
+                result.unwrap_or_else(|error| {
+                    panic!(
+                        "FAIL {}:{} invalid expect-error marker: {}",
+                        fixture_path.display(),
+                        line_index + 1,
+                        error
+                    );
+                })
+            })
+        })
+        .collect()
+}
+
+fn validate_expected_error_code(code: &str) -> Result<(), String> {
+    if code.is_empty() {
+        return Err("expected a diagnostic code after expect-error".to_string());
+    }
+
+    let bare_legacy_code = code
+        .strip_prefix('E')
+        .is_some_and(|digits| !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit()));
+    let bracketed_legacy_code = code
+        .strip_prefix("[E")
+        .and_then(|digits| digits.strip_suffix(']'))
+        .is_some_and(|digits| !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit()));
+    if bare_legacy_code || bracketed_legacy_code {
+        return Err(format!(
+            "legacy pseudo-code '{code}' is not accepted; use canonical SIFR-<FAMILY>-dddd"
+        ));
+    }
+
+    if code
+        .chars()
+        .any(|character| character == ':' || character.is_whitespace())
+    {
+        return Err(format!(
+            "message substrings are not accepted in expect-error markers: '{code}'"
+        ));
+    }
+
+    if !is_diagnostic_code(code) {
+        return Err(format!(
+            "expected canonical SIFR-<FAMILY>-dddd code, got '{code}'"
+        ));
+    }
+
+    match registry_entry(code) {
+        Some(entry) if entry.state == DiagnosticState::Active => Ok(()),
+        Some(entry) => Err(format!(
+            "diagnostic code '{}' is {}, but e2e expectations require an active code",
+            entry.id,
+            entry.state.as_str()
+        )),
+        None => {
+            let hint = closest_active_diagnostic_code(code)
+                .map(|candidate| format!("; did you mean {candidate}?"))
+                .unwrap_or_default();
+            Err(format!("unknown diagnostic code '{code}'{hint}"))
+        }
+    }
 }
 
 fn is_diagnostic_code(raw: &str) -> bool {
@@ -642,7 +713,7 @@ fn is_diagnostic_code(raw: &str) -> bool {
     if let Some((prefix, code)) = suffix.split_once('-') {
         prefix
             .chars()
-            .all(|character| character.is_ascii_alphanumeric())
+            .all(|character| character.is_ascii_uppercase() || character.is_ascii_digit())
             && code.len() == 4
             && code.chars().all(|character| character.is_ascii_digit())
     } else {
@@ -650,37 +721,67 @@ fn is_diagnostic_code(raw: &str) -> bool {
     }
 }
 
-fn is_message_error_code(raw: &str) -> bool {
-    raw.starts_with('E')
-        && raw.len() > 1
-        && raw[1..].chars().all(|character| character.is_ascii_digit())
+fn closest_active_diagnostic_code(raw: &str) -> Option<&'static str> {
+    active_registry_entries()
+        .map(|entry| (entry.id, edit_distance(raw, entry.id)))
+        .min_by_key(|(id, distance)| (*distance, *id))
+        .map(|(id, _)| id)
 }
 
-fn normalize_error_code(raw: &str) -> String {
-    let trimmed = raw.trim();
-    if let Some(inner) = trimmed
-        .strip_prefix('[')
-        .and_then(|value| value.strip_suffix(']'))
-    {
-        inner.to_string()
-    } else {
-        trimmed.to_string()
+fn edit_distance(left: &str, right: &str) -> usize {
+    let right_chars = right.chars().collect::<Vec<_>>();
+    let mut previous = (0..=right_chars.len()).collect::<Vec<_>>();
+    let mut current = vec![0; right_chars.len() + 1];
+
+    for (left_index, left_char) in left.chars().enumerate() {
+        current[0] = left_index + 1;
+        for (right_index, right_char) in right_chars.iter().enumerate() {
+            let substitution_cost = usize::from(left_char != *right_char);
+            current[right_index + 1] = (previous[right_index + 1] + 1)
+                .min(current[right_index] + 1)
+                .min(previous[right_index] + substitution_cost);
+        }
+        std::mem::swap(&mut previous, &mut current);
     }
+
+    previous[right_chars.len()]
 }
 
 fn compile_failures_to_messages(failures: &[CompiledFailure]) -> Vec<String> {
     failures
         .iter()
-        .map(|f| format!("{}: {}", f.code, f.message))
+        .map(|failure| match failure.column {
+            Some(column) => format!("{}@col{}: {}", failure.code, column, failure.message),
+            None => format!("{}: {}", failure.code, failure.message),
+        })
         .collect()
 }
 
-fn diagnostic_error_code(message: &str) -> Option<String> {
-    let start = message.find('[')?;
-    let remainder = &message[start + 1..];
-    let end = remainder.find(']')?;
-    let code = &remainder[..end];
-    is_message_error_code(code).then(|| code.to_string())
+fn failure_matches_expectation(
+    failure: &CompiledFailure,
+    expectation: &CompileFailureExpectation,
+) -> bool {
+    failure.code == expectation.code
+        && match expectation.column {
+            Some(column) => failure.column == Some(column),
+            None => true,
+        }
+}
+
+fn match_compile_failure_expectations(
+    expectations: &[CompileFailureExpectation],
+    failures: &[CompiledFailure],
+) -> Result<(), CompileFailureExpectation> {
+    let mut consumed = vec![false; failures.len()];
+    for expectation in expectations {
+        let Some(index) = failures.iter().enumerate().find_map(|(index, failure)| {
+            (!consumed[index] && failure_matches_expectation(failure, expectation)).then_some(index)
+        }) else {
+            return Err(expectation.clone());
+        };
+        consumed[index] = true;
+    }
+    Ok(())
 }
 
 fn compile_source_with_metadata(
@@ -816,7 +917,6 @@ fn discover_fixtures(base_dir: &Path) -> Vec<FixtureCase> {
                         source_hash,
                         expected_stdout: extract_expect_stdout(&source),
                         _expected_stderr: extract_expect_stderr(&source),
-                        _expected_errors: extract_expect_errors(&source),
                     });
                 }
                 Err(err) => {
@@ -2537,7 +2637,7 @@ fn test_e2e_fail() {
     let mut failures = 0usize;
     for path in read_dir_file_paths_sorted(fail_dir) {
         let source = std::fs::read_to_string(&path).unwrap();
-        let expected = extract_expect_errors(&source);
+        let expected = extract_compile_failure_expectations(&source, &path);
 
         match compile_source(&source) {
             Ok(rust_source) => {
@@ -2548,36 +2648,17 @@ fn test_e2e_fail() {
                 );
             }
             Err(errors) => {
-                for expected in &expected {
-                    let expected = parse_expected_error(expected).unwrap_or_else(|| {
-                        panic!(
-                            "FAIL {} expected marker '{}' is invalid; use SIFR-XXXX-XXXX or Exxxx",
-                            path.display(),
-                            expected
-                        )
-                    });
-
-                    let matched = errors.iter().any(|failure| {
-                        failure.code == expected.code
-                            && match expected.message_contains.as_ref() {
-                                Some(message) => failure.message.contains(message),
-                                None => true,
-                            }
-                    });
-
-                    assert!(
-                        matched,
+                match_compile_failure_expectations(&expected, &errors).unwrap_or_else(|missing| {
+                    panic!(
                         "FAIL {} expected diagnostic code '{}'{} but got:\n{}",
                         path.display(),
-                        expected.code,
-                        expected
-                            .message_contains
-                            .as_ref()
-                            .map(|message| format!(" with message containing {:?}", message))
-                            .unwrap_or_default(),
+                        missing.code,
+                        missing
+                            .column
+                            .map_or_else(String::new, |column| format!(" at column {column}")),
                         compile_failures_to_messages(&errors).join("\n")
                     );
-                }
+                });
                 failures += 1;
             }
         }
@@ -2756,7 +2837,7 @@ fn test_expectation_parsing_contract() {
         "# expect-stderr: err-2",
         "# expect-error: SIFR-PARSE-0002",
         "# expect-error: SIFR-TYPE-0002",
-        "# expect-error: [E2507]",
+        "# expect-error[col=7]: SIFR-DECIMAL-0007",
     ]
     .join("\n");
 
@@ -2765,32 +2846,187 @@ fn test_expectation_parsing_contract() {
         extract_expect_stderr(&source),
         vec!["err-1".to_string(), "err-2".to_string()]
     );
+    let expected = extract_compile_failure_expectations(&source, Path::new("unit.sifr"));
     assert_eq!(
-        extract_expect_errors(&source),
+        expected,
         vec![
-            "SIFR-PARSE-0002".to_string(),
-            "SIFR-TYPE-0002".to_string(),
-            "[E2507]".to_string()
+            CompileFailureExpectation {
+                code: "SIFR-PARSE-0002".to_string(),
+                column: None,
+            },
+            CompileFailureExpectation {
+                code: "SIFR-TYPE-0002".to_string(),
+                column: None,
+            },
+            CompileFailureExpectation {
+                code: "SIFR-DECIMAL-0007".to_string(),
+                column: Some(7),
+            },
         ]
     );
 }
 
 #[test]
-fn test_expected_error_contract_with_messages() {
-    let parsed = parse_expected_error("SIFR-TYPE-0002: assignment to immutability").unwrap();
+fn test_expected_error_contract_accepts_canonical_codes_and_columns() {
+    let parsed = parse_expected_error("SIFR-TYPE-0002").unwrap();
     assert_eq!(parsed.code, "SIFR-TYPE-0002");
-    assert_eq!(
-        parsed.message_contains.unwrap(),
-        "assignment to immutability"
+    assert_eq!(parsed.column, None);
+
+    let parsed = parse_expect_error_line("# expect-error[col=12]: SIFR-DECIMAL-0007")
+        .unwrap()
+        .unwrap();
+    assert_eq!(parsed.code, "SIFR-DECIMAL-0007");
+    assert_eq!(parsed.column, Some(12));
+}
+
+#[test]
+fn test_expected_error_contract_rejects_messages_legacy_and_unknown_codes() {
+    let message_error = parse_expected_error("SIFR-TYPE-0002: assignment to immutability")
+        .expect_err("message substrings must be rejected");
+    assert!(message_error.contains("message substrings are not accepted"));
+
+    let legacy_error =
+        parse_expected_error("[E2507]").expect_err("legacy pseudo-codes must be rejected");
+    assert!(legacy_error.contains("legacy pseudo-code"));
+
+    let unknown_error =
+        parse_expected_error("SIFR-TYPE-9999").expect_err("unknown codes must be rejected");
+    assert!(unknown_error.contains("unknown diagnostic code 'SIFR-TYPE-9999'"));
+    assert!(
+        unknown_error.contains("did you mean SIFR-"),
+        "unknown-code error should include closest active-code hint: {unknown_error}"
     );
 
-    let parsed =
-        parse_expected_error("[E2507] decimal.round() scale must be between 0 and 28, got 29")
-            .unwrap();
-    assert_eq!(parsed.code, "E2507");
+    let reserved_error =
+        parse_expected_error("SIFR-INTERNAL-0002").expect_err("reserved codes must be rejected");
+    assert!(reserved_error.contains("Reserved"));
+}
+
+#[test]
+fn test_expected_error_contract_rejects_malformed_grammar() {
+    let empty_error = parse_expected_error("").expect_err("empty payload must be rejected");
+    assert!(empty_error.contains("expected a diagnostic code"));
+
+    let shape_error = parse_expected_error("SIFR-").expect_err("invalid shape must be rejected");
+    assert!(shape_error.contains("expected canonical SIFR-<FAMILY>-dddd code"));
+
+    let bracket_error = parse_expected_error("[SIFR-TYPE-0002]")
+        .expect_err("bracketed canonical code must be rejected");
+    assert!(bracket_error.contains("expected canonical SIFR-<FAMILY>-dddd code"));
+
+    let missing_close = parse_expect_error_line("# expect-error[col=12 SIFR-TYPE-0002").unwrap();
+    assert!(missing_close
+        .expect_err("malformed qualifier must be rejected")
+        .contains("expected expect-error qualifier syntax"));
+
+    let unknown_qualifier =
+        parse_expect_error_line("# expect-error[line=3]: SIFR-TYPE-0002").unwrap();
+    assert!(unknown_qualifier
+        .expect_err("unknown qualifier must be rejected")
+        .contains("unknown expect-error qualifier"));
+
+    let invalid_column = parse_expect_error_line("# expect-error[col=0]: SIFR-TYPE-0002").unwrap();
+    assert!(invalid_column
+        .expect_err("non-positive column must be rejected")
+        .contains("invalid expect-error column"));
+}
+
+#[test]
+fn test_failure_matching_consumes_failures_and_honors_columns() {
+    let failures = vec![
+        CompiledFailure {
+            code: "SIFR-TYPE-0002".to_string(),
+            message: "first".to_string(),
+            column: Some(4),
+        },
+        CompiledFailure {
+            code: "SIFR-TYPE-0002".to_string(),
+            message: "second".to_string(),
+            column: Some(8),
+        },
+    ];
+
+    let expected = vec![
+        CompileFailureExpectation {
+            code: "SIFR-TYPE-0002".to_string(),
+            column: Some(4),
+        },
+        CompileFailureExpectation {
+            code: "SIFR-TYPE-0002".to_string(),
+            column: Some(8),
+        },
+    ];
+    assert!(match_compile_failure_expectations(&expected, &failures).is_ok());
+
+    let duplicate_expectations = vec![
+        CompileFailureExpectation {
+            code: "SIFR-TYPE-0002".to_string(),
+            column: Some(4),
+        },
+        CompileFailureExpectation {
+            code: "SIFR-TYPE-0002".to_string(),
+            column: Some(4),
+        },
+    ];
+    assert!(match_compile_failure_expectations(&duplicate_expectations, &failures).is_err());
+
+    let too_many_code_only_expectations = vec![
+        CompileFailureExpectation {
+            code: "SIFR-TYPE-0002".to_string(),
+            column: None,
+        },
+        CompileFailureExpectation {
+            code: "SIFR-TYPE-0002".to_string(),
+            column: None,
+        },
+        CompileFailureExpectation {
+            code: "SIFR-TYPE-0002".to_string(),
+            column: None,
+        },
+    ];
+    assert!(
+        match_compile_failure_expectations(&too_many_code_only_expectations, &failures).is_err()
+    );
+}
+
+#[test]
+fn test_rendered_diagnostic_column_is_used_for_expect_error_matching() {
+    let rendered = sifr_diagnostics::RenderedDiagnostic {
+        code: "SIFR-TYPE-0002".to_string(),
+        severity: sifr_diagnostics::Severity::Error,
+        message: "type mismatch".to_string(),
+        message_template: "{message}".to_string(),
+        args: BTreeMap::new(),
+        url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
+        spans: vec![sifr_diagnostics::DiagnosticSpan {
+            file: Some("unit.sifr".to_string()),
+            byte_start: 4,
+            byte_end: 5,
+            line: Some(2),
+            column: Some(9),
+            end_line: Some(2),
+            end_column: Some(10),
+            is_primary: true,
+            label: Some("value".to_string()),
+            lines: Vec::new(),
+        }],
+        children: Vec::new(),
+        help: None,
+        suggestions: Vec::new(),
+    };
+
+    let failure = compiled_failure_from_rendered(rendered);
+    assert_eq!(failure.column, Some(9));
+
+    let expected = parse_expect_error_line("# expect-error[col=9]: SIFR-TYPE-0002")
+        .unwrap()
+        .unwrap();
+    assert!(
+        match_compile_failure_expectations(&[expected], std::slice::from_ref(&failure)).is_ok()
+    );
     assert_eq!(
-        parsed.message_contains.unwrap(),
-        "decimal.round() scale must be between 0 and 28, got 29"
+        compile_failures_to_messages(&[failure]),
+        vec!["SIFR-TYPE-0002@col9: type mismatch".to_string()]
     );
 }
 
@@ -2964,7 +3200,7 @@ fn test_smoke_property_deterministic_hash_contract() {
 }
 
 #[test]
-fn test_smoke_fuzz_expectation_extractors_no_panic() {
+fn test_smoke_fuzz_valid_expectation_extractors_no_panic() {
     let mut seed = 0xBADC_0FFE_EE11_2233u64;
     for _ in 0..512 {
         let mut sample = smoke_ascii(&mut seed, 120);
@@ -2975,20 +3211,20 @@ fn test_smoke_fuzz_expectation_extractors_no_panic() {
             sample.push_str("\n# expect-stderr: err");
         }
         if (smoke_rand_next(&mut seed) & 1) == 0 {
-            sample.push_str("\n# expect-error: issue");
+            sample.push_str("\n# expect-error: SIFR-TYPE-0002");
         }
 
         let _ = extract_expect_stdout(&sample);
         let _ = extract_expect_stderr(&sample);
-        let _ = extract_expect_errors(&sample);
+        let _ = extract_compile_failure_expectations(&sample, Path::new("smoke.sifr"));
     }
 }
 
 #[test]
 fn test_smoke_expectation_extractors_unicode_inputs() {
     let samples = [
-        "# expect-stdout: مرحبا\n# expect-stderr: λάθος\n# expect-error: ошибка",
-        "# expect-stdout: こんにちは世界\n# expect-error: 错误",
+        "# expect-stdout: مرحبا\n# expect-stderr: λάθος\n# expect-error: SIFR-TYPE-0002",
+        "# expect-stdout: こんにちは世界\n# expect-error: SIFR-TYPE-0002",
         "# expect-stderr: emoji-😀\nplain-text",
         "no-directives-🧪",
     ];
@@ -2996,7 +3232,7 @@ fn test_smoke_expectation_extractors_unicode_inputs() {
     for sample in samples {
         let _ = extract_expect_stdout(sample);
         let _ = extract_expect_stderr(sample);
-        let _ = extract_expect_errors(sample);
+        let _ = extract_compile_failure_expectations(sample, Path::new("unicode.sifr"));
     }
 }
 
@@ -3050,7 +3286,6 @@ fn test_filter_fixtures_by_selection_rejects_unknown_fixture_names() {
             source_hash: "a".to_string(),
             expected_stdout: None,
             _expected_stderr: Vec::new(),
-            _expected_errors: Vec::new(),
         },
         FixtureCase {
             name: "beta".to_string(),
@@ -3059,7 +3294,6 @@ fn test_filter_fixtures_by_selection_rejects_unknown_fixture_names() {
             source_hash: "b".to_string(),
             expected_stdout: None,
             _expected_stderr: Vec::new(),
-            _expected_errors: Vec::new(),
         },
     ];
 
@@ -3101,7 +3335,6 @@ fn test_dependency_fingerprint_and_cache_key_determinism() {
         source_hash: deterministic_hash(&format!("hash-{}", now.as_nanos())),
         expected_stdout: None,
         _expected_stderr: Vec::new(),
-        _expected_errors: Vec::new(),
     };
     let compiled = CompiledCase {
         fixture: case.clone(),
@@ -3196,7 +3429,6 @@ fn test_cache_entry_invalidation_rules() {
         source_hash: deterministic_hash("cache-fixture-a"),
         expected_stdout: None,
         _expected_stderr: Vec::new(),
-        _expected_errors: Vec::new(),
     };
     let compiled = CompiledCase {
         fixture: case.clone(),
