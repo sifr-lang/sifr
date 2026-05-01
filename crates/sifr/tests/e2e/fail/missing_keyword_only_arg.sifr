@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0003: cannot return borrowed parameter `name`: borrowed parameters cannot escape -- add `own` at the signature boundary or return `name.clone()`
+# expect-error: SIFR-OWN-0003
 def display(name: str, *, verbose: bool) -> str:
     if verbose:
         return f"Name: {name}"

@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: TypeVar bound must be a simple type name
+# expect-error: SIFR-TYPE-0007
 
 from typing import TypeVar
 

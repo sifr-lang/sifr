@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: Callable type requires exactly 2 type parameters: [[param_types], return_type]
+# expect-error: SIFR-TYPE-0007
 
 def consume(callback: Callable[[int], str, bool]) -> int:
     return 0

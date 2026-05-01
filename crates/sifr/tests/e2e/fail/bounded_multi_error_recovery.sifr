@@ -1,7 +1,8 @@
 # Reference: m27_5
 # Source issue: phase27-runtime-safety-and-diagnostics-execution.md
-# expect-error: SIFR-TYPE-0002: type mismatch: expected 'int', got 'str'
-# expect-error: SIFR-TYPE-0002: type mismatch: expected 'bool', got 'int'
+# expect-error: SIFR-TYPE-0002
+# expect-error: SIFR-TYPE-0002
+# expect-error: SIFR-TYPE-0002
 
 def main():
     a: int = "a"

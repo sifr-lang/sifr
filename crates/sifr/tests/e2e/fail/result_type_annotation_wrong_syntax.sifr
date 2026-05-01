@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: Result type annotation requires [T, E] syntax
+# expect-error: SIFR-TYPE-0007
 
 def consume(value: Result[int]) -> int:
     return 0

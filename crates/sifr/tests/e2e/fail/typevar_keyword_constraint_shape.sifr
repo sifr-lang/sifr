@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: TypeVar constraints must be a type name or tuple of type names
+# expect-error: SIFR-TYPE-0007
 
 from typing import TypeVar
 

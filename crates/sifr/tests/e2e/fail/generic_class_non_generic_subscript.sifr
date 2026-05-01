@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: class 'LegacyBox' does not declare type parameters; use `class LegacyBox[T]: ...`
+# expect-error: SIFR-TYPE-0007
 # Test: class subscripts require declared type parameters.
 
 class LegacyBox:

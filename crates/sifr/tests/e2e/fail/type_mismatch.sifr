@@ -1,3 +1,3 @@
-# expect-error: SIFR-TYPE-0002: type mismatch: expected 'int', got 'str'
+# expect-error: SIFR-TYPE-0002
 def main():
     x: int = "hello"

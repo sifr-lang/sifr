@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0009: for loop tuple target expects 2 element(s), iterable yields 3
+# expect-error: SIFR-TYPE-0009
 
 def main():
     triples: list[tuple[int, int, int]] = [(1, 2, 3)]

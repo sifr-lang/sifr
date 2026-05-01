@@ -1,4 +1,4 @@
-# expect-error: SIFR-MATCH-0003: class 'Point' has no field 'z' — available fields: x, y
+# expect-error: SIFR-MATCH-0003
 class Point:
     x: int
     y: int

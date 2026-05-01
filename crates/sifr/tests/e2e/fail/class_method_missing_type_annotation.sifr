@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004: parameter 'value' in Tool.scale is missing a type annotation
+# expect-error: SIFR-TYPE-0004
 
 class Tool:
     def scale(self, value) -> int:

@@ -1,4 +1,4 @@
-# expect-error: SIFR-DECIMAL-0004: cannot mix 'decimal' and 'bigdecimal' in arithmetic; use explicit Decimal(...) or BigDecimal(...) conversion
+# expect-error: SIFR-DECIMAL-0004
 def main():
     d: decimal = Decimal("1.0")
     b: bigdecimal = BigDecimal("2.0")

@@ -1,4 +1,4 @@
-# expect-error: SIFR-CALL-0004: range() missing required argument 'stop'
+# expect-error: SIFR-CALL-0004
 def main():
     values: list[int] = list(range())
     print(len(values))

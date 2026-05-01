@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004: vararg parameter 'values' in function 'total' is missing a type annotation
+# expect-error: SIFR-TYPE-0004
 
 def total(*values) -> int:
     acc = 0

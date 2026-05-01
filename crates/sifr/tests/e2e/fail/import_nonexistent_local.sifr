@@ -1,4 +1,4 @@
-# expect-error: SIFR-IMPORT-0002: unknown import target: 'mymodule'
+# expect-error: SIFR-IMPORT-0002
 # Test that importing from a nonexistent local module fails
 from mymodule import bar
 

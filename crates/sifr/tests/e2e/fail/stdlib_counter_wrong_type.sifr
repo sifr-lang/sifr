@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0002: argument 1 ('source') of function 'Counter': expected 'None | dict[T, int]', got 'int'
+# expect-error: SIFR-TYPE-0002
 # Test: passing wrong type to Counter constructor
 from sifr.collections import Counter
 

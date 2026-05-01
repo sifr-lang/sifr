@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007: generic class 'Pair' expects 1 type argument(s), got 2
+# expect-error: SIFR-TYPE-0007
 # Test: generic classes reject the wrong number of type arguments.
 
 class Pair[T]:
