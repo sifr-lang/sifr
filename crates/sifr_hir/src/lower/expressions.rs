@@ -1343,9 +1343,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     return None;
                 };
                 if name.as_str() != "start" {
-                    ctx.error(format!(
-                        "enumerate() got an unexpected keyword argument '{name}'"
-                    ));
+                    ctx.error_with_code(
+                        DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+                        format!("enumerate() got an unexpected keyword argument '{name}'"),
+                    );
                     return None;
                 }
                 if call.arguments.args.len() == 2 {

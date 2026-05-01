@@ -1,0 +1,4 @@
+# expect-error: SIFR-CALL-0002: zip() got an unexpected keyword argument 'bogus'
+def main():
+    nums: list[int] = [1, 2]
+    _paired = zip(nums, nums, bogus=True)
