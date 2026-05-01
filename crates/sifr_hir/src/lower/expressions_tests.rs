@@ -268,6 +268,25 @@ fn test_sorted_unexpected_keyword_has_call_code() {
 }
 
 #[test]
+fn test_sorted_and_range_missing_required_argument_have_call_code() {
+    let sorted_result = lower_source("def main():\n    values: list[int] = sorted()\n");
+    assert!(sorted_result.is_err());
+    let sorted_errors = sorted_result.unwrap_err();
+    assert!(sorted_errors.iter().any(|error| {
+        error.message == "sorted() missing required argument 'iterable'"
+            && error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+    }));
+
+    let range_result = lower_source("def main():\n    values: list[int] = list(range())\n");
+    assert!(range_result.is_err());
+    let range_errors = range_result.unwrap_err();
+    assert!(range_errors.iter().any(|error| {
+        error.message == "range() missing required argument 'stop'"
+            && error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+    }));
+}
+
+#[test]
 fn test_function_unexpected_keyword_has_call_code() {
     let result = lower_source(
         "def greet(name: str) -> str:\n    return \"hello\"\n\ndef main():\n    print(greet(\"Alice\", punctuation=\"!\"))\n",

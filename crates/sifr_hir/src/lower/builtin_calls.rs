@@ -843,7 +843,10 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
     }
 
     let Some(stop_raw) = stop_expr else {
-        ctx.error("range() missing required argument 'stop'".to_string());
+        ctx.error_with_code(
+            DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT,
+            "range() missing required argument 'stop'".to_string(),
+        );
         return None;
     };
 
