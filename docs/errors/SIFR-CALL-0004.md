@@ -10,7 +10,7 @@ Missing required argument.
 | Family | `CALL` |
 | Severity | Error |
 | Owner | `sifr_hir::lower` |
-| Message template | `{callable} missing required argument {argument}` |
-| Representative fixture | `crates/sifr/tests/e2e/fail/missing_keyword_only_arg.sifr` |
+| Message template | `{callable} missing required argument '{argument}'` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/missing_required_argument.sifr` |
 | Declared args | `callable (message+json)`, `argument (message+json)` |
 | Dedupe args | `callable`, `argument` |

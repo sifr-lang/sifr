@@ -331,6 +331,19 @@ fn test_function_wrong_arg_count_has_call_code() {
 }
 
 #[test]
+fn test_missing_required_argument_has_call_code() {
+    let result = lower_source(
+        "def display(name: str, *, verbose: bool) -> str:\n    if verbose:\n        return \"verbose\"\n    return \"quiet\"\n\ndef main():\n    print(display(\"Alice\"))\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "display() missing required argument 'verbose'"
+            && error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+    }));
+}
+
+#[test]
 fn test_defaultdict_accepts_counter_initial_mapping() {
     let result = lower_source(
         "class Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",

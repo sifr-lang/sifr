@@ -824,8 +824,8 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "CALL",
         "Missing required argument.",
         Severity::Error,
-        "crates/sifr/tests/e2e/fail/missing_keyword_only_arg.sifr",
-        "{callable} missing required argument {argument}",
+        "crates/sifr/tests/e2e/fail/missing_required_argument.sifr",
+        "{callable} missing required argument '{argument}'",
         "sifr_hir::lower",
         [arg!("callable"), arg!("argument")],
         ["callable", "argument"]

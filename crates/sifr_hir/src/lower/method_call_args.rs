@@ -286,9 +286,10 @@ fn duplicate_argument_error<T>(callable_name: &str, arg: &str, ctx: &mut LowerCt
 }
 
 fn missing_argument_error<T>(callable_name: &str, arg: &str, ctx: &mut LowerCtx) -> Option<T> {
-    ctx.error(format!(
-        "{callable_name}(): missing argument '{arg}' with no default value"
-    ));
+    ctx.error_with_code(
+        DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT,
+        format!("{callable_name}() missing required argument '{arg}'"),
+    );
     None
 }
 
