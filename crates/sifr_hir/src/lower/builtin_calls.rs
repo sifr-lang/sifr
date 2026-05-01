@@ -20,7 +20,13 @@ pub(super) fn reject_zip_keywords_if_present(call: &ExprCall, ctx: &mut LowerCtx
     };
     let message = match name.as_str() {
         "strict" => "zip() keyword argument 'strict' is not supported".to_string(),
-        other => format!("zip() got an unexpected keyword argument '{other}'"),
+        other => {
+            ctx.error_with_code(
+                DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+                format!("zip() got an unexpected keyword argument '{other}'"),
+            );
+            return true;
+        }
     };
     ctx.error(message);
     true
@@ -827,9 +833,10 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
                 step_expr = Some(&keyword.value);
             }
             other => {
-                ctx.error(format!(
-                    "range() got an unexpected keyword argument '{other}'"
-                ));
+                ctx.error_with_code(
+                    DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+                    format!("range() got an unexpected keyword argument '{other}'"),
+                );
                 return None;
             }
         }

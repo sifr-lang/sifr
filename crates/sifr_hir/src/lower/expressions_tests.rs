@@ -1514,9 +1514,29 @@ fn test_zip_keyword_diagnostics_are_stable() {
     assert!(unexpected_result.is_err());
     let unexpected_errors = unexpected_result.unwrap_err();
     assert!(unexpected_errors.iter().any(|error| {
-        error
-            .message
-            .contains("zip() got an unexpected keyword argument 'bogus'")
+        error.message == "zip() got an unexpected keyword argument 'bogus'"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+    }));
+}
+
+#[test]
+fn test_range_and_enumerate_unexpected_keywords_have_call_code() {
+    let range_result = lower_source("def main():\n    print(list(range(stop=3, bogus=1)))\n");
+    assert!(range_result.is_err());
+    let range_errors = range_result.unwrap_err();
+    assert!(range_errors.iter().any(|error| {
+        error.message == "range() got an unexpected keyword argument 'bogus'"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+    }));
+
+    let enumerate_result = lower_source(
+        "def main():\n    nums: list[int] = [1, 2]\n    _items = enumerate(nums, bogus=1)\n",
+    );
+    assert!(enumerate_result.is_err());
+    let enumerate_errors = enumerate_result.unwrap_err();
+    assert!(enumerate_errors.iter().any(|error| {
+        error.message == "enumerate() got an unexpected keyword argument 'bogus'"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
     }));
 }
 
