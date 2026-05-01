@@ -1214,7 +1214,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 (Some(arg), None) => lower_expr(arg, ctx)?,
                 (None, Some(keyword)) => lower_expr(&keyword.value, ctx)?,
                 (None, None) => {
-                    ctx.error("sorted() missing required argument 'iterable'".to_string());
+                    ctx.error_with_code(
+                        DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT,
+                        "sorted() missing required argument 'iterable'".to_string(),
+                    );
                     return None;
                 }
             };
