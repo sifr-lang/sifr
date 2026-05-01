@@ -1,4 +1,5 @@
 use crate::diagnostics::{write_stderr_line, CompileError, CompilePhase};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult};
 use sifr_python_ast::Stmt;
 
@@ -38,17 +39,28 @@ fn lowering_error_to_compile_error(
     diagnostic_style: FrontendDiagnosticStyle,
     error: LoweringError,
 ) -> CompileError {
+    let code = lowering_error_code_or_internal(&error);
+    let uncoded = error.code.is_none();
     let message = match diagnostic_style {
         FrontendDiagnosticStyle::Bare => error.message,
         FrontendDiagnosticStyle::ModulePrefixed => {
             format!("[{}] {}", module_name, error.message)
         }
     };
-    if let Some(code) = error.code {
-        CompileError::with_code(message, CompilePhase::TypeCheck, code)
+    let message = if uncoded {
+        format!(
+            "internal compiler error: HIR lowering emitted a diagnostic without canonical code: {message}"
+        )
     } else {
-        CompileError::new(message, CompilePhase::TypeCheck)
-    }
+        message
+    };
+    CompileError::with_code(message, CompilePhase::TypeCheck, code)
+}
+
+pub(crate) fn lowering_error_code_or_internal(error: &LoweringError) -> DiagnosticCode {
+    error
+        .code
+        .unwrap_or(DiagnosticCode::INTERNAL_COMPILER_PANIC)
 }
 
 pub(crate) fn emit_frontend_diagnostics(lowering_result: &LoweringResult) {
@@ -83,21 +95,24 @@ mod tests {
             lowering_error_to_compile_error("main", FrontendDiagnosticStyle::Bare, error);
         let diagnostic = compile_error.to_diagnostic();
 
-        assert_eq!(compile_error.code, Some(DiagnosticCode::TYPE_MISMATCH));
+        assert_eq!(compile_error.code, DiagnosticCode::TYPE_MISMATCH);
         assert_eq!(diagnostic.code, "SIFR-TYPE-0002");
         assert_eq!(diagnostic.url, "https://sifr.sh/docs/errors/SIFR-TYPE-0002");
     }
 
     #[test]
-    fn codeless_lowering_error_preserves_legacy_bridge() {
+    fn codeless_lowering_error_is_internal_compiler_diagnostic() {
         let error = lowering_error(None, "expected int, got str");
 
         let compile_error =
             lowering_error_to_compile_error("main", FrontendDiagnosticStyle::ModulePrefixed, error);
         let diagnostic = compile_error.to_diagnostic();
 
-        assert_eq!(compile_error.code, None);
-        assert_eq!(compile_error.message, "[main] expected int, got str");
-        assert_eq!(diagnostic.code, "SIFR-TYPE-0001");
+        assert_eq!(compile_error.code, DiagnosticCode::INTERNAL_COMPILER_PANIC);
+        assert_eq!(
+            compile_error.message,
+            "internal compiler error: HIR lowering emitted a diagnostic without canonical code: [main] expected int, got str"
+        );
+        assert_eq!(diagnostic.code, "SIFR-INTERNAL-0001");
     }
 }

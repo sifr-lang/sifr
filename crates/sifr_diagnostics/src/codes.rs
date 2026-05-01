@@ -36,6 +36,8 @@ impl DiagnosticCode {
     pub const TYPE_UNPACK_SHAPE_MISMATCH: Self = Self::new("SIFR-TYPE-0009", Severity::Error);
     pub const TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED: Self =
         Self::new("SIFR-TYPE-0010", Severity::Error);
+    pub const TYPE_UNSUPPORTED_DEFAULT_ARGUMENT: Self =
+        Self::new("SIFR-TYPE-0011", Severity::Error);
     pub const TYPE_ARITHMETIC_OVERFLOW_RISK: Self = Self::new("SIFR-TYPE-0901", Severity::Warning);
     pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
 
@@ -157,7 +159,6 @@ impl DiagnosticCode {
 pub enum DiagnosticState {
     Active,
     Reserved,
-    Retired,
 }
 
 impl DiagnosticState {
@@ -166,7 +167,6 @@ impl DiagnosticState {
         match self {
             Self::Active => "Active",
             Self::Reserved => "Reserved",
-            Self::Retired => "Retired",
         }
     }
 }
@@ -220,7 +220,6 @@ pub struct DiagnosticRegistryEntry {
     pub summary: &'static str,
     pub state: DiagnosticState,
     pub docs_path: &'static str,
-    pub replacement: Option<&'static str>,
     pub representative_fixture_path: Option<&'static str>,
     pub message_template: Option<&'static str>,
     pub owner_module: Option<&'static str>,
@@ -344,33 +343,12 @@ macro_rules! active_entry {
             summary: $summary,
             state: DiagnosticState::Active,
             docs_path: concat!("docs/errors/", $id, ".md"),
-            replacement: None,
             representative_fixture_path: Some($fixture),
             message_template: Some($template),
             owner_module: Some($owner),
             declared_args: &[$($arg),*],
             dedupe_args: &[$($dedupe),*],
             declared_severity: Some($severity),
-            tooling: DiagnosticTooling::DEFAULT,
-        }
-    };
-}
-
-macro_rules! retired_entry {
-    ($id:literal, $family:literal, $summary:literal, $replacement:literal) => {
-        DiagnosticRegistryEntry {
-            id: $id,
-            family: $family,
-            summary: $summary,
-            state: DiagnosticState::Retired,
-            docs_path: "docs/errors/diagnostic-codes.md",
-            replacement: Some($replacement),
-            representative_fixture_path: None,
-            message_template: None,
-            owner_module: None,
-            declared_args: &[],
-            dedupe_args: &[],
-            declared_severity: None,
             tooling: DiagnosticTooling::DEFAULT,
         }
     };
@@ -394,30 +372,6 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-CODEGEN-0000", "CODEGEN"),
     reserved_family_base("SIFR-BUILD-0000", "BUILD"),
     reserved_family_base("SIFR-INTERNAL-0000", "INTERNAL"),
-    retired_entry!(
-        "SIFR-PARSE-0001",
-        "PARSE",
-        "Retired opaque parser phase bucket.",
-        "replaced by active PARSE category codes"
-    ),
-    retired_entry!(
-        "SIFR-TYPE-0001",
-        "TYPE",
-        "Retired semantic catch-all type-check bucket.",
-        "replaced by active semantic family codes"
-    ),
-    retired_entry!(
-        "SIFR-CODEGEN-0001",
-        "CODEGEN",
-        "Retired broad code-generation catch-all.",
-        "replaced by SIFR-CODEGEN-0002 or INTERNAL codes"
-    ),
-    retired_entry!(
-        "SIFR-BUILD-0001",
-        "BUILD",
-        "Retired broad build catch-all.",
-        "replaced by active BUILD operation codes"
-    ),
     active_entry!(
         "SIFR-PARSE-0002",
         "PARSE",
@@ -670,6 +624,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::expressions",
         [arg!("actual"), arg!("constraints"), arg!("type_param")],
         ["actual", "constraints", "type_param"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0011",
+        "TYPE",
+        "Unsupported default argument expression.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr",
+        "function {function}: unsupported default argument expression for parameter {parameter}",
+        "sifr_hir::lower::typing_and_functions",
+        [arg!("function"), arg!("parameter")],
+        ["function", "parameter"]
     ),
     active_entry!(
         "SIFR-TYPE-0901",
@@ -1333,7 +1298,6 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         summary: "Reserved for structured recovery-cap omission summaries.",
         state: DiagnosticState::Reserved,
         docs_path: "docs/errors/diagnostic-codes.md",
-        replacement: None,
         representative_fixture_path: None,
         message_template: None,
         owner_module: Some("diagnostic recovery cap"),
@@ -1368,6 +1332,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
     DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
     DiagnosticCode::TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED,
+    DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
     DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
     DiagnosticCode::TYPE_REVEAL_TYPE,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
@@ -1446,7 +1411,6 @@ const fn reserved_family_base(id: &'static str, family: &'static str) -> Diagnos
         summary: "Reserved family base; not emitted as a diagnostic.",
         state: DiagnosticState::Reserved,
         docs_path: "docs/errors/diagnostic-codes.md",
-        replacement: None,
         representative_fixture_path: None,
         message_template: None,
         owner_module: None,
@@ -1530,7 +1494,6 @@ mod tests {
                         entry.id
                     );
                 }
-                DiagnosticState::Retired => {}
             }
         }
 
@@ -1683,7 +1646,6 @@ mod tests {
             entry.id,
             entry.family,
             entry.docs_path,
-            entry.replacement.unwrap_or_default(),
             entry.summary,
             entry.owner_module.unwrap_or_default(),
             entry.message_template.unwrap_or_default(),

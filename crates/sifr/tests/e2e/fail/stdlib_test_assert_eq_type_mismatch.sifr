@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: argument 2 ('expected') of function 'assert_eq': expected 'int', got 'str'
+# expect-error: SIFR-TYPE-0002: argument 2 ('expected') of function 'assert_eq': expected 'int', got 'str'
 # Test: generic assert_eq enforces same-type arguments
 from sifr.test import assert_eq
 

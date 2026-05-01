@@ -204,11 +204,9 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
             )
             .map_err(|e| {
                 vec![CompileError {
+                    code: e.code,
                     message: format!("[stdlib:{module_name}] {}", e.message),
                     phase: e.phase,
-                    // Preserves the internal panic code set by
-                    // run_codegen_with_boundary.
-                    code: e.code,
                 }]
             })?;
             stdlib_code

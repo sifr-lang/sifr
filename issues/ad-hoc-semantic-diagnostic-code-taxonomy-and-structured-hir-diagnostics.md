@@ -26,7 +26,7 @@ Current wave: `milestone_diag_4a` renderer integration, split into reviewable tr
 - [x] Identified wrong-layer diagnostics, related-span/source-map needs, and recovery behavior expectations in `internal_docs/diagnostic_emission_inventory.md`.
 - [x] Claude review for `milestone_diag_3` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-3-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-3-review-pass-2.md`.
 - [x] `milestone_diag_3` PR opened and merged: https://github.com/sifr-lang/sifr/pull/1669.
-- [x] Populated active diagnostic registry entries, retired legacy catch-all codes, and preserved future reservations from the checked-in inventory.
+- [x] Populated active diagnostic registry entries and future reservations from the checked-in inventory. Pre-1.0 legacy catch-all code entries are not preserved as public retired-code metadata.
 - [x] Added generated active-code documentation pages and internal registry metadata for owner modules, message templates, declared args, dedupe args, and representative fixture plans.
 - [x] Reviewed existing `SIFR-WORKSPACE-0001..0103` codes against the identity policy and kept them as active precise workspace diagnostics.
 - [x] Claude review for `milestone_diag_2b` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-3.md`.
@@ -64,8 +64,9 @@ Current wave: `milestone_diag_4a` renderer integration, split into reviewable tr
 - [x] `milestone_diag_4a` slice 2b.29 merged: shared missing required argument diagnostic migration to active `SIFR-CALL-0004` with fixture and registry representative coverage. PR: https://github.com/sifr-lang/sifr/pull/1701.
 - [x] `milestone_diag_4a` slice 2b.30 merged: shared unexpected keyword argument diagnostic migration to active `SIFR-CALL-0002` with fixture and method-helper coverage. PR: https://github.com/sifr-lang/sifr/pull/1702.
 - [x] `milestone_diag_4a` slice 2b.31 merged: builtin `zip()`, `range()`, and `enumerate()` unexpected keyword diagnostics migration to active `SIFR-CALL-0002` with fixture and HIR coverage. PR: https://github.com/sifr-lang/sifr/pull/1703.
-- [ ] `milestone_diag_4a` slice 2b.32 implementation complete and reviewer-satisfied: builtin `sorted()` and `range()` missing required argument diagnostics migration to active `SIFR-CALL-0004` with fixture and HIR coverage. PR: https://github.com/sifr-lang/sifr/pull/1704.
-- [x] Deferred `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` bridge deletion and affected fixture re-keying to later `milestone_diag_4a` slice-2 sub-PRs, where HIR call sites will be migrated by domain before the bridge is removed.
+- [x] `milestone_diag_4a` slice 2b.32 merged: builtin `sorted()` and `range()` missing required argument diagnostics migration to active `SIFR-CALL-0004` with fixture and HIR coverage. PR: https://github.com/sifr-lang/sifr/pull/1704.
+- [x] `milestone_diag_4a` slice 2b.33 implementation complete and reviewer-satisfied: remove pre-1.0 retired catch-all registry/docs metadata, delete the phase-derived diagnostic-code bridge, require `CompileError` to carry an active diagnostic code, and migrate the remaining exercised HIR codeless fixture paths to active semantic codes. PR: https://github.com/sifr-lang/sifr/pull/1705.
+- [x] Deferred `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` bridge deletion was superseded by slice 2b.33 after the pre-1.0 no-compatibility decision.
 - [x] Claude pre-implementation review for `milestone_diag_4a` slice 2 completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2a completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-2.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.1 completed and reviewer is satisfied. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-2.md`.
@@ -100,6 +101,7 @@ Current wave: `milestone_diag_4a` renderer integration, split into reviewable tr
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.30 completed and reviewer is satisfied: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-unexpected-keyword-diagnostics-review-pass-1.md`. Local validation passed: `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo test -p sifr_hir unexpected_keyword`, `cargo test -p sifr_hir unexpected_method_keyword`, `cargo test -p sifr --test e2e -- test_e2e_fail`, `cargo test -p sifr -- --skip test_e2e_pass`, `cargo clippy --workspace -- -D warnings`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=632.17s`; warm wall-time advisory exceeded).
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.31 completed and reviewer is satisfied: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-builtin-unexpected-keyword-diagnostics-review-pass-1.md`. Local validation passed: `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo test -p sifr_hir test_zip_keyword_diagnostics_are_stable`, `cargo test -p sifr_hir test_range_and_enumerate_unexpected_keywords_have_call_code`, `cargo test -p sifr --test e2e -- test_e2e_fail`, `cargo test -p sifr -- --skip test_e2e_pass`, `cargo clippy --workspace -- -D warnings`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=856.53s`; warm wall-time, cache-hit, and group-skew advisories emitted).
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.32 completed and reviewer is satisfied: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-builtin-missing-arg-diagnostics-review-pass-1.md`. Local validation passed: `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo test -p sifr_hir test_sorted_and_range_missing_required_argument_have_call_code`, `cargo test -p sifr --test e2e -- test_e2e_fail`, `cargo test -p sifr -- --skip test_e2e_pass`, `cargo clippy --workspace -- -D warnings`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=664.36s`; warm wall-time and group-skew advisories emitted).
+- [x] Claude implementation review for `milestone_diag_4a` slice 2b.33 completed and reviewer is satisfied. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-remove-retired-fallbacks-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-remove-retired-fallbacks-review-pass-2.md`. Local validation passed: `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo test -p sifr_hir diagnostic_transport_tests`, `cargo test -p sifr_diagnostics -p sifr_driver --lib --tests`, `cargo run -q -p sifr_diagnostics --bin gen-error-docs -- --check`, `cargo test -p sifr --test e2e test_e2e_fail`, `cargo test -p sifr -- --skip test_e2e_pass`, `cargo clippy --workspace -- -D warnings`, manual CLI user-error exit check for `stdlib_wrong_type.sifr`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=1478.57s`; warm wall-time and group-skew advisories emitted).
 - [x] Claude pre-implementation review for `milestone_diag_4a` completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 1 completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-3.md`.
 
@@ -256,7 +258,7 @@ Examples:
 - `use after move`, `double mutable borrow`, and `borrowed parameter escape` must be separate ownership codes because the fix strategies differ.
 - `non-exhaustive enum match` and `non-exhaustive union match` may share a code only if the docs, related spans, and fix strategy are intentionally identical; otherwise split them.
 
-The canonical diagnostic identity is the string value `SIFR-<FAMILY>-dddd`, for example `SIFR-TYPE-0002`. Rust constants use descriptive `UPPER_SNAKE_CASE` names such as `DiagnosticCode::TYPE_ASSIGNMENT_MISMATCH`. The constant name encodes the rule, not the number; validation checks that each constant's `code() -> &'static str` accessor returns the registry id. Constants exist only for `Active` codes. `Reserved` and `Retired` codes remain in the registry/docs but have no active emission constant.
+The canonical diagnostic identity is the string value `SIFR-<FAMILY>-dddd`, for example `SIFR-TYPE-0002`. Rust constants use descriptive `UPPER_SNAKE_CASE` names such as `DiagnosticCode::TYPE_ASSIGNMENT_MISMATCH`. The constant name encodes the rule, not the number; validation checks that each constant's `code() -> &'static str` accessor returns the registry id. Constants exist only for `Active` codes. `Reserved` codes remain in the registry/docs but have no active emission constant. Pre-1.0 superseded codes are removed rather than kept as compatibility aliases or retired public metadata.
 
 ## Non-Goals
 
@@ -295,7 +297,7 @@ Use stable code families by semantic domain. The family prefix is the namespace;
 
 New families are added by introducing a new `SIFR-<FAMILY>-*` namespace in the registry. This does not require finding unused space in a global `0000..9999` range.
 
-Family names are uppercase ASCII letters, 3-12 characters, with no digits. Abbreviations should be avoided unless they are part of the initial allowlist: `PARSE`, `NAME`, `IMPORT`, `TYPE`, `DECIMAL`, `CALL`, `OWN`, `FLOW`, `MATCH`, `PROTO`, `CLASS`, `RESULT`, `STDLIB`, `WORKSPACE`, `CODEGEN`, `BUILD`, and `INTERNAL`. New families require a registry PR that adds the family entry, reserves the local `0000` base, and introduces at least one active code with a fixture. Retired families remain documented in the registry; a retired family is never reused for a different domain.
+Family names are uppercase ASCII letters, 3-12 characters, with no digits. Abbreviations should be avoided unless they are part of the initial allowlist: `PARSE`, `NAME`, `IMPORT`, `TYPE`, `DECIMAL`, `CALL`, `OWN`, `FLOW`, `MATCH`, `PROTO`, `CLASS`, `RESULT`, `STDLIB`, `WORKSPACE`, `CODEGEN`, `BUILD`, and `INTERNAL`. New families require a registry PR that adds the family entry, reserves the local `0000` base, and introduces at least one active code with a fixture.
 
 The full diagnostic string is the identity. Numeric suffixes are family-local and intentionally human-readable; uniqueness is required only for the complete `SIFR-<FAMILY>-dddd` code.
 
@@ -305,7 +307,7 @@ Per-family numbering convention:
 
 - The family base is reserved and not used for an active diagnostic.
 - The first active code in a family is usually `0001`, for example `SIFR-NAME-0001`.
-- Reserved and retired codes remain in the registry so the gap is intentional.
+- Reserved codes remain in the registry so structural gaps are intentional. Pre-1.0 removed codes do not need a public retired-code entry.
 - A family can reserve semantic sub-ranges locally, for example `SIFR-STDLIB-0100..0149` for one stdlib module. These local sub-ranges have no meaning outside that family.
 
 Family ownership rules for overlaps:
@@ -327,12 +329,12 @@ Existing code renumbering:
 
 | Existing code | New code policy |
 | --- | --- |
-| `SIFR-PARSE-0001` | Retired as the legacy opaque parser phase bucket. Parser diagnostics use active category codes such as `SIFR-PARSE-0002..0009`; generic upstream recovery context folds into `SIFR-PARSE-0002` with a parser-category JSON arg. |
-| `SIFR-TYPE-0001` | Retired as a public catch-all and never reused. New type diagnostics start at later local codes such as `SIFR-TYPE-0002`. |
-| `SIFR-CODEGEN-0001` | Retired if it is only a broad catch-all; replaced by specific `SIFR-CODEGEN-xxxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
-| `SIFR-BUILD-0001` | Retired if it is only a broad catch-all; replaced by specific `SIFR-BUILD-xxxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
-| `SIFR-WORKSPACE-0001..0103` | Each existing code must be reviewed during registry population. It remains active only if it describes a precise workspace rule; otherwise it is retired and replaced within the `SIFR-WORKSPACE-*` namespace. |
-| Message-embedded `[E25xx]` | Retired; converted to top-level `SIFR-DECIMAL-xxxx` codes. |
+| `SIFR-PARSE-0001` | Removed as the legacy opaque parser phase bucket before public stability. Parser diagnostics use active category codes such as `SIFR-PARSE-0002..0009`; generic upstream recovery context folds into `SIFR-PARSE-0002` with a parser-category JSON arg. |
+| `SIFR-TYPE-0001` | Removed as the semantic catch-all before public stability. New type diagnostics start at later local codes such as `SIFR-TYPE-0002`. |
+| `SIFR-CODEGEN-0001` | Removed as the broad code-generation catch-all before public stability; replaced by specific `SIFR-CODEGEN-xxxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
+| `SIFR-BUILD-0001` | Removed as the broad build catch-all before public stability; replaced by specific `SIFR-BUILD-xxxx` operation codes. |
+| `SIFR-WORKSPACE-0001..0103` | Each existing code must be reviewed during registry population. It remains active only if it describes a precise workspace rule; otherwise it is replaced within the `SIFR-WORKSPACE-*` namespace before public stability. |
+| Message-embedded `[E25xx]` | Removed; converted to top-level `SIFR-DECIMAL-xxxx` codes. |
 
 ## Documentation URL Policy
 
@@ -903,7 +905,7 @@ Definition of done:
 - The registry skeleton exists with families, the per-family numbering convention, state machine, and reserved family bases (`0000` per family).
 - The registry skeleton reserves `SIFR-INTERNAL-0001` for unclassified compiler panics and `SIFR-INTERNAL-0002` for recovery-cap omission summaries. `SIFR-INTERNAL-0002` remains `Reserved` until activation in `milestone_diag_10`.
 - Registry and code constants cannot silently diverge.
-- The registry records `id`, `family`, `summary`, `state` (`Active | Reserved | Retired`), docs path, representative fixture path, message template, owner module, declared args, dedupe args, and optional tooling metadata.
+- The registry records `id`, `family`, `summary`, `state` (`Active | Reserved`), docs path, representative fixture path, message template, owner module, declared args, dedupe args, and optional tooling metadata.
 - `DiagnosticCode::code() -> &'static str` returns the canonical registry id and is the only accessor used for JSON, docs URLs, sorting, and registry checks.
 - Tooling metadata is optional reservation-only in this phase and has documented defaults: `tool_actions` defaults to empty, `fix_all_eligible` defaults to false, and machine-applicable suggestion availability is derived from emitted suggestion applicability rather than authored manually. No LSP or code-action validation is implemented in this phase.
 - The docs generator writes `docs/errors/<CODE>.md`, `docs/errors/diagnostic-codes.md`, and `internal_docs/diagnostic_codes.md` from `crates/sifr_diagnostics/src/codes.rs`.
@@ -937,18 +939,18 @@ Scope:
 
 - Populate active registry entries from the diagnostic emission inventory.
 - Add docs metadata, message templates, owner modules, and planned fixture paths for active codes.
-- Mark intentionally future codes as reserved and previously superseded codes as retired.
-- Review each existing `SIFR-WORKSPACE-0001..0103` code against the diagnostic identity policy. Mark any code that fails the policy as retired and replace it with a precise code in the same family.
+- Mark intentionally future codes as reserved and remove previously superseded pre-1.0 codes.
+- Review each existing `SIFR-WORKSPACE-0001..0103` code against the diagnostic identity policy. Keep precise workspace rules active; replace any code that fails the policy with a precise code in the same family before public stability.
 
 Definition of done:
 
 - Every emitted code exists in the registry.
 - Every active registry code records a representative fixture path; reserved codes are explicitly marked `Reserved` and are exempt. The fixture file itself may land in the milestone that migrates the emitting family.
 - Every active code has a docs page under `docs/errors/<CODE>.md`; reserved codes are exempt.
-- Every active code has a corresponding `DiagnosticCode` constant. Retired codes remain in registry/docs but do not have active code constants and cannot be emitted.
+- Every active code has a corresponding `DiagnosticCode` constant.
 - Domain diagnostic helpers may exist only for active codes. A future/reserved diagnostic remains a registry reservation without a `DiagnosticCode` constant or helper until the code becomes active.
 - The registry population matches the checked-in inventory.
-- Every existing workspace code has either an active registry entry with a precise rule and docs page, or a retired registry entry with its replacement code recorded.
+- Every existing workspace code has either an active registry entry with a precise rule and docs page, or has been replaced before public stability.
 
 ### milestone_diag_4a: Renderer Integration
 
@@ -1040,7 +1042,7 @@ Scope:
 
 - Map upstream Ruff-fork parser error categories to distinct `SIFR-PARSE-*` codes where the parser exposes a condition category.
 - Replace broad parser emission with category-specific codes for all parser conditions identified in `milestone_diag_3`.
-- Keep `SIFR-PARSE-0001` retired; parser diagnostics use category-specific `SIFR-PARSE-0002..0009` codes and a `parser_category` JSON arg for upstream recovery context.
+- Keep `SIFR-PARSE-0001` removed before public stability; parser diagnostics use category-specific `SIFR-PARSE-0002..0009` codes and a `parser_category` JSON arg for upstream recovery context.
 - Convert common frontend semantic errors to structured diagnostics:
   - Undefined variable/function.
   - Unknown generic type.
@@ -1173,8 +1175,6 @@ Required guardrails:
 - Every emitted diagnostic must derive a deterministic docs URL from its code.
 - Every active registry code must have representative fixture coverage; reserved codes are explicitly marked `Reserved` and are exempt.
 - Every active registry code must appear through its canonical `DiagnosticCode::...` constant in non-test compiler source outside `sifr_diagnostics` itself. Textual presence is the decidable emission-path check; codes found only in tests or only in the registry crate must be marked `Reserved` or deleted.
-- Retired diagnostic-code docs remain present and are not deleted.
-- Retired diagnostic codes remain in the registry/docs but have no active `DiagnosticCode` constant and cannot be emitted.
 - HIR user diagnostics must not be emitted through raw `ctx.error(String)`.
 - No renderer or driver code may infer diagnostic codes from message prefixes.
 - No compact/recovery grouping may use fully rendered messages when a `message_template` is available.
@@ -1286,7 +1286,7 @@ python3 scripts/check_diagnostic_cancel_usage.py
 
 The diagnostic docs, coverage, baseline-hygiene, schema-sync, and cancel-usage checks must be wired into `scripts/run_all_tests.sh` so local validation and CI stay identical.
 
-`scripts/check_diagnostic_code_coverage.py` must enforce decidable registry hygiene rather than attempting whole-program reachability: every emitted code is registered, every `Active` code has fixture proof once its family migration milestone lands, every `Active` code's canonical constant appears in non-test compiler source outside `sifr_diagnostics` once that family migration milestone lands, `Reserved` codes are not required to emit, and `Retired` codes retain docs without active constants. The global form of this check is mandatory in `milestone_diag_11`.
+`scripts/check_diagnostic_code_coverage.py` must enforce decidable registry hygiene rather than attempting whole-program reachability: every emitted code is registered, every `Active` code has fixture proof once its family migration milestone lands, every `Active` code's canonical constant appears in non-test compiler source outside `sifr_diagnostics` once that family migration milestone lands, and `Reserved` codes are not required to emit. The global form of this check is mandatory in `milestone_diag_11`.
 
 ## Required Documentation Updates
 
@@ -1303,9 +1303,9 @@ The diagnostic docs, coverage, baseline-hygiene, schema-sync, and cancel-usage c
 
 ## Stability Policy
 
-Pre-1.0 stability means diagnostic codes can be renamed, split, or retired only through an explicit registry change accompanied by fixture, baseline, and docs updates in the same milestone. No compatibility aliases are required before public release.
+Pre-1.0 stability means diagnostic codes can be renamed, split, or removed through an explicit registry change accompanied by fixture, baseline, and docs updates in the same milestone. No compatibility aliases or public retired-code docs are required before public release.
 
-Post-1.0 stability begins at the first documented stable Sifr release, expected to align with Phase 39 stable-channel GA. After that point, active diagnostic codes are immutable public API. Retired codes remain documented as retired, and new categories receive new codes.
+Post-1.0 stability begins at the first documented stable Sifr release, expected to align with Phase 39 stable-channel GA. After that point, active diagnostic codes are immutable public API. A retired-code lifecycle can be introduced when there are stable users to protect; until then, removed pre-1.0 codes are not public compatibility artifacts.
 
 ## Hard Rules
 
@@ -1314,21 +1314,20 @@ Post-1.0 stability begins at the first documented stable Sifr release, expected 
 - Do not map strings to codes after the fact.
 - Do not infer codes from message prefixes.
 - Do not add generic fallback diagnostics for user errors.
-- Do not use retired catch-all codes such as `SIFR-PARSE-0001`, `SIFR-CODEGEN-0001`, or `SIFR-BUILD-0001`, and do not add any active non-`INTERNAL` `0001` code as a family-default catch-all.
+- Do not use removed catch-all codes such as `SIFR-PARSE-0001`, `SIFR-CODEGEN-0001`, or `SIFR-BUILD-0001`, and do not add any active non-`INTERNAL` `0001` code as a family-default catch-all.
 - Do not allow spanless HIR diagnostics when the AST node has a source location.
 - Do not keep old baselines as accepted alternatives.
 - Do not add a historical migration layer.
 - Do not use rendered diagnostic messages as stable machine identity.
 - Do not define public diagnostic types outside `crates/sifr_diagnostics`.
 - Do not add a diagnostic helper without a registry entry in the same PR.
-- Do not add a diagnostic helper or `DiagnosticCode` constant for a `Reserved` or `Retired` code; helpers and constants are active-code-only.
+- Do not add a diagnostic helper or `DiagnosticCode` constant for a `Reserved` code; helpers and constants are active-code-only.
 - Do not allow an `expect-error` fixture annotation to use a code absent from the registry.
 - Do not construct diagnostic codes with `format!` or raw strings at emission sites.
 - Do not allow `Severity::Error` as a child diagnostic severity.
 - Do not allow top-level `Severity::Help`; help belongs on a parent diagnostic.
 - Do not use `Option<TextRange>` for parser/HIR source diagnostics when a source range exists.
 - Do not add fixture-local diagnostic regex normalization as a way to make baselines pass.
-- Do not delete retired diagnostic-code docs.
 
 Internal compiler failure boundaries are the only place where a broad code is acceptable. Those diagnostics must use `SIFR-INTERNAL-*`, must not be described as user-fixable, and must not mask a known user-input error that should have a specific code.
 
@@ -1383,7 +1382,7 @@ This ad-hoc phase is complete when:
 - Registry/docs synchronization is enforced.
 - Diagnostic schema synchronization is enforced.
 - Active diagnostic-code fixture coverage is enforced.
-- Active diagnostic-code emission coverage and retired-doc retention are enforced.
+- Active diagnostic-code emission coverage is enforced.
 - Diagnostic baseline hygiene is enforced, including centralized path normalization and duplicate baseline/expectation detection.
 - Phase 27 status in roadmap/docs reflects this corrective amendment.
 - Full local validation passes.

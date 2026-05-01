@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0001: function 'pick': unsupported default argument expression for parameter 'x'
+# expect-error: SIFR-TYPE-0011: function 'pick': unsupported default argument expression for parameter 'x'
 def seed() -> int:
     return 7
 

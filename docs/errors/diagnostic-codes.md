@@ -55,6 +55,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0008`](SIFR-TYPE-0008.md) | Error | Container literal elements, keys, or values have conflicting types. |
 | [`SIFR-TYPE-0009`](SIFR-TYPE-0009.md) | Error | Tuple or list unpacking shape mismatch. |
 | [`SIFR-TYPE-0010`](SIFR-TYPE-0010.md) | Error | TypeVar constraints are not satisfied by the inferred concrete type. |
+| [`SIFR-TYPE-0011`](SIFR-TYPE-0011.md) | Error | Unsupported default argument expression. |
 | [`SIFR-TYPE-0901`](SIFR-TYPE-0901.md) | Warning | Integer arithmetic may overflow at runtime. |
 | [`SIFR-TYPE-0902`](SIFR-TYPE-0902.md) | Note | Reveal the inferred static type of an expression. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
@@ -136,12 +137,3 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-BUILD-0000` | `BUILD` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INTERNAL-0000` | `INTERNAL` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INTERNAL-0002` | `INTERNAL` | Reserved for structured recovery-cap omission summaries. |
-
-## Retired Codes
-
-| Code | Family | Summary | Replacement |
-| --- | --- | --- | --- |
-| `SIFR-PARSE-0001` | `PARSE` | Retired opaque parser phase bucket. | `replaced by active PARSE category codes` |
-| `SIFR-TYPE-0001` | `TYPE` | Retired semantic catch-all type-check bucket. | `replaced by active semantic family codes` |
-| `SIFR-CODEGEN-0001` | `CODEGEN` | Retired broad code-generation catch-all. | `replaced by SIFR-CODEGEN-0002 or INTERNAL codes` |
-| `SIFR-BUILD-0001` | `BUILD` | Retired broad build catch-all. | `replaced by active BUILD operation codes` |

@@ -258,7 +258,7 @@ fn run_with_panic_boundary<T>(
 }
 
 fn is_internal_compile_error(error: &CompileError) -> bool {
-    error.code == Some(DiagnosticCode::INTERNAL_COMPILER_PANIC)
+    error.code == DiagnosticCode::INTERNAL_COMPILER_PANIC
 }
 
 fn compile_error_exit_code(errors: &[CompileError]) -> i32 {
@@ -1207,7 +1207,11 @@ mod tests {
 
     #[test]
     fn test_compile_error_exit_code_contract_user_vs_internal() {
-        let user_error = CompileError::new("type mismatch", CompilePhase::TypeCheck);
+        let user_error = CompileError::with_code(
+            "type mismatch",
+            CompilePhase::TypeCheck,
+            DiagnosticCode::TYPE_MISMATCH,
+        );
         assert_eq!(compile_error_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
 
         let internal_error = CompileError::with_code(
@@ -1270,10 +1274,10 @@ mod tests {
         let mut diagnostics = Vec::new();
         for idx in 0..8 {
             diagnostics.push(CompilerDiagnostic {
-                code: "SIFR-TYPE-0001".to_string(),
+                code: "SIFR-TYPE-0002".to_string(),
                 severity: Severity::Error,
                 message: "type mismatch: expected 'int', got 'str'".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
                 primary_span: Some(sifr_driver::DiagnosticSpan {
                     file: Some("main.sifr".to_string()),
                     line: Some(idx + 1),
@@ -1292,12 +1296,12 @@ mod tests {
             first_line.starts_with("summary: "),
             "first line should be severity summary, got: {first_line}"
         );
-        assert!(compact.contains("error [SIFR-TYPE-0001]"));
+        assert!(compact.contains("error [SIFR-TYPE-0002]"));
         assert!(compact.contains(" (x8)"));
         assert_eq!(compact.matches("help: ").count(), 1);
         assert_eq!(
             compact
-                .matches("url: https://sifr.sh/docs/errors/SIFR-TYPE-0001")
+                .matches("url: https://sifr.sh/docs/errors/SIFR-TYPE-0002")
                 .count(),
             1
         );
@@ -1309,10 +1313,10 @@ mod tests {
     fn test_compact_renderer_never_drops_or_invents_relative_to_json_count() {
         let diagnostics = vec![
             CompilerDiagnostic {
-                code: "SIFR-TYPE-0001".to_string(),
+                code: "SIFR-TYPE-0002".to_string(),
                 severity: Severity::Error,
                 message: "mismatch one".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1320,10 +1324,10 @@ mod tests {
                 suggestions: Vec::new(),
             },
             CompilerDiagnostic {
-                code: "SIFR-TYPE-0001".to_string(),
+                code: "SIFR-TYPE-0002".to_string(),
                 severity: Severity::Error,
                 message: "mismatch one".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1331,10 +1335,10 @@ mod tests {
                 suggestions: Vec::new(),
             },
             CompilerDiagnostic {
-                code: "SIFR-PARSE-0001".to_string(),
+                code: "SIFR-PARSE-0002".to_string(),
                 severity: Severity::Error,
                 message: "parse fail".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-PARSE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-PARSE-0002".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1361,10 +1365,10 @@ mod tests {
         let mut diagnostics = Vec::new();
         for _ in 0..5 {
             diagnostics.push(CompilerDiagnostic {
-                code: "SIFR-TYPE-0001".to_string(),
+                code: "SIFR-TYPE-0002".to_string(),
                 severity: Severity::Error,
                 message: "type mismatch: expected 'int', got 'str'".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1373,10 +1377,10 @@ mod tests {
             });
         }
         diagnostics.push(CompilerDiagnostic {
-            code: "SIFR-TYPE-0001".to_string(),
+            code: "SIFR-TYPE-0002".to_string(),
             severity: Severity::Error,
             message: "... +3 more similar diagnostics".to_string(),
-            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
+            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
             primary_span: None,
             related_spans: Vec::new(),
             children: Vec::new(),
@@ -1386,10 +1390,10 @@ mod tests {
 
         let expected = concat!(
             "summary: 6 error(s), 0 warning(s), 0 note(s), 0 help item(s)\n",
-            "error [SIFR-TYPE-0001] type mismatch: expected 'int', got 'str' (x5)\n",
-            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0001\n",
-            "error [SIFR-TYPE-0001] ... +3 more similar diagnostics (x1)\n",
-            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0001\n",
+            "error [SIFR-TYPE-0002] type mismatch: expected 'int', got 'str' (x5)\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0002\n",
+            "error [SIFR-TYPE-0002] ... +3 more similar diagnostics (x1)\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0002\n",
         );
         assert_eq!(render_compact_diagnostics(&diagnostics), expected);
     }
@@ -1398,10 +1402,10 @@ mod tests {
     fn test_compact_renderer_snapshot_multi_severity_group_order() {
         let diagnostics = vec![
             CompilerDiagnostic {
-                code: "SIFR-TYPE-0001".to_string(),
+                code: "SIFR-TYPE-0002".to_string(),
                 severity: Severity::Warning,
                 message: "unused value".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1409,10 +1413,10 @@ mod tests {
                 suggestions: Vec::new(),
             },
             CompilerDiagnostic {
-                code: "SIFR-PARSE-0001".to_string(),
+                code: "SIFR-PARSE-0002".to_string(),
                 severity: Severity::Error,
                 message: "parse failure".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-PARSE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-PARSE-0002".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1420,10 +1424,10 @@ mod tests {
                 suggestions: Vec::new(),
             },
             CompilerDiagnostic {
-                code: "SIFR-CODEGEN-0001".to_string(),
+                code: "SIFR-CODEGEN-0002".to_string(),
                 severity: Severity::Help,
                 message: "consider adding a type annotation".to_string(),
-                url: "https://sifr.sh/docs/errors/SIFR-CODEGEN-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-CODEGEN-0002".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1434,13 +1438,13 @@ mod tests {
 
         let expected = concat!(
             "summary: 1 error(s), 1 warning(s), 0 note(s), 1 help item(s)\n",
-            "error [SIFR-PARSE-0001] parse failure (x1)\n",
-            "  url: https://sifr.sh/docs/errors/SIFR-PARSE-0001\n",
-            "warning [SIFR-TYPE-0001] unused value (x1)\n",
+            "error [SIFR-PARSE-0002] parse failure (x1)\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-PARSE-0002\n",
+            "warning [SIFR-TYPE-0002] unused value (x1)\n",
             "  help: remove the assignment\n",
-            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0001\n",
-            "help [SIFR-CODEGEN-0001] consider adding a type annotation (x1)\n",
-            "  url: https://sifr.sh/docs/errors/SIFR-CODEGEN-0001\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0002\n",
+            "help [SIFR-CODEGEN-0002] consider adding a type annotation (x1)\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-CODEGEN-0002\n",
         );
         assert_eq!(render_compact_diagnostics(&diagnostics), expected);
     }

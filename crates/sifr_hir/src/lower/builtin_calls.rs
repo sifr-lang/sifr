@@ -189,7 +189,8 @@ pub(super) fn lower_tuple_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) 
             if matches!(lowered.ty().resolve_alias(), Type::Tuple(_)) {
                 Some(lowered)
             } else {
-                ctx.error(
+                ctx.error_with_code(
+                    DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
                     "tuple() currently requires a tuple, list literal, or string literal because Sifr tuples are fixed-length typed values".to_string(),
                 );
                 None
@@ -928,10 +929,13 @@ pub(super) fn lower_builtin_reverseable_arg(
         .ty()
         .supports_iteration_capability(IterationCapability::DoubleEnded)
     {
-        ctx.error(format!(
-            "{builtin_name}() argument must be reversible, got '{}'",
-            arg.ty().display_name()
-        ));
+        ctx.error_with_code(
+            DiagnosticCode::PROTO_BOUND_NOT_SATISFIED,
+            format!(
+                "{builtin_name}() argument must be reversible, got '{}'",
+                arg.ty().display_name()
+            ),
+        );
         return None;
     }
     Some(arg)

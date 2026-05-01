@@ -471,10 +471,13 @@ pub(super) fn collect_class_type(
                             if let Some(hir_default) = lower_expr_simple(default_expr) {
                                 defaults.push((i, hir_default));
                             } else {
-                                ctx.error(format!(
-                                    "class '{class_name}.__init__': unsupported default argument expression for parameter '{}'",
-                                    param.parameter.name
-                                ));
+                                ctx.error_with_code(
+                                    DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
+                                    format!(
+                                        "class '{class_name}.__init__': unsupported default argument expression for parameter '{}'",
+                                        param.parameter.name
+                                    ),
+                                );
                             }
                         }
                     }
@@ -516,10 +519,13 @@ pub(super) fn collect_class_type(
                             if let Some(hir_default) = lower_expr_simple(default_expr) {
                                 defaults.push((i, hir_default));
                             } else {
-                                ctx.error(format!(
-                                    "class '{class_name}.{method_name}': unsupported default argument expression for parameter '{}'",
-                                    param.parameter.name
-                                ));
+                                ctx.error_with_code(
+                                    DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
+                                    format!(
+                                        "class '{class_name}.{method_name}': unsupported default argument expression for parameter '{}'",
+                                        param.parameter.name
+                                    ),
+                                );
                             }
                         }
                     }

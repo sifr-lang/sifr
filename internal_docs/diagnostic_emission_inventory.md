@@ -46,11 +46,10 @@ Wrong-layer notes:
 
 ## Parser Surface
 
-Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `third_party/ruff/crates/ruff_python_parser/src/error.rs`) and are currently wrapped by `sifr_driver::frontend::api` as phase-derived `SIFR-PARSE-0001`. `SIFR-PARSE-0001` should be retired as a catch-all in `milestone_diag_2b`; parser migration (`milestone_diag_7`) should map the exposed error categories below.
+Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `third_party/ruff/crates/ruff_python_parser/src/error.rs`) and are currently mapped by `sifr_driver::frontend::api` to parser-category diagnostics. The legacy `SIFR-PARSE-0001` catch-all was removed before public stability; parser migration (`milestone_diag_7`) should keep mapping exposed error categories below.
 
 | Proposed code | Ruff category / examples | Fixture plan |
 | --- | --- | --- |
-| `SIFR-PARSE-0001` | retired legacy phase bucket | registry-only retired entry, no active fixture |
 | `SIFR-PARSE-0002` | expected token or generic recovery context (`ExpectedToken`, `OtherError("Expected ...")`, `ExpectedExpression`, `UnexpectedExpressionToken`) | fixture pending in `milestone_diag_7`: missing delimiter/expression; existing invalid source unit tests can seed it |
 | `SIFR-PARSE-0003` | lexical and interpolated-string errors (`Lexical`, `FStringError`, `TStringError`) | fixture pending in `milestone_diag_7`: malformed string/f-string |
 | `SIFR-PARSE-0004` | indentation and same-line statement layout (`UnexpectedIndentation`, `SimpleStatementsOnSameLine`, `SimpleAndCompoundStatementOnSameLine`) | fixture pending in `milestone_diag_7`: indentation/layout |
@@ -82,11 +81,11 @@ Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `t
 
 ## Driver And CLI Surface
 
-Legacy `CompileError` is the current outer transport and phase-derived code source. The migration target is `DiagnosticSink` plus `ErrorEmitted`; `CompileError` and `CompilerDiagnostic` should disappear by residual cleanup.
+Legacy `CompileError` is the current outer transport, but it no longer assigns public diagnostic identity from `CompilePhase`; it carries an active `DiagnosticCode`. The migration target is `DiagnosticSink` plus `ErrorEmitted`; `CompileError` and `CompilerDiagnostic` should disappear by residual cleanup.
 
 | Surface | Current construction count | Current code source | Target handling |
 | --- | ---: | --- | --- |
-| `crates/sifr_driver/src/diagnostics.rs` | 1 | `CompilePhase` maps `Parse -> SIFR-PARSE-0001`, `TypeCheck -> SIFR-TYPE-0001`, `Codegen -> SIFR-CODEGEN-0001`, `Build -> SIFR-BUILD-0001`; workspace prefix classifier maps some build messages to `SIFR-WORKSPACE-*`; one actual construction is the codegen panic boundary | Delete phase-derived codes in `milestone_diag_4a`; route already-structured diagnostics through shared renderer. Workspace prefix classifier is replaced by typed `WORKSPACE-*` constructors. |
+| `crates/sifr_driver/src/diagnostics.rs` | 1 | `CompileError` carries active `DiagnosticCode`; one actual construction is the codegen panic boundary | Route already-structured diagnostics through shared renderer; delete the residual `CompileError` abstraction once `DiagnosticSink` is authoritative. |
 | `crates/sifr_driver/src/frontend/api.rs` | 2 | parser frontend errors become `CompilePhase::Parse`; HIR lowering errors become `CompilePhase::TypeCheck` | Parser adapter emits `PARSE-*`; HIR returns `LoweringOutcome` diagnostics. |
 | `crates/sifr_driver/src/frontend/module_lowering.rs` | 1 | module lowering errors become `TypeCheck` | Preserve module/source span and direct HIR diagnostic identity. |
 | `crates/sifr_driver/src/project/discovery.rs` | 6 | workspace discovery and reachable parse failures | Keep workspace discovery in `WORKSPACE-*`; reachable source parse failures are `PARSE-*`. |
@@ -108,14 +107,14 @@ CLI and renderer tests also manually construct `CompilerDiagnostic` values. Thes
 
 | File | Manual `CompilerDiagnostic` sites | Current hard-coded identities | Migration owner |
 | --- | ---: | --- | --- |
-| `crates/sifr/src/main.rs` | 9 | `SIFR-TYPE-0001`, `SIFR-PARSE-0001`, `[E2507]`-style message content in compact-renderer tests | `milestone_diag_5` test harness/renderer contract cleanup |
-| `crates/sifr_driver/src/tests/diagnostics.rs` | 2 | `SIFR-TYPE-0001` recovery-limit fixtures | `milestone_diag_5` or residual legacy diagnostic cleanup |
+| `crates/sifr/src/main.rs` | 9 | Active `SIFR-*` code strings and `[E2507]`-style message content in compact-renderer tests | `milestone_diag_5` test harness/renderer contract cleanup |
+| `crates/sifr_driver/src/tests/diagnostics.rs` | 2 | Active `SIFR-*` recovery-limit fixtures | `milestone_diag_5` or residual legacy diagnostic cleanup |
 
 Current public-code mechanisms to remove:
 
 | Mechanism | Current owner | Current effect | Replacement |
 | --- | --- | --- | --- |
-| Phase-derived `CompilePhase` mapping | `crates/sifr_driver/src/diagnostics.rs` | assigns `SIFR-PARSE-0001`, `SIFR-TYPE-0001`, `SIFR-CODEGEN-0001`, or `SIFR-BUILD-0001` after the real rule has already been flattened | domain helpers construct `SifrDiagnostic` with the canonical code before driver rendering |
+| Phase-derived `CompilePhase` mapping | `crates/sifr_driver/src/diagnostics.rs` | removed; `CompileError` now requires an active `DiagnosticCode` | domain helpers construct `SifrDiagnostic` with the canonical code before driver rendering |
 | Workspace prefix classifier | `CompileError::workspace_diagnostic_code` | infers some `SIFR-WORKSPACE-*` identities from rendered message prefixes | typed workspace/project discovery constructors with structured path/module args |
 | Type-error string forwarding | HIR sites that call `ctx.error(e.message)` or `ctx.error(error.message)` | loses `TypeErrorKind`, source relation, expected/actual/operator args, and decimal identity | HIR call site emits the target `TYPE-*`, `DECIMAL-*`, `NAME-*`, `CALL-*`, or `OWN-*` diagnostic directly with the AST span |
 | Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | keeps `[E25xx]` as text inside a broader `SIFR-TYPE-0001` diagnostic | top-level `SIFR-DECIMAL-*` diagnostic code and no secondary message code |
@@ -134,14 +133,14 @@ Workspace code review for `milestone_diag_2b`:
 
 ## E2E Expectation And Baseline Surface
 
-Current harness behavior in `crates/sifr/tests/e2e.rs` treats `# expect-error:` as substring matching. Harness sample tests explicitly accept `SIFR-PARSE-0001`, `SIFR-TYPE-0001`, and `[E2507]`. That is intentional legacy state until `milestone_diag_6`; inventory confirms these are the surfaces to tighten.
+Current harness behavior in `crates/sifr/tests/e2e.rs` treats `# expect-error:` as substring matching. Harness sample tests now use active `SIFR-*` sample codes but still accept `[E2507]`-style pseudo-code text. That remaining legacy state is tightened in `milestone_diag_6`.
 
 Current fail-fixture and harness-sample code markers:
 
 | Marker | Count | Migration action |
 | --- | ---: | --- |
-| `SIFR-TYPE-0001` | 95 | Retire catch-all. Replace with category-specific codes during family migration milestones. |
-| `SIFR-PARSE-0001` | 2 harness samples | Replace parse harness samples with canonical parse codes once parser emits structured diagnostics. |
+| `SIFR-TYPE-0001` | 95 original inventory count | Removed catch-all. Replace with category-specific codes during family migration milestones. |
+| `SIFR-PARSE-0001` | 2 original harness samples | Removed; harness samples now use active parser codes. |
 | `[E2501]` | 1 | `SIFR-DECIMAL-0001`. |
 | `[E2502]` | 2 | `SIFR-DECIMAL-0002`. |
 | `[E2503]` | 1 | `SIFR-DECIMAL-0003`. |
@@ -300,7 +299,6 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-NAME-0004` | module/member does not exist | import/member lookup | `crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr` |
 | `SIFR-IMPORT-0001` | forbidden `_sifr.*` intrinsic import | import lowering | `crates/sifr/tests/e2e/fail/import_intrinsic.sifr` |
 | `SIFR-IMPORT-0002` | unknown source module/import target | import lowering/project discovery | `crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr` |
-| `SIFR-TYPE-0001` | retired catch-all | registry only | no active fixture; document retired replacement policy |
 | `SIFR-TYPE-0002` | expected/actual type mismatch | type checking / assignment/call helpers | `crates/sifr/tests/e2e/fail/type_mismatch.sifr` |
 | `SIFR-TYPE-0003` | if/conditional branch type mismatch | `if_expression` lowering | `crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr` |
 | `SIFR-TYPE-0004` | missing required type annotation/inference boundary | type annotation/inference | fixture pending in `milestone_diag_7` |
@@ -309,6 +307,7 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-TYPE-0007` | invalid type annotation shape | type annotation lowering | fixture pending in `milestone_diag_7` from annotation tests |
 | `SIFR-TYPE-0008` | container literal element/key/value type conflict | container literal specialization | fixture pending in `milestone_diag_7` |
 | `SIFR-TYPE-0009` | tuple/list unpacking shape mismatch | tuple unpack lowering | `crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr` |
+| `SIFR-TYPE-0011` | unsupported default argument expression | function default lowering | `crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` |
 | `SIFR-DECIMAL-0001` | `Decimal()` invalid exact literal | decimal constructor lowering | `crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr` |
 | `SIFR-DECIMAL-0002` | `BigDecimal()` invalid or non-literal exact string | decimal constructor lowering | bigdecimal invalid/non-literal fixtures |
 | `SIFR-DECIMAL-0003` | float mixed with decimal family | type system decimal checks | `crates/sifr/tests/e2e/fail/decimal_float_mixed_arithmetic.sifr` |

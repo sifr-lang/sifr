@@ -2726,8 +2726,8 @@ fn test_expectation_parsing_contract() {
         "# expect-stdout: b",
         "# expect-stderr: err-1",
         "# expect-stderr: err-2",
-        "# expect-error: SIFR-PARSE-0001",
-        "# expect-error: SIFR-TYPE-0001",
+        "# expect-error: SIFR-PARSE-0002",
+        "# expect-error: SIFR-TYPE-0002",
         "# expect-error: [E2507]",
     ]
     .join("\n");
@@ -2740,8 +2740,8 @@ fn test_expectation_parsing_contract() {
     assert_eq!(
         extract_expect_errors(&source),
         vec![
-            "SIFR-PARSE-0001".to_string(),
-            "SIFR-TYPE-0001".to_string(),
+            "SIFR-PARSE-0002".to_string(),
+            "SIFR-TYPE-0002".to_string(),
             "[E2507]".to_string()
         ]
     );
@@ -2749,8 +2749,8 @@ fn test_expectation_parsing_contract() {
 
 #[test]
 fn test_expected_error_contract_with_messages() {
-    let parsed = parse_expected_error("SIFR-TYPE-0001: assignment to immutability").unwrap();
-    assert_eq!(parsed.code, "SIFR-TYPE-0001");
+    let parsed = parse_expected_error("SIFR-TYPE-0002: assignment to immutability").unwrap();
+    assert_eq!(parsed.code, "SIFR-TYPE-0002");
     assert_eq!(
         parsed.message_contains.unwrap(),
         "assignment to immutability"
