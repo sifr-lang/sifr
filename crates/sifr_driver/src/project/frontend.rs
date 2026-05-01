@@ -1,6 +1,6 @@
 use super::compile_order::compute_module_compile_order;
 use super::exports::collect_module_exports;
-use crate::diagnostics::{write_stderr_line, CompilerDiagnostic};
+use crate::diagnostics::{write_stderr_line, RenderedDiagnostic};
 use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle, FrontendModuleDiagnostics};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
@@ -18,14 +18,14 @@ pub(crate) fn compile_frontend_modules(
     parsed_modules: &HashMap<String, Vec<Stmt>>,
     mut external_defs: ExternalDefs,
     diagnostic_style: FrontendDiagnosticStyle,
-) -> Result<ProjectLowering, Vec<CompilerDiagnostic>> {
+) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
     let mut module_diagnostics: HashMap<String, FrontendModuleDiagnostics> = HashMap::new();
     let compile_order = compute_module_compile_order(parsed_modules)?;
 
     for module_name in &compile_order {
         let Some(stmts) = parsed_modules.get(module_name.as_str()) else {
-            return Err(vec![CompilerDiagnostic::with_code(
+            return Err(vec![crate::diagnostics::diagnostic_with_code(
                 format!("[{module_name}] module was not parsed"),
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
@@ -67,7 +67,7 @@ pub(crate) fn compile_frontend_modules(
 pub(crate) fn collect_project_hir_modules(
     parsed_modules: &HashMap<String, Vec<Stmt>>,
     external_defs: ExternalDefs,
-) -> Result<ProjectLowering, Vec<CompilerDiagnostic>> {
+) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
     compile_frontend_modules(
         parsed_modules,
         external_defs,

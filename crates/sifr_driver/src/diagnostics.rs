@@ -1,5 +1,5 @@
-use serde::Serialize;
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+pub(crate) use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
 use std::any::Any;
 use std::collections::{BTreeMap, HashSet};
 use std::io::Write;
@@ -8,7 +8,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 #[derive(Debug)]
 pub enum CompileResult {
     Success { rust_source: String },
-    Errors { errors: Vec<CompilerDiagnostic> },
+    Errors { errors: Vec<RenderedDiagnostic> },
 }
 
 pub enum CompileResultFull {
@@ -19,82 +19,33 @@ pub enum CompileResultFull {
         lowering_stats: sifr_codegen::LoweringStats,
     },
     Errors {
-        errors: Vec<CompilerDiagnostic>,
+        errors: Vec<RenderedDiagnostic>,
     },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-pub enum Severity {
-    Error,
-    Warning,
-    Note,
-    Help,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub enum SuggestionKind {
-    DidYouMean,
-    ReplaceText,
-    InsertText,
-    DeleteText,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct DiagnosticSpan {
-    pub file: Option<String>,
-    pub line: Option<u32>,
-    pub column: Option<u32>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct RelatedSpan {
-    pub label: String,
-    pub span: DiagnosticSpan,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct DiagnosticChild {
-    pub severity: Severity,
-    pub message: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct DiagnosticSuggestion {
-    pub kind: SuggestionKind,
-    pub message: String,
-    pub replacement: Option<String>,
-    pub span: Option<DiagnosticSpan>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct CompilerDiagnostic {
-    pub code: String,
-    pub severity: Severity,
-    pub message: String,
-    pub url: String,
-    pub primary_span: Option<DiagnosticSpan>,
-    pub related_spans: Vec<RelatedSpan>,
-    pub children: Vec<DiagnosticChild>,
-    pub help: Option<String>,
-    pub suggestions: Vec<DiagnosticSuggestion>,
-}
-
-impl CompilerDiagnostic {
-    /// Creates an error diagnostic with canonical diagnostic identity.
-    #[must_use]
-    pub fn with_code(message: impl Into<String>, code: DiagnosticCode) -> Self {
-        let code = code.code().to_string();
-        Self {
-            url: format!("https://sifr.sh/docs/errors/{code}"),
-            code,
-            severity: Severity::Error,
-            message: message.into(),
-            primary_span: None,
-            related_spans: Vec::new(),
-            children: Vec::new(),
-            help: None,
-            suggestions: Vec::new(),
-        }
+/// Creates a rendered error diagnostic with canonical diagnostic identity.
+#[must_use]
+pub(crate) fn diagnostic_with_code(
+    message: impl Into<String>,
+    code: DiagnosticCode,
+) -> RenderedDiagnostic {
+    let message = message.into();
+    let mut args = BTreeMap::new();
+    args.insert(
+        "message".to_string(),
+        DiagnosticArg::String(message.clone()),
+    );
+    RenderedDiagnostic {
+        code: code.code().to_string(),
+        severity: code.declared_severity(),
+        message,
+        message_template: "{message}".to_string(),
+        args,
+        url: code.docs_url(),
+        spans: Vec::new(),
+        children: Vec::new(),
+        help: None,
+        suggestions: Vec::new(),
     }
 }
 
@@ -106,24 +57,20 @@ fn severity_rank(severity: Severity) -> u8 {
         Severity::Error => 0,
         Severity::Warning => 1,
         Severity::Note => 2,
-        Severity::Help => 3,
     }
 }
 
 pub fn apply_diagnostic_recovery_limits(
-    diagnostics: &[CompilerDiagnostic],
-) -> Vec<CompilerDiagnostic> {
-    let mut grouped: BTreeMap<(u8, String, String, Option<String>), Vec<CompilerDiagnostic>> =
+    diagnostics: &[RenderedDiagnostic],
+) -> Vec<RenderedDiagnostic> {
+    let mut grouped: BTreeMap<(u8, String, String, Option<String>), Vec<RenderedDiagnostic>> =
         BTreeMap::new();
     for diagnostic in diagnostics {
         let key = (
             severity_rank(diagnostic.severity),
             diagnostic.code.clone(),
             diagnostic.message.clone(),
-            diagnostic
-                .primary_span
-                .as_ref()
-                .and_then(|span| span.file.clone()),
+            primary_span(diagnostic).and_then(|span| span.file.clone()),
         );
         grouped.entry(key).or_default().push(diagnostic.clone());
     }
@@ -140,8 +87,7 @@ pub fn apply_diagnostic_recovery_limits(
                 "... +{} more similar diagnostics",
                 group.len() - MAX_SIMILAR_DIAGNOSTICS_PER_GROUP
             );
-            summary.primary_span = None;
-            summary.related_spans.clear();
+            summary.spans.clear();
             summary.children.clear();
             summary.help = None;
             summary.suggestions.clear();
@@ -155,15 +101,17 @@ pub fn apply_diagnostic_recovery_limits(
     bounded
 }
 
-impl std::fmt::Display for CompilerDiagnostic {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}: {}",
-            diagnostic_label_for_code_str(&self.code),
-            self.message
-        )
-    }
+fn primary_span(diagnostic: &RenderedDiagnostic) -> Option<&DiagnosticSpan> {
+    diagnostic.spans.iter().find(|span| span.is_primary)
+}
+
+#[cfg(test)]
+pub(crate) fn diagnostic_legacy_display(diagnostic: &RenderedDiagnostic) -> String {
+    format!(
+        "{}: {}",
+        diagnostic_label_for_code_str(&diagnostic.code),
+        diagnostic.message
+    )
 }
 
 #[must_use]
@@ -213,11 +161,11 @@ fn panic_payload_message(payload: &(dyn Any + Send)) -> String {
 pub(crate) fn run_codegen_with_boundary<T>(
     context: impl Into<String>,
     f: impl FnOnce() -> T,
-) -> Result<T, Box<CompilerDiagnostic>> {
+) -> Result<T, Box<RenderedDiagnostic>> {
     let context = context.into();
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Ok(value),
-        Err(payload) => Err(Box::new(CompilerDiagnostic::with_code(
+        Err(payload) => Err(Box::new(diagnostic_with_code(
             format!("{context}: {}", panic_payload_message(payload.as_ref())),
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         ))),

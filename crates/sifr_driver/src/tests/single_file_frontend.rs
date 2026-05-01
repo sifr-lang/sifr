@@ -35,10 +35,13 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
     let check_errors = type_check_source("def main():\n    x: int = \"bad\"\n");
     assert_eq!(errors.len(), check_errors.len());
     assert_eq!(
-        errors.iter().map(ToString::to_string).collect::<Vec<_>>(),
+        errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>(),
         check_errors
             .iter()
-            .map(ToString::to_string)
+            .map(crate::diagnostics::diagnostic_legacy_display)
             .collect::<Vec<_>>()
     );
 }

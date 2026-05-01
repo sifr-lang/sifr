@@ -23,7 +23,7 @@ Deliver production-quality diagnostics with recovery and explicit stability guar
   - Thread precise spans through frontend/codegen errors.
   - Standardize stable diagnostic codes, related-span labels, help text, deterministic documentation URLs, and structured fix-suggestion fields.
   - Require every top-level diagnostic to expose `url = "https://sifr.sh/docs/errors/<CODE>"`.
-  - Define the canonical structured diagnostic schema with at least: `code`, `severity`, `message`, `url`, `primary_span`, `related_spans`, `children`, `help`, and optional structured suggestions.
+  - Define the canonical structured diagnostic schema with at least: `code`, `severity`, `message`, `message_template`, structured `args`, `url`, `spans`, `children`, `help`, and optional structured suggestions.
   - Define structured suggestions with applicability and replacement edits rather than renderer-only help text.
   - Define stable diagnostic renderers for `human` and `json` output modes without changing semantic ownership.
   - Require `json` mode to be the lossless machine-readable rendering of the canonical diagnostic schema.

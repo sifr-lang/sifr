@@ -1,7 +1,7 @@
 use super::artifacts::{compose_test_runner_lib, generate_test_runner_cargo_toml};
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{prepare_cached_artifact, ArtifactCacheReport, PreparedArtifactCache};
-use crate::diagnostics::{write_stderr, write_stderr_line, CompilerDiagnostic};
+use crate::diagnostics::{write_stderr, write_stderr_line, RenderedDiagnostic};
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::Path;
@@ -14,7 +14,7 @@ pub(crate) struct TestRunnerExecutionOutcome {
 
 pub(crate) fn execute_test_runner_project(
     generated_project: &GeneratedTestRunnerProject,
-) -> Result<TestRunnerExecutionOutcome, Vec<CompilerDiagnostic>> {
+) -> Result<TestRunnerExecutionOutcome, Vec<RenderedDiagnostic>> {
     let cargo_toml = generate_test_runner_cargo_toml(
         &generated_project.all_stdlib_modules,
         &generated_project.all_required_crates,
@@ -39,14 +39,14 @@ pub(crate) fn execute_test_runner_project(
     if let PreparedArtifactCache::Miss(_) = &prepared {
         let src_dir = project_dir.join("src");
         std::fs::create_dir_all(&src_dir).map_err(|error| {
-            vec![CompilerDiagnostic::with_code(
+            vec![crate::diagnostics::diagnostic_with_code(
                 format!("failed to create test directory: {error}"),
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
         })?;
 
         std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|error| {
-            vec![CompilerDiagnostic::with_code(
+            vec![crate::diagnostics::diagnostic_with_code(
                 format!("failed to write Cargo.toml: {error}"),
                 DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
             )]
@@ -58,7 +58,7 @@ pub(crate) fn execute_test_runner_project(
                 let output_path = src_dir.join(&module_path);
                 if let Some(parent) = output_path.parent() {
                     std::fs::create_dir_all(parent).map_err(|error| {
-                        vec![CompilerDiagnostic::with_code(
+                        vec![crate::diagnostics::diagnostic_with_code(
                             format!(
                                 "failed to create test support module directory '{}': {error}",
                                 parent.display()
@@ -68,7 +68,7 @@ pub(crate) fn execute_test_runner_project(
                     })?;
                 }
                 std::fs::write(&output_path, code).map_err(|error| {
-                    vec![CompilerDiagnostic::with_code(
+                    vec![crate::diagnostics::diagnostic_with_code(
                         format!(
                             "failed to write test support module '{}': {error}",
                             output_path.display()
@@ -83,7 +83,7 @@ pub(crate) fn execute_test_runner_project(
             let output_path = src_dir.join(&namespace_file.path);
             if let Some(parent) = output_path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| {
-                    vec![CompilerDiagnostic::with_code(
+                    vec![crate::diagnostics::diagnostic_with_code(
                         format!(
                             "failed to create test support namespace directory '{}': {error}",
                             parent.display()
@@ -99,7 +99,7 @@ pub(crate) fn execute_test_runner_project(
                 contents.push_str(";\n");
             }
             std::fs::write(&output_path, contents).map_err(|error| {
-                vec![CompilerDiagnostic::with_code(
+                vec![crate::diagnostics::diagnostic_with_code(
                     format!(
                         "failed to write test support namespace '{}': {error}",
                         output_path.display()
@@ -110,7 +110,7 @@ pub(crate) fn execute_test_runner_project(
         }
 
         std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|error| {
-            vec![CompilerDiagnostic::with_code(
+            vec![crate::diagnostics::diagnostic_with_code(
                 format!("failed to write lib.rs: {error}"),
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
@@ -122,7 +122,7 @@ pub(crate) fn execute_test_runner_project(
         .current_dir(&project_dir)
         .output()
         .map_err(|error| {
-            vec![CompilerDiagnostic::with_code(
+            vec![crate::diagnostics::diagnostic_with_code(
                 format!("failed to run cargo test: {error}"),
                 DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
             )]

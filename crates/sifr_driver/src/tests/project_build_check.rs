@@ -310,8 +310,14 @@ def broken() -> int:
         .err()
         .expect("build_project should fail with same frontend error");
 
-    let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.to_string()).collect();
-    let build_messages: Vec<String> = build_errors.into_iter().map(|e| e.to_string()).collect();
+    let check_messages: Vec<String> = check_errors
+        .iter()
+        .map(crate::diagnostics::diagnostic_legacy_display)
+        .collect();
+    let build_messages: Vec<String> = build_errors
+        .iter()
+        .map(crate::diagnostics::diagnostic_legacy_display)
+        .collect();
     assert_eq!(check_messages, build_messages);
     assert!(build_messages
         .iter()

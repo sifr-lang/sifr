@@ -22,8 +22,7 @@ pub use build::{
 };
 pub use diagnostics::{
     apply_diagnostic_recovery_limits, diagnostic_label_for_code, diagnostic_label_for_code_str,
-    CompileResult, CompileResultFull, CompilerDiagnostic, DiagnosticChild, DiagnosticSpan,
-    DiagnosticSuggestion, RelatedSpan, Severity, SuggestionKind,
+    CompileResult, CompileResultFull,
 };
 pub use frontend::{
     check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,

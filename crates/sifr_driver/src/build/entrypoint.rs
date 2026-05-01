@@ -5,7 +5,7 @@ use super::project_codegen::{
     generated_project_binary_project, generated_single_file_binary_project, GeneratedBinaryProject,
 };
 use super::ArtifactCacheReport;
-use crate::diagnostics::{run_codegen_with_boundary, CompileResult, CompilerDiagnostic};
+use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled, FrontendDiagnosticStyle};
 use crate::project::{
     collect_project_hir_modules, compile_frontend_modules, emit_project_frontend_diagnostics,
@@ -58,14 +58,14 @@ pub(crate) struct RootedEntrypointPlan {
 
 pub(crate) fn compile_single_file_frontend(
     source: &str,
-) -> Result<FrontendCompiled, Vec<CompilerDiagnostic>> {
+) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
     RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile { source })?
         .into_single_file_frontend()
 }
 
 pub(crate) fn compile_single_file_entrypoint_with_metadata(
     source: &str,
-) -> Result<sifr_codegen::CodegenResult, Vec<CompilerDiagnostic>> {
+) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
     let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile { source })?;
     plan.emit_frontend_diagnostics();
     plan.into_single_file_codegen_result()
@@ -73,7 +73,7 @@ pub(crate) fn compile_single_file_entrypoint_with_metadata(
 
 pub(crate) fn resolve_project_entrypoint_plan(
     main_file: &Path,
-) -> Result<RootedEntrypointPlan, Vec<CompilerDiagnostic>> {
+) -> Result<RootedEntrypointPlan, Vec<RenderedDiagnostic>> {
     RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project { main_file })
 }
 
@@ -94,7 +94,7 @@ pub(crate) fn emit_project_entrypoint(main_file: &Path) -> CompileResult {
 pub(crate) fn build_rooted_entrypoint_binary(
     entrypoint: &RootedEntrypoint<'_>,
     output_dir: &Path,
-) -> Result<PathBuf, Vec<CompilerDiagnostic>> {
+) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
     plan.emit_frontend_diagnostics();
     let generated_project = plan.into_generated_binary_project()?;
@@ -103,7 +103,7 @@ pub(crate) fn build_rooted_entrypoint_binary(
 
 pub(crate) fn build_cached_project_binary(
     main_file: &Path,
-) -> Result<CachedBinaryArtifact, Vec<CompilerDiagnostic>> {
+) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     build_cached_rooted_entrypoint_binary(
         &RootedEntrypoint::Project { main_file },
         main_file.parent().unwrap_or(Path::new(".")),
@@ -114,7 +114,7 @@ pub(crate) fn build_cached_project_binary(
 pub(crate) fn build_cached_single_file_binary(
     source: &str,
     entrypoint_file: &Path,
-) -> Result<CachedBinaryArtifact, Vec<CompilerDiagnostic>> {
+) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     build_cached_rooted_entrypoint_binary(
         &RootedEntrypoint::SingleFile { source },
         entrypoint_file.parent().unwrap_or(Path::new(".")),
@@ -126,7 +126,7 @@ fn build_cached_rooted_entrypoint_binary(
     entrypoint: &RootedEntrypoint<'_>,
     cache_scope: &Path,
     cache_namespace: &str,
-) -> Result<CachedBinaryArtifact, Vec<CompilerDiagnostic>> {
+) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
     plan.emit_frontend_diagnostics();
     let generated_project = plan.into_generated_binary_project()?;
@@ -143,7 +143,7 @@ fn build_cached_rooted_entrypoint_binary(
 }
 
 impl RootedEntrypointPlan {
-    fn from_entrypoint(entrypoint: &RootedEntrypoint<'_>) -> Result<Self, Vec<CompilerDiagnostic>> {
+    fn from_entrypoint(entrypoint: &RootedEntrypoint<'_>) -> Result<Self, Vec<RenderedDiagnostic>> {
         let stdlib = compile_stdlib()?;
         let (shape, project_lowering) = match entrypoint {
             RootedEntrypoint::SingleFile { source } => {
@@ -163,7 +163,7 @@ impl RootedEntrypointPlan {
                     .file_stem()
                     .map(|stem| stem.to_string_lossy().to_string())
                 else {
-                    return Err(vec![CompilerDiagnostic::with_code(
+                    return Err(vec![crate::diagnostics::diagnostic_with_code(
                         format!("invalid project entrypoint path '{}'", main_file.display()),
                         DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
                     )]);
@@ -202,9 +202,9 @@ impl RootedEntrypointPlan {
         emit_project_frontend_diagnostics(&self.project_lowering);
     }
 
-    fn into_single_file_frontend(self) -> Result<FrontendCompiled, Vec<CompilerDiagnostic>> {
+    fn into_single_file_frontend(self) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
         if self.shape != RootedEntrypointShape::SingleFile {
-            return Err(vec![CompilerDiagnostic::with_code(
+            return Err(vec![crate::diagnostics::diagnostic_with_code(
                 "internal error: rooted project entrypoint cannot be converted into a single-file frontend result",
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
@@ -212,7 +212,7 @@ impl RootedEntrypointPlan {
 
         let mut project_lowering = self.project_lowering;
         let main_module = project_lowering.hir_modules.remove("main").ok_or_else(|| {
-            vec![CompilerDiagnostic::with_code(
+            vec![crate::diagnostics::diagnostic_with_code(
                 "internal error: frontend lowering missing 'main' module",
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]
@@ -237,7 +237,7 @@ impl RootedEntrypointPlan {
 
     fn into_single_file_codegen_result(
         self,
-    ) -> Result<sifr_codegen::CodegenResult, Vec<CompilerDiagnostic>> {
+    ) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
         let frontend = self.into_single_file_frontend()?;
         run_codegen_with_boundary(
             "internal compiler panic during single-file code generation",
@@ -248,7 +248,7 @@ impl RootedEntrypointPlan {
 
     fn into_generated_binary_project(
         self,
-    ) -> Result<GeneratedBinaryProject, Vec<CompilerDiagnostic>> {
+    ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
         match self.shape {
             RootedEntrypointShape::SingleFile => {
                 let codegen_result = self.into_single_file_codegen_result()?;

@@ -1,4 +1,4 @@
-use crate::diagnostics::{write_stderr_line, CompilerDiagnostic};
+use crate::diagnostics::{write_stderr_line, RenderedDiagnostic};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult};
 use sifr_python_ast::Stmt;
@@ -20,11 +20,11 @@ pub(crate) fn lower_frontend_module(
     stmts: &[Stmt],
     external_defs: &ExternalDefs,
     diagnostic_style: FrontendDiagnosticStyle,
-) -> Result<LoweringResult, Vec<CompilerDiagnostic>> {
+) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
     let result = match lower_module_with_externals(stmts, external_defs) {
         Ok(result) => result,
         Err(errors) => {
-            let diagnostics: Vec<CompilerDiagnostic> = errors
+            let diagnostics: Vec<RenderedDiagnostic> = errors
                 .into_iter()
                 .map(|error| lowering_error_to_diagnostic(module_name, diagnostic_style, error))
                 .collect();
@@ -38,7 +38,7 @@ fn lowering_error_to_diagnostic(
     module_name: &str,
     diagnostic_style: FrontendDiagnosticStyle,
     error: LoweringError,
-) -> CompilerDiagnostic {
+) -> RenderedDiagnostic {
     let code = lowering_error_code_or_internal(&error);
     let uncoded = error.code.is_none();
     let message = match diagnostic_style {
@@ -54,7 +54,7 @@ fn lowering_error_to_diagnostic(
     } else {
         message
     };
-    CompilerDiagnostic::with_code(message, code)
+    crate::diagnostics::diagnostic_with_code(message, code)
 }
 
 pub(crate) fn lowering_error_code_or_internal(error: &LoweringError) -> DiagnosticCode {

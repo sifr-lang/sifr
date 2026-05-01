@@ -1,4 +1,4 @@
-use crate::diagnostics::{run_codegen_with_boundary, CompilerDiagnostic};
+use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
 use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
 use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
@@ -11,15 +11,15 @@ use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
-pub(crate) fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompilerDiagnostic>> {
+pub(crate) fn compile_stdlib() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     get_or_init_stdlib_cache(&STDLIB_COMPILED_CACHE, compile_stdlib_uncached)
 }
 
-pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<CompilerDiagnostic>> {
+pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     compile_stdlib_uncached_impl()
 }
 
-fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompilerDiagnostic>> {
+fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
 
@@ -29,11 +29,11 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompilerDiagnost
                 if !parsed.has_valid_syntax() {
                     // TODO(diag_4a slice 2): classify Ruff parse failures
                     // into the precise active parse-code buckets.
-                    let errors: Vec<CompilerDiagnostic> = parsed
+                    let errors: Vec<RenderedDiagnostic> = parsed
                         .errors()
                         .iter()
                         .map(|e| {
-                            CompilerDiagnostic::with_code(
+                            crate::diagnostics::diagnostic_with_code(
                                 format!("[stdlib:{module_name}] {e}"),
                                 DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                             )
@@ -46,7 +46,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompilerDiagnost
             Err(e) => {
                 // TODO(diag_4a slice 2): classify Ruff parse failures into
                 // the precise active parse-code buckets.
-                return Err(vec![CompilerDiagnostic::with_code(
+                return Err(vec![crate::diagnostics::diagnostic_with_code(
                     format!("[stdlib:{module_name}] failed to parse: {e}"),
                     DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                 )]);
@@ -56,14 +56,14 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompilerDiagnost
         let result = match lower_module_stdlib_with_externals(parsed.suite(), &stdlib_defs) {
             Ok(result) => result,
             Err(errors) => {
-                let diagnostics: Vec<CompilerDiagnostic> = errors
+                let diagnostics: Vec<RenderedDiagnostic> = errors
                     .into_iter()
                     .map(|e| {
                         // Even if `e.code` is `Some(_)`, stdlib lowering
                         // failures collapse to bootstrap failures from the
                         // caller's perspective, not user-facing semantic
                         // diagnostics.
-                        CompilerDiagnostic::with_code(
+                        crate::diagnostics::diagnostic_with_code(
                             format!("[stdlib:{}] {}", module_name, e.message),
                             DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                         )
