@@ -298,9 +298,10 @@ fn unexpected_keyword_error<T>(
     keyword: &str,
     ctx: &mut LowerCtx,
 ) -> Option<T> {
-    ctx.error(format!(
-        "{callable_name}() got an unexpected keyword argument '{keyword}'"
-    ));
+    ctx.error_with_code(
+        DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+        format!("{callable_name}() got an unexpected keyword argument '{keyword}'"),
+    );
     None
 }
 
