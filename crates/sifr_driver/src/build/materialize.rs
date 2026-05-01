@@ -1,7 +1,7 @@
 use super::cargo_manifest::generate_dependency_cargo_toml;
 use super::project_codegen::GeneratedBinaryProject;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
-use crate::diagnostics::{CompileError, CompilePhase};
+use crate::diagnostics::CompileError;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::BTreeSet;
@@ -142,19 +142,11 @@ fn write_project_file(
 }
 
 fn build_error(message: String) -> CompileError {
-    CompileError::with_code(
-        message,
-        CompilePhase::Build,
-        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-    )
+    CompileError::with_code(message, DiagnosticCode::BUILD_MATERIALIZATION_FAILURE)
 }
 
 fn cargo_build_error(message: String) -> CompileError {
-    CompileError::with_code(
-        message,
-        CompilePhase::Build,
-        DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
-    )
+    CompileError::with_code(message, DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE)
 }
 
 fn binary_project_cache_key(

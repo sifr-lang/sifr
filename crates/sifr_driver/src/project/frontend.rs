@@ -1,6 +1,6 @@
 use super::compile_order::compute_module_compile_order;
 use super::exports::collect_module_exports;
-use crate::diagnostics::{write_stderr_line, CompileError, CompilePhase};
+use crate::diagnostics::{write_stderr_line, CompileError};
 use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle, FrontendModuleDiagnostics};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
@@ -27,7 +27,6 @@ pub(crate) fn compile_frontend_modules(
         let Some(stmts) = parsed_modules.get(module_name.as_str()) else {
             return Err(vec![CompileError::with_code(
                 format!("[{module_name}] module was not parsed"),
-                CompilePhase::Build,
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
         };

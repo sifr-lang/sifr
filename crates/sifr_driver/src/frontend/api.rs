@@ -1,5 +1,5 @@
 use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_file_frontend};
-use crate::diagnostics::{CompileError, CompilePhase, CompileResult, CompileResultFull};
+use crate::diagnostics::{CompileError, CompileResult, CompileResultFull};
 use crate::frontend::module_lowering::emit_frontend_diagnostics;
 use crate::stdlib::StdlibCompiled;
 use sifr_diagnostics::DiagnosticCode;
@@ -24,7 +24,6 @@ pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<CompileError>> {
                     .map(|e| {
                         CompileError::with_code(
                             format!("{e}"),
-                            CompilePhase::Parse,
                             DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
                         )
                     })
@@ -37,7 +36,6 @@ pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<CompileError>> {
         // precise active parse-code buckets.
         Err(e) => Err(vec![CompileError::with_code(
             format!("failed to parse: {e}"),
-            CompilePhase::Parse,
             DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
         )]),
     }

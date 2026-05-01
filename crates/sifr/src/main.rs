@@ -10,9 +10,9 @@ use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
-    build_project, check, check_project, compile, compile_errors_to_diagnostics, emit_project,
-    find_workspace_root, run_tests, CachedBinaryArtifact, CompileError, CompilePhase,
-    CompileResult, CompilerDiagnostic, Severity,
+    build_project, check, check_project, compile, compile_error_label_for_code_str,
+    compile_errors_to_diagnostics, emit_project, find_workspace_root, run_tests,
+    CachedBinaryArtifact, CompileError, CompileResult, CompilerDiagnostic, Severity,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -243,7 +243,6 @@ fn panic_payload_message(payload: &(dyn std::any::Any + Send)) -> String {
 
 fn run_with_panic_boundary<T>(
     context: impl Into<String>,
-    phase: CompilePhase,
     f: impl FnOnce() -> T,
 ) -> Result<T, CompileError> {
     let context = context.into();
@@ -251,7 +250,6 @@ fn run_with_panic_boundary<T>(
         Ok(value) => Ok(value),
         Err(payload) => Err(CompileError::with_code(
             format!("{context}: {}", panic_payload_message(payload.as_ref())),
-            phase,
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         )),
     }
@@ -371,20 +369,14 @@ fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) -> i
     match format {
         DiagnosticFormat::Human => {
             for diagnostic in diagnostics {
-                let label = if diagnostic.code.starts_with("SIFR-PARSE-") {
-                    "parse error"
-                } else if diagnostic.code.starts_with("SIFR-TYPE-") {
-                    "type error"
-                } else if diagnostic.code.starts_with("SIFR-CODEGEN-") {
-                    "codegen error"
-                } else if diagnostic.code.starts_with("SIFR-BUILD-") {
-                    "build error"
+                let label = if diagnostic.code.starts_with("SIFR-") {
+                    compile_error_label_for_code_str(&diagnostic.code)
                 } else {
                     match diagnostic.severity {
-                        sifr_driver::Severity::Error => "error",
-                        sifr_driver::Severity::Warning => "warning",
-                        sifr_driver::Severity::Note => "note",
-                        sifr_driver::Severity::Help => "help",
+                        Severity::Error => "error",
+                        Severity::Warning => "warning",
+                        Severity::Note => "note",
+                        Severity::Help => "help",
                     }
                 };
                 let _ = writeln!(
@@ -417,7 +409,6 @@ fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) -> i
 fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let result = match run_with_panic_boundary(
         "internal compiler panic during build command execution",
-        CompilePhase::Build,
         || compile_entrypoint(file, output),
     ) {
         Ok(result) => result,
@@ -440,7 +431,6 @@ fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) ->
 fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let result = match run_with_panic_boundary(
         "internal compiler panic during run command compilation",
-        CompilePhase::Build,
         || build_run_artifact(file),
     ) {
         Ok(result) => result,
@@ -473,7 +463,6 @@ fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
 fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let errors = match run_with_panic_boundary(
         "internal compiler panic during check command execution",
-        CompilePhase::TypeCheck,
         || check_entrypoint(file),
     ) {
         Ok(errors) => errors,
@@ -504,7 +493,6 @@ fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
 fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let run_result = match run_with_panic_boundary(
         "internal compiler panic during test command execution",
-        CompilePhase::Build,
         || run_tests(dir),
     ) {
         Ok(result) => result,
@@ -525,7 +513,6 @@ fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
 fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let compile_result = match run_with_panic_boundary(
         "internal compiler panic during emit command execution",
-        CompilePhase::Codegen,
         || emit_entrypoint(file),
     ) {
         Ok(result) => result,
@@ -1207,16 +1194,11 @@ mod tests {
 
     #[test]
     fn test_compile_error_exit_code_contract_user_vs_internal() {
-        let user_error = CompileError::with_code(
-            "type mismatch",
-            CompilePhase::TypeCheck,
-            DiagnosticCode::TYPE_MISMATCH,
-        );
+        let user_error = CompileError::with_code("type mismatch", DiagnosticCode::TYPE_MISMATCH);
         assert_eq!(compile_error_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
 
         let internal_error = CompileError::with_code(
             "internal compiler panic during single-file code generation: boom",
-            CompilePhase::Codegen,
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         );
         assert_eq!(
@@ -1256,7 +1238,6 @@ mod tests {
     fn test_run_with_panic_boundary_converts_panic_to_internal_compile_error() {
         let error = run_with_panic_boundary(
             "internal compiler panic during test boundary",
-            CompilePhase::Build,
             || -> usize { panic!("boom") },
         )
         .expect_err("panic should convert to compile error");

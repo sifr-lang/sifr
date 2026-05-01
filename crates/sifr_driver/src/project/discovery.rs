@@ -1,4 +1,4 @@
-use crate::diagnostics::{CompileError, CompilePhase};
+use crate::diagnostics::CompileError;
 use crate::workspace::WorkspaceRoot;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Stmt;
@@ -196,12 +196,10 @@ impl ResolutionError {
         match &self.kind {
             ResolutionFailureKind::Unresolved => CompileError::with_code(
                 unresolved_import_message(&self.module_name, &self.tried_paths),
-                CompilePhase::Build,
                 DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
             ),
             ResolutionFailureKind::Ambiguous => CompileError::with_code(
                 ambiguous_import_message(&self.module_name, resolver, &self.matches),
-                CompilePhase::Build,
                 DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
             ),
             ResolutionFailureKind::NamespaceFileCollision { parent_name } => {
@@ -222,7 +220,6 @@ impl ResolutionError {
                         parent_name,
                         &parent_path,
                     ),
-                    CompilePhase::Build,
                     DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
                 )
             }
@@ -395,7 +392,6 @@ pub(crate) fn parse_import_closure_modules(
         let source = std::fs::read_to_string(&path).map_err(|e| {
             vec![CompileError::with_code(
                 format!("failed to read '{}': {}", path.display(), e),
-                CompilePhase::Build,
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
         })?;
@@ -411,7 +407,6 @@ pub(crate) fn parse_import_closure_modules(
                         .map(|e| {
                             CompileError::with_code(
                                 format!("[{label}] {e}"),
-                                CompilePhase::Parse,
                                 DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
                             )
                         })
@@ -425,7 +420,6 @@ pub(crate) fn parse_import_closure_modules(
                 // the precise active parse-code buckets.
                 return Err(vec![CompileError::with_code(
                     format!("[{label}] failed to parse: {e}"),
-                    CompilePhase::Parse,
                     DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
                 )]);
             }

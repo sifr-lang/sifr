@@ -8,7 +8,7 @@ Sifr is not production-released yet. This phase intentionally does not preserve 
 
 ## Execution Status
 
-Current wave: `milestone_diag_4a` renderer integration, split into reviewable transport slices.
+Current wave: `milestone_diag_4b` phase-mapping retirement, split into reviewable residual-cleanup slices.
 
 - [x] Proposal reviewed through final loop and accepted for implementation.
 - [x] Added `crates/sifr_diagnostics` as the canonical leaf crate for diagnostic codes, source spans/source map, model builders, sink emission, rendering, and JSON schema generation.
@@ -67,6 +67,7 @@ Current wave: `milestone_diag_4a` renderer integration, split into reviewable tr
 - [x] `milestone_diag_4a` slice 2b.32 merged: builtin `sorted()` and `range()` missing required argument diagnostics migration to active `SIFR-CALL-0004` with fixture and HIR coverage. PR: https://github.com/sifr-lang/sifr/pull/1704.
 - [x] `milestone_diag_4a` slice 2b.33 implementation complete and reviewer-satisfied: remove pre-1.0 retired catch-all registry/docs metadata, delete the phase-derived diagnostic-code bridge, require `CompileError` to carry an active diagnostic code, and migrate the remaining exercised HIR codeless fixture paths to active semantic codes. PR: https://github.com/sifr-lang/sifr/pull/1705.
 - [x] Deferred `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` bridge deletion was superseded by slice 2b.33 after the pre-1.0 no-compatibility decision.
+- [x] `milestone_diag_4b` slice 1 implementation complete and reviewer-satisfied: deleted the public `CompilePhase` enum and phase field from `CompileError`, removed phase-derived panic-boundary plumbing, and preserved legacy human labels through canonical diagnostic-code families instead of phases. PR: pending.
 - [x] Claude pre-implementation review for `milestone_diag_4a` slice 2 completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2a completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-2.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.1 completed and reviewer is satisfied. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-2.md`.
@@ -102,6 +103,7 @@ Current wave: `milestone_diag_4a` renderer integration, split into reviewable tr
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.31 completed and reviewer is satisfied: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-builtin-unexpected-keyword-diagnostics-review-pass-1.md`. Local validation passed: `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo test -p sifr_hir test_zip_keyword_diagnostics_are_stable`, `cargo test -p sifr_hir test_range_and_enumerate_unexpected_keywords_have_call_code`, `cargo test -p sifr --test e2e -- test_e2e_fail`, `cargo test -p sifr -- --skip test_e2e_pass`, `cargo clippy --workspace -- -D warnings`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=856.53s`; warm wall-time, cache-hit, and group-skew advisories emitted).
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.32 completed and reviewer is satisfied: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-builtin-missing-arg-diagnostics-review-pass-1.md`. Local validation passed: `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo test -p sifr_hir test_sorted_and_range_missing_required_argument_have_call_code`, `cargo test -p sifr --test e2e -- test_e2e_fail`, `cargo test -p sifr -- --skip test_e2e_pass`, `cargo clippy --workspace -- -D warnings`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=664.36s`; warm wall-time and group-skew advisories emitted).
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.33 completed and reviewer is satisfied. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-remove-retired-fallbacks-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-remove-retired-fallbacks-review-pass-2.md`. Local validation passed: `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo test -p sifr_hir diagnostic_transport_tests`, `cargo test -p sifr_diagnostics -p sifr_driver --lib --tests`, `cargo run -q -p sifr_diagnostics --bin gen-error-docs -- --check`, `cargo test -p sifr --test e2e test_e2e_fail`, `cargo test -p sifr -- --skip test_e2e_pass`, `cargo clippy --workspace -- -D warnings`, manual CLI user-error exit check for `stdlib_wrong_type.sifr`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=1478.57s`; warm wall-time and group-skew advisories emitted).
+- [x] Claude implementation review for `milestone_diag_4b` slice 1 completed and reviewer is satisfied. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4b-phase-mapping-retirement-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4b-phase-mapping-retirement-review-pass-2-retry.md`. Local validation passed: `cargo fmt --check`, `git diff --check`, `cargo test -p sifr_driver --lib --tests`, `cargo test -p sifr --test e2e test_e2e_fail`, `cargo test -p sifr -- --skip test_e2e_pass`, `cargo clippy --workspace -- -D warnings`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=1649.50s`; warm wall-time and group-skew advisories emitted).
 - [x] Claude pre-implementation review for `milestone_diag_4a` completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 1 completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-3.md`.
 
@@ -210,12 +212,12 @@ That includes unrelated failures such as:
 - Result/Option misuse
 - Stdlib static API contract errors
 
-The implementation root cause is architectural:
+The original implementation root cause was architectural:
 
-- HIR lowering emits mostly string diagnostics through `LoweringError { message, line, col }`.
-- The driver wraps every HIR lowering error as `CompilePhase::TypeCheck`.
-- `CompilePhase::TypeCheck` maps to `SIFR-TYPE-0001`.
-- Decimal-specific pseudo-codes such as `[E2501]` are embedded in the message instead of being the top-level diagnostic identity.
+- HIR lowering emitted mostly string diagnostics through `LoweringError { message, line, col }`.
+- The driver wrapped every HIR lowering error as `CompilePhase::TypeCheck`.
+- `CompilePhase::TypeCheck` mapped to `SIFR-TYPE-0001`.
+- Decimal-specific pseudo-codes such as `[E2501]` were embedded in the message instead of being the top-level diagnostic identity.
 
 This makes diagnostic codes too coarse for:
 
