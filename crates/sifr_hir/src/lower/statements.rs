@@ -295,7 +295,7 @@ pub(super) fn lower_stmt(
                         if has_enter && has_exit {
                             true
                         } else if has_enter || has_exit {
-                            ctx.error("type used in 'with' statement must implement both __enter__ and __exit__ methods".to_string());
+                            protocol_diagnostics::context_manager_incomplete(ctx, name);
                             false
                         } else {
                             protocol_diagnostics::context_manager_missing(ctx, name);
@@ -303,7 +303,8 @@ pub(super) fn lower_stmt(
                         }
                     } else {
                         // Non-class types don't have methods — can't be context managers
-                        ctx.error("type used in 'with' statement must implement the ContextManager protocol (__enter__/__exit__)".to_string());
+                        let type_name = val_ty.display_name();
+                        protocol_diagnostics::context_manager_missing(ctx, &type_name);
                         false
                     };
                     // If the type has __enter__, the variable is bound to __enter__()'s return type

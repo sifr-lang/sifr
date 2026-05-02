@@ -1,0 +1,9 @@
+# expect-error: SIFR-PROTO-0003
+
+class HalfContext:
+    def __enter__(self) -> HalfContext:
+        return self
+
+def main():
+    with HalfContext() as ctx:
+        print(ctx)
