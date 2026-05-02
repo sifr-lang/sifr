@@ -1,5 +1,5 @@
 # Reference: phase_psp_a1_tuple_dynamic_list_shape
-# expect-error: SIFR-STDLIB-0001
+# expect-error[col=20]: SIFR-STDLIB-0001
 
 def main():
     nums: list[int] = [1, 2, 3]

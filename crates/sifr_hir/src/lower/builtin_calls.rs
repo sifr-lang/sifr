@@ -191,9 +191,10 @@ pub(super) fn lower_tuple_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) 
             if matches!(lowered.ty().resolve_alias(), Type::Tuple(_)) {
                 Some(lowered)
             } else {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
                     "tuple() currently requires a tuple, list literal, or string literal because Sifr tuples are fixed-length typed values".to_string(),
+                    arg_expr.range(),
                 );
                 None
             }
@@ -414,9 +415,19 @@ pub(super) fn lower_defaultdict_constructor_call(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error_with_code(
+        let keyword = &call.arguments.keywords[0];
+        let Some(name) = keyword.arg.as_ref() else {
+            ctx.error_with_code_at(
+                DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                "defaultdict() does not support unpacked keyword arguments".to_string(),
+                keyword.range,
+            );
+            return None;
+        };
+        ctx.error_with_code_at(
             DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
             "defaultdict() does not support keyword arguments".to_string(),
+            name.range(),
         );
         return None;
     }
