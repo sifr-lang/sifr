@@ -115,11 +115,11 @@ fn validate_iteration_protocol_methods(
 ) {
     if let Some(iter_ft) = class_method_signature(methods, "__iter__") {
         if !iter_ft.params.is_empty() {
-            ctx.error(format!(
-                "class '{class_name}.__iter__' must not declare parameters besides self"
-            ));
-        }
-        if class_iter_element_type(class_name, methods).is_none() {
+            protocol_diagnostics::iterator_invalid_parameter_signature(
+                ctx,
+                &format!("{class_name}.__iter__"),
+            );
+        } else if class_iter_element_type(class_name, methods).is_none() {
             protocol_diagnostics::iterator_invalid_return_signature(
                 ctx,
                 &format!("{class_name}.__iter__"),
@@ -130,11 +130,11 @@ fn validate_iteration_protocol_methods(
 
     if let Some(next_ft) = class_method_signature(methods, "__next__") {
         if !next_ft.params.is_empty() {
-            ctx.error(format!(
-                "class '{class_name}.__next__' must not declare parameters besides self"
-            ));
-        }
-        if class_next_element_type(class_name, methods).is_none() {
+            protocol_diagnostics::iterator_invalid_parameter_signature(
+                ctx,
+                &format!("{class_name}.__next__"),
+            );
+        } else if class_next_element_type(class_name, methods).is_none() {
             protocol_diagnostics::iterator_invalid_return_signature(
                 ctx,
                 &format!("{class_name}.__next__"),
@@ -145,11 +145,11 @@ fn validate_iteration_protocol_methods(
 
     if let Some(reversed_ft) = class_method_signature(methods, "__reversed__") {
         if !reversed_ft.params.is_empty() {
-            ctx.error(format!(
-                "class '{class_name}.__reversed__' must not declare parameters besides self"
-            ));
-        }
-        if class_reversed_element_type(class_name, methods).is_none() {
+            protocol_diagnostics::iterator_invalid_parameter_signature(
+                ctx,
+                &format!("{class_name}.__reversed__"),
+            );
+        } else if class_reversed_element_type(class_name, methods).is_none() {
             protocol_diagnostics::iterator_invalid_return_signature(
                 ctx,
                 &format!("{class_name}.__reversed__"),
@@ -163,11 +163,14 @@ fn validate_iteration_protocol_methods(
         class_next_element_type(class_name, methods),
     ) {
         if !next_elem.is_assignable_to(&iter_elem) || !iter_elem.is_assignable_to(&next_elem) {
-            ctx.error(format!(
-                "class '{class_name}' iteration protocol mismatch: '__iter__' yields '{}' but '__next__' yields '{}'",
-                iter_elem.display_name(),
-                next_elem.display_name()
-            ));
+            protocol_diagnostics::iterator_element_mismatch(
+                ctx,
+                class_name,
+                "__iter__",
+                iter_elem.display_name().as_str(),
+                "__next__",
+                next_elem.display_name().as_str(),
+            );
         }
     }
 
@@ -178,11 +181,14 @@ fn validate_iteration_protocol_methods(
         if !reversed_elem.is_assignable_to(&iter_elem)
             || !iter_elem.is_assignable_to(&reversed_elem)
         {
-            ctx.error(format!(
-                "class '{class_name}' iteration protocol mismatch: '__iter__' yields '{}' but '__reversed__' yields '{}'",
-                iter_elem.display_name(),
-                reversed_elem.display_name()
-            ));
+            protocol_diagnostics::iterator_element_mismatch(
+                ctx,
+                class_name,
+                "__iter__",
+                iter_elem.display_name().as_str(),
+                "__reversed__",
+                reversed_elem.display_name().as_str(),
+            );
         }
     }
 }

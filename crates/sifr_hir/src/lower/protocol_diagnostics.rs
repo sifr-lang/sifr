@@ -45,6 +45,29 @@ pub(super) fn iterator_invalid_return_signature(
     );
 }
 
+pub(super) fn iterator_invalid_parameter_signature(ctx: &mut LowerCtx, type_name: &str) {
+    ctx.error_with_code(
+        DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
+        format!("class '{type_name}' must not declare parameters besides self"),
+    );
+}
+
+pub(super) fn iterator_element_mismatch(
+    ctx: &mut LowerCtx,
+    class_name: &str,
+    left_method: &str,
+    left_type: &str,
+    right_method: &str,
+    right_type: &str,
+) {
+    ctx.error_with_code(
+        DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
+        format!(
+            "class '{class_name}' iteration protocol mismatch: '{left_method}' yields '{left_type}' but '{right_method}' yields '{right_type}'"
+        ),
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{lower_module, LoweringError};
@@ -154,6 +177,45 @@ mod tests {
         assert!(errors.iter().any(|error| {
             error.message
                 == "class 'BadReversed.__reversed__' must return 'Iterator[T]' or 'Iterable[T]'"
+                && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
+        }));
+    }
+
+    #[test]
+    fn invalid_iter_parameter_signature_has_proto_code() {
+        let errors = lower_errors(
+            "class BadIterParam:\n    def __iter__(self, limit: int) -> Iterator[int]:\n        return iter([1])\n",
+        );
+
+        assert!(errors.iter().any(|error| {
+            error.message
+                == "class 'BadIterParam.__iter__' must not declare parameters besides self"
+                && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
+        }));
+    }
+
+    #[test]
+    fn iter_next_element_mismatch_has_proto_code() {
+        let errors = lower_errors(
+            "class BadNextMismatch:\n    def __iter__(self) -> Iterator[int]:\n        return iter([1])\n\n    def __next__(self) -> str | None:\n        return \"x\"\n",
+        );
+
+        assert!(errors.iter().any(|error| {
+            error.message
+                == "class 'BadNextMismatch' iteration protocol mismatch: '__iter__' yields 'int' but '__next__' yields 'str'"
+                && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
+        }));
+    }
+
+    #[test]
+    fn iter_reversed_element_mismatch_has_proto_code() {
+        let errors = lower_errors(
+            "class BadReversedMismatch:\n    def __iter__(self) -> Iterator[int]:\n        return iter([1])\n\n    def __reversed__(self) -> Iterator[str]:\n        return iter([\"x\"])\n",
+        );
+
+        assert!(errors.iter().any(|error| {
+            error.message
+                == "class 'BadReversedMismatch' iteration protocol mismatch: '__iter__' yields 'int' but '__reversed__' yields 'str'"
                 && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
         }));
     }

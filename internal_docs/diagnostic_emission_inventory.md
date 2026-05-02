@@ -326,7 +326,7 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-MATCH-0002` | match guard must be bool | match lowering | `crates/sifr/tests/e2e/fail/match_type_mismatch_guard.sifr` |
 | `SIFR-MATCH-0003` | invalid class pattern field | match lowering | `crates/sifr/tests/e2e/fail/match_invalid_field_name.sifr` |
 | `SIFR-PROTO-0001` | protocol bound/conformance failure | generic/protocol checking | generic bounds fixtures |
-| `SIFR-PROTO-0002` | invalid iterator/reversible protocol signature | protocol checking | invalid iterator/reversible fixtures |
+| `SIFR-PROTO-0002` | invalid iterator/reversible protocol signature | protocol checking | `crates/sifr/tests/e2e/fail/invalid_iter_parameter_signature.sifr`, `crates/sifr/tests/e2e/fail/invalid_iter_signature.sifr`, `crates/sifr/tests/e2e/fail/invalid_next_signature.sifr`, `crates/sifr/tests/e2e/fail/invalid_reversed_signature.sifr` |
 | `SIFR-PROTO-0003` | context-manager protocol missing | with-statement lowering | `crates/sifr/tests/e2e/fail/with_non_context_manager.sifr`, `crates/sifr/tests/e2e/fail/with_partial_context_manager.sifr` |
 | `SIFR-PROTO-0004` | hashable/comparable protocol required | protocol checking | unhashable/comparable fixtures |
 | `SIFR-CLASS-0001` | class has fields but no required initializer/super initializer | class lowering | `crates/sifr/tests/e2e/fail/auto_init_inheritance_missing_super.sifr` |
