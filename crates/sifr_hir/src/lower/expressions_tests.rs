@@ -1947,24 +1947,28 @@ fn test_user_defined_method_defaults_and_keywords_lower() {
 
 #[test]
 fn test_break_outside_loop() {
-    let result = lower_source("def main():\n    break\n");
+    let source = "def main():\n    break\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
         .any(|e| e.message.contains("'break' outside of loop")
-            && e.code == Some(DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP)));
+            && e.code == Some(DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP)
+            && e.primary_range == Some(range_for(source, "break"))));
 }
 
 #[test]
 fn test_continue_outside_loop() {
-    let result = lower_source("def main():\n    continue\n");
+    let source = "def main():\n    continue\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
         .any(|e| e.message.contains("'continue' outside of loop")
-            && e.code == Some(DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP)));
+            && e.code == Some(DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP)
+            && e.primary_range == Some(range_for(source, "continue"))));
 }
 
 #[test]
