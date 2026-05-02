@@ -25,6 +25,15 @@ pub(super) fn context_manager_missing(ctx: &mut LowerCtx, type_name: &str) {
     );
 }
 
+pub(super) fn context_manager_incomplete(ctx: &mut LowerCtx, type_name: &str) {
+    ctx.error_with_code(
+        DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING,
+        format!(
+            "type '{type_name}' used in 'with' statement must implement both __enter__ and __exit__ methods"
+        ),
+    );
+}
+
 pub(super) fn iterator_invalid_return_signature(
     ctx: &mut LowerCtx,
     type_name: &str,
@@ -85,6 +94,30 @@ mod tests {
         assert!(errors.iter().any(|error| {
             error.message
                 == "type 'PlainClass' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)"
+                && error.code == Some(DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING)
+        }));
+    }
+
+    #[test]
+    fn incomplete_context_manager_has_proto_code() {
+        let errors = lower_errors(
+            "class HalfContext:\n    def __enter__(self) -> HalfContext:\n        return self\n\ndef main():\n    with HalfContext() as ctx:\n        print(ctx)\n",
+        );
+
+        assert!(errors.iter().any(|error| {
+            error.message
+                == "type 'HalfContext' used in 'with' statement must implement both __enter__ and __exit__ methods"
+                && error.code == Some(DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING)
+        }));
+    }
+
+    #[test]
+    fn non_class_context_manager_has_proto_code() {
+        let errors = lower_errors("def main():\n    with 1 as value:\n        print(value)\n");
+
+        assert!(errors.iter().any(|error| {
+            error.message
+                == "type 'int' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)"
                 && error.code == Some(DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING)
         }));
     }
