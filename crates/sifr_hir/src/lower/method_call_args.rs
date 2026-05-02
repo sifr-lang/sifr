@@ -1,4 +1,5 @@
 use crate::hir_nodes::HirExpr;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::ExprCall;
 use sifr_type_system::{make_union, FunctionType, Type};
@@ -7,7 +8,23 @@ use super::builtin_calls::{callable_builtin_dict_output_type, callable_builtin_e
 use super::expressions::lower_expr;
 use super::LowerCtx;
 
-type LoweredKeywords = Vec<(String, HirExpr)>;
+struct LoweredKeyword {
+    name: String,
+    value: HirExpr,
+    name_range: TextRange,
+}
+
+type LoweredKeywords = Vec<LoweredKeyword>;
+
+struct VarargCallArgs<'a> {
+    callable_name: &'a str,
+    ft: &'a FunctionType,
+    defaults: Option<&'a [(usize, HirExpr)]>,
+    vararg_index: usize,
+    positional_args: &'a [HirExpr],
+    keyword_args: &'a LoweredKeywords,
+    missing_range: TextRange,
+}
 
 pub(super) fn lower_method_call_args(
     object_ty: &Type,
@@ -56,12 +73,15 @@ pub(super) fn lower_function_call_args(
 
     if let Some(vararg_index) = vararg_index {
         return lower_vararg_function_call_args(
-            callable_name,
-            ft,
-            defaults,
-            vararg_index,
-            &positional_args,
-            &keyword_args,
+            &VarargCallArgs {
+                callable_name,
+                ft,
+                defaults,
+                vararg_index,
+                positional_args: &positional_args,
+                keyword_args: &keyword_args,
+                missing_range: call.func.range(),
+            },
             ctx,
         );
     }
@@ -70,11 +90,12 @@ pub(super) fn lower_function_call_args(
         if positional_args.len() > ft.params.len() {
             let expected_count = ft.params.len();
             let actual_count = positional_args.len();
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
                 format!(
                     "{callable_name}() takes at most {expected_count} argument(s), got {actual_count}"
                 ),
+                call.arguments.args[expected_count].range(),
             );
             return None;
         }
@@ -84,7 +105,12 @@ pub(super) fn lower_function_call_args(
                 if let Some(default_expr) = default_arg_expr(defaults, i) {
                     filled.push(default_expr.clone());
                 } else {
-                    return missing_argument_error(callable_name, &ft.params[i].0, ctx);
+                    return missing_argument_error(
+                        callable_name,
+                        &ft.params[i].0,
+                        ctx,
+                        call.func.range(),
+                    );
                 }
             }
             return Some(filled);
@@ -95,30 +121,35 @@ pub(super) fn lower_function_call_args(
     let mut resolved = Vec::with_capacity(ft.params.len());
     for (i, (param_name, _, _)) in ft.params.iter().enumerate() {
         if i < positional_args.len() {
-            if keyword_arg_expr(&keyword_args, param_name).is_some() {
-                return duplicate_argument_error(callable_name, param_name, ctx);
+            if let Some(keyword) = keyword_arg(&keyword_args, param_name) {
+                return duplicate_argument_error(
+                    callable_name,
+                    param_name,
+                    ctx,
+                    keyword.name_range,
+                );
             }
             resolved.push(positional_args[i].clone());
             continue;
         }
-        if let Some(argument) = keyword_arg_expr(&keyword_args, param_name) {
-            resolved.push(argument.clone());
+        if let Some(keyword) = keyword_arg(&keyword_args, param_name) {
+            resolved.push(keyword.value.clone());
             continue;
         }
         if let Some(default_expr) = default_arg_expr(defaults, i) {
             resolved.push(default_expr.clone());
             continue;
         }
-        return missing_argument_error(callable_name, param_name, ctx);
+        return missing_argument_error(callable_name, param_name, ctx, call.func.range());
     }
 
-    for (keyword, _) in keyword_args {
+    for keyword in keyword_args {
         if !ft
             .params
             .iter()
-            .any(|(param_name, _, _)| param_name == keyword.as_str())
+            .any(|(param_name, _, _)| param_name == keyword.name.as_str())
         {
-            return unexpected_keyword_error(callable_name, &keyword, ctx);
+            return unexpected_keyword_error(callable_name, &keyword.name, ctx, keyword.name_range);
         }
     }
 
@@ -126,27 +157,34 @@ pub(super) fn lower_function_call_args(
 }
 
 fn lower_vararg_function_call_args(
-    callable_name: &str,
-    ft: &FunctionType,
-    defaults: Option<&[(usize, HirExpr)]>,
-    vararg_index: usize,
-    positional_args: &[HirExpr],
-    keyword_args: &LoweredKeywords,
+    args: &VarargCallArgs<'_>,
     ctx: &mut LowerCtx,
 ) -> Option<Vec<HirExpr>> {
+    let callable_name = args.callable_name;
+    let ft = args.ft;
+    let defaults = args.defaults;
+    let vararg_index = args.vararg_index;
+    let positional_args = args.positional_args;
+    let keyword_args = args.keyword_args;
+    let missing_range = args.missing_range;
     let mut resolved = Vec::with_capacity(ft.params.len());
     let mut used_kwargs: std::collections::HashSet<String> = std::collections::HashSet::new();
 
     for (i, (param_name, _, _)) in ft.params.iter().take(vararg_index).enumerate() {
         if i < positional_args.len() {
-            if keyword_arg_expr(keyword_args, param_name).is_some() {
-                return duplicate_argument_error(callable_name, param_name, ctx);
+            if let Some(keyword) = keyword_arg(keyword_args, param_name) {
+                return duplicate_argument_error(
+                    callable_name,
+                    param_name,
+                    ctx,
+                    keyword.name_range,
+                );
             }
             resolved.push(positional_args[i].clone());
             continue;
         }
-        if let Some(argument) = keyword_arg_expr(keyword_args, param_name) {
-            resolved.push(argument.clone());
+        if let Some(keyword) = keyword_arg(keyword_args, param_name) {
+            resolved.push(keyword.value.clone());
             used_kwargs.insert(param_name.clone());
             continue;
         }
@@ -154,7 +192,7 @@ fn lower_vararg_function_call_args(
             resolved.push(default_expr.clone());
             continue;
         }
-        return missing_argument_error(callable_name, param_name, ctx);
+        return missing_argument_error(callable_name, param_name, ctx, missing_range);
     }
 
     let vararg_elements = if positional_args.len() > vararg_index {
@@ -182,8 +220,8 @@ fn lower_vararg_function_call_args(
     });
 
     for (i, (param_name, _, _)) in ft.params.iter().enumerate().skip(vararg_index + 1) {
-        if let Some(argument) = keyword_arg_expr(keyword_args, param_name) {
-            resolved.push(argument.clone());
+        if let Some(keyword) = keyword_arg(keyword_args, param_name) {
+            resolved.push(keyword.value.clone());
             used_kwargs.insert(param_name.clone());
             continue;
         }
@@ -191,23 +229,23 @@ fn lower_vararg_function_call_args(
             resolved.push(default_expr.clone());
             continue;
         }
-        return missing_argument_error(callable_name, param_name, ctx);
+        return missing_argument_error(callable_name, param_name, ctx, missing_range);
     }
 
     let vararg_name = &ft.params[vararg_index].0;
-    for (keyword, _) in keyword_args {
-        if keyword == vararg_name {
-            return unexpected_keyword_error(callable_name, keyword, ctx);
+    for keyword in keyword_args {
+        if keyword.name == *vararg_name {
+            return unexpected_keyword_error(callable_name, &keyword.name, ctx, keyword.name_range);
         }
-        if !used_kwargs.contains(keyword)
+        if !used_kwargs.contains(&keyword.name)
             && !ft
                 .params
                 .iter()
                 .take(vararg_index)
                 .chain(ft.params.iter().skip(vararg_index + 1))
-                .any(|(param_name, _, _)| param_name == keyword)
+                .any(|(param_name, _, _)| param_name == &keyword.name)
         {
-            return unexpected_keyword_error(callable_name, keyword, ctx);
+            return unexpected_keyword_error(callable_name, &keyword.name, ctx, keyword.name_range);
         }
     }
 
@@ -227,7 +265,7 @@ fn lower_keyword_args(
     method: &str,
     ctx: &mut LowerCtx,
 ) -> Option<LoweredKeywords> {
-    let mut keywords = Vec::with_capacity(call.arguments.keywords.len());
+    let mut keywords: LoweredKeywords = Vec::with_capacity(call.arguments.keywords.len());
     for keyword in &call.arguments.keywords {
         let Some(name) = keyword.arg.as_ref() else {
             ctx.error(format!(
@@ -235,29 +273,35 @@ fn lower_keyword_args(
             ));
             return None;
         };
-        if keywords.iter().any(|(seen, _)| seen == name.as_str()) {
-            ctx.error(format!(
-                "{method}() got multiple values for keyword argument '{name}'"
-            ));
+        if keywords.iter().any(|seen| seen.name == name.as_str()) {
+            ctx.error_with_code_at(
+                DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
+                format!("{method}() got multiple values for keyword argument '{name}'"),
+                name.range(),
+            );
             return None;
         }
-        keywords.push((name.to_string(), lower_expr(&keyword.value, ctx)?));
+        keywords.push(LoweredKeyword {
+            name: name.to_string(),
+            value: lower_expr(&keyword.value, ctx)?,
+            name_range: name.range(),
+        });
     }
     Some(keywords)
 }
 
-fn take_keyword(keywords: &mut LoweredKeywords, name: &str) -> Option<HirExpr> {
-    let index = keywords.iter().position(|(keyword, _)| keyword == name)?;
-    Some(keywords.remove(index).1)
+fn take_keyword(keywords: &mut LoweredKeywords, name: &str) -> Option<LoweredKeyword> {
+    let index = keywords.iter().position(|keyword| keyword.name == name)?;
+    Some(keywords.remove(index))
 }
 
 fn reject_remaining_keywords(
     method: &str,
-    keywords: &[(String, HirExpr)],
+    keywords: &[LoweredKeyword],
     ctx: &mut LowerCtx,
 ) -> Option<()> {
-    if let Some((keyword, _)) = keywords.first() {
-        return unexpected_keyword_error(method, keyword, ctx);
+    if let Some(keyword) = keywords.first() {
+        return unexpected_keyword_error(method, &keyword.name, ctx, keyword.name_range);
     }
     Some(())
 }
@@ -270,25 +314,34 @@ fn default_arg_expr(defaults: Option<&[(usize, HirExpr)]>, index: usize) -> Opti
     })
 }
 
-fn keyword_arg_expr<'a>(keywords: &'a LoweredKeywords, name: &str) -> Option<&'a HirExpr> {
-    keywords
-        .iter()
-        .find(|(keyword, _)| keyword == name)
-        .map(|(_, expr)| expr)
+fn keyword_arg<'a>(keywords: &'a LoweredKeywords, name: &str) -> Option<&'a LoweredKeyword> {
+    keywords.iter().find(|keyword| keyword.name == name)
 }
 
-fn duplicate_argument_error<T>(callable_name: &str, arg: &str, ctx: &mut LowerCtx) -> Option<T> {
-    ctx.error_with_code(
+fn duplicate_argument_error<T>(
+    callable_name: &str,
+    arg: &str,
+    ctx: &mut LowerCtx,
+    range: TextRange,
+) -> Option<T> {
+    ctx.error_with_code_at(
         DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
         format!("{callable_name}() got multiple values for argument '{arg}'"),
+        range,
     );
     None
 }
 
-fn missing_argument_error<T>(callable_name: &str, arg: &str, ctx: &mut LowerCtx) -> Option<T> {
-    ctx.error_with_code(
+fn missing_argument_error<T>(
+    callable_name: &str,
+    arg: &str,
+    ctx: &mut LowerCtx,
+    range: TextRange,
+) -> Option<T> {
+    ctx.error_with_code_at(
         DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT,
         format!("{callable_name}() missing required argument '{arg}'"),
+        range,
     );
     None
 }
@@ -297,10 +350,12 @@ fn unexpected_keyword_error<T>(
     callable_name: &str,
     keyword: &str,
     ctx: &mut LowerCtx,
+    range: TextRange,
 ) -> Option<T> {
-    ctx.error_with_code(
+    ctx.error_with_code_at(
         DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
         format!("{callable_name}() got an unexpected keyword argument '{keyword}'"),
+        range,
     );
     None
 }
@@ -313,18 +368,18 @@ fn append_start_stop_args(
 ) -> Option<Vec<HirExpr>> {
     if let Some(start) = take_keyword(keywords, "start") {
         if positional.len() > 1 {
-            return duplicate_argument_error(method, "start", ctx);
+            return duplicate_argument_error(method, "start", ctx, start.name_range);
         }
-        positional.push(start);
+        positional.push(start.value);
     }
     if let Some(stop) = take_keyword(keywords, "stop") {
         if positional.len() > 2 {
-            return duplicate_argument_error(method, "stop", ctx);
+            return duplicate_argument_error(method, "stop", ctx, stop.name_range);
         }
         if positional.len() == 1 {
             positional.push(HirExpr::IntLiteral(0));
         }
-        positional.push(stop);
+        positional.push(stop.value);
     }
     Some(positional)
 }
@@ -340,9 +395,9 @@ fn normalize_list_method_args(
             let mut args = positional;
             if let Some(reverse) = take_keyword(keywords, "reverse") {
                 if !args.is_empty() {
-                    return duplicate_argument_error(method, "reverse", ctx);
+                    return duplicate_argument_error(method, "reverse", ctx, reverse.name_range);
                 }
-                args.push(reverse);
+                args.push(reverse.value);
             }
             Some(args)
         }
@@ -361,10 +416,10 @@ fn normalize_dict_method_args(
             let mut args = positional;
             if let Some(default) = take_keyword(keywords, "default") {
                 if args.len() > 1 {
-                    return duplicate_argument_error(method, "default", ctx);
+                    return duplicate_argument_error(method, "default", ctx, default.name_range);
                 }
                 if args.len() == 1 {
-                    args.push(default);
+                    args.push(default.value);
                 }
             }
             Some(args)
@@ -374,9 +429,9 @@ fn normalize_dict_method_args(
             if !keywords.is_empty() {
                 let mut keys = Vec::with_capacity(keywords.len());
                 let mut values = Vec::with_capacity(keywords.len());
-                for (name, value) in keywords.drain(..) {
-                    keys.push(HirExpr::StringLiteral(name));
-                    values.push(value);
+                for keyword in keywords.drain(..) {
+                    keys.push(HirExpr::StringLiteral(keyword.name));
+                    values.push(keyword.value);
                 }
                 args.push(HirExpr::DictLiteral {
                     keys,
@@ -441,20 +496,20 @@ fn normalize_string_method_args(
             let mut args = positional;
             if let Some(sep) = take_keyword(keywords, "sep") {
                 if !args.is_empty() {
-                    return duplicate_argument_error(method, "sep", ctx);
+                    return duplicate_argument_error(method, "sep", ctx, sep.name_range);
                 }
                 if args.is_empty() {
-                    args.push(sep);
+                    args.push(sep.value);
                 }
             }
             if let Some(maxsplit) = take_keyword(keywords, "maxsplit") {
                 if args.len() > 1 {
-                    return duplicate_argument_error(method, "maxsplit", ctx);
+                    return duplicate_argument_error(method, "maxsplit", ctx, maxsplit.name_range);
                 }
                 if args.is_empty() {
                     args.push(HirExpr::NoneLiteral);
                 }
-                args.push(maxsplit);
+                args.push(maxsplit.value);
             }
             Some(args)
         }
@@ -462,9 +517,9 @@ fn normalize_string_method_args(
             let mut args = positional;
             if let Some(count) = take_keyword(keywords, "count") {
                 if args.len() > 2 {
-                    return duplicate_argument_error(method, "count", ctx);
+                    return duplicate_argument_error(method, "count", ctx, count.name_range);
                 }
-                args.push(count);
+                args.push(count.value);
             }
             Some(args)
         }

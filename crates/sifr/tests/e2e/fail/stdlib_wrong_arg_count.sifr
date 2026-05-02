@@ -1,4 +1,4 @@
-# expect-error: SIFR-CALL-0001
+# expect-error[col=26]: SIFR-CALL-0001
 # Test that calling a stdlib function with wrong number of arguments fails
 from sifr.math import sqrt
 

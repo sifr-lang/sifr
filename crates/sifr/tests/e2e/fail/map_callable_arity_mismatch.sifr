@@ -1,5 +1,5 @@
 # Reference: phase_psp_a1_map_callable_arity_mismatch
-# expect-error: SIFR-CALL-0005
+# expect-error[col=42]: SIFR-CALL-0005
 
 def inc(x: int) -> int:
     return x + 1

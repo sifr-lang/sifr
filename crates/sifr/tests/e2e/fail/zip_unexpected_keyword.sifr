@@ -1,4 +1,4 @@
-# expect-error: SIFR-CALL-0002
+# expect-error[col=31]: SIFR-CALL-0002
 def main():
     nums: list[int] = [1, 2]
     _paired = zip(nums, nums, bogus=True)

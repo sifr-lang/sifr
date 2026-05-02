@@ -288,95 +288,113 @@ fn test_defaultdict_keyword_constructor_unsupported_has_stdlib_code() {
 
 #[test]
 fn test_builtin_sum_wrong_arity_has_call_code() {
-    let result =
-        lower_source("def main():\n    data: list[int] = [1, 2, 3]\n    print(sum(data, data))\n");
+    let source = "def main():\n    data: list[int] = [1, 2, 3]\n    print(sum(data, data))\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "sum() takes exactly 1 argument(s), got 2"
             && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(source, "sum(data, ", "data"))
     }));
 }
 
 #[test]
 fn test_sorted_unexpected_keyword_has_call_code() {
-    let result = lower_source(
-        "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(nums, bogus=True)\n",
-    );
+    let source = "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(nums, bogus=True)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "sorted() got an unexpected keyword argument 'bogus'"
             && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range == Some(range_for_after_anchor(source, "sorted(nums, ", "bogus"))
     }));
 }
 
 #[test]
 fn test_sorted_and_range_missing_required_argument_have_call_code() {
-    let sorted_result = lower_source("def main():\n    values: list[int] = sorted()\n");
+    let sorted_source = "def main():\n    values: list[int] = sorted()\n";
+    let sorted_result = lower_source(sorted_source);
     assert!(sorted_result.is_err());
     let sorted_errors = sorted_result.unwrap_err();
     assert!(sorted_errors.iter().any(|error| {
         error.message == "sorted() missing required argument 'iterable'"
             && error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+            && error.primary_range == Some(range_for(sorted_source, "sorted"))
     }));
 
-    let range_result = lower_source("def main():\n    values: list[int] = list(range())\n");
+    let range_source = "def main():\n    values: list[int] = list(range())\n";
+    let range_result = lower_source(range_source);
     assert!(range_result.is_err());
     let range_errors = range_result.unwrap_err();
     assert!(range_errors.iter().any(|error| {
         error.message == "range() missing required argument 'stop'"
             && error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+            && error.primary_range == Some(range_for(range_source, "range"))
     }));
 }
 
 #[test]
 fn test_function_unexpected_keyword_has_call_code() {
-    let result = lower_source(
-        "def greet(name: str) -> str:\n    return \"hello\"\n\ndef main():\n    print(greet(\"Alice\", punctuation=\"!\"))\n",
-    );
+    let source = "def greet(name: str) -> str:\n    return \"hello\"\n\ndef main():\n    print(greet(\"Alice\", punctuation=\"!\"))\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "greet() got an unexpected keyword argument 'punctuation'"
             && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "greet(\"Alice\", ",
+                    "punctuation",
+                ))
     }));
 }
 
 #[test]
 fn test_keyword_after_positional_has_call_code() {
-    let result = lower_source(
-        "def greet(name: str, greeting: str) -> str:\n    return greeting\n\ndef main():\n    print(greet(\"Alice\", name=\"Bob\"))\n",
-    );
+    let source = "def greet(name: str, greeting: str) -> str:\n    return greeting\n\ndef main():\n    print(greet(\"Alice\", name=\"Bob\"))\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "greet() got multiple values for argument 'name'"
             && error.code == Some(DiagnosticCode::CALL_DUPLICATE_ARGUMENT)
+            && error.primary_range
+                == Some(range_for_after_anchor(source, "greet(\"Alice\", ", "name"))
     }));
 }
 
 #[test]
 fn test_range_duplicate_stop_keyword_has_call_code() {
-    let result = lower_source("def main():\n    print(list(range(10, stop=20)))\n");
+    let source = "def main():\n    print(list(range(10, stop=20)))\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "range() got multiple values for argument 'stop'"
             && error.code == Some(DiagnosticCode::CALL_DUPLICATE_ARGUMENT)
+            && error.primary_range == Some(range_for_after_anchor(source, "range(10, ", "stop"))
     }));
 }
 
 #[test]
 fn test_map_callable_arity_mismatch_has_call_code() {
-    let result = lower_source(
-        "def inc(x: int) -> int:\n    return x + 1\n\ndef main():\n    values: list[int] = map(inc, [1, 2], [3, 4])\n",
-    );
+    let source = "def inc(x: int) -> int:\n    return x + 1\n\ndef main():\n    values: list[int] = map(inc, [1, 2], [3, 4])\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "map() callable expects 1 argument(s), got 2 iterable(s)"
             && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "map(inc, [1, 2], ",
+                    "[3, 4]",
+                ))
     }));
 }
 
@@ -395,27 +413,28 @@ fn test_hash_unhashable_argument_has_proto_code() {
 
 #[test]
 fn test_function_wrong_arg_count_has_call_code() {
-    let result = lower_source(
-        "def takes_one(x: int) -> int:\n    return x\n\ndef main():\n    print(takes_one(1, 2))\n",
-    );
+    let source =
+        "def takes_one(x: int) -> int:\n    return x\n\ndef main():\n    print(takes_one(1, 2))\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "takes_one() takes at most 1 argument(s), got 2"
             && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(source, "takes_one(1, ", "2"))
     }));
 }
 
 #[test]
 fn test_missing_required_argument_has_call_code() {
-    let result = lower_source(
-        "def display(name: str, *, verbose: bool) -> str:\n    if verbose:\n        return \"verbose\"\n    return \"quiet\"\n\ndef main():\n    print(display(\"Alice\"))\n",
-    );
+    let source = "def display(name: str, *, verbose: bool) -> str:\n    if verbose:\n        return \"verbose\"\n    return \"quiet\"\n\ndef main():\n    print(display(\"Alice\"))\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "display() missing required argument 'verbose'"
             && error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+            && error.primary_range == Some(range_for_after_anchor(source, "print(", "display"))
     }));
 }
 
@@ -1660,35 +1679,72 @@ fn test_zip_keyword_diagnostics_are_stable() {
             .contains("zip() keyword argument 'strict' is not supported")
     }));
 
-    let unexpected_result = lower_source(
-        "def main():\n    nums: list[int] = [1, 2]\n    _paired = zip(nums, nums, bogus=True)\n",
-    );
+    let unexpected_source =
+        "def main():\n    nums: list[int] = [1, 2]\n    _paired = zip(nums, nums, bogus=True)\n";
+    let unexpected_result = lower_source(unexpected_source);
     assert!(unexpected_result.is_err());
     let unexpected_errors = unexpected_result.unwrap_err();
     assert!(unexpected_errors.iter().any(|error| {
         error.message == "zip() got an unexpected keyword argument 'bogus'"
             && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    unexpected_source,
+                    "zip(nums, nums, ",
+                    "bogus",
+                ))
     }));
 }
 
 #[test]
 fn test_range_and_enumerate_unexpected_keywords_have_call_code() {
-    let range_result = lower_source("def main():\n    print(list(range(stop=3, bogus=1)))\n");
+    let range_source = "def main():\n    print(list(range(stop=3, bogus=1)))\n";
+    let range_result = lower_source(range_source);
     assert!(range_result.is_err());
     let range_errors = range_result.unwrap_err();
     assert!(range_errors.iter().any(|error| {
         error.message == "range() got an unexpected keyword argument 'bogus'"
             && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range
+                == Some(range_for_after_anchor(range_source, "stop=3, ", "bogus"))
     }));
 
-    let enumerate_result = lower_source(
-        "def main():\n    nums: list[int] = [1, 2]\n    _items = enumerate(nums, bogus=1)\n",
-    );
+    let enumerate_source =
+        "def main():\n    nums: list[int] = [1, 2]\n    _items = enumerate(nums, bogus=1)\n";
+    let enumerate_result = lower_source(enumerate_source);
     assert!(enumerate_result.is_err());
     let enumerate_errors = enumerate_result.unwrap_err();
     assert!(enumerate_errors.iter().any(|error| {
         error.message == "enumerate() got an unexpected keyword argument 'bogus'"
             && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    enumerate_source,
+                    "enumerate(nums, ",
+                    "bogus",
+                ))
+    }));
+}
+
+#[test]
+fn test_enumerate_duplicate_start_keyword_has_call_code() {
+    let source = "\
+def main():
+    nums: list[int] = [1, 2]
+    _items = enumerate(nums, 10, start=1)
+";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "enumerate() got multiple values for argument 'start'"
+            && error.code == Some(DiagnosticCode::CALL_DUPLICATE_ARGUMENT)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "enumerate(nums, 10, ",
+                    "start",
+                ))
     }));
 }
 
@@ -1955,25 +2011,29 @@ fn test_string_split_and_replace_keyword_forms_lower() {
 
 #[test]
 fn test_unexpected_method_keyword_is_rejected() {
-    let result = lower_source("def main():\n    xs: list[int] = [1]\n    xs.append(value=2)\n");
+    let source = "def main():\n    xs: list[int] = [1]\n    xs.append(value=2)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "append() got an unexpected keyword argument 'value'"
             && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range == Some(range_for(source, "value"))
     }));
 }
 
 #[test]
 fn test_duplicate_optional_method_keyword_is_rejected() {
-    let result = lower_source(
-        "def main():\n    data: dict[str, int] = {\"x\": 1}\n    value: int = data.get(\"x\", 1, default=2)\n",
-    );
+    let source = "def main():\n    data: dict[str, int] = {\"x\": 1}\n    value: int = data.get(\"x\", 1, default=2)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("get() got multiple values for argument 'default'")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("get() got multiple values for argument 'default'")
+            && e.code == Some(DiagnosticCode::CALL_DUPLICATE_ARGUMENT)
+            && e.primary_range == Some(range_for(source, "default"))
+    }));
 }
 
 #[test]
