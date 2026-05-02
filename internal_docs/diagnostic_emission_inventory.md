@@ -335,7 +335,7 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-CLASS-0004` | missing class field | attribute lowering | `crates/sifr/tests/e2e/fail/missing_field.sifr` |
 | `SIFR-RESULT-0001` | unused `Result` value | result/error-flow checking | `crates/sifr/tests/e2e/fail/unused_result.sifr` |
 | `SIFR-RESULT-0002` | invalid `Result` error type | result/error type lowering | `crates/sifr/tests/e2e/fail/error_str_not_allowed.sifr` |
-| `SIFR-RESULT-0003` | invalid `raise` expression | statement lowering | `crates/sifr/tests/e2e/fail/error_raise_str.sifr` |
+| `SIFR-RESULT-0003` | invalid `raise` expression | statement lowering | `crates/sifr/tests/e2e/fail/error_raise_bare.sifr`, `crates/sifr/tests/e2e/fail/error_raise_non_error.sifr`, `crates/sifr/tests/e2e/fail/error_raise_str.sifr` |
 | `SIFR-STDLIB-0001` | unsupported stdlib constructor/method surface | stdlib/builtin lowering | `crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr` |
 | `SIFR-STDLIB-0002` | stdlib method/argument type mismatch | stdlib call validation | stdlib wrong type/count fixtures, unless better represented by `CALL`/`TYPE` helper |
 | `SIFR-WORKSPACE-0001..0104` | workspace manifest/source-root/import graph diagnostics | `sifr_driver::workspace` and project discovery | existing driver workspace tests |

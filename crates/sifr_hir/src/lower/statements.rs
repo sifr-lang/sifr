@@ -247,10 +247,7 @@ pub(super) fn lower_stmt(
             if let Some(ref exc) = raise_stmt.exc {
                 // Check if the raise expression is a string literal — disallow raise "message"
                 if matches!(exc.as_ref(), Expr::StringLiteral(_) | Expr::FString(_)) {
-                    ctx.error_with_code(
-                        DiagnosticCode::RESULT_INVALID_RAISE,
-                        "raise requires an Error class instance — `raise \"message\"` is not allowed, use e.g. `raise ValueError(\"message\")`".to_string(),
-                    );
+                    super::result_diagnostics::invalid_raise_string(ctx);
                     return None;
                 }
                 let value = lower_expr(exc, ctx)?;
@@ -258,17 +255,12 @@ pub(super) fn lower_stmt(
                 let raised_ty = value.ty();
                 if !is_valid_error_type(raised_ty, ctx) {
                     let ty_name = format_type_name(raised_ty);
-                    ctx.error_with_code(
-                        DiagnosticCode::RESULT_INVALID_RAISE,
-                        format!(
-                            "raise requires an Error class instance — `{ty_name}` is not an Error class"
-                        ),
-                    );
+                    super::result_diagnostics::invalid_raise_non_error(ctx, ty_name.as_str());
                     return None;
                 }
                 Some(HirStmt::Raise { value })
             } else {
-                ctx.error("bare 'raise' without an expression is not supported".to_string());
+                super::result_diagnostics::invalid_bare_raise(ctx);
                 None
             }
         }

@@ -63,6 +63,9 @@ mod own_mut_param_tests;
 mod own_mut_semantics_tests;
 mod ownership_diagnostics;
 mod protocol_diagnostics;
+mod result_diagnostics;
+#[cfg(test)]
+mod result_diagnostics_tests;
 mod scope_helpers;
 mod sequence_guard_detection;
 mod sequence_guard_updates;
