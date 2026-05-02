@@ -1,4 +1,4 @@
-# expect-error: SIFR-DECIMAL-0006
+# expect-error[col=22]: SIFR-DECIMAL-0006
 def main():
     d: bigdecimal = BigDecimal("1.5")
     x: float = float(d)
