@@ -1,4 +1,4 @@
-# expect-error: SIFR-RESULT-0001
+# expect-error[col=5]: SIFR-RESULT-0001
 
 def fallible() -> Result[int, ValueError]:
     return 42
