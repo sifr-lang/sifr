@@ -86,7 +86,7 @@ use default_args::collect_function_defaults;
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
 use len_aliases::LenAliasFact;
-use ruff_text_size::TextRange;
+use ruff_text_size::{Ranged, TextRange};
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use sifr_diagnostics::DiagnosticCode;
@@ -754,6 +754,14 @@ fn lower_module_impl(
                     .map(|(_, alias)| alias.clone())
                     .unwrap_or_else(|| original.to_string())
             };
+            let import_range = import_from.range();
+            let imported_name_range = |original: &str| -> TextRange {
+                import_from
+                    .names
+                    .iter()
+                    .find(|alias| alias.name.as_str() == original)
+                    .map_or(import_range, Ranged::range)
+            };
 
             // Skip typing imports (TypeVar, Callable, etc.) - they are handled at the type level
             if is_absolute_import && module_name == "typing" {
@@ -769,7 +777,7 @@ fn lower_module_impl(
             // Stdlib .sifr files are allowed to import from _sifr.*
             if is_absolute_import && module_name.starts_with("_sifr.") {
                 if !ctx.allow_intrinsic_imports {
-                    import_diagnostics::forbidden_intrinsic(&mut ctx, &module_name);
+                    import_diagnostics::forbidden_intrinsic(&mut ctx, &module_name, import_range);
                     continue;
                 }
                 // Resolve intrinsic imports for stdlib .sifr files
@@ -781,7 +789,12 @@ fn lower_module_impl(
                         } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
                             ctx.scope.define(local, const_ty.clone());
                         } else {
-                            name_diagnostics::missing_member(&mut ctx, &module_name, name);
+                            name_diagnostics::missing_member(
+                                &mut ctx,
+                                &module_name,
+                                name,
+                                imported_name_range(name),
+                            );
                         }
                     }
                     imports.push(HirImport {
@@ -791,7 +804,7 @@ fn lower_module_impl(
                     });
                     continue;
                 }
-                import_diagnostics::unknown_import_target(&mut ctx, &module_name);
+                import_diagnostics::unknown_import_target(&mut ctx, &module_name, import_range);
                 continue;
             }
 
@@ -941,7 +954,12 @@ fn lower_module_impl(
                             }
                         }
                         if !found {
-                            name_diagnostics::missing_member(&mut ctx, &module_name, name);
+                            name_diagnostics::missing_member(
+                                &mut ctx,
+                                &module_name,
+                                name,
+                                imported_name_range(name),
+                            );
                         }
                     }
                     imports.push(HirImport {
@@ -952,7 +970,7 @@ fn lower_module_impl(
                     continue;
                 }
                 // Module doesn't exist in stdlib — emit clear error at the import site
-                import_diagnostics::unknown_import_target(&mut ctx, &module_name);
+                import_diagnostics::unknown_import_target(&mut ctx, &module_name, import_range);
                 continue;
             }
 
@@ -961,7 +979,7 @@ fn lower_module_impl(
                 || externals.classes.contains_key(&module_name)
                 || externals.constants.contains_key(&module_name);
             if !has_local_module {
-                import_diagnostics::unknown_import_target(&mut ctx, &module_name);
+                import_diagnostics::unknown_import_target(&mut ctx, &module_name, import_range);
                 continue;
             }
 
@@ -1079,7 +1097,12 @@ fn lower_module_impl(
                     }
                 }
                 if !found {
-                    name_diagnostics::missing_member(&mut ctx, &module_name, name);
+                    name_diagnostics::missing_member(
+                        &mut ctx,
+                        &module_name,
+                        name,
+                        imported_name_range(name),
+                    );
                 }
             }
 
