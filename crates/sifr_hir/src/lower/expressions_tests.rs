@@ -275,14 +275,28 @@ fn test_defaultdict_list_call_resolves_without_import() {
 
 #[test]
 fn test_defaultdict_keyword_constructor_unsupported_has_stdlib_code() {
-    let result = lower_source(
-        "def main():\n    groups = defaultdict(default_factory=list)\n    _ = groups\n",
-    );
+    let source = "def main():\n    groups = defaultdict(default_factory=list)\n    _ = groups\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "defaultdict() does not support keyword arguments"
             && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.primary_range == Some(range_for(source, "default_factory"))
+    }));
+}
+
+#[test]
+fn test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdlib_code() {
+    let source =
+        "def main():\n    groups = defaultdict(**{\"default_factory\": list})\n    _ = groups\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "defaultdict() does not support unpacked keyword arguments"
+            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.primary_range == Some(range_for(source, "**{\"default_factory\": list}"))
     }));
 }
 
@@ -1947,13 +1961,15 @@ fn test_list_sort_rejects_non_bool_reverse_keyword() {
 
 #[test]
 fn test_tuple_constructor_rejects_dynamic_list_shape() {
-    let result =
-        lower_source("def main():\n    nums: list[int] = [1, 2, 3]\n    t = tuple(nums)\n");
+    let source = "def main():\n    nums: list[int] = [1, 2, 3]\n    t = tuple(nums)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message
             .contains("tuple() currently requires a tuple, list literal, or string literal")
+            && e.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && e.primary_range == Some(range_for_after_anchor(source, "tuple(", "nums"))
     }));
 }
 
