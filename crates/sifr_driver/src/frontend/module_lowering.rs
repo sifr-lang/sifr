@@ -24,6 +24,7 @@ pub(crate) struct FrontendSourceContext<'a> {
     pub(crate) source: &'a str,
 }
 
+#[cfg(test)]
 pub(crate) fn lower_frontend_module(
     module_name: &str,
     stmts: &[Stmt],

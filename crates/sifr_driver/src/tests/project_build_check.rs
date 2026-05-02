@@ -1,4 +1,5 @@
 use crate::{build_cached_project, build_project, check_project, emit_project, CompileResult};
+use sifr_diagnostics::DiagnosticCode;
 use std::path::PathBuf;
 
 fn mktemp_dir(name: &str) -> PathBuf {
@@ -44,6 +45,34 @@ def area(radius: float) -> float:
         errors.is_empty(),
         "check_project should succeed: {errors:?}"
     );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn test_check_project_reports_primary_span_for_ranged_hir_diagnostic() {
+    let dir = mktemp_dir("check_project_primary_span");
+    let main_file = dir.join("main.sifr");
+    std::fs::write(&main_file, "def main() -> None:\n    if 1:\n        pass\n")
+        .expect("main module should be written");
+
+    let errors = check_project(&main_file);
+    let diagnostic = errors
+        .iter()
+        .find(|error| error.code == DiagnosticCode::FLOW_INVALID_CONDITION_TYPE.code())
+        .expect("expected invalid condition diagnostic");
+    let primary = diagnostic
+        .spans
+        .iter()
+        .find(|span| span.is_primary)
+        .expect("expected primary span");
+
+    let expected_file = main_file.display().to_string();
+    assert_eq!(primary.file.as_deref(), Some(expected_file.as_str()));
+    assert_eq!(primary.line, Some(2));
+    assert_eq!(primary.column, Some(8));
+    assert_eq!(primary.end_line, Some(2));
+    assert_eq!(primary.end_column, Some(9));
 
     let _ = std::fs::remove_dir_all(&dir);
 }

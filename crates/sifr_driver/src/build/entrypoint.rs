@@ -10,9 +10,9 @@ use crate::frontend::{
     parse_source, FrontendCompiled, FrontendDiagnosticStyle, FrontendSourceContext,
 };
 use crate::project::{
-    collect_project_hir_modules, compile_single_frontend_module_with_source,
-    emit_project_frontend_diagnostics, parse_import_closure_modules, DiscoveryDiagnosticStyle,
-    ModuleResolver, ProjectLowering,
+    collect_project_hir_source_modules, compile_single_frontend_module_with_source,
+    emit_project_frontend_diagnostics, parse_import_closure_source_modules,
+    DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering,
 };
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use crate::workspace::find_workspace_root;
@@ -181,18 +181,18 @@ impl RootedEntrypointPlan {
                     }
                     None => ModuleResolver::entry_parent(project_dir),
                 };
-                let mut parsed_modules = parse_import_closure_modules(
+                let mut parsed_modules = parse_import_closure_source_modules(
                     &resolver,
                     &root_modules,
                     DiscoveryDiagnosticStyle::ModuleName,
                 )?;
                 if main_module_name != "main" {
-                    if let Some(entry_suite) = parsed_modules.remove(&main_module_name) {
-                        parsed_modules.insert("main".to_string(), entry_suite);
+                    if let Some(entry_module) = parsed_modules.remove(&main_module_name) {
+                        parsed_modules.insert("main".to_string(), entry_module);
                     }
                 }
                 let project_lowering =
-                    collect_project_hir_modules(&parsed_modules, stdlib.defs.clone())?;
+                    collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())?;
                 (RootedEntrypointShape::Project, project_lowering)
             }
         };

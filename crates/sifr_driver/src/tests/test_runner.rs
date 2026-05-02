@@ -355,26 +355,37 @@ fn test_run_tests_frontend_type_errors_use_single_path_prefix() {
     .expect("helper should be written");
     std::fs::write(
         test_dir.join("test_bad.sifr"),
-        "from helper import value\n\ndef test_bad() -> int:\n    return \"bad\"\n",
+        "from helper import value\n\ndef test_bad() -> None:\n    if 1:\n        pass\n",
     )
     .expect("bad test module should be written");
 
-    let errors = run_tests(&test_dir)
-        .err()
-        .expect("type errors in test module should fail frontend");
+    let errors = run_tests(&test_dir).expect_err("type errors in test module should fail frontend");
     let messages: Vec<String> = errors.iter().map(|error| error.message.clone()).collect();
     assert!(messages
         .iter()
         .all(|message| message.contains("test_bad.sifr")));
     assert!(messages
         .iter()
-        .all(|message| !message.contains("] [test_bad] return type mismatch")));
+        .all(|message| !message.contains("] [test_bad] invalid condition type")));
     assert!(
         errors
             .iter()
-            .any(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code()),
+            .any(|error| error.code == DiagnosticCode::FLOW_INVALID_CONDITION_TYPE.code()),
         "test module frontend diagnostics should preserve semantic code identity: {errors:?}"
     );
+    let primary = errors
+        .iter()
+        .find(|error| error.code == DiagnosticCode::FLOW_INVALID_CONDITION_TYPE.code())
+        .and_then(|error| error.spans.iter().find(|span| span.is_primary))
+        .expect("test module frontend diagnostic should carry a primary span");
+    assert!(
+        primary
+            .file
+            .as_deref()
+            .is_some_and(|file| file.ends_with("test_bad.sifr")),
+        "primary span should point at the test module source: {primary:?}"
+    );
+    assert_eq!(primary.line, Some(4));
     assert!(
         errors
             .iter()

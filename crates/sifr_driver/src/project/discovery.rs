@@ -6,6 +6,13 @@ use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
+#[derive(Clone, Debug)]
+pub(crate) struct ParsedProjectModule {
+    pub(crate) suite: Vec<Stmt>,
+    pub(crate) source: String,
+    pub(crate) display_path: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ModuleOrigin {
     EntryParent,
@@ -364,12 +371,26 @@ fn collect_import_closure_module_dependencies(stmts: &[Stmt]) -> BTreeSet<String
     deps
 }
 
+#[cfg(test)]
 pub(crate) fn parse_import_closure_modules(
     resolver: &ModuleResolver,
     root_modules: &BTreeSet<String>,
     diagnostic_style: DiscoveryDiagnosticStyle,
 ) -> Result<HashMap<String, Vec<Stmt>>, Vec<RenderedDiagnostic>> {
-    let mut parsed_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
+    parse_import_closure_source_modules(resolver, root_modules, diagnostic_style).map(|modules| {
+        modules
+            .into_iter()
+            .map(|(name, module)| (name, module.suite))
+            .collect()
+    })
+}
+
+pub(crate) fn parse_import_closure_source_modules(
+    resolver: &ModuleResolver,
+    root_modules: &BTreeSet<String>,
+    diagnostic_style: DiscoveryDiagnosticStyle,
+) -> Result<HashMap<String, ParsedProjectModule>, Vec<RenderedDiagnostic>> {
+    let mut parsed_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
     let mut parsed_names: BTreeSet<String> = BTreeSet::new();
     let mut pending = root_modules.clone();
 
@@ -412,7 +433,14 @@ pub(crate) fn parse_import_closure_modules(
                 Err(_) => {}
             }
         }
-        parsed_modules.insert(module_name, suite);
+        parsed_modules.insert(
+            module_name,
+            ParsedProjectModule {
+                suite,
+                source,
+                display_path: path.display().to_string(),
+            },
+        );
     }
 
     Ok(parsed_modules)
