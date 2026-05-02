@@ -67,7 +67,7 @@ The remaining cleanup target is to move these helper failures from message strin
 
 | Current failure data | Current message category | Active code | Representative code fixture |
 | --- | --- | --- | --- |
-| `(DiagnosticCode::TYPE_MISMATCH, message)` | equality comparison mismatch from operator helpers; broader expected/actual mismatch from HIR sites | `SIFR-TYPE-0002` | `crates/sifr/tests/e2e/fail/type_mismatch.sifr`, `crates/sifr/tests/e2e/fail/union_type_mismatch.sifr`; helper-specific comparison fixture pending |
+| `(DiagnosticCode::TYPE_MISMATCH, message)` | equality comparison mismatch from operator helpers; broader expected/actual mismatch from HIR sites | `SIFR-TYPE-0002` | `crates/sifr/tests/e2e/fail/type_comparison_mismatch.sifr`, `crates/sifr/tests/e2e/fail/type_mismatch.sifr`, `crates/sifr/tests/e2e/fail/union_type_mismatch.sifr` |
 | `(DiagnosticCode::DECIMAL_FLOAT_MIXED, message)` | arithmetic or comparison mixing float with the decimal family | `SIFR-DECIMAL-0003` | `crates/sifr/tests/e2e/fail/decimal_float_mixed_arithmetic.sifr` |
 | `(DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL, message)` | arithmetic or comparison mixing decimal and bigdecimal | `SIFR-DECIMAL-0004` | `crates/sifr/tests/e2e/fail/decimal_bigdecimal_mixed_arithmetic.sifr` |
 | `(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR, message)` | unsupported arithmetic/comparison/unary/bool operator | `SIFR-TYPE-0005` | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
