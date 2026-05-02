@@ -1,4 +1,4 @@
-# expect-error: SIFR-MATCH-0001
+# expect-error[col=11]: SIFR-MATCH-0001
 from enum import Enum
 
 class Color(Enum):

@@ -42,8 +42,7 @@ mod imported_defaults;
 mod imports;
 mod len_aliases;
 mod match_diagnostics;
-#[cfg(test)]
-mod match_diagnostics_tests;
+mod match_lowering;
 mod method_call_args;
 mod min_max_validation;
 mod module_function_registry;

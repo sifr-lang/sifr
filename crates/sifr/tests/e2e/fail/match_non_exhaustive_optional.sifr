@@ -1,4 +1,4 @@
-# expect-error: SIFR-MATCH-0001
+# expect-error[col=11]: SIFR-MATCH-0001
 def describe(x: str | None) -> str:
     match x:
         case str():

@@ -1,4 +1,4 @@
-# expect-error: SIFR-MATCH-0002
+# expect-error[col=19]: SIFR-MATCH-0002
 def classify(x: int) -> str:
     match x:
         case n if n + 1:
