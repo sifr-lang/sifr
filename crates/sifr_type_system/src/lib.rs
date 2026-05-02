@@ -27,49 +27,17 @@ pub use union::{
     union_contains_none,
 };
 
-/// A type error produced during type checking.
+/// A canonical diagnostic produced during type checking.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeError {
-    pub code: Option<DiagnosticCode>,
+pub struct TypeCheckDiagnostic {
+    pub code: DiagnosticCode,
     pub message: String,
-    pub kind: TypeErrorKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TypeErrorKind {
-    TypeMismatch {
-        expected: Box<Type>,
-        actual: Box<Type>,
-    },
-    UndefinedVariable {
-        name: String,
-    },
-    UndefinedFunction {
-        name: String,
-    },
-    WrongArgumentCount {
-        expected: usize,
-        actual: usize,
-    },
-    UseAfterMove {
-        name: String,
-    },
-    MissingTypeAnnotation {
-        name: String,
-    },
-    InvalidOperator {
-        op: String,
-        ty: Box<Type>,
-    },
-    NotCallable {
-        ty: Box<Type>,
-    },
-}
-
-impl std::fmt::Display for TypeError {
+impl std::fmt::Display for TypeCheckDiagnostic {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.message)
     }
 }
 
-impl std::error::Error for TypeError {}
+impl std::error::Error for TypeCheckDiagnostic {}

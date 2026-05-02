@@ -370,7 +370,7 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
                     }
                 }
             }
-            ctx.type_error(e);
+            ctx.type_check_diagnostic(e);
             None
         }
     }
@@ -393,7 +393,7 @@ pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<H
             ty: result_ty,
         }),
         Err(e) => {
-            ctx.type_error(e);
+            ctx.type_check_diagnostic(e);
             None
         }
     }
@@ -515,7 +515,7 @@ pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<Hir
                     _ => false,
                 };
                 if !has_overload {
-                    ctx.type_error(e);
+                    ctx.type_check_diagnostic(e);
                     return None;
                 }
             }
@@ -565,7 +565,7 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
     // Check all values are Bool
     for val in &values {
         if let Err(e) = type_check_bool_op(val.ty(), op_str, &Type::Bool) {
-            ctx.type_error(e);
+            ctx.type_check_diagnostic(e);
             return None;
         }
     }
