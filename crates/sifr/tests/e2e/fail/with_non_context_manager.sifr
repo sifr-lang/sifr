@@ -1,4 +1,4 @@
-# expect-error: SIFR-PROTO-0003
+# expect-error[col=10]: SIFR-PROTO-0003
 # Test that using a non-context-manager type in with produces a compile error
 class PlainClass:
     value: int

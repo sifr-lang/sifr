@@ -1994,6 +1994,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                                 &concrete_ty.display_name(),
                                 &bound,
                                 tv_name,
+                                call.range(),
                             );
                         }
                     }

@@ -1,4 +1,4 @@
-# expect-error: SIFR-PROTO-0003
+# expect-error[col=10]: SIFR-PROTO-0003
 
 class HalfContext:
     def __enter__(self) -> HalfContext:

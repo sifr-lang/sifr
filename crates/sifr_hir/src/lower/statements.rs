@@ -286,6 +286,7 @@ pub(super) fn lower_stmt(
                         format!("_with_val_{}", items.len())
                     };
                     let val_ty = value.ty().clone();
+                    let context_range = item.context_expr.range();
                     // Check if the type implements the ContextManager protocol (__enter__/__exit__)
                     let has_context_manager = if let Type::Class { name, methods, .. } = &val_ty {
                         let has_enter = methods
@@ -297,16 +298,24 @@ pub(super) fn lower_stmt(
                         if has_enter && has_exit {
                             true
                         } else if has_enter || has_exit {
-                            protocol_diagnostics::context_manager_incomplete(ctx, name);
+                            protocol_diagnostics::context_manager_incomplete(
+                                ctx,
+                                name,
+                                context_range,
+                            );
                             false
                         } else {
-                            protocol_diagnostics::context_manager_missing(ctx, name);
+                            protocol_diagnostics::context_manager_missing(ctx, name, context_range);
                             false
                         }
                     } else {
                         // Non-class types don't have methods — can't be context managers
                         let type_name = val_ty.display_name();
-                        protocol_diagnostics::context_manager_missing(ctx, &type_name);
+                        protocol_diagnostics::context_manager_missing(
+                            ctx,
+                            &type_name,
+                            context_range,
+                        );
                         false
                     };
                     // If the type has __enter__, the variable is bound to __enter__()'s return type

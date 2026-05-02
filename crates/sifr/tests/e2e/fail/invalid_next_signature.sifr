@@ -1,5 +1,5 @@
 # Reference: phase_psp_iter_fix_7_invalid_next_signature
-# expect-error: SIFR-PROTO-0002
+# expect-error[col=9]: SIFR-PROTO-0002
 class BadNext:
     def __iter__(self) -> Iterator[int]:
         return iter([1])
