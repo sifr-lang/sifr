@@ -1,0 +1,2 @@
+# expect-error: SIFR-PARSE-0009
+lazy import value

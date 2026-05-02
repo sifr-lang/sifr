@@ -2,7 +2,7 @@ use crate::{
     check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,
     CompileResult, CompileResultFull,
 };
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 
 #[test]
 fn test_parse_source_returns_suite_for_valid_program() {
@@ -19,6 +19,109 @@ fn test_parse_source_returns_parse_error_for_invalid_program() {
         errors[0].code,
         DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY.code()
     );
+}
+
+#[test]
+fn test_parse_source_classifies_parser_error_categories() {
+    let cases = [
+        (
+            "def main(:\n    pass\n",
+            DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
+            "expected",
+            "parser_category",
+        ),
+        (
+            "def main():\n    x = \"unterminated\n",
+            DiagnosticCode::PARSE_LEXICAL_OR_STRING,
+            "reason",
+            "parser_category",
+        ),
+        (
+            "    x = 1\n",
+            DiagnosticCode::PARSE_LAYOUT,
+            "reason",
+            "parser_category",
+        ),
+        (
+            "def main():\n    1 = 2\n",
+            DiagnosticCode::PARSE_INVALID_TARGET,
+            "target_kind",
+            "parser_category",
+        ),
+        (
+            "def main():\n    f(a=1, 2)\n",
+            DiagnosticCode::PARSE_INVALID_CALL_ARGUMENTS,
+            "reason",
+            "parser_category",
+        ),
+        (
+            "def main():\n    global\n",
+            DiagnosticCode::PARSE_MALFORMED_DECLARATION_LIST,
+            "declaration_kind",
+            "parser_category",
+        ),
+        (
+            "def main():\n    match 1:\n        case *x:\n            pass\n",
+            DiagnosticCode::PARSE_INVALID_PATTERN,
+            "reason",
+            "parser_category",
+        ),
+        (
+            "lazy import value\n",
+            DiagnosticCode::PARSE_UNSUPPORTED_SYNTAX,
+            "syntax_kind",
+            "parser_category",
+        ),
+    ];
+
+    for (source, expected_code, message_arg, category_arg) in cases {
+        let errors = parse_source(source).expect_err("invalid source should fail parsing");
+        let diagnostic = errors
+            .iter()
+            .find(|diagnostic| diagnostic.code == expected_code.code())
+            .unwrap_or_else(|| {
+                panic!(
+                    "expected parser code {} in {errors:?}",
+                    expected_code.code()
+                )
+            });
+        assert_eq!(diagnostic.code, expected_code.code(), "{source}");
+        assert_eq!(diagnostic.severity, expected_code.declared_severity());
+        assert!(diagnostic.args.contains_key(message_arg), "{source}");
+        assert!(matches!(
+            diagnostic.args.get(category_arg),
+            Some(DiagnosticArg::String(category)) if !category.is_empty()
+        ));
+        assert_ne!(diagnostic.message_template, "{message}");
+    }
+}
+
+#[test]
+fn test_parse_source_normalizes_parser_recovery_messages() {
+    let expected_prefixed = parse_source("def main(:\n")
+        .expect_err("invalid source should fail parsing")
+        .into_iter()
+        .find(|diagnostic| {
+            diagnostic.code == DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY.code()
+        })
+        .expect("expected parser recovery diagnostic");
+    assert_eq!(
+        expected_prefixed.message,
+        "syntax error: expected a parameter or the end of the parameter list"
+    );
+    assert!(!expected_prefixed.message.contains("expected Expected"));
+
+    let recovery_prefixed = parse_source("def f(mut mut items: list[int]):\n    return items\n")
+        .expect_err("invalid source should fail parsing")
+        .into_iter()
+        .find(|diagnostic| {
+            diagnostic.code == DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY.code()
+                && diagnostic.message.contains("recovery:")
+        })
+        .expect("non-expected recovery payload should be normalized");
+    assert!(recovery_prefixed
+        .message
+        .starts_with("syntax error: expected recovery: "));
 }
 
 #[test]

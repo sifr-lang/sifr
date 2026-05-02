@@ -1,0 +1,3 @@
+# expect-error: SIFR-PARSE-0002
+def main(:
+    pass

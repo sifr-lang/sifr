@@ -197,7 +197,7 @@
               "kind": "contains",
               "command_id": "closure_neg_check",
               "stream": "stderr",
-              "text": "[helper] failed to parse"
+              "text": "while parsing helper"
             },
             {
               "kind": "contains",

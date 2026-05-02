@@ -1,0 +1,3 @@
+# expect-error: SIFR-PARSE-0006
+def main():
+    print(value=1, 2)

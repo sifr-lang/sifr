@@ -271,11 +271,10 @@ fn test_check_project_reports_reachable_parse_errors_in_import_closure() {
 
     let errors = check_project(&dir.join("main.sifr"));
     assert!(
-        errors.iter().any(|e| {
-            e.message.contains("[helper]")
-                && (e.message.contains("failed to parse")
-                    || e.message.contains("Expected a parameter"))
-        }),
+        errors.iter().any(|e| e.code == "SIFR-PARSE-0002"
+            && e.children
+                .iter()
+                .any(|child| child.message == "while parsing helper")),
         "reachable parse errors must still fail check_project: {errors:?}"
     );
 

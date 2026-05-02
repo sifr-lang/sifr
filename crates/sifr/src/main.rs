@@ -8,7 +8,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{
-    DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
+    ChildSeverity, DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
 };
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
@@ -417,6 +417,13 @@ fn render_diagnostic_stream(
                     }
                 };
                 let _ = writeln!(output, "{label}: {message}", message = diagnostic.message);
+                for child in &diagnostic.children {
+                    let child_label = match child.severity {
+                        ChildSeverity::Note => "note",
+                        ChildSeverity::Help => "help",
+                    };
+                    let _ = writeln!(output, "{child_label}: {}", child.message);
+                }
             }
         }
         DiagnosticFormat::Json => {
@@ -1501,6 +1508,30 @@ mod tests {
         assert_eq!(compact_total, canonical.len());
         assert!(compact_output.contains("error [SIFR-TYPE-0002] distinct diagnostic 43 (x1)"));
         assert!(!compact_output.contains("distinct diagnostic 44"));
+    }
+
+    #[test]
+    fn test_human_diagnostic_format_renders_child_notes() {
+        let mut diagnostic = test_diagnostic(
+            "SIFR-PARSE-0002",
+            Severity::Error,
+            "syntax error: expected expression",
+            None,
+            None,
+        );
+        diagnostic
+            .children
+            .push(sifr_diagnostics::render::RenderedDiagnosticChild {
+                severity: ChildSeverity::Note,
+                message: "while parsing helper".to_string(),
+            });
+
+        let human_output = render_diagnostic_output(&[diagnostic], DiagnosticFormat::Human)
+            .expect("human diagnostics should render");
+        assert_eq!(
+            human_output,
+            "parse error: syntax error: expected expression\nnote: while parsing helper\n"
+        );
     }
 
     #[test]

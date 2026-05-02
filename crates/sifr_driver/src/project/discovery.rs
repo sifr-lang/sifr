@@ -1,8 +1,8 @@
 use crate::diagnostics::RenderedDiagnostic;
+use crate::frontend::parse_module_with_diagnostics;
 use crate::workspace::WorkspaceRoot;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Stmt;
-use sifr_python_parser::parse_module;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -396,34 +396,7 @@ pub(crate) fn parse_import_closure_modules(
             )]
         })?;
         let label = discovery_label(&module_name, &path, diagnostic_style);
-        let parsed = match parse_module(&source) {
-            Ok(parsed) => {
-                if !parsed.has_valid_syntax() {
-                    // TODO(diag_4a slice 2): classify Ruff parse failures
-                    // into the precise active parse-code buckets.
-                    let errors: Vec<RenderedDiagnostic> = parsed
-                        .errors()
-                        .iter()
-                        .map(|e| {
-                            crate::diagnostics::diagnostic_with_code(
-                                format!("[{label}] {e}"),
-                                DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
-                            )
-                        })
-                        .collect();
-                    return Err(errors);
-                }
-                parsed
-            }
-            Err(e) => {
-                // TODO(diag_4a slice 2): classify Ruff parse failures into
-                // the precise active parse-code buckets.
-                return Err(vec![crate::diagnostics::diagnostic_with_code(
-                    format!("[{label}] failed to parse: {e}"),
-                    DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
-                )]);
-            }
-        };
+        let parsed = parse_module_with_diagnostics(&source, Some(&label))?;
         let suite = parsed.into_suite();
         for dependency in collect_import_closure_module_dependencies(&suite) {
             if parsed_names.contains(dependency.as_str()) {
