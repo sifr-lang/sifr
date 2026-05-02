@@ -589,7 +589,11 @@ pub(super) fn lower_stmt(
 
             if !declared_nonlocals.is_empty() && hir_body_calls_function(&body, func.name.as_str())
             {
-                super::flow_diagnostics::recursive_nonlocal_nested_function(ctx, &func.name);
+                super::flow_diagnostics::recursive_nonlocal_nested_function(
+                    ctx,
+                    &func.name,
+                    func.name.range(),
+                );
             }
 
             let inferred_return_type = infer_function_return_type(
@@ -1701,7 +1705,7 @@ pub(super) fn lower_if(
     let narrowing_cond = detect_narrowing_condition(&if_stmt.test, ctx);
 
     let condition = lower_expr(&if_stmt.test, ctx)?;
-    validate_control_flow_condition(&condition, "if", Some(if_stmt.test.range()), ctx);
+    validate_control_flow_condition(&condition, "if", if_stmt.test.range(), ctx);
     predeclare_exhaustive_if_assigned_names(if_stmt, ctx);
 
     let saved_state = ctx.scope.save_narrowing_state();
@@ -1746,7 +1750,7 @@ pub(super) fn lower_if(
 
             let elif_narrowing = detect_narrowing_condition(test, ctx);
             let cond = lower_expr(test, ctx)?;
-            validate_control_flow_condition(&cond, "elif", Some(test.range()), ctx);
+            validate_control_flow_condition(&cond, "elif", test.range(), ctx);
 
             let elif_saved = ctx.scope.save_narrowing_state();
             if let Some(ref elif_cond) = elif_narrowing {
@@ -1990,7 +1994,7 @@ pub(super) fn lower_while(
 ) -> Option<HirStmt> {
     let narrowing_cond = detect_narrowing_condition(&while_stmt.test, ctx);
     let condition = lower_expr(&while_stmt.test, ctx)?;
-    validate_control_flow_condition(&condition, "while", Some(while_stmt.test.range()), ctx);
+    validate_control_flow_condition(&condition, "while", while_stmt.test.range(), ctx);
     let saved_narrowing_state = ctx.scope.save_narrowing_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
     if let Some(ref cond) = narrowing_cond {

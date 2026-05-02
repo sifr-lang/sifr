@@ -801,13 +801,15 @@ fn test_class_truthiness_allowed_in_if_while_and_boolop() {
 
 #[test]
 fn test_non_none_return_annotation_requires_exhaustive_returns() {
-    let result = lower_source("def f(flag: bool) -> int:\n    if flag:\n        return 1\n");
+    let source = "def f(flag: bool) -> int:\n    if flag:\n        return 1\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message
             .contains("must return a value of type 'int' on all control-flow paths")
             && e.code == Some(DiagnosticCode::FLOW_MISSING_RETURN_VALUE)
+            && e.primary_range == Some(range_for_after_anchor(source, "def ", "f"))
     }));
 }
 

@@ -1,4 +1,5 @@
 use crate::hir_nodes::{HirExpr, HirStmt};
+use ruff_text_size::Ranged;
 use sifr_python_ast::{ExceptHandler, Stmt, StmtNonlocal};
 use std::collections::HashSet;
 
@@ -57,18 +58,26 @@ fn collect_declared_nonlocals_into(stmts: &[Stmt], out: &mut HashSet<String>) {
 
 pub(super) fn lower_nonlocal(nonlocal: &StmtNonlocal, ctx: &mut LowerCtx) {
     if ctx.function_scopes.len() < 2 {
-        super::flow_diagnostics::nonlocal_requires_enclosing_binding(ctx);
+        super::flow_diagnostics::nonlocal_requires_enclosing_binding(ctx, nonlocal.range());
         return;
     }
 
     for name in &nonlocal.names {
-        let name = name.to_string();
-        if ctx.lookup_current_function_binding(&name).is_some() {
-            super::flow_diagnostics::nonlocal_conflicts_with_current_binding(ctx, &name);
+        let name_text = name.to_string();
+        if ctx.lookup_current_function_binding(&name_text).is_some() {
+            super::flow_diagnostics::nonlocal_conflicts_with_current_binding(
+                ctx,
+                &name_text,
+                name.range(),
+            );
             continue;
         }
-        if ctx.lookup_outer_function_binding(&name).is_none() {
-            super::flow_diagnostics::nonlocal_missing_enclosing_binding(ctx, &name);
+        if ctx.lookup_outer_function_binding(&name_text).is_none() {
+            super::flow_diagnostics::nonlocal_missing_enclosing_binding(
+                ctx,
+                &name_text,
+                name.range(),
+            );
         }
     }
 }

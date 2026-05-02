@@ -92,7 +92,7 @@ pub(super) fn lower_tuple_unpack_assign(
         match target {
             TupleAssignTarget::Name { name, range } => {
                 if ctx.is_declared_nonlocal(&name) {
-                    super::flow_diagnostics::tuple_unpack_nonlocal_rebind(ctx);
+                    super::flow_diagnostics::tuple_unpack_nonlocal_rebind(ctx, tuple.range());
                     return None;
                 }
                 let rebind_existing = if ctx.current_function_frame_start().is_some() {

@@ -289,7 +289,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         } else if ctx.is_declared_nonlocal(&name) {
             ctx.lookup_outer_function_binding(&name)
         } else if ctx.scope.lookup(&name).is_some() {
-            super::flow_diagnostics::captured_augassign_requires_nonlocal(ctx, &name);
+            super::flow_diagnostics::captured_augassign_requires_nonlocal(ctx, &name, name_range);
             return None;
         } else {
             None

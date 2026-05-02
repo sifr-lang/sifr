@@ -1,4 +1,5 @@
 use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
+use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     AstParamConvention, AstParamMutability, AstParamOwnership, Expr, Number, Operator,
@@ -837,6 +838,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
                     ctx,
                     func.name.as_str(),
                     return_type.as_str(),
+                    func.name.range(),
                 );
             }
             Ok(true) => {}
