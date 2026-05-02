@@ -129,8 +129,8 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let base_op = &op_str[..op_str.len() - 1];
             let result_ty = match type_check_binary_op(&current_elem_ty, base_op, value.ty()) {
                 Ok(ty) => ty,
-                Err(error) => {
-                    ctx.error(error.message);
+                Err((code, message)) => {
+                    ctx.error_with_code(code, message);
                     return None;
                 }
             };
@@ -198,8 +198,8 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let base_op = &op_str[..op_str.len() - 1];
             let result_ty = match type_check_binary_op(&element_ty, base_op, value.ty()) {
                 Ok(ty) => ty,
-                Err(error) => {
-                    ctx.error(error.message);
+                Err((code, message)) => {
+                    ctx.error_with_code(code, message);
                     return None;
                 }
             };
@@ -312,14 +312,14 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             (Type::List(_), Type::List(_)) => {}
             (Type::Bytes, Type::Bytes) => {}
             _ => {
-                if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-                    ctx.type_check_diagnostic(e);
+                if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
+                    ctx.error_with_code(code, message);
                     return None;
                 }
             }
         }
-    } else if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-        ctx.type_check_diagnostic(e);
+    } else if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
+        ctx.error_with_code(code, message);
         return None;
     }
 

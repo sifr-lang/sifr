@@ -355,7 +355,7 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
                 ty: result_ty,
             })
         }
-        Err(e) => {
+        Err((code, message)) => {
             // Check for operator overloading on class types
             if let Type::Class { methods, .. } = left.ty() {
                 if let Some(dunder) = op_to_dunder(op_str) {
@@ -370,7 +370,7 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
                     }
                 }
             }
-            ctx.type_check_diagnostic(e);
+            ctx.error_with_code(code, message);
             None
         }
     }
@@ -392,8 +392,8 @@ pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<H
             operand: Box::new(operand),
             ty: result_ty,
         }),
-        Err(e) => {
-            ctx.type_check_diagnostic(e);
+        Err((code, message)) => {
+            ctx.error_with_code(code, message);
             None
         }
     }
@@ -501,7 +501,7 @@ pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<Hir
         // `is` and `is not` are identity checks (used for None comparison)
         // They don't need type_check_comparison
         if op_str != "is" && op_str != "is not" {
-            if let Err(e) = type_check_comparison(left.ty(), op_str, right.ty()) {
+            if let Err((code, message)) = type_check_comparison(left.ty(), op_str, right.ty()) {
                 // Check for operator overloading on class types
                 let has_overload = match left.ty() {
                     Type::Class { methods, .. } => {
@@ -515,7 +515,7 @@ pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<Hir
                     _ => false,
                 };
                 if !has_overload {
-                    ctx.type_check_diagnostic(e);
+                    ctx.error_with_code(code, message);
                     return None;
                 }
             }
@@ -564,8 +564,8 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
 
     // Check all values are Bool
     for val in &values {
-        if let Err(e) = type_check_bool_op(val.ty(), op_str, &Type::Bool) {
-            ctx.type_check_diagnostic(e);
+        if let Err((code, message)) = type_check_bool_op(val.ty(), op_str, &Type::Bool) {
+            ctx.error_with_code(code, message);
             return None;
         }
     }
