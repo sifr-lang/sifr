@@ -1,4 +1,5 @@
 use crate::hir_nodes::{HirStmt, HirTupleTarget, HirTupleTargetBinding};
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprAttribute, ExprTuple};
 
@@ -12,13 +13,16 @@ use super::LowerCtx;
 
 #[derive(Debug, Clone)]
 enum TupleAssignTarget {
-    Name(String),
+    Name { name: String, range: TextRange },
     Field { object: String, field: String },
 }
 
 fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarget> {
     match elt {
-        Expr::Name(n) => Some(TupleAssignTarget::Name(n.id.to_string())),
+        Expr::Name(n) => Some(TupleAssignTarget::Name {
+            name: n.id.to_string(),
+            range: n.range(),
+        }),
         Expr::Attribute(ExprAttribute { value, attr, .. }) => {
             let Expr::Name(object_name) = value.as_ref() else {
                 ctx.error(
@@ -51,7 +55,7 @@ pub(super) fn lower_tuple_unpack_assign(
     let mut target_names = Vec::new();
     for elt in &tuple.elts {
         let target = lower_tuple_target(elt, ctx)?;
-        if let TupleAssignTarget::Name(name) = &target {
+        if let TupleAssignTarget::Name { name, .. } = &target {
             target_names.push(name.clone());
         }
         targets.push(target);
@@ -86,7 +90,7 @@ pub(super) fn lower_tuple_unpack_assign(
     let mut lowered_targets = Vec::new();
     for (target, ty) in targets.into_iter().zip(elem_types.into_iter()) {
         match target {
-            TupleAssignTarget::Name(name) => {
+            TupleAssignTarget::Name { name, range } => {
                 if ctx.is_declared_nonlocal(&name) {
                     super::flow_diagnostics::tuple_unpack_nonlocal_rebind(ctx);
                     return None;
@@ -99,7 +103,7 @@ pub(super) fn lower_tuple_unpack_assign(
 
                 if rebind_existing {
                     let Some(info) = ctx.scope.lookup(&name) else {
-                        name_diagnostics::undefined_variable(ctx, &name);
+                        name_diagnostics::undefined_variable(ctx, &name, range);
                         return None;
                     };
                     if info.is_parameter_binding() && !info.is_mutable_binding() {

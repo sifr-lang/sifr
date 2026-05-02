@@ -1,3 +1,3 @@
-# expect-error: SIFR-NAME-0001
+# expect-error[col=11]: SIFR-NAME-0001
 def main():
     print(x)

@@ -1,4 +1,4 @@
-# expect-error: SIFR-NAME-0004
+# expect-error[col=23]: SIFR-NAME-0004
 # Test that importing a nonexistent function from a valid stdlib module fails
 from sifr.math import nonexistent_func
 

@@ -53,6 +53,7 @@ use super::{
     LowerCtx,
 };
 use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
+use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
@@ -246,7 +247,7 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
         _ => {}
     }
 
-    name_diagnostics::undefined_variable(ctx, &var_name);
+    name_diagnostics::undefined_variable(ctx, &var_name, name.range());
     None
 }
 
@@ -1731,7 +1732,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     }
 
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
-        name_diagnostics::undefined_function(ctx, &func_name);
+        name_diagnostics::undefined_function(ctx, &func_name, call.func.range());
         None
     })?;
 

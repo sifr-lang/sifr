@@ -1485,8 +1485,8 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         });
     }
 
-    let name = if let Expr::Name(n) = &assign.targets[0] {
-        n.id.to_string()
+    let (name, name_range) = if let Expr::Name(n) = &assign.targets[0] {
+        (n.id.to_string(), n.range())
     } else {
         ctx.error("assignment target must be a simple name".to_string());
         return None;
@@ -1535,7 +1535,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     // Check if variable already exists
     if should_treat_as_existing_binding {
         let Some(info) = ctx.scope.lookup(&name) else {
-            name_diagnostics::undefined_variable(ctx, &name);
+            name_diagnostics::undefined_variable(ctx, &name, name_range);
             return None;
         };
         if info.is_parameter_binding() && !info.is_mutable_binding() {

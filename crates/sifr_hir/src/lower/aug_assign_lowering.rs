@@ -1,3 +1,4 @@
+use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::{Expr, Operator, StmtAugAssign};
 use sifr_type_system::{type_check_binary_op, Type};
 
@@ -260,8 +261,8 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             object_ty,
         });
     }
-    let name = if let Expr::Name(n) = aug.target.as_ref() {
-        n.id.to_string()
+    let (name, name_range): (String, TextRange) = if let Expr::Name(n) = aug.target.as_ref() {
+        (n.id.to_string(), n.range())
     } else {
         ctx.error("augmented assignment target must be a simple name".to_string());
         return None;
@@ -288,7 +289,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         ctx.scope.lookup(&name)
     };
     let Some(var_info) = var_info else {
-        name_diagnostics::undefined_variable(ctx, &name);
+        name_diagnostics::undefined_variable(ctx, &name, name_range);
         return None;
     };
     if var_info.is_parameter_binding() && !var_info.is_mutable_binding() {
