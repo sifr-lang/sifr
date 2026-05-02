@@ -82,6 +82,7 @@ mod tests {
         LoweringError {
             code,
             message: message.to_string(),
+            primary_range: None,
             line: None,
             col: None,
         }

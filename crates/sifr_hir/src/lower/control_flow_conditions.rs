@@ -1,10 +1,12 @@
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
+use ruff_text_size::TextRange;
 use sifr_type_system::{union_contains_none, Type};
 
 pub(super) fn validate_control_flow_condition(
     condition: &HirExpr,
     keyword: &str,
+    primary_range: Option<TextRange>,
     ctx: &mut LowerCtx,
 ) {
     let is_supported = matches!(
@@ -24,6 +26,15 @@ pub(super) fn validate_control_flow_condition(
     ) || union_contains_none(condition.ty());
     if !is_supported {
         let actual = condition.ty().display_name();
-        super::flow_diagnostics::invalid_condition_type(ctx, keyword, actual.as_str());
+        if let Some(range) = primary_range {
+            super::flow_diagnostics::invalid_condition_type_at(
+                ctx,
+                keyword,
+                actual.as_str(),
+                range,
+            );
+        } else {
+            super::flow_diagnostics::invalid_condition_type(ctx, keyword, actual.as_str());
+        }
     }
 }

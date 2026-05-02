@@ -1,4 +1,5 @@
 use crate::{lower_module, HirExpr, HirModule, HirStmt, LoweringError};
+use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
@@ -6,6 +7,14 @@ use sifr_type_system::Type;
 fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
     let parsed = parse_module(source).expect("parse failed");
     lower_module(parsed.suite()).map(|r| r.module)
+}
+
+fn range_for(source: &str, needle: &str) -> TextRange {
+    let start = source.find(needle).expect("needle should exist") as u32;
+    TextRange::new(
+        TextSize::new(start),
+        TextSize::new(start + needle.len() as u32),
+    )
 }
 
 #[test]
@@ -702,25 +711,43 @@ fn test_if_else_branch_bindings_are_visible_after_if() {
 
 #[test]
 fn test_if_condition_rejects_numeric_truthiness() {
-    let result = lower_source("def main():\n    if 1:\n        pass\n");
+    let source = "def main():\n    if 1:\n        pass\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message
             .contains("if condition must be bool or collection/string truthiness")
             && e.code == Some(DiagnosticCode::FLOW_INVALID_CONDITION_TYPE)
+            && e.primary_range == Some(range_for(source, "1"))
     }));
 }
 
 #[test]
 fn test_while_condition_rejects_numeric_truthiness() {
-    let result = lower_source("def main():\n    while 1:\n        return\n");
+    let source = "def main():\n    while 1:\n        return\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message
             .contains("while condition must be bool or collection/string truthiness")
             && e.code == Some(DiagnosticCode::FLOW_INVALID_CONDITION_TYPE)
+            && e.primary_range == Some(range_for(source, "1"))
+    }));
+}
+
+#[test]
+fn test_elif_condition_rejects_numeric_truthiness_with_primary_range() {
+    let source = "def main(flag: bool):\n    if flag:\n        pass\n    elif 1:\n        pass\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("elif condition must be bool or collection/string truthiness")
+            && e.code == Some(DiagnosticCode::FLOW_INVALID_CONDITION_TYPE)
+            && e.primary_range == Some(range_for(source, "1"))
     }));
 }
 
