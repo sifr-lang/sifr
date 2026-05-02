@@ -6,7 +6,7 @@ Coverage snapshot from April 29, 2026:
 
 - `rg "ctx\\.error\\(" crates/sifr_hir/src -g '*.rs'` finds 489 raw HIR lowering emissions across 22 files.
 - The legacy public `CompileError` abstraction and the custom driver `CompilerDiagnostic` transport have been deleted. Driver and CLI APIs now carry `sifr_diagnostics::RenderedDiagnostic` directly as the rendered diagnostic envelope until the residual driver renderer moves to `DiagnosticSink` directly.
-- `rg "TypeErrorKind::" crates/sifr_type_system/src crates/sifr_hir/src -g '*.rs'` finds 24 current type-system typed-error construction sites.
+- `sifr_type_system::TypeError` and `TypeErrorKind` have been deleted. The residual operator-helper boundary is `TypeCheckDiagnostic { code, message }`, which carries a required active diagnostic code into HIR lowering without a code-less fallback.
 - `rg "# expect-error" crates/sifr/tests/e2e/fail crates/sifr/tests/e2e.rs -g '*.sifr' -g '*.rs'` finds 155 fail-fixture expectations plus harness parser samples.
 
 ## HIR Lowering Surface
@@ -61,23 +61,17 @@ Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `t
 
 ## Type System Surface
 
-`sifr_type_system::TypeError` and `TypeErrorKind` are transitional only. They have typed payloads but no spans, no stable code, and no canonical renderer model. Migration should replace them with direct domain helper calls in HIR/type-checking code, then delete these symbols.
+`sifr_type_system` still owns focused operator type helpers used by HIR expression lowering. Those helpers now return `TypeCheckDiagnostic` directly: a narrow residual transport with a required `DiagnosticCode` plus the existing human message. It is intentionally not a fallback classifier; there is no `Option<DiagnosticCode>` and no variant-to-code mapping layer. HIR records the provided active code through `LowerCtx::type_check_diagnostic` at the AST site that owns the source relation.
 
-| Current variant / construction | Current message category | Target code | Representative fixture |
+The remaining cleanup target is to retire `TypeCheckDiagnostic` itself by moving operator diagnostic construction to HIR-owned helpers or by returning canonical diagnostic data with declared args and spans from the semantic owner.
+
+| Current construction | Current message category | Active code | Representative fixture |
 | --- | --- | --- | --- |
-| `TypeErrorKind::TypeMismatch` | ordinary expected/actual mismatch | `SIFR-TYPE-0002` | `crates/sifr/tests/e2e/fail/type_mismatch.sifr` |
-| `TypeErrorKind::TypeMismatch` | union/optional mismatch | `SIFR-TYPE-0002` with union args | `crates/sifr/tests/e2e/fail/union_type_mismatch.sifr` |
-| `TypeErrorKind::TypeMismatch` | decimal/bigdecimal comparison | `SIFR-DECIMAL-0004` | `crates/sifr/tests/e2e/fail/decimal_bigdecimal_mixed_arithmetic.sifr` |
-| `TypeErrorKind::TypeMismatch` | float compared with decimal family | `SIFR-DECIMAL-0003` | `crates/sifr/tests/e2e/fail/decimal_float_mixed_arithmetic.sifr` |
-| `TypeErrorKind::UndefinedVariable` | unresolved local/name expression | `SIFR-NAME-0001` | `crates/sifr/tests/e2e/fail/undefined_var.sifr` |
-| `TypeErrorKind::UndefinedFunction` | unresolved callable name | `SIFR-NAME-0002` | `crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr` |
-| `TypeErrorKind::WrongArgumentCount` | positional arity mismatch | `SIFR-CALL-0001` | `crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr` |
-| `TypeErrorKind::UseAfterMove` | moved value use | `SIFR-OWN-0001` | `crates/sifr/tests/e2e/fail/use_after_move.sifr` |
-| `TypeErrorKind::MissingTypeAnnotation` | annotation required for inference boundary | `SIFR-TYPE-0004` | fixture pending in `milestone_diag_7` |
-| `TypeErrorKind::InvalidOperator` | unsupported arithmetic/comparison/unary/bool operator | `SIFR-TYPE-0005` | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
-| `TypeErrorKind::InvalidOperator` | int/bigint arithmetic or comparison requires conversion | `SIFR-TYPE-0006` | `crates/sifr/tests/e2e/fail/bigint_int_mixed_arithmetic.sifr`, `crates/sifr/tests/e2e/fail/bigint_int_mixed_comparison.sifr` |
-| `TypeErrorKind::InvalidOperator` | decimal-family mixed arithmetic | `SIFR-DECIMAL-0003`, `SIFR-DECIMAL-0004` | decimal mixed arithmetic fixtures |
-| `TypeErrorKind::NotCallable` | non-callable receiver/expression used as callable | `SIFR-CALL-0005` | fixture pending in call migration |
+| `TypeCheckDiagnostic { code: TYPE_MISMATCH, ... }` | ordinary expected/actual mismatch and union/optional mismatch | `SIFR-TYPE-0002` | `crates/sifr/tests/e2e/fail/type_mismatch.sifr`, `crates/sifr/tests/e2e/fail/union_type_mismatch.sifr` |
+| `TypeCheckDiagnostic { code: DECIMAL_FLOAT_MIXED, ... }` | arithmetic or comparison mixing float with the decimal family | `SIFR-DECIMAL-0003` | `crates/sifr/tests/e2e/fail/decimal_float_mixed_arithmetic.sifr` |
+| `TypeCheckDiagnostic { code: DECIMAL_MIXED_WITH_BIGDECIMAL, ... }` | arithmetic or comparison mixing decimal and bigdecimal | `SIFR-DECIMAL-0004` | `crates/sifr/tests/e2e/fail/decimal_bigdecimal_mixed_arithmetic.sifr` |
+| `TypeCheckDiagnostic { code: TYPE_UNSUPPORTED_OPERATOR, ... }` | unsupported arithmetic/comparison/unary/bool operator | `SIFR-TYPE-0005` | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
+| `TypeCheckDiagnostic { code: TYPE_INT_BIGINT_MIXED, ... }` | int/bigint arithmetic or comparison requires conversion | `SIFR-TYPE-0006` | `crates/sifr/tests/e2e/fail/bigint_int_mixed_arithmetic.sifr`, `crates/sifr/tests/e2e/fail/bigint_int_mixed_comparison.sifr` |
 
 ## Driver And CLI Surface
 
@@ -116,7 +110,7 @@ Current public-code mechanisms to remove:
 | --- | --- | --- | --- |
 | Phase-derived `CompilePhase` mapping and display labels | `crates/sifr_driver/src/diagnostics.rs` | removed; diagnostics now carry active code strings, and human labels are code-derived | domain helpers construct `SifrDiagnostic` with the canonical code before driver rendering |
 | Workspace prefix classifier | legacy `CompileError::workspace_diagnostic_code` | removed before `milestone_diag_4b`; workspace identities are explicit at construction | typed workspace/project discovery constructors with structured path/module args |
-| Type-error string forwarding | HIR sites that call `ctx.error(e.message)` or `ctx.error(error.message)` | loses `TypeErrorKind`, source relation, expected/actual/operator args, and decimal identity | HIR call site emits the target `TYPE-*`, `DECIMAL-*`, `NAME-*`, `CALL-*`, or `OWN-*` diagnostic directly with the AST span |
+| Type-check diagnostic forwarding | HIR sites that call `ctx.type_check_diagnostic(error)` | preserves required active code but still lacks declared args and related spans | HIR call site emits the target `TYPE-*` or `DECIMAL-*` diagnostic directly with the AST span and structured args |
 | Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | removed in `milestone_diag_6` slice 1; decimal diagnostics now carry top-level `SIFR-DECIMAL-*` codes with no secondary message code | keep top-level `SIFR-DECIMAL-*` identity and no message-embedded pseudo-code |
 | Test-only hard-coded diagnostics | CLI renderer and driver diagnostics tests | locks renderer behavior to legacy phase buckets and pseudo-code text | renderer/harness tests construct canonical diagnostics through `sifr_diagnostics` fixtures |
 
@@ -372,6 +366,6 @@ These expectations are not implemented until `milestone_diag_10`, but the code a
 ## Span, Related-Span, And Recovery Notes
 
 - Every HIR source diagnostic should use the AST node span that caused the semantic failure. Existing raw messages usually have the expression/statement node available at the emission site; the migration should not introduce spanless HIR diagnostics for those paths.
-- `TypeError` forwarding sites (`ctx.error(e.message)` / `ctx.error(error.message)`) currently lose the source relation between type-system payload and AST node. The migrated helper should be called at the HIR site that knows the node span and should pass expected/actual/operator/name args explicitly.
+- `TypeCheckDiagnostic` forwarding sites preserve active code identity, but they still do not carry source spans, expected/actual/operator args, or related spans. The final migrated helper should be called at the HIR site that knows the AST node span and should pass expected/actual/operator/name args explicitly.
 - Import and workspace diagnostics need related spans/paths for "searched here", "ambiguous candidate", and "import requested here" notes. Do not encode those in message strings.
 - Recovery deduplication remains `milestone_diag_10`. Until then, repeated type errors keep the existing recovery behavior but must share `message_template` and explicit dedupe args once migrated.
