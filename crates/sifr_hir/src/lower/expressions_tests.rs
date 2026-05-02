@@ -508,6 +508,35 @@ fn test_nested_subscript_augassign_lowers_for_name_targets() {
 }
 
 #[test]
+fn test_bytes_subscript_assignment_has_ownership_code() {
+    let result =
+        lower_source("def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] = 65\n");
+    let errors = result.expect_err("expected bytes subscript assignment error");
+
+    assert!(
+        errors.iter().any(|error| error.code
+            == Some(DiagnosticCode::OWN_IMMUTABLE_BYTES_ASSIGNMENT)
+            && error.message == "bytes is immutable; subscript assignment is not supported"),
+        "bytes subscript assignment should preserve ownership code: {errors:?}"
+    );
+}
+
+#[test]
+fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
+    let result =
+        lower_source("def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] += 1\n");
+    let errors = result.expect_err("expected bytes augmented subscript assignment error");
+
+    assert!(
+        errors.iter().any(|error| error.code
+            == Some(DiagnosticCode::OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT)
+            && error.message
+                == "bytes is immutable; augmented subscript assignment is not supported"),
+        "bytes augmented subscript assignment should preserve ownership code: {errors:?}"
+    );
+}
+
+#[test]
 fn test_list_subscript_augassign_type_error_keeps_code() {
     let result = lower_source("def bad(mut xs: list[int]) -> None:\n    xs[0] += \"x\"\n");
     let errors = result.expect_err("expected list subscript augassign type error");

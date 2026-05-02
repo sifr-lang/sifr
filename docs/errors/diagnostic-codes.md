@@ -77,6 +77,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-OWN-0004`](SIFR-OWN-0004.md) | Error | Moved value is reused across loop iterations. |
 | [`SIFR-OWN-0005`](SIFR-OWN-0005.md) | Error | Immutable parameter is mutated. |
 | [`SIFR-OWN-0006`](SIFR-OWN-0006.md) | Error | Immutable parameter is reassigned. |
+| [`SIFR-OWN-0007`](SIFR-OWN-0007.md) | Error | Immutable bytes value is mutated. |
+| [`SIFR-OWN-0008`](SIFR-OWN-0008.md) | Error | Immutable bytes value is mutated by augmented assignment. |
 | [`SIFR-FLOW-0001`](SIFR-FLOW-0001.md) | Error | Break outside a loop. |
 | [`SIFR-FLOW-0002`](SIFR-FLOW-0002.md) | Error | Continue outside a loop. |
 | [`SIFR-FLOW-0003`](SIFR-FLOW-0003.md) | Error | Invalid nonlocal or nested-function flow. |

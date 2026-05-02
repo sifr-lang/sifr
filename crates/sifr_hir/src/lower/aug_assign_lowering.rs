@@ -102,10 +102,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
                 return None;
             }
             if matches!(obj_ty.resolve_alias(), Type::Bytes) {
-                ctx.error(
-                    "bytes is immutable; augmented subscript assignment is not supported"
-                        .to_string(),
-                );
+                super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(ctx);
                 return None;
             }
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
@@ -183,10 +180,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let field_name = attr.attr.to_string();
             let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
             if matches!(field_ty.resolve_alias(), Type::Bytes) {
-                ctx.error(
-                    "bytes is immutable; augmented subscript assignment is not supported"
-                        .to_string(),
-                );
+                super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(ctx);
                 return None;
             }
             let object_expr = lower_expr(attr.value.as_ref(), ctx)?;
@@ -244,9 +238,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
         if matches!(obj_ty.resolve_alias(), Type::Bytes) {
-            ctx.error(
-                "bytes is immutable; augmented subscript assignment is not supported".to_string(),
-            );
+            super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(ctx);
             return None;
         }
         let index = lower_expr(&sub.slice, ctx)?;
