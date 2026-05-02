@@ -1099,10 +1099,10 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         ctx.error("annotated assignment target must be a simple name".to_string());
         return None;
     };
-
     let declared_type = resolve_annotation_expr(&ann.annotation, ctx);
 
-    let value = if let Some(val) = &ann.value {
+    let (value, initializer_range) = if let Some(val) = &ann.value {
+        let initializer_range = val.range();
         let mut expr = if let Some(kind) = numeric_sentinel_kind(val) {
             if let Some(domain) = numeric_domain_for_type(&declared_type) {
                 domain_typed_sentinel_expr(kind, domain)
@@ -1148,7 +1148,7 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
                 ),
             );
         }
-        expr
+        (expr, initializer_range)
     } else {
         ctx.error(format!("variable '{name}' must be initialized"));
         return None;
@@ -1165,7 +1165,11 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
             // Escape analysis: cannot store a borrowed parameter into a new binding
             if ctx.borrowed_params.contains(src_name.as_str()) {
-                ownership_diagnostics::borrowed_parameter_store_escape(ctx, src_name);
+                ownership_diagnostics::borrowed_parameter_store_escape(
+                    ctx,
+                    src_name,
+                    initializer_range,
+                );
             } else {
                 ctx.scope.mark_moved(src_name);
             }
@@ -1356,7 +1360,8 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.error("attribute assignment target must be a simple name".to_string());
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+            let obj_range = inner_attr.value.range();
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
                 return None;
             }
             let field_name = inner_attr.attr.to_string();
@@ -1380,7 +1385,8 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.error("attribute assignment target must be a simple name".to_string());
             return None;
         };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+        let obj_range = attr.value.range();
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
             return None;
         }
         let field_name = attr.attr.to_string();
@@ -1404,7 +1410,8 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.error("nested subscript assignment target must be a simple name".to_string());
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+            let obj_range = inner_sub.value.range();
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
                 return None;
             }
             let obj_ty = ctx
@@ -1413,7 +1420,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 .map(|info| info.effective_type().clone())
                 .unwrap_or(Type::Unknown);
             if matches!(obj_ty.resolve_alias(), Type::Bytes) {
-                super::ownership_diagnostics::immutable_bytes_subscript_assignment(ctx);
+                super::ownership_diagnostics::immutable_bytes_subscript_assignment(
+                    ctx,
+                    inner_sub.range(),
+                );
                 return None;
             }
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
@@ -1435,13 +1445,17 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.error("subscript assignment target must be a simple name".to_string());
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+            let obj_range = attr.value.range();
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
                 return None;
             }
             let field_name = attr.attr.to_string();
             let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
             if matches!(field_ty.resolve_alias(), Type::Bytes) {
-                super::ownership_diagnostics::immutable_bytes_subscript_assignment(ctx);
+                super::ownership_diagnostics::immutable_bytes_subscript_assignment(
+                    ctx,
+                    sub.range(),
+                );
                 return None;
             }
             let index = lower_expr(&sub.slice, ctx)?;
@@ -1460,7 +1474,8 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.error("subscript assignment target must be a simple name".to_string());
             return None;
         };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+        let obj_range = sub.value.range();
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
             return None;
         }
         let obj_ty = ctx
@@ -1469,7 +1484,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
         if matches!(obj_ty.resolve_alias(), Type::Bytes) {
-            super::ownership_diagnostics::immutable_bytes_subscript_assignment(ctx);
+            super::ownership_diagnostics::immutable_bytes_subscript_assignment(ctx, sub.range());
             return None;
         }
         let index = lower_expr(&sub.slice, ctx)?;
@@ -1539,7 +1554,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             return None;
         };
         if info.is_parameter_binding() && !info.is_mutable_binding() {
-            super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name);
+            super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name, name_range);
             return None;
         }
         // Reassignment: check type compatibility
@@ -1625,7 +1640,8 @@ pub(super) fn lower_return(
         if let HirExpr::Name { name, ty } = &expr {
             if ctx.borrowed_params.contains(name.as_str()) && ty.ownership() == OwnershipKind::Move
             {
-                ownership_diagnostics::borrowed_parameter_return_escape(ctx, name);
+                let range = val.range();
+                ownership_diagnostics::borrowed_parameter_return_escape(ctx, name, range);
             }
         }
 
@@ -1998,7 +2014,7 @@ pub(super) fn lower_while(
     // Check for outer-scope variables moved inside the loop body
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);
     for var_name in &newly_moved {
-        ownership_diagnostics::moved_across_loop(ctx, var_name);
+        ownership_diagnostics::moved_across_loop(ctx, var_name, while_stmt.range());
     }
 
     let else_body = if while_stmt.orelse.is_empty() {
@@ -2153,7 +2169,7 @@ pub(super) fn lower_for(
     // Check for outer-scope variables moved inside the loop body
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);
     for var_name in &newly_moved {
-        ownership_diagnostics::moved_across_loop(ctx, var_name);
+        ownership_diagnostics::moved_across_loop(ctx, var_name, for_stmt.range());
     }
 
     let else_body = if for_stmt.orelse.is_empty() {

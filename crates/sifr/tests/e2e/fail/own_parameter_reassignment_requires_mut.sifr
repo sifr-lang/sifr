@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0006
+# expect-error[col=5]: SIFR-OWN-0006
 # Test: borrowed parameters cannot be rebound unless explicitly marked mut.
 
 def borrowed_reassign(items: list[int]) -> int:

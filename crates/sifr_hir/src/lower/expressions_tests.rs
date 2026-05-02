@@ -17,6 +17,30 @@ fn range_for(source: &str, needle: &str) -> TextRange {
     )
 }
 
+fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
+    let after_start = source.find(after).expect("anchor should exist");
+    let relative_start = source[after_start..]
+        .find(needle)
+        .expect("needle should exist after anchor");
+    let start = (after_start + relative_start) as u32;
+    TextRange::new(
+        TextSize::new(start),
+        TextSize::new(start + needle.len() as u32),
+    )
+}
+
+fn range_for_after_anchor(source: &str, after: &str, needle: &str) -> TextRange {
+    let search_start = source.find(after).expect("anchor should exist") + after.len();
+    let relative_start = source[search_start..]
+        .find(needle)
+        .expect("needle should exist after anchor");
+    let start = (search_start + relative_start) as u32;
+    TextRange::new(
+        TextSize::new(start),
+        TextSize::new(start + needle.len() as u32),
+    )
+}
+
 #[test]
 fn test_simple_function() {
     let module = lower_source("def add(a: int, b: int) -> int:\n    return a + b\n").unwrap();
@@ -93,55 +117,66 @@ fn test_failed_annotated_assignment_rhs_still_seeds_followup_binding() {
 
 #[test]
 fn test_use_after_move() {
-    let result = lower_source(
-        "def consume(own s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n",
-    );
+    let source = "def consume(own s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
-        e.message.contains("moved value") && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+        e.message.contains("moved value")
+            && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && e.primary_range == Some(range_for_after(source, "print(", "s"))
     }));
 }
 
 #[test]
 fn test_double_mutable_borrow_has_ownership_code() {
-    let result = lower_source(
-        "def swap(mut a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    swap(items, items)\n",
-    );
+    let source = "def swap(mut a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    swap(items, items)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message
             .contains("cannot borrow 'items' as mutable more than once")
             && e.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && e.primary_range == Some(range_for_after_anchor(source, "swap(items, ", "items"))
     }));
 }
 
 #[test]
 fn test_mutable_after_immutable_borrow_has_ownership_code() {
-    let result = lower_source(
-        "def read_then_mutate(a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    read_then_mutate(items, items)\n",
-    );
+    let source = "def read_then_mutate(a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    read_then_mutate(items, items)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message.contains(
             "cannot borrow 'items' as mutable because it is already borrowed as immutable",
         ) && e.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && e.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "read_then_mutate(items, ",
+                    "items",
+                ))
     }));
 }
 
 #[test]
 fn test_immutable_after_mutable_borrow_has_ownership_code() {
-    let result = lower_source(
-        "def mutate_then_read(mut a: list[int], b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    mutate_then_read(items, items)\n",
-    );
+    let source = "def mutate_then_read(mut a: list[int], b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    mutate_then_read(items, items)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message.contains(
             "cannot borrow 'items' as immutable because it is already borrowed as mutable",
         ) && e.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && e.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "mutate_then_read(items, ",
+                    "items",
+                ))
     }));
 }
 
@@ -518,29 +553,31 @@ fn test_nested_subscript_augassign_lowers_for_name_targets() {
 
 #[test]
 fn test_bytes_subscript_assignment_has_ownership_code() {
-    let result =
-        lower_source("def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] = 65\n");
+    let source = "def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] = 65\n";
+    let result = lower_source(source);
     let errors = result.expect_err("expected bytes subscript assignment error");
 
     assert!(
         errors.iter().any(|error| error.code
             == Some(DiagnosticCode::OWN_IMMUTABLE_BYTES_ASSIGNMENT)
-            && error.message == "bytes is immutable; subscript assignment is not supported"),
+            && error.message == "bytes is immutable; subscript assignment is not supported"
+            && error.primary_range == Some(range_for(source, "payload[0]"))),
         "bytes subscript assignment should preserve ownership code: {errors:?}"
     );
 }
 
 #[test]
 fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
-    let result =
-        lower_source("def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] += 1\n");
+    let source = "def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] += 1\n";
+    let result = lower_source(source);
     let errors = result.expect_err("expected bytes augmented subscript assignment error");
 
     assert!(
         errors.iter().any(|error| error.code
             == Some(DiagnosticCode::OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT)
             && error.message
-                == "bytes is immutable; augmented subscript assignment is not supported"),
+                == "bytes is immutable; augmented subscript assignment is not supported"
+            && error.primary_range == Some(range_for(source, "payload[0]"))),
         "bytes augmented subscript assignment should preserve ownership code: {errors:?}"
     );
 }

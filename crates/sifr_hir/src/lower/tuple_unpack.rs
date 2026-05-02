@@ -31,7 +31,7 @@ fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarge
                 return None;
             };
             let object = object_name.id.to_string();
-            if !ensure_mutable_parameter_binding(ctx, &object) {
+            if !ensure_mutable_parameter_binding(ctx, &object, object_name.range()) {
                 return None;
             }
             Some(TupleAssignTarget::Field {
@@ -107,7 +107,9 @@ pub(super) fn lower_tuple_unpack_assign(
                         return None;
                     };
                     if info.is_parameter_binding() && !info.is_mutable_binding() {
-                        super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name);
+                        super::ownership_diagnostics::immutable_parameter_reassignment(
+                            ctx, &name, range,
+                        );
                         return None;
                     }
                     let info_ty = info.ty.clone();

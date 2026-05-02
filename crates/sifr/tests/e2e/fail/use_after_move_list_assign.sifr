@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0001
+# expect-error[col=11]: SIFR-OWN-0001
 def main():
     l1: list[int] = [1, 2, 3]
     l2: list[int] = l1

@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0005
+# expect-error[col=5]: SIFR-OWN-0005
 # Test: owned parameters remain immutable unless explicitly marked mut.
 
 def owned_immutable_mutation(own items: list[int]) -> list[int]:

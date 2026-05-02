@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0003
+# expect-error[col=25]: SIFR-OWN-0003
 # Test: storing a borrowed parameter into a local variable should produce a compile error.
 # The parameter `items` is borrowed by default (&Vec<i64>),
 # so it cannot be stored (would escape the borrow).

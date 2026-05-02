@@ -1,5 +1,6 @@
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
+use ruff_text_size::TextRange;
 use sifr_type_system::Type;
 
 pub(super) fn reject_immutable_parameter_method_mutation(
@@ -7,6 +8,7 @@ pub(super) fn reject_immutable_parameter_method_mutation(
     object: &HirExpr,
     object_ty: &Type,
     method: &str,
+    object_range: TextRange,
 ) -> bool {
     if !is_collection_mutating_method(object_ty, method) {
         return false;
@@ -18,7 +20,7 @@ pub(super) fn reject_immutable_parameter_method_mutation(
             .lookup(name)
             .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding())
         {
-            super::ownership_diagnostics::immutable_parameter_mutation(ctx, name);
+            super::ownership_diagnostics::immutable_parameter_mutation(ctx, name, object_range);
             return true;
         }
     }

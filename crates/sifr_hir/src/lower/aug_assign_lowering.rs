@@ -42,7 +42,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             ctx.error("augmented attribute assignment target must be a simple name".to_string());
             return None;
         };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, attr.value.range()) {
             return None;
         }
         let field_name = attr.attr.to_string();
@@ -99,11 +99,14 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
                 );
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, inner_sub.value.range()) {
                 return None;
             }
             if matches!(obj_ty.resolve_alias(), Type::Bytes) {
-                super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(ctx);
+                super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(
+                    ctx,
+                    inner_sub.range(),
+                );
                 return None;
             }
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
@@ -175,13 +178,16 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
                 );
                 return None;
             };
-            if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, attr.value.range()) {
                 return None;
             }
             let field_name = attr.attr.to_string();
             let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
             if matches!(field_ty.resolve_alias(), Type::Bytes) {
-                super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(ctx);
+                super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(
+                    ctx,
+                    sub.range(),
+                );
                 return None;
             }
             let object_expr = lower_expr(attr.value.as_ref(), ctx)?;
@@ -230,7 +236,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             ctx.error("augmented subscript assignment target must be a simple name".to_string());
             return None;
         };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name) {
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, sub.value.range()) {
             return None;
         }
         let obj_ty = ctx
@@ -239,7 +245,10 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
         if matches!(obj_ty.resolve_alias(), Type::Bytes) {
-            super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(ctx);
+            super::ownership_diagnostics::immutable_bytes_augmented_subscript_assignment(
+                ctx,
+                sub.range(),
+            );
             return None;
         }
         let index = lower_expr(&sub.slice, ctx)?;
@@ -293,7 +302,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         return None;
     };
     if var_info.is_parameter_binding() && !var_info.is_mutable_binding() {
-        super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name);
+        super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name, name_range);
         return None;
     }
     let var_ty = var_info.ty.clone();
