@@ -676,9 +676,11 @@ fn test_if_condition_rejects_numeric_truthiness() {
     let result = lower_source("def main():\n    if 1:\n        pass\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("if condition must be bool or collection/string truthiness")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("if condition must be bool or collection/string truthiness")
+            && e.code == Some(DiagnosticCode::FLOW_INVALID_CONDITION_TYPE)
+    }));
 }
 
 #[test]
@@ -686,9 +688,11 @@ fn test_while_condition_rejects_numeric_truthiness() {
     let result = lower_source("def main():\n    while 1:\n        return\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("while condition must be bool or collection/string truthiness")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("while condition must be bool or collection/string truthiness")
+            && e.code == Some(DiagnosticCode::FLOW_INVALID_CONDITION_TYPE)
+    }));
 }
 
 #[test]

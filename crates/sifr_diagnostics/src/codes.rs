@@ -72,6 +72,7 @@ impl DiagnosticCode {
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
     pub const FLOW_INVALID_NONLOCAL: Self = Self::new("SIFR-FLOW-0003", Severity::Error);
     pub const FLOW_MISSING_RETURN_VALUE: Self = Self::new("SIFR-FLOW-0004", Severity::Error);
+    pub const FLOW_INVALID_CONDITION_TYPE: Self = Self::new("SIFR-FLOW-0005", Severity::Error);
     pub const FLOW_UNREACHABLE_STATEMENT: Self = Self::new("SIFR-FLOW-0901", Severity::Warning);
 
     pub const MATCH_NON_EXHAUSTIVE: Self = Self::new("SIFR-MATCH-0001", Severity::Error);
@@ -922,6 +923,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["function", "return_type"]
     ),
     active_entry!(
+        "SIFR-FLOW-0005",
+        "FLOW",
+        "Control-flow condition has an unsupported type.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/if_condition_numeric_truthiness.sifr",
+        "{keyword} condition must be bool or collection/string truthiness, got '{actual}'",
+        "sifr_hir::lower::control_flow_conditions",
+        [arg!("keyword"), arg!("actual")],
+        ["keyword", "actual"]
+    ),
+    active_entry!(
         "SIFR-FLOW-0901",
         "FLOW",
         "Unreachable statement ignored during lowering.",
@@ -1370,6 +1382,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,
     DiagnosticCode::FLOW_MISSING_RETURN_VALUE,
+    DiagnosticCode::FLOW_INVALID_CONDITION_TYPE,
     DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
     DiagnosticCode::MATCH_NON_EXHAUSTIVE,
     DiagnosticCode::MATCH_GUARD_NOT_BOOL,
