@@ -137,8 +137,8 @@ pub(super) fn validate_subscript_augassign_target(
                     index_ty.display_name()
                 ));
             }
-            if let Err(error) = type_check_binary_op(elem_ty.as_ref(), base_op, rhs_ty) {
-                ctx.error(error.message);
+            if let Err((code, message)) = type_check_binary_op(elem_ty.as_ref(), base_op, rhs_ty) {
+                ctx.error_with_code(code, message);
             }
             Type::List(elem_ty)
         }
@@ -150,7 +150,9 @@ pub(super) fn validate_subscript_augassign_target(
                     key_ty.display_name()
                 ));
             }
-            if let Err(error) = type_check_binary_op(value_ty_expected.as_ref(), base_op, rhs_ty) {
+            if let Err((code, message)) =
+                type_check_binary_op(value_ty_expected.as_ref(), base_op, rhs_ty)
+            {
                 if let Some(Type::Dict(expected_key, expected_value)) =
                     ctx.empty_dict_specializations.get(object_name).cloned()
                 {
@@ -163,7 +165,7 @@ pub(super) fn validate_subscript_augassign_target(
                         rhs_ty,
                     );
                 } else {
-                    ctx.error(error.message);
+                    ctx.error_with_code(code, message);
                 }
             }
             match object_ty {

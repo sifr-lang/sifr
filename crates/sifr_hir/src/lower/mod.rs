@@ -2,7 +2,7 @@
 use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 use crate::scope::Scope;
 use sifr_python_ast::{Expr, ExprCall, Stmt};
-use sifr_type_system::{make_union, FunctionType, Type, TypeCheckDiagnostic};
+use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 mod append_growth_shapes;
 mod arithmetic_warnings;
@@ -226,10 +226,6 @@ impl LowerCtx {
             line: None,
             col: None,
         });
-    }
-
-    fn type_check_diagnostic(&mut self, error: TypeCheckDiagnostic) {
-        self.error_with_code(error.code, error.message);
     }
 
     fn error_with_code(&mut self, code: DiagnosticCode, message: String) {

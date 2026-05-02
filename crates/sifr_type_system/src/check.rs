@@ -2,8 +2,9 @@
 
 use crate::types::Type;
 use crate::union::{remove_none_from_union, union_contains_none};
-use crate::TypeCheckDiagnostic;
 use sifr_diagnostics::DiagnosticCode;
+
+type TypeCheckResult = Result<Type, (DiagnosticCode, String)>;
 
 fn is_decimal_type(ty: &Type) -> bool {
     matches!(ty, Type::Decimal)
@@ -24,27 +25,23 @@ fn is_integral_numeric_type(ty: &Type) -> bool {
 /// Type-check a binary operation (e.g., `a + b`, `a - b`).
 ///
 /// Returns the result type or an error.
-pub fn type_check_binary_op(
-    left: &Type,
-    op: &str,
-    right: &Type,
-) -> Result<Type, TypeCheckDiagnostic> {
+pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckResult {
     if (is_decimal_type(left) && is_bigdecimal_type(right))
         || (is_bigdecimal_type(left) && is_decimal_type(right))
     {
-        return Err(TypeCheckDiagnostic {
-            code: DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL,
-            message: "cannot mix 'decimal' and 'bigdecimal' in arithmetic; use explicit Decimal(...) or BigDecimal(...) conversion".to_string(),
-        });
+        return Err((
+            DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL,
+            "cannot mix 'decimal' and 'bigdecimal' in arithmetic; use explicit Decimal(...) or BigDecimal(...) conversion".to_string(),
+        ));
     }
 
     if (left == &Type::Float && is_decimal_family_type(right))
         || (right == &Type::Float && is_decimal_family_type(left))
     {
-        return Err(TypeCheckDiagnostic {
-            code: DiagnosticCode::DECIMAL_FLOAT_MIXED,
-            message: "cannot mix 'float' with decimal numeric types in arithmetic".to_string(),
-        });
+        return Err((
+            DiagnosticCode::DECIMAL_FLOAT_MIXED,
+            "cannot mix 'float' with decimal numeric types in arithmetic".to_string(),
+        ));
     }
 
     // Mixed int/bigint arithmetic is a compile error (except bigint ** int which is allowed)
@@ -53,10 +50,10 @@ pub fn type_check_binary_op(
         if (left == &Type::Int && right == &Type::BigInt)
             || (left == &Type::BigInt && right == &Type::Int)
         {
-            return Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_INT_BIGINT_MIXED,
-                message: "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly".to_string(),
-            });
+            return Err((
+                DiagnosticCode::TYPE_INT_BIGINT_MIXED,
+                "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly".to_string(),
+            ));
         }
     }
 
@@ -115,14 +112,14 @@ pub fn type_check_binary_op(
             if left == &Type::Bytes && right == &Type::Bytes {
                 return Ok(Type::Bytes);
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "unsupported operand type(s) for +: '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
         "-" | "*" => {
             // Decimal-family arithmetic
@@ -173,14 +170,14 @@ pub fn type_check_binary_op(
                     return Ok(Type::Bytes);
                 }
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
         "/" => {
             // Decimal-family arithmetic
@@ -208,14 +205,14 @@ pub fn type_check_binary_op(
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "unsupported operand type(s) for /: '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
         "//" | "%" => {
             // Decimal-family arithmetic
@@ -246,14 +243,14 @@ pub fn type_check_binary_op(
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
         "**" => {
             // Decimal-family exponentiation currently accepts integral exponents only.
@@ -274,14 +271,14 @@ pub fn type_check_binary_op(
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "unsupported operand type(s) for **: '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
         "&" | "|" | "^" => {
             // Bitwise operators: int & int -> int, int | int -> int, int ^ int -> int
@@ -292,58 +289,53 @@ pub fn type_check_binary_op(
             if left == &Type::Bool && right == &Type::Bool {
                 return Ok(Type::Bool);
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
         "<<" | ">>" => {
             // Shift operators: int << int -> int, int >> int -> int
             if left == &Type::Int && right == &Type::Int {
                 return Ok(Type::Int);
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
-        _ => Err(TypeCheckDiagnostic {
-            code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-            message: format!("unknown binary operator: {op}"),
-        }),
+        _ => Err((
+            DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+            format!("unknown binary operator: {op}"),
+        )),
     }
 }
 
 /// Type-check a comparison operation (e.g., `a == b`, `a < b`).
-pub fn type_check_comparison(
-    left: &Type,
-    op: &str,
-    right: &Type,
-) -> Result<Type, TypeCheckDiagnostic> {
+pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckResult {
     if (is_decimal_type(left) && is_bigdecimal_type(right))
         || (is_bigdecimal_type(left) && is_decimal_type(right))
     {
-        return Err(TypeCheckDiagnostic {
-            code: DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL,
-            message: "cannot compare 'decimal' and 'bigdecimal' without explicit conversion"
-                .to_string(),
-        });
+        return Err((
+            DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL,
+            "cannot compare 'decimal' and 'bigdecimal' without explicit conversion".to_string(),
+        ));
     }
     if (left == &Type::Float && is_decimal_family_type(right))
         || (right == &Type::Float && is_decimal_family_type(left))
     {
-        return Err(TypeCheckDiagnostic {
-            code: DiagnosticCode::DECIMAL_FLOAT_MIXED,
-            message: "cannot compare 'float' with decimal numeric types".to_string(),
-        });
+        return Err((
+            DiagnosticCode::DECIMAL_FLOAT_MIXED,
+            "cannot compare 'float' with decimal numeric types".to_string(),
+        ));
     }
 
     match op {
@@ -352,10 +344,10 @@ pub fn type_check_comparison(
             if (left == &Type::Int && right == &Type::BigInt)
                 || (left == &Type::BigInt && right == &Type::Int)
             {
-                return Err(TypeCheckDiagnostic {
-                    code: DiagnosticCode::TYPE_INT_BIGINT_MIXED,
-                    message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
-                });
+                return Err((
+                    DiagnosticCode::TYPE_INT_BIGINT_MIXED,
+                    "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
+                ));
             }
             // Equality comparison works on same types and on structurally matching
             // containers when one side still carries Any/Unknown element shape.
@@ -386,24 +378,24 @@ pub fn type_check_comparison(
                     return Ok(Type::Bool);
                 }
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_MISMATCH,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
                     "cannot compare '{}' and '{}' with {op}",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
         "<" | ">" | "<=" | ">=" => {
             // Block mixed int/bigint comparisons
             if (left == &Type::Int && right == &Type::BigInt)
                 || (left == &Type::BigInt && right == &Type::Int)
             {
-                return Err(TypeCheckDiagnostic {
-                    code: DiagnosticCode::TYPE_INT_BIGINT_MIXED,
-                    message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
-                });
+                return Err((
+                    DiagnosticCode::TYPE_INT_BIGINT_MIXED,
+                    "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
+                ));
             }
             // Ordering comparison works on numeric types and strings
             if left.is_numeric() && right.is_numeric() {
@@ -429,19 +421,19 @@ pub fn type_check_comparison(
                     return Ok(Type::Bool);
                 }
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "'{op}' not supported between instances of '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
-        _ => Err(TypeCheckDiagnostic {
-            code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-            message: format!("unknown comparison operator: {op}"),
-        }),
+        _ => Err((
+            DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+            format!("unknown comparison operator: {op}"),
+        )),
     }
 }
 
@@ -478,19 +470,19 @@ fn equality_comparable(left: &Type, right: &Type) -> bool {
 }
 
 /// Type-check a unary operation (e.g., `-x`, `not x`).
-pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeCheckDiagnostic> {
+pub fn type_check_unary_op(op: &str, operand: &Type) -> TypeCheckResult {
     match op {
         "-" | "+" => {
             if operand.is_numeric() {
                 return Ok(operand.clone());
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "bad operand type for unary {op}: '{}'",
                     operand.display_name()
                 ),
-            })
+            ))
         }
         "not" => {
             if operand == &Type::Bool {
@@ -513,37 +505,33 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeCheckDi
                 }
                 _ => {}
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "bad operand type for unary not: '{}'",
                     operand.display_name()
                 ),
-            })
+            ))
         }
         "~" => {
             // Bitwise invert: ~int -> int, ~bool -> int
             if operand == &Type::Int || operand == &Type::Bool {
                 return Ok(Type::Int);
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!("bad operand type for unary ~: '{}'", operand.display_name()),
-            })
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!("bad operand type for unary ~: '{}'", operand.display_name()),
+            ))
         }
-        _ => Err(TypeCheckDiagnostic {
-            code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-            message: format!("unknown unary operator: {op}"),
-        }),
+        _ => Err((
+            DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+            format!("unknown unary operator: {op}"),
+        )),
     }
 }
 
 /// Type-check a boolean operation (e.g., `a and b`, `a or b`).
-pub fn type_check_bool_op(
-    left: &Type,
-    op: &str,
-    right: &Type,
-) -> Result<Type, TypeCheckDiagnostic> {
+pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> TypeCheckResult {
     fn supports_truthiness(ty: &Type) -> bool {
         matches!(
             ty,
@@ -568,19 +556,19 @@ pub fn type_check_bool_op(
             if supports_truthiness(left) && supports_truthiness(right) {
                 return Ok(Type::Bool);
             }
-            Err(TypeCheckDiagnostic {
-                code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-                message: format!(
+            Err((
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
                     left.display_name(),
                     right.display_name()
                 ),
-            })
+            ))
         }
-        _ => Err(TypeCheckDiagnostic {
-            code: DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-            message: format!("unknown boolean operator: {op}"),
-        }),
+        _ => Err((
+            DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+            format!("unknown boolean operator: {op}"),
+        )),
     }
 }
 
@@ -643,11 +631,11 @@ mod tests {
     #[test]
     fn test_invalid_binary_op() {
         let str_sub = type_check_binary_op(&Type::Str, "-", &Type::Str).unwrap_err();
-        assert_eq!(str_sub.code, DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR);
+        assert_eq!(str_sub.0, DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR);
         let int_str_add = type_check_binary_op(&Type::Int, "+", &Type::Str).unwrap_err();
-        assert_eq!(int_str_add.code, DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR);
+        assert_eq!(int_str_add.0, DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR);
         let bool_add = type_check_binary_op(&Type::Bool, "+", &Type::Bool).unwrap_err();
-        assert_eq!(bool_add.code, DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR);
+        assert_eq!(bool_add.0, DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR);
     }
 
     #[test]
@@ -655,7 +643,7 @@ mod tests {
         let optional_int = Type::Union(vec![Type::None, Type::Int]);
         let optional_plus_int = type_check_binary_op(&optional_int, "+", &Type::Int).unwrap_err();
         assert_eq!(
-            optional_plus_int.code,
+            optional_plus_int.0,
             DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR
         );
         assert!(type_check_binary_op(&Type::Int, "+", &optional_int).is_err());
@@ -715,7 +703,7 @@ mod tests {
     #[test]
     fn test_mixed_int_bigint_comparison_blocked() {
         let int_bigint_eq = type_check_comparison(&Type::Int, "==", &Type::BigInt).unwrap_err();
-        assert_eq!(int_bigint_eq.code, DiagnosticCode::TYPE_INT_BIGINT_MIXED);
+        assert_eq!(int_bigint_eq.0, DiagnosticCode::TYPE_INT_BIGINT_MIXED);
         assert!(type_check_comparison(&Type::BigInt, "==", &Type::Int).is_err());
         assert!(type_check_comparison(&Type::Int, "<", &Type::BigInt).is_err());
         assert!(type_check_comparison(&Type::BigInt, ">", &Type::Int).is_err());

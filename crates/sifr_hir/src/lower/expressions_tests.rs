@@ -473,9 +473,10 @@ fn test_attribute_subscript_augassign_lowers_for_class_fields() {
         "attribute subscript augassign should lower past target-shape validation: {errors:?}"
     );
     assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("unsupported operand type(s) for +")),
+        errors.iter().any(
+            |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                && error.message.contains("unsupported operand type(s) for +")
+        ),
         "lowering should reach operand typing for attribute subscript augassign: {errors:?}"
     );
 }
@@ -498,10 +499,41 @@ fn test_nested_subscript_augassign_lowers_for_name_targets() {
         "nested subscript augassign should lower past target-shape validation: {errors:?}"
     );
     assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("unsupported operand type(s) for +")),
+        errors.iter().any(
+            |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                && error.message.contains("unsupported operand type(s) for +")
+        ),
         "lowering should reach operand typing for nested subscript augassign: {errors:?}"
+    );
+}
+
+#[test]
+fn test_list_subscript_augassign_type_error_keeps_code() {
+    let result = lower_source("def bad(mut xs: list[int]) -> None:\n    xs[0] += \"x\"\n");
+    let errors = result.expect_err("expected list subscript augassign type error");
+
+    assert!(
+        errors.iter().any(
+            |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                && error.message.contains("unsupported operand type(s) for +")
+        ),
+        "list subscript augassign should preserve the operator helper code: {errors:?}"
+    );
+}
+
+#[test]
+fn test_dict_subscript_augassign_type_error_keeps_code() {
+    let result = lower_source(
+        "def bad(mut data: dict[str, int]) -> None:\n    data[\"x\"] = 1\n    data[\"x\"] += \"x\"\n",
+    );
+    let errors = result.expect_err("expected dict subscript augassign type error");
+
+    assert!(
+        errors.iter().any(
+            |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                && error.message.contains("unsupported operand type(s) for +")
+        ),
+        "dict subscript augassign should preserve the operator helper code: {errors:?}"
     );
 }
 
