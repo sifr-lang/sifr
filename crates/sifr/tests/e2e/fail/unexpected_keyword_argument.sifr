@@ -1,4 +1,4 @@
-# expect-error: SIFR-CALL-0002
+# expect-error[col=26]: SIFR-CALL-0002
 def greet(name: str) -> str:
     return "hello"
 

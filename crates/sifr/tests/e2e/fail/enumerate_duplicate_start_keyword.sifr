@@ -1,0 +1,5 @@
+# expect-error[col=34]: SIFR-CALL-0003
+
+def main():
+    nums: list[int] = [1, 2]
+    _items = enumerate(nums, 10, start=1)

@@ -1,5 +1,5 @@
 # Reference: phase_psp_a1_range_duplicate_stop_keyword
-# expect-error: SIFR-CALL-0003
+# expect-error[col=26]: SIFR-CALL-0003
 
 def main():
     print(list(range(10, stop=20)))

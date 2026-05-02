@@ -1158,9 +1158,15 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         if func_name == "sum" {
             if call.arguments.args.len() != 1 {
                 let actual_count = call.arguments.args.len();
-                ctx.error_with_code(
+                let range = if let Some(extra_arg) = call.arguments.args.get(1) {
+                    extra_arg.range()
+                } else {
+                    call.func.range()
+                };
+                ctx.error_with_code_at(
                     DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
                     format!("sum() takes exactly 1 argument(s), got {actual_count}"),
+                    range,
                 );
                 return None;
             }
@@ -1224,9 +1230,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     }
                     other => {
                         let keyword = other;
-                        ctx.error_with_code(
+                        ctx.error_with_code_at(
                             DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
                             format!("sorted() got an unexpected keyword argument '{keyword}'"),
+                            name.range(),
                         );
                         return None;
                     }
@@ -1240,9 +1247,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 (Some(arg), None) => lower_expr(arg, ctx)?,
                 (None, Some(keyword)) => lower_expr(&keyword.value, ctx)?,
                 (None, None) => {
-                    ctx.error_with_code(
+                    ctx.error_with_code_at(
                         DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT,
                         "sorted() missing required argument 'iterable'".to_string(),
+                        call.func.range(),
                     );
                     return None;
                 }
@@ -1372,14 +1380,19 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     return None;
                 };
                 if name.as_str() != "start" {
-                    ctx.error_with_code(
+                    ctx.error_with_code_at(
                         DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
                         format!("enumerate() got an unexpected keyword argument '{name}'"),
+                        name.range(),
                     );
                     return None;
                 }
                 if call.arguments.args.len() == 2 {
-                    ctx.error("enumerate() got multiple values for argument 'start'".to_string());
+                    ctx.error_with_code_at(
+                        DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
+                        "enumerate() got multiple values for argument 'start'".to_string(),
+                        name.range(),
+                    );
                     return None;
                 }
             }
@@ -1487,11 +1500,17 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         if param_types.len() != context_types.len() {
             let expected_count = param_types.len();
             let actual_count = context_types.len();
-            ctx.error_with_code(
+            let range = if actual_count > expected_count {
+                call.arguments.args[expected_count + 1].range()
+            } else {
+                call.func.range()
+            };
+            ctx.error_with_code_at(
                 DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY,
                 format!(
                     "map() callable expects {expected_count} argument(s), got {actual_count} iterable(s)"
                 ),
+                range,
             );
             return None;
         }

@@ -22,9 +22,10 @@ pub(super) fn reject_zip_keywords_if_present(call: &ExprCall, ctx: &mut LowerCtx
     let message = match name.as_str() {
         "strict" => "zip() keyword argument 'strict' is not supported".to_string(),
         other => {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
                 format!("zip() got an unexpected keyword argument '{other}'"),
+                name.range(),
             );
             return true;
         }
@@ -806,9 +807,10 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
         match name.as_str() {
             "start" => {
                 if start_expr.is_some() {
-                    ctx.error_with_code(
+                    ctx.error_with_code_at(
                         DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
                         "range() got multiple values for argument 'start'".to_string(),
+                        name.range(),
                     );
                     return None;
                 }
@@ -816,9 +818,10 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
             }
             "stop" => {
                 if stop_expr.is_some() {
-                    ctx.error_with_code(
+                    ctx.error_with_code_at(
                         DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
                         "range() got multiple values for argument 'stop'".to_string(),
+                        name.range(),
                     );
                     return None;
                 }
@@ -826,18 +829,20 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
             }
             "step" => {
                 if step_expr.is_some() {
-                    ctx.error_with_code(
+                    ctx.error_with_code_at(
                         DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
                         "range() got multiple values for argument 'step'".to_string(),
+                        name.range(),
                     );
                     return None;
                 }
                 step_expr = Some(&keyword.value);
             }
             other => {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
                     format!("range() got an unexpected keyword argument '{other}'"),
+                    name.range(),
                 );
                 return None;
             }
@@ -845,9 +850,10 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
     }
 
     let Some(stop_raw) = stop_expr else {
-        ctx.error_with_code(
+        ctx.error_with_code_at(
             DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT,
             "range() missing required argument 'stop'".to_string(),
+            call.func.range(),
         );
         return None;
     };

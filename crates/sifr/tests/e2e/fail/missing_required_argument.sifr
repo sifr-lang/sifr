@@ -1,4 +1,4 @@
-# expect-error: SIFR-CALL-0004
+# expect-error[col=11]: SIFR-CALL-0004
 def display(name: str, *, verbose: bool) -> str:
     if verbose:
         return "verbose"

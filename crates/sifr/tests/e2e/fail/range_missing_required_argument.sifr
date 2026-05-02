@@ -1,4 +1,4 @@
-# expect-error: SIFR-CALL-0004
+# expect-error[col=30]: SIFR-CALL-0004
 def main():
     values: list[int] = list(range())
     print(len(values))
