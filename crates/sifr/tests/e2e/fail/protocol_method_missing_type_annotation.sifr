@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004
+# expect-error[col=22]: SIFR-TYPE-0004
 
 class Sink(Protocol):
     def accept(self, value) -> None:

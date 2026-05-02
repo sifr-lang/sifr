@@ -57,12 +57,14 @@ fn missing_method_param_annotation(
     class_name: &str,
     method_name: &str,
     param_name: &str,
+    range: ruff_text_size::TextRange,
 ) {
-    ctx.error_with_code(
+    ctx.error_with_code_at(
         DiagnosticCode::TYPE_MISSING_ANNOTATION,
         format!(
             "parameter '{param_name}' in {class_name}.{method_name} is missing a type annotation"
         ),
+        range,
     );
 }
 
@@ -323,6 +325,7 @@ pub(super) fn collect_class_type(
                             &class_name,
                             &method_name,
                             &param_name,
+                            param.parameter.name.range(),
                         );
                         Type::Any
                     };
@@ -363,6 +366,7 @@ pub(super) fn collect_class_type(
                             &class_name,
                             &method_name,
                             &param_name,
+                            param.parameter.name.range(),
                         );
                         Type::Any
                     };
@@ -478,6 +482,7 @@ pub(super) fn collect_class_type(
                                 &class_name,
                                 "__init__",
                                 &param_name,
+                                param.parameter.name.range(),
                             );
                             Type::Any
                         };
@@ -533,6 +538,7 @@ pub(super) fn collect_class_type(
                                 &class_name,
                                 &method_name,
                                 &param_name,
+                                param.parameter.name.range(),
                             );
                             Type::Any
                         };
@@ -834,6 +840,7 @@ pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Optio
                             &class_name,
                             &method_name,
                             &param_name,
+                            param.parameter.name.range(),
                         );
                         Type::Any
                     };

@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004
+# expect-error[col=19]: SIFR-TYPE-0004
 
 class UserId(int):
     def add(self, amount) -> int:

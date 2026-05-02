@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004
+# expect-error[col=16]: SIFR-TYPE-0004
 
 def power_two(exp: int) -> int:
     def helper(n):

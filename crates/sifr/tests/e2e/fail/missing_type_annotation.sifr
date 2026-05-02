@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004
+# expect-error[col=14]: SIFR-TYPE-0004
 
 def identity(value) -> int:
     return value

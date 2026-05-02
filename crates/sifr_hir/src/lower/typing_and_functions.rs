@@ -320,12 +320,13 @@ pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) 
         let ty = if let Some(annotation) = &param.parameter.annotation {
             resolve_annotation_expr(annotation, ctx)
         } else {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISSING_ANNOTATION,
                 format!(
                     "parameter '{}' in function '{}' is missing a type annotation",
                     name, func.name
                 ),
+                param.parameter.name.range(),
             );
             Type::Any
         };
@@ -339,12 +340,13 @@ pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) 
         let elem_ty = if let Some(ref annotation) = vararg.annotation {
             resolve_annotation_expr(annotation, ctx)
         } else {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISSING_ANNOTATION,
                 format!(
                     "vararg parameter '{}' in function '{}' is missing a type annotation",
                     name, func.name
                 ),
+                vararg.name.range(),
             );
             Type::Any
         };
@@ -359,12 +361,13 @@ pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) 
         let ty = if let Some(annotation) = &param.parameter.annotation {
             resolve_annotation_expr(annotation, ctx)
         } else {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISSING_ANNOTATION,
                 format!(
                     "parameter '{}' in function '{}' is missing a type annotation",
                     name, func.name
                 ),
+                param.parameter.name.range(),
             );
             Type::Any
         };

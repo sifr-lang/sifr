@@ -1,3 +1,4 @@
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{AstParamConvention, CmpOp, Expr, ExprCall, Operator, Stmt, StmtFunctionDef};
 use sifr_type_system::{type_check_binary_op, FunctionType, Type};
@@ -16,6 +17,7 @@ pub(super) struct NestedFunctionInference {
 #[derive(Clone)]
 struct ParamState {
     name: String,
+    name_range: TextRange,
     ty: Type,
     explicit: bool,
     convention: sifr_python_ast::AstParamConvention,
@@ -173,6 +175,7 @@ fn collect_nested_function_states<'a>(
             };
             params.push(ParamState {
                 name,
+                name_range: param.parameter.name.range(),
                 ty,
                 explicit,
                 convention: param.parameter.convention,
@@ -436,12 +439,13 @@ fn finalize_nested_function_types(
         for param in &mut state.params {
             if !param.explicit && param.ty.is_unknown() {
                 state.inference_failed = true;
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISSING_ANNOTATION,
                     format!(
                         "parameter '{}' in function '{}' is missing a type annotation and could not be inferred",
                         param.name, state.func.name
                     ),
+                    param.name_range,
                 );
                 param.ty = Type::Any;
             }

@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004
+# expect-error[col=24]: SIFR-TYPE-0004
 
 class Box:
     value: int
