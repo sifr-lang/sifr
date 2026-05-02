@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007
+# expect-error[col=20]: SIFR-TYPE-0007
 
 def consume(value: make_type()[int]) -> int:
     return 0
