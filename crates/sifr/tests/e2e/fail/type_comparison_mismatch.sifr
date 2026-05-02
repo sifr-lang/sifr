@@ -1,0 +1,4 @@
+# expect-error: SIFR-TYPE-0002
+
+def main():
+    _ = 1 == "1"
