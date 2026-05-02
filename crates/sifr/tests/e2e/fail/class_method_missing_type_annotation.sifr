@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0004
+# expect-error[col=21]: SIFR-TYPE-0004
 
 class Tool:
     def scale(self, value) -> int:

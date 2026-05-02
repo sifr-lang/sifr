@@ -2233,6 +2233,32 @@ fn test_generic_class_subscript_arity_mismatch_errors() {
 }
 
 #[test]
+fn test_missing_function_parameter_annotation_has_primary_range() {
+    let source = "def identity(value) -> int:\n    return value\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "parameter 'value' in function 'identity' is missing a type annotation"
+            && error.code == Some(DiagnosticCode::TYPE_MISSING_ANNOTATION)
+            && error.primary_range == Some(range_for(source, "value"))
+    }));
+}
+
+#[test]
+fn test_missing_class_method_parameter_annotation_has_primary_range() {
+    let source = "class Tool:\n    def scale(self, value) -> int:\n        return value\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "parameter 'value' in Tool.scale is missing a type annotation"
+            && error.code == Some(DiagnosticCode::TYPE_MISSING_ANNOTATION)
+            && error.primary_range == Some(range_for(source, "value"))
+    }));
+}
+
+#[test]
 fn test_typevar_constraints_violation_has_type_code() {
     let result = lower_source(
         "from typing import TypeVar\n\nT = TypeVar(\"T\", int, str)\n\ndef echo(x: T) -> T:\n    return x\n\ndef main():\n    bad: float = echo(1.5)\n    print(bad)\n",
