@@ -67,6 +67,9 @@ impl DiagnosticCode {
     pub const OWN_IMMUTABLE_PARAMETER_MUTATION: Self = Self::new("SIFR-OWN-0005", Severity::Error);
     pub const OWN_IMMUTABLE_PARAMETER_REASSIGNMENT: Self =
         Self::new("SIFR-OWN-0006", Severity::Error);
+    pub const OWN_IMMUTABLE_BYTES_ASSIGNMENT: Self = Self::new("SIFR-OWN-0007", Severity::Error);
+    pub const OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT: Self =
+        Self::new("SIFR-OWN-0008", Severity::Error);
 
     pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
@@ -879,6 +882,28 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["binding"]
     ),
     active_entry!(
+        "SIFR-OWN-0007",
+        "OWN",
+        "Immutable bytes value is mutated.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/bytes_subscript_assignment_unsupported.sifr",
+        "bytes is immutable; subscript assignment is not supported",
+        "sifr_hir::lower::statements",
+        [],
+        []
+    ),
+    active_entry!(
+        "SIFR-OWN-0008",
+        "OWN",
+        "Immutable bytes value is mutated by augmented assignment.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/bytes_augmented_subscript_assignment_unsupported.sifr",
+        "bytes is immutable; augmented subscript assignment is not supported",
+        "sifr_hir::lower::aug_assign_lowering",
+        [],
+        []
+    ),
+    active_entry!(
         "SIFR-FLOW-0001",
         "FLOW",
         "Break outside a loop.",
@@ -1378,6 +1403,8 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::OWN_MOVED_ACROSS_LOOP,
     DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION,
     DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT,
+    DiagnosticCode::OWN_IMMUTABLE_BYTES_ASSIGNMENT,
+    DiagnosticCode::OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT,
     DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,

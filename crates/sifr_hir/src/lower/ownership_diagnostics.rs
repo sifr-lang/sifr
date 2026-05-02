@@ -77,3 +77,17 @@ pub(super) fn immutable_parameter_reassignment(ctx: &mut LowerCtx, name: &str) {
         ),
     );
 }
+
+pub(super) fn immutable_bytes_subscript_assignment(ctx: &mut LowerCtx) {
+    ctx.error_with_code(
+        DiagnosticCode::OWN_IMMUTABLE_BYTES_ASSIGNMENT,
+        "bytes is immutable; subscript assignment is not supported".to_string(),
+    );
+}
+
+pub(super) fn immutable_bytes_augmented_subscript_assignment(ctx: &mut LowerCtx) {
+    ctx.error_with_code(
+        DiagnosticCode::OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT,
+        "bytes is immutable; augmented subscript assignment is not supported".to_string(),
+    );
+}

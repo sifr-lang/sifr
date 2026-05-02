@@ -317,6 +317,8 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-OWN-0002` | double mutable borrow | ownership/borrow checker | `crates/sifr/tests/e2e/fail/double_mut_borrow.sifr` |
 | `SIFR-OWN-0003` | borrowed parameter escapes by return/store | ownership tracking | borrow escape fixtures |
 | `SIFR-OWN-0004` | moved value across loop iteration | ownership tracking | `crates/sifr/tests/e2e/fail/use_after_move_loop.sifr` |
+| `SIFR-OWN-0007` | immutable bytes subscript assignment | assignment lowering | `crates/sifr/tests/e2e/fail/bytes_subscript_assignment_unsupported.sifr` |
+| `SIFR-OWN-0008` | immutable bytes augmented subscript assignment | augmented-assignment lowering | `crates/sifr/tests/e2e/fail/bytes_augmented_subscript_assignment_unsupported.sifr` |
 | `SIFR-FLOW-0001` | `break` outside loop | statement lowering | `crates/sifr/tests/e2e/fail/break_outside_loop.sifr` |
 | `SIFR-FLOW-0002` | `continue` outside loop | statement lowering | `crates/sifr/tests/e2e/fail/continue_outside_loop.sifr` |
 | `SIFR-FLOW-0003` | unsupported or invalid nonlocal/nested function flow | nested function/nonlocal lowering | `crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr` |
