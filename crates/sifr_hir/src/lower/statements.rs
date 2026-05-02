@@ -2,7 +2,6 @@ use super::assignment_widening::reconcile_optional_reassignment;
 use super::aug_assign_lowering::lower_aug_assign as lower_aug_assign_impl;
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::builtin_calls::callable_builtin_element_type;
-use super::classes::collect_literal_coverage;
 use super::container_literal_specialization::{
     apply_container_specialization_patches, type_contains_unknown_or_any,
     validate_subscript_assignment_target,
@@ -17,6 +16,8 @@ use super::if_branch_bindings::{
     predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,
 };
 use super::len_aliases::record_len_alias_fact;
+use super::match_diagnostics;
+use super::match_lowering::lower_match;
 use super::name_diagnostics;
 use super::nonlocal_support::{
     collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
@@ -42,14 +43,14 @@ use super::typing_and_functions::{
 };
 use super::LowerCtx;
 use crate::hir_nodes::{
-    HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirMatchArm, HirParam, HirPattern,
-    HirStmt, MethodKind,
+    HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt,
+    MethodKind,
 };
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     BoolOp, CmpOp, ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign,
-    StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
+    StmtAugAssign, StmtFor, StmtIf, StmtReturn, StmtWhile, UnaryOp,
 };
 use sifr_type_system::infer::resolve_type_annotation;
 use sifr_type_system::{
@@ -642,235 +643,6 @@ pub(super) fn lower_stmt(
     }
 }
 
-pub(super) fn lower_match(
-    match_stmt: &StmtMatch,
-    func_type: &FunctionType,
-    ctx: &mut LowerCtx,
-) -> Option<HirStmt> {
-    let subject = lower_expr(&match_stmt.subject, ctx)?;
-    let subject_ty = subject.ty().clone();
-
-    let mut arms = Vec::new();
-    for case in &match_stmt.cases {
-        let arm = ctx.with_pushed_scope(|ctx| {
-            let pattern = lower_pattern(&case.pattern, &subject_ty, ctx)?;
-
-            // Bind captured variables into scope
-            bind_pattern_vars(&pattern, ctx);
-
-            let guard = if let Some(ref g) = case.guard {
-                let guard_expr = lower_expr(g, ctx)?;
-                let guard_ty = guard_expr.ty();
-                if *guard_ty != Type::Bool && *guard_ty != Type::Any {
-                    super::match_diagnostics::guard_not_bool(ctx, &guard_ty.display_name());
-                }
-                Some(guard_expr)
-            } else {
-                None
-            };
-
-            let body = lower_stmts(&case.body, func_type, ctx);
-            Some(HirMatchArm {
-                pattern,
-                guard,
-                body,
-            })
-        })?;
-
-        arms.push(arm);
-    }
-
-    // Exhaustiveness check: verify all variants of the subject type are covered
-    let has_wildcard = arms
-        .iter()
-        .any(|arm| matches!(arm.pattern, HirPattern::Wildcard));
-    let has_capture_without_guard = arms
-        .iter()
-        .any(|arm| matches!(arm.pattern, HirPattern::Capture { .. }) && arm.guard.is_none());
-
-    if !has_wildcard && !has_capture_without_guard {
-        if let Type::Union(members) = &subject_ty {
-            // Collect covered types from arms
-            let mut covered_none = false;
-            let mut covered_classes: std::collections::HashSet<String> =
-                std::collections::HashSet::new();
-            let mut covered_types: std::collections::HashSet<String> =
-                std::collections::HashSet::new();
-            let mut covered_literal_strs: std::collections::HashSet<String> =
-                std::collections::HashSet::new();
-            let mut covered_literal_ints: std::collections::HashSet<i64> =
-                std::collections::HashSet::new();
-            let mut covered_literal_bools: std::collections::HashSet<bool> =
-                std::collections::HashSet::new();
-
-            for arm in &arms {
-                match &arm.pattern {
-                    HirPattern::None => {
-                        covered_none = true;
-                    }
-                    HirPattern::Class { class_name, .. } => {
-                        covered_classes.insert(class_name.clone());
-                    }
-                    HirPattern::Capture { ty, .. } if arm.guard.is_none() => {
-                        covered_types.insert(ty.display_name());
-                    }
-                    HirPattern::Literal { .. } => {
-                        collect_literal_coverage(
-                            &arm.pattern,
-                            &mut covered_literal_strs,
-                            &mut covered_literal_ints,
-                            &mut covered_literal_bools,
-                        );
-                    }
-                    HirPattern::Or { patterns } => {
-                        for p in patterns {
-                            match p {
-                                HirPattern::None => {
-                                    covered_none = true;
-                                }
-                                HirPattern::Class { class_name, .. } => {
-                                    covered_classes.insert(class_name.clone());
-                                }
-                                HirPattern::Literal { .. } => {
-                                    collect_literal_coverage(
-                                        p,
-                                        &mut covered_literal_strs,
-                                        &mut covered_literal_ints,
-                                        &mut covered_literal_bools,
-                                    );
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-
-            // Check each union member is covered
-            let mut uncovered: Vec<String> = Vec::new();
-            for member in members {
-                match member {
-                    Type::None => {
-                        if !covered_none {
-                            uncovered.push("None".to_string());
-                        }
-                    }
-                    Type::Class { name, .. } => {
-                        if !covered_classes.contains(name) && !covered_types.contains(name) {
-                            uncovered.push(name.clone());
-                        }
-                    }
-                    Type::Int => {
-                        if !covered_types.contains("int") && !covered_classes.contains("int") {
-                            uncovered.push("int".to_string());
-                        }
-                    }
-                    Type::Str => {
-                        if !covered_types.contains("str") && !covered_classes.contains("str") {
-                            uncovered.push("str".to_string());
-                        }
-                    }
-                    Type::Float => {
-                        if !covered_types.contains("float") && !covered_classes.contains("float") {
-                            uncovered.push("float".to_string());
-                        }
-                    }
-                    Type::Bool => {
-                        if !covered_types.contains("bool") && !covered_classes.contains("bool") {
-                            uncovered.push("bool".to_string());
-                        }
-                    }
-                    Type::LiteralStr(s) => {
-                        if !covered_literal_strs.contains(s) {
-                            uncovered.push(format!("\"{s}\""));
-                        }
-                    }
-                    Type::LiteralInt(n) => {
-                        if !covered_literal_ints.contains(n) {
-                            uncovered.push(n.to_string());
-                        }
-                    }
-                    Type::LiteralBool(b) => {
-                        if !covered_literal_bools.contains(b) {
-                            uncovered.push(b.to_string());
-                        }
-                    }
-                    _ => {}
-                }
-            }
-
-            if !uncovered.is_empty() {
-                super::match_diagnostics::non_exhaustive_union(
-                    ctx,
-                    &subject_ty.display_name(),
-                    &uncovered.join(", "),
-                );
-            }
-        }
-
-        // Check enum exhaustiveness
-        if let Type::Enum {
-            ref name,
-            ref variants,
-        } = subject_ty
-        {
-            let mut covered_variants: std::collections::HashSet<String> =
-                std::collections::HashSet::new();
-            for arm in &arms {
-                if let HirPattern::Value { path } = &arm.pattern {
-                    if path.len() == 2 {
-                        covered_variants.insert(path[1].clone());
-                    }
-                }
-                if let HirPattern::Or { patterns } = &arm.pattern {
-                    for p in patterns {
-                        if let HirPattern::Value { path } = p {
-                            if path.len() == 2 {
-                                covered_variants.insert(path[1].clone());
-                            }
-                        }
-                    }
-                }
-            }
-            let uncovered: Vec<&String> = variants
-                .iter()
-                .map(|(v, _)| v)
-                .filter(|v| !covered_variants.contains(*v))
-                .collect();
-            if !uncovered.is_empty() {
-                super::match_diagnostics::non_exhaustive_enum(
-                    ctx,
-                    name,
-                    &uncovered
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                );
-            }
-        }
-
-        // For non-union, non-enum types with only literal/guarded patterns, require a wildcard
-        if !matches!(subject_ty, Type::Union(_)) && !matches!(subject_ty, Type::Enum { .. }) {
-            let all_literal_or_guarded = arms.iter().all(|arm| {
-                matches!(arm.pattern, HirPattern::Literal { .. })
-                    || matches!(arm.pattern, HirPattern::Or { .. })
-                    || arm.guard.is_some()
-            });
-            if all_literal_or_guarded {
-                super::match_diagnostics::non_exhaustive_literal(ctx, &subject_ty.display_name());
-            }
-        }
-    }
-
-    Some(HirStmt::Match {
-        subject,
-        subject_ty,
-        arms,
-    })
-}
-
 pub(super) fn lower_pattern(
     pattern: &Pattern,
     subject_ty: &Type,
@@ -965,7 +737,7 @@ pub(super) fn lower_pattern(
                         .find(|(n, _)| n == &field_name)
                         .map(|(_, t)| t.clone())
                     else {
-                        super::match_diagnostics::invalid_class_pattern_field(
+                        match_diagnostics::invalid_class_pattern_field(
                             ctx,
                             &class_name,
                             &field_name,
@@ -974,6 +746,7 @@ pub(super) fn lower_pattern(
                                 .map(|(n, _)| n.as_str())
                                 .collect::<Vec<_>>()
                                 .join(", "),
+                            kw.attr.range(),
                         );
                         return None;
                     };

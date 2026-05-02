@@ -1,4 +1,4 @@
-# expect-error: SIFR-MATCH-0003
+# expect-error[col=26]: SIFR-MATCH-0003
 class Point:
     x: int
     y: int
