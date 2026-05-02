@@ -2301,6 +2301,45 @@ fn test_typevar_constraints_violation_has_type_code() {
 }
 
 #[test]
+fn test_typevar_invalid_bound_shape_has_primary_range() {
+    let source = "from typing import TypeVar\n\nT = TypeVar(\"T\", bound=1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "TypeVar bound must be a simple type name"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && error.primary_range == Some(range_for_after_anchor(source, "bound=", "1"))
+    }));
+}
+
+#[test]
+fn test_typevar_bound_constraints_conflict_has_primary_range() {
+    let source = "from typing import TypeVar\n\nT = TypeVar(\"T\", int, bound=str)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "TypeVar cannot declare both 'bound' and 'constraints'"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && error.primary_range == Some(range_for_after_anchor(source, "int, ", "bound"))
+    }));
+}
+
+#[test]
+fn test_pep695_typevar_constraint_shape_has_primary_range() {
+    let source = "def echo[T: (int, 1)](x: T) -> T:\n    return x\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "TypeVar constraints must be simple type names"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && error.primary_range == Some(range_for_after_anchor(source, "(int, ", "1"))
+    }));
+}
+
+#[test]
 fn test_auto_init_inheritance_missing_super_has_class_code() {
     let source = "class Animal:\n    name: str\n\n    def __init__(self, name: str):\n        self.name = name\n\nclass Dog(Animal):\n    breed: str\n\ndef main():\n    d: Dog = Dog(\"Rex\", \"Labrador\")\n";
     let result = lower_source(source);

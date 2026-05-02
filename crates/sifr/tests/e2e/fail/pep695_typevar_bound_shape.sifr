@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007
+# expect-error[col=13]: SIFR-TYPE-0007
 
 def echo[T: 1](x: T) -> T:
     return x

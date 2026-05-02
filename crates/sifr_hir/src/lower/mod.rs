@@ -1,7 +1,7 @@
 //! AST to HIR lowering with type checking and name resolution.
 use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 use crate::scope::Scope;
-use sifr_python_ast::{Expr, ExprCall, Stmt};
+use sifr_python_ast::{Expr, Stmt};
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 mod append_growth_shapes;
@@ -79,6 +79,7 @@ mod type_alias_tests;
 mod type_aliases;
 mod type_bounds;
 mod type_var_collection;
+mod typevar_annotations;
 mod typing_and_functions;
 use classes::{collect_class_type, lower_class, lower_expr_simple};
 use default_args::collect_function_defaults;
@@ -91,6 +92,10 @@ use sequence_pointers::SequencePointerFact;
 use sifr_diagnostics::DiagnosticCode;
 use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_type_aliases};
 use type_var_collection::collect_type_vars;
+pub(super) use typevar_annotations::{
+    decode_typevar_constraint, encode_typevar_constraint, parse_typevar_bound_expr,
+    parse_typevar_declaration_specs,
+};
 use typing_and_functions::{
     extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
 };
@@ -266,120 +271,6 @@ impl LowerCtx {
 
 #[cfg(test)]
 mod diagnostic_transport_tests;
-const TYPEVAR_CONSTRAINT_PREFIX: &str = "__constraint__:";
-
-fn encode_typevar_constraint(name: &str) -> String {
-    format!("{TYPEVAR_CONSTRAINT_PREFIX}{name}")
-}
-
-fn decode_typevar_constraint(encoded: &str) -> Option<&str> {
-    encoded.strip_prefix(TYPEVAR_CONSTRAINT_PREFIX)
-}
-
-fn invalid_typevar_shape(ctx: &mut LowerCtx, message: impl Into<String>) {
-    ctx.error_with_code(DiagnosticCode::TYPE_INVALID_ANNOTATION, message.into());
-}
-
-/// Parse a `TypeVar` bound/constraint expression from PEP 695 syntax.
-/// `T: Bound` is treated as a hard bound; `T: (A, B)` is treated as constraints.
-fn parse_typevar_bound_expr(expr: &Expr, ctx: &mut LowerCtx) -> Vec<String> {
-    match expr {
-        Expr::Name(name) => vec![name.id.to_string()],
-        Expr::Tuple(tuple) => {
-            let mut specs = Vec::new();
-            for elt in &tuple.elts {
-                if let Expr::Name(name) = elt {
-                    specs.push(encode_typevar_constraint(&name.id));
-                } else {
-                    invalid_typevar_shape(ctx, "TypeVar constraints must be simple type names");
-                }
-            }
-            specs
-        }
-        _ => {
-            invalid_typevar_shape(
-                ctx,
-                "TypeVar bound must be a type name or tuple of type names",
-            );
-            Vec::new()
-        }
-    }
-}
-
-/// Parse `TypeVar(...)` declaration bounds/constraints.
-/// Supports:
-/// - `TypeVar("T")`
-/// - `TypeVar("T", int, str)` (constraints)
-/// - `TypeVar("T", bound=Comparable)`
-/// - `TypeVar("T", constraints=(int, str))`
-fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<String> {
-    let mut specs = Vec::new();
-    let mut saw_bound = false;
-    let mut saw_constraints = false;
-
-    // Positional constraints after the first argument (`name`).
-    for arg in call.arguments.args.iter().skip(1) {
-        saw_constraints = true;
-        match arg {
-            Expr::Name(name) => specs.push(encode_typevar_constraint(&name.id)),
-            _ => invalid_typevar_shape(
-                ctx,
-                "TypeVar positional constraints must be simple type names",
-            ),
-        }
-    }
-
-    for kw in &call.arguments.keywords {
-        let Some(arg_name) = &kw.arg else {
-            continue;
-        };
-        match arg_name.as_str() {
-            "bound" => {
-                saw_bound = true;
-                match &kw.value {
-                    Expr::Name(name) => specs.push(name.id.to_string()),
-                    _ => {
-                        invalid_typevar_shape(ctx, "TypeVar bound must be a simple type name");
-                    }
-                }
-            }
-            "constraints" => {
-                saw_constraints = true;
-                match &kw.value {
-                    Expr::Tuple(tuple) => {
-                        for elt in &tuple.elts {
-                            if let Expr::Name(name) = elt {
-                                specs.push(encode_typevar_constraint(&name.id));
-                            } else {
-                                invalid_typevar_shape(
-                                    ctx,
-                                    "TypeVar constraints must be simple type names",
-                                );
-                            }
-                        }
-                    }
-                    Expr::Name(name) => {
-                        specs.push(encode_typevar_constraint(&name.id));
-                    }
-                    _ => {
-                        invalid_typevar_shape(
-                            ctx,
-                            "TypeVar constraints must be a type name or tuple of type names",
-                        );
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-
-    if saw_bound && saw_constraints {
-        invalid_typevar_shape(ctx, "TypeVar cannot declare both 'bound' and 'constraints'");
-    }
-
-    specs
-}
-
 /// Substitute type variables in a type with concrete types.
 fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
     fn substitute_function_type(
