@@ -1,4 +1,4 @@
-# expect-error: SIFR-RESULT-0003
+# expect-error[col=11]: SIFR-RESULT-0003
 
 def broken() -> Result[int, ValueError]:
     raise "this is a string"

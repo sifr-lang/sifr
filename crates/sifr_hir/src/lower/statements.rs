@@ -192,12 +192,13 @@ pub(super) fn lower_stmt(
             // #[must_use] enforcement: Result values must not be silently discarded
             let expr_ty = expr.ty();
             if matches!(expr_ty, Type::Result(_, _)) {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::RESULT_UNUSED_VALUE,
                     format!(
                         "unused Result value of type '{}' must be used. Use 'let _ = expr' to explicitly discard",
                         expr_ty.display_name()
                     ),
+                    expr_stmt.value.range(),
                 );
             }
             Some(HirStmt::Expr { expr })
@@ -249,7 +250,7 @@ pub(super) fn lower_stmt(
             if let Some(ref exc) = raise_stmt.exc {
                 // Check if the raise expression is a string literal — disallow raise "message"
                 if matches!(exc.as_ref(), Expr::StringLiteral(_) | Expr::FString(_)) {
-                    super::result_diagnostics::invalid_raise_string(ctx);
+                    super::result_diagnostics::invalid_raise_string(ctx, exc.range());
                     return None;
                 }
                 let value = lower_expr(exc, ctx)?;
@@ -257,12 +258,16 @@ pub(super) fn lower_stmt(
                 let raised_ty = value.ty();
                 if !is_valid_error_type(raised_ty, ctx) {
                     let ty_name = format_type_name(raised_ty);
-                    super::result_diagnostics::invalid_raise_non_error(ctx, ty_name.as_str());
+                    super::result_diagnostics::invalid_raise_non_error(
+                        ctx,
+                        ty_name.as_str(),
+                        exc.range(),
+                    );
                     return None;
                 }
                 Some(HirStmt::Raise { value })
             } else {
-                super::result_diagnostics::invalid_bare_raise(ctx);
+                super::result_diagnostics::invalid_bare_raise(ctx, raise_stmt.range());
                 None
             }
         }
