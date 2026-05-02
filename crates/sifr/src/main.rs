@@ -395,8 +395,15 @@ fn render_compact_diagnostics(diagnostics: &[RenderedDiagnostic]) -> String {
     output
 }
 
-fn render_diagnostics(errors: &[RenderedDiagnostic], format: DiagnosticFormat) -> i32 {
-    let diagnostics = apply_diagnostic_recovery_limits(errors);
+fn canonical_diagnostic_stream(errors: &[RenderedDiagnostic]) -> Vec<RenderedDiagnostic> {
+    apply_diagnostic_recovery_limits(errors)
+}
+
+fn render_diagnostic_stream(
+    diagnostics: &[RenderedDiagnostic],
+    format: DiagnosticFormat,
+) -> Result<String, serde_json::Error> {
+    let mut output = String::new();
     match format {
         DiagnosticFormat::Human => {
             for diagnostic in diagnostics {
@@ -409,28 +416,39 @@ fn render_diagnostics(errors: &[RenderedDiagnostic], format: DiagnosticFormat) -
                         Severity::Note => "note",
                     }
                 };
-                let _ = writeln!(
-                    io::stderr(),
-                    "{label}: {message}",
-                    message = diagnostic.message
-                );
+                let _ = writeln!(output, "{label}: {message}", message = diagnostic.message);
             }
         }
-        DiagnosticFormat::Json => match serde_json::to_string_pretty(&diagnostics) {
-            Ok(json) => {
-                let _ = writeln!(io::stderr(), "{json}");
-            }
-            Err(e) => {
-                let _ = writeln!(
-                    io::stderr(),
-                    "build error: failed to serialize diagnostics as json: {e}"
-                );
-                return EXIT_INTERNAL_COMPILER_FAILURE;
-            }
-        },
+        DiagnosticFormat::Json => {
+            let json = serde_json::to_string_pretty(diagnostics)?;
+            let _ = writeln!(output, "{json}");
+        }
         DiagnosticFormat::Compact => {
-            let compact_output = render_compact_diagnostics(&diagnostics);
-            let _ = write!(io::stderr(), "{compact_output}");
+            let _ = write!(output, "{}", render_compact_diagnostics(diagnostics));
+        }
+    }
+    Ok(output)
+}
+
+fn render_diagnostic_output(
+    errors: &[RenderedDiagnostic],
+    format: DiagnosticFormat,
+) -> Result<String, serde_json::Error> {
+    let diagnostics = canonical_diagnostic_stream(errors);
+    render_diagnostic_stream(&diagnostics, format)
+}
+
+fn render_diagnostics(errors: &[RenderedDiagnostic], format: DiagnosticFormat) -> i32 {
+    match render_diagnostic_output(errors, format) {
+        Ok(output) => {
+            let _ = write!(io::stderr(), "{output}");
+        }
+        Err(e) => {
+            let _ = writeln!(
+                io::stderr(),
+                "build error: failed to serialize diagnostics as json: {e}"
+            );
+            return EXIT_INTERNAL_COMPILER_FAILURE;
         }
     }
     diagnostic_exit_code(errors)
@@ -1405,6 +1423,84 @@ mod tests {
             })
             .sum();
         assert_eq!(grouped_total, diagnostics.len());
+    }
+
+    #[test]
+    fn test_diagnostic_formats_share_canonical_sorted_capped_stream() {
+        let mut diagnostics = Vec::new();
+        for idx in (0..49).rev() {
+            diagnostics.push(test_diagnostic(
+                "SIFR-TYPE-0002",
+                Severity::Error,
+                &format!("distinct diagnostic {idx:02}"),
+                Some(primary_test_span(&format!("distinct_{idx:02}.sifr"), 1, 1)),
+                None,
+            ));
+        }
+        for idx in (0..8).rev() {
+            diagnostics.push(test_diagnostic(
+                "SIFR-TYPE-0002",
+                Severity::Error,
+                "aaa repeated mismatch",
+                Some(primary_test_span("repeated.sifr", idx + 1, 1)),
+                None,
+            ));
+        }
+
+        let canonical = canonical_diagnostic_stream(&diagnostics);
+        assert_eq!(canonical.len(), 50);
+        assert!(canonical
+            .iter()
+            .take(5)
+            .all(|diagnostic| diagnostic.code == "SIFR-TYPE-0002"
+                && diagnostic.message == "aaa repeated mismatch"));
+        assert_eq!(canonical[5].message, "... +3 more similar diagnostics");
+        assert!(canonical
+            .iter()
+            .any(|diagnostic| diagnostic.message == "distinct diagnostic 43"));
+        assert!(!canonical
+            .iter()
+            .any(|diagnostic| diagnostic.message == "distinct diagnostic 44"));
+
+        let json_output = render_diagnostic_output(&diagnostics, DiagnosticFormat::Json)
+            .expect("JSON diagnostics should render");
+        let json_diagnostics: Vec<RenderedDiagnostic> =
+            serde_json::from_str(&json_output).expect("JSON output should be diagnostic stream");
+        assert_eq!(json_diagnostics, canonical);
+
+        let human_output = render_diagnostic_output(&diagnostics, DiagnosticFormat::Human)
+            .expect("human diagnostics should render");
+        let expected_human = canonical
+            .iter()
+            .map(legacy_diagnostic_display)
+            .collect::<Vec<_>>()
+            .join("\n")
+            + "\n";
+        assert_eq!(human_output, expected_human);
+
+        let compact_output = render_diagnostic_output(&diagnostics, DiagnosticFormat::Compact)
+            .expect("compact diagnostics should render");
+        let summary = compact_output
+            .lines()
+            .next()
+            .expect("compact output should start with a summary");
+        assert_eq!(
+            summary,
+            "summary: 50 error(s), 0 warning(s), 0 note(s), 0 help item(s)"
+        );
+        let compact_total: usize = compact_output
+            .lines()
+            .filter_map(|line| {
+                let marker = " (x";
+                let start = line.find(marker)?;
+                let rest = &line[(start + marker.len())..];
+                let end = rest.find(')')?;
+                rest[..end].parse::<usize>().ok()
+            })
+            .sum();
+        assert_eq!(compact_total, canonical.len());
+        assert!(compact_output.contains("error [SIFR-TYPE-0002] distinct diagnostic 43 (x1)"));
+        assert!(!compact_output.contains("distinct diagnostic 44"));
     }
 
     #[test]
