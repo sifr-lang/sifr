@@ -1,4 +1,4 @@
-# expect-error: SIFR-DECIMAL-0007
+# expect-error[col=26]: SIFR-DECIMAL-0007
 def main():
     d: decimal = Decimal("1.2345")
     x: decimal = d.round(29)

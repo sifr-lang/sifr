@@ -395,7 +395,7 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
                     }
                 }
             }
-            ctx.error_with_code(code, message);
+            ctx.error_with_code_at(code, message, binop.range());
             None
         }
     }
@@ -418,7 +418,7 @@ pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<H
             ty: result_ty,
         }),
         Err((code, message)) => {
-            ctx.error_with_code(code, message);
+            ctx.error_with_code_at(code, message, unary.range());
             None
         }
     }
@@ -540,7 +540,7 @@ pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<Hir
                     _ => false,
                 };
                 if !has_overload {
-                    ctx.error_with_code(code, message);
+                    ctx.error_with_code_at(code, message, comparator.range());
                     return None;
                 }
             }
@@ -587,10 +587,9 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
     }
     ctx.restore_sequence_guards(&saved_sequence_guards);
 
-    // Check all values are Bool
-    for val in &values {
+    for (index, val) in values.iter().enumerate() {
         if let Err((code, message)) = type_check_bool_op(val.ty(), op_str, &Type::Bool) {
-            ctx.error_with_code(code, message);
+            ctx.error_with_code_at(code, message, boolop.values[index].range());
             return None;
         }
     }
@@ -991,7 +990,6 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             });
         }
 
-        // Special handling for float() conversion
         if func_name == "float" {
             if call.arguments.args.len() != 1 {
                 ctx.error(format!(
@@ -1005,9 +1003,6 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             let arg_ty = arg.ty().clone();
-            // float(str) -> Result[float, ParseError] (fallible)
-            // float(int) -> float (infallible widening)
-            // float(float) -> float (identity)
             let result_ty = if arg_ty == Type::Str {
                 let parse_error_ty =
                     ctx.class_types
@@ -1021,17 +1016,19 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         });
                 Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
             } else if arg_ty == Type::Decimal {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
                     "float(decimal_value) is not allowed; decimal values are exact and cannot be converted to float"
                         .to_string(),
+                    call.arguments.args[0].range(),
                 );
                 return None;
             } else if arg_ty == Type::BigDecimal {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
                     "float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float"
                         .to_string(),
+                    call.arguments.args[0].range(),
                 );
                 return None;
             } else {
@@ -2538,13 +2535,21 @@ pub(super) fn lower_method_call(
     ) {
         return None;
     }
-    // Resolve method return type based on object type and method name
+    let method_arg_ranges: Vec<TextRange> = call.arguments.args.iter().map(Ranged::range).collect();
+    let resolved_method_type = resolve_method_type(
+        &object_ty,
+        &method_name,
+        &args,
+        &method_arg_ranges,
+        attr.attr.range(),
+        ctx,
+    )?;
     let return_ty = refine_nonempty_method_return_type(
         &object_ty,
         &object,
         &method_name,
         &args,
-        &resolve_method_type(&object_ty, &method_name, &args, ctx)?,
+        &resolved_method_type,
         ctx,
     );
     invalidate_collection_flow_facts_for_method(ctx, &object, &object_ty, &method_name);
@@ -2594,6 +2599,8 @@ pub(super) fn resolve_method_type(
     object_ty: &Type,
     method: &str,
     args: &[HirExpr],
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
     let canonical_object_ty = canonicalize_class_surface_type(object_ty);
@@ -2608,7 +2615,7 @@ pub(super) fn resolve_method_type(
             alias_name.as_str(),
             DEFAULTDICT_INT_ALIAS | DEFAULTDICT_LIST_ALIAS | DEFAULTDICT_SET_ALIAS
         ) {
-            return resolve_method_type(body, method, args, ctx);
+            return resolve_method_type(body, method, args, arg_ranges, method_range, ctx);
         }
     }
     match object_ty {
@@ -3319,7 +3326,7 @@ pub(super) fn resolve_method_type(
                 Some(*inner.clone())
             } else {
                 // Delegate to the inner type's methods
-                resolve_method_type(inner, method, args, ctx)
+                resolve_method_type(inner, method, args, arg_ranges, method_range, ctx)
             }
         }
         Type::Enum { name, .. } => {
@@ -3362,7 +3369,7 @@ pub(super) fn resolve_method_type(
             }
         }
         Type::Decimal | Type::BigDecimal => {
-            resolve_decimal_method_type(object_ty, method, args, ctx)
+            resolve_decimal_method_type(object_ty, method, args, arg_ranges, method_range, ctx)
         }
         _ => {
             ctx.error(format!(
