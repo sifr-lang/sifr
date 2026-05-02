@@ -6,12 +6,16 @@ mod frontend;
 mod rust_module_layout;
 
 pub(crate) use assembly::{assemble_project_main_rs, ordered_non_main_module_names};
+#[cfg(test)]
+pub(crate) use discovery::parse_import_closure_modules;
 pub(crate) use discovery::{
-    discover_test_root_modules, parse_import_closure_modules, DiscoveryDiagnosticStyle,
-    ModuleResolver,
+    discover_test_root_modules, parse_import_closure_source_modules, DiscoveryDiagnosticStyle,
+    ModuleResolver, ParsedProjectModule,
 };
+#[cfg(test)]
+pub(crate) use frontend::{collect_project_hir_modules, compile_frontend_modules};
 pub(crate) use frontend::{
-    collect_project_hir_modules, compile_single_frontend_module_with_source,
+    collect_project_hir_source_modules, compile_single_frontend_module_with_source,
     emit_project_frontend_diagnostics, ProjectLowering,
 };
 pub(crate) use rust_module_layout::{
@@ -20,5 +24,3 @@ pub(crate) use rust_module_layout::{
 
 #[cfg(test)]
 pub(crate) use compile_order::compute_module_compile_order;
-#[cfg(test)]
-pub(crate) use frontend::compile_frontend_modules;

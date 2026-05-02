@@ -1,15 +1,17 @@
 use super::execution::execute_test_runner_project;
 use crate::diagnostics::{run_codegen_with_boundary, write_stderr_line, RenderedDiagnostic};
-use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle};
+use crate::frontend::{
+    lower_frontend_module_with_source, FrontendDiagnosticStyle, FrontendSourceContext,
+};
 use crate::project::{
-    collect_project_hir_modules, discover_test_root_modules, parse_import_closure_modules,
-    DiscoveryDiagnosticStyle, ModuleResolver,
+    collect_project_hir_source_modules, discover_test_root_modules,
+    parse_import_closure_source_modules, DiscoveryDiagnosticStyle, ModuleResolver,
+    ParsedProjectModule,
 };
 use crate::stdlib::compile_stdlib;
 use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_test};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::HirModule;
-use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -45,20 +47,24 @@ pub(crate) fn build_test_runner_project(
 ) -> Result<GeneratedTestRunnerProject, Vec<RenderedDiagnostic>> {
     let test_roots: BTreeSet<String> = test_files_by_module.keys().cloned().collect();
     let resolver = ModuleResolver::entry_parent(test_dir);
-    let parsed_modules =
-        parse_import_closure_modules(&resolver, &test_roots, DiscoveryDiagnosticStyle::FilePath)?;
-    let mut support_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
-    let mut test_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
-    for (module_name, suite) in parsed_modules {
+    let parsed_modules = parse_import_closure_source_modules(
+        &resolver,
+        &test_roots,
+        DiscoveryDiagnosticStyle::FilePath,
+    )?;
+    let mut support_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
+    let mut test_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
+    for (module_name, parsed_module) in parsed_modules {
         if test_roots.contains(module_name.as_str()) {
-            test_modules.insert(module_name, suite);
+            test_modules.insert(module_name, parsed_module);
         } else {
-            support_modules.insert(module_name, suite);
+            support_modules.insert(module_name, parsed_module);
         }
     }
 
     let stdlib_compiled = compile_stdlib()?;
-    let project_lowering = collect_project_hir_modules(&support_modules, stdlib_compiled.defs)?;
+    let project_lowering =
+        collect_project_hir_source_modules(&support_modules, stdlib_compiled.defs)?;
     let project_externals = project_lowering.external_defs.clone();
     let mut support_module_names: Vec<String> =
         project_lowering.hir_modules.keys().cloned().collect();
@@ -94,11 +100,15 @@ pub(crate) fn build_test_runner_project(
             )]);
         };
 
-        let lowering_result = match lower_frontend_module(
+        let lowering_result = match lower_frontend_module_with_source(
             module_name,
-            parsed,
+            &parsed.suite,
             &project_externals,
             FrontendDiagnosticStyle::Bare,
+            Some(FrontendSourceContext {
+                display_path: &parsed.display_path,
+                source: &parsed.source,
+            }),
         ) {
             Ok(result) => result,
             Err(errors) => {
