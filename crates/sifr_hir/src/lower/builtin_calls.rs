@@ -1,4 +1,5 @@
 use crate::hir_nodes::HirExpr;
+use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprAttribute, ExprCall, Number};
 use sifr_type_system::{make_union, IterationCapability, Type};
@@ -929,12 +930,13 @@ pub(super) fn lower_builtin_reverseable_arg(
         .ty()
         .supports_iteration_capability(IterationCapability::DoubleEnded)
     {
-        ctx.error_with_code(
+        ctx.error_with_code_at(
             DiagnosticCode::PROTO_BOUND_NOT_SATISFIED,
             format!(
                 "{builtin_name}() argument must be reversible, got '{}'",
                 arg.ty().display_name()
             ),
+            call.arguments.args[0].range(),
         );
         return None;
     }

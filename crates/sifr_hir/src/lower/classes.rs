@@ -112,49 +112,60 @@ fn class_reversed_element_type(
 fn validate_iteration_protocol_methods(
     class_name: &str,
     methods: &[(String, FunctionType)],
+    method_ranges: &HashMap<String, ruff_text_size::TextRange>,
+    class_range: ruff_text_size::TextRange,
     ctx: &mut LowerCtx,
 ) {
     if let Some(iter_ft) = class_method_signature(methods, "__iter__") {
+        let range = method_ranges["__iter__"];
         if !iter_ft.params.is_empty() {
             protocol_diagnostics::iterator_invalid_parameter_signature(
                 ctx,
                 &format!("{class_name}.__iter__"),
+                range,
             );
         } else if class_iter_element_type(class_name, methods).is_none() {
             protocol_diagnostics::iterator_invalid_return_signature(
                 ctx,
                 &format!("{class_name}.__iter__"),
                 "'Iterator[T]' or 'Iterable[T]'",
+                range,
             );
         }
     }
 
     if let Some(next_ft) = class_method_signature(methods, "__next__") {
+        let range = method_ranges["__next__"];
         if !next_ft.params.is_empty() {
             protocol_diagnostics::iterator_invalid_parameter_signature(
                 ctx,
                 &format!("{class_name}.__next__"),
+                range,
             );
         } else if class_next_element_type(class_name, methods).is_none() {
             protocol_diagnostics::iterator_invalid_return_signature(
                 ctx,
                 &format!("{class_name}.__next__"),
                 "'T | None'",
+                range,
             );
         }
     }
 
     if let Some(reversed_ft) = class_method_signature(methods, "__reversed__") {
+        let range = method_ranges["__reversed__"];
         if !reversed_ft.params.is_empty() {
             protocol_diagnostics::iterator_invalid_parameter_signature(
                 ctx,
                 &format!("{class_name}.__reversed__"),
+                range,
             );
         } else if class_reversed_element_type(class_name, methods).is_none() {
             protocol_diagnostics::iterator_invalid_return_signature(
                 ctx,
                 &format!("{class_name}.__reversed__"),
                 "'Iterator[T]' or 'Iterable[T]'",
+                range,
             );
         }
     }
@@ -171,6 +182,7 @@ fn validate_iteration_protocol_methods(
                 iter_elem.display_name().as_str(),
                 "__next__",
                 next_elem.display_name().as_str(),
+                class_range,
             );
         }
     }
@@ -189,6 +201,7 @@ fn validate_iteration_protocol_methods(
                 iter_elem.display_name().as_str(),
                 "__reversed__",
                 reversed_elem.display_name().as_str(),
+                class_range,
             );
         }
     }
@@ -202,6 +215,7 @@ pub(super) fn collect_class_type(
     let class_name = class_def.name.to_string();
     let mut fields: Vec<(String, Type)> = Vec::new();
     let mut methods: Vec<(String, FunctionType)> = Vec::new();
+    let mut method_ranges: HashMap<String, ruff_text_size::TextRange> = HashMap::new();
     let is_error = is_error_class(class_def);
     let is_protocol = is_protocol_class(class_def);
     let newtype_inner = get_newtype_inner(class_def);
@@ -449,6 +463,7 @@ pub(super) fn collect_class_type(
             // Method definitions
             Stmt::FunctionDef(func) => {
                 let method_name = func.name.to_string();
+                method_ranges.insert(method_name.clone(), func.name.range());
                 if method_name == "__init__" {
                     // Constructor: extract params (skip `self`)
                     let mut params = Vec::new();
@@ -569,7 +584,13 @@ pub(super) fn collect_class_type(
     }
 
     if validate_iteration_protocols {
-        validate_iteration_protocol_methods(&class_name, &methods, ctx);
+        validate_iteration_protocol_methods(
+            &class_name,
+            &methods,
+            &method_ranges,
+            class_def.name.range(),
+            ctx,
+        );
     }
 
     let class_ty = Type::Class {

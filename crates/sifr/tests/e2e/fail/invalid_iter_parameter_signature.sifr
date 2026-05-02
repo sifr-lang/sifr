@@ -1,4 +1,4 @@
-# expect-error: SIFR-PROTO-0002
+# expect-error[col=9]: SIFR-PROTO-0002
 
 class BadIterParam:
     def __iter__(self, limit: int) -> Iterator[int]:
