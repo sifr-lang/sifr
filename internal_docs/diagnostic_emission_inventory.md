@@ -50,14 +50,14 @@ Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `t
 
 | Proposed code | Ruff category / examples | Fixture plan |
 | --- | --- | --- |
-| `SIFR-PARSE-0002` | expected token or generic recovery context (`ExpectedToken`, `OtherError("Expected ...")`, `ExpectedExpression`, `UnexpectedExpressionToken`) | fixture pending in `milestone_diag_7`: missing delimiter/expression; existing invalid source unit tests can seed it |
-| `SIFR-PARSE-0003` | lexical and interpolated-string errors (`Lexical`, `FStringError`, `TStringError`) | fixture pending in `milestone_diag_7`: malformed string/f-string |
-| `SIFR-PARSE-0004` | indentation and same-line statement layout (`UnexpectedIndentation`, `SimpleStatementsOnSameLine`, `SimpleAndCompoundStatementOnSameLine`) | fixture pending in `milestone_diag_7`: indentation/layout |
-| `SIFR-PARSE-0005` | invalid assignment/delete/starred/named-expression targets (`InvalidAssignmentTarget`, `InvalidAnnotatedAssignmentTarget`, `InvalidNamedAssignmentTarget`, `InvalidAugmentedAssignmentTarget`, `InvalidDeleteTarget`, `InvalidStarredExpressionUsage`) | fixture pending in `milestone_diag_7`: invalid target |
-| `SIFR-PARSE-0006` | invalid call argument order/unpacking (`PositionalAfterKeywordArgument`, `PositionalAfterKeywordUnpacking`, `InvalidArgumentUnpackingOrder`, `DuplicateKeywordArgumentError`) | fixture pending in `milestone_diag_7`: invalid call syntax |
-| `SIFR-PARSE-0007` | empty or malformed declaration lists (`EmptyImportNames`, `EmptyGlobalNames`, `EmptyNonlocalNames`, `EmptyTypeParams`, parameter-order errors) | fixture pending in `milestone_diag_7`: malformed import/global/nonlocal/type-param |
-| `SIFR-PARSE-0008` | invalid pattern/match syntax (`InvalidStarPatternUsage`, invalid mapping/class pattern errors, expected pattern recovery) | fixture pending in `milestone_diag_7`: invalid match-pattern |
-| `SIFR-PARSE-0009` | explicitly unsupported parser syntax or interactive-only syntax (`UnsupportedSyntaxErrorKind`, `UnexpectedIpythonEscapeCommand`, unsupported async token contexts) | fixture pending in `milestone_diag_7`: unsupported syntax |
+| `SIFR-PARSE-0002` | expected token or generic recovery context (`ExpectedToken`, `OtherError("Expected ...")`, `ExpectedExpression`, `UnexpectedExpressionToken`) | `crates/sifr/tests/e2e/fail/parser_expected_token.sifr` |
+| `SIFR-PARSE-0003` | lexical and interpolated-string errors (`Lexical`, `FStringError`, `TStringError`) | `crates/sifr/tests/e2e/fail/parser_malformed_string.sifr` |
+| `SIFR-PARSE-0004` | indentation and same-line statement layout (`UnexpectedIndentation`, `SimpleStatementsOnSameLine`, `SimpleAndCompoundStatementOnSameLine`) | `crates/sifr/tests/e2e/fail/parser_invalid_layout.sifr` |
+| `SIFR-PARSE-0005` | invalid assignment/delete/starred/named-expression targets (`InvalidAssignmentTarget`, `InvalidAnnotatedAssignmentTarget`, `InvalidNamedAssignmentTarget`, `InvalidAugmentedAssignmentTarget`, `InvalidDeleteTarget`, `InvalidStarredExpressionUsage`) | `crates/sifr/tests/e2e/fail/parser_invalid_target.sifr` |
+| `SIFR-PARSE-0006` | invalid call argument order/unpacking (`PositionalAfterKeywordArgument`, `PositionalAfterKeywordUnpacking`, `InvalidArgumentUnpackingOrder`, `DuplicateKeywordArgumentError`) | `crates/sifr/tests/e2e/fail/parser_invalid_call_arguments.sifr` |
+| `SIFR-PARSE-0007` | empty or malformed declaration lists (`EmptyImportNames`, `EmptyGlobalNames`, `EmptyNonlocalNames`, `EmptyTypeParams`, parameter-order errors) | `crates/sifr/tests/e2e/fail/parser_malformed_declaration_list.sifr` |
+| `SIFR-PARSE-0008` | invalid pattern/match syntax (`InvalidStarPatternUsage`, invalid mapping/class pattern errors, expected pattern recovery) | `crates/sifr/tests/e2e/fail/parser_invalid_match_pattern.sifr` |
+| `SIFR-PARSE-0009` | explicitly unsupported parser syntax or interactive-only syntax (`UnsupportedSyntaxErrorKind`, `UnexpectedIpythonEscapeCommand`, unsupported async token contexts) | `crates/sifr/tests/e2e/fail/parser_unsupported_syntax.sifr` |
 
 ## Type System Surface
 
@@ -277,21 +277,21 @@ These entries are the proposed active registry population for `milestone_diag_2b
 
 | Code | Category | Owner module | Representative fixture / proof |
 | --- | --- | --- | --- |
-| `SIFR-PARSE-0002` | expected token or generic parser recovery with source span | parser adapter / driver frontend | fixture pending in `milestone_diag_7`: missing delimiter/expression or existing invalid source tests |
-| `SIFR-PARSE-0003` | lexical or interpolated-string parser error | parser adapter / driver frontend | fixture pending in `milestone_diag_7`: malformed string/f-string |
-| `SIFR-PARSE-0004` | indentation or same-line statement layout error | parser adapter / driver frontend | fixture pending in `milestone_diag_7`: indentation/layout |
-| `SIFR-PARSE-0005` | invalid assignment/delete/starred/named-expression target syntax | parser adapter / driver frontend | fixture pending in `milestone_diag_7`: invalid target |
-| `SIFR-PARSE-0006` | invalid call argument order/unpacking syntax | parser adapter / driver frontend | fixture pending in `milestone_diag_7`: invalid call syntax |
-| `SIFR-PARSE-0007` | empty or malformed declaration list syntax | parser adapter / driver frontend | fixture pending in `milestone_diag_7`: malformed import/global/nonlocal/type-param |
-| `SIFR-PARSE-0008` | invalid match-pattern syntax | parser adapter / driver frontend | fixture pending in `milestone_diag_7`: invalid match-pattern |
-| `SIFR-PARSE-0009` | unsupported parser syntax or interactive-only syntax | parser adapter / driver frontend | fixture pending in `milestone_diag_7`: unsupported syntax |
+| `SIFR-PARSE-0002` | expected token or generic parser recovery with source span | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_expected_token.sifr` |
+| `SIFR-PARSE-0003` | lexical or interpolated-string parser error | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_malformed_string.sifr` |
+| `SIFR-PARSE-0004` | indentation or same-line statement layout error | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_invalid_layout.sifr` |
+| `SIFR-PARSE-0005` | invalid assignment/delete/starred/named-expression target syntax | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_invalid_target.sifr` |
+| `SIFR-PARSE-0006` | invalid call argument order/unpacking syntax | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_invalid_call_arguments.sifr` |
+| `SIFR-PARSE-0007` | empty or malformed declaration list syntax | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_malformed_declaration_list.sifr` |
+| `SIFR-PARSE-0008` | invalid match-pattern syntax | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_invalid_match_pattern.sifr` |
+| `SIFR-PARSE-0009` | unsupported parser syntax or interactive-only syntax | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_unsupported_syntax.sifr` |
 | `SIFR-NAME-0001` | undefined variable | `sifr_hir::lower` name lookup | `crates/sifr/tests/e2e/fail/undefined_var.sifr` |
 | `SIFR-NAME-0002` | undefined function/callable | `sifr_hir::lower` call lowering | `crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr` |
 | `SIFR-NAME-0003` | unknown type or generic type name | type annotation lowering | `crates/sifr/tests/e2e/fail/generic_class_missing_type_arg.sifr` |
 | `SIFR-NAME-0004` | module/member does not exist | import/member lookup | `crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr` |
 | `SIFR-IMPORT-0001` | forbidden `_sifr.*` intrinsic import | import lowering | `crates/sifr/tests/e2e/fail/import_intrinsic.sifr` |
 | `SIFR-IMPORT-0002` | unknown source module/import target | import lowering/project discovery | `crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr` |
-| `SIFR-TYPE-0002` | expected/actual type mismatch | type checking / assignment/call helpers | `crates/sifr/tests/e2e/fail/type_mismatch.sifr` |
+| `SIFR-TYPE-0002` | expected/actual type mismatch | type checking / assignment/call helpers | `crates/sifr/tests/e2e/fail/type_comparison_mismatch.sifr`, `crates/sifr/tests/e2e/fail/type_mismatch.sifr`, `crates/sifr/tests/e2e/fail/union_type_mismatch.sifr` |
 | `SIFR-TYPE-0003` | if/conditional branch type mismatch | `if_expression` lowering | `crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr` |
 | `SIFR-TYPE-0004` | missing required type annotation/inference boundary | type annotation/inference | fixture pending in `milestone_diag_7` |
 | `SIFR-TYPE-0005` | unsupported operator or operand types | `sifr_type_system` / HIR expression lowering | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
