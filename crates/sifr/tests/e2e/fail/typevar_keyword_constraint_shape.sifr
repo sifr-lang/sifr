@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007
+# expect-error[col=30]: SIFR-TYPE-0007
 
 from typing import TypeVar
 
