@@ -204,16 +204,16 @@ pub(super) fn lower_stmt(
         Stmt::If(if_stmt) => lower_if(if_stmt, func_type, ctx),
         Stmt::While(while_stmt) => lower_while(while_stmt, func_type, ctx),
         Stmt::For(for_stmt) => lower_for(for_stmt, func_type, ctx),
-        Stmt::Break(_) => {
+        Stmt::Break(break_stmt) => {
             if !ctx.in_loop() {
-                super::flow_diagnostics::break_outside_loop(ctx);
+                super::flow_diagnostics::break_outside_loop(ctx, break_stmt.range());
                 return None;
             }
             Some(HirStmt::Break)
         }
-        Stmt::Continue(_) => {
+        Stmt::Continue(continue_stmt) => {
             if !ctx.in_loop() {
-                super::flow_diagnostics::continue_outside_loop(ctx);
+                super::flow_diagnostics::continue_outside_loop(ctx, continue_stmt.range());
                 return None;
             }
             Some(HirStmt::Continue)

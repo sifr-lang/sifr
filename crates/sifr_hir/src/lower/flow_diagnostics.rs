@@ -3,17 +3,19 @@ use sifr_diagnostics::DiagnosticCode;
 
 use super::LowerCtx;
 
-pub(super) fn break_outside_loop(ctx: &mut LowerCtx) {
-    ctx.error_with_code(
+pub(super) fn break_outside_loop(ctx: &mut LowerCtx, range: TextRange) {
+    ctx.error_with_code_at(
         DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
         "'break' outside of loop".to_string(),
+        range,
     );
 }
 
-pub(super) fn continue_outside_loop(ctx: &mut LowerCtx) {
-    ctx.error_with_code(
+pub(super) fn continue_outside_loop(ctx: &mut LowerCtx, range: TextRange) {
+    ctx.error_with_code_at(
         DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
         "'continue' outside of loop".to_string(),
+        range,
     );
 }
 
