@@ -832,11 +832,12 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             crate::cfg::flow_facts(&body).always_exits()
         })) {
             Ok(false) => {
-                ctx.error(format!(
-                    "function '{}' must return a value of type '{}' on all control-flow paths",
-                    func.name,
-                    ft.return_type.display_name()
-                ));
+                let return_type = ft.return_type.display_name();
+                super::flow_diagnostics::missing_return_value(
+                    ctx,
+                    func.name.as_str(),
+                    return_type.as_str(),
+                );
             }
             Ok(true) => {}
             Err(_) => {

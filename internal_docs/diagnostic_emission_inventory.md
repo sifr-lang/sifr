@@ -320,6 +320,7 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-FLOW-0001` | `break` outside loop | statement lowering | `crates/sifr/tests/e2e/fail/break_outside_loop.sifr` |
 | `SIFR-FLOW-0002` | `continue` outside loop | statement lowering | `crates/sifr/tests/e2e/fail/continue_outside_loop.sifr` |
 | `SIFR-FLOW-0003` | unsupported or invalid nonlocal/nested function flow | nested function/nonlocal lowering | `crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr` |
+| `SIFR-FLOW-0004` | missing return value on some control-flow paths | function return-completeness validation | `crates/sifr/tests/e2e/fail/missing_return_value.sifr` |
 | `SIFR-MATCH-0001` | non-exhaustive match | match lowering | match non-exhaustive fixtures |
 | `SIFR-MATCH-0002` | match guard must be bool | match lowering | `crates/sifr/tests/e2e/fail/match_type_mismatch_guard.sifr` |
 | `SIFR-MATCH-0003` | invalid class pattern field | match lowering | `crates/sifr/tests/e2e/fail/match_invalid_field_name.sifr` |

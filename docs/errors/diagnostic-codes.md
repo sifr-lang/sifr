@@ -80,6 +80,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-FLOW-0001`](SIFR-FLOW-0001.md) | Error | Break outside a loop. |
 | [`SIFR-FLOW-0002`](SIFR-FLOW-0002.md) | Error | Continue outside a loop. |
 | [`SIFR-FLOW-0003`](SIFR-FLOW-0003.md) | Error | Invalid nonlocal or nested-function flow. |
+| [`SIFR-FLOW-0004`](SIFR-FLOW-0004.md) | Error | Function may finish without returning a required value. |
 | [`SIFR-FLOW-0901`](SIFR-FLOW-0901.md) | Warning | Unreachable statement ignored during lowering. |
 | [`SIFR-MATCH-0001`](SIFR-MATCH-0001.md) | Error | Non-exhaustive match. |
 | [`SIFR-MATCH-0002`](SIFR-MATCH-0002.md) | Error | Match guard must be bool. |

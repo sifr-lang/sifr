@@ -20,6 +20,15 @@ pub(super) fn invalid_nonlocal(ctx: &mut LowerCtx, message: String) {
     ctx.error_with_code(DiagnosticCode::FLOW_INVALID_NONLOCAL, message);
 }
 
+pub(super) fn missing_return_value(ctx: &mut LowerCtx, function_name: &str, return_type: &str) {
+    ctx.error_with_code(
+        DiagnosticCode::FLOW_MISSING_RETURN_VALUE,
+        format!(
+            "function '{function_name}' must return a value of type '{return_type}' on all control-flow paths"
+        ),
+    );
+}
+
 pub(super) fn nonlocal_requires_enclosing_binding(ctx: &mut LowerCtx) {
     invalid_nonlocal(
         ctx,

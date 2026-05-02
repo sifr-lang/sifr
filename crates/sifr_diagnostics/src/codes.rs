@@ -71,6 +71,7 @@ impl DiagnosticCode {
     pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
     pub const FLOW_INVALID_NONLOCAL: Self = Self::new("SIFR-FLOW-0003", Severity::Error);
+    pub const FLOW_MISSING_RETURN_VALUE: Self = Self::new("SIFR-FLOW-0004", Severity::Error);
     pub const FLOW_UNREACHABLE_STATEMENT: Self = Self::new("SIFR-FLOW-0901", Severity::Warning);
 
     pub const MATCH_NON_EXHAUSTIVE: Self = Self::new("SIFR-MATCH-0001", Severity::Error);
@@ -910,6 +911,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["function"]
     ),
     active_entry!(
+        "SIFR-FLOW-0004",
+        "FLOW",
+        "Function may finish without returning a required value.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/missing_return_value.sifr",
+        "function '{function}' must return a value of type '{return_type}' on all control-flow paths",
+        "sifr_hir::lower::typing_and_functions",
+        [arg!("function"), arg!("return_type")],
+        ["function", "return_type"]
+    ),
+    active_entry!(
         "SIFR-FLOW-0901",
         "FLOW",
         "Unreachable statement ignored during lowering.",
@@ -1357,6 +1369,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,
+    DiagnosticCode::FLOW_MISSING_RETURN_VALUE,
     DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
     DiagnosticCode::MATCH_NON_EXHAUSTIVE,
     DiagnosticCode::MATCH_GUARD_NOT_BOOL,
