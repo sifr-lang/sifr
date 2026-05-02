@@ -1,4 +1,4 @@
-# expect-error: SIFR-CLASS-0004
+# expect-error[col=13]: SIFR-CLASS-0004
 
 class Point:
     x: float

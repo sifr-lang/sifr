@@ -2332,13 +2332,14 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
                 ty: field_ty.clone(),
             });
         }
-        ctx.error_with_code(
+        ctx.error_with_code_at(
             DiagnosticCode::CLASS_MISSING_MEMBER,
             format!(
                 "type '{type_name}' has no field '{field}'",
                 type_name = object_ty.display_name(),
                 field = field_name
             ),
+            attr.attr.range(),
         );
         return None;
     }
