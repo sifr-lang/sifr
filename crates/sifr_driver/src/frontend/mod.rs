@@ -8,6 +8,7 @@ pub use api::{
 
 pub(crate) use api::FrontendCompiled;
 pub(crate) use module_lowering::{
-    lower_frontend_module, FrontendDiagnosticStyle, FrontendModuleDiagnostics,
+    lower_frontend_module, lower_frontend_module_with_source, FrontendDiagnosticStyle,
+    FrontendModuleDiagnostics, FrontendSourceContext,
 };
 pub(crate) use parser_diagnostics::parse_module_with_diagnostics;

@@ -11,8 +11,8 @@ pub(crate) use discovery::{
     ModuleResolver,
 };
 pub(crate) use frontend::{
-    collect_project_hir_modules, compile_frontend_modules, emit_project_frontend_diagnostics,
-    ProjectLowering,
+    collect_project_hir_modules, compile_single_frontend_module_with_source,
+    emit_project_frontend_diagnostics, ProjectLowering,
 };
 pub(crate) use rust_module_layout::{
     namespace_module_files, rust_module_file_path, top_level_module_declarations,
@@ -20,3 +20,5 @@ pub(crate) use rust_module_layout::{
 
 #[cfg(test)]
 pub(crate) use compile_order::compute_module_compile_order;
+#[cfg(test)]
+pub(crate) use frontend::compile_frontend_modules;

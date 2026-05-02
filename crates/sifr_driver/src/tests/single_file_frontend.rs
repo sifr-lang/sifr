@@ -249,6 +249,27 @@ def main():
 }
 
 #[test]
+fn test_check_reports_primary_span_for_ranged_hir_diagnostic() {
+    let source = "def main():\n    if 1:\n        pass\n";
+    let errors = check(source);
+    let diagnostic = errors
+        .iter()
+        .find(|error| error.code == DiagnosticCode::FLOW_INVALID_CONDITION_TYPE.code())
+        .expect("expected invalid condition diagnostic");
+    let primary = diagnostic
+        .spans
+        .iter()
+        .find(|span| span.is_primary)
+        .expect("expected primary span");
+
+    assert_eq!(primary.file.as_deref(), Some("main"));
+    assert_eq!(primary.line, Some(2));
+    assert_eq!(primary.column, Some(8));
+    assert_eq!(primary.end_line, Some(2));
+    assert_eq!(primary.end_column, Some(9));
+}
+
+#[test]
 fn test_check_valid_program() {
     let source = r#"
 def main():
