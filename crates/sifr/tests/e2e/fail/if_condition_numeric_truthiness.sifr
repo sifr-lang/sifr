@@ -1,0 +1,5 @@
+# expect-error: SIFR-FLOW-0005
+
+def main():
+    if 1:
+        pass

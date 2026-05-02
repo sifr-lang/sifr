@@ -29,6 +29,13 @@ pub(super) fn missing_return_value(ctx: &mut LowerCtx, function_name: &str, retu
     );
 }
 
+pub(super) fn invalid_condition_type(ctx: &mut LowerCtx, keyword: &str, actual: &str) {
+    ctx.error_with_code(
+        DiagnosticCode::FLOW_INVALID_CONDITION_TYPE,
+        format!("{keyword} condition must be bool or collection/string truthiness, got '{actual}'"),
+    );
+}
+
 pub(super) fn nonlocal_requires_enclosing_binding(ctx: &mut LowerCtx) {
     invalid_nonlocal(
         ctx,

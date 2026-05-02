@@ -23,9 +23,7 @@ pub(super) fn validate_control_flow_condition(
             | Type::Unknown
     ) || union_contains_none(condition.ty());
     if !is_supported {
-        ctx.error(format!(
-            "{keyword} condition must be bool or collection/string truthiness, got '{}'",
-            condition.ty().display_name()
-        ));
+        let actual = condition.ty().display_name();
+        super::flow_diagnostics::invalid_condition_type(ctx, keyword, actual.as_str());
     }
 }
