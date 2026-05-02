@@ -1,4 +1,5 @@
 use crate::hir_nodes::HirStmt;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::{Expr, Stmt, StmtClassDef, StmtFunctionDef};
 use sifr_type_system::Type;
 
@@ -175,9 +176,14 @@ pub(super) fn is_enum_class(class_def: &StmtClassDef) -> bool {
     false
 }
 
-/// Collect enum variants from a class body
-/// Returns (name, `optional_int_value`) for each variant
-pub(super) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Option<i64>)> {
+pub(super) struct EnumVariantInfo {
+    pub(super) name: String,
+    pub(super) value: Option<i64>,
+    pub(super) name_range: TextRange,
+}
+
+/// Collect enum variants from a class body.
+pub(super) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<EnumVariantInfo> {
     let mut variants = Vec::new();
     let mut auto_value = 1i64;
     for stmt in &class_def.body {
@@ -198,7 +204,11 @@ pub(super) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Op
                         };
                         let v = value.unwrap_or(auto_value);
                         auto_value = v + 1;
-                        variants.push((variant_name, value));
+                        variants.push(EnumVariantInfo {
+                            name: variant_name,
+                            value,
+                            name_range: name.range(),
+                        });
                     }
                 }
             }
@@ -221,7 +231,11 @@ pub(super) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Op
                     };
                     let v = value.unwrap_or(auto_value);
                     auto_value = v + 1;
-                    variants.push((variant_name, value));
+                    variants.push(EnumVariantInfo {
+                        name: variant_name,
+                        value,
+                        name_range: name.range(),
+                    });
                 }
             }
             _ => {}

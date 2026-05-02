@@ -2172,55 +2172,56 @@ fn test_typevar_constraints_violation_has_type_code() {
 
 #[test]
 fn test_auto_init_inheritance_missing_super_has_class_code() {
-    let result = lower_source(
-        "class Animal:\n    name: str\n\n    def __init__(self, name: str):\n        self.name = name\n\nclass Dog(Animal):\n    breed: str\n\ndef main():\n    d: Dog = Dog(\"Rex\", \"Labrador\")\n",
-    );
+    let source = "class Animal:\n    name: str\n\n    def __init__(self, name: str):\n        self.name = name\n\nclass Dog(Animal):\n    breed: str\n\ndef main():\n    d: Dog = Dog(\"Rex\", \"Labrador\")\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message
             == "class 'Dog' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)"
             && e.code == Some(DiagnosticCode::CLASS_MISSING_INITIALIZER)
+            && e.primary_range == Some(range_for_after(source, "class ", "Dog"))
     }));
 }
 
 #[test]
 fn test_auto_init_required_after_default_has_class_code() {
-    let result = lower_source(
-        "class BadConfig:\n    debug: bool = False\n    name: str\n\ndef main():\n    c: BadConfig = BadConfig(True, \"test\")\n",
-    );
+    let source =
+        "class BadConfig:\n    debug: bool = False\n    name: str\n\ndef main():\n    c: BadConfig = BadConfig(True, \"test\")\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message
             == "class 'BadConfig': required field 'name' declared after field with default value"
             && e.code == Some(DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT)
+            && e.primary_range == Some(range_for_after(source, "    ", "name"))
     }));
 }
 
 #[test]
 fn test_enum_duplicate_value_has_class_code() {
-    let result = lower_source(
-        "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n    SUCCESS = 200\n    NOT_FOUND = 404\n\ndef main():\n    s: Status = Status.OK\n    print(s)\n",
-    );
+    let source = "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n    SUCCESS = 200\n    NOT_FOUND = 404\n\ndef main():\n    s: Status = Status.OK\n    print(s)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message == "enum 'Status' has duplicate value 200: variants 'OK' and 'SUCCESS'"
             && e.code == Some(DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE)
+            && e.primary_range == Some(range_for_after(source, "    ", "SUCCESS"))
     }));
 }
 
 #[test]
 fn test_missing_field_has_class_code() {
-    let result = lower_source(
-        "class Point:\n    x: float\n    y: float\n\n    def __init__(self, x: float, y: float):\n        self.x = x\n        self.y = y\n\ndef main():\n    p: Point = Point(1.0, 2.0)\n    print(p.z)\n",
-    );
+    let source = "class Point:\n    x: float\n    y: float\n\n    def __init__(self, x: float, y: float):\n        self.x = x\n        self.y = y\n\ndef main():\n    p: Point = Point(1.0, 2.0)\n    print(p.z)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message == "type 'Point' has no field 'z'"
             && e.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)
+            && e.primary_range == Some(range_for_after(source, "print(p.", "z"))
     }));
 }
 

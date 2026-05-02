@@ -1,4 +1,4 @@
-# expect-error: SIFR-CLASS-0003
+# expect-error[col=5]: SIFR-CLASS-0003
 # Test: enum with duplicate integer values
 from enum import Enum
 

@@ -2,6 +2,7 @@ use crate::hir_nodes::{
     HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
     HirTupleTargetBinding, MethodKind,
 };
+use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Number, Stmt, StmtClassDef, UnaryOp};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -254,35 +255,39 @@ pub(super) fn collect_class_type(
         {
             let mut seen_values: std::collections::HashMap<i64, String> =
                 std::collections::HashMap::new();
-            for (vname, vval) in &variants {
-                let val = vval.unwrap_or(0);
+            for variant in &variants {
+                let val = variant.value.unwrap_or(0);
                 if let Some(existing) = seen_values.get(&val) {
-                    if vval.is_some() {
+                    if variant.value.is_some() {
                         let enum_name = class_name.as_str();
                         let value = val;
                         let existing_variant = existing;
-                        let duplicate_variant = vname;
-                        ctx.error_with_code(
+                        let duplicate_variant = variant.name.as_str();
+                        ctx.error_with_code_at(
                             DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE,
                             format!(
                                 "enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'"
                             ),
+                            variant.name_range,
                         );
                     }
-                } else if vval.is_some() {
-                    seen_values.insert(val, vname.clone());
+                } else if variant.value.is_some() {
+                    seen_values.insert(val, variant.name.clone());
                 }
             }
         }
         let enum_ty = Type::Enum {
             name: class_name.clone(),
-            variants: variants.iter().map(|(n, v)| (n.clone(), *v)).collect(),
+            variants: variants
+                .iter()
+                .map(|variant| (variant.name.clone(), variant.value))
+                .collect(),
         };
         ctx.class_types.insert(class_name.clone(), enum_ty.clone());
         // Register each variant as a constant of the enum type
-        for (variant_name, _) in &variants {
+        for variant in &variants {
             ctx.functions.insert(
-                format!("{class_name}.{variant_name}"),
+                format!("{}.{}", class_name, variant.name),
                 FunctionType::new(vec![], enum_ty.clone()),
             );
         }
@@ -414,6 +419,8 @@ pub(super) fn collect_class_type(
     );
 
     let mut field_defaults: Vec<(usize, HirExpr)> = Vec::new();
+    let mut own_fields: Vec<(String, ruff_text_size::TextRange)> = Vec::new();
+    let mut own_field_default_indices = std::collections::HashSet::new();
 
     for stmt in &class_def.body {
         match stmt {
@@ -422,11 +429,14 @@ pub(super) fn collect_class_type(
                 if let Expr::Name(name) = ann.target.as_ref() {
                     let ty = resolve_annotation_expr(&ann.annotation, ctx);
                     let field_idx = fields.len();
+                    let own_field_idx = own_fields.len();
                     fields.push((name.id.to_string(), ty));
+                    own_fields.push((name.id.to_string(), name.range()));
                     // Collect default value if present (for auto-init default params)
                     if let Some(ref default_expr) = ann.value {
                         if let Some(hir_default) = lower_expr_simple(default_expr) {
                             field_defaults.push((field_idx, hir_default));
+                            own_field_default_indices.insert(own_field_idx);
                         } else {
                             ctx.error(format!(
                                 "class '{class_name}': unsupported default expression for field '{}'",
@@ -576,19 +586,18 @@ pub(super) fn collect_class_type(
         // No __init__ defined -- create a default constructor from fields
 
         // Validate field ordering: required fields must come before defaulted fields
-        let default_indices: std::collections::HashSet<usize> =
-            field_defaults.iter().map(|(i, _)| *i).collect();
         let mut seen_default = false;
-        for (i, (fname, _)) in fields.iter().enumerate() {
-            if default_indices.contains(&i) {
+        for (i, (fname, range)) in own_fields.iter().enumerate() {
+            if own_field_default_indices.contains(&i) {
                 seen_default = true;
             } else if seen_default {
                 let field = fname.as_str();
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
                     format!(
                         "class '{class_name}': required field '{field}' declared after field with default value"
                     ),
+                    *range,
                 );
             }
         }
@@ -608,12 +617,13 @@ pub(super) fn collect_class_type(
             };
             let has_own_fields = fields.len() > parent_field_count;
             if has_own_fields {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::CLASS_MISSING_INITIALIZER,
                     format!(
                         "class '{class_name}' has fields but no __init__; parent fields will not be initialized. \
                          Define an explicit __init__ with super().__init__(...)"
                     ),
+                    class_def.name.range(),
                 );
             }
         }
@@ -772,7 +782,10 @@ pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Optio
             implements_protocols: Vec::new(),
             parent_class: None,
             type_params: Vec::new(),
-            enum_variants: variants,
+            enum_variants: variants
+                .iter()
+                .map(|variant| (variant.name.clone(), variant.value))
+                .collect(),
         });
     }
 

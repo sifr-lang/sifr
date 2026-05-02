@@ -1,4 +1,4 @@
-# expect-error: SIFR-CLASS-0001
+# expect-error[col=7]: SIFR-CLASS-0001
 
 class Animal:
     name: str
