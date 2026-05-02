@@ -45,6 +45,7 @@ use crate::hir_nodes::{
     HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirMatchArm, HirParam, HirPattern,
     HirStmt, MethodKind,
 };
+use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     BoolOp, CmpOp, ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign,
@@ -1684,7 +1685,7 @@ pub(super) fn lower_if(
     let narrowing_cond = detect_narrowing_condition(&if_stmt.test, ctx);
 
     let condition = lower_expr(&if_stmt.test, ctx)?;
-    validate_control_flow_condition(&condition, "if", ctx);
+    validate_control_flow_condition(&condition, "if", Some(if_stmt.test.range()), ctx);
     predeclare_exhaustive_if_assigned_names(if_stmt, ctx);
 
     let saved_state = ctx.scope.save_narrowing_state();
@@ -1729,6 +1730,7 @@ pub(super) fn lower_if(
 
             let elif_narrowing = detect_narrowing_condition(test, ctx);
             let cond = lower_expr(test, ctx)?;
+            validate_control_flow_condition(&cond, "elif", Some(test.range()), ctx);
 
             let elif_saved = ctx.scope.save_narrowing_state();
             if let Some(ref elif_cond) = elif_narrowing {
@@ -1972,7 +1974,7 @@ pub(super) fn lower_while(
 ) -> Option<HirStmt> {
     let narrowing_cond = detect_narrowing_condition(&while_stmt.test, ctx);
     let condition = lower_expr(&while_stmt.test, ctx)?;
-    validate_control_flow_condition(&condition, "while", ctx);
+    validate_control_flow_condition(&condition, "while", Some(while_stmt.test.range()), ctx);
     let saved_narrowing_state = ctx.scope.save_narrowing_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
     if let Some(ref cond) = narrowing_cond {

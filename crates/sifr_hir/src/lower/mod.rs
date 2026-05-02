@@ -86,6 +86,7 @@ use default_args::collect_function_defaults;
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
 use len_aliases::LenAliasFact;
+use ruff_text_size::TextRange;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use sifr_diagnostics::DiagnosticCode;
@@ -99,6 +100,7 @@ use typing_and_functions::{
 pub struct LoweringError {
     pub code: Option<DiagnosticCode>,
     pub message: String,
+    pub primary_range: Option<TextRange>,
     pub line: Option<u32>,
     pub col: Option<u32>,
 }
@@ -226,6 +228,7 @@ impl LowerCtx {
         self.errors.push(LoweringError {
             code: None,
             message,
+            primary_range: None,
             line: None,
             col: None,
         });
@@ -235,6 +238,17 @@ impl LowerCtx {
         self.errors.push(LoweringError {
             code: Some(code),
             message,
+            primary_range: None,
+            line: None,
+            col: None,
+        });
+    }
+
+    fn error_with_code_at(&mut self, code: DiagnosticCode, message: String, range: TextRange) {
+        self.errors.push(LoweringError {
+            code: Some(code),
+            message,
+            primary_range: Some(range),
             line: None,
             col: None,
         });

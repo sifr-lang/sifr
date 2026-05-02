@@ -1,3 +1,4 @@
+use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 
 use super::LowerCtx;
@@ -33,6 +34,19 @@ pub(super) fn invalid_condition_type(ctx: &mut LowerCtx, keyword: &str, actual: 
     ctx.error_with_code(
         DiagnosticCode::FLOW_INVALID_CONDITION_TYPE,
         format!("{keyword} condition must be bool or collection/string truthiness, got '{actual}'"),
+    );
+}
+
+pub(super) fn invalid_condition_type_at(
+    ctx: &mut LowerCtx,
+    keyword: &str,
+    actual: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::FLOW_INVALID_CONDITION_TYPE,
+        format!("{keyword} condition must be bool or collection/string truthiness, got '{actual}'"),
+        range,
     );
 }
 
