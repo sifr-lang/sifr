@@ -6,17 +6,20 @@ use super::project_codegen::{
 };
 use super::ArtifactCacheReport;
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
-use crate::frontend::{parse_source, FrontendCompiled, FrontendDiagnosticStyle};
+use crate::frontend::{
+    parse_source, FrontendCompiled, FrontendDiagnosticStyle, FrontendSourceContext,
+};
 use crate::project::{
-    collect_project_hir_modules, compile_frontend_modules, emit_project_frontend_diagnostics,
-    parse_import_closure_modules, DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering,
+    collect_project_hir_modules, compile_single_frontend_module_with_source,
+    emit_project_frontend_diagnostics, parse_import_closure_modules, DiscoveryDiagnosticStyle,
+    ModuleResolver, ProjectLowering,
 };
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use crate::workspace::find_workspace_root;
 use sifr_codegen::generate_rust_with_stdlib;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::LoweringResult;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -148,10 +151,13 @@ impl RootedEntrypointPlan {
         let (shape, project_lowering) = match entrypoint {
             RootedEntrypoint::SingleFile { source } => {
                 let parsed_suite = parse_source(source)?;
-                let mut parsed_modules = HashMap::new();
-                parsed_modules.insert("main".to_string(), parsed_suite);
-                let project_lowering = compile_frontend_modules(
-                    &parsed_modules,
+                let project_lowering = compile_single_frontend_module_with_source(
+                    "main",
+                    &parsed_suite,
+                    FrontendSourceContext {
+                        display_path: "main",
+                        source,
+                    },
                     stdlib.defs.clone(),
                     FrontendDiagnosticStyle::Bare,
                 )?;

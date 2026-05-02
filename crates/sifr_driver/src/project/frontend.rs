@@ -1,7 +1,10 @@
 use super::compile_order::compute_module_compile_order;
 use super::exports::collect_module_exports;
 use crate::diagnostics::{write_stderr_line, RenderedDiagnostic};
-use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle, FrontendModuleDiagnostics};
+use crate::frontend::{
+    lower_frontend_module, lower_frontend_module_with_source, FrontendDiagnosticStyle,
+    FrontendModuleDiagnostics, FrontendSourceContext,
+};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
 use sifr_python_ast::Stmt;
@@ -61,6 +64,50 @@ pub(crate) fn compile_frontend_modules(
         external_defs,
         compile_order,
         module_diagnostics,
+    })
+}
+
+pub(crate) fn compile_single_frontend_module_with_source(
+    module_name: &str,
+    stmts: &[Stmt],
+    source_context: FrontendSourceContext<'_>,
+    mut external_defs: ExternalDefs,
+    diagnostic_style: FrontendDiagnosticStyle,
+) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
+    let result = lower_frontend_module_with_source(
+        module_name,
+        stmts,
+        &external_defs,
+        diagnostic_style,
+        Some(source_context),
+    )?;
+    let LoweringResult {
+        module,
+        function_defaults,
+        function_varargs,
+        reveal_types,
+        warnings,
+    } = result;
+    let lowering_result = LoweringResult {
+        module: module.clone(),
+        function_defaults,
+        function_varargs,
+        reveal_types: reveal_types.clone(),
+        warnings: warnings.clone(),
+    };
+    collect_module_exports(module_name, &lowering_result, &mut external_defs);
+
+    Ok(ProjectLowering {
+        hir_modules: HashMap::from([(module_name.to_string(), module)]),
+        external_defs,
+        compile_order: vec![module_name.to_string()],
+        module_diagnostics: HashMap::from([(
+            module_name.to_string(),
+            FrontendModuleDiagnostics {
+                reveal_types,
+                warnings,
+            },
+        )]),
     })
 }
 
