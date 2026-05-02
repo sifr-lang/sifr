@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0001
+# expect-error[col=11]: SIFR-OWN-0001
 def consume(own s: str) -> str:
     return s
 

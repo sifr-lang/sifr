@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0002
+# expect-error[col=29]: SIFR-OWN-0002
 
 def mutate_then_read(mut a: list[int], b: list[int]):
     pass

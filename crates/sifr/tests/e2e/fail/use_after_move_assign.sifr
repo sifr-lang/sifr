@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0001
+# expect-error[col=11]: SIFR-OWN-0001
 def main():
     s1: str = "hello"
     s2: str = s1

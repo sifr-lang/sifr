@@ -1,4 +1,4 @@
-# expect-error: SIFR-OWN-0003
+# expect-error[col=12]: SIFR-OWN-0003
 def display(name: str, *, verbose: bool) -> str:
     if verbose:
         return f"Name: {name}"

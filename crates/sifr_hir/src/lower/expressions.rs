@@ -53,7 +53,7 @@ use super::{
     LowerCtx,
 };
 use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
-use ruff_text_size::Ranged;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
@@ -226,7 +226,7 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
         // Use effective type (narrowed if available)
         let ty = info.effective_type().clone();
         if is_moved {
-            ownership_diagnostics::use_after_move(ctx, &var_name);
+            ownership_diagnostics::use_after_move(ctx, &var_name, name.range());
         }
         return Some(HirExpr::Name { name: var_name, ty });
     }
@@ -249,6 +249,30 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     name_diagnostics::undefined_variable(ctx, &var_name, name.range());
     None
+}
+
+fn call_argument_ranges_by_param(call: &ExprCall, ft: &FunctionType) -> Vec<Option<TextRange>> {
+    let mut ranges = vec![None; ft.params.len()];
+
+    for (index, arg) in call.arguments.args.iter().enumerate().take(ft.params.len()) {
+        ranges[index] = Some(arg.range());
+    }
+
+    for keyword in &call.arguments.keywords {
+        let Some(name) = keyword.arg.as_ref() else {
+            continue;
+        };
+        let Some(index) = ft
+            .params
+            .iter()
+            .position(|(param_name, _, _)| param_name == name.as_str())
+        else {
+            continue;
+        };
+        ranges[index] = Some(keyword.value.range());
+    }
+
+    ranges
 }
 
 /// Map a binary operator to its corresponding dunder method name.
@@ -1834,11 +1858,17 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     // Exclusivity check: enforce that the same variable is not passed as mut twice,
     // or as both mut and immutable borrow in the same call.
     {
+        let arg_ranges = call_argument_ranges_by_param(call, &ft);
         let mut mut_borrowed: Vec<String> = Vec::new();
         let mut immut_borrowed: Vec<String> = Vec::new();
         for (i, arg) in args.iter().enumerate() {
             if let HirExpr::Name { name, ty } = arg {
                 if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+                    let primary_range = arg_ranges
+                        .get(i)
+                        .copied()
+                        .flatten()
+                        .unwrap_or_else(|| call.range());
                     let convention = ft
                         .params
                         .get(i)
@@ -1846,17 +1876,28 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         .unwrap_or(ParamConvention::borrow());
                     if convention.is_mut_borrow() {
                         if mut_borrowed.contains(name) {
-                            ownership_diagnostics::double_mutable_borrow(ctx, name, &func_name);
+                            ownership_diagnostics::double_mutable_borrow(
+                                ctx,
+                                name,
+                                &func_name,
+                                primary_range,
+                            );
                         } else if immut_borrowed.contains(name) {
                             ownership_diagnostics::mutable_borrow_after_immutable(
-                                ctx, name, &func_name,
+                                ctx,
+                                name,
+                                &func_name,
+                                primary_range,
                             );
                         }
                         mut_borrowed.push(name.clone());
                     } else if convention.is_shared_borrow() {
                         if mut_borrowed.contains(name) {
                             ownership_diagnostics::immutable_borrow_after_mutable(
-                                ctx, name, &func_name,
+                                ctx,
+                                name,
+                                &func_name,
+                                primary_range,
                             );
                         }
                         immut_borrowed.push(name.clone());
@@ -2467,7 +2508,13 @@ pub(super) fn lower_method_call(
     }
     object = refine_generic_class_binding_expr(object, &method_name, &args, ctx);
     let object_ty = object.ty().clone();
-    if reject_immutable_parameter_method_mutation(ctx, &object, &object_ty, &method_name) {
+    if reject_immutable_parameter_method_mutation(
+        ctx,
+        &object,
+        &object_ty,
+        &method_name,
+        attr.value.range(),
+    ) {
         return None;
     }
     // Resolve method return type based on object type and method name
