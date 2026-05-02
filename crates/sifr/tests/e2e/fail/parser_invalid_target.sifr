@@ -1,0 +1,3 @@
+# expect-error: SIFR-PARSE-0005
+def main():
+    1 = 2

@@ -8,7 +8,7 @@ Sifr is not production-released yet. This phase intentionally does not preserve 
 
 ## Execution Status
 
-Current wave: `milestone_diag_5` test harness contract cleanup, split into reviewable residual-cleanup slices.
+Current wave: `milestone_diag_7` parser/name/import/type/call diagnostic refinement, split into reviewable category slices.
 
 - [x] Proposal reviewed through final loop and accepted for implementation.
 - [x] Added `crates/sifr_diagnostics` as the canonical leaf crate for diagnostic codes, source spans/source map, model builders, sink emission, rendering, and JSON schema generation.
@@ -75,6 +75,7 @@ Current wave: `milestone_diag_5` test harness contract cleanup, split into revie
 - [x] `milestone_diag_5` slice 2 implementation complete and reviewer-satisfied: added verification harness duplicate-baseline artifact path detection before command execution or blessing, normalized baseline artifact identity to resolved repo-contained paths, added manifest-shape failures for duplicate formats and invalid entries, and wired regression self-tests into the authoritative local validation lane. PR: https://github.com/sifr-lang/sifr/pull/1711.
 - [x] `milestone_diag_5` slice 3 implementation complete and reviewer-satisfied: added e2e fixture expectation contradiction detection so overlapping explicit `expect-error[col=N]` assertion locations cannot claim incompatible diagnostic codes, kept unqualified markers as code-existence assertions only, and loaded all fail-fixture expectation contracts before compiling the fail corpus. PR: https://github.com/sifr-lang/sifr/pull/1712.
 - [x] `milestone_diag_5` slice 4 implementation complete and reviewer-satisfied: refactored CLI diagnostic rendering so human, JSON, and compact formats consume one canonical sorted-and-capped diagnostic stream, and added a focused regression test proving all three outputs derive from that same stream. PR: https://github.com/sifr-lang/sifr/pull/1713.
+- [x] `milestone_diag_7` slice 1 implementation complete and reviewer-satisfied: parser diagnostics now classify Ruff parse and unsupported-syntax categories to active `SIFR-PARSE-0002..0009` codes with registry-aligned templates, declared args, `parser_category` JSON context, project/test child-note context, and representative e2e fixtures for every active parse code. PR: https://github.com/sifr-lang/sifr/pull/1714.
 - [x] Claude pre-implementation review for `milestone_diag_4a` slice 2 completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2a completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-2.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.1 completed and reviewer is satisfied. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-2.md`.

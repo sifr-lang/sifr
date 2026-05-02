@@ -1,0 +1,5 @@
+# expect-error: SIFR-PARSE-0008
+def main():
+    match 1:
+        case *value:
+            pass

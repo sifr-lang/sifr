@@ -158,10 +158,14 @@ fn test_project_and_test_discovery_parity_reports_reachable_parse_errors() {
             .err()
             .expect("test closure should fail on reachable parse error");
 
-    assert!(project_errors
+    assert!(project_errors.iter().any(|e| e
+        .children
         .iter()
-        .any(|e| e.message.contains("[helper]")));
-    assert!(test_errors.iter().any(|e| e.message.contains("[helper]")));
+        .any(|child| child.message == "while parsing helper")));
+    assert!(test_errors.iter().any(|e| e
+        .children
+        .iter()
+        .any(|child| child.message == "while parsing helper")));
 
     let _ = std::fs::remove_dir_all(&dir);
 }

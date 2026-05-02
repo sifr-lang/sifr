@@ -291,25 +291,45 @@ fn test_run_tests_reports_deterministic_parse_error_order() {
     std::fs::write(test_dir.join("test_a_bad.sifr"), "def a(:\n")
         .expect("test_a_bad should be written");
 
-    let first_messages: Vec<String> = run_tests(&test_dir)
+    let first_diagnostics: Vec<(String, Vec<String>)> = run_tests(&test_dir)
         .err()
         .expect("parse errors should be reported")
         .into_iter()
-        .map(|error| error.message)
+        .map(|error| {
+            (
+                error.message,
+                error
+                    .children
+                    .into_iter()
+                    .map(|child| child.message)
+                    .collect(),
+            )
+        })
         .collect();
-    let second_messages: Vec<String> = run_tests(&test_dir)
+    let second_diagnostics: Vec<(String, Vec<String>)> = run_tests(&test_dir)
         .err()
         .expect("parse errors should be deterministic")
         .into_iter()
-        .map(|error| error.message)
+        .map(|error| {
+            (
+                error.message,
+                error
+                    .children
+                    .into_iter()
+                    .map(|child| child.message)
+                    .collect(),
+            )
+        })
         .collect();
 
-    assert_eq!(first_messages, second_messages);
+    assert_eq!(first_diagnostics, second_diagnostics);
     assert!(
-        first_messages
+        first_diagnostics
             .first()
-            .is_some_and(|message| message.contains("test_a_bad.sifr")),
-        "first parse error should be from lexicographically first fixture: {first_messages:?}"
+            .is_some_and(|(_message, children)| children
+                .iter()
+                .any(|child| child.contains("test_a_bad.sifr"))),
+        "first parse error should be from lexicographically first fixture: {first_diagnostics:?}"
     );
 
     let _ = std::fs::remove_dir_all(&test_dir);
