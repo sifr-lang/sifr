@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007
+# expect-error[col=27]: SIFR-TYPE-0007
 
 def consume(value: Result[int]) -> int:
     return 0

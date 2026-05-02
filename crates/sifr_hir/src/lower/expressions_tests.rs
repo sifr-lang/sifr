@@ -2208,28 +2208,56 @@ fn test_for_tuple_target_requires_tuple_elements() {
 
 #[test]
 fn test_generic_class_subscript_requires_declared_type_params() {
-    let result = lower_source(
-        "T = TypeVar(\"T\")\nclass LegacyBox:\n    value: T\ndef f(x: LegacyBox[int]) -> int:\n    return 1\n",
-    );
+    let source =
+        "T = TypeVar(\"T\")\nclass LegacyBox:\n    value: T\ndef f(x: LegacyBox[int]) -> int:\n    return 1\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("does not declare type parameters")
-            && e.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)));
+    assert!(errors.iter().any(|e| {
+        e.message.contains("does not declare type parameters")
+            && e.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && e.primary_range == Some(range_for_after_anchor(source, "def f(x: ", "LegacyBox"))
+    }));
 }
 
 #[test]
 fn test_generic_class_subscript_arity_mismatch_errors() {
-    let result = lower_source(
-        "class Pair[T]:\n    left: T\n    right: T\ndef f(x: Pair[int, str]) -> int:\n    return 1\n",
-    );
+    let source =
+        "class Pair[T]:\n    left: T\n    right: T\ndef f(x: Pair[int, str]) -> int:\n    return 1\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("expects 1 type argument(s), got 2")
-            && e.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)));
+    assert!(errors.iter().any(|e| {
+        e.message.contains("expects 1 type argument(s), got 2")
+            && e.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && e.primary_range == Some(range_for(source, "int, str"))
+    }));
+}
+
+#[test]
+fn test_invalid_dict_type_annotation_has_primary_range() {
+    let source = "def consume(value: dict[int]) -> int:\n    return 0\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "dict type annotation requires [K, V] syntax"
+            && e.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && e.primary_range == Some(range_for(source, "int"))
+    }));
+}
+
+#[test]
+fn test_callable_param_list_annotation_has_primary_range() {
+    let source = "def consume(callback: Callable[int, str]) -> int:\n    return 0\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "Callable parameter types must be a list: Callable[[int, str], bool]"
+            && e.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && e.primary_range == Some(range_for_after_anchor(source, "Callable[", "int"))
+    }));
 }
 
 #[test]

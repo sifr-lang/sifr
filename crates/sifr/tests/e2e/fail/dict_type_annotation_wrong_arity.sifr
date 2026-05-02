@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007
+# expect-error[col=25]: SIFR-TYPE-0007
 
 def consume(value: dict[int, str, bool]) -> int:
     return 0

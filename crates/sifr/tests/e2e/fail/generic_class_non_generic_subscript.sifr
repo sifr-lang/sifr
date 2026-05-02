@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0007
+# expect-error[col=12]: SIFR-TYPE-0007
 # Test: class subscripts require declared type parameters.
 
 class LegacyBox:
