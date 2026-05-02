@@ -1,4 +1,4 @@
-# expect-error: SIFR-FLOW-0004
+# expect-error[col=5]: SIFR-FLOW-0004
 
 def choose(flag: bool) -> int:
     if flag:

@@ -1,4 +1,5 @@
 use crate::{lower_module, HirExpr, HirModule, HirStmt, LoweringError};
+use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
@@ -6,6 +7,18 @@ use sifr_type_system::{ParamConvention, Type};
 fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
     let parsed = parse_module(source).expect("parse failed");
     lower_module(parsed.suite()).map(|result| result.module)
+}
+
+fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
+    let after_start = source.find(after).expect("anchor should exist");
+    let relative_start = source[after_start..]
+        .find(needle)
+        .expect("needle should exist after anchor");
+    let start = (after_start + relative_start) as u32;
+    TextRange::new(
+        TextSize::new(start),
+        TextSize::new(start + needle.len() as u32),
+    )
 }
 
 #[test]
@@ -121,80 +134,91 @@ fn test_nonlocal_nested_helper_rebinds_enclosing_name() {
 
 #[test]
 fn test_nonlocal_tuple_unpack_fails_explicitly() {
-    let result = lower_source(
-        "def outer() -> int:\n    left, right = 0, 1\n    def update() -> None:\n        nonlocal left, right\n        left, right = right, left + right\n    update()\n    return left + right\n",
-    );
+    let source = "def outer() -> int:\n    left, right = 0, 1\n    def update() -> None:\n        nonlocal left, right\n        left, right = right, left + right\n    update()\n    return left + right\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "tuple unpacking cannot rebind captured state with `nonlocal` yet"
             && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+            && error.primary_range
+                == Some(range_for_after(
+                    source,
+                    "        left, right",
+                    "left, right",
+                ))
     }));
 }
 
 #[test]
 fn test_augassign_to_capture_requires_nonlocal() {
-    let result = lower_source(
-        "def outer() -> int:\n    total = 0\n    def apply() -> None:\n        total += 1\n    apply()\n    return total\n",
-    );
+    let source =
+        "def outer() -> int:\n    total = 0\n    def apply() -> None:\n        total += 1\n    apply()\n    return total\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message
             == "captured variable `total` must be declared with `nonlocal` before augmented assignment"
             && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+            && error.primary_range == Some(range_for_after(source, "        total += ", "total"))
     }));
 }
 
 #[test]
 fn test_recursive_nonlocal_nested_helper_fails_explicitly() {
-    let result = lower_source(
-        "def outer(limit: int) -> int:\n    total = 0\n    def visit(i: int) -> None:\n        nonlocal total\n        if i == limit:\n            total += 1\n            return\n        visit(i + 1)\n    visit(0)\n    return total\n",
-    );
+    let source = "def outer(limit: int) -> int:\n    total = 0\n    def visit(i: int) -> None:\n        nonlocal total\n        if i == limit:\n            total += 1\n            return\n        visit(i + 1)\n    visit(0)\n    return total\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message
             == "recursive nested function 'visit' cannot mutate captured state with `nonlocal` yet"
             && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+            && error.primary_range == Some(range_for_after(source, "def visit", "visit"))
     }));
 }
 
 #[test]
 fn test_top_level_nonlocal_requires_enclosing_binding_code() {
-    let result = lower_source("def main() -> None:\n    nonlocal total\n");
+    let source = "def main() -> None:\n    nonlocal total\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "nonlocal declaration requires an enclosing function binding"
             && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+            && error.primary_range
+                == Some(range_for_after(source, "    nonlocal", "nonlocal total"))
     }));
 }
 
 #[test]
 fn test_unresolved_nonlocal_has_flow_code() {
-    let result = lower_source(
-        "def outer() -> int:\n    def inner() -> None:\n        nonlocal missing\n    inner()\n    return 0\n",
-    );
+    let source =
+        "def outer() -> int:\n    def inner() -> None:\n        nonlocal missing\n    inner()\n    return 0\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message == "nonlocal name 'missing' does not resolve to an enclosing function binding"
             && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+            && error.primary_range == Some(range_for_after(source, "nonlocal ", "missing"))
     }));
 }
 
 #[test]
 fn test_nonlocal_current_binding_conflict_has_flow_code() {
-    let result = lower_source(
-        "def outer(value: int) -> int:\n    def inner(value: int) -> None:\n        nonlocal value\n    inner(1)\n    return value\n",
-    );
+    let source =
+        "def outer(value: int) -> int:\n    def inner(value: int) -> None:\n        nonlocal value\n    inner(1)\n    return value\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message
             == "nonlocal name 'value' conflicts with a binding in the current function scope"
             && error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+            && error.primary_range == Some(range_for_after(source, "nonlocal ", "value"))
     }));
 }
 
