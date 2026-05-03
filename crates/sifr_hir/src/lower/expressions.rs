@@ -3424,9 +3424,37 @@ pub(super) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<Hi
     })
 }
 
+fn reject_invalid_expression_target(ctx: &mut LowerCtx, message: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET,
+        message.to_string(),
+        range,
+    );
+}
+
+fn reject_invalid_expression_iteration(ctx: &mut LowerCtx, iter_ty: &Type, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::FLOW_INVALID_ITERATION,
+        format!("cannot iterate over type '{}'", iter_ty.display_name()),
+        range,
+    );
+}
+
+fn reject_unsupported_expression_form(ctx: &mut LowerCtx, message: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
+        message.to_string(),
+        range,
+    );
+}
+
 pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if comp.generators.is_empty() {
-        ctx.error("list comprehension must have at least one generator".to_string());
+        reject_unsupported_expression_form(
+            ctx,
+            "list comprehension must have at least one generator",
+            comp.range(),
+        );
         return None;
     }
 
@@ -3450,15 +3478,21 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
                         })
                         .collect();
                     if names.len() != tup.elts.len() {
-                        ctx.error(
-                            "comprehension tuple target must contain only simple names".to_string(),
+                        reject_invalid_expression_target(
+                            ctx,
+                            "comprehension tuple target must contain only simple names",
+                            gen.target.range(),
                         );
                         return None;
                     }
                     names.join(",")
                 }
                 _ => {
-                    ctx.error("comprehension target must be a simple name or tuple".to_string());
+                    reject_invalid_expression_target(
+                        ctx,
+                        "comprehension target must be a simple name or tuple",
+                        gen.target.range(),
+                    );
                     return None;
                 }
             };
@@ -3466,10 +3500,7 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
-                ctx.error(format!(
-                    "cannot iterate over type '{}'",
-                    iter_ty.display_name()
-                ));
+                reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
                 return None;
             };
 
@@ -3538,16 +3569,17 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<H
             let var_name = if let Expr::Name(n) = &gen.target {
                 n.id.to_string()
             } else {
-                ctx.error("set comprehension target must be a simple name".to_string());
+                reject_invalid_expression_target(
+                    ctx,
+                    "set comprehension target must be a simple name",
+                    gen.target.range(),
+                );
                 return None;
             };
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
-                ctx.error(format!(
-                    "cannot iterate over type '{}'",
-                    iter_ty.display_name()
-                ));
+                reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
                 return None;
             };
             ctx.scope.push();
@@ -3593,11 +3625,21 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
                             }
                         })
                         .collect();
+                    if names.len() != tup.elts.len() {
+                        reject_invalid_expression_target(
+                            ctx,
+                            "dict comprehension tuple target must contain only simple names",
+                            gen.target.range(),
+                        );
+                        return None;
+                    }
                     names.join(",")
                 }
                 _ => {
-                    ctx.error(
-                        "dict comprehension target must be a simple name or tuple".to_string(),
+                    reject_invalid_expression_target(
+                        ctx,
+                        "dict comprehension target must be a simple name or tuple",
+                        gen.target.range(),
                     );
                     return None;
                 }
@@ -3605,10 +3647,7 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
-                ctx.error(format!(
-                    "cannot iterate over type '{}'",
-                    iter_ty.display_name()
-                ));
+                reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
                 return None;
             };
             ctx.scope.push();
@@ -3655,7 +3694,11 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
 pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Only support single generator: (expr for var in iter) or (expr for var in iter if cond)
     if gen.generators.len() != 1 {
-        ctx.error("only single-generator generator expressions are supported".to_string());
+        reject_unsupported_expression_form(
+            ctx,
+            "only single-generator generator expressions are supported",
+            gen.range(),
+        );
         return None;
     }
 
@@ -3664,16 +3707,17 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
     let var_name = if let Expr::Name(n) = &comp.target {
         n.id.to_string()
     } else {
-        ctx.error("generator target must be a simple name".to_string());
+        reject_invalid_expression_target(
+            ctx,
+            "generator target must be a simple name",
+            comp.target.range(),
+        );
         return None;
     };
     let iter_source_expr = lower_expr(&comp.iter, ctx)?;
     let iter_ty = iter_source_expr.ty().clone();
     let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
-        ctx.error(format!(
-            "cannot iterate over type '{}'",
-            iter_ty.display_name()
-        ));
+        reject_invalid_expression_iteration(ctx, &iter_ty, comp.iter.range());
         return None;
     };
 
@@ -3725,7 +3769,11 @@ pub(super) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<
     let name = if let Expr::Name(n) = named.target.as_ref() {
         n.id.to_string()
     } else {
-        ctx.error("walrus operator target must be a simple name".to_string());
+        reject_invalid_expression_target(
+            ctx,
+            "walrus operator target must be a simple name",
+            named.target.range(),
+        );
         return None;
     };
 

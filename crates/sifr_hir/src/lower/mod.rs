@@ -254,19 +254,6 @@ impl LowerCtx {
             });
     }
 
-    fn error(&mut self, message: String) -> ErrorTaint {
-        let taint = ErrorTaint::emitted();
-        self.errors.push(HirDiagnostic {
-            code: None,
-            message,
-            primary_range: None,
-            line: None,
-            col: None,
-        });
-        self.last_error_taint = Some(taint);
-        taint
-    }
-
     fn error_with_code_at(
         &mut self,
         code: DiagnosticCode,

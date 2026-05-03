@@ -1,7 +1,11 @@
-use super::{expressions::resolve_method_type, LowerCtx};
+use super::{
+    expressions::{lower_named_expr, resolve_method_type},
+    LowerCtx,
+};
 use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_python_ast::{AtomicNodeIndex, Expr, ExprNamed, ExprNoneLiteral};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, Type};
 
@@ -2586,6 +2590,152 @@ fn test_comprehensions_accept_iterator_inputs() {
         "def main():\n    nums: list[int] = [1, 2, 3]\n    it_list: Iterator[int] = iter(nums)\n    list_comp: list[int] = [x for x in it_list]\n    it_set: Iterator[int] = iter(nums)\n    set_comp: set[int] = {x for x in it_set}\n    it_dict: Iterator[tuple[int, int]] = enumerate(nums)\n    dict_comp: dict[int, int] = {i: x for i, x in it_dict}\n",
     );
     assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_list_comprehension_invalid_target_has_flow_code() {
+    let source = "def main():\n    values: list[int] = [1]\n    out: list[int] = [x for values[0] in values]\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "comprehension target must be a simple name or tuple"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET)
+            && error.primary_range == Some(range_for_after(source, "for ", "values[0]"))
+    }));
+}
+
+#[test]
+fn test_list_comprehension_non_iterable_has_flow_code() {
+    let source = "def main():\n    value: int = 1\n    out: list[int] = [x for x in value]\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "cannot iterate over type 'int'"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ITERATION)
+            && error.primary_range == Some(range_for_after(source, "in ", "value"))
+    }));
+}
+
+#[test]
+fn test_set_comprehension_invalid_target_has_flow_code() {
+    let source = "def main():\n    values: list[int] = [1]\n    out: set[int] = {x for values[0] in values}\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "set comprehension target must be a simple name"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET)
+            && error.primary_range == Some(range_for_after(source, "for ", "values[0]"))
+    }));
+}
+
+#[test]
+fn test_set_comprehension_non_iterable_has_flow_code() {
+    let source = "def main():\n    value: int = 1\n    out: set[int] = {x for x in value}\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "cannot iterate over type 'int'"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ITERATION)
+            && error.primary_range == Some(range_for_after(source, "in ", "value"))
+    }));
+}
+
+#[test]
+fn test_dict_comprehension_invalid_tuple_target_has_flow_code() {
+    let source = "def main():\n    values: list[int] = [0]\n    pairs: list[tuple[int, int]] = [(1, 2)]\n    out: dict[int, int] = {left: right for (left, values[0]) in pairs}\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "dict comprehension tuple target must contain only simple names"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET)
+            && error.primary_range == Some(range_for(source, "(left, values[0])"))
+    }));
+}
+
+#[test]
+fn test_dict_comprehension_non_iterable_has_flow_code() {
+    let source =
+        "def main():\n    value: int = 1\n    out: dict[int, int] = {x: x for x in value}\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "cannot iterate over type 'int'"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ITERATION)
+            && error.primary_range == Some(range_for_after(source, "in ", "value"))
+    }));
+}
+
+#[test]
+fn test_generator_expression_multi_generator_has_type_code() {
+    let source = "def main():\n    xs: list[int] = [1]\n    ys: list[int] = [2]\n    out: Iterator[int] = (x for x in xs for y in ys)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "only single-generator generator expressions are supported"
+            && error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM)
+            && error.primary_range == Some(range_for(source, "(x for x in xs for y in ys)"))
+    }));
+}
+
+#[test]
+fn test_generator_expression_invalid_target_has_flow_code() {
+    let source = "def main():\n    values: list[int] = [1]\n    out: Iterator[int] = (x for values[0] in values)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "generator target must be a simple name"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET)
+            && error.primary_range == Some(range_for_after(source, "for ", "values[0]"))
+    }));
+}
+
+#[test]
+fn test_generator_expression_non_iterable_has_flow_code() {
+    let source = "def main():\n    value: int = 1\n    out: Iterator[int] = (x for x in value)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "cannot iterate over type 'int'"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ITERATION)
+            && error.primary_range == Some(range_for_after(source, "in ", "value"))
+    }));
+}
+
+#[test]
+fn test_walrus_invalid_target_has_flow_code() {
+    let target_range = TextRange::new(TextSize::new(10), TextSize::new(14));
+    let value_range = TextRange::new(TextSize::new(18), TextSize::new(22));
+    let named = ExprNamed {
+        node_index: AtomicNodeIndex::NONE,
+        range: TextRange::new(TextSize::new(10), TextSize::new(22)),
+        target: Box::new(Expr::NoneLiteral(ExprNoneLiteral {
+            node_index: AtomicNodeIndex::NONE,
+            range: target_range,
+        })),
+        value: Box::new(Expr::NoneLiteral(ExprNoneLiteral {
+            node_index: AtomicNodeIndex::NONE,
+            range: value_range,
+        })),
+    };
+    let mut ctx = LowerCtx::new();
+
+    let result = lower_named_expr(&named, &mut ctx);
+
+    assert!(result.is_none());
+    assert!(ctx.errors.iter().any(|error| {
+        error.message == "walrus operator target must be a simple name"
+            && error.code == Some(DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET)
+            && error.primary_range == Some(target_range)
+    }));
 }
 
 #[test]
