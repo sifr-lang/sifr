@@ -54,17 +54,25 @@ pub(super) fn validate_subscript_assignment_target(
     match object_ty.resolve_alias().clone() {
         Type::List(elem_ty) => {
             if index_ty != &Type::Int {
-                ctx.error(format!(
-                    "list subscript assignment index must be 'int', got '{}'",
-                    index_ty.display_name()
-                ));
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "list subscript assignment index must be 'int', got '{}'",
+                        index_ty.display_name()
+                    ),
+                    range,
+                );
             }
             if !value_ty.is_assignable_to(elem_ty.as_ref()) {
-                ctx.error(format!(
-                    "list subscript assignment value type '{}' is not compatible with list element type '{}'",
-                    value_ty.display_name(),
-                    elem_ty.display_name()
-                ));
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "list subscript assignment value type '{}' is not compatible with list element type '{}'",
+                        value_ty.display_name(),
+                        elem_ty.display_name()
+                    ),
+                    range,
+                );
             }
             Type::List(elem_ty)
         }
@@ -127,33 +135,53 @@ pub(super) fn validate_subscript_assignment_target(
             Type::Dict(key_ty, value_ty_expected)
         }
         other => {
-            ctx.error(format!(
-                "subscript assignment is not supported for type '{}'",
-                other.display_name()
-            ));
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "subscript assignment is not supported for type '{}'",
+                    other.display_name()
+                ),
+                range,
+            );
             other
         }
     }
 }
 
+pub(super) struct SubscriptAugAssignTarget<'a> {
+    pub(super) object_name: &'a str,
+    pub(super) object_ty: Type,
+    pub(super) index_ty: &'a Type,
+    pub(super) rhs_ty: &'a Type,
+    pub(super) op: &'a str,
+    pub(super) target_range: TextRange,
+    pub(super) rhs_range: TextRange,
+}
+
 pub(super) fn validate_subscript_augassign_target(
     ctx: &mut LowerCtx,
-    object_name: &str,
-    object_ty: Type,
-    index_ty: &Type,
-    rhs_ty: &Type,
-    op: &str,
-    rhs_range: TextRange,
+    target: SubscriptAugAssignTarget<'_>,
 ) -> Type {
+    let object_name = target.object_name;
+    let object_ty = target.object_ty;
+    let index_ty = target.index_ty;
+    let rhs_ty = target.rhs_ty;
+    let op = target.op;
+    let target_range = target.target_range;
+    let rhs_range = target.rhs_range;
     let base_op = &op[..op.len() - 1];
     let resolved_object_ty = object_ty.resolve_alias().clone();
     match resolved_object_ty {
         Type::List(elem_ty) => {
             if index_ty != &Type::Int {
-                ctx.error(format!(
-                    "list subscript assignment index must be 'int', got '{}'",
-                    index_ty.display_name()
-                ));
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "list subscript assignment index must be 'int', got '{}'",
+                        index_ty.display_name()
+                    ),
+                    target_range,
+                );
             }
             if let Err((code, message)) = type_check_binary_op(elem_ty.as_ref(), base_op, rhs_ty) {
                 ctx.error_with_code_at(code, message, rhs_range);
@@ -162,11 +190,15 @@ pub(super) fn validate_subscript_augassign_target(
         }
         Type::Dict(key_ty, value_ty_expected) => {
             if !index_ty.is_assignable_to(key_ty.as_ref()) {
-                ctx.error(format!(
-                    "dict subscript assignment key type '{}' is not compatible with dict key type '{}'",
-                    index_ty.display_name(),
-                    key_ty.display_name()
-                ));
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "dict subscript assignment key type '{}' is not compatible with dict key type '{}'",
+                        index_ty.display_name(),
+                        key_ty.display_name()
+                    ),
+                    target_range,
+                );
             }
             if let Err((code, message)) =
                 type_check_binary_op(value_ty_expected.as_ref(), base_op, rhs_ty)
@@ -199,10 +231,14 @@ pub(super) fn validate_subscript_augassign_target(
             }
         }
         other => {
-            ctx.error(format!(
-                "augmented subscript assignment is not supported for type '{}'",
-                other.display_name()
-            ));
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "augmented subscript assignment is not supported for type '{}'",
+                    other.display_name()
+                ),
+                target_range,
+            );
             other
         }
     }
