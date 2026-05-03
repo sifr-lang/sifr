@@ -1091,7 +1091,7 @@ mod tests {
         assert_eq!(run_messages, build_messages);
         assert!(run_messages
             .iter()
-            .any(|m| m.contains("unsupported import statement 'import helper'")));
+            .any(|m| m.contains("unsupported import form: import helper")));
 
         let _ = std::fs::remove_dir_all(run_out);
         let _ = std::fs::remove_dir_all(build_out);
@@ -1118,7 +1118,7 @@ mod tests {
         assert_eq!(run_messages, build_messages);
         assert!(run_messages
             .iter()
-            .any(|m| m.contains("unsupported bare relative import")));
+            .any(|m| m.contains("unsupported import form: bare relative import")));
 
         let _ = std::fs::remove_dir_all(run_out);
         let _ = std::fs::remove_dir_all(build_out);
@@ -1145,7 +1145,7 @@ mod tests {
         assert_eq!(run_messages, build_messages);
         assert!(run_messages
             .iter()
-            .any(|m| m.contains("unsupported relative import level 2")));
+            .any(|m| m.contains("unsupported import form: relative import level 2")));
 
         let _ = std::fs::remove_dir_all(run_out);
         let _ = std::fs::remove_dir_all(build_out);

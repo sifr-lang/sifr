@@ -1,0 +1,7 @@
+# expect-error[col=8]: SIFR-IMPORT-0003
+# Test: bare import statements use the stable unsupported import-form diagnostic.
+
+import local_math
+
+def main():
+    pass

@@ -47,6 +47,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-NAME-0005`](SIFR-NAME-0005.md) | Error | Duplicate function definition in a module. |
 | [`SIFR-IMPORT-0001`](SIFR-IMPORT-0001.md) | Error | Forbidden intrinsic import. |
 | [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md) | Error | Unknown source module import target. |
+| [`SIFR-IMPORT-0003`](SIFR-IMPORT-0003.md) | Error | Unsupported import statement form. |
+| [`SIFR-IMPORT-0004`](SIFR-IMPORT-0004.md) | Error | Private module member import. |
 | [`SIFR-TYPE-0002`](SIFR-TYPE-0002.md) | Error | Expected and actual types are incompatible. |
 | [`SIFR-TYPE-0003`](SIFR-TYPE-0003.md) | Error | If-expression or conditional branches have incompatible types. |
 | [`SIFR-TYPE-0004`](SIFR-TYPE-0004.md) | Error | A required type annotation is missing. |
@@ -97,6 +99,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-CLASS-0002`](SIFR-CLASS-0002.md) | Error | Required field declared after a defaulted field. |
 | [`SIFR-CLASS-0003`](SIFR-CLASS-0003.md) | Error | Duplicate enum or class value, or invalid variant. |
 | [`SIFR-CLASS-0004`](SIFR-CLASS-0004.md) | Error | Missing class field. |
+| [`SIFR-CLASS-0005`](SIFR-CLASS-0005.md) | Error | Invalid class base. |
+| [`SIFR-CLASS-0006`](SIFR-CLASS-0006.md) | Error | Unsupported class declaration. |
 | [`SIFR-RESULT-0001`](SIFR-RESULT-0001.md) | Error | Unused Result value. |
 | [`SIFR-RESULT-0002`](SIFR-RESULT-0002.md) | Error | Invalid Result error type. |
 | [`SIFR-RESULT-0003`](SIFR-RESULT-0003.md) | Error | Invalid raise expression. |

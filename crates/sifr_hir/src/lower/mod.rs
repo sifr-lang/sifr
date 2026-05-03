@@ -676,15 +676,22 @@ fn lower_module_impl(
                     .as_ref()
                     .map(ToString::to_string)
                     .unwrap_or_else(|| "<none>".to_string());
-                ctx.error(format!(
-                    "unsupported relative import level {} for module '{module_name}'",
-                    import_from.level
-                ));
+                import_diagnostics::unsupported_form(
+                    &mut ctx,
+                    format!(
+                        "relative import level {} for module '{module_name}'",
+                        import_from.level
+                    )
+                    .as_str(),
+                    import_from.range(),
+                );
                 continue;
             }
             let Some(ref module) = import_from.module else {
-                ctx.error(
-                    "unsupported bare relative import; use 'from <module> import ...'".to_string(),
+                import_diagnostics::unsupported_form(
+                    &mut ctx,
+                    "bare relative import; use 'from <module> import ...'",
+                    import_from.range(),
                 );
                 continue;
             };
@@ -949,9 +956,12 @@ fn lower_module_impl(
                 let local = local_name_for(name);
                 // Check if it's a private name
                 if name.starts_with('_') {
-                    ctx.error(format!(
-                        "cannot import private name '{name}' from module '{module_name}'"
-                    ));
+                    import_diagnostics::private_member(
+                        &mut ctx,
+                        &module_name,
+                        name,
+                        imported_name_range(name),
+                    );
                     continue;
                 }
 
@@ -1075,9 +1085,12 @@ fn lower_module_impl(
         } else if let Stmt::Import(import_stmt) = stmt {
             for alias in &import_stmt.names {
                 let module_name = alias.name.to_string();
-                ctx.error(format!(
-                    "unsupported import statement 'import {module_name}'; use 'from {module_name} import <name>'"
-                ));
+                import_diagnostics::unsupported_form(
+                    &mut ctx,
+                    format!("import {module_name}; use 'from {module_name} import <name>'")
+                        .as_str(),
+                    alias.name.range(),
+                );
             }
         }
     }

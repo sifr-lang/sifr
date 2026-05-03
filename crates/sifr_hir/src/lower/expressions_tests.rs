@@ -2936,6 +2936,33 @@ fn test_missing_field_has_class_code() {
 }
 
 #[test]
+fn test_unknown_parent_class_has_class_code() {
+    let source =
+        "class Child(MissingParent):\n    value: int\n\ndef main():\n    c: Child = Child(1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "invalid base class for 'Child': parent class 'MissingParent' not defined"
+            && e.code == Some(DiagnosticCode::CLASS_INVALID_BASE)
+            && e.primary_range == Some(range_for_after(source, "class Child(", "MissingParent"))
+    }));
+}
+
+#[test]
+fn test_unsupported_class_field_default_has_class_code() {
+    let source = "class BadDefault:\n    value: int = 1 + 2\n\ndef main():\n    b: BadDefault = BadDefault(3)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "unsupported class declaration in 'BadDefault': unsupported default expression for field 'value'"
+            && e.code == Some(DiagnosticCode::CLASS_UNSUPPORTED_DECLARATION)
+            && e.primary_range == Some(range_for_after(source, "= ", "1 + 2"))
+    }));
+}
+
+#[test]
 fn test_match_tuple_pattern_requires_tuple_subject() {
     let result = lower_source(
         "def main():\n    x: int = 1\n    match x:\n        case (a, b):\n            print(a)\n",

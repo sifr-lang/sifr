@@ -2,7 +2,7 @@ use crate::hir_nodes::{
     HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
     HirTupleTargetBinding, MethodKind,
 };
-use ruff_text_size::Ranged;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Number, Stmt, StmtClassDef, UnaryOp};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -66,6 +66,38 @@ fn missing_method_param_annotation(
         ),
         range,
     );
+}
+
+fn invalid_class_base(ctx: &mut LowerCtx, class_name: &str, reason: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::CLASS_INVALID_BASE,
+        format!("invalid base class for '{class_name}': {reason}"),
+        range,
+    );
+}
+
+fn unsupported_class_declaration(
+    ctx: &mut LowerCtx,
+    class_name: &str,
+    detail: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::CLASS_UNSUPPORTED_DECLARATION,
+        format!("unsupported class declaration in '{class_name}': {detail}"),
+        range,
+    );
+}
+
+fn parent_class_range(class_def: &StmtClassDef, parent_name: &str) -> TextRange {
+    class_def
+        .bases()
+        .iter()
+        .find_map(|base| match base {
+            Expr::Name(name) if name.id.as_str() == parent_name => Some(name.range()),
+            _ => None,
+        })
+        .unwrap_or_else(|| class_def.name.range())
 }
 
 fn class_next_element_type(class_name: &str, methods: &[(String, FunctionType)]) -> Option<Type> {
@@ -417,10 +449,22 @@ pub(super) fn collect_class_type(
                     parent_name.clone()
                 });
             } else {
-                ctx.error(format!("parent type '{parent_name}' is not a class"));
+                let reason = format!("parent type '{parent_name}' is not a class");
+                invalid_class_base(
+                    ctx,
+                    &class_name,
+                    reason.as_str(),
+                    parent_class_range(class_def, parent_name),
+                );
             }
         } else {
-            ctx.error(format!("parent class '{parent_name}' not defined"));
+            let reason = format!("parent class '{parent_name}' not defined");
+            invalid_class_base(
+                ctx,
+                &class_name,
+                reason.as_str(),
+                parent_class_range(class_def, parent_name),
+            );
         }
     }
 
@@ -456,10 +500,14 @@ pub(super) fn collect_class_type(
                             field_defaults.push((field_idx, hir_default));
                             own_field_default_indices.insert(own_field_idx);
                         } else {
-                            ctx.error(format!(
-                                "class '{class_name}': unsupported default expression for field '{}'",
-                                name.id
-                            ));
+                            let detail =
+                                format!("unsupported default expression for field '{}'", name.id);
+                            unsupported_class_declaration(
+                                ctx,
+                                &class_name,
+                                detail.as_str(),
+                                default_expr.range(),
+                            );
                         }
                     }
                 }
@@ -584,9 +632,12 @@ pub(super) fn collect_class_type(
             }
             Stmt::Pass(_) => {} // Allow pass in class body
             _ => {
-                ctx.error(format!(
-                    "unsupported statement in class '{class_name}' body"
-                ));
+                unsupported_class_declaration(
+                    ctx,
+                    &class_name,
+                    "unsupported statement in class body",
+                    stmt.range(),
+                );
             }
         }
     }

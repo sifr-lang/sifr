@@ -89,3 +89,36 @@ fn unknown_module_import_has_import_code() {
             && error.primary_range == Some(range_for(source, "from missing_module import value"))
     }));
 }
+
+#[test]
+fn unsupported_import_statement_has_import_code() {
+    let source = "import local_math\n\ndef main():\n    pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "unsupported import form: import local_math; use 'from local_math import <name>'"
+            && error.code == Some(DiagnosticCode::IMPORT_UNSUPPORTED_FORM)
+            && error.primary_range == Some(range_for(source, "local_math"))
+    }));
+}
+
+#[test]
+fn private_import_member_has_import_code() {
+    let source = "from local_math import _secret\n\ndef main():\n    pass\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals
+        .functions
+        .insert("local_math".to_string(), HashMap::new());
+    let errors = match lower_module_with_externals(parsed.suite(), &externals) {
+        Ok(_) => panic!("expected lowering error"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.message == "cannot import private name '_secret' from module 'local_math'"
+            && error.code == Some(DiagnosticCode::IMPORT_PRIVATE_MEMBER)
+            && error.primary_range == Some(range_for(source, "_secret"))
+    }));
+}
