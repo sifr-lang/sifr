@@ -3010,7 +3010,7 @@ fn test_expected_error_contract_rejects_messages_legacy_and_unknown_codes() {
     );
 
     let reserved_error =
-        parse_expected_error("SIFR-INTERNAL-0002").expect_err("reserved codes must be rejected");
+        parse_expected_error("SIFR-INTERNAL-0000").expect_err("reserved codes must be rejected");
     assert!(reserved_error.contains("Reserved"));
 }
 

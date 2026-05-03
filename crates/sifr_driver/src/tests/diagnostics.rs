@@ -1,4 +1,5 @@
 use crate::{apply_diagnostic_recovery_limits, diagnostic_label_for_code};
+use sifr_diagnostics::DiagnosticArg;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
 
@@ -58,6 +59,7 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
             "internal compiler error",
         ),
+        (DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY, "note"),
         (DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE, "build error"),
         (DiagnosticCode::STDLIB_CACHE_FAILURE, "build error"),
         (DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE, "type error"),
@@ -155,7 +157,17 @@ fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
         .iter()
         .take(5)
         .all(|diag| diag.message == "type mismatch: expected 'int', got 'str'"));
-    assert_eq!(bounded[5].message, "... +3 more similar diagnostics");
+    assert_eq!(bounded[5].code, "SIFR-INTERNAL-0002");
+    assert_eq!(bounded[5].severity, Severity::Note);
+    assert_eq!(
+        bounded[5].message,
+        "3 additional diagnostics omitted by recovery cap (similar-diagnostic group)"
+    );
+    assert!(bounded[5].spans.is_empty());
+    assert_eq!(
+        bounded[5].args.get("omitted_count"),
+        Some(&DiagnosticArg::Unsigned(3))
+    );
 }
 
 #[test]
@@ -165,4 +177,10 @@ fn test_apply_diagnostic_recovery_limits_caps_top_level_diagnostics() {
         .collect();
     let bounded = apply_diagnostic_recovery_limits(&diagnostics);
     assert_eq!(bounded.len(), 50);
+    assert_eq!(bounded[49].code, "SIFR-INTERNAL-0002");
+    assert_eq!(bounded[49].severity, Severity::Note);
+    assert_eq!(
+        bounded[49].message,
+        "11 additional diagnostics omitted by recovery cap (top-level diagnostic stream)"
+    );
 }
