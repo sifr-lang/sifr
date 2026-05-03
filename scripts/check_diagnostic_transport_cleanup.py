@@ -17,6 +17,10 @@ RETIRED_SYMBOLS = (
     re.compile(r"\bis_message_error_code\b"),
     re.compile(r"\bdiagnostic_error_code\b"),
 )
+RAW_HIR_ERROR_FREE_FILES = (
+    pathlib.Path("crates/sifr_hir/src/lower/builtin_calls.rs"),
+)
+RAW_CTX_ERROR = re.compile(r"\bctx\.error\s*\(")
 
 
 def git_ls_files(*patterns: str) -> list[pathlib.Path]:
@@ -39,6 +43,8 @@ def main() -> int:
             for pattern in RETIRED_SYMBOLS:
                 if pattern.search(line):
                     errors.append(f"{rel}:{line_number}: retired diagnostic transport symbol")
+            if rel in RAW_HIR_ERROR_FREE_FILES and RAW_CTX_ERROR.search(line):
+                errors.append(f"{rel}:{line_number}: raw HIR ctx.error in migrated file")
 
     if errors:
         for error in errors:
