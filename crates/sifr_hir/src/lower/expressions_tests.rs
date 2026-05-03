@@ -3262,6 +3262,59 @@ fn test_set_missing_method_has_stdlib_code() {
 }
 
 #[test]
+fn test_str_method_wrong_positional_count_has_call_code() {
+    let source = "def main():\n    text: str = \"abc\"\n    text.find(\"a\", 1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "str.find() takes exactly 1 argument, got 2"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(source, "text.find(\"a\", ", "1"))
+    }));
+}
+
+#[test]
+fn test_str_method_type_mismatch_has_type_code() {
+    let source = "def main():\n    text: str = \"a,b\"\n    text.split(\",\", \"bad\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "str.split() maxsplit must be 'int', got 'str'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for(source, "\"bad\""))
+    }));
+}
+
+#[test]
+fn test_str_replace_keyword_count_type_mismatch_has_type_code() {
+    let source =
+        "def main():\n    text: str = \"aaaa\"\n    text.replace(\"a\", \"b\", count=\"bad\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "str.replace() count must be 'int', got 'str'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for(source, "\"bad\""))
+    }));
+}
+
+#[test]
+fn test_str_missing_method_has_stdlib_code() {
+    let source = "def main():\n    text: str = \"abc\"\n    text.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "str has no method 'missing'"
+            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.primary_range == Some(range_for_after(source, "text.", "missing"))
+    }));
+}
+
+#[test]
 fn test_duplicate_optional_method_keyword_is_rejected() {
     let source = "def main():\n    data: dict[str, int] = {\"x\": 1}\n    value: int = data.get(\"x\", 1, default=2)\n";
     let result = lower_source(source);
