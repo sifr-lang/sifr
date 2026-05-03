@@ -11,12 +11,70 @@ pub(super) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
 pub(super) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
 pub(super) const DEFAULTDICT_SET_ALIAS: &str = "__compat_defaultdict_set";
 
+fn first_keyword_range(call: &ExprCall) -> ruff_text_size::TextRange {
+    call.arguments
+        .keywords
+        .first()
+        .map_or_else(|| call.func.range(), |keyword| keyword.range)
+}
+
+fn arity_range(call: &ExprCall) -> ruff_text_size::TextRange {
+    call.arguments
+        .args
+        .last()
+        .map_or_else(|| call.func.range(), Ranged::range)
+}
+
+fn reject_keywords(call: &ExprCall, callable_name: &str, ctx: &mut LowerCtx) {
+    ctx.error_with_code_at(
+        DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+        format!("{callable_name}() does not accept keyword arguments"),
+        first_keyword_range(call),
+    );
+}
+
+fn reject_unpacked_keyword(call: &ExprCall, callable_name: &str, ctx: &mut LowerCtx) {
+    reject_unpacked_keyword_at(callable_name, ctx, first_keyword_range(call));
+}
+
+fn reject_unpacked_keyword_at(
+    callable_name: &str,
+    ctx: &mut LowerCtx,
+    range: ruff_text_size::TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+        format!("{callable_name}() does not support unpacked keyword arguments"),
+        range,
+    );
+}
+
+fn reject_wrong_positional_count(call: &ExprCall, message: String, ctx: &mut LowerCtx) {
+    ctx.error_with_code_at(
+        DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
+        message,
+        arity_range(call),
+    );
+}
+
+fn reject_type_mismatch(ctx: &mut LowerCtx, message: String, range: ruff_text_size::TextRange) {
+    ctx.error_with_code_at(DiagnosticCode::TYPE_MISMATCH, message, range);
+}
+
+fn reject_unsupported_surface(
+    ctx: &mut LowerCtx,
+    message: String,
+    range: ruff_text_size::TextRange,
+) {
+    ctx.error_with_code_at(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE, message, range);
+}
+
 pub(super) fn reject_zip_keywords_if_present(call: &ExprCall, ctx: &mut LowerCtx) -> bool {
     let Some(keyword) = call.arguments.keywords.first() else {
         return false;
     };
     let Some(name) = keyword.arg.as_ref() else {
-        ctx.error("zip() does not support unpacked keyword arguments".to_string());
+        reject_unpacked_keyword(call, "zip", ctx);
         return true;
     };
     let message = match name.as_str() {
@@ -30,7 +88,11 @@ pub(super) fn reject_zip_keywords_if_present(call: &ExprCall, ctx: &mut LowerCtx
             return true;
         }
     };
-    ctx.error(message);
+    ctx.error_with_code_at(
+        DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+        message,
+        name.range(),
+    );
     true
 }
 
@@ -100,9 +162,7 @@ fn lower_single_optional_iterable_arg(
     ctx: &mut LowerCtx,
 ) -> Option<OptionalIterableArg> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error(format!(
-            "{builtin_name}() does not accept keyword arguments"
-        ));
+        reject_keywords(call, builtin_name, ctx);
         return None;
     }
     match call.arguments.args.len() {
@@ -112,9 +172,11 @@ fn lower_single_optional_iterable_arg(
             ctx,
         )?)),
         actual => {
-            ctx.error(format!(
-                "{builtin_name}() takes at most 1 positional argument, got {actual}"
-            ));
+            reject_wrong_positional_count(
+                call,
+                format!("{builtin_name}() takes at most 1 positional argument, got {actual}"),
+                ctx,
+            );
             None
         }
     }
@@ -140,7 +202,7 @@ pub(super) fn lower_list_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -
 
 pub(super) fn lower_tuple_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error("tuple() does not accept keyword arguments".to_string());
+        reject_keywords(call, "tuple", ctx);
         return None;
     }
     match &call.arguments.args[..] {
@@ -200,10 +262,14 @@ pub(super) fn lower_tuple_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) 
             }
         }
         _ => {
-            ctx.error(format!(
-                "tuple() takes at most 1 positional argument, got {}",
-                call.arguments.args.len()
-            ));
+            reject_wrong_positional_count(
+                call,
+                format!(
+                    "tuple() takes at most 1 positional argument, got {}",
+                    call.arguments.args.len()
+                ),
+                ctx,
+            );
             None
         }
     }
@@ -211,10 +277,14 @@ pub(super) fn lower_tuple_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) 
 
 pub(super) fn lower_dict_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() > 1 {
-        ctx.error(format!(
-            "dict() takes at most 1 positional argument, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "dict() takes at most 1 positional argument, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
 
@@ -222,7 +292,7 @@ pub(super) fn lower_dict_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -
     let mut keyword_values = Vec::with_capacity(call.arguments.keywords.len());
     for keyword in &call.arguments.keywords {
         let Some(name) = keyword.arg.as_ref() else {
-            ctx.error("dict() does not support unpacked keyword arguments".to_string());
+            reject_unpacked_keyword_at("dict", ctx, keyword.range);
             return None;
         };
         keyword_keys.push(HirExpr::StringLiteral(name.to_string()));
@@ -268,10 +338,14 @@ pub(super) fn lower_dict_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -
         [arg_expr] => {
             let arg = lower_expr(arg_expr, ctx)?;
             let Type::Dict(key_ty, value_ty) = dict_constructor_output_type(arg.ty())? else {
-                ctx.error(format!(
-                    "dict() argument must be a dict or iterable of key/value tuples, got '{}'",
-                    arg.ty().display_name()
-                ));
+                reject_type_mismatch(
+                    ctx,
+                    format!(
+                        "dict() argument must be a dict or iterable of key/value tuples, got '{}'",
+                        arg.ty().display_name()
+                    ),
+                    arg_expr.range(),
+                );
                 return None;
             };
             let merged_ty = Type::Dict(
@@ -290,22 +364,28 @@ pub(super) fn lower_dict_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -
 
 pub(super) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error("ord() does not accept keyword arguments".to_string());
+        reject_keywords(call, "ord", ctx);
         return None;
     }
     if call.arguments.args.len() != 1 {
-        ctx.error(format!(
-            "ord() takes exactly 1 positional argument, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "ord() takes exactly 1 positional argument, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
 
     if let Expr::StringLiteral(text) = &call.arguments.args[0] {
         let chars: Vec<char> = text.value.to_str().chars().collect();
         if chars.len() != 1 {
-            ctx.error(
+            reject_type_mismatch(
+                ctx,
                 "ord() string literal argument must contain exactly one character".to_string(),
+                call.arguments.args[0].range(),
             );
             return None;
         }
@@ -314,10 +394,14 @@ pub(super) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
 
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     if arg.ty() != &Type::Str {
-        ctx.error(format!(
-            "ord() argument must be 'str', got '{}'",
-            arg.ty().display_name()
-        ));
+        reject_type_mismatch(
+            ctx,
+            format!(
+                "ord() argument must be 'str', got '{}'",
+                arg.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
         return None;
     }
     Some(HirExpr::Call {
@@ -342,32 +426,52 @@ pub(super) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
 
 pub(super) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error("chr() does not accept keyword arguments".to_string());
+        reject_keywords(call, "chr", ctx);
         return None;
     }
     if call.arguments.args.len() != 1 {
-        ctx.error(format!(
-            "chr() takes exactly 1 positional argument, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "chr() takes exactly 1 positional argument, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
 
     if let Expr::NumberLiteral(num) = &call.arguments.args[0] {
         let Number::Int(value) = &num.value else {
-            ctx.error("chr() argument must be an integer".to_string());
+            reject_type_mismatch(
+                ctx,
+                "chr() argument must be an integer".to_string(),
+                call.arguments.args[0].range(),
+            );
             return None;
         };
         let Some(value) = value.as_i64() else {
-            ctx.error("chr() integer literal is out of range for 'int'".to_string());
+            reject_type_mismatch(
+                ctx,
+                "chr() integer literal is out of range for 'int'".to_string(),
+                call.arguments.args[0].range(),
+            );
             return None;
         };
         let Ok(code_point) = u32::try_from(value) else {
-            ctx.error("chr() integer literal must be a valid Unicode code point".to_string());
+            reject_type_mismatch(
+                ctx,
+                "chr() integer literal must be a valid Unicode code point".to_string(),
+                call.arguments.args[0].range(),
+            );
             return None;
         };
         let Some(character) = char::from_u32(code_point) else {
-            ctx.error("chr() integer literal must be a valid Unicode code point".to_string());
+            reject_type_mismatch(
+                ctx,
+                "chr() integer literal must be a valid Unicode code point".to_string(),
+                call.arguments.args[0].range(),
+            );
             return None;
         };
         return Some(HirExpr::StringLiteral(character.to_string()));
@@ -375,10 +479,14 @@ pub(super) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
 
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     if arg.ty() != &Type::Int {
-        ctx.error(format!(
-            "chr() argument must be 'int', got '{}'",
-            arg.ty().display_name()
-        ));
+        reject_type_mismatch(
+            ctx,
+            format!(
+                "chr() argument must be 'int', got '{}'",
+                arg.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
         return None;
     }
     Some(HirExpr::Call {
@@ -432,25 +540,35 @@ pub(super) fn lower_defaultdict_constructor_call(
         return None;
     }
     if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
-        ctx.error(format!(
-            "defaultdict() takes 1 or 2 positional arguments, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "defaultdict() takes 1 or 2 positional arguments, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
 
     let factory_name = if let Expr::Name(name) = &call.arguments.args[0] {
         name.id.as_str()
     } else {
-        ctx.error(
+        reject_unsupported_surface(
+            ctx,
             "defaultdict() factory must be a builtin name such as int, list, or set".to_string(),
+            call.arguments.args[0].range(),
         );
         return None;
     };
     let Some((alias_name, value_ty)) = defaultdict_alias_and_value_type(factory_name) else {
-        ctx.error(format!(
-            "defaultdict() currently supports int, list, and set factories, got '{factory_name}'"
-        ));
+        reject_unsupported_surface(
+            ctx,
+            format!(
+                "defaultdict() currently supports int, list, and set factories, got '{factory_name}'"
+            ),
+            call.arguments.args[0].range(),
+        );
         return None;
     };
 
@@ -476,18 +594,26 @@ pub(super) fn lower_defaultdict_constructor_call(
                 let Some((_, counts_ty)) =
                     fields.iter().find(|(field_name, _)| field_name == "counts")
                 else {
-                    ctx.error(format!(
-                        "defaultdict() initial mapping must be a dict, got '{}'",
-                        mapping.ty().display_name()
-                    ));
+                    reject_type_mismatch(
+                        ctx,
+                        format!(
+                            "defaultdict() initial mapping must be a dict, got '{}'",
+                            mapping.ty().display_name()
+                        ),
+                        call.arguments.args[1].range(),
+                    );
                     return None;
                 };
                 let counts_ty = counts_ty.clone();
                 let Type::Dict(key_ty, mapping_value_ty) = counts_ty.resolve_alias() else {
-                    ctx.error(format!(
-                        "defaultdict() initial mapping must be a dict, got '{}'",
-                        mapping.ty().display_name()
-                    ));
+                    reject_type_mismatch(
+                        ctx,
+                        format!(
+                            "defaultdict() initial mapping must be a dict, got '{}'",
+                            mapping.ty().display_name()
+                        ),
+                        call.arguments.args[1].range(),
+                    );
                     return None;
                 };
                 (
@@ -501,21 +627,29 @@ pub(super) fn lower_defaultdict_constructor_call(
                 )
             }
             _ => {
-                ctx.error(format!(
-                    "defaultdict() initial mapping must be a dict, got '{}'",
-                    mapping.ty().display_name()
-                ));
+                reject_type_mismatch(
+                    ctx,
+                    format!(
+                        "defaultdict() initial mapping must be a dict, got '{}'",
+                        mapping.ty().display_name()
+                    ),
+                    call.arguments.args[1].range(),
+                );
                 return None;
             }
         };
         if !mapping_value_ty.is_assignable_to(&value_ty)
             && !value_ty.is_assignable_to(&mapping_value_ty)
         {
-            ctx.error(format!(
-                "defaultdict() initial mapping value type '{}' is not compatible with factory '{}'",
-                mapping_value_ty.display_name(),
-                factory_name
-            ));
+            reject_type_mismatch(
+                ctx,
+                format!(
+                    "defaultdict() initial mapping value type '{}' is not compatible with factory '{}'",
+                    mapping_value_ty.display_name(),
+                    factory_name
+                ),
+                call.arguments.args[1].range(),
+            );
             return None;
         }
         args.push(mapping_expr);
@@ -546,10 +680,14 @@ pub(super) fn lower_set_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) ->
         }),
         OptionalIterableArg::Value(iterable) => {
             let Some(elem_ty) = iterable_element_type_for_builtin(iterable.ty()) else {
-                ctx.error(format!(
-                    "set() argument must be an iterable with a statically-known element type, got '{}'",
-                    iterable.ty().display_name()
-                ));
+                reject_type_mismatch(
+                    ctx,
+                    format!(
+                        "set() argument must be an iterable with a statically-known element type, got '{}'",
+                        iterable.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             };
             Some(HirExpr::Call {
@@ -563,7 +701,7 @@ pub(super) fn lower_set_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) ->
 
 pub(super) fn lower_bytes_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error("bytes() does not accept keyword arguments".to_string());
+        reject_keywords(call, "bytes", ctx);
         return None;
     }
     if call.arguments.args.is_empty() {
@@ -573,18 +711,26 @@ pub(super) fn lower_bytes_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) 
         });
     }
     if call.arguments.args.len() != 1 {
-        ctx.error(format!(
-            "bytes() takes at most 1 positional argument, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "bytes() takes at most 1 positional argument, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
     let size = lower_expr(&call.arguments.args[0], ctx)?;
     if size.ty() != &Type::Int {
-        ctx.error(format!(
-            "bytes(size) expects 'int' size, got '{}'",
-            size.ty().display_name()
-        ));
+        reject_type_mismatch(
+            ctx,
+            format!(
+                "bytes(size) expects 'int' size, got '{}'",
+                size.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
         return None;
     }
     Some(HirExpr::Call {
@@ -631,28 +777,33 @@ pub(super) fn lower_bytes_type_factory_call(
     }
 
     if !call.arguments.keywords.is_empty() {
-        ctx.error(format!(
-            "bytes.{}() does not accept keyword arguments",
-            attr.attr
-        ));
+        reject_keywords(call, &format!("bytes.{}", attr.attr), ctx);
         return None;
     }
 
     match attr.attr.as_str() {
         "from_hex" => {
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "bytes.from_hex() takes exactly 1 positional argument, got {}",
-                    call.arguments.args.len()
-                ));
+                reject_wrong_positional_count(
+                    call,
+                    format!(
+                        "bytes.from_hex() takes exactly 1 positional argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    ctx,
+                );
                 return None;
             }
             let hex_expr = lower_expr(&call.arguments.args[0], ctx)?;
             if hex_expr.ty() != &Type::Str {
-                ctx.error(format!(
-                    "bytes.from_hex() expects 'str', got '{}'",
-                    hex_expr.ty().display_name()
-                ));
+                reject_type_mismatch(
+                    ctx,
+                    format!(
+                        "bytes.from_hex() expects 'str', got '{}'",
+                        hex_expr.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             }
             Some(HirExpr::Call {
@@ -663,10 +814,14 @@ pub(super) fn lower_bytes_type_factory_call(
         }
         "from_ints" => {
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "bytes.from_ints() takes exactly 1 positional argument, got {}",
-                    call.arguments.args.len()
-                ));
+                reject_wrong_positional_count(
+                    call,
+                    format!(
+                        "bytes.from_ints() takes exactly 1 positional argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    ctx,
+                );
                 return None;
             }
             let data_expr = lower_expr(&call.arguments.args[0], ctx)?;
@@ -675,10 +830,14 @@ pub(super) fn lower_bytes_type_factory_call(
                 Type::List(elem) if elem.as_ref() == &Type::Int
             );
             if !is_list_int {
-                ctx.error(format!(
-                    "bytes.from_ints() expects 'list[int]', got '{}'",
-                    data_expr.ty().display_name()
-                ));
+                reject_type_mismatch(
+                    ctx,
+                    format!(
+                        "bytes.from_ints() expects 'list[int]', got '{}'",
+                        data_expr.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             }
             Some(HirExpr::Call {
@@ -693,10 +852,14 @@ pub(super) fn lower_bytes_type_factory_call(
 
 pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() != 1 {
-        ctx.error(format!(
-            "len() takes exactly 1 argument, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "len() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -736,10 +899,14 @@ pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
             })
         }
         _ => {
-            ctx.error(format!(
-                "len() argument must be a string, bytes, list, dict, tuple, set, or sized class, got '{}'",
-                arg_ty.display_name()
-            ));
+            reject_type_mismatch(
+                ctx,
+                format!(
+                    "len() argument must be a string, bytes, list, dict, tuple, set, or sized class, got '{}'",
+                    arg_ty.display_name()
+                ),
+                call.arguments.args[0].range(),
+            );
             None
         }
     }
@@ -747,10 +914,14 @@ pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
 
 pub(super) fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() != 2 {
-        ctx.error(format!(
-            "isinstance() takes exactly 2 arguments, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "isinstance() takes exactly 2 arguments, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -767,10 +938,14 @@ pub(super) fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Opti
 
 pub(super) fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() != 1 {
-        ctx.error(format!(
-            "reveal_type() takes exactly 1 argument, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "reveal_type() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -784,10 +959,14 @@ pub(super) fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Opt
 
 pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() > 3 {
-        ctx.error(format!(
-            "range() takes at most 3 positional arguments, got {}",
-            call.arguments.args.len()
-        ));
+        reject_wrong_positional_count(
+            call,
+            format!(
+                "range() takes at most 3 positional arguments, got {}",
+                call.arguments.args.len()
+            ),
+            ctx,
+        );
         return None;
     }
 
@@ -814,7 +993,7 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
 
     for keyword in &call.arguments.keywords {
         let Some(name) = keyword.arg.as_ref() else {
-            ctx.error("range() does not support unpacked keyword arguments".to_string());
+            reject_unpacked_keyword_at("range", ctx, keyword.range);
             return None;
         };
         match name.as_str() {
@@ -874,10 +1053,14 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
     let start = if let Some(raw) = start_expr {
         let lowered = lower_expr(raw, ctx)?;
         if lowered.ty() != &Type::Int {
-            ctx.error(format!(
-                "range() start argument must be 'int', got '{}'",
-                lowered.ty().display_name()
-            ));
+            reject_type_mismatch(
+                ctx,
+                format!(
+                    "range() start argument must be 'int', got '{}'",
+                    lowered.ty().display_name()
+                ),
+                raw.range(),
+            );
             return None;
         }
         lowered
@@ -886,19 +1069,27 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
     };
     let stop = lower_expr(stop_raw, ctx)?;
     if stop.ty() != &Type::Int {
-        ctx.error(format!(
-            "range() stop argument must be 'int', got '{}'",
-            stop.ty().display_name()
-        ));
+        reject_type_mismatch(
+            ctx,
+            format!(
+                "range() stop argument must be 'int', got '{}'",
+                stop.ty().display_name()
+            ),
+            stop_raw.range(),
+        );
         return None;
     }
     let step = if let Some(raw) = step_expr {
         let lowered = lower_expr(raw, ctx)?;
         if lowered.ty() != &Type::Int {
-            ctx.error(format!(
-                "range() step argument must be 'int', got '{}'",
-                lowered.ty().display_name()
-            ));
+            reject_type_mismatch(
+                ctx,
+                format!(
+                    "range() step argument must be 'int', got '{}'",
+                    lowered.ty().display_name()
+                ),
+                raw.range(),
+            );
             return None;
         }
         Some(Box::new(lowered))
@@ -932,17 +1123,27 @@ pub(super) fn lower_builtin_reverseable_arg(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
-        ctx.error(format!(
-            "{builtin_name}() takes exactly 1 positional argument"
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
+            format!("{builtin_name}() takes exactly 1 positional argument"),
+            if call.arguments.keywords.is_empty() {
+                arity_range(call)
+            } else {
+                first_keyword_range(call)
+            },
+        );
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     if callable_builtin_element_type(arg.ty()).is_none() {
-        ctx.error(format!(
-            "{builtin_name}() argument must be an iterable with a statically-known element type, got '{}'",
-            arg.ty().display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
+            format!(
+                "{builtin_name}() argument must be an iterable with a statically-known element type, got '{}'",
+                arg.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
         return None;
     }
     if !arg
