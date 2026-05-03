@@ -1067,7 +1067,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     result_ty = pair_result_ty;
                 }
 
-                if !validate_variadic_min_max_operands("min", &args, ctx) {
+                if !validate_variadic_min_max_operands("min", &args, &call.arguments.args, ctx) {
                     return None;
                 }
                 return Some(HirExpr::Call {
@@ -1114,7 +1114,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     result_ty = pair_result_ty;
                 }
 
-                if !validate_variadic_min_max_operands("max", &args, ctx) {
+                if !validate_variadic_min_max_operands("max", &args, &call.arguments.args, ctx) {
                     return None;
                 }
                 return Some(HirExpr::Call {

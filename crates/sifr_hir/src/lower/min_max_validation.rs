@@ -1,27 +1,45 @@
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
+use ruff_text_size::{Ranged, TextRange};
+use sifr_diagnostics::DiagnosticCode;
+use sifr_python_ast::Expr;
 use sifr_type_system::union_contains_none;
 
 pub(super) fn validate_two_arg_min_max_operands(
     func_name: &str,
     left: &HirExpr,
+    left_range: TextRange,
     right: &HirExpr,
+    right_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> bool {
     if union_contains_none(left.ty()) || union_contains_none(right.ty()) {
-        ctx.error(format!(
-            "{func_name}() with 2 arguments does not accept optional operands; got '{}' and '{}' (guard or unwrap first)",
-            left.ty().display_name(),
-            right.ty().display_name()
-        ));
+        let range = if union_contains_none(left.ty()) {
+            left_range
+        } else {
+            right_range
+        };
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "{func_name}() with 2 arguments does not accept optional operands; got '{}' and '{}' (guard or unwrap first)",
+                left.ty().display_name(),
+                right.ty().display_name()
+            ),
+            range,
+        );
         return false;
     }
     if !left.ty().is_assignable_to(right.ty()) && !right.ty().is_assignable_to(left.ty()) {
-        ctx.error(format!(
-            "{func_name}() arguments must be comparable and type-compatible; got '{}' and '{}'",
-            left.ty().display_name(),
-            right.ty().display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "{func_name}() arguments must be comparable and type-compatible; got '{}' and '{}'",
+                left.ty().display_name(),
+                right.ty().display_name()
+            ),
+            right_range,
+        );
         return false;
     }
     true
@@ -30,17 +48,22 @@ pub(super) fn validate_two_arg_min_max_operands(
 pub(super) fn validate_variadic_min_max_operands(
     func_name: &str,
     operands: &[HirExpr],
+    operand_ranges: &[Expr],
     ctx: &mut LowerCtx,
 ) -> bool {
     if operands.len() < 2 {
         return true;
     }
 
-    for window in operands.windows(2) {
-        let [left, right] = window else {
-            continue;
-        };
-        if !validate_two_arg_min_max_operands(func_name, left, right, ctx) {
+    for index in 1..operands.len() {
+        if !validate_two_arg_min_max_operands(
+            func_name,
+            &operands[index - 1],
+            operand_ranges[index - 1].range(),
+            &operands[index],
+            operand_ranges[index].range(),
+            ctx,
+        ) {
             return false;
         }
     }
