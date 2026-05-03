@@ -26,6 +26,8 @@ impl DiagnosticCode {
 
     pub const IMPORT_FORBIDDEN_INTRINSIC: Self = Self::new("SIFR-IMPORT-0001", Severity::Error);
     pub const IMPORT_UNKNOWN_SOURCE_MODULE: Self = Self::new("SIFR-IMPORT-0002", Severity::Error);
+    pub const IMPORT_UNSUPPORTED_FORM: Self = Self::new("SIFR-IMPORT-0003", Severity::Error);
+    pub const IMPORT_PRIVATE_MEMBER: Self = Self::new("SIFR-IMPORT-0004", Severity::Error);
 
     pub const TYPE_MISMATCH: Self = Self::new("SIFR-TYPE-0002", Severity::Error);
     pub const TYPE_IF_BRANCH_MISMATCH: Self = Self::new("SIFR-TYPE-0003", Severity::Error);
@@ -97,6 +99,8 @@ impl DiagnosticCode {
     pub const CLASS_DUPLICATE_OR_INVALID_VALUE: Self =
         Self::new("SIFR-CLASS-0003", Severity::Error);
     pub const CLASS_MISSING_MEMBER: Self = Self::new("SIFR-CLASS-0004", Severity::Error);
+    pub const CLASS_INVALID_BASE: Self = Self::new("SIFR-CLASS-0005", Severity::Error);
+    pub const CLASS_UNSUPPORTED_DECLARATION: Self = Self::new("SIFR-CLASS-0006", Severity::Error);
 
     pub const RESULT_UNUSED_VALUE: Self = Self::new("SIFR-RESULT-0001", Severity::Error);
     pub const RESULT_INVALID_ERROR_TYPE: Self = Self::new("SIFR-RESULT-0002", Severity::Error);
@@ -541,6 +545,28 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower",
         [arg!("module")],
         ["module"]
+    ),
+    active_entry!(
+        "SIFR-IMPORT-0003",
+        "IMPORT",
+        "Unsupported import statement form.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/unsupported_import_statement.sifr",
+        "unsupported import form: {form}",
+        "sifr_hir::lower",
+        [arg!("form")],
+        ["form"]
+    ),
+    active_entry!(
+        "SIFR-IMPORT-0004",
+        "IMPORT",
+        "Private module member import.",
+        Severity::Error,
+        "crates/sifr_hir/src/lower/name_import_diagnostics_tests.rs",
+        "cannot import private name '{name}' from module '{module}'",
+        "sifr_hir::lower",
+        [arg!("name"), arg!("module")],
+        ["name", "module"]
     ),
     active_entry!(
         "SIFR-TYPE-0002",
@@ -1107,6 +1133,28 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["type_name", "field"]
     ),
     active_entry!(
+        "SIFR-CLASS-0005",
+        "CLASS",
+        "Invalid class base.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/class_unknown_parent.sifr",
+        "invalid base class for '{class_name}': {reason}",
+        "sifr_hir::lower::classes",
+        [arg!("class_name"), arg!("reason")],
+        ["class_name", "reason"]
+    ),
+    active_entry!(
+        "SIFR-CLASS-0006",
+        "CLASS",
+        "Unsupported class declaration.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/class_unsupported_field_default.sifr",
+        "unsupported class declaration in '{class_name}': {detail}",
+        "sifr_hir::lower::classes",
+        [arg!("class_name"), arg!("detail")],
+        ["class_name", "detail"]
+    ),
+    active_entry!(
         "SIFR-RESULT-0001",
         "RESULT",
         "Unused Result value.",
@@ -1359,6 +1407,8 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::NAME_DUPLICATE_DEFINITION,
     DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC,
     DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
+    DiagnosticCode::IMPORT_UNSUPPORTED_FORM,
+    DiagnosticCode::IMPORT_PRIVATE_MEMBER,
     DiagnosticCode::TYPE_MISMATCH,
     DiagnosticCode::TYPE_IF_BRANCH_MISMATCH,
     DiagnosticCode::TYPE_MISSING_ANNOTATION,
@@ -1409,6 +1459,8 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
     DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE,
     DiagnosticCode::CLASS_MISSING_MEMBER,
+    DiagnosticCode::CLASS_INVALID_BASE,
+    DiagnosticCode::CLASS_UNSUPPORTED_DECLARATION,
     DiagnosticCode::RESULT_UNUSED_VALUE,
     DiagnosticCode::RESULT_INVALID_ERROR_TYPE,
     DiagnosticCode::RESULT_INVALID_RAISE,

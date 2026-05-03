@@ -18,3 +18,19 @@ pub(super) fn unknown_import_target(ctx: &mut LowerCtx, module: &str, range: Tex
         range,
     );
 }
+
+pub(super) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::IMPORT_UNSUPPORTED_FORM,
+        format!("unsupported import form: {form}"),
+        range,
+    );
+}
+
+pub(super) fn private_member(ctx: &mut LowerCtx, module: &str, name: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::IMPORT_PRIVATE_MEMBER,
+        format!("cannot import private name '{name}' from module '{module}'"),
+        range,
+    );
+}

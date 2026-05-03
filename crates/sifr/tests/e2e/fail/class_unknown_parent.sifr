@@ -1,0 +1,8 @@
+# expect-error[col=13]: SIFR-CLASS-0005
+# Test: unknown class bases are rejected with a class diagnostic.
+
+class Child(MissingParent):
+    value: int
+
+def main():
+    c: Child = Child(1)

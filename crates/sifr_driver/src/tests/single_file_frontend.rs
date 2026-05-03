@@ -372,9 +372,9 @@ def main():
     print(value())
 "#;
     let errors = check(source);
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("unsupported relative import level 2")));
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("unsupported import form: relative import level 2")));
 }
 
 #[test]
@@ -386,9 +386,9 @@ def main():
     print(helper)
 "#;
     let errors = check(source);
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("unsupported bare relative import")));
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("unsupported import form: bare relative import")));
 }
 
 #[test]
@@ -400,7 +400,7 @@ def main():
     print("ok")
 "#;
     let errors = check(source);
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("unsupported import statement 'import helper'")));
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("unsupported import form: import helper")));
 }
