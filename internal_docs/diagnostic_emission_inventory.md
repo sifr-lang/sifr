@@ -1,17 +1,23 @@
 # Diagnostic Emission Inventory
 
-This inventory is the `milestone_diag_3` handoff into diagnostic registry population. It does not migrate emissions. It records the current emission surfaces, the target diagnostic identity for each user-facing category, representative fixtures, and notes that the migration milestones must preserve.
+This inventory is the `milestone_diag_3` handoff into diagnostic registry population. It records the original emission surfaces, the target diagnostic identity for each user-facing category, representative fixtures, and notes that the migration milestones had to preserve.
 
-Coverage snapshot from April 29, 2026:
+Historical coverage snapshot from April 29, 2026:
 
 - `rg "ctx\\.error\\(" crates/sifr_hir/src -g '*.rs'` finds 489 raw HIR lowering emissions across 22 files.
 - The legacy public `CompileError` abstraction and the custom driver `CompilerDiagnostic` transport have been deleted. Driver and CLI APIs now carry `sifr_diagnostics::RenderedDiagnostic` directly as the rendered diagnostic envelope until the residual driver renderer moves to `DiagnosticSink` directly.
-- `sifr_type_system::TypeError`, `TypeErrorKind`, and the residual `TypeCheckDiagnostic` adapter have been deleted. Operator helper failures return a direct `(DiagnosticCode, String)` pair, and HIR lowering records it through `error_with_code` without a code-less fallback.
+- `sifr_type_system::TypeError`, `TypeErrorKind`, and the residual `TypeCheckDiagnostic` adapter have been deleted. Operator helper failures return a direct `(DiagnosticCode, String)` pair, and HIR lowering records it through `error_with_code_at` without a code-less fallback.
 - `rg "# expect-error" crates/sifr/tests/e2e/fail crates/sifr/tests/e2e.rs -g '*.sifr' -g '*.rs'` finds 155 fail-fixture expectations plus harness parser samples.
+
+Closure snapshot from May 3, 2026:
+
+- `rg -n "ctx\\.error\\(" crates/sifr_hir/src -g '*.rs'` has no matches.
+- The raw `LowerCtx::error(String)` transport has been deleted; HIR user-facing diagnostics now use explicit diagnostic codes with primary ranges at emission sites.
+- `scripts/run_all_tests.sh --profile quick` passes with diagnostic schema, docs, coverage, baseline-hygiene, cancel-usage, and transport-cleanup guardrails enabled.
 
 ## HIR Lowering Surface
 
-Raw `ctx.error(...)` remains the largest source of user-facing semantic diagnostics. The migration target is domain-owned helpers that construct `SifrDiagnostic` directly with primary spans from the AST node being lowered.
+The table below is the original raw-HIR migration inventory. It is retained as provenance for the diagnostic-family split. The current codebase has no raw `ctx.error(...)` HIR emission sites.
 
 | File | Raw calls | Primary categories | Target families |
 | --- | ---: | --- | --- |
@@ -61,7 +67,7 @@ Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `t
 
 ## Type System Surface
 
-`sifr_type_system` still owns focused operator type helpers used by HIR expression lowering. Those helpers now return direct canonical diagnostic data as `(DiagnosticCode, String)` on failure. There is no named adapter type, no `Option<DiagnosticCode>`, and no variant-to-code mapping layer. HIR destructures the pair at the AST site that owns the source relation and records it through `LowerCtx::error_with_code`.
+`sifr_type_system` still owns focused operator type helpers used by HIR expression lowering. Those helpers now return direct canonical diagnostic data as `(DiagnosticCode, String)` on failure. There is no named adapter type, no `Option<DiagnosticCode>`, and no variant-to-code mapping layer. HIR destructures the pair at the AST site that owns the source relation and records it through `LowerCtx::error_with_code_at`.
 
 The remaining cleanup target is to move these helper failures from message strings to full canonical source diagnostics with declared args and spans from the semantic owner.
 
@@ -293,11 +299,11 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-IMPORT-0002` | unknown source module/import target | import lowering/project discovery | `crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr` |
 | `SIFR-TYPE-0002` | expected/actual type mismatch | type checking / assignment/call helpers | `crates/sifr/tests/e2e/fail/type_comparison_mismatch.sifr`, `crates/sifr/tests/e2e/fail/type_mismatch.sifr`, `crates/sifr/tests/e2e/fail/union_type_mismatch.sifr` |
 | `SIFR-TYPE-0003` | if/conditional branch type mismatch | `if_expression` lowering | `crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr` |
-| `SIFR-TYPE-0004` | missing required type annotation/inference boundary | type annotation/inference | fixture pending in `milestone_diag_7` |
+| `SIFR-TYPE-0004` | missing required type annotation/inference boundary | type annotation/inference | `crates/sifr/tests/e2e/fail/missing_type_annotation.sifr`, plus class/protocol/enum/newtype/nested/vararg fixtures |
 | `SIFR-TYPE-0005` | unsupported operator or operand types | `sifr_type_system` / HIR expression lowering | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
 | `SIFR-TYPE-0006` | int/bigint mixed arithmetic/comparison without conversion | type system numeric checks | bigint mixed arithmetic/comparison fixtures |
-| `SIFR-TYPE-0007` | invalid type annotation shape | type annotation lowering | fixture pending in `milestone_diag_7` from annotation tests |
-| `SIFR-TYPE-0008` | container literal element/key/value type conflict | container literal specialization | fixture pending in `milestone_diag_7` |
+| `SIFR-TYPE-0007` | invalid type annotation shape | type annotation lowering | `crates/sifr/tests/e2e/fail/invalid_type_annotation.sifr`, plus Callable/Result/TypeVar/generic annotation-shape fixtures |
+| `SIFR-TYPE-0008` | container literal element/key/value type conflict | container literal specialization | `crates/sifr/tests/e2e/fail/container_literal_type_conflict.sifr`, plus dict-key/dict-value/set/tuple fixtures |
 | `SIFR-TYPE-0009` | tuple/list unpacking shape mismatch | tuple unpack lowering | `crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr` |
 | `SIFR-TYPE-0011` | unsupported default argument expression | function default lowering | `crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` |
 | `SIFR-DECIMAL-0001` | `Decimal()` invalid exact literal | decimal constructor lowering | `crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr` |

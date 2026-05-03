@@ -11,7 +11,26 @@
       }
     },
     "url": "https://sifr.sh/docs/errors/SIFR-DECIMAL-0001",
-    "spans": [],
+    "spans": [
+      {
+        "file": "<WORKSPACE>/crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/main.sifr",
+        "byte_start": 144,
+        "byte_end": 154,
+        "line": 3,
+        "column": 30,
+        "end_line": 3,
+        "end_column": 40,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    value: decimal = Decimal(\"12.34.56\")",
+            "highlight_start": 30,
+            "highlight_end": 40
+          }
+        ]
+      }
+    ],
     "children": [],
     "help": null,
     "suggestions": []
