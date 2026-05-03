@@ -2251,6 +2251,68 @@ pub(super) fn lower_method_call(
         ty: return_ty,
     })
 }
+
+fn method_count_range(
+    actual: usize,
+    max_allowed: usize,
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+) -> TextRange {
+    if actual > max_allowed {
+        arg_ranges.get(max_allowed).copied().unwrap_or(method_range)
+    } else {
+        method_range
+    }
+}
+
+fn reject_method_arg_count(ctx: &mut LowerCtx, message: String, range: TextRange) {
+    expression_diagnostics::call_wrong_positional_count(ctx, message, range);
+}
+
+fn reject_exact_method_arg_count(
+    ctx: &mut LowerCtx,
+    method: &str,
+    expected: usize,
+    actual: usize,
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+) {
+    let suffix = if expected == 1 { "" } else { "s" };
+    reject_method_arg_count(
+        ctx,
+        format!("{method}() takes exactly {expected} argument{suffix}, got {actual}"),
+        method_count_range(actual, expected, arg_ranges, method_range),
+    );
+}
+
+fn reject_max_method_arg_count(
+    ctx: &mut LowerCtx,
+    method: &str,
+    max_allowed: usize,
+    actual: usize,
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+) {
+    reject_method_arg_count(
+        ctx,
+        format!("{method}() takes at most {max_allowed} argument, got {actual}"),
+        method_count_range(actual, max_allowed, arg_ranges, method_range),
+    );
+}
+
+fn reject_no_method_args(
+    ctx: &mut LowerCtx,
+    method: &str,
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+) {
+    reject_method_arg_count(
+        ctx,
+        format!("{method}() takes no arguments"),
+        method_count_range(arg_ranges.len(), 0, arg_ranges, method_range),
+    );
+}
+
 /// Resolve the return type of a method call on a given type.
 pub(super) fn resolve_method_type(
     object_ty: &Type,
@@ -2279,10 +2341,14 @@ pub(super) fn resolve_method_type(
         Type::List(elem_ty) => match method {
             "append" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "list.append() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "list.append",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 if !args[0].ty().is_assignable_to(elem_ty) {
@@ -2292,10 +2358,14 @@ pub(super) fn resolve_method_type(
             }
             "extend" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "list.extend() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "list.extend",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 validate_list_extend_arg(elem_ty, args[0].ty(), arg_ranges[0], ctx);
@@ -2303,49 +2373,61 @@ pub(super) fn resolve_method_type(
             }
             "insert" => {
                 if args.len() != 2 {
-                    ctx.error(format!(
-                        "list.insert() takes exactly 2 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "list.insert",
+                        2,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::None)
             }
             "clear" => {
                 if !args.is_empty() {
-                    ctx.error("list.clear() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "list.clear", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::None)
             }
             "copy" => {
                 if !args.is_empty() {
-                    ctx.error("list.copy() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "list.copy", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::List(elem_ty.clone()))
             }
             "reverse" => {
                 if !args.is_empty() {
-                    ctx.error("list.reverse() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "list.reverse", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::None)
             }
             "sort" => {
                 if args.len() > 1 {
-                    ctx.error(format!(
-                        "list.sort() takes at most 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_max_method_arg_count(
+                        ctx,
+                        "list.sort",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 if let Some(reverse_arg) = args.first() {
                     if reverse_arg.ty() != &Type::Bool {
-                        ctx.error(format!(
-                            "list.sort() argument 'reverse' must be 'bool', got '{}'",
-                            reverse_arg.ty().display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "list.sort() argument 'reverse' must be 'bool', got '{}'",
+                                reverse_arg.ty().display_name()
+                            ),
+                            arg_ranges[0],
+                        );
                         return None;
                     }
                 }
@@ -2353,45 +2435,61 @@ pub(super) fn resolve_method_type(
             }
             "count" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "list.count() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "list.count",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Int)
             }
             "contains" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "list.contains() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "list.contains",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Bool)
             }
             "len" => {
                 if !args.is_empty() {
-                    ctx.error("list.len() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "list.len", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::Int)
             }
             "pop" => {
                 if args.len() > 1 {
-                    ctx.error(format!(
-                        "list.pop() takes at most 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_max_method_arg_count(
+                        ctx,
+                        "list.pop",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 if let Some(index_arg) = args.first() {
                     if index_arg.ty() != &Type::Int {
-                        ctx.error(format!(
-                            "list.pop() index must be 'int', got '{}'",
-                            index_arg.ty().display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "list.pop() index must be 'int', got '{}'",
+                                index_arg.ty().display_name()
+                            ),
+                            arg_ranges[0],
+                        );
                     }
                 }
                 // pop() returns Option[T] = T | None
@@ -2399,52 +2497,69 @@ pub(super) fn resolve_method_type(
             }
             "popleft" => {
                 if !args.is_empty() {
-                    ctx.error("list.popleft() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "list.popleft", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
             }
             "appendleft" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "list.appendleft() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "list.appendleft",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::None)
             }
             "remove" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "list.remove() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "list.remove",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::None)
             }
             "index" => {
                 if args.is_empty() || args.len() > 3 {
-                    ctx.error(format!(
-                        "list.index() takes 1 to 3 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_method_arg_count(
+                        ctx,
+                        format!("list.index() takes 1 to 3 arguments, got {}", args.len()),
+                        method_count_range(args.len(), 3, arg_ranges, method_range),
+                    );
                     return None;
                 }
-                for bound in args.iter().skip(1) {
+                for (bound_index, bound) in args.iter().enumerate().skip(1) {
                     if bound.ty() != &Type::Int {
-                        ctx.error(format!(
-                            "list.index() bounds must be 'int', got '{}'",
-                            bound.ty().display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "list.index() bounds must be 'int', got '{}'",
+                                bound.ty().display_name()
+                            ),
+                            arg_ranges.get(bound_index).copied().unwrap_or(method_range),
+                        );
                     }
                 }
                 // Returns Option[int] = int | None (safe: no panic if not found)
                 Some(Type::Union(vec![Type::Int, Type::None]))
             }
             _ => {
-                ctx.error(format!("list has no method '{method}'"));
+                ctx.error_with_code_at(
+                    DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                    format!("list has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         },

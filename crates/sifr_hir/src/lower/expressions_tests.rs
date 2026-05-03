@@ -3144,6 +3144,45 @@ fn test_list_extend_non_iterable_has_protocol_code() {
 }
 
 #[test]
+fn test_list_method_wrong_positional_count_has_call_code() {
+    let source = "def main():\n    xs: list[int] = []\n    xs.append(1, 2)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "list.append() takes exactly 1 argument, got 2"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(source, "xs.append(1, ", "2"))
+    }));
+}
+
+#[test]
+fn test_list_method_type_mismatch_has_type_code() {
+    let source = "def main():\n    xs: list[int] = [1]\n    xs.pop(\"0\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "list.pop() index must be 'int', got 'str'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for(source, "\"0\""))
+    }));
+}
+
+#[test]
+fn test_list_missing_method_has_stdlib_code() {
+    let source = "def main():\n    xs: list[int] = []\n    xs.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "list has no method 'missing'"
+            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.primary_range == Some(range_for_after(source, "xs.", "missing"))
+    }));
+}
+
+#[test]
 fn test_dict_update_keyword_value_mismatch_has_type_code() {
     let source = "def main():\n    data: dict[str, int] = {}\n    data.update(bad=\"x\")\n";
     let result = lower_source(source);
