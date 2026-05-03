@@ -2239,14 +2239,38 @@ fn test_min_max_accept_variadic_scalar_inputs() {
 
 #[test]
 fn test_max_two_arg_rejects_optional_operand() {
-    let result = lower_source(
-        "def pick(d: dict[str, int], k: str) -> int:\n    best = 0\n    best = max(best, d[k])\n    return best\n",
-    );
+    let source =
+        "def pick(d: dict[str, int], k: str) -> int:\n    best = 0\n    best = max(best, d[k])\n    return best\n";
+    let result = lower_source(source);
     assert!(result.is_err(), "max(i64, i64|None) should be rejected");
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("max() with 2 arguments does not accept optional operands")));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error
+                    .message
+                    .contains("max() with 2 arguments does not accept optional operands")
+                && error.primary_range == Some(range_for(source, "d[k]"))),
+        "max optional operand diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
+fn test_min_max_incompatible_operands_have_type_codes() {
+    let source = "def main() -> None:\n    lo = min(1, \"x\")\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected min incompatible operand error");
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message
+                    == "min() arguments must be comparable and type-compatible; got 'int' and 'str'"
+                && error.primary_range == Some(range_for(source, "\"x\""))),
+        "min incompatible operand diagnostic should be structured and ranged: {errors:?}"
+    );
 }
 
 #[test]
