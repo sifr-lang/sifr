@@ -50,6 +50,18 @@ pub(super) fn lower_method_call_args(
     Some(args)
 }
 
+pub(super) fn resolved_method_arg_ranges(
+    object_ty: &Type,
+    method: &str,
+    call: &ExprCall,
+) -> Vec<TextRange> {
+    let mut ranges: Vec<TextRange> = call.arguments.args.iter().map(Ranged::range).collect();
+    if matches!(object_ty.resolve_alias(), Type::Dict(_, _)) && method == "update" {
+        ranges.extend(call.arguments.keywords.iter().take(1).map(Ranged::range));
+    }
+    ranges
+}
+
 pub(super) fn lower_signature_call_args(
     call: &ExprCall,
     callable_name: &str,
@@ -268,10 +280,7 @@ fn lower_keyword_args(
     let mut keywords: LoweredKeywords = Vec::with_capacity(call.arguments.keywords.len());
     for keyword in &call.arguments.keywords {
         let Some(name) = keyword.arg.as_ref() else {
-            ctx.error(format!(
-                "{method}() does not support unpacked keyword arguments"
-            ));
-            return None;
+            return unpacked_keyword_error(method, ctx, keyword.range());
         };
         if keywords.iter().any(|seen| seen.name == name.as_str()) {
             ctx.error_with_code_at(
@@ -355,6 +364,19 @@ fn unexpected_keyword_error<T>(
     ctx.error_with_code_at(
         DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
         format!("{callable_name}() got an unexpected keyword argument '{keyword}'"),
+        range,
+    );
+    None
+}
+
+fn unpacked_keyword_error<T>(
+    callable_name: &str,
+    ctx: &mut LowerCtx,
+    range: TextRange,
+) -> Option<T> {
+    ctx.error_with_code_at(
+        DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+        format!("{callable_name}() does not support unpacked keyword arguments"),
         range,
     );
     None
@@ -530,21 +552,30 @@ fn normalize_string_method_args(
 pub(super) fn validate_list_extend_arg(
     list_elem_ty: &Type,
     iterable_ty: &Type,
+    range: TextRange,
     ctx: &mut LowerCtx,
 ) -> bool {
     let Some(iterable_elem_ty) = callable_builtin_element_type(iterable_ty) else {
-        ctx.error(format!(
-            "list.extend() argument must be an iterable with a statically-known element type, got '{}'",
-            iterable_ty.display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
+            format!(
+                "list.extend() argument must be an iterable with a statically-known element type, got '{}'",
+                iterable_ty.display_name()
+            ),
+            range,
+        );
         return false;
     };
     if !iterable_elem_ty.is_assignable_to(list_elem_ty) {
-        ctx.error(format!(
-            "list.extend() iterable element type '{}' is not compatible with list element type '{}'",
-            iterable_elem_ty.display_name(),
-            list_elem_ty.display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "list.extend() iterable element type '{}' is not compatible with list element type '{}'",
+                iterable_elem_ty.display_name(),
+                list_elem_ty.display_name()
+            ),
+            range,
+        );
         return false;
     }
     true
@@ -554,32 +585,45 @@ pub(super) fn validate_dict_update_arg(
     key_ty: &Type,
     value_ty: &Type,
     update_ty: &Type,
+    range: TextRange,
     ctx: &mut LowerCtx,
 ) -> bool {
     let Some(Type::Dict(update_key_ty, update_value_ty)) =
         callable_builtin_dict_output_type(update_ty)
     else {
-        ctx.error(format!(
-            "dict.update() argument must be a dict or iterable of key/value tuples, got '{}'",
-            update_ty.display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "dict.update() argument must be a dict or iterable of key/value tuples, got '{}'",
+                update_ty.display_name()
+            ),
+            range,
+        );
         return false;
     };
     let mut valid = true;
     if !update_key_ty.is_assignable_to(key_ty) {
-        ctx.error(format!(
-            "dict.update() key type '{}' is not compatible with dict key type '{}'",
-            update_key_ty.display_name(),
-            key_ty.display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "dict.update() key type '{}' is not compatible with dict key type '{}'",
+                update_key_ty.display_name(),
+                key_ty.display_name()
+            ),
+            range,
+        );
         valid = false;
     }
     if !update_value_ty.is_assignable_to(value_ty) {
-        ctx.error(format!(
-            "dict.update() value type '{}' is not compatible with dict value type '{}'",
-            update_value_ty.display_name(),
-            value_ty.display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "dict.update() value type '{}' is not compatible with dict value type '{}'",
+                update_value_ty.display_name(),
+                value_ty.display_name()
+            ),
+            range,
+        );
         valid = false;
     }
     valid
@@ -589,21 +633,30 @@ pub(super) fn validate_set_iterable_arg(
     set_elem_ty: &Type,
     iterable_ty: &Type,
     method: &str,
+    range: TextRange,
     ctx: &mut LowerCtx,
 ) -> bool {
     let Some(iterable_elem_ty) = callable_builtin_element_type(iterable_ty) else {
-        ctx.error(format!(
-            "set.{method}() arguments must be iterables with a statically-known element type, got '{}'",
-            iterable_ty.display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
+            format!(
+                "set.{method}() arguments must be iterables with a statically-known element type, got '{}'",
+                iterable_ty.display_name()
+            ),
+            range,
+        );
         return false;
     };
     if !iterable_elem_ty.is_assignable_to(set_elem_ty) {
-        ctx.error(format!(
-            "set.{method}() iterable element type '{}' is not compatible with set element type '{}'",
-            iterable_elem_ty.display_name(),
-            set_elem_ty.display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "set.{method}() iterable element type '{}' is not compatible with set element type '{}'",
+                iterable_elem_ty.display_name(),
+                set_elem_ty.display_name()
+            ),
+            range,
+        );
         return false;
     }
     true

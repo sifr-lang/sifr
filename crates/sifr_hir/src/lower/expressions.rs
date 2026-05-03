@@ -29,7 +29,8 @@ use super::generic_constructor_specialization::refine_constructor_return_type_fr
 use super::generic_receiver_specialization::refine_generic_class_binding_expr;
 use super::method_call_args::{
     lower_function_call_args, lower_method_call_args, lower_signature_call_args,
-    validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
+    resolved_method_arg_ranges, validate_dict_update_arg, validate_list_extend_arg,
+    validate_set_iterable_arg,
 };
 use super::min_max_validation::validate_variadic_min_max_operands;
 use super::mutating_methods::{
@@ -2540,7 +2541,7 @@ pub(super) fn lower_method_call(
     ) {
         return None;
     }
-    let method_arg_ranges: Vec<TextRange> = call.arguments.args.iter().map(Ranged::range).collect();
+    let method_arg_ranges = resolved_method_arg_ranges(&object_ty_for_args, &method_name, call);
     let resolved_method_type = resolve_method_type(
         &object_ty,
         &method_name,
@@ -2598,7 +2599,6 @@ pub(super) fn lower_method_call(
         ty: return_ty,
     })
 }
-
 /// Resolve the return type of a method call on a given type.
 pub(super) fn resolve_method_type(
     object_ty: &Type,
@@ -2646,7 +2646,7 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
-                validate_list_extend_arg(elem_ty, args[0].ty(), ctx);
+                validate_list_extend_arg(elem_ty, args[0].ty(), arg_ranges[0], ctx);
                 Some(Type::None)
             }
             "insert" => {
@@ -2837,10 +2837,10 @@ pub(super) fn resolve_method_type(
                     return None;
                 }
                 if let Some(arg) = args.first() {
-                    validate_dict_update_arg(key_ty, val_ty, arg.ty(), ctx);
+                    validate_dict_update_arg(key_ty, val_ty, arg.ty(), arg_ranges[0], ctx);
                 }
                 if let Some(keyword_dict) = args.get(1) {
-                    validate_dict_update_arg(key_ty, val_ty, keyword_dict.ty(), ctx);
+                    validate_dict_update_arg(key_ty, val_ty, keyword_dict.ty(), arg_ranges[1], ctx);
                 }
                 Some(Type::None)
             }
@@ -3023,8 +3023,8 @@ pub(super) fn resolve_method_type(
                 Some(Type::Set(elem_ty.clone()))
             }
             "union" | "intersection" | "difference" => {
-                for arg in args {
-                    validate_set_iterable_arg(elem_ty, arg.ty(), method, ctx);
+                for (index, arg) in args.iter().enumerate() {
+                    validate_set_iterable_arg(elem_ty, arg.ty(), method, arg_ranges[index], ctx);
                 }
                 Some(Type::Set(elem_ty.clone()))
             }
@@ -3037,12 +3037,12 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
-                validate_set_iterable_arg(elem_ty, args[0].ty(), method, ctx);
+                validate_set_iterable_arg(elem_ty, args[0].ty(), method, arg_ranges[0], ctx);
                 Some(Type::Set(elem_ty.clone()))
             }
             "update" | "intersection_update" | "difference_update" => {
-                for arg in args {
-                    validate_set_iterable_arg(elem_ty, arg.ty(), method, ctx);
+                for (index, arg) in args.iter().enumerate() {
+                    validate_set_iterable_arg(elem_ty, arg.ty(), method, arg_ranges[index], ctx);
                 }
                 Some(Type::None)
             }
@@ -3055,7 +3055,7 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
-                validate_set_iterable_arg(elem_ty, args[0].ty(), method, ctx);
+                validate_set_iterable_arg(elem_ty, args[0].ty(), method, arg_ranges[0], ctx);
                 Some(Type::None)
             }
             "issubset" | "issuperset" | "isdisjoint" => {
@@ -3067,7 +3067,7 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
-                validate_set_iterable_arg(elem_ty, args[0].ty(), method, ctx);
+                validate_set_iterable_arg(elem_ty, args[0].ty(), method, arg_ranges[0], ctx);
                 Some(Type::Bool)
             }
             "pop" => {
