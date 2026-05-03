@@ -608,20 +608,36 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // Special handling for abs() built-in
         if func_name == "abs" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "abs() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "abs() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "abs() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             let ty = arg.ty().clone();
             if !ty.is_numeric() {
-                ctx.error(format!(
-                    "abs() argument must be numeric, got '{}'",
-                    ty.display_name()
-                ));
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "abs() argument must be numeric, got '{}'",
+                        ty.display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             }
             return Some(HirExpr::Call {
@@ -633,11 +649,23 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // Special handling for hash() built-in
         if func_name == "hash" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "hash() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "hash() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "hash() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -661,19 +689,35 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // Special handling for round() built-in
         if func_name == "round" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "round() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
-                ctx.error(format!(
-                    "round() takes 1 or 2 arguments, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "round() takes 1 or 2 arguments, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             if !arg.ty().is_numeric() {
-                ctx.error(format!(
-                    "round() argument must be numeric, got '{}'",
-                    arg.ty().display_name()
-                ));
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "round() argument must be numeric, got '{}'",
+                        arg.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             }
             if call.arguments.args.len() == 2 {
@@ -693,11 +737,23 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // Special handling for repr() built-in
         if func_name == "repr" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "repr() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "repr() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "repr() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -718,11 +774,23 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // Special handling for int() conversion
         if func_name == "int" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "int() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "int() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "int() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -774,11 +842,23 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // bigint(n) — convert int|bigint|decimal|bigdecimal to bigint
         if func_name == "bigint" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "bigint() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "bigint() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "bigint() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -787,10 +867,14 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 arg_ty,
                 Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal
             ) {
-                ctx.error(format!(
-                    "bigint() requires int, bigint, decimal, or bigdecimal argument, got '{}'",
-                    arg_ty.display_name()
-                ));
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "bigint() requires int, bigint, decimal, or bigdecimal argument, got '{}'",
+                        arg_ty.display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             }
             return Some(HirExpr::Call {
@@ -801,11 +885,23 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         }
 
         if func_name == "float" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "float() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "float() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "float() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             if let Some(kind) = float_sentinel_kind_from_call(call) {
@@ -853,11 +949,23 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // Special handling for bool() conversion
         if func_name == "bool" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "bool() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "bool() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "bool() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;

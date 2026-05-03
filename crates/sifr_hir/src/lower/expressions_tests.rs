@@ -602,6 +602,115 @@ fn test_pow_wrong_arg_count_has_call_code() {
 }
 
 #[test]
+fn test_scalar_builtin_wrong_arg_counts_have_call_code() {
+    let cases = [
+        ("abs", "abs()", "abs() takes exactly 1 argument, got 0"),
+        ("hash", "hash()", "hash() takes exactly 1 argument, got 0"),
+        ("round", "round()", "round() takes 1 or 2 arguments, got 0"),
+        ("repr", "repr()", "repr() takes exactly 1 argument, got 0"),
+        ("int", "int()", "int() takes exactly 1 argument, got 0"),
+        (
+            "bigint",
+            "bigint()",
+            "bigint() takes exactly 1 argument, got 0",
+        ),
+        (
+            "float",
+            "float()",
+            "float() takes exactly 1 argument, got 0",
+        ),
+        ("bool", "bool()", "bool() takes exactly 1 argument, got 0"),
+    ];
+
+    for (callable, call, message) in cases {
+        let source = format!("def main():\n    _value = {call}\n");
+        let result = lower_source(&source);
+        assert!(result.is_err(), "{callable} should reject wrong arity");
+        let errors = result.unwrap_err();
+        assert!(
+            errors.iter().any(|error| {
+                error.message == message
+                    && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+                    && error.primary_range
+                        == Some(range_for_after_anchor(&source, "_value = ", callable))
+            }),
+            "{callable} errors: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn test_scalar_builtin_keywords_have_call_code() {
+    let callables = [
+        "abs", "hash", "round", "repr", "int", "bigint", "float", "bool",
+    ];
+
+    for callable in callables {
+        let source = format!("def main():\n    _value = {callable}(value=1)\n");
+        let result = lower_source(&source);
+        assert!(result.is_err(), "{callable} should reject keywords");
+        let errors = result.unwrap_err();
+        assert!(
+            errors.iter().any(|error| {
+                error.message == format!("{callable}() does not accept keyword arguments")
+                    && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+                    && error.primary_range
+                        == Some(range_for_after_anchor(
+                            &source,
+                            &format!("{callable}("),
+                            "value=1",
+                        ))
+            }),
+            "{callable} errors: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn test_scalar_builtin_type_mismatches_have_type_code() {
+    let cases = [
+        (
+            "abs",
+            "abs(\"x\")",
+            "abs() argument must be numeric, got 'str'",
+        ),
+        (
+            "round",
+            "round(\"x\")",
+            "round() argument must be numeric, got 'str'",
+        ),
+        (
+            "bigint",
+            "bigint(\"x\")",
+            "bigint() requires int, bigint, decimal, or bigdecimal argument, got 'str'",
+        ),
+    ];
+
+    for (callable, call, message) in cases {
+        let source = format!("def main():\n    _value = {call}\n");
+        let result = lower_source(&source);
+        assert!(
+            result.is_err(),
+            "{callable} should reject invalid argument type"
+        );
+        let errors = result.unwrap_err();
+        assert!(
+            errors.iter().any(|error| {
+                error.message == message
+                    && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                    && error.primary_range
+                        == Some(range_for_after_anchor(
+                            &source,
+                            &format!("{callable}("),
+                            "\"x\"",
+                        ))
+            }),
+            "{callable} errors: {errors:?}"
+        );
+    }
+}
+
+#[test]
 fn test_hash_unhashable_argument_has_proto_code() {
     let result = lower_source(
         "class Measurement:\n    value: float\n\n    def __init__(self, value: float):\n        self.value = value\n\ndef main():\n    m: Measurement = Measurement(3.14)\n    print(hash(m))\n",
