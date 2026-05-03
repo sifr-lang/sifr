@@ -27,6 +27,7 @@ RAW_HIR_ERROR_FREE_FILES = (
     pathlib.Path("crates/sifr_hir/src/lower/min_max_validation.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/subscript_type.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/tuple_unpack.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/type_aliases.rs"),
 )
 RAW_CTX_ERROR = re.compile(r"\bctx\.error\s*\(")
 

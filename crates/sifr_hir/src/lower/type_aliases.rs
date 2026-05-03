@@ -1,5 +1,7 @@
 use super::typing_and_functions::resolve_annotation_expr;
 use super::LowerCtx;
+use ruff_text_size::{Ranged, TextRange};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt, TypeParam};
 use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -9,6 +11,7 @@ pub(super) struct TypeAliasDecl {
     pub(super) name: String,
     pub(super) type_params: Vec<String>,
     pub(super) value: Box<Expr>,
+    pub(super) value_range: TextRange,
     pub(super) order: usize,
 }
 
@@ -26,7 +29,11 @@ pub(super) fn collect_type_alias_decls(stmts: &[Stmt], ctx: &mut LowerCtx) -> Ve
             continue;
         };
         let Expr::Name(name_expr) = type_alias.name.as_ref() else {
-            ctx.error("type alias name must be a simple name".to_string());
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_INVALID_ANNOTATION,
+                "type alias name must be a simple name".to_string(),
+                type_alias.name.range(),
+            );
             continue;
         };
 
@@ -42,6 +49,7 @@ pub(super) fn collect_type_alias_decls(stmts: &[Stmt], ctx: &mut LowerCtx) -> Ve
         decls.push(TypeAliasDecl {
             name: name_expr.id.to_string(),
             type_params,
+            value_range: type_alias.value.range(),
             value: type_alias.value.clone(),
             order,
         });
@@ -317,7 +325,11 @@ fn validate_recursive_alias_sccs(
 
             for name in bad_component {
                 if let Some(decl) = decl_map.get(&name) {
-                    ctx.error(recursive_alias_error_message(decl));
+                    ctx.error_with_code_at(
+                        DiagnosticCode::TYPE_INVALID_ANNOTATION,
+                        recursive_alias_error_message(decl),
+                        decl.value_range,
+                    );
                     invalid_aliases.insert(name);
                 }
             }

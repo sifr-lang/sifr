@@ -1,4 +1,5 @@
 use crate::{lower_module, HirDiagnostic, HirModule, HirStmt};
+use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
@@ -6,6 +7,18 @@ use sifr_type_system::Type;
 fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     let parsed = parse_module(source).expect("parse failed");
     lower_module(parsed.suite()).map(|result| result.module)
+}
+
+fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
+    let after_start = source.find(after).expect("anchor should exist");
+    let relative_start = source[after_start..]
+        .find(needle)
+        .expect("needle should exist after anchor");
+    let start = (after_start + relative_start) as u32;
+    TextRange::new(
+        TextSize::new(start),
+        TextSize::new(start + needle.len() as u32),
+    )
 }
 
 #[test]
@@ -43,36 +56,43 @@ fn test_mutual_recursive_alias_accepts_cycle_with_container_boundary() {
 
 #[test]
 fn test_naked_recursive_alias_is_rejected() {
-    let result = lower_source("type Bad = Bad\n\ndef main():\n    print(\"ok\")\n");
+    let source = "type Bad = Bad\n\ndef main():\n    print(\"ok\")\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message
             == "ill-formed recursive type alias 'Bad': recursion must cross an indirection boundary"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && error.primary_range == Some(range_for_after(source, "= ", "Bad"))
     }));
 }
 
 #[test]
 fn test_mutual_naked_recursive_alias_is_rejected() {
-    let result =
-        lower_source("type Left = Right\ntype Right = Left\n\ndef main():\n    print(\"ok\")\n");
+    let source = "type Left = Right\ntype Right = Left\n\ndef main():\n    print(\"ok\")\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message
             == "ill-formed recursive type alias 'Left': recursion must cross an indirection boundary"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && error.primary_range == Some(range_for_after(source, "= ", "Right"))
     }));
 }
 
 #[test]
 fn test_recursive_generic_tuple_alias_is_rejected() {
-    let result =
-        lower_source("type AlsoBad[T] = tuple[AlsoBad[T], T]\n\ndef main():\n    print(\"ok\")\n");
+    let source = "type AlsoBad[T] = tuple[AlsoBad[T], T]\n\ndef main():\n    print(\"ok\")\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
         error.message
             == "ill-formed recursive generic alias 'AlsoBad[T]': recursion must cross an indirection boundary"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+            && error.primary_range == Some(range_for_after(source, "= ", "tuple[AlsoBad[T], T]"))
     }));
 }
 
