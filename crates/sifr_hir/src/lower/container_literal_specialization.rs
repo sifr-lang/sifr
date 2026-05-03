@@ -1,6 +1,7 @@
 use super::LowerCtx;
 use crate::hir_nodes::{HirExpr, HirStmt};
 use ruff_text_size::TextRange;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::{type_check_binary_op, Type};
 use std::collections::HashMap;
 
@@ -27,14 +28,19 @@ fn emit_empty_literal_type_conflict(
     expected_value: &Type,
     actual_key: &Type,
     actual_value: &Type,
+    range: TextRange,
 ) {
-    ctx.error(format!(
-        "empty literal type conflict for '{object_name}': expected key '{}' and value '{}', got key '{}' and value '{}'",
-        expected_key.display_name(),
-        expected_value.display_name(),
-        actual_key.display_name(),
-        actual_value.display_name()
-    ));
+    ctx.error_with_code_at(
+        DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
+        format!(
+            "empty literal type conflict for '{object_name}': expected key '{}' and value '{}', got key '{}' and value '{}'",
+            expected_key.display_name(),
+            expected_value.display_name(),
+            actual_key.display_name(),
+            actual_value.display_name()
+        ),
+        range,
+    );
 }
 
 pub(super) fn validate_subscript_assignment_target(
@@ -43,6 +49,7 @@ pub(super) fn validate_subscript_assignment_target(
     object_ty: &Type,
     index_ty: &Type,
     value_ty: &Type,
+    range: TextRange,
 ) -> Type {
     match object_ty.resolve_alias().clone() {
         Type::List(elem_ty) => {
@@ -90,21 +97,30 @@ pub(super) fn validate_subscript_assignment_target(
                         expected_value.as_ref(),
                         index_ty,
                         value_ty,
+                        range,
                     );
                 } else {
                     if !key_ok {
-                        ctx.error(format!(
-                            "dict subscript assignment key type '{}' is not compatible with dict key type '{}'",
-                            index_ty.display_name(),
-                            key_ty.display_name()
-                        ));
+                        ctx.error_with_code_at(
+                            DiagnosticCode::TYPE_MISMATCH,
+                            format!(
+                                "dict subscript assignment key type '{}' is not compatible with dict key type '{}'",
+                                index_ty.display_name(),
+                                key_ty.display_name()
+                            ),
+                            range,
+                        );
                     }
                     if !value_ok {
-                        ctx.error(format!(
-                            "dict subscript assignment value type '{}' is not compatible with dict value type '{}'",
-                            value_ty.display_name(),
-                            value_ty_expected.display_name()
-                        ));
+                        ctx.error_with_code_at(
+                            DiagnosticCode::TYPE_MISMATCH,
+                            format!(
+                                "dict subscript assignment value type '{}' is not compatible with dict value type '{}'",
+                                value_ty.display_name(),
+                                value_ty_expected.display_name()
+                            ),
+                            range,
+                        );
                     }
                 }
             }
@@ -165,6 +181,7 @@ pub(super) fn validate_subscript_augassign_target(
                         expected_value.as_ref(),
                         index_ty,
                         rhs_ty,
+                        rhs_range,
                     );
                 } else {
                     ctx.error_with_code_at(code, message, rhs_range);

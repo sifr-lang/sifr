@@ -1,6 +1,6 @@
 //! AST to HIR lowering with type checking and name resolution.
 use crate::hir_nodes::{HirExpr, HirImport, HirModule};
-use crate::scope::Scope;
+use crate::scope::{ErrorTaint, Scope};
 use sifr_python_ast::{Expr, Stmt};
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
@@ -131,6 +131,8 @@ pub(super) struct LowerCtx {
     scope: Scope,
     /// Collected errors
     errors: Vec<LoweringError>,
+    /// Proof for the latest emitted lowering error.
+    last_error_taint: Option<ErrorTaint>,
     /// Loop nesting depth (for break/continue validation)
     loop_depth: usize,
     /// `reveal_type()` diagnostics (informational, not errors)
@@ -183,6 +185,7 @@ pub(super) struct LowerCtx {
     sequence_shapes: Vec<sequence_shapes::SequenceShapeFact>,
     function_scopes: Vec<function_scopes::FunctionScopeState>,
     inferred_binding_hints: Vec<HashMap<String, Type>>,
+    empty_collection_hint_adoption: Vec<bool>,
     empty_dict_specializations: HashMap<String, Type>,
 }
 impl LowerCtx {
@@ -193,6 +196,7 @@ impl LowerCtx {
             class_types: HashMap::new(),
             scope: Scope::new(),
             errors: Vec::new(),
+            last_error_taint: None,
             loop_depth: 0,
             reveal_types: Vec::new(),
             warnings: Vec::new(),
@@ -223,6 +227,7 @@ impl LowerCtx {
             sequence_shapes: Vec::new(),
             function_scopes: Vec::new(),
             inferred_binding_hints: Vec::new(),
+            empty_collection_hint_adoption: Vec::new(),
             empty_dict_specializations: HashMap::new(),
         }
     }
@@ -241,7 +246,8 @@ impl LowerCtx {
             });
     }
 
-    fn error(&mut self, message: String) {
+    fn error(&mut self, message: String) -> ErrorTaint {
+        let taint = ErrorTaint::emitted();
         self.errors.push(LoweringError {
             code: None,
             message,
@@ -249,9 +255,17 @@ impl LowerCtx {
             line: None,
             col: None,
         });
+        self.last_error_taint = Some(taint);
+        taint
     }
 
-    fn error_with_code_at(&mut self, code: DiagnosticCode, message: String, range: TextRange) {
+    fn error_with_code_at(
+        &mut self,
+        code: DiagnosticCode,
+        message: String,
+        range: TextRange,
+    ) -> ErrorTaint {
+        let taint = ErrorTaint::emitted();
         self.errors.push(LoweringError {
             code: Some(code),
             message,
@@ -259,6 +273,24 @@ impl LowerCtx {
             line: None,
             col: None,
         });
+        self.last_error_taint = Some(taint);
+        taint
+    }
+
+    fn error_count(&self) -> usize {
+        self.errors.len()
+    }
+
+    fn error_taint_since(&self, previous_error_count: usize) -> Option<ErrorTaint> {
+        (self.errors.len() > previous_error_count)
+            .then_some(self.last_error_taint)
+            .flatten()
+    }
+
+    fn is_poisoned_binding(&self, name: &str) -> bool {
+        self.scope
+            .lookup(name)
+            .is_some_and(crate::scope::VarInfo::is_poisoned_binding)
     }
 
     fn in_loop(&self) -> bool {
@@ -269,6 +301,21 @@ impl LowerCtx {
             .iter()
             .rev()
             .find_map(|hints| hints.get(name))
+    }
+
+    fn push_empty_collection_hint_adoption(&mut self, allow: bool) {
+        self.empty_collection_hint_adoption.push(allow);
+    }
+
+    fn pop_empty_collection_hint_adoption(&mut self) {
+        let _ = self.empty_collection_hint_adoption.pop();
+    }
+
+    fn can_adopt_empty_collection_hints(&self) -> bool {
+        self.empty_collection_hint_adoption
+            .last()
+            .copied()
+            .unwrap_or(false)
     }
 }
 
