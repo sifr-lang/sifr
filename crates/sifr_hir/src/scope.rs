@@ -24,6 +24,15 @@ pub enum BindingTypeSource {
     Inferred,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ErrorTaint(());
+
+impl ErrorTaint {
+    pub(crate) const fn emitted() -> Self {
+        Self(())
+    }
+}
+
 /// Tracks variable state for ownership and narrowing.
 #[derive(Debug, Clone)]
 pub struct VarInfo {
@@ -41,6 +50,8 @@ pub struct VarInfo {
     pub binding_kind: BindingKind,
     /// Whether the binding type was provided explicitly (annotation/parameter).
     pub type_source: BindingTypeSource,
+    /// Proof that this binding only exists to suppress cascades after an emitted error.
+    error_taint: Option<ErrorTaint>,
 }
 
 impl VarInfo {
@@ -60,6 +71,10 @@ impl VarInfo {
     pub fn is_inferred_local_binding(&self) -> bool {
         matches!(self.binding_kind, BindingKind::Local)
             && matches!(self.type_source, BindingTypeSource::Inferred)
+    }
+
+    pub fn is_poisoned_binding(&self) -> bool {
+        self.error_taint.is_some()
     }
 }
 
@@ -127,6 +142,23 @@ impl Scope {
         self.define_binding(name, ty, true, BindingKind::Local, true);
     }
 
+    pub(crate) fn define_poisoned_local(
+        &mut self,
+        name: String,
+        ty: Type,
+        has_explicit_type: bool,
+        error_taint: ErrorTaint,
+    ) {
+        self.define_binding_with_taint(
+            name,
+            ty,
+            true,
+            BindingKind::Local,
+            has_explicit_type,
+            Some(error_taint),
+        );
+    }
+
     /// Define a function parameter in the current (innermost) scope.
     pub fn define_parameter(&mut self, name: String, ty: Type, is_mutable_binding: bool) {
         self.define_binding(name, ty, is_mutable_binding, BindingKind::Parameter, true);
@@ -139,6 +171,25 @@ impl Scope {
         is_mutable_binding: bool,
         binding_kind: BindingKind,
         has_explicit_type: bool,
+    ) {
+        self.define_binding_with_taint(
+            name,
+            ty,
+            is_mutable_binding,
+            binding_kind,
+            has_explicit_type,
+            None,
+        );
+    }
+
+    fn define_binding_with_taint(
+        &mut self,
+        name: String,
+        ty: Type,
+        is_mutable_binding: bool,
+        binding_kind: BindingKind,
+        has_explicit_type: bool,
+        error_taint: Option<ErrorTaint>,
     ) {
         if let Some(frame) = self.frames.last_mut() {
             let mutability = if is_mutable_binding {
@@ -161,6 +212,7 @@ impl Scope {
                     mutability,
                     binding_kind,
                     type_source,
+                    error_taint,
                 },
             );
         }

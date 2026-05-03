@@ -100,9 +100,19 @@ fn hint_matches_empty_collection_shape(value_expr: &Expr, hint: &Type) -> bool {
     }
 }
 
-fn should_adopt_inferred_binding_hint(value_expr: &Expr, value_ty: &Type, hint: &Type) -> bool {
+fn should_adopt_inferred_binding_hint(
+    value_expr: &Expr,
+    value_ty: &Type,
+    hint: &Type,
+    allow_empty_collection_hint: bool,
+) -> bool {
     if !type_contains_unknown_or_any(value_ty) {
         return false;
+    }
+    if empty_collection_literal_kind(value_expr).is_some() {
+        return allow_empty_collection_hint
+            && !type_contains_unknown_or_any(hint)
+            && hint_matches_empty_collection_shape(value_expr, hint);
     }
     if value_ty.is_assignable_to(hint) {
         return true;
@@ -120,8 +130,10 @@ pub(super) fn lower_stmts(
 ) -> Vec<HirStmt> {
     let nested_inference =
         super::nested_function_inference::infer_nested_function_types(stmts, ctx);
+    let can_adopt_empty_collection_hints = !nested_inference.function_types.is_empty();
     ctx.inferred_binding_hints
         .push(nested_inference.binding_hints.clone());
+    ctx.push_empty_collection_hint_adoption(can_adopt_empty_collection_hints);
     predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
 
     let mut result = Vec::new();
@@ -148,6 +160,7 @@ pub(super) fn lower_stmts(
         );
     }
     let _ = ctx.inferred_binding_hints.pop();
+    ctx.pop_empty_collection_hint_adoption();
     result
 }
 fn predeclare_nested_function_symbols(
@@ -614,7 +627,9 @@ pub(super) fn lower_stmt(
                 ft.return_type.as_ref(),
                 func.returns.is_some(),
                 &body,
-                |message| ctx.error(message),
+                |message| {
+                    ctx.error(message);
+                },
             );
 
             // Collect user-defined decorators
@@ -864,16 +879,33 @@ fn seed_binding_after_failed_initializer(
     name: &str,
     ty: Type,
     is_explicit_local: bool,
+    error_taint: crate::scope::ErrorTaint,
 ) {
-    if is_explicit_local {
-        ctx.scope.define_explicit_local(name.to_string(), ty);
-    } else {
-        ctx.scope.define(name.to_string(), ty);
-    }
+    ctx.scope
+        .define_poisoned_local(name.to_string(), ty, is_explicit_local, error_taint);
     ctx.empty_dict_specializations.remove(name);
     ctx.pending_container_specialization_patches.remove(name);
     ctx.clear_numeric_sentinel_var(name);
     ctx.clear_sequence_shape_fact(name);
+}
+
+fn failed_initializer_taint(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: ruff_text_size::TextRange,
+    error_count_before_initializer: usize,
+) -> Option<crate::scope::ErrorTaint> {
+    let taint = ctx.error_taint_since(error_count_before_initializer);
+    if taint.is_none() {
+        ctx.error_with_code_at(
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            format!(
+                "internal compiler error: failed initializer for '{name}' did not emit a diagnostic"
+            ),
+            range,
+        );
+    }
+    taint
 }
 
 fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
@@ -892,19 +924,44 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
 
     let (value, initializer_range) = if let Some(val) = &ann.value {
         let initializer_range = val.range();
+        let error_count_before_initializer = ctx.error_count();
         let mut expr = if let Some(kind) = numeric_sentinel_kind(val) {
             if let Some(domain) = numeric_domain_for_type(&declared_type) {
                 domain_typed_sentinel_expr(kind, domain)
             } else if let Some(expr) = lower_expr(val, ctx) {
                 expr
             } else {
-                seed_binding_after_failed_initializer(ctx, &name, declared_type.clone(), true);
+                let error_taint = failed_initializer_taint(
+                    ctx,
+                    &name,
+                    initializer_range,
+                    error_count_before_initializer,
+                )?;
+                seed_binding_after_failed_initializer(
+                    ctx,
+                    &name,
+                    declared_type.clone(),
+                    true,
+                    error_taint,
+                );
                 return None;
             }
         } else if let Some(expr) = lower_expr(val, ctx) {
             expr
         } else {
-            seed_binding_after_failed_initializer(ctx, &name, declared_type.clone(), true);
+            let error_taint = failed_initializer_taint(
+                ctx,
+                &name,
+                initializer_range,
+                error_count_before_initializer,
+            )?;
+            seed_binding_after_failed_initializer(
+                ctx,
+                &name,
+                declared_type.clone(),
+                true,
+                error_taint,
+            );
             return None;
         };
         let expr_ty = expr.ty().clone();
@@ -1279,8 +1336,14 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&assign.value, ctx)?;
-        let object_ty =
-            validate_subscript_assignment_target(ctx, &obj_name, &obj_ty, index.ty(), value.ty());
+        let object_ty = validate_subscript_assignment_target(
+            ctx,
+            &obj_name,
+            &obj_ty,
+            index.ty(),
+            value.ty(),
+            sub.range(),
+        );
         maybe_record_dict_assignment_guard(ctx, &object_ty, &obj_name, &sub.slice);
         return Some(HirStmt::SubscriptAssign {
             object: obj_name,
@@ -1314,13 +1377,20 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     } else {
         ctx.scope.lookup(&name).is_some()
     };
+    let error_count_before_initializer = ctx.error_count();
     let Some(value) = lower_expr(&assign.value, ctx) else {
         if !should_treat_as_existing_binding {
+            let error_taint = failed_initializer_taint(
+                ctx,
+                &name,
+                assign.value.range(),
+                error_count_before_initializer,
+            )?;
             let fallback_ty = ctx
                 .inferred_binding_hint(&name)
                 .cloned()
                 .unwrap_or(Type::Unknown);
-            seed_binding_after_failed_initializer(ctx, &name, fallback_ty, false);
+            seed_binding_after_failed_initializer(ctx, &name, fallback_ty, false, error_taint);
         }
         return None;
     };
@@ -1380,7 +1450,14 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         // New variable (type inferred)
         let binding_ty = ctx
             .inferred_binding_hint(&name)
-            .filter(|hint| should_adopt_inferred_binding_hint(&assign.value, &value_ty, hint))
+            .filter(|hint| {
+                should_adopt_inferred_binding_hint(
+                    &assign.value,
+                    &value_ty,
+                    hint,
+                    ctx.can_adopt_empty_collection_hints(),
+                )
+            })
             .cloned()
             .unwrap_or_else(|| value_ty.clone());
         ctx.scope.define(name.clone(), binding_ty.clone());

@@ -187,6 +187,44 @@ fn test_failed_annotated_assignment_rhs_still_seeds_followup_binding() {
 }
 
 #[test]
+fn test_poisoned_initializer_binding_suppresses_followup_operator_cascade() {
+    let result =
+        lower_source("def main(xs: list[int]) -> int:\n    s = xs[0] + xs[0]\n    return s + 1\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    let unsupported_operator_count = errors
+        .iter()
+        .filter(|error| error.message.contains("unsupported operand type(s) for +"))
+        .count();
+    assert_eq!(
+        unsupported_operator_count, 1,
+        "poisoned initializer binding should not trigger a second operator cascade: {errors:?}"
+    );
+    assert!(
+        !errors
+            .iter()
+            .any(|error| error.message == "undefined variable: 's'"),
+        "poisoned initializer binding should suppress undefined-name cascades: {errors:?}"
+    );
+}
+
+#[test]
+fn test_poisoned_initializer_binding_suppresses_followup_unary_cascade() {
+    let result =
+        lower_source("def main(xs: list[int]) -> int:\n    s = xs[0] + xs[0]\n    return -s\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert_eq!(
+        errors
+            .iter()
+            .filter(|error| error.message.contains("unsupported operand type(s)"))
+            .count(),
+        1,
+        "poisoned initializer binding should not trigger unary operator cascades: {errors:?}"
+    );
+}
+
+#[test]
 fn test_use_after_move() {
     let source = "def consume(own s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n";
     let result = lower_source(source);

@@ -20,6 +20,7 @@ use super::decimal_methods::{
     lower_decimal_constructor_call, resolve_decimal_method_type,
 };
 use super::defaultdict_refinement::refine_defaultdict_binding_expr;
+use super::diagnostics::list_append_argument_type_mismatch;
 use super::empty_collection_refinement::{
     refine_empty_list_binding_expr, refine_empty_set_binding_expr,
 };
@@ -222,10 +223,8 @@ fn canonicalize_class_surface_type(ty: &Type) -> Type {
 pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let var_name = name.id.to_string();
 
-    // Check if it's a known variable
     if let Some(info) = ctx.scope.lookup(&var_name) {
         let is_moved = info.is_moved;
-        // Use effective type (narrowed if available)
         let ty = info.effective_type().clone();
         if is_moved {
             ownership_diagnostics::use_after_move(ctx, &var_name, name.range());
@@ -233,7 +232,6 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
         return Some(HirExpr::Name { name: var_name, ty });
     }
 
-    // Check if it's a known function
     if let Some(ft) = ctx.functions.get(&var_name) {
         let ft = ft.clone();
         return Some(HirExpr::Name {
@@ -242,7 +240,6 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
         });
     }
 
-    // Check built-in constants
     match var_name.as_str() {
         "True" => return Some(HirExpr::BoolLiteral(true)),
         "False" => return Some(HirExpr::BoolLiteral(false)),
@@ -327,6 +324,13 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
     let left = lower_expr(&binop.left, ctx)?;
     let right = lower_expr(&binop.right, ctx)?;
 
+    if [&left, &right]
+        .iter()
+        .any(|expr| matches!(expr, HirExpr::Name { name, .. } if ctx.is_poisoned_binding(name)))
+    {
+        return None;
+    }
+
     let op_str = match binop.op {
         Operator::Add => "+",
         Operator::Sub => "-",
@@ -381,6 +385,9 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
 
 pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let operand = lower_expr(&unary.operand, ctx)?;
+    if matches!(&operand, HirExpr::Name { name, .. } if ctx.is_poisoned_binding(name)) {
+        return None;
+    }
 
     let op_str = match unary.op {
         UnaryOp::USub => "-",
@@ -2627,11 +2634,7 @@ pub(super) fn resolve_method_type(
                     return None;
                 }
                 if !args[0].ty().is_assignable_to(elem_ty) {
-                    ctx.error(format!(
-                        "list.append() argument type '{}' is not compatible with list element type '{}'",
-                        args[0].ty().display_name(),
-                        elem_ty.display_name()
-                    ));
+                    list_append_argument_type_mismatch(ctx, args[0].ty(), elem_ty, arg_ranges[0]);
                 }
                 Some(Type::None)
             }

@@ -895,7 +895,9 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         ft.return_type.as_ref(),
         func.returns.is_some(),
         &body,
-        |message| ctx.error(message),
+        |message| {
+            ctx.error(message);
+        },
     );
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)

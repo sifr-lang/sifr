@@ -1,5 +1,6 @@
 use crate::hir_nodes::HirStmt;
 use ruff_text_size::{Ranged, TextRange};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt, StmtClassDef, StmtFunctionDef};
 use sifr_type_system::Type;
 
@@ -54,6 +55,23 @@ pub(super) fn format_type_name(ty: &Type) -> String {
         Type::Dict(k, v) => format!("dict[{}, {}]", format_type_name(k), format_type_name(v)),
         _ => format!("{ty:?}"),
     }
+}
+
+pub(super) fn list_append_argument_type_mismatch(
+    ctx: &mut LowerCtx,
+    actual: &Type,
+    expected: &Type,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::TYPE_MISMATCH,
+        format!(
+            "list.append() argument type '{}' is not compatible with list element type '{}'",
+            actual.display_name(),
+            expected.display_name()
+        ),
+        range,
+    );
 }
 
 /// Collect error types from raise statements in a list of HIR statements.
