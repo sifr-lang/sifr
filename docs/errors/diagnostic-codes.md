@@ -60,6 +60,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0009`](SIFR-TYPE-0009.md) | Error | Tuple or list unpacking shape mismatch. |
 | [`SIFR-TYPE-0010`](SIFR-TYPE-0010.md) | Error | TypeVar constraints are not satisfied by the inferred concrete type. |
 | [`SIFR-TYPE-0011`](SIFR-TYPE-0011.md) | Error | Unsupported default argument expression. |
+| [`SIFR-TYPE-0012`](SIFR-TYPE-0012.md) | Error | Unsupported expression form. |
 | [`SIFR-TYPE-0901`](SIFR-TYPE-0901.md) | Warning | Integer arithmetic may overflow at runtime. |
 | [`SIFR-TYPE-0902`](SIFR-TYPE-0902.md) | Note | Reveal the inferred static type of an expression. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |

@@ -24,6 +24,8 @@ mod default_args;
 mod defaultdict_refinement;
 mod diagnostics;
 mod empty_collection_refinement;
+mod expression_diagnostics;
+mod expression_operators;
 mod expressions;
 #[cfg(test)]
 mod expressions_tests;
