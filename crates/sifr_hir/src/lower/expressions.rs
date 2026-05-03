@@ -349,7 +349,7 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
     match type_check_binary_op(left.ty(), op_str, right.ty()) {
         Ok(result_ty) => {
             if result_ty == Type::Int {
-                check_int_overflow_risk(op_str, &left, &right, ctx);
+                check_int_overflow_risk(op_str, &left, &right, ctx, binop.range());
             }
             Some(HirExpr::BinOp {
                 left: Box::new(left),

@@ -125,11 +125,9 @@ pub(super) fn lower_stmts(
     predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
 
     let mut result = Vec::new();
-    for (index, stmt) in stmts.iter().enumerate() {
+    for stmt in stmts {
         if crate::cfg::flow_facts(&result).always_exits() {
-            ctx.warn(format!(
-                "unreachable statement at block index {index} was ignored"
-            ));
+            ctx.warn_unreachable_statement(stmt.range());
             continue;
         }
         // Handle chained assignment (x = y = z = 0) by expanding into multiple statements

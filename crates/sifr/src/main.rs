@@ -294,11 +294,18 @@ fn diagnostic_exit_code(errors: &[RenderedDiagnostic]) -> i32 {
 
 #[cfg(test)]
 fn legacy_diagnostic_display(diagnostic: &RenderedDiagnostic) -> String {
-    format!(
-        "{}: {}",
-        diagnostic_label_for_code_str(&diagnostic.code),
-        diagnostic.message
-    )
+    format!("{}: {}", human_label(diagnostic), diagnostic.message)
+}
+
+fn human_label(diagnostic: &RenderedDiagnostic) -> &'static str {
+    match diagnostic.severity {
+        Severity::Error if diagnostic.code.starts_with("SIFR-") => {
+            diagnostic_label_for_code_str(&diagnostic.code)
+        }
+        Severity::Error => "error",
+        Severity::Warning => "warning",
+        Severity::Note => "note",
+    }
 }
 
 fn compact_severity_summary(diagnostics: &[RenderedDiagnostic]) -> String {
@@ -412,15 +419,7 @@ fn render_diagnostic_stream(
     match format {
         DiagnosticFormat::Human => {
             for diagnostic in diagnostics {
-                let label = if diagnostic.code.starts_with("SIFR-") {
-                    diagnostic_label_for_code_str(&diagnostic.code)
-                } else {
-                    match diagnostic.severity {
-                        Severity::Error => "error",
-                        Severity::Warning => "warning",
-                        Severity::Note => "note",
-                    }
-                };
+                let label = human_label(diagnostic);
                 let _ = writeln!(output, "{label}: {message}", message = diagnostic.message);
                 for child in &diagnostic.children {
                     let child_label = match child.severity {
@@ -1209,6 +1208,90 @@ mod tests {
             primary_span.byte_end > primary_span.byte_start,
             "reveal_type primary span should cover source bytes"
         );
+        assert_eq!(diagnostic_exit_code(&diagnostics), EXIT_SUCCESS);
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_check_entrypoint_single_file_arithmetic_warning_is_structured_spanned_warning() {
+        let dir = mktemp_dir("check_entrypoint_single_arithmetic_warning");
+        let main = dir.join("main.sifr");
+        std::fs::write(
+            &main,
+            "def multiply(a: int, b: int) -> int:\n    return a * b\n\ndef main():\n    print(multiply(2, 3))\n",
+        )
+        .expect("main file should be written");
+
+        let diagnostics = check_entrypoint(&main);
+        assert_eq!(diagnostics.len(), 1);
+        let diagnostic = &diagnostics[0];
+        assert_eq!(
+            diagnostic.code,
+            DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK.code()
+        );
+        assert_eq!(diagnostic.severity, Severity::Warning);
+        assert_eq!(
+            diagnostic.message_template,
+            "integer {operation} may overflow at runtime"
+        );
+        assert_eq!(
+            diagnostic.args.get("operation"),
+            Some(&DiagnosticArg::String("multiplication".to_string()))
+        );
+
+        let primary_span = diagnostic
+            .spans
+            .iter()
+            .find(|span| span.is_primary)
+            .expect("arithmetic warning should carry a primary span");
+        assert_eq!(
+            primary_span.file.as_deref(),
+            Some(main.to_string_lossy().as_ref())
+        );
+        assert_eq!(primary_span.line, Some(2));
+        assert_eq!(diagnostic_exit_code(&diagnostics), EXIT_SUCCESS);
+
+        let human = render_diagnostic_output(&diagnostics, DiagnosticFormat::Human)
+            .expect("human warning diagnostics should render");
+        assert_eq!(
+            human,
+            "warning: integer multiplication may overflow at runtime\n"
+        );
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_check_entrypoint_single_file_unreachable_statement_warning_is_structured() {
+        let dir = mktemp_dir("check_entrypoint_single_unreachable_warning");
+        let main = dir.join("main.sifr");
+        std::fs::write(
+            &main,
+            "def value() -> int:\n    return 1\n    return 2\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+
+        let diagnostics = check_entrypoint(&main);
+        assert_eq!(diagnostics.len(), 1);
+        let diagnostic = &diagnostics[0];
+        assert_eq!(
+            diagnostic.code,
+            DiagnosticCode::FLOW_UNREACHABLE_STATEMENT.code()
+        );
+        assert_eq!(diagnostic.severity, Severity::Warning);
+        assert_eq!(diagnostic.message_template, "unreachable statement ignored");
+        assert!(diagnostic.args.is_empty());
+        let primary_span = diagnostic
+            .spans
+            .iter()
+            .find(|span| span.is_primary)
+            .expect("unreachable warning should carry a primary span");
+        assert_eq!(
+            primary_span.file.as_deref(),
+            Some(main.to_string_lossy().as_ref())
+        );
+        assert_eq!(primary_span.line, Some(3));
         assert_eq!(diagnostic_exit_code(&diagnostics), EXIT_SUCCESS);
 
         let _ = std::fs::remove_dir_all(dir);

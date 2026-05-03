@@ -1,12 +1,12 @@
 use super::compile_order::compute_module_compile_order;
 use super::discovery::ParsedProjectModule;
 use super::exports::collect_module_exports;
-use crate::diagnostics::{write_stderr_line, RenderedDiagnostic};
+use crate::diagnostics::{apply_diagnostic_recovery_limits, write_stderr_line, RenderedDiagnostic};
 #[cfg(test)]
 use crate::frontend::lower_frontend_module;
 use crate::frontend::{
-    lower_frontend_module_with_source, reveal_type_diagnostics, FrontendDiagnosticStyle,
-    FrontendModuleDiagnostics, FrontendSourceContext,
+    lower_frontend_module_with_source, reveal_type_diagnostics, warning_diagnostics,
+    FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
@@ -59,6 +59,7 @@ pub(crate) fn compile_frontend_modules(
             FrontendModuleDiagnostics {
                 rendered_reveal_types: reveal_type_diagnostics(None, &reveal_types),
                 reveal_types,
+                rendered_warnings: warning_diagnostics(None, &warnings),
                 warnings,
             },
         );
@@ -111,6 +112,7 @@ pub(crate) fn compile_single_frontend_module_with_source(
             FrontendModuleDiagnostics {
                 rendered_reveal_types: reveal_type_diagnostics(Some(source_context), &reveal_types),
                 reveal_types,
+                rendered_warnings: warning_diagnostics(Some(source_context), &warnings),
                 warnings,
             },
         )]),
@@ -183,6 +185,7 @@ pub(crate) fn collect_project_hir_source_modules(
             FrontendModuleDiagnostics {
                 rendered_reveal_types: reveal_type_diagnostics(Some(source_context), &reveal_types),
                 reveal_types,
+                rendered_warnings: warning_diagnostics(Some(source_context), &warnings),
                 warnings,
             },
         );
@@ -197,6 +200,7 @@ pub(crate) fn collect_project_hir_source_modules(
 }
 
 pub(crate) fn emit_project_frontend_diagnostics(project_lowering: &ProjectLowering) {
+    let mut diagnostics = Vec::new();
     for module_name in &project_lowering.compile_order {
         let Some(diag) = project_lowering
             .module_diagnostics
@@ -204,11 +208,39 @@ pub(crate) fn emit_project_frontend_diagnostics(project_lowering: &ProjectLoweri
         else {
             continue;
         };
-        for diagnostic in &diag.rendered_reveal_types {
-            write_stderr_line(&format!("note: {}", diagnostic.message));
+        diagnostics.extend(diag.rendered_warnings.clone());
+        diagnostics.extend(diag.rendered_reveal_types.clone());
+    }
+    for diagnostic in apply_diagnostic_recovery_limits(&diagnostics) {
+        write_stderr_line(&format!(
+            "{}: {}",
+            diagnostic_severity_label(diagnostic.severity),
+            diagnostic.message
+        ));
+        for child in diagnostic.children {
+            write_stderr_line(&format!(
+                "{}: {}",
+                child_diagnostic_severity_label(child.severity),
+                child.message
+            ));
         }
-        for warning in &diag.warnings {
-            write_stderr_line(warning);
+        if let Some(help) = diagnostic.help {
+            write_stderr_line(&format!("help: {help}"));
         }
+    }
+}
+
+fn diagnostic_severity_label(severity: sifr_diagnostics::Severity) -> &'static str {
+    match severity {
+        sifr_diagnostics::Severity::Error => "error",
+        sifr_diagnostics::Severity::Warning => "warning",
+        sifr_diagnostics::Severity::Note => "note",
+    }
+}
+
+fn child_diagnostic_severity_label(severity: sifr_diagnostics::ChildSeverity) -> &'static str {
+    match severity {
+        sifr_diagnostics::ChildSeverity::Note => "note",
+        sifr_diagnostics::ChildSeverity::Help => "help",
     }
 }

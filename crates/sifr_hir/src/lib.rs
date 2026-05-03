@@ -16,7 +16,8 @@ pub mod stdlib;
 pub use hir_nodes::*;
 pub use lower::{
     lower_module, lower_module_stdlib, lower_module_stdlib_with_externals,
-    lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult, RevealTypeDiagnostic,
+    lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult,
+    LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 pub use lowering_outcome::LoweringOutcome;
 pub use scope::{NarrowingSnapshot, Scope};

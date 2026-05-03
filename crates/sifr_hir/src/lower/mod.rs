@@ -135,8 +135,8 @@ pub(super) struct LowerCtx {
     loop_depth: usize,
     /// `reveal_type()` diagnostics (informational, not errors)
     reveal_types: Vec<RevealTypeDiagnostic>,
-    /// Compiler warnings (non-fatal diagnostics printed to stderr)
-    warnings: Vec<String>,
+    /// Compiler warnings (non-fatal diagnostics)
+    warnings: Vec<LoweringWarningDiagnostic>,
     /// Whether we're currently inside a class method (tracks `self` type)
     current_class: Option<String>,
     /// Current function/method owner name while lowering a body.
@@ -226,8 +226,19 @@ impl LowerCtx {
             empty_dict_specializations: HashMap::new(),
         }
     }
-    fn warn(&mut self, message: String) {
-        self.warnings.push(message);
+    fn warn_arithmetic_overflow_risk(&mut self, operation: &'static str, range: TextRange) {
+        self.warnings
+            .push(LoweringWarningDiagnostic::ArithmeticOverflowRisk {
+                operation: operation.to_string(),
+                primary_range: Some(range),
+            });
+    }
+
+    fn warn_unreachable_statement(&mut self, range: TextRange) {
+        self.warnings
+            .push(LoweringWarningDiagnostic::UnreachableStatement {
+                primary_range: Some(range),
+            });
     }
 
     fn error(&mut self, message: String) {
@@ -369,14 +380,25 @@ pub struct RevealTypeDiagnostic {
     pub primary_range: Option<TextRange>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LoweringWarningDiagnostic {
+    ArithmeticOverflowRisk {
+        operation: String,
+        primary_range: Option<TextRange>,
+    },
+    UnreachableStatement {
+        primary_range: Option<TextRange>,
+    },
+}
+
 pub struct LoweringResult {
     pub module: HirModule,
     pub function_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
     pub function_varargs: std::collections::HashMap<String, usize>,
     /// `reveal_type()` diagnostics (informational, printed to stderr)
     pub reveal_types: Vec<RevealTypeDiagnostic>,
-    /// Compiler warnings (non-fatal, printed to stderr)
-    pub warnings: Vec<String>,
+    /// Compiler warnings (non-fatal diagnostics)
+    pub warnings: Vec<LoweringWarningDiagnostic>,
 }
 /// External module definitions that can be imported.
 #[derive(Debug, Clone, Default)]

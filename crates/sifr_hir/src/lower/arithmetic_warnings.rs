@@ -1,11 +1,13 @@
 use super::LowerCtx;
 use crate::HirExpr;
+use ruff_text_size::TextRange;
 
 pub(super) fn check_int_overflow_risk(
     op: &str,
     left: &HirExpr,
     right: &HirExpr,
     ctx: &mut LowerCtx,
+    range: TextRange,
 ) {
     let is_left_const = matches!(left, HirExpr::IntLiteral(_));
     let is_right_const = matches!(right, HirExpr::IntLiteral(_));
@@ -14,33 +16,23 @@ pub(super) fn check_int_overflow_risk(
         "**" => {
             if let HirExpr::IntLiteral(exp) = right {
                 if *exp > 40 {
-                    ctx.warn(format!(
-                        "warning: int exponentiation with large exponent ({exp}) may overflow i64; consider using bigint"
-                    ));
+                    ctx.warn_arithmetic_overflow_risk("exponentiation", range);
                 }
             } else {
-                ctx.warn(
-                    "warning: int exponentiation (**) with non-constant exponent may overflow i64 at runtime; consider using bigint".to_string()
-                );
+                ctx.warn_arithmetic_overflow_risk("exponentiation", range);
             }
         }
         "*" => {
             if !is_left_const && !is_right_const {
-                ctx.warn(
-                    "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values".to_string()
-                );
+                ctx.warn_arithmetic_overflow_risk("multiplication", range);
             }
         }
         "<<" => {
             if !is_right_const {
-                ctx.warn(
-                    "warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint".to_string()
-                );
+                ctx.warn_arithmetic_overflow_risk("left shift", range);
             } else if let HirExpr::IntLiteral(shift) = right {
                 if *shift >= 63 {
-                    ctx.warn(format!(
-                        "warning: int left shift by {shift} exceeds i64 range; consider using bigint"
-                    ));
+                    ctx.warn_arithmetic_overflow_risk("left shift", range);
                 }
             }
         }
