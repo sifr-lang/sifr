@@ -25,6 +25,7 @@ mod defaultdict_refinement;
 mod diagnostics;
 mod empty_collection_refinement;
 mod expression_diagnostics;
+mod expression_functional_builtins;
 mod expression_iter_builtins;
 mod expression_operators;
 mod expression_sum_sorted;
