@@ -401,10 +401,11 @@ fn invalid_type_annotation(
     );
 }
 
-fn unknown_type(ctx: &mut LowerCtx, name: &str) {
-    ctx.error_with_code(
+fn unknown_type(ctx: &mut LowerCtx, name: &str, range: ruff_text_size::TextRange) {
+    ctx.error_with_code_at(
         DiagnosticCode::NAME_UNKNOWN_TYPE,
         format!("unknown type: '{name}'"),
+        range,
     );
 }
 
@@ -424,7 +425,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                 return class_ty.clone();
             }
             resolve_type_annotation(&name.id).unwrap_or_else(|| {
-                unknown_type(ctx, &name.id);
+                unknown_type(ctx, &name.id, name.range());
                 Type::Any
             })
         }
@@ -747,7 +748,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         }
                         class_ty
                     } else {
-                        unknown_type(ctx, &base_name);
+                        unknown_type(ctx, &base_name, sub.value.range());
                         Type::Any
                     }
                 }

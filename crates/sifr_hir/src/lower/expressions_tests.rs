@@ -2316,6 +2316,32 @@ fn test_unsupported_method_default_argument_has_primary_range() {
 }
 
 #[test]
+fn test_unknown_type_annotation_has_primary_range() {
+    let source = "def consume(value: MissingType) -> int:\n    return 0\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "unknown type: 'MissingType'"
+            && error.code == Some(DiagnosticCode::NAME_UNKNOWN_TYPE)
+            && error.primary_range == Some(range_for(source, "MissingType"))
+    }));
+}
+
+#[test]
+fn test_unknown_generic_type_annotation_has_primary_range() {
+    let source = "def main():\n    x: UnknownType[int] = 42\n    print(x)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "unknown type: 'UnknownType'"
+            && error.code == Some(DiagnosticCode::NAME_UNKNOWN_TYPE)
+            && error.primary_range == Some(range_for(source, "UnknownType"))
+    }));
+}
+
+#[test]
 fn test_typevar_constraints_violation_has_type_code() {
     let result = lower_source(
         "from typing import TypeVar\n\nT = TypeVar(\"T\", int, str)\n\ndef echo(x: T) -> T:\n    return x\n\ndef main():\n    bad: float = echo(1.5)\n    print(bad)\n",
