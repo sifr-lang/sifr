@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0009
+# expect-error[col=20]: SIFR-TYPE-0009
 
 def main():
     first, *rest = (1, 2, 3)

@@ -46,7 +46,7 @@ use crate::hir_nodes::{
     HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt,
     MethodKind,
 };
-use ruff_text_size::Ranged;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     BoolOp, CmpOp, ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign,
@@ -1869,32 +1869,33 @@ pub(super) fn lower_for(
     };
 
     // Extract the target variable name(s)
-    let target_name = match for_stmt.target.as_ref() {
-        Expr::Name(n) => n.id.to_string(),
-        Expr::Tuple(tup) => {
-            // Tuple unpacking: for i, v in enumerate(lst)
-            let names: Vec<String> = tup
-                .elts
-                .iter()
-                .filter_map(|e| {
-                    if let Expr::Name(n) = e {
-                        Some(n.id.to_string())
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-            if names.len() != tup.elts.len() {
-                ctx.error("for loop tuple target must contain only simple names".to_string());
+    let (target_name, target_tuple_range): (String, Option<TextRange>) =
+        match for_stmt.target.as_ref() {
+            Expr::Name(n) => (n.id.to_string(), None),
+            Expr::Tuple(tup) => {
+                // Tuple unpacking: for i, v in enumerate(lst)
+                let names: Vec<String> = tup
+                    .elts
+                    .iter()
+                    .filter_map(|e| {
+                        if let Expr::Name(n) = e {
+                            Some(n.id.to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                if names.len() != tup.elts.len() {
+                    ctx.error("for loop tuple target must contain only simple names".to_string());
+                    return None;
+                }
+                (names.join(","), Some(tup.range()))
+            }
+            _ => {
+                ctx.error("for loop target must be a simple name or tuple".to_string());
                 return None;
             }
-            names.join(",")
-        }
-        _ => {
-            ctx.error("for loop target must be a simple name or tuple".to_string());
-            return None;
-        }
-    };
+        };
 
     // Snapshot moved state before loop to detect moves inside the body
     let moved_before_loop = ctx.scope.save_moved_state();
@@ -1907,13 +1908,14 @@ pub(super) fn lower_for(
         let names: Vec<&str> = target_name.split(',').collect();
         if let Type::Tuple(elem_types) = &elem_ty {
             if elem_types.len() != names.len() {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
                     format!(
                         "for loop tuple target expects {} element(s), iterable yields {}",
                         names.len(),
                         elem_types.len()
                     ),
+                    target_tuple_range.unwrap_or_else(|| for_stmt.target.range()),
                 );
                 ctx.scope.pop();
                 return None;
@@ -1923,12 +1925,13 @@ pub(super) fn lower_for(
                 ctx.scope.define((*name).to_string(), ty);
             }
         } else {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
                 format!(
                     "for loop tuple target expects iterable elements of tuple type, got '{}'",
                     elem_ty.display_name()
                 ),
+                target_tuple_range.unwrap_or_else(|| for_stmt.target.range()),
             );
             ctx.scope.pop();
             return None;

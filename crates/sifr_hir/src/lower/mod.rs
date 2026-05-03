@@ -240,16 +240,6 @@ impl LowerCtx {
         });
     }
 
-    fn error_with_code(&mut self, code: DiagnosticCode, message: String) {
-        self.errors.push(LoweringError {
-            code: Some(code),
-            message,
-            primary_range: None,
-            line: None,
-            col: None,
-        });
-    }
-
     fn error_with_code_at(&mut self, code: DiagnosticCode, message: String, range: TextRange) {
         self.errors.push(LoweringError {
             code: Some(code),

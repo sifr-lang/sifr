@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0009
+# expect-error[col=9]: SIFR-TYPE-0009
 
 def main():
     values: list[int] = [1, 2, 3]

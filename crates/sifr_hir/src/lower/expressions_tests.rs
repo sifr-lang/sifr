@@ -2210,24 +2210,52 @@ fn test_tuple_unpack() {
 
 #[test]
 fn test_tuple_unpack_wrong_count() {
-    let result = lower_source(
-        "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y, z = pair\n",
-    );
+    let source = "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y, z = pair\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
-        .any(|e| e.message.contains("expected 3 values, got 2")));
+        .any(|e| e.message.contains("expected 3 values, got 2")
+            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "x, y, z"))));
 }
 
 #[test]
 fn test_tuple_unpack_non_tuple() {
-    let result = lower_source("def main():\n    x: int = 42\n    a, b = x\n");
+    let source = "def main():\n    x: int = 42\n    a, b = x\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
-        .any(|e| e.message.contains("cannot unpack non-tuple")));
+        .any(|e| e.message.contains("cannot unpack non-tuple")
+            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for_after(source, "a, b = ", "x"))));
+}
+
+#[test]
+fn test_tuple_unpack_reassignment_type_mismatch_has_primary_range() {
+    let source =
+        "def main():\n    left = 1\n    left, label = (\"not an int\", \"name\")\n    print(label)\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected tuple unpack reassignment type mismatch");
+    assert!(errors.iter().any(
+        |e| e.message.contains("cannot assign 'str' to variable 'left'")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && e.primary_range == Some(range_for_after_anchor(source, "left = 1\n    ", "left"))
+    ));
+}
+
+#[test]
+fn test_star_unpack_requires_list_has_primary_range() {
+    let source = "def main():\n    first, *rest = (1, 2, 3)\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected star unpack list-shape error");
+    assert!(errors.iter().any(
+        |e| e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "(1, 2, 3)"))
+    ));
 }
 
 #[test]
@@ -2269,15 +2297,29 @@ fn test_tuple_unpack_allows_attribute_targets() {
 
 #[test]
 fn test_for_tuple_target_requires_tuple_elements() {
-    let result = lower_source(
-        "def main():\n    nums: list[int] = [1, 2, 3]\n    for a, b in nums:\n        print(a)\n",
-    );
+    let source =
+        "def main():\n    nums: list[int] = [1, 2, 3]\n    for a, b in nums:\n        print(a)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
         e.message
             .contains("for loop tuple target expects iterable elements of tuple type")
+            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "a, b"))
     }));
+}
+
+#[test]
+fn test_for_tuple_target_arity_mismatch_has_primary_range() {
+    let source = "def main():\n    pairs: list[tuple[int, int, int]] = [(1, 2, 3)]\n    for a, b in pairs:\n        print(a)\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected for tuple target arity mismatch");
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("expects 2 element(s)")
+            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "a, b"))));
 }
 
 #[test]
