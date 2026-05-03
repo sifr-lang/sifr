@@ -725,6 +725,33 @@ fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
 }
 
 #[test]
+fn test_bytes_codec_type_errors_have_structured_codes() {
+    let encode_source = "def main() -> None:\n    _bad: bytes = \"abc\".encode(1)\n";
+    let encode_result = lower_source(encode_source);
+    let encode_errors = encode_result.expect_err("expected str.encode codec type error");
+    assert!(
+        encode_errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message == "str.encode() encoding must be 'str', got 'int'"
+                && error.primary_range == Some(range_for(encode_source, "1"))),
+        "str.encode codec type diagnostic should be structured and ranged: {encode_errors:?}"
+    );
+
+    let decode_source = "def main() -> None:\n    _bad: str = b\"abc\".decode(1)\n";
+    let decode_result = lower_source(decode_source);
+    let decode_errors = decode_result.expect_err("expected bytes.decode codec type error");
+    assert!(
+        decode_errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message == "bytes.decode() encoding must be 'str', got 'int'"
+                && error.primary_range == Some(range_for(decode_source, "1"))),
+        "bytes.decode codec type diagnostic should be structured and ranged: {decode_errors:?}"
+    );
+}
+
+#[test]
 fn test_list_subscript_augassign_type_error_keeps_code() {
     let source = "def bad(mut xs: list[int]) -> None:\n    xs[0] += \"x\"\n";
     let result = lower_source(source);

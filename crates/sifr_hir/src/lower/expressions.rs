@@ -3183,13 +3183,13 @@ pub(super) fn resolve_method_type(
                 // find() returns Option[int] = int | None
                 Some(Type::Union(vec![Type::Int, Type::None]))
             }
-            "encode" => resolve_str_encode_method_type(args, ctx),
+            "encode" => resolve_str_encode_method_type(args, arg_ranges, method_range, ctx),
             _ => {
                 ctx.error(format!("str has no method '{method}'"));
                 None
             }
         },
-        Type::Bytes => resolve_bytes_method_type(method, args, ctx),
+        Type::Bytes => resolve_bytes_method_type(method, args, arg_ranges, method_range, ctx),
         Type::Tuple(_) => match method {
             "len" => Some(Type::Int),
             "count" => {
