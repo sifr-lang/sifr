@@ -102,7 +102,6 @@ impl DiagnosticCode {
     pub const RESULT_INVALID_RAISE: Self = Self::new("SIFR-RESULT-0003", Severity::Error);
 
     pub const STDLIB_UNSUPPORTED_SURFACE: Self = Self::new("SIFR-STDLIB-0001", Severity::Error);
-    pub const STDLIB_ARGUMENT_TYPE_MISMATCH: Self = Self::new("SIFR-STDLIB-0002", Severity::Error);
     pub const STDLIB_BOOTSTRAP_FAILURE: Self = Self::new("SIFR-STDLIB-0003", Severity::Error);
     pub const STDLIB_CACHE_FAILURE: Self = Self::new("SIFR-STDLIB-0004", Severity::Error);
 
@@ -119,8 +118,6 @@ impl DiagnosticCode {
     pub const WORKSPACE_NAMESPACE_COLLISION: Self =
         Self::new("SIFR-WORKSPACE-0103", Severity::Error);
     pub const WORKSPACE_IMPORT_CYCLE: Self = Self::new("SIFR-WORKSPACE-0104", Severity::Error);
-
-    pub const CODEGEN_BACKEND_FAILURE: Self = Self::new("SIFR-CODEGEN-0002", Severity::Error);
 
     pub const BUILD_MATERIALIZATION_FAILURE: Self = Self::new("SIFR-BUILD-0002", Severity::Error);
     pub const BUILD_TEMP_WORKSPACE_FAILURE: Self = Self::new("SIFR-BUILD-0003", Severity::Error);
@@ -648,7 +645,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "TYPE",
         "Integer arithmetic may overflow at runtime.",
         Severity::Warning,
-        "crates/sifr/tests/e2e/pass/arithmetic_overflow_warning.sifr",
+        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_arithmetic_overflow_as_structured_warning",
         "integer {operation} may overflow at runtime",
         "sifr_hir::lower::arithmetic_warnings",
         [arg!("operation")],
@@ -659,7 +656,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "TYPE",
         "Reveal the inferred static type of an expression.",
         Severity::Note,
-        "crates/sifr/tests/e2e/pass/reveal_type.sifr",
+        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note",
         "revealed type is {revealed_type}",
         "sifr_hir::lower::builtin_calls",
         [arg!("revealed_type")],
@@ -965,7 +962,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "FLOW",
         "Unreachable statement ignored during lowering.",
         Severity::Warning,
-        "crates/sifr/tests/e2e/fail/unreachable_statement_warning.sifr",
+        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_unreachable_statement_as_structured_warning",
         "unreachable statement ignored",
         "sifr_hir::lower::statements",
         [],
@@ -1142,17 +1139,6 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         []
     ),
     active_entry!(
-        "SIFR-STDLIB-0002",
-        "STDLIB",
-        "Standard-library method or argument type mismatch.",
-        Severity::Error,
-        "crates/sifr/tests/e2e/fail/stdlib_wrong_type.sifr",
-        "invalid argument type for {symbol}: expected {expected}, got {actual}",
-        "sifr_hir::lower",
-        [arg!("symbol"), arg!("expected"), arg!("actual")],
-        ["symbol", "expected", "actual"]
-    ),
-    active_entry!(
         "SIFR-STDLIB-0003",
         "STDLIB",
         "Embedded standard-library bootstrap failure.",
@@ -1265,17 +1251,6 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_driver::project::compile_order",
         [arg!("cycle")],
         ["cycle"]
-    ),
-    active_entry!(
-        "SIFR-CODEGEN-0002",
-        "CODEGEN",
-        "Code-generation backend or panic-boundary failure.",
-        Severity::Error,
-        "crates/sifr_driver/src/tests/panic_boundary.rs::planned_codegen_0002",
-        "code generation failed during {operation}",
-        "sifr_driver::diagnostics",
-        [arg!("operation")],
-        ["operation"]
     ),
     active_entry!(
         "SIFR-BUILD-0002",
@@ -1425,7 +1400,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::RESULT_INVALID_ERROR_TYPE,
     DiagnosticCode::RESULT_INVALID_RAISE,
     DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
-    DiagnosticCode::STDLIB_ARGUMENT_TYPE_MISMATCH,
     DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
     DiagnosticCode::STDLIB_CACHE_FAILURE,
     DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
@@ -1436,7 +1410,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
     DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
     DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
-    DiagnosticCode::CODEGEN_BACKEND_FAILURE,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,

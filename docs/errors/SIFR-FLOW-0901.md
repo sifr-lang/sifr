@@ -11,6 +11,6 @@ Unreachable statement ignored during lowering.
 | Severity | Warning |
 | Owner | `sifr_hir::lower::statements` |
 | Message template | `unreachable statement ignored` |
-| Representative fixture | `crates/sifr/tests/e2e/fail/unreachable_statement_warning.sifr` |
+| Representative fixture | `crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_unreachable_statement_as_structured_warning` |
 | Declared args | n/a |
 | Dedupe args | n/a |

@@ -100,7 +100,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-RESULT-0002`](SIFR-RESULT-0002.md) | Error | Invalid Result error type. |
 | [`SIFR-RESULT-0003`](SIFR-RESULT-0003.md) | Error | Invalid raise expression. |
 | [`SIFR-STDLIB-0001`](SIFR-STDLIB-0001.md) | Error | Unsupported standard-library constructor, method, or surface. |
-| [`SIFR-STDLIB-0002`](SIFR-STDLIB-0002.md) | Error | Standard-library method or argument type mismatch. |
 | [`SIFR-STDLIB-0003`](SIFR-STDLIB-0003.md) | Error | Embedded standard-library bootstrap failure. |
 | [`SIFR-STDLIB-0004`](SIFR-STDLIB-0004.md) | Error | Standard-library cache build or reuse failure. |
 | [`SIFR-WORKSPACE-0001`](SIFR-WORKSPACE-0001.md) | Error | Malformed workspace manifest. |
@@ -111,7 +110,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-WORKSPACE-0102`](SIFR-WORKSPACE-0102.md) | Error | Workspace import target is ambiguous. |
 | [`SIFR-WORKSPACE-0103`](SIFR-WORKSPACE-0103.md) | Error | Workspace namespace package collision. |
 | [`SIFR-WORKSPACE-0104`](SIFR-WORKSPACE-0104.md) | Error | Workspace import graph contains a cycle. |
-| [`SIFR-CODEGEN-0002`](SIFR-CODEGEN-0002.md) | Error | Code-generation backend or panic-boundary failure. |
 | [`SIFR-BUILD-0002`](SIFR-BUILD-0002.md) | Error | Build file materialization failed. |
 | [`SIFR-BUILD-0003`](SIFR-BUILD-0003.md) | Error | Temporary build workspace creation failed. |
 | [`SIFR-BUILD-0004`](SIFR-BUILD-0004.md) | Error | Cargo manifest generation failed. |
