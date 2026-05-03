@@ -84,12 +84,12 @@ pub(super) fn iterator_element_mismatch(
 
 #[cfg(test)]
 mod tests {
-    use crate::{lower_module, LoweringError};
+    use crate::{lower_module, HirDiagnostic};
     use ruff_text_size::{TextRange, TextSize};
     use sifr_diagnostics::DiagnosticCode;
     use sifr_python_parser::parse_module;
 
-    fn lower_errors(source: &str) -> Vec<LoweringError> {
+    fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
         let parsed = parse_module(source).expect("parse failed");
         match lower_module(parsed.suite()) {
             Ok(_) => panic!("expected lowering error"),

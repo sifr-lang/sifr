@@ -111,6 +111,9 @@ python3 "${SCRIPT_DIR}/check_diagnostic_baseline_hygiene.py"
 echo "Running diagnostic cancel usage check"
 python3 "${SCRIPT_DIR}/check_diagnostic_cancel_usage.py"
 
+echo "Running diagnostic transport cleanup check"
+python3 "${SCRIPT_DIR}/check_diagnostic_transport_cleanup.py"
+
 echo "Running verification hardening script self-tests"
 python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
 

@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-use crate::{lower_module, lower_module_with_externals, ExternalDefs, LoweringError};
+use crate::{lower_module, lower_module_with_externals, ExternalDefs, HirDiagnostic};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 
-fn lower_errors(source: &str) -> Vec<LoweringError> {
+fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
     let parsed = parse_module(source).expect("parse failed");
     match lower_module(parsed.suite()) {
         Ok(_) => panic!("expected lowering error"),

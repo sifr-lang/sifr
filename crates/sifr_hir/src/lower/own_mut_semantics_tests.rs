@@ -1,14 +1,14 @@
-use crate::{lower_module, HirModule, LoweringError};
+use crate::{lower_module, HirDiagnostic, HirModule};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 
-fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
+fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     let parsed = parse_module(source).expect("parse failed");
     lower_module(parsed.suite()).map(|result| result.module)
 }
 
-fn lower_errors(source: &str) -> Vec<LoweringError> {
+fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
     lower_source(source).expect_err("expected lowering error")
 }
 
