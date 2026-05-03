@@ -23,10 +23,11 @@ fn test_diagnostic(
 }
 
 fn primary_test_span(file: &str, line: u32, column: u32) -> DiagnosticSpan {
+    let byte_start = (line.saturating_sub(1) * 100) + column.saturating_sub(1);
     DiagnosticSpan {
         file: Some(file.to_string()),
-        byte_start: 0,
-        byte_end: 0,
+        byte_start,
+        byte_end: byte_start + 1,
         line: Some(line),
         column: Some(column),
         end_line: Some(line),
@@ -35,6 +36,69 @@ fn primary_test_span(file: &str, line: u32, column: u32) -> DiagnosticSpan {
         label: None,
         lines: Vec::new(),
     }
+}
+
+#[test]
+fn test_apply_diagnostic_recovery_limits_deduplicates_exact_recovery_keys() {
+    let duplicate_span = primary_test_span("main.sifr", 3, 5);
+    let diagnostics = vec![
+        test_diagnostic(
+            "SIFR-TYPE-0002",
+            "first duplicate".to_string(),
+            Some(duplicate_span.clone()),
+        ),
+        test_diagnostic(
+            "SIFR-TYPE-0002",
+            "second duplicate".to_string(),
+            Some(duplicate_span),
+        ),
+        test_diagnostic(
+            "SIFR-TYPE-0002",
+            "same line but distinct range".to_string(),
+            Some(primary_test_span("main.sifr", 3, 6)),
+        ),
+    ];
+
+    let bounded = apply_diagnostic_recovery_limits(&diagnostics);
+    assert_eq!(bounded.len(), 2);
+    assert_eq!(bounded[0].message, "first duplicate");
+    assert_eq!(bounded[1].message, "same line but distinct range");
+}
+
+#[test]
+fn test_apply_diagnostic_recovery_limits_uses_registry_dedupe_args_only() {
+    let mut first = test_diagnostic(
+        DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY.code(),
+        "5 additional diagnostics omitted by recovery cap (top-level diagnostic stream)"
+            .to_string(),
+        None,
+    );
+    first.severity = Severity::Note;
+    first.message_template =
+        "{omitted_count} additional diagnostics omitted by recovery cap ({cap_kind})".to_string();
+    first
+        .args
+        .insert("omitted_count".to_string(), DiagnosticArg::Unsigned(5));
+    first.args.insert(
+        "cap_kind".to_string(),
+        DiagnosticArg::String("top-level diagnostic stream".to_string()),
+    );
+
+    let mut second = first.clone();
+    second.severity = Severity::Note;
+    second.message =
+        "9 additional diagnostics omitted by recovery cap (top-level diagnostic stream)"
+            .to_string();
+    second
+        .args
+        .insert("omitted_count".to_string(), DiagnosticArg::Unsigned(9));
+
+    let bounded = apply_diagnostic_recovery_limits(&[first, second]);
+    assert_eq!(bounded.len(), 1);
+    assert_eq!(
+        bounded[0].args.get("omitted_count"),
+        Some(&DiagnosticArg::Unsigned(5))
+    );
 }
 
 #[test]
@@ -167,6 +231,39 @@ fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
     assert_eq!(
         bounded[5].args.get("omitted_count"),
         Some(&DiagnosticArg::Unsigned(3))
+    );
+}
+
+#[test]
+fn test_apply_diagnostic_recovery_limits_keeps_distinct_reveal_types_until_top_level_cap() {
+    let mut diagnostics = Vec::new();
+    for idx in 0..60 {
+        let mut diagnostic = test_diagnostic(
+            DiagnosticCode::TYPE_REVEAL_TYPE.code(),
+            format!("revealed type is T{idx}"),
+            Some(primary_test_span("main.sifr", idx + 1, 1)),
+        );
+        diagnostic.severity = Severity::Note;
+        diagnostic.message_template = "revealed type is {revealed_type}".to_string();
+        diagnostic.args.insert(
+            "revealed_type".to_string(),
+            DiagnosticArg::String(format!("T{idx}")),
+        );
+        diagnostics.push(diagnostic);
+    }
+
+    let bounded = apply_diagnostic_recovery_limits(&diagnostics);
+    assert_eq!(bounded.len(), 50);
+    assert_eq!(
+        bounded
+            .iter()
+            .filter(|diagnostic| diagnostic.code == DiagnosticCode::TYPE_REVEAL_TYPE.code())
+            .count(),
+        49
+    );
+    assert_eq!(
+        bounded.last().map(|diagnostic| diagnostic.message.as_str()),
+        Some("11 additional diagnostics omitted by recovery cap (top-level diagnostic stream)")
     );
 }
 

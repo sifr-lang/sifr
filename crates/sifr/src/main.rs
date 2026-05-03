@@ -675,10 +675,11 @@ mod tests {
     }
 
     fn primary_test_span(file: &str, line: u32, column: u32) -> DiagnosticSpan {
+        let byte_start = (line.saturating_sub(1) * 100) + column.saturating_sub(1);
         DiagnosticSpan {
             file: Some(file.to_string()),
-            byte_start: 0,
-            byte_end: 0,
+            byte_start,
+            byte_end: byte_start + 1,
             line: Some(line),
             column: Some(column),
             end_line: Some(line),

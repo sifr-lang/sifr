@@ -2,7 +2,7 @@ use sifr_diagnostics::codes::registry_entry;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 pub(crate) use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
 use std::any::Any;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::io::Write;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
@@ -66,9 +66,10 @@ fn severity_rank(severity: Severity) -> u8 {
 pub fn apply_diagnostic_recovery_limits(
     diagnostics: &[RenderedDiagnostic],
 ) -> Vec<RenderedDiagnostic> {
-    let mut grouped: BTreeMap<RecoveryGroupKey, Vec<RenderedDiagnostic>> = BTreeMap::new();
-    for diagnostic in diagnostics {
-        let key = RecoveryGroupKey::from_diagnostic(diagnostic);
+    let deduped = deduplicate_recovery_diagnostics(diagnostics);
+    let mut grouped: BTreeMap<SimilarDiagnosticGroupKey, Vec<RenderedDiagnostic>> = BTreeMap::new();
+    for diagnostic in deduped {
+        let key = SimilarDiagnosticGroupKey::from_diagnostic(&diagnostic);
         grouped.entry(key).or_default().push(diagnostic.clone());
     }
 
@@ -95,7 +96,15 @@ pub fn apply_diagnostic_recovery_limits(
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct RecoveryGroupKey {
+struct RecoveryDedupeKey {
+    code: String,
+    message_template: String,
+    dedupe_args: Vec<(String, String)>,
+    primary_span: Option<PrimarySpanKey>,
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct SimilarDiagnosticGroupKey {
     severity_rank: u8,
     code: String,
     message_template: String,
@@ -103,7 +112,25 @@ struct RecoveryGroupKey {
     primary_file: Option<String>,
 }
 
-impl RecoveryGroupKey {
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct PrimarySpanKey {
+    file: Option<String>,
+    byte_start: u32,
+    byte_end: u32,
+}
+
+impl RecoveryDedupeKey {
+    fn from_diagnostic(diagnostic: &RenderedDiagnostic) -> Self {
+        Self {
+            code: diagnostic.code.clone(),
+            message_template: diagnostic.message_template.clone(),
+            dedupe_args: recovery_dedupe_args(diagnostic),
+            primary_span: primary_span(diagnostic).map(PrimarySpanKey::from_span),
+        }
+    }
+}
+
+impl SimilarDiagnosticGroupKey {
     fn from_diagnostic(diagnostic: &RenderedDiagnostic) -> Self {
         Self {
             severity_rank: severity_rank(diagnostic.severity),
@@ -115,17 +142,33 @@ impl RecoveryGroupKey {
     }
 }
 
+impl PrimarySpanKey {
+    fn from_span(span: &DiagnosticSpan) -> Self {
+        Self {
+            file: span.file.clone(),
+            byte_start: span.byte_start,
+            byte_end: span.byte_end,
+        }
+    }
+}
+
+fn deduplicate_recovery_diagnostics(diagnostics: &[RenderedDiagnostic]) -> Vec<RenderedDiagnostic> {
+    let mut seen = BTreeSet::new();
+    let mut deduped = Vec::new();
+    for diagnostic in diagnostics {
+        if seen.insert(RecoveryDedupeKey::from_diagnostic(diagnostic)) {
+            deduped.push(diagnostic.clone());
+        }
+    }
+    deduped
+}
+
 fn recovery_dedupe_args(diagnostic: &RenderedDiagnostic) -> Vec<(String, String)> {
     if let Some(entry) = registry_entry(&diagnostic.code) {
         let mut key_args = Vec::new();
         for arg in entry.dedupe_args {
             if let Some(value) = diagnostic.args.get(*arg) {
                 key_args.push(((*arg).to_string(), diagnostic_arg_key(value)));
-            }
-        }
-        for (arg, value) in &diagnostic.args {
-            if !entry.dedupe_args.contains(&arg.as_str()) {
-                key_args.push((arg.clone(), diagnostic_arg_key(value)));
             }
         }
         return key_args;
@@ -139,13 +182,7 @@ fn recovery_dedupe_args(diagnostic: &RenderedDiagnostic) -> Vec<(String, String)
 }
 
 fn diagnostic_arg_key(arg: &DiagnosticArg) -> String {
-    match arg {
-        DiagnosticArg::String(value) => value.clone(),
-        DiagnosticArg::Signed(value) => value.to_string(),
-        DiagnosticArg::Unsigned(value) => value.to_string(),
-        DiagnosticArg::Float(value) => value.to_string(),
-        DiagnosticArg::Bool(value) => value.to_string(),
-    }
+    String::from_utf8_lossy(&arg.canonical_json_bytes()).into_owned()
 }
 
 fn recovery_omission_summary(omitted_count: usize, cap_kind: &'static str) -> RenderedDiagnostic {
