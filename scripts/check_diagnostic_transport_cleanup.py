@@ -20,6 +20,7 @@ RETIRED_SYMBOLS = (
 RAW_HIR_ERROR_FREE_FILES = (
     pathlib.Path("crates/sifr_hir/src/lower/bytes_methods.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/builtin_calls.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/aug_assign_lowering.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/container_literal_specialization.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/decimal_methods.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/method_call_args.rs"),
