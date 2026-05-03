@@ -1,0 +1,8 @@
+# expect-error[col=5]: SIFR-NAME-0005
+# Test: duplicate module function definitions are rejected with a stable name diagnostic.
+
+def same() -> bool:
+    return True
+
+def same() -> bool:
+    return False

@@ -1193,14 +1193,15 @@ fn test_invalid_return_expression_does_not_emit_missing_return_cascade() {
 
 #[test]
 fn test_duplicate_module_function_definition_reports_error() {
-    let result = lower_source(
-        "def same() -> bool:\n    return True\n\ndef same() -> bool:\n    return False\n",
-    );
+    let source = "def same() -> bool:\n    return True\n\ndef same() -> bool:\n    return False\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| e
         .message
-        .contains("duplicate function definition in module: 'same'")));
+        .contains("duplicate function definition in module: 'same'")
+        && e.code == Some(DiagnosticCode::NAME_DUPLICATE_DEFINITION)
+        && e.primary_range == Some(range_for_after(source, "\n\ndef ", "same"))));
 }
 
 #[test]

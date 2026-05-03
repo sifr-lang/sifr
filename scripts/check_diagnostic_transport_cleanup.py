@@ -25,6 +25,7 @@ RAW_HIR_ERROR_FREE_FILES = (
     pathlib.Path("crates/sifr_hir/src/lower/decimal_methods.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/method_call_args.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/min_max_validation.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/module_function_registry.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/subscript_type.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/tuple_unpack.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/type_aliases.rs"),

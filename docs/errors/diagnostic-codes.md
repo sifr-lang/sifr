@@ -44,6 +44,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-NAME-0002`](SIFR-NAME-0002.md) | Error | Undefined function or callable. |
 | [`SIFR-NAME-0003`](SIFR-NAME-0003.md) | Error | Unknown type or generic type name. |
 | [`SIFR-NAME-0004`](SIFR-NAME-0004.md) | Error | Missing module or class member. |
+| [`SIFR-NAME-0005`](SIFR-NAME-0005.md) | Error | Duplicate function definition in a module. |
 | [`SIFR-IMPORT-0001`](SIFR-IMPORT-0001.md) | Error | Forbidden intrinsic import. |
 | [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md) | Error | Unknown source module import target. |
 | [`SIFR-TYPE-0002`](SIFR-TYPE-0002.md) | Error | Expected and actual types are incompatible. |

@@ -587,7 +587,11 @@ fn lower_module_impl(
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
             let function_name = func.name.to_string();
-            if !function_name_registry.note_module_decl(function_name.as_str(), &mut ctx) {
+            if !function_name_registry.note_module_decl(
+                function_name.as_str(),
+                func.name.range(),
+                &mut ctx,
+            ) {
                 continue;
             }
             // PEP 695: register inline type params (def f[T](...)) as type variables

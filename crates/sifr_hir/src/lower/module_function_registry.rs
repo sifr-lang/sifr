@@ -1,4 +1,6 @@
 use super::LowerCtx;
+use ruff_text_size::TextRange;
+use sifr_diagnostics::DiagnosticCode;
 use std::collections::HashSet;
 
 #[derive(Default)]
@@ -8,13 +10,20 @@ pub(super) struct ModuleFunctionRegistry {
 }
 
 impl ModuleFunctionRegistry {
-    pub(super) fn note_module_decl(&mut self, function_name: &str, ctx: &mut LowerCtx) -> bool {
+    pub(super) fn note_module_decl(
+        &mut self,
+        function_name: &str,
+        name_range: TextRange,
+        ctx: &mut LowerCtx,
+    ) -> bool {
         if self.seen_module_decls.insert(function_name.to_string()) {
             return true;
         }
-        ctx.error(format!(
-            "duplicate function definition in module: '{function_name}'"
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::NAME_DUPLICATE_DEFINITION,
+            format!("duplicate function definition in module: '{function_name}'"),
+            name_range,
+        );
         false
     }
 
