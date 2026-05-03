@@ -876,10 +876,16 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             }
             Ok(true) => {}
             Err(_) => {
-                ctx.warn(format!(
-                    "skipped exhaustive-return validation for '{}' due to invalid internal control-flow graph shape",
-                    func.name
-                ));
+                // Fail closed: skipping return-completeness validation after an
+                // invalid CFG would let an unsound function compile.
+                ctx.error_with_code_at(
+                    DiagnosticCode::INTERNAL_COMPILER_PANIC,
+                    format!(
+                        "internal compiler error: invalid control-flow graph while validating exhaustive return for '{}'",
+                        func.name
+                    ),
+                    func.name.range(),
+                );
             }
         }
     }

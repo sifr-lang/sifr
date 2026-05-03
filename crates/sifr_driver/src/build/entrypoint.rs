@@ -249,7 +249,13 @@ impl RootedEntrypointPlan {
                     .module_diagnostics
                     .get(module_name.as_str())
             })
-            .flat_map(|diagnostics| diagnostics.rendered_reveal_types.clone())
+            .flat_map(|diagnostics| {
+                diagnostics
+                    .rendered_warnings
+                    .clone()
+                    .into_iter()
+                    .chain(diagnostics.rendered_reveal_types.clone())
+            })
             .collect()
     }
 

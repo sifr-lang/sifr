@@ -177,6 +177,62 @@ fn test_type_check_source_surfaces_reveal_type_as_structured_note() {
 }
 
 #[test]
+fn test_type_check_source_surfaces_arithmetic_warning_as_structured_warning() {
+    let diagnostics = type_check_source("def multiply(a: int, b: int) -> int:\n    return a * b\n");
+
+    assert_eq!(diagnostics.len(), 1);
+    let diagnostic = &diagnostics[0];
+    assert_eq!(
+        diagnostic.code,
+        DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK.code()
+    );
+    assert_eq!(diagnostic.severity, sifr_diagnostics::Severity::Warning);
+    assert_eq!(
+        diagnostic.message_template,
+        "integer {operation} may overflow at runtime"
+    );
+    assert_eq!(
+        diagnostic.message,
+        "integer multiplication may overflow at runtime"
+    );
+    assert_eq!(
+        diagnostic.args.get("operation"),
+        Some(&DiagnosticArg::String("multiplication".to_string()))
+    );
+    let primary_span = diagnostic
+        .spans
+        .iter()
+        .find(|span| span.is_primary)
+        .expect("arithmetic warning should carry a primary span");
+    assert_eq!(primary_span.file.as_deref(), Some("main"));
+    assert_eq!(primary_span.line, Some(2));
+    assert!(primary_span.byte_end > primary_span.byte_start);
+}
+
+#[test]
+fn test_type_check_source_surfaces_unreachable_statement_as_structured_warning() {
+    let diagnostics = type_check_source("def value() -> int:\n    return 1\n    return 2\n");
+
+    assert_eq!(diagnostics.len(), 1);
+    let diagnostic = &diagnostics[0];
+    assert_eq!(
+        diagnostic.code,
+        DiagnosticCode::FLOW_UNREACHABLE_STATEMENT.code()
+    );
+    assert_eq!(diagnostic.severity, sifr_diagnostics::Severity::Warning);
+    assert_eq!(diagnostic.message_template, "unreachable statement ignored");
+    assert!(diagnostic.args.is_empty());
+    let primary_span = diagnostic
+        .spans
+        .iter()
+        .find(|span| span.is_primary)
+        .expect("unreachable warning should carry a primary span");
+    assert_eq!(primary_span.file.as_deref(), Some("main"));
+    assert_eq!(primary_span.line, Some(3));
+    assert!(primary_span.byte_end > primary_span.byte_start);
+}
+
+#[test]
 fn test_compile_hello_world() {
     let source = r#"
 def main():

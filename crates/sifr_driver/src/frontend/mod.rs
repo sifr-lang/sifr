@@ -10,7 +10,7 @@ pub(crate) use api::FrontendCompiled;
 #[cfg(test)]
 pub(crate) use module_lowering::lower_frontend_module;
 pub(crate) use module_lowering::{
-    lower_frontend_module_with_source, reveal_type_diagnostics, FrontendDiagnosticStyle,
-    FrontendModuleDiagnostics, FrontendSourceContext,
+    lower_frontend_module_with_source, reveal_type_diagnostics, warning_diagnostics,
+    FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
 };
 pub(crate) use parser_diagnostics::parse_module_with_diagnostics;
