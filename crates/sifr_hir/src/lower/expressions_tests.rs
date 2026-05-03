@@ -2397,6 +2397,18 @@ fn test_tuple_unpack_non_tuple() {
 }
 
 #[test]
+fn test_tuple_unpack_invalid_target_has_unpack_code() {
+    let source = "def main():\n    values: list[int] = [0]\n    values[0], y = (1, 2)\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected tuple unpack target error");
+    assert!(errors.iter().any(|e| {
+        e.message == "tuple unpacking target must be a simple name or attribute"
+            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "values[0]"))
+    }));
+}
+
+#[test]
 fn test_tuple_unpack_reassignment_type_mismatch_has_primary_range() {
     let source =
         "def main():\n    left = 1\n    left, label = (\"not an int\", \"name\")\n    print(label)\n";
@@ -2407,6 +2419,42 @@ fn test_tuple_unpack_reassignment_type_mismatch_has_primary_range() {
             && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
             && e.primary_range == Some(range_for_after_anchor(source, "left = 1\n    ", "left"))
     ));
+}
+
+#[test]
+fn test_star_unpack_multiple_starred_targets_have_unpack_code() {
+    let source = "def main():\n    first, *rest, *tail = [1, 2, 3]\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected multiple starred target error");
+    assert!(errors.iter().any(|e| {
+        e.message == "multiple starred expressions in assignment"
+            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "*tail"))
+    }));
+}
+
+#[test]
+fn test_star_unpack_invalid_starred_target_has_unpack_code() {
+    let source = "def main():\n    values: list[int] = [0]\n    first, *values[0] = [1, 2]\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected invalid starred target error");
+    assert!(errors.iter().any(|e| {
+        e.message == "starred target must be a simple name"
+            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for_after_anchor(source, "*", "values[0]"))
+    }));
+}
+
+#[test]
+fn test_star_unpack_invalid_trailing_target_has_unpack_code() {
+    let source = "def main():\n    values: list[int] = [0]\n    first, *rest, values[0] = [1, 2]\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected invalid star unpack trailing target error");
+    assert!(errors.iter().any(|e| {
+        e.message == "star unpacking target must be a simple name"
+            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+            && e.primary_range == Some(range_for_after_anchor(source, "*rest, ", "values[0]"))
+    }));
 }
 
 #[test]
