@@ -1,8 +1,9 @@
+use super::{expressions::resolve_method_type, LowerCtx};
 use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
-use sifr_type_system::Type;
+use sifr_type_system::{FunctionType, Type};
 
 fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     let parsed = parse_module(source).expect("parse failed");
@@ -3311,6 +3312,220 @@ fn test_str_missing_method_has_stdlib_code() {
         error.message == "str has no method 'missing'"
             && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
             && error.primary_range == Some(range_for_after(source, "text.", "missing"))
+    }));
+}
+
+#[test]
+fn test_tuple_method_wrong_positional_count_has_call_code() {
+    let source = "def main():\n    pair: tuple[int, int] = (1, 2)\n    pair.count(1, 2)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "tuple.count() takes exactly 1 argument, got 2"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(source, "pair.count(1, ", "2"))
+    }));
+}
+
+#[test]
+fn test_tuple_method_type_mismatch_has_type_code() {
+    let source =
+        "def main():\n    pair: tuple[int, int, int] = (1, 2, 3)\n    pair.index(1, \"bad\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "tuple.index() bounds must be 'int', got 'str'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for(source, "\"bad\""))
+    }));
+}
+
+#[test]
+fn test_tuple_missing_method_has_stdlib_code() {
+    let source = "def main():\n    pair: tuple[int, int] = (1, 2)\n    pair.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "tuple has no method 'missing'"
+            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.primary_range == Some(range_for_after(source, "pair.", "missing"))
+    }));
+}
+
+#[test]
+fn test_class_method_argument_type_has_type_code() {
+    let source = "class Box:\n    def take(self, value: int) -> None:\n        pass\n\ndef main():\n    box: Box = Box()\n    box.take(\"bad\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "argument 1 ('value') of Box.take(): expected 'int', got 'str'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for(source, "\"bad\""))
+    }));
+}
+
+#[test]
+fn test_callable_field_wrong_arity_has_call_code() {
+    let source = "class Runner:\n    callback: Callable[[int], int]\n\n    def __init__(self, callback: Callable[[int], int]):\n        self.callback = callback\n\ndef double(x: int) -> int:\n    return x * 2\n\ndef main():\n    runner: Runner = Runner(double)\n    runner.callback()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "Runner.callback() (callable field) takes 1 argument(s), got 0"
+            && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.primary_range == Some(range_for_after(source, "runner.", "callback"))
+    }));
+}
+
+#[test]
+fn test_class_field_not_callable_has_call_code() {
+    let source = "class Box:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\ndef main():\n    box: Box = Box(1)\n    box.value()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "field 'value' of class 'Box' is not callable (type: 'int')"
+            && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.primary_range == Some(range_for_after(source, "box.", "value"))
+    }));
+}
+
+#[test]
+fn test_class_missing_method_has_class_code() {
+    let source = "class Box:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\ndef main():\n    box: Box = Box(1)\n    box.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "class 'Box' has no method 'missing'"
+            && error.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)
+            && error.primary_range == Some(range_for_after(source, "box.", "missing"))
+    }));
+}
+
+#[test]
+fn test_protocol_method_wrong_arity_has_call_code() {
+    let protocol_ty = Type::Protocol {
+        name: "Runner".to_string(),
+        methods: vec![(
+            "run".to_string(),
+            FunctionType::new(vec![("value".to_string(), Type::Int)], Type::Str),
+        )],
+    };
+    let mut ctx = LowerCtx::new();
+    let method_range = TextRange::new(TextSize::new(10), TextSize::new(13));
+
+    let result = resolve_method_type(&protocol_ty, "run", &[], &[], method_range, &mut ctx);
+
+    assert!(result.is_none());
+    assert!(ctx.errors.iter().any(|error| {
+        error.message == "Runner.run() takes 1 argument(s), got 0"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(method_range)
+    }));
+}
+
+#[test]
+fn test_protocol_missing_method_has_protocol_code() {
+    let protocol_ty = Type::Protocol {
+        name: "Runner".to_string(),
+        methods: vec![(
+            "run".to_string(),
+            FunctionType::new(vec![("value".to_string(), Type::Int)], Type::Str),
+        )],
+    };
+    let mut ctx = LowerCtx::new();
+    let method_range = TextRange::new(TextSize::new(20), TextSize::new(27));
+
+    let result = resolve_method_type(&protocol_ty, "missing", &[], &[], method_range, &mut ctx);
+
+    assert!(result.is_none());
+    assert!(ctx.errors.iter().any(|error| {
+        error.message == "protocol 'Runner' has no method 'missing'"
+            && error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error.primary_range == Some(method_range)
+    }));
+}
+
+#[test]
+fn test_newtype_value_wrong_arity_has_call_code() {
+    let source = "class Port(int):\n    pass\n\ndef main():\n    port: Port = Port(8080)\n    port.value(1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "Port.value() takes no arguments"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after(source, "port.value(", "1"))
+    }));
+}
+
+#[test]
+fn test_enum_value_wrong_arity_has_call_code() {
+    let source = "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n\ndef main():\n    status: Status = Status.OK\n    status.value(1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "Status.value() takes no arguments"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after(source, "status.value(", "1"))
+    }));
+}
+
+#[test]
+fn test_enum_missing_method_has_class_code() {
+    let source = "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n\ndef main():\n    status: Status = Status.OK\n    status.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "enum 'Status' has no method 'missing'"
+            && error.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)
+            && error.primary_range == Some(range_for_after(source, "status.", "missing"))
+    }));
+}
+
+#[test]
+fn test_bigint_clone_wrong_arity_has_call_code() {
+    let source = "def main():\n    value: bigint = bigint(1)\n    value.clone(1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "bigint.clone() takes no arguments"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after(source, "value.clone(", "1"))
+    }));
+}
+
+#[test]
+fn test_bigint_missing_method_has_stdlib_code() {
+    let source = "def main():\n    value: bigint = bigint(1)\n    value.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "type 'bigint' has no method 'missing'"
+            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.primary_range == Some(range_for_after(source, "value.", "missing"))
+    }));
+}
+
+#[test]
+fn test_generic_type_missing_method_has_stdlib_code() {
+    let source = "def use_value[T](value: T):\n    value.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "type 'T' has no method 'missing'"
+            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.primary_range == Some(range_for_after(source, "value.", "missing"))
     }));
 }
 
