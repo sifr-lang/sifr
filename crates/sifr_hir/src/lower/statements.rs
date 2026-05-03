@@ -37,6 +37,7 @@ use super::sequence_guard_updates::{
 };
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
+use super::statement_diagnostics;
 use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
     resolve_annotation_expr,
@@ -196,7 +197,11 @@ pub(super) fn lower_stmt(
                     let value = lower_expr(val, ctx)?;
                     return Some(HirStmt::Yield { value });
                 }
-                ctx.error("yield without a value is not supported".to_string());
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "yield without a value",
+                    yield_expr.range(),
+                );
                 return None;
             }
             let expr = lower_expr(&expr_stmt.value, ctx)?;
@@ -234,7 +239,11 @@ pub(super) fn lower_stmt(
         Stmt::Pass(_) => Some(HirStmt::Pass),
         Stmt::Delete(del_stmt) => {
             if del_stmt.targets.len() != 1 {
-                ctx.error("del with multiple targets not supported".to_string());
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "del with multiple targets",
+                    del_stmt.range(),
+                );
                 return None;
             }
             if let Expr::Subscript(sub) = &del_stmt.targets[0] {
@@ -242,8 +251,10 @@ pub(super) fn lower_stmt(
                 let index = lower_expr(&sub.slice, ctx)?;
                 Some(HirStmt::Delete { object, index })
             } else {
-                ctx.error(
-                    "del is only supported for collection items (del d[key], del a[i])".to_string(),
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "del is only supported for collection items (del d[key], del a[i])",
+                    del_stmt.targets[0].range(),
                 );
                 None
             }
@@ -284,7 +295,11 @@ pub(super) fn lower_stmt(
         }
         Stmt::With(with_stmt) => {
             if with_stmt.items.is_empty() {
-                ctx.error("with statement must have at least one item".to_string());
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "with statement must have at least one item",
+                    with_stmt.range(),
+                );
                 return None;
             }
             let (items, body) = ctx.with_pushed_scope(|ctx| {
@@ -295,7 +310,11 @@ pub(super) fn lower_stmt(
                         if let Expr::Name(n) = vars.as_ref() {
                             n.id.to_string()
                         } else {
-                            ctx.error("with target must be a simple name".to_string());
+                            statement_diagnostics::unsupported_form(
+                                ctx,
+                                "with target must be a simple name",
+                                vars.range(),
+                            );
                             return None;
                         }
                     } else {
@@ -381,27 +400,36 @@ pub(super) fn lower_stmt(
 
             for handler in &try_stmt.handlers {
                 let ExceptHandler::ExceptHandler(h) = handler;
-                let error_type = if let Some(ref type_expr) = h.type_ {
-                    if let Expr::Name(n) = type_expr.as_ref() {
-                        Some(n.id.to_string())
+                let (error_type, error_type_range, invalid_error_type_form) =
+                    if let Some(ref type_expr) = h.type_ {
+                        if let Expr::Name(n) = type_expr.as_ref() {
+                            (Some(n.id.to_string()), Some(n.range()), false)
+                        } else {
+                            (None, Some(type_expr.range()), true)
+                        }
                     } else {
-                        None
-                    }
-                } else {
-                    None
-                };
+                        (None, None, false)
+                    };
                 let name = h.name.as_ref().map(std::string::ToString::to_string);
 
                 // Check if this is a catch-all (except Error) or a specific handler
-                if let Some(ref et) = error_type {
+                if invalid_error_type_form {
+                    super::result_diagnostics::invalid_except_type(
+                        ctx,
+                        "except type must be a simple error class name",
+                        error_type_range.unwrap_or_else(|| h.range()),
+                    );
+                } else if let Some(ref et) = error_type {
                     if et == "Error" {
                         has_catch_all = true;
                     } else {
                         // Validate the except type is a known error class
                         if !ctx.error_types.contains(et) {
-                            ctx.error(format!(
-                                "`{et}` in except arm is not a known error class — use a class extending Error"
-                            ));
+                            super::result_diagnostics::unknown_except_type(
+                                ctx,
+                                et,
+                                error_type_range.unwrap_or_else(|| h.range()),
+                            );
                         }
                         covered_types.insert(et.clone());
                     }
@@ -497,10 +525,11 @@ pub(super) fn lower_stmt(
                 if !uncovered.is_empty() {
                     let mut sorted = uncovered;
                     sorted.sort();
-                    ctx.error(format!(
-                        "except arms do not cover all error types from try body — uncovered: {}. Add `except Error as e` as a catch-all or add specific except arms",
-                        sorted.join(", ")
-                    ));
+                    super::result_diagnostics::uncovered_try_errors(
+                        ctx,
+                        &sorted.join(", "),
+                        try_stmt.range(),
+                    );
                 }
             }
 
@@ -672,7 +701,11 @@ pub(super) fn lower_stmt(
         }
         Stmt::Match(match_stmt) => lower_match(match_stmt, func_type, ctx),
         _ => {
-            ctx.error("unsupported statement type".to_string());
+            statement_diagnostics::unsupported_form(
+                ctx,
+                "unsupported statement type",
+                stmt.range(),
+            );
             None
         }
     }
@@ -728,7 +761,11 @@ pub(super) fn lower_pattern(
                 let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
                     n.id.to_string()
                 } else {
-                    ctx.error("complex attribute pattern not supported".to_string());
+                    match_diagnostics::invalid_pattern_form(
+                        ctx,
+                        "complex attribute pattern is not supported",
+                        attr.value.range(),
+                    );
                     return None;
                 };
                 let attr_name = attr.attr.to_string();
@@ -752,7 +789,11 @@ pub(super) fn lower_pattern(
             let class_name = if let Expr::Name(n) = class_pat.cls.as_ref() {
                 n.id.to_string()
             } else {
-                ctx.error("class pattern class name must be a simple name".to_string());
+                match_diagnostics::invalid_pattern_form(
+                    ctx,
+                    "class pattern class name must be a simple name",
+                    class_pat.cls.range(),
+                );
                 return None;
             };
 
@@ -802,18 +843,26 @@ pub(super) fn lower_pattern(
             let elem_types: Vec<Type> = if let Type::Tuple(ref elems) = *subject_ty {
                 elems.clone()
             } else {
-                ctx.error(format!(
-                    "tuple pattern requires subject of tuple type, got '{}'",
-                    subject_ty.display_name()
-                ));
+                match_diagnostics::invalid_pattern_form(
+                    ctx,
+                    &format!(
+                        "tuple pattern requires subject of tuple type, got '{}'",
+                        subject_ty.display_name()
+                    ),
+                    seq_pat.range(),
+                );
                 return None;
             };
             if elem_types.len() != seq_pat.patterns.len() {
-                ctx.error(format!(
-                    "tuple pattern expects {} element(s), subject has {}",
-                    seq_pat.patterns.len(),
-                    elem_types.len()
-                ));
+                match_diagnostics::invalid_pattern_form(
+                    ctx,
+                    &format!(
+                        "tuple pattern expects {} element(s), subject has {}",
+                        seq_pat.patterns.len(),
+                        elem_types.len()
+                    ),
+                    seq_pat.range(),
+                );
                 return None;
             }
             let mut elements = Vec::new();
@@ -828,11 +877,19 @@ pub(super) fn lower_pattern(
             Some(HirPattern::Tuple { elements })
         }
         Pattern::MatchMapping(_) => {
-            ctx.error("mapping patterns in match are not yet supported".to_string());
+            match_diagnostics::invalid_pattern_form(
+                ctx,
+                "mapping patterns are not yet supported",
+                pattern.range(),
+            );
             None
         }
         Pattern::MatchStar(_) => {
-            ctx.error("star patterns in match are not yet supported".to_string());
+            match_diagnostics::invalid_pattern_form(
+                ctx,
+                "star patterns are not yet supported",
+                pattern.range(),
+            );
             None
         }
     }
@@ -925,7 +982,11 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
     let name = if let Expr::Name(n) = ann.target.as_ref() {
         n.id.to_string()
     } else {
-        ctx.error("annotated assignment target must be a simple name".to_string());
+        statement_diagnostics::invalid_assignment_target(
+            ctx,
+            "annotated assignment target must be a simple name",
+            ann.target.range(),
+        );
         return None;
     };
     let declared_type = resolve_annotation_expr(&ann.annotation, ctx);
@@ -1005,7 +1066,7 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         }
         (expr, initializer_range)
     } else {
-        ctx.error(format!("variable '{name}' must be initialized"));
+        name_diagnostics::uninitialized_variable(ctx, &name, ann.target.range());
         return None;
     };
 
@@ -1137,7 +1198,11 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
                 }
             }
         } else {
-            ctx.error("chained assignment targets must be simple names".to_string());
+            statement_diagnostics::invalid_assignment_target(
+                ctx,
+                "chained assignment targets must be simple names",
+                target.range(),
+            );
         }
     }
 
@@ -1192,7 +1257,11 @@ pub(super) fn resolve_object_field_type(
 
 pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
-        ctx.error("multiple assignment targets are not supported".to_string());
+        statement_diagnostics::invalid_assignment_target(
+            ctx,
+            "multiple assignment targets are not supported",
+            assign.range(),
+        );
         return None;
     }
 
@@ -1212,7 +1281,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             let obj_name = if let Expr::Name(n) = inner_attr.value.as_ref() {
                 n.id.to_string()
             } else {
-                ctx.error("attribute assignment target must be a simple name".to_string());
+                statement_diagnostics::invalid_assignment_target(
+                    ctx,
+                    "attribute assignment target must be a simple name",
+                    inner_attr.value.range(),
+                );
                 return None;
             };
             let obj_range = inner_attr.value.range();
@@ -1237,7 +1310,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
             n.id.to_string()
         } else {
-            ctx.error("attribute assignment target must be a simple name".to_string());
+            statement_diagnostics::invalid_assignment_target(
+                ctx,
+                "attribute assignment target must be a simple name",
+                attr.value.range(),
+            );
             return None;
         };
         let obj_range = attr.value.range();
@@ -1262,7 +1339,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             let obj_name = if let Expr::Name(n) = inner_sub.value.as_ref() {
                 n.id.to_string()
             } else {
-                ctx.error("nested subscript assignment target must be a simple name".to_string());
+                statement_diagnostics::invalid_assignment_target(
+                    ctx,
+                    "nested subscript assignment target must be a simple name",
+                    inner_sub.value.range(),
+                );
                 return None;
             };
             let obj_range = inner_sub.value.range();
@@ -1297,7 +1378,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
                 n.id.to_string()
             } else {
-                ctx.error("subscript assignment target must be a simple name".to_string());
+                statement_diagnostics::invalid_assignment_target(
+                    ctx,
+                    "subscript assignment target must be a simple name",
+                    attr.value.range(),
+                );
                 return None;
             };
             let obj_range = attr.value.range();
@@ -1326,7 +1411,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         let obj_name = if let Expr::Name(n) = sub.value.as_ref() {
             n.id.to_string()
         } else {
-            ctx.error("subscript assignment target must be a simple name".to_string());
+            statement_diagnostics::invalid_assignment_target(
+                ctx,
+                "subscript assignment target must be a simple name",
+                sub.value.range(),
+            );
             return None;
         };
         let obj_range = sub.value.range();
@@ -1364,7 +1453,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     let (name, name_range) = if let Expr::Name(n) = &assign.targets[0] {
         (n.id.to_string(), n.range())
     } else {
-        ctx.error("assignment target must be a simple name".to_string());
+        statement_diagnostics::invalid_assignment_target(
+            ctx,
+            "assignment target must be a simple name",
+            assign.targets[0].range(),
+        );
         return None;
     };
 
@@ -1559,10 +1652,14 @@ pub(super) fn lower_return(
                     };
                 }
             }
-            ctx.error(format!(
-                "function expects return type '{}', but returns nothing",
-                func_type.return_type.display_name()
-            ));
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "type mismatch: expected '{}', got 'None'",
+                    func_type.return_type.display_name()
+                ),
+                ret.range(),
+            );
         }
         None
     };
@@ -1925,24 +2022,33 @@ pub(super) fn lower_for(
     };
     let iter_source_ty = iterable_expr.ty().clone();
     if matches!(iter_source_ty.resolve_alias(), Type::Any | Type::Unknown) {
-        ctx.error(format!(
-            "for-loop iterable must have a statically-known element type, got '{}'",
-            iter_source_ty.display_name()
-        ));
+        statement_diagnostics::invalid_iteration(
+            ctx,
+            &format!(
+                "for-loop iterable must have a statically-known element type, got '{}'",
+                iter_source_ty.display_name()
+            ),
+            for_stmt.iter.range(),
+        );
         return None;
     }
     let Some(elem_ty) = callable_builtin_element_type(&iter_source_ty) else {
         if matches!(iter_source_ty.resolve_alias(), Type::Tuple(_)) {
-            ctx.error(
-                "for-loop tuple iteration requires one statically provable element type"
-                    .to_string(),
+            statement_diagnostics::invalid_iteration(
+                ctx,
+                "for-loop tuple iteration requires one statically provable element type",
+                for_stmt.iter.range(),
             );
             return None;
         }
-        ctx.error(format!(
-            "cannot iterate over type '{}'",
-            iter_source_ty.display_name()
-        ));
+        statement_diagnostics::invalid_iteration(
+            ctx,
+            &format!(
+                "cannot iterate over type '{}'",
+                iter_source_ty.display_name()
+            ),
+            for_stmt.iter.range(),
+        );
         return None;
     };
     let iter_expr = HirExpr::IteratorCall {
@@ -1969,13 +2075,21 @@ pub(super) fn lower_for(
                     })
                     .collect();
                 if names.len() != tup.elts.len() {
-                    ctx.error("for loop tuple target must contain only simple names".to_string());
+                    statement_diagnostics::invalid_iteration(
+                        ctx,
+                        "for loop tuple target must contain only simple names",
+                        tup.range(),
+                    );
                     return None;
                 }
                 (names.join(","), Some(tup.range()))
             }
             _ => {
-                ctx.error("for loop target must be a simple name or tuple".to_string());
+                statement_diagnostics::invalid_iteration(
+                    ctx,
+                    "for loop target must be a simple name or tuple",
+                    for_stmt.target.range(),
+                );
                 return None;
             }
         };
@@ -2039,9 +2153,7 @@ pub(super) fn lower_for(
         if is_collection_backed_iter_source(&iter_source_ty)
             && loop_body_mutates_iter_source(&body, source_name)
         {
-            ctx.error(format!(
-                "cannot mutate '{source_name}' while iterating over it in a for loop"
-            ));
+            statement_diagnostics::mutation_during_iteration(ctx, source_name, for_stmt.range());
             return None;
         }
     }

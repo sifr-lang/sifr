@@ -30,6 +30,7 @@ RAW_HIR_ERROR_FREE_FILES = (
     pathlib.Path("crates/sifr_hir/src/lower/mod.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/module_function_registry.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/nested_function_inference.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/statements.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/subscript_type.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/tuple_unpack.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/typing_and_functions.rs"),

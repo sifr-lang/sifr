@@ -1,0 +1,7 @@
+# expect-error[col=17]: SIFR-FLOW-0008
+# Test: invalid for-loop sources use a structured iteration diagnostic.
+
+def main():
+    value: int = 1
+    for item in value:
+        pass

@@ -1,0 +1,6 @@
+# expect-error[col=5]: SIFR-FLOW-0007
+# Test: unsupported assignment target shapes use a structured assignment-target diagnostic.
+
+def main():
+    values: list[int] = [0]
+    values[0]: int = 1

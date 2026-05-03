@@ -1,0 +1,5 @@
+# expect-error[col=5]: SIFR-FLOW-0006
+# Test: yield statements without values use a structured statement-form diagnostic.
+
+def count():
+    yield

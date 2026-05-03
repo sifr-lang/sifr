@@ -45,6 +45,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-NAME-0003`](SIFR-NAME-0003.md) | Error | Unknown type or generic type name. |
 | [`SIFR-NAME-0004`](SIFR-NAME-0004.md) | Error | Missing module or class member. |
 | [`SIFR-NAME-0005`](SIFR-NAME-0005.md) | Error | Duplicate function definition in a module. |
+| [`SIFR-NAME-0006`](SIFR-NAME-0006.md) | Error | Variable declaration lacks a required initializer. |
 | [`SIFR-IMPORT-0001`](SIFR-IMPORT-0001.md) | Error | Forbidden intrinsic import. |
 | [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md) | Error | Unknown source module import target. |
 | [`SIFR-IMPORT-0003`](SIFR-IMPORT-0003.md) | Error | Unsupported import statement form. |
@@ -87,10 +88,14 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-FLOW-0003`](SIFR-FLOW-0003.md) | Error | Invalid nonlocal or nested-function flow. |
 | [`SIFR-FLOW-0004`](SIFR-FLOW-0004.md) | Error | Function may finish without returning a required value. |
 | [`SIFR-FLOW-0005`](SIFR-FLOW-0005.md) | Error | Control-flow condition has an unsupported type. |
+| [`SIFR-FLOW-0006`](SIFR-FLOW-0006.md) | Error | Statement form is unsupported by HIR lowering. |
+| [`SIFR-FLOW-0007`](SIFR-FLOW-0007.md) | Error | Assignment target form is unsupported by HIR lowering. |
+| [`SIFR-FLOW-0008`](SIFR-FLOW-0008.md) | Error | For-loop iteration form or source is invalid. |
 | [`SIFR-FLOW-0901`](SIFR-FLOW-0901.md) | Warning | Unreachable statement ignored during lowering. |
 | [`SIFR-MATCH-0001`](SIFR-MATCH-0001.md) | Error | Non-exhaustive match. |
 | [`SIFR-MATCH-0002`](SIFR-MATCH-0002.md) | Error | Match guard must be bool. |
 | [`SIFR-MATCH-0003`](SIFR-MATCH-0003.md) | Error | Invalid class pattern field. |
+| [`SIFR-MATCH-0004`](SIFR-MATCH-0004.md) | Error | Invalid or unsupported match pattern form. |
 | [`SIFR-PROTO-0001`](SIFR-PROTO-0001.md) | Error | Protocol bound or conformance failure. |
 | [`SIFR-PROTO-0002`](SIFR-PROTO-0002.md) | Error | Invalid iterator or reversible protocol signature. |
 | [`SIFR-PROTO-0003`](SIFR-PROTO-0003.md) | Error | Context-manager protocol is missing. |
@@ -104,6 +109,9 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-RESULT-0001`](SIFR-RESULT-0001.md) | Error | Unused Result value. |
 | [`SIFR-RESULT-0002`](SIFR-RESULT-0002.md) | Error | Invalid Result error type. |
 | [`SIFR-RESULT-0003`](SIFR-RESULT-0003.md) | Error | Invalid raise expression. |
+| [`SIFR-RESULT-0004`](SIFR-RESULT-0004.md) | Error | Except arm references an unknown error type. |
+| [`SIFR-RESULT-0005`](SIFR-RESULT-0005.md) | Error | Try body error types are not fully covered by except arms. |
+| [`SIFR-RESULT-0006`](SIFR-RESULT-0006.md) | Error | Except arm type expression has an unsupported form. |
 | [`SIFR-STDLIB-0001`](SIFR-STDLIB-0001.md) | Error | Unsupported standard-library constructor, method, or surface. |
 | [`SIFR-STDLIB-0003`](SIFR-STDLIB-0003.md) | Error | Embedded standard-library bootstrap failure. |
 | [`SIFR-STDLIB-0004`](SIFR-STDLIB-0004.md) | Error | Standard-library cache build or reuse failure. |

@@ -1,0 +1,8 @@
+# expect-error[col=14]: SIFR-MATCH-0004
+# Test: invalid match-pattern forms use a structured match diagnostic.
+
+def main():
+    value: int = 1
+    match value:
+        case (a, b):
+            pass
