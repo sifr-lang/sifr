@@ -22,6 +22,7 @@ impl DiagnosticCode {
     pub const NAME_UNDEFINED_CALLABLE: Self = Self::new("SIFR-NAME-0002", Severity::Error);
     pub const NAME_UNKNOWN_TYPE: Self = Self::new("SIFR-NAME-0003", Severity::Error);
     pub const NAME_MISSING_MODULE_MEMBER: Self = Self::new("SIFR-NAME-0004", Severity::Error);
+    pub const NAME_DUPLICATE_DEFINITION: Self = Self::new("SIFR-NAME-0005", Severity::Error);
 
     pub const IMPORT_FORBIDDEN_INTRINSIC: Self = Self::new("SIFR-IMPORT-0001", Severity::Error);
     pub const IMPORT_UNKNOWN_SOURCE_MODULE: Self = Self::new("SIFR-IMPORT-0002", Severity::Error);
@@ -507,6 +508,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower",
         [arg!("member"), arg!("container")],
         ["member", "container"]
+    ),
+    active_entry!(
+        "SIFR-NAME-0005",
+        "NAME",
+        "Duplicate function definition in a module.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/duplicate_function_definition.sifr",
+        "duplicate function definition in module: '{name}'",
+        "sifr_hir::lower::module_function_registry",
+        [arg!("name")],
+        ["name"]
     ),
     active_entry!(
         "SIFR-IMPORT-0001",
@@ -1344,6 +1356,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::NAME_UNDEFINED_CALLABLE,
     DiagnosticCode::NAME_UNKNOWN_TYPE,
     DiagnosticCode::NAME_MISSING_MODULE_MEMBER,
+    DiagnosticCode::NAME_DUPLICATE_DEFINITION,
     DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC,
     DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
     DiagnosticCode::TYPE_MISMATCH,
