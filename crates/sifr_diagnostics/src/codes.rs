@@ -42,6 +42,7 @@ impl DiagnosticCode {
         Self::new("SIFR-TYPE-0010", Severity::Error);
     pub const TYPE_UNSUPPORTED_DEFAULT_ARGUMENT: Self =
         Self::new("SIFR-TYPE-0011", Severity::Error);
+    pub const TYPE_UNSUPPORTED_EXPRESSION_FORM: Self = Self::new("SIFR-TYPE-0012", Severity::Error);
     pub const TYPE_ARITHMETIC_OVERFLOW_RISK: Self = Self::new("SIFR-TYPE-0901", Severity::Warning);
     pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
 
@@ -696,6 +697,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::typing_and_functions",
         [arg!("function"), arg!("parameter")],
         ["function", "parameter"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0012",
+        "TYPE",
+        "Unsupported expression form.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/unsupported_yield_expression.sifr",
+        "unsupported expression form: {form}",
+        "sifr_hir::lower::expressions",
+        [arg!("form")],
+        ["form"]
     ),
     active_entry!(
         "SIFR-TYPE-0901",
@@ -1516,6 +1528,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
     DiagnosticCode::TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED,
     DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
+    DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
     DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
     DiagnosticCode::TYPE_REVEAL_TYPE,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,

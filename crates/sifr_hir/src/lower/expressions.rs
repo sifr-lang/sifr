@@ -1,4 +1,3 @@
-use super::arithmetic_warnings::check_int_overflow_risk;
 use super::builtin_calls::{
     callable_builtin_element_type, callable_builtin_list_output_type,
     lower_builtin_reverseable_arg, lower_bytes_constructor_call, lower_bytes_type_factory_call,
@@ -24,6 +23,8 @@ use super::diagnostics::list_append_argument_type_mismatch;
 use super::empty_collection_refinement::{
     refine_empty_list_binding_expr, refine_empty_set_binding_expr,
 };
+use super::expression_diagnostics;
+use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
 use super::fstring_support::lower_fstring_expr;
 use super::generic_constructor_specialization::refine_constructor_return_type_from_args;
 use super::generic_receiver_specialization::refine_generic_class_binding_expr;
@@ -39,9 +40,7 @@ use super::mutating_methods::{
 use super::name_diagnostics;
 use super::nonempty_method_narrowing::refine_nonempty_method_return_type;
 use super::numeric_sentinels::{
-    float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
-    maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
-    retag_numeric_sentinel_name_expr,
+    float_sentinel_expr, float_sentinel_kind_from_call, normalize_min_max_numeric_sentinels,
 };
 use super::ownership_diagnostics;
 use super::protocol_diagnostics;
@@ -60,14 +59,12 @@ use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
-    ExprCompare, ExprDict, ExprDictComp, ExprGenerator, ExprLambda, ExprList, ExprListComp,
-    ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript, ExprTuple,
-    ExprUnaryOp, Number, Operator, UnaryOp,
+    BoolOp, Expr, ExprAttribute, ExprBoolOp, ExprBytesLiteral, ExprCall, ExprDict, ExprDictComp,
+    ExprGenerator, ExprLambda, ExprList, ExprListComp, ExprName, ExprNamed, ExprNumberLiteral,
+    ExprSet, ExprSetComp, ExprSubscript, ExprTuple, Number,
 };
 use sifr_type_system::{
-    make_union, type_check_binary_op, type_check_bool_op, type_check_comparison,
-    type_check_unary_op, FunctionType, OwnershipKind, ParamConvention, Type,
+    make_union, type_check_bool_op, FunctionType, OwnershipKind, ParamConvention, Type,
 };
 use std::collections::HashMap;
 pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -101,7 +98,11 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::DictComp(comp) => lower_dict_comp(comp, ctx),
         Expr::Generator(gen) => lower_generator_expr(gen, ctx),
         _ => {
-            ctx.error("unsupported expression type".to_string());
+            expression_diagnostics::unsupported_form(
+                ctx,
+                "unsupported expression type",
+                expr.range(),
+            );
             None
         }
     }
@@ -251,20 +252,6 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
     None
 }
 
-/// Map a binary operator to its corresponding dunder method name.
-pub(super) fn op_to_dunder(op: &str) -> Option<&'static str> {
-    match op {
-        "+" => Some("__add__"),
-        "-" => Some("__sub__"),
-        "*" => Some("__mul__"),
-        "/" => Some("__truediv__"),
-        "//" => Some("__floordiv__"),
-        "%" => Some("__mod__"),
-        "**" => Some("__pow__"),
-        _ => None,
-    }
-}
-
 /// Shape compatibility used when generic inference leaves unresolved `TypeVar`s.
 /// `TypeVar`s are treated as wildcards, but container/class structure must still match.
 fn is_compatible_with_unresolved_typevars(source: &Type, target: &Type) -> bool {
@@ -319,229 +306,6 @@ fn is_compatible_with_unresolved_typevars(source: &Type, target: &Type) -> bool 
             .any(|member| is_compatible_with_unresolved_typevars(source, member)),
         _ => source.is_assignable_to(target),
     }
-}
-
-pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let left = lower_expr(&binop.left, ctx)?;
-    let right = lower_expr(&binop.right, ctx)?;
-
-    if [&left, &right]
-        .iter()
-        .any(|expr| matches!(expr, HirExpr::Name { name, .. } if ctx.is_poisoned_binding(name)))
-    {
-        return None;
-    }
-
-    let op_str = match binop.op {
-        Operator::Add => "+",
-        Operator::Sub => "-",
-        Operator::Mult => "*",
-        Operator::Div => "/",
-        Operator::FloorDiv => "//",
-        Operator::Mod => "%",
-        Operator::Pow => "**",
-        Operator::BitAnd => "&",
-        Operator::BitOr => "|",
-        Operator::BitXor => "^",
-        Operator::LShift => "<<",
-        Operator::RShift => ">>",
-        Operator::MatMult => {
-            ctx.error("matrix multiplication operator (@) is not supported".to_string());
-            return None;
-        }
-    };
-
-    match type_check_binary_op(left.ty(), op_str, right.ty()) {
-        Ok(result_ty) => {
-            if result_ty == Type::Int {
-                check_int_overflow_risk(op_str, &left, &right, ctx, binop.range());
-            }
-            Some(HirExpr::BinOp {
-                left: Box::new(left),
-                op: op_str.to_string(),
-                right: Box::new(right),
-                ty: result_ty,
-            })
-        }
-        Err((code, message)) => {
-            // Check for operator overloading on class types
-            if let Type::Class { methods, .. } = left.ty() {
-                if let Some(dunder) = op_to_dunder(op_str) {
-                    if let Some((_, ft)) = methods.iter().find(|(n, _)| n == dunder) {
-                        let result_ty = *ft.return_type.clone();
-                        return Some(HirExpr::BinOp {
-                            left: Box::new(left),
-                            op: op_str.to_string(),
-                            right: Box::new(right),
-                            ty: result_ty,
-                        });
-                    }
-                }
-            }
-            ctx.error_with_code_at(code, message, binop.range());
-            None
-        }
-    }
-}
-
-pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let operand = lower_expr(&unary.operand, ctx)?;
-    if matches!(&operand, HirExpr::Name { name, .. } if ctx.is_poisoned_binding(name)) {
-        return None;
-    }
-
-    let op_str = match unary.op {
-        UnaryOp::USub => "-",
-        UnaryOp::UAdd => "+",
-        UnaryOp::Not => "not",
-        UnaryOp::Invert => "~",
-    };
-
-    match type_check_unary_op(op_str, operand.ty()) {
-        Ok(result_ty) => Some(HirExpr::UnaryOp {
-            op: op_str.to_string(),
-            operand: Box::new(operand),
-            ty: result_ty,
-        }),
-        Err((code, message)) => {
-            ctx.error_with_code_at(code, message, unary.range());
-            None
-        }
-    }
-}
-
-pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let mut left = lower_expr(&cmp.left, ctx)?;
-
-    // Handle `in` and `not in` operators specially
-    if cmp.ops.len() == 1 {
-        match &cmp.ops[0] {
-            CmpOp::In => {
-                let mut collection = lower_expr(&cmp.comparators[0], ctx)?;
-                collection = refine_empty_set_binding_expr(collection, left.ty().clone(), ctx);
-                let collection_ty = collection.ty().clone();
-                if let Some(elem_ty) = collection_ty.contains_element_type() {
-                    if !left.ty().is_assignable_to(&elem_ty) {
-                        ctx.error(format!(
-                            "'in' operator: element type '{}' is not compatible with collection element type '{}'",
-                            left.ty().display_name(),
-                            elem_ty.display_name()
-                        ));
-                    }
-                } else {
-                    ctx.error(format!(
-                        "'in' operator not supported for type '{}'",
-                        collection_ty.display_name()
-                    ));
-                }
-                return Some(HirExpr::ContainsOp {
-                    element: Box::new(left),
-                    collection: Box::new(collection),
-                    ty: Type::Bool,
-                });
-            }
-            CmpOp::NotIn => {
-                let mut collection = lower_expr(&cmp.comparators[0], ctx)?;
-                collection = refine_empty_set_binding_expr(collection, left.ty().clone(), ctx);
-                let collection_ty = collection.ty().clone();
-                if let Some(elem_ty) = collection_ty.contains_element_type() {
-                    if !left.ty().is_assignable_to(&elem_ty) {
-                        ctx.error(format!(
-                            "'not in' operator: element type '{}' is not compatible with collection element type '{}'",
-                            left.ty().display_name(),
-                            elem_ty.display_name()
-                        ));
-                    }
-                } else {
-                    ctx.error(format!(
-                        "'not in' operator not supported for type '{}'",
-                        collection_ty.display_name()
-                    ));
-                }
-                // Wrap in a UnaryOp not
-                let contains = HirExpr::ContainsOp {
-                    element: Box::new(left),
-                    collection: Box::new(collection),
-                    ty: Type::Bool,
-                };
-                return Some(HirExpr::UnaryOp {
-                    op: "not".to_string(),
-                    operand: Box::new(contains),
-                    ty: Type::Bool,
-                });
-            }
-            _ => {}
-        }
-    }
-
-    let mut ops = Vec::new();
-    let mut comparators = Vec::new();
-
-    for (op, comparator) in cmp.ops.iter().zip(cmp.comparators.iter()) {
-        let op_str = match op {
-            CmpOp::Eq => "==",
-            CmpOp::NotEq => "!=",
-            CmpOp::Lt => "<",
-            CmpOp::Gt => ">",
-            CmpOp::LtE => "<=",
-            CmpOp::GtE => ">=",
-            CmpOp::Is => "is",
-            CmpOp::IsNot => "is not",
-            _ => {
-                ctx.error("unsupported comparison operator".to_string());
-                return None;
-            }
-        };
-
-        let mut right = if let Some(retagged_right) =
-            lower_sentinel_expr_for_name_domain(comparator, &left, ctx)
-        {
-            retagged_right
-        } else {
-            lower_expr(comparator, ctx)?
-        };
-        maybe_resolve_numeric_sentinel_name_from_type(&left, right.ty(), ctx);
-        maybe_resolve_numeric_sentinel_name_from_type(&right, left.ty(), ctx);
-        left = retag_numeric_sentinel_name_expr(left, ctx);
-        if let Some(retagged_right) = lower_sentinel_expr_for_name_domain(comparator, &left, ctx) {
-            right = retagged_right;
-        } else {
-            right = retag_numeric_sentinel_name_expr(right, ctx);
-        }
-
-        // `is` and `is not` are identity checks (used for None comparison)
-        // They don't need type_check_comparison
-        if op_str != "is" && op_str != "is not" {
-            if let Err((code, message)) = type_check_comparison(left.ty(), op_str, right.ty()) {
-                // Check for operator overloading on class types
-                let has_overload = match left.ty() {
-                    Type::Class { methods, .. } => {
-                        let dunder = match op_str {
-                            "==" | "!=" => "__eq__",
-                            "<" | ">" | "<=" | ">=" => "__lt__",
-                            _ => "",
-                        };
-                        !dunder.is_empty() && methods.iter().any(|(n, _)| n == dunder)
-                    }
-                    _ => false,
-                };
-                if !has_overload {
-                    ctx.error_with_code_at(code, message, comparator.range());
-                    return None;
-                }
-            }
-        }
-
-        ops.push(op_str.to_string());
-        comparators.push(right);
-    }
-
-    Some(HirExpr::Compare {
-        left: Box::new(left),
-        ops,
-        comparators,
-        ty: Type::Bool,
-    })
 }
 
 pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<HirExpr> {

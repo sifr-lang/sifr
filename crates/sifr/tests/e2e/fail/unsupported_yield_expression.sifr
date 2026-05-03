@@ -1,0 +1,5 @@
+# expect-error[col=10]: SIFR-TYPE-0012
+# Test: unsupported expression forms use structured expression-form diagnostics.
+
+def main():
+    x = (yield 1)

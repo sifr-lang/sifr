@@ -711,6 +711,53 @@ fn test_matrix_augassign_has_unsupported_operator_code() {
 }
 
 #[test]
+fn test_matrix_binop_has_unsupported_operator_code() {
+    let source = "def main():\n    x: int = 1 @ 2\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected matrix binop unsupported operator error");
+
+    assert!(
+        errors.iter().any(
+            |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                && error.message == "matrix multiplication operator (@) is not supported"
+                && error.primary_range == Some(range_for(source, "1 @ 2"))
+        ),
+        "matrix binop diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
+fn test_unsupported_expression_form_has_type_code() {
+    let source = "def main():\n    x = (yield 1)\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected unsupported expression form error");
+
+    assert!(
+        errors.iter().any(|error| error.code
+            == Some(DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM)
+            && error.message == "unsupported expression form: unsupported expression type"
+            && error.primary_range == Some(range_for(source, "yield 1"))),
+        "unsupported expression form diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
+fn test_in_operator_non_collection_has_unsupported_operator_code() {
+    let source = "def main() -> bool:\n    return 1 in 2\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected unsupported in operator error");
+
+    assert!(
+        errors.iter().any(
+            |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                && error.message == "unsupported operator in for int"
+                && error.primary_range == Some(range_for_after(source, " in ", "2"))
+        ),
+        "in operator diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
 fn test_augassign_complex_targets_have_type_codes() {
     let cases = [
         (
