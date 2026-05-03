@@ -2331,14 +2331,111 @@ def main():
 
 #[test]
 fn test_reversed_rejects_non_reversible_iterator_argument() {
-    let result = lower_source(
-        "def main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    _rev = reversed(it)\n",
-    );
+    let source =
+        "def main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    _rev = reversed(it)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("reversed() argument must be reversible")));
+    assert!(errors.iter().any(|error| {
+        error.message == "reversed() argument must be reversible, got 'Iterator[int]'"
+            && error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error.primary_range == Some(range_for_after_anchor(source, "reversed(", "it"))
+    }));
+}
+
+#[test]
+fn test_reversed_and_enumerate_argument_errors_have_codes() {
+    let reversed_source = "def main():\n    _rev = reversed(1)\n";
+    let reversed_result = lower_source(reversed_source);
+    assert!(reversed_result.is_err());
+    let reversed_errors = reversed_result.unwrap_err();
+    assert!(reversed_errors.iter().any(|error| {
+        error.message
+            == "reversed() argument must be an iterable with a statically-known element type, got 'int'"
+            && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
+            && error.primary_range == Some(range_for_after_anchor(reversed_source, "reversed(", "1"))
+    }));
+
+    let enumerate_source = "def main():\n    _items = enumerate(1)\n";
+    let enumerate_result = lower_source(enumerate_source);
+    assert!(enumerate_result.is_err());
+    let enumerate_errors = enumerate_result.unwrap_err();
+    assert!(enumerate_errors.iter().any(|error| {
+        error.message
+            == "enumerate() argument must be an iterable with a statically-known element type, got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(enumerate_source, "enumerate(", "1"))
+    }));
+}
+
+#[test]
+fn test_enumerate_start_type_errors_have_codes() {
+    let positional_source =
+        "def main():\n    nums: list[int] = [1, 2]\n    _items = enumerate(nums, \"bad\")\n";
+    let positional_result = lower_source(positional_source);
+    assert!(positional_result.is_err());
+    let positional_errors = positional_result.unwrap_err();
+    assert!(positional_errors.iter().any(|error| {
+        error.message == "enumerate() start argument must be 'int', got 'str'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    positional_source,
+                    "enumerate(nums, ",
+                    "\"bad\"",
+                ))
+    }));
+
+    let keyword_source =
+        "def main():\n    nums: list[int] = [1, 2]\n    _items = enumerate(nums, start=\"bad\")\n";
+    let keyword_result = lower_source(keyword_source);
+    assert!(keyword_result.is_err());
+    let keyword_errors = keyword_result.unwrap_err();
+    assert!(keyword_errors.iter().any(|error| {
+        error.message == "enumerate() keyword argument 'start' must be 'int', got 'str'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    keyword_source,
+                    "enumerate(nums, start=",
+                    "\"bad\"",
+                ))
+    }));
+}
+
+#[test]
+fn test_enumerate_arity_and_unpacked_keyword_errors_have_codes() {
+    let arity_source =
+        "def main():\n    nums: list[int] = [1, 2]\n    _items = enumerate(nums, 1, 2)\n";
+    let arity_result = lower_source(arity_source);
+    assert!(arity_result.is_err());
+    let arity_errors = arity_result.unwrap_err();
+    assert!(arity_errors.iter().any(|error| {
+        error.message == "enumerate() takes 1 or 2 arguments"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    arity_source,
+                    "enumerate(nums, 1, ",
+                    "2",
+                ))
+    }));
+
+    let unpacked_source =
+        "def main():\n    nums: list[int] = [1, 2]\n    kwargs: dict[str, int] = {\"start\": 1}\n    _items = enumerate(nums, **kwargs)\n";
+    let unpacked_result = lower_source(unpacked_source);
+    assert!(unpacked_result.is_err());
+    let unpacked_errors = unpacked_result.unwrap_err();
+    assert!(unpacked_errors.iter().any(|error| {
+        error.message == "enumerate() does not support unpacked keyword arguments"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    unpacked_source,
+                    "enumerate(nums, ",
+                    "**kwargs",
+                ))
+    }));
 }
 
 #[test]

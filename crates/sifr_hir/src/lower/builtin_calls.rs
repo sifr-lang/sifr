@@ -1121,7 +1121,7 @@ pub(super) fn lower_builtin_reverseable_arg(
     call: &ExprCall,
     builtin_name: &str,
     ctx: &mut LowerCtx,
-) -> Option<HirExpr> {
+) -> Option<(HirExpr, Type)> {
     if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
         ctx.error_with_code_at(
             DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
@@ -1135,7 +1135,7 @@ pub(super) fn lower_builtin_reverseable_arg(
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
-    if callable_builtin_element_type(arg.ty()).is_none() {
+    let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
         ctx.error_with_code_at(
             DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
             format!(
@@ -1145,7 +1145,7 @@ pub(super) fn lower_builtin_reverseable_arg(
             call.arguments.args[0].range(),
         );
         return None;
-    }
+    };
     if !arg
         .ty()
         .supports_iteration_capability(IterationCapability::DoubleEnded)
@@ -1160,5 +1160,5 @@ pub(super) fn lower_builtin_reverseable_arg(
         );
         return None;
     }
-    Some(arg)
+    Some((arg, elem_ty))
 }

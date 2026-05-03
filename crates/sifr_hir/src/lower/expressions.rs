@@ -1,10 +1,10 @@
 use super::builtin_calls::{
-    callable_builtin_element_type, lower_builtin_reverseable_arg, lower_bytes_constructor_call,
-    lower_bytes_type_factory_call, lower_chr_call, lower_defaultdict_constructor_call,
-    lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
-    lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
-    lower_set_constructor_call, lower_tuple_constructor_call, reject_zip_keywords_if_present,
-    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    callable_builtin_element_type, lower_bytes_constructor_call, lower_bytes_type_factory_call,
+    lower_chr_call, lower_defaultdict_constructor_call, lower_dict_constructor_call,
+    lower_isinstance_call, lower_len_call, lower_list_constructor_call, lower_ord_call,
+    lower_range_call, lower_reveal_type_call, lower_set_constructor_call,
+    lower_tuple_constructor_call, reject_zip_keywords_if_present, DEFAULTDICT_INT_ALIAS,
+    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argument_range};
@@ -23,6 +23,7 @@ use super::empty_collection_refinement::{
     refine_empty_list_binding_expr, refine_empty_set_binding_expr,
 };
 use super::expression_diagnostics;
+use super::expression_iter_builtins::{lower_enumerate_call, lower_reversed_call};
 use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
 use super::expression_sum_sorted::{lower_sorted_call, lower_sum_call};
 use super::fstring_support::lower_fstring_expr;
@@ -1113,99 +1114,12 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // reversed(iterable) -> iterator of element type
         if func_name == "reversed" {
-            let arg = lower_builtin_reverseable_arg(call, "reversed", ctx)?;
-            let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
-                ctx.error(format!(
-                    "reversed() argument must be an iterable with a statically-known element type, got '{}'",
-                    arg.ty().display_name()
-                ));
-                return None;
-            };
-            return Some(HirExpr::IteratorCall {
-                op: HirIteratorOp::Reversed,
-                args: vec![arg],
-                ty: Type::Iterator(Box::new(elem_ty)),
-            });
+            return lower_reversed_call(call, ctx);
         }
 
         // enumerate(iterable) -> iterator of (int, element) tuples
         if func_name == "enumerate" {
-            if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
-                ctx.error("enumerate() takes 1 or 2 arguments".to_string());
-                return None;
-            }
-            let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
-                ctx.error(format!(
-                    "enumerate() argument must be an iterable with a statically-known element type, got '{}'",
-                    arg.ty().display_name()
-                ));
-                return None;
-            };
-            let start = if call.arguments.args.len() == 2 {
-                let lowered = lower_expr(&call.arguments.args[1], ctx)?;
-                if lowered.ty() != &Type::Int {
-                    ctx.error(format!(
-                        "enumerate() start argument must be 'int', got '{}'",
-                        lowered.ty().display_name()
-                    ));
-                    return None;
-                }
-                lowered
-            } else if let Some(keyword) = call
-                .arguments
-                .keywords
-                .iter()
-                .find(|keyword| keyword.arg.as_deref() == Some("start"))
-            {
-                let lowered = lower_expr(&keyword.value, ctx)?;
-                if lowered.ty() != &Type::Int {
-                    ctx.error(format!(
-                        "enumerate() keyword argument 'start' must be 'int', got '{}'",
-                        lowered.ty().display_name()
-                    ));
-                    return None;
-                }
-                lowered
-            } else {
-                HirExpr::IntLiteral(0)
-            };
-            for keyword in &call.arguments.keywords {
-                let Some(name) = keyword.arg.as_ref() else {
-                    ctx.error(
-                        "enumerate() does not support unpacked keyword arguments".to_string(),
-                    );
-                    return None;
-                };
-                if name.as_str() != "start" {
-                    ctx.error_with_code_at(
-                        DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
-                        format!("enumerate() got an unexpected keyword argument '{name}'"),
-                        name.range(),
-                    );
-                    return None;
-                }
-                if call.arguments.args.len() == 2 {
-                    ctx.error_with_code_at(
-                        DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
-                        "enumerate() got multiple values for argument 'start'".to_string(),
-                        name.range(),
-                    );
-                    return None;
-                }
-            }
-            let tuple_ty = Type::Tuple(vec![Type::Int, elem_ty]);
-            let result_ty = Type::Iterator(Box::new(tuple_ty));
-            let args = if matches!(start, HirExpr::IntLiteral(0)) {
-                vec![arg]
-            } else {
-                vec![arg, start]
-            };
-            return Some(HirExpr::IteratorCall {
-                op: HirIteratorOp::Enumerate,
-                args,
-                ty: result_ty,
-            });
+            return lower_enumerate_call(call, ctx);
         }
 
         // zip(*iters) -> iterator of tuples
