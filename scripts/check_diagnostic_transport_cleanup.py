@@ -23,6 +23,7 @@ RAW_HIR_ERROR_FREE_FILES = (
     pathlib.Path("crates/sifr_hir/src/lower/decimal_methods.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/method_call_args.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/subscript_type.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/tuple_unpack.rs"),
 )
 RAW_CTX_ERROR = re.compile(r"\bctx\.error\s*\(")
 

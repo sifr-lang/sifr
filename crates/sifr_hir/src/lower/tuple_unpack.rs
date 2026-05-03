@@ -25,8 +25,10 @@ fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarge
         }),
         Expr::Attribute(ExprAttribute { value, attr, .. }) => {
             let Expr::Name(object_name) = value.as_ref() else {
-                ctx.error(
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
                     "tuple unpacking attribute target must be rooted at a simple name".to_string(),
+                    value.range(),
                 );
                 return None;
             };
@@ -40,7 +42,11 @@ fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarge
             })
         }
         _ => {
-            ctx.error("tuple unpacking target must be a simple name or attribute".to_string());
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                "tuple unpacking target must be a simple name or attribute".to_string(),
+                elt.range(),
+            );
             None
         }
     }
@@ -187,7 +193,11 @@ pub(super) fn lower_star_unpack_assign(
         match elt {
             Expr::Starred(starred) => {
                 if star.is_some() {
-                    ctx.error("multiple starred expressions in assignment".to_string());
+                    ctx.error_with_code_at(
+                        DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                        "multiple starred expressions in assignment".to_string(),
+                        starred.range(),
+                    );
                     return None;
                 }
                 if let Expr::Name(n) = starred.value.as_ref() {
@@ -196,7 +206,11 @@ pub(super) fn lower_star_unpack_assign(
                     ctx.scope.define(name.clone(), star_ty.clone());
                     star = Some((name, star_ty));
                 } else {
-                    ctx.error("starred target must be a simple name".to_string());
+                    ctx.error_with_code_at(
+                        DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                        "starred target must be a simple name".to_string(),
+                        starred.value.range(),
+                    );
                     return None;
                 }
             }
@@ -210,19 +224,24 @@ pub(super) fn lower_star_unpack_assign(
                 }
             }
             _ => {
-                ctx.error("star unpacking target must be a simple name".to_string());
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                    "star unpacking target must be a simple name".to_string(),
+                    elt.range(),
+                );
                 return None;
             }
         }
     }
 
-    let star = star.unwrap_or_else(|| {
-        ctx.error("star unpacking requires a starred expression".to_string());
-        (
-            "_".to_string(),
-            sifr_type_system::Type::List(Box::new(elem_ty.clone())),
-        )
-    });
+    let Some(star) = star else {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+            "star unpacking requires a starred expression".to_string(),
+            tuple.range(),
+        );
+        return None;
+    };
 
     Some(HirStmt::StarUnpack {
         before,
