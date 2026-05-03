@@ -2293,9 +2293,10 @@ fn reject_max_method_arg_count(
     arg_ranges: &[TextRange],
     method_range: TextRange,
 ) {
+    let suffix = if max_allowed == 1 { "" } else { "s" };
     reject_method_arg_count(
         ctx,
-        format!("{method}() takes at most {max_allowed} argument, got {actual}"),
+        format!("{method}() takes at most {max_allowed} argument{suffix}, got {actual}"),
         method_count_range(actual, max_allowed, arg_ranges, method_range),
     );
 }
@@ -2566,28 +2567,28 @@ pub(super) fn resolve_method_type(
         Type::Dict(key_ty, val_ty) => match method {
             "len" => {
                 if !args.is_empty() {
-                    ctx.error("dict.len() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "dict.len", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::Int)
             }
             "keys" => {
                 if !args.is_empty() {
-                    ctx.error("dict.keys() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "dict.keys", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::List(key_ty.clone()))
             }
             "values" => {
                 if !args.is_empty() {
-                    ctx.error("dict.values() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "dict.values", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::List(val_ty.clone()))
             }
             "items" => {
                 if !args.is_empty() {
-                    ctx.error("dict.items() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "dict.items", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::List(Box::new(Type::Tuple(vec![
@@ -2597,10 +2598,14 @@ pub(super) fn resolve_method_type(
             }
             "update" => {
                 if args.len() > 2 {
-                    ctx.error(format!(
-                        "dict.update() takes at most 2 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_max_method_arg_count(
+                        ctx,
+                        "dict.update",
+                        2,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 if let Some(arg) = args.first() {
@@ -2613,57 +2618,74 @@ pub(super) fn resolve_method_type(
             }
             "clear" => {
                 if !args.is_empty() {
-                    ctx.error("dict.clear() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "dict.clear", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::None)
             }
             "copy" => {
                 if !args.is_empty() {
-                    ctx.error("dict.copy() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "dict.copy", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::Dict(key_ty.clone(), val_ty.clone()))
             }
             "contains" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "dict.contains() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "dict.contains",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 if !args[0].ty().is_assignable_to(key_ty) {
-                    ctx.error(format!(
-                        "dict.contains() key type '{}' is not compatible with dict key type '{}'",
-                        args[0].ty().display_name(),
-                        key_ty.display_name()
-                    ));
+                    expression_diagnostics::type_mismatch(
+                        ctx,
+                        format!(
+                            "dict.contains() key type '{}' is not compatible with dict key type '{}'",
+                            args[0].ty().display_name(),
+                            key_ty.display_name()
+                        ),
+                        arg_ranges[0],
+                    );
                 }
                 Some(Type::Bool)
             }
             "get" => {
                 if args.is_empty() || args.len() > 2 {
-                    ctx.error(format!(
-                        "dict.get() takes 1 or 2 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_method_arg_count(
+                        ctx,
+                        format!("dict.get() takes 1 or 2 arguments, got {}", args.len()),
+                        method_count_range(args.len(), 2, arg_ranges, method_range),
+                    );
                     return None;
                 }
                 if !args[0].ty().is_assignable_to(key_ty) {
-                    ctx.error(format!(
-                        "dict.get() key type '{}' is not compatible with dict key type '{}'",
-                        args[0].ty().display_name(),
-                        key_ty.display_name()
-                    ));
+                    expression_diagnostics::type_mismatch(
+                        ctx,
+                        format!(
+                            "dict.get() key type '{}' is not compatible with dict key type '{}'",
+                            args[0].ty().display_name(),
+                            key_ty.display_name()
+                        ),
+                        arg_ranges[0],
+                    );
                 }
                 if args.len() == 2 {
                     if !args[1].ty().is_assignable_to(val_ty) {
-                        ctx.error(format!(
-                            "dict.get() default type '{}' is not compatible with dict value type '{}'",
-                            args[1].ty().display_name(),
-                            val_ty.display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "dict.get() default type '{}' is not compatible with dict value type '{}'",
+                                args[1].ty().display_name(),
+                                val_ty.display_name()
+                            ),
+                            arg_ranges[1],
+                        );
                     }
                     // When V is still unknown/Any (e.g. empty literal before specialization),
                     // preserve precision from the provided default instead of leaking `Any`.
@@ -2680,26 +2702,35 @@ pub(super) fn resolve_method_type(
             }
             "pop" => {
                 if args.is_empty() || args.len() > 2 {
-                    ctx.error(format!(
-                        "dict.pop() takes 1 or 2 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_method_arg_count(
+                        ctx,
+                        format!("dict.pop() takes 1 or 2 arguments, got {}", args.len()),
+                        method_count_range(args.len(), 2, arg_ranges, method_range),
+                    );
                     return None;
                 }
                 if !args[0].ty().is_assignable_to(key_ty) {
-                    ctx.error(format!(
-                        "dict.pop() key type '{}' is not compatible with dict key type '{}'",
-                        args[0].ty().display_name(),
-                        key_ty.display_name()
-                    ));
+                    expression_diagnostics::type_mismatch(
+                        ctx,
+                        format!(
+                            "dict.pop() key type '{}' is not compatible with dict key type '{}'",
+                            args[0].ty().display_name(),
+                            key_ty.display_name()
+                        ),
+                        arg_ranges[0],
+                    );
                 }
                 if args.len() == 2 {
                     if !args[1].ty().is_assignable_to(val_ty) {
-                        ctx.error(format!(
-                            "dict.pop() default type '{}' is not compatible with dict value type '{}'",
-                            args[1].ty().display_name(),
-                            val_ty.display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "dict.pop() default type '{}' is not compatible with dict value type '{}'",
+                                args[1].ty().display_name(),
+                                val_ty.display_name()
+                            ),
+                            arg_ranges[1],
+                        );
                     }
                     Some(*val_ty.clone())
                 } else {
@@ -2709,30 +2740,46 @@ pub(super) fn resolve_method_type(
             }
             "setdefault" => {
                 if args.len() != 2 {
-                    ctx.error(format!(
-                        "dict.setdefault() takes exactly 2 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "dict.setdefault",
+                        2,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 if !args[0].ty().is_assignable_to(key_ty) {
-                    ctx.error(format!(
-                        "dict.setdefault() key type '{}' is not compatible with dict key type '{}'",
-                        args[0].ty().display_name(),
-                        key_ty.display_name()
-                    ));
+                    expression_diagnostics::type_mismatch(
+                        ctx,
+                        format!(
+                            "dict.setdefault() key type '{}' is not compatible with dict key type '{}'",
+                            args[0].ty().display_name(),
+                            key_ty.display_name()
+                        ),
+                        arg_ranges[0],
+                    );
                 }
                 if !args[1].ty().is_assignable_to(val_ty) {
-                    ctx.error(format!(
-                        "dict.setdefault() default type '{}' is not compatible with dict value type '{}'",
-                        args[1].ty().display_name(),
-                        val_ty.display_name()
-                    ));
+                    expression_diagnostics::type_mismatch(
+                        ctx,
+                        format!(
+                            "dict.setdefault() default type '{}' is not compatible with dict value type '{}'",
+                            args[1].ty().display_name(),
+                            val_ty.display_name()
+                        ),
+                        arg_ranges[1],
+                    );
                 }
                 Some(*val_ty.clone())
             }
             _ => {
-                ctx.error(format!("dict has no method '{method}'"));
+                ctx.error_with_code_at(
+                    DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                    format!("dict has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         },
