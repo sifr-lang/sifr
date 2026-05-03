@@ -4,7 +4,7 @@ use sifr_diagnostics::{
     DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, SourceMap, SourceSpan,
 };
 use sifr_hir::{
-    lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult,
+    lower_module_with_externals, ExternalDefs, HirDiagnostic, LoweringResult,
     LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 use sifr_python_ast::Stmt;
@@ -52,12 +52,7 @@ pub(crate) fn lower_frontend_module_with_source(
             let diagnostics: Vec<RenderedDiagnostic> = errors
                 .into_iter()
                 .map(|error| {
-                    lowering_error_to_diagnostic(
-                        module_name,
-                        diagnostic_style,
-                        source_context,
-                        error,
-                    )
+                    hir_diagnostic_to_rendered(module_name, diagnostic_style, source_context, error)
                 })
                 .collect();
             return Err(diagnostics);
@@ -66,13 +61,13 @@ pub(crate) fn lower_frontend_module_with_source(
     Ok(result)
 }
 
-fn lowering_error_to_diagnostic(
+fn hir_diagnostic_to_rendered(
     module_name: &str,
     diagnostic_style: FrontendDiagnosticStyle,
     source_context: Option<FrontendSourceContext<'_>>,
-    error: LoweringError,
+    error: HirDiagnostic,
 ) -> RenderedDiagnostic {
-    let code = lowering_error_code_or_internal(&error);
+    let code = hir_diagnostic_code_or_internal(&error);
     let uncoded = error.code.is_none();
     let primary_range = error.primary_range;
     let message = match diagnostic_style {
@@ -100,7 +95,7 @@ fn lowering_error_to_diagnostic(
     crate::diagnostics::diagnostic_with_code(message, code)
 }
 
-pub(crate) fn lowering_error_code_or_internal(error: &LoweringError) -> DiagnosticCode {
+pub(crate) fn hir_diagnostic_code_or_internal(error: &HirDiagnostic) -> DiagnosticCode {
     error
         .code
         .unwrap_or(DiagnosticCode::INTERNAL_COMPILER_PANIC)
@@ -240,12 +235,12 @@ fn rendered_spanless_diagnostic(
 
 #[cfg(test)]
 mod tests {
-    use super::{lowering_error_to_diagnostic, FrontendDiagnosticStyle};
+    use super::{hir_diagnostic_to_rendered, FrontendDiagnosticStyle};
     use sifr_diagnostics::DiagnosticCode;
-    use sifr_hir::LoweringError;
+    use sifr_hir::HirDiagnostic;
 
-    fn lowering_error(code: Option<DiagnosticCode>, message: &str) -> LoweringError {
-        LoweringError {
+    fn hir_diagnostic(code: Option<DiagnosticCode>, message: &str) -> HirDiagnostic {
+        HirDiagnostic {
             code,
             message: message.to_string(),
             primary_range: None,
@@ -255,21 +250,21 @@ mod tests {
     }
 
     #[test]
-    fn coded_lowering_error_uses_active_diagnostic_code() {
-        let error = lowering_error(Some(DiagnosticCode::TYPE_MISMATCH), "expected int, got str");
+    fn coded_hir_diagnostic_uses_active_diagnostic_code() {
+        let error = hir_diagnostic(Some(DiagnosticCode::TYPE_MISMATCH), "expected int, got str");
 
         let diagnostic =
-            lowering_error_to_diagnostic("main", FrontendDiagnosticStyle::Bare, None, error);
+            hir_diagnostic_to_rendered("main", FrontendDiagnosticStyle::Bare, None, error);
 
         assert_eq!(diagnostic.code, "SIFR-TYPE-0002");
         assert_eq!(diagnostic.url, "https://sifr.sh/docs/errors/SIFR-TYPE-0002");
     }
 
     #[test]
-    fn codeless_lowering_error_is_internal_compiler_diagnostic() {
-        let error = lowering_error(None, "expected int, got str");
+    fn codeless_hir_diagnostic_is_internal_compiler_diagnostic() {
+        let error = hir_diagnostic(None, "expected int, got str");
 
-        let diagnostic = lowering_error_to_diagnostic(
+        let diagnostic = hir_diagnostic_to_rendered(
             "main",
             FrontendDiagnosticStyle::ModulePrefixed,
             None,

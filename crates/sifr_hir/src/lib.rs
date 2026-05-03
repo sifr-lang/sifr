@@ -16,7 +16,7 @@ pub mod stdlib;
 pub use hir_nodes::*;
 pub use lower::{
     lower_module, lower_module_stdlib, lower_module_stdlib_with_externals,
-    lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult,
+    lower_module_with_externals, ExternalDefs, HirDiagnostic, LoweringResult,
     LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 pub use lowering_outcome::LoweringOutcome;

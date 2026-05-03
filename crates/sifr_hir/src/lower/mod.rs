@@ -101,16 +101,16 @@ pub(super) use typevar_annotations::{
 use typing_and_functions::{
     extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
 };
-/// Errors produced during lowering.
+/// Structured diagnostics produced during HIR lowering.
 #[derive(Debug, Clone)]
-pub struct LoweringError {
+pub struct HirDiagnostic {
     pub code: Option<DiagnosticCode>,
     pub message: String,
     pub primary_range: Option<TextRange>,
     pub line: Option<u32>,
     pub col: Option<u32>,
 }
-impl std::fmt::Display for LoweringError {
+impl std::fmt::Display for HirDiagnostic {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let (Some(line), Some(col)) = (self.line, self.col) {
             write!(f, "{}:{}: {}", line, col, self.message)
@@ -129,9 +129,9 @@ pub(super) struct LowerCtx {
     class_types: HashMap<String, Type>,
     /// Current scope for name resolution
     scope: Scope,
-    /// Collected errors
-    errors: Vec<LoweringError>,
-    /// Proof for the latest emitted lowering error.
+    /// Collected diagnostics that stop successful lowering.
+    errors: Vec<HirDiagnostic>,
+    /// Proof for the latest emitted lowering diagnostic.
     last_error_taint: Option<ErrorTaint>,
     /// Loop nesting depth (for break/continue validation)
     loop_depth: usize,
@@ -248,7 +248,7 @@ impl LowerCtx {
 
     fn error(&mut self, message: String) -> ErrorTaint {
         let taint = ErrorTaint::emitted();
-        self.errors.push(LoweringError {
+        self.errors.push(HirDiagnostic {
             code: None,
             message,
             primary_range: None,
@@ -266,7 +266,7 @@ impl LowerCtx {
         range: TextRange,
     ) -> ErrorTaint {
         let taint = ErrorTaint::emitted();
-        self.errors.push(LoweringError {
+        self.errors.push(HirDiagnostic {
             code: Some(code),
             message,
             primary_range: Some(range),
@@ -478,11 +478,11 @@ pub struct ExternalDefs {
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<(usize, HirExpr)>>>,
 }
 /// Lower a parsed module AST into a typed HIR module.
-pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>> {
+pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     lower_module_with_externals(stmts, &ExternalDefs::default())
 }
 /// Lower a stdlib .sifr module. Allows _sifr.* intrinsic imports.
-pub fn lower_module_stdlib(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>> {
+pub fn lower_module_stdlib(stmts: &[Stmt]) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     let mut ctx = LowerCtx::new();
     ctx.allow_intrinsic_imports = true;
     lower_module_impl(stmts, &ExternalDefs::default(), ctx)
@@ -491,7 +491,7 @@ pub fn lower_module_stdlib(stmts: &[Stmt]) -> Result<LoweringResult, Vec<Lowerin
 pub fn lower_module_stdlib_with_externals(
     stmts: &[Stmt],
     externals: &ExternalDefs,
-) -> Result<LoweringResult, Vec<LoweringError>> {
+) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     let mut ctx = LowerCtx::new();
     ctx.allow_intrinsic_imports = true;
     lower_module_impl(stmts, externals, ctx)
@@ -500,7 +500,7 @@ pub fn lower_module_stdlib_with_externals(
 pub fn lower_module_with_externals(
     stmts: &[Stmt],
     externals: &ExternalDefs,
-) -> Result<LoweringResult, Vec<LoweringError>> {
+) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     let ctx = LowerCtx::new();
     lower_module_impl(stmts, externals, ctx)
 }
@@ -509,7 +509,7 @@ fn lower_module_impl(
     stmts: &[Stmt],
     externals: &ExternalDefs,
     mut ctx: LowerCtx,
-) -> Result<LoweringResult, Vec<LoweringError>> {
+) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     ctx.externals = externals.clone();
     // Register built-in functions
     register_builtins(&mut ctx);

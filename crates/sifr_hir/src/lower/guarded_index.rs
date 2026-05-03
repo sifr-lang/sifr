@@ -180,16 +180,16 @@ fn sequence_guard_target_name(expr: &Expr) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{lower_module, HirModule, LoweringError, LoweringResult};
+    use crate::{lower_module, HirDiagnostic, HirModule, LoweringResult};
     use sifr_python_parser::parse_module;
     use sifr_type_system::Type;
 
-    fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
+    fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
         let parsed = parse_module(source).expect("parse failed");
         lower_module(parsed.suite()).map(|r| r.module)
     }
 
-    fn lower_source_result(source: &str) -> Result<LoweringResult, Vec<LoweringError>> {
+    fn lower_source_result(source: &str) -> Result<LoweringResult, Vec<HirDiagnostic>> {
         let parsed = parse_module(source).expect("parse failed");
         lower_module(parsed.suite())
     }

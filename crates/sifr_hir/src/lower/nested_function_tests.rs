@@ -1,10 +1,10 @@
-use crate::{lower_module, HirExpr, HirModule, HirStmt, LoweringError};
+use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 
-fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
+fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     let parsed = parse_module(source).expect("parse failed");
     lower_module(parsed.suite()).map(|result| result.module)
 }
