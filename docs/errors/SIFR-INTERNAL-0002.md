@@ -10,7 +10,7 @@ Structured recovery-cap omission summary.
 | Family | `INTERNAL` |
 | Severity | Note |
 | Owner | `sifr_driver::diagnostics` |
-| Message template | `{omitted_count} additional diagnostics omitted by recovery cap ({cap_kind})` |
+| Message template | `{omitted_count} additional {omitted_kind} omitted by recovery cap ({cap_kind})` |
 | Representative fixture | `crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics` |
-| Declared args | `omitted_count (message+json)`, `cap_kind (message+json)` |
+| Declared args | `omitted_count (message+json)`, `omitted_kind (message+json)`, `cap_kind (message+json)` |
 | Dedupe args | `cap_kind` |

@@ -80,17 +80,23 @@ pub fn apply_diagnostic_recovery_limits(
             bounded.push(diagnostic.clone());
         }
         if group.len() > MAX_SIMILAR_DIAGNOSTICS_PER_GROUP {
+            let omitted_diagnostics = &group[MAX_SIMILAR_DIAGNOSTICS_PER_GROUP..];
             bounded.push(recovery_omission_summary(
-                group.len() - MAX_SIMILAR_DIAGNOSTICS_PER_GROUP,
+                omitted_diagnostics.len(),
                 SIMILAR_DIAGNOSTIC_CAP_KIND,
+                &omitted_kind(omitted_diagnostics),
             ));
         }
     }
 
     if bounded.len() > MAX_TOP_LEVEL_DIAGNOSTICS {
-        let omitted = bounded.len() - (MAX_TOP_LEVEL_DIAGNOSTICS - 1);
+        let omitted_diagnostics = bounded[MAX_TOP_LEVEL_DIAGNOSTICS - 1..].to_vec();
         bounded.truncate(MAX_TOP_LEVEL_DIAGNOSTICS - 1);
-        bounded.push(recovery_omission_summary(omitted, TOP_LEVEL_CAP_KIND));
+        bounded.push(recovery_omission_summary(
+            omitted_diagnostics.len(),
+            TOP_LEVEL_CAP_KIND,
+            &omitted_kind(&omitted_diagnostics),
+        ));
     }
     bounded
 }
@@ -185,7 +191,27 @@ fn diagnostic_arg_key(arg: &DiagnosticArg) -> String {
     String::from_utf8_lossy(&arg.canonical_json_bytes()).into_owned()
 }
 
-fn recovery_omission_summary(omitted_count: usize, cap_kind: &'static str) -> RenderedDiagnostic {
+fn omitted_kind(omitted_diagnostics: &[RenderedDiagnostic]) -> String {
+    let reveal_type_count = omitted_diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.code == DiagnosticCode::TYPE_REVEAL_TYPE.code())
+        .count();
+    match (reveal_type_count, omitted_diagnostics.len()) {
+        (0, _) => "diagnostics".to_string(),
+        (reveal_type_count, total) if reveal_type_count == total => {
+            "reveal_type results".to_string()
+        }
+        (reveal_type_count, _) => {
+            format!("diagnostics (including {reveal_type_count} reveal_type results)")
+        }
+    }
+}
+
+fn recovery_omission_summary(
+    omitted_count: usize,
+    cap_kind: &'static str,
+    omitted_kind: &str,
+) -> RenderedDiagnostic {
     let code = DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY;
     let mut args = BTreeMap::new();
     args.insert(
@@ -196,14 +222,18 @@ fn recovery_omission_summary(omitted_count: usize, cap_kind: &'static str) -> Re
         "cap_kind".to_string(),
         DiagnosticArg::String(cap_kind.to_string()),
     );
+    args.insert(
+        "omitted_kind".to_string(),
+        DiagnosticArg::String(omitted_kind.to_string()),
+    );
     RenderedDiagnostic {
         code: code.code().to_string(),
         severity: code.declared_severity(),
         message: format!(
-            "{omitted_count} additional diagnostics omitted by recovery cap ({cap_kind})"
+            "{omitted_count} additional {omitted_kind} omitted by recovery cap ({cap_kind})"
         ),
         message_template:
-            "{omitted_count} additional diagnostics omitted by recovery cap ({cap_kind})"
+            "{omitted_count} additional {omitted_kind} omitted by recovery cap ({cap_kind})"
                 .to_string(),
         args,
         url: code.docs_url(),

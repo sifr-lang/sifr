@@ -1349,9 +1349,9 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "Structured recovery-cap omission summary.",
         Severity::Note,
         "crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics",
-        "{omitted_count} additional diagnostics omitted by recovery cap ({cap_kind})",
+        "{omitted_count} additional {omitted_kind} omitted by recovery cap ({cap_kind})",
         "sifr_driver::diagnostics",
-        [arg!("omitted_count"), arg!("cap_kind")],
+        [arg!("omitted_count"), arg!("omitted_kind"), arg!("cap_kind")],
         ["cap_kind"]
     ),
 ];
