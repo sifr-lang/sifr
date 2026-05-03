@@ -2038,18 +2038,24 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
                 });
             }
             _ => {
-                ctx.error(format!(
-                    "enum '{enum_name}' has no attribute '{field_name}'"
-                ));
+                ctx.error_with_code_at(
+                    DiagnosticCode::CLASS_MISSING_MEMBER,
+                    format!("enum '{enum_name}' has no attribute '{field_name}'"),
+                    attr.attr.range(),
+                );
                 return None;
             }
         }
     }
 
     // Not a class field access -- report unsupported
-    ctx.error(format!(
-        "attribute access '.{field_name}' is not supported as an expression; use as a method call"
-    ));
+    expression_diagnostics::unsupported_form(
+        ctx,
+        &format!(
+            "attribute access '.{field_name}' is not supported as an expression; use as a method call"
+        ),
+        attr.range(),
+    );
     None
 }
 
@@ -2082,7 +2088,11 @@ pub(super) fn lower_method_call(
                         ty: Type::None,
                     });
                 }
-                ctx.error("super() used outside of a class with a parent".to_string());
+                ctx.error_with_code_at(
+                    DiagnosticCode::CLASS_INVALID_BASE,
+                    "super() used outside of a class with a parent".to_string(),
+                    attr.value.range(),
+                );
                 return None;
             }
         }
@@ -2110,9 +2120,11 @@ pub(super) fn lower_method_call(
                     });
                 }
             }
-            ctx.error(format!(
-                "type '{class_name}' has no class/static method '{method_name}'"
-            ));
+            ctx.error_with_code_at(
+                DiagnosticCode::CLASS_MISSING_MEMBER,
+                format!("type '{class_name}' has no class/static method '{method_name}'"),
+                attr.attr.range(),
+            );
             return None;
         }
     }
