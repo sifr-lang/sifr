@@ -1,4 +1,4 @@
-# expect-error: SIFR-NAME-0003
+# expect-error[col=20]: SIFR-NAME-0003
 
 def consume(value: MissingType) -> int:
     return 0
