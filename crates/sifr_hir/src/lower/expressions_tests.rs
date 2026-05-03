@@ -536,6 +536,42 @@ fn test_non_simple_call_target_has_call_code() {
 }
 
 #[test]
+fn test_open_missing_path_has_call_code() {
+    let source = "def main():\n    _file = open()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "open() requires at least 1 argument: open(path) or open(path, mode)"
+            && error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+            && error.primary_range == Some(range_for(source, "open"))
+    }));
+}
+
+#[test]
+fn test_callable_variable_call_errors_have_codes() {
+    let arity_source = "def apply(f: Callable[[int], int]) -> int:\n    return f()\n";
+    let arity_result = lower_source(arity_source);
+    assert!(arity_result.is_err());
+    let arity_errors = arity_result.unwrap_err();
+    assert!(arity_errors.iter().any(|error| {
+        error.message == "callable 'f' expects 1 argument(s), got 0"
+            && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.primary_range == Some(range_for_after_anchor(arity_source, "return ", "f"))
+    }));
+
+    let type_source = "def apply(f: Callable[[int], int]) -> int:\n    return f(\"bad\")\n";
+    let type_result = lower_source(type_source);
+    assert!(type_result.is_err());
+    let type_errors = type_result.unwrap_err();
+    assert!(type_errors.iter().any(|error| {
+        error.message == "argument 1 of callable 'f': expected 'int', got 'str'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(type_source, "f(", "\"bad\""))
+    }));
+}
+
+#[test]
 fn test_iter_keyword_has_call_code() {
     let source = "def main():\n    values: list[int] = [1, 2, 3]\n    _it = iter(source=values)\n";
     let result = lower_source(source);

@@ -1153,8 +1153,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         let path_arg = if n_args >= 1 {
             lower_expr(&call.arguments.args[0], ctx)?
         } else {
-            ctx.error(
+            expression_diagnostics::call_missing_required_argument(
+                ctx,
                 "open() requires at least 1 argument: open(path) or open(path, mode)".to_string(),
+                call.func.range(),
             );
             return None;
         };
@@ -1287,24 +1289,37 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             args.push(expr);
         }
         if args.len() != param_types.len() {
-            ctx.error(format!(
-                "callable '{}' expects {} argument(s), got {}",
-                func_name,
-                param_types.len(),
-                args.len()
-            ));
+            let range = if args.len() > param_types.len() {
+                call.arguments.args[param_types.len()].range()
+            } else {
+                call.func.range()
+            };
+            expression_diagnostics::call_not_callable_or_arity(
+                ctx,
+                format!(
+                    "callable '{}' expects {} argument(s), got {}",
+                    func_name,
+                    param_types.len(),
+                    args.len()
+                ),
+                range,
+            );
             return None;
         }
         // Type check arguments and apply convention-aware move tracking
         for (i, (arg, param_ty)) in args.iter().zip(param_types.iter()).enumerate() {
             if !arg.ty().is_assignable_to(param_ty) {
-                ctx.error(format!(
-                    "argument {} of callable '{}': expected '{}', got '{}'",
-                    i + 1,
-                    func_name,
-                    param_ty.display_name(),
-                    arg.ty().display_name()
-                ));
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "argument {} of callable '{}': expected '{}', got '{}'",
+                        i + 1,
+                        func_name,
+                        param_ty.display_name(),
+                        arg.ty().display_name()
+                    ),
+                    call.arguments.args[i].range(),
+                );
             }
             // Apply move tracking based on convention
             let convention = conventions
@@ -1340,7 +1355,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             });
     if let Some(call_ft) = callable_object_ft {
         let Expr::Name(name_expr) = call.func.as_ref() else {
-            ctx.error("only simple function calls are supported".to_string());
+            expression_diagnostics::call_not_callable_or_arity(
+                ctx,
+                "only simple function calls are supported".to_string(),
+                call.func.range(),
+            );
             return None;
         };
         let object = lower_name(name_expr, ctx)?;
