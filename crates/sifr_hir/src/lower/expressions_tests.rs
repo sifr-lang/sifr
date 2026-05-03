@@ -51,10 +51,81 @@ fn test_simple_function() {
 
 #[test]
 fn test_type_mismatch_error() {
-    let result = lower_source("def main():\n    x: int = \"hello\"\n");
+    let source = "def main():\n    x: int = \"hello\"\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e.message.contains("type mismatch")));
+    assert!(errors.iter().any(|e| e.message.contains("type mismatch")
+        && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+        && e.primary_range == Some(range_for(source, "\"hello\""))));
+}
+
+#[test]
+fn test_reassignment_type_mismatch_has_primary_range() {
+    let source = "def main():\n    value = 1\n    value = \"not an int\"\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected reassignment type mismatch");
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("cannot assign 'str' to variable 'value'")
+        && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+        && e.primary_range == Some(range_for(source, "\"not an int\""))));
+}
+
+#[test]
+fn test_return_type_mismatch_has_primary_range() {
+    let source = "def main() -> int:\n    return \"no\"\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected return type mismatch");
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("return type mismatch")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "\"no\""))));
+}
+
+#[test]
+fn test_function_argument_type_mismatch_has_primary_range() {
+    let source = "def takes_int(value: int) -> int:\n    return value\n\ndef main():\n    result: int = takes_int(\"bad\")\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected argument type mismatch");
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("argument 1 ('value') of function 'takes_int'")
+        && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+        && e.primary_range == Some(range_for(source, "\"bad\""))));
+}
+
+#[test]
+fn test_typevar_constraint_mismatch_has_primary_range() {
+    let source = "from typing import TypeVar\n\nT = TypeVar(\"T\", int, str)\n\ndef echo(x: T) -> T:\n    return x\n\ndef main():\n    bad: float = echo(1.5)\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected TypeVar constraint mismatch");
+    assert!(errors.iter().any(|e| e.code
+        == Some(DiagnosticCode::TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED)
+        && e.primary_range == Some(range_for(source, "1.5"))));
+}
+
+#[test]
+fn test_if_expression_branch_mismatch_has_primary_range() {
+    let source = "def main():\n    x: str | int = \"yes\" if True else 42\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected if-expression branch mismatch");
+    assert!(errors
+        .iter()
+        .any(|e| e.code == Some(DiagnosticCode::TYPE_IF_BRANCH_MISMATCH)
+            && e.primary_range == Some(range_for(source, "42"))));
+}
+
+#[test]
+fn test_container_literal_type_conflict_has_primary_range() {
+    let source = "def main():\n    values = [1, \"two\"]\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected container literal conflict");
+    assert!(errors.iter().any(
+        |e| e.code == Some(DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT)
+            && e.primary_range == Some(range_for(source, "\"two\""))
+    ));
 }
 
 #[test]
@@ -617,13 +688,15 @@ fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
 
 #[test]
 fn test_list_subscript_augassign_type_error_keeps_code() {
-    let result = lower_source("def bad(mut xs: list[int]) -> None:\n    xs[0] += \"x\"\n");
+    let source = "def bad(mut xs: list[int]) -> None:\n    xs[0] += \"x\"\n";
+    let result = lower_source(source);
     let errors = result.expect_err("expected list subscript augassign type error");
 
     assert!(
         errors.iter().any(
             |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
                 && error.message.contains("unsupported operand type(s) for +")
+                && error.primary_range == Some(range_for(source, "\"x\""))
         ),
         "list subscript augassign should preserve the operator helper code: {errors:?}"
     );
@@ -631,15 +704,16 @@ fn test_list_subscript_augassign_type_error_keeps_code() {
 
 #[test]
 fn test_dict_subscript_augassign_type_error_keeps_code() {
-    let result = lower_source(
-        "def bad(mut data: dict[str, int]) -> None:\n    data[\"x\"] = 1\n    data[\"x\"] += \"x\"\n",
-    );
+    let source =
+        "def bad(mut data: dict[str, int]) -> None:\n    data[\"x\"] = 1\n    data[\"x\"] += \"x\"\n";
+    let result = lower_source(source);
     let errors = result.expect_err("expected dict subscript augassign type error");
 
     assert!(
         errors.iter().any(
             |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
                 && error.message.contains("unsupported operand type(s) for +")
+                && error.primary_range == Some(range_for_after(source, "+= ", "\"x\""))
         ),
         "dict subscript augassign should preserve the operator helper code: {errors:?}"
     );

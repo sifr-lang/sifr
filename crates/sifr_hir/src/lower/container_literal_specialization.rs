@@ -1,5 +1,6 @@
 use super::LowerCtx;
 use crate::hir_nodes::{HirExpr, HirStmt};
+use ruff_text_size::TextRange;
 use sifr_type_system::{type_check_binary_op, Type};
 use std::collections::HashMap;
 
@@ -126,6 +127,7 @@ pub(super) fn validate_subscript_augassign_target(
     index_ty: &Type,
     rhs_ty: &Type,
     op: &str,
+    rhs_range: TextRange,
 ) -> Type {
     let base_op = &op[..op.len() - 1];
     let resolved_object_ty = object_ty.resolve_alias().clone();
@@ -138,7 +140,7 @@ pub(super) fn validate_subscript_augassign_target(
                 ));
             }
             if let Err((code, message)) = type_check_binary_op(elem_ty.as_ref(), base_op, rhs_ty) {
-                ctx.error_with_code(code, message);
+                ctx.error_with_code_at(code, message, rhs_range);
             }
             Type::List(elem_ty)
         }
@@ -165,7 +167,7 @@ pub(super) fn validate_subscript_augassign_target(
                         rhs_ty,
                     );
                 } else {
-                    ctx.error_with_code(code, message);
+                    ctx.error_with_code_at(code, message, rhs_range);
                 }
             }
             match object_ty {

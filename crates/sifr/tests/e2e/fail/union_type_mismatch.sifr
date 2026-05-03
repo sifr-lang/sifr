@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0002
+# expect-error[col=20]: SIFR-TYPE-0002
 # Assigning incompatible type to union
 
 def main():

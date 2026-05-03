@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0002
+# expect-error[col=18]: SIFR-TYPE-0002
 # Test: generic assert_eq enforces same-type arguments
 from sifr.test import assert_eq
 

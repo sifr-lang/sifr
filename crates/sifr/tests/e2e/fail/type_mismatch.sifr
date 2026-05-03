@@ -1,3 +1,3 @@
-# expect-error: SIFR-TYPE-0002
+# expect-error[col=14]: SIFR-TYPE-0002
 def main():
     x: int = "hello"

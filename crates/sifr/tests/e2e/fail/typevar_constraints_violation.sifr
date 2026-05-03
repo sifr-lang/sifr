@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0010
+# expect-error[col=23]: SIFR-TYPE-0010
 # Test: TypeVar constraints reject unsupported concrete type
 from typing import TypeVar
 
