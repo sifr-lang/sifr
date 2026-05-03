@@ -3,8 +3,8 @@ use super::builtin_calls::{
     lower_chr_call, lower_defaultdict_constructor_call, lower_dict_constructor_call,
     lower_isinstance_call, lower_len_call, lower_list_constructor_call, lower_ord_call,
     lower_range_call, lower_reveal_type_call, lower_set_constructor_call,
-    lower_tuple_constructor_call, reject_zip_keywords_if_present, DEFAULTDICT_INT_ALIAS,
-    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
+    DEFAULTDICT_SET_ALIAS,
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argument_range};
@@ -23,6 +23,9 @@ use super::empty_collection_refinement::{
     refine_empty_list_binding_expr, refine_empty_set_binding_expr,
 };
 use super::expression_diagnostics;
+use super::expression_functional_builtins::{
+    lower_any_all_call, lower_filter_call, lower_map_call, lower_zip_call,
+};
 use super::expression_iter_builtins::{lower_enumerate_call, lower_reversed_call};
 use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
 use super::expression_sum_sorted::{lower_sorted_call, lower_sum_call};
@@ -1122,162 +1125,27 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             return lower_enumerate_call(call, ctx);
         }
 
-        // zip(*iters) -> iterator of tuples
         if func_name == "zip" {
-            if reject_zip_keywords_if_present(call, ctx) {
-                return None;
-            }
-            let mut args = Vec::with_capacity(call.arguments.args.len());
-            let mut elem_types = Vec::with_capacity(call.arguments.args.len());
-            for (index, arg_expr) in call.arguments.args.iter().enumerate() {
-                let arg = lower_expr(arg_expr, ctx)?;
-                let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
-                    ctx.error(format!(
-                        "zip() argument {} must be an iterable with a statically-known element type, got '{}'",
-                        index + 1,
-                        arg.ty().display_name()
-                    ));
-                    return None;
-                };
-                elem_types.push(elem_ty);
-                args.push(arg);
-            }
-            let result_ty = Type::Iterator(Box::new(Type::Tuple(elem_types)));
-            return Some(HirExpr::IteratorCall {
-                op: HirIteratorOp::Zip,
-                args,
-                ty: result_ty,
-            });
+            return lower_zip_call(call, ctx);
         }
     }
 
     // any(iterable) -> bool
     if func_name == "any" {
-        if call.arguments.args.len() != 1 {
-            ctx.error("any() takes exactly 1 argument".to_string());
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        return Some(HirExpr::Call {
-            func: "any".to_string(),
-            args: vec![arg],
-            ty: Type::Bool,
-        });
+        return lower_any_all_call(call, "any", ctx);
     }
 
     // all(iterable) -> bool
     if func_name == "all" {
-        if call.arguments.args.len() != 1 {
-            ctx.error("all() takes exactly 1 argument".to_string());
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        return Some(HirExpr::Call {
-            func: "all".to_string(),
-            args: vec![arg],
-            ty: Type::Bool,
-        });
+        return lower_any_all_call(call, "all", ctx);
     }
 
     // map(func, iterable) -> iterator
     if func_name == "map" {
-        if !call.arguments.keywords.is_empty() {
-            ctx.error("map() does not accept keyword arguments".to_string());
-            return None;
-        }
-        if call.arguments.args.len() < 2 {
-            ctx.error("map() takes a callable followed by at least one iterable".to_string());
-            return None;
-        }
-        let mut iter_args = Vec::with_capacity(call.arguments.args.len() - 1);
-        let mut context_types = Vec::with_capacity(call.arguments.args.len() - 1);
-        for arg_expr in call.arguments.args.iter().skip(1) {
-            let iter_arg = lower_expr(arg_expr, ctx)?;
-            let Some(elem_ty) = callable_builtin_element_type(iter_arg.ty()) else {
-                ctx.error(format!(
-                    "map() iterable arguments must have statically-known element types, got '{}'",
-                    iter_arg.ty().display_name()
-                ));
-                return None;
-            };
-            context_types.push(elem_ty);
-            iter_args.push(iter_arg);
-        }
-        let func_arg = lower_lambda_with_context(&call.arguments.args[0], &context_types, ctx)?;
-        let Some((param_types, _conventions, result_elem_ty)) = callable_signature(&func_arg)
-        else {
-            ctx.error("map() first argument must be callable".to_string());
-            return None;
-        };
-        if param_types.len() != context_types.len() {
-            let expected_count = param_types.len();
-            let actual_count = context_types.len();
-            let range = if actual_count > expected_count {
-                call.arguments.args[expected_count + 1].range()
-            } else {
-                call.func.range()
-            };
-            ctx.error_with_code_at(
-                DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY,
-                format!(
-                    "map() callable expects {expected_count} argument(s), got {actual_count} iterable(s)"
-                ),
-                range,
-            );
-            return None;
-        }
-        let result_ty = Type::Iterator(Box::new(result_elem_ty));
-        return Some(HirExpr::IteratorCall {
-            op: HirIteratorOp::Map,
-            args: std::iter::once(func_arg).chain(iter_args).collect(),
-            ty: result_ty,
-        });
+        return lower_map_call(call, ctx);
     }
     if func_name == "filter" {
-        if !call.arguments.keywords.is_empty() {
-            ctx.error("filter() does not accept keyword arguments".to_string());
-            return None;
-        }
-        if call.arguments.args.len() != 2 {
-            ctx.error("filter() takes exactly 2 arguments (function, iterable)".to_string());
-            return None;
-        }
-        let iter_arg = lower_expr(&call.arguments.args[1], ctx)?;
-        let Some(elem_ty) = callable_builtin_element_type(iter_arg.ty()) else {
-            ctx.error(format!(
-                "filter() argument must be an iterable with a statically-known element type, got '{}'",
-                iter_arg.ty().display_name()
-            ));
-            return None;
-        };
-        let func_arg = lower_lambda_with_context(
-            &call.arguments.args[0],
-            std::slice::from_ref(&elem_ty),
-            ctx,
-        )?;
-        let Some((param_types, _conventions, return_ty)) = callable_signature(&func_arg) else {
-            ctx.error("filter() first argument must be callable".to_string());
-            return None;
-        };
-        if param_types.len() != 1 {
-            ctx.error(format!(
-                "filter() callable expects {} argument(s), got 1 iterable(s)",
-                param_types.len()
-            ));
-            return None;
-        }
-        if !return_ty.is_assignable_to(&Type::Bool) && !Type::Bool.is_assignable_to(&return_ty) {
-            ctx.error(format!(
-                "filter() callable must return 'bool', got '{}'",
-                return_ty.display_name()
-            ));
-            return None;
-        }
-        return Some(HirExpr::IteratorCall {
-            op: HirIteratorOp::Filter,
-            args: vec![func_arg, iter_arg],
-            ty: Type::Iterator(Box::new(elem_ty)),
-        });
+        return lower_filter_call(call, ctx);
     }
     if func_name == "open" {
         let n_args = call.arguments.args.len();

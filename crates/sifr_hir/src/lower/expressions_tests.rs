@@ -2278,6 +2278,45 @@ fn test_zip_keyword_diagnostics_are_stable() {
 }
 
 #[test]
+fn test_zip_non_iterable_argument_has_type_code() {
+    let source = "def main():\n    nums: list[int] = [1, 2]\n    _paired = zip(nums, 1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "zip() argument 2 must be an iterable with a statically-known element type, got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(source, "zip(nums, ", "1"))
+    }));
+}
+
+#[test]
+fn test_any_all_wrong_arity_have_call_codes() {
+    let any_source = "def main():\n    _value = any()\n";
+    let any_result = lower_source(any_source);
+    assert!(any_result.is_err());
+    let any_errors = any_result.unwrap_err();
+    assert!(any_errors.iter().any(|error| {
+        error.message == "any() takes exactly 1 argument"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for(any_source, "any"))
+    }));
+
+    let all_source =
+        "def main():\n    flags: list[bool] = [True]\n    _value = all(flags, flags)\n";
+    let all_result = lower_source(all_source);
+    assert!(all_result.is_err());
+    let all_errors = all_result.unwrap_err();
+    assert!(all_errors.iter().any(|error| {
+        error.message == "all() takes exactly 1 argument"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range
+                == Some(range_for_after_anchor(all_source, "all(flags, ", "flags"))
+    }));
+}
+
+#[test]
 fn test_range_and_enumerate_unexpected_keywords_have_call_code() {
     let range_source = "def main():\n    print(list(range(stop=3, bogus=1)))\n";
     let range_result = lower_source(range_source);
@@ -2498,15 +2537,51 @@ fn test_map_rejects_plain_list_annotation_without_materialization() {
 
 #[test]
 fn test_map_rejects_keywords_with_stable_diagnostic() {
-    let result = lower_source(
-        "def add(x: int) -> int:\n    return x + 1\n\ndef main():\n    nums: list[int] = [1, 2]\n    _mapped = map(function=add, iterable=nums)\n",
-    );
+    let source = "def add(x: int) -> int:\n    return x + 1\n\ndef main():\n    nums: list[int] = [1, 2]\n    _mapped = map(function=add, iterable=nums)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
-        error
-            .message
-            .contains("map() does not accept keyword arguments")
+        error.message == "map() does not accept keyword arguments"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range == Some(range_for_after_anchor(source, "map(", "function=add"))
+    }));
+}
+
+#[test]
+fn test_map_argument_errors_have_codes() {
+    let missing_source =
+        "def inc(x: int) -> int:\n    return x + 1\n\ndef main():\n    _mapped = map(inc)\n";
+    let missing_result = lower_source(missing_source);
+    assert!(missing_result.is_err());
+    let missing_errors = missing_result.unwrap_err();
+    assert!(missing_errors.iter().any(|error| {
+        error.message == "map() takes a callable followed by at least one iterable"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(missing_source, "map(", "inc"))
+    }));
+
+    let iterable_source =
+        "def inc(x: int) -> int:\n    return x + 1\n\ndef main():\n    _mapped = map(inc, 1)\n";
+    let iterable_result = lower_source(iterable_source);
+    assert!(iterable_result.is_err());
+    let iterable_errors = iterable_result.unwrap_err();
+    assert!(iterable_errors.iter().any(|error| {
+        error.message
+            == "map() iterable arguments must have statically-known element types, got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range
+                == Some(range_for_after_anchor(iterable_source, "map(inc, ", "1"))
+    }));
+
+    let callable_source = "def main():\n    nums: list[int] = [1, 2]\n    _mapped = map(1, nums)\n";
+    let callable_result = lower_source(callable_source);
+    assert!(callable_result.is_err());
+    let callable_errors = callable_result.unwrap_err();
+    assert!(callable_errors.iter().any(|error| {
+        error.message == "map() first argument must be callable"
+            && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.primary_range == Some(range_for_after_anchor(callable_source, "map(", "1"))
     }));
 }
 
@@ -2545,15 +2620,64 @@ fn test_filter_rejects_plain_list_annotation_without_materialization() {
 
 #[test]
 fn test_filter_rejects_keywords_with_stable_diagnostic() {
-    let result = lower_source(
-        "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    nums: list[int] = [1, 2]\n    _filtered = filter(function=pred, iterable=nums)\n",
-    );
+    let source = "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    nums: list[int] = [1, 2]\n    _filtered = filter(function=pred, iterable=nums)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
-        error
-            .message
-            .contains("filter() does not accept keyword arguments")
+        error.message == "filter() does not accept keyword arguments"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range
+                == Some(range_for_after_anchor(source, "filter(", "function=pred"))
+    }));
+}
+
+#[test]
+fn test_filter_argument_errors_have_codes() {
+    let arity_source = "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    _filtered = filter(pred)\n";
+    let arity_result = lower_source(arity_source);
+    assert!(arity_result.is_err());
+    let arity_errors = arity_result.unwrap_err();
+    assert!(arity_errors.iter().any(|error| {
+        error.message == "filter() takes exactly 2 arguments (function, iterable)"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(arity_source, "filter(", "pred"))
+    }));
+
+    let iterable_source =
+        "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    _filtered = filter(pred, 1)\n";
+    let iterable_result = lower_source(iterable_source);
+    assert!(iterable_result.is_err());
+    let iterable_errors = iterable_result.unwrap_err();
+    assert!(iterable_errors.iter().any(|error| {
+        error.message
+            == "filter() argument must be an iterable with a statically-known element type, got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range
+                == Some(range_for_after_anchor(iterable_source, "filter(pred, ", "1"))
+    }));
+
+    let callable_source =
+        "def main():\n    nums: list[int] = [1, 2]\n    _filtered = filter(1, nums)\n";
+    let callable_result = lower_source(callable_source);
+    assert!(callable_result.is_err());
+    let callable_errors = callable_result.unwrap_err();
+    assert!(callable_errors.iter().any(|error| {
+        error.message == "filter() first argument must be callable"
+            && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.primary_range == Some(range_for_after_anchor(callable_source, "filter(", "1"))
+    }));
+
+    let return_source =
+        "def ident(x: int) -> int:\n    return x\n\ndef main():\n    nums: list[int] = [1, 2]\n    _filtered = filter(ident, nums)\n";
+    let return_result = lower_source(return_source);
+    assert!(return_result.is_err());
+    let return_errors = return_result.unwrap_err();
+    assert!(return_errors.iter().any(|error| {
+        error.message == "filter() callable must return 'bool', got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range
+                == Some(range_for_after_anchor(return_source, "filter(", "ident"))
     }));
 }
 
