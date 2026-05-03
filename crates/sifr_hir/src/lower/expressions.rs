@@ -2927,95 +2927,123 @@ pub(super) fn resolve_method_type(
             | "swapcase" => Some(Type::Str),
             "startswith" | "endswith" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "str.{}() takes exactly 1 argument, got {}",
-                        method,
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        &format!("str.{method}"),
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Bool)
             }
             "isdigit" | "isalpha" | "isalnum" | "isspace" | "isupper" | "islower" => {
                 if !args.is_empty() {
-                    ctx.error(format!("str.{method}() takes no arguments"));
+                    reject_no_method_args(ctx, &format!("str.{method}"), arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::Bool)
             }
             "split" => {
                 if args.len() > 2 {
-                    ctx.error(format!(
-                        "str.split() takes 0 to 2 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_method_arg_count(
+                        ctx,
+                        format!("str.split() takes 0 to 2 arguments, got {}", args.len()),
+                        method_count_range(args.len(), 2, arg_ranges, method_range),
+                    );
                     return None;
                 }
                 if let Some(maxsplit) = args.get(1) {
                     if maxsplit.ty() != &Type::Int {
-                        ctx.error(format!(
-                            "str.split() maxsplit must be 'int', got '{}'",
-                            maxsplit.ty().display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "str.split() maxsplit must be 'int', got '{}'",
+                                maxsplit.ty().display_name()
+                            ),
+                            arg_ranges[1],
+                        );
                     }
                 }
                 Some(Type::List(Box::new(Type::Str)))
             }
             "replace" => {
                 if args.len() < 2 || args.len() > 3 {
-                    ctx.error(format!(
-                        "str.replace() takes 2 or 3 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_method_arg_count(
+                        ctx,
+                        format!("str.replace() takes 2 or 3 arguments, got {}", args.len()),
+                        method_count_range(args.len(), 3, arg_ranges, method_range),
+                    );
                     return None;
                 }
                 if let Some(count) = args.get(2) {
                     if count.ty() != &Type::Int {
-                        ctx.error(format!(
-                            "str.replace() count must be 'int', got '{}'",
-                            count.ty().display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "str.replace() count must be 'int', got '{}'",
+                                count.ty().display_name()
+                            ),
+                            arg_ranges[2],
+                        );
                     }
                 }
                 Some(Type::Str)
             }
             "join" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "str.join() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "str.join",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Str)
             }
             "count" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "str.count() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "str.count",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Int)
             }
             "center" | "ljust" | "rjust" | "zfill" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "str.{}() takes exactly 1 argument, got {}",
-                        method,
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        &format!("str.{method}"),
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Str)
             }
             "find" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "str.find() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "str.find",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 // find() returns Option[int] = int | None
@@ -3023,7 +3051,11 @@ pub(super) fn resolve_method_type(
             }
             "encode" => resolve_str_encode_method_type(args, arg_ranges, method_range, ctx),
             _ => {
-                ctx.error(format!("str has no method '{method}'"));
+                ctx.error_with_code_at(
+                    DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                    format!("str has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         },

@@ -56,8 +56,48 @@ pub(super) fn resolved_method_arg_ranges(
     call: &ExprCall,
 ) -> Vec<TextRange> {
     let mut ranges: Vec<TextRange> = call.arguments.args.iter().map(Ranged::range).collect();
-    if matches!(object_ty.resolve_alias(), Type::Dict(_, _)) && method == "update" {
-        ranges.extend(call.arguments.keywords.iter().take(1).map(Ranged::range));
+    match object_ty.resolve_alias() {
+        Type::Dict(_, _) if method == "update" => {
+            ranges.extend(call.arguments.keywords.iter().take(1).map(Ranged::range));
+        }
+        Type::Str if method == "split" => {
+            if let Some(sep) = call
+                .arguments
+                .keywords
+                .iter()
+                .find(|keyword| keyword.arg.as_ref().is_some_and(|name| name == "sep"))
+            {
+                if ranges.is_empty() {
+                    ranges.push(sep.value.range());
+                }
+            }
+            if let Some(maxsplit) = call
+                .arguments
+                .keywords
+                .iter()
+                .find(|keyword| keyword.arg.as_ref().is_some_and(|name| name == "maxsplit"))
+            {
+                if ranges.is_empty() {
+                    ranges.push(call.func.range());
+                }
+                if ranges.len() == 1 {
+                    ranges.push(maxsplit.value.range());
+                }
+            }
+        }
+        Type::Str if method == "replace" => {
+            if let Some(count) = call
+                .arguments
+                .keywords
+                .iter()
+                .find(|keyword| keyword.arg.as_ref().is_some_and(|name| name == "count"))
+            {
+                if ranges.len() <= 2 {
+                    ranges.push(count.value.range());
+                }
+            }
+        }
+        _ => {}
     }
     ranges
 }
