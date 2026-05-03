@@ -1,4 +1,5 @@
 use ruff_text_size::{Ranged, TextRange};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Operator, StmtAugAssign};
 use sifr_type_system::{type_check_binary_op, Type};
 
@@ -14,7 +15,22 @@ use super::statements::resolve_object_field_type;
 use super::subscript_type::resolve_subscript_result_type;
 use super::LowerCtx;
 
-fn op_to_augassign_string(op: Operator, ctx: &mut LowerCtx) -> Option<&'static str> {
+const AUGMENTED_SUBSCRIPT_TARGET_SIMPLE_NAME: &str =
+    "augmented subscript assignment target must be a simple name";
+
+fn invalid_target_shape(ctx: &mut LowerCtx, message: &'static str, range: TextRange) {
+    ctx.error_with_code_at(DiagnosticCode::TYPE_MISMATCH, message.to_string(), range);
+}
+
+fn invalid_subscript_target_shape(ctx: &mut LowerCtx, range: TextRange) {
+    invalid_target_shape(ctx, AUGMENTED_SUBSCRIPT_TARGET_SIMPLE_NAME, range);
+}
+
+fn op_to_augassign_string(
+    op: Operator,
+    ctx: &mut LowerCtx,
+    target_range: TextRange,
+) -> Option<&'static str> {
     match op {
         Operator::Add => Some("+="),
         Operator::Sub => Some("-="),
@@ -29,7 +45,11 @@ fn op_to_augassign_string(op: Operator, ctx: &mut LowerCtx) -> Option<&'static s
         Operator::RShift => Some(">>="),
         Operator::FloorDiv => Some("//="),
         Operator::MatMult => {
-            ctx.error("matrix multiplication operator (@) is not supported".to_string());
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                "matrix multiplication operator (@) is not supported".to_string(),
+                target_range,
+            );
             None
         }
     }
@@ -41,7 +61,11 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
             n.id.to_string()
         } else {
-            ctx.error("augmented attribute assignment target must be a simple name".to_string());
+            invalid_target_shape(
+                ctx,
+                "augmented attribute assignment target must be a simple name",
+                attr.value.range(),
+            );
             return None;
         };
         if !ensure_mutable_parameter_binding(ctx, &obj_name, attr.value.range()) {
@@ -49,7 +73,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         }
         let field_name = attr.attr.to_string();
         let value = lower_expr(&aug.value, ctx)?;
-        let op_str = op_to_augassign_string(aug.op, ctx)?;
+        let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
         return Some(HirStmt::AttributeAugAssign {
             object: obj_name,
             field: field_name,
@@ -61,46 +85,41 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     // Handle augmented assignment on subscript: list[i] += val
     if let Expr::Subscript(sub) = aug.target.as_ref() {
         if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
-            let (obj_name, nested_field_name, obj_ty, nested_object_expr) = if let Expr::Name(n) =
-                inner_sub.value.as_ref()
-            {
-                let obj_ty = ctx
-                    .scope
-                    .lookup(&n.id)
-                    .map(|info| info.effective_type().clone())
-                    .unwrap_or(Type::Unknown);
-                (
-                    n.id.to_string(),
-                    None,
-                    obj_ty.clone(),
-                    HirExpr::Name {
-                        name: n.id.to_string(),
-                        ty: obj_ty,
-                    },
-                )
-            } else if let Expr::Attribute(attr) = inner_sub.value.as_ref() {
-                let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-                    n.id.to_string()
+            let (obj_name, nested_field_name, obj_ty, nested_object_expr) =
+                if let Expr::Name(n) = inner_sub.value.as_ref() {
+                    let obj_ty = ctx
+                        .scope
+                        .lookup(&n.id)
+                        .map(|info| info.effective_type().clone())
+                        .unwrap_or(Type::Unknown);
+                    (
+                        n.id.to_string(),
+                        None,
+                        obj_ty.clone(),
+                        HirExpr::Name {
+                            name: n.id.to_string(),
+                            ty: obj_ty,
+                        },
+                    )
+                } else if let Expr::Attribute(attr) = inner_sub.value.as_ref() {
+                    let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
+                        n.id.to_string()
+                    } else {
+                        invalid_subscript_target_shape(ctx, attr.value.range());
+                        return None;
+                    };
+                    let field_name = attr.attr.to_string();
+                    let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
+                    let object_expr = HirExpr::FieldAccess {
+                        object: Box::new(lower_expr(attr.value.as_ref(), ctx)?),
+                        field: field_name.clone(),
+                        ty: field_ty.clone(),
+                    };
+                    (obj_name, Some(field_name), field_ty, object_expr)
                 } else {
-                    ctx.error(
-                        "augmented subscript assignment target must be a simple name".to_string(),
-                    );
+                    invalid_subscript_target_shape(ctx, inner_sub.value.range());
                     return None;
                 };
-                let field_name = attr.attr.to_string();
-                let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
-                let object_expr = HirExpr::FieldAccess {
-                    object: Box::new(lower_expr(attr.value.as_ref(), ctx)?),
-                    field: field_name.clone(),
-                    ty: field_ty.clone(),
-                };
-                (obj_name, Some(field_name), field_ty, object_expr)
-            } else {
-                ctx.error(
-                    "augmented subscript assignment target must be a simple name".to_string(),
-                );
-                return None;
-            };
             if !ensure_mutable_parameter_binding(ctx, &obj_name, inner_sub.value.range()) {
                 return None;
             }
@@ -114,7 +133,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
             let inner_index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&aug.value, ctx)?;
-            let op_str = op_to_augassign_string(aug.op, ctx)?;
+            let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
             let outer_elem_ty = resolve_subscript_result_type(
                 inner_sub,
                 &obj_ty,
@@ -175,9 +194,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
                 n.id.to_string()
             } else {
-                ctx.error(
-                    "augmented subscript assignment target must be a simple name".to_string(),
-                );
+                invalid_subscript_target_shape(ctx, attr.value.range());
                 return None;
             };
             if !ensure_mutable_parameter_binding(ctx, &obj_name, attr.value.range()) {
@@ -195,7 +212,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let object_expr = lower_expr(attr.value.as_ref(), ctx)?;
             let index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&aug.value, ctx)?;
-            let op_str = op_to_augassign_string(aug.op, ctx)?;
+            let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
 
             let element_ty = resolve_subscript_result_type(sub, &field_ty, &index, index.ty(), ctx);
             let base_op = &op_str[..op_str.len() - 1];
@@ -235,7 +252,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         let obj_name = if let Expr::Name(n) = sub.value.as_ref() {
             n.id.to_string()
         } else {
-            ctx.error("augmented subscript assignment target must be a simple name".to_string());
+            invalid_subscript_target_shape(ctx, sub.value.range());
             return None;
         };
         if !ensure_mutable_parameter_binding(ctx, &obj_name, sub.value.range()) {
@@ -255,7 +272,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         }
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&aug.value, ctx)?;
-        let op_str = op_to_augassign_string(aug.op, ctx)?;
+        let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
         let object_ty = validate_subscript_augassign_target(
             ctx,
             SubscriptAugAssignTarget {
@@ -279,7 +296,11 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     let (name, name_range): (String, TextRange) = if let Expr::Name(n) = aug.target.as_ref() {
         (n.id.to_string(), n.range())
     } else {
-        ctx.error("augmented assignment target must be a simple name".to_string());
+        invalid_target_shape(
+            ctx,
+            "augmented assignment target must be a simple name",
+            aug.target.range(),
+        );
         return None;
     };
 
@@ -287,7 +308,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     ctx.clear_sequence_pointer(&name);
     ctx.clear_len_alias(&name);
 
-    let op_str = op_to_augassign_string(aug.op, ctx)?;
+    let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
 
     let var_info = if ctx.current_function_frame_start().is_some() {
         if let Some(info) = ctx.lookup_current_function_binding(&name) {

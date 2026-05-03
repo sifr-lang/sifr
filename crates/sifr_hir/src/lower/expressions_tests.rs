@@ -694,6 +694,73 @@ fn test_nested_subscript_augassign_lowers_for_name_targets() {
 }
 
 #[test]
+fn test_matrix_augassign_has_unsupported_operator_code() {
+    let source = "def bad(mut value: int) -> None:\n    value @= 1\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected matrix augassign unsupported operator error");
+
+    assert!(
+        errors.iter().any(
+            |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                && error.message == "matrix multiplication operator (@) is not supported"
+                && error.primary_range
+                    == Some(range_for_after(source, ") -> None:\n    ", "value"))
+        ),
+        "matrix augassign diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
+fn test_augassign_complex_targets_have_type_codes() {
+    let cases = [
+        (
+            "attribute receiver",
+            "def make_box() -> int:\n    return 1\n\ndef bad() -> None:\n    make_box().field += 1\n",
+            "augmented attribute assignment target must be a simple name",
+            "make_box()",
+        ),
+        (
+            "subscript receiver",
+            "def make_items() -> list[int]:\n    return [1]\n\ndef bad() -> None:\n    make_items()[0] += 1\n",
+            "augmented subscript assignment target must be a simple name",
+            "make_items()",
+        ),
+        (
+            "attribute subscript receiver",
+            "def make_box() -> int:\n    return 1\n\ndef bad() -> None:\n    make_box().counts[0] += 1\n",
+            "augmented subscript assignment target must be a simple name",
+            "make_box()",
+        ),
+        (
+            "nested subscript receiver",
+            "def make_grid() -> list[list[int]]:\n    return [[1]]\n\ndef bad() -> None:\n    make_grid()[0][0] += 1\n",
+            "augmented subscript assignment target must be a simple name",
+            "make_grid()",
+        ),
+        (
+            "nested subscript expression receiver",
+            "def bad(mut xs: list[list[int]], mut ys: list[list[int]]) -> None:\n    (xs + ys)[0][0] += 1\n",
+            "augmented subscript assignment target must be a simple name",
+            "xs + ys",
+        ),
+    ];
+
+    for (label, source, message, range_needle) in cases {
+        let result = lower_source(source);
+        let errors = result.expect_err("expected complex augassign target error");
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                    && error.message == message
+                    && error.primary_range
+                        == Some(range_for_after(source, ") -> None:\n    ", range_needle))),
+            "{label} diagnostic should be structured and ranged: {errors:?}"
+        );
+    }
+}
+
+#[test]
 fn test_bytes_subscript_assignment_has_ownership_code() {
     let source = "def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] = 65\n";
     let result = lower_source(source);
