@@ -18,6 +18,31 @@ fn decimal_scale_diagnostic_code(receiver_name: &str) -> DiagnosticCode {
     }
 }
 
+fn decimal_method_arity_range(arg_ranges: &[TextRange], method_range: TextRange) -> TextRange {
+    arg_ranges.last().copied().unwrap_or(method_range)
+}
+
+fn reject_decimal_method_wrong_count(
+    ctx: &mut LowerCtx,
+    message: String,
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
+        message,
+        decimal_method_arity_range(arg_ranges, method_range),
+    );
+}
+
+fn reject_decimal_method_unsupported(ctx: &mut LowerCtx, message: String, method_range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+        message,
+        method_range,
+    );
+}
+
 fn literal_scale_value(arg: &HirExpr) -> Option<i64> {
     match arg {
         HirExpr::IntLiteral(v) => Some(*v),
@@ -311,7 +336,12 @@ pub(super) fn resolve_decimal_method_type(
             }
             "sqrt" => {
                 if !args.is_empty() {
-                    ctx.error("decimal.sqrt() takes no arguments".to_string());
+                    reject_decimal_method_wrong_count(
+                        ctx,
+                        "decimal.sqrt() takes no arguments".to_string(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Result(
@@ -355,20 +385,34 @@ pub(super) fn resolve_decimal_method_type(
             }
             "abs" => {
                 if !args.is_empty() {
-                    ctx.error("decimal.abs() takes no arguments".to_string());
+                    reject_decimal_method_wrong_count(
+                        ctx,
+                        "decimal.abs() takes no arguments".to_string(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Decimal)
             }
             "is_zero" | "is_finite" => {
                 if !args.is_empty() {
-                    ctx.error(format!("decimal.{method}() takes no arguments"));
+                    reject_decimal_method_wrong_count(
+                        ctx,
+                        format!("decimal.{method}() takes no arguments"),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Bool)
             }
             _ => {
-                ctx.error(format!("type 'decimal' has no method '{method}'"));
+                reject_decimal_method_unsupported(
+                    ctx,
+                    format!("type 'decimal' has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         },
@@ -386,7 +430,12 @@ pub(super) fn resolve_decimal_method_type(
             }
             "sqrt" => {
                 if !args.is_empty() {
-                    ctx.error("bigdecimal.sqrt() takes no arguments".to_string());
+                    reject_decimal_method_wrong_count(
+                        ctx,
+                        "bigdecimal.sqrt() takes no arguments".to_string(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Result(
@@ -430,20 +479,34 @@ pub(super) fn resolve_decimal_method_type(
             }
             "abs" => {
                 if !args.is_empty() {
-                    ctx.error("bigdecimal.abs() takes no arguments".to_string());
+                    reject_decimal_method_wrong_count(
+                        ctx,
+                        "bigdecimal.abs() takes no arguments".to_string(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::BigDecimal)
             }
             "is_zero" | "is_finite" => {
                 if !args.is_empty() {
-                    ctx.error(format!("bigdecimal.{method}() takes no arguments"));
+                    reject_decimal_method_wrong_count(
+                        ctx,
+                        format!("bigdecimal.{method}() takes no arguments"),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Bool)
             }
             _ => {
-                ctx.error(format!("type 'bigdecimal' has no method '{method}'"));
+                reject_decimal_method_unsupported(
+                    ctx,
+                    format!("type 'bigdecimal' has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         },

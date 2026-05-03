@@ -20,6 +20,7 @@ RETIRED_SYMBOLS = (
 RAW_HIR_ERROR_FREE_FILES = (
     pathlib.Path("crates/sifr_hir/src/lower/bytes_methods.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/builtin_calls.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/decimal_methods.rs"),
 )
 RAW_CTX_ERROR = re.compile(r"\bctx\.error\s*\(")
 

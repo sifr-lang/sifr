@@ -752,6 +752,32 @@ fn test_bytes_codec_type_errors_have_structured_codes() {
 }
 
 #[test]
+fn test_decimal_method_surface_errors_have_structured_codes() {
+    let arity_source =
+        "def main() -> None:\n    d: decimal = Decimal(\"1.25\")\n    _bad: decimal = d.sqrt(1)\n";
+    let arity_result = lower_source(arity_source);
+    let arity_errors = arity_result.expect_err("expected decimal.sqrt arity error");
+    assert!(
+        arity_errors.iter().any(|error| error.code
+            == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.message == "decimal.sqrt() takes no arguments"
+            && error.primary_range == Some(range_for_after_anchor(arity_source, "sqrt(", "1"))),
+        "decimal.sqrt arity diagnostic should be structured and ranged: {arity_errors:?}"
+    );
+
+    let method_source = "def main() -> None:\n    d: decimal = Decimal(\"1.25\")\n    _bad: decimal = d.magnitude()\n";
+    let method_result = lower_source(method_source);
+    let method_errors = method_result.expect_err("expected decimal unknown method error");
+    assert!(
+        method_errors.iter().any(|error| error.code
+            == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.message == "type 'decimal' has no method 'magnitude'"
+            && error.primary_range == Some(range_for(method_source, "magnitude"))),
+        "decimal unknown method diagnostic should be structured and ranged: {method_errors:?}"
+    );
+}
+
+#[test]
 fn test_list_subscript_augassign_type_error_keeps_code() {
     let source = "def bad(mut xs: list[int]) -> None:\n    xs[0] += \"x\"\n";
     let result = lower_source(source);
