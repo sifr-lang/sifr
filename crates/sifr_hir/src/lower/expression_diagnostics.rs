@@ -44,6 +44,10 @@ pub(super) fn call_wrong_positional_count(ctx: &mut LowerCtx, message: String, r
     ctx.error_with_code_at(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT, message, range);
 }
 
+pub(super) fn call_duplicate_argument(ctx: &mut LowerCtx, message: String, range: TextRange) {
+    ctx.error_with_code_at(DiagnosticCode::CALL_DUPLICATE_ARGUMENT, message, range);
+}
+
 pub(super) fn type_mismatch(ctx: &mut LowerCtx, message: String, range: TextRange) {
     ctx.error_with_code_at(DiagnosticCode::TYPE_MISMATCH, message, range);
 }
