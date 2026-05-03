@@ -9,10 +9,12 @@ use super::builtin_calls::{
     DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
+use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argument_range};
 use super::classes::is_hashable_type;
 use super::compat_imports::{
     resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
 };
+use super::container_literal_diagnostics::container_literal_type_conflict;
 use super::decimal_methods::{
     decimal_conversion_error_type, lower_bigdecimal_constructor_call,
     lower_decimal_constructor_call, resolve_decimal_method_type,
@@ -249,30 +251,6 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     name_diagnostics::undefined_variable(ctx, &var_name, name.range());
     None
-}
-
-fn call_argument_ranges_by_param(call: &ExprCall, ft: &FunctionType) -> Vec<Option<TextRange>> {
-    let mut ranges = vec![None; ft.params.len()];
-
-    for (index, arg) in call.arguments.args.iter().enumerate().take(ft.params.len()) {
-        ranges[index] = Some(arg.range());
-    }
-
-    for keyword in &call.arguments.keywords {
-        let Some(name) = keyword.arg.as_ref() else {
-            continue;
-        };
-        let Some(index) = ft
-            .params
-            .iter()
-            .position(|(param_name, _, _)| param_name == name.as_str())
-        else {
-            continue;
-        };
-        ranges[index] = Some(keyword.value.range());
-    }
-
-    ranges
 }
 
 /// Map a binary operator to its corresponding dunder method name.
@@ -707,10 +685,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             }
             let Some(elem_ty) = callable_builtin_element_type(iterable.ty()) else {
                 if matches!(iterable.ty().resolve_alias(), Type::Tuple(_)) {
-                    ctx.error_with_code(
+                    ctx.error_with_code_at(
                         DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
                         "iter() tuple argument must have one statically provable element type"
                             .to_string(),
+                        call.arguments.args[0].range(),
                     );
                     return None;
                 }
@@ -836,9 +815,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             // Check if the type is hashable
             if !is_hashable_type(&ty) {
                 let type_name = ty.display_name();
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::PROTO_HASHABLE_OR_COMPARABLE_REQUIRED,
                     format!("hash() argument must be hashable, got '{type_name}'"),
+                    call.arguments.args[0].range(),
                 );
                 return None;
             }
@@ -1843,6 +1823,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         )?
     };
 
+    let arg_ranges = call_argument_ranges_by_param(call, &ft);
+
     // Check argument types (skip for print)
     if func_name != "print" {
         let is_generic_function = ctx.generic_functions.contains_key(&func_name);
@@ -1856,7 +1838,12 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 }
             }
             if !arg.ty().is_assignable_to(param_ty) {
-                ctx.error_with_code(
+                let primary_range = arg_ranges
+                    .get(i)
+                    .copied()
+                    .flatten()
+                    .unwrap_or_else(|| call.range());
+                ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISMATCH,
                     format!(
                         "argument {} ('{}') of function '{}': expected '{}', got '{}'",
@@ -1866,6 +1853,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         param_ty.display_name(),
                         arg.ty().display_name()
                     ),
+                    primary_range,
                 );
             }
         }
@@ -1874,7 +1862,6 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     // Exclusivity check: enforce that the same variable is not passed as mut twice,
     // or as both mut and immutable borrow in the same call.
     {
-        let arg_ranges = call_argument_ranges_by_param(call, &ft);
         let mut mut_borrowed: Vec<String> = Vec::new();
         let mut immut_borrowed: Vec<String> = Vec::new();
         for (i, arg) in args.iter().enumerate() {
@@ -1959,7 +1946,12 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 collect_type_vars(&concrete_param_ty, &mut unresolved_type_vars);
                 if !unresolved_type_vars.is_empty() {
                     if !is_compatible_with_unresolved_typevars(arg.ty(), &concrete_param_ty) {
-                        ctx.error_with_code(
+                        let primary_range = arg_ranges
+                            .get(i)
+                            .copied()
+                            .flatten()
+                            .unwrap_or_else(|| call.range());
+                        ctx.error_with_code_at(
                             DiagnosticCode::TYPE_MISMATCH,
                             format!(
                                 "argument {} ('{}') of function '{}': expected '{}', got '{}'",
@@ -1969,12 +1961,18 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                                 concrete_param_ty.display_name(),
                                 arg.ty().display_name()
                             ),
+                            primary_range,
                         );
                     }
                     continue;
                 }
                 if !arg.ty().is_assignable_to(&concrete_param_ty) {
-                    ctx.error_with_code(
+                    let primary_range = arg_ranges
+                        .get(i)
+                        .copied()
+                        .flatten()
+                        .unwrap_or_else(|| call.range());
+                    ctx.error_with_code_at(
                         DiagnosticCode::TYPE_MISMATCH,
                         format!(
                             "argument {} ('{}') of function '{}': expected '{}', got '{}'",
@@ -1984,6 +1982,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                             concrete_param_ty.display_name(),
                             arg.ty().display_name()
                         ),
+                        primary_range,
                     );
                 }
             }
@@ -2020,7 +2019,9 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                             type_satisfies_constraint(concrete_ty, constraint, ctx)
                         })
                     {
-                        ctx.error_with_code(
+                        let primary_range = type_param_argument_range(call, &ft, tv_name)
+                            .unwrap_or_else(|| call.range());
+                        ctx.error_with_code_at(
                             DiagnosticCode::TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED,
                             format!(
                                 "type '{actual}' does not satisfy constraints ({constraints}) required by type parameter '{type_param}'",
@@ -2028,6 +2029,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                                 constraints = constraints.join(", "),
                                 type_param = tv_name
                             ),
+                            primary_range,
                         );
                     }
                 }
@@ -2060,22 +2062,6 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     }
 }
 
-fn container_literal_type_conflict(
-    ctx: &mut LowerCtx,
-    element_kind: &str,
-    expected: &Type,
-    actual: &Type,
-) {
-    ctx.error_with_code(
-        DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
-        format!(
-            "container literal has conflicting {element_kind} types: {} and {}",
-            expected.display_name(),
-            actual.display_name()
-        ),
-    );
-}
-
 pub(super) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut elements = Vec::new();
     let mut elem_ty: Option<Type> = None;
@@ -2085,7 +2071,7 @@ pub(super) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<
         let ty = expr.ty().clone();
         if let Some(ref expected) = elem_ty {
             if !ty.is_assignable_to(expected) {
-                container_literal_type_conflict(ctx, "list element", expected, &ty);
+                container_literal_type_conflict(ctx, "list element", expected, &ty, elt.range());
             }
         } else {
             elem_ty = Some(ty);
@@ -2111,7 +2097,7 @@ pub(super) fn lower_set_literal(set: &ExprSet, ctx: &mut LowerCtx) -> Option<Hir
         let ty = expr.ty().clone();
         if let Some(ref expected) = elem_ty {
             if !ty.is_assignable_to(expected) {
-                container_literal_type_conflict(ctx, "set element", expected, &ty);
+                container_literal_type_conflict(ctx, "set element", expected, &ty, elt.range());
             }
         } else {
             elem_ty = Some(ty);
@@ -2140,7 +2126,13 @@ pub(super) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) -> Option<
             let kt = key.ty().clone();
             if let Some(ref expected) = key_ty {
                 if !kt.is_assignable_to(expected) {
-                    container_literal_type_conflict(ctx, "dict key", expected, &kt);
+                    container_literal_type_conflict(
+                        ctx,
+                        "dict key",
+                        expected,
+                        &kt,
+                        key_expr.range(),
+                    );
                 }
             } else {
                 key_ty = Some(kt);
@@ -2155,7 +2147,13 @@ pub(super) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) -> Option<
         let vt = val.ty().clone();
         if let Some(ref expected) = val_ty {
             if !vt.is_assignable_to(expected) {
-                container_literal_type_conflict(ctx, "dict value", expected, &vt);
+                container_literal_type_conflict(
+                    ctx,
+                    "dict value",
+                    expected,
+                    &vt,
+                    item.value.range(),
+                );
             }
         } else {
             val_ty = Some(vt);

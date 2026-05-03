@@ -131,7 +131,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let result_ty = match type_check_binary_op(&current_elem_ty, base_op, value.ty()) {
                 Ok(ty) => ty,
                 Err((code, message)) => {
-                    ctx.error_with_code(code, message);
+                    ctx.error_with_code_at(code, message, aug.value.range());
                     return None;
                 }
             };
@@ -200,7 +200,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let result_ty = match type_check_binary_op(&element_ty, base_op, value.ty()) {
                 Ok(ty) => ty,
                 Err((code, message)) => {
-                    ctx.error_with_code(code, message);
+                    ctx.error_with_code_at(code, message, aug.value.range());
                     return None;
                 }
             };
@@ -261,6 +261,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             index.ty(),
             value.ty(),
             op_str,
+            aug.value.range(),
         );
         return Some(HirStmt::SubscriptAugAssign {
             object: obj_name,
@@ -315,13 +316,13 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             (Type::Bytes, Type::Bytes) => {}
             _ => {
                 if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-                    ctx.error_with_code(code, message);
+                    ctx.error_with_code_at(code, message, aug.value.range());
                     return None;
                 }
             }
         }
     } else if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-        ctx.error_with_code(code, message);
+        ctx.error_with_code_at(code, message, aug.value.range());
         return None;
     }
 

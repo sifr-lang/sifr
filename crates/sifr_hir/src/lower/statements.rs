@@ -930,13 +930,14 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         // int literals are assignable to bigint (coercion: 42 -> BigInt::from(42))
         let is_int_to_bigint = final_ty == Type::Int && declared_type == Type::BigInt;
         if !is_int_to_bigint && !final_ty.is_assignable_to(&declared_type) {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 format!(
                     "type mismatch: expected '{}', got '{}'",
                     declared_type.display_name(),
                     final_ty.display_name()
                 ),
+                initializer_range,
             );
         }
         (expr, initializer_range)
@@ -1352,7 +1353,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         let info_ty = info.ty.clone();
         let can_widen = info.is_inferred_local_binding();
         if !reconcile_optional_reassignment(ctx, &name, &info_ty, &value_ty, can_widen) {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 format!(
                     "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
@@ -1360,6 +1361,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                     name,
                     info_ty.display_name()
                 ),
+                assign.value.range(),
             );
         }
         // Reset moved state on reassignment
@@ -1450,13 +1452,14 @@ pub(super) fn lower_return(
         }
 
         if !expr_ty.is_assignable_to(&func_type.return_type) {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 format!(
                     "return type mismatch: expected '{}', got '{}'",
                     func_type.return_type.display_name(),
                     expr_ty.display_name()
                 ),
+                val.range(),
             );
         }
         Some(expr)

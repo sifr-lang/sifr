@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0008
+# expect-error[col=18]: SIFR-TYPE-0008
 
 def main():
     values = [1, "two"]
