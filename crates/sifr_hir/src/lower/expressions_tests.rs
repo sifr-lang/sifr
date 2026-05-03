@@ -1917,14 +1917,16 @@ fn test_generator_function_infers_iterator_return_type() {
 
 #[test]
 fn test_generator_function_rejects_non_iterator_annotation() {
-    let result = lower_source(
-        "def count_up(n: int) -> list[int]:\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n",
-    );
+    let source =
+        "def count_up(n: int) -> list[int]:\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| { e.message.contains("must declare return type 'Iterator[T]'") }));
+    assert!(errors.iter().any(|e| {
+        e.message.contains("must declare return type 'Iterator[T]'")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && e.primary_range == Some(range_for_after_anchor(source, "-> ", "list[int]"))
+    }));
 }
 
 #[test]

@@ -455,10 +455,14 @@ fn finalize_nested_function_types(
             state.return_type = finalize_return_type(state);
             if state.return_type.is_unknown() {
                 state.inference_failed = true;
-                ctx.error(format!(
-                    "function '{}' return type could not be inferred deterministically",
-                    state.func.name
-                ));
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISSING_ANNOTATION,
+                    format!(
+                        "function '{}' return type could not be inferred deterministically",
+                        state.func.name
+                    ),
+                    state.func.name.range(),
+                );
                 state.return_type = Type::Any;
             }
         }

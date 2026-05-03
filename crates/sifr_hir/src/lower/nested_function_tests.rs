@@ -264,6 +264,19 @@ fn test_nested_missing_parameter_annotation_has_primary_range() {
 }
 
 #[test]
+fn test_nested_ambiguous_return_inference_has_code_and_primary_range() {
+    let source = "def outer(flag: bool) -> None:\n    def helper():\n        if flag:\n            return 1\n        return \"x\"\n    helper()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "function 'helper' return type could not be inferred deterministically"
+            && error.code == Some(DiagnosticCode::TYPE_MISSING_ANNOTATION)
+            && error.primary_range == Some(range_for_after(source, "def ", "helper"))
+    }));
+}
+
+#[test]
 fn test_recursive_memoized_nested_helper_infers_deterministic_int_return() {
     let result = lower_source(
         "def max_profit(prices: list[int]) -> int:\n    dp = {}\n\n    def dfs(i, buying):\n        if i >= len(prices):\n            return 0\n        if (i, buying) in dp:\n            return dp[(i, buying)]\n\n        cooldown = dfs(i + 1, buying)\n        if buying:\n            buy = dfs(i + 1, not buying) - prices[i]\n            dp[(i, buying)] = max(buy, cooldown)\n        else:\n            sell = dfs(i + 2, not buying) + prices[i]\n            dp[(i, buying)] = max(sell, cooldown)\n        return dp[(i, buying)]\n\n    return dfs(0, True)\n",

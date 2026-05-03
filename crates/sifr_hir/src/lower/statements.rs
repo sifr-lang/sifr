@@ -622,13 +622,21 @@ pub(super) fn lower_stmt(
                 );
             }
 
+            let return_annotation_range = func
+                .returns
+                .as_ref()
+                .map_or_else(|| func.name.range(), |returns| returns.range());
             let inferred_return_type = infer_function_return_type(
                 func.name.as_ref(),
                 ft.return_type.as_ref(),
                 func.returns.is_some(),
                 &body,
                 |message| {
-                    ctx.error(message);
+                    ctx.error_with_code_at(
+                        DiagnosticCode::TYPE_MISMATCH,
+                        message,
+                        return_annotation_range,
+                    );
                 },
             );
 

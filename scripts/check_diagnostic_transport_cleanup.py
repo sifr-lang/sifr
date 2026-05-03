@@ -23,11 +23,14 @@ RAW_HIR_ERROR_FREE_FILES = (
     pathlib.Path("crates/sifr_hir/src/lower/aug_assign_lowering.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/container_literal_specialization.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/decimal_methods.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/diagnostic_transport_tests.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/method_call_args.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/min_max_validation.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/module_function_registry.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/nested_function_inference.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/subscript_type.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/tuple_unpack.rs"),
+    pathlib.Path("crates/sifr_hir/src/lower/typing_and_functions.rs"),
     pathlib.Path("crates/sifr_hir/src/lower/type_aliases.rs"),
 )
 RAW_CTX_ERROR = re.compile(r"\bctx\.error\s*\(")
