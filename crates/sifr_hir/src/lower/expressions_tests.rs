@@ -3236,6 +3236,32 @@ fn test_dict_missing_method_has_stdlib_code() {
 }
 
 #[test]
+fn test_set_method_wrong_positional_count_has_call_code() {
+    let source = "def main():\n    values: set[int] = {1}\n    values.add(1, 2)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "set.add() takes exactly 1 argument, got 2"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(source, "values.add(1, ", "2"))
+    }));
+}
+
+#[test]
+fn test_set_missing_method_has_stdlib_code() {
+    let source = "def main():\n    values: set[int] = {1}\n    values.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "set has no method 'missing'"
+            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
+            && error.primary_range == Some(range_for_after(source, "values.", "missing"))
+    }));
+}
+
+#[test]
 fn test_duplicate_optional_method_keyword_is_rejected() {
     let source = "def main():\n    data: dict[str, int] = {\"x\": 1}\n    value: int = data.get(\"x\", 1, default=2)\n";
     let result = lower_source(source);
