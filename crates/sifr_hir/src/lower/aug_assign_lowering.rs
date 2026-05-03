@@ -5,7 +5,9 @@ use sifr_type_system::{type_check_binary_op, Type};
 use crate::hir_nodes::{HirExpr, HirStmt};
 
 use super::binding_mutability::ensure_mutable_parameter_binding;
-use super::container_literal_specialization::validate_subscript_augassign_target;
+use super::container_literal_specialization::{
+    validate_subscript_augassign_target, SubscriptAugAssignTarget,
+};
 use super::expressions::lower_expr;
 use super::name_diagnostics;
 use super::statements::resolve_object_field_type;
@@ -256,12 +258,15 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         let op_str = op_to_augassign_string(aug.op, ctx)?;
         let object_ty = validate_subscript_augassign_target(
             ctx,
-            &obj_name,
-            obj_ty,
-            index.ty(),
-            value.ty(),
-            op_str,
-            aug.value.range(),
+            SubscriptAugAssignTarget {
+                object_name: &obj_name,
+                object_ty: obj_ty,
+                index_ty: index.ty(),
+                rhs_ty: value.ty(),
+                op: op_str,
+                target_range: sub.range(),
+                rhs_range: aug.value.range(),
+            },
         );
         return Some(HirStmt::SubscriptAugAssign {
             object: obj_name,

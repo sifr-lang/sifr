@@ -811,6 +811,72 @@ fn test_dict_subscript_augassign_type_error_keeps_code() {
 }
 
 #[test]
+fn test_list_subscript_assignment_index_error_has_type_code() {
+    let source = "def bad(mut xs: list[int]) -> None:\n    xs[\"0\"] = 1\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected list subscript assignment index error");
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message == "list subscript assignment index must be 'int', got 'str'"
+                && error.primary_range == Some(range_for(source, "xs[\"0\"]"))),
+        "list subscript assignment index diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
+fn test_list_subscript_assignment_value_error_has_type_code() {
+    let source = "def bad(mut xs: list[int]) -> None:\n    xs[0] = \"x\"\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected list subscript assignment value error");
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message
+                    == "list subscript assignment value type 'str' is not compatible with list element type 'int'"
+                && error.primary_range == Some(range_for(source, "xs[0]"))),
+        "list subscript assignment value diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
+fn test_unsupported_subscript_assignment_has_type_code() {
+    let source = "def bad(mut value: int) -> None:\n    value[0] = 1\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected unsupported subscript assignment error");
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message == "subscript assignment is not supported for type 'int'"
+                && error.primary_range == Some(range_for(source, "value[0]"))),
+        "unsupported subscript assignment diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
+fn test_unsupported_subscript_augassign_has_type_code() {
+    let source = "def bad(mut value: int) -> None:\n    value[0] += 1\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected unsupported subscript augassign error");
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message
+                    == "augmented subscript assignment is not supported for type 'int'"
+                && error.primary_range == Some(range_for(source, "value[0]"))),
+        "unsupported subscript augassign diagnostic should be structured and ranged: {errors:?}"
+    );
+}
+
+#[test]
 fn test_tuple_index_out_of_range_has_type_code() {
     let source = "def main():\n    pair: tuple[int, str] = (1, \"x\")\n    value: int = pair[2]\n";
     let result = lower_source(source);
