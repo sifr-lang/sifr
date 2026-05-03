@@ -129,6 +129,8 @@ impl DiagnosticCode {
     pub const BUILD_ARTIFACT_MISSING: Self = Self::new("SIFR-BUILD-0006", Severity::Error);
 
     pub const INTERNAL_COMPILER_PANIC: Self = Self::new("SIFR-INTERNAL-0001", Severity::Error);
+    pub const INTERNAL_RECOVERY_OMISSION_SUMMARY: Self =
+        Self::new("SIFR-INTERNAL-0002", Severity::Note);
 
     #[cfg(test)]
     pub(crate) const TEST_INTERNAL_ERROR: Self = Self::new("SIFR-INTERNAL-9998", Severity::Error);
@@ -1341,20 +1343,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         [],
         []
     ),
-    DiagnosticRegistryEntry {
-        id: "SIFR-INTERNAL-0002",
-        family: "INTERNAL",
-        summary: "Reserved for structured recovery-cap omission summaries.",
-        state: DiagnosticState::Reserved,
-        docs_path: "docs/errors/diagnostic-codes.md",
-        representative_fixture_path: None,
-        message_template: None,
-        owner_module: Some("diagnostic recovery cap"),
-        declared_args: &[],
-        dedupe_args: &[],
-        declared_severity: Some(Severity::Note),
-        tooling: DiagnosticTooling::DEFAULT,
-    },
+    active_entry!(
+        "SIFR-INTERNAL-0002",
+        "INTERNAL",
+        "Structured recovery-cap omission summary.",
+        Severity::Note,
+        "crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics",
+        "{omitted_count} additional diagnostics omitted by recovery cap ({cap_kind})",
+        "sifr_driver::diagnostics",
+        [arg!("omitted_count"), arg!("cap_kind")],
+        ["cap_kind"]
+    ),
 ];
 
 pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
@@ -1444,6 +1443,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
     DiagnosticCode::BUILD_ARTIFACT_MISSING,
     DiagnosticCode::INTERNAL_COMPILER_PANIC,
+    DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY,
 ];
 
 #[must_use]

@@ -1440,7 +1440,11 @@ mod tests {
                 "SIFR-TYPE-0002",
                 Severity::Error,
                 &format!("distinct diagnostic {idx:02}"),
-                Some(primary_test_span(&format!("distinct_{idx:02}.sifr"), 1, 1)),
+                Some(primary_test_span(
+                    &format!("zzz_distinct_{idx:02}.sifr"),
+                    1,
+                    1,
+                )),
                 None,
             ));
         }
@@ -1449,7 +1453,7 @@ mod tests {
                 "SIFR-TYPE-0002",
                 Severity::Error,
                 "aaa repeated mismatch",
-                Some(primary_test_span("repeated.sifr", idx + 1, 1)),
+                Some(primary_test_span("aaa_repeated.sifr", idx + 1, 1)),
                 None,
             ));
         }
@@ -1461,13 +1465,22 @@ mod tests {
             .take(5)
             .all(|diagnostic| diagnostic.code == "SIFR-TYPE-0002"
                 && diagnostic.message == "aaa repeated mismatch"));
-        assert_eq!(canonical[5].message, "... +3 more similar diagnostics");
+        assert_eq!(canonical[5].code, "SIFR-INTERNAL-0002");
+        assert_eq!(
+            canonical[5].message,
+            "3 additional diagnostics omitted by recovery cap (similar-diagnostic group)"
+        );
         assert!(canonical
             .iter()
-            .any(|diagnostic| diagnostic.message == "distinct diagnostic 43"));
+            .any(|diagnostic| diagnostic.message == "distinct diagnostic 42"));
         assert!(!canonical
             .iter()
-            .any(|diagnostic| diagnostic.message == "distinct diagnostic 44"));
+            .any(|diagnostic| diagnostic.message == "distinct diagnostic 43"));
+        assert_eq!(canonical[49].code, "SIFR-INTERNAL-0002");
+        assert_eq!(
+            canonical[49].message,
+            "6 additional diagnostics omitted by recovery cap (top-level diagnostic stream)"
+        );
 
         let json_output = render_diagnostic_output(&diagnostics, DiagnosticFormat::Json)
             .expect("JSON diagnostics should render");
@@ -1493,7 +1506,7 @@ mod tests {
             .expect("compact output should start with a summary");
         assert_eq!(
             summary,
-            "summary: 50 error(s), 0 warning(s), 0 note(s), 0 help item(s)"
+            "summary: 48 error(s), 0 warning(s), 2 note(s), 0 help item(s)"
         );
         let compact_total: usize = compact_output
             .lines()
@@ -1506,8 +1519,8 @@ mod tests {
             })
             .sum();
         assert_eq!(compact_total, canonical.len());
-        assert!(compact_output.contains("error [SIFR-TYPE-0002] distinct diagnostic 43 (x1)"));
-        assert!(!compact_output.contains("distinct diagnostic 44"));
+        assert!(compact_output.contains("error [SIFR-TYPE-0002] distinct diagnostic 42 (x1)"));
+        assert!(!compact_output.contains("distinct diagnostic 43"));
     }
 
     #[test]

@@ -118,6 +118,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-BUILD-0005`](SIFR-BUILD-0005.md) | Error | Rustc or Cargo execution failed. |
 | [`SIFR-BUILD-0006`](SIFR-BUILD-0006.md) | Error | Expected build artifact was not produced. |
 | [`SIFR-INTERNAL-0001`](SIFR-INTERNAL-0001.md) | Error | Unclassified compiler panic after a panic boundary. |
+| [`SIFR-INTERNAL-0002`](SIFR-INTERNAL-0002.md) | Note | Structured recovery-cap omission summary. |
 
 ## Reserved Codes
 
@@ -140,4 +141,3 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-CODEGEN-0000` | `CODEGEN` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-BUILD-0000` | `BUILD` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INTERNAL-0000` | `INTERNAL` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-INTERNAL-0002` | `INTERNAL` | Reserved for structured recovery-cap omission summaries. |

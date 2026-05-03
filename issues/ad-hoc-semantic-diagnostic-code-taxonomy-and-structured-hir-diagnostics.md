@@ -8,7 +8,7 @@ Sifr is not production-released yet. This phase intentionally does not preserve 
 
 ## Execution Status
 
-Current wave: `milestone_diag_9` source span completion, split into reviewable source-range transport and diagnostic-family slices.
+Current wave: `milestone_diag_10` recovery semantics and error tainting, split into reviewable recovery-cap, dedupe, tainting, and reveal-type overflow slices.
 
 - [x] Proposal reviewed through final loop and accepted for implementation.
 - [x] Added `crates/sifr_diagnostics` as the canonical leaf crate for diagnostic codes, source spans/source map, model builders, sink emission, rendering, and JSON schema generation.
@@ -135,6 +135,8 @@ Current wave: `milestone_diag_9` source span completion, split into reviewable s
 - [x] Claude implementation review for `milestone_diag_9` slice 20 completed and reviewer is satisfied. Review round: `reviews/semantic-diagnostic-code-taxonomy-diag-9-type-mismatch-primary-ranges-review-pass-1.md`. Local validation passed: `cargo fmt --check`, `git diff --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo clippy --workspace -- -D warnings`, focused HIR primary-range and augassign tests, focused type-mismatch/container/TypeVar e2e fixture selection, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=55.42s`; group-skew advisory emitted).
 - [x] `milestone_diag_9` slice 21 implementation complete and reviewer-satisfied: attached primary ranges to tuple unpack, star unpack, for-loop tuple target shape, and tuple-unpack reassignment diagnostics, removed the now-unused spanless `LowerCtx::error_with_code` helper, and added HIR primary-range assertions plus e2e column anchors for unpack fixtures. PR: https://github.com/sifr-lang/sifr/pull/1745.
 - [x] Claude implementation review for `milestone_diag_9` slice 21 completed and reviewer is satisfied. Review round: `reviews/semantic-diagnostic-code-taxonomy-diag-9-unpack-primary-ranges-review-pass-1.md`. Local validation passed: `cargo fmt --check`, `git diff --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr_hir "unpack" -- --nocapture --test-threads=1`, `cargo test -p sifr_hir diagnostic_transport_tests -- --nocapture`, focused unpack e2e fixture selection, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=56.42s`; group-skew advisory emitted).
+- [x] `milestone_diag_10` slice 1 implementation complete and reviewer-satisfied: activated `SIFR-INTERNAL-0002` for structured recovery-cap omission summaries, made similar-diagnostic and top-level cap overflow emit that note instead of cloning ordinary diagnostics, and updated generated registry/docs metadata.
+- [x] Claude implementation review for `milestone_diag_10` slice 1 completed and reviewer is satisfied. Review round: `reviews/semantic-diagnostic-code-taxonomy-diag-10-recovery-limit-summaries-review-pass-1.md`. Local validation passed: `cargo run -q -p sifr_diagnostics --bin gen-error-docs`, `cargo fmt --check`, `git diff --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, `python3 scripts/check_diagnostic_docs_sync.py`, `python3 scripts/check_diagnostic_schema_sync.py`, `cargo test -p sifr_diagnostics -p sifr_driver --lib --tests`, `cargo test -p sifr expected_error_contract -- --nocapture`, `cargo test -p sifr test_diagnostic_formats_share_canonical_sorted_capped_stream -- --nocapture`, `cargo clippy --workspace -- -D warnings`, and `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=52.46s`; group-skew advisory emitted).
 - [x] Claude pre-implementation review for `milestone_diag_4a` slice 2 completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2-preimplementation-review-pass-1.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2a completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-slice2a-transport-review-pass-2.md`.
 - [x] Claude implementation review for `milestone_diag_4a` slice 2b.1 completed and reviewer is satisfied. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-decimal-review-pass-2.md`.
@@ -979,7 +981,7 @@ crates/sifr_diagnostics/src/codes.rs
 Definition of done:
 
 - The registry skeleton exists with families, the per-family numbering convention, state machine, and reserved family bases (`0000` per family).
-- The registry skeleton reserves `SIFR-INTERNAL-0001` for unclassified compiler panics and `SIFR-INTERNAL-0002` for recovery-cap omission summaries. `SIFR-INTERNAL-0002` remains `Reserved` until activation in `milestone_diag_10`.
+- The registry skeleton reserves `SIFR-INTERNAL-0001` for unclassified compiler panics. `SIFR-INTERNAL-0002` is activated in `milestone_diag_10` for structured recovery-cap omission summaries.
 - Registry and code constants cannot silently diverge.
 - The registry records `id`, `family`, `summary`, `state` (`Active | Reserved`), docs path, representative fixture path, message template, owner module, declared args, dedupe args, and optional tooling metadata.
 - `DiagnosticCode::code() -> &'static str` returns the canonical registry id and is the only accessor used for JSON, docs URLs, sorting, and registry checks.
@@ -1410,7 +1412,7 @@ Internal compiler failure boundaries are the only place where a broad code is ac
 Internal code allocation policy:
 
 - `SIFR-INTERNAL-0001` is the stable catch-all for unclassified compiler panics after a panic boundary.
-- `SIFR-INTERNAL-0002` is reserved for structured recovery-cap omission summaries. It is activated in `milestone_diag_10`.
+- `SIFR-INTERNAL-0002` is active for structured recovery-cap omission summaries in `milestone_diag_10`.
 - Dedicated `SIFR-INTERNAL-*` codes should be added for recurring known internal failure families.
 - Known user-input failures must never be routed through `SIFR-INTERNAL-*`.
 
