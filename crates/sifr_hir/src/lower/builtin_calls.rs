@@ -5,7 +5,7 @@ use sifr_python_ast::{Expr, ExprAttribute, ExprCall, Number};
 use sifr_type_system::{make_union, IterationCapability, Type};
 
 use super::expressions::lower_expr;
-use super::LowerCtx;
+use super::{LowerCtx, RevealTypeDiagnostic};
 
 pub(super) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
 pub(super) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
@@ -775,8 +775,10 @@ pub(super) fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Opt
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     let ty = arg.ty().clone();
-    ctx.reveal_types
-        .push(format!("reveal_type: {}", ty.display_name()));
+    ctx.reveal_types.push(RevealTypeDiagnostic {
+        revealed_type: ty.display_name(),
+        primary_range: Some(call.arguments.args[0].range()),
+    });
     Some(arg)
 }
 

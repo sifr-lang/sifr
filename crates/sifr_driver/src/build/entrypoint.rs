@@ -29,8 +29,13 @@ enum RootedEntrypointShape {
 }
 
 pub(crate) enum RootedEntrypoint<'a> {
-    SingleFile { source: &'a str },
-    Project { main_file: &'a Path },
+    SingleFile {
+        source: &'a str,
+        display_path: &'a str,
+    },
+    Project {
+        main_file: &'a Path,
+    },
 }
 
 pub struct CachedBinaryArtifact {
@@ -62,16 +67,36 @@ pub(crate) struct RootedEntrypointPlan {
 pub(crate) fn compile_single_file_frontend(
     source: &str,
 ) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
-    RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile { source })?
-        .into_single_file_frontend()
+    RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
+        source,
+        display_path: "main",
+    })?
+    .into_single_file_frontend()
 }
 
 pub(crate) fn compile_single_file_entrypoint_with_metadata(
     source: &str,
 ) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile { source })?;
+    let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
+        source,
+        display_path: "main",
+    })?;
     plan.emit_frontend_diagnostics();
     plan.into_single_file_codegen_result()
+}
+
+pub(crate) fn check_single_file_entrypoint(
+    source: &str,
+    entrypoint_file: &Path,
+) -> Vec<RenderedDiagnostic> {
+    let display_path = entrypoint_file.to_string_lossy();
+    match RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
+        source,
+        display_path: &display_path,
+    }) {
+        Ok(plan) => plan.frontend_diagnostics(),
+        Err(errors) => errors,
+    }
 }
 
 pub(crate) fn resolve_project_entrypoint_plan(
@@ -118,8 +143,12 @@ pub(crate) fn build_cached_single_file_binary(
     source: &str,
     entrypoint_file: &Path,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
+    let display_path = entrypoint_file.to_string_lossy();
     build_cached_rooted_entrypoint_binary(
-        &RootedEntrypoint::SingleFile { source },
+        &RootedEntrypoint::SingleFile {
+            source,
+            display_path: &display_path,
+        },
         entrypoint_file.parent().unwrap_or(Path::new(".")),
         "run",
     )
@@ -149,13 +178,16 @@ impl RootedEntrypointPlan {
     fn from_entrypoint(entrypoint: &RootedEntrypoint<'_>) -> Result<Self, Vec<RenderedDiagnostic>> {
         let stdlib = compile_stdlib()?;
         let (shape, project_lowering) = match entrypoint {
-            RootedEntrypoint::SingleFile { source } => {
+            RootedEntrypoint::SingleFile {
+                source,
+                display_path,
+            } => {
                 let parsed_suite = parse_source(source)?;
                 let project_lowering = compile_single_frontend_module_with_source(
                     "main",
                     &parsed_suite,
                     FrontendSourceContext {
-                        display_path: "main",
+                        display_path,
                         source,
                     },
                     stdlib.defs.clone(),
@@ -206,6 +238,19 @@ impl RootedEntrypointPlan {
 
     pub(crate) fn emit_frontend_diagnostics(&self) {
         emit_project_frontend_diagnostics(&self.project_lowering);
+    }
+
+    pub(crate) fn frontend_diagnostics(&self) -> Vec<RenderedDiagnostic> {
+        self.project_lowering
+            .compile_order
+            .iter()
+            .filter_map(|module_name| {
+                self.project_lowering
+                    .module_diagnostics
+                    .get(module_name.as_str())
+            })
+            .flat_map(|diagnostics| diagnostics.rendered_reveal_types.clone())
+            .collect()
     }
 
     fn into_single_file_frontend(self) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
@@ -289,6 +334,7 @@ mod tests {
     fn test_single_file_entrypoint_plan_generates_main_only_project() {
         let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
             source: "def main():\n    print(\"ok\")\n",
+            display_path: "main",
         })
         .expect("single-file entrypoint should compile");
 

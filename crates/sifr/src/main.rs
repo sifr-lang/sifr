@@ -12,8 +12,8 @@ use sifr_diagnostics::{
 };
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
-    build_project, check, check_project, compile, diagnostic_label_for_code_str, emit_project,
-    find_workspace_root, run_tests, CachedBinaryArtifact, CompileResult,
+    build_project, check_project, check_single_file, compile, diagnostic_label_for_code_str,
+    emit_project, find_workspace_root, run_tests, CachedBinaryArtifact, CompileResult,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -613,7 +613,7 @@ fn check_entrypoint(file: &Path) -> Vec<RenderedDiagnostic> {
         Ok(CompilationMode::Project) => check_project(file),
         Ok(CompilationMode::SingleFile) => {
             let source = read_source(file);
-            check(&source)
+            check_single_file(&source, file)
         }
     }
 }
@@ -1169,6 +1169,96 @@ mod tests {
         assert!(
             errors.is_empty(),
             "project-aware check should succeed for valid local imports: {errors:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_check_entrypoint_single_file_reveal_type_is_structured_spanned_note() {
+        let dir = mktemp_dir("check_entrypoint_single_reveal_type");
+        let main = dir.join("main.sifr");
+        std::fs::write(&main, "def main():\n    reveal_type(1)\n")
+            .expect("main file should be written");
+
+        let diagnostics = check_entrypoint(&main);
+        assert_eq!(diagnostics.len(), 1);
+        let diagnostic = &diagnostics[0];
+        assert_eq!(diagnostic.code, DiagnosticCode::TYPE_REVEAL_TYPE.code());
+        assert_eq!(diagnostic.severity, Severity::Note);
+        assert_eq!(
+            diagnostic.message_template,
+            "revealed type is {revealed_type}"
+        );
+        assert_eq!(
+            diagnostic.args.get("revealed_type"),
+            Some(&DiagnosticArg::String("int".to_string()))
+        );
+
+        let primary_span = diagnostic
+            .spans
+            .iter()
+            .find(|span| span.is_primary)
+            .expect("reveal_type diagnostic should carry a primary span");
+        assert_eq!(
+            primary_span.file.as_deref(),
+            Some(main.to_string_lossy().as_ref())
+        );
+        assert_eq!(primary_span.line, Some(2));
+        assert!(
+            primary_span.byte_end > primary_span.byte_start,
+            "reveal_type primary span should cover source bytes"
+        );
+        assert_eq!(diagnostic_exit_code(&diagnostics), EXIT_SUCCESS);
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_check_entrypoint_reveal_type_notes_obey_recovery_cap() {
+        let dir = mktemp_dir("check_entrypoint_reveal_type_cap");
+        let main = dir.join("main.sifr");
+        let mut source = String::new();
+        for index in 0..60 {
+            let _ = writeln!(source, "class T{index}:");
+            let _ = writeln!(source, "    pass");
+            let _ = writeln!(source);
+        }
+        let _ = writeln!(source, "def main():");
+        for index in 0..60 {
+            let _ = writeln!(source, "    reveal_type(T{index}())");
+        }
+        std::fs::write(&main, source).expect("main file should be written");
+
+        let diagnostics = check_entrypoint(&main);
+        assert_eq!(diagnostics.len(), 60);
+        assert_eq!(diagnostic_exit_code(&diagnostics), EXIT_SUCCESS);
+
+        let canonical = canonical_diagnostic_stream(&diagnostics);
+        assert_eq!(canonical.len(), 50);
+        assert_eq!(
+            canonical
+                .iter()
+                .filter(|diagnostic| diagnostic.code == DiagnosticCode::TYPE_REVEAL_TYPE.code())
+                .count(),
+            49
+        );
+        let summary = canonical
+            .last()
+            .expect("recovery cap should append an omission summary");
+        assert_eq!(
+            summary.code,
+            DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY.code()
+        );
+        // The summary occupies the final display slot, so 60 raw notes become
+        // 49 explicit notes plus one summary for the 11 omitted notes.
+        assert_eq!(
+            summary.message,
+            "11 additional diagnostics omitted by recovery cap (top-level diagnostic stream)"
+        );
+        assert_eq!(
+            summary.args.get("omitted_count"),
+            Some(&DiagnosticArg::Unsigned(11))
         );
 
         let _ = std::fs::remove_dir_all(dir);

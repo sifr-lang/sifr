@@ -150,6 +150,33 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
 }
 
 #[test]
+fn test_type_check_source_surfaces_reveal_type_as_structured_note() {
+    let diagnostics = type_check_source("def main():\n    reveal_type(1)\n");
+
+    assert_eq!(diagnostics.len(), 1);
+    let diagnostic = &diagnostics[0];
+    assert_eq!(diagnostic.code, DiagnosticCode::TYPE_REVEAL_TYPE.code());
+    assert_eq!(diagnostic.severity, sifr_diagnostics::Severity::Note);
+    assert_eq!(
+        diagnostic.message_template,
+        "revealed type is {revealed_type}"
+    );
+    assert_eq!(diagnostic.message, "revealed type is int");
+    assert_eq!(
+        diagnostic.args.get("revealed_type"),
+        Some(&DiagnosticArg::String("int".to_string()))
+    );
+    let primary_span = diagnostic
+        .spans
+        .iter()
+        .find(|span| span.is_primary)
+        .expect("reveal_type note should carry a primary span for source-backed checks");
+    assert_eq!(primary_span.file.as_deref(), Some("main"));
+    assert_eq!(primary_span.line, Some(2));
+    assert!(primary_span.byte_end > primary_span.byte_start);
+}
+
+#[test]
 fn test_compile_hello_world() {
     let source = r#"
 def main():

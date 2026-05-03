@@ -7,15 +7,16 @@ mod workspace;
 
 pub use api::{
     build, build_cached_project, build_cached_single_file, build_project, check_project,
-    emit_project,
+    check_single_file, emit_project,
 };
 pub use entrypoint::CachedBinaryArtifact;
 
 pub(crate) use cargo_manifest::generate_dependency_cargo_toml;
 pub(crate) use entrypoint::{
     build_cached_project_binary, build_cached_single_file_binary, build_rooted_entrypoint_binary,
-    compile_single_file_entrypoint_with_metadata, compile_single_file_frontend,
-    emit_project_entrypoint, resolve_project_entrypoint_plan, RootedEntrypoint,
+    check_single_file_entrypoint, compile_single_file_entrypoint_with_metadata,
+    compile_single_file_frontend, emit_project_entrypoint, resolve_project_entrypoint_plan,
+    RootedEntrypoint,
 };
 pub(crate) use workspace::{
     prepare_cached_artifact, ArtifactCacheReport, CachedArtifactEntry, PreparedArtifactCache,
