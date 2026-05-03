@@ -75,10 +75,15 @@ fn test_apply_diagnostic_recovery_limits_uses_registry_dedupe_args_only() {
     );
     first.severity = Severity::Note;
     first.message_template =
-        "{omitted_count} additional diagnostics omitted by recovery cap ({cap_kind})".to_string();
+        "{omitted_count} additional {omitted_kind} omitted by recovery cap ({cap_kind})"
+            .to_string();
     first
         .args
         .insert("omitted_count".to_string(), DiagnosticArg::Unsigned(5));
+    first.args.insert(
+        "omitted_kind".to_string(),
+        DiagnosticArg::String("diagnostics".to_string()),
+    );
     first.args.insert(
         "cap_kind".to_string(),
         DiagnosticArg::String("top-level diagnostic stream".to_string()),
@@ -263,7 +268,76 @@ fn test_apply_diagnostic_recovery_limits_keeps_distinct_reveal_types_until_top_l
     );
     assert_eq!(
         bounded.last().map(|diagnostic| diagnostic.message.as_str()),
-        Some("11 additional diagnostics omitted by recovery cap (top-level diagnostic stream)")
+        Some("11 additional reveal_type results omitted by recovery cap (top-level diagnostic stream)")
+    );
+}
+
+#[test]
+fn test_apply_diagnostic_recovery_limits_reports_reveal_type_kind_in_similar_group_cap() {
+    let mut diagnostics = Vec::new();
+    for idx in 0..8 {
+        let mut diagnostic = test_diagnostic(
+            DiagnosticCode::TYPE_REVEAL_TYPE.code(),
+            "revealed type is Repeated".to_string(),
+            Some(primary_test_span("main.sifr", idx + 1, 1)),
+        );
+        diagnostic.severity = Severity::Note;
+        diagnostic.message_template = "revealed type is {revealed_type}".to_string();
+        diagnostic.args.insert(
+            "revealed_type".to_string(),
+            DiagnosticArg::String("Repeated".to_string()),
+        );
+        diagnostics.push(diagnostic);
+    }
+
+    let bounded = apply_diagnostic_recovery_limits(&diagnostics);
+    assert_eq!(bounded.len(), 6);
+    let summary = bounded.last().expect("similar group cap should summarize");
+    assert_eq!(
+        summary.message,
+        "3 additional reveal_type results omitted by recovery cap (similar-diagnostic group)"
+    );
+    assert_eq!(
+        summary.args.get("omitted_kind"),
+        Some(&DiagnosticArg::String("reveal_type results".to_string()))
+    );
+}
+
+#[test]
+fn test_apply_diagnostic_recovery_limits_reports_reveal_type_count_in_mixed_top_level_cap() {
+    let mut diagnostics: Vec<RenderedDiagnostic> = (0..55)
+        .map(|idx| test_diagnostic(&format!("SIFR-TYPE-{idx:04}"), format!("error {idx}"), None))
+        .collect();
+    for idx in 0..5 {
+        let mut diagnostic = test_diagnostic(
+            DiagnosticCode::TYPE_REVEAL_TYPE.code(),
+            format!("revealed type is T{idx}"),
+            Some(primary_test_span("main.sifr", idx + 1, 1)),
+        );
+        diagnostic.severity = Severity::Note;
+        diagnostic.message_template = "revealed type is {revealed_type}".to_string();
+        diagnostic.args.insert(
+            "revealed_type".to_string(),
+            DiagnosticArg::String(format!("T{idx}")),
+        );
+        diagnostics.push(diagnostic);
+    }
+
+    let bounded = apply_diagnostic_recovery_limits(&diagnostics);
+    assert_eq!(bounded.len(), 50);
+    assert_eq!(
+        bounded.last().map(|diagnostic| diagnostic.message.as_str()),
+        Some(
+            "11 additional diagnostics (including 5 reveal_type results) omitted by recovery cap (top-level diagnostic stream)"
+        )
+    );
+    assert_eq!(
+        bounded
+            .last()
+            .and_then(|diagnostic| diagnostic.args.get("omitted_kind")),
+        Some(&DiagnosticArg::String(
+            "diagnostics (including 5 reveal_type results)".to_string()
+        ))
     );
 }
 

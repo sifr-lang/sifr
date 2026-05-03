@@ -1338,11 +1338,15 @@ mod tests {
         // 49 explicit notes plus one summary for the 11 omitted notes.
         assert_eq!(
             summary.message,
-            "11 additional diagnostics omitted by recovery cap (top-level diagnostic stream)"
+            "11 additional reveal_type results omitted by recovery cap (top-level diagnostic stream)"
         );
         assert_eq!(
             summary.args.get("omitted_count"),
             Some(&DiagnosticArg::Unsigned(11))
+        );
+        assert_eq!(
+            summary.args.get("omitted_kind"),
+            Some(&DiagnosticArg::String("reveal_type results".to_string()))
         );
 
         let _ = std::fs::remove_dir_all(dir);
