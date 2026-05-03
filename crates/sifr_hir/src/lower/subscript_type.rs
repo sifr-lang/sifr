@@ -2,6 +2,8 @@ use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAUL
 use super::guarded_index::guarded_sequence_index_result_type;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
+use ruff_text_size::Ranged;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::ExprSubscript;
 use sifr_type_system::{make_union, Type};
 
@@ -46,7 +48,11 @@ pub(super) fn resolve_subscript_result_type(
     if let Some(elems) = tuple_members_for_subscript(object_ty) {
         if let HirExpr::IntLiteral(raw_index) = index {
             let Ok(len_i64) = i64::try_from(elems.len()) else {
-                ctx.error("tuple too large for indexing".to_string());
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    "tuple too large for indexing".to_string(),
+                    sub.slice.range(),
+                );
                 return Type::Any;
             };
             let normalized = if *raw_index < 0 {
@@ -59,7 +65,11 @@ pub(super) fn resolve_subscript_result_type(
                     return elems[idx].clone();
                 }
             }
-            ctx.error("tuple index out of range".to_string());
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "tuple index out of range".to_string(),
+                sub.slice.range(),
+            );
             return Type::Any;
         }
         if index_ty == &Type::Int && !elems.is_empty() {
@@ -72,11 +82,15 @@ pub(super) fn resolve_subscript_result_type(
     }
 
     object_ty.index_result_type(index_ty).unwrap_or_else(|| {
-        ctx.error(format!(
-            "cannot index type '{}' with '{}'",
-            object_ty.display_name(),
-            index_ty.display_name()
-        ));
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "cannot index type '{}' with '{}'",
+                object_ty.display_name(),
+                index_ty.display_name()
+            ),
+            sub.range(),
+        );
         Type::Any
     })
 }
