@@ -522,6 +522,86 @@ fn test_map_callable_arity_mismatch_has_call_code() {
 }
 
 #[test]
+fn test_non_simple_call_target_has_call_code() {
+    let source = "def make() -> int:\n    return 1\n\ndef main():\n    value: int = make()(1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "only simple function calls are supported"
+            && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.primary_range
+                == Some(range_for_after_anchor(source, "value: int = ", "make()"))
+    }));
+}
+
+#[test]
+fn test_iter_keyword_has_call_code() {
+    let source = "def main():\n    values: list[int] = [1, 2, 3]\n    _it = iter(source=values)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "iter() does not accept keyword arguments"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range == Some(range_for_after_anchor(source, "iter(", "source=values"))
+    }));
+}
+
+#[test]
+fn test_iter_wrong_arg_count_has_call_code() {
+    let source = "def main():\n    values: list[int] = [1, 2, 3]\n    _it = iter(values, values)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "iter() takes exactly 1 argument, got 2"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range
+                == Some(range_for_after_anchor(source, "iter(values, ", "values"))
+    }));
+}
+
+#[test]
+fn test_iter_non_iterable_has_type_code() {
+    let source = "def main():\n    _it = iter(1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "iter() argument must be iterable, got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(source, "iter(", "1"))
+    }));
+}
+
+#[test]
+fn test_next_non_iterator_has_type_code() {
+    let source = "def main():\n    values: list[int] = [1, 2, 3]\n    next(values)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "next() argument must be an iterator, got 'list[int]'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(source, "next(", "values"))
+    }));
+}
+
+#[test]
+fn test_pow_wrong_arg_count_has_call_code() {
+    let source = "def main():\n    value: int = pow(2)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "pow() takes exactly 2 arguments"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range == Some(range_for_after_anchor(source, "pow(", "2"))
+    }));
+}
+
+#[test]
 fn test_hash_unhashable_argument_has_proto_code() {
     let result = lower_source(
         "class Measurement:\n    value: float\n\n    def __init__(self, value: float):\n        self.value = value\n\ndef main():\n    m: Measurement = Measurement(3.14)\n    print(hash(m))\n",

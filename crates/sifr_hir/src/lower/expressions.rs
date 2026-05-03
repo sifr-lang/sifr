@@ -351,6 +351,20 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
     })
 }
 
+fn first_call_keyword_range(call: &ExprCall) -> TextRange {
+    call.arguments
+        .keywords
+        .first()
+        .map_or_else(|| call.func.range(), |keyword| keyword.range)
+}
+
+fn call_arity_range(call: &ExprCall) -> TextRange {
+    call.arguments
+        .args
+        .last()
+        .map_or_else(|| call.func.range(), Ranged::range)
+}
+
 pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let compat_alias = resolve_python_compat_call_alias(call, ctx);
     if let (None, Expr::Attribute(attr)) = (&compat_alias, call.func.as_ref()) {
@@ -365,7 +379,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         resolve_bare_python_compat_call_alias(n.id.as_str(), ctx)
             .unwrap_or_else(|| n.id.to_string())
     } else {
-        ctx.error("only simple function calls are supported".to_string());
+        expression_diagnostics::call_not_callable_or_arity(
+            ctx,
+            "only simple function calls are supported".to_string(),
+            call.func.range(),
+        );
         return None;
     };
     // Handle `cls(...)` in @classmethod as constructor call for the current class
@@ -437,22 +455,34 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         // iter(iterable) -> Iterator[T]
         if func_name == "iter" {
             if !call.arguments.keywords.is_empty() {
-                ctx.error("iter() does not accept keyword arguments".to_string());
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "iter() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
                 return None;
             }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "iter() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "iter() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let iterable = lower_expr(&call.arguments.args[0], ctx)?;
             if matches!(iterable.ty().resolve_alias(), Type::Any | Type::Unknown) {
-                ctx.error(format!(
-                    "iter() argument must be an iterable with a statically-known element type, got '{}'",
-                    iterable.ty().display_name()
-                ));
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "iter() argument must be an iterable with a statically-known element type, got '{}'",
+                        iterable.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             }
             let Some(elem_ty) = callable_builtin_element_type(iterable.ty()) else {
@@ -465,10 +495,14 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     );
                     return None;
                 }
-                ctx.error(format!(
-                    "iter() argument must be iterable, got '{}'",
-                    iterable.ty().display_name()
-                ));
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "iter() argument must be iterable, got '{}'",
+                        iterable.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             };
             return Some(HirExpr::IteratorCall {
@@ -481,22 +515,34 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         // next(iterator) -> Option[T]
         if func_name == "next" {
             if !call.arguments.keywords.is_empty() {
-                ctx.error("next() does not accept keyword arguments".to_string());
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "next() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
                 return None;
             }
             if call.arguments.args.len() != 1 {
-                ctx.error(format!(
-                    "next() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ));
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "next() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let iterator = lower_expr(&call.arguments.args[0], ctx)?;
             let Some(elem_ty) = iterator.ty().iterator_element_type() else {
-                ctx.error(format!(
-                    "next() argument must be an iterator, got '{}'",
-                    iterator.ty().display_name()
-                ));
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "next() argument must be an iterator, got '{}'",
+                        iterator.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             };
             return Some(HirExpr::IteratorCall {
@@ -530,8 +576,20 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // pow(base, exp) -> base ** exp
         if func_name == "pow" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "pow() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() != 2 {
-                ctx.error("pow() takes exactly 2 arguments".to_string());
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    "pow() takes exactly 2 arguments".to_string(),
+                    call_arity_range(call),
+                );
                 return None;
             }
             let base = lower_expr(&call.arguments.args[0], ctx)?;
