@@ -2610,15 +2610,107 @@ fn test_sorted_accepts_iterable_keyword_and_key_none() {
 }
 
 #[test]
+fn test_sum_keyword_and_type_errors_have_codes() {
+    let keyword_source =
+        "def main():\n    nums: list[int] = [1, 2]\n    _total = sum(values=nums)\n";
+    let keyword_result = lower_source(keyword_source);
+    assert!(keyword_result.is_err());
+    let keyword_errors = keyword_result.unwrap_err();
+    assert!(keyword_errors.iter().any(|error| {
+        error.message == "sum() does not accept keyword arguments"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    keyword_source,
+                    "sum(",
+                    "values=nums",
+                ))
+    }));
+
+    let type_source = "def main():\n    _total = sum(1)\n";
+    let type_result = lower_source(type_source);
+    assert!(type_result.is_err());
+    let type_errors = type_result.unwrap_err();
+    assert!(type_errors.iter().any(|error| {
+        error.message
+            == "sum() argument must be an iterable with a statically-known element type, got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(type_source, "sum(", "1"))
+    }));
+}
+
+#[test]
+fn test_sorted_positional_and_duplicate_errors_have_codes() {
+    let too_many_source =
+        "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered = sorted(nums, nums)\n";
+    let too_many_result = lower_source(too_many_source);
+    assert!(too_many_result.is_err());
+    let too_many_errors = too_many_result.unwrap_err();
+    assert!(too_many_errors.iter().any(|error| {
+        error.message == "sorted() takes at most 1 positional argument"
+            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    too_many_source,
+                    "sorted(nums, ",
+                    "nums",
+                ))
+    }));
+}
+
+#[test]
 fn test_sorted_rejects_duplicate_iterable_argument() {
-    let result = lower_source(
-        "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(nums, iterable=nums)\n",
-    );
+    let source =
+        "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(nums, iterable=nums)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("sorted() got multiple values for argument 'iterable'")));
+    assert!(errors.iter().any(|error| {
+        error.message == "sorted() got multiple values for argument 'iterable'"
+            && error.code == Some(DiagnosticCode::CALL_DUPLICATE_ARGUMENT)
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "sorted(nums, ",
+                    "iterable=nums",
+                ))
+    }));
+}
+
+#[test]
+fn test_sorted_type_and_key_errors_have_codes() {
+    let iterable_source = "def main():\n    ordered = sorted(1)\n";
+    let iterable_result = lower_source(iterable_source);
+    assert!(iterable_result.is_err());
+    let iterable_errors = iterable_result.unwrap_err();
+    assert!(iterable_errors.iter().any(|error| {
+        error.message
+            == "sorted() argument must be an iterable with a statically-known element type, got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(iterable_source, "sorted(", "1"))
+    }));
+
+    let key_source =
+        "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered = sorted(nums, key=1)\n";
+    let key_result = lower_source(key_source);
+    assert!(key_result.is_err());
+    let key_errors = key_result.unwrap_err();
+    assert!(key_errors.iter().any(|error| {
+        error.message == "sorted() keyword argument 'key' must be callable"
+            && error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.primary_range == Some(range_for_after_anchor(key_source, "key=", "1"))
+    }));
+
+    let reverse_source =
+        "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered = sorted(nums, reverse=1)\n";
+    let reverse_result = lower_source(reverse_source);
+    assert!(reverse_result.is_err());
+    let reverse_errors = reverse_result.unwrap_err();
+    assert!(reverse_errors.iter().any(|error| {
+        error.message == "sorted() keyword argument 'reverse' must be 'bool', got 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(reverse_source, "reverse=", "1"))
+    }));
 }
 
 #[test]

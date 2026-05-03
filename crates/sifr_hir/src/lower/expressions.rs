@@ -1,11 +1,10 @@
 use super::builtin_calls::{
-    callable_builtin_element_type, callable_builtin_list_output_type,
-    lower_builtin_reverseable_arg, lower_bytes_constructor_call, lower_bytes_type_factory_call,
-    lower_chr_call, lower_defaultdict_constructor_call, lower_dict_constructor_call,
-    lower_isinstance_call, lower_len_call, lower_list_constructor_call, lower_ord_call,
-    lower_range_call, lower_reveal_type_call, lower_set_constructor_call,
-    lower_tuple_constructor_call, reject_zip_keywords_if_present, DEFAULTDICT_INT_ALIAS,
-    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    callable_builtin_element_type, lower_builtin_reverseable_arg, lower_bytes_constructor_call,
+    lower_bytes_type_factory_call, lower_chr_call, lower_defaultdict_constructor_call,
+    lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
+    lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
+    lower_set_constructor_call, lower_tuple_constructor_call, reject_zip_keywords_if_present,
+    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argument_range};
@@ -25,6 +24,7 @@ use super::empty_collection_refinement::{
 };
 use super::expression_diagnostics;
 use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
+use super::expression_sum_sorted::{lower_sorted_call, lower_sum_call};
 use super::fstring_support::lower_fstring_expr;
 use super::generic_constructor_specialization::refine_constructor_return_type_from_args;
 use super::generic_receiver_specialization::refine_generic_class_binding_expr;
@@ -132,7 +132,9 @@ pub(super) fn lower_bytes_literal(bytes: &ExprBytesLiteral) -> HirExpr {
     }
 }
 
-fn callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {
+pub(super) fn callable_signature(
+    expr: &HirExpr,
+) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {
     match expr.ty().resolve_alias() {
         Type::Function(ft) => Some((
             ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
@@ -1103,161 +1105,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             return None;
         }
         if func_name == "sum" {
-            if call.arguments.args.len() != 1 {
-                let actual_count = call.arguments.args.len();
-                let range = if let Some(extra_arg) = call.arguments.args.get(1) {
-                    extra_arg.range()
-                } else {
-                    call.func.range()
-                };
-                ctx.error_with_code_at(
-                    DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
-                    format!("sum() takes exactly 1 argument(s), got {actual_count}"),
-                    range,
-                );
-                return None;
-            }
-            let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
-                ctx.error(format!(
-                    "sum() argument must be an iterable with a statically-known element type, got '{}'",
-                    arg.ty().display_name()
-                ));
-                return None;
-            };
-            return Some(HirExpr::Call {
-                func: "sum".to_string(),
-                args: vec![arg],
-                ty: elem_ty,
-            });
+            return lower_sum_call(call, ctx);
         }
         if func_name == "sorted" {
-            if call.arguments.args.len() > 1 {
-                ctx.error("sorted() takes at most 1 positional argument".to_string());
-                return None;
-            }
-            let mut iterable_keyword = None;
-            let mut key_keyword = None;
-            let mut reverse_keyword = None;
-            for keyword in &call.arguments.keywords {
-                let Some(name) = keyword.arg.as_ref() else {
-                    ctx.error("sorted() does not support unpacked keyword arguments".to_string());
-                    return None;
-                };
-                match name.as_str() {
-                    "iterable" => {
-                        if iterable_keyword.is_some() {
-                            ctx.error(
-                                "sorted() got multiple values for keyword argument 'iterable'"
-                                    .to_string(),
-                            );
-                            return None;
-                        }
-                        iterable_keyword = Some(keyword);
-                    }
-                    "key" => {
-                        if key_keyword.is_some() {
-                            ctx.error(
-                                "sorted() got multiple values for keyword argument 'key'"
-                                    .to_string(),
-                            );
-                            return None;
-                        }
-                        key_keyword = Some(keyword);
-                    }
-                    "reverse" => {
-                        if reverse_keyword.is_some() {
-                            ctx.error(
-                                "sorted() got multiple values for keyword argument 'reverse'"
-                                    .to_string(),
-                            );
-                            return None;
-                        }
-                        reverse_keyword = Some(keyword);
-                    }
-                    other => {
-                        let keyword = other;
-                        ctx.error_with_code_at(
-                            DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
-                            format!("sorted() got an unexpected keyword argument '{keyword}'"),
-                            name.range(),
-                        );
-                        return None;
-                    }
-                }
-            }
-            let iterable = match (call.arguments.args.first(), iterable_keyword) {
-                (Some(_), Some(_)) => {
-                    ctx.error("sorted() got multiple values for argument 'iterable'".to_string());
-                    return None;
-                }
-                (Some(arg), None) => lower_expr(arg, ctx)?,
-                (None, Some(keyword)) => lower_expr(&keyword.value, ctx)?,
-                (None, None) => {
-                    ctx.error_with_code_at(
-                        DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT,
-                        "sorted() missing required argument 'iterable'".to_string(),
-                        call.func.range(),
-                    );
-                    return None;
-                }
-            };
-            let Some(elem_ty) = callable_builtin_element_type(iterable.ty()) else {
-                ctx.error(format!(
-                    "sorted() argument must be an iterable with a statically-known element type, got '{}'",
-                    iterable.ty().display_name()
-                ));
-                return None;
-            };
-            let mut key_arg = None;
-            let mut reverse_arg = HirExpr::BoolLiteral(false);
-            if let Some(keyword) = key_keyword {
-                let lowered = if matches!(keyword.value, Expr::NoneLiteral(_)) {
-                    lower_expr(&keyword.value, ctx)?
-                } else {
-                    lower_lambda_with_context(&keyword.value, std::slice::from_ref(&elem_ty), ctx)?
-                };
-                if !matches!(lowered, HirExpr::NoneLiteral) {
-                    let Some((param_types, _conventions, _return_ty)) =
-                        callable_signature(&lowered)
-                    else {
-                        ctx.error("sorted() keyword argument 'key' must be callable".to_string());
-                        return None;
-                    };
-                    if param_types.len() != 1 {
-                        ctx.error(
-                            "sorted() key callable must accept exactly 1 argument".to_string(),
-                        );
-                        return None;
-                    }
-                }
-                key_arg = Some(lowered);
-            }
-            if let Some(keyword) = reverse_keyword {
-                let lowered = lower_expr(&keyword.value, ctx)?;
-                if lowered.ty() != &Type::Bool {
-                    ctx.error(format!(
-                        "sorted() keyword argument 'reverse' must be 'bool', got '{}'",
-                        lowered.ty().display_name()
-                    ));
-                    return None;
-                }
-                reverse_arg = lowered;
-            }
-            let list_ty = callable_builtin_list_output_type(iterable.ty())?;
-            let mut args = vec![iterable];
-            if let Some(key_arg) = key_arg {
-                args.push(key_arg);
-                args.push(reverse_arg);
-            } else if !matches!(reverse_arg, HirExpr::BoolLiteral(false)) {
-                args.push(HirExpr::NoneLiteral);
-                args.push(reverse_arg);
-            }
-            return Some(HirExpr::Call {
-                func: "sorted".to_string(),
-                args,
-                ty: list_ty,
-            });
+            return lower_sorted_call(call, ctx);
         }
 
         // reversed(iterable) -> iterator of element type
