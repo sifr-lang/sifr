@@ -507,12 +507,13 @@ pub(super) fn collect_class_type(
                             if let Some(hir_default) = lower_expr_simple(default_expr) {
                                 defaults.push((i, hir_default));
                             } else {
-                                ctx.error_with_code(
+                                ctx.error_with_code_at(
                                     DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
                                     format!(
                                         "class '{class_name}.__init__': unsupported default argument expression for parameter '{}'",
                                         param.parameter.name
                                     ),
+                                    default_expr.range(),
                                 );
                             }
                         }
@@ -556,12 +557,13 @@ pub(super) fn collect_class_type(
                             if let Some(hir_default) = lower_expr_simple(default_expr) {
                                 defaults.push((i, hir_default));
                             } else {
-                                ctx.error_with_code(
+                                ctx.error_with_code_at(
                                     DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
                                     format!(
                                         "class '{class_name}.{method_name}': unsupported default argument expression for parameter '{}'",
                                         param.parameter.name
                                     ),
+                                    default_expr.range(),
                                 );
                             }
                         }

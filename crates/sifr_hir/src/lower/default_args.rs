@@ -1,5 +1,6 @@
 use super::{classes::lower_expr_simple, LowerCtx};
 use crate::hir_nodes::HirExpr;
+use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ParameterWithDefault, StmtFunctionDef};
 
@@ -33,12 +34,13 @@ fn collect_param_default(
         if let Some(hir_default) = lower_expr_simple(default_expr) {
             defaults.push((index, hir_default));
         } else {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
                 format!(
                     "function '{}': unsupported default argument expression for parameter '{}'",
                     func.name, param.parameter.name
                 ),
+                default_expr.range(),
             );
         }
     }
