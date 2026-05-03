@@ -2287,6 +2287,35 @@ fn test_missing_class_method_parameter_annotation_has_primary_range() {
 }
 
 #[test]
+fn test_unsupported_function_default_argument_has_primary_range() {
+    let source =
+        "def seed() -> int:\n    return 7\n\ndef pick(x: int = seed()) -> int:\n    return x\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "function 'pick': unsupported default argument expression for parameter 'x'"
+            && error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT)
+            && error.primary_range == Some(range_for_after_anchor(source, "= ", "seed()"))
+    }));
+}
+
+#[test]
+fn test_unsupported_method_default_argument_has_primary_range() {
+    let source = "def seed() -> int:\n    return 7\n\nclass Tool:\n    def scale(self, value: int = seed()) -> int:\n        return value\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "class 'Tool.scale': unsupported default argument expression for parameter 'value'"
+            && error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT)
+            && error.primary_range == Some(range_for_after_anchor(source, "= ", "seed()"))
+    }));
+}
+
+#[test]
 fn test_typevar_constraints_violation_has_type_code() {
     let result = lower_source(
         "from typing import TypeVar\n\nT = TypeVar(\"T\", int, str)\n\ndef echo(x: T) -> T:\n    return x\n\ndef main():\n    bad: float = echo(1.5)\n    print(bad)\n",

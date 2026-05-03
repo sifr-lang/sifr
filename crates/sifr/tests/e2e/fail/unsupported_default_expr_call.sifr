@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0011
+# expect-error[col=19]: SIFR-TYPE-0011
 def seed() -> int:
     return 7
 

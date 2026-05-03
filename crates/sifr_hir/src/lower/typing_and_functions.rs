@@ -245,12 +245,13 @@ fn collect_function_defaults(
             if let Some(hir_default) = lower_expr_simple(default_expr) {
                 defaults.push((index, hir_default));
             } else {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
                     format!(
                         "function '{}': unsupported default argument expression for parameter '{}'",
                         func.name, param.parameter.name
                     ),
+                    default_expr.range(),
                 );
             }
         }
@@ -262,12 +263,13 @@ fn collect_function_defaults(
             if let Some(hir_default) = lower_expr_simple(default_expr) {
                 defaults.push((regular_count + index, hir_default));
             } else {
-                ctx.error_with_code(
+                ctx.error_with_code_at(
                     DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
                     format!(
                         "function '{}': unsupported default argument expression for parameter '{}'",
                         func.name, param.parameter.name
                     ),
+                    default_expr.range(),
                 );
             }
         }
