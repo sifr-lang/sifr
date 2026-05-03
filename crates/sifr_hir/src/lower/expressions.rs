@@ -1761,7 +1761,11 @@ pub(super) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) -> Option<
             }
             keys.push(key);
         } else {
-            ctx.error("dict unpacking (**) not supported".to_string());
+            expression_diagnostics::type_mismatch(
+                ctx,
+                "dict unpacking (**) not supported".to_string(),
+                item.value.range(),
+            );
             return None;
         }
 
@@ -1846,7 +1850,11 @@ pub(super) fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option
                         (start_expr.as_ref(), stop_expr.as_ref())
                     {
                         let Ok(len_i64) = i64::try_from(elems.len()) else {
-                            ctx.error("tuple too large for slicing index computation".to_string());
+                            expression_diagnostics::type_mismatch(
+                                ctx,
+                                "tuple too large for slicing index computation".to_string(),
+                                sub.slice.range(),
+                            );
                             return Some(HirExpr::Slice {
                                 object: Box::new(object),
                                 start,
@@ -1865,20 +1873,34 @@ pub(super) fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option
                                 if e_usize <= elems.len() {
                                     Type::Tuple(elems[s_usize..e_usize].to_vec())
                                 } else {
-                                    ctx.error("tuple slice indices out of range".to_string());
+                                    expression_diagnostics::type_mismatch(
+                                        ctx,
+                                        "tuple slice indices out of range".to_string(),
+                                        sub.slice.range(),
+                                    );
                                     Type::Any
                                 }
                             } else {
-                                ctx.error("tuple slice indices out of range".to_string());
+                                expression_diagnostics::type_mismatch(
+                                    ctx,
+                                    "tuple slice indices out of range".to_string(),
+                                    sub.slice.range(),
+                                );
                                 Type::Any
                             }
                         } else {
-                            ctx.error("tuple slice indices out of range".to_string());
+                            expression_diagnostics::type_mismatch(
+                                ctx,
+                                "tuple slice indices out of range".to_string(),
+                                sub.slice.range(),
+                            );
                             Type::Any
                         }
                     } else {
-                        ctx.error(
+                        expression_diagnostics::type_mismatch(
+                            ctx,
                             "tuple slicing requires compile-time constant indices".to_string(),
+                            sub.slice.range(),
                         );
                         Type::Any
                     }
@@ -1906,7 +1928,11 @@ pub(super) fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option
                 }
             }
             _ => {
-                ctx.error(format!("cannot slice type '{}'", object_ty.display_name()));
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!("cannot slice type '{}'", object_ty.display_name()),
+                    sub.slice.range(),
+                );
                 Type::Any
             }
         };
