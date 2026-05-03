@@ -1796,7 +1796,7 @@ mod tests {
                 None,
             ),
             test_diagnostic(
-                "SIFR-CODEGEN-0002",
+                "SIFR-INTERNAL-0002",
                 Severity::Note,
                 "consider adding a type annotation",
                 None,
@@ -1811,8 +1811,8 @@ mod tests {
             "warning [SIFR-TYPE-0002] unused value (x1)\n",
             "  help: remove the assignment\n",
             "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0002\n",
-            "note [SIFR-CODEGEN-0002] consider adding a type annotation (x1)\n",
-            "  url: https://sifr.sh/docs/errors/SIFR-CODEGEN-0002\n",
+            "note [SIFR-INTERNAL-0002] consider adding a type annotation (x1)\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-INTERNAL-0002\n",
         );
         assert_eq!(render_compact_diagnostics(&diagnostics), expected);
     }

@@ -132,7 +132,6 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
         (DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE, "build error"),
         (DiagnosticCode::STDLIB_CACHE_FAILURE, "build error"),
         (DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE, "type error"),
-        (DiagnosticCode::STDLIB_ARGUMENT_TYPE_MISMATCH, "type error"),
         (DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST, "build error"),
         (DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT, "build error"),
         (DiagnosticCode::WORKSPACE_IMPORT_CYCLE, "build error"),
@@ -140,7 +139,6 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
             DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
             "parse error",
         ),
-        (DiagnosticCode::CODEGEN_BACKEND_FAILURE, "codegen error"),
         (DiagnosticCode::BUILD_MATERIALIZATION_FAILURE, "build error"),
         (DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE, "build error"),
         (DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE, "build error"),
@@ -164,13 +162,16 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
 fn test_compiler_diagnostics_preserve_order() {
     let diagnostics = [
         crate::diagnostics::diagnostic_with_code("first", DiagnosticCode::TYPE_MISMATCH),
-        crate::diagnostics::diagnostic_with_code("second", DiagnosticCode::CODEGEN_BACKEND_FAILURE),
+        crate::diagnostics::diagnostic_with_code(
+            "second",
+            DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+        ),
     ];
     assert_eq!(diagnostics.len(), 2);
     assert_eq!(diagnostics[0].message, "first");
     assert_eq!(diagnostics[1].message, "second");
     assert_eq!(diagnostics[0].code, "SIFR-TYPE-0002");
-    assert_eq!(diagnostics[1].code, "SIFR-CODEGEN-0002");
+    assert_eq!(diagnostics[1].code, "SIFR-BUILD-0002");
 }
 
 #[test]

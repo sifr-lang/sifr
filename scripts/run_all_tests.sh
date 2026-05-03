@@ -102,6 +102,15 @@ python3 "${SCRIPT_DIR}/check_diagnostic_schema_sync.py"
 echo "Running diagnostic docs sync check"
 python3 "${SCRIPT_DIR}/check_diagnostic_docs_sync.py"
 
+echo "Running diagnostic code coverage check"
+python3 "${SCRIPT_DIR}/check_diagnostic_code_coverage.py"
+
+echo "Running diagnostic baseline hygiene check"
+python3 "${SCRIPT_DIR}/check_diagnostic_baseline_hygiene.py"
+
+echo "Running diagnostic cancel usage check"
+python3 "${SCRIPT_DIR}/check_diagnostic_cancel_usage.py"
+
 echo "Running verification hardening script self-tests"
 python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
 
