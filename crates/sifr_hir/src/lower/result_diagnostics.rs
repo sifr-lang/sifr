@@ -29,3 +29,27 @@ pub(super) fn invalid_bare_raise(ctx: &mut LowerCtx, range: TextRange) {
 fn invalid_raise(ctx: &mut LowerCtx, message: String, range: TextRange) {
     ctx.error_with_code_at(DiagnosticCode::RESULT_INVALID_RAISE, message, range);
 }
+
+pub(super) fn unknown_except_type(ctx: &mut LowerCtx, error_type: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::RESULT_UNKNOWN_EXCEPT_TYPE,
+        format!("unknown except error type '{error_type}'"),
+        range,
+    );
+}
+
+pub(super) fn uncovered_try_errors(ctx: &mut LowerCtx, uncovered: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::RESULT_UNCOVERED_TRY_ERRORS,
+        format!("except arms do not cover all error types from try body: {uncovered}"),
+        range,
+    );
+}
+
+pub(super) fn invalid_except_type(ctx: &mut LowerCtx, reason: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::RESULT_INVALID_EXCEPT_TYPE,
+        format!("invalid except error type: {reason}"),
+        range,
+    );
+}

@@ -1,0 +1,157 @@
+use crate::{lower_module, HirDiagnostic};
+use ruff_text_size::{TextRange, TextSize};
+use sifr_diagnostics::DiagnosticCode;
+use sifr_python_parser::parse_module;
+
+fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
+    let parsed = parse_module(source).expect("parse failed");
+    match lower_module(parsed.suite()) {
+        Ok(_) => panic!("expected lowering error"),
+        Err(errors) => errors,
+    }
+}
+
+fn range_for(source: &str, needle: &str) -> TextRange {
+    let start = source.find(needle).expect("needle should exist") as u32;
+    TextRange::new(
+        TextSize::new(start),
+        TextSize::new(start + needle.len() as u32),
+    )
+}
+
+fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
+    let after_start = source.find(after).expect("anchor should exist") + after.len();
+    let relative_start = source[after_start..]
+        .find(needle)
+        .expect("needle should exist after anchor");
+    let start = (after_start + relative_start) as u32;
+    TextRange::new(
+        TextSize::new(start),
+        TextSize::new(start + needle.len() as u32),
+    )
+}
+
+#[test]
+fn yield_without_value_has_statement_form_code() {
+    let source = "def count():\n    yield\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::FLOW_UNSUPPORTED_STATEMENT_FORM)
+            && error.message == "unsupported statement form: yield without a value"
+            && error.primary_range == Some(range_for(source, "yield"))
+    }));
+}
+
+#[test]
+fn annotated_assignment_target_has_assignment_target_code() {
+    let source = "def main():\n    values: list[int] = [0]\n    values[0]: int = 1\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET)
+            && error.message
+                == "invalid assignment target: annotated assignment target must be a simple name"
+            && error.primary_range == Some(range_for(source, "values[0]"))
+    }));
+}
+
+#[test]
+fn annotated_variable_without_initializer_has_name_code() {
+    let source = "def main():\n    value: int\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::NAME_UNINITIALIZED_VARIABLE)
+            && error.message == "variable 'value' must be initialized"
+            && error.primary_range == Some(range_for(source, "value"))
+    }));
+}
+
+#[test]
+fn match_tuple_pattern_subject_mismatch_has_match_code() {
+    let source = "def main():\n    value: int = 1\n    match value:\n        case (a, b):\n            pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::MATCH_INVALID_PATTERN_FORM)
+            && error
+                .message
+                .contains("tuple pattern requires subject of tuple type")
+            && error.primary_range == Some(range_for(source, "(a, b)"))
+    }));
+}
+
+#[test]
+fn for_loop_invalid_iterable_has_iteration_code() {
+    let source = "def main():\n    value: int = 1\n    for item in value:\n        pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::FLOW_INVALID_ITERATION)
+            && error.message == "invalid for-loop iteration: cannot iterate over type 'int'"
+            && error.primary_range == Some(range_for_after(source, "for item in ", "value"))
+    }));
+}
+
+#[test]
+fn unknown_except_type_has_result_code() {
+    let source = "\
+def fallible() -> Result[int, ValueError]:
+    raise ValueError(\"bad\")
+
+def main():
+    try:
+        value: int = fallible()
+    except MissingError as e:
+        pass
+";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RESULT_UNKNOWN_EXCEPT_TYPE)
+            && error.message == "unknown except error type 'MissingError'"
+            && error.primary_range == Some(range_for(source, "MissingError"))
+    }));
+}
+
+#[test]
+fn invalid_except_type_form_has_result_code() {
+    let source = "\
+def main():
+    try:
+        pass
+    except ValueError() as e:
+        pass
+";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RESULT_INVALID_EXCEPT_TYPE)
+            && error.message
+                == "invalid except error type: except type must be a simple error class name"
+            && error.primary_range == Some(range_for(source, "ValueError()"))
+    }));
+}
+
+#[test]
+fn uncovered_try_errors_have_result_code() {
+    let source = "\
+def fallible() -> Result[int, ValueError]:
+    raise ValueError(\"bad\")
+
+def main():
+    try:
+        value: int = fallible()
+    except IOError as e:
+        pass
+";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RESULT_UNCOVERED_TRY_ERRORS)
+            && error.message == "except arms do not cover all error types from try body: ValueError"
+            && error.primary_range.map(|range| range.start())
+                == Some(range_for(source, "try:").start())
+    }));
+}

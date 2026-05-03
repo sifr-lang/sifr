@@ -73,6 +73,9 @@ mod sequence_guard_updates;
 mod sequence_guards;
 mod sequence_pointers;
 mod sequence_shapes;
+mod statement_diagnostics;
+#[cfg(test)]
+mod statement_diagnostics_tests;
 mod statements;
 mod subscript_type;
 mod tuple_unpack;

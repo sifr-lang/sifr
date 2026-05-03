@@ -67,6 +67,14 @@ pub(super) fn invalid_class_pattern_field(
     );
 }
 
+pub(super) fn invalid_pattern_form(ctx: &mut LowerCtx, reason: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::MATCH_INVALID_PATTERN_FORM,
+        format!("invalid match pattern: {reason}"),
+        range,
+    );
+}
+
 #[cfg(test)]
 #[path = "match_diagnostics_tests.rs"]
 mod tests;

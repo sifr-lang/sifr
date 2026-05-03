@@ -23,6 +23,7 @@ impl DiagnosticCode {
     pub const NAME_UNKNOWN_TYPE: Self = Self::new("SIFR-NAME-0003", Severity::Error);
     pub const NAME_MISSING_MODULE_MEMBER: Self = Self::new("SIFR-NAME-0004", Severity::Error);
     pub const NAME_DUPLICATE_DEFINITION: Self = Self::new("SIFR-NAME-0005", Severity::Error);
+    pub const NAME_UNINITIALIZED_VARIABLE: Self = Self::new("SIFR-NAME-0006", Severity::Error);
 
     pub const IMPORT_FORBIDDEN_INTRINSIC: Self = Self::new("SIFR-IMPORT-0001", Severity::Error);
     pub const IMPORT_UNKNOWN_SOURCE_MODULE: Self = Self::new("SIFR-IMPORT-0002", Severity::Error);
@@ -79,12 +80,16 @@ impl DiagnosticCode {
     pub const FLOW_INVALID_NONLOCAL: Self = Self::new("SIFR-FLOW-0003", Severity::Error);
     pub const FLOW_MISSING_RETURN_VALUE: Self = Self::new("SIFR-FLOW-0004", Severity::Error);
     pub const FLOW_INVALID_CONDITION_TYPE: Self = Self::new("SIFR-FLOW-0005", Severity::Error);
+    pub const FLOW_UNSUPPORTED_STATEMENT_FORM: Self = Self::new("SIFR-FLOW-0006", Severity::Error);
+    pub const FLOW_INVALID_ASSIGNMENT_TARGET: Self = Self::new("SIFR-FLOW-0007", Severity::Error);
+    pub const FLOW_INVALID_ITERATION: Self = Self::new("SIFR-FLOW-0008", Severity::Error);
     pub const FLOW_UNREACHABLE_STATEMENT: Self = Self::new("SIFR-FLOW-0901", Severity::Warning);
 
     pub const MATCH_NON_EXHAUSTIVE: Self = Self::new("SIFR-MATCH-0001", Severity::Error);
     pub const MATCH_GUARD_NOT_BOOL: Self = Self::new("SIFR-MATCH-0002", Severity::Error);
     pub const MATCH_INVALID_CLASS_PATTERN_FIELD: Self =
         Self::new("SIFR-MATCH-0003", Severity::Error);
+    pub const MATCH_INVALID_PATTERN_FORM: Self = Self::new("SIFR-MATCH-0004", Severity::Error);
 
     pub const PROTO_BOUND_NOT_SATISFIED: Self = Self::new("SIFR-PROTO-0001", Severity::Error);
     pub const PROTO_INVALID_ITERATOR_SIGNATURE: Self =
@@ -105,6 +110,9 @@ impl DiagnosticCode {
     pub const RESULT_UNUSED_VALUE: Self = Self::new("SIFR-RESULT-0001", Severity::Error);
     pub const RESULT_INVALID_ERROR_TYPE: Self = Self::new("SIFR-RESULT-0002", Severity::Error);
     pub const RESULT_INVALID_RAISE: Self = Self::new("SIFR-RESULT-0003", Severity::Error);
+    pub const RESULT_UNKNOWN_EXCEPT_TYPE: Self = Self::new("SIFR-RESULT-0004", Severity::Error);
+    pub const RESULT_UNCOVERED_TRY_ERRORS: Self = Self::new("SIFR-RESULT-0005", Severity::Error);
+    pub const RESULT_INVALID_EXCEPT_TYPE: Self = Self::new("SIFR-RESULT-0006", Severity::Error);
 
     pub const STDLIB_UNSUPPORTED_SURFACE: Self = Self::new("SIFR-STDLIB-0001", Severity::Error);
     pub const STDLIB_BOOTSTRAP_FAILURE: Self = Self::new("SIFR-STDLIB-0003", Severity::Error);
@@ -521,6 +529,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "crates/sifr/tests/e2e/fail/duplicate_function_definition.sifr",
         "duplicate function definition in module: '{name}'",
         "sifr_hir::lower::module_function_registry",
+        [arg!("name")],
+        ["name"]
+    ),
+    active_entry!(
+        "SIFR-NAME-0006",
+        "NAME",
+        "Variable declaration lacks a required initializer.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/annotated_variable_requires_initializer.sifr",
+        "variable '{name}' must be initialized",
+        "sifr_hir::lower::statements",
         [arg!("name")],
         ["name"]
     ),
@@ -996,6 +1015,39 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["keyword", "actual"]
     ),
     active_entry!(
+        "SIFR-FLOW-0006",
+        "FLOW",
+        "Statement form is unsupported by HIR lowering.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/yield_without_value.sifr",
+        "unsupported statement form: {form}",
+        "sifr_hir::lower::statements",
+        [arg!("form")],
+        ["form"]
+    ),
+    active_entry!(
+        "SIFR-FLOW-0007",
+        "FLOW",
+        "Assignment target form is unsupported by HIR lowering.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/invalid_assignment_target_attribute_base.sifr",
+        "invalid assignment target: {target}",
+        "sifr_hir::lower::statements",
+        [arg!("target")],
+        ["target"]
+    ),
+    active_entry!(
+        "SIFR-FLOW-0008",
+        "FLOW",
+        "For-loop iteration form or source is invalid.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/for_loop_invalid_iterable.sifr",
+        "invalid for-loop iteration: {reason}",
+        "sifr_hir::lower::statements",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
         "SIFR-FLOW-0901",
         "FLOW",
         "Unreachable statement ignored during lowering.",
@@ -1038,6 +1090,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::statements",
         [arg!("field"), arg!("class_name")],
         ["field", "class_name"]
+    ),
+    active_entry!(
+        "SIFR-MATCH-0004",
+        "MATCH",
+        "Invalid or unsupported match pattern form.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/match_tuple_pattern_requires_tuple_subject.sifr",
+        "invalid match pattern: {reason}",
+        "sifr_hir::lower::statements",
+        [arg!("reason")],
+        ["reason"]
     ),
     active_entry!(
         "SIFR-PROTO-0001",
@@ -1186,6 +1249,39 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::statements",
         [arg!("actual")],
         ["actual"]
+    ),
+    active_entry!(
+        "SIFR-RESULT-0004",
+        "RESULT",
+        "Except arm references an unknown error type.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/unknown_except_error_type.sifr",
+        "unknown except error type '{error_type}'",
+        "sifr_hir::lower::statements",
+        [arg!("error_type")],
+        ["error_type"]
+    ),
+    active_entry!(
+        "SIFR-RESULT-0005",
+        "RESULT",
+        "Try body error types are not fully covered by except arms.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/try_except_uncovered_error_types.sifr",
+        "except arms do not cover all error types from try body: {uncovered}",
+        "sifr_hir::lower::statements",
+        [arg!("uncovered")],
+        ["uncovered"]
+    ),
+    active_entry!(
+        "SIFR-RESULT-0006",
+        "RESULT",
+        "Except arm type expression has an unsupported form.",
+        Severity::Error,
+        "crates/sifr_hir/src/lower/statement_diagnostics_tests.rs",
+        "invalid except error type: {reason}",
+        "sifr_hir::lower::statements",
+        [arg!("reason")],
+        ["reason"]
     ),
     active_entry!(
         "SIFR-STDLIB-0001",
@@ -1405,6 +1501,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::NAME_UNKNOWN_TYPE,
     DiagnosticCode::NAME_MISSING_MODULE_MEMBER,
     DiagnosticCode::NAME_DUPLICATE_DEFINITION,
+    DiagnosticCode::NAME_UNINITIALIZED_VARIABLE,
     DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC,
     DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
     DiagnosticCode::IMPORT_UNSUPPORTED_FORM,
@@ -1447,10 +1544,14 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::FLOW_INVALID_NONLOCAL,
     DiagnosticCode::FLOW_MISSING_RETURN_VALUE,
     DiagnosticCode::FLOW_INVALID_CONDITION_TYPE,
+    DiagnosticCode::FLOW_UNSUPPORTED_STATEMENT_FORM,
+    DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET,
+    DiagnosticCode::FLOW_INVALID_ITERATION,
     DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
     DiagnosticCode::MATCH_NON_EXHAUSTIVE,
     DiagnosticCode::MATCH_GUARD_NOT_BOOL,
     DiagnosticCode::MATCH_INVALID_CLASS_PATTERN_FIELD,
+    DiagnosticCode::MATCH_INVALID_PATTERN_FORM,
     DiagnosticCode::PROTO_BOUND_NOT_SATISFIED,
     DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
     DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING,
@@ -1464,6 +1565,9 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::RESULT_UNUSED_VALUE,
     DiagnosticCode::RESULT_INVALID_ERROR_TYPE,
     DiagnosticCode::RESULT_INVALID_RAISE,
+    DiagnosticCode::RESULT_UNKNOWN_EXCEPT_TYPE,
+    DiagnosticCode::RESULT_UNCOVERED_TRY_ERRORS,
+    DiagnosticCode::RESULT_INVALID_EXCEPT_TYPE,
     DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
     DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
     DiagnosticCode::STDLIB_CACHE_FAILURE,
