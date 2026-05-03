@@ -1,7 +1,7 @@
 use super::parse_module_with_diagnostics;
 use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_file_frontend};
 use crate::diagnostics::{CompileResult, CompileResultFull, RenderedDiagnostic};
-use crate::frontend::module_lowering::emit_frontend_diagnostics;
+use crate::frontend::module_lowering::{reveal_type_diagnostics, FrontendSourceContext};
 use crate::stdlib::StdlibCompiled;
 use sifr_hir::LoweringResult;
 use sifr_python_ast::Stmt;
@@ -25,10 +25,13 @@ pub fn lower_source(source: &str) -> Result<LoweringResult, Vec<RenderedDiagnost
 
 pub fn type_check_source(source: &str) -> Vec<RenderedDiagnostic> {
     match lower_source(source) {
-        Ok(lowering_result) => {
-            emit_frontend_diagnostics(&lowering_result);
-            vec![]
-        }
+        Ok(lowering_result) => reveal_type_diagnostics(
+            Some(FrontendSourceContext {
+                display_path: "main",
+                source,
+            }),
+            &lowering_result.reveal_types,
+        ),
         Err(errors) => errors,
     }
 }

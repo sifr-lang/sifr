@@ -5,8 +5,8 @@ use crate::diagnostics::{write_stderr_line, RenderedDiagnostic};
 #[cfg(test)]
 use crate::frontend::lower_frontend_module;
 use crate::frontend::{
-    lower_frontend_module_with_source, FrontendDiagnosticStyle, FrontendModuleDiagnostics,
-    FrontendSourceContext,
+    lower_frontend_module_with_source, reveal_type_diagnostics, FrontendDiagnosticStyle,
+    FrontendModuleDiagnostics, FrontendSourceContext,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
@@ -57,6 +57,7 @@ pub(crate) fn compile_frontend_modules(
         module_diagnostics.insert(
             module_name.clone(),
             FrontendModuleDiagnostics {
+                rendered_reveal_types: reveal_type_diagnostics(None, &reveal_types),
                 reveal_types,
                 warnings,
             },
@@ -108,6 +109,7 @@ pub(crate) fn compile_single_frontend_module_with_source(
         module_diagnostics: HashMap::from([(
             module_name.to_string(),
             FrontendModuleDiagnostics {
+                rendered_reveal_types: reveal_type_diagnostics(Some(source_context), &reveal_types),
                 reveal_types,
                 warnings,
             },
@@ -156,6 +158,10 @@ pub(crate) fn collect_project_hir_source_modules(
                 source: &parsed_module.source,
             }),
         )?;
+        let source_context = FrontendSourceContext {
+            display_path: &parsed_module.display_path,
+            source: &parsed_module.source,
+        };
         let LoweringResult {
             module,
             function_defaults,
@@ -175,6 +181,7 @@ pub(crate) fn collect_project_hir_source_modules(
         module_diagnostics.insert(
             module_name.clone(),
             FrontendModuleDiagnostics {
+                rendered_reveal_types: reveal_type_diagnostics(Some(source_context), &reveal_types),
                 reveal_types,
                 warnings,
             },
@@ -197,8 +204,8 @@ pub(crate) fn emit_project_frontend_diagnostics(project_lowering: &ProjectLoweri
         else {
             continue;
         };
-        for message in &diag.reveal_types {
-            write_stderr_line(message);
+        for diagnostic in &diag.rendered_reveal_types {
+            write_stderr_line(&format!("note: {}", diagnostic.message));
         }
         for warning in &diag.warnings {
             write_stderr_line(warning);

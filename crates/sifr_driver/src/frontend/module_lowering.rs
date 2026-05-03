@@ -1,14 +1,17 @@
-use crate::diagnostics::{write_stderr_line, RenderedDiagnostic};
+use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::{
     DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, SourceMap, SourceSpan,
 };
-use sifr_hir::{lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult};
+use sifr_hir::{
+    lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult, RevealTypeDiagnostic,
+};
 use sifr_python_ast::Stmt;
 
 #[derive(Default)]
 pub(crate) struct FrontendModuleDiagnostics {
-    pub(crate) reveal_types: Vec<String>,
+    pub(crate) reveal_types: Vec<RevealTypeDiagnostic>,
+    pub(crate) rendered_reveal_types: Vec<RenderedDiagnostic>,
     pub(crate) warnings: Vec<String>,
 }
 
@@ -84,7 +87,13 @@ fn lowering_error_to_diagnostic(
         message
     };
     if let (Some(context), Some(range)) = (source_context, primary_range) {
-        return diagnostic_with_source_range(message, code, context, range);
+        return diagnostic_with_source_range(
+            code,
+            context,
+            range,
+            "{message}",
+            &[("message", DiagnosticArg::String(message.clone()))],
+        );
     }
     crate::diagnostics::diagnostic_with_code(message, code)
 }
@@ -96,20 +105,27 @@ pub(crate) fn lowering_error_code_or_internal(error: &LoweringError) -> Diagnost
 }
 
 fn diagnostic_with_source_range(
-    message: String,
     code: DiagnosticCode,
     source_context: FrontendSourceContext<'_>,
     range: TextRange,
+    message_template: &'static str,
+    args: &[(&'static str, DiagnosticArg)],
 ) -> RenderedDiagnostic {
     let mut source_map = SourceMap::new();
     let source_id = source_map.register_source(source_context.display_path, source_context.source);
     let span = SourceSpan::new(source_id, range);
-    let diagnostic = DiagnosticBuilder::source(code, code.declared_severity(), span)
-        .message_template("{message}")
-        .arg("message", DiagnosticArg::String(message))
-        .build();
+    let mut builder = DiagnosticBuilder::source(code, code.declared_severity(), span)
+        .message_template(message_template);
+    for (name, value) in args {
+        builder = builder.arg(name, value.clone());
+    }
+    let diagnostic = builder.build();
     let mut sink = DiagnosticSink::new();
-    sink.emit_error(diagnostic);
+    if code.declared_severity() == sifr_diagnostics::Severity::Error {
+        let _ = sink.emit_error(diagnostic);
+    } else {
+        sink.emit(diagnostic);
+    }
     match sifr_diagnostics::render::render_sink(&sink, &source_map) {
         Ok(mut envelope) if envelope.diagnostics.len() == 1 => envelope.diagnostics.remove(0),
         Ok(_) => crate::diagnostics::diagnostic_with_code(
@@ -123,12 +139,52 @@ fn diagnostic_with_source_range(
     }
 }
 
-pub(crate) fn emit_frontend_diagnostics(lowering_result: &LoweringResult) {
-    for diag in &lowering_result.reveal_types {
-        write_stderr_line(diag);
+#[must_use]
+pub(crate) fn reveal_type_diagnostics(
+    source_context: Option<FrontendSourceContext<'_>>,
+    reveal_types: &[RevealTypeDiagnostic],
+) -> Vec<RenderedDiagnostic> {
+    reveal_types
+        .iter()
+        .map(|diagnostic| reveal_type_diagnostic(source_context, diagnostic))
+        .collect()
+}
+
+fn reveal_type_diagnostic(
+    source_context: Option<FrontendSourceContext<'_>>,
+    diagnostic: &RevealTypeDiagnostic,
+) -> RenderedDiagnostic {
+    let code = DiagnosticCode::TYPE_REVEAL_TYPE;
+    let message = format!("revealed type is {}", diagnostic.revealed_type);
+    let args = [(
+        "revealed_type",
+        DiagnosticArg::String(diagnostic.revealed_type.clone()),
+    )];
+    if let (Some(context), Some(range)) = (source_context, diagnostic.primary_range) {
+        return diagnostic_with_source_range(
+            code,
+            context,
+            range,
+            "revealed type is {revealed_type}",
+            &args,
+        );
     }
-    for warning in &lowering_result.warnings {
-        write_stderr_line(warning);
+    let mut rendered_args = std::collections::BTreeMap::new();
+    rendered_args.insert(
+        "revealed_type".to_string(),
+        DiagnosticArg::String(diagnostic.revealed_type.clone()),
+    );
+    RenderedDiagnostic {
+        code: code.code().to_string(),
+        severity: code.declared_severity(),
+        message,
+        message_template: "revealed type is {revealed_type}".to_string(),
+        args: rendered_args,
+        url: code.docs_url(),
+        spans: Vec::new(),
+        children: Vec::new(),
+        help: None,
+        suggestions: Vec::new(),
     }
 }
 

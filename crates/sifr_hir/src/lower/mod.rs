@@ -134,7 +134,7 @@ pub(super) struct LowerCtx {
     /// Loop nesting depth (for break/continue validation)
     loop_depth: usize,
     /// `reveal_type()` diagnostics (informational, not errors)
-    reveal_types: Vec<String>,
+    reveal_types: Vec<RevealTypeDiagnostic>,
     /// Compiler warnings (non-fatal diagnostics printed to stderr)
     warnings: Vec<String>,
     /// Whether we're currently inside a class method (tracks `self` type)
@@ -363,12 +363,18 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
 }
 
 /// Result of lowering, including the HIR module and any diagnostics.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RevealTypeDiagnostic {
+    pub revealed_type: String,
+    pub primary_range: Option<TextRange>,
+}
+
 pub struct LoweringResult {
     pub module: HirModule,
     pub function_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
     pub function_varargs: std::collections::HashMap<String, usize>,
     /// `reveal_type()` diagnostics (informational, printed to stderr)
-    pub reveal_types: Vec<String>,
+    pub reveal_types: Vec<RevealTypeDiagnostic>,
     /// Compiler warnings (non-fatal, printed to stderr)
     pub warnings: Vec<String>,
 }

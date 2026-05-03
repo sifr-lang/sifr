@@ -204,7 +204,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: str"));
+            .any(|diagnostic| diagnostic.revealed_type == "str"));
     }
 
     #[test]
@@ -217,7 +217,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: str"));
+            .any(|diagnostic| diagnostic.revealed_type == "str"));
     }
 
     #[test]
@@ -230,7 +230,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -243,7 +243,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -256,7 +256,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -269,7 +269,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -282,7 +282,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -295,7 +295,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -321,7 +321,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -334,7 +334,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -347,7 +347,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -360,7 +360,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -490,7 +490,7 @@ mod tests {
         let reveal_count = result
             .reveal_types
             .iter()
-            .filter(|diagnostic| diagnostic.as_str() == "reveal_type: int")
+            .filter(|diagnostic| diagnostic.revealed_type == "int")
             .count();
         assert_eq!(reveal_count, 2);
     }
@@ -523,7 +523,7 @@ mod tests {
         let reveal_count = result
             .reveal_types
             .iter()
-            .filter(|diagnostic| diagnostic.as_str() == "reveal_type: int")
+            .filter(|diagnostic| diagnostic.revealed_type == "int")
             .count();
         assert_eq!(reveal_count, 2);
     }
@@ -538,7 +538,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -551,7 +551,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: str"));
+            .any(|diagnostic| diagnostic.revealed_type == "str"));
     }
 
     #[test]
@@ -564,7 +564,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: str"));
+            .any(|diagnostic| diagnostic.revealed_type == "str"));
     }
 
     #[test]
@@ -595,7 +595,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -608,7 +608,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
@@ -632,7 +632,7 @@ mod tests {
         assert!(result
             .reveal_types
             .iter()
-            .any(|diagnostic| diagnostic == "reveal_type: int"));
+            .any(|diagnostic| diagnostic.revealed_type == "int"));
     }
 
     #[test]
