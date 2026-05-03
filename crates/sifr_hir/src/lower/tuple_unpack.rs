@@ -66,21 +66,23 @@ pub(super) fn lower_tuple_unpack_assign(
 
     let elem_types = if let sifr_type_system::Type::Tuple(elems) = &value_ty {
         if elems.len() != targets.len() {
-            ctx.error_with_code(
+            ctx.error_with_code_at(
                 DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
                 format!(
                     "tuple unpacking: expected {} values, got {}",
                     targets.len(),
                     elems.len()
                 ),
+                tuple.range(),
             );
             return None;
         }
         elems.clone()
     } else {
-        ctx.error_with_code(
+        ctx.error_with_code_at(
             DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
             format!("cannot unpack non-tuple type '{}'", value_ty.display_name()),
+            value.range(),
         );
         return None;
     };
@@ -115,7 +117,7 @@ pub(super) fn lower_tuple_unpack_assign(
                     let info_ty = info.ty.clone();
                     let can_widen = info.is_inferred_local_binding();
                     if !reconcile_optional_reassignment(ctx, &name, &info_ty, &ty, can_widen) {
-                        ctx.error_with_code(
+                        ctx.error_with_code_at(
                             DiagnosticCode::TYPE_MISMATCH,
                             format!(
                                 "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
@@ -123,6 +125,7 @@ pub(super) fn lower_tuple_unpack_assign(
                                 name,
                                 info_ty.display_name()
                             ),
+                            range,
                         );
                     }
                     ctx.scope.reset_moved(&name);
@@ -168,9 +171,10 @@ pub(super) fn lower_star_unpack_assign(
     let elem_ty = if let sifr_type_system::Type::List(elem) = &value_ty {
         *elem.clone()
     } else {
-        ctx.error_with_code(
+        ctx.error_with_code_at(
             DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
             "star unpacking requires a list type".to_string(),
+            value.range(),
         );
         return None;
     };
