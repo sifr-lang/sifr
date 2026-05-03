@@ -282,8 +282,13 @@ fn is_internal_diagnostic(error: &RenderedDiagnostic) -> bool {
 fn diagnostic_exit_code(errors: &[RenderedDiagnostic]) -> i32 {
     if errors.iter().any(is_internal_diagnostic) {
         EXIT_INTERNAL_COMPILER_FAILURE
-    } else {
+    } else if errors
+        .iter()
+        .any(|diagnostic| diagnostic.severity == Severity::Error)
+    {
         EXIT_USER_DIAGNOSTIC
+    } else {
+        EXIT_SUCCESS
     }
 }
 
@@ -1312,6 +1317,24 @@ mod tests {
     fn test_diagnostic_exit_code_contract_user_vs_internal() {
         let user_error = diagnostic_with_code("type mismatch", DiagnosticCode::TYPE_MISMATCH);
         assert_eq!(diagnostic_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
+
+        let reveal_note = test_diagnostic(
+            "SIFR-TYPE-0902",
+            Severity::Note,
+            "revealed type is int",
+            None,
+            None,
+        );
+        assert_eq!(diagnostic_exit_code(&[reveal_note]), EXIT_SUCCESS);
+
+        let overflow_warning = test_diagnostic(
+            "SIFR-TYPE-0901",
+            Severity::Warning,
+            "integer addition may overflow at runtime",
+            None,
+            None,
+        );
+        assert_eq!(diagnostic_exit_code(&[overflow_warning]), EXIT_SUCCESS);
 
         let internal_error = diagnostic_with_code(
             "internal compiler panic during single-file code generation: boom",
