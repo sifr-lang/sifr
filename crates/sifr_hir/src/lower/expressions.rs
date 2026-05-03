@@ -2786,52 +2786,63 @@ pub(super) fn resolve_method_type(
         Type::Set(elem_ty) => match method {
             "len" => {
                 if !args.is_empty() {
-                    ctx.error("set.len() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "set.len", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::Int)
             }
             "add" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "set.add() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "set.add",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::None)
             }
             "remove" | "discard" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "set.{}() takes exactly 1 argument, got {}",
-                        method,
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        &format!("set.{method}"),
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::None)
             }
             "contains" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "set.contains() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "set.contains",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Bool)
             }
             "clear" => {
                 if !args.is_empty() {
-                    ctx.error("set.clear() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "set.clear", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::None)
             }
             "copy" => {
                 if !args.is_empty() {
-                    ctx.error("set.copy() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "set.copy", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::Set(elem_ty.clone()))
@@ -2844,11 +2855,14 @@ pub(super) fn resolve_method_type(
             }
             "symmetric_difference" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "set.{}() takes exactly 1 argument, got {}",
-                        method,
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        &format!("set.{method}"),
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 validate_set_iterable_arg(elem_ty, args[0].ty(), method, arg_ranges[0], ctx);
@@ -2862,11 +2876,14 @@ pub(super) fn resolve_method_type(
             }
             "symmetric_difference_update" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "set.{}() takes exactly 1 argument, got {}",
-                        method,
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        &format!("set.{method}"),
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 validate_set_iterable_arg(elem_ty, args[0].ty(), method, arg_ranges[0], ctx);
@@ -2874,11 +2891,14 @@ pub(super) fn resolve_method_type(
             }
             "issubset" | "issuperset" | "isdisjoint" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "set.{}() takes exactly 1 argument, got {}",
-                        method,
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        &format!("set.{method}"),
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 validate_set_iterable_arg(elem_ty, args[0].ty(), method, arg_ranges[0], ctx);
@@ -2886,14 +2906,18 @@ pub(super) fn resolve_method_type(
             }
             "pop" => {
                 if !args.is_empty() {
-                    ctx.error("set.pop() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "set.pop", arg_ranges, method_range);
                     return None;
                 }
                 // Returns Option[T] = T | None (safe: no panic on empty set)
                 Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
             }
             _ => {
-                ctx.error(format!("set has no method '{method}'"));
+                ctx.error_with_code_at(
+                    DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                    format!("set has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         },
