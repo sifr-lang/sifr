@@ -2204,6 +2204,47 @@ fn test_unexpected_method_keyword_is_rejected() {
 }
 
 #[test]
+fn test_unpacked_method_keyword_has_call_code() {
+    let source = "def main():\n    xs: list[int] = [1]\n    xs.append(**{\"value\": 2})\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "append() does not support unpacked keyword arguments"
+            && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+            && error.primary_range == Some(range_for(source, "**{\"value\": 2}"))
+    }));
+}
+
+#[test]
+fn test_list_extend_non_iterable_has_protocol_code() {
+    let source = "def main():\n    xs: list[int] = []\n    xs.extend(1)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "list.extend() argument must be an iterable with a statically-known element type, got 'int'"
+            && error.code == Some(DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE)
+            && error.primary_range == Some(range_for(source, "1"))
+    }));
+}
+
+#[test]
+fn test_dict_update_keyword_value_mismatch_has_type_code() {
+    let source = "def main():\n    data: dict[str, int] = {}\n    data.update(bad=\"x\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "dict.update() value type 'str' is not compatible with dict value type 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for(source, "bad=\"x\""))
+    }));
+}
+
+#[test]
 fn test_duplicate_optional_method_keyword_is_rejected() {
     let source = "def main():\n    data: dict[str, int] = {\"x\": 1}\n    value: int = data.get(\"x\", 1, default=2)\n";
     let result = lower_source(source);
