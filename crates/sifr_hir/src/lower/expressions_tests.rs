@@ -3659,6 +3659,59 @@ fn test_missing_field_has_class_code() {
 }
 
 #[test]
+fn test_enum_missing_attribute_has_class_code() {
+    let source = "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n\ndef main():\n    s: Status = Status.OK\n    print(s.missing)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "enum 'Status' has no attribute 'missing'"
+            && e.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)
+            && e.primary_range == Some(range_for_after(source, "print(s.", "missing"))
+    }));
+}
+
+#[test]
+fn test_unsupported_attribute_expression_has_type_code() {
+    let source = "def main():\n    value: int = 1\n    print(value.real)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            == "unsupported expression form: attribute access '.real' is not supported as an expression; use as a method call"
+            && e.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM)
+            && e.primary_range == Some(range_for_after(source, "print(", "value.real"))
+    }));
+}
+
+#[test]
+fn test_super_outside_parent_has_class_code() {
+    let source = "def main():\n    super().missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "super() used outside of a class with a parent"
+            && e.code == Some(DiagnosticCode::CLASS_INVALID_BASE)
+            && e.primary_range == Some(range_for(source, "super()"))
+    }));
+}
+
+#[test]
+fn test_missing_class_static_method_has_class_code() {
+    let source = "class Box:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\ndef main():\n    Box.missing()\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message == "type 'Box' has no class/static method 'missing'"
+            && e.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)
+            && e.primary_range == Some(range_for_after(source, "Box.", "missing"))
+    }));
+}
+
+#[test]
 fn test_unknown_parent_class_has_class_code() {
     let source =
         "class Child(MissingParent):\n    value: int\n\ndef main():\n    c: Child = Child(1)\n";
