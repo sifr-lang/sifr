@@ -3064,34 +3064,47 @@ pub(super) fn resolve_method_type(
             "len" => Some(Type::Int),
             "count" => {
                 if args.len() != 1 {
-                    ctx.error(format!(
-                        "tuple.count() takes exactly 1 argument, got {}",
-                        args.len()
-                    ));
+                    reject_exact_method_arg_count(
+                        ctx,
+                        "tuple.count",
+                        1,
+                        args.len(),
+                        arg_ranges,
+                        method_range,
+                    );
                     return None;
                 }
                 Some(Type::Int)
             }
             "index" => {
                 if args.is_empty() || args.len() > 3 {
-                    ctx.error(format!(
-                        "tuple.index() takes 1 to 3 arguments, got {}",
-                        args.len()
-                    ));
+                    reject_method_arg_count(
+                        ctx,
+                        format!("tuple.index() takes 1 to 3 arguments, got {}", args.len()),
+                        method_count_range(args.len(), 3, arg_ranges, method_range),
+                    );
                     return None;
                 }
-                for bound in args.iter().skip(1) {
+                for (bound_index, bound) in args.iter().enumerate().skip(1) {
                     if bound.ty() != &Type::Int {
-                        ctx.error(format!(
-                            "tuple.index() bounds must be 'int', got '{}'",
-                            bound.ty().display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "tuple.index() bounds must be 'int', got '{}'",
+                                bound.ty().display_name()
+                            ),
+                            arg_ranges.get(bound_index).copied().unwrap_or(method_range),
+                        );
                     }
                 }
                 Some(Type::Union(vec![Type::Int, Type::None]))
             }
             _ => {
-                ctx.error(format!("tuple has no method '{method}'"));
+                ctx.error_with_code_at(
+                    DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                    format!("tuple has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         },
@@ -3104,13 +3117,17 @@ pub(super) fn resolve_method_type(
             if let Some((_, ft)) = methods.iter().find(|(n, _)| n == method) {
                 // Check argument count
                 if args.len() != ft.params.len() {
-                    ctx.error(format!(
-                        "{}.{}() takes {} argument(s), got {}",
-                        name,
-                        method,
-                        ft.params.len(),
-                        args.len()
-                    ));
+                    reject_method_arg_count(
+                        ctx,
+                        format!(
+                            "{}.{}() takes {} argument(s), got {}",
+                            name,
+                            method,
+                            ft.params.len(),
+                            args.len()
+                        ),
+                        method_count_range(args.len(), ft.params.len(), arg_ranges, method_range),
+                    );
                     return None;
                 }
                 // Check argument types
@@ -3118,15 +3135,19 @@ pub(super) fn resolve_method_type(
                     args.iter().zip(ft.params.iter()).enumerate()
                 {
                     if !arg.ty().is_assignable_to(param_ty) {
-                        ctx.error(format!(
-                            "argument {} ('{}') of {}.{}(): expected '{}', got '{}'",
-                            i + 1,
-                            param_name,
-                            name,
-                            method,
-                            param_ty.display_name(),
-                            arg.ty().display_name()
-                        ));
+                        expression_diagnostics::type_mismatch(
+                            ctx,
+                            format!(
+                                "argument {} ('{}') of {}.{}(): expected '{}', got '{}'",
+                                i + 1,
+                                param_name,
+                                name,
+                                method,
+                                param_ty.display_name(),
+                                arg.ty().display_name()
+                            ),
+                            arg_ranges.get(i).copied().unwrap_or(method_range),
+                        );
                     }
                 }
                 Some(canonicalize_class_surface_type(&ft.return_type))
@@ -3134,56 +3155,86 @@ pub(super) fn resolve_method_type(
                 // Check if the field is a Callable type — allow calling it like a method
                 if let Type::Callable(param_types, _, ret_type) = field_ty {
                     if args.len() != param_types.len() {
-                        ctx.error(format!(
-                            "{}.{}() (callable field) takes {} argument(s), got {}",
-                            name,
-                            method,
-                            param_types.len(),
-                            args.len()
-                        ));
+                        expression_diagnostics::call_not_callable_or_arity(
+                            ctx,
+                            format!(
+                                "{}.{}() (callable field) takes {} argument(s), got {}",
+                                name,
+                                method,
+                                param_types.len(),
+                                args.len()
+                            ),
+                            method_count_range(
+                                args.len(),
+                                param_types.len(),
+                                arg_ranges,
+                                method_range,
+                            ),
+                        );
                         return None;
                     }
                     for (i, (arg, param_ty)) in args.iter().zip(param_types.iter()).enumerate() {
                         if !arg.ty().is_assignable_to(param_ty) {
-                            ctx.error(format!(
-                                "argument {} of {}.{}(): expected '{}', got '{}'",
-                                i + 1,
-                                name,
-                                method,
-                                param_ty.display_name(),
-                                arg.ty().display_name()
-                            ));
+                            expression_diagnostics::type_mismatch(
+                                ctx,
+                                format!(
+                                    "argument {} of {}.{}(): expected '{}', got '{}'",
+                                    i + 1,
+                                    name,
+                                    method,
+                                    param_ty.display_name(),
+                                    arg.ty().display_name()
+                                ),
+                                arg_ranges.get(i).copied().unwrap_or(method_range),
+                            );
                         }
                     }
                     Some(canonicalize_class_surface_type(ret_type))
                 } else {
-                    ctx.error(format!(
-                        "field '{}' of class '{}' is not callable (type: '{}')",
-                        method,
-                        name,
-                        field_ty.display_name()
-                    ));
+                    expression_diagnostics::call_not_callable_or_arity(
+                        ctx,
+                        format!(
+                            "field '{}' of class '{}' is not callable (type: '{}')",
+                            method,
+                            name,
+                            field_ty.display_name()
+                        ),
+                        method_range,
+                    );
                     None
                 }
             } else {
-                ctx.error(format!("class '{name}' has no method '{method}'"));
+                ctx.error_with_code_at(
+                    DiagnosticCode::CLASS_MISSING_MEMBER,
+                    format!("class '{name}' has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         }
         Type::Protocol { name, methods, .. } => {
             if let Some((_, ft)) = methods.iter().find(|(n, _)| n == method) {
                 if args.len() != ft.params.len() {
-                    ctx.error(format!(
-                        "{}.{}() takes {} argument(s), got {}",
-                        name,
-                        method,
-                        ft.params.len(),
-                        args.len()
-                    ));
+                    reject_method_arg_count(
+                        ctx,
+                        format!(
+                            "{}.{}() takes {} argument(s), got {}",
+                            name,
+                            method,
+                            ft.params.len(),
+                            args.len()
+                        ),
+                        method_count_range(args.len(), ft.params.len(), arg_ranges, method_range),
+                    );
+                    return None;
                 }
                 Some(canonicalize_class_surface_type(&ft.return_type))
             } else {
-                ctx.error(format!("protocol '{name}' has no method '{method}'"));
+                ctx.error_with_code_at(
+                    DiagnosticCode::PROTO_BOUND_NOT_SATISFIED,
+                    format!("protocol '{name}' has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         }
@@ -3191,7 +3242,7 @@ pub(super) fn resolve_method_type(
             // Newtype has a built-in `value()` method that returns the inner type
             if method == "value" {
                 if !args.is_empty() {
-                    ctx.error(format!("{name}.value() takes no arguments"));
+                    reject_no_method_args(ctx, &format!("{name}.value"), arg_ranges, method_range);
                     return None;
                 }
                 Some(*inner.clone())
@@ -3204,14 +3255,24 @@ pub(super) fn resolve_method_type(
             match method {
                 "name" => {
                     if !args.is_empty() {
-                        ctx.error(format!("{name}.name() takes no arguments"));
+                        reject_no_method_args(
+                            ctx,
+                            &format!("{name}.name"),
+                            arg_ranges,
+                            method_range,
+                        );
                         return None;
                     }
                     Some(Type::Str)
                 }
                 "value" => {
                     if !args.is_empty() {
-                        ctx.error(format!("{name}.value() takes no arguments"));
+                        reject_no_method_args(
+                            ctx,
+                            &format!("{name}.value"),
+                            arg_ranges,
+                            method_range,
+                        );
                         return None;
                     }
                     Some(Type::Int)
@@ -3222,7 +3283,11 @@ pub(super) fn resolve_method_type(
                     if let Some(ft) = ctx.functions.get(&method_key).cloned() {
                         return Some(*ft.return_type.clone());
                     }
-                    ctx.error(format!("enum '{name}' has no method '{method}'"));
+                    ctx.error_with_code_at(
+                        DiagnosticCode::CLASS_MISSING_MEMBER,
+                        format!("enum '{name}' has no method '{method}'"),
+                        method_range,
+                    );
                     None
                 }
             }
@@ -3230,12 +3295,16 @@ pub(super) fn resolve_method_type(
         Type::BigInt => {
             if method == "clone" {
                 if !args.is_empty() {
-                    ctx.error("bigint.clone() takes no arguments".to_string());
+                    reject_no_method_args(ctx, "bigint.clone", arg_ranges, method_range);
                     return None;
                 }
                 Some(Type::BigInt)
             } else {
-                ctx.error(format!("type 'bigint' has no method '{method}'"));
+                ctx.error_with_code_at(
+                    DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                    format!("type 'bigint' has no method '{method}'"),
+                    method_range,
+                );
                 None
             }
         }
@@ -3243,11 +3312,15 @@ pub(super) fn resolve_method_type(
             resolve_decimal_method_type(object_ty, method, args, arg_ranges, method_range, ctx)
         }
         _ => {
-            ctx.error(format!(
-                "type '{}' has no method '{}'",
-                object_ty.display_name(),
-                method
-            ));
+            ctx.error_with_code_at(
+                DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                format!(
+                    "type '{}' has no method '{}'",
+                    object_ty.display_name(),
+                    method
+                ),
+                method_range,
+            );
             None
         }
     }
