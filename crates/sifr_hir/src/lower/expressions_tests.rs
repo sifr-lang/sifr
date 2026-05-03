@@ -811,6 +811,36 @@ fn test_dict_subscript_augassign_type_error_keeps_code() {
 }
 
 #[test]
+fn test_tuple_index_out_of_range_has_type_code() {
+    let source = "def main():\n    pair: tuple[int, str] = (1, \"x\")\n    value: int = pair[2]\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected tuple index error");
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message == "tuple index out of range"
+                && error.primary_range == Some(range_for(source, "2"))),
+        "tuple index diagnostic should preserve type code and literal index range: {errors:?}"
+    );
+}
+
+#[test]
+fn test_invalid_subscript_receiver_has_type_code() {
+    let source = "def main():\n    value: int = 1\n    bad: int = value[0]\n";
+    let result = lower_source(source);
+    let errors = result.expect_err("expected invalid subscript receiver error");
+
+    assert!(
+        errors.iter().any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message == "cannot index type 'int' with 'int'"
+            && error.primary_range == Some(range_for_after_anchor(source, "bad: int = ", "value[0]"))),
+        "invalid subscript receiver diagnostic should preserve type code and subscript range: {errors:?}"
+    );
+}
+
+#[test]
 fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
     let result = lower_source(
         "class ListNode:\n    next: ListNode | None\n\n    def __init__(self):\n        self.next = None\n\nclass Wrapper:\n    head: ListNode\n\n    def __init__(self):\n        self.head = ListNode()\n        self.head.next = ListNode()\n",
