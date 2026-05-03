@@ -2477,6 +2477,95 @@ fn test_min_max_accept_variadic_scalar_inputs() {
 }
 
 #[test]
+fn test_min_max_missing_args_have_call_code() {
+    let cases = [
+        ("min", "min() takes at least 1 argument"),
+        ("max", "max() takes at least 1 argument"),
+    ];
+
+    for (callable, message) in cases {
+        let source = format!("def main():\n    _value = {callable}()\n");
+        let result = lower_source(&source);
+        assert!(
+            result.is_err(),
+            "{callable} should reject missing arguments"
+        );
+        let errors = result.unwrap_err();
+        assert!(
+            errors.iter().any(|error| {
+                error.message == message
+                    && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
+                    && error.primary_range
+                        == Some(range_for_after_anchor(&source, "_value = ", callable))
+            }),
+            "{callable} errors: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn test_min_max_keywords_have_call_code() {
+    for callable in ["min", "max"] {
+        let source = format!(
+            "def main():\n    values: list[int] = [1, 2]\n    _value = {callable}(values=values)\n"
+        );
+        let result = lower_source(&source);
+        assert!(result.is_err(), "{callable} should reject keywords");
+        let errors = result.unwrap_err();
+        assert!(
+            errors.iter().any(|error| {
+                error.message == format!("{callable}() does not accept keyword arguments")
+                    && error.code == Some(DiagnosticCode::CALL_UNEXPECTED_KEYWORD)
+                    && error.primary_range
+                        == Some(range_for_after_anchor(
+                            &source,
+                            &format!("{callable}("),
+                            "values=values",
+                        ))
+            }),
+            "{callable} errors: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn test_min_max_single_non_iterable_has_type_code() {
+    let cases = [
+        (
+            "min",
+            "min() argument must be an iterable with a statically-known element type, got 'int'",
+        ),
+        (
+            "max",
+            "max() argument must be an iterable with a statically-known element type, got 'int'",
+        ),
+    ];
+
+    for (callable, message) in cases {
+        let source = format!("def main():\n    _value = {callable}(1)\n");
+        let result = lower_source(&source);
+        assert!(
+            result.is_err(),
+            "{callable} should reject single non-iterable argument"
+        );
+        let errors = result.unwrap_err();
+        assert!(
+            errors.iter().any(|error| {
+                error.message == message
+                    && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                    && error.primary_range
+                        == Some(range_for_after_anchor(
+                            &source,
+                            &format!("{callable}("),
+                            "1",
+                        ))
+            }),
+            "{callable} errors: {errors:?}"
+        );
+    }
+}
+
+#[test]
 fn test_max_two_arg_rejects_optional_operand() {
     let source =
         "def pick(d: dict[str, int], k: str) -> int:\n    best = 0\n    best = max(best, d[k])\n    return best\n";

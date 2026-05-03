@@ -977,6 +977,14 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         }
 
         if func_name == "min" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "min() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() >= 2 {
                 let mut args = Vec::with_capacity(call.arguments.args.len());
                 for arg in &call.arguments.args {
@@ -1008,10 +1016,14 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             } else if call.arguments.args.len() == 1 {
                 let arg = lower_expr(&call.arguments.args[0], ctx)?;
                 let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
-                    ctx.error(format!(
-                        "min() argument must be an iterable with a statically-known element type, got '{}'",
-                        arg.ty().display_name()
-                    ));
+                    expression_diagnostics::type_mismatch(
+                        ctx,
+                        format!(
+                            "min() argument must be an iterable with a statically-known element type, got '{}'",
+                            arg.ty().display_name()
+                        ),
+                        call.arguments.args[0].range(),
+                    );
                     return None;
                 };
                 return Some(HirExpr::Call {
@@ -1020,10 +1032,22 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     ty: Type::Union(vec![elem_ty, Type::None]),
                 });
             }
-            ctx.error("min() takes at least 1 argument".to_string());
+            expression_diagnostics::call_wrong_positional_count(
+                ctx,
+                "min() takes at least 1 argument".to_string(),
+                call.func.range(),
+            );
             return None;
         }
         if func_name == "max" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "max() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
             if call.arguments.args.len() >= 2 {
                 let mut args = Vec::with_capacity(call.arguments.args.len());
                 for arg in &call.arguments.args {
@@ -1055,10 +1079,14 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             } else if call.arguments.args.len() == 1 {
                 let arg = lower_expr(&call.arguments.args[0], ctx)?;
                 let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
-                    ctx.error(format!(
-                        "max() argument must be an iterable with a statically-known element type, got '{}'",
-                        arg.ty().display_name()
-                    ));
+                    expression_diagnostics::type_mismatch(
+                        ctx,
+                        format!(
+                            "max() argument must be an iterable with a statically-known element type, got '{}'",
+                            arg.ty().display_name()
+                        ),
+                        call.arguments.args[0].range(),
+                    );
                     return None;
                 };
                 return Some(HirExpr::Call {
@@ -1067,7 +1095,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     ty: Type::Union(vec![elem_ty, Type::None]),
                 });
             }
-            ctx.error("max() takes at least 1 argument".to_string());
+            expression_diagnostics::call_wrong_positional_count(
+                ctx,
+                "max() takes at least 1 argument".to_string(),
+                call.func.range(),
+            );
             return None;
         }
         if func_name == "sum" {
