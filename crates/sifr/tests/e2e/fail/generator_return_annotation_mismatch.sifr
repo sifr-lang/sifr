@@ -1,0 +1,8 @@
+# expect-error[col=25]: SIFR-TYPE-0002
+# Test: generator functions must declare Iterator[T] return annotations.
+
+def count_up(n: int) -> list[int]:
+    i: int = 0
+    while i < n:
+        yield i
+        i = i + 1
