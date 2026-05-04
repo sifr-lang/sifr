@@ -3179,13 +3179,16 @@ fn test_list_sort_accepts_reverse_keyword() {
 
 #[test]
 fn test_list_sort_rejects_non_bool_reverse_keyword() {
-    let result =
-        lower_source("def main():\n    nums: list[int] = [3, 1, 2]\n    nums.sort(reverse=1)\n");
+    let source = "def main():\n    nums: list[int] = [3, 1, 2]\n    nums.sort(reverse=1)\n";
+    let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("list.sort() argument 'reverse' must be 'bool'")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("list.sort() argument 'reverse' must be 'bool'")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && e.primary_range == Some(range_for_after_anchor(source, "reverse=", "1"))
+    }));
 }
 
 #[test]
@@ -3370,6 +3373,50 @@ fn test_dict_method_type_mismatch_has_type_code() {
         error.message == "dict.get() key type 'int' is not compatible with dict key type 'str'"
             && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
             && error.primary_range == Some(range_for_after(source, "data.get(", "1"))
+    }));
+}
+
+#[test]
+fn test_dict_get_default_keyword_type_mismatch_has_type_code_and_range() {
+    let source =
+        "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.get(0, default=\"bad\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "dict.get() default type 'str' is not compatible with dict value type 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(source, "default=", "\"bad\""))
+    }));
+}
+
+#[test]
+fn test_dict_pop_default_keyword_type_mismatch_has_type_code_and_range() {
+    let source =
+        "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.pop(0, default=\"bad\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "dict.pop() default type 'str' is not compatible with dict value type 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(source, "default=", "\"bad\""))
+    }));
+}
+
+#[test]
+fn test_dict_setdefault_keyword_type_mismatch_has_type_code_and_range() {
+    let source = "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.setdefault(0, default=\"bad\")\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "dict.setdefault() default type 'str' is not compatible with dict value type 'int'"
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for_after_anchor(source, "default=", "\"bad\""))
     }));
 }
 
