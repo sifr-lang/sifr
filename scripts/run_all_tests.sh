@@ -120,6 +120,9 @@ python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
 echo "Running sifr_diagnostics tests"
 cargo test -p sifr_diagnostics
 
+echo "Running sifr_hir tests"
+cargo test -p sifr_hir -- --skip test_e2e_pass
+
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass
 

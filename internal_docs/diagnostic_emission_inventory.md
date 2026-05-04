@@ -305,6 +305,7 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-TYPE-0007` | invalid type annotation shape | type annotation lowering | `crates/sifr/tests/e2e/fail/invalid_type_annotation.sifr`, plus Callable/Result/TypeVar/generic annotation-shape fixtures |
 | `SIFR-TYPE-0008` | container literal element/key/value type conflict | container literal specialization | `crates/sifr/tests/e2e/fail/container_literal_type_conflict.sifr`, plus dict-key/dict-value/set/tuple fixtures |
 | `SIFR-TYPE-0009` | tuple/list unpacking shape mismatch | tuple unpack lowering | `crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr` |
+| `SIFR-TYPE-0010` | TypeVar constraint not satisfied by inferred concrete type | type variable constraint checking | `crates/sifr/tests/e2e/fail/typevar_constraints_violation.sifr` |
 | `SIFR-TYPE-0011` | unsupported default argument expression | function default lowering | `crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` |
 | `SIFR-DECIMAL-0001` | `Decimal()` invalid exact literal | decimal constructor lowering | `crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr` |
 | `SIFR-DECIMAL-0002` | `BigDecimal()` invalid or non-literal exact string | decimal constructor lowering | bigdecimal invalid/non-literal fixtures |
@@ -345,9 +346,9 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-RESULT-0002` | invalid `Result` error type | result/error type lowering | `crates/sifr/tests/e2e/fail/error_str_not_allowed.sifr` |
 | `SIFR-RESULT-0003` | invalid `raise` expression | statement lowering | `crates/sifr/tests/e2e/fail/error_raise_bare.sifr`, `crates/sifr/tests/e2e/fail/error_raise_non_error.sifr`, `crates/sifr/tests/e2e/fail/error_raise_str.sifr` |
 | `SIFR-STDLIB-0001` | unsupported stdlib constructor/method surface | stdlib/builtin lowering | `crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr` |
-| `SIFR-STDLIB-0002` | stdlib method/argument type mismatch | stdlib call validation | stdlib wrong type/count fixtures, unless better represented by `CALL`/`TYPE` helper |
+| `SIFR-STDLIB-0002` | removed in `milestone_diag_11` guardrail audit; no compiler emission path | n/a | n/a |
 | `SIFR-WORKSPACE-0001..0104` | workspace manifest/source-root/import graph diagnostics | `sifr_driver::workspace` and project discovery | existing driver workspace tests |
-| `SIFR-CODEGEN-0002` | codegen panic boundary/internal backend failure | driver codegen boundary | panic boundary tests |
+| `SIFR-CODEGEN-0002` | removed in `milestone_diag_11` guardrail audit; no compiler emission path | n/a | n/a |
 | `SIFR-BUILD-0002..0006` | build workspace/materialization/cargo/rustc/test harness failures | driver build/test runner | driver build tests |
 | `SIFR-INTERNAL-0001` | unclassified compiler panic after panic boundary | panic boundary | panic boundary tests |
 

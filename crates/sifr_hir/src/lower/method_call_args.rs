@@ -57,6 +57,30 @@ pub(super) fn resolved_method_arg_ranges(
 ) -> Vec<TextRange> {
     let mut ranges: Vec<TextRange> = call.arguments.args.iter().map(Ranged::range).collect();
     match object_ty.resolve_alias() {
+        Type::List(_) if method == "sort" => {
+            if let Some(reverse) = call
+                .arguments
+                .keywords
+                .iter()
+                .find(|keyword| keyword.arg.as_ref().is_some_and(|name| name == "reverse"))
+            {
+                if ranges.is_empty() {
+                    ranges.push(reverse.value.range());
+                }
+            }
+        }
+        Type::Dict(_, _) if matches!(method, "get" | "pop" | "setdefault") => {
+            if let Some(default) = call
+                .arguments
+                .keywords
+                .iter()
+                .find(|keyword| keyword.arg.as_ref().is_some_and(|name| name == "default"))
+            {
+                if ranges.len() == 1 {
+                    ranges.push(default.value.range());
+                }
+            }
+        }
         Type::Dict(_, _) if method == "update" => {
             ranges.extend(call.arguments.keywords.iter().take(1).map(Ranged::range));
         }
