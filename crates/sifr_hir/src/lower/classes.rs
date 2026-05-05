@@ -13,6 +13,7 @@ use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
     is_error_class, is_operator_dunder, is_protocol_class,
 };
+use super::integer_literals::canonical_large_int_literal_text;
 use super::protocol_diagnostics;
 use super::statements::lower_stmts;
 use super::typing_and_functions::resolve_annotation_expr;
@@ -1246,7 +1247,15 @@ pub(super) fn collect_literal_coverage(
 pub(super) fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
     match expr {
         Expr::NumberLiteral(num) => match &num.value {
-            Number::Int(i) => Some(HirExpr::IntLiteral(i.as_i64()?)),
+            Number::Int(i) => {
+                if let Some(value) = i.as_i64() {
+                    Some(HirExpr::IntLiteral(value))
+                } else {
+                    Some(HirExpr::LargeIntLiteral(canonical_large_int_literal_text(
+                        i,
+                    )))
+                }
+            }
             Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
             Number::Complex { .. } => None,
         },
@@ -1270,6 +1279,11 @@ pub(super) fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
             if let Some(inner) = lower_expr_simple(&unary.operand) {
                 match inner {
                     HirExpr::IntLiteral(v) => Some(HirExpr::IntLiteral(-v)),
+                    HirExpr::LargeIntLiteral(value) => Some(HirExpr::UnaryOp {
+                        op: "-".to_string(),
+                        operand: Box::new(HirExpr::LargeIntLiteral(value)),
+                        ty: Type::Int,
+                    }),
                     HirExpr::FloatLiteral(v) => Some(HirExpr::FloatLiteral(-v)),
                     _ => None,
                 }

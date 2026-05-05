@@ -105,6 +105,54 @@ def main():
 }
 
 #[test]
+fn test_negative_large_integer_literal_lowers_as_unary_large_literal() {
+    let source = "def main():\n    value = -9_223_372_036_854_775_809\n";
+    let module = lower_source(source).expect("negative large integer literal should lower");
+
+    match function_let_value(&module, "value") {
+        HirExpr::UnaryOp { op, operand, ty } => {
+            assert_eq!(op, "-");
+            assert_eq!(ty, &Type::Int);
+            assert!(
+                matches!(operand.as_ref(), HirExpr::LargeIntLiteral(value) if value == "9223372036854775809"),
+                "expected unary large integer operand, got {operand:?}",
+            );
+        }
+        other => panic!("expected unary large integer literal, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_large_integer_default_arguments_lower_losslessly() {
+    let source = "\
+def identity(
+    x: int = 9223372036854775808,
+    y: int = -0x8000000000000001,
+) -> int:
+    return x
+";
+    let module = lower_source(source).expect("large integer defaults should lower");
+    let params = &module.functions[0].params;
+
+    assert!(
+        matches!(params[0].default.as_ref(), Some(HirExpr::LargeIntLiteral(value)) if value == "9223372036854775808"),
+        "expected positive large integer default, got {:?}",
+        params[0].default
+    );
+    match params[1].default.as_ref() {
+        Some(HirExpr::UnaryOp { op, operand, ty }) => {
+            assert_eq!(op, "-");
+            assert_eq!(ty, &Type::Int);
+            assert!(
+                matches!(operand.as_ref(), HirExpr::LargeIntLiteral(value) if value == "9223372036854775809"),
+                "expected negative large integer default operand, got {operand:?}",
+            );
+        }
+        other => panic!("expected negative large integer default, got {other:?}"),
+    }
+}
+
+#[test]
 fn test_type_mismatch_error() {
     let source = "def main():\n    x: int = \"hello\"\n";
     let result = lower_source(source);
