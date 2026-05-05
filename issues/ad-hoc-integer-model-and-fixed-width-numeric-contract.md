@@ -406,11 +406,11 @@ Validation:
 - [ ] INT-1 runtime `SifrInt` and ownership semantics
   - [x] Wave 1 runtime substrate and generated Cargo dependency plumbing reviewed and quick-validated: PR #1789.
   - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated: PR #1790.
-- [ ] INT-2A parser boundary and literal capture
+- [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
   - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.
   - [x] Default-argument large-literal parity and negative-large-literal unary coverage implemented, review satisfied, and quick validation passing: PR #1793.
-  - [x] Malformed integer token text has typed parser diagnostic coverage, over-budget integer literals emit `SIFR-INT-0004`, parsed/constructed HIR parity is covered, review is satisfied, and quick validation is passing.
+  - [x] Malformed integer token text has typed parser diagnostic coverage, over-budget integer literals emit `SIFR-INT-0004`, parsed/constructed HIR parity is covered, review is satisfied, and quick validation is passing: PR #1794.
 - [ ] INT-2B HIR, type system, and const fitting
   - [ ] Carry follow-ups from INT-2A reserved-width review: broaden annotation-position tests, align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, and decide reserved-name shadowing policy during `bigint` cleanup.
 - [ ] INT-3 scalar arithmetic and numeric mixing
