@@ -47,6 +47,7 @@ mod if_expression;
 mod import_diagnostics;
 mod imported_defaults;
 mod imports;
+mod integer_literal_diagnostics;
 mod integer_literals;
 mod len_aliases;
 mod match_diagnostics;
@@ -509,6 +510,7 @@ fn lower_module_impl(
     ctx.externals = externals.clone();
     // Register built-in functions
     register_builtins(&mut ctx);
+    integer_literal_diagnostics::validate_module_integer_literals(stmts, &mut ctx);
     // Pass 0: Pre-register all class names as forward references.
     // This allows function signatures and other classes to reference classes
     // defined later in the file (e.g., ListNode, TreeNode, Node).

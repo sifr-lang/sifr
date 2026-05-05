@@ -398,6 +398,7 @@ Validation:
 - [x] INT-2A large integer literal HIR review pass 1 completed with canonical-representation blocker: `reviews/integer-model-int-2a-large-literal-hir-review-pass-1b.md`.
 - [x] INT-2A large integer literal HIR review pass 2 approved after canonical decimal normalization: `reviews/integer-model-int-2a-large-literal-hir-review-pass-2.md`.
 - [x] INT-2A large integer literal default/unary parity review satisfied: `reviews/integer-model-int-2a-large-literal-defaults-parity-review-pass-1b.md`.
+- [x] INT-2A boundary diagnostics and parsed/constructed parity review satisfied: `reviews/integer-model-int-2a-boundary-diagnostics-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -409,7 +410,7 @@ Validation:
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
   - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.
   - [x] Default-argument large-literal parity and negative-large-literal unary coverage implemented, review satisfied, and quick validation passing: PR #1793.
-  - [ ] Carry INT-2A malformed/over-budget literal diagnostics and parsed/constructed HIR parity in the next INT-2A slice.
+  - [x] Malformed integer token text has typed parser diagnostic coverage, over-budget integer literals emit `SIFR-INT-0004`, parsed/constructed HIR parity is covered, review is satisfied, and quick validation is passing.
 - [ ] INT-2B HIR, type system, and const fitting
   - [ ] Carry follow-ups from INT-2A reserved-width review: broaden annotation-position tests, align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, and decide reserved-name shadowing policy during `bigint` cleanup.
 - [ ] INT-3 scalar arithmetic and numeric mixing
