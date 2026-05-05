@@ -403,7 +403,7 @@ Validation:
   - [x] Wave 1 runtime substrate and generated Cargo dependency plumbing reviewed and quick-validated: PR #1789.
   - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated: PR #1790.
 - [ ] INT-2A parser boundary and literal capture
-  - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing.
+  - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
   - [ ] Carry INT-2A parser literal lexeme capture, malformed/over-budget literal diagnostics, and parsed/constructed HIR parity in the next INT-2A slice.
 - [ ] INT-2B HIR, type system, and const fitting
   - [ ] Carry follow-ups from INT-2A reserved-width review: broaden annotation-position tests, align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, and decide reserved-name shadowing policy during `bigint` cleanup.
