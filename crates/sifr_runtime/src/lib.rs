@@ -3,4 +3,7 @@
 
 mod int;
 
-pub use int::{IntegerParseError, NormalizedIntegerHash, SifrInt, DEFAULT_MAX_INTEGER_DIGITS};
+pub use int::{
+    IntegerParseError, IntegerRangeError, NormalizedIntegerHash, SifrInt,
+    DEFAULT_MAX_INTEGER_DIGITS,
+};

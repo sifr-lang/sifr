@@ -33,6 +33,41 @@ impl fmt::Display for IntegerParseError {
 
 impl std::error::Error for IntegerParseError {}
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IntegerRangeError {
+    target: &'static str,
+    value: String,
+}
+
+impl IntegerRangeError {
+    #[must_use]
+    pub const fn new(target: &'static str, value: String) -> Self {
+        Self { target, value }
+    }
+
+    #[must_use]
+    pub const fn target(&self) -> &'static str {
+        self.target
+    }
+
+    #[must_use]
+    pub fn value(&self) -> &str {
+        &self.value
+    }
+}
+
+impl fmt::Display for IntegerRangeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "integer value {} does not fit {}",
+            self.value, self.target
+        )
+    }
+}
+
+impl std::error::Error for IntegerRangeError {}
+
 #[derive(Clone, Debug, Eq)]
 pub enum SifrInt {
     Small(i64),
@@ -61,6 +96,16 @@ impl NormalizedIntegerHash {
             magnitude_be: normalized_magnitude_bytes(&value.to_be_bytes()),
         }
     }
+}
+
+macro_rules! try_to_fixed_width {
+    ($name:ident, $target_ty:ty, $target_name:literal, $to_primitive:ident) => {
+        pub fn $name(&self) -> Result<$target_ty, IntegerRangeError> {
+            self.as_bigint()
+                .$to_primitive()
+                .ok_or_else(|| self.range_error($target_name))
+        }
+    };
 }
 
 impl SifrInt {
@@ -127,6 +172,23 @@ impl SifrInt {
             Self::Small(value) => Some(*value),
             Self::Big(_) => None,
         }
+    }
+
+    try_to_fixed_width!(try_to_i8, i8, "i8", to_i8);
+    try_to_fixed_width!(try_to_i16, i16, "i16", to_i16);
+    try_to_fixed_width!(try_to_i32, i32, "i32", to_i32);
+    try_to_fixed_width!(try_to_i64, i64, "i64", to_i64);
+    try_to_fixed_width!(try_to_i128, i128, "i128", to_i128);
+    try_to_fixed_width!(try_to_isize, isize, "isize", to_isize);
+    try_to_fixed_width!(try_to_u8, u8, "u8", to_u8);
+    try_to_fixed_width!(try_to_u16, u16, "u16", to_u16);
+    try_to_fixed_width!(try_to_u32, u32, "u32", to_u32);
+    try_to_fixed_width!(try_to_u64, u64, "u64", to_u64);
+    try_to_fixed_width!(try_to_u128, u128, "u128", to_u128);
+    try_to_fixed_width!(try_to_usize, usize, "usize", to_usize);
+
+    fn range_error(&self, target: &'static str) -> IntegerRangeError {
+        IntegerRangeError::new(target, self.to_string())
     }
 }
 
@@ -498,6 +560,52 @@ mod tests {
             NormalizedIntegerHash::from_signed(-1),
             NormalizedIntegerHash::from_unsigned(255)
         );
+    }
+
+    #[test]
+    fn exact_integer_converts_to_fitting_fixed_width_targets() {
+        let value = SifrInt::from_i64(42);
+
+        assert_eq!(value.try_to_i8().expect("fits i8"), 42);
+        assert_eq!(value.try_to_i16().expect("fits i16"), 42);
+        assert_eq!(value.try_to_i32().expect("fits i32"), 42);
+        assert_eq!(value.try_to_i64().expect("fits i64"), 42);
+        assert_eq!(value.try_to_i128().expect("fits i128"), 42);
+        assert_eq!(value.try_to_isize().expect("fits isize"), 42);
+        assert_eq!(value.try_to_u8().expect("fits u8"), 42);
+        assert_eq!(value.try_to_u16().expect("fits u16"), 42);
+        assert_eq!(value.try_to_u32().expect("fits u32"), 42);
+        assert_eq!(value.try_to_u64().expect("fits u64"), 42);
+        assert_eq!(value.try_to_u128().expect("fits u128"), 42);
+        assert_eq!(value.try_to_usize().expect("fits usize"), 42);
+    }
+
+    #[test]
+    fn exact_integer_conversion_reports_typed_range_errors() {
+        let too_large = SifrInt::parse_decimal(
+            "340282366920938463463374607431768211456",
+            DEFAULT_MAX_INTEGER_DIGITS,
+        )
+        .unwrap_or_else(|err| panic!("{err}"));
+        let negative = SifrInt::from_i64(-1);
+
+        let i64_err = too_large
+            .try_to_i64()
+            .expect_err("oversized exact int should not fit i64");
+        assert_eq!(i64_err.target(), "i64");
+        assert_eq!(i64_err.value(), "340282366920938463463374607431768211456");
+
+        let u8_err = SifrInt::from_i64(256)
+            .try_to_u8()
+            .expect_err("256 should not fit u8");
+        assert_eq!(u8_err.target(), "u8");
+        assert_eq!(u8_err.value(), "256");
+
+        let usize_err = negative
+            .try_to_usize()
+            .expect_err("negative exact int should not fit usize");
+        assert_eq!(usize_err.target(), "usize");
+        assert_eq!(usize_err.value(), "-1");
     }
 
     #[test]
