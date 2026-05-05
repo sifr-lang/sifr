@@ -22,6 +22,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `IMPORT` | `SIFR-IMPORT-0000` | Module import and path resolution diagnostics. |
 | `TYPE` | `SIFR-TYPE-0000` | Static type compatibility and inference diagnostics. |
 | `DECIMAL` | `SIFR-DECIMAL-0000` | Decimal literal and fixed-point arithmetic diagnostics. |
+| `INT` | `SIFR-INT-0000` | Exact and fixed-width integer model diagnostics. |
 | `CALL` | `SIFR-CALL-0000` | Function, method, constructor, and overload call diagnostics. |
 | `OWN` | `SIFR-OWN-0000` | Ownership, borrow, move, and lifetime diagnostics. |
 | `FLOW` | `SIFR-FLOW-0000` | Control-flow, reachability, and narrowing diagnostics. |
@@ -44,6 +45,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-IMPORT-0000` | `IMPORT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-TYPE-0000` | `TYPE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-INT-0000` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-CALL-0000` | `CALL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-OWN-0000` | `OWN` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-FLOW-0000` | `FLOW` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -87,6 +89,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-TYPE-0012` | `TYPE` | Active | Error | `docs/errors/SIFR-TYPE-0012.md` | `crates/sifr/tests/e2e/fail/unsupported_yield_expression.sifr` | `sifr_hir::lower::expressions` | `unsupported expression form: {form}` | `form (message+json)` | `form` | n/a | false |
 | `SIFR-TYPE-0901` | `TYPE` | Active | Warning | `docs/errors/SIFR-TYPE-0901.md` | `crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_arithmetic_overflow_as_structured_warning` | `sifr_hir::lower::arithmetic_warnings` | `integer {operation} may overflow at runtime` | `operation (message+json)` | `operation` | n/a | false |
 | `SIFR-TYPE-0902` | `TYPE` | Active | Note | `docs/errors/SIFR-TYPE-0902.md` | `crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note` | `sifr_hir::lower::builtin_calls` | `revealed type is {revealed_type}` | `revealed_type (message+json)` | `revealed_type` | n/a | false |
+| `SIFR-INT-0003` | `INT` | Active | Error | `docs/errors/SIFR-INT-0003.md` | `crates/sifr_hir/src/lower/type_alias_tests.rs::test_reserved_integer_width_annotations_have_int_code` | `sifr_hir::lower::typing_and_functions` | `reserved integer width name {name} is not supported yet` | `name (message+json)` | `name` | n/a | false |
 | `SIFR-DECIMAL-0001` | `DECIMAL` | Active | Error | `docs/errors/SIFR-DECIMAL-0001.md` | `crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr` | `sifr_hir::lower` | `invalid Decimal literal: {literal}` | `literal (message+json)` | `literal` | n/a | false |
 | `SIFR-DECIMAL-0002` | `DECIMAL` | Active | Error | `docs/errors/SIFR-DECIMAL-0002.md` | `crates/sifr/tests/e2e/fail/bigdecimal_invalid_literal_string.sifr` | `sifr_hir::lower` | `invalid BigDecimal literal: {literal}` | `literal (message+json)` | `literal` | n/a | false |
 | `SIFR-DECIMAL-0003` | `DECIMAL` | Active | Error | `docs/errors/SIFR-DECIMAL-0003.md` | `crates/sifr/tests/e2e/fail/decimal_float_mixed_arithmetic.sifr` | `sifr_type_system` | `cannot mix float with {decimal_type}` | `decimal_type (message+json)` | `decimal_type` | n/a | false |

@@ -64,7 +64,7 @@ Width is a storage, binary protocol, dtype, schema, or FFI choice. It is not the
 | `uint8`, `uint16`, `uint32`, `uint64` | unsigned fixed-width integer | bytes, protocols, external unsigned schemas, FFI | `u8`, `u16`, `u32`, `u64` |
 | `isize`, `usize` | pointer-sized Rust interop integer | FFI boundary only | `isize`, `usize` |
 
-Reserve `int128` and `uint128` as future fixed-width type names. Rust supports `i128` and `u128`, and some storage targets need 128-bit values, but Sifr does not need to ship them in the first fixed-width slice. Using either reserved name before support lands must produce `SIFR-INT-003`, not a generic unresolved-name diagnostic.
+Reserve `int128` and `uint128` as future fixed-width type names. Rust supports `i128` and `u128`, and some storage targets need 128-bit values, but Sifr does not need to ship them in the first fixed-width slice. Using either reserved name before support lands must produce `SIFR-INT-0003`, not a generic unresolved-name diagnostic.
 
 `bigint` should not remain a separate user-facing numeric type. If implementation staging needs a local transition, `bigint` may exist only as a temporary parser/type alias with deprecation diagnostics and no public documentation.
 
@@ -98,7 +98,7 @@ The compile-time fitting rule applies to const-evaluable integer expressions, no
 
 Runtime-dependent conditionals, function calls, collection lookups, and non-constant names do not participate. They require explicit fallible constructors.
 
-The first compile-time evaluator budget is 4096 decimal digits for any evaluated integer result, plus an implementation-defined operation-count guard to prevent pathological constant expressions from hanging the type checker. Exceeding the budget is a compile-time `SIFR-INT-004` diagnostic, not a fallback to runtime narrowing. Imported immutable module constants may carry const-evaluable status across module boundaries only when the frontend query layer can prove the imported initializer and its dependency graph are acyclic and within budget.
+The first compile-time evaluator budget is 4096 decimal digits for any evaluated integer result, plus an implementation-defined operation-count guard to prevent pathological constant expressions from hanging the type checker. Exceeding the budget is a compile-time `SIFR-INT-0004` diagnostic, not a fallback to runtime narrowing. Imported immutable module constants may carry const-evaluable status across module boundaries only when the frontend query layer can prove the imported initializer and its dependency graph are acyclic and within budget.
 
 ```python
 x: uint8 = 100 + 27       # ok
@@ -447,17 +447,17 @@ Reserve the `SIFR-INT-*` family for integer-model diagnostics:
 
 | Code | Family |
 | --- | --- |
-| `SIFR-INT-001` | fixed-width literal or const expression out of range |
-| `SIFR-INT-002` | implicit narrowing from exact/fixed source to narrower fixed-width target |
-| `SIFR-INT-003` | reserved integer width name such as `int128` or `uint128` before support lands |
-| `SIFR-INT-004` | compile-time integer evaluation budget exceeded |
-| `SIFR-INT-005` | exact integer division, modulo, exponentiation, or shift requires handling a typed failure |
-| `SIFR-INT-006` | exact integer to `float` conversion would overflow or lose precision |
-| `SIFR-INT-007` | bool/integer comparison without explicit conversion |
-| `SIFR-INT-008` | fixed-width array/tensor/dataframe arithmetic missing overflow policy |
-| `SIFR-INT-009` | JSON/web-safe integer serialization policy failure |
-| `SIFR-INT-010` | bytearray/bytes construction or mutation requires fitting `uint8` |
-| `SIFR-INT-011` | temporary `bigint` transition alias or stale public `bigint` usage |
+| `SIFR-INT-0001` | fixed-width literal or const expression out of range |
+| `SIFR-INT-0002` | implicit narrowing from exact/fixed source to narrower fixed-width target |
+| `SIFR-INT-0003` | reserved integer width name such as `int128` or `uint128` before support lands |
+| `SIFR-INT-0004` | compile-time integer evaluation budget exceeded |
+| `SIFR-INT-0005` | exact integer division, modulo, exponentiation, or shift requires handling a typed failure |
+| `SIFR-INT-0006` | exact integer to `float` conversion would overflow or lose precision |
+| `SIFR-INT-0007` | bool/integer comparison without explicit conversion |
+| `SIFR-INT-0008` | fixed-width array/tensor/dataframe arithmetic missing overflow policy |
+| `SIFR-INT-0009` | JSON/web-safe integer serialization policy failure |
+| `SIFR-INT-0010` | bytearray/bytes construction or mutation requires fitting `uint8` |
+| `SIFR-INT-0011` | temporary `bigint` transition alias or stale public `bigint` usage |
 
 ## Runtime and Codegen Contract
 

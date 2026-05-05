@@ -130,7 +130,7 @@ Scope:
 - Add a parser-driver or AST-to-HIR shim that captures the original integer literal lexeme when the parser-side numeric value would be lossy.
 - Normalize decimal, hex, octal, and binary literals into a lossless integer-literal representation for HIR.
 - Return a typed parser/frontend diagnostic for malformed or over-budget integer literal text.
-- Add `SIFR-INT-003` for reserved `int128`/`uint128` names before support lands.
+- Add `SIFR-INT-0003` for reserved `int128`/`uint128` names before support lands.
 
 Acceptance criteria:
 
@@ -163,9 +163,9 @@ Acceptance criteria:
 - Unsuffixed literals infer as `int`.
 - `x: int = 10 ** 100` type-checks.
 - `x: uint8 = 255` type-checks; `x: uint8 = 256` and `x: uint8 = -1` are compile errors with range diagnostics.
-- `x: uint8 = 10 ** 5000` or an equivalent over-budget const expression fails with `SIFR-INT-004`.
+- `x: uint8 = 10 ** 5000` or an equivalent over-budget const expression fails with `SIFR-INT-0004`.
 - No implicit narrowing occurs in assignments, calls, returns, list literals, dict literals, or generic specialization.
-- `bigint` is gone from public docs/tests or emits intentional `SIFR-INT-011` transition diagnostics only.
+- `bigint` is gone from public docs/tests or emits intentional `SIFR-INT-0011` transition diagnostics only.
 
 Validation:
 
@@ -190,7 +190,7 @@ Scope:
 - Add fixed-width checked/wrapping/saturating/overflowing APIs.
 - Enforce exact comparisons, exact int/float comparison without lossy casts, bool/integer separation, and decimal/float mixing rules.
 - Update `Addable` or introduce an output-typed integer/numeric protocol so `T + T -> T` is not satisfied by fixed-width ordinary arithmetic unless the output is assignable to `T`.
-- Emit `SIFR-INT-005` for unhandled exact integer failure cases, `SIFR-INT-006` for exact-to-float overflow/precision loss, and `SIFR-INT-007` for bool/integer comparison mistakes.
+- Emit `SIFR-INT-0005` for unhandled exact integer failure cases, `SIFR-INT-0006` for exact-to-float overflow/precision loss, and `SIFR-INT-0007` for bool/integer comparison mistakes.
 
 Acceptance criteria:
 
@@ -221,7 +221,7 @@ Scope:
 - Keep compiler-owned checked `usize` conversions at Rust indexing/materialization boundaries.
 - Make `bytes` indexing and iteration yield `uint8`.
 - Make `bytearray` indexing and iteration yield `uint8`; writes require fitting literals or explicit `uint8(...)` narrowing.
-- Emit `SIFR-INT-010` for byte and bytearray construction/mutation values that do not fit `uint8`.
+- Emit `SIFR-INT-0010` for byte and bytearray construction/mutation values that do not fit `uint8`.
 - Implement integer dict/set key hashing through normalized integer hashing so equal mathematical values hash consistently across `int` and fixed-width families where equality is allowed.
 - Update `sum`, `abs`, `min`, `max`, `random.randrange`, `secrets.randbelow`, and math integer helpers.
 - Add literal pattern fitting for fixed-width subjects.
@@ -253,7 +253,7 @@ Scope:
 - Implement or lock JSON integer profiles: `json.exact`, `json.web`, and `json.string_ints`.
 - Implement profile machinery in `sifr_runtime::json` and expose wrappers from future stdlib/web layers instead of duplicating profile logic.
 - Register `JsonIntegerRangeError` and `JsonLimitError` in the canonical built-in error registry and architecture docs with parent class, fields, and display rules.
-- Emit `SIFR-INT-009` for JSON/web-safe integer serialization policy failures.
+- Emit `SIFR-INT-0009` for JSON/web-safe integer serialization policy failures.
 - Add parser digit limits and typed errors for untrusted JSON/CSV/env/URL integer tokens.
 - Map OpenAPI/JSON Schema integer fields according to static range and selected profile.
 - Define TypeScript client mappings for safe numbers, branded decimal integer strings, and future exact-client bigint profiles.
@@ -286,7 +286,7 @@ Scope:
 - Add a dtype contract artifact under `verification/validation_contracts/` or an equivalent test-owned location.
 - Define fixed-width integer dtype names and scalar-to-dtype conversion rules.
 - Define default dtype arithmetic as dtype-preserving and fallible, with explicit wrapping/saturating/overflowing/widen policy APIs.
-- Emit `SIFR-INT-008` for fixed-width array/tensor/dataframe arithmetic that lacks an explicit overflow policy once those surfaces exist.
+- Emit `SIFR-INT-0008` for fixed-width array/tensor/dataframe arithmetic that lacks an explicit overflow policy once those surfaces exist.
 - Require explicit dtype when constructing compact column/tensor storage from `list[int]`.
 - Add type-checker stubs, pending fixtures, or blocked tests proving an implementation PR cannot later introduce silent fixed-width dtype wrapping.
 - Define Arrow/Parquet integer schema mapping expectations even if loaders are not implemented yet.
@@ -334,7 +334,7 @@ Goal: make the new model teachable and remove bootstrap leftovers.
 Scope:
 
 - Add stable diagnostic codes for integer range, narrowing, unsafe division, float precision, bool comparison, JSON policy, and dtype overflow-policy errors.
-- Reserve and document the `SIFR-INT-001..011` diagnostic families listed in `internal_docs/integer_model.md`.
+- Reserve and document the `SIFR-INT-0001..0011` diagnostic families listed in `internal_docs/integer_model.md`.
 - Update public docs, internal docs, demos, and issue references to use exact `int` and explicit fixed-width types.
 - Remove or quarantine transition fixtures that mention public `bigint`.
 - Add examples for web APIs, dataframes/tensors, bytes, FFI, and common domain values.
@@ -393,15 +393,20 @@ Validation:
 - [x] INT-1 runtime substrate wave 1 review pass 1 completed with blockers: `reviews/integer-model-int-1-runtime-wave-1-review-pass-1.md`.
 - [x] INT-1 runtime substrate wave 1 review pass 2 satisfied after addressing blockers: `reviews/integer-model-int-1-runtime-wave-1-review-pass-2.md`.
 - [x] INT-1 fixed-width conversion substrate wave review satisfied: `reviews/integer-model-int-1-runtime-fixed-width-conversions-review-pass-1b.md`.
+- [x] INT-2A reserved-width diagnostic review pass 1 completed with doc-code normalization blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-1.md`.
+- [x] INT-2A reserved-width diagnostic review pass 2 satisfied after addressing blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-2b.md`.
 
 ## Implementation Checklist
 
 - [x] INT-0 contract lock and legacy audit
 - [ ] INT-1 runtime `SifrInt` and ownership semantics
-  - [x] Wave 1 runtime substrate and generated Cargo dependency plumbing reviewed and quick-validated.
-  - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated.
+  - [x] Wave 1 runtime substrate and generated Cargo dependency plumbing reviewed and quick-validated: PR #1789.
+  - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated: PR #1790.
 - [ ] INT-2A parser boundary and literal capture
+  - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing.
+  - [ ] Carry INT-2A parser literal lexeme capture, malformed/over-budget literal diagnostics, and parsed/constructed HIR parity in the next INT-2A slice.
 - [ ] INT-2B HIR, type system, and const fitting
+  - [ ] Carry follow-ups from INT-2A reserved-width review: broaden annotation-position tests, align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, and decide reserved-name shadowing policy during `bigint` cleanup.
 - [ ] INT-3 scalar arithmetic and numeric mixing
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries

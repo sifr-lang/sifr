@@ -110,6 +110,31 @@ fn test_unresolved_type_alias_dependency_still_errors() {
 }
 
 #[test]
+fn test_reserved_integer_width_annotations_have_int_code() {
+    let source = "type Wide = int128\n\ndef take(value: uint128) -> int:\n    return 0\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+
+    assert!(errors.iter().any(|error| {
+        error.message == "reserved integer width name 'int128' is not supported yet"
+            && error.code == Some(DiagnosticCode::INT_RESERVED_WIDTH_NAME)
+            && error.primary_range == Some(range_for_after(source, "= ", "int128"))
+    }));
+    assert!(errors.iter().any(|error| {
+        error.message == "reserved integer width name 'uint128' is not supported yet"
+            && error.code == Some(DiagnosticCode::INT_RESERVED_WIDTH_NAME)
+            && error.primary_range == Some(range_for_after(source, "value: ", "uint128"))
+    }));
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != Some(DiagnosticCode::NAME_UNKNOWN_TYPE)),
+        "reserved width names should not fall through to generic unknown-type diagnostics"
+    );
+}
+
+#[test]
 fn test_recursive_alias_annotation_preserves_symbolic_self_reference() {
     let result = lower_source(
         "type Json = None | bool | int | float | str | list[Json] | dict[str, Json]\n\ndef main():\n    value: Json = None\n",
