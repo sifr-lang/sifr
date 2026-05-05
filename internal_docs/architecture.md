@@ -43,6 +43,10 @@
     - `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
     - `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
     - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
+- Integer model amendment source of truth:
+  - `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` replaces the historical `int = i64`/separate user-facing `bigint` design before production.
+  - Target source semantics: `int` is an exact signed arbitrary-precision value-semantic scalar backed by inline-small `SifrInt`; explicit fixed-width `int8`/`int16`/`int32`/`int64` and `uint8`/`uint16`/`uint32`/`uint64` are for storage, dtypes, binary formats, and FFI.
+  - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 
@@ -65,7 +69,7 @@ Sifr's core guarantee: **if it compiles, it works.** The language is designed so
   - Division (`a / b` returns `Result[T, DivisionError]` when the divisor is not provably non-zero)
   - Type conversions (`int(s)` where `s: str` returns `Result[int, ParseError]`)
   - File I/O, network, and all stdlib operations that can fail
-  - Integer overflow (`int` panics in debug, wraps in release -- matches Rust; use `bigint` for arbitrary-precision arithmetic matching Python's behavior)
+  - Fixed-width integer narrowing and representation-preserving fixed-width arithmetic (`int` itself is exact; overflow policy is explicit at fixed-width/storage boundaries)
 - `**assert` is the only panic.** The `assert` statement is a programmer invariant check -- it generates `panic!()` and is intentionally unrecoverable. It exists to catch programmer bugs (violated assumptions), not to handle runtime errors. It is the one escape hatch from the no-panic guarantee.
 - **Panic = unrecoverable system failure.** Beyond `assert`, panics only occur from truly unrecoverable situations: stack overflow, double panic, or hardware failure. These are never part of normal control flow.
 - **Generated runtime panic-shape gate is enforced.** Phase 27 requires an emitted-code sweep across pass fixtures to ensure generated Rust contains no `.unwrap(` or `.expect(` in user-facing runtime paths.
@@ -100,7 +104,7 @@ Sifr uses the CPython source code (`/Users/yaseralnajjar/work/sifr/cpython`) as 
 
 - The first-class `bytes` surface is now a distinct compiler type (`Type::Bytes`) across type checking, lowering, and codegen.
 - Current Rust codegen representation is raw-byte storage (`Vec<u8>`) for typed bytes-native paths.
-- Indexing and iteration still yield Sifr `int`; the `u8 -> i64` widening happens at explicit read boundaries, not in stored representation.
+- Target integer-model amendment: indexing and iteration yield `uint8`; callers use `int(b)` when they want exact scalar integer arithmetic.
 - Explicit construction boundaries (`bytes.from_ints`, `bytes.from_hex`, UTF-8 decode) remain responsible for runtime validation and typed error propagation.
 
 ### Safety Adaptation Rules
@@ -110,7 +114,7 @@ When adapting CPython behavior to Sifr, apply these rules:
 1. **Where CPython raises an exception, Sifr returns `Result[T, E]`.** Example: `int("abc")` raises `ValueError` in CPython; in Sifr it returns `Result[int, ParseError]`.
 2. **Where CPython raises `IndexError`, Sifr returns `Option[T]`.** Example: `list[99]` raises `IndexError` in CPython; in Sifr it returns `None`.
 3. **Where CPython raises `KeyError`, Sifr returns `Option[V]`.** Example: `dict["missing"]` raises `KeyError` in CPython; in Sifr it returns `None`.
-4. **Where CPython uses arbitrary-precision integers, Sifr provides two options.** `int` maps to `i64` for performance (overflow panics in debug, wraps in release — matching Rust defaults). `bigint` maps to arbitrary-precision integers matching Python's `int` behavior (no overflow possible). The compiler emits warnings when `int` arithmetic could overflow at runtime. Conversion between `int` and `bigint` is explicit: `bigint(n)` always succeeds; `int(b)` returns `Result[int, OverflowError]`.
+4. **Where CPython uses arbitrary-precision integers, Sifr uses exact `int`.** Source-level `int` is signed, arbitrary precision, and value-semantic. Fixed-width integer families are explicit for storage, binary protocols, dataframes/tensors, and FFI. Narrowing from `int` to a fixed-width type is explicit and fallible unless the compiler proves a constant fits.
 5. **Where CPython allows mutation on immutable types at runtime, Sifr rejects at compile time.** Example: `tuple[0] = 1` raises `TypeError` at runtime in CPython; in Sifr it is a compile-time error.
 6. **Where CPython behavior is undefined or platform-dependent, Sifr defines explicit behavior.** Document any deviations from CPython in the milestone's notes.
 
@@ -143,7 +147,7 @@ Sifr intentionally diverges from CPython in several areas to achieve compile-tim
 | Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` with compiler-enforced exhaustiveness checking on error types; no `?` operator in user code; `raise` maps to `Err(...)`, `return` auto-wraps in `Ok(...)` | Compile-time error handling eliminates unhandled exceptions at runtime; exhaustiveness checking ensures all error types are covered | milestone_error_handling, milestone_error_exhaustiveness |
 | `IndexError` on out-of-bounds access                   | `x[i]` returns `Option[T]` (no panic)                                                                                | Safe indexing -- no runtime crashes from bad indices                                      | milestone_safe_indexing                        |
 | `KeyError` on missing dict key                         | `d[key]` returns `Option[V]` (no panic)                                                                              | Safe access -- caller must handle missing keys                                            | milestone_safe_indexing                        |
-| Arbitrary-precision integers                           | `int` is `i64` (overflow panics in debug, wraps in release); `bigint` type provides arbitrary-precision arithmetic matching Python's `int` | `int` stays `i64` for performance; `bigint` is opt-in for arbitrary precision; compiler warns on potential `int` overflow | milestone_error_handling, milestone_integer_safety |
+| Arbitrary-precision integers                           | `int` is exact and arbitrary precision; fixed-width integer families are explicit for storage, dtypes, binary formats, and FFI | Python-simple default arithmetic without overflow; widths are visible only where representation matters | ad-hoc-integer-model-and-fixed-width-numeric-contract |
 | Import-time side effects (`__init__.py` runs code)     | `__init__.sifr` defines exported API only; no side effects on import                                                 | Deterministic, safe module loading                                                        | milestone_imports                              |
 | Mutable default arguments (`def f(x=[])`)              | Default values are evaluated fresh each call (no shared mutable state)                                               | Eliminates a common Python footgun                                                        | milestone_ergonomics                           |
 | Parameter reassignment is implicit (`def f(x): x = ...`) | Rebinding or mutating a parameter requires explicit `mut` / `own mut`; bare parameters are immutable by default | Keeps ownership and mutability explicit; avoids hidden local mutation that conflicts with borrow-by-default semantics | milestone_borrow_default, ad-hoc-own-mut-parameter-convention |
@@ -308,14 +312,14 @@ Union types, `Unknown`, and class instances all need a coherent runtime represen
 - **Class unions** (`Circle | Square`, milestone_classes/milestone_protocols): generate Rust `enum` with one variant per class. Discriminated union narrowing via tag field generates `match` on the tag.
 - `**Unknown` type**: generates `Box<dyn std::any::Any>` in Rust. The compiler enforces that every use site is guarded by a narrowing check (`isinstance`, equality, etc.) before any operation. At runtime, `downcast_ref::<T>()` is used after narrowing. This is the only type that requires runtime type information (RTTI).
 - `**Any` type**: generates the same `Box<dyn Any>` but the compiler does NOT enforce narrowing. This is the escape hatch.
-- **Generics** (milestone_generics): monomorphized at compile time (like Rust). No runtime type erasure for generic types. `list[int]` generates `Vec<i64>`, not `Vec<Box<dyn Any>>`.
+- **Generics** (milestone_generics): monomorphized at compile time (like Rust). No runtime type erasure for generic types. Under the integer-model amendment, `list[int]` generates storage over the canonical `SifrInt` representation, while fixed-width lists use the corresponding Rust primitive storage.
 - **Protocol/trait objects** (milestone_protocols): when a protocol is used as a type (not just a bound), generate `Box<dyn Trait>` with vtable dispatch. This is the only case of dynamic dispatch besides `Unknown`/`Any`.
 
 **Invariant:** Every `Type` variant must have exactly one Rust representation. The `rust_type()` method on `Type` is the single source of truth for this mapping.
 
 ### 2. Borrow and Lifetime Strategy
 
-Sifr uses **borrow-by-default** semantics for function parameters. Move-type arguments are immutably borrowed (`&T`) unless the programmer opts in to mutable borrowing (`mut`), ownership transfer (`own`), or owned mutable parameters (`own mut`). Copy types (`int`, `float`, `bool`) always pass by value. This eliminates "use-after-move" friction for the common case while keeping ownership explicit where it matters.
+Sifr uses **borrow-by-default** semantics for function parameters. Move-type arguments are immutably borrowed (`&T`) unless the programmer opts in to mutable borrowing (`mut`), ownership transfer (`own`), or owned mutable parameters (`own mut`). Scalar value-semantic primitives (`int`, fixed-width integers, `float`, `bool`) do not expose use-after-move friction at the source level; under the integer-model amendment, `int` is not Rust `Copy`, but codegen owns the borrow/clone/primitive-local optimization needed to preserve scalar source semantics.
 
 **Contract:**
 
@@ -327,11 +331,11 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
     - immutable
     - mutable
   Valid surface forms are:
-  - `x: list[int]` -> borrowed immutable -> `x: &Vec<i64>`
-  - `mut x: list[int]` -> borrowed mutable -> `x: &mut Vec<i64>`
-  - `own x: list[int]` -> owned immutable -> `x: Vec<i64>`
-  - `own mut x: list[int]` -> owned mutable -> `mut x: Vec<i64>`
-  Copy types (`int`, `float`, `bool`) always pass by value regardless of annotation; `mut` on Copy parameters only affects local rebinding/mutation semantics, not borrow emission.
+  - `x: list[int]` -> borrowed immutable -> `x: &Vec<SifrInt>` under the integer-model amendment
+  - `mut x: list[int]` -> borrowed mutable -> `x: &mut Vec<SifrInt>` under the integer-model amendment
+  - `own x: list[int]` -> owned immutable -> `x: Vec<SifrInt>` under the integer-model amendment
+  - `own mut x: list[int]` -> owned mutable -> `mut x: Vec<SifrInt>` under the integer-model amendment
+  Scalar value-semantic types (`int`, fixed-width integers, `float`, `bool`) remain reusable after calls regardless of annotation; `mut` on those parameters only affects local rebinding/mutation semantics, not observable ownership transfer.
 - **Method receivers:** auto-borrow based on method body analysis:
   - If the method only reads `self` fields: `&self`
   - If the method mutates `self` fields: `&mut self`
@@ -372,7 +376,7 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (mile
 | `try`/`except` block             | Pattern match on `Result`         | `except` arms match error types; compiler checks coverage   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
 | Indexing                         | `Option[T]` return                | Type narrowing (`if val is not None`)                       | `.get(i).cloned()` / `.chars().nth(i)`                     |
 | Division                         | `Result[T, DivisionError]`        | `try`/`except`                                              | Checked division with zero-check                           |
-| Integer overflow (`int`)         | Panic in debug, wrap in release   | Use `bigint` for arbitrary precision; compiler warns on risky `int` expressions | Default Rust `i64` arithmetic; `bigint` uses `num_bigint::BigInt` |
+| Exact integer arithmetic (`int`) | Exact value-semantic arithmetic; explosive operations such as exponentiation/large shifts are budgeted and fallible when needed | Use fixed-width integer APIs only when representation matters; no silent wrap/panic in normal `int` arithmetic | `SifrInt` inline-small runtime type; fixed-width types map to Rust primitives |
 | Type conversion                  | `Result[T, ParseError]`           | `try`/`except`                                              | `.parse::<T>()`                                            |
 | Unused `Result`                  | **Compile-time error**            | Must handle via `try`/`except` or discard with `_ = ...`    | `#[must_use]` attribute on `Result`                        |
 | Rust FFI (milestone_ffi)         | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points                     | Panic -> `Result::Err` conversion                          |
@@ -823,8 +827,8 @@ enum Type {
     Tuple(Vec<Type>),
     Set(Box<Type>),
 
-    // Literal types (Copy) -- specific values as types (milestone_type_system)
-    LiteralInt(i64),
+    // Literal types -- specific values as types (milestone_type_system)
+    LiteralInt(SifrIntLiteral),
     LiteralStr(String),
     LiteralBool(bool),
 
@@ -895,7 +899,7 @@ Key behaviors:
 - **Deduplicated:** `Union(vec![Int, Int, Str])` normalizes to `Union(vec![Int, Str])`
 - **Single-element unions collapse:** `Union(vec![Int])` becomes `Int`
 - **Subtyping:** `A` is assignable to `A | B`; `A | B` is assignable to `C` only if both `A` and `C` and `B` and `C` are assignable
-- **Codegen:** `int | str` generates a Rust enum `enum IntOrStr { Int(i64), Str(String) }`
+- **Codegen:** `int | str` generates a Rust enum with one variant per runtime representation, e.g. `enum IntOrStr { Int(SifrInt), Str(String) }` under the integer-model amendment.
 
 ### Type Narrowing (TypeScript-inspired, milestone_type_system)
 
