@@ -487,6 +487,9 @@ fn infer_dependencies(
     if rust_source.contains("num_bigint::BigInt") || rust_source.contains("use num_bigint") {
         modules.insert("_bigint".to_string());
     }
+    if rust_source.contains("sifr_runtime::") || rust_source.contains("use sifr_runtime") {
+        crates.insert("sifr_runtime".to_string());
+    }
     if rust_source.contains("regex::") {
         crates.insert("regex".to_string());
     }
@@ -1221,6 +1224,9 @@ fn generate_cargo_toml(
                     "bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }".to_string(),
                 );
             }
+            "sifr_runtime" | "sifr-runtime" => {
+                deps.insert(sifr_runtime_dependency_spec());
+            }
             _ => {}
         }
     }
@@ -1238,6 +1244,49 @@ fn generate_cargo_toml(
     contents.push_str("\n[workspace]\n");
 
     contents
+}
+
+fn sifr_runtime_dependency_spec() -> String {
+    let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
+    let escaped_path = runtime_path
+        .to_string_lossy()
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"");
+    format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
+}
+
+fn discover_sifr_runtime_path() -> Option<PathBuf> {
+    env::var_os("SIFR_RUNTIME_PATH")
+        .map(PathBuf::from)
+        .filter(|path| path.join("Cargo.toml").is_file())
+        .or_else(|| discover_sifr_runtime_path_from_current_dir())
+        .or_else(|| discover_sifr_runtime_path_from_current_exe())
+}
+
+fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
+    env::current_dir()
+        .ok()
+        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
+}
+
+fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
+    env::current_exe()
+        .ok()
+        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
+}
+
+fn discover_sifr_runtime_path_from_ancestors(start: &Path) -> Option<PathBuf> {
+    start.ancestors().find_map(|ancestor| {
+        let candidate = ancestor.join("crates").join("sifr_runtime");
+        candidate.join("Cargo.toml").is_file().then_some(candidate)
+    })
+}
+
+fn compile_time_sifr_runtime_path() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")))
+        .join("sifr_runtime")
 }
 
 fn make_entry_function_public(source: &str, entry_fn: &str) -> String {
@@ -3602,6 +3651,15 @@ fn test_generate_cargo_toml_required_toml_uses_preserve_order_feature() {
 
     let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
     assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
+}
+
+#[test]
+fn test_generate_cargo_toml_required_sifr_runtime_uses_path_dependency() {
+    let stdlib_modules = BTreeSet::new();
+    let required_crates = normalize_dependency_set(vec!["sifr_runtime".to_string()]);
+
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
+    assert!(cargo_toml.contains("sifr_runtime = { path = "));
 }
 
 fn sample_cache_entry(

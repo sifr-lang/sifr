@@ -17,6 +17,7 @@ pub(crate) struct IrCollectionImportNeeds {
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct IrRuntimeImportNeeds {
     pub(crate) needs_mutex: bool,
+    pub(crate) needs_sifr_int: bool,
     pub(crate) numeric: IrNumericImportNeeds,
 }
 
@@ -432,6 +433,8 @@ fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
         "HashSet" => needs.collections.needs_hashset = true,
         "VecDeque" => needs.collections.needs_vecdeque = true,
         "Mutex" => needs.runtime.needs_mutex = true,
+        "SifrInt" => needs.runtime.needs_sifr_int = true,
+        "sifr_runtime" => needs.runtime.needs_sifr_int = true,
         "BigInt" => needs.runtime.numeric.needs_bigint = true,
         "Decimal" => needs.runtime.numeric.needs_decimal = true,
         "BigDecimal" => needs.runtime.numeric.needs_bigdecimal = true,
@@ -522,5 +525,32 @@ mod tests {
         assert!(!needs.runtime.numeric.needs_bigint);
         assert!(!needs.runtime.numeric.needs_decimal);
         assert!(!needs.runtime.numeric.needs_bigdecimal);
+    }
+
+    #[test]
+    fn collects_sifr_runtime_integer_symbols() {
+        let items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![RustParam::Named {
+                name: "value".to_string(),
+                ty: RustType::Named("SifrInt".to_string()),
+            }],
+            ret: Some(RustType::Named("SifrInt".to_string())),
+            body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "sifr_runtime".to_string(),
+                    "SifrInt".to_string(),
+                    "from_i64".to_string(),
+                ])),
+                args: vec![RustExpr::Literal(RustLiteral::Int(1))],
+            }))],
+            is_async: false,
+        }];
+
+        let needs = collect_import_needs_from_items(&items);
+
+        assert!(needs.runtime.needs_sifr_int);
     }
 }

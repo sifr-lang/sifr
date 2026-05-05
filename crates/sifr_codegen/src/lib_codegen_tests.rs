@@ -1,6 +1,7 @@
 use crate::{
-    generate_rust, generate_rust_multi, generate_rust_multi_with_metadata, generate_rust_test,
-    generate_rust_with_metadata, RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
+    generate_project_with_deps_and_crates, generate_rust, generate_rust_multi,
+    generate_rust_multi_with_metadata, generate_rust_test, generate_rust_with_metadata,
+    RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
 };
 use sifr_hir::{
     lower_module, HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFStringPart, HirFunction,
@@ -14,6 +15,17 @@ fn generate_rust_from_source(source: &str) -> String {
     let parsed = parse_module(source).expect("parse failed");
     let lowering = lower_module(parsed.suite()).expect("lowering failed");
     generate_rust(&lowering.module)
+}
+
+fn empty_module() -> HirModule {
+    HirModule {
+        functions: vec![],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    }
 }
 
 #[test]
@@ -3484,6 +3496,20 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
     assert!(!generate_block.contains("assert_output_drained("));
     assert!(!generate_block.contains("emitter.output"));
     assert!(!generate_block.contains("module_import_prelude"));
+}
+
+#[test]
+fn test_generate_project_emits_sifr_runtime_path_dependency_when_required() {
+    let module = empty_module();
+    let required_crates = HashSet::from(["sifr_runtime".to_string()]);
+    let (cargo_toml, _main_rs) = generate_project_with_deps_and_crates(
+        &module,
+        "sifr_output",
+        &HashSet::new(),
+        &required_crates,
+    );
+
+    assert!(cargo_toml.contains("sifr_runtime = { path = "));
 }
 
 #[test]

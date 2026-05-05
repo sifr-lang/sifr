@@ -64,7 +64,9 @@ pub(crate) use lib_support::{
 use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
+use std::env;
 use std::fmt::Write as _;
+use std::path::{Path, PathBuf};
 use stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
 };
@@ -77,6 +79,49 @@ type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
 type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
 pub use entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
+
+pub fn sifr_runtime_dependency_spec() -> String {
+    let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
+    let escaped_path = runtime_path
+        .to_string_lossy()
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"");
+    format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
+}
+
+fn discover_sifr_runtime_path() -> Option<PathBuf> {
+    env::var_os("SIFR_RUNTIME_PATH")
+        .map(PathBuf::from)
+        .filter(|path| path.join("Cargo.toml").is_file())
+        .or_else(|| discover_sifr_runtime_path_from_current_dir())
+        .or_else(|| discover_sifr_runtime_path_from_current_exe())
+}
+
+fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
+    env::current_dir()
+        .ok()
+        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
+}
+
+fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
+    env::current_exe()
+        .ok()
+        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
+}
+
+fn discover_sifr_runtime_path_from_ancestors(start: &Path) -> Option<PathBuf> {
+    start.ancestors().find_map(|ancestor| {
+        let candidate = ancestor.join("crates").join("sifr_runtime");
+        candidate.join("Cargo.toml").is_file().then_some(candidate)
+    })
+}
+
+fn compile_time_sifr_runtime_path() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")))
+        .join("sifr_runtime")
+}
 
 #[derive(Clone)]
 struct NestedFnCapture {
@@ -523,6 +568,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         || stdlib_import_needs.runtime.numeric.needs_decimal;
     let needs_bigdecimal = body_import_needs.runtime.numeric.needs_bigdecimal
         || stdlib_import_needs.runtime.numeric.needs_bigdecimal;
+    let needs_sifr_int =
+        body_import_needs.runtime.needs_sifr_int || stdlib_import_needs.runtime.needs_sifr_int;
     let needs_mutex = needs_file_handles
         || needs_logging
         || needs_random_module_state
@@ -567,6 +614,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         import_items.push(RustItem::Use(vec![
             "bigdecimal".to_string(),
             "BigDecimal".to_string(),
+        ]));
+    }
+    if needs_sifr_int {
+        import_items.push(RustItem::Use(vec![
+            "sifr_runtime".to_string(),
+            "SifrInt".to_string(),
         ]));
     }
     if needs_mutex {
@@ -644,6 +697,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             }
             if needs_bigdecimal {
                 crates.insert("bigdecimal".to_string());
+            }
+            if needs_sifr_int {
+                crates.insert("sifr_runtime".to_string());
             }
             crates
         },
@@ -1038,6 +1094,12 @@ edition = "2021"
                     deps.push(
                         "bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }".to_string(),
                     );
+                }
+            }
+            "sifr_runtime" | "sifr-runtime" => {
+                let dep = sifr_runtime_dependency_spec();
+                if !deps.contains(&dep) {
+                    deps.push(dep);
                 }
             }
             _ => {}
