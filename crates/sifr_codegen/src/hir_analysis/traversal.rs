@@ -279,6 +279,7 @@ where
         }
         HirExpr::Name { .. }
         | HirExpr::IntLiteral(_)
+        | HirExpr::LargeIntLiteral(_)
         | HirExpr::FloatLiteral(_)
         | HirExpr::StringLiteral(_)
         | HirExpr::BoolLiteral(_)

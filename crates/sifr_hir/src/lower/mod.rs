@@ -47,6 +47,7 @@ mod if_expression;
 mod import_diagnostics;
 mod imported_defaults;
 mod imports;
+mod integer_literals;
 mod len_aliases;
 mod match_diagnostics;
 mod match_lowering;

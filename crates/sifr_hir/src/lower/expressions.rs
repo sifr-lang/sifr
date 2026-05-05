@@ -32,6 +32,7 @@ use super::expression_sum_sorted::{lower_sorted_call, lower_sum_call};
 use super::fstring_support::lower_fstring_expr;
 use super::generic_constructor_specialization::refine_constructor_return_type_from_args;
 use super::generic_receiver_specialization::refine_generic_class_binding_expr;
+use super::integer_literals::canonical_large_int_literal_text;
 use super::method_call_args::{
     lower_function_call_args, lower_method_call_args, lower_signature_call_args,
     resolved_method_arg_ranges, validate_dict_update_arg, validate_list_extend_arg,
@@ -115,8 +116,13 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
 pub(super) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
     match &num.value {
         Number::Int(i) => {
-            let val = i.as_i64()?;
-            Some(HirExpr::IntLiteral(val))
+            if let Some(val) = i.as_i64() {
+                Some(HirExpr::IntLiteral(val))
+            } else {
+                Some(HirExpr::LargeIntLiteral(canonical_large_int_literal_text(
+                    i,
+                )))
+            }
         }
         Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
         Number::Complex { .. } => None, // Not supported.

@@ -344,6 +344,9 @@ pub enum HirIteratorOp {
 pub enum HirExpr {
     /// Integer literal
     IntLiteral(i64),
+    /// Canonical decimal integer literal that does not fit in the historical small-literal `i64`
+    /// slot.
+    LargeIntLiteral(String),
     /// Float literal
     FloatLiteral(f64),
     /// String literal
@@ -547,7 +550,7 @@ impl HirExpr {
     /// Get the type of this expression.
     pub fn ty(&self) -> &Type {
         match self {
-            Self::IntLiteral(_) => &Type::Int,
+            Self::IntLiteral(_) | Self::LargeIntLiteral(_) => &Type::Int,
             Self::FloatLiteral(_) => &Type::Float,
             Self::StringLiteral(_) => &Type::Str,
             Self::BoolLiteral(_) => &Type::Bool,

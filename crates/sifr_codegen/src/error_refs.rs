@@ -443,6 +443,7 @@ fn collect_expr_error_refs(
             }
         }
         HirExpr::IntLiteral(_)
+        | HirExpr::LargeIntLiteral(_)
         | HirExpr::FloatLiteral(_)
         | HirExpr::StringLiteral(_)
         | HirExpr::BoolLiteral(_)
