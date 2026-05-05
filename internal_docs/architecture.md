@@ -44,7 +44,8 @@
     - `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
     - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
 - Integer model amendment source of truth:
-  - `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` replaces the historical `int = i64`/separate user-facing `bigint` design before production.
+  - `internal_docs/integer_model.md` defines the canonical semantic contract and replaces the historical machine-integer/separate user-facing `bigint` design before production.
+  - `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` tracks the implementation phase and milestone breakdown for that contract.
   - Target source semantics: `int` is an exact signed arbitrary-precision value-semantic scalar backed by inline-small `SifrInt`; explicit fixed-width `int8`/`int16`/`int32`/`int64` and `uint8`/`uint16`/`uint32`/`uint64` are for storage, dtypes, binary formats, and FFI.
   - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
@@ -513,7 +514,12 @@ All errors have `message: str` populated from Rust's `Display` (for built-ins) o
 | `JSONDecodeError` | `Error` | `message: str`, `line: int`, `column: int` | `serde_json::Error` |
 | `TOMLDecodeError` | `Error` | `message: str`, `line: int`, `column: int` | `toml::de::Error` |
 | `RegexError` | `Error` | `message: str`, `detail: str` | `regex::Error` |
-| `OverflowError` | `Error` | `message: str` | `bigint`-to-`int` conversion via `int(b)` |
+| `OverflowError` | `Error` | `message: str` | Fixed-width narrowing and representation-preserving fixed-width arithmetic overflow |
+| `ArithmeticLimitError` | `OverflowError` | `message: str`, `limit: int` | Exact integer operation exceeds configured output budget |
+| `FloatOverflowError` | `OverflowError` | `message: str` | Exact integer cannot be represented as finite `float` |
+| `FloatPrecisionLossError` | `OverflowError` | `message: str` | Exact integer to `float` conversion would silently lose precision |
+| `JsonIntegerRangeError` | `Error` | `message: str`, `path: str`, `profile: str` | JSON integer output violates selected precision/range profile |
+| `JsonLimitError` | `Error` | `message: str`, `limit: int` | JSON/text integer token or document exceeds configured decoder limit |
 
 **Exhaustiveness with Subclasses:**
 
@@ -702,7 +708,7 @@ Sifr auto-derives common Rust traits for all user-defined types. This is a langu
   - `Hash` -- derived when `Eq` is derived AND all fields implement `Hash`. NOT derived for types containing `float`, `dict`, or other unhashable types.
 - **Not auto-derived (require explicit opt-in):**
   - `Ord` / `PartialOrd` -- comparison ordering requires explicit definition via `__lt__`, `__le__`, etc.
-  - `Copy` -- only primitives (`int`, `float`, `bool`) are `Copy`. User-defined types are move-by-default.
+  - `Copy` -- only Rust-copy scalar primitives such as fixed-width integers, `float`, and `bool` are `Copy`. Source-level `int` is value-semantic but lowers to `SifrInt` and is not Rust `Copy`.
 - **Codegen:** the compiler emits `#[derive(Debug, Clone, PartialEq)]` (and conditionally `Eq`, `Hash`) on all generated structs and enums.
 - **Enum types (milestone_enums):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
 - **Auto-init (milestone_auto_init):** when a class has no explicit `__init__`, the compiler auto-generates `__init__`, `__eq__` (if all fields are `PartialEq`), and `__str__` (via `Debug`-style formatting). Explicit definitions always take precedence.
@@ -779,7 +785,7 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 
 - **Auto-derived protocols:** `Display`, `Hashable`, `Comparable` are auto-derived for classes where all fields implement the corresponding Rust trait (see contract #10: Auto-Derived Traits). Users can override with explicit `__str__`, `__hash__`, `__lt__` etc.
 - **Pre-generics usage:** Before milestone_generics, protocols are used for operator overloading and dynamic dispatch (`&dyn Trait`). After milestone_generics, they become usable as generic bounds (`T: Comparable`).
-- **Primitive types:** `int`, `float`, `str`, `bool` implement all applicable protocols from the start. `float` does NOT implement `Comparable` (because `NaN` violates total ordering) -- this is a compile-time error, matching Rust's `f64` not implementing `Ord`.
+- **Primitive types:** `int`, fixed-width integer types, `float`, `str`, and `bool` implement applicable protocols from the start. Under the integer-model amendment, `Addable` must model the operator output type; fixed-width scalar `+` returns exact `int`, so fixed-width types do not satisfy a generic `T + T -> T` contract through ordinary arithmetic. `float` does NOT implement `Comparable` (because `NaN` violates total ordering) -- this is a compile-time error, matching Rust's `f64` not implementing `Ord`.
 - **Protocol composition:** a function can require multiple protocols via intersection bounds (milestone_generics): `def process[T: Comparable & Display](item: T)`.
 
 **Milestone responsibilities:**
@@ -814,8 +820,22 @@ Sifr's standard library follows a **thin wrapper + FFI** strategy:
 
 ```rust
 enum Type {
-    // Primitives (Copy)
+    // Exact integer (value-semantic at source, not Rust Copy)
     Int,
+
+    // Fixed-width integer primitives (Copy)
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64,
+    ISize,
+    USize,
+
+    // Other primitives
     Float,
     Bool,
     Str,
@@ -854,9 +874,6 @@ enum Type {
 
     // Enum (milestone_enums)
     Enum(EnumId),
-
-    // Arbitrary-precision integer (milestone_integer_safety)
-    BigInt,
 
     // Range (milestone_control_flow)
     Range,
@@ -916,7 +933,7 @@ Narrowing refines a variable's type within a control flow branch:
 ### Ownership Model
 
 - All types are **move by default** for assignment (like Rust)
-- Primitive types (`int`, `float`, `bool`) are `Copy` -- assignment copies
+- Fixed-width integer types, `float`, and `bool` are Rust `Copy` values in generated code. Source-level `int` remains scalar and value-semantic, but it lowers to `SifrInt` and is not Rust `Copy`; codegen preserves non-consuming source behavior with borrowing, cloning, or primitive-local optimization.
 - Compound types (`str`, `list`, `dict`, classes) **move** on assignment
 - Explicit `.clone()` for deep copy
 - Function arguments: **borrow by default** (maps to `&T` for Move types)
