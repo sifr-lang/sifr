@@ -1,11 +1,14 @@
 use super::{
+    classes::lower_expr_simple,
     expressions::{lower_named_expr, resolve_method_type},
     LowerCtx,
 };
 use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_python_ast::{AtomicNodeIndex, Expr, ExprNamed, ExprNoneLiteral};
+use sifr_python_ast::{
+    AtomicNodeIndex, Expr, ExprNamed, ExprNoneLiteral, ExprNumberLiteral, Int, Number,
+};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, Type};
 
@@ -149,6 +152,48 @@ def identity(
             );
         }
         other => panic!("expected negative large integer default, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_large_integer_literal_over_budget_has_int_code() {
+    let literal = "1".repeat(4097);
+    let source = format!("def main():\n    value = {literal}\n");
+    let result = lower_source(&source);
+
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED)
+            && error.message
+                == "integer literal exceeds compile-time evaluation budget: 4097 decimal digits (max 4096)"
+            && error.primary_range == Some(range_for(&source, &literal))
+    }));
+}
+
+#[test]
+fn test_constructed_and_parsed_large_integer_literals_match_hir() {
+    let token = "0xFFFF_FFFF_FFFF_FFFF_FFFF";
+    let constructed_int =
+        Int::from_str_radix("FFFFFFFFFFFFFFFFFFFF", 16, token).expect("valid hex literal");
+    let constructed_expr = Expr::NumberLiteral(ExprNumberLiteral {
+        node_index: AtomicNodeIndex::NONE,
+        range: TextRange::default(),
+        value: Number::Int(constructed_int),
+    });
+    let constructed_hir =
+        lower_expr_simple(&constructed_expr).expect("constructed literal should lower");
+
+    let source = "def main():\n    value = 0xFFFF_FFFF_FFFF_FFFF_FFFF\n";
+    let parsed_module = lower_source(source).expect("parsed literal should lower");
+    let parsed_hir = function_let_value(&parsed_module, "value");
+
+    match (&constructed_hir, parsed_hir) {
+        (HirExpr::LargeIntLiteral(constructed), HirExpr::LargeIntLiteral(parsed)) => {
+            assert_eq!(constructed, parsed);
+            assert_eq!(parsed, "1208925819614629174706175");
+        }
+        other => panic!("expected matching large integer HIR literals, got {other:?}"),
     }
 }
 

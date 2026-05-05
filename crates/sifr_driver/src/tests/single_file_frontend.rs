@@ -125,6 +125,25 @@ fn test_parse_source_normalizes_parser_recovery_messages() {
 }
 
 #[test]
+fn test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic() {
+    let errors = parse_source("def main():\n    value = 0123\n")
+        .expect_err("malformed integer token should fail parsing");
+    let diagnostic = errors
+        .iter()
+        .find(|diagnostic| diagnostic.code == DiagnosticCode::PARSE_LEXICAL_OR_STRING.code())
+        .expect("expected lexical parser diagnostic");
+
+    assert_eq!(
+        diagnostic.args.get("parser_category"),
+        Some(&DiagnosticArg::String("lexical_other".to_string()))
+    );
+    assert!(matches!(
+        diagnostic.args.get("reason"),
+        Some(DiagnosticArg::String(reason)) if reason.contains("Invalid decimal integer literal")
+    ));
+}
+
+#[test]
 fn test_lower_source_and_type_check_source_surface_type_errors() {
     let errors = match lower_source("def main():\n    x: int = \"bad\"\n") {
         Ok(_) => panic!("type mismatch should fail lowering/type-check"),
