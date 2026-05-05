@@ -43,7 +43,7 @@ Generated Rust must not expose user-triggerable integer panics. Existing generat
 
 Primary files and areas:
 
-- `crates/sifr_diagnostics/src/codes.rs`: add `SIFR-INT-001..011`; retire or migrate `TYPE_INT_BIGINT_MIXED`.
+- `crates/sifr_diagnostics/src/codes.rs`: add `SIFR-INT-0001..0011`; retire or migrate `TYPE_INT_BIGINT_MIXED`.
 - `crates/sifr_diagnostics/src/lib.rs`: expose new code families and metadata.
 - `internal_docs/diagnostic_emission_inventory.md`: currently lists `SIFR-TYPE-0006` for int/bigint mixing and bytes diagnostics that may need `uint8`/bytearray updates.
 - `internal_docs/diagnostic_codes.md`: synchronize once the registry is updated.

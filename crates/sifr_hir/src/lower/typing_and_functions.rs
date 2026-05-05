@@ -409,6 +409,14 @@ fn unknown_type(ctx: &mut LowerCtx, name: &str, range: ruff_text_size::TextRange
     );
 }
 
+fn reserved_integer_width_name(ctx: &mut LowerCtx, name: &str, range: ruff_text_size::TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::INT_RESERVED_WIDTH_NAME,
+        format!("reserved integer width name '{name}' is not supported yet"),
+        range,
+    );
+}
+
 pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
@@ -423,6 +431,10 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
             // Check class types
             if let Some(class_ty) = ctx.class_types.get(name.id.as_str()) {
                 return class_ty.clone();
+            }
+            if matches!(name.id.as_str(), "int128" | "uint128") {
+                reserved_integer_width_name(ctx, &name.id, name.range());
+                return Type::Any;
             }
             resolve_type_annotation(&name.id).unwrap_or_else(|| {
                 unknown_type(ctx, &name.id, name.range());

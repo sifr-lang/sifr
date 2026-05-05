@@ -59,6 +59,8 @@ impl DiagnosticCode {
     pub const DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID: Self =
         Self::new("SIFR-DECIMAL-0008", Severity::Error);
 
+    pub const INT_RESERVED_WIDTH_NAME: Self = Self::new("SIFR-INT-0003", Severity::Error);
+
     pub const CALL_WRONG_POSITIONAL_COUNT: Self = Self::new("SIFR-CALL-0001", Severity::Error);
     pub const CALL_UNEXPECTED_KEYWORD: Self = Self::new("SIFR-CALL-0002", Severity::Error);
     pub const CALL_DUPLICATE_ARGUMENT: Self = Self::new("SIFR-CALL-0003", Severity::Error);
@@ -274,6 +276,11 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-DECIMAL-0000",
     },
     DiagnosticFamily {
+        name: "INT",
+        summary: "Exact and fixed-width integer model diagnostics.",
+        reserved_base: "SIFR-INT-0000",
+    },
+    DiagnosticFamily {
         name: "CALL",
         summary: "Function, method, constructor, and overload call diagnostics.",
         reserved_base: "SIFR-CALL-0000",
@@ -378,6 +385,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-IMPORT-0000", "IMPORT"),
     reserved_family_base("SIFR-TYPE-0000", "TYPE"),
     reserved_family_base("SIFR-DECIMAL-0000", "DECIMAL"),
+    reserved_family_base("SIFR-INT-0000", "INT"),
     reserved_family_base("SIFR-CALL-0000", "CALL"),
     reserved_family_base("SIFR-OWN-0000", "OWN"),
     reserved_family_base("SIFR-FLOW-0000", "FLOW"),
@@ -730,6 +738,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::builtin_calls",
         [arg!("revealed_type")],
         ["revealed_type"]
+    ),
+    active_entry!(
+        "SIFR-INT-0003",
+        "INT",
+        "Reserved integer width name used before support lands.",
+        Severity::Error,
+        "crates/sifr_hir/src/lower/type_alias_tests.rs::test_reserved_integer_width_annotations_have_int_code",
+        "reserved integer width name {name} is not supported yet",
+        "sifr_hir::lower::typing_and_functions",
+        [arg!("name")],
+        ["name"]
     ),
     active_entry!(
         "SIFR-DECIMAL-0001",
@@ -1539,6 +1558,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
     DiagnosticCode::DECIMAL_SCALE_INVALID,
     DiagnosticCode::DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID,
+    DiagnosticCode::INT_RESERVED_WIDTH_NAME,
     DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
     DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
     DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
