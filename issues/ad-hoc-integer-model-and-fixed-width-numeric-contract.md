@@ -392,12 +392,14 @@ Validation:
 - [x] Phase-plan review pass 2 completed after addressing pass 1 blockers: `reviews/integer-model-phase-plan-review-pass-2.md`.
 - [x] INT-1 runtime substrate wave 1 review pass 1 completed with blockers: `reviews/integer-model-int-1-runtime-wave-1-review-pass-1.md`.
 - [x] INT-1 runtime substrate wave 1 review pass 2 satisfied after addressing blockers: `reviews/integer-model-int-1-runtime-wave-1-review-pass-2.md`.
+- [x] INT-1 fixed-width conversion substrate wave review satisfied: `reviews/integer-model-int-1-runtime-fixed-width-conversions-review-pass-1b.md`.
 
 ## Implementation Checklist
 
 - [x] INT-0 contract lock and legacy audit
 - [ ] INT-1 runtime `SifrInt` and ownership semantics
   - [x] Wave 1 runtime substrate and generated Cargo dependency plumbing reviewed and quick-validated.
+  - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated.
 - [ ] INT-2A parser boundary and literal capture
 - [ ] INT-2B HIR, type system, and const fitting
 - [ ] INT-3 scalar arithmetic and numeric mixing
