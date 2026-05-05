@@ -46,12 +46,62 @@ fn range_for_after_anchor(source: &str, after: &str, needle: &str) -> TextRange 
     )
 }
 
+fn function_let_value<'a>(module: &'a HirModule, name: &str) -> &'a HirExpr {
+    module
+        .functions
+        .iter()
+        .flat_map(|function| &function.body)
+        .find_map(|stmt| match stmt {
+            HirStmt::Let {
+                name: local_name,
+                value,
+                ..
+            } if local_name == name => Some(value),
+            _ => None,
+        })
+        .expect("expected local binding")
+}
+
 #[test]
 fn test_simple_function() {
     let module = lower_source("def add(a: int, b: int) -> int:\n    return a + b\n").unwrap();
     assert_eq!(module.functions.len(), 1);
     assert_eq!(module.functions[0].name, "add");
     assert_eq!(module.functions[0].return_type, Type::Int);
+}
+
+#[test]
+fn test_large_integer_literals_lower_losslessly_from_source() {
+    let source = "\
+def main():
+    decimal = 9223372036854775808
+    decimal_big = 184467440737095516160
+    decimal_underscored = 1_000_000_000_000_000_000_000
+    hex_mid = 0xffffffffffffffff
+    hexed = 0x10000000000000000
+    hexed_underscored = 0xFFFF_FFFF_FFFF_FFFF_FFFF
+    octaled = 0o2000000000000000000000
+    binaried = 0b10000000000000000000000000000000000000000000000000000000000000000
+";
+    let module = lower_source(source).expect("large integer literals should lower");
+
+    let expected = [
+        ("decimal", "9223372036854775808"),
+        ("decimal_big", "184467440737095516160"),
+        ("decimal_underscored", "1000000000000000000000"),
+        ("hex_mid", "18446744073709551615"),
+        ("hexed", "18446744073709551616"),
+        ("hexed_underscored", "1208925819614629174706175"),
+        ("octaled", "18446744073709551616"),
+        ("binaried", "18446744073709551616"),
+    ];
+
+    for (name, literal_text) in expected {
+        match function_let_value(&module, name) {
+            HirExpr::LargeIntLiteral(actual) => assert_eq!(actual, literal_text),
+            other => panic!("expected large integer literal for {name}, got {other:?}"),
+        }
+    }
 }
 
 #[test]
@@ -2001,6 +2051,7 @@ fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
             HirExpr::EnumVariant { .. }
             | HirExpr::Name { .. }
             | HirExpr::IntLiteral(_)
+            | HirExpr::LargeIntLiteral(_)
             | HirExpr::FloatLiteral(_)
             | HirExpr::StringLiteral(_)
             | HirExpr::BoolLiteral(_)

@@ -395,6 +395,8 @@ Validation:
 - [x] INT-1 fixed-width conversion substrate wave review satisfied: `reviews/integer-model-int-1-runtime-fixed-width-conversions-review-pass-1b.md`.
 - [x] INT-2A reserved-width diagnostic review pass 1 completed with doc-code normalization blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-1.md`.
 - [x] INT-2A reserved-width diagnostic review pass 2 satisfied after addressing blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-2b.md`.
+- [x] INT-2A large integer literal HIR review pass 1 completed with canonical-representation blocker: `reviews/integer-model-int-2a-large-literal-hir-review-pass-1b.md`.
+- [x] INT-2A large integer literal HIR review pass 2 approved after canonical decimal normalization: `reviews/integer-model-int-2a-large-literal-hir-review-pass-2.md`.
 
 ## Implementation Checklist
 
@@ -404,7 +406,8 @@ Validation:
   - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated: PR #1790.
 - [ ] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
-  - [ ] Carry INT-2A parser literal lexeme capture, malformed/over-budget literal diagnostics, and parsed/constructed HIR parity in the next INT-2A slice.
+  - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.
+  - [ ] Carry INT-2A default-argument large-literal parity, negative-large-literal unary coverage, malformed/over-budget literal diagnostics, and parsed/constructed HIR parity in the next INT-2A slice.
 - [ ] INT-2B HIR, type system, and const fitting
   - [ ] Carry follow-ups from INT-2A reserved-width review: broaden annotation-position tests, align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, and decide reserved-name shadowing policy during `bigint` cleanup.
 - [ ] INT-3 scalar arithmetic and numeric mixing

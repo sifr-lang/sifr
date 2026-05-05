@@ -93,8 +93,8 @@ fn discover_sifr_runtime_path() -> Option<PathBuf> {
     env::var_os("SIFR_RUNTIME_PATH")
         .map(PathBuf::from)
         .filter(|path| path.join("Cargo.toml").is_file())
-        .or_else(|| discover_sifr_runtime_path_from_current_dir())
-        .or_else(|| discover_sifr_runtime_path_from_current_exe())
+        .or_else(discover_sifr_runtime_path_from_current_dir)
+        .or_else(discover_sifr_runtime_path_from_current_exe)
 }
 
 fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {

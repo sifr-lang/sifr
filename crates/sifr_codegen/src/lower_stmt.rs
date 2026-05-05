@@ -568,6 +568,7 @@ fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
             Ok(())
         }
         HirExpr::IntLiteral(_)
+        | HirExpr::LargeIntLiteral(_)
         | HirExpr::FloatLiteral(_)
         | HirExpr::StringLiteral(_)
         | HirExpr::BoolLiteral(_)
@@ -1498,6 +1499,7 @@ fn expr_has_result_flow(expr: &HirExpr) -> bool {
         }
         HirExpr::Name { .. }
         | HirExpr::IntLiteral(_)
+        | HirExpr::LargeIntLiteral(_)
         | HirExpr::FloatLiteral(_)
         | HirExpr::StringLiteral(_)
         | HirExpr::BoolLiteral(_)

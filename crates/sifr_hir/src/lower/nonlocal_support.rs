@@ -347,6 +347,7 @@ fn hir_expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
         HirExpr::EnumVariant { .. }
         | HirExpr::Name { .. }
         | HirExpr::IntLiteral(_)
+        | HirExpr::LargeIntLiteral(_)
         | HirExpr::FloatLiteral(_)
         | HirExpr::StringLiteral(_)
         | HirExpr::BoolLiteral(_)
