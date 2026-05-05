@@ -403,6 +403,7 @@ fn test_generate_test_runner_cargo_toml_includes_required_crates() {
         "regex".to_string(),
         "rand".to_string(),
         "rand_distr".to_string(),
+        "sifr_runtime".to_string(),
     ]);
 
     let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
@@ -410,6 +411,7 @@ fn test_generate_test_runner_cargo_toml_includes_required_crates() {
     assert!(cargo_toml.contains("regex = \"1.12.3\""));
     assert!(cargo_toml.contains("rand = \"0.10.1\""));
     assert!(cargo_toml.contains("rand_distr = \"0.6.0\""));
+    assert!(cargo_toml.contains("sifr_runtime = { path = "));
 }
 
 #[test]

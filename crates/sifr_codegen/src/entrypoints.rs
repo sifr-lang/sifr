@@ -98,6 +98,12 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             "BigDecimal".to_string(),
         ]));
     }
+    if import_needs.runtime.needs_sifr_int {
+        import_items.push(RustItem::Use(vec![
+            "sifr_runtime".to_string(),
+            "SifrInt".to_string(),
+        ]));
+    }
 
     let mut file_items: Vec<RustItem> = Vec::new();
     file_items.extend(import_items);
@@ -131,6 +137,9 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             }
             if import_needs.runtime.numeric.needs_bigdecimal {
                 crates.insert("bigdecimal".to_string());
+            }
+            if import_needs.runtime.needs_sifr_int {
+                crates.insert("sifr_runtime".to_string());
             }
             crates
         },
