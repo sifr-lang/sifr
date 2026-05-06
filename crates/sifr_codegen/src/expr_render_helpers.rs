@@ -256,13 +256,30 @@ impl RustEmitter {
                     .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
                     .collect(),
             },
-            crate::RustExpr::FnCall { func, args } => crate::RustExpr::FnCall {
-                func: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*func)),
-                args: args
-                    .into_iter()
-                    .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
-                    .collect(),
-            },
+            crate::RustExpr::FnCall { func, args } => {
+                let func = self.rewrite_stdlib_constant_idents_in_expr(*func);
+                let args = if let Some(func_name) = rust_expr_identifier_path(&func) {
+                    args.into_iter()
+                        .enumerate()
+                        .map(|(idx, arg)| {
+                            let arg = self.rewrite_stdlib_constant_idents_in_expr(arg);
+                            if self.function_param_lowers_to_sifr_int(&func_name, idx) {
+                                self.coerce_expr_to_sifr_int_value(arg)
+                            } else {
+                                arg
+                            }
+                        })
+                        .collect()
+                } else {
+                    args.into_iter()
+                        .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
+                        .collect()
+                };
+                crate::RustExpr::FnCall {
+                    func: Box::new(func),
+                    args,
+                }
+            }
             crate::RustExpr::MacroCall { name, args } => crate::RustExpr::MacroCall {
                 name,
                 args: args
@@ -1424,6 +1441,13 @@ impl RustEmitter {
 
     pub(super) fn function_returns_sifr_int(&self, name: &str) -> bool {
         self.sifr_int_function_returns.borrow().contains(name)
+    }
+
+    pub(super) fn function_param_lowers_to_sifr_int(&self, name: &str, idx: usize) -> bool {
+        self.sifr_int_function_params
+            .borrow()
+            .get(name)
+            .is_some_and(|params| params.contains(&idx))
     }
 }
 

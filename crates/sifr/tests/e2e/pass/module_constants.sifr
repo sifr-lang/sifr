@@ -16,6 +16,19 @@ def returned_big_limit() -> int:
 def returned_big_with_offset(offset: int) -> int:
     return BIG_LIMIT + offset
 
+def echo_int_parameter(value: int) -> int:
+    return value
+
+def add_to_exact_parameter(value: int, offset: int) -> int:
+    return value + offset
+
+def add_right_exact_parameter(prefix: int, value: int) -> int:
+    return value + prefix
+
+def alias_exact_parameter(value: int) -> int:
+    alias: int = value
+    return alias + 1
+
 def returned_big_with_nested_small() -> int:
     def small_inner() -> int:
         return 42
@@ -58,6 +71,11 @@ def main():
     returned_big: int = returned_big_limit()
     returned_plus_one: int = returned_big_limit() + 1
     returned_with_offset: int = returned_big_with_offset(3)
+    echoed_parameter: int = echo_int_parameter(BIG_LIMIT)
+    echoed_small_parameter: int = echo_int_parameter(5)
+    added_parameter: int = add_to_exact_parameter(BIG_LIMIT, 3)
+    added_right_parameter: int = add_right_exact_parameter(3, BIG_LIMIT)
+    aliased_parameter: int = alias_exact_parameter(BIG_LIMIT)
     returned_nested: int = returned_big_with_nested_small()
     returned_nested_helper: int = returned_big_from_nested_helper()
     returned_recursive_nested_helper: int = returned_big_from_recursive_nested_helper()
@@ -66,6 +84,11 @@ def main():
     assert str(returned_big) == '100000000000000000001'
     assert str(returned_plus_one) == '100000000000000000002'
     assert str(returned_with_offset) == '100000000000000000003'
+    assert str(echoed_parameter) == '100000000000000000000'
+    assert str(echoed_small_parameter) == '5'
+    assert str(added_parameter) == '100000000000000000003'
+    assert str(added_right_parameter) == '100000000000000000003'
+    assert str(aliased_parameter) == '100000000000000000001'
     assert str(returned_nested) == '100000000000000000042'
     assert str(returned_nested_helper) == '100000000000000000001'
     assert str(returned_recursive_nested_helper) == '100000000000000000003'

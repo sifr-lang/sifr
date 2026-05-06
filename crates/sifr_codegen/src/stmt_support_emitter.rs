@@ -5213,6 +5213,12 @@ impl RustEmitter {
                 );
             }
 
+            if self.function_param_lowers_to_sifr_int(func, idx) {
+                let lowered_arg = self.rewrite_stdlib_constant_idents_in_expr(lowered_arg);
+                adapted.push(self.coerce_expr_to_sifr_int_value(lowered_arg));
+                continue;
+            }
+
             let param_rust_type = param_ty.rust_type();
             if param_rust_type.starts_with("Box<")
                 && !Self::is_box_new_call_expr_for_ir(&lowered_arg)
