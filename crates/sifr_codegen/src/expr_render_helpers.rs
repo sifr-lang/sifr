@@ -1419,6 +1419,7 @@ impl RustEmitter {
             crate::RustExpr::UnaryOp { op, operand } if op == "-" => self.is_sifr_int_expr(operand),
             crate::RustExpr::Paren(inner) => self.is_sifr_int_expr(inner),
             crate::RustExpr::Ref { expr, .. } => self.is_sifr_int_expr(expr),
+            crate::RustExpr::Clone(expr) => self.is_sifr_int_expr(expr),
             _ => false,
         }
     }
