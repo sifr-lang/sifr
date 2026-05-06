@@ -410,6 +410,7 @@ Validation:
 - [x] INT-2B `bigint(...)` constructor warning review satisfied: `reviews/integer-model-int-2b-bigint-constructor-warning-review-pass-1.md`.
 - [x] INT-2B stdlib constant integer value export review satisfied: `reviews/integer-model-int-2b-stdlib-const-values-review-pass-1.md`.
 - [x] INT-2B stdlib constant folding integration coverage review satisfied: `reviews/integer-model-int-2b-stdlib-folding-coverage-review-pass-1.md`.
+- [x] INT-2B `SIFR-INT-0003` registry placement and e2e fail fixture review satisfied: `reviews/integer-model-int-2b-int0003-registry-e2e-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -432,7 +433,8 @@ Validation:
   - [x] `bigint(...)` constructor calls now emit `SIFR-INT-0011` transition warnings, with constructor-only coverage and annotation-only warning coverage preserved; review is satisfied and quick validation is passing: PR #1801.
   - [x] Stdlib bootstrap now exports public recorded `constant_integer_values` for `.sifr` stdlib constants, preserving project-module export parity without adding a direct `num-bigint` dependency to `sifr_driver`; review is satisfied and quick validation is passing: PR #1802.
   - [x] Stdlib fixed-width fitting now has integration coverage proving a real `.sifr` stdlib integer constant (`sifr.logging.DEBUG`) folds through import into a `uint8` initializer; review is satisfied and quick validation is passing: PR #1804.
-  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, decide reserved-name shadowing policy during `bigint` cleanup, clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable, and document or implement transitive re-export semantics for imported constants.
+  - [x] `SIFR-INT-0003` now has a representative e2e fail fixture and the active INT diagnostic rows are ordered after DECIMAL and before CALL to match family ordering; review is satisfied and quick validation is passing: PR #1806.
+  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: decide reserved-name shadowing policy during `bigint` cleanup, clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable, and document or implement transitive re-export semantics for imported constants.
 - [ ] INT-3 scalar arithmetic and numeric mixing
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
