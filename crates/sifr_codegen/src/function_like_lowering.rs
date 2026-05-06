@@ -21,12 +21,14 @@ impl RustEmitter {
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
+        let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         self.local_binding_types.clear();
+        self.sifr_int_local_bindings.borrow_mut().clear();
         for param in &func.params {
             if param.convention.is_shared_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
@@ -98,6 +100,7 @@ impl RustEmitter {
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
         self.local_binding_types = saved_local_binding_types;
+        *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         lowered_body
     }
 }

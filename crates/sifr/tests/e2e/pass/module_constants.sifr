@@ -19,3 +19,7 @@ def main():
     assert str(BIG_LIMIT + 1) == '100000000000000000001'
     oversized_local: int = BIG_LIMIT + LIMIT
     assert str(oversized_local) == '100000000000000000254'
+    chained_oversized_local: int = oversized_local + 2
+    assert str(chained_oversized_local) == '100000000000000000256'
+    assert BIG_LIMIT > 100
+    assert chained_oversized_local > BIG_LIMIT

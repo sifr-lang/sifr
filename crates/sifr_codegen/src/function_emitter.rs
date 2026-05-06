@@ -155,6 +155,7 @@ impl RustEmitter {
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
+        let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
 
         self.current_return_type = Some(func.return_type.clone());
@@ -163,6 +164,7 @@ impl RustEmitter {
         self.mut_borrowed_params.clear();
         self.local_binding_types.clear();
         self.none_widened_local_bindings.clear();
+        self.sifr_int_local_bindings.borrow_mut().clear();
         self.callable_var_conventions
             .clone_from(&post_stmt_callable_conventions);
         for param in &func.params {
@@ -195,6 +197,7 @@ impl RustEmitter {
             .clone_from(&saved_callable_var_conventions);
         self.local_binding_types = saved_local_binding_types;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
+        *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
 
         let lowered_stmt = if is_recursive {
             let params = func
@@ -522,6 +525,7 @@ impl RustEmitter {
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
+        let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
@@ -530,6 +534,7 @@ impl RustEmitter {
         self.callable_var_conventions.clear();
         self.local_binding_types.clear();
         self.none_widened_local_bindings.clear();
+        self.sifr_int_local_bindings.borrow_mut().clear();
         self.register_function_scope_params(&func.params);
         self.register_local_body_binding_types(&func.body);
 
@@ -630,5 +635,6 @@ impl RustEmitter {
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
+        *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
     }
 }
