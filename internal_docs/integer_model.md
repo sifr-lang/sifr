@@ -66,6 +66,8 @@ Width is a storage, binary protocol, dtype, schema, or FFI choice. It is not the
 
 Reserve `int128` and `uint128` as future fixed-width type names. Rust supports `i128` and `u128`, and some storage targets need 128-bit values, but Sifr does not need to ship them in the first fixed-width slice. Using either reserved name before support lands must produce `SIFR-INT-0003`, not a generic unresolved-name diagnostic.
 
+The reserved-width diagnostic is reached after ordinary annotation name resolution. Existing Sifr type names are shadowable, so a user-defined type variable, type alias, or class named `int128` or `uint128` resolves to that user definition instead of emitting `SIFR-INT-0003`. INT-2B should keep this general shadowing behavior rather than create a special anti-shadowing rule only for future integer widths. A later language-wide reserved-identifier policy may tighten this consistently across all builtin and reserved names.
+
 `bigint` should not remain a separate user-facing numeric type. If implementation staging needs a local transition, `bigint` may exist only as a temporary parser/type alias with deprecation diagnostics and no public documentation.
 
 ## Literal and Conversion Rules
