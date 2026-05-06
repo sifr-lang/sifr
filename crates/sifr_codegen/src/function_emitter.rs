@@ -224,7 +224,7 @@ impl RustEmitter {
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
-        let saved_current_sifr_int_return = self.current_sifr_int_return;
+        let saved_current_sifr_int_return = self.current_sifr_int_return.get();
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
 
         self.current_return_type = Some(func.return_type.clone());
@@ -235,6 +235,7 @@ impl RustEmitter {
         self.none_widened_local_bindings.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
+        self.current_sifr_int_return.set(false);
         self.callable_var_conventions
             .clone_from(&post_stmt_callable_conventions);
         for param in &func.params {
@@ -269,7 +270,8 @@ impl RustEmitter {
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
-        self.current_sifr_int_return = saved_current_sifr_int_return;
+        self.current_sifr_int_return
+            .set(saved_current_sifr_int_return);
 
         let lowered_stmt = if is_recursive {
             let params = func
@@ -603,7 +605,7 @@ impl RustEmitter {
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
-        let saved_current_sifr_int_return = self.current_sifr_int_return;
+        let saved_current_sifr_int_return = self.current_sifr_int_return.get();
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
@@ -614,7 +616,8 @@ impl RustEmitter {
         self.none_widened_local_bindings.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
-        self.current_sifr_int_return = self.function_returns_sifr_int(&func.name);
+        self.current_sifr_int_return
+            .set(self.function_returns_sifr_int(&func.name));
         self.register_function_scope_params(&func.params);
         self.register_local_body_binding_types(&func.body);
 
@@ -717,7 +720,8 @@ impl RustEmitter {
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
-        self.current_sifr_int_return = saved_current_sifr_int_return;
+        self.current_sifr_int_return
+            .set(saved_current_sifr_int_return);
     }
 }
 
@@ -830,9 +834,7 @@ fn hir_expr_needs_sifr_int_storage(
         HirExpr::Name { name, .. } => {
             forced_locals.contains(name) || module_sifr_int_bindings.contains(name)
         }
-        HirExpr::Call { func, args, .. } => {
-            args.is_empty() && function_sifr_int_returns.contains(func)
-        }
+        HirExpr::Call { func, .. } => function_sifr_int_returns.contains(func),
         HirExpr::BinOp {
             left,
             op,

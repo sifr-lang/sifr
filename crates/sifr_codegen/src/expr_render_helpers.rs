@@ -399,23 +399,37 @@ impl RustEmitter {
                 params,
                 body,
                 is_move,
-            } => crate::RustExpr::Closure {
-                params,
-                body: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*body)),
-                is_move,
-            },
+            } => {
+                let saved_current_sifr_int_return = self.current_sifr_int_return.get();
+                self.current_sifr_int_return.set(false);
+                let body = Box::new(self.rewrite_stdlib_constant_idents_in_expr(*body));
+                self.current_sifr_int_return
+                    .set(saved_current_sifr_int_return);
+                crate::RustExpr::Closure {
+                    params,
+                    body,
+                    is_move,
+                }
+            }
             crate::RustExpr::ClosureBlock {
                 params,
                 body,
                 is_move,
-            } => crate::RustExpr::ClosureBlock {
-                params,
-                body: body
+            } => {
+                let saved_current_sifr_int_return = self.current_sifr_int_return.get();
+                self.current_sifr_int_return.set(false);
+                let body = body
                     .into_iter()
                     .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
-                    .collect(),
-                is_move,
-            },
+                    .collect();
+                self.current_sifr_int_return
+                    .set(saved_current_sifr_int_return);
+                crate::RustExpr::ClosureBlock {
+                    params,
+                    body,
+                    is_move,
+                }
+            }
             crate::RustExpr::StructInit { name, fields } => crate::RustExpr::StructInit {
                 name,
                 fields: fields
@@ -565,7 +579,7 @@ impl RustEmitter {
             crate::RustStmt::Return(expr) => {
                 let value = expr.map(|ret| {
                     let ret = self.rewrite_stdlib_constant_idents_in_expr(ret);
-                    if self.current_sifr_int_return {
+                    if self.current_sifr_int_return.get() {
                         self.coerce_expr_to_sifr_int_value(ret)
                     } else {
                         ret
@@ -1371,16 +1385,16 @@ impl RustEmitter {
 
     fn is_sifr_int_expr(&self, expr: &crate::RustExpr) -> bool {
         match expr {
-            crate::RustExpr::FnCall { func, args } if args.is_empty() => {
-                self.is_sifr_int_module_constant_func(func)
+            crate::RustExpr::FnCall { func, args } => {
+                (args.is_empty() && self.is_sifr_int_module_constant_func(func))
                     || self.is_sifr_int_returning_function_call(func)
+                    || matches!(
+                        func.as_ref(),
+                        crate::RustExpr::Path(path)
+                            if string_path_matches(path, &["SifrInt", "from_i64"])
+                                || string_path_matches(path, &["sifr_runtime", "SifrInt", "from_i64"])
+                    )
             }
-            crate::RustExpr::FnCall { func, .. } => matches!(
-                func.as_ref(),
-                crate::RustExpr::Path(path)
-                    if string_path_matches(path, &["SifrInt", "from_i64"])
-                        || string_path_matches(path, &["sifr_runtime", "SifrInt", "from_i64"])
-            ),
             crate::RustExpr::Ident(name) => self.is_registered_sifr_int_local(name),
             crate::RustExpr::BinOp { left, op, right } if is_sifr_int_arithmetic_op(op) => {
                 self.is_sifr_int_expr(left) || self.is_sifr_int_expr(right)
@@ -1906,5 +1920,62 @@ mod tests {
                 ..
             } if name == "SifrInt"
         ));
+    }
+
+    #[test]
+    fn rewrites_sifr_int_returning_function_call_with_args_let_type() {
+        let emitter = RustEmitter::new();
+        emitter
+            .sifr_int_function_returns
+            .borrow_mut()
+            .insert("make_big_with_arg".to_string());
+
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
+            mutable: false,
+            name: "value".to_string(),
+            ty: Some(RustType::Named("i64".to_string())),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident("make_big_with_arg".to_string())),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(3))),
+                    ty: RustType::I64,
+                }],
+            },
+        });
+
+        assert!(matches!(
+            rewritten,
+            RustStmt::Let {
+                ty: Some(RustType::Named(ref name)),
+                ..
+            } if name == "SifrInt"
+        ));
+    }
+
+    #[test]
+    fn closure_block_returns_do_not_inherit_sifr_int_return_state() {
+        let emitter = RustEmitter::new();
+        emitter.current_sifr_int_return.set(true);
+
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_expr(RustExpr::ClosureBlock {
+            params: vec![],
+            body: vec![RustStmt::Return(Some(RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Int(42))),
+                ty: RustType::I64,
+            }))],
+            is_move: false,
+        });
+
+        let RustExpr::ClosureBlock { body, .. } = rewritten else {
+            panic!("expected closure block");
+        };
+        assert!(matches!(
+            body.as_slice(),
+            [RustStmt::Return(Some(RustExpr::Cast {
+                ty: RustType::I64,
+                ..
+            }))]
+        ));
+        assert!(emitter.current_sifr_int_return.get());
     }
 }
