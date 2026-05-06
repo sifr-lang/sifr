@@ -67,6 +67,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-INT-0001`](SIFR-INT-0001.md) | Error | Fixed-width integer literal or const expression is out of range. |
 | [`SIFR-INT-0003`](SIFR-INT-0003.md) | Error | Reserved integer width name used before support lands. |
 | [`SIFR-INT-0004`](SIFR-INT-0004.md) | Error | Compile-time integer evaluation budget exceeded. |
+| [`SIFR-INT-0011`](SIFR-INT-0011.md) | Warning | Temporary bigint transition alias used. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
 | [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.md) | Error | Invalid BigDecimal exact literal. |
 | [`SIFR-DECIMAL-0003`](SIFR-DECIMAL-0003.md) | Error | Float mixed with a decimal numeric type. |
