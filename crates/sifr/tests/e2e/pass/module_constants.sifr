@@ -2,6 +2,9 @@
 
 PI: float = 3.14159
 MAX_RETRIES: int = 3
+BASE_LIMIT: int = 250
+LIMIT: int = BASE_LIMIT + 4
+NEGATIVE_LIMIT: int = -(MAX_RETRIES + 10)
 
 def circle_area(r: float) -> float:
     return PI * r * r
@@ -9,3 +12,5 @@ def circle_area(r: float) -> float:
 def main():
     assert str(circle_area(5.0)) == '78.53975'
     assert str(MAX_RETRIES) == '3'
+    assert str(LIMIT) == '254'
+    assert str(NEGATIVE_LIMIT) == '-13'
