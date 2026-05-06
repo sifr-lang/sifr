@@ -158,6 +158,14 @@ pub(super) fn ensure_synthetic_stdlib_import(
         if let Some(module_consts) = externals.constants.get(module_name) {
             if let Some(const_ty) = module_consts.get(member_name) {
                 ctx.scope.define(alias.clone(), const_ty.clone());
+                if let Some(value) = externals
+                    .constant_integer_values
+                    .get(module_name)
+                    .and_then(|module_values| module_values.get(member_name))
+                {
+                    ctx.const_integer_values
+                        .insert(alias.clone(), value.clone());
+                }
                 found = true;
             }
         }

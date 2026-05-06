@@ -42,6 +42,7 @@ pub(crate) fn compile_frontend_modules(
             module,
             function_defaults,
             function_varargs,
+            constant_integer_values,
             reveal_types,
             warnings,
         } = result;
@@ -49,6 +50,7 @@ pub(crate) fn compile_frontend_modules(
             module: module.clone(),
             function_defaults,
             function_varargs,
+            constant_integer_values,
             reveal_types: reveal_types.clone(),
             warnings: warnings.clone(),
         };
@@ -91,6 +93,7 @@ pub(crate) fn compile_single_frontend_module_with_source(
         module,
         function_defaults,
         function_varargs,
+        constant_integer_values,
         reveal_types,
         warnings,
     } = result;
@@ -98,6 +101,7 @@ pub(crate) fn compile_single_frontend_module_with_source(
         module: module.clone(),
         function_defaults,
         function_varargs,
+        constant_integer_values,
         reveal_types: reveal_types.clone(),
         warnings: warnings.clone(),
     };
@@ -168,6 +172,7 @@ pub(crate) fn collect_project_hir_source_modules(
             module,
             function_defaults,
             function_varargs,
+            constant_integer_values,
             reveal_types,
             warnings,
         } = result;
@@ -175,6 +180,7 @@ pub(crate) fn collect_project_hir_source_modules(
             module: module.clone(),
             function_defaults,
             function_varargs,
+            constant_integer_values,
             reveal_types: reveal_types.clone(),
             warnings: warnings.clone(),
         };

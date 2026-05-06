@@ -13,6 +13,7 @@ pub(crate) fn collect_module_exports(
     let mut class_exports = HashMap::new();
     let mut class_type_param_exports = HashMap::new();
     let mut const_exports = HashMap::new();
+    let mut const_integer_value_exports = HashMap::new();
     let mut default_exports = HashMap::new();
     let mut vararg_exports = HashMap::new();
 
@@ -92,6 +93,9 @@ pub(crate) fn collect_module_exports(
     for (name, ty, _) in &module.constants {
         if !name.starts_with('_') {
             const_exports.insert(name.clone(), ty.clone());
+            if let Some(value) = lowering_result.constant_integer_values.get(name) {
+                const_integer_value_exports.insert(name.clone(), value.clone());
+            }
         }
     }
 
@@ -119,4 +123,9 @@ pub(crate) fn collect_module_exports(
     external_defs
         .constants
         .insert(module_name.to_string(), const_exports);
+    if !const_integer_value_exports.is_empty() {
+        external_defs
+            .constant_integer_values
+            .insert(module_name.to_string(), const_integer_value_exports);
+    }
 }
