@@ -1,3 +1,4 @@
+use crate::NestedFnCapture;
 use crate::{
     body_contains_yield, collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem,
     RustLiteral, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
@@ -173,6 +174,22 @@ impl RustEmitter {
         function_returns
     }
 
+    pub(super) fn recursive_capture_lowers_to_sifr_int(&self, capture: &NestedFnCapture) -> bool {
+        matches!(
+            crate::resolve_alias_type_for_plain_call(&capture.ty),
+            Type::Int
+        ) && (self.module_sifr_int_bindings().contains(&capture.name)
+            || self.is_registered_sifr_int_local(&capture.name)
+            || self.is_forced_sifr_int_local(&capture.name))
+    }
+
+    fn lower_recursive_capture_param_type(&self, capture: &NestedFnCapture) -> RustType {
+        if self.recursive_capture_lowers_to_sifr_int(capture) {
+            return RustType::Named("SifrInt".to_string());
+        }
+        self.lower_function_param_type(&capture.ty, capture.convention)
+    }
+
     pub(super) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
         let HirStmt::NestedFunction { func } = stmt else {
             return false;
@@ -260,6 +277,11 @@ impl RustEmitter {
         }
         for capture in &recursive_captures {
             self.register_function_scope_binding(&capture.name, &capture.ty, capture.convention);
+            if self.recursive_capture_lowers_to_sifr_int(capture) {
+                self.sifr_int_local_bindings
+                    .borrow_mut()
+                    .insert(capture.name.clone());
+            }
         }
         self.register_local_body_binding_types(&func.body);
 
@@ -299,7 +321,7 @@ impl RustEmitter {
                 })
                 .chain(recursive_captures.iter().map(|capture| RustParam::Named {
                     name: capture.name.clone(),
-                    ty: self.lower_function_param_type(&capture.ty, capture.convention),
+                    ty: self.lower_recursive_capture_param_type(capture),
                 }))
                 .collect::<Vec<_>>();
             RustStmt::LocalFn {
