@@ -529,11 +529,33 @@ impl RustEmitter {
                 };
                 crate::RustStmt::Assign { target, value }
             }
-            crate::RustStmt::AugAssign { target, op, value } => crate::RustStmt::AugAssign {
-                target: self.rewrite_stdlib_constant_idents_in_expr(target),
-                op,
-                value: self.rewrite_stdlib_constant_idents_in_expr(value),
-            },
+            crate::RustStmt::AugAssign { target, op, value } => {
+                let target = self.rewrite_stdlib_constant_idents_in_expr(target);
+                let value = self.rewrite_stdlib_constant_idents_in_expr(value);
+                match &target {
+                    crate::RustExpr::Ident(name)
+                        if is_sifr_int_arithmetic_op(&op)
+                            && (self.is_registered_sifr_int_local(name)
+                                || self.is_forced_sifr_int_local(name)) =>
+                    {
+                        self.sifr_int_local_bindings
+                            .borrow_mut()
+                            .insert(name.clone());
+                        crate::RustStmt::Assign {
+                            target: target.clone(),
+                            value: crate::RustExpr::BinOp {
+                                left: Box::new(crate::RustExpr::Ref {
+                                    mutable: false,
+                                    expr: Box::new(target),
+                                }),
+                                op,
+                                right: Box::new(self.coerce_expr_to_sifr_int(value)),
+                            },
+                        }
+                    }
+                    _ => crate::RustStmt::AugAssign { target, op, value },
+                }
+            }
             crate::RustStmt::Expr(expr) => {
                 crate::RustStmt::Expr(self.rewrite_stdlib_constant_idents_in_expr(expr))
             }
@@ -1710,5 +1732,104 @@ mod tests {
             } if target == "target"
                 && matches!(inner.as_ref(), RustExpr::Ident(source) if source == "source")
         ));
+    }
+
+    #[test]
+    fn rewrites_forced_sifr_int_augassign_to_assignment() {
+        let emitter = RustEmitter::new();
+        emitter
+            .sifr_int_forced_local_bindings
+            .borrow_mut()
+            .insert("total".to_string());
+
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::AugAssign {
+            target: RustExpr::Ident("total".to_string()),
+            op: "+".to_string(),
+            value: RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Int(2))),
+                ty: RustType::I64,
+            },
+        });
+
+        let RustStmt::Assign { target, value } = rewritten else {
+            panic!("expected SifrInt augassign rewrite to plain assignment");
+        };
+        assert!(matches!(target, RustExpr::Ident(ref name) if name == "total"));
+        assert!(matches!(
+            value,
+            RustExpr::BinOp { left, op, right }
+                if op == "+"
+                    && matches!(
+                        left.as_ref(),
+                        RustExpr::Ref { mutable: false, expr }
+                            if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "total")
+                    )
+                    && matches!(
+                        right.as_ref(),
+                        RustExpr::FnCall { func, args }
+                            if args.len() == 1
+                                && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                    )
+        ));
+    }
+
+    #[test]
+    fn rewrites_sifr_int_augassign_registered_source_to_borrowed_operand() {
+        let emitter = RustEmitter::new();
+        emitter
+            .sifr_int_forced_local_bindings
+            .borrow_mut()
+            .insert("total".to_string());
+        emitter
+            .sifr_int_local_bindings
+            .borrow_mut()
+            .insert("source".to_string());
+
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::AugAssign {
+            target: RustExpr::Ident("total".to_string()),
+            op: "+".to_string(),
+            value: RustExpr::Ident("source".to_string()),
+        });
+
+        let RustStmt::Assign { value, .. } = rewritten else {
+            panic!("expected SifrInt augassign rewrite to plain assignment");
+        };
+        assert!(matches!(
+            value,
+            RustExpr::BinOp { right, .. }
+                if matches!(
+                    right.as_ref(),
+                    RustExpr::Ref { mutable: false, expr }
+                        if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "source")
+                )
+        ));
+    }
+
+    #[test]
+    fn rewrites_sifr_int_augassign_for_supported_ops() {
+        for op in ["+", "-", "*"] {
+            let emitter = RustEmitter::new();
+            emitter
+                .sifr_int_forced_local_bindings
+                .borrow_mut()
+                .insert("total".to_string());
+
+            let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::AugAssign {
+                target: RustExpr::Ident("total".to_string()),
+                op: op.to_string(),
+                value: RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(2))),
+                    ty: RustType::I64,
+                },
+            });
+
+            assert!(matches!(
+                rewritten,
+                RustStmt::Assign {
+                    value: RustExpr::BinOp { op: ref rewritten_op, .. },
+                    ..
+                } if rewritten_op == op
+            ));
+        }
     }
 }
