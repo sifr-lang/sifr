@@ -854,6 +854,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // bigint(n) — convert int|bigint|decimal|bigdecimal to bigint
         if func_name == "bigint" {
+            ctx.warn_bigint_transition_alias(call.func.range());
             if !call.arguments.keywords.is_empty() {
                 expression_diagnostics::call_unexpected_keyword(
                     ctx,
