@@ -22,15 +22,25 @@ fn invalid_typevar_shape(ctx: &mut LowerCtx, message: impl Into<String>, range: 
     );
 }
 
+fn warn_bigint_transition_name(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+    if name == "bigint" {
+        ctx.warn_bigint_transition_alias(range);
+    }
+}
+
 /// Parse a `TypeVar` bound/constraint expression from PEP 695 syntax.
 /// `T: Bound` is treated as a hard bound; `T: (A, B)` is treated as constraints.
 pub(crate) fn parse_typevar_bound_expr(expr: &Expr, ctx: &mut LowerCtx) -> Vec<String> {
     match expr {
-        Expr::Name(name) => vec![name.id.to_string()],
+        Expr::Name(name) => {
+            warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
+            vec![name.id.to_string()]
+        }
         Expr::Tuple(tuple) => {
             let mut specs = Vec::new();
             for elt in &tuple.elts {
                 if let Expr::Name(name) = elt {
+                    warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
                     specs.push(encode_typevar_constraint(&name.id));
                 } else {
                     invalid_typevar_shape(
@@ -68,7 +78,10 @@ pub(crate) fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCt
     for arg in call.arguments.args.iter().skip(1) {
         saw_constraints = true;
         match arg {
-            Expr::Name(name) => specs.push(encode_typevar_constraint(&name.id)),
+            Expr::Name(name) => {
+                warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
+                specs.push(encode_typevar_constraint(&name.id));
+            }
             _ => invalid_typevar_shape(
                 ctx,
                 "TypeVar positional constraints must be simple type names",
@@ -93,7 +106,10 @@ pub(crate) fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCt
                 }
                 saw_bound = true;
                 match &kw.value {
-                    Expr::Name(name) => specs.push(name.id.to_string()),
+                    Expr::Name(name) => {
+                        warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
+                        specs.push(name.id.to_string());
+                    }
                     _ => invalid_typevar_shape(
                         ctx,
                         "TypeVar bound must be a simple type name",
@@ -115,6 +131,7 @@ pub(crate) fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCt
                     Expr::Tuple(tuple) => {
                         for elt in &tuple.elts {
                             if let Expr::Name(name) = elt {
+                                warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
                                 specs.push(encode_typevar_constraint(&name.id));
                             } else {
                                 invalid_typevar_shape(
@@ -126,6 +143,7 @@ pub(crate) fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCt
                         }
                     }
                     Expr::Name(name) => {
+                        warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
                         specs.push(encode_typevar_constraint(&name.id));
                     }
                     _ => invalid_typevar_shape(
