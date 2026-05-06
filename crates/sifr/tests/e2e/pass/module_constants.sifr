@@ -16,3 +16,6 @@ def main():
     assert str(LIMIT) == '254'
     assert str(NEGATIVE_LIMIT) == '-13'
     assert str(BIG_LIMIT) == '100000000000000000000'
+    assert str(BIG_LIMIT + 1) == '100000000000000000001'
+    oversized_local: int = BIG_LIMIT + LIMIT
+    assert str(oversized_local) == '100000000000000000254'
