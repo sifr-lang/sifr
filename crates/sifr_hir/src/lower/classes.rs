@@ -255,30 +255,34 @@ pub(super) fn collect_class_type(
     let is_protocol = is_protocol_class(class_def);
     let newtype_inner = get_newtype_inner(class_def);
 
-    // PEP 695: register inline type params (class C[T]) as type variables
-    if let Some(ref type_params) = class_def.type_params {
-        let mut declared_params = Vec::new();
-        for tp in type_params.iter() {
-            if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
-                let tp_name = tv.name.to_string();
-                ctx.type_vars.insert(tp_name.clone());
-                declared_params.push(tp_name.clone());
-                if let Some(ref bound) = tv.bound {
-                    let specs = parse_typevar_bound_expr(bound, ctx);
-                    if !specs.is_empty() {
-                        ctx.type_param_bounds
-                            .entry(class_name.clone())
-                            .or_default()
-                            .entry(tp_name)
-                            .or_default()
-                            .extend(specs);
+    // PEP 695: register inline type params (class C[T]) as type variables.
+    // Class collection runs twice; bounds are source-shape declarations and should only emit
+    // diagnostics/register specs once.
+    if !validate_iteration_protocols {
+        if let Some(ref type_params) = class_def.type_params {
+            let mut declared_params = Vec::new();
+            for tp in type_params.iter() {
+                if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
+                    let tp_name = tv.name.to_string();
+                    ctx.type_vars.insert(tp_name.clone());
+                    declared_params.push(tp_name.clone());
+                    if let Some(ref bound) = tv.bound {
+                        let specs = parse_typevar_bound_expr(bound, ctx);
+                        if !specs.is_empty() {
+                            ctx.type_param_bounds
+                                .entry(class_name.clone())
+                                .or_default()
+                                .entry(tp_name)
+                                .or_default()
+                                .extend(specs);
+                        }
                     }
                 }
             }
-        }
-        if !declared_params.is_empty() {
-            ctx.class_declared_type_params
-                .insert(class_name.clone(), declared_params);
+            if !declared_params.is_empty() {
+                ctx.class_declared_type_params
+                    .insert(class_name.clone(), declared_params);
+            }
         }
     }
 
