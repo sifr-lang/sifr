@@ -144,6 +144,14 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 const_exports.insert(name.clone(), ty.clone());
             }
         }
+        let const_integer_value_exports = collect_public_constant_integer_value_exports(
+            result
+                .module
+                .constants
+                .iter()
+                .filter_map(|(name, _, _)| (!name.starts_with('_')).then_some(name.as_str())),
+            &result.constant_integer_values,
+        );
 
         for class in &result.module.classes {
             if !class.name.starts_with('_') {
@@ -325,6 +333,11 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 .constants
                 .insert((*module_name).to_string(), const_exports);
         }
+        if !const_integer_value_exports.is_empty() {
+            stdlib_defs
+                .constant_integer_values
+                .insert((*module_name).to_string(), const_integer_value_exports);
+        }
         if !result.module.generic_functions.is_empty() {
             stdlib_defs.generic_functions.insert(
                 (*module_name).to_string(),
@@ -374,6 +387,19 @@ fn signature_params(
         .collect()
 }
 
+fn collect_public_constant_integer_value_exports<'a, T: Clone>(
+    public_constant_names: impl Iterator<Item = &'a str>,
+    constant_integer_values: &HashMap<String, T>,
+) -> HashMap<String, T> {
+    public_constant_names
+        .filter_map(|name| {
+            constant_integer_values
+                .get(name)
+                .map(|value| (name.to_string(), value.clone()))
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -417,5 +443,23 @@ mod tests {
             signature_params(&params, Some(ParamConvention::own())),
             vec![(Type::Str, ParamConvention::own())]
         );
+    }
+
+    #[test]
+    fn public_constant_integer_value_exports_filter_to_public_recorded_values() {
+        let mut values = HashMap::new();
+        values.insert("ANSWER".to_string(), 42);
+        values.insert("_PRIVATE".to_string(), 99);
+        values.insert("STALE".to_string(), 100);
+
+        let exports = collect_public_constant_integer_value_exports(
+            ["ANSWER", "MISSING"].into_iter(),
+            &values,
+        );
+
+        assert_eq!(exports.len(), 1);
+        assert_eq!(exports.get("ANSWER"), Some(&42));
+        assert!(!exports.contains_key("_PRIVATE"));
+        assert!(!exports.contains_key("STALE"));
     }
 }
