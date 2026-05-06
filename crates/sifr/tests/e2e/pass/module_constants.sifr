@@ -23,3 +23,12 @@ def main():
     assert str(chained_oversized_local) == '100000000000000000256'
     assert BIG_LIMIT > 100
     assert chained_oversized_local > BIG_LIMIT
+    reusable_oversized_local: int = BIG_LIMIT + 1
+    reuse_a: int = reusable_oversized_local + 1
+    reuse_b: int = reusable_oversized_local + 2
+    negated_reuse: int = -reusable_oversized_local
+    assert str(reusable_oversized_local) == '100000000000000000001'
+    assert str(reuse_a) == '100000000000000000002'
+    assert str(reuse_b) == '100000000000000000003'
+    assert str(negated_reuse) == '-100000000000000000001'
+    assert reusable_oversized_local < reuse_b
