@@ -217,11 +217,18 @@ impl RustEmitter {
         let module_sifr_int_bindings = self.module_sifr_int_bindings();
         let mut function_returns = self.sifr_int_function_returns.borrow().clone();
         let forced_locals = self.sifr_int_forced_local_bindings.borrow().clone();
+        let mut shadowed_module_bindings = self
+            .local_binding_types
+            .keys()
+            .cloned()
+            .collect::<HashSet<_>>();
+        shadowed_module_bindings.extend(collect_locally_defined_vars(body));
         function_returns.extend(collect_nested_sifr_int_function_returns(
             body,
             &module_sifr_int_bindings,
             &function_returns,
             &forced_locals,
+            &shadowed_module_bindings,
         ));
         function_returns
     }
@@ -231,6 +238,7 @@ impl RustEmitter {
             crate::resolve_alias_type_for_plain_call(&capture.ty),
             Type::Int
         ) && (self.module_sifr_int_bindings().contains(&capture.name)
+            && !self.local_binding_types.contains_key(&capture.name)
             || self.is_registered_sifr_int_local(&capture.name)
             || self.is_forced_sifr_int_local(&capture.name))
     }
@@ -279,6 +287,16 @@ impl RustEmitter {
         let outer_forced_locals = self.sifr_int_forced_local_bindings.borrow().clone();
         let sifr_int_captured_forced_locals =
             collect_sifr_int_captured_forced_locals(func, &outer_forced_locals);
+        let outer_shadowed_module_bindings = self
+            .local_binding_types
+            .keys()
+            .filter(|name| self.module_sifr_int_bindings().contains(*name))
+            .cloned()
+            .collect::<HashSet<_>>();
+        let captured_shadowed_module_bindings = collect_sifr_int_captured_shadowed_module_bindings(
+            func,
+            &outer_shadowed_module_bindings,
+        );
         let sifr_int_recursive_captures = recursive_captures
             .iter()
             .filter_map(|capture| {
@@ -291,12 +309,14 @@ impl RustEmitter {
         let nested_returns_sifr_int = matches!(
             crate::resolve_alias_type_for_plain_call(&func.return_type),
             Type::Int
-        ) && hir_function_returns_sifr_int_with_extra_forced(
-            func,
-            &self.module_sifr_int_bindings(),
-            &self.sifr_int_function_returns.borrow(),
-            &sifr_int_nested_capture_bindings,
-        );
+        )
+            && hir_function_returns_sifr_int_with_extra_forced_and_shadowed(
+                func,
+                &self.module_sifr_int_bindings(),
+                &self.sifr_int_function_returns.borrow(),
+                &sifr_int_nested_capture_bindings,
+                &captured_shadowed_module_bindings,
+            );
         let post_stmt_callable_conventions = {
             let mut conventions = self.callable_var_conventions.clone();
             let params = func
@@ -360,6 +380,9 @@ impl RustEmitter {
                     .borrow_mut()
                     .insert(capture.name.clone());
             }
+        }
+        for name in &captured_shadowed_module_bindings {
+            self.local_binding_types.insert(name.clone(), Type::Int);
         }
         self.sifr_int_local_bindings
             .borrow_mut()
@@ -754,9 +777,9 @@ impl RustEmitter {
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
         self.current_sifr_int_return
             .set(self.function_returns_sifr_int(&func.name));
+        self.register_function_scope_params(&func.name, &func.params);
         let active_function_returns = self.function_sifr_int_returns_for_body(&func.body);
         *self.sifr_int_function_returns.borrow_mut() = active_function_returns;
-        self.register_function_scope_params(&func.name, &func.params);
         self.register_local_body_binding_types(&func.body);
 
         let visibility = if !test_mode && module_public && func.name != "main" {
@@ -899,6 +922,7 @@ fn hir_function_returns_sifr_int(
             module_sifr_int_bindings,
             &function_sifr_int_returns,
             &forced,
+            &shadowed_module_bindings,
         ));
         if function_sifr_int_returns.len() == before {
             break;
@@ -933,12 +957,31 @@ fn hir_function_returns_sifr_int_with_extra_forced(
     function_sifr_int_returns: &HashSet<String>,
     extra_forced_locals: &HashSet<String>,
 ) -> bool {
-    let shadowed_module_bindings = collect_function_local_shadow_names(func);
-    let forced = collect_function_sifr_int_forced_locals_with_extra(
+    let extra_shadowed_module_bindings = HashSet::new();
+    hir_function_returns_sifr_int_with_extra_forced_and_shadowed(
         func,
         module_sifr_int_bindings,
         function_sifr_int_returns,
         extra_forced_locals,
+        &extra_shadowed_module_bindings,
+    )
+}
+
+fn hir_function_returns_sifr_int_with_extra_forced_and_shadowed(
+    func: &HirFunction,
+    module_sifr_int_bindings: &HashSet<String>,
+    function_sifr_int_returns: &HashSet<String>,
+    extra_forced_locals: &HashSet<String>,
+    extra_shadowed_module_bindings: &HashSet<String>,
+) -> bool {
+    let mut shadowed_module_bindings = collect_function_local_shadow_names(func);
+    shadowed_module_bindings.extend(extra_shadowed_module_bindings.iter().cloned());
+    let forced = collect_function_sifr_int_forced_locals_with_extra_and_shadowed(
+        func,
+        module_sifr_int_bindings,
+        function_sifr_int_returns,
+        extra_forced_locals,
+        extra_shadowed_module_bindings,
     );
     let mut function_sifr_int_returns = function_sifr_int_returns.clone();
     function_sifr_int_returns.extend(collect_nested_sifr_int_function_returns(
@@ -946,6 +989,7 @@ fn hir_function_returns_sifr_int_with_extra_forced(
         module_sifr_int_bindings,
         &function_sifr_int_returns,
         &forced,
+        &shadowed_module_bindings,
     ));
 
     let mut returns_sifr_int = false;
@@ -976,6 +1020,23 @@ fn collect_function_sifr_int_forced_locals_with_extra(
     function_sifr_int_returns: &HashSet<String>,
     extra_forced_locals: &HashSet<String>,
 ) -> HashSet<String> {
+    let extra_shadowed_module_bindings = HashSet::new();
+    collect_function_sifr_int_forced_locals_with_extra_and_shadowed(
+        func,
+        module_sifr_int_bindings,
+        function_sifr_int_returns,
+        extra_forced_locals,
+        &extra_shadowed_module_bindings,
+    )
+}
+
+fn collect_function_sifr_int_forced_locals_with_extra_and_shadowed(
+    func: &HirFunction,
+    module_sifr_int_bindings: &HashSet<String>,
+    function_sifr_int_returns: &HashSet<String>,
+    extra_forced_locals: &HashSet<String>,
+    extra_shadowed_module_bindings: &HashSet<String>,
+) -> HashSet<String> {
     let mut function_sifr_int_returns = function_sifr_int_returns.clone();
     let local_int_bindings = func
         .body
@@ -989,7 +1050,8 @@ fn collect_function_sifr_int_forced_locals_with_extra(
             _ => None,
         })
         .collect::<HashSet<_>>();
-    let shadowed_module_bindings = collect_function_local_shadow_names(func);
+    let mut shadowed_module_bindings = collect_function_local_shadow_names(func);
+    shadowed_module_bindings.extend(extra_shadowed_module_bindings.iter().cloned());
     let mut forced;
     loop {
         forced = collect_sifr_int_forced_locals_with_seed(
@@ -1006,6 +1068,7 @@ fn collect_function_sifr_int_forced_locals_with_extra(
             module_sifr_int_bindings,
             &function_sifr_int_returns,
             &forced,
+            &shadowed_module_bindings,
         ));
         if function_sifr_int_returns.len() == before {
             break;
@@ -1083,6 +1146,7 @@ fn collect_nested_sifr_int_function_returns(
     module_sifr_int_bindings: &HashSet<String>,
     outer_function_returns: &HashSet<String>,
     outer_forced_locals: &HashSet<String>,
+    outer_shadowed_module_bindings: &HashSet<String>,
 ) -> HashSet<String> {
     let nested_functions = body
         .iter()
@@ -1099,21 +1163,19 @@ fn collect_nested_sifr_int_function_returns(
             .filter_map(|func| {
                 let captured_forced =
                     collect_sifr_int_captured_forced_locals(func, outer_forced_locals);
+                let captured_shadowed = collect_sifr_int_captured_shadowed_module_bindings(
+                    func,
+                    outer_shadowed_module_bindings,
+                );
                 (matches!(
                     crate::resolve_alias_type_for_plain_call(&func.return_type),
                     Type::Int
-                ) && hir_function_returns_sifr_int(
-                    func,
-                    module_sifr_int_bindings,
-                    &function_returns,
-                ) || matches!(
-                    crate::resolve_alias_type_for_plain_call(&func.return_type),
-                    Type::Int
-                ) && hir_function_returns_sifr_int_with_extra_forced(
+                ) && hir_function_returns_sifr_int_with_extra_forced_and_shadowed(
                     func,
                     module_sifr_int_bindings,
                     &function_returns,
                     &captured_forced,
+                    &captured_shadowed,
                 ))
                 .then(|| func.name.clone())
             })
@@ -1133,7 +1195,21 @@ fn collect_sifr_int_captured_forced_locals(
     func: &HirFunction,
     outer_forced_locals: &HashSet<String>,
 ) -> HashSet<String> {
-    if outer_forced_locals.is_empty() {
+    collect_captured_outer_names(func, outer_forced_locals)
+}
+
+fn collect_sifr_int_captured_shadowed_module_bindings(
+    func: &HirFunction,
+    outer_shadowed_module_bindings: &HashSet<String>,
+) -> HashSet<String> {
+    collect_captured_outer_names(func, outer_shadowed_module_bindings)
+}
+
+fn collect_captured_outer_names(
+    func: &HirFunction,
+    outer_names: &HashSet<String>,
+) -> HashSet<String> {
+    if outer_names.is_empty() {
         return HashSet::new();
     }
     let param_names = func
@@ -1147,7 +1223,7 @@ fn collect_sifr_int_captured_forced_locals(
         .filter_map(|(name, _)| {
             (!param_names.contains(&name)
                 && !locally_defined.contains(&name)
-                && outer_forced_locals.contains(&name))
+                && outer_names.contains(&name))
             .then_some(name)
         })
         .collect()
@@ -1314,6 +1390,20 @@ mod tests {
         }
     }
 
+    fn helper_returning_name(name: &str) -> HirFunction {
+        HirFunction {
+            name: "helper".to_string(),
+            params: vec![],
+            return_type: Type::Int,
+            body: vec![HirStmt::Return {
+                value: Some(int_binop_name(name)),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }
+    }
+
     #[test]
     fn shadowed_module_const_local_does_not_promote_return_to_sifr_int() {
         let func = regular_int_function(
@@ -1352,6 +1442,38 @@ mod tests {
             vec![HirStmt::Return {
                 value: Some(int_binop_name("BIG_LIMIT")),
             }],
+        );
+        let module_sifr_int_bindings = HashSet::from(["BIG_LIMIT".to_string()]);
+
+        assert!(!hir_function_returns_sifr_int(
+            &func,
+            &module_sifr_int_bindings,
+            &HashSet::new(),
+        ));
+    }
+
+    #[test]
+    fn nested_helper_captures_outer_shadow_without_promoting_return_to_sifr_int() {
+        let func = regular_int_function(
+            vec![],
+            vec![
+                HirStmt::Let {
+                    name: "BIG_LIMIT".to_string(),
+                    ty: Type::Int,
+                    value: HirExpr::IntLiteral(5),
+                    is_mutable: false,
+                },
+                HirStmt::NestedFunction {
+                    func: helper_returning_name("BIG_LIMIT"),
+                },
+                HirStmt::Return {
+                    value: Some(HirExpr::Call {
+                        func: "helper".to_string(),
+                        args: vec![],
+                        ty: Type::Int,
+                    }),
+                },
+            ],
         );
         let module_sifr_int_bindings = HashSet::from(["BIG_LIMIT".to_string()]);
 

@@ -36,6 +36,25 @@ def shadow_exact_module_constant_with_local() -> int:
 def shadow_exact_module_constant_with_param(BIG_LIMIT: int) -> int:
     return BIG_LIMIT + 1
 
+def shadow_exact_module_constant_with_nested_local() -> int:
+    BIG_LIMIT: int = 5
+    def helper() -> int:
+        return BIG_LIMIT + 1
+    return helper()
+
+def shadow_exact_module_constant_with_recursive_nested_local() -> int:
+    BIG_LIMIT: int = 5
+    def helper(remaining: int) -> int:
+        if remaining <= 0:
+            return BIG_LIMIT + 1
+        return helper(remaining - 1) + 1
+    return helper(2)
+
+def shadow_exact_module_constant_param_with_nested(BIG_LIMIT: int) -> int:
+    def helper() -> int:
+        return BIG_LIMIT + 1
+    return helper()
+
 def returned_big_with_nested_small() -> int:
     def small_inner() -> int:
         return 42
@@ -85,6 +104,9 @@ def main():
     aliased_parameter: int = alias_exact_parameter(BIG_LIMIT)
     local_shadow: int = shadow_exact_module_constant_with_local()
     param_shadow: int = shadow_exact_module_constant_with_param(5)
+    nested_local_shadow: int = shadow_exact_module_constant_with_nested_local()
+    recursive_nested_local_shadow: int = shadow_exact_module_constant_with_recursive_nested_local()
+    nested_param_shadow: int = shadow_exact_module_constant_param_with_nested(5)
     returned_nested: int = returned_big_with_nested_small()
     returned_nested_helper: int = returned_big_from_nested_helper()
     returned_recursive_nested_helper: int = returned_big_from_recursive_nested_helper()
@@ -100,6 +122,9 @@ def main():
     assert str(aliased_parameter) == '100000000000000000001'
     assert str(local_shadow) == '6'
     assert str(param_shadow) == '6'
+    assert str(nested_local_shadow) == '6'
+    assert str(recursive_nested_local_shadow) == '8'
+    assert str(nested_param_shadow) == '6'
     assert str(returned_nested) == '100000000000000000042'
     assert str(returned_nested_helper) == '100000000000000000001'
     assert str(returned_recursive_nested_helper) == '100000000000000000003'
