@@ -257,6 +257,13 @@ impl LowerCtx {
             });
     }
 
+    fn warn_bigint_transition_alias(&mut self, range: TextRange) {
+        self.warnings
+            .push(LoweringWarningDiagnostic::BigIntTransitionAlias {
+                primary_range: Some(range),
+            });
+    }
+
     fn error_with_code_at(
         &mut self,
         code: DiagnosticCode,
@@ -432,6 +439,9 @@ pub enum LoweringWarningDiagnostic {
         primary_range: Option<TextRange>,
     },
     UnreachableStatement {
+        primary_range: Option<TextRange>,
+    },
+    BigIntTransitionAlias {
         primary_range: Option<TextRange>,
     },
 }

@@ -62,6 +62,7 @@ impl DiagnosticCode {
     pub const INT_FIXED_WIDTH_OUT_OF_RANGE: Self = Self::new("SIFR-INT-0001", Severity::Error);
     pub const INT_RESERVED_WIDTH_NAME: Self = Self::new("SIFR-INT-0003", Severity::Error);
     pub const INT_EVAL_BUDGET_EXCEEDED: Self = Self::new("SIFR-INT-0004", Severity::Error);
+    pub const INT_BIGINT_TRANSITION_ALIAS: Self = Self::new("SIFR-INT-0011", Severity::Warning);
 
     pub const CALL_WRONG_POSITIONAL_COUNT: Self = Self::new("SIFR-CALL-0001", Severity::Error);
     pub const CALL_UNEXPECTED_KEYWORD: Self = Self::new("SIFR-CALL-0002", Severity::Error);
@@ -778,6 +779,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::integer_literal_diagnostics",
         [arg!("digits"), arg!("max_digits")],
         ["digits", "max_digits"]
+    ),
+    active_entry!(
+        "SIFR-INT-0011",
+        "INT",
+        "Temporary bigint transition alias used.",
+        Severity::Warning,
+        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning",
+        "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values",
+        "sifr_hir::lower::typing_and_functions",
+        [],
+        []
     ),
     active_entry!(
         "SIFR-DECIMAL-0001",
@@ -1590,6 +1602,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE,
     DiagnosticCode::INT_RESERVED_WIDTH_NAME,
     DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED,
+    DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
     DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
     DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
     DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
