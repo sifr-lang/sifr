@@ -10,6 +10,9 @@ BIG_LIMIT: int = 10 ** 20
 def circle_area(r: float) -> float:
     return PI * r * r
 
+def returned_big_limit() -> int:
+    return BIG_LIMIT + 1
+
 def main():
     assert str(circle_area(5.0)) == '78.53975'
     assert str(MAX_RETRIES) == '3'
@@ -17,6 +20,10 @@ def main():
     assert str(NEGATIVE_LIMIT) == '-13'
     assert str(BIG_LIMIT) == '100000000000000000000'
     assert str(BIG_LIMIT + 1) == '100000000000000000001'
+    returned_big: int = returned_big_limit()
+    returned_plus_one: int = returned_big_limit() + 1
+    assert str(returned_big) == '100000000000000000001'
+    assert str(returned_plus_one) == '100000000000000000002'
     oversized_local: int = BIG_LIMIT + LIMIT
     assert str(oversized_local) == '100000000000000000254'
     chained_oversized_local: int = oversized_local + 2

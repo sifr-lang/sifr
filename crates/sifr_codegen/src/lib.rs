@@ -1213,6 +1213,10 @@ struct RustEmitter {
     sifr_int_local_bindings: RefCell<HashSet<String>>,
     /// Local names pre-promoted to `SifrInt` because a later assignment needs exact-int storage.
     sifr_int_forced_local_bindings: RefCell<HashSet<String>>,
+    /// Function names whose generated Rust return type has been promoted from legacy `i64` to `SifrInt`.
+    sifr_int_function_returns: RefCell<HashSet<String>>,
+    /// Whether the active function-like body returns `SifrInt` for source-level `int`.
+    current_sifr_int_return: bool,
     /// Stack used to capture structured statement emission as IR nodes.
     stmt_capture_stack: Vec<Vec<RustStmt>>,
     /// Recursion guard for non-structured emitter paths.
@@ -1314,6 +1318,8 @@ impl RustEmitter {
             none_widened_local_bindings: HashSet::new(),
             sifr_int_local_bindings: RefCell::new(HashSet::new()),
             sifr_int_forced_local_bindings: RefCell::new(HashSet::new()),
+            sifr_int_function_returns: RefCell::new(HashSet::new()),
+            current_sifr_int_return: false,
             stmt_capture_stack: Vec::new(),
             lowering_stats: LoweringStats::default(),
         }
@@ -1373,6 +1379,7 @@ impl RustEmitter {
         self.prescan_module_metadata(module);
 
         self.emit_module_constants(module, module_public);
+        self.register_sifr_int_function_returns(module);
         self.emit_module_body(module, module_public, test_mode);
     }
 

@@ -6,7 +6,7 @@ use crate::{
     helpers::collect_reassigned_vars,
     hir_analysis::traversal::{self, TraversalConfig},
 };
-use sifr_hir::{HirExpr, HirFunction, HirParam, HirStmt};
+use sifr_hir::{HirExpr, HirFunction, HirModule, HirParam, HirStmt};
 use sifr_type_system::{make_union, OwnershipKind, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
@@ -110,56 +110,56 @@ impl RustEmitter {
             return;
         }
 
-        let module_sifr_int_bindings = self
-            .module_constants
+        let module_sifr_int_bindings = self.module_sifr_int_bindings();
+        let function_sifr_int_returns = self.sifr_int_function_returns.borrow().clone();
+
+        let mut forced = self.sifr_int_forced_local_bindings.borrow().clone();
+        forced.extend(collect_sifr_int_forced_locals(
+            body,
+            &local_int_bindings,
+            &module_sifr_int_bindings,
+            &function_sifr_int_returns,
+        ));
+        *self.sifr_int_forced_local_bindings.borrow_mut() = forced;
+    }
+
+    pub(super) fn register_sifr_int_function_returns(&self, module: &HirModule) {
+        let module_sifr_int_bindings = self.module_sifr_int_bindings();
+        let mut function_returns = HashSet::new();
+        loop {
+            let before = function_returns.len();
+            let discovered = module
+                .functions
+                .iter()
+                .filter_map(|func| {
+                    (matches!(
+                        crate::resolve_alias_type_for_plain_call(&func.return_type),
+                        Type::Int
+                    ) && hir_function_returns_sifr_int(
+                        func,
+                        &module_sifr_int_bindings,
+                        &function_returns,
+                    ))
+                    .then(|| func.name.clone())
+                })
+                .collect::<Vec<_>>();
+            function_returns.extend(discovered);
+            if function_returns.len() == before {
+                break;
+            }
+        }
+        *self.sifr_int_function_returns.borrow_mut() = function_returns;
+    }
+
+    fn module_sifr_int_bindings(&self) -> HashSet<String> {
+        self.module_constants
             .iter()
             .filter_map(|(name, (ty, rust_name))| {
                 (matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
                     && rust_name.ends_with("()"))
                 .then(|| name.clone())
             })
-            .collect::<HashSet<_>>();
-
-        let mut forced = self.sifr_int_forced_local_bindings.borrow().clone();
-        loop {
-            let before = forced.len();
-            let mut on_stmt = |stmt: &HirStmt| match stmt {
-                HirStmt::Let { name, value, .. } | HirStmt::Assign { name, value }
-                    if local_int_bindings.contains(name)
-                        && hir_expr_needs_sifr_int_storage(
-                            value,
-                            &forced,
-                            &module_sifr_int_bindings,
-                        ) =>
-                {
-                    forced.insert(name.clone());
-                }
-                HirStmt::AugAssign { name, op, value }
-                    if local_int_bindings.contains(name)
-                        && is_sifr_int_augassign_op(op)
-                        && (forced.contains(name)
-                            || hir_expr_needs_sifr_int_storage(
-                                value,
-                                &forced,
-                                &module_sifr_int_bindings,
-                            )) =>
-                {
-                    forced.insert(name.clone());
-                }
-                _ => {}
-            };
-            let mut on_expr = |_expr: &HirExpr| {};
-            traversal::walk_stmts(
-                body,
-                TraversalConfig::LOCAL_SCOPE_ONLY,
-                &mut on_stmt,
-                &mut on_expr,
-            );
-            if forced.len() == before {
-                break;
-            }
-        }
-        *self.sifr_int_forced_local_bindings.borrow_mut() = forced;
+            .collect::<HashSet<_>>()
     }
 
     pub(super) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
@@ -224,6 +224,7 @@ impl RustEmitter {
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
+        let saved_current_sifr_int_return = self.current_sifr_int_return;
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
 
         self.current_return_type = Some(func.return_type.clone());
@@ -268,6 +269,7 @@ impl RustEmitter {
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
+        self.current_sifr_int_return = saved_current_sifr_int_return;
 
         let lowered_stmt = if is_recursive {
             let params = func
@@ -431,6 +433,9 @@ impl RustEmitter {
 
         if func.return_type == Type::None {
             return None;
+        }
+        if self.function_returns_sifr_int(&func.name) {
+            return Some(RustType::Named("SifrInt".to_string()));
         }
         Some(self.rust_ir_type_with_generics(&func.return_type))
     }
@@ -598,6 +603,7 @@ impl RustEmitter {
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
+        let saved_current_sifr_int_return = self.current_sifr_int_return;
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
@@ -608,6 +614,7 @@ impl RustEmitter {
         self.none_widened_local_bindings.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
+        self.current_sifr_int_return = self.function_returns_sifr_int(&func.name);
         self.register_function_scope_params(&func.params);
         self.register_local_body_binding_types(&func.body);
 
@@ -710,18 +717,121 @@ impl RustEmitter {
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
+        self.current_sifr_int_return = saved_current_sifr_int_return;
     }
+}
+
+fn hir_function_returns_sifr_int(
+    func: &HirFunction,
+    module_sifr_int_bindings: &HashSet<String>,
+    function_sifr_int_returns: &HashSet<String>,
+) -> bool {
+    let local_int_bindings = func
+        .body
+        .iter()
+        .filter_map(|stmt| match stmt {
+            HirStmt::Let { name, ty, .. }
+                if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int) =>
+            {
+                Some(name.clone())
+            }
+            _ => None,
+        })
+        .collect::<HashSet<_>>();
+    let forced = collect_sifr_int_forced_locals(
+        &func.body,
+        &local_int_bindings,
+        module_sifr_int_bindings,
+        function_sifr_int_returns,
+    );
+
+    let mut returns_sifr_int = false;
+    let mut on_stmt = |stmt: &HirStmt| {
+        if let HirStmt::Return { value: Some(value) } = stmt {
+            returns_sifr_int |= hir_expr_needs_sifr_int_storage(
+                value,
+                &forced,
+                module_sifr_int_bindings,
+                function_sifr_int_returns,
+            );
+        }
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    traversal::walk_stmts(
+        &func.body,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    returns_sifr_int
+}
+
+fn collect_sifr_int_forced_locals(
+    body: &[HirStmt],
+    local_int_bindings: &HashSet<String>,
+    module_sifr_int_bindings: &HashSet<String>,
+    function_sifr_int_returns: &HashSet<String>,
+) -> HashSet<String> {
+    let mut forced = HashSet::new();
+    if local_int_bindings.is_empty() {
+        return forced;
+    }
+    loop {
+        let before = forced.len();
+        let mut on_stmt = |stmt: &HirStmt| match stmt {
+            HirStmt::Let { name, value, .. } | HirStmt::Assign { name, value }
+                if local_int_bindings.contains(name)
+                    && hir_expr_needs_sifr_int_storage(
+                        value,
+                        &forced,
+                        module_sifr_int_bindings,
+                        function_sifr_int_returns,
+                    ) =>
+            {
+                forced.insert(name.clone());
+            }
+            HirStmt::AugAssign { name, op, value }
+                if local_int_bindings.contains(name)
+                    && is_sifr_int_augassign_op(op)
+                    && (forced.contains(name)
+                        || hir_expr_needs_sifr_int_storage(
+                            value,
+                            &forced,
+                            module_sifr_int_bindings,
+                            function_sifr_int_returns,
+                        )) =>
+            {
+                forced.insert(name.clone());
+            }
+            _ => {}
+        };
+        let mut on_expr = |_expr: &HirExpr| {};
+        traversal::walk_stmts(
+            body,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        if forced.len() == before {
+            break;
+        }
+    }
+    forced
 }
 
 fn hir_expr_needs_sifr_int_storage(
     expr: &HirExpr,
     forced_locals: &HashSet<String>,
     module_sifr_int_bindings: &HashSet<String>,
+    function_sifr_int_returns: &HashSet<String>,
 ) -> bool {
     match expr {
         HirExpr::LargeIntLiteral(_) => true,
         HirExpr::Name { name, .. } => {
             forced_locals.contains(name) || module_sifr_int_bindings.contains(name)
+        }
+        HirExpr::Call { func, args, .. } => {
+            args.is_empty() && function_sifr_int_returns.contains(func)
         }
         HirExpr::BinOp {
             left,
@@ -732,14 +842,28 @@ fn hir_expr_needs_sifr_int_storage(
         } if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
             && matches!(op.as_str(), "+" | "-" | "*") =>
         {
-            hir_expr_needs_sifr_int_storage(left, forced_locals, module_sifr_int_bindings)
-                || hir_expr_needs_sifr_int_storage(right, forced_locals, module_sifr_int_bindings)
+            hir_expr_needs_sifr_int_storage(
+                left,
+                forced_locals,
+                module_sifr_int_bindings,
+                function_sifr_int_returns,
+            ) || hir_expr_needs_sifr_int_storage(
+                right,
+                forced_locals,
+                module_sifr_int_bindings,
+                function_sifr_int_returns,
+            )
         }
         HirExpr::UnaryOp { op, operand, ty }
             if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
                 && matches!(op.as_str(), "+" | "-") =>
         {
-            hir_expr_needs_sifr_int_storage(operand, forced_locals, module_sifr_int_bindings)
+            hir_expr_needs_sifr_int_storage(
+                operand,
+                forced_locals,
+                module_sifr_int_bindings,
+                function_sifr_int_returns,
+            )
         }
         _ => false,
     }
