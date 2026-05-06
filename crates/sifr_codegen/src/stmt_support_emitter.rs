@@ -326,6 +326,7 @@ impl RustEmitter {
     fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Int
+            | Type::FixedInt(_)
             | Type::Float
             | Type::Bool
             | Type::Str

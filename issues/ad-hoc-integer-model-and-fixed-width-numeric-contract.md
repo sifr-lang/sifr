@@ -399,6 +399,7 @@ Validation:
 - [x] INT-2A large integer literal HIR review pass 2 approved after canonical decimal normalization: `reviews/integer-model-int-2a-large-literal-hir-review-pass-2.md`.
 - [x] INT-2A large integer literal default/unary parity review satisfied: `reviews/integer-model-int-2a-large-literal-defaults-parity-review-pass-1b.md`.
 - [x] INT-2A boundary diagnostics and parsed/constructed parity review satisfied: `reviews/integer-model-int-2a-boundary-diagnostics-review-pass-1.md`.
+- [x] INT-2B fixed-width type variants and annotation resolution review satisfied: `reviews/integer-model-int-2b-fixed-width-type-variants-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -412,7 +413,8 @@ Validation:
   - [x] Default-argument large-literal parity and negative-large-literal unary coverage implemented, review satisfied, and quick validation passing: PR #1793.
   - [x] Malformed integer token text has typed parser diagnostic coverage, over-budget integer literals emit `SIFR-INT-0004`, parsed/constructed HIR parity is covered, review is satisfied, and quick validation is passing: PR #1794.
 - [ ] INT-2B HIR, type system, and const fitting
-  - [ ] Carry follow-ups from INT-2A reserved-width review: broaden annotation-position tests, align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, and decide reserved-name shadowing policy during `bigint` cleanup.
+  - [x] Fixed-width signed, unsigned, and pointer-sized integer annotations resolve in compiler-owned type layers, nested reserved-width annotation coverage was broadened, review is satisfied, and quick validation is passing: PR #1795.
+  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, decide reserved-name shadowing policy during `bigint` cleanup, and clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable.
 - [ ] INT-3 scalar arithmetic and numeric mixing
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries

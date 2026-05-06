@@ -5,6 +5,7 @@ use sifr_type_system::Type;
 fn uses_debug_display_format(ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(ty) {
         Type::Int
+        | Type::FixedInt(_)
         | Type::Float
         | Type::Bool
         | Type::Str

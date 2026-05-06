@@ -2,7 +2,7 @@ use crate::{lower_module, HirDiagnostic, HirModule, HirStmt};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
-use sifr_type_system::Type;
+use sifr_type_system::{FixedIntType, Type};
 
 fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     let parsed = parse_module(source).expect("parse failed");
@@ -132,6 +132,63 @@ fn test_reserved_integer_width_annotations_have_int_code() {
             .all(|error| error.code != Some(DiagnosticCode::NAME_UNKNOWN_TYPE)),
         "reserved width names should not fall through to generic unknown-type diagnostics"
     );
+}
+
+#[test]
+fn test_nested_reserved_integer_width_annotations_have_int_code() {
+    let source = "type BadMap = dict[str, uint128]\n\ndef bad() -> list[int128]:\n    return []\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+
+    assert!(errors.iter().any(|error| {
+        error.message == "reserved integer width name 'uint128' is not supported yet"
+            && error.code == Some(DiagnosticCode::INT_RESERVED_WIDTH_NAME)
+            && error.primary_range == Some(range_for_after(source, "str, ", "uint128"))
+    }));
+    assert!(errors.iter().any(|error| {
+        error.message == "reserved integer width name 'int128' is not supported yet"
+            && error.code == Some(DiagnosticCode::INT_RESERVED_WIDTH_NAME)
+            && error.primary_range == Some(range_for_after(source, "list[", "int128"))
+    }));
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != Some(DiagnosticCode::NAME_UNKNOWN_TYPE)),
+        "nested reserved width names should not fall through to generic unknown-type diagnostics"
+    );
+}
+
+#[test]
+fn test_fixed_width_integer_annotations_resolve_in_hir_signatures() {
+    let result = lower_source(
+        "def widths(a: int8, b: int16, c: int32, d: int64, e: uint8, f: uint16, g: uint32, h: uint64, i: isize, j: usize) -> usize:\n    return j\n",
+    )
+    .expect("fixed-width integer annotations should lower");
+
+    let widths = result
+        .functions
+        .iter()
+        .find(|function| function.name == "widths")
+        .expect("widths function missing");
+
+    let actual: Vec<Type> = widths.params.iter().map(|param| param.ty.clone()).collect();
+    assert_eq!(
+        actual,
+        vec![
+            Type::FixedInt(FixedIntType::I8),
+            Type::FixedInt(FixedIntType::I16),
+            Type::FixedInt(FixedIntType::I32),
+            Type::FixedInt(FixedIntType::I64),
+            Type::FixedInt(FixedIntType::U8),
+            Type::FixedInt(FixedIntType::U16),
+            Type::FixedInt(FixedIntType::U32),
+            Type::FixedInt(FixedIntType::U64),
+            Type::FixedInt(FixedIntType::ISize),
+            Type::FixedInt(FixedIntType::USize),
+        ]
+    );
+    assert_eq!(widths.return_type, Type::FixedInt(FixedIntType::USize));
 }
 
 #[test]
