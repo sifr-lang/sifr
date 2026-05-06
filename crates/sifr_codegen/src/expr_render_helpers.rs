@@ -1289,6 +1289,10 @@ impl RustEmitter {
     }
 
     fn rewrite_special_ident(&self, name: String) -> crate::RustExpr {
+        if self.local_binding_types.contains_key(&name) {
+            return crate::RustExpr::Ident(name);
+        }
+
         if self.is_stdlib_constant(&name) {
             return match name.as_str() {
                 "pi" => crate::RustExpr::Path(vec![
@@ -1593,6 +1597,19 @@ mod tests {
                 ..
             } if name == "SifrInt"
         ));
+    }
+
+    #[test]
+    fn local_binding_shadows_large_int_module_const_rewrite() {
+        let mut emitter = emitter_with_large_int_const();
+        emitter
+            .local_binding_types
+            .insert("BIG_LIMIT".to_string(), Type::Int);
+
+        let rewritten = emitter
+            .rewrite_stdlib_constant_idents_in_expr(RustExpr::Ident("BIG_LIMIT".to_string()));
+
+        assert!(matches!(rewritten, RustExpr::Ident(name) if name == "BIG_LIMIT"));
     }
 
     #[test]

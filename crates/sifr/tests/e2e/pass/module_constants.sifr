@@ -29,6 +29,13 @@ def alias_exact_parameter(value: int) -> int:
     alias: int = value
     return alias + 1
 
+def shadow_exact_module_constant_with_local() -> int:
+    BIG_LIMIT: int = 5
+    return BIG_LIMIT + 1
+
+def shadow_exact_module_constant_with_param(BIG_LIMIT: int) -> int:
+    return BIG_LIMIT + 1
+
 def returned_big_with_nested_small() -> int:
     def small_inner() -> int:
         return 42
@@ -76,6 +83,8 @@ def main():
     added_parameter: int = add_to_exact_parameter(BIG_LIMIT, 3)
     added_right_parameter: int = add_right_exact_parameter(3, BIG_LIMIT)
     aliased_parameter: int = alias_exact_parameter(BIG_LIMIT)
+    local_shadow: int = shadow_exact_module_constant_with_local()
+    param_shadow: int = shadow_exact_module_constant_with_param(5)
     returned_nested: int = returned_big_with_nested_small()
     returned_nested_helper: int = returned_big_from_nested_helper()
     returned_recursive_nested_helper: int = returned_big_from_recursive_nested_helper()
@@ -89,6 +98,8 @@ def main():
     assert str(added_parameter) == '100000000000000000003'
     assert str(added_right_parameter) == '100000000000000000003'
     assert str(aliased_parameter) == '100000000000000000001'
+    assert str(local_shadow) == '6'
+    assert str(param_shadow) == '6'
     assert str(returned_nested) == '100000000000000000042'
     assert str(returned_nested_helper) == '100000000000000000001'
     assert str(returned_recursive_nested_helper) == '100000000000000000003'
