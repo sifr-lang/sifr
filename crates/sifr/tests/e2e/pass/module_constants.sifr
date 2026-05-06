@@ -22,6 +22,11 @@ def returned_big_with_nested_small() -> int:
     value: int = small_inner()
     return BIG_LIMIT + value
 
+def returned_big_from_nested_helper() -> int:
+    def helper() -> int:
+        return BIG_LIMIT + 1
+    return helper()
+
 def main():
     assert str(circle_area(5.0)) == '78.53975'
     assert str(MAX_RETRIES) == '3'
@@ -33,10 +38,12 @@ def main():
     returned_plus_one: int = returned_big_limit() + 1
     returned_with_offset: int = returned_big_with_offset(3)
     returned_nested: int = returned_big_with_nested_small()
+    returned_nested_helper: int = returned_big_from_nested_helper()
     assert str(returned_big) == '100000000000000000001'
     assert str(returned_plus_one) == '100000000000000000002'
     assert str(returned_with_offset) == '100000000000000000003'
     assert str(returned_nested) == '100000000000000000042'
+    assert str(returned_nested_helper) == '100000000000000000001'
     oversized_local: int = BIG_LIMIT + LIMIT
     assert str(oversized_local) == '100000000000000000254'
     chained_oversized_local: int = oversized_local + 2
