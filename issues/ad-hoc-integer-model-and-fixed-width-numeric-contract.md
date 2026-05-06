@@ -407,6 +407,7 @@ Validation:
 - [x] INT-2B cross-module const fitting review satisfied: `reviews/integer-model-int-2b-cross-module-const-fitting-review-pass-1b.md`.
 - [x] INT-2B `bigint` warning coverage review pass 1 completed with duplicate-warning/test-coverage blockers: `reviews/integer-model-int-2b-bigint-warning-coverage-review-pass-1.md`.
 - [x] INT-2B `bigint` warning coverage review pass 2 satisfied after addressing blockers: `reviews/integer-model-int-2b-bigint-warning-coverage-review-pass-2.md`.
+- [x] INT-2B `bigint(...)` constructor warning review satisfied: `reviews/integer-model-int-2b-bigint-constructor-warning-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -426,7 +427,8 @@ Validation:
   - [x] Same-module fixed-width const expression fitting covers integer arithmetic, shifts, non-negative exponentiation, parentheses, immutable module constants, shadowing-safe name lookup, over-budget diagnostics, and no implicit narrowing outside assignment/module-constant surfaces; review is satisfied and quick validation is passing: PR #1798.
   - [x] Imported immutable module constants carry const-evaluable integer values through the project frontend/export API, including alias-aware fitting and shadowing-safe rejection; review is satisfied and quick validation is passing: PR #1799.
   - [x] `SIFR-INT-0011` transition warning coverage includes `isinstance(..., bigint)`, TypeVar bounds/constraints, PEP 695 function/class bounds, and class-bound single-emission behavior; review is satisfied and quick validation is passing: PR #1800.
-  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, decide reserved-name shadowing policy during `bigint` cleanup, decide whether `bigint(...)` constructor calls should warn before public `bigint` removal, clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable, decide whether stdlib bootstrap exports should populate `constant_integer_values`, and document or implement transitive re-export semantics for imported constants.
+  - [x] `bigint(...)` constructor calls now emit `SIFR-INT-0011` transition warnings, with constructor-only coverage and annotation-only warning coverage preserved; review is satisfied and quick validation is passing: PR #1801.
+  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, decide reserved-name shadowing policy during `bigint` cleanup, clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable, decide whether stdlib bootstrap exports should populate `constant_integer_values`, and document or implement transitive re-export semantics for imported constants.
 - [ ] INT-3 scalar arithmetic and numeric mixing
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
