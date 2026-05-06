@@ -415,6 +415,7 @@ Validation:
 - [x] INT-2B reserved-width shadowing policy documentation review satisfied: `reviews/integer-model-int-2b-reserved-width-shadowing-policy-review-pass-1.md`.
 - [x] INT-2B fixed-width fail fixture marker cleanup review satisfied: `reviews/integer-model-int-2b-fixed-width-fail-fixture-markers-review-pass-1.md`.
 - [x] INT-2B module const/fixed-width fallback cleanup review pass 4 satisfied after addressing pass 2 and pass 3 blockers: `reviews/integer-model-int-2b-module-const-fallback-cleanup-review-pass-4.md`.
+- [x] INT-2B milestone closure review pass 1 found the milestone ready to close with non-blocking follow-ups: `reviews/integer-model-int-2b-milestone-closure-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -428,7 +429,7 @@ Validation:
   - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.
   - [x] Default-argument large-literal parity and negative-large-literal unary coverage implemented, review satisfied, and quick validation passing: PR #1793.
   - [x] Malformed integer token text has typed parser diagnostic coverage, over-budget integer literals emit `SIFR-INT-0004`, parsed/constructed HIR parity is covered, review is satisfied, and quick validation is passing: PR #1794.
-- [ ] INT-2B HIR, type system, and const fitting
+- [x] INT-2B HIR, type system, and const fitting
   - [x] Fixed-width signed, unsigned, and pointer-sized integer annotations resolve in compiler-owned type layers, nested reserved-width annotation coverage was broadened, review is satisfied, and quick validation is passing: PR #1795.
   - [x] Direct fixed-width const literal fitting accepts fitting annotated assignments/module constants, rejects out-of-range initializers with `SIFR-INT-0001`, preserves non-const/call narrowing rejections, emits suffixed Rust literals, review is satisfied, and quick validation is passing: PR #1796.
   - [x] `bigint` annotations emit warning-only `SIFR-INT-0011` transition diagnostics while preserving the temporary `Type::BigInt` path, review is satisfied, and quick validation is passing: PR #1797.
@@ -444,6 +445,7 @@ Validation:
   - [x] Fixed-width const-expression fail fixture markers are canonical top-level `expect-error` entries, so the e2e fail harness now enforces `SIFR-INT-0001` and `SIFR-INT-0004` columns; review is satisfied and quick validation is passing: PR #1812.
   - [x] Module constant integer fallback paths now preserve budget diagnostics for over-budget module `int`/fixed-width constants, support same-module `int` const reuse through names/unary/binops, reject mixed fixed-width-to-`int` const reuse before codegen, and smoke-test the new codegen shapes; review is satisfied and quick validation is passing: PR #1814.
 - [ ] INT-3 scalar arithmetic and numeric mixing
+  - [ ] Add hardening tests that keep implicit `int`-to-fixed-width narrowing rejected in returns, list literals, dict literals, and generic specialization as scalar arithmetic and numeric mixing evolve.
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
 - [ ] INT-6A dtype contract lock
