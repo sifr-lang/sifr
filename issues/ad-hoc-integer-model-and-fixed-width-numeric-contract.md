@@ -414,6 +414,7 @@ Validation:
 - [x] INT-2B transitive const re-export semantics documentation review satisfied: `reviews/integer-model-int-2b-transitive-reexport-doc-review-pass-1.md`.
 - [x] INT-2B reserved-width shadowing policy documentation review satisfied: `reviews/integer-model-int-2b-reserved-width-shadowing-policy-review-pass-1.md`.
 - [x] INT-2B fixed-width fail fixture marker cleanup review satisfied: `reviews/integer-model-int-2b-fixed-width-fail-fixture-markers-review-pass-1.md`.
+- [x] INT-2B module const/fixed-width fallback cleanup review pass 4 satisfied after addressing pass 2 and pass 3 blockers: `reviews/integer-model-int-2b-module-const-fallback-cleanup-review-pass-4.md`.
 
 ## Implementation Checklist
 
@@ -421,6 +422,7 @@ Validation:
 - [ ] INT-1 runtime `SifrInt` and ownership semantics
   - [x] Wave 1 runtime substrate and generated Cargo dependency plumbing reviewed and quick-validated: PR #1789.
   - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated: PR #1790.
+  - [ ] Wire module-level `int` constants whose in-budget values exceed `i64` through `SifrInt` codegen, removing the current module-constant production panic path tracked by the INT-2B module const/fixed-width fallback cleanup review.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
   - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.
@@ -440,7 +442,7 @@ Validation:
   - [x] Imported const-evaluable status is documented as local to the importing module, with no transitive const-value re-export unless the intermediate module defines its own public const-evaluable constant; review is satisfied and quick validation is passing: PR #1808.
   - [x] Reserved `int128`/`uint128` diagnostics are documented as applying after ordinary annotation name resolution, preserving user-defined type variable, alias, and class shadowing until a future language-wide reserved-identifier policy; review is satisfied and quick validation is passing: PR #1810.
   - [x] Fixed-width const-expression fail fixture markers are canonical top-level `expect-error` entries, so the e2e fail harness now enforces `SIFR-INT-0001` and `SIFR-INT-0004` columns; review is satisfied and quick validation is passing: PR #1812.
-  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable.
+  - [x] Module constant integer fallback paths now preserve budget diagnostics for over-budget module `int`/fixed-width constants, support same-module `int` const reuse through names/unary/binops, reject mixed fixed-width-to-`int` const reuse before codegen, and smoke-test the new codegen shapes; review is satisfied and quick validation is passing: PR #1814.
 - [ ] INT-3 scalar arithmetic and numeric mixing
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
