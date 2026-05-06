@@ -1,0 +1,4 @@
+# expect-error[col=12]: SIFR-INT-0003
+
+def main():
+    value: int128 = 0
