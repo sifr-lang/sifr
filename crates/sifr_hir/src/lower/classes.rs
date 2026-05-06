@@ -4,7 +4,7 @@ use crate::hir_nodes::{
 };
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_python_ast::{Expr, Number, Stmt, StmtClassDef, UnaryOp};
+use sifr_python_ast::{Expr, Stmt, StmtClassDef};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::HashMap;
 
@@ -13,8 +13,8 @@ use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
     is_error_class, is_operator_dunder, is_protocol_class,
 };
-use super::integer_literals::canonical_large_int_literal_text;
 use super::protocol_diagnostics;
+use super::simple_expr::lower_expr_simple;
 use super::statements::lower_stmts;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{parse_typevar_bound_expr, LowerCtx};
@@ -1239,153 +1239,5 @@ pub(super) fn collect_literal_coverage(
             }
             _ => {}
         }
-    }
-}
-
-/// Lower a simple expression (literal values only) without requiring a full `LowerCtx`.
-/// Used for collecting default parameter values in the first pass.
-pub(super) fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
-    match expr {
-        Expr::NumberLiteral(num) => match &num.value {
-            Number::Int(i) => {
-                if let Some(value) = i.as_i64() {
-                    Some(HirExpr::IntLiteral(value))
-                } else {
-                    Some(HirExpr::LargeIntLiteral(canonical_large_int_literal_text(
-                        i,
-                    )))
-                }
-            }
-            Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
-            Number::Complex { .. } => None,
-        },
-        Expr::StringLiteral(s) => Some(HirExpr::StringLiteral(s.value.to_str().to_string())),
-        Expr::BytesLiteral(bytes) => {
-            let mut elements = Vec::new();
-            for part in &bytes.value {
-                for value in part.as_slice() {
-                    elements.push(HirExpr::IntLiteral(i64::from(*value)));
-                }
-            }
-            Some(HirExpr::ListLiteral {
-                elements,
-                ty: Type::Bytes,
-            })
-        }
-        Expr::BooleanLiteral(b) => Some(HirExpr::BoolLiteral(b.value)),
-        Expr::NoneLiteral(_) => Some(HirExpr::NoneLiteral),
-        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::USub) => {
-            // Handle negative literals like -1
-            if let Some(inner) = lower_expr_simple(&unary.operand) {
-                match inner {
-                    HirExpr::IntLiteral(v) => Some(HirExpr::IntLiteral(-v)),
-                    HirExpr::LargeIntLiteral(value) => Some(HirExpr::UnaryOp {
-                        op: "-".to_string(),
-                        operand: Box::new(HirExpr::LargeIntLiteral(value)),
-                        ty: Type::Int,
-                    }),
-                    HirExpr::FloatLiteral(v) => Some(HirExpr::FloatLiteral(-v)),
-                    _ => None,
-                }
-            } else {
-                None
-            }
-        }
-        Expr::List(list) => {
-            let mut elements = Vec::new();
-            let mut elem_ty: Option<Type> = None;
-            for elt in &list.elts {
-                let lowered = lower_expr_simple(elt)?;
-                let lowered_ty = lowered.ty().clone();
-                if let Some(ref expected) = elem_ty {
-                    if !lowered_ty.is_assignable_to(expected) {
-                        return None;
-                    }
-                } else {
-                    elem_ty = Some(lowered_ty);
-                }
-                elements.push(lowered);
-            }
-            Some(HirExpr::ListLiteral {
-                elements,
-                ty: Type::List(Box::new(elem_ty.unwrap_or(Type::Any))),
-            })
-        }
-        Expr::Set(set) => {
-            let mut elements = Vec::new();
-            let mut elem_ty: Option<Type> = None;
-            for elt in &set.elts {
-                let lowered = lower_expr_simple(elt)?;
-                let lowered_ty = lowered.ty().clone();
-                if let Some(ref expected) = elem_ty {
-                    if !lowered_ty.is_assignable_to(expected) {
-                        return None;
-                    }
-                } else {
-                    elem_ty = Some(lowered_ty);
-                }
-                elements.push(lowered);
-            }
-            Some(HirExpr::SetLiteral {
-                elements,
-                ty: Type::Set(Box::new(elem_ty.unwrap_or(Type::Any))),
-            })
-        }
-        Expr::Dict(dict) => {
-            let mut keys = Vec::new();
-            let mut values = Vec::new();
-            let mut key_ty: Option<Type> = None;
-            let mut val_ty: Option<Type> = None;
-
-            for item in &dict.items {
-                let key_expr = item.key.as_ref()?;
-                let lowered_key = lower_expr_simple(key_expr)?;
-                let lowered_val = lower_expr_simple(&item.value)?;
-                let lowered_key_ty = lowered_key.ty().clone();
-                let lowered_val_ty = lowered_val.ty().clone();
-
-                if let Some(ref expected) = key_ty {
-                    if !lowered_key_ty.is_assignable_to(expected) {
-                        return None;
-                    }
-                } else {
-                    key_ty = Some(lowered_key_ty);
-                }
-
-                if let Some(ref expected) = val_ty {
-                    if !lowered_val_ty.is_assignable_to(expected) {
-                        return None;
-                    }
-                } else {
-                    val_ty = Some(lowered_val_ty);
-                }
-
-                keys.push(lowered_key);
-                values.push(lowered_val);
-            }
-
-            Some(HirExpr::DictLiteral {
-                keys,
-                values,
-                ty: Type::Dict(
-                    Box::new(key_ty.unwrap_or(Type::Any)),
-                    Box::new(val_ty.unwrap_or(Type::Any)),
-                ),
-            })
-        }
-        Expr::Tuple(tuple) => {
-            let mut elements = Vec::new();
-            let mut element_types = Vec::new();
-            for elt in &tuple.elts {
-                let lowered = lower_expr_simple(elt)?;
-                element_types.push(lowered.ty().clone());
-                elements.push(lowered);
-            }
-            Some(HirExpr::TupleLiteral {
-                elements,
-                ty: Type::Tuple(element_types),
-            })
-        }
-        _ => None,
     }
 }

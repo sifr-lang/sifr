@@ -55,6 +55,7 @@ mod match_diagnostics;
 mod match_lowering;
 mod method_call_args;
 mod min_max_validation;
+mod module_constants_lowering;
 mod module_function_registry;
 mod mutating_methods;
 mod name_diagnostics;
@@ -81,6 +82,7 @@ mod sequence_guard_updates;
 mod sequence_guards;
 mod sequence_pointers;
 mod sequence_shapes;
+mod simple_expr;
 mod statement_diagnostics;
 #[cfg(test)]
 mod statement_diagnostics_tests;
@@ -94,7 +96,7 @@ mod type_bounds;
 mod type_var_collection;
 mod typevar_annotations;
 mod typing_and_functions;
-use classes::{collect_class_type, lower_class, lower_expr_simple};
+use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
@@ -109,9 +111,7 @@ pub(super) use typevar_annotations::{
     decode_typevar_constraint, encode_typevar_constraint, parse_typevar_bound_expr,
     parse_typevar_declaration_specs,
 };
-use typing_and_functions::{
-    extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
-};
+use typing_and_functions::{extract_function_type, lower_function, register_builtins};
 /// Structured diagnostics produced during HIR lowering.
 #[derive(Debug, Clone)]
 pub struct HirDiagnostic {
@@ -198,6 +198,7 @@ pub(super) struct LowerCtx {
     inferred_binding_hints: Vec<HashMap<String, Type>>,
     empty_collection_hint_adoption: Vec<bool>,
     empty_dict_specializations: HashMap<String, Type>,
+    const_integer_values: HashMap<String, num_bigint::BigInt>,
 }
 impl LowerCtx {
     fn new() -> Self {
@@ -240,6 +241,7 @@ impl LowerCtx {
             inferred_binding_hints: Vec::new(),
             empty_collection_hint_adoption: Vec::new(),
             empty_dict_specializations: HashMap::new(),
+            const_integer_values: HashMap::new(),
         }
     }
     fn warn_arithmetic_overflow_risk(&mut self, operation: &'static str, range: TextRange) {
@@ -1104,45 +1106,7 @@ fn lower_module_impl(
         }
     }
 
-    // Collect module-level constants (annotated assignments at top level)
-    let mut constants = Vec::new();
-    for stmt in stmts {
-        if let Stmt::AnnAssign(ann) = stmt {
-            if let Expr::Name(name) = ann.target.as_ref() {
-                let var_name = name.id.to_string();
-                let ty = resolve_annotation_expr(&ann.annotation, &mut ctx);
-                if let Some(ref value_expr) = ann.value {
-                    if let Some(hir_value) = lower_expr_simple(value_expr) {
-                        fixed_width_fitting::validate_annotated_constant_initializer(
-                            &mut ctx,
-                            &ty,
-                            &hir_value,
-                            value_expr.range(),
-                        );
-                        ctx.scope.define(var_name.clone(), ty.clone());
-                        constants.push((var_name, ty, hir_value));
-                    }
-                }
-            }
-        }
-        // Also handle bare assignments: PI = 3.14 (without annotation)
-        if let Stmt::Assign(assign) = stmt {
-            if assign.targets.len() == 1 {
-                if let Expr::Name(name) = &assign.targets[0] {
-                    let var_name = name.id.to_string();
-                    // Skip TypeVar declarations (already handled)
-                    if ctx.type_vars.contains(&var_name) {
-                        continue;
-                    }
-                    if let Some(hir_value) = lower_expr_simple(&assign.value) {
-                        let ty = hir_value.ty().clone();
-                        ctx.scope.define(var_name.clone(), ty.clone());
-                        constants.push((var_name, ty, hir_value));
-                    }
-                }
-            }
-        }
-    }
+    let constants = module_constants_lowering::collect_module_constants(stmts, &mut ctx);
 
     // Second pass: lower function bodies and class method bodies
     let mut functions = Vec::new();

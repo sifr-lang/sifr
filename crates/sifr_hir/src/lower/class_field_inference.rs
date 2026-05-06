@@ -2,7 +2,7 @@ use sifr_python_ast::{Expr, Operator, Stmt, UnaryOp};
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
-use super::{classes::lower_expr_simple, LowerCtx};
+use super::{simple_expr::lower_expr_simple, LowerCtx};
 
 fn merge_inferred_types(existing: Type, inferred: Type) -> Type {
     if matches!(existing.resolve_alias(), Type::Any | Type::Unknown)

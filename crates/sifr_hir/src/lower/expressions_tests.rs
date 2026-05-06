@@ -1,6 +1,6 @@
 use super::{
-    classes::lower_expr_simple,
     expressions::{lower_named_expr, resolve_method_type},
+    simple_expr::lower_expr_simple,
     LowerCtx,
 };
 use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
@@ -226,9 +226,7 @@ fn test_fixed_width_literal_assignment_fits() {
         panic!("expected second statement to be int8 let");
     };
     assert_eq!(ty, &Type::FixedInt(FixedIntType::I8));
-    assert!(
-        matches!(value, HirExpr::UnaryOp { op, operand, .. } if op == "-" && matches!(operand.as_ref(), HirExpr::IntLiteral(128)))
-    );
+    assert!(matches!(value, HirExpr::IntLiteral(-128)));
 
     let HirStmt::Let { ty, value, .. } = &main_fn.body[2] else {
         panic!("expected third statement to be uint64 let");
@@ -280,6 +278,152 @@ fn test_fixed_width_module_constant_out_of_range_has_int_code() {
 }
 
 #[test]
+fn test_fixed_width_const_expression_assignment_fits_and_folds() {
+    let module = lower_source(
+        "def main() -> uint8:\n    value: uint8 = (1 + 2) * 40 + (20 >> 1)\n    shifted: uint8 = (1 << 6) + (9 // 2) + (9 % 2)\n    signed: int8 = -10 * 5\n    negated: int16 = -(100 + 27)\n    return value\n",
+    )
+    .expect("fitting fixed-width const expression assignment should lower");
+
+    let main_fn = &module.functions[0];
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[0] else {
+        panic!("expected uint8 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::U8));
+    assert!(matches!(value, HirExpr::IntLiteral(130)));
+
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[1] else {
+        panic!("expected shifted uint8 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::U8));
+    assert!(matches!(value, HirExpr::IntLiteral(69)));
+
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[2] else {
+        panic!("expected signed int8 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::I8));
+    assert!(matches!(value, HirExpr::IntLiteral(-50)));
+
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[3] else {
+        panic!("expected negated int16 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::I16));
+    assert!(matches!(value, HirExpr::IntLiteral(-127)));
+}
+
+#[test]
+fn test_fixed_width_const_expression_uses_module_integer_constants() {
+    let module = lower_source(
+        "BASE: int = 250 + 4\n\ndef main() -> uint8:\n    value: uint8 = BASE + 1\n    return value\n",
+    )
+    .expect("module integer constants should participate in const fitting");
+
+    let main_fn = &module.functions[0];
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[0] else {
+        panic!("expected uint8 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::U8));
+    assert!(matches!(value, HirExpr::IntLiteral(255)));
+}
+
+#[test]
+fn test_fixed_width_const_expression_does_not_fold_shadowed_module_constant() {
+    let source = "\
+BASE: int = 254
+
+def main():
+    BASE: int = 100
+    value: uint8 = BASE + 1
+";
+    let errors = lower_source(source)
+        .expect_err("shadowed module constant should not participate in const fitting");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message == "type mismatch: expected 'uint8', got 'int'"
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "value: uint8 = ",
+                    "BASE + 1",
+                ))
+    }));
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != Some(DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE)),
+        "shadowed module constants should not be folded into range diagnostics: {errors:?}"
+    );
+}
+
+#[test]
+fn test_fixed_width_const_expression_out_of_range_has_int_code() {
+    let source = "def main():\n    too_wide: uint8 = 2 ** 8\n";
+    let errors =
+        lower_source(source).expect_err("out-of-range fixed-width const expression should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE)
+            && error.message
+                == "integer value 256 does not fit target type uint8; valid range is 0..=255"
+            && error.primary_range == Some(range_for(source, "2 ** 8"))
+    }));
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != Some(DiagnosticCode::TYPE_MISMATCH)),
+        "range diagnostics should not be followed by generic type mismatches: {errors:?}"
+    );
+}
+
+#[test]
+fn test_fixed_width_const_expression_budget_has_int_code() {
+    let source = "def main():\n    too_large: uint8 = 10 ** 5000\n";
+    let errors =
+        lower_source(source).expect_err("over-budget fixed-width const expression should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED)
+            && error.message
+                == "integer literal exceeds compile-time evaluation budget: 5001 decimal digits (max 4096)"
+            && error.primary_range == Some(range_for(source, "10 ** 5000"))
+    }));
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != Some(DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE)),
+        "over-budget const expressions should not also emit range diagnostics: {errors:?}"
+    );
+}
+
+#[test]
+fn test_fixed_width_over_budget_literal_diagnostic_is_not_duplicated() {
+    let literal = "1".repeat(4097);
+    let source = format!("def main():\n    too_large: uint8 = {literal}\n");
+    let errors =
+        lower_source(&source).expect_err("over-budget fixed-width literal should fail once");
+
+    let budget_errors: Vec<_> = errors
+        .iter()
+        .filter(|error| error.code == Some(DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED))
+        .collect();
+    assert_eq!(
+        budget_errors.len(),
+        1,
+        "over-budget literal should not duplicate diagnostics: {errors:?}"
+    );
+    assert_eq!(
+        budget_errors[0].primary_range,
+        Some(range_for(&source, &literal))
+    );
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != Some(DiagnosticCode::TYPE_MISMATCH)),
+        "already-diagnosed over-budget literals should not emit generic mismatches: {errors:?}"
+    );
+}
+
+#[test]
 fn test_fixed_width_assignment_from_non_const_int_is_still_mismatch() {
     let source = "def main():\n    source: int = 1\n    target: uint8 = source\n";
     let errors = lower_source(source).expect_err("non-const int narrowing should fail");
@@ -289,6 +433,23 @@ fn test_fixed_width_assignment_from_non_const_int_is_still_mismatch() {
             && error.message == "type mismatch: expected 'uint8', got 'int'"
             && error.primary_range
                 == Some(range_for_after_anchor(source, "target: uint8 = ", "source"))
+    }));
+}
+
+#[test]
+fn test_fixed_width_assignment_from_non_const_binop_is_still_mismatch() {
+    let source = "def main():\n    source: int = 1\n    target: uint8 = source + 1\n";
+    let errors = lower_source(source).expect_err("non-const int binop narrowing should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message == "type mismatch: expected 'uint8', got 'int'"
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "target: uint8 = ",
+                    "source + 1",
+                ))
     }));
 }
 

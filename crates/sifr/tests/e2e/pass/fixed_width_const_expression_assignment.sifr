@@ -1,0 +1,15 @@
+BASE: int = 250 + 4
+
+def main() -> None:
+    value: uint8 = BASE + 1
+    mixed: uint8 = (1 + 2) * 40 + (20 >> 1)
+    powered: uint16 = 2 ** 12
+    shifted: uint8 = (1 << 6) + (9 // 2) + (9 % 2)
+    signed: int8 = -10 * 5
+    negated: int16 = -(100 + 27)
+    print(value)
+    print(mixed)
+    print(powered)
+    print(shifted)
+    print(signed)
+    print(negated)
