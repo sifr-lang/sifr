@@ -17,7 +17,12 @@ fn resolve_alias_type(ty: &Type) -> &Type {
 fn is_simple_module_primitive_const_type(ty: &Type) -> bool {
     matches!(
         resolve_alias_type(ty),
-        Type::Int | Type::Float | Type::Bool | Type::LiteralInt(_) | Type::LiteralBool(_)
+        Type::Int
+            | Type::FixedInt(_)
+            | Type::Float
+            | Type::Bool
+            | Type::LiteralInt(_)
+            | Type::LiteralBool(_)
     )
 }
 
@@ -79,9 +84,15 @@ fn try_lower_simple_module_constant_item_result_impl(
     value: &HirExpr,
 ) -> Result<Option<(RustItem, String)>, CodegenError> {
     if is_simple_module_primitive_const_type(ty) {
-        let Some(lowered_value) = try_lower_leaf_or_name_expr_result(value)? else {
-            return Ok(None);
-        };
+        let lowered_value =
+            if let Some(lowered) = crate::fixed_width_literal_expr_for_target(ty, value) {
+                lowered
+            } else {
+                let Some(lowered) = try_lower_leaf_or_name_expr_result(value)? else {
+                    return Ok(None);
+                };
+                lowered
+            };
         let rust_name = name.to_uppercase();
         return Ok(Some((
             RustItem::Const {

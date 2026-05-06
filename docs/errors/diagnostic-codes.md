@@ -64,6 +64,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0012`](SIFR-TYPE-0012.md) | Error | Unsupported expression form. |
 | [`SIFR-TYPE-0901`](SIFR-TYPE-0901.md) | Warning | Integer arithmetic may overflow at runtime. |
 | [`SIFR-TYPE-0902`](SIFR-TYPE-0902.md) | Note | Reveal the inferred static type of an expression. |
+| [`SIFR-INT-0001`](SIFR-INT-0001.md) | Error | Fixed-width integer literal or const expression is out of range. |
 | [`SIFR-INT-0003`](SIFR-INT-0003.md) | Error | Reserved integer width name used before support lands. |
 | [`SIFR-INT-0004`](SIFR-INT-0004.md) | Error | Compile-time integer evaluation budget exceeded. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |

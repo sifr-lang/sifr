@@ -4207,6 +4207,9 @@ fn try_lower_simple_return_stmt(
 }
 
 fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = crate::fixed_width_literal_expr_for_target(ty, value) {
+        return Some(lowered);
+    }
     if is_option_like_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::None));
     }

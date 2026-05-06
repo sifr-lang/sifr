@@ -1,0 +1,6 @@
+# expect-error[col=23]: SIFR-INT-0001
+# expect-error[col=32]: SIFR-INT-0001
+
+def main():
+    too_wide: uint8 = 256
+    negative_unsigned: uint8 = -1
