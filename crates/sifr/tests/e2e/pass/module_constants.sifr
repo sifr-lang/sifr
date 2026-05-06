@@ -130,6 +130,27 @@ def returned_big_from_local_multilevel_recursive_nested_helper() -> int:
         return inner(2)
     return middle()
 
+def returned_big_from_local_multilevel_chained_nested_helper() -> int:
+    big: int = BIG_LIMIT + 1
+    def middle() -> int:
+        def inner() -> int:
+            derived: int = big + 1
+            derived2: int = derived + 1
+            return derived2
+        return inner()
+    return middle()
+
+def returned_big_from_local_multilevel_chained_recursive_nested_helper() -> int:
+    big: int = BIG_LIMIT + 1
+    def middle() -> int:
+        def inner(remaining: int) -> int:
+            derived: int = big + 1
+            if remaining <= 0:
+                return derived
+            return inner(remaining - 1) + 1
+        return inner(2)
+    return middle()
+
 def main():
     assert str(circle_area(5.0)) == '78.53975'
     assert str(MAX_RETRIES) == '3'
@@ -160,6 +181,8 @@ def main():
     returned_local_nested_helper: int = returned_big_from_local_nested_helper()
     returned_local_multilevel_nested_helper: int = returned_big_from_local_multilevel_nested_helper()
     returned_local_multilevel_recursive_nested_helper: int = returned_big_from_local_multilevel_recursive_nested_helper()
+    returned_local_multilevel_chained_nested_helper: int = returned_big_from_local_multilevel_chained_nested_helper()
+    returned_local_multilevel_chained_recursive_nested_helper: int = returned_big_from_local_multilevel_chained_recursive_nested_helper()
     assert str(returned_big) == '100000000000000000001'
     assert str(returned_plus_one) == '100000000000000000002'
     assert str(returned_with_offset) == '100000000000000000003'
@@ -183,6 +206,8 @@ def main():
     assert str(returned_local_nested_helper) == '100000000000000000002'
     assert str(returned_local_multilevel_nested_helper) == '100000000000000000001'
     assert str(returned_local_multilevel_recursive_nested_helper) == '100000000000000000003'
+    assert str(returned_local_multilevel_chained_nested_helper) == '100000000000000000003'
+    assert str(returned_local_multilevel_chained_recursive_nested_helper) == '100000000000000000004'
     oversized_local: int = BIG_LIMIT + LIMIT
     assert str(oversized_local) == '100000000000000000254'
     chained_oversized_local: int = oversized_local + 2
