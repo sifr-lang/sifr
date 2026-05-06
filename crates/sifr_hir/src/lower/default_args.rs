@@ -1,4 +1,4 @@
-use super::{classes::lower_expr_simple, LowerCtx};
+use super::{simple_expr::lower_expr_simple, LowerCtx};
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;

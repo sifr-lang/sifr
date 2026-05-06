@@ -11,11 +11,11 @@ use sifr_type_system::{
 };
 use std::collections::HashMap;
 
-use super::classes::lower_expr_simple;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
 use super::function_flow::{collect_yield_types, infer_function_return_type};
 use super::nonlocal_support::collect_declared_nonlocals;
+use super::simple_expr::lower_expr_simple;
 use super::statements::lower_stmts;
 use super::{substitute_type_vars, LowerCtx};
 

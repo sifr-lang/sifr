@@ -9,7 +9,7 @@ use super::container_literal_specialization::{
 use super::control_flow_conditions::validate_control_flow_condition;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
-use super::fixed_width_fitting::validate_fixed_width_initializer;
+use super::fixed_width_fitting::{validate_fixed_width_initializer, FixedWidthInitializerFit};
 use super::flow_helpers::{expr_to_literal_value, then_body_always_exits};
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::function_flow::infer_function_return_type;
@@ -1056,9 +1056,11 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         let is_int_to_bigint = final_ty == Type::Int && declared_type == Type::BigInt;
         let fixed_width_fit =
             validate_fixed_width_initializer(ctx, &declared_type, &expr, initializer_range);
-        if !is_int_to_bigint
-            && fixed_width_fit.is_none()
-            && !final_ty.is_assignable_to(&declared_type)
+        let fixed_width_not_const = matches!(fixed_width_fit, FixedWidthInitializerFit::NotConst);
+        if let FixedWidthInitializerFit::Fits(folded_expr) = fixed_width_fit {
+            expr = folded_expr;
+        }
+        if !is_int_to_bigint && fixed_width_not_const && !final_ty.is_assignable_to(&declared_type)
         {
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
