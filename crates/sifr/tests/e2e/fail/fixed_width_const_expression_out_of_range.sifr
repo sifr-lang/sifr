@@ -1,3 +1,5 @@
 def main():
-    too_wide: uint8 = 2 ** 8  # expect-error: SIFR-INT-0001 col=23
-    too_large: uint8 = 10 ** 5000  # expect-error: SIFR-INT-0004 col=23
+    # expect-error[col=23]: SIFR-INT-0001
+    too_wide: uint8 = 2 ** 8
+    # expect-error[col=24]: SIFR-INT-0004
+    too_large: uint8 = 10 ** 5000

@@ -105,7 +105,14 @@ pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ct
                 for name in &names {
                     let local = local_name_for(name);
                     if let Some(const_ty) = module_consts.get(name) {
-                        ctx.scope.define(local, const_ty.clone());
+                        ctx.scope.define(local.clone(), const_ty.clone());
+                        if let Some(value) = externals
+                            .constant_integer_values
+                            .get(&module_key)
+                            .and_then(|module_values| module_values.get(name))
+                        {
+                            ctx.const_integer_values.insert(local, value.clone());
+                        }
                     }
                 }
             }

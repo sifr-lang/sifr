@@ -452,6 +452,7 @@ pub struct LoweringResult {
     pub module: HirModule,
     pub function_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
     pub function_varargs: std::collections::HashMap<String, usize>,
+    pub constant_integer_values: std::collections::HashMap<String, num_bigint::BigInt>,
     /// `reveal_type()` diagnostics (informational, printed to stderr)
     pub reveal_types: Vec<RevealTypeDiagnostic>,
     /// Compiler warnings (non-fatal diagnostics)
@@ -470,6 +471,9 @@ pub struct ExternalDefs {
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
     /// Map of `module_name` -> (`constant_name` -> Type)
     pub constants: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
+    /// Map of `module_name` -> (`constant_name` -> compile-time integer value)
+    pub constant_integer_values:
+        std::collections::HashMap<String, std::collections::HashMap<String, num_bigint::BigInt>>,
     /// Set of class names that are error types (class Foo(Error)) across all modules
     pub error_types: std::collections::HashSet<String>,
     /// Map of `module_name` -> (`owner_name` -> (`type_var_name` -> bounds))
@@ -927,7 +931,14 @@ fn lower_module_impl(
                             if let Some(module_consts) = externals.constants.get(&stdlib_module_key)
                             {
                                 if let Some(const_ty) = module_consts.get(name) {
-                                    ctx.scope.define(local, const_ty.clone());
+                                    ctx.scope.define(local.clone(), const_ty.clone());
+                                    if let Some(value) = externals
+                                        .constant_integer_values
+                                        .get(&stdlib_module_key)
+                                        .and_then(|module_values| module_values.get(name))
+                                    {
+                                        ctx.const_integer_values.insert(local, value.clone());
+                                    }
                                     found = true;
                                 }
                             }
@@ -1074,6 +1085,14 @@ fn lower_module_impl(
                     if let Some(module_consts) = externals.constants.get(&module_name) {
                         if let Some(const_ty) = module_consts.get(name) {
                             ctx.scope.define(local.clone(), const_ty.clone());
+                            if let Some(value) = externals
+                                .constant_integer_values
+                                .get(&module_name)
+                                .and_then(|module_values| module_values.get(name))
+                            {
+                                ctx.const_integer_values
+                                    .insert(local.clone(), value.clone());
+                            }
                             found = true;
                         }
                     }
@@ -1144,6 +1163,7 @@ fn lower_module_impl(
             },
             function_defaults: ctx.function_defaults.clone(),
             function_varargs: ctx.vararg_functions.clone(),
+            constant_integer_values: ctx.const_integer_values.clone(),
             reveal_types: ctx.reveal_types,
             warnings: ctx.warnings,
         })
