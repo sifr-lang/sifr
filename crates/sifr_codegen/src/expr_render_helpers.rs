@@ -288,10 +288,21 @@ impl RustEmitter {
                 if is_sifr_int_operand_coercion_op(&op)
                     && (self.is_sifr_int_expr(&left) || self.is_sifr_int_expr(&right))
                 {
+                    let (left, right) = if is_sifr_int_comparison_op(&op) {
+                        (
+                            self.coerce_expr_to_sifr_int_comparison_operand(left),
+                            self.coerce_expr_to_sifr_int_comparison_operand(right),
+                        )
+                    } else {
+                        (
+                            self.coerce_expr_to_sifr_int(left),
+                            self.coerce_expr_to_sifr_int(right),
+                        )
+                    };
                     return crate::RustExpr::BinOp {
-                        left: Box::new(self.coerce_expr_to_sifr_int(left)),
+                        left: Box::new(left),
                         op,
-                        right: Box::new(self.coerce_expr_to_sifr_int(right)),
+                        right: Box::new(right),
                     };
                 }
                 crate::RustExpr::BinOp {
@@ -300,10 +311,18 @@ impl RustEmitter {
                     right: Box::new(right),
                 }
             }
-            crate::RustExpr::UnaryOp { op, operand } => crate::RustExpr::UnaryOp {
-                op,
-                operand: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*operand)),
-            },
+            crate::RustExpr::UnaryOp { op, operand } => {
+                let operand = self.rewrite_stdlib_constant_idents_in_expr(*operand);
+                let operand = if op == "-" && self.is_sifr_int_expr(&operand) {
+                    self.coerce_expr_to_sifr_int(operand)
+                } else {
+                    operand
+                };
+                crate::RustExpr::UnaryOp {
+                    op,
+                    operand: Box::new(operand),
+                }
+            }
             crate::RustExpr::Field { expr, field } => {
                 let rewritten_expr = match expr.as_ref() {
                     crate::RustExpr::Ident(name) if self.is_stdlib_constant(name) => {
@@ -1227,19 +1246,38 @@ impl RustEmitter {
     }
 
     fn coerce_expr_to_sifr_int(&self, expr: crate::RustExpr) -> crate::RustExpr {
-        if self.is_sifr_int_expr(&expr) {
-            return expr;
-        }
         match expr {
+            crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
+                crate::RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(crate::RustExpr::Ident(name)),
+                }
+            }
+            crate::RustExpr::Paren(inner) => {
+                crate::RustExpr::Paren(Box::new(self.coerce_expr_to_sifr_int(*inner)))
+            }
+            other if self.is_sifr_int_expr(&other) => other,
             crate::RustExpr::Cast {
                 expr,
                 ty: crate::RustType::I64,
             } => sifr_int_from_i64_expr(*expr),
-            crate::RustExpr::Paren(inner) => {
-                crate::RustExpr::Paren(Box::new(self.coerce_expr_to_sifr_int(*inner)))
-            }
             other => sifr_int_from_i64_expr(other),
         }
+    }
+
+    fn coerce_expr_to_sifr_int_comparison_operand(&self, expr: crate::RustExpr) -> crate::RustExpr {
+        let coerced = self.coerce_expr_to_sifr_int(expr);
+        if matches!(coerced, crate::RustExpr::Ref { .. }) {
+            return coerced;
+        }
+        crate::RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(coerced),
+        }
+    }
+
+    fn is_registered_sifr_int_local(&self, name: &str) -> bool {
+        self.sifr_int_local_bindings.borrow().contains(name)
     }
 
     fn is_sifr_int_expr(&self, expr: &crate::RustExpr) -> bool {
@@ -1253,12 +1291,13 @@ impl RustEmitter {
                     if string_path_matches(path, &["SifrInt", "from_i64"])
                         || string_path_matches(path, &["sifr_runtime", "SifrInt", "from_i64"])
             ),
-            crate::RustExpr::Ident(name) => self.sifr_int_local_bindings.borrow().contains(name),
+            crate::RustExpr::Ident(name) => self.is_registered_sifr_int_local(name),
             crate::RustExpr::BinOp { left, op, right } if is_sifr_int_arithmetic_op(op) => {
                 self.is_sifr_int_expr(left) || self.is_sifr_int_expr(right)
             }
             crate::RustExpr::UnaryOp { op, operand } if op == "-" => self.is_sifr_int_expr(operand),
             crate::RustExpr::Paren(inner) => self.is_sifr_int_expr(inner),
+            crate::RustExpr::Ref { expr, .. } => self.is_sifr_int_expr(expr),
             _ => false,
         }
     }
@@ -1437,7 +1476,11 @@ mod tests {
             panic!("expected SifrInt local binary expression");
         };
         assert_eq!(op, "+");
-        assert!(matches!(left.as_ref(), RustExpr::Ident(name) if name == "oversized_local"));
+        assert!(matches!(
+            left.as_ref(),
+            RustExpr::Ref { mutable: false, expr }
+                if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "oversized_local")
+        ));
         assert!(matches!(
             right.as_ref(),
             RustExpr::FnCall { func, args }
@@ -1464,15 +1507,60 @@ mod tests {
         assert_eq!(op, ">");
         assert!(matches!(
             left.as_ref(),
-            RustExpr::FnCall { func, args }
-                if args.is_empty()
-                    && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+            RustExpr::Ref { mutable: false, expr }
+                if matches!(
+                    expr.as_ref(),
+                    RustExpr::FnCall { func, args }
+                        if args.is_empty()
+                            && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+                )
         ));
         assert!(matches!(
             right.as_ref(),
-            RustExpr::FnCall { func, args }
-                if args.len() == 1
-                    && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+            RustExpr::Ref { mutable: false, expr }
+                if matches!(
+                    expr.as_ref(),
+                    RustExpr::FnCall { func, args }
+                        if args.len() == 1
+                            && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                )
+        ));
+    }
+
+    #[test]
+    fn rewrites_registered_sifr_int_local_comparison_to_borrowed_operands() {
+        let emitter = emitter_with_large_int_const();
+        let _ = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
+            mutable: false,
+            name: "oversized_local".to_string(),
+            ty: Some(RustType::I64),
+            value: RustExpr::Ident("BIG_LIMIT".to_string()),
+        });
+
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_expr(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("oversized_local".to_string())),
+            op: "<".to_string(),
+            right: Box::new(RustExpr::Ident("BIG_LIMIT".to_string())),
+        });
+
+        let RustExpr::BinOp { left, op, right } = rewritten else {
+            panic!("expected SifrInt local comparison expression");
+        };
+        assert_eq!(op, "<");
+        assert!(matches!(
+            left.as_ref(),
+            RustExpr::Ref { mutable: false, expr }
+                if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "oversized_local")
+        ));
+        assert!(matches!(
+            right.as_ref(),
+            RustExpr::Ref { mutable: false, expr }
+                if matches!(
+                    expr.as_ref(),
+                    RustExpr::FnCall { func, args }
+                        if args.is_empty()
+                            && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+                )
         ));
     }
 }
