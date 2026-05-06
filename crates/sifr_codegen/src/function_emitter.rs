@@ -228,6 +228,9 @@ impl RustEmitter {
             .get(&func.name)
             .cloned()
             .unwrap_or_default();
+        let outer_forced_locals = self.sifr_int_forced_local_bindings.borrow().clone();
+        let sifr_int_captured_forced_locals =
+            collect_sifr_int_captured_forced_locals(func, &outer_forced_locals);
         let sifr_int_recursive_captures = recursive_captures
             .iter()
             .filter_map(|capture| {
@@ -235,6 +238,8 @@ impl RustEmitter {
                     .then(|| capture.name.clone())
             })
             .collect::<HashSet<_>>();
+        let mut sifr_int_nested_capture_bindings = sifr_int_recursive_captures.clone();
+        sifr_int_nested_capture_bindings.extend(sifr_int_captured_forced_locals.iter().cloned());
         let nested_returns_sifr_int = matches!(
             crate::resolve_alias_type_for_plain_call(&func.return_type),
             Type::Int
@@ -242,7 +247,7 @@ impl RustEmitter {
             func,
             &self.module_sifr_int_bindings(),
             &self.sifr_int_function_returns.borrow(),
-            &sifr_int_recursive_captures,
+            &sifr_int_nested_capture_bindings,
         );
         let post_stmt_callable_conventions = {
             let mut conventions = self.callable_var_conventions.clone();
@@ -302,12 +307,15 @@ impl RustEmitter {
         }
         for capture in &recursive_captures {
             self.register_function_scope_binding(&capture.name, &capture.ty, capture.convention);
-            if sifr_int_recursive_captures.contains(&capture.name) {
+            if sifr_int_nested_capture_bindings.contains(&capture.name) {
                 self.sifr_int_local_bindings
                     .borrow_mut()
                     .insert(capture.name.clone());
             }
         }
+        self.sifr_int_local_bindings
+            .borrow_mut()
+            .extend(sifr_int_captured_forced_locals);
         self.register_local_body_binding_types(&func.body);
 
         let mut lowered_body = Vec::new();
