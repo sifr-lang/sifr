@@ -1772,4 +1772,64 @@ mod tests {
                     )
         ));
     }
+
+    #[test]
+    fn rewrites_sifr_int_augassign_registered_source_to_borrowed_operand() {
+        let emitter = RustEmitter::new();
+        emitter
+            .sifr_int_forced_local_bindings
+            .borrow_mut()
+            .insert("total".to_string());
+        emitter
+            .sifr_int_local_bindings
+            .borrow_mut()
+            .insert("source".to_string());
+
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::AugAssign {
+            target: RustExpr::Ident("total".to_string()),
+            op: "+".to_string(),
+            value: RustExpr::Ident("source".to_string()),
+        });
+
+        let RustStmt::Assign { value, .. } = rewritten else {
+            panic!("expected SifrInt augassign rewrite to plain assignment");
+        };
+        assert!(matches!(
+            value,
+            RustExpr::BinOp { right, .. }
+                if matches!(
+                    right.as_ref(),
+                    RustExpr::Ref { mutable: false, expr }
+                        if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "source")
+                )
+        ));
+    }
+
+    #[test]
+    fn rewrites_sifr_int_augassign_for_supported_ops() {
+        for op in ["+", "-", "*"] {
+            let emitter = RustEmitter::new();
+            emitter
+                .sifr_int_forced_local_bindings
+                .borrow_mut()
+                .insert("total".to_string());
+
+            let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::AugAssign {
+                target: RustExpr::Ident("total".to_string()),
+                op: op.to_string(),
+                value: RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(2))),
+                    ty: RustType::I64,
+                },
+            });
+
+            assert!(matches!(
+                rewritten,
+                RustStmt::Assign {
+                    value: RustExpr::BinOp { op: ref rewritten_op, .. },
+                    ..
+                } if rewritten_op == op
+            ));
+        }
+    }
 }
