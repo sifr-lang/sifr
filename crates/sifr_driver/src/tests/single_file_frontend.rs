@@ -253,7 +253,7 @@ fn test_type_check_source_surfaces_unreachable_statement_as_structured_warning()
 
 #[test]
 fn test_type_check_source_surfaces_bigint_transition_warning() {
-    let diagnostics = type_check_source("def main():\n    value: bigint = bigint(1)\n");
+    let diagnostics = type_check_source("def main():\n    value: bigint = 1\n");
 
     assert_eq!(diagnostics.len(), 1);
     let diagnostic = &diagnostics[0];
@@ -279,6 +279,15 @@ fn test_type_check_source_surfaces_bigint_transition_warning() {
     assert_eq!(primary_span.file.as_deref(), Some("main"));
     assert_eq!(primary_span.line, Some(2));
     assert!(primary_span.byte_end > primary_span.byte_start);
+}
+
+#[test]
+fn test_type_check_source_warns_for_bigint_constructor_call() {
+    assert_single_bigint_transition_warning(
+        "def main():\n    value = bigint(1)\n",
+        2,
+        "bigint constructor",
+    );
 }
 
 fn assert_single_bigint_transition_warning(source: &str, line: u32, context: &str) {
