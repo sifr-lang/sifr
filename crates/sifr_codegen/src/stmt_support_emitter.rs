@@ -5291,6 +5291,10 @@ impl RustEmitter {
         capture: &crate::NestedFnCapture,
     ) -> crate::RustExpr {
         let ident = crate::RustExpr::Ident(capture.name.clone());
+        if self.recursive_capture_lowers_to_sifr_int(capture) {
+            let rewritten = self.rewrite_stdlib_constant_idents_in_expr(ident);
+            return self.coerce_expr_to_sifr_int_value(rewritten);
+        }
         if capture.convention.is_mut_borrow() {
             if self.mut_borrowed_params.contains(&capture.name) {
                 return ident;

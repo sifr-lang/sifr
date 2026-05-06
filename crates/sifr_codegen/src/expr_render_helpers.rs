@@ -1337,7 +1337,7 @@ impl RustEmitter {
         }
     }
 
-    fn coerce_expr_to_sifr_int_value(&self, expr: crate::RustExpr) -> crate::RustExpr {
+    pub(super) fn coerce_expr_to_sifr_int_value(&self, expr: crate::RustExpr) -> crate::RustExpr {
         match expr {
             crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
                 crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(name)))
@@ -1375,11 +1375,11 @@ impl RustEmitter {
         }
     }
 
-    fn is_registered_sifr_int_local(&self, name: &str) -> bool {
+    pub(super) fn is_registered_sifr_int_local(&self, name: &str) -> bool {
         self.sifr_int_local_bindings.borrow().contains(name)
     }
 
-    fn is_forced_sifr_int_local(&self, name: &str) -> bool {
+    pub(super) fn is_forced_sifr_int_local(&self, name: &str) -> bool {
         self.sifr_int_forced_local_bindings.borrow().contains(name)
     }
 
