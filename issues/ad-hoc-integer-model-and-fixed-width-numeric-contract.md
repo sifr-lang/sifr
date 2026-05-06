@@ -412,6 +412,7 @@ Validation:
 - [x] INT-2B stdlib constant folding integration coverage review satisfied: `reviews/integer-model-int-2b-stdlib-folding-coverage-review-pass-1.md`.
 - [x] INT-2B `SIFR-INT-0003` registry placement and e2e fail fixture review satisfied: `reviews/integer-model-int-2b-int0003-registry-e2e-review-pass-1.md`.
 - [x] INT-2B transitive const re-export semantics documentation review satisfied: `reviews/integer-model-int-2b-transitive-reexport-doc-review-pass-1.md`.
+- [x] INT-2B reserved-width shadowing policy documentation review satisfied: `reviews/integer-model-int-2b-reserved-width-shadowing-policy-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -436,7 +437,8 @@ Validation:
   - [x] Stdlib fixed-width fitting now has integration coverage proving a real `.sifr` stdlib integer constant (`sifr.logging.DEBUG`) folds through import into a `uint8` initializer; review is satisfied and quick validation is passing: PR #1804.
   - [x] `SIFR-INT-0003` now has a representative e2e fail fixture and the active INT diagnostic rows are ordered after DECIMAL and before CALL to match family ordering; review is satisfied and quick validation is passing: PR #1806.
   - [x] Imported const-evaluable status is documented as local to the importing module, with no transitive const-value re-export unless the intermediate module defines its own public const-evaluable constant; review is satisfied and quick validation is passing: PR #1808.
-  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: decide reserved-name shadowing policy during `bigint` cleanup and clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable.
+  - [x] Reserved `int128`/`uint128` diagnostics are documented as applying after ordinary annotation name resolution, preserving user-defined type variable, alias, and class shadowing until a future language-wide reserved-identifier policy; review is satisfied and quick validation is passing: PR #1810.
+  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable.
 - [ ] INT-3 scalar arithmetic and numeric mixing
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
