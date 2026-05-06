@@ -166,7 +166,7 @@ fn lower_expr_simple_inner(expr: &Expr, allow_integer_binop: bool) -> Option<Hir
     }
 }
 
-fn negate_simple_expr(expr: HirExpr) -> Option<HirExpr> {
+pub(super) fn negate_simple_expr(expr: HirExpr) -> Option<HirExpr> {
     match expr {
         HirExpr::IntLiteral(value) => Some(HirExpr::IntLiteral(-value)),
         HirExpr::LargeIntLiteral(value) => Some(HirExpr::UnaryOp {
@@ -179,7 +179,7 @@ fn negate_simple_expr(expr: HirExpr) -> Option<HirExpr> {
     }
 }
 
-fn integer_binop_source(op: Operator) -> Option<&'static str> {
+pub(super) fn integer_binop_source(op: Operator) -> Option<&'static str> {
     match op {
         Operator::Add => Some("+"),
         Operator::Sub => Some("-"),

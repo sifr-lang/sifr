@@ -1,9 +1,11 @@
 use crate::HirExpr;
 use ruff_text_size::Ranged;
-use sifr_python_ast::{Expr, Stmt};
+use sifr_python_ast::{Expr, Stmt, UnaryOp};
 use sifr_type_system::Type;
 
-use super::simple_expr::lower_integer_const_expr_simple;
+use super::simple_expr::{
+    integer_binop_source, lower_integer_const_expr_simple, negate_simple_expr,
+};
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{fixed_width_fitting, LowerCtx};
 
@@ -33,7 +35,7 @@ fn collect_annotated_constant(
     let Some(ref value_expr) = ann.value else {
         return;
     };
-    let Some(mut hir_value) = lower_integer_const_expr_simple(value_expr) else {
+    let Some(mut hir_value) = lower_module_integer_const_expr(value_expr, ctx) else {
         return;
     };
 
@@ -78,7 +80,7 @@ fn collect_bare_constant(
     if ctx.type_vars.contains(&var_name) {
         return;
     }
-    let Some(hir_value) = lower_integer_const_expr_simple(&assign.value) else {
+    let Some(hir_value) = lower_module_integer_const_expr(&assign.value, ctx) else {
         return;
     };
 
@@ -91,4 +93,50 @@ fn collect_bare_constant(
     );
     ctx.scope.define(var_name.clone(), ty.clone());
     constants.push((var_name, ty, hir_value));
+}
+
+fn lower_module_integer_const_expr(expr: &Expr, ctx: &LowerCtx) -> Option<HirExpr> {
+    match expr {
+        Expr::Name(name) if ctx.const_integer_values.contains_key(name.id.as_str()) => {
+            let scope_ty = &ctx.scope.lookup(name.id.as_str())?.ty;
+            if !matches!(scope_ty, Type::Int) {
+                return None;
+            }
+            Some(HirExpr::Name {
+                name: name.id.to_string(),
+                ty: Type::Int,
+            })
+        }
+        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::UAdd) => {
+            lower_module_integer_const_expr(&unary.operand, ctx)
+        }
+        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::USub) => {
+            let operand = lower_module_integer_const_expr(&unary.operand, ctx)?;
+            negate_module_integer_const_expr(operand)
+        }
+        Expr::BinOp(binop) => {
+            let left = lower_module_integer_const_expr(&binop.left, ctx)?;
+            let right = lower_module_integer_const_expr(&binop.right, ctx)?;
+            if !matches!(left.ty(), Type::Int) || !matches!(right.ty(), Type::Int) {
+                return None;
+            }
+            Some(HirExpr::BinOp {
+                left: Box::new(left),
+                op: integer_binop_source(binop.op)?.to_string(),
+                right: Box::new(right),
+                ty: Type::Int,
+            })
+        }
+        _ => lower_integer_const_expr_simple(expr),
+    }
+}
+
+fn negate_module_integer_const_expr(expr: HirExpr) -> Option<HirExpr> {
+    negate_simple_expr(expr.clone()).or_else(|| {
+        matches!(expr.ty(), Type::Int).then(|| HirExpr::UnaryOp {
+            op: "-".to_string(),
+            operand: Box::new(expr),
+            ty: Type::Int,
+        })
+    })
 }

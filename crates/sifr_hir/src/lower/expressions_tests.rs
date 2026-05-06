@@ -396,6 +396,115 @@ fn test_fixed_width_const_expression_budget_has_int_code() {
 }
 
 #[test]
+fn test_module_constant_export_uses_prior_const_name() {
+    let module = lower_source(
+        "BASE: int = 250\nLIMIT: int = BASE + 4\n\ndef main() -> uint8:\n    value: uint8 = LIMIT + 1\n    return value\n",
+    )
+    .expect("module constants should reuse earlier const-evaluable names");
+
+    let main_fn = &module.functions[0];
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[0] else {
+        panic!("expected uint8 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::U8));
+    assert!(matches!(value, HirExpr::IntLiteral(255)));
+}
+
+#[test]
+fn test_module_constant_export_uses_unary_prior_const_name() {
+    let module = lower_source(
+        "BASE: int = 10\nNEGATIVE: int = -(BASE + 3)\n\ndef main() -> int8:\n    value: int8 = NEGATIVE\n    return value\n",
+    )
+    .expect("module constants should reuse earlier const-evaluable names through unary expressions");
+
+    let main_fn = &module.functions[0];
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[0] else {
+        panic!("expected int8 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::I8));
+    assert!(matches!(value, HirExpr::IntLiteral(-13)));
+}
+
+#[test]
+fn test_module_constant_export_does_not_retype_fixed_width_name_as_int() {
+    let module = lower_source(
+        "BASE: uint8 = 250\nLIMIT: int = BASE + 4\n\ndef main():\n    print(\"ok\")\n",
+    )
+    .expect("mixed fixed-width to int module const reuse should stay out of export lowering");
+
+    assert!(
+        module
+            .constants
+            .iter()
+            .any(|(name, ty, value)| name == "BASE"
+                && ty == &Type::FixedInt(FixedIntType::U8)
+                && matches!(value, HirExpr::IntLiteral(250))),
+        "source fixed-width module constant should still be collected"
+    );
+    assert!(
+        module.constants.iter().all(|(name, _, _)| name != "LIMIT"),
+        "module lowering should not synthesize an int-typed name for a fixed-width constant"
+    );
+}
+
+#[test]
+fn test_module_fixed_width_const_expression_budget_has_int_code_once() {
+    let source = "LIMIT: uint8 = 10 ** 5000\n\ndef main():\n    print(\"ok\")\n";
+    let errors = lower_source(source)
+        .expect_err("module fixed-width over-budget const expression should fail");
+
+    let budget_errors: Vec<_> = errors
+        .iter()
+        .filter(|error| error.code == Some(DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED))
+        .collect();
+    assert_eq!(
+        budget_errors.len(),
+        1,
+        "module fixed-width over-budget const expressions should emit one budget diagnostic: {errors:?}"
+    );
+    assert_eq!(
+        budget_errors[0].message,
+        "integer literal exceeds compile-time evaluation budget: 5001 decimal digits (max 4096)"
+    );
+    assert_eq!(
+        budget_errors[0].primary_range,
+        Some(range_for(source, "10 ** 5000"))
+    );
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != Some(DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE)),
+        "over-budget module const expressions should not also emit range diagnostics: {errors:?}"
+    );
+}
+
+#[test]
+fn test_module_int_over_budget_const_expr_stays_hir_diagnostic() {
+    let source = "LIMIT: int = 10 ** 5000\n\ndef main():\n    print(\"ok\")\n";
+    let errors = lower_source(source)
+        .expect_err("module int over-budget const expression should fail in HIR");
+
+    let budget_errors: Vec<_> = errors
+        .iter()
+        .filter(|error| error.code == Some(DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED))
+        .collect();
+    assert_eq!(
+        budget_errors.len(),
+        1,
+        "module int over-budget const expressions should not reach codegen: {errors:?}"
+    );
+    assert_eq!(
+        errors.len(),
+        1,
+        "module int over-budget const expressions should not emit follow-on diagnostics: {errors:?}"
+    );
+    assert_eq!(
+        budget_errors[0].primary_range,
+        Some(range_for(source, "10 ** 5000"))
+    );
+}
+
+#[test]
 fn test_fixed_width_over_budget_literal_diagnostic_is_not_duplicated() {
     let literal = "1".repeat(4097);
     let source = format!("def main():\n    too_large: uint8 = {literal}\n");
