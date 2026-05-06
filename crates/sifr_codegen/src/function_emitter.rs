@@ -1202,7 +1202,7 @@ fn collect_sifr_int_captured_shadowed_module_bindings(
     func: &HirFunction,
     outer_shadowed_module_bindings: &HashSet<String>,
 ) -> HashSet<String> {
-    collect_captured_outer_names(func, outer_shadowed_module_bindings)
+    collect_captured_outer_names_transitively(func, outer_shadowed_module_bindings)
 }
 
 fn collect_captured_outer_names(
@@ -1227,6 +1227,44 @@ fn collect_captured_outer_names(
             .then_some(name)
         })
         .collect()
+}
+
+fn collect_captured_outer_names_transitively(
+    func: &HirFunction,
+    outer_names: &HashSet<String>,
+) -> HashSet<String> {
+    if outer_names.is_empty() {
+        return HashSet::new();
+    }
+    let param_names = func
+        .params
+        .iter()
+        .map(|param| param.name.clone())
+        .collect::<HashSet<_>>();
+    let locally_defined = collect_locally_defined_vars(&func.body);
+    let shadowed_in_func = param_names
+        .union(&locally_defined)
+        .cloned()
+        .collect::<HashSet<_>>();
+    let visible_outer_names = outer_names
+        .difference(&shadowed_in_func)
+        .cloned()
+        .collect::<HashSet<_>>();
+    if visible_outer_names.is_empty() {
+        return HashSet::new();
+    }
+
+    let mut captured = collect_captured_outer_names(func, &visible_outer_names);
+    for nested in func.body.iter().filter_map(|stmt| match stmt {
+        HirStmt::NestedFunction { func } => Some(func),
+        _ => None,
+    }) {
+        captured.extend(collect_captured_outer_names_transitively(
+            nested,
+            &visible_outer_names,
+        ));
+    }
+    captured
 }
 
 fn collect_sifr_int_forced_locals(
@@ -1404,6 +1442,29 @@ mod tests {
         }
     }
 
+    fn middle_with_inner_returning_name(name: &str) -> HirFunction {
+        HirFunction {
+            name: "middle".to_string(),
+            params: vec![],
+            return_type: Type::Int,
+            body: vec![
+                HirStmt::NestedFunction {
+                    func: helper_returning_name(name),
+                },
+                HirStmt::Return {
+                    value: Some(HirExpr::Call {
+                        func: "helper".to_string(),
+                        args: vec![],
+                        ty: Type::Int,
+                    }),
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }
+    }
+
     #[test]
     fn shadowed_module_const_local_does_not_promote_return_to_sifr_int() {
         let func = regular_int_function(
@@ -1469,6 +1530,38 @@ mod tests {
                 HirStmt::Return {
                     value: Some(HirExpr::Call {
                         func: "helper".to_string(),
+                        args: vec![],
+                        ty: Type::Int,
+                    }),
+                },
+            ],
+        );
+        let module_sifr_int_bindings = HashSet::from(["BIG_LIMIT".to_string()]);
+
+        assert!(!hir_function_returns_sifr_int(
+            &func,
+            &module_sifr_int_bindings,
+            &HashSet::new(),
+        ));
+    }
+
+    #[test]
+    fn multilevel_nested_helper_captures_outer_shadow_without_promoting_return_to_sifr_int() {
+        let func = regular_int_function(
+            vec![],
+            vec![
+                HirStmt::Let {
+                    name: "BIG_LIMIT".to_string(),
+                    ty: Type::Int,
+                    value: HirExpr::IntLiteral(5),
+                    is_mutable: false,
+                },
+                HirStmt::NestedFunction {
+                    func: middle_with_inner_returning_name("BIG_LIMIT"),
+                },
+                HirStmt::Return {
+                    value: Some(HirExpr::Call {
+                        func: "middle".to_string(),
                         args: vec![],
                         ty: Type::Int,
                     }),

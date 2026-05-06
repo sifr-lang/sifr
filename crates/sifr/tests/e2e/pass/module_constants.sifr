@@ -55,6 +55,31 @@ def shadow_exact_module_constant_param_with_nested(BIG_LIMIT: int) -> int:
         return BIG_LIMIT + 1
     return helper()
 
+def shadow_exact_module_constant_with_multilevel_nested_local() -> int:
+    BIG_LIMIT: int = 5
+    def middle() -> int:
+        def inner() -> int:
+            return BIG_LIMIT + 1
+        return inner()
+    return middle()
+
+def shadow_exact_module_constant_with_multilevel_recursive_nested_local() -> int:
+    BIG_LIMIT: int = 5
+    def middle() -> int:
+        def inner(remaining: int) -> int:
+            if remaining <= 0:
+                return BIG_LIMIT + 1
+            return inner(remaining - 1) + 1
+        return inner(2)
+    return middle()
+
+def shadow_exact_module_constant_param_with_multilevel_nested(BIG_LIMIT: int) -> int:
+    def middle() -> int:
+        def inner() -> int:
+            return BIG_LIMIT + 1
+        return inner()
+    return middle()
+
 def returned_big_with_nested_small() -> int:
     def small_inner() -> int:
         return 42
@@ -107,6 +132,9 @@ def main():
     nested_local_shadow: int = shadow_exact_module_constant_with_nested_local()
     recursive_nested_local_shadow: int = shadow_exact_module_constant_with_recursive_nested_local()
     nested_param_shadow: int = shadow_exact_module_constant_param_with_nested(5)
+    multilevel_nested_local_shadow: int = shadow_exact_module_constant_with_multilevel_nested_local()
+    multilevel_recursive_nested_local_shadow: int = shadow_exact_module_constant_with_multilevel_recursive_nested_local()
+    multilevel_nested_param_shadow: int = shadow_exact_module_constant_param_with_multilevel_nested(5)
     returned_nested: int = returned_big_with_nested_small()
     returned_nested_helper: int = returned_big_from_nested_helper()
     returned_recursive_nested_helper: int = returned_big_from_recursive_nested_helper()
@@ -125,6 +153,9 @@ def main():
     assert str(nested_local_shadow) == '6'
     assert str(recursive_nested_local_shadow) == '8'
     assert str(nested_param_shadow) == '6'
+    assert str(multilevel_nested_local_shadow) == '6'
+    assert str(multilevel_recursive_nested_local_shadow) == '8'
+    assert str(multilevel_nested_param_shadow) == '6'
     assert str(returned_nested) == '100000000000000000042'
     assert str(returned_nested_helper) == '100000000000000000001'
     assert str(returned_recursive_nested_helper) == '100000000000000000003'
