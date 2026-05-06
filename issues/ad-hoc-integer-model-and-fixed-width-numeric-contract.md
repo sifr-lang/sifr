@@ -404,6 +404,7 @@ Validation:
 - [x] INT-2B `bigint` transition annotation diagnostic review satisfied: `reviews/integer-model-int-2b-bigint-transition-diagnostic-review-pass-1.md`.
 - [x] INT-2B fixed-width const expression fitting review pass 1c completed with shadowing/diagnostic/test blockers: `reviews/integer-model-int-2b-const-expression-fitting-review-pass-1c.md`.
 - [x] INT-2B fixed-width const expression fitting review pass 2 satisfied after addressing blockers: `reviews/integer-model-int-2b-const-expression-fitting-review-pass-2.md`.
+- [x] INT-2B cross-module const fitting review satisfied: `reviews/integer-model-int-2b-cross-module-const-fitting-review-pass-1b.md`.
 
 ## Implementation Checklist
 
@@ -421,7 +422,8 @@ Validation:
   - [x] Direct fixed-width const literal fitting accepts fitting annotated assignments/module constants, rejects out-of-range initializers with `SIFR-INT-0001`, preserves non-const/call narrowing rejections, emits suffixed Rust literals, review is satisfied, and quick validation is passing: PR #1796.
   - [x] `bigint` annotations emit warning-only `SIFR-INT-0011` transition diagnostics while preserving the temporary `Type::BigInt` path, review is satisfied, and quick validation is passing: PR #1797.
   - [x] Same-module fixed-width const expression fitting covers integer arithmetic, shifts, non-negative exponentiation, parentheses, immutable module constants, shadowing-safe name lookup, over-budget diagnostics, and no implicit narrowing outside assignment/module-constant surfaces; review is satisfied and quick validation is passing: PR #1798.
-  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, decide reserved-name shadowing policy during `bigint` cleanup, add `SIFR-INT-0011` coverage for silent `bigint` mentions in `isinstance` and TypeVar bounds if they remain before removal, clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable, convert inline fixed-width const-expression e2e fail comments to canonical leading `expect-error` annotations if those codes need e2e enforcement, and revisit module-level `int` over-budget remember-path behavior during cross-module const propagation.
+  - [x] Imported immutable module constants carry const-evaluable integer values through the project frontend/export API, including alias-aware fitting and shadowing-safe rejection; review is satisfied and quick validation is passing: PR #1799.
+  - [ ] Carry remaining follow-ups from INT-2A/INT-2B reviews: align `SIFR-INT-0003` registry table placement with future INT entries, add an e2e fail fixture, decide reserved-name shadowing policy during `bigint` cleanup, add `SIFR-INT-0011` coverage for silent `bigint` mentions in `isinstance` and TypeVar bounds if they remain before removal, clean up fixed-width diagnostic formatting/fallback paths as those code paths become reachable, decide whether stdlib bootstrap exports should populate `constant_integer_values`, and document or implement transitive re-export semantics for imported constants.
 - [ ] INT-3 scalar arithmetic and numeric mixing
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
