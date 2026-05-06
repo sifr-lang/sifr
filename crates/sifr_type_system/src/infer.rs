@@ -1,6 +1,6 @@
 //! Type inference for Sifr expressions.
 
-use crate::types::Type;
+use crate::types::{FixedIntType, Type};
 
 /// Infer the type of a literal value from its string representation and kind.
 pub fn infer_literal_type(kind: LiteralKind) -> Type {
@@ -27,6 +27,16 @@ pub enum LiteralKind {
 pub fn resolve_type_annotation(name: &str) -> Option<Type> {
     match name {
         "int" => Some(Type::Int),
+        "int8" => Some(Type::FixedInt(FixedIntType::I8)),
+        "int16" => Some(Type::FixedInt(FixedIntType::I16)),
+        "int32" => Some(Type::FixedInt(FixedIntType::I32)),
+        "int64" => Some(Type::FixedInt(FixedIntType::I64)),
+        "uint8" => Some(Type::FixedInt(FixedIntType::U8)),
+        "uint16" => Some(Type::FixedInt(FixedIntType::U16)),
+        "uint32" => Some(Type::FixedInt(FixedIntType::U32)),
+        "uint64" => Some(Type::FixedInt(FixedIntType::U64)),
+        "isize" => Some(Type::FixedInt(FixedIntType::ISize)),
+        "usize" => Some(Type::FixedInt(FixedIntType::USize)),
         "float" => Some(Type::Float),
         "bool" => Some(Type::Bool),
         "str" => Some(Type::Str),
@@ -61,6 +71,46 @@ mod tests {
     #[test]
     fn test_resolve_type_annotations() {
         assert_eq!(resolve_type_annotation("int"), Some(Type::Int));
+        assert_eq!(
+            resolve_type_annotation("int8"),
+            Some(Type::FixedInt(FixedIntType::I8))
+        );
+        assert_eq!(
+            resolve_type_annotation("int16"),
+            Some(Type::FixedInt(FixedIntType::I16))
+        );
+        assert_eq!(
+            resolve_type_annotation("int32"),
+            Some(Type::FixedInt(FixedIntType::I32))
+        );
+        assert_eq!(
+            resolve_type_annotation("int64"),
+            Some(Type::FixedInt(FixedIntType::I64))
+        );
+        assert_eq!(
+            resolve_type_annotation("uint8"),
+            Some(Type::FixedInt(FixedIntType::U8))
+        );
+        assert_eq!(
+            resolve_type_annotation("uint16"),
+            Some(Type::FixedInt(FixedIntType::U16))
+        );
+        assert_eq!(
+            resolve_type_annotation("uint32"),
+            Some(Type::FixedInt(FixedIntType::U32))
+        );
+        assert_eq!(
+            resolve_type_annotation("uint64"),
+            Some(Type::FixedInt(FixedIntType::U64))
+        );
+        assert_eq!(
+            resolve_type_annotation("isize"),
+            Some(Type::FixedInt(FixedIntType::ISize))
+        );
+        assert_eq!(
+            resolve_type_annotation("usize"),
+            Some(Type::FixedInt(FixedIntType::USize))
+        );
         assert_eq!(resolve_type_annotation("float"), Some(Type::Float));
         assert_eq!(resolve_type_annotation("str"), Some(Type::Str));
         assert_eq!(resolve_type_annotation("bytes"), Some(Type::Bytes));

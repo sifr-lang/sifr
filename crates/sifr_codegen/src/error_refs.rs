@@ -106,6 +106,7 @@ fn collect_type_error_refs(
             collect_type_error_refs(ret, referenced, builtin_error_classes);
         }
         Type::Int
+        | Type::FixedInt(_)
         | Type::Float
         | Type::Bool
         | Type::Str

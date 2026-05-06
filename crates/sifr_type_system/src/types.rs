@@ -4,8 +4,10 @@ use crate::union::make_union;
 /// Represents a type in the Sifr language.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
-    /// 64-bit integer (`int` in Sifr, `i64` in Rust)
+    /// Exact source-level integer (`int` in Sifr).
     Int,
+    /// Explicit fixed-width integer family for representation-sensitive values.
+    FixedInt(FixedIntType),
     /// 64-bit float (`float` in Sifr, `f64` in Rust)
     Float,
     /// Boolean (`bool`)
@@ -111,6 +113,71 @@ pub enum Type {
     Decimal,
     /// Arbitrary-precision decimal (`bigdecimal` in Sifr, `bigdecimal::BigDecimal` in Rust)
     BigDecimal,
+}
+
+/// Explicit fixed-width integer types.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FixedIntType {
+    I8,
+    I16,
+    I32,
+    I64,
+    U8,
+    U16,
+    U32,
+    U64,
+    ISize,
+    USize,
+}
+
+impl FixedIntType {
+    #[must_use]
+    pub const fn source_name(self) -> &'static str {
+        match self {
+            Self::I8 => "int8",
+            Self::I16 => "int16",
+            Self::I32 => "int32",
+            Self::I64 => "int64",
+            Self::U8 => "uint8",
+            Self::U16 => "uint16",
+            Self::U32 => "uint32",
+            Self::U64 => "uint64",
+            Self::ISize => "isize",
+            Self::USize => "usize",
+        }
+    }
+
+    #[must_use]
+    pub const fn rust_name(self) -> &'static str {
+        match self {
+            Self::I8 => "i8",
+            Self::I16 => "i16",
+            Self::I32 => "i32",
+            Self::I64 => "i64",
+            Self::U8 => "u8",
+            Self::U16 => "u16",
+            Self::U32 => "u32",
+            Self::U64 => "u64",
+            Self::ISize => "isize",
+            Self::USize => "usize",
+        }
+    }
+
+    #[must_use]
+    pub const fn variant_prefix(self) -> &'static str {
+        match self {
+            Self::I8 => "Int8",
+            Self::I16 => "Int16",
+            Self::I32 => "Int32",
+            Self::I64 => "Int64",
+            Self::U8 => "Uint8",
+            Self::U16 => "Uint16",
+            Self::U32 => "Uint32",
+            Self::U64 => "Uint64",
+            Self::ISize => "Isize",
+            Self::USize => "Usize",
+        }
+    }
 }
 
 /// Iterator/iterable capabilities carried through typing and lowering.
@@ -446,6 +513,7 @@ impl Type {
     pub fn ownership(&self) -> OwnershipKind {
         match self {
             Self::Int
+            | Self::FixedInt(_)
             | Self::Float
             | Self::Bool
             | Self::None
@@ -500,6 +568,7 @@ impl Type {
     pub fn display_name(&self) -> String {
         match self {
             Self::Int => "int".to_string(),
+            Self::FixedInt(fixed) => fixed.source_name().to_string(),
             Self::Float => "float".to_string(),
             Self::Bool => "bool".to_string(),
             Self::Str => "str".to_string(),
@@ -575,6 +644,7 @@ impl Type {
     pub fn rust_type(&self) -> String {
         match self {
             Self::Int => "i64".to_string(),
+            Self::FixedInt(fixed) => fixed.rust_name().to_string(),
             Self::Float => "f64".to_string(),
             Self::Bool => "bool".to_string(),
             Self::Str => "String".to_string(),
@@ -726,6 +796,7 @@ impl Type {
     fn type_to_enum_variant_prefix(ty: &Type) -> String {
         match ty {
             Type::Int => "Int".to_string(),
+            Type::FixedInt(fixed) => fixed.variant_prefix().to_string(),
             Type::Float => "Float".to_string(),
             Type::Bool => "Bool".to_string(),
             Type::Str => "Str".to_string(),
@@ -1335,6 +1406,10 @@ mod tests {
     #[test]
     fn test_ownership_primitives_are_copy() {
         assert_eq!(Type::Int.ownership(), OwnershipKind::Copy);
+        assert_eq!(
+            Type::FixedInt(FixedIntType::U8).ownership(),
+            OwnershipKind::Copy
+        );
         assert_eq!(Type::Float.ownership(), OwnershipKind::Copy);
         assert_eq!(Type::Bool.ownership(), OwnershipKind::Copy);
         assert_eq!(Type::None.ownership(), OwnershipKind::Copy);
@@ -1348,10 +1423,27 @@ mod tests {
     #[test]
     fn test_rust_type_mapping() {
         assert_eq!(Type::Int.rust_type(), "i64");
+        assert_eq!(Type::FixedInt(FixedIntType::I8).rust_type(), "i8");
+        assert_eq!(Type::FixedInt(FixedIntType::I16).rust_type(), "i16");
+        assert_eq!(Type::FixedInt(FixedIntType::I32).rust_type(), "i32");
+        assert_eq!(Type::FixedInt(FixedIntType::I64).rust_type(), "i64");
+        assert_eq!(Type::FixedInt(FixedIntType::U8).rust_type(), "u8");
+        assert_eq!(Type::FixedInt(FixedIntType::U16).rust_type(), "u16");
+        assert_eq!(Type::FixedInt(FixedIntType::U32).rust_type(), "u32");
+        assert_eq!(Type::FixedInt(FixedIntType::U64).rust_type(), "u64");
+        assert_eq!(Type::FixedInt(FixedIntType::ISize).rust_type(), "isize");
+        assert_eq!(Type::FixedInt(FixedIntType::USize).rust_type(), "usize");
         assert_eq!(Type::Float.rust_type(), "f64");
         assert_eq!(Type::Bool.rust_type(), "bool");
         assert_eq!(Type::Str.rust_type(), "String");
         assert_eq!(Type::None.rust_type(), "()");
+    }
+
+    #[test]
+    fn test_fixed_width_type_names_and_union_variants() {
+        let fixed = Type::FixedInt(FixedIntType::U32);
+        assert_eq!(fixed.display_name(), "uint32");
+        assert_eq!(fixed.union_variant_name(), "Uint32");
     }
 
     #[test]
