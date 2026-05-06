@@ -490,6 +490,8 @@ impl RustEmitter {
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
+        let saved_sifr_int_forced_local_bindings =
+            self.sifr_int_forced_local_bindings.borrow().clone();
 
         self.current_return_type = Some(method.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&method.body, &self.func_signatures);
@@ -498,6 +500,7 @@ impl RustEmitter {
         self.callable_var_conventions.clear();
         self.local_binding_types.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
+        self.sifr_int_forced_local_bindings.borrow_mut().clear();
 
         for param in &method.params {
             let effective_convention = if method.name == "new" {
@@ -597,6 +600,7 @@ impl RustEmitter {
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
+        *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
 
         RustItem::Fn {
             name: method.name.clone(),

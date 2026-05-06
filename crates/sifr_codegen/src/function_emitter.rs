@@ -94,6 +94,60 @@ impl RustEmitter {
             self.local_binding_types.entry(name).or_insert(ty);
         }
         self.none_widened_local_bindings.extend(widened_bindings);
+        self.register_sifr_int_forced_local_bindings(body);
+    }
+
+    fn register_sifr_int_forced_local_bindings(&self, body: &[HirStmt]) {
+        let local_int_bindings = self
+            .local_binding_types
+            .iter()
+            .filter_map(|(name, ty)| {
+                matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
+                    .then(|| name.clone())
+            })
+            .collect::<HashSet<_>>();
+        if local_int_bindings.is_empty() {
+            return;
+        }
+
+        let module_sifr_int_bindings = self
+            .module_constants
+            .iter()
+            .filter_map(|(name, (ty, rust_name))| {
+                (matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
+                    && rust_name.ends_with("()"))
+                .then(|| name.clone())
+            })
+            .collect::<HashSet<_>>();
+
+        let mut forced = self.sifr_int_forced_local_bindings.borrow().clone();
+        loop {
+            let before = forced.len();
+            let mut on_stmt = |stmt: &HirStmt| match stmt {
+                HirStmt::Let { name, value, .. } | HirStmt::Assign { name, value }
+                    if local_int_bindings.contains(name)
+                        && hir_expr_needs_sifr_int_storage(
+                            value,
+                            &forced,
+                            &module_sifr_int_bindings,
+                        ) =>
+                {
+                    forced.insert(name.clone());
+                }
+                _ => {}
+            };
+            let mut on_expr = |_expr: &HirExpr| {};
+            traversal::walk_stmts(
+                body,
+                TraversalConfig::LOCAL_SCOPE_ONLY,
+                &mut on_stmt,
+                &mut on_expr,
+            );
+            if forced.len() == before {
+                break;
+            }
+        }
+        *self.sifr_int_forced_local_bindings.borrow_mut() = forced;
     }
 
     pub(super) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
@@ -156,6 +210,8 @@ impl RustEmitter {
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
+        let saved_sifr_int_forced_local_bindings =
+            self.sifr_int_forced_local_bindings.borrow().clone();
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
 
         self.current_return_type = Some(func.return_type.clone());
@@ -165,6 +221,7 @@ impl RustEmitter {
         self.local_binding_types.clear();
         self.none_widened_local_bindings.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
+        self.sifr_int_forced_local_bindings.borrow_mut().clear();
         self.callable_var_conventions
             .clone_from(&post_stmt_callable_conventions);
         for param in &func.params {
@@ -198,6 +255,7 @@ impl RustEmitter {
         self.local_binding_types = saved_local_binding_types;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
+        *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
 
         let lowered_stmt = if is_recursive {
             let params = func
@@ -526,6 +584,8 @@ impl RustEmitter {
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
+        let saved_sifr_int_forced_local_bindings =
+            self.sifr_int_forced_local_bindings.borrow().clone();
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
@@ -535,6 +595,7 @@ impl RustEmitter {
         self.local_binding_types.clear();
         self.none_widened_local_bindings.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
+        self.sifr_int_forced_local_bindings.borrow_mut().clear();
         self.register_function_scope_params(&func.params);
         self.register_local_body_binding_types(&func.body);
 
@@ -636,5 +697,38 @@ impl RustEmitter {
         self.local_binding_types = saved_local_binding_types;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
+        *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
+    }
+}
+
+fn hir_expr_needs_sifr_int_storage(
+    expr: &HirExpr,
+    forced_locals: &HashSet<String>,
+    module_sifr_int_bindings: &HashSet<String>,
+) -> bool {
+    match expr {
+        HirExpr::LargeIntLiteral(_) => true,
+        HirExpr::Name { name, .. } => {
+            forced_locals.contains(name) || module_sifr_int_bindings.contains(name)
+        }
+        HirExpr::BinOp {
+            left,
+            op,
+            right,
+            ty,
+            ..
+        } if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
+            && matches!(op.as_str(), "+" | "-" | "*") =>
+        {
+            hir_expr_needs_sifr_int_storage(left, forced_locals, module_sifr_int_bindings)
+                || hir_expr_needs_sifr_int_storage(right, forced_locals, module_sifr_int_bindings)
+        }
+        HirExpr::UnaryOp { op, operand, ty }
+            if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
+                && matches!(op.as_str(), "+" | "-") =>
+        {
+            hir_expr_needs_sifr_int_storage(operand, forced_locals, module_sifr_int_bindings)
+        }
+        _ => false,
     }
 }
