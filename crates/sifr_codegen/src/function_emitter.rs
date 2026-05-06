@@ -386,6 +386,9 @@ impl RustEmitter {
         }
         self.sifr_int_local_bindings
             .borrow_mut()
+            .extend(sifr_int_captured_forced_locals.iter().cloned());
+        self.sifr_int_forced_local_bindings
+            .borrow_mut()
             .extend(sifr_int_captured_forced_locals);
         self.register_local_body_binding_types(&func.body);
 
@@ -1195,7 +1198,7 @@ fn collect_sifr_int_captured_forced_locals(
     func: &HirFunction,
     outer_forced_locals: &HashSet<String>,
 ) -> HashSet<String> {
-    collect_captured_outer_names(func, outer_forced_locals)
+    collect_captured_outer_names_transitively(func, outer_forced_locals)
 }
 
 fn collect_sifr_int_captured_shadowed_module_bindings(
@@ -1574,6 +1577,23 @@ mod tests {
             &func,
             &module_sifr_int_bindings,
             &HashSet::new(),
+        ));
+    }
+
+    #[test]
+    fn multilevel_nested_helper_captures_forced_local_and_promotes_return_to_sifr_int() {
+        let func = middle_with_inner_returning_name("big");
+        let forced_locals = HashSet::from(["big".to_string()]);
+
+        assert_eq!(
+            collect_sifr_int_captured_forced_locals(&func, &forced_locals),
+            forced_locals
+        );
+        assert!(hir_function_returns_sifr_int_with_extra_forced(
+            &func,
+            &HashSet::new(),
+            &HashSet::new(),
+            &forced_locals,
         ));
     }
 

@@ -112,6 +112,24 @@ def returned_big_from_local_nested_helper() -> int:
         return big + 1
     return helper()
 
+def returned_big_from_local_multilevel_nested_helper() -> int:
+    big: int = BIG_LIMIT + 1
+    def middle() -> int:
+        def inner() -> int:
+            return big + 0
+        return inner()
+    return middle()
+
+def returned_big_from_local_multilevel_recursive_nested_helper() -> int:
+    big: int = BIG_LIMIT + 1
+    def middle() -> int:
+        def inner(remaining: int) -> int:
+            if remaining <= 0:
+                return big + 0
+            return inner(remaining - 1) + 1
+        return inner(2)
+    return middle()
+
 def main():
     assert str(circle_area(5.0)) == '78.53975'
     assert str(MAX_RETRIES) == '3'
@@ -140,6 +158,8 @@ def main():
     returned_recursive_nested_helper: int = returned_big_from_recursive_nested_helper()
     returned_local_recursive_nested_helper: int = returned_big_from_local_recursive_nested_helper()
     returned_local_nested_helper: int = returned_big_from_local_nested_helper()
+    returned_local_multilevel_nested_helper: int = returned_big_from_local_multilevel_nested_helper()
+    returned_local_multilevel_recursive_nested_helper: int = returned_big_from_local_multilevel_recursive_nested_helper()
     assert str(returned_big) == '100000000000000000001'
     assert str(returned_plus_one) == '100000000000000000002'
     assert str(returned_with_offset) == '100000000000000000003'
@@ -161,6 +181,8 @@ def main():
     assert str(returned_recursive_nested_helper) == '100000000000000000003'
     assert str(returned_local_recursive_nested_helper) == '100000000000000000003'
     assert str(returned_local_nested_helper) == '100000000000000000002'
+    assert str(returned_local_multilevel_nested_helper) == '100000000000000000001'
+    assert str(returned_local_multilevel_recursive_nested_helper) == '100000000000000000003'
     oversized_local: int = BIG_LIMIT + LIMIT
     assert str(oversized_local) == '100000000000000000254'
     chained_oversized_local: int = oversized_local + 2
