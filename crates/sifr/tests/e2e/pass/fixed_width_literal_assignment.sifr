@@ -1,0 +1,16 @@
+def byte_value() -> uint8:
+    value: uint8 = 255
+    return value
+
+def signed_value() -> int8:
+    value: int8 = -128
+    return value
+
+def wide_value() -> uint64:
+    value: uint64 = 18446744073709551615
+    return value
+
+def main():
+    print(byte_value())
+    print(signed_value())
+    print(wide_value())

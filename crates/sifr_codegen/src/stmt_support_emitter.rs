@@ -294,6 +294,9 @@ impl RustEmitter {
         } else {
             value.ty()
         };
+        if let Some(coerced) = crate::fixed_width_literal_expr_for_target(target_ty, value) {
+            return Ok(coerced);
+        }
         Ok(Self::wrap_option_local_value_for_ir(
             target_ty,
             value,

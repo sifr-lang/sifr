@@ -10,7 +10,7 @@ use sifr_python_ast::{
     AtomicNodeIndex, Expr, ExprNamed, ExprNoneLiteral, ExprNumberLiteral, Int, Number,
 };
 use sifr_python_parser::parse_module;
-use sifr_type_system::{FunctionType, Type};
+use sifr_type_system::{FixedIntType, FunctionType, Type};
 
 fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     let parsed = parse_module(source).expect("parse failed");
@@ -206,6 +206,104 @@ fn test_type_mismatch_error() {
     assert!(errors.iter().any(|e| e.message.contains("type mismatch")
         && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
         && e.primary_range == Some(range_for(source, "\"hello\""))));
+}
+
+#[test]
+fn test_fixed_width_literal_assignment_fits() {
+    let module = lower_source(
+        "def main() -> uint8:\n    value: uint8 = 255\n    signed: int8 = -128\n    wide: uint64 = 18446744073709551615\n    return value\n",
+    )
+    .expect("fitting fixed-width literal assignments should lower");
+
+    let main_fn = &module.functions[0];
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[0] else {
+        panic!("expected first statement to be uint8 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::U8));
+    assert!(matches!(value, HirExpr::IntLiteral(255)));
+
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[1] else {
+        panic!("expected second statement to be int8 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::I8));
+    assert!(
+        matches!(value, HirExpr::UnaryOp { op, operand, .. } if op == "-" && matches!(operand.as_ref(), HirExpr::IntLiteral(128)))
+    );
+
+    let HirStmt::Let { ty, value, .. } = &main_fn.body[2] else {
+        panic!("expected third statement to be uint64 let");
+    };
+    assert_eq!(ty, &Type::FixedInt(FixedIntType::U64));
+    assert!(matches!(value, HirExpr::LargeIntLiteral(value) if value == "18446744073709551615"));
+}
+
+#[test]
+fn test_fixed_width_literal_assignment_out_of_range_has_int_code() {
+    let source = "def main():\n    too_wide: uint8 = 256\n    negative_unsigned: uint8 = -1\n    signed_high: int8 = 128\n    signed_low: int8 = -129\n";
+    let errors = lower_source(source).expect_err("out-of-range fixed-width literals should fail");
+
+    for (needle, target, min, max, value) in [
+        ("256", "uint8", "0", "255", "256"),
+        ("-1", "uint8", "0", "255", "-1"),
+        ("128", "int8", "-128", "127", "128"),
+        ("-129", "int8", "-128", "127", "-129"),
+    ] {
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE)
+                && error.message
+                    == format!(
+                        "integer value {value} does not fit target type {target}; valid range is {min}..={max}"
+                    )
+                && error.primary_range == Some(range_for(source, needle))
+        }));
+    }
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != Some(DiagnosticCode::TYPE_MISMATCH)),
+        "range diagnostics should not be followed by generic type mismatches: {errors:?}"
+    );
+}
+
+#[test]
+fn test_fixed_width_module_constant_out_of_range_has_int_code() {
+    let source = "LIMIT: uint8 = 255\nTOO_HIGH: uint8 = 256\n\ndef main():\n    print(\"ok\")\n";
+    let errors =
+        lower_source(source).expect_err("out-of-range fixed-width module constant should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE)
+            && error.message
+                == "integer value 256 does not fit target type uint8; valid range is 0..=255"
+            && error.primary_range == Some(range_for(source, "256"))
+    }));
+}
+
+#[test]
+fn test_fixed_width_assignment_from_non_const_int_is_still_mismatch() {
+    let source = "def main():\n    source: int = 1\n    target: uint8 = source\n";
+    let errors = lower_source(source).expect_err("non-const int narrowing should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message == "type mismatch: expected 'uint8', got 'int'"
+            && error.primary_range
+                == Some(range_for_after_anchor(source, "target: uint8 = ", "source"))
+    }));
+}
+
+#[test]
+fn test_fixed_width_call_argument_literal_is_not_implicitly_narrowed() {
+    let source = "def take(value: uint8) -> None:\n    pass\n\ndef main():\n    take(1)\n";
+    let errors = lower_source(source).expect_err("call argument literal narrowing should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("argument 1 ('value') of function 'take'")
+            && error.primary_range == Some(range_for_after_anchor(source, "def main():", "1"))
+    }));
 }
 
 #[test]

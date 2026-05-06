@@ -33,6 +33,27 @@ fn is_compat_stdlib_alias(func: &str) -> bool {
     func.starts_with("__compat_sifr_")
 }
 
+pub fn fixed_width_literal_expr_for_target(target_ty: &Type, value: &HirExpr) -> Option<RustExpr> {
+    let Type::FixedInt(fixed) = crate::resolve_alias_type_for_plain_call(target_ty) else {
+        return None;
+    };
+    let literal = integer_literal_decimal(value)?;
+    Some(RustExpr::Ident(format!("{literal}{}", fixed.rust_name())))
+}
+
+fn integer_literal_decimal(value: &HirExpr) -> Option<String> {
+    match value {
+        HirExpr::IntLiteral(value) => Some(value.to_string()),
+        HirExpr::LargeIntLiteral(value) => Some(value.clone()),
+        HirExpr::UnaryOp { op, operand, .. } if op == "+" => integer_literal_decimal(operand),
+        HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
+            let value = integer_literal_decimal(operand)?;
+            Some(format!("-{value}"))
+        }
+        _ => None,
+    }
+}
+
 fn iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
     match op {
         HirIteratorOp::Iter => "iter",
@@ -1734,6 +1755,35 @@ mod tests {
         assert!(matches!(bool_name_expr, RustExpr::Ident(ref name) if name == "ok"));
         assert!(matches!(none_expr, RustExpr::Literal(RustLiteral::None)));
         assert!(matches!(enum_expr, RustExpr::Path(_)));
+    }
+
+    #[test]
+    fn lowers_fixed_width_literal_for_target_type() {
+        assert_eq!(
+            fixed_width_literal_expr_for_target(
+                &Type::FixedInt(sifr_type_system::FixedIntType::U8),
+                &HirExpr::IntLiteral(255),
+            ),
+            Some(RustExpr::Ident("255u8".to_string()))
+        );
+        assert_eq!(
+            fixed_width_literal_expr_for_target(
+                &Type::FixedInt(sifr_type_system::FixedIntType::I8),
+                &HirExpr::UnaryOp {
+                    op: "-".to_string(),
+                    operand: Box::new(HirExpr::IntLiteral(128)),
+                    ty: Type::Int,
+                },
+            ),
+            Some(RustExpr::Ident("-128i8".to_string()))
+        );
+        assert_eq!(
+            fixed_width_literal_expr_for_target(
+                &Type::FixedInt(sifr_type_system::FixedIntType::U64),
+                &HirExpr::LargeIntLiteral("18446744073709551615".to_string()),
+            ),
+            Some(RustExpr::Ident("18446744073709551615u64".to_string()))
+        );
     }
 
     #[test]

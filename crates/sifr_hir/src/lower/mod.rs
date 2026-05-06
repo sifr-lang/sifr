@@ -32,6 +32,7 @@ mod expression_sum_sorted;
 mod expressions;
 #[cfg(test)]
 mod expressions_tests;
+mod fixed_width_fitting;
 mod flow_diagnostics;
 mod flow_helpers;
 mod for_loop_safety;
@@ -1102,6 +1103,12 @@ fn lower_module_impl(
                 let ty = resolve_annotation_expr(&ann.annotation, &mut ctx);
                 if let Some(ref value_expr) = ann.value {
                     if let Some(hir_value) = lower_expr_simple(value_expr) {
+                        fixed_width_fitting::validate_annotated_constant_initializer(
+                            &mut ctx,
+                            &ty,
+                            &hir_value,
+                            value_expr.range(),
+                        );
                         ctx.scope.define(var_name.clone(), ty.clone());
                         constants.push((var_name, ty, hir_value));
                     }

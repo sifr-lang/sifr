@@ -46,6 +46,7 @@ pub(super) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
 pub(super) fn format_type_name(ty: &Type) -> String {
     match ty {
         Type::Int => "int".to_string(),
+        Type::FixedInt(fixed) => fixed.source_name().to_string(),
         Type::Float => "float".to_string(),
         Type::Str => "str".to_string(),
         Type::Bool => "bool".to_string(),

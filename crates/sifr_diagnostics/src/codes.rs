@@ -59,6 +59,7 @@ impl DiagnosticCode {
     pub const DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID: Self =
         Self::new("SIFR-DECIMAL-0008", Severity::Error);
 
+    pub const INT_FIXED_WIDTH_OUT_OF_RANGE: Self = Self::new("SIFR-INT-0001", Severity::Error);
     pub const INT_RESERVED_WIDTH_NAME: Self = Self::new("SIFR-INT-0003", Severity::Error);
     pub const INT_EVAL_BUDGET_EXCEEDED: Self = Self::new("SIFR-INT-0004", Severity::Error);
 
@@ -739,6 +740,22 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::builtin_calls",
         [arg!("revealed_type")],
         ["revealed_type"]
+    ),
+    active_entry!(
+        "SIFR-INT-0001",
+        "INT",
+        "Fixed-width integer literal or const expression is out of range.",
+        Severity::Error,
+        "crates/sifr_hir/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code",
+        "integer value {value} does not fit target type {target_type}; valid range is {min_value}..={max_value}",
+        "sifr_hir::lower::fixed_width_fitting",
+        [
+            arg!("value"),
+            arg!("target_type"),
+            arg!("min_value"),
+            arg!("max_value")
+        ],
+        ["value", "target_type", "min_value", "max_value"]
     ),
     active_entry!(
         "SIFR-INT-0003",
@@ -1570,6 +1587,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
     DiagnosticCode::DECIMAL_SCALE_INVALID,
     DiagnosticCode::DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID,
+    DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE,
     DiagnosticCode::INT_RESERVED_WIDTH_NAME,
     DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED,
     DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
