@@ -393,6 +393,7 @@ Validation:
 - [x] INT-1 runtime substrate wave 1 review pass 1 completed with blockers: `reviews/integer-model-int-1-runtime-wave-1-review-pass-1.md`.
 - [x] INT-1 runtime substrate wave 1 review pass 2 satisfied after addressing blockers: `reviews/integer-model-int-1-runtime-wave-1-review-pass-2.md`.
 - [x] INT-1 fixed-width conversion substrate wave review satisfied: `reviews/integer-model-int-1-runtime-fixed-width-conversions-review-pass-1b.md`.
+- [x] INT-1 oversized module `int` constant codegen review satisfied: `reviews/integer-model-int-1-large-module-int-codegen-review-pass-1.md`.
 - [x] INT-2A reserved-width diagnostic review pass 1 completed with doc-code normalization blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-1.md`.
 - [x] INT-2A reserved-width diagnostic review pass 2 satisfied after addressing blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-2b.md`.
 - [x] INT-2A large integer literal HIR review pass 1 completed with canonical-representation blocker: `reviews/integer-model-int-2a-large-literal-hir-review-pass-1b.md`.
@@ -423,7 +424,8 @@ Validation:
 - [ ] INT-1 runtime `SifrInt` and ownership semantics
   - [x] Wave 1 runtime substrate and generated Cargo dependency plumbing reviewed and quick-validated: PR #1789.
   - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated: PR #1790.
-  - [ ] Wire module-level `int` constants whose in-budget values exceed `i64` through `SifrInt` codegen, removing the current module-constant production panic path tracked by the INT-2B module const/fixed-width fallback cleanup review.
+  - [x] Module-level `int` constants whose in-budget values exceed `i64` now lower through `SifrInt` helper codegen, removing the current module-constant production panic path tracked by the INT-2B module const/fixed-width fallback cleanup review; review is satisfied and quick validation is passing: PR #1817.
+  - [ ] Wire `int`-typed use sites and arithmetic that reference oversized `SifrInt` module-constant helpers, so expressions like `BIG_LIMIT + 1` no longer fall through to invalid legacy `i64` Rust during the broader `Type::Int` codegen migration.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
   - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.
