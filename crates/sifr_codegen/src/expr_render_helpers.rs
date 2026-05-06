@@ -478,7 +478,7 @@ impl RustEmitter {
                 let (ty, value) = if matches!(ty, Some(crate::RustType::I64))
                     && (value_is_sifr_int || force_sifr_int)
                 {
-                    let value = self.coerce_expr_to_sifr_int(value);
+                    let value = self.coerce_expr_to_sifr_int_value(value);
                     self.sifr_int_local_bindings
                         .borrow_mut()
                         .insert(name.clone());
@@ -523,7 +523,7 @@ impl RustEmitter {
                         self.sifr_int_local_bindings
                             .borrow_mut()
                             .insert(name.clone());
-                        self.coerce_expr_to_sifr_int(value)
+                        self.coerce_expr_to_sifr_int_value(value)
                     }
                     _ => value,
                 };
@@ -1294,6 +1294,33 @@ impl RustEmitter {
         }
     }
 
+    fn coerce_expr_to_sifr_int_value(&self, expr: crate::RustExpr) -> crate::RustExpr {
+        match expr {
+            crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
+                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(name)))
+            }
+            crate::RustExpr::Paren(inner) => {
+                crate::RustExpr::Paren(Box::new(self.coerce_expr_to_sifr_int_value(*inner)))
+            }
+            crate::RustExpr::BinOp { left, op, right }
+                if is_sifr_int_arithmetic_op(&op)
+                    && (self.is_sifr_int_expr(&left) || self.is_sifr_int_expr(&right)) =>
+            {
+                crate::RustExpr::BinOp {
+                    left: Box::new(self.coerce_expr_to_sifr_int(*left)),
+                    op,
+                    right: Box::new(self.coerce_expr_to_sifr_int(*right)),
+                }
+            }
+            other if self.is_sifr_int_expr(&other) => other,
+            crate::RustExpr::Cast {
+                expr,
+                ty: crate::RustType::I64,
+            } => sifr_int_from_i64_expr(*expr),
+            other => sifr_int_from_i64_expr(other),
+        }
+    }
+
     fn coerce_expr_to_sifr_int_comparison_operand(&self, expr: crate::RustExpr) -> crate::RustExpr {
         let coerced = self.coerce_expr_to_sifr_int(expr);
         if matches!(coerced, crate::RustExpr::Ref { .. }) {
@@ -1640,6 +1667,48 @@ mod tests {
             } if name == "total"
                 && args.len() == 1
                 && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+        ));
+    }
+
+    #[test]
+    fn rewrites_sifr_int_value_position_aliases_to_clone() {
+        let emitter = RustEmitter::new();
+        emitter
+            .sifr_int_local_bindings
+            .borrow_mut()
+            .insert("source".to_string());
+        emitter
+            .sifr_int_forced_local_bindings
+            .borrow_mut()
+            .insert("target".to_string());
+
+        let rewritten_let = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
+            mutable: false,
+            name: "target".to_string(),
+            ty: Some(RustType::I64),
+            value: RustExpr::Ident("source".to_string()),
+        });
+        assert!(matches!(
+            rewritten_let,
+            RustStmt::Let {
+                ty: Some(RustType::Named(ref name)),
+                value: RustExpr::Clone(inner),
+                ..
+            } if name == "SifrInt"
+                && matches!(inner.as_ref(), RustExpr::Ident(source) if source == "source")
+        ));
+
+        let rewritten_assign = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Assign {
+            target: RustExpr::Ident("target".to_string()),
+            value: RustExpr::Ident("source".to_string()),
+        });
+        assert!(matches!(
+            rewritten_assign,
+            RustStmt::Assign {
+                target: RustExpr::Ident(ref target),
+                value: RustExpr::Clone(inner),
+            } if target == "target"
+                && matches!(inner.as_ref(), RustExpr::Ident(source) if source == "source")
         ));
     }
 }
