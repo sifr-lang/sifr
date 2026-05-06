@@ -1211,6 +1211,8 @@ struct RustEmitter {
     none_widened_local_bindings: HashSet<String>,
     /// Local names whose generated Rust binding has been promoted from legacy `i64` to `SifrInt`.
     sifr_int_local_bindings: RefCell<HashSet<String>>,
+    /// Local names pre-promoted to `SifrInt` because a later assignment needs exact-int storage.
+    sifr_int_forced_local_bindings: RefCell<HashSet<String>>,
     /// Stack used to capture structured statement emission as IR nodes.
     stmt_capture_stack: Vec<Vec<RustStmt>>,
     /// Recursion guard for non-structured emitter paths.
@@ -1311,6 +1313,7 @@ impl RustEmitter {
             local_binding_types: HashMap::new(),
             none_widened_local_bindings: HashSet::new(),
             sifr_int_local_bindings: RefCell::new(HashSet::new()),
+            sifr_int_forced_local_bindings: RefCell::new(HashSet::new()),
             stmt_capture_stack: Vec::new(),
             lowering_stats: LoweringStats::default(),
         }
@@ -1494,7 +1497,7 @@ impl RustEmitter {
                 }
             };
 
-            self.push_captured_stmt(&RustStmt::Let {
+            let lowered_stmt = RustStmt::Let {
                 mutable: self.mutated_vars.contains(name)
                     || matches!(
                         &effective_ty,
@@ -1507,8 +1510,10 @@ impl RustEmitter {
                     || is_generic_class
                     || match (&effective_ty, value) {
                         (resolved_ty, HirExpr::Call { func, args, .. })
-                            if matches!(resolve_alias_type_for_plain_call(resolved_ty), Type::Set(_))
-                                && func == "set"
+                            if matches!(
+                                resolve_alias_type_for_plain_call(resolved_ty),
+                                Type::Set(_)
+                            ) && func == "set"
                                 && args.is_empty() =>
                         {
                             true
@@ -1520,10 +1525,9 @@ impl RustEmitter {
                                 ..
                             },
                             HirExpr::Call { func, args, .. },
-                        )
-                            if func == alias_name
-                                && args.is_empty()
-                                && alias_name.starts_with("__compat_defaultdict_") =>
+                        ) if func == alias_name
+                            && args.is_empty()
+                            && alias_name.starts_with("__compat_defaultdict_") =>
                         {
                             if let Type::Dict(key_ty, value_ty) = body.resolve_alias() {
                                 matches!(key_ty.as_ref(), Type::Any | Type::Unknown)
@@ -1534,14 +1538,15 @@ impl RustEmitter {
                             }
                         }
                         _ => false,
-                    }
-                {
+                    } {
                     None
                 } else {
                     Some(self.rust_ir_type_with_generics(&effective_ty))
                 },
                 value: lowered_value,
-            });
+            };
+            let lowered_stmt = self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt);
+            self.push_captured_stmt(&lowered_stmt);
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
@@ -1595,10 +1600,12 @@ impl RustEmitter {
             } else {
                 return Ok(false);
             };
-            self.push_captured_stmt(&RustStmt::Assign {
+            let lowered_stmt = RustStmt::Assign {
                 target: RustExpr::Ident(name.clone()),
                 value: lowered_value,
-            });
+            };
+            let lowered_stmt = self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt);
+            self.push_captured_stmt(&lowered_stmt);
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);

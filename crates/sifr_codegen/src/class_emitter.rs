@@ -162,12 +162,15 @@ impl RustEmitter {
         let saved_mutated = self.mutated_vars.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
+        let saved_sifr_int_forced_local_bindings =
+            self.sifr_int_forced_local_bindings.borrow().clone();
 
         self.emission_ctx.in_display_impl = true;
         self.current_return_type = Some(str_func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
         self.local_binding_types.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
+        self.sifr_int_forced_local_bindings.borrow_mut().clear();
         self.register_local_body_binding_types(&str_func.body);
 
         let mut body = Vec::new();
@@ -188,6 +191,7 @@ impl RustEmitter {
         self.mutated_vars = saved_mutated;
         self.local_binding_types = saved_local_binding_types;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
+        *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         body
     }
 
