@@ -61,9 +61,14 @@ impl RustEmitter {
             .insert(name.to_string(), ty.clone());
     }
 
-    fn register_function_scope_params(&mut self, params: &[HirParam]) {
-        for param in params {
+    fn register_function_scope_params(&mut self, func_name: &str, params: &[HirParam]) {
+        for (param_idx, param) in params.iter().enumerate() {
             self.register_function_scope_binding(&param.name, &param.ty, param.convention);
+            if self.function_param_lowers_to_sifr_int(func_name, param_idx) {
+                self.sifr_int_local_bindings
+                    .borrow_mut()
+                    .insert(param.name.clone());
+            }
         }
     }
 
@@ -129,29 +134,68 @@ impl RustEmitter {
     pub(super) fn register_sifr_int_function_returns(&self, module: &HirModule) {
         let module_sifr_int_bindings = self.module_sifr_int_bindings();
         let mut function_returns = HashSet::new();
+        let mut function_params: HashMap<String, HashSet<usize>> = HashMap::new();
+        let module_function_params = module
+            .functions
+            .iter()
+            .map(|func| {
+                (
+                    func.name.clone(),
+                    func.params
+                        .iter()
+                        .map(|param| param.ty.clone())
+                        .collect::<Vec<_>>(),
+                )
+            })
+            .collect::<HashMap<_, _>>();
         loop {
             let before = function_returns.len();
+            let before_params = function_params.values().map(HashSet::len).sum::<usize>();
             let discovered = module
                 .functions
                 .iter()
                 .filter_map(|func| {
+                    let extra_forced_params =
+                        collect_sifr_int_function_param_names(func, &function_params);
                     (matches!(
                         crate::resolve_alias_type_for_plain_call(&func.return_type),
                         Type::Int
-                    ) && hir_function_returns_sifr_int(
+                    ) && hir_function_returns_sifr_int_with_extra_forced(
                         func,
                         &module_sifr_int_bindings,
                         &function_returns,
+                        &extra_forced_params,
                     ))
                     .then(|| func.name.clone())
                 })
                 .collect::<Vec<_>>();
             function_returns.extend(discovered);
-            if function_returns.len() == before {
+            for func in &module.functions {
+                let extra_forced_params =
+                    collect_sifr_int_function_param_names(func, &function_params);
+                let forced = collect_function_sifr_int_forced_locals_with_extra(
+                    func,
+                    &module_sifr_int_bindings,
+                    &function_returns,
+                    &extra_forced_params,
+                );
+                for (name, indexes) in collect_sifr_int_call_arg_function_params(
+                    &func.body,
+                    &module_function_params,
+                    &forced,
+                    &module_sifr_int_bindings,
+                    &function_returns,
+                ) {
+                    function_params.entry(name).or_default().extend(indexes);
+                }
+            }
+            let after_params = function_params.values().map(HashSet::len).sum::<usize>();
+            if function_returns.len() == before && after_params == before_params {
                 break;
             }
         }
         *self.sifr_int_function_returns.borrow_mut() = function_returns;
+        *self.sifr_int_function_params.borrow_mut() = function_params;
     }
 
     fn module_sifr_int_bindings(&self) -> HashSet<String> {
@@ -494,6 +538,23 @@ impl RustEmitter {
         }
     }
 
+    fn lower_module_function_param_type(
+        &self,
+        func_name: &str,
+        param_idx: usize,
+        param: &HirParam,
+    ) -> RustType {
+        if self.function_param_lowers_to_sifr_int(func_name, param_idx)
+            && matches!(
+                crate::resolve_alias_type_for_plain_call(&param.ty),
+                Type::Int
+            )
+        {
+            return RustType::Named("SifrInt".to_string());
+        }
+        self.lower_function_param_type(&param.ty, param.convention)
+    }
+
     fn lower_function_return_type(
         &self,
         func: &HirFunction,
@@ -691,7 +752,7 @@ impl RustEmitter {
             .set(self.function_returns_sifr_int(&func.name));
         let active_function_returns = self.function_sifr_int_returns_for_body(&func.body);
         *self.sifr_int_function_returns.borrow_mut() = active_function_returns;
-        self.register_function_scope_params(&func.params);
+        self.register_function_scope_params(&func.name, &func.params);
         self.register_local_body_binding_types(&func.body);
 
         let visibility = if !test_mode && module_public && func.name != "main" {
@@ -712,8 +773,9 @@ impl RustEmitter {
         let params = func
             .params
             .iter()
-            .map(|param| {
-                let rust_ty = self.lower_function_param_type(&param.ty, param.convention);
+            .enumerate()
+            .map(|(param_idx, param)| {
+                let rust_ty = self.lower_module_function_param_type(&func.name, param_idx, param);
                 if param.convention.is_owned() && param.convention.is_mutable() {
                     RustParam::NamedMut {
                         name: param.name.clone(),
@@ -864,39 +926,19 @@ fn hir_function_returns_sifr_int_with_extra_forced(
     function_sifr_int_returns: &HashSet<String>,
     extra_forced_locals: &HashSet<String>,
 ) -> bool {
+    let forced = collect_function_sifr_int_forced_locals_with_extra(
+        func,
+        module_sifr_int_bindings,
+        function_sifr_int_returns,
+        extra_forced_locals,
+    );
     let mut function_sifr_int_returns = function_sifr_int_returns.clone();
-    let local_int_bindings = func
-        .body
-        .iter()
-        .filter_map(|stmt| match stmt {
-            HirStmt::Let { name, ty, .. }
-                if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int) =>
-            {
-                Some(name.clone())
-            }
-            _ => None,
-        })
-        .collect::<HashSet<_>>();
-    let mut forced;
-    loop {
-        forced = collect_sifr_int_forced_locals(
-            &func.body,
-            &local_int_bindings,
-            module_sifr_int_bindings,
-            &function_sifr_int_returns,
-        );
-        forced.extend(extra_forced_locals.iter().cloned());
-        let before = function_sifr_int_returns.len();
-        function_sifr_int_returns.extend(collect_nested_sifr_int_function_returns(
-            &func.body,
-            module_sifr_int_bindings,
-            &function_sifr_int_returns,
-            &forced,
-        ));
-        if function_sifr_int_returns.len() == before {
-            break;
-        }
-    }
+    function_sifr_int_returns.extend(collect_nested_sifr_int_function_returns(
+        &func.body,
+        module_sifr_int_bindings,
+        &function_sifr_int_returns,
+        &forced,
+    ));
 
     let mut returns_sifr_int = false;
     let mut on_stmt = |stmt: &HirStmt| {
@@ -917,6 +959,104 @@ fn hir_function_returns_sifr_int_with_extra_forced(
         &mut on_expr,
     );
     returns_sifr_int
+}
+
+fn collect_function_sifr_int_forced_locals_with_extra(
+    func: &HirFunction,
+    module_sifr_int_bindings: &HashSet<String>,
+    function_sifr_int_returns: &HashSet<String>,
+    extra_forced_locals: &HashSet<String>,
+) -> HashSet<String> {
+    let mut function_sifr_int_returns = function_sifr_int_returns.clone();
+    let local_int_bindings = func
+        .body
+        .iter()
+        .filter_map(|stmt| match stmt {
+            HirStmt::Let { name, ty, .. }
+                if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int) =>
+            {
+                Some(name.clone())
+            }
+            _ => None,
+        })
+        .collect::<HashSet<_>>();
+    let mut forced;
+    loop {
+        forced = collect_sifr_int_forced_locals_with_seed(
+            &func.body,
+            &local_int_bindings,
+            module_sifr_int_bindings,
+            &function_sifr_int_returns,
+            extra_forced_locals,
+        );
+        let before = function_sifr_int_returns.len();
+        function_sifr_int_returns.extend(collect_nested_sifr_int_function_returns(
+            &func.body,
+            module_sifr_int_bindings,
+            &function_sifr_int_returns,
+            &forced,
+        ));
+        if function_sifr_int_returns.len() == before {
+            break;
+        }
+    }
+    forced
+}
+
+fn collect_sifr_int_function_param_names(
+    func: &HirFunction,
+    function_params: &HashMap<String, HashSet<usize>>,
+) -> HashSet<String> {
+    let Some(indexes) = function_params.get(&func.name) else {
+        return HashSet::new();
+    };
+    func.params
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, param)| indexes.contains(&idx).then(|| param.name.clone()))
+        .collect()
+}
+
+fn collect_sifr_int_call_arg_function_params(
+    body: &[HirStmt],
+    module_function_params: &HashMap<String, Vec<Type>>,
+    forced_locals: &HashSet<String>,
+    module_sifr_int_bindings: &HashSet<String>,
+    function_sifr_int_returns: &HashSet<String>,
+) -> HashMap<String, HashSet<usize>> {
+    let mut discovered: HashMap<String, HashSet<usize>> = HashMap::new();
+    let mut on_stmt = |_stmt: &HirStmt| {};
+    let mut on_expr = |expr: &HirExpr| {
+        let HirExpr::Call { func, args, .. } = expr else {
+            return;
+        };
+        let Some(params) = module_function_params.get(func) else {
+            return;
+        };
+        for (idx, arg) in args.iter().enumerate() {
+            let Some(param_ty) = params.get(idx) else {
+                continue;
+            };
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(param_ty),
+                Type::Int
+            ) && hir_expr_needs_sifr_int_storage(
+                arg,
+                forced_locals,
+                module_sifr_int_bindings,
+                function_sifr_int_returns,
+            ) {
+                discovered.entry(func.clone()).or_default().insert(idx);
+            }
+        }
+    };
+    traversal::walk_stmts(
+        body,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    discovered
 }
 
 fn collect_nested_sifr_int_function_returns(
@@ -1000,7 +1140,23 @@ fn collect_sifr_int_forced_locals(
     module_sifr_int_bindings: &HashSet<String>,
     function_sifr_int_returns: &HashSet<String>,
 ) -> HashSet<String> {
-    let mut forced = HashSet::new();
+    collect_sifr_int_forced_locals_with_seed(
+        body,
+        local_int_bindings,
+        module_sifr_int_bindings,
+        function_sifr_int_returns,
+        &HashSet::new(),
+    )
+}
+
+fn collect_sifr_int_forced_locals_with_seed(
+    body: &[HirStmt],
+    local_int_bindings: &HashSet<String>,
+    module_sifr_int_bindings: &HashSet<String>,
+    function_sifr_int_returns: &HashSet<String>,
+    seed: &HashSet<String>,
+) -> HashSet<String> {
+    let mut forced = seed.clone();
     if local_int_bindings.is_empty() {
         return forced;
     }
