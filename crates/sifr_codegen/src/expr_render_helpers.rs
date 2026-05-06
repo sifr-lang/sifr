@@ -282,11 +282,24 @@ impl RustEmitter {
                     .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
                     .collect(),
             },
-            crate::RustExpr::BinOp { left, op, right } => crate::RustExpr::BinOp {
-                left: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*left)),
-                op,
-                right: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*right)),
-            },
+            crate::RustExpr::BinOp { left, op, right } => {
+                let left = self.rewrite_stdlib_constant_idents_in_expr(*left);
+                let right = self.rewrite_stdlib_constant_idents_in_expr(*right);
+                if is_sifr_int_arithmetic_op(&op)
+                    && (self.is_sifr_int_expr(&left) || self.is_sifr_int_expr(&right))
+                {
+                    return crate::RustExpr::BinOp {
+                        left: Box::new(self.coerce_expr_to_sifr_int(left)),
+                        op,
+                        right: Box::new(self.coerce_expr_to_sifr_int(right)),
+                    };
+                }
+                crate::RustExpr::BinOp {
+                    left: Box::new(left),
+                    op,
+                    right: Box::new(right),
+                }
+            }
             crate::RustExpr::UnaryOp { op, operand } => crate::RustExpr::UnaryOp {
                 op,
                 operand: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*operand)),
@@ -439,12 +452,21 @@ impl RustEmitter {
                 name,
                 ty,
                 value,
-            } => crate::RustStmt::Let {
-                mutable,
-                name,
-                ty,
-                value: self.rewrite_stdlib_constant_idents_in_expr(value),
-            },
+            } => {
+                let value = self.rewrite_stdlib_constant_idents_in_expr(value);
+                let ty =
+                    if matches!(ty, Some(crate::RustType::I64)) && self.is_sifr_int_expr(&value) {
+                        Some(crate::RustType::Named("SifrInt".to_string()))
+                    } else {
+                        ty
+                    };
+                crate::RustStmt::Let {
+                    mutable,
+                    name,
+                    ty,
+                    value,
+                }
+            }
             crate::RustStmt::LetPattern { pattern, value } => crate::RustStmt::LetPattern {
                 pattern,
                 value: self.rewrite_stdlib_constant_idents_in_expr(value),
@@ -1199,6 +1221,54 @@ impl RustEmitter {
 
         crate::RustExpr::Ident(name)
     }
+
+    fn coerce_expr_to_sifr_int(&self, expr: crate::RustExpr) -> crate::RustExpr {
+        if self.is_sifr_int_expr(&expr) {
+            return expr;
+        }
+        match expr {
+            crate::RustExpr::Cast {
+                expr,
+                ty: crate::RustType::I64,
+            } => sifr_int_from_i64_expr(*expr),
+            crate::RustExpr::Paren(inner) => {
+                crate::RustExpr::Paren(Box::new(self.coerce_expr_to_sifr_int(*inner)))
+            }
+            other => sifr_int_from_i64_expr(other),
+        }
+    }
+
+    fn is_sifr_int_expr(&self, expr: &crate::RustExpr) -> bool {
+        match expr {
+            crate::RustExpr::FnCall { func, args } if args.is_empty() => {
+                self.is_sifr_int_module_constant_func(func)
+            }
+            crate::RustExpr::FnCall { func, .. } => matches!(
+                func.as_ref(),
+                crate::RustExpr::Path(path)
+                    if string_path_matches(path, &["SifrInt", "from_i64"])
+                        || string_path_matches(path, &["sifr_runtime", "SifrInt", "from_i64"])
+            ),
+            crate::RustExpr::BinOp { left, op, right } if is_sifr_int_arithmetic_op(op) => {
+                self.is_sifr_int_expr(left) || self.is_sifr_int_expr(right)
+            }
+            crate::RustExpr::UnaryOp { op, operand } if op == "-" => self.is_sifr_int_expr(operand),
+            crate::RustExpr::Paren(inner) => self.is_sifr_int_expr(inner),
+            _ => false,
+        }
+    }
+
+    fn is_sifr_int_module_constant_func(&self, func: &crate::RustExpr) -> bool {
+        let Some(func_name) = rust_expr_identifier_path(func) else {
+            return false;
+        };
+        self.module_constants.values().any(|(ty, rust_name)| {
+            matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
+                && rust_name
+                    .strip_suffix("()")
+                    .is_some_and(|const_func| const_func == func_name)
+        })
+    }
 }
 
 fn parse_module_constant_expr(rust_name: &str) -> Option<crate::RustExpr> {
@@ -1235,4 +1305,99 @@ fn is_ident(name: &str) -> bool {
         _ => return false,
     }
     chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
+}
+
+fn sifr_int_from_i64_expr(expr: crate::RustExpr) -> crate::RustExpr {
+    crate::RustExpr::FnCall {
+        func: Box::new(crate::RustExpr::Path(vec![
+            "SifrInt".to_string(),
+            "from_i64".to_string(),
+        ])),
+        args: vec![expr],
+    }
+}
+
+fn is_sifr_int_arithmetic_op(op: &str) -> bool {
+    matches!(op, "+" | "-" | "*")
+}
+
+fn rust_expr_identifier_path(expr: &crate::RustExpr) -> Option<String> {
+    match expr {
+        crate::RustExpr::Ident(name) => Some(name.clone()),
+        crate::RustExpr::Path(path) => Some(path.join("::")),
+        _ => None,
+    }
+}
+
+fn string_path_matches(path: &[String], expected: &[&str]) -> bool {
+    path.len() == expected.len()
+        && path
+            .iter()
+            .zip(expected)
+            .all(|(segment, expected_segment)| segment == expected_segment)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{RustExpr, RustLiteral, RustStmt, RustType};
+
+    fn emitter_with_large_int_const() -> RustEmitter {
+        let mut emitter = RustEmitter::new();
+        emitter.module_constants.insert(
+            "BIG_LIMIT".to_string(),
+            (Type::Int, "__const_BIG_LIMIT()".to_string()),
+        );
+        emitter
+    }
+
+    #[test]
+    fn rewrites_large_int_module_const_arithmetic_to_sifr_int_operands() {
+        let emitter = emitter_with_large_int_const();
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_expr(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("BIG_LIMIT".to_string())),
+            op: "+".to_string(),
+            right: Box::new(RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                ty: RustType::I64,
+            }),
+        });
+
+        let RustExpr::BinOp { left, op, right } = rewritten else {
+            panic!("expected SifrInt binary expression");
+        };
+        assert_eq!(op, "+");
+        assert!(matches!(
+            left.as_ref(),
+            RustExpr::FnCall { func, args }
+                if args.is_empty()
+                    && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+        ));
+        assert!(matches!(
+            right.as_ref(),
+            RustExpr::FnCall { func, args }
+                if args.len() == 1
+                    && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+        ));
+    }
+
+    #[test]
+    fn rewrites_large_int_module_const_let_type_to_sifr_int() {
+        let emitter = emitter_with_large_int_const();
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
+            mutable: false,
+            name: "x".to_string(),
+            ty: Some(RustType::I64),
+            value: RustExpr::Ident("BIG_LIMIT".to_string()),
+        });
+
+        assert!(matches!(
+            rewritten,
+            RustStmt::Let {
+                ty: Some(RustType::Named(ref name)),
+                value: RustExpr::FnCall { .. },
+                ..
+            } if name == "SifrInt"
+        ));
+    }
 }
