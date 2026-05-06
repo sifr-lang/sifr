@@ -1,4 +1,5 @@
 use crate::HirExpr;
+use num_bigint::BigInt;
 use ruff_text_size::Ranged;
 use sifr_python_ast::{Expr, Stmt, UnaryOp};
 use sifr_type_system::Type;
@@ -51,12 +52,17 @@ fn collect_annotated_constant(
         hir_value = folded_value;
     }
     if ctx.error_count() == error_count_before_initializer {
-        fixed_width_fitting::remember_module_const_integer(
+        let remembered_value = fixed_width_fitting::remember_module_const_integer(
             ctx,
             &var_name,
             &hir_value,
             value_expr.range(),
         );
+        if let Some(folded) =
+            oversized_int_module_constant_literal_for_codegen(&ty, remembered_value.as_ref())
+        {
+            hir_value = folded;
+        }
     }
     ctx.scope.define(var_name.clone(), ty.clone());
     constants.push((var_name, ty, hir_value));
@@ -80,19 +86,38 @@ fn collect_bare_constant(
     if ctx.type_vars.contains(&var_name) {
         return;
     }
-    let Some(hir_value) = lower_module_integer_const_expr(&assign.value, ctx) else {
+    let Some(mut hir_value) = lower_module_integer_const_expr(&assign.value, ctx) else {
         return;
     };
 
     let ty = hir_value.ty().clone();
-    fixed_width_fitting::remember_module_const_integer(
+    let remembered_value = fixed_width_fitting::remember_module_const_integer(
         ctx,
         &var_name,
         &hir_value,
         assign.value.range(),
     );
+    if let Some(folded) =
+        oversized_int_module_constant_literal_for_codegen(&ty, remembered_value.as_ref())
+    {
+        hir_value = folded;
+    }
     ctx.scope.define(var_name.clone(), ty.clone());
     constants.push((var_name, ty, hir_value));
+}
+
+fn oversized_int_module_constant_literal_for_codegen(
+    ty: &Type,
+    value: Option<&BigInt>,
+) -> Option<HirExpr> {
+    if !matches!(ty.resolve_alias(), Type::Int) {
+        return None;
+    }
+    let value = value?;
+    if i64::try_from(value.clone()).is_ok() {
+        return None;
+    }
+    Some(HirExpr::LargeIntLiteral(value.to_str_radix(10)))
 }
 
 fn lower_module_integer_const_expr(expr: &Expr, ctx: &LowerCtx) -> Option<HirExpr> {

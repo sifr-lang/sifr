@@ -2,7 +2,7 @@
 
 use crate::{
     try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustItem, RustLiteral,
-    RustStmt, RustType, Visibility,
+    RustMatchArm, RustStmt, RustType, Visibility,
 };
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
@@ -32,6 +32,10 @@ fn is_simple_module_string_const_type(ty: &Type) -> bool {
 
 fn is_simple_module_none_const_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::None)
+}
+
+fn is_exact_module_int_type(ty: &Type) -> bool {
+    matches!(resolve_alias_type(ty), Type::Int)
 }
 
 pub fn try_lower_simple_module_constant_item_result(
@@ -83,6 +87,10 @@ fn try_lower_simple_module_constant_item_result_impl(
     ty: &Type,
     value: &HirExpr,
 ) -> Result<Option<(RustItem, String)>, CodegenError> {
+    if let Some(decimal_text) = large_module_int_literal_decimal(ty, value) {
+        return Ok(Some(lower_large_module_int_const_item(name, &decimal_text)));
+    }
+
     if is_simple_module_primitive_const_type(ty) {
         let lowered_value =
             if let Some(lowered) = crate::fixed_width_literal_expr_for_target(ty, value) {
@@ -172,16 +180,92 @@ fn try_lower_simple_module_constant_item_result_impl(
     )))
 }
 
+fn large_module_int_literal_decimal(ty: &Type, value: &HirExpr) -> Option<String> {
+    if !is_exact_module_int_type(ty) {
+        return None;
+    }
+    match value {
+        HirExpr::LargeIntLiteral(value) => Some(value.clone()),
+        HirExpr::UnaryOp { op, operand, .. } if op == "+" => {
+            large_module_int_literal_decimal(ty, operand)
+        }
+        HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
+            let value = large_module_int_literal_decimal(ty, operand)?;
+            Some(format!("-{value}"))
+        }
+        _ => None,
+    }
+}
+
+fn sifr_int_parse_decimal_call(decimal_text: &str) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "SifrInt".to_string(),
+            "parse_decimal".to_string(),
+        ])),
+        args: vec![
+            RustExpr::Ident(format!("\"{}\"", decimal_text.escape_default())),
+            RustExpr::Path(vec![
+                "sifr_runtime".to_string(),
+                "DEFAULT_MAX_INTEGER_DIGITS".to_string(),
+            ]),
+        ],
+    }
+}
+
 /// Conservative dispatcher for simple module-constant item lowering.
 pub fn try_lower_simple_module_constant_item(
     name: &str,
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
+    if let Some(decimal_text) = large_module_int_literal_decimal(ty, value) {
+        return Some(lower_large_module_int_const_item(name, &decimal_text));
+    }
     try_lower_simple_module_const_item(name, ty, value)
         .or_else(|| try_lower_simple_module_string_const_item(name, ty, value))
         .or_else(|| try_lower_simple_module_none_const_item(name, ty, value))
         .or_else(|| try_lower_simple_module_helper_const_item(name, ty, value))
+}
+
+fn lower_large_module_int_const_item(name: &str, decimal_text: &str) -> (RustItem, String) {
+    let rust_name = format!("__const_{name}");
+    (
+        RustItem::Fn {
+            name: rust_name.clone(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: Some(RustType::Named("SifrInt".to_string())),
+            body: vec![RustStmt::Match {
+                expr: sifr_int_parse_decimal_call(decimal_text),
+                arms: vec![
+                    RustMatchArm {
+                        pattern: "Ok(value)".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::Return(Some(RustExpr::Ident(
+                            "value".to_string(),
+                        )))],
+                    },
+                    RustMatchArm {
+                        pattern: "Err(err)".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::Expr(RustExpr::FormatMacro {
+                            name: "panic".to_string(),
+                            format_str: format!(
+                                "compiler emitted invalid integer literal for module constant {name}: {{}}"
+                            ),
+                            args: vec![RustExpr::Ident("err".to_string())],
+                        })],
+                    },
+                ],
+            }],
+            is_async: false,
+        },
+        format!("{rust_name}()"),
+    )
 }
 
 /// Conservatively lowers module-level primitive constants via IR.
@@ -389,6 +473,36 @@ mod tests {
                 ..
             } if name == "ANSWER"
         ));
+    }
+
+    #[test]
+    fn dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper() {
+        let (item, rust_name_call) = try_lower_simple_module_constant_item_result(
+            "limit",
+            &Type::Int,
+            &HirExpr::LargeIntLiteral("100000000000000000000".to_string()),
+        )
+        .expect("large exact int module const should validate")
+        .expect("large exact int module const should lower");
+
+        assert_eq!(rust_name_call, "__const_limit()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                ref name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::Named(ref ret)),
+                ..
+            } if name == "__const_limit" && ret == "SifrInt"
+        ));
+
+        let rendered = crate::render_items(&[item]);
+        assert!(rendered.contains("fn __const_limit() -> SifrInt"));
+        assert!(rendered.contains(
+            "SifrInt::parse_decimal(\"100000000000000000000\", sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS)"
+        ));
+        assert!(!rendered.contains(".unwrap("));
+        assert!(!rendered.contains(".expect("));
     }
 
     #[test]

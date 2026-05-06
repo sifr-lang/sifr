@@ -80,10 +80,13 @@ pub(super) fn remember_module_const_integer(
     name: &str,
     value: &HirExpr,
     range: TextRange,
-) {
+) -> Option<BigInt> {
     if let ConstIntegerValue::Value(value) = const_integer_value(ctx, value, range) {
-        ctx.const_integer_values.insert(name.to_string(), value);
+        ctx.const_integer_values
+            .insert(name.to_string(), value.clone());
+        return Some(value);
     }
+    None
 }
 
 enum ConstIntegerValue {

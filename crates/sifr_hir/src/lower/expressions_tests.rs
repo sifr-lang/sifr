@@ -505,6 +505,23 @@ fn test_module_int_over_budget_const_expr_stays_hir_diagnostic() {
 }
 
 #[test]
+fn test_module_int_const_expr_above_i64_folds_to_large_literal_for_codegen() {
+    let module = lower_source("LIMIT: int = 10 ** 20\n\ndef main():\n    print(str(LIMIT))\n")
+        .expect("in-budget oversized module int constant should lower");
+
+    assert!(
+        module
+            .constants
+            .iter()
+            .any(|(name, ty, value)| name == "LIMIT"
+                && ty == &Type::Int
+                && matches!(value, HirExpr::LargeIntLiteral(value) if value == "100000000000000000000")),
+        "oversized exact int module constants should be folded to a canonical large literal for codegen: {:?}",
+        module.constants
+    );
+}
+
+#[test]
 fn test_fixed_width_over_budget_literal_diagnostic_is_not_duplicated() {
     let literal = "1".repeat(4097);
     let source = format!("def main():\n    too_large: uint8 = {literal}\n");
