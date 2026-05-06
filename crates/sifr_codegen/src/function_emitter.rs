@@ -134,6 +134,18 @@ impl RustEmitter {
                 {
                     forced.insert(name.clone());
                 }
+                HirStmt::AugAssign { name, op, value }
+                    if local_int_bindings.contains(name)
+                        && is_sifr_int_augassign_op(op)
+                        && (forced.contains(name)
+                            || hir_expr_needs_sifr_int_storage(
+                                value,
+                                &forced,
+                                &module_sifr_int_bindings,
+                            )) =>
+                {
+                    forced.insert(name.clone());
+                }
                 _ => {}
             };
             let mut on_expr = |_expr: &HirExpr| {};
@@ -731,4 +743,8 @@ fn hir_expr_needs_sifr_int_storage(
         }
         _ => false,
     }
+}
+
+fn is_sifr_int_augassign_op(op: &str) -> bool {
+    matches!(op, "+=" | "-=" | "*=")
 }

@@ -36,6 +36,10 @@ def main():
     assigned_total = assigned_total + reusable_oversized_local
     assigned_total = assigned_total + 2
     assert str(assigned_total) == '100000000000000000003'
+    augmented_total: int = 0
+    augmented_total += reusable_oversized_local
+    augmented_total += 2
+    assert str(augmented_total) == '100000000000000000003'
     alias_reuse: int = reusable_oversized_local
     alias_assign: int = 0
     alias_assign = reusable_oversized_local
