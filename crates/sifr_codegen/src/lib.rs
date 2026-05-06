@@ -63,6 +63,7 @@ pub(crate) use lib_support::{
 };
 use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fmt::Write as _;
@@ -1208,6 +1209,8 @@ struct RustEmitter {
     local_binding_types: HashMap<String, Type>,
     /// Local names widened to `T | None` due `name = None` reassignment in current scope.
     none_widened_local_bindings: HashSet<String>,
+    /// Local names whose generated Rust binding has been promoted from legacy `i64` to `SifrInt`.
+    sifr_int_local_bindings: RefCell<HashSet<String>>,
     /// Stack used to capture structured statement emission as IR nodes.
     stmt_capture_stack: Vec<Vec<RustStmt>>,
     /// Recursion guard for non-structured emitter paths.
@@ -1307,6 +1310,7 @@ impl RustEmitter {
             callable_var_conventions: HashMap::new(),
             local_binding_types: HashMap::new(),
             none_widened_local_bindings: HashSet::new(),
+            sifr_int_local_bindings: RefCell::new(HashSet::new()),
             stmt_capture_stack: Vec::new(),
             lowering_stats: LoweringStats::default(),
         }
