@@ -100,6 +100,8 @@ Runtime-dependent conditionals, function calls, collection lookups, and non-cons
 
 The first compile-time evaluator budget is 4096 decimal digits for any evaluated integer result, plus an implementation-defined operation-count guard to prevent pathological constant expressions from hanging the type checker. Exceeding the budget is a compile-time `SIFR-INT-0004` diagnostic, not a fallback to runtime narrowing. Imported immutable module constants may carry const-evaluable status across module boundaries only when the frontend query layer can prove the imported initializer and its dependency graph are acyclic and within budget.
 
+Const-evaluable import status is local to the importing module. A module may use an imported immutable constant in its own fixed-width fitting checks, but it does not transitively re-export that imported constant's const value with `from other import LIMIT`. Downstream modules must import from the module that defines the constant, or the intermediate module must define its own public immutable constant with a const-evaluable initializer.
+
 ```python
 x: uint8 = 100 + 27       # ok
 y: uint8 = 1 - 2          # compile error
