@@ -63,7 +63,7 @@ pub(crate) use lib_support::{
 };
 use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fmt::Write as _;
@@ -1216,7 +1216,7 @@ struct RustEmitter {
     /// Function names whose generated Rust return type has been promoted from legacy `i64` to `SifrInt`.
     sifr_int_function_returns: RefCell<HashSet<String>>,
     /// Whether the active function-like body returns `SifrInt` for source-level `int`.
-    current_sifr_int_return: bool,
+    current_sifr_int_return: Cell<bool>,
     /// Stack used to capture structured statement emission as IR nodes.
     stmt_capture_stack: Vec<Vec<RustStmt>>,
     /// Recursion guard for non-structured emitter paths.
@@ -1319,7 +1319,7 @@ impl RustEmitter {
             sifr_int_local_bindings: RefCell::new(HashSet::new()),
             sifr_int_forced_local_bindings: RefCell::new(HashSet::new()),
             sifr_int_function_returns: RefCell::new(HashSet::new()),
-            current_sifr_int_return: false,
+            current_sifr_int_return: Cell::new(false),
             stmt_capture_stack: Vec::new(),
             lowering_stats: LoweringStats::default(),
         }
