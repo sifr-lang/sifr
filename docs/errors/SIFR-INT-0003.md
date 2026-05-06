@@ -11,6 +11,6 @@ Reserved integer width name used before support lands.
 | Severity | Error |
 | Owner | `sifr_hir::lower::typing_and_functions` |
 | Message template | `reserved integer width name {name} is not supported yet` |
-| Representative fixture | `crates/sifr_hir/src/lower/type_alias_tests.rs::test_reserved_integer_width_annotations_have_int_code` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/reserved_int128_annotation.sifr` |
 | Declared args | `name (message+json)` |
 | Dedupe args | `name` |

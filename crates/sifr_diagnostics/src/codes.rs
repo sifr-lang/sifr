@@ -743,55 +743,6 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["revealed_type"]
     ),
     active_entry!(
-        "SIFR-INT-0001",
-        "INT",
-        "Fixed-width integer literal or const expression is out of range.",
-        Severity::Error,
-        "crates/sifr_hir/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code",
-        "integer value {value} does not fit target type {target_type}; valid range is {min_value}..={max_value}",
-        "sifr_hir::lower::fixed_width_fitting",
-        [
-            arg!("value"),
-            arg!("target_type"),
-            arg!("min_value"),
-            arg!("max_value")
-        ],
-        ["value", "target_type", "min_value", "max_value"]
-    ),
-    active_entry!(
-        "SIFR-INT-0003",
-        "INT",
-        "Reserved integer width name used before support lands.",
-        Severity::Error,
-        "crates/sifr_hir/src/lower/type_alias_tests.rs::test_reserved_integer_width_annotations_have_int_code",
-        "reserved integer width name {name} is not supported yet",
-        "sifr_hir::lower::typing_and_functions",
-        [arg!("name")],
-        ["name"]
-    ),
-    active_entry!(
-        "SIFR-INT-0004",
-        "INT",
-        "Compile-time integer evaluation budget exceeded.",
-        Severity::Error,
-        "crates/sifr_hir/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code",
-        "integer literal exceeds compile-time evaluation budget: {digits} decimal digits (max {max_digits})",
-        "sifr_hir::lower::integer_literal_diagnostics",
-        [arg!("digits"), arg!("max_digits")],
-        ["digits", "max_digits"]
-    ),
-    active_entry!(
-        "SIFR-INT-0011",
-        "INT",
-        "Temporary bigint transition alias used.",
-        Severity::Warning,
-        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning",
-        "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values",
-        "sifr_hir::lower::typing_and_functions",
-        [],
-        []
-    ),
-    active_entry!(
         "SIFR-DECIMAL-0001",
         "DECIMAL",
         "Invalid Decimal exact literal.",
@@ -878,6 +829,55 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::decimal_methods",
         [arg!("argument"), arg!("value"), json_arg!("operation")],
         ["argument", "value", "operation"]
+    ),
+    active_entry!(
+        "SIFR-INT-0001",
+        "INT",
+        "Fixed-width integer literal or const expression is out of range.",
+        Severity::Error,
+        "crates/sifr_hir/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code",
+        "integer value {value} does not fit target type {target_type}; valid range is {min_value}..={max_value}",
+        "sifr_hir::lower::fixed_width_fitting",
+        [
+            arg!("value"),
+            arg!("target_type"),
+            arg!("min_value"),
+            arg!("max_value")
+        ],
+        ["value", "target_type", "min_value", "max_value"]
+    ),
+    active_entry!(
+        "SIFR-INT-0003",
+        "INT",
+        "Reserved integer width name used before support lands.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/reserved_int128_annotation.sifr",
+        "reserved integer width name {name} is not supported yet",
+        "sifr_hir::lower::typing_and_functions",
+        [arg!("name")],
+        ["name"]
+    ),
+    active_entry!(
+        "SIFR-INT-0004",
+        "INT",
+        "Compile-time integer evaluation budget exceeded.",
+        Severity::Error,
+        "crates/sifr_hir/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code",
+        "integer literal exceeds compile-time evaluation budget: {digits} decimal digits (max {max_digits})",
+        "sifr_hir::lower::integer_literal_diagnostics",
+        [arg!("digits"), arg!("max_digits")],
+        ["digits", "max_digits"]
+    ),
+    active_entry!(
+        "SIFR-INT-0011",
+        "INT",
+        "Temporary bigint transition alias used.",
+        Severity::Warning,
+        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning",
+        "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values",
+        "sifr_hir::lower::typing_and_functions",
+        [],
+        []
     ),
     active_entry!(
         "SIFR-CALL-0001",
