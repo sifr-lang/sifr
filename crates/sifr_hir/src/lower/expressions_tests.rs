@@ -783,6 +783,99 @@ fn test_fixed_width_call_argument_literal_is_not_implicitly_narrowed() {
 }
 
 #[test]
+fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_return() {
+    let source = "\
+def add(left: uint8, right: uint8) -> uint8:
+    return left + right
+";
+    let errors =
+        lower_source(source).expect_err("promoted fixed-width return narrowing should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message == "return type mismatch: expected 'uint8', got 'int'"
+            && error.primary_range
+                == Some(range_for_after_anchor(source, "return ", "left + right"))
+    }));
+}
+
+#[test]
+fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_list_literal() {
+    let source = "\
+def main() -> None:
+    left: uint8 = 1
+    right: uint8 = 2
+    values: list[uint8] = [left + right]
+";
+    let errors = lower_source(source).expect_err("promoted fixed-width list narrowing should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message == "type mismatch: expected 'list[uint8]', got 'list[int]'"
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "values: list[uint8] = ",
+                    "[left + right]",
+                ))
+    }));
+}
+
+#[test]
+fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_dict_literal() {
+    let source = "\
+def main() -> None:
+    left: uint8 = 1
+    right: uint8 = 2
+    values: dict[str, uint8] = {\"sum\": left + right}
+";
+    let errors = lower_source(source).expect_err("promoted fixed-width dict narrowing should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message == "type mismatch: expected 'dict[str, uint8]', got 'dict[str, int]'"
+            && error.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "values: dict[str, uint8] = ",
+                    "{\"sum\": left + right}",
+                ))
+    }));
+}
+
+#[test]
+fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_generic_specialization() {
+    let source = "\
+class Box[T]:
+    value: T
+
+    def __init__(self, value: T):
+        self.value = value
+
+def main() -> None:
+    left: uint8 = 1
+    right: uint8 = 2
+    box: Box[uint8] = Box(left + right)
+";
+    let errors =
+        lower_source(source).expect_err("promoted fixed-width generic narrowing should fail");
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message == "type mismatch: expected 'Box', got 'Box'"
+                && error.primary_range
+                    == Some(range_for_after_anchor(
+                        source,
+                        "box: Box[uint8] = ",
+                        "Box(left + right)",
+                    ))
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
 fn test_reassignment_type_mismatch_has_primary_range() {
     let source = "def main():\n    value = 1\n    value = \"not an int\"\n";
     let result = lower_source(source);
