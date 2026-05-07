@@ -637,28 +637,37 @@ mod tests {
 
     #[test]
     fn test_fixed_width_integer_add_sub_mul_promote_to_int() {
-        let i32_ty = Type::FixedInt(crate::FixedIntType::I32);
-        let u8_ty = Type::FixedInt(crate::FixedIntType::U8);
+        for fixed in [
+            crate::FixedIntType::I8,
+            crate::FixedIntType::I16,
+            crate::FixedIntType::I32,
+            crate::FixedIntType::I64,
+            crate::FixedIntType::U8,
+            crate::FixedIntType::U16,
+            crate::FixedIntType::U32,
+            crate::FixedIntType::ISize,
+        ] {
+            let ty = Type::FixedInt(fixed);
 
-        assert_eq!(
-            type_check_binary_op(&i32_ty, "+", &i32_ty).unwrap(),
-            Type::Int
-        );
-        assert_eq!(
-            type_check_binary_op(&u8_ty, "-", &Type::Int).unwrap(),
-            Type::Int
-        );
-        assert_eq!(
-            type_check_binary_op(&Type::LiteralInt(2), "*", &u8_ty).unwrap(),
-            Type::Int
-        );
+            assert_eq!(type_check_binary_op(&ty, "+", &ty).unwrap(), Type::Int);
+            assert_eq!(
+                type_check_binary_op(&ty, "-", &Type::Int).unwrap(),
+                Type::Int
+            );
+            assert_eq!(
+                type_check_binary_op(&Type::LiteralInt(2), "*", &ty).unwrap(),
+                Type::Int
+            );
+        }
     }
 
     #[test]
-    fn test_uint64_integer_add_waits_for_sifrint_promotion() {
-        let u64_ty = Type::FixedInt(crate::FixedIntType::U64);
+    fn test_uint64_and_usize_integer_add_wait_for_sifrint_promotion() {
+        for fixed in [crate::FixedIntType::U64, crate::FixedIntType::USize] {
+            let ty = Type::FixedInt(fixed);
 
-        assert!(type_check_binary_op(&u64_ty, "+", &u64_ty).is_err());
+            assert!(type_check_binary_op(&ty, "+", &ty).is_err());
+        }
     }
 
     #[test]
