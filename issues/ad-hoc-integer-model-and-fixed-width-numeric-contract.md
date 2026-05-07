@@ -448,6 +448,7 @@ Validation:
 - [x] INT-3 fixed-width promotion narrowing-boundary hardening review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-narrowing-hardening-review-pass-1.md`.
 - [x] INT-3 fixed-width floor/modulo diagnostic scaffold review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-floor-mod-diagnostic-review-pass-1.md`.
 - [x] INT-3 integer exponentiation diagnostic scaffold review satisfied with no blockers: `reviews/integer-model-int-3-integer-power-diagnostic-review-pass-1.md`.
+- [x] INT-3 bool/integer comparison diagnostic review satisfied with no blockers: `reviews/integer-model-int-3-bool-integer-comparison-diagnostic-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -507,6 +508,7 @@ Validation:
   - [x] Promoted fixed-width arithmetic results are now hardened against implicit narrowing in fixed-width returns, list literals, dict literals, and generic class specialization; review is satisfied and quick validation is passing: PR #1862.
   - [x] Fixed-width scalar `//`, `%`, `//=`, and `%=` now fail closed with `SIFR-INT-0005` instead of lowering through ordinary Rust integer operators while the typed `Result[int, DivisionError]` path is pending; exact `int` non-zero proof behavior is preserved, review is satisfied, and quick validation is passing: PR #1863.
   - [x] Exact integer `**` now fails closed for negative or runtime-dependent exponents while preserving non-negative literal exponents, and fixed-width `**`/`**=` now emit `SIFR-INT-0005` instead of silently becoming float or lowering through unchecked casts; review is satisfied and quick validation is passing: PR #1864.
+  - [x] Direct bool/integer equality and ordering comparisons now emit active `SIFR-INT-0007` across exact, bigint-transition, literal, and fixed-width integer shapes while preserving bool/bool and unrelated comparisons; review is satisfied and quick validation is passing: PR #1865.
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
 - [ ] INT-6A dtype contract lock
