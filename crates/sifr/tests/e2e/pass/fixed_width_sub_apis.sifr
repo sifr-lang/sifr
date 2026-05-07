@@ -1,0 +1,27 @@
+def main() -> None:
+    low: uint8 = 0
+    one: uint8 = 1
+    two: uint8 = 2
+    wrapped_expected: uint8 = 255
+    saturated_expected: uint8 = 0
+    overflowed_expected: tuple[uint8, bool] = (wrapped_expected, True)
+
+    wrapped: uint8 = low.wrapping_sub(one)
+    saturated: uint8 = low.saturating_sub(one)
+    overflowed: tuple[uint8, bool] = low.overflowing_sub(one)
+
+    assert wrapped == wrapped_expected
+    assert saturated == saturated_expected
+    assert overflowed == overflowed_expected
+
+    try:
+        checked: uint8 = low.checked_sub(one)
+        assert checked == saturated_expected
+    except OverflowError as e:
+        assert e.message == "fixed-width integer subtraction overflow"
+
+    try:
+        ok: uint8 = two.checked_sub(one)
+        assert ok == one
+    except OverflowError as e:
+        assert e.message == ""

@@ -15,7 +15,8 @@ pub(super) fn resolve_fixed_width_method_type(
 ) -> Option<Type> {
     let fixed_ty = Type::FixedInt(fixed);
     match method {
-        "checked_add" | "wrapping_add" | "saturating_add" | "overflowing_add" => {
+        "checked_add" | "wrapping_add" | "saturating_add" | "overflowing_add" | "checked_sub"
+        | "wrapping_sub" | "saturating_sub" | "overflowing_sub" => {
             if args.len() != 1 {
                 reject_exact_arg_count(
                     ctx,
@@ -43,11 +44,13 @@ pub(super) fn resolve_fixed_width_method_type(
                 return None;
             }
             match method {
-                "checked_add" => Some(Type::Result(
+                "checked_add" | "checked_sub" => Some(Type::Result(
                     Box::new(fixed_ty),
                     Box::new(overflow_error_type(ctx)),
                 )),
-                "overflowing_add" => Some(Type::Tuple(vec![fixed_ty, Type::Bool])),
+                "overflowing_add" | "overflowing_sub" => {
+                    Some(Type::Tuple(vec![fixed_ty, Type::Bool]))
+                }
                 _ => Some(fixed_ty),
             }
         }
