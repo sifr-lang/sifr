@@ -517,6 +517,37 @@ def main() -> None:
 }
 
 #[test]
+fn test_bool_integer_equality_has_int0007() {
+    let source = "\
+def main() -> None:
+    value: bool = True == 1
+";
+    let errors = lower_source(source).expect_err("bool/integer equality should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_BOOL_INTEGER_COMPARISON)
+            && error.message == "cannot compare bool and integer values without explicit conversion"
+            && error.primary_range == Some(range_for_after(source, "True == ", "1"))
+    }));
+}
+
+#[test]
+fn test_bool_fixed_width_ordering_has_int0007() {
+    let source = "\
+def main() -> None:
+    value: uint8 = 1
+    flag: bool = True
+    result: bool = value < flag
+";
+    let errors = lower_source(source).expect_err("bool/fixed-width ordering should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_BOOL_INTEGER_COMPARISON)
+            && error.primary_range == Some(range_for_after(source, "value < ", "flag"))
+    }));
+}
+
+#[test]
 fn test_exact_int_division_after_zero_guard_early_exit_lowers() {
     let module = lower_source(
         "\

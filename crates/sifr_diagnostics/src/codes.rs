@@ -64,6 +64,7 @@ impl DiagnosticCode {
     pub const INT_EVAL_BUDGET_EXCEEDED: Self = Self::new("SIFR-INT-0004", Severity::Error);
     pub const INT_EXACT_DIVISION_REQUIRES_HANDLING: Self =
         Self::new("SIFR-INT-0005", Severity::Error);
+    pub const INT_BOOL_INTEGER_COMPARISON: Self = Self::new("SIFR-INT-0007", Severity::Error);
     pub const INT_BIGINT_TRANSITION_ALIAS: Self = Self::new("SIFR-INT-0011", Severity::Warning);
 
     pub const CALL_WRONG_POSITIONAL_COUNT: Self = Self::new("SIFR-CALL-0001", Severity::Error);
@@ -882,6 +883,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         []
     ),
     active_entry!(
+        "SIFR-INT-0007",
+        "INT",
+        "Bool and integer comparison requires explicit conversion.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/bool_integer_comparison.sifr",
+        "cannot compare bool and integer values without explicit conversion",
+        "sifr_type_system",
+        [],
+        []
+    ),
+    active_entry!(
         "SIFR-INT-0011",
         "INT",
         "Temporary bigint transition alias used.",
@@ -1616,6 +1628,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INT_RESERVED_WIDTH_NAME,
     DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED,
     DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING,
+    DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
     DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
     DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
     DiagnosticCode::CALL_UNEXPECTED_KEYWORD,

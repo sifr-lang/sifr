@@ -27,6 +27,21 @@ fn is_exact_or_fixed_integer_type(ty: &Type) -> bool {
         || matches!(ty, Type::FixedInt(fixed) if fixed_width_promotes_to_current_int(*fixed))
 }
 
+fn is_bool_type(ty: &Type) -> bool {
+    matches!(ty.resolve_alias(), Type::Bool | Type::LiteralBool(_))
+}
+
+fn is_integer_type(ty: &Type) -> bool {
+    matches!(
+        ty.resolve_alias(),
+        Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::FixedInt(_)
+    )
+}
+
+fn is_bool_integer_mixed_comparison(left: &Type, right: &Type) -> bool {
+    (is_bool_type(left) && is_integer_type(right)) || (is_integer_type(left) && is_bool_type(right))
+}
+
 fn fixed_width_promotes_to_current_int(fixed: FixedIntType) -> bool {
     !matches!(fixed, FixedIntType::U64 | FixedIntType::USize)
 }
@@ -355,6 +370,13 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
 
     match op {
         "==" | "!=" => {
+            if is_bool_integer_mixed_comparison(left, right) {
+                return Err((
+                    DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
+                    "cannot compare bool and integer values without explicit conversion"
+                        .to_string(),
+                ));
+            }
             // Block mixed int/bigint equality comparisons
             if (left == &Type::Int && right == &Type::BigInt)
                 || (left == &Type::BigInt && right == &Type::Int)
@@ -403,6 +425,13 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
             ))
         }
         "<" | ">" | "<=" | ">=" => {
+            if is_bool_integer_mixed_comparison(left, right) {
+                return Err((
+                    DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
+                    "cannot compare bool and integer values without explicit conversion"
+                        .to_string(),
+                ));
+            }
             // Block mixed int/bigint comparisons
             if (left == &Type::Int && right == &Type::BigInt)
                 || (left == &Type::BigInt && right == &Type::Int)
@@ -760,6 +789,24 @@ mod tests {
         // Same-type comparisons should still work
         assert!(type_check_comparison(&Type::BigInt, "==", &Type::BigInt).is_ok());
         assert!(type_check_comparison(&Type::BigInt, "<", &Type::BigInt).is_ok());
+    }
+
+    #[test]
+    fn test_bool_integer_comparison_blocked_with_int_diagnostic() {
+        for (left, op, right) in [
+            (Type::Bool, "==", Type::Int),
+            (Type::LiteralBool(true), "!=", Type::LiteralInt(1)),
+            (Type::FixedInt(crate::FixedIntType::U8), "<", Type::Bool),
+            (Type::BigInt, ">=", Type::LiteralBool(false)),
+        ] {
+            let err = type_check_comparison(&left, op, &right).unwrap_err();
+            assert_eq!(err.0, DiagnosticCode::INT_BOOL_INTEGER_COMPARISON);
+            assert_eq!(
+                err.1,
+                "cannot compare bool and integer values without explicit conversion"
+            );
+        }
+        assert!(type_check_comparison(&Type::Bool, "==", &Type::Bool).is_ok());
     }
 
     #[test]
