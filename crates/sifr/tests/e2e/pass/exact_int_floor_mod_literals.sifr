@@ -1,0 +1,18 @@
+BIG_LIMIT: int = 100000000000000000000
+
+
+def main() -> None:
+    quotient: int = BIG_LIMIT // 3
+    remainder: int = BIG_LIMIT % 3
+    negative_quotient: int = -BIG_LIMIT // 3
+    negative_remainder: int = -BIG_LIMIT % 3
+    derived: int = BIG_LIMIT + 2
+    derived_quotient: int = derived // 3
+    derived_remainder: int = derived % 3
+
+    assert str(quotient) == "33333333333333333333"
+    assert str(remainder) == "1"
+    assert str(negative_quotient) == "-33333333333333333334"
+    assert str(negative_remainder) == "2"
+    assert str(derived_quotient) == "33333333333333333334"
+    assert str(derived_remainder) == "0"

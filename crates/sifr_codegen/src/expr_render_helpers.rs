@@ -302,6 +302,12 @@ impl RustEmitter {
             crate::RustExpr::BinOp { left, op, right } => {
                 let left = self.rewrite_stdlib_constant_idents_in_expr(*left);
                 let right = self.rewrite_stdlib_constant_idents_in_expr(*right);
+                if is_sifr_int_checked_floor_op(&op)
+                    && self.is_sifr_int_expr(&left)
+                    && is_proven_nonzero_integer_expr(&right)
+                {
+                    return self.sifr_int_known_nonzero_floor_expr(op.as_str(), left, right);
+                }
                 if is_sifr_int_operand_coercion_op(&op)
                     && (self.is_sifr_int_expr(&left) || self.is_sifr_int_expr(&right))
                 {
@@ -1358,6 +1364,44 @@ impl RustEmitter {
         }
     }
 
+    fn sifr_int_known_nonzero_floor_expr(
+        &self,
+        op: &str,
+        left: crate::RustExpr,
+        right: crate::RustExpr,
+    ) -> crate::RustExpr {
+        let method = match op {
+            "/" => "floor_div_known_nonzero",
+            "%" => "floor_mod_known_nonzero",
+            _ => unreachable!("SifrInt floor rewrite only handles floor division and modulo"),
+        };
+        crate::RustExpr::MethodCall {
+            receiver: Box::new(self.coerce_expr_to_sifr_int_method_receiver(left)),
+            method: method.to_string(),
+            args: vec![self.coerce_expr_to_sifr_int_comparison_operand(right)],
+        }
+    }
+
+    fn coerce_expr_to_sifr_int_method_receiver(&self, expr: crate::RustExpr) -> crate::RustExpr {
+        match expr {
+            crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
+                crate::RustExpr::Ident(name)
+            }
+            crate::RustExpr::Paren(inner) => crate::RustExpr::Paren(Box::new(
+                self.coerce_expr_to_sifr_int_method_receiver(*inner),
+            )),
+            crate::RustExpr::UnaryOp { op, operand } if op == "-" => {
+                crate::RustExpr::Paren(Box::new(crate::RustExpr::UnaryOp { op, operand }))
+            }
+            other if self.is_sifr_int_expr(&other) => other,
+            crate::RustExpr::Cast {
+                expr,
+                ty: crate::RustType::I64,
+            } => sifr_int_from_i64_expr(*expr),
+            other => sifr_int_from_i64_expr(other),
+        }
+    }
+
     pub(super) fn coerce_expr_to_sifr_int_value(&self, expr: crate::RustExpr) -> crate::RustExpr {
         match expr {
             crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
@@ -1419,6 +1463,15 @@ impl RustEmitter {
             crate::RustExpr::Ident(name) => self.is_registered_sifr_int_local(name),
             crate::RustExpr::BinOp { left, op, right } if is_sifr_int_arithmetic_op(op) => {
                 self.is_sifr_int_expr(left) || self.is_sifr_int_expr(right)
+            }
+            crate::RustExpr::MethodCall {
+                receiver, method, ..
+            } if matches!(
+                method.as_str(),
+                "floor_div_known_nonzero" | "floor_mod_known_nonzero"
+            ) =>
+            {
+                self.is_sifr_int_expr(receiver)
             }
             crate::RustExpr::UnaryOp { op, operand } if op == "-" => self.is_sifr_int_expr(operand),
             crate::RustExpr::Paren(inner) => self.is_sifr_int_expr(inner),
@@ -1506,6 +1559,10 @@ fn is_sifr_int_arithmetic_op(op: &str) -> bool {
     matches!(op, "+" | "-" | "*")
 }
 
+fn is_sifr_int_checked_floor_op(op: &str) -> bool {
+    matches!(op, "/" | "%")
+}
+
 fn is_sifr_int_comparison_op(op: &str) -> bool {
     matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=")
 }
@@ -1517,6 +1574,32 @@ fn is_sifr_int_operand_coercion_op(op: &str) -> bool {
 fn is_legacy_i64_type(ty: &Option<crate::RustType>) -> bool {
     matches!(ty, Some(crate::RustType::I64))
         || matches!(ty, Some(crate::RustType::Named(name)) if name == "i64")
+}
+
+fn is_proven_nonzero_integer_expr(expr: &crate::RustExpr) -> bool {
+    match expr {
+        crate::RustExpr::Literal(crate::RustLiteral::Int(value)) => *value != 0,
+        crate::RustExpr::Cast {
+            expr,
+            ty: crate::RustType::I64,
+        } => is_proven_nonzero_integer_expr(expr),
+        crate::RustExpr::UnaryOp { op, operand } if op == "-" => {
+            is_proven_nonzero_integer_expr(operand)
+        }
+        crate::RustExpr::Paren(inner) => is_proven_nonzero_integer_expr(inner),
+        crate::RustExpr::FnCall { func, args }
+            if args.len() == 1
+                && matches!(
+                    func.as_ref(),
+                    crate::RustExpr::Path(path)
+                        if string_path_matches(path, &["SifrInt", "from_i64"])
+                            || string_path_matches(path, &["sifr_runtime", "SifrInt", "from_i64"])
+                ) =>
+        {
+            is_proven_nonzero_integer_expr(&args[0])
+        }
+        _ => false,
+    }
 }
 
 fn rust_expr_identifier_path(expr: &crate::RustExpr) -> Option<String> {
@@ -1576,6 +1659,85 @@ mod tests {
             RustExpr::FnCall { func, args }
                 if args.len() == 1
                     && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+        ));
+    }
+
+    #[test]
+    fn rewrites_large_int_floor_division_by_nonzero_literal_to_checked_runtime_call() {
+        let emitter = emitter_with_large_int_const();
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
+            mutable: false,
+            name: "quotient".to_string(),
+            ty: Some(RustType::I64),
+            value: RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("BIG_LIMIT".to_string())),
+                op: "/".to_string(),
+                right: Box::new(RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(3))),
+                    ty: RustType::I64,
+                }),
+            },
+        });
+
+        let RustStmt::Let {
+            ty: Some(RustType::Named(ty)),
+            value:
+                RustExpr::MethodCall {
+                    receiver,
+                    method,
+                    args,
+                },
+            ..
+        } = rewritten
+        else {
+            panic!("expected SifrInt floor division let");
+        };
+        assert_eq!(ty, "SifrInt");
+        assert_eq!(method, "floor_div_known_nonzero");
+        assert!(matches!(
+            receiver.as_ref(),
+            RustExpr::FnCall { func, args }
+                if args.is_empty()
+                    && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+        ));
+        assert!(matches!(
+            args.as_slice(),
+            [RustExpr::Ref {
+                mutable: false,
+                expr,
+            }] if matches!(
+                expr.as_ref(),
+                RustExpr::FnCall { func, args }
+                    if args.len() == 1
+                        && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+            )
+        ));
+    }
+
+    #[test]
+    fn rewrites_large_int_modulo_by_nonzero_literal_to_checked_runtime_call() {
+        let emitter = emitter_with_large_int_const();
+        let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
+            mutable: false,
+            name: "remainder".to_string(),
+            ty: Some(RustType::I64),
+            value: RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("BIG_LIMIT".to_string())),
+                op: "%".to_string(),
+                right: Box::new(RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(3))),
+                    ty: RustType::I64,
+                }),
+            },
+        });
+
+        assert!(matches!(
+            rewritten,
+            RustStmt::Let {
+                ty: Some(RustType::Named(ref ty)),
+                value: RustExpr::MethodCall { ref method, .. },
+                ..
+            } if ty == "SifrInt" && method == "floor_mod_known_nonzero"
         ));
     }
 
