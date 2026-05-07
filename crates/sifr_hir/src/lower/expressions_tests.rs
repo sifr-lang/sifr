@@ -264,6 +264,34 @@ fn test_fixed_width_literal_assignment_out_of_range_has_int_code() {
 }
 
 #[test]
+fn test_fixed_width_match_literal_out_of_range_has_int_code() {
+    let source = "def main():\n    value: uint8 = 1\n    match value:\n        case 256:\n            pass\n        case _:\n            pass\n";
+    let errors =
+        lower_source(source).expect_err("out-of-range fixed-width match literal should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE)
+            && error.message
+                == "integer value 256 does not fit target type uint8; valid range is 0..=255"
+            && error.primary_range == Some(range_for(source, "256"))
+    }));
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code == Some(DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE)),
+        "expected only fixed-width range diagnostics, got {errors:?}"
+    );
+}
+
+#[test]
+fn test_fixed_width_match_literal_in_range_lowers() {
+    lower_source(
+        "def main():\n    value: uint8 = 255\n    match value:\n        case 255:\n            pass\n        case _:\n            pass\n",
+    )
+    .expect("in-range fixed-width match literal should lower");
+}
+
+#[test]
 fn test_fixed_width_module_constant_out_of_range_has_int_code() {
     let source = "LIMIT: uint8 = 255\nTOO_HIGH: uint8 = 256\n\ndef main():\n    print(\"ok\")\n";
     let errors =

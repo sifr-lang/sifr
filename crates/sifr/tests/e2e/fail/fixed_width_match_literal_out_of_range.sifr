@@ -1,0 +1,9 @@
+# expect-error: SIFR-INT-0001
+
+def main():
+    value: uint8 = 1
+    match value:
+        case 256:
+            pass
+        case _:
+            pass
