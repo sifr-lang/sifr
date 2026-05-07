@@ -20,7 +20,7 @@ pub(super) fn exact_int_division_requires_handling(
         || !is_exact_int_division_or_modulo(op)
         || !is_exact_int_like(left.ty())
         || !is_exact_int_like(right.ty())
-        || is_proven_nonzero_integer_expr(right)
+        || is_proven_nonzero_integer_expr(right, ctx)
     {
         return false;
     }
@@ -39,7 +39,7 @@ pub(super) fn exact_int_augassign_requires_handling(
         || !is_exact_int_division_or_modulo(base_op)
         || !is_exact_int_like(target_ty)
         || !is_exact_int_like(value.ty())
-        || is_proven_nonzero_integer_expr(value)
+        || is_proven_nonzero_integer_expr(value, ctx)
     {
         return false;
     }
@@ -63,13 +63,14 @@ fn is_exact_int_like(ty: &Type) -> bool {
     matches!(ty, Type::Int | Type::LiteralInt(_))
 }
 
-fn is_proven_nonzero_integer_expr(expr: &HirExpr) -> bool {
+fn is_proven_nonzero_integer_expr(expr: &HirExpr, ctx: &LowerCtx) -> bool {
     match expr {
         HirExpr::IntLiteral(value) => *value != 0,
         HirExpr::LargeIntLiteral(value) => value != "0",
         HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
-            is_proven_nonzero_integer_expr(operand)
+            is_proven_nonzero_integer_expr(operand, ctx)
         }
+        HirExpr::Name { name, .. } => ctx.is_proven_nonzero_integer_binding(name),
         _ => false,
     }
 }

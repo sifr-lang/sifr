@@ -308,6 +308,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     let value = lower_expr(&aug.value, ctx)?;
     ctx.clear_sequence_pointer(&name);
     ctx.clear_len_alias(&name);
+    ctx.clear_proven_nonzero_integer_binding(&name);
 
     let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
 

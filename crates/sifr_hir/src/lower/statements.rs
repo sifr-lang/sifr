@@ -10,16 +10,20 @@ use super::control_flow_conditions::validate_control_flow_condition;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::fixed_width_fitting::{validate_fixed_width_initializer, FixedWidthInitializerFit};
-use super::flow_helpers::{expr_to_literal_value, then_body_always_exits};
+use super::flow_helpers::then_body_always_exits;
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::function_flow::infer_function_return_type;
 use super::if_branch_bindings::{
     predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,
 };
+use super::integer_nonzero_guards::{
+    detect_false_nonzero_integer_guards, detect_true_nonzero_integer_guards,
+};
 use super::len_aliases::record_len_alias_fact;
 use super::match_diagnostics;
 use super::match_lowering::lower_match;
 use super::name_diagnostics;
+use super::narrowing::{apply_narrowing, detect_narrowing_condition};
 use super::nonlocal_support::{
     collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
 };
@@ -51,13 +55,10 @@ use crate::hir_nodes::{
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    BoolOp, CmpOp, ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign,
-    StmtAugAssign, StmtFor, StmtIf, StmtReturn, StmtWhile, UnaryOp,
+    ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign, StmtAugAssign,
+    StmtFor, StmtIf, StmtReturn, StmtWhile,
 };
-use sifr_type_system::infer::resolve_type_annotation;
-use sifr_type_system::{
-    make_union, narrow_type, FunctionType, NarrowingCondition, OwnershipKind, Type,
-};
+use sifr_type_system::{make_union, FunctionType, NarrowingCondition, OwnershipKind, Type};
 
 fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
     match expr {
@@ -977,6 +978,7 @@ fn failed_initializer_taint(
 fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
     ctx.scope.clear_narrowing(name);
     ctx.clear_sequence_guards_for_binding(name);
+    ctx.clear_proven_nonzero_integer_binding(name);
 }
 
 pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
@@ -1689,12 +1691,16 @@ pub(super) fn lower_if(
     let saved_state = ctx.scope.save_narrowing_state();
     let saved_moved = ctx.scope.save_moved_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
+    let saved_nonzero_integer_bindings = ctx.save_proven_nonzero_integer_bindings();
 
     if let Some(ref cond) = narrowing_cond {
         apply_narrowing(ctx, cond, true);
     }
     for guard in detect_true_sequence_guards(&if_stmt.test, ctx) {
         ctx.add_sequence_guard(guard);
+    }
+    for name in detect_true_nonzero_integer_guards(&if_stmt.test, ctx) {
+        ctx.add_proven_nonzero_integer_binding(name);
     }
 
     ctx.scope.push();
@@ -1707,6 +1713,7 @@ pub(super) fn lower_if(
     ctx.scope.restore_narrowing_state(&saved_state);
     ctx.scope.restore_moved_state(&saved_moved);
     ctx.restore_sequence_guards(&saved_sequence_guards);
+    ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
 
     let mut all_conditions: Vec<NarrowingCondition> = Vec::new();
     if let Some(ref cond) = narrowing_cond {
@@ -1722,6 +1729,7 @@ pub(super) fn lower_if(
             ctx.scope.restore_narrowing_state(&saved_state);
             ctx.scope.restore_moved_state(&saved_moved);
             ctx.restore_sequence_guards(&saved_sequence_guards);
+            ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
             for prev_cond in &all_conditions {
                 apply_narrowing(ctx, prev_cond, false);
             }
@@ -1737,6 +1745,9 @@ pub(super) fn lower_if(
             for guard in detect_true_sequence_guards(test, ctx) {
                 ctx.add_sequence_guard(guard);
             }
+            for name in detect_true_nonzero_integer_guards(test, ctx) {
+                ctx.add_proven_nonzero_integer_binding(name);
+            }
 
             ctx.scope.push();
             let body = lower_stmts(&clause.body, func_type, ctx);
@@ -1749,6 +1760,7 @@ pub(super) fn lower_if(
             ctx.scope.restore_narrowing_state(&elif_saved);
             ctx.scope.restore_moved_state(&saved_moved);
             ctx.restore_sequence_guards(&saved_sequence_guards);
+            ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
 
             if let Some(elif_cond) = elif_narrowing {
                 all_conditions.push(elif_cond);
@@ -1764,6 +1776,7 @@ pub(super) fn lower_if(
             ctx.scope.restore_narrowing_state(&saved_state);
             ctx.scope.restore_moved_state(&saved_moved);
             ctx.restore_sequence_guards(&saved_sequence_guards);
+            ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
             for prev_cond in &all_conditions {
                 apply_narrowing(ctx, prev_cond, false);
             }
@@ -1778,6 +1791,7 @@ pub(super) fn lower_if(
     ctx.scope.restore_narrowing_state(&saved_state);
     ctx.scope.restore_moved_state(&saved_moved);
     ctx.restore_sequence_guards(&saved_sequence_guards);
+    ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
 
     for branch_state in &branch_moved_states {
         for (name, was_moved) in branch_state {
@@ -1802,6 +1816,9 @@ pub(super) fn lower_if(
         for guard in detect_false_exit_sequence_guards(&if_stmt.test, ctx) {
             ctx.add_sequence_guard(guard);
         }
+        for name in detect_false_nonzero_integer_guards(&if_stmt.test, ctx) {
+            ctx.add_proven_nonzero_integer_binding(name);
+        }
     }
     ctx.clear_sequence_pointers();
     Some(HirStmt::If {
@@ -1810,159 +1827,6 @@ pub(super) fn lower_if(
         elif_clauses,
         else_body,
     })
-}
-
-/// Detect a narrowing condition from an if-test expression.
-pub(super) fn detect_narrowing_condition(
-    expr: &Expr,
-    ctx: &LowerCtx,
-) -> Option<NarrowingCondition> {
-    match expr {
-        // isinstance(x, Type) -> IsInstance narrowing
-        Expr::Call(call) => {
-            if let Expr::Name(func_name) = call.func.as_ref() {
-                if func_name.id.as_str() == "isinstance" && call.arguments.args.len() == 2 {
-                    if let Expr::Name(var) = &call.arguments.args[0] {
-                        let var_name = var.id.to_string();
-                        // Check that the variable exists and has a union/Unknown type
-                        if ctx.scope.lookup(&var_name).is_some() {
-                            if let Expr::Name(type_name) = &call.arguments.args[1] {
-                                // Try built-in types first, then class types
-                                let target_ty =
-                                    resolve_type_annotation(&type_name.id).or_else(|| {
-                                        ctx.class_types.get(type_name.id.as_str()).cloned()
-                                    });
-                                if let Some(target_ty) = target_ty {
-                                    return Some(NarrowingCondition::IsInstance(
-                                        var_name, target_ty,
-                                    ));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            None
-        }
-        // x is None / x is not None
-        Expr::Compare(cmp) => {
-            if cmp.ops.len() == 1 && cmp.comparators.len() == 1 {
-                match &cmp.ops[0] {
-                    CmpOp::Is => {
-                        if let (Expr::Name(var), Expr::NoneLiteral(_)) =
-                            (cmp.left.as_ref(), &cmp.comparators[0])
-                        {
-                            let var_name = var.id.to_string();
-                            if ctx.scope.lookup(&var_name).is_some() {
-                                return Some(NarrowingCondition::IsNone(var_name));
-                            }
-                        }
-                    }
-                    CmpOp::IsNot => {
-                        if let (Expr::Name(var), Expr::NoneLiteral(_)) =
-                            (cmp.left.as_ref(), &cmp.comparators[0])
-                        {
-                            let var_name = var.id.to_string();
-                            if ctx.scope.lookup(&var_name).is_some() {
-                                return Some(NarrowingCondition::IsNotNone(var_name));
-                            }
-                        }
-                    }
-                    // x == "value" -> Equality narrowing
-                    CmpOp::Eq => {
-                        if let Expr::Name(var) = cmp.left.as_ref() {
-                            let var_name = var.id.to_string();
-                            if ctx.scope.lookup(&var_name).is_some() {
-                                if let Some(lit_val) = expr_to_literal_value(&cmp.comparators[0]) {
-                                    return Some(NarrowingCondition::Equality(var_name, lit_val));
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            None
-        }
-        // Simple variable name -> Truthiness narrowing
-        Expr::Name(name) => {
-            let var_name = name.id.to_string();
-            if ctx.scope.lookup(&var_name).is_some() {
-                Some(NarrowingCondition::Truthiness(var_name))
-            } else {
-                None
-            }
-        }
-        // not expr -> negate the inner condition
-        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::Not) => {
-            let inner = detect_narrowing_condition(&unary.operand, ctx)?;
-            Some(NarrowingCondition::Not(Box::new(inner)))
-        }
-        // a and b -> And narrowing (both conditions must be true)
-        Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::And) => {
-            let conditions: Vec<NarrowingCondition> = boolop
-                .values
-                .iter()
-                .filter_map(|v| detect_narrowing_condition(v, ctx))
-                .collect();
-            if conditions.is_empty() {
-                None
-            } else if conditions.len() == 1 {
-                conditions.into_iter().next()
-            } else {
-                Some(NarrowingCondition::And(conditions))
-            }
-        }
-        // a or b -> Or narrowing (at least one condition must be true)
-        Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::Or) => {
-            let conditions: Vec<NarrowingCondition> = boolop
-                .values
-                .iter()
-                .filter_map(|v| detect_narrowing_condition(v, ctx))
-                .collect();
-            if conditions.is_empty() {
-                None
-            } else if conditions.len() == 1 {
-                conditions.into_iter().next()
-            } else {
-                Some(NarrowingCondition::Or(conditions))
-            }
-        }
-        _ => None,
-    }
-}
-
-/// Apply narrowing to the scope based on a condition.
-pub(super) fn apply_narrowing(ctx: &mut LowerCtx, condition: &NarrowingCondition, is_true: bool) {
-    match condition {
-        NarrowingCondition::And(conditions) => {
-            if is_true {
-                // All conditions are true: apply each narrowing
-                for cond in conditions {
-                    apply_narrowing(ctx, cond, true);
-                }
-            } else {
-                // At least one is false: can't narrow precisely, skip
-            }
-        }
-        NarrowingCondition::Or(conditions) => {
-            if !is_true {
-                // All conditions are false: apply each false-narrowing
-                for cond in conditions {
-                    apply_narrowing(ctx, cond, false);
-                }
-            }
-        }
-        _ => {
-            if let Some(var_name) = condition.var_name() {
-                if let Some(info) = ctx.scope.lookup(var_name) {
-                    let current_ty = info.effective_type().clone();
-                    let narrowed = narrow_type(&current_ty, condition, is_true);
-                    ctx.scope.narrow_var(var_name, narrowed);
-                }
-            }
-        }
-    }
 }
 
 pub(super) fn lower_while(
@@ -1975,11 +1839,15 @@ pub(super) fn lower_while(
     validate_control_flow_condition(&condition, "while", while_stmt.test.range(), ctx);
     let saved_narrowing_state = ctx.scope.save_narrowing_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
+    let saved_nonzero_integer_bindings = ctx.save_proven_nonzero_integer_bindings();
     if let Some(ref cond) = narrowing_cond {
         apply_narrowing(ctx, cond, true);
     }
     for guard in detect_while_sequence_guards(while_stmt, ctx) {
         ctx.add_sequence_guard(guard);
+    }
+    for name in detect_true_nonzero_integer_guards(&while_stmt.test, ctx) {
+        ctx.add_proven_nonzero_integer_binding(name);
     }
 
     // Snapshot moved state before loop to detect moves inside the body
@@ -1992,6 +1860,7 @@ pub(super) fn lower_while(
     ctx.scope.pop();
     ctx.scope.restore_narrowing_state(&saved_narrowing_state);
     ctx.restore_sequence_guards(&saved_sequence_guards);
+    ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
 
     // Check for outer-scope variables moved inside the loop body
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);
