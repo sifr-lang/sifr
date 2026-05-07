@@ -62,36 +62,11 @@ When phase is fully closed, run:
 
 ## Reviewer Trigger
 
-Use the [talk-to-claude](.cursor/skills/talk-to-claude/SKILL.md) skill for all external review passes.
-
-Authoritative launch pattern for a review pass:
-
-```bash
-PWD_NOW="$(pwd)"
-TARGET_FILE="${PWD_NOW}/reviews/<review-file>.md"
-CLAUDE_SESSION_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')" \
-  bash .cursor/skills/talk-to-claude/scripts/claude_resume_to_desktop.sh "$(cat <<PROMPT
-Review implementation of phase ${PHASE_NAME}
-Write the output into ${TARGET_FILE}
-PROMPT
-)"
-```
+Use the [talk-to-claude-default](.cursor/skills/talk-to-claude-default/SKILL.md) skill for all external review passes.
 
 Adjust prompt scope for the active stage: `wave`, `milestone closure`, `phase closure`, `pass 1`, `pass 2`.
 
 If the target review file already exists, create a new filename with the same prefix and incremented suffix.
-
-## Review Wait Command
-
-```bash
-PWD_NOW="$(pwd)"; uv run --project /Users/yaseralnajjar/work/talk-to-claude \
-  python /Users/yaseralnajjar/work/talk-to-claude/wait_for_review.py "${PWD_NOW}/reviews/<review-file>.md" \
-  --timeout-seconds 2400 \
-  --poll-seconds 10
-```
-
-- Max wait: 40 minutes.
-- If file is still unavailable at timeout, stop and report blocker state.
 
 ## Telegram Status Command
 
