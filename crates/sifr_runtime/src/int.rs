@@ -192,6 +192,18 @@ impl SifrInt {
         Some(Self::from_bigint(floor_mod_bigint(&self.as_bigint(), &rhs)))
     }
 
+    #[must_use]
+    pub fn floor_div_known_nonzero(&self, rhs: &Self) -> Self {
+        debug_assert!(!rhs.as_bigint().is_zero());
+        Self::from_bigint(floor_div_bigint(&self.as_bigint(), &rhs.as_bigint()))
+    }
+
+    #[must_use]
+    pub fn floor_mod_known_nonzero(&self, rhs: &Self) -> Self {
+        debug_assert!(!rhs.as_bigint().is_zero());
+        Self::from_bigint(floor_mod_bigint(&self.as_bigint(), &rhs.as_bigint()))
+    }
+
     try_to_fixed_width!(try_to_i8, i8, "i8", to_i8);
     try_to_fixed_width!(try_to_i16, i16, "i16", to_i16);
     try_to_fixed_width!(try_to_i32, i32, "i32", to_i32);
@@ -656,6 +668,24 @@ mod tests {
                 .to_string(),
             "1"
         );
+    }
+
+    #[test]
+    fn known_nonzero_floor_division_and_modulo_match_checked_results() {
+        let cases = [(7, 3), (-7, 3), (7, -3), (-7, -3), (6, 3)];
+
+        for (left, right) in cases {
+            let left = SifrInt::from_i64(left);
+            let right = SifrInt::from_i64(right);
+            assert_eq!(
+                left.floor_div_known_nonzero(&right),
+                left.checked_floor_div(&right).expect("non-zero divisor")
+            );
+            assert_eq!(
+                left.floor_mod_known_nonzero(&right),
+                left.checked_floor_mod(&right).expect("non-zero divisor")
+            );
+        }
     }
 
     #[test]
