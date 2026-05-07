@@ -1,6 +1,6 @@
 use num_bigint::BigInt;
 use num_bigint::Sign;
-use num_traits::{Signed, ToPrimitive};
+use num_traits::{Signed, ToPrimitive, Zero};
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -174,6 +174,24 @@ impl SifrInt {
         }
     }
 
+    #[must_use]
+    pub fn checked_floor_div(&self, rhs: &Self) -> Option<Self> {
+        let rhs = rhs.as_bigint();
+        if rhs.is_zero() {
+            return None;
+        }
+        Some(Self::from_bigint(floor_div_bigint(&self.as_bigint(), &rhs)))
+    }
+
+    #[must_use]
+    pub fn checked_floor_mod(&self, rhs: &Self) -> Option<Self> {
+        let rhs = rhs.as_bigint();
+        if rhs.is_zero() {
+            return None;
+        }
+        Some(Self::from_bigint(floor_mod_bigint(&self.as_bigint(), &rhs)))
+    }
+
     try_to_fixed_width!(try_to_i8, i8, "i8", to_i8);
     try_to_fixed_width!(try_to_i16, i16, "i16", to_i16);
     try_to_fixed_width!(try_to_i32, i32, "i32", to_i32);
@@ -190,6 +208,29 @@ impl SifrInt {
     fn range_error(&self, target: &'static str) -> IntegerRangeError {
         IntegerRangeError::new(target, self.to_string())
     }
+}
+
+fn floor_div_bigint(left: &BigInt, right: &BigInt) -> BigInt {
+    let quotient = left / right;
+    let remainder = left % right;
+    if needs_floor_adjustment(&remainder, right) {
+        quotient - BigInt::from(1_i8)
+    } else {
+        quotient
+    }
+}
+
+fn floor_mod_bigint(left: &BigInt, right: &BigInt) -> BigInt {
+    let remainder = left % right;
+    if needs_floor_adjustment(&remainder, right) {
+        remainder + right
+    } else {
+        remainder
+    }
+}
+
+fn needs_floor_adjustment(remainder: &BigInt, divisor: &BigInt) -> bool {
+    !remainder.is_zero() && (remainder.is_negative() != divisor.is_negative())
 }
 
 impl From<i64> for SifrInt {
@@ -548,6 +589,73 @@ mod tests {
             (SifrInt::from_i64(i64::MAX) + SifrInt::from_i64(1)) - SifrInt::from_i64(i64::MAX);
 
         assert!(matches!(result, SifrInt::Small(1)));
+    }
+
+    #[test]
+    fn checked_floor_division_matches_exact_integer_semantics() {
+        let cases = [
+            (7, 3, 2),
+            (-7, 3, -3),
+            (7, -3, -3),
+            (-7, -3, 2),
+            (6, 3, 2),
+            (-6, 3, -2),
+        ];
+
+        for (left, right, expected) in cases {
+            let result = SifrInt::from_i64(left)
+                .checked_floor_div(&SifrInt::from_i64(right))
+                .expect("non-zero divisor should divide");
+            assert_eq!(result, SifrInt::from_i64(expected));
+        }
+    }
+
+    #[test]
+    fn checked_floor_modulo_matches_exact_integer_semantics() {
+        let cases = [
+            (7, 3, 1),
+            (-7, 3, 2),
+            (7, -3, -2),
+            (-7, -3, -1),
+            (6, 3, 0),
+            (-6, 3, 0),
+        ];
+
+        for (left, right, expected) in cases {
+            let result = SifrInt::from_i64(left)
+                .checked_floor_mod(&SifrInt::from_i64(right))
+                .expect("non-zero divisor should produce a remainder");
+            assert_eq!(result, SifrInt::from_i64(expected));
+        }
+    }
+
+    #[test]
+    fn checked_floor_division_and_modulo_return_none_for_zero_divisor() {
+        let left = SifrInt::from_i64(7);
+        let zero = SifrInt::from_i64(0);
+
+        assert_eq!(left.checked_floor_div(&zero), None);
+        assert_eq!(left.checked_floor_mod(&zero), None);
+    }
+
+    #[test]
+    fn checked_floor_division_and_modulo_normalize_large_results() {
+        let left = SifrInt::parse_decimal("100000000000000000000", DEFAULT_MAX_INTEGER_DIGITS)
+            .unwrap_or_else(|err| panic!("{err}"));
+        let divisor = SifrInt::from_i64(3);
+
+        assert_eq!(
+            left.checked_floor_div(&divisor)
+                .expect("non-zero divisor")
+                .to_string(),
+            "33333333333333333333"
+        );
+        assert_eq!(
+            left.checked_floor_mod(&divisor)
+                .expect("non-zero divisor")
+                .to_string(),
+            "1"
+        );
     }
 
     #[test]
