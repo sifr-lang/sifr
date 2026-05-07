@@ -505,15 +505,27 @@ fn test_fixed_width_scalar_add_sub_mul_promote_to_int() {
     let module = lower_source(
         "\
 def main() -> None:
-    left: int32 = 2
-    right: int32 = 3
-    total: int = left + right
-    diff: int = left - 1
-    product: int = 2 * right
+    tiny: int8 = 2
+    small: int16 = 3
+    left: int32 = 5
+    wide: int64 = 7
+    byte: uint8 = 11
+    mid: uint16 = 13
+    large: uint32 = 17
+    pointer: isize = 19
+    tiny_total: int = tiny + small
+    total: int = left + wide
+    diff: int = mid - byte
+    product: int = 2 * large
+    pointer_total: int = pointer + 1
 ",
     )
     .expect("ordinary fixed-width scalar arithmetic should promote to int");
 
+    assert!(matches!(
+        function_let_value(&module, "tiny_total"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
     assert!(matches!(
         function_let_value(&module, "total"),
         HirExpr::BinOp { ty: Type::Int, .. }
@@ -524,6 +536,10 @@ def main() -> None:
     ));
     assert!(matches!(
         function_let_value(&module, "product"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+    assert!(matches!(
+        function_let_value(&module, "pointer_total"),
         HirExpr::BinOp { ty: Type::Int, .. }
     ));
 }

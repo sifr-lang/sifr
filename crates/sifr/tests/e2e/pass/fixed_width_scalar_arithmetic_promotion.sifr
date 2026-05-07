@@ -1,9 +1,26 @@
 def main() -> None:
+    tiny: int8 = 120
+    small: int16 = 32_000
     left: int32 = 2_000_000_000
     right: int32 = 2_000_000_000
+    wide: int64 = 9_000_000_000
+    byte: uint8 = 250
+    mid: uint16 = 65_000
+    large: uint32 = 4_000_000_000
+    pointer: isize = 500
+    tiny_total: int = tiny + small
     total: int = left + right
+    wide_total: int = wide + left
     diff: int = right - left
+    unsigned_diff: int = mid - byte
     product: int = 2 * right
+    unsigned_product: int = large * 2
+    pointer_total: int = pointer + 1
+    assert str(tiny_total) == "32120"
     assert str(total) == "4000000000"
+    assert str(wide_total) == "11000000000"
     assert str(diff) == "0"
+    assert str(unsigned_diff) == "64750"
     assert str(product) == "4000000000"
+    assert str(unsigned_product) == "8000000000"
+    assert str(pointer_total) == "501"
