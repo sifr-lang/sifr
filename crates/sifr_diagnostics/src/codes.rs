@@ -873,10 +873,10 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     active_entry!(
         "SIFR-INT-0005",
         "INT",
-        "Integer division or modulo requires handling a typed failure.",
+        "Integer division, modulo, or exponentiation requires handling a typed failure.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/exact_int_division_requires_handling.sifr",
-        "integer division or modulo requires handling Result[int, DivisionError] unless the compiler can prove this operation is safe",
+        "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe",
         "sifr_hir::lower::integer_failure_diagnostics",
         [],
         []

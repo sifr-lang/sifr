@@ -1,0 +1,5 @@
+# expect-error: SIFR-INT-0005
+
+def main() -> None:
+    base: uint8 = 2
+    value: int = base ** 3
