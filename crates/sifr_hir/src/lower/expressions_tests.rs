@@ -2280,6 +2280,39 @@ fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
 }
 
 #[test]
+fn test_bytes_index_and_iteration_expose_uint8() {
+    let source =
+        "def main() -> None:\n    payload: bytes = b\"abc\"\n    first = payload[0]\n    for value in payload:\n        seen: uint8 = value\n";
+    let module = lower_source(source).expect("bytes uint8 lowering should succeed");
+    let function = module
+        .functions
+        .iter()
+        .find(|function| function.name == "main")
+        .expect("main function should exist");
+
+    let Some(HirStmt::Let { ty: first_ty, .. }) = function
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::Let { name, .. } if name == "first"))
+    else {
+        panic!("expected first binding");
+    };
+    assert_eq!(
+        first_ty,
+        &Type::Union(vec![Type::FixedInt(FixedIntType::U8), Type::None])
+    );
+
+    let Some(HirStmt::For { target_ty, .. }) = function
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::For { target, .. } if target == "value"))
+    else {
+        panic!("expected bytes for loop");
+    };
+    assert_eq!(target_ty, &Type::FixedInt(FixedIntType::U8));
+}
+
+#[test]
 fn test_bytes_codec_type_errors_have_structured_codes() {
     let encode_source = "def main() -> None:\n    _bad: bytes = \"abc\".encode(1)\n";
     let encode_result = lower_source(encode_source);

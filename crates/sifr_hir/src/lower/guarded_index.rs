@@ -22,6 +22,7 @@ pub(super) fn guarded_sequence_index_result_type(
                 }
             }
             Type::Str => guarded_string_index_type(sequence_name.as_str(), &sub.slice, ctx),
+            Type::Bytes => guarded_bytes_index_type(sequence_name.as_str(), &sub.slice, ctx),
             _ => None,
         };
     }
@@ -78,6 +79,18 @@ fn guarded_string_index_type(
 ) -> Option<Type> {
     if has_guarded_sequence_index(sequence_name, index_expr, ctx) {
         Some(Type::Str)
+    } else {
+        None
+    }
+}
+
+fn guarded_bytes_index_type(
+    sequence_name: &str,
+    index_expr: &Expr,
+    ctx: &LowerCtx,
+) -> Option<Type> {
+    if has_guarded_sequence_index(sequence_name, index_expr, ctx) {
+        Some(Type::FixedInt(sifr_type_system::FixedIntType::U8))
     } else {
         None
     }

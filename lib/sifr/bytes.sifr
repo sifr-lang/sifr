@@ -28,7 +28,7 @@ def encode_utf8_result(s: str) -> Result[bytes, ParseError]:
 def count_byte(data: bytes, value: int) -> int:
     count: int = 0
     for b in data:
-        if b == value:
+        if int(b) == value:
             count = count + 1
     return count
 
@@ -36,7 +36,7 @@ def count_byte(data: bytes, value: int) -> int:
 def find_byte(data: bytes, value: int) -> int | None:
     idx: int = 0
     for b in data:
-        if b == value:
+        if int(b) == value:
             return idx
         idx = idx + 1
     return None
@@ -47,8 +47,8 @@ def starts_with(data: bytes, prefix: bytes) -> bool:
         return False
     i: int = 0
     while i < len(prefix):
-        a: int | None = data[i]
-        b: int | None = prefix[i]
+        a: uint8 | None = data[i]
+        b: uint8 | None = prefix[i]
         if a is None:
             return False
         if b is None:
@@ -65,8 +65,8 @@ def ends_with(data: bytes, suffix: bytes) -> bool:
     offset: int = len(data) - len(suffix)
     i: int = 0
     while i < len(suffix):
-        a: int | None = data[offset + i]
-        b: int | None = suffix[i]
+        a: uint8 | None = data[offset + i]
+        b: uint8 | None = suffix[i]
         if a is None:
             return False
         if b is None:

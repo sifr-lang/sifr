@@ -455,6 +455,8 @@ Validation:
 - [x] INT-3 fixed-width add API review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-add-apis-review-pass-1.md`.
 - [x] INT-3 fixed-width subtraction API review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-sub-apis-review-pass-1.md`.
 - [x] INT-3 fixed-width multiplication API review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-mul-apis-review-pass-1.md`.
+- [x] INT-4 bytes `uint8` surface review pass 1 satisfied with a non-blocking display-option fallback cleanup note: `reviews/integer-model-int-4-bytes-uint8-surface-review-pass-1.md`.
+- [x] INT-4 bytes `uint8` surface review pass 2 satisfied after addressing the pass 1 cleanup note: `reviews/integer-model-int-4-bytes-uint8-surface-review-pass-2.md`.
 
 ## Implementation Checklist
 
@@ -521,6 +523,7 @@ Validation:
   - [x] Fixed-width instance `checked_sub`, `wrapping_sub`, `saturating_sub`, and `overflowing_sub` now expose explicit representation-preserving subtraction for same-width operands, reject mixed-width operands, lower to Rust primitive no-panic APIs, and cover underflow/non-underflow behavior in e2e; review is satisfied and quick validation is passing: PR #1869.
   - [x] Fixed-width instance `checked_mul`, `wrapping_mul`, `saturating_mul`, and `overflowing_mul` now expose explicit representation-preserving multiplication for same-width operands, reject mixed-width operands, lower to Rust primitive no-panic APIs, and cover overflow/non-overflow behavior in e2e; review is satisfied and quick validation is passing: PR #1870.
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
+  - [x] `bytes` indexing, guarded indexing, and iteration now expose `uint8`; ordinary indexes and lengths remain `int`, stdlib bytes helpers widen explicitly with `int(b)`, display fallback typing is aligned, and focused bytes fixtures cover the surface; review is satisfied and quick validation is passing: PR #1872.
 - [ ] INT-5 serialization, web, and schema boundaries
 - [ ] INT-6A dtype contract lock
 - [ ] INT-6B deferred dtype runtime integration

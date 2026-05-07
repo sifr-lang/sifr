@@ -1101,7 +1101,7 @@ impl RustEmitter {
                                         expr: Box::new(crate::RustExpr::Deref(Box::new(
                                             crate::RustExpr::Ident("__byte".to_string()),
                                         ))),
-                                        ty: crate::RustType::I64,
+                                        ty: crate::RustType::Named("u8".to_string()),
                                     }),
                                     is_move: false,
                                 }],
