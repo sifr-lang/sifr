@@ -20,11 +20,19 @@ nohup claude --dangerously-skip-permissions --setting-sources project --model cl
 ${TOPIC_NAME}
 PROMPT
 )" >"${TARGET_FILE}" 2>"${LOG_FILE}" &
+CLAUDE_PID=$!
+wait "${CLAUDE_PID}"
+CLAUDE_EXIT_CODE=$?
+if [ "${CLAUDE_EXIT_CODE}" -ne 0 ] || [ ! -s "${TARGET_FILE}" ]; then
+  echo "Claude reviewer failed or produced an empty output. See ${LOG_FILE}" >&2
+  exit 1
+fi
 ```
 
 - Replace `<conversation-file-name>.md` with a concrete file name for the active topic.
 - If the target file already exists, use a new filename with the same prefix and an incremented suffix.
-- The command prints the background job id. Keep using the target file as the handoff artifact.
+- Keep the `wait "${CLAUDE_PID}"` in the same shell invocation; detached `nohup ... &` can leave empty artifacts in Codex exec sessions.
+- Keep using the target file as the handoff artifact.
 
 ## Wait For Output File
 
