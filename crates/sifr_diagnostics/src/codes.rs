@@ -62,6 +62,8 @@ impl DiagnosticCode {
     pub const INT_FIXED_WIDTH_OUT_OF_RANGE: Self = Self::new("SIFR-INT-0001", Severity::Error);
     pub const INT_RESERVED_WIDTH_NAME: Self = Self::new("SIFR-INT-0003", Severity::Error);
     pub const INT_EVAL_BUDGET_EXCEEDED: Self = Self::new("SIFR-INT-0004", Severity::Error);
+    pub const INT_EXACT_DIVISION_REQUIRES_HANDLING: Self =
+        Self::new("SIFR-INT-0005", Severity::Error);
     pub const INT_BIGINT_TRANSITION_ALIAS: Self = Self::new("SIFR-INT-0011", Severity::Warning);
 
     pub const CALL_WRONG_POSITIONAL_COUNT: Self = Self::new("SIFR-CALL-0001", Severity::Error);
@@ -869,6 +871,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["digits", "max_digits"]
     ),
     active_entry!(
+        "SIFR-INT-0005",
+        "INT",
+        "Exact integer division or modulo requires handling a typed failure.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/exact_int_division_requires_handling.sifr",
+        "exact integer division or modulo requires handling Result[int, DivisionError] unless the divisor is proven non-zero",
+        "sifr_hir::lower::integer_failure_diagnostics",
+        [],
+        []
+    ),
+    active_entry!(
         "SIFR-INT-0011",
         "INT",
         "Temporary bigint transition alias used.",
@@ -1602,6 +1615,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INT_FIXED_WIDTH_OUT_OF_RANGE,
     DiagnosticCode::INT_RESERVED_WIDTH_NAME,
     DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED,
+    DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING,
     DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
     DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
     DiagnosticCode::CALL_UNEXPECTED_KEYWORD,

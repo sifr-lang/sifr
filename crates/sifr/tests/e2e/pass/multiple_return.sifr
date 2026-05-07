@@ -1,7 +1,7 @@
-def divmod(a: int, b: int) -> tuple[int, int]:
-    return a // b, a % b
+def divmod(a: int) -> tuple[int, int]:
+    return a // 5, a % 5
 
 def main():
-    q, r = divmod(17, 5)
+    q, r = divmod(17)
     assert str(q) == '3'
     assert str(r) == '2'

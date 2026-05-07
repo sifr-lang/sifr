@@ -48,6 +48,7 @@ mod if_expression;
 mod import_diagnostics;
 mod imported_defaults;
 mod imports;
+mod integer_failure_diagnostics;
 mod integer_literal_diagnostics;
 mod integer_literals;
 mod len_aliases;
@@ -244,6 +245,11 @@ impl LowerCtx {
             const_integer_values: HashMap::new(),
         }
     }
+
+    fn is_stdlib_lowering(&self) -> bool {
+        self.allow_intrinsic_imports
+    }
+
     fn warn_arithmetic_overflow_risk(&mut self, operation: &'static str, range: TextRange) {
         self.warnings
             .push(LoweringWarningDiagnostic::ArithmeticOverflowRisk {

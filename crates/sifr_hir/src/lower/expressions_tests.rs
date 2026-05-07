@@ -311,6 +311,61 @@ fn test_fixed_width_const_expression_assignment_fits_and_folds() {
 }
 
 #[test]
+fn test_exact_int_division_by_unproven_divisor_has_int0005() {
+    let source = "\
+def main() -> None:
+    divisor: int = 3
+    value: int = 10 // divisor
+";
+    let errors = lower_source(source).expect_err("unproven exact-int divisor should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.message
+                == "exact integer division or modulo requires handling Result[int, DivisionError] unless the divisor is proven non-zero"
+            && error.primary_range == Some(range_for(source, "10 // divisor"))
+    }));
+}
+
+#[test]
+fn test_exact_int_mod_augassign_by_unproven_divisor_has_int0005() {
+    let source = "\
+def main() -> None:
+    divisor: int = 3
+    value: int = 10
+    value %= divisor
+";
+    let errors =
+        lower_source(source).expect_err("unproven exact-int augassign divisor should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for_after(source, "value %= ", "divisor"))
+    }));
+}
+
+#[test]
+fn test_exact_int_division_by_nonzero_literal_still_lowers_as_int() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    value: int = 10 // 2
+    remainder: int = 10 % -3
+",
+    )
+    .expect("proven non-zero literal divisors should lower");
+
+    assert!(matches!(
+        function_let_value(&module, "value"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+    assert!(matches!(
+        function_let_value(&module, "remainder"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+}
+
+#[test]
 fn test_fixed_width_const_expression_uses_module_integer_constants() {
     let module = lower_source(
         "BASE: int = 250 + 4\n\ndef main() -> uint8:\n    value: uint8 = BASE + 1\n    return value\n",
