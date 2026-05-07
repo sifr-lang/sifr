@@ -322,7 +322,7 @@ def main() -> None:
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
             && error.message
-                == "exact integer division or modulo requires handling Result[int, DivisionError] unless the divisor is proven non-zero"
+                == "integer division or modulo requires handling Result[int, DivisionError] unless the compiler can prove this operation is safe"
             && error.primary_range == Some(range_for(source, "10 // divisor"))
     }));
 }
@@ -394,6 +394,39 @@ def main() -> None:
             value: HirExpr::UnaryOp { ty: Type::Int, .. },
         } if name == "value" && op == "%="
     ));
+}
+
+#[test]
+fn test_fixed_width_floor_division_requires_handling_even_with_literal_divisor() {
+    let source = "\
+def main() -> None:
+    left: uint8 = 10
+    value: int = left // 2
+";
+    let errors = lower_source(source).expect_err("fixed-width floor division should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.message
+                == "integer division or modulo requires handling Result[int, DivisionError] unless the compiler can prove this operation is safe"
+            && error.primary_range == Some(range_for(source, "left // 2"))
+    }));
+}
+
+#[test]
+fn test_fixed_width_mod_augassign_requires_handling() {
+    let source = "\
+def main() -> None:
+    value: uint8 = 10
+    divisor: uint8 = 3
+    value %= divisor
+";
+    let errors = lower_source(source).expect_err("fixed-width modulo augassign should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for_after(source, "value %= ", "divisor"))
+    }));
 }
 
 #[test]

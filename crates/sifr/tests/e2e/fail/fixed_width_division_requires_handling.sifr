@@ -1,0 +1,6 @@
+# expect-error: SIFR-INT-0005
+
+def main() -> None:
+    left: uint8 = 10
+    divisor: uint8 = 2
+    value: int = left // divisor
