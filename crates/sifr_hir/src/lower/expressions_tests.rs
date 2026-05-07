@@ -366,6 +366,37 @@ def main() -> None:
 }
 
 #[test]
+fn test_exact_int_augassign_by_nonzero_literal_still_lowers() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    value: int = 28
+    value //= 3
+    value %= -5
+",
+    )
+    .expect("proven non-zero literal augassign divisors should lower");
+
+    let main_fn = &module.functions[0];
+    assert!(matches!(
+        &main_fn.body[1],
+        HirStmt::AugAssign {
+            name,
+            op,
+            value: HirExpr::IntLiteral(3),
+        } if name == "value" && op == "//="
+    ));
+    assert!(matches!(
+        &main_fn.body[2],
+        HirStmt::AugAssign {
+            name,
+            op,
+            value: HirExpr::UnaryOp { ty: Type::Int, .. },
+        } if name == "value" && op == "%="
+    ));
+}
+
+#[test]
 fn test_fixed_width_const_expression_uses_module_integer_constants() {
     let module = lower_source(
         "BASE: int = 250 + 4\n\ndef main() -> uint8:\n    value: uint8 = BASE + 1\n    return value\n",
