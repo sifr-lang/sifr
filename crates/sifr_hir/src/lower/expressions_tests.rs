@@ -328,6 +328,24 @@ def main() -> None:
 }
 
 #[test]
+fn test_exact_int_true_division_has_int0006() {
+    let source = "\
+def main() -> None:
+    numerator: int = 10
+    denominator: int = 3
+    value: float = numerator / denominator
+";
+    let errors = lower_source(source).expect_err("exact-int true division should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+            && error.message
+                == "exact integer to float conversion requires handling possible overflow or precision loss"
+            && error.primary_range == Some(range_for(source, "numerator / denominator"))
+    }));
+}
+
+#[test]
 fn test_exact_int_mod_augassign_by_unproven_divisor_has_int0005() {
     let source = "\
 def main() -> None:
