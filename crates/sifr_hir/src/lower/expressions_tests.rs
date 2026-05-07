@@ -566,6 +566,36 @@ def main() -> None:
 }
 
 #[test]
+fn test_unbounded_generic_addition_requires_addable_bound() {
+    let source = "\
+def add_same[T](left: T, right: T) -> T:
+    return left + right
+";
+    let errors = lower_source(source).expect_err("unbounded generic addition should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+            && error.message
+                == "generic addition on type parameter 'T' requires an Addable bound with output assignable to T"
+            && error.primary_range == Some(range_for(source, "left + right"))
+    }));
+}
+
+#[test]
+fn test_addable_generic_addition_accepts_int() {
+    lower_source(
+        "\
+def add_same[T: Addable](left: T, right: T) -> T:
+    return left + right
+
+def main() -> None:
+    value: int = add_same(1, 2)
+",
+    )
+    .expect("Addable generic addition should accept exact int");
+}
+
+#[test]
 fn test_exact_int_division_after_zero_guard_early_exit_lowers() {
     let module = lower_source(
         "\
