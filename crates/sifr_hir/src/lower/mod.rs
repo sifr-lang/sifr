@@ -32,6 +32,7 @@ mod expression_sum_sorted;
 mod expressions;
 #[cfg(test)]
 mod expressions_tests;
+mod fixed_width_arithmetic_methods;
 mod fixed_width_class_payload;
 mod fixed_width_fitting;
 mod flow_diagnostics;

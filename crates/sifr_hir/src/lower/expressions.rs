@@ -29,6 +29,7 @@ use super::expression_functional_builtins::{
 use super::expression_iter_builtins::{lower_enumerate_call, lower_reversed_call};
 use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
 use super::expression_sum_sorted::{lower_sorted_call, lower_sum_call};
+use super::fixed_width_arithmetic_methods::resolve_fixed_width_method_type;
 use super::fstring_support::lower_fstring_expr;
 use super::generic_constructor_specialization::refine_constructor_return_type_from_args;
 use super::generic_receiver_specialization::refine_generic_class_binding_expr;
@@ -3067,6 +3068,9 @@ pub(super) fn resolve_method_type(
             }
         },
         Type::Bytes => resolve_bytes_method_type(method, args, arg_ranges, method_range, ctx),
+        Type::FixedInt(fixed) => {
+            resolve_fixed_width_method_type(*fixed, method, args, arg_ranges, method_range, ctx)
+        }
         Type::Tuple(_) => match method {
             "len" => Some(Type::Int),
             "count" => {
@@ -3333,9 +3337,6 @@ pub(super) fn resolve_method_type(
     }
 }
 
-/// Lower a lambda or regular expression with contextual type information for parameters.
-/// If the expression is a lambda, use `context_types` for untyped parameters.
-/// If it's not a lambda, just lower it normally.
 pub(super) fn lower_lambda_with_context(
     expr: &Expr,
     context_types: &[Type],

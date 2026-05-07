@@ -744,6 +744,57 @@ def main() -> None:
 }
 
 #[test]
+fn test_fixed_width_add_apis_have_representation_preserving_types() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    high: int8 = 127
+    one: int8 = 1
+    checked: Result[int8, OverflowError] = high.checked_add(one)
+    wrapped: int8 = high.wrapping_add(one)
+    saturated: int8 = high.saturating_add(one)
+    overflowed: tuple[int8, bool] = high.overflowing_add(one)
+",
+    )
+    .expect("fixed-width add APIs should lower with representation-preserving types");
+
+    assert!(matches!(
+        function_let_value(&module, "checked"),
+        HirExpr::MethodCall { ty: Type::Result(ok, _), .. }
+            if ok.as_ref() == &Type::FixedInt(FixedIntType::I8)
+    ));
+    assert_eq!(
+        function_let_value(&module, "wrapped").ty(),
+        &Type::FixedInt(FixedIntType::I8)
+    );
+    assert_eq!(
+        function_let_value(&module, "saturated").ty(),
+        &Type::FixedInt(FixedIntType::I8)
+    );
+    assert_eq!(
+        function_let_value(&module, "overflowed").ty(),
+        &Type::Tuple(vec![Type::FixedInt(FixedIntType::I8), Type::Bool])
+    );
+}
+
+#[test]
+fn test_fixed_width_add_api_rejects_mixed_width_argument() {
+    let source = "\
+def main() -> None:
+    left: int8 = 1
+    right: int16 = 2
+    wrapped: int8 = left.wrapping_add(right)
+";
+    let errors = lower_source(source).expect_err("fixed-width add API should reject mixed widths");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message == "int8.wrapping_add() argument must be 'int8', got 'int16'"
+            && error.primary_range == Some(range_for_after(source, "wrapping_add(", "right"))
+    }));
+}
+
+#[test]
 fn test_fixed_width_const_expression_out_of_range_has_int_code() {
     let source = "def main():\n    too_wide: uint8 = 2 ** 8\n";
     let errors =

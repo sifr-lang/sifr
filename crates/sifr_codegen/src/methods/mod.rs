@@ -5,6 +5,7 @@ mod common;
 mod decimal;
 mod deque;
 mod dict;
+mod fixed_width;
 mod list;
 mod set;
 mod string;
@@ -100,6 +101,10 @@ pub(crate) fn lower_method_with_context(
         (Type::Bytes, "contains") => bytes::lower_contains(object, args),
         (Type::Bytes, "index") => bytes::lower_index(object, args),
         (Type::Bytes, "to_ints") => bytes::lower_to_ints(object, args),
+        (Type::FixedInt(_), "checked_add") => fixed_width::lower_checked_add(object, args),
+        (Type::FixedInt(_), "wrapping_add") => fixed_width::lower_wrapping_add(object, args),
+        (Type::FixedInt(_), "saturating_add") => fixed_width::lower_saturating_add(object, args),
+        (Type::FixedInt(_), "overflowing_add") => fixed_width::lower_overflowing_add(object, args),
         (Type::Dict(_, _), "keys") => dict::lower_keys(object, args),
         (Type::Dict(_, _), "values") => dict::lower_values(object, args),
         (Type::Dict(_, _), "items") => dict::lower_items(object, args),
