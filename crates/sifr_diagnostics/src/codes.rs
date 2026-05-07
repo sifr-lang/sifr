@@ -64,6 +64,8 @@ impl DiagnosticCode {
     pub const INT_EVAL_BUDGET_EXCEEDED: Self = Self::new("SIFR-INT-0004", Severity::Error);
     pub const INT_EXACT_DIVISION_REQUIRES_HANDLING: Self =
         Self::new("SIFR-INT-0005", Severity::Error);
+    pub const INT_EXACT_TO_FLOAT_REQUIRES_HANDLING: Self =
+        Self::new("SIFR-INT-0006", Severity::Error);
     pub const INT_BOOL_INTEGER_COMPARISON: Self = Self::new("SIFR-INT-0007", Severity::Error);
     pub const INT_BIGINT_TRANSITION_ALIAS: Self = Self::new("SIFR-INT-0011", Severity::Warning);
 
@@ -883,6 +885,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         []
     ),
     active_entry!(
+        "SIFR-INT-0006",
+        "INT",
+        "Exact integer to float conversion requires handling precision loss.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/exact_int_true_division_requires_handling.sifr",
+        "exact integer to float conversion requires handling possible overflow or precision loss",
+        "sifr_type_system",
+        [],
+        []
+    ),
+    active_entry!(
         "SIFR-INT-0007",
         "INT",
         "Bool and integer comparison requires explicit conversion.",
@@ -1628,6 +1641,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INT_RESERVED_WIDTH_NAME,
     DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED,
     DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING,
+    DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING,
     DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
     DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
     DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,

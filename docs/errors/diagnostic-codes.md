@@ -76,6 +76,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-INT-0003`](SIFR-INT-0003.md) | Error | Reserved integer width name used before support lands. |
 | [`SIFR-INT-0004`](SIFR-INT-0004.md) | Error | Compile-time integer evaluation budget exceeded. |
 | [`SIFR-INT-0005`](SIFR-INT-0005.md) | Error | Integer division, modulo, or exponentiation requires handling a typed failure. |
+| [`SIFR-INT-0006`](SIFR-INT-0006.md) | Error | Exact integer to float conversion requires handling precision loss. |
 | [`SIFR-INT-0007`](SIFR-INT-0007.md) | Error | Bool and integer comparison requires explicit conversion. |
 | [`SIFR-INT-0011`](SIFR-INT-0011.md) | Warning | Temporary bigint transition alias used. |
 | [`SIFR-CALL-0001`](SIFR-CALL-0001.md) | Error | Wrong positional argument count. |

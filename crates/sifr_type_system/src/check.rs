@@ -38,6 +38,13 @@ fn is_integer_type(ty: &Type) -> bool {
     )
 }
 
+fn is_exact_to_float_integer_type(ty: &Type) -> bool {
+    matches!(
+        ty.resolve_alias(),
+        Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::FixedInt(_)
+    )
+}
+
 fn is_bool_integer_mixed_comparison(left: &Type, right: &Type) -> bool {
     (is_bool_type(left) && is_integer_type(right)) || (is_integer_type(left) && is_bool_type(right))
 }
@@ -210,6 +217,12 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             ))
         }
         "/" => {
+            if is_exact_to_float_integer_type(left) && is_exact_to_float_integer_type(right) {
+                return Err((
+                    DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING,
+                    "exact integer to float conversion requires handling possible overflow or precision loss".to_string(),
+                ));
+            }
             // Decimal-family arithmetic
             if is_decimal_type(left) && is_decimal_type(right) {
                 return Ok(Type::Decimal);
@@ -645,11 +658,20 @@ mod tests {
     }
 
     #[test]
-    fn test_division_returns_float() {
-        assert_eq!(
-            type_check_binary_op(&Type::Int, "/", &Type::Int).unwrap(),
-            Type::Float
-        );
+    fn test_exact_integer_true_division_requires_float_handling() {
+        for (left, right) in [
+            (Type::Int, Type::Int),
+            (Type::LiteralInt(10), Type::LiteralInt(2)),
+            (Type::FixedInt(crate::FixedIntType::I32), Type::Int),
+            (Type::BigInt, Type::BigInt),
+        ] {
+            let err = type_check_binary_op(&left, "/", &right).unwrap_err();
+            assert_eq!(err.0, DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING);
+            assert_eq!(
+                err.1,
+                "exact integer to float conversion requires handling possible overflow or precision loss"
+            );
+        }
     }
 
     #[test]

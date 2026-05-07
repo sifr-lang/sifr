@@ -1,0 +1,6 @@
+# expect-error: SIFR-INT-0006
+
+def main() -> None:
+    numerator: int = 10
+    denominator: int = 3
+    value: float = numerator / denominator
