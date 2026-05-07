@@ -1,0 +1,46 @@
+{
+  "details": {
+    "0332_reconstruct_itinerary": {
+      "nested_or_class_untyped_defs": [
+        {
+          "line": 13,
+          "missing_params": [
+            "list[str]]"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(adj: dict[str, list[str]], src: str):"
+        }
+      ],
+      "top_level_untyped_defs": []
+    },
+    "2092_find_all_people_with_secret": {
+      "nested_or_class_untyped_defs": [
+        {
+          "line": 13,
+          "missing_params": [
+            "list[int]]"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(src: int, adj: dict[int, list[int]]):"
+        }
+      ],
+      "top_level_untyped_defs": []
+    }
+  },
+  "groups": {
+    "class_boundary_exceptions": [],
+    "top_level": [],
+    "true_nested_local": [
+      "0332_reconstruct_itinerary",
+      "2092_find_all_people_with_secret"
+    ]
+  },
+  "note": "Primary-root-cause style signature-invalid inventory for the Any/Unknown lane.",
+  "source_results": "verification/leetcode/full_corpus_current_results_20260402_live.json",
+  "totals": {
+    "class_boundary_exceptions": 0,
+    "signature_invalid_total": 2,
+    "top_level": 0,
+    "true_nested_local": 2
+  }
+}

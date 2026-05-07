@@ -1,0 +1,972 @@
+{
+  "fixtures": {
+    "0040_combination_sum_ii": {
+      "nested_or_class": [
+        {
+          "line": 8,
+          "missing_params": [
+            "cur",
+            "pos",
+            "target"
+          ],
+          "name": "backtrack",
+          "signature": "def backtrack(cur, pos, target):"
+        }
+      ],
+      "top_level": []
+    },
+    "0047_permutations_ii": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "perm",
+            "counter"
+          ],
+          "name": "backtrack",
+          "signature": "def backtrack(perm, counter):"
+        }
+      ],
+      "top_level": []
+    },
+    "0051_n_queens": {
+      "nested_or_class": [
+        {
+          "line": 11,
+          "missing_params": [
+            "r"
+          ],
+          "name": "backtrack",
+          "signature": "def backtrack(r):"
+        }
+      ],
+      "top_level": []
+    },
+    "0079_word_search": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "r",
+            "c",
+            "i"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(r, c, i):"
+        }
+      ],
+      "top_level": []
+    },
+    "0094_binary_tree_inorder_traversal": {
+      "nested_or_class": [
+        {
+          "line": 69,
+          "missing_params": [
+            "root"
+          ],
+          "name": "helper",
+          "signature": "def helper(root):"
+        }
+      ],
+      "top_level": []
+    },
+    "0106_construct_binary_tree_from_inorder_and_postorder_traversal": {
+      "nested_or_class": [
+        {
+          "line": 53,
+          "missing_params": [
+            "left",
+            "right"
+          ],
+          "name": "buildTreeHelper",
+          "signature": "def buildTreeHelper(left, right):"
+        }
+      ],
+      "top_level": []
+    },
+    "0112_path_sum": {
+      "nested_or_class": [],
+      "top_level": [
+        {
+          "line": 13,
+          "missing_params": [
+            "root",
+            "sum"
+          ],
+          "name": "hasPathSum",
+          "signature": "def hasPathSum(root, sum):"
+        },
+        {
+          "line": 23,
+          "missing_params": [
+            "root",
+            "sum"
+          ],
+          "name": "hasPathSum",
+          "signature": "def hasPathSum(root, sum):"
+        }
+      ]
+    },
+    "0118_pascals_triangle": {
+      "nested_or_class": [],
+      "top_level": [
+        {
+          "line": 3,
+          "missing_params": [
+            "rowIndex"
+          ],
+          "name": "generate",
+          "signature": "def generate(rowIndex) -> list[list[int]]:"
+        },
+        {
+          "line": 10,
+          "missing_params": [
+            "rowIndex"
+          ],
+          "name": "getAllRow",
+          "signature": "def getAllRow(rowIndex):"
+        }
+      ]
+    },
+    "0124_binary_tree_maximum_path_sum": {
+      "nested_or_class": [
+        {
+          "line": 56,
+          "missing_params": [
+            "root"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(root):"
+        }
+      ],
+      "top_level": []
+    },
+    "0130_surrounded_regions": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "r",
+            "c"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(r, c):"
+        }
+      ],
+      "top_level": []
+    },
+    "0138_copy_list_with_random_pointer": {
+      "nested_or_class": [],
+      "top_level": [
+        {
+          "line": 3,
+          "missing_params": [
+            "int]]"
+          ],
+          "name": "buildRandomList",
+          "signature": "def buildRandomList(spec: list[tuple[int, int]]) -> Node | None:"
+        }
+      ]
+    },
+    "0146_lru_cache": {
+      "nested_or_class": [
+        {
+          "line": 4,
+          "missing_params": [
+            "key",
+            "val"
+          ],
+          "name": "__init__",
+          "signature": "def __init__(self, key, val):"
+        },
+        {
+          "line": 13,
+          "missing_params": [
+            "node"
+          ],
+          "name": "remove",
+          "signature": "def remove(self, node):"
+        },
+        {
+          "line": 16,
+          "missing_params": [
+            "node"
+          ],
+          "name": "insert",
+          "signature": "def insert(self, node):"
+        }
+      ],
+      "top_level": []
+    },
+    "0179_largest_number": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "n1",
+            "n2"
+          ],
+          "name": "compare",
+          "signature": "def compare(n1, n2):"
+        }
+      ],
+      "top_level": []
+    },
+    "0200_number_of_islands": {
+      "nested_or_class": [
+        {
+          "line": 11,
+          "missing_params": [
+            "r",
+            "c"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(r, c):"
+        },
+        {
+          "line": 36,
+          "missing_params": [
+            "r",
+            "c"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(r, c):"
+        },
+        {
+          "line": 61,
+          "missing_params": [
+            "r",
+            "c"
+          ],
+          "name": "bfs",
+          "signature": "def bfs(r, c):"
+        }
+      ],
+      "top_level": []
+    },
+    "0211_design_add_and_search_words_data_structure": {
+      "nested_or_class": [
+        {
+          "line": 45,
+          "missing_params": [
+            "j",
+            "root"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(j, root):"
+        }
+      ],
+      "top_level": []
+    },
+    "0212_word_search_ii": {
+      "nested_or_class": [
+        {
+          "line": 38,
+          "missing_params": [
+            "r",
+            "c",
+            "node",
+            "word"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(r, c, node, word):"
+        },
+        {
+          "line": 74,
+          "missing_params": [
+            "word"
+          ],
+          "name": "addWord",
+          "signature": "def addWord(self, word):"
+        },
+        {
+          "line": 83,
+          "missing_params": [
+            "word"
+          ],
+          "name": "removeWord",
+          "signature": "def removeWord(self, word):"
+        }
+      ],
+      "top_level": []
+    },
+    "0221_maximal_square": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "r",
+            "c"
+          ],
+          "name": "helper",
+          "signature": "def helper(r, c):"
+        }
+      ],
+      "top_level": []
+    },
+    "0241_different_ways_to_add_parentheses": {
+      "nested_or_class": [
+        {
+          "line": 4,
+          "missing_params": [
+            "s"
+          ],
+          "name": "f",
+          "signature": "def f(s):"
+        }
+      ],
+      "top_level": []
+    },
+    "0261_graph_valid_tree": {
+      "nested_or_class": [
+        {
+          "line": 13,
+          "missing_params": [
+            "i",
+            "prev"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(i, prev):"
+        }
+      ],
+      "top_level": [
+        {
+          "line": 3,
+          "missing_params": [
+            "n",
+            "edges"
+          ],
+          "name": "validTree",
+          "signature": "def validTree(n, edges):"
+        }
+      ]
+    },
+    "0269_alien_dictionary": {
+      "nested_or_class": [
+        {
+          "line": 20,
+          "missing_params": [
+            "char"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(char):"
+        }
+      ],
+      "top_level": []
+    },
+    "0297_serialize_and_deserialize_binary_tree": {
+      "nested_or_class": [
+        {
+          "line": 53,
+          "missing_params": [
+            "root"
+          ],
+          "name": "serialize",
+          "signature": "def serialize(self, root):"
+        },
+        {
+          "line": 55,
+          "missing_params": [
+            "node"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(node):"
+        },
+        {
+          "line": 64,
+          "missing_params": [
+            "data"
+          ],
+          "name": "deserialize",
+          "signature": "def deserialize(self, data):"
+        }
+      ],
+      "top_level": []
+    },
+    "0304_range_sum_query_2d_immutable": {
+      "nested_or_class": [
+        {
+          "line": 4,
+          "missing_params": [
+            "matrix"
+          ],
+          "name": "__init__",
+          "signature": "def __init__(self, matrix):"
+        },
+        {
+          "line": 12,
+          "missing_params": [
+            "row1",
+            "col1",
+            "row2",
+            "col2"
+          ],
+          "name": "sumRegion",
+          "signature": "def sumRegion(self, row1, col1, row2, col2):"
+        }
+      ],
+      "top_level": []
+    },
+    "0323_number_of_connected_components_in_an_undirected_graph": {
+      "nested_or_class": [
+        {
+          "line": 13,
+          "missing_params": [
+            "x"
+          ],
+          "name": "findParent",
+          "signature": "def findParent(self, x):"
+        },
+        {
+          "line": 18,
+          "missing_params": [
+            "x",
+            "y"
+          ],
+          "name": "union",
+          "signature": "def union(self, x, y):"
+        }
+      ],
+      "top_level": []
+    },
+    "0329_longest_increasing_path_in_a_matrix": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "r",
+            "c",
+            "prevVal"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(r, c, prevVal):"
+        }
+      ],
+      "top_level": []
+    },
+    "0332_reconstruct_itinerary": {
+      "nested_or_class": [
+        {
+          "line": 13,
+          "missing_params": [
+            "list[str]]"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(adj: dict[str, list[str]], src: str):"
+        }
+      ],
+      "top_level": []
+    },
+    "0371_sum_of_two_integers": {
+      "nested_or_class": [
+        {
+          "line": 4,
+          "missing_params": [
+            "a",
+            "b"
+          ],
+          "name": "add",
+          "signature": "def add(a, b):"
+        }
+      ],
+      "top_level": []
+    },
+    "0410_split_array_largest_sum": {
+      "nested_or_class": [
+        {
+          "line": 4,
+          "missing_params": [
+            "largest"
+          ],
+          "name": "canSplit",
+          "signature": "def canSplit(largest):"
+        }
+      ],
+      "top_level": []
+    },
+    "0417_pacific_atlantic_water_flow": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "int]]"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(r: int, c: int, visit: set[tuple[int, int]], prevHeight: int):"
+        }
+      ],
+      "top_level": []
+    },
+    "0463_island_perimeter": {
+      "nested_or_class": [
+        {
+          "line": 6,
+          "missing_params": [
+            "i",
+            "j"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(i, j):"
+        }
+      ],
+      "top_level": []
+    },
+    "0473_matchsticks_to_square": {
+      "nested_or_class": [
+        {
+          "line": 11,
+          "missing_params": [
+            "i"
+          ],
+          "name": "backtrack",
+          "signature": "def backtrack(i):"
+        }
+      ],
+      "top_level": []
+    },
+    "0513_find_bottom_left_tree_value": {
+      "nested_or_class": [
+        {
+          "line": 75,
+          "missing_params": [
+            "root",
+            "depth"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(root, depth):"
+        }
+      ],
+      "top_level": []
+    },
+    "0516_longest_palindromic_subsequence": {
+      "nested_or_class": [
+        {
+          "line": 25,
+          "missing_params": [
+            "i",
+            "j"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(i, j):"
+        }
+      ],
+      "top_level": []
+    },
+    "0543_diameter_of_binary_tree": {
+      "nested_or_class": [
+        {
+          "line": 55,
+          "missing_params": [
+            "root"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(root):"
+        }
+      ],
+      "top_level": []
+    },
+    "0673_number_of_longest_increasing_subsequence": {
+      "nested_or_class": [
+        {
+          "line": 9,
+          "missing_params": [
+            "i"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(i):"
+        }
+      ],
+      "top_level": []
+    },
+    "0707_design_linked_list": {
+      "nested_or_class": [
+        {
+          "line": 31,
+          "missing_params": [
+            "val"
+          ],
+          "name": "__init__",
+          "signature": "def __init__(self, val):"
+        }
+      ],
+      "top_level": []
+    },
+    "0729_my_calendar_i": {
+      "nested_or_class": [
+        {
+          "line": 34,
+          "missing_params": [
+            "cur",
+            "targetStart",
+            "targetEnd"
+          ],
+          "name": "bookHelper",
+          "signature": "def bookHelper(cur, targetStart, targetEnd):"
+        },
+        {
+          "line": 48,
+          "missing_params": [
+            "start",
+            "end"
+          ],
+          "name": "__init__",
+          "signature": "def __init__(self, start, end):"
+        }
+      ],
+      "top_level": []
+    },
+    "0783_minimum_distance_between_bst_nodes": {
+      "nested_or_class": [
+        {
+          "line": 55,
+          "missing_params": [
+            "node"
+          ],
+          "name": "inorder",
+          "signature": "def inorder(node):"
+        }
+      ],
+      "top_level": []
+    },
+    "0785_is_graph_bipartite": {
+      "nested_or_class": [
+        {
+          "line": 27,
+          "missing_params": [
+            "node",
+            "c"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(node, c):"
+        }
+      ],
+      "top_level": []
+    },
+    "0802_find_eventual_safe_states": {
+      "nested_or_class": [
+        {
+          "line": 34,
+          "missing_params": [
+            "i"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(i):"
+        }
+      ],
+      "top_level": []
+    },
+    "0894_all_possible_full_binary_trees": {
+      "nested_or_class": [
+        {
+          "line": 55,
+          "missing_params": [
+            "n"
+          ],
+          "name": "backtrack",
+          "signature": "def backtrack(n):"
+        }
+      ],
+      "top_level": []
+    },
+    "0931_minimum_falling_path_sum": {
+      "nested_or_class": [
+        {
+          "line": 6,
+          "missing_params": [
+            "i",
+            "k",
+            "n"
+          ],
+          "name": "Path",
+          "signature": "def Path(i, k, n):"
+        }
+      ],
+      "top_level": []
+    },
+    "1011_capacity_to_ship_packages_within_d_days": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "cap"
+          ],
+          "name": "canShip",
+          "signature": "def canShip(cap):"
+        }
+      ],
+      "top_level": []
+    },
+    "1020_number_of_enclaves": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "grid",
+            "row",
+            "col"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(grid, row, col):"
+        }
+      ],
+      "top_level": []
+    },
+    "1049_last_stone_weight_ii": {
+      "nested_or_class": [
+        {
+          "line": 8,
+          "missing_params": [
+            "i",
+            "total"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(i, total):"
+        }
+      ],
+      "top_level": []
+    },
+    "1220_count_vowels_permutation": {
+      "nested_or_class": [],
+      "top_level": [
+        {
+          "line": 5,
+          "missing_params": [
+            "n",
+            "c"
+          ],
+          "name": "countVowelPermutation",
+          "signature": "def countVowelPermutation(n, c = '') -> int:"
+        }
+      ]
+    },
+    "1254_number_of_closed_islands": {
+      "nested_or_class": [
+        {
+          "line": 8,
+          "missing_params": [
+            "x",
+            "y"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(x, y):"
+        }
+      ],
+      "top_level": []
+    },
+    "1260_shift_2d_grid": {
+      "nested_or_class": [
+        {
+          "line": 6,
+          "missing_params": [
+            "r",
+            "c"
+          ],
+          "name": "posToVal",
+          "signature": "def posToVal(r, c):"
+        },
+        {
+          "line": 8,
+          "missing_params": [
+            "v"
+          ],
+          "name": "valToPos",
+          "signature": "def valToPos(v):"
+        }
+      ],
+      "top_level": []
+    },
+    "1397_find_all_good_strings": {
+      "nested_or_class": [
+        {
+          "line": 18,
+          "missing_params": [
+            "s"
+          ],
+          "name": "good",
+          "signature": "def good(s):"
+        },
+        {
+          "line": 23,
+          "missing_params": [
+            "i",
+            "skip",
+            "reach",
+            "e"
+          ],
+          "name": "f",
+          "signature": "def f(i, skip, reach, e):"
+        }
+      ],
+      "top_level": []
+    },
+    "1462_course_schedule_iv": {
+      "nested_or_class": [
+        {
+          "line": 8,
+          "missing_params": [
+            "crs"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(crs):"
+        }
+      ],
+      "top_level": []
+    },
+    "1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero": {
+      "nested_or_class": [
+        {
+          "line": 13,
+          "missing_params": [
+            "city"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(city):"
+        }
+      ],
+      "top_level": []
+    },
+    "1472_design_browser_history": {
+      "nested_or_class": [
+        {
+          "line": 31,
+          "missing_params": [
+            "val",
+            "prev",
+            "next"
+          ],
+          "name": "__init__",
+          "signature": "def __init__(self, val, prev=None, next=None):"
+        }
+      ],
+      "top_level": []
+    },
+    "1572_matrix_diagonal_sum": {
+      "nested_or_class": [],
+      "top_level": [
+        {
+          "line": 3,
+          "missing_params": [
+            "mat"
+          ],
+          "name": "PrimeSum",
+          "signature": "def PrimeSum(mat):"
+        },
+        {
+          "line": 10,
+          "missing_params": [
+            "mat"
+          ],
+          "name": "CrossSum",
+          "signature": "def CrossSum(mat):"
+        }
+      ]
+    },
+    "1849_splitting_a_string_into_descending_consecutive_values": {
+      "nested_or_class": [
+        {
+          "line": 5,
+          "missing_params": [
+            "index",
+            "prev"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(index, prev):"
+        }
+      ],
+      "top_level": []
+    },
+    "1958_check_if_move_is_legal": {
+      "nested_or_class": [
+        {
+          "line": 9,
+          "missing_params": [
+            "row",
+            "col",
+            "color",
+            "direc"
+          ],
+          "name": "legal",
+          "signature": "def legal(row, col, color, direc):"
+        }
+      ],
+      "top_level": []
+    },
+    "1980_find_unique_binary_string": {
+      "nested_or_class": [
+        {
+          "line": 7,
+          "missing_params": [
+            "i",
+            "cur"
+          ],
+          "name": "backtrack",
+          "signature": "def backtrack(i, cur):"
+        }
+      ],
+      "top_level": []
+    },
+    "2092_find_all_people_with_secret": {
+      "nested_or_class": [
+        {
+          "line": 13,
+          "missing_params": [
+            "list[int]]"
+          ],
+          "name": "dfs",
+          "signature": "def dfs(src: int, adj: dict[int, list[int]]):"
+        }
+      ],
+      "top_level": []
+    },
+    "2616_minimize_the_maximum_difference_of_pairs": {
+      "nested_or_class": [
+        {
+          "line": 6,
+          "missing_params": [
+            "mid"
+          ],
+          "name": "checkPair",
+          "signature": "def checkPair(mid):"
+        }
+      ],
+      "top_level": []
+    },
+    "2709_greatest_common_divisor_traversal": {
+      "nested_or_class": [
+        {
+          "line": 27,
+          "missing_params": [
+            "n"
+          ],
+          "name": "__init__",
+          "signature": "def __init__(self, n):"
+        },
+        {
+          "line": 31,
+          "missing_params": [
+            "x"
+          ],
+          "name": "find",
+          "signature": "def find(self, x):"
+        },
+        {
+          "line": 35,
+          "missing_params": [
+            "x",
+            "y"
+          ],
+          "name": "union",
+          "signature": "def union(self, x, y):"
+        }
+      ],
+      "top_level": []
+    }
+  },
+  "source_results": "verification/leetcode/full_corpus_current_results_20260402_live.json",
+  "totals": {
+    "failing_fixtures": 249,
+    "fixtures_with_missing_signatures": 58,
+    "fixtures_with_nested_or_class_missing_signatures_only": 52,
+    "fixtures_with_top_level_missing_signatures": 6
+  }
+}
