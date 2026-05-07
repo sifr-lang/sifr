@@ -414,6 +414,7 @@ Validation:
 - [x] INT-1 multi-level nested lexical shadowing review satisfied with non-blocking forced-local capture follow-up: `reviews/integer-model-int-1-sifrint-multilevel-shadowing-review-pass-1.md`.
 - [x] INT-1 multi-level forced-local capture review satisfied with non-blocking chained-forcing follow-up: `reviews/integer-model-int-1-sifrint-multilevel-forced-captures-review-pass-1.md`.
 - [x] INT-1 seeded chained-forcing coverage review satisfied with optional forced-set seeding note: `reviews/integer-model-int-1-sifrint-seeded-chained-forcing-review-pass-1.md`.
+- [x] INT-1 checked `SifrInt` floor division/modulo runtime review satisfied with non-blocking overflow-boundary coverage note: `reviews/integer-model-int-1-sifrint-checked-floor-mod-runtime-review-pass-1.md`.
 - [x] INT-2A reserved-width diagnostic review pass 1 completed with doc-code normalization blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-1.md`.
 - [x] INT-2A reserved-width diagnostic review pass 2 satisfied after addressing blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-2b.md`.
 - [x] INT-2A large integer literal HIR review pass 1 completed with canonical-representation blocker: `reviews/integer-model-int-2a-large-literal-hir-review-pass-1b.md`.
@@ -462,7 +463,8 @@ Validation:
   - [x] Multi-level nested helpers now preserve outer locals and parameters that shadow oversized exact-int module constants across nested return analysis, closure body rewriting, and recursive hidden capture parameters, preserving helper-inside-helper local, recursive, and parameter-shadow shapes while unshadowed module constants still lower through `SifrInt`; review is satisfied and quick validation is passing: PR #1847.
   - [x] Multi-level nested helpers now propagate outer locals already forced to `SifrInt` transitively through helper-inside-helper return analysis, closure body lowering, and recursive hidden capture parameters, preserving both non-recursive and recursive local-source forced capture shapes; review is satisfied and quick validation is passing: PR #1849.
   - [x] Multi-level nested helpers with locals derived from captured forced `SifrInt` parents now have non-recursive and recursive regression coverage proving current codegen lowers chained derived locals through `SifrInt`; review is satisfied and quick validation is passing: PR #1851.
-  - [ ] Continue the broader `Type::Int` codegen migration beyond direct helper/local expression rewrites: unsupported augmented assignment and fallible `//` and `%` still need exact-int runtime/codegen support.
+  - [x] `SifrInt` now exposes checked floor-division and floor-modulo runtime primitives that return `None` for zero divisors and preserve exact/Python floor semantics across positive, negative, divisible, and large values; review is satisfied and quick validation is passing: PR #1853.
+  - [ ] Continue the broader `Type::Int` codegen migration beyond direct helper/local expression rewrites: unsupported exact-int codegen for `//`, `%`, `//=`, and `%=` plus HIR typed-failure/proven-nonzero integration still need support.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
   - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.
