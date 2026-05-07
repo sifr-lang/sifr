@@ -2,6 +2,7 @@ use super::arithmetic_warnings::check_int_overflow_risk;
 use super::empty_collection_refinement::refine_empty_set_binding_expr;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::integer_failure_diagnostics::exact_int_division_requires_handling;
 use super::numeric_sentinels::{
     lower_sentinel_expr_for_name_domain, maybe_resolve_numeric_sentinel_name_from_type,
     retag_numeric_sentinel_name_expr,
@@ -55,6 +56,10 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
             return None;
         }
     };
+
+    if exact_int_division_requires_handling(&left, op_str, &right, ctx, binop.range()) {
+        return None;
+    }
 
     match type_check_binary_op(left.ty(), op_str, right.ty()) {
         Ok(result_ty) => {

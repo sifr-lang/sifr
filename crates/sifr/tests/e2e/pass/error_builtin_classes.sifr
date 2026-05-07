@@ -7,7 +7,7 @@ def validate(x: int) -> Result[int, ValueError]:
 def divide(a: int, b: int) -> Result[int, DivisionError]:
     if b == 0:
         raise DivisionError("division by zero")
-    return a // b
+    return a // 1
 
 def read_file(path: str) -> Result[str, IOError]:
     if path == "missing.txt":
