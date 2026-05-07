@@ -1,0 +1,29 @@
+def main() -> None:
+    high: int8 = 127
+    one: int8 = 1
+    zero: int8 = 0
+    six: int8 = 6
+    wrapped_expected: int8 = -128
+    saturated_expected: int8 = 127
+    overflowed_expected: tuple[int8, bool] = (wrapped_expected, True)
+
+    wrapped: int8 = high.wrapping_add(one)
+    saturated: int8 = high.saturating_add(one)
+    overflowed: tuple[int8, bool] = high.overflowing_add(one)
+
+    assert wrapped == wrapped_expected
+    assert saturated == saturated_expected
+    assert overflowed == overflowed_expected
+
+    try:
+        checked: int8 = high.checked_add(one)
+        assert checked == zero
+    except OverflowError as e:
+        assert e.message == "fixed-width integer addition overflow"
+
+    low: int8 = 5
+    try:
+        ok: int8 = low.checked_add(one)
+        assert ok == six
+    except OverflowError as e:
+        assert e.message == ""
