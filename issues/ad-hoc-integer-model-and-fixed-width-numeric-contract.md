@@ -443,6 +443,7 @@ Validation:
 - [x] INT-2B fixed-width fail fixture marker cleanup review satisfied: `reviews/integer-model-int-2b-fixed-width-fail-fixture-markers-review-pass-1.md`.
 - [x] INT-2B module const/fixed-width fallback cleanup review pass 4 satisfied after addressing pass 2 and pass 3 blockers: `reviews/integer-model-int-2b-module-const-fallback-cleanup-review-pass-4.md`.
 - [x] INT-2B milestone closure review pass 1 found the milestone ready to close with non-blocking follow-ups: `reviews/integer-model-int-2b-milestone-closure-review-pass-1.md`.
+- [x] INT-3 fitting fixed-width scalar `+`/`-`/`*` promotion review satisfied with no blockers and non-blocking broader-width coverage follow-up: `reviews/integer-model-int-3-fixed-width-scalar-promotion-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -496,6 +497,9 @@ Validation:
   - [x] Fixed-width const-expression fail fixture markers are canonical top-level `expect-error` entries, so the e2e fail harness now enforces `SIFR-INT-0001` and `SIFR-INT-0004` columns; review is satisfied and quick validation is passing: PR #1812.
   - [x] Module constant integer fallback paths now preserve budget diagnostics for over-budget module `int`/fixed-width constants, support same-module `int` const reuse through names/unary/binops, reject mixed fixed-width-to-`int` const reuse before codegen, and smoke-test the new codegen shapes; review is satisfied and quick validation is passing: PR #1814.
 - [ ] INT-3 scalar arithmetic and numeric mixing
+  - [x] Ordinary fixed-width scalar `+`, `-`, and `*` now promote fitting fixed-width operands to source-level `int` and cast operands before generated Rust arithmetic, preserving `int32(2_000_000_000) + int32(2_000_000_000) -> int`; review is satisfied and quick validation is passing: PR #1860.
+  - [ ] Expand fixed-width scalar promotion coverage across `int8`, `int16`, `int64`, `uint16`, `uint32`, and `isize` before closing INT-3.
+  - [ ] Deduplicate the temporary `fixed_width_promotes_to_current_int` policy between type checking and codegen once the broader `SifrInt` promotion path lands.
   - [ ] Add hardening tests that keep implicit `int`-to-fixed-width narrowing rejected in returns, list literals, dict literals, and generic specialization as scalar arithmetic and numeric mixing evolve.
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries

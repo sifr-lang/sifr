@@ -1,0 +1,9 @@
+def main() -> None:
+    left: int32 = 2_000_000_000
+    right: int32 = 2_000_000_000
+    total: int = left + right
+    diff: int = right - left
+    product: int = 2 * right
+    assert str(total) == "4000000000"
+    assert str(diff) == "0"
+    assert str(product) == "4000000000"

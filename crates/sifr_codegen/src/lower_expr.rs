@@ -2,7 +2,7 @@
 
 use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp, HirParam};
-use sifr_type_system::Type;
+use sifr_type_system::{FixedIntType, Type};
 use std::cell::RefCell;
 
 thread_local! {
@@ -209,6 +209,13 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                     left: Box::new(try_lower_mixed_float_operand_expr(left)?),
                     op: normalize_binop_op(op).to_string(),
                     right: Box::new(try_lower_mixed_float_operand_expr(right)?),
+                });
+            }
+            if is_promoted_fixed_width_integer_binop(op, left.ty(), right.ty(), ty) {
+                return Some(RustExpr::BinOp {
+                    left: Box::new(try_lower_promoted_integer_operand_expr(left)?),
+                    op: normalize_binop_op(op).to_string(),
+                    right: Box::new(try_lower_promoted_integer_operand_expr(right)?),
                 });
             }
             Some(RustExpr::BinOp {
@@ -1340,6 +1347,17 @@ fn is_int_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_numeric_scalar_type(ty), Some("int"))
 }
 
+fn is_fixed_width_int_like_simple(ty: &Type) -> bool {
+    matches!(
+        resolve_alias_type(ty),
+        Type::FixedInt(fixed) if fixed_width_promotes_to_current_int(*fixed)
+    )
+}
+
+fn fixed_width_promotes_to_current_int(fixed: FixedIntType) -> bool {
+    !matches!(fixed, FixedIntType::U64 | FixedIntType::USize)
+}
+
 fn is_float_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_numeric_scalar_type(ty), Some("float"))
 }
@@ -1464,6 +1482,19 @@ fn is_simple_int_true_division_binop(
         && is_int_like_simple(right_ty)
 }
 
+fn is_promoted_fixed_width_integer_binop(
+    op: &str,
+    left_ty: &Type,
+    right_ty: &Type,
+    result_ty: &Type,
+) -> bool {
+    matches!(op, "+" | "-" | "*")
+        && is_int_like_simple(result_ty)
+        && (is_fixed_width_int_like_simple(left_ty) || is_fixed_width_int_like_simple(right_ty))
+        && (is_int_like_simple(left_ty) || is_fixed_width_int_like_simple(left_ty))
+        && (is_int_like_simple(right_ty) || is_fixed_width_int_like_simple(right_ty))
+}
+
 fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
         return false;
@@ -1503,6 +1534,9 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
     if matches!(op, "+" | "-" | "*" | "%")
         && is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty)
     {
+        return true;
+    }
+    if is_promoted_fixed_width_integer_binop(op, left_ty, right_ty, result_ty) {
         return true;
     }
     if matches!(op, "&" | "|" | "^" | "<<" | ">>") {
@@ -1668,6 +1702,24 @@ fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
         return Some(RustExpr::Cast {
             expr: Box::new(lowered),
             ty: RustType::F64,
+        });
+    }
+    Some(lowered)
+}
+
+fn try_lower_promoted_integer_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+    let lowered = match expr {
+        HirExpr::Name { name, ty }
+            if is_int_like_simple(ty) || is_fixed_width_int_like_simple(ty) =>
+        {
+            RustExpr::Ident(name.clone())
+        }
+        _ => try_lower_simple_binop_operand_expr(expr)?,
+    };
+    if is_fixed_width_int_like_simple(expr.ty()) {
+        return Some(RustExpr::Cast {
+            expr: Box::new(lowered),
+            ty: RustType::I64,
         });
     }
     Some(lowered)
