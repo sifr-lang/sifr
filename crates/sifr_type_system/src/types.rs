@@ -132,6 +132,14 @@ pub enum FixedIntType {
 
 impl FixedIntType {
     #[must_use]
+    pub const fn supports_current_int_builtin_widening(self) -> bool {
+        matches!(
+            self,
+            Self::I8 | Self::I16 | Self::I32 | Self::U8 | Self::U16 | Self::U32
+        )
+    }
+
+    #[must_use]
     pub const fn source_name(self) -> &'static str {
         match self {
             Self::I8 => "int8",
@@ -1449,6 +1457,29 @@ mod tests {
         let fixed = Type::FixedInt(FixedIntType::U32);
         assert_eq!(fixed.display_name(), "uint32");
         assert_eq!(fixed.union_variant_name(), "Uint32");
+    }
+
+    #[test]
+    fn test_fixed_width_current_int_builtin_widening_policy() {
+        for fixed in [
+            FixedIntType::I8,
+            FixedIntType::I16,
+            FixedIntType::I32,
+            FixedIntType::U8,
+            FixedIntType::U16,
+            FixedIntType::U32,
+        ] {
+            assert!(fixed.supports_current_int_builtin_widening());
+        }
+
+        for fixed in [
+            FixedIntType::I64,
+            FixedIntType::U64,
+            FixedIntType::ISize,
+            FixedIntType::USize,
+        ] {
+            assert!(!fixed.supports_current_int_builtin_widening());
+        }
     }
 
     #[test]

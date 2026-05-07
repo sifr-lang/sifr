@@ -54,10 +54,14 @@ pub(super) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
         );
         return None;
     };
+    let result_ty = match elem_ty.resolve_alias() {
+        Type::FixedInt(fixed) if fixed.supports_current_int_builtin_widening() => Type::Int,
+        _ => elem_ty,
+    };
     Some(HirExpr::Call {
         func: "sum".to_string(),
         args: vec![arg],
-        ty: elem_ty,
+        ty: result_ty,
     })
 }
 

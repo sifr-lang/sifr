@@ -2134,18 +2134,42 @@ impl RustEmitter {
                 }
             }
             "sum" if args.len() == 1 => {
-                let sum_method = if let Some(elem_ty) =
-                    crate::resolve_alias_type_for_plain_call(args[0].ty()).iterable_element_type()
-                {
-                    format!(
-                        "sum::<{}>",
-                        crate::render_type(&crate::sifr_type_to_rust_type(&elem_ty))
-                    )
+                let elem_ty =
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()).iterable_element_type();
+                let mut iter_expr = registry_iterable_to_owned_iter_expr(self, &args[0])?;
+                if matches!(
+                    elem_ty.as_ref().map(Type::resolve_alias),
+                    Some(Type::FixedInt(fixed)) if fixed.supports_current_int_builtin_widening()
+                ) {
+                    iter_expr = crate::RustExpr::MethodCall {
+                        receiver: Box::new(iter_expr),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__sum_item".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::Cast {
+                                expr: Box::new(crate::RustExpr::Ident("__sum_item".to_string())),
+                                ty: crate::RustType::I64,
+                            }),
+                            is_move: false,
+                        }],
+                    };
+                }
+                let sum_method = if let Some(elem_ty) = elem_ty {
+                    let sum_ty = match elem_ty.resolve_alias() {
+                        Type::FixedInt(fixed) if fixed.supports_current_int_builtin_widening() => {
+                            crate::RustType::I64
+                        }
+                        _ => crate::sifr_type_to_rust_type(&elem_ty),
+                    };
+                    format!("sum::<{}>", crate::render_type(&sum_ty))
                 } else {
                     "sum".to_string()
                 };
                 let iter_chain = crate::RustExpr::MethodCall {
-                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
+                    receiver: Box::new(iter_expr),
                     method: sum_method,
                     args: vec![],
                 };
@@ -2615,6 +2639,17 @@ impl RustEmitter {
             }
             "abs" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+                let lowered = if matches!(
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()),
+                    Type::FixedInt(fixed) if fixed.supports_current_int_builtin_widening()
+                ) {
+                    crate::RustExpr::Cast {
+                        expr: Box::new(lowered),
+                        ty: crate::RustType::I64,
+                    }
+                } else {
+                    lowered
+                };
                 Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
                     method: "abs".to_string(),

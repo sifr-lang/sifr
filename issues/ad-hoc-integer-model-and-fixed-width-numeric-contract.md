@@ -459,6 +459,8 @@ Validation:
 - [x] INT-4 bytes `uint8` surface review pass 2 satisfied after addressing the pass 1 cleanup note: `reviews/integer-model-int-4-bytes-uint8-surface-review-pass-2.md`.
 - [x] INT-4 fixed-width literal pattern fitting review pass 1 satisfied with a non-blocking positive-coverage note: `reviews/integer-model-int-4-fixed-width-match-literal-review-pass-1.md`.
 - [x] INT-4 fixed-width literal pattern fitting review pass 2 satisfied after adding positive in-range coverage: `reviews/integer-model-int-4-fixed-width-match-literal-review-pass-2.md`.
+- [x] INT-4 fixed-width `sum`/`abs` builtin review pass 1 completed with guardrail and duplicate-policy blockers: `reviews/integer-model-int-4-fixed-width-sum-abs-builtins-review-pass-1.md`.
+- [x] INT-4 fixed-width `sum`/`abs` builtin review pass 2 satisfied after extracting `abs` lowering and sharing the widening policy: `reviews/integer-model-int-4-fixed-width-sum-abs-builtins-review-pass-2.md`.
 
 ## Implementation Checklist
 
@@ -527,6 +529,7 @@ Validation:
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
   - [x] `bytes` indexing, guarded indexing, and iteration now expose `uint8`; ordinary indexes and lengths remain `int`, stdlib bytes helpers widen explicitly with `int(b)`, display fallback typing is aligned, and focused bytes fixtures cover the surface; review is satisfied and quick validation is passing: PR #1872.
   - [x] Fixed-width match literal patterns now reuse the fixed-width fitting diagnostic path, so in-range `uint8` cases such as `case 255` lower and out-of-range cases such as `case 256` fail with `SIFR-INT-0001`; review is satisfied and quick validation is passing: PR #1873.
+  - [x] `sum(list[int32])` and `abs(int8.MIN)` now widen to `int` for the currently safe fixed-width builtin families, with shared policy coverage, focused e2e coverage, review satisfied, and quick validation passing: PR #1874.
 - [ ] INT-5 serialization, web, and schema boundaries
 - [ ] INT-6A dtype contract lock
 - [ ] INT-6B deferred dtype runtime integration

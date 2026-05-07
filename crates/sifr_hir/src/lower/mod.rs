@@ -24,6 +24,7 @@ mod default_args;
 mod defaultdict_refinement;
 mod diagnostics;
 mod empty_collection_refinement;
+mod expression_abs;
 mod expression_diagnostics;
 mod expression_functional_builtins;
 mod expression_iter_builtins;
