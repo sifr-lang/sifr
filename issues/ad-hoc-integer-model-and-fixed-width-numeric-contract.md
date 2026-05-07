@@ -445,6 +445,7 @@ Validation:
 - [x] INT-2B milestone closure review pass 1 found the milestone ready to close with non-blocking follow-ups: `reviews/integer-model-int-2b-milestone-closure-review-pass-1.md`.
 - [x] INT-3 fitting fixed-width scalar `+`/`-`/`*` promotion review satisfied with no blockers and non-blocking broader-width coverage follow-up: `reviews/integer-model-int-3-fixed-width-scalar-promotion-review-pass-1.md`.
 - [x] INT-3 fitting fixed-width scalar promotion coverage review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-promotion-coverage-review-pass-1.md`.
+- [x] INT-3 fixed-width promotion narrowing-boundary hardening review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-narrowing-hardening-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -501,7 +502,7 @@ Validation:
   - [x] Ordinary fixed-width scalar `+`, `-`, and `*` now promote fitting fixed-width operands to source-level `int` and cast operands before generated Rust arithmetic, preserving `int32(2_000_000_000) + int32(2_000_000_000) -> int`; review is satisfied and quick validation is passing: PR #1860.
   - [x] Fixed-width scalar promotion coverage now spans all fitting fixed-width families (`int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, and `isize`) while keeping `uint64` and `usize` blocked until the broader `SifrInt` promotion path; review is satisfied and quick validation is passing: PR #1861.
   - [ ] Deduplicate the temporary `fixed_width_promotes_to_current_int` policy between type checking and codegen once the broader `SifrInt` promotion path lands.
-  - [ ] Add hardening tests that keep implicit `int`-to-fixed-width narrowing rejected in returns, list literals, dict literals, and generic specialization as scalar arithmetic and numeric mixing evolve.
+  - [x] Promoted fixed-width arithmetic results are now hardened against implicit narrowing in fixed-width returns, list literals, dict literals, and generic class specialization; review is satisfied and quick validation is passing: PR #1862.
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
 - [ ] INT-6A dtype contract lock

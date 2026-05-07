@@ -9,6 +9,7 @@ use super::container_literal_specialization::{
 use super::control_flow_conditions::validate_control_flow_condition;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
+use super::fixed_width_class_payload::class_specialization_payload_conflicts;
 use super::fixed_width_fitting::{validate_fixed_width_initializer, FixedWidthInitializerFit};
 use super::flow_helpers::then_body_always_exits;
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
@@ -1062,7 +1063,11 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         if let FixedWidthInitializerFit::Fits(folded_expr) = fixed_width_fit {
             expr = folded_expr;
         }
-        if !is_int_to_bigint && fixed_width_not_const && !final_ty.is_assignable_to(&declared_type)
+        let class_specialization_conflict =
+            class_specialization_payload_conflicts(&final_ty, &declared_type);
+        if !is_int_to_bigint
+            && ((fixed_width_not_const && !final_ty.is_assignable_to(&declared_type))
+                || class_specialization_conflict)
         {
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
