@@ -446,6 +446,7 @@ Validation:
 - [x] INT-3 fitting fixed-width scalar `+`/`-`/`*` promotion review satisfied with no blockers and non-blocking broader-width coverage follow-up: `reviews/integer-model-int-3-fixed-width-scalar-promotion-review-pass-1.md`.
 - [x] INT-3 fitting fixed-width scalar promotion coverage review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-promotion-coverage-review-pass-1.md`.
 - [x] INT-3 fixed-width promotion narrowing-boundary hardening review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-narrowing-hardening-review-pass-1.md`.
+- [x] INT-3 fixed-width floor/modulo diagnostic scaffold review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-floor-mod-diagnostic-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -503,6 +504,7 @@ Validation:
   - [x] Fixed-width scalar promotion coverage now spans all fitting fixed-width families (`int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, and `isize`) while keeping `uint64` and `usize` blocked until the broader `SifrInt` promotion path; review is satisfied and quick validation is passing: PR #1861.
   - [ ] Deduplicate the temporary `fixed_width_promotes_to_current_int` policy between type checking and codegen once the broader `SifrInt` promotion path lands.
   - [x] Promoted fixed-width arithmetic results are now hardened against implicit narrowing in fixed-width returns, list literals, dict literals, and generic class specialization; review is satisfied and quick validation is passing: PR #1862.
+  - [x] Fixed-width scalar `//`, `%`, `//=`, and `%=` now fail closed with `SIFR-INT-0005` instead of lowering through ordinary Rust integer operators while the typed `Result[int, DivisionError]` path is pending; exact `int` non-zero proof behavior is preserved, review is satisfied, and quick validation is passing: PR #1863.
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
 - [ ] INT-6A dtype contract lock
