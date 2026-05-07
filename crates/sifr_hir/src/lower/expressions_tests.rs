@@ -322,7 +322,7 @@ def main() -> None:
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
             && error.message
-                == "integer division or modulo requires handling Result[int, DivisionError] unless the compiler can prove this operation is safe"
+                == "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe"
             && error.primary_range == Some(range_for(source, "10 // divisor"))
     }));
 }
@@ -408,7 +408,7 @@ def main() -> None:
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
             && error.message
-                == "integer division or modulo requires handling Result[int, DivisionError] unless the compiler can prove this operation is safe"
+                == "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe"
             && error.primary_range == Some(range_for(source, "left // 2"))
     }));
 }
@@ -427,6 +427,93 @@ def main() -> None:
         error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
             && error.primary_range == Some(range_for_after(source, "value %= ", "divisor"))
     }));
+}
+
+#[test]
+fn test_exact_int_power_by_negative_literal_requires_handling() {
+    let source = "\
+def main() -> None:
+    value: int = 2 ** -1
+";
+    let errors = lower_source(source).expect_err("negative exact-int exponent should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.message
+                == "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe"
+            && error.primary_range == Some(range_for(source, "2 ** -1"))
+    }));
+}
+
+#[test]
+fn test_exact_int_power_by_unproven_exponent_requires_handling() {
+    let source = "\
+def main() -> None:
+    exponent: int = 3
+    value: int = 2 ** exponent
+";
+    let errors = lower_source(source).expect_err("unproven exact-int exponent should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for(source, "2 ** exponent"))
+    }));
+}
+
+#[test]
+fn test_fixed_width_power_requires_handling_even_with_literal_exponent() {
+    let source = "\
+def main() -> None:
+    base: uint8 = 2
+    value: int = base ** 3
+";
+    let errors = lower_source(source).expect_err("fixed-width exponentiation should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for(source, "base ** 3"))
+    }));
+}
+
+#[test]
+fn test_fixed_width_power_augassign_requires_handling() {
+    let source = "\
+def main() -> None:
+    value: uint8 = 2
+    value **= 3
+";
+    let errors =
+        lower_source(source).expect_err("fixed-width exponentiation augassign should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for_after(source, "value **= ", "3"))
+    }));
+}
+
+#[test]
+fn test_exact_int_power_by_nonnegative_literal_still_lowers() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    value: int = 2 ** 3
+    value **= 2
+",
+    )
+    .expect("non-negative exact-int literal exponents should still lower");
+
+    assert!(matches!(
+        function_let_value(&module, "value"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+    assert!(matches!(
+        &module.functions[0].body[1],
+        HirStmt::AugAssign {
+            name,
+            op,
+            value: HirExpr::IntLiteral(2),
+        } if name == "value" && op == "**="
+    ));
 }
 
 #[test]
