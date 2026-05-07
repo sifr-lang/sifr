@@ -22,6 +22,7 @@ use super::diagnostics::list_append_argument_type_mismatch;
 use super::empty_collection_refinement::{
     refine_empty_list_binding_expr, refine_empty_set_binding_expr,
 };
+use super::expression_abs::lower_abs_call;
 use super::expression_diagnostics;
 use super::expression_functional_builtins::{
     lower_any_all_call, lower_filter_call, lower_map_call, lower_zip_call,
@@ -621,43 +622,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // Special handling for abs() built-in
         if func_name == "abs" {
-            if !call.arguments.keywords.is_empty() {
-                expression_diagnostics::call_unexpected_keyword(
-                    ctx,
-                    "abs() does not accept keyword arguments".to_string(),
-                    first_call_keyword_range(call),
-                );
-                return None;
-            }
-            if call.arguments.args.len() != 1 {
-                expression_diagnostics::call_wrong_positional_count(
-                    ctx,
-                    format!(
-                        "abs() takes exactly 1 argument, got {}",
-                        call.arguments.args.len()
-                    ),
-                    call_arity_range(call),
-                );
-                return None;
-            }
-            let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let ty = arg.ty().clone();
-            if !ty.is_numeric() {
-                expression_diagnostics::type_mismatch(
-                    ctx,
-                    format!(
-                        "abs() argument must be numeric, got '{}'",
-                        ty.display_name()
-                    ),
-                    call.arguments.args[0].range(),
-                );
-                return None;
-            }
-            return Some(HirExpr::Call {
-                func: "abs".to_string(),
-                args: vec![arg],
-                ty,
-            });
+            return lower_abs_call(call, ctx);
         }
 
         // Special handling for hash() built-in

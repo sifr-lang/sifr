@@ -1,0 +1,14 @@
+def main():
+    left: int32 = 2000000000
+    right: int32 = 2000000000
+    values: list[int32] = [left, right]
+    total: int = sum(values)
+    assert str(total) == '4000000000'
+
+    minimum: int8 = -128
+    magnitude: int = abs(minimum)
+    assert str(magnitude) == '128'
+
+    byte: uint8 = 255
+    widened_byte_abs: int = abs(byte)
+    assert str(widened_byte_abs) == '255'

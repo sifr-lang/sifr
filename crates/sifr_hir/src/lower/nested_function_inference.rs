@@ -1131,13 +1131,19 @@ fn infer_call_type(
                 return Type::List(Box::new(elem_ty));
             }
             if name.id == "sum" {
-                return call
+                let elem_ty = call
                     .arguments
                     .args
                     .first()
                     .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
                     .and_then(|arg_ty| arg_ty.iterable_element_type())
                     .unwrap_or(Type::Unknown);
+                return match elem_ty.resolve_alias() {
+                    Type::FixedInt(fixed) if fixed.supports_current_int_builtin_widening() => {
+                        Type::Int
+                    }
+                    _ => elem_ty,
+                };
             }
             if name.id == "Counter" {
                 let key_ty = call
@@ -1156,12 +1162,18 @@ fn infer_call_type(
                 return Type::Int;
             }
             if name.id == "abs" {
-                return call
+                let arg_ty = call
                     .arguments
                     .args
                     .first()
                     .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
                     .unwrap_or(Type::Unknown);
+                return match arg_ty.resolve_alias() {
+                    Type::FixedInt(fixed) if fixed.supports_current_int_builtin_widening() => {
+                        Type::Int
+                    }
+                    _ => arg_ty,
+                };
             }
             if name.id == "max" || name.id == "min" {
                 let mut result = Type::Unknown;

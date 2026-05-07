@@ -1942,6 +1942,22 @@ fn test_scalar_builtin_type_mismatches_have_type_code() {
 }
 
 #[test]
+fn test_abs_fixed_width_builtin_widens_to_int() {
+    let module =
+        lower_source("def main():\n    value: int8 = -128\n    widened: int = abs(value)\n")
+            .expect("fixed-width abs should widen to int");
+    let main_fn = module
+        .functions
+        .iter()
+        .find(|func| func.name == "main")
+        .expect("main should lower");
+    let HirStmt::Let { ty, .. } = &main_fn.body[1] else {
+        panic!("expected widened let");
+    };
+    assert_eq!(ty, &Type::Int);
+}
+
+#[test]
 fn test_hash_unhashable_argument_has_proto_code() {
     let result = lower_source(
         "class Measurement:\n    value: float\n\n    def __init__(self, value: float):\n        self.value = value\n\ndef main():\n    m: Measurement = Measurement(3.14)\n    print(hash(m))\n",
@@ -4318,6 +4334,23 @@ fn test_sum_keyword_and_type_errors_have_codes() {
             && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
             && error.primary_range == Some(range_for_after_anchor(type_source, "sum(", "1"))
     }));
+}
+
+#[test]
+fn test_sum_fixed_width_iterable_widens_to_int() {
+    let module = lower_source(
+        "def main():\n    left: int32 = 2000000000\n    right: int32 = 2000000000\n    values: list[int32] = [left, right]\n    total: int = sum(values)\n",
+    )
+    .expect("fixed-width sum should widen to int");
+    let main_fn = module
+        .functions
+        .iter()
+        .find(|func| func.name == "main")
+        .expect("main should lower");
+    let HirStmt::Let { ty, .. } = &main_fn.body[3] else {
+        panic!("expected total let");
+    };
+    assert_eq!(ty, &Type::Int);
 }
 
 #[test]
