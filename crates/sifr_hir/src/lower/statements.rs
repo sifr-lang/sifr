@@ -778,7 +778,17 @@ pub(super) fn lower_pattern(
             } else {
                 // Try to lower as a literal expression
                 let expr = lower_expr(val_pat.value.as_ref(), ctx)?;
-                Some(HirPattern::Literal { value: expr })
+                let value = match validate_fixed_width_initializer(
+                    ctx,
+                    subject_ty,
+                    &expr,
+                    val_pat.value.range(),
+                ) {
+                    FixedWidthInitializerFit::Fits(value) => value,
+                    FixedWidthInitializerFit::Rejected => return None,
+                    FixedWidthInitializerFit::NotConst => expr,
+                };
+                Some(HirPattern::Literal { value })
             }
         }
         Pattern::MatchOr(or_pat) => {

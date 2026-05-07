@@ -1,0 +1,16 @@
+def classify(value: uint8) -> str:
+    match value:
+        case 255:
+            return "max"
+        case 0:
+            return "zero"
+        case _:
+            return "other"
+
+def main():
+    max_byte: uint8 = 255
+    zero: uint8 = 0
+    one: uint8 = 1
+    assert str(classify(max_byte)) == 'max'
+    assert str(classify(zero)) == 'zero'
+    assert str(classify(one)) == 'other'
