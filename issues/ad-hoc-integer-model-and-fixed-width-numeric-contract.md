@@ -453,6 +453,7 @@ Validation:
 - [x] INT-3 generic `Addable` output-boundary review pass 1 completed with a mixed-TypeVar blocker and fixture-diagnostic question: `reviews/integer-model-int-3-generic-addable-output-boundary-review-pass-1.md`.
 - [x] INT-3 generic `Addable` output-boundary review pass 2 satisfied after narrowing the guard to same-TypeVar operands and verifying the call-site protocol diagnostic: `reviews/integer-model-int-3-generic-addable-output-boundary-review-pass-2.md`.
 - [x] INT-3 fixed-width add API review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-add-apis-review-pass-1.md`.
+- [x] INT-3 fixed-width subtraction API review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-sub-apis-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -516,6 +517,7 @@ Validation:
   - [x] Exact and fixed-width integer true division now fails closed with active `SIFR-INT-0006` instead of silently lowering through `float` casts while the fallible `Result[float, ...]` path is pending; review is satisfied and quick validation is passing: PR #1866.
   - [x] Generic addition now rejects unbounded `T + T -> T`, preserves `Addable` exact-int generic addition, and proves fixed-width `int32` cannot satisfy `Addable` for `T + T -> T` because ordinary fixed-width `+` promotes to `int`; review is satisfied and quick validation is passing: PR #1867.
   - [x] Fixed-width instance `checked_add`, `wrapping_add`, `saturating_add`, and `overflowing_add` now expose explicit representation-preserving addition for same-width operands, reject mixed-width operands, lower to Rust primitive no-panic APIs, and cover overflow/non-overflow behavior in e2e; review is satisfied and quick validation is passing: PR #1868.
+  - [x] Fixed-width instance `checked_sub`, `wrapping_sub`, `saturating_sub`, and `overflowing_sub` now expose explicit representation-preserving subtraction for same-width operands, reject mixed-width operands, lower to Rust primitive no-panic APIs, and cover underflow/non-underflow behavior in e2e; review is satisfied and quick validation is passing: PR #1869.
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
 - [ ] INT-6A dtype contract lock
