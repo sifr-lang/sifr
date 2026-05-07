@@ -570,6 +570,24 @@ impl RustEmitter {
                 let value = self.rewrite_stdlib_constant_idents_in_expr(value);
                 match &target {
                     crate::RustExpr::Ident(name)
+                        if is_sifr_int_checked_floor_op(&op)
+                            && is_proven_nonzero_integer_expr(&value)
+                            && (self.is_registered_sifr_int_local(name)
+                                || self.is_forced_sifr_int_local(name)) =>
+                    {
+                        self.sifr_int_local_bindings
+                            .borrow_mut()
+                            .insert(name.clone());
+                        crate::RustStmt::Assign {
+                            target: target.clone(),
+                            value: self.sifr_int_known_nonzero_floor_expr(
+                                op.as_str(),
+                                target,
+                                value,
+                            ),
+                        }
+                    }
+                    crate::RustExpr::Ident(name)
                         if is_sifr_int_arithmetic_op(&op)
                             && (self.is_registered_sifr_int_local(name)
                                 || self.is_forced_sifr_int_local(name)) =>
@@ -2068,6 +2086,56 @@ mod tests {
                     value: RustExpr::BinOp { op: ref rewritten_op, .. },
                     ..
                 } if rewritten_op == op
+            ));
+        }
+    }
+
+    #[test]
+    fn rewrites_sifr_int_floor_mod_augassign_by_nonzero_literal_to_assignment() {
+        for (op, expected_method) in [
+            ("/", "floor_div_known_nonzero"),
+            ("%", "floor_mod_known_nonzero"),
+        ] {
+            let emitter = RustEmitter::new();
+            emitter
+                .sifr_int_forced_local_bindings
+                .borrow_mut()
+                .insert("total".to_string());
+
+            let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::AugAssign {
+                target: RustExpr::Ident("total".to_string()),
+                op: op.to_string(),
+                value: RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(3))),
+                    ty: RustType::I64,
+                },
+            });
+
+            assert!(matches!(
+                rewritten,
+                RustStmt::Assign {
+                    target: RustExpr::Ident(ref target),
+                    value:
+                        RustExpr::MethodCall {
+                            receiver,
+                            ref method,
+                            ref args,
+                        },
+                } if target == "total"
+                    && method == expected_method
+                    && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "total")
+                    && matches!(
+                        args.as_slice(),
+                        [RustExpr::Ref {
+                            mutable: false,
+                            expr,
+                        }] if matches!(
+                            expr.as_ref(),
+                            RustExpr::FnCall { func, args }
+                                if args.len() == 1
+                                    && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                        )
+                    )
             ));
         }
     }

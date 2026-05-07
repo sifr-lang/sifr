@@ -9,6 +9,9 @@ def main() -> None:
     derived: int = BIG_LIMIT + 2
     derived_quotient: int = derived // 3
     derived_remainder: int = derived % 3
+    augmented: int = BIG_LIMIT + 2
+    augmented //= 3
+    augmented %= 5
 
     assert str(quotient) == "33333333333333333333"
     assert str(remainder) == "1"
@@ -16,3 +19,4 @@ def main() -> None:
     assert str(negative_remainder) == "2"
     assert str(derived_quotient) == "33333333333333333334"
     assert str(derived_remainder) == "0"
+    assert str(augmented) == "4"
