@@ -3406,7 +3406,7 @@ impl RustEmitter {
                                 expr: Box::new(crate::RustExpr::Deref(Box::new(
                                     crate::RustExpr::Ident("__byte".to_string()),
                                 ))),
-                                ty: crate::RustType::I64,
+                                ty: crate::RustType::Named("u8".to_string()),
                             }),
                             is_move: false,
                         }],
@@ -3555,7 +3555,7 @@ impl RustEmitter {
                                     expr: Box::new(crate::RustExpr::Deref(Box::new(
                                         crate::RustExpr::Ident("__byte".to_string()),
                                     ))),
-                                    ty: crate::RustType::I64,
+                                    ty: crate::RustType::Named("u8".to_string()),
                                 }),
                                 is_move: false,
                             }],
@@ -3566,7 +3566,7 @@ impl RustEmitter {
                             expr: Box::new(lowered_object),
                             index: Box::new(list_index),
                         }),
-                        ty: crate::RustType::I64,
+                        ty: crate::RustType::Named("u8".to_string()),
                     }));
                 }
                 Type::Str => {
@@ -5394,7 +5394,7 @@ impl RustEmitter {
                         ty: crate::RustType::Named("usize".to_string()),
                     }),
                 }),
-                ty: crate::RustType::I64,
+                ty: crate::RustType::Named("u8".to_string()),
             },
             Type::Str => {
                 let nth_expr = crate::RustExpr::MethodCall {
@@ -6929,7 +6929,7 @@ impl RustEmitter {
                         }],
                         body: Box::new(crate::RustExpr::Cast {
                             expr: Box::new(crate::RustExpr::Ident("__byte".to_string())),
-                            ty: crate::RustType::I64,
+                            ty: crate::RustType::Named("u8".to_string()),
                         }),
                         is_move: false,
                     }],
@@ -6950,7 +6950,7 @@ impl RustEmitter {
                             expr: Box::new(crate::RustExpr::Deref(Box::new(
                                 crate::RustExpr::Ident("__byte".to_string()),
                             ))),
-                            ty: crate::RustType::I64,
+                            ty: crate::RustType::Named("u8".to_string()),
                         }),
                         is_move: false,
                     }],

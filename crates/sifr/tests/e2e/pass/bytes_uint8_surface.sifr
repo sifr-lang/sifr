@@ -1,0 +1,21 @@
+def main() -> None:
+    payload: bytes = b"A\xff"
+
+    first: uint8 | None = payload[0]
+    second: uint8 | None = payload[1]
+    missing: uint8 | None = payload[99]
+    expected_first: uint8 = 65
+    expected_second: uint8 = 255
+
+    assert first == expected_first
+    assert second == expected_second
+    assert missing is None
+
+    values: list[uint8] = []
+    for byte in payload:
+        values.append(byte)
+
+    expected_values: list[uint8] = []
+    expected_values.append(expected_first)
+    expected_values.append(expected_second)
+    assert values == expected_values

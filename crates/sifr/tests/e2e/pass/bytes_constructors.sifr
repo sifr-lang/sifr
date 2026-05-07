@@ -3,9 +3,10 @@ def main() -> None:
     size_ok: bool = False
     try:
         zeroes: bytes = bytes(4)
+        zero: uint8 = 0
         assert len(zeroes) == 4
-        assert zeroes[0] == 0
-        assert zeroes[3] == 0
+        assert zeroes[0] == zero
+        assert zeroes[3] == zero
         size_ok = True
     except ValueError as e:
         _ = str(e.message)
@@ -15,9 +16,12 @@ def main() -> None:
     try:
         ints: list[int] = [72, 105, 33]
         payload: bytes = bytes.from_ints(ints)
-        assert payload[0] == 72
-        assert payload[1] == 105
-        assert payload[2] == 33
+        h: uint8 = 72
+        i: uint8 = 105
+        bang: uint8 = 33
+        assert payload[0] == h
+        assert payload[1] == i
+        assert payload[2] == bang
         from_ints_ok = True
     except ValueError as e:
         _ = str(e.message)

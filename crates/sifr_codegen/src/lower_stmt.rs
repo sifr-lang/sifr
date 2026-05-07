@@ -2489,7 +2489,7 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<Ru
                     }],
                     body: Box::new(RustExpr::Cast {
                         expr: Box::new(RustExpr::Ident("__byte".to_string())),
-                        ty: RustType::I64,
+                        ty: RustType::Named("u8".to_string()),
                     }),
                     is_move: false,
                 }],
@@ -2510,7 +2510,7 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<Ru
                         expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
                             "__byte".to_string(),
                         )))),
-                        ty: RustType::I64,
+                        ty: RustType::Named("u8".to_string()),
                     }),
                     is_move: false,
                 }],

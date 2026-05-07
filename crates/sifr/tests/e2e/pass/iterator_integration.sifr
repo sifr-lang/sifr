@@ -35,8 +35,11 @@ def main():
     actual.append(str(materialize_iterable_from_return(iter([4, 5]))) == "[4, 5]")
 
     payload: bytes = b"ABC"
-    byte_iter: Iterator[int] = iter(payload)
-    actual.append(str(list(map(lambda b: b + 1, byte_iter))) == "[66, 67, 68]")
+    byte_iter: Iterator[uint8] = iter(payload)
+    incremented: list[int] = []
+    for b in byte_iter:
+        incremented.append(int(b) + 1)
+    actual.append(str(incremented) == "[66, 67, 68]")
 
     try:
         matches: Iterator[Match] = finditer("\\d+", "a12b345")

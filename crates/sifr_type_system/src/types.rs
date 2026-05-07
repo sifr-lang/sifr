@@ -890,7 +890,7 @@ impl Type {
             Self::Set(elem) => Some(*elem.clone()),
             Self::Tuple(elems) => Self::homogeneous_tuple_iter_element_type(elems),
             Self::Str => Some(Type::Str),
-            Self::Bytes => Some(Type::Int),
+            Self::Bytes => Some(Type::FixedInt(FixedIntType::U8)),
             Self::Dict(key, _) => Some(*key.clone()),
             Self::Iterable(elem) => Some(*elem.clone()),
             Self::Iterator(elem) => Some(*elem.clone()),
@@ -960,7 +960,7 @@ impl Type {
                 ],
             }),
             Self::Bytes => Some(IterationMetadata {
-                element_type: Type::Int,
+                element_type: Type::FixedInt(FixedIntType::U8),
                 capabilities: vec![
                     IterationCapability::MultiPass,
                     IterationCapability::DoubleEnded,
@@ -1077,8 +1077,11 @@ impl Type {
             }
             Self::Bytes => {
                 if index_ty == &Type::Int {
-                    // Safe indexing: returns Option[int] = int | None
-                    Some(Type::Union(vec![Type::Int, Type::None]))
+                    // Safe indexing: returns Option[uint8] = uint8 | None
+                    Some(Type::Union(vec![
+                        Type::FixedInt(FixedIntType::U8),
+                        Type::None,
+                    ]))
                 } else {
                     None
                 }
@@ -1133,7 +1136,7 @@ impl Type {
             Self::Dict(key, _) => Some(*key.clone()),
             Self::Range => Some(Type::Int),
             Self::Str => Some(Type::Str),
-            Self::Bytes => Some(Type::Int),
+            Self::Bytes => Some(Type::FixedInt(FixedIntType::U8)),
             Self::Union(members) => {
                 let non_none: Vec<&Type> = members
                     .iter()
@@ -1266,7 +1269,9 @@ impl Type {
             }
             (Self::Range, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
             (Self::Str, Self::Iterable(dst)) => return Type::Str.is_assignable_to(dst),
-            (Self::Bytes, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
+            (Self::Bytes, Self::Iterable(dst)) => {
+                return Type::FixedInt(FixedIntType::U8).is_assignable_to(dst);
+            }
             (Self::Dict(key, _), Self::Iterable(dst)) => return key.is_assignable_to(dst),
             (Self::Class { name, methods, .. }, Self::Iterator(dst)) => {
                 return Self::class_next_element_type(name, methods)
@@ -1494,6 +1499,25 @@ mod tests {
         assert_eq!(iterable_int.iterable_element_type(), Some(Type::Int));
         assert!(iter_int.is_assignable_to(&iterable_int));
         assert!(list_int.is_assignable_to(&iterable_int));
+    }
+
+    #[test]
+    fn test_bytes_iterable_and_index_contract_uses_uint8() {
+        let uint8 = Type::FixedInt(FixedIntType::U8);
+
+        assert_eq!(Type::Bytes.iterable_element_type(), Some(uint8.clone()));
+        assert_eq!(
+            Type::Bytes
+                .iteration_metadata()
+                .map(|metadata| metadata.element_type),
+            Some(uint8.clone())
+        );
+        assert_eq!(
+            Type::Bytes.index_result_type(&Type::Int),
+            Some(Type::Union(vec![uint8.clone(), Type::None]))
+        );
+        assert!(Type::Bytes.is_assignable_to(&Type::Iterable(Box::new(uint8))));
+        assert!(!Type::Bytes.is_assignable_to(&Type::Iterable(Box::new(Type::Int))));
     }
 
     #[test]

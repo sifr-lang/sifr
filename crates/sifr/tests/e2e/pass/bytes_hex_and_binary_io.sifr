@@ -25,9 +25,10 @@ def main():
     utf8_guard_ok: bool = False
     hex_guard_ok: bool = False
 
-    idx: int | None = payload[1]
+    idx: uint8 | None = payload[1]
+    expected_idx: uint8 = 66
     if idx is not None:
-        index_ok = idx == 66
+        index_ok = idx == expected_idx
 
     iter_ok = sum_bytes(payload) == 266
     contains_ok = payload.contains(67) and (not payload.contains(300))

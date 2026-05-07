@@ -291,7 +291,7 @@ fn registry_iterable_to_owned_iter_expr_with_hint(
                     }],
                     body: Box::new(RustExpr::Cast {
                         expr: Box::new(RustExpr::Ident("__byte".to_string())),
-                        ty: crate::RustType::I64,
+                        ty: crate::RustType::Named("u8".to_string()),
                     }),
                     is_move: false,
                 }],
@@ -312,7 +312,7 @@ fn registry_iterable_to_owned_iter_expr_with_hint(
                         expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
                             "__byte".to_string(),
                         )))),
-                        ty: crate::RustType::I64,
+                        ty: crate::RustType::Named("u8".to_string()),
                     }),
                     is_move: false,
                 }],
@@ -1422,7 +1422,7 @@ impl RustEmitter {
                                         expr: Box::new(crate::RustExpr::Deref(Box::new(
                                             crate::RustExpr::Ident("__byte".to_string()),
                                         ))),
-                                        ty: crate::RustType::I64,
+                                        ty: crate::RustType::Named("u8".to_string()),
                                     }),
                                     is_move: false,
                                 }],
@@ -1560,7 +1560,7 @@ impl RustEmitter {
                                     expr: Box::new(crate::RustExpr::Deref(Box::new(
                                         crate::RustExpr::Ident("__byte".to_string()),
                                     ))),
-                                    ty: crate::RustType::I64,
+                                    ty: crate::RustType::Named("u8".to_string()),
                                 }),
                                 is_move: false,
                             }],
@@ -2950,6 +2950,10 @@ impl RustEmitter {
                         else_expr: Some(Box::new(crate::RustExpr::Literal(
                             crate::RustLiteral::Int(0),
                         ))),
+                    }),
+                    Type::FixedInt(_) => Some(crate::RustExpr::Cast {
+                        expr: Box::new(lowered),
+                        ty: crate::RustType::I64,
                     }),
                     Type::BigInt => Some(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::FnCall {
