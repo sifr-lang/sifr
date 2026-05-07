@@ -1,0 +1,9 @@
+# expect-error: SIFR-PROTO-0001
+
+def add_same[T: Addable](left: T, right: T) -> T:
+    return left + right
+
+def main() -> None:
+    left: int32 = 1
+    right: int32 = 2
+    value: int32 = add_same(left, right)

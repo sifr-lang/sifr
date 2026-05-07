@@ -60,6 +60,9 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
     if exact_int_division_requires_handling(&left, op_str, &right, ctx, binop.range()) {
         return None;
     }
+    if generic_addition_requires_addable_bound(&left, op_str, &right, ctx, binop.range()) {
+        return None;
+    }
 
     match type_check_binary_op(left.ty(), op_str, right.ty()) {
         Ok(result_ty) => {
@@ -91,6 +94,49 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
             None
         }
     }
+}
+
+fn generic_addition_requires_addable_bound(
+    left: &HirExpr,
+    op: &str,
+    right: &HirExpr,
+    ctx: &mut LowerCtx,
+    range: ruff_text_size::TextRange,
+) -> bool {
+    if op != "+" {
+        return false;
+    }
+    let Some(type_var) = addition_type_var(left.ty(), right.ty()) else {
+        return false;
+    };
+    if current_owner_has_typevar_bound(ctx, type_var, "Addable") {
+        return false;
+    }
+    ctx.error_with_code_at(
+        sifr_diagnostics::DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+        format!(
+            "generic addition on type parameter '{type_var}' requires an Addable bound with output assignable to {type_var}"
+        ),
+        range,
+    );
+    true
+}
+
+fn addition_type_var<'a>(left: &'a Type, right: &'a Type) -> Option<&'a str> {
+    match (left.resolve_alias(), right.resolve_alias()) {
+        (Type::TypeVar(left), Type::TypeVar(right)) if left == right => Some(left.as_str()),
+        _ => None,
+    }
+}
+
+fn current_owner_has_typevar_bound(ctx: &LowerCtx, type_var: &str, bound: &str) -> bool {
+    let Some(owner) = ctx.current_owner.as_ref() else {
+        return false;
+    };
+    ctx.type_param_bounds
+        .get(owner)
+        .and_then(|bounds| bounds.get(type_var))
+        .is_some_and(|bounds| bounds.iter().any(|candidate| candidate == bound))
 }
 
 pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
