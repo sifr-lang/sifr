@@ -1,6 +1,6 @@
 //! Type checking rules for Sifr operators and expressions.
 
-use crate::types::Type;
+use crate::types::{FixedIntType, Type};
 use crate::union::{remove_none_from_union, union_contains_none};
 use sifr_diagnostics::DiagnosticCode;
 
@@ -20,6 +20,15 @@ fn is_decimal_family_type(ty: &Type) -> bool {
 
 fn is_integral_numeric_type(ty: &Type) -> bool {
     matches!(ty, Type::Int | Type::LiteralInt(_) | Type::BigInt)
+}
+
+fn is_exact_or_fixed_integer_type(ty: &Type) -> bool {
+    matches!(ty, Type::Int | Type::LiteralInt(_))
+        || matches!(ty, Type::FixedInt(fixed) if fixed_width_promotes_to_current_int(*fixed))
+}
+
+fn fixed_width_promotes_to_current_int(fixed: FixedIntType) -> bool {
+    !matches!(fixed, FixedIntType::U64 | FixedIntType::USize)
 }
 
 /// Type-check a binary operation (e.g., `a + b`, `a - b`).
@@ -95,6 +104,9 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             if left == &Type::Int && right == &Type::Int {
                 return Ok(Type::Int);
             }
+            if is_exact_or_fixed_integer_type(left) && is_exact_or_fixed_integer_type(right) {
+                return Ok(Type::Int);
+            }
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
             }
@@ -144,6 +156,9 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
                 return Ok(Type::BigInt);
             }
             if left == &Type::Int && right == &Type::Int {
+                return Ok(Type::Int);
+            }
+            if is_exact_or_fixed_integer_type(left) && is_exact_or_fixed_integer_type(right) {
                 return Ok(Type::Int);
             }
             if left.is_numeric() && right.is_numeric() {
@@ -618,6 +633,32 @@ mod tests {
             type_check_binary_op(&Type::Float, "*", &Type::Int).unwrap(),
             Type::Float
         );
+    }
+
+    #[test]
+    fn test_fixed_width_integer_add_sub_mul_promote_to_int() {
+        let i32_ty = Type::FixedInt(crate::FixedIntType::I32);
+        let u8_ty = Type::FixedInt(crate::FixedIntType::U8);
+
+        assert_eq!(
+            type_check_binary_op(&i32_ty, "+", &i32_ty).unwrap(),
+            Type::Int
+        );
+        assert_eq!(
+            type_check_binary_op(&u8_ty, "-", &Type::Int).unwrap(),
+            Type::Int
+        );
+        assert_eq!(
+            type_check_binary_op(&Type::LiteralInt(2), "*", &u8_ty).unwrap(),
+            Type::Int
+        );
+    }
+
+    #[test]
+    fn test_uint64_integer_add_waits_for_sifrint_promotion() {
+        let u64_ty = Type::FixedInt(crate::FixedIntType::U64);
+
+        assert!(type_check_binary_op(&u64_ty, "+", &u64_ty).is_err());
     }
 
     #[test]

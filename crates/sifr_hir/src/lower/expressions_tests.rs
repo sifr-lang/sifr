@@ -501,6 +501,34 @@ def main():
 }
 
 #[test]
+fn test_fixed_width_scalar_add_sub_mul_promote_to_int() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    left: int32 = 2
+    right: int32 = 3
+    total: int = left + right
+    diff: int = left - 1
+    product: int = 2 * right
+",
+    )
+    .expect("ordinary fixed-width scalar arithmetic should promote to int");
+
+    assert!(matches!(
+        function_let_value(&module, "total"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+    assert!(matches!(
+        function_let_value(&module, "diff"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+    assert!(matches!(
+        function_let_value(&module, "product"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+}
+
+#[test]
 fn test_fixed_width_const_expression_out_of_range_has_int_code() {
     let source = "def main():\n    too_wide: uint8 = 2 ** 8\n";
     let errors =
