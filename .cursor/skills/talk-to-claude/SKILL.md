@@ -5,26 +5,26 @@ description: Talk to Claude asynchronously about a specific task by asking it to
 
 ## Start Claude Conversation
 
-Choose a target file under `./reviews`, then tell Claude to write its output there.
+Choose a target file under `./reviews`, then run Claude CLI in the background and redirect its output there.
 
-Use an absolute path derived from `./reviews` in the prompt so Claude has an exact output location.
+Use an absolute path derived from `./reviews` so the output location is exact.
 
 Authoritative launch command:
 
 ```bash
 PWD_NOW="$(pwd)"
 TARGET_FILE="${PWD_NOW}/reviews/<conversation-file-name>.md"
-CLAUDE_SESSION_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')" \
-  bash .cursor/skills/talk-to-claude/scripts/claude_resume_to_desktop.sh "$(cat <<PROMPT
+LOG_FILE="${TARGET_FILE%.md}.claude.log"
+
+nohup claude -p "$(cat <<PROMPT
 ${TOPIC_NAME}
-Write the output into ${TARGET_FILE}
 PROMPT
-)"
+)" >"${TARGET_FILE}" 2>"${LOG_FILE}" &
 ```
 
 - Replace `<conversation-file-name>.md` with a concrete file name for the active topic.
 - If the target file already exists, use a new filename with the same prefix and an incremented suffix.
-- Run the script with `bash`. Direct execution of some local script paths can be killed by the terminal host on macOS.
+- The command prints the background job id. Keep using the target file as the handoff artifact.
 
 ## Wait For Output File
 
@@ -43,9 +43,9 @@ uv run --project /Users/yaseralnajjar/work/talk-to-claude \
 
 ## Debugging
 
-If Claude does not produce the file, inspect the per-session log:
+If Claude does not produce the file, inspect the per-conversation log:
 
 ```bash
 PWD_NOW="$(pwd)"
-sed -n '1,200p' "${PWD_NOW}/reviews/claude-resume-to-desktop-<session-id>.log"
+sed -n '1,200p' "${PWD_NOW}/reviews/<conversation-file-name>.claude.log"
 ```
