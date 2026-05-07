@@ -16,7 +16,7 @@ PWD_NOW="$(pwd)"
 TARGET_FILE="${PWD_NOW}/reviews/<conversation-file-name>.md"
 LOG_FILE="${TARGET_FILE%.md}.claude.log"
 
-nohup claude --setting-sources project --model claude-opus-4-7 --effort xhigh -p "$(cat <<PROMPT
+nohup claude --dangerously-skip-permissions --setting-sources project --model claude-opus-4-7 --effort xhigh -p "$(cat <<PROMPT
 ${TOPIC_NAME}
 PROMPT
 )" >"${TARGET_FILE}" 2>"${LOG_FILE}" &
