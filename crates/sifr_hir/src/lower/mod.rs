@@ -51,6 +51,7 @@ mod imports;
 mod integer_failure_diagnostics;
 mod integer_literal_diagnostics;
 mod integer_literals;
+mod integer_nonzero_guards;
 mod len_aliases;
 mod match_diagnostics;
 mod match_lowering;
@@ -62,6 +63,7 @@ mod mutating_methods;
 mod name_diagnostics;
 #[cfg(test)]
 mod name_import_diagnostics_tests;
+mod narrowing;
 mod nested_function_inference;
 #[cfg(test)]
 mod nested_function_tests;
@@ -195,6 +197,7 @@ pub(super) struct LowerCtx {
     pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
     pending_container_specialization_patches: HashMap<String, Type>,
     sequence_shapes: Vec<sequence_shapes::SequenceShapeFact>,
+    proven_nonzero_integer_bindings: std::collections::HashSet<String>,
     function_scopes: Vec<function_scopes::FunctionScopeState>,
     inferred_binding_hints: Vec<HashMap<String, Type>>,
     empty_collection_hint_adoption: Vec<bool>,
@@ -238,6 +241,7 @@ impl LowerCtx {
             pending_numeric_sentinel_patches: HashMap::new(),
             pending_container_specialization_patches: HashMap::new(),
             sequence_shapes: Vec::new(),
+            proven_nonzero_integer_bindings: std::collections::HashSet::new(),
             function_scopes: Vec::new(),
             inferred_binding_hints: Vec::new(),
             empty_collection_hint_adoption: Vec::new(),

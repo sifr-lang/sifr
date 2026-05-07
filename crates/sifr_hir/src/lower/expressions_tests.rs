@@ -397,6 +397,65 @@ def main() -> None:
 }
 
 #[test]
+fn test_exact_int_division_after_zero_guard_early_exit_lowers() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    divisor: int = 3
+    if divisor == 0:
+        return
+    value: int = 10 // divisor
+",
+    )
+    .expect("early-exit zero guard should prove the divisor is non-zero after the if");
+
+    assert!(matches!(
+        function_let_value(&module, "value"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+}
+
+#[test]
+fn test_exact_int_modulo_inside_nonzero_while_guard_lowers() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    divisor: int = 3
+    while divisor != 0:
+        value: int = 10 % divisor
+        divisor = 0
+",
+    )
+    .expect("while non-zero guard should prove the divisor is non-zero in the body");
+
+    let HirStmt::While { body, .. } = &module.functions[0].body[1] else {
+        panic!("expected while statement");
+    };
+    let HirStmt::Let { name, value, .. } = &body[0] else {
+        panic!("expected value binding inside while body");
+    };
+    assert_eq!(name, "value");
+    assert!(matches!(value, HirExpr::BinOp { ty: Type::Int, .. }));
+}
+
+#[test]
+fn test_exact_int_nonzero_guard_is_cleared_after_reassignment() {
+    let source = "\
+def main() -> None:
+    divisor: int = 3
+    if divisor != 0:
+        divisor = 0
+        value: int = 10 // divisor
+";
+    let errors = lower_source(source).expect_err("reassignment should clear non-zero proof");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for(source, "10 // divisor"))
+    }));
+}
+
+#[test]
 fn test_fixed_width_const_expression_uses_module_integer_constants() {
     let module = lower_source(
         "BASE: int = 250 + 4\n\ndef main() -> uint8:\n    value: uint8 = BASE + 1\n    return value\n",
