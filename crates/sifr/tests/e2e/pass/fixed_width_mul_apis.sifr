@@ -1,0 +1,29 @@
+def main() -> None:
+    left: uint8 = 16
+    right: uint8 = 16
+    three: uint8 = 3
+    four: uint8 = 4
+    twelve: uint8 = 12
+    wrapped_expected: uint8 = 0
+    saturated_expected: uint8 = 255
+    overflowed_expected: tuple[uint8, bool] = (wrapped_expected, True)
+
+    wrapped: uint8 = left.wrapping_mul(right)
+    saturated: uint8 = left.saturating_mul(right)
+    overflowed: tuple[uint8, bool] = left.overflowing_mul(right)
+
+    assert wrapped == wrapped_expected
+    assert saturated == saturated_expected
+    assert overflowed == overflowed_expected
+
+    try:
+        checked: uint8 = left.checked_mul(right)
+        assert checked == wrapped_expected
+    except OverflowError as e:
+        assert e.message == "fixed-width integer multiplication overflow"
+
+    try:
+        ok: uint8 = three.checked_mul(four)
+        assert ok == twelve
+    except OverflowError as e:
+        assert e.message == ""

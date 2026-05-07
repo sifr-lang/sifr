@@ -18,6 +18,15 @@ pub(crate) fn lower_checked_sub(object: &RustExpr, args: &[RustExpr]) -> Option<
     )
 }
 
+pub(crate) fn lower_checked_mul(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_checked_method(
+        object,
+        "checked_mul",
+        "fixed-width integer multiplication overflow",
+        args,
+    )
+}
+
 fn lower_checked_method(
     object: &RustExpr,
     method: &str,
@@ -60,6 +69,10 @@ pub(crate) fn lower_wrapping_sub(object: &RustExpr, args: &[RustExpr]) -> Option
     lower_primitive_method(object, "wrapping_sub", args)
 }
 
+pub(crate) fn lower_wrapping_mul(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_primitive_method(object, "wrapping_mul", args)
+}
+
 pub(crate) fn lower_saturating_add(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_primitive_method(object, "saturating_add", args)
 }
@@ -68,12 +81,20 @@ pub(crate) fn lower_saturating_sub(object: &RustExpr, args: &[RustExpr]) -> Opti
     lower_primitive_method(object, "saturating_sub", args)
 }
 
+pub(crate) fn lower_saturating_mul(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_primitive_method(object, "saturating_mul", args)
+}
+
 pub(crate) fn lower_overflowing_add(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_primitive_method(object, "overflowing_add", args)
 }
 
 pub(crate) fn lower_overflowing_sub(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_primitive_method(object, "overflowing_sub", args)
+}
+
+pub(crate) fn lower_overflowing_mul(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_primitive_method(object, "overflowing_mul", args)
 }
 
 fn lower_primitive_method(object: &RustExpr, method: &str, args: &[RustExpr]) -> Option<RustExpr> {
