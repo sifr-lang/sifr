@@ -450,6 +450,8 @@ Validation:
 - [x] INT-3 integer exponentiation diagnostic scaffold review satisfied with no blockers: `reviews/integer-model-int-3-integer-power-diagnostic-review-pass-1.md`.
 - [x] INT-3 bool/integer comparison diagnostic review satisfied with no blockers: `reviews/integer-model-int-3-bool-integer-comparison-diagnostic-review-pass-1.md`.
 - [x] INT-3 exact integer true-division diagnostic review satisfied with no blockers: `reviews/integer-model-int-3-exact-int-true-division-diagnostic-review-pass-1.md`.
+- [x] INT-3 generic `Addable` output-boundary review pass 1 completed with a mixed-TypeVar blocker and fixture-diagnostic question: `reviews/integer-model-int-3-generic-addable-output-boundary-review-pass-1.md`.
+- [x] INT-3 generic `Addable` output-boundary review pass 2 satisfied after narrowing the guard to same-TypeVar operands and verifying the call-site protocol diagnostic: `reviews/integer-model-int-3-generic-addable-output-boundary-review-pass-2.md`.
 
 ## Implementation Checklist
 
@@ -511,6 +513,7 @@ Validation:
   - [x] Exact integer `**` now fails closed for negative or runtime-dependent exponents while preserving non-negative literal exponents, and fixed-width `**`/`**=` now emit `SIFR-INT-0005` instead of silently becoming float or lowering through unchecked casts; review is satisfied and quick validation is passing: PR #1864.
   - [x] Direct bool/integer equality and ordering comparisons now emit active `SIFR-INT-0007` across exact, bigint-transition, literal, and fixed-width integer shapes while preserving bool/bool and unrelated comparisons; review is satisfied and quick validation is passing: PR #1865.
   - [x] Exact and fixed-width integer true division now fails closed with active `SIFR-INT-0006` instead of silently lowering through `float` casts while the fallible `Result[float, ...]` path is pending; review is satisfied and quick validation is passing: PR #1866.
+  - [x] Generic addition now rejects unbounded `T + T -> T`, preserves `Addable` exact-int generic addition, and proves fixed-width `int32` cannot satisfy `Addable` for `T + T -> T` because ordinary fixed-width `+` promotes to `int`; review is satisfied and quick validation is passing: PR #1867.
 - [ ] INT-4 builtins, indexing, bytes, ranges, and pattern matching
 - [ ] INT-5 serialization, web, and schema boundaries
 - [ ] INT-6A dtype contract lock
