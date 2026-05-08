@@ -483,6 +483,7 @@ Validation:
 - [x] INT-5 JSON load digit-limit review satisfied after adding runtime JSON integer-token scanning, pre-`serde_json` `json_loads` budget enforcement, a typed `sifr.json.validate_integer_digit_limits` `JsonLimitError` boundary, and quick-lane fixture coverage: `reviews/integer-model-int-5-json-load-digit-limits-review-pass-1.md`; PR #1893.
 - [x] INT-5 milestone closure review pass 1 satisfied: runtime JSON exact/web/string profile machinery, public `sifr.json` profile wrappers, JSON load digit limits, builtin error surfaces, and the schema/client/generated-serde/storage/`SIFR-INT-0009` boundary contract are complete for current surfaces; web/schema/model emitters remain explicitly deferred to later surface-owning phases: `reviews/integer-model-int-5-milestone-closure-review-pass-1.md`; PR #1894.
 - [x] INT-6A dtype contract lock review satisfied after adding the test-owned integer dtype contract artifact, quick/pr validation sentinels, fixed-width dtype construction/arithmetic/Arrow/Parquet rules, and the future `SIFR-INT-0008` emission contract: `reviews/integer-model-int-6a-dtype-contract-lock-review-pass-1.md`; PR #1895.
+- [x] INT-6B deferred dtype runtime integration closure review satisfied: array, tensor, dataframe, and Arrow/Parquet runtime surfaces are Phase 42 scope; the INT-6A dtype contract is wired into quick/pr/nightly/release validation lanes and fails closed against silent wrapping or implicit widening until those owning surfaces exist: `reviews/integer-model-int-6b-deferred-runtime-closure-review-pass-1.md`; PR #1896.
 
 ## Implementation Checklist
 
@@ -570,6 +571,7 @@ Validation:
   - [x] JSON input integer tokens are scanned against `DEFAULT_JSON_INTEGER_DIGIT_LIMIT` before `serde_json` parsing, and `sifr.json.validate_integer_digit_limits` exposes typed `JsonLimitError` validation for callers that need the explicit limit boundary; review is satisfied and quick validation is passing: PR #1893.
 - [x] INT-6A dtype contract lock
   - [x] Integer dtype semantics are locked in `verification/validation_contracts/integer_dtype_contract.md`: fixed-width dtype names, explicit `list[int]` compact-storage dtype selection, dtype-preserving fallible arithmetic, explicit checked/wrapping/saturating/overflowing/widen APIs, future `SIFR-INT-0008` emission, and Arrow/Parquet fixed-width mappings. The sentinel script is wired into quick/pr/nightly/release validation lanes; review is satisfied and quick validation is passing: PR #1895.
-- [ ] INT-6B deferred dtype runtime integration
+- [x] INT-6B deferred dtype runtime integration
+  - [x] Runtime array/tensor/dataframe kernels and Arrow/Parquet loaders are deferred to Phase 42, where the owning data-science surfaces are planned. This phase now closes the milestone by linking the future owner and relying on the INT-6A validation contract to preserve dtype-preserving fallible arithmetic, explicit overflow policy APIs, explicit widening, fixed-width external schema mapping, and future `SIFR-INT-0008` emission until implementation surfaces exist: PR #1896.
 - [ ] INT-7 diagnostics, documentation, and migration cleanup
 - [ ] INT-8 closure hardening and performance gates
