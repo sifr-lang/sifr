@@ -131,6 +131,13 @@ pub enum FixedIntType {
 }
 
 impl FixedIntType {
+    /// Temporary scalar arithmetic policy while ordinary fixed-width promotion
+    /// still depends on the current exact-int codegen surface.
+    #[must_use]
+    pub const fn supports_current_scalar_promotion_to_int(self) -> bool {
+        !matches!(self, Self::U64 | Self::USize)
+    }
+
     #[must_use]
     pub const fn supports_current_int_builtin_widening(self) -> bool {
         matches!(
@@ -1479,6 +1486,26 @@ mod tests {
             FixedIntType::USize,
         ] {
             assert!(!fixed.supports_current_int_builtin_widening());
+        }
+    }
+
+    #[test]
+    fn test_fixed_width_current_scalar_promotion_policy() {
+        for fixed in [
+            FixedIntType::I8,
+            FixedIntType::I16,
+            FixedIntType::I32,
+            FixedIntType::I64,
+            FixedIntType::U8,
+            FixedIntType::U16,
+            FixedIntType::U32,
+            FixedIntType::ISize,
+        ] {
+            assert!(fixed.supports_current_scalar_promotion_to_int());
+        }
+
+        for fixed in [FixedIntType::U64, FixedIntType::USize] {
+            assert!(!fixed.supports_current_scalar_promotion_to_int());
         }
     }
 
