@@ -339,6 +339,12 @@ Under `json.web`, schema-driven public models default to JSON numbers only when 
 
 Core rule: Sifr never silently loses integer precision when crossing a boundary. A serializer either preserves the exact integer, proves the target can represent it, or returns a typed error.
 
+The reviewable contract artifact for schema, client, generated serde, and
+storage boundary mappings is
+`verification/integer_model_serialization_boundary_contract.md`. Future web,
+ORM, and schema phases must update that artifact when they implement the
+corresponding runtime surfaces.
+
 ### JSON
 
 Sifr's JSON parser parses integer number tokens into exact `int` values. A JSON number token with no `.`, `e`, or `E` is an integer token. Fractional or exponent-bearing number tokens follow the selected numeric profile, initially `float` unless a Phase 28 decimal profile is requested.
