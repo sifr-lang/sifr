@@ -243,19 +243,34 @@ impl RustEmitter {
                 receiver,
                 method,
                 args,
-            } => crate::RustExpr::MethodCall {
-                receiver: Box::new(match receiver.as_ref() {
+            } => {
+                let receiver = match receiver.as_ref() {
                     crate::RustExpr::Ident(name) if self.is_stdlib_constant(name) => {
                         crate::RustExpr::Ident(name.clone())
                     }
                     _ => self.rewrite_stdlib_constant_idents_in_expr(*receiver),
-                }),
-                method,
-                args: args
+                };
+                let receiver_class = self.rust_expr_class_name(&receiver);
+                let args = args
                     .into_iter()
-                    .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
-                    .collect(),
-            },
+                    .enumerate()
+                    .map(|(idx, arg)| {
+                        let arg = self.rewrite_stdlib_constant_idents_in_expr(arg);
+                        if receiver_class.as_ref().is_some_and(|class_name| {
+                            self.method_param_lowers_to_sifr_int_result(class_name, &method, idx)
+                        }) {
+                            self.coerce_result_int_expr_to_sifr_int_value(arg)
+                        } else {
+                            arg
+                        }
+                    })
+                    .collect();
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(receiver),
+                    method,
+                    args,
+                }
+            }
             crate::RustExpr::FnCall { func, args } => {
                 let func = self.rewrite_stdlib_constant_idents_in_expr(*func);
                 let args = if let Some(func_name) = rust_expr_identifier_path(&func) {
@@ -1656,6 +1671,21 @@ impl RustEmitter {
         self.sifr_int_result_function_params
             .borrow()
             .get(name)
+            .is_some_and(|params| params.contains(&idx))
+    }
+
+    pub(super) fn method_param_lowers_to_sifr_int_result(
+        &self,
+        class_name: &str,
+        method_name: &str,
+        idx: usize,
+    ) -> bool {
+        self.sifr_int_result_method_params
+            .borrow()
+            .get(&crate::function_emitter::result_method_key(
+                class_name,
+                method_name,
+            ))
             .is_some_and(|params| params.contains(&idx))
     }
 

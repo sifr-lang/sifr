@@ -145,6 +145,7 @@ impl RustEmitter {
         let mut result_method_returns = HashSet::new();
         let mut function_params: HashMap<String, HashSet<usize>> = HashMap::new();
         let mut result_function_params: HashMap<String, HashSet<usize>> = HashMap::new();
+        let mut result_method_params: HashMap<String, HashSet<usize>> = HashMap::new();
         let module_function_params = module
             .functions
             .iter()
@@ -158,12 +159,32 @@ impl RustEmitter {
                 )
             })
             .collect::<HashMap<_, _>>();
+        let module_method_params = module
+            .classes
+            .iter()
+            .flat_map(|class| {
+                class.methods.iter().map(|method| {
+                    (
+                        result_method_key(&class.name, &method.name),
+                        method
+                            .params
+                            .iter()
+                            .map(|param| param.ty.clone())
+                            .collect::<Vec<_>>(),
+                    )
+                })
+            })
+            .collect::<HashMap<_, _>>();
         loop {
             let before = function_returns.len();
             let before_result_returns = result_function_returns.len();
             let before_result_methods = result_method_returns.len();
             let before_params = function_params.values().map(HashSet::len).sum::<usize>();
             let before_result_params = result_function_params
+                .values()
+                .map(HashSet::len)
+                .sum::<usize>();
+            let before_result_method_params = result_method_params
                 .values()
                 .map(HashSet::len)
                 .sum::<usize>();
@@ -195,6 +216,7 @@ impl RustEmitter {
                         &result_function_returns,
                         &result_method_returns,
                         &result_function_params,
+                        collect_sifr_int_result_function_param_names(func, &result_function_params),
                     ))
                     .then(|| func.name.clone())
                 })
@@ -205,11 +227,18 @@ impl RustEmitter {
                 .iter()
                 .flat_map(|class| {
                     class.methods.iter().filter_map(|method| {
+                        let method_key = result_method_key(&class.name, &method.name);
+                        let result_param_bindings = collect_sifr_int_result_method_param_names(
+                            method,
+                            &method_key,
+                            &result_method_params,
+                        );
                         function_returns_result_sifr_int(
                             method,
                             &result_function_returns,
                             &result_method_returns,
                             &result_function_params,
+                            result_param_bindings,
                         )
                         .then(|| result_method_key(&class.name, &method.name))
                     })
@@ -248,9 +277,61 @@ impl RustEmitter {
                         .or_default()
                         .extend(indexes);
                 }
+                for (name, indexes) in collect_sifr_int_result_call_arg_method_params(
+                    &func.body,
+                    &module_method_params,
+                    &result_function_returns,
+                    &result_method_returns,
+                    collect_sifr_int_result_function_param_names(func, &result_function_params),
+                ) {
+                    result_method_params
+                        .entry(name)
+                        .or_default()
+                        .extend(indexes);
+                }
+            }
+            for class in &module.classes {
+                for method in &class.methods {
+                    let method_key = result_method_key(&class.name, &method.name);
+                    let result_param_bindings = collect_sifr_int_result_method_param_names(
+                        method,
+                        &method_key,
+                        &result_method_params,
+                    );
+                    for (name, indexes) in
+                        collect_sifr_int_result_call_arg_function_params_with_initial(
+                            &method.body,
+                            &module_function_params,
+                            &result_function_returns,
+                            &result_method_returns,
+                            result_param_bindings.clone(),
+                        )
+                    {
+                        result_function_params
+                            .entry(name)
+                            .or_default()
+                            .extend(indexes);
+                    }
+                    for (name, indexes) in collect_sifr_int_result_call_arg_method_params(
+                        &method.body,
+                        &module_method_params,
+                        &result_function_returns,
+                        &result_method_returns,
+                        result_param_bindings,
+                    ) {
+                        result_method_params
+                            .entry(name)
+                            .or_default()
+                            .extend(indexes);
+                    }
+                }
             }
             let after_params = function_params.values().map(HashSet::len).sum::<usize>();
             let after_result_params = result_function_params
+                .values()
+                .map(HashSet::len)
+                .sum::<usize>();
+            let after_result_method_params = result_method_params
                 .values()
                 .map(HashSet::len)
                 .sum::<usize>();
@@ -259,6 +340,7 @@ impl RustEmitter {
                 && result_method_returns.len() == before_result_methods
                 && after_params == before_params
                 && after_result_params == before_result_params
+                && after_result_method_params == before_result_method_params
             {
                 break;
             }
@@ -268,6 +350,7 @@ impl RustEmitter {
         *self.sifr_int_result_method_returns.borrow_mut() = result_method_returns;
         *self.sifr_int_function_params.borrow_mut() = function_params;
         *self.sifr_int_result_function_params.borrow_mut() = result_function_params;
+        *self.sifr_int_result_method_params.borrow_mut() = result_method_params;
     }
 
     fn module_sifr_int_bindings(&self) -> HashSet<String> {
@@ -390,6 +473,10 @@ impl RustEmitter {
             &self.sifr_int_result_function_returns.borrow(),
             &self.sifr_int_result_method_returns.borrow(),
             &self.sifr_int_result_function_params.borrow(),
+            collect_sifr_int_result_function_param_names(
+                func,
+                &self.sifr_int_result_function_params.borrow(),
+            ),
         );
         let post_stmt_callable_conventions = {
             let mut conventions = self.callable_var_conventions.clone();
@@ -1077,6 +1164,7 @@ fn function_returns_result_sifr_int(
     result_function_returns: &HashSet<String>,
     result_method_returns: &HashSet<String>,
     result_function_params: &HashMap<String, HashSet<usize>>,
+    initial_result_bindings: HashSet<String>,
 ) -> bool {
     if !is_result_int_type(&func.return_type) {
         return false;
@@ -1089,13 +1177,11 @@ fn function_returns_result_sifr_int(
         result_method_returns,
         result_function_params,
     ));
-    let result_param_bindings =
-        collect_sifr_int_result_function_param_names(func, result_function_params);
     let local_result_bindings = collect_sifr_int_result_local_bindings_with_initial(
         &func.body,
         &result_function_returns,
         result_method_returns,
-        result_param_bindings,
+        initial_result_bindings,
     );
     let mut returns_sifr_int_result = false;
     let mut on_stmt = |stmt: &HirStmt| {
@@ -1136,6 +1222,7 @@ fn collect_nested_sifr_int_result_function_returns(
                     &available_result_returns,
                     result_method_returns,
                     result_function_params,
+                    collect_sifr_int_result_function_param_names(func, result_function_params),
                 ) {
                     nested_returns.insert(func.name.clone());
                 }
@@ -1217,6 +1304,22 @@ fn collect_sifr_int_result_function_param_names(
         return HashSet::new();
     };
     func.params
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, param)| indexes.contains(&idx).then(|| param.name.clone()))
+        .collect()
+}
+
+fn collect_sifr_int_result_method_param_names(
+    method: &HirFunction,
+    method_key: &str,
+    result_method_params: &HashMap<String, HashSet<usize>>,
+) -> HashSet<String> {
+    let Some(indexes) = result_method_params.get(method_key) else {
+        return HashSet::new();
+    };
+    method
+        .params
         .iter()
         .enumerate()
         .filter_map(|(idx, param)| indexes.contains(&idx).then(|| param.name.clone()))
@@ -1474,8 +1577,24 @@ fn collect_sifr_int_result_call_arg_function_params(
 ) -> HashMap<String, HashSet<usize>> {
     let result_param_bindings =
         collect_sifr_int_result_function_param_names(caller, result_function_params);
-    let local_result_bindings = collect_sifr_int_result_local_bindings_with_initial(
+    collect_sifr_int_result_call_arg_function_params_with_initial(
         &caller.body,
+        module_function_params,
+        result_function_returns,
+        result_method_returns,
+        result_param_bindings,
+    )
+}
+
+fn collect_sifr_int_result_call_arg_function_params_with_initial(
+    body: &[HirStmt],
+    module_function_params: &HashMap<String, Vec<Type>>,
+    result_function_returns: &HashSet<String>,
+    result_method_returns: &HashSet<String>,
+    result_param_bindings: HashSet<String>,
+) -> HashMap<String, HashSet<usize>> {
+    let local_result_bindings = collect_sifr_int_result_local_bindings_with_initial(
+        body,
         result_function_returns,
         result_method_returns,
         result_param_bindings,
@@ -1506,7 +1625,67 @@ fn collect_sifr_int_result_call_arg_function_params(
         }
     };
     traversal::walk_stmts(
-        &caller.body,
+        body,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    discovered
+}
+
+fn collect_sifr_int_result_call_arg_method_params(
+    body: &[HirStmt],
+    module_method_params: &HashMap<String, Vec<Type>>,
+    result_function_returns: &HashSet<String>,
+    result_method_returns: &HashSet<String>,
+    result_param_bindings: HashSet<String>,
+) -> HashMap<String, HashSet<usize>> {
+    let local_result_bindings = collect_sifr_int_result_local_bindings_with_initial(
+        body,
+        result_function_returns,
+        result_method_returns,
+        result_param_bindings,
+    );
+    let mut discovered: HashMap<String, HashSet<usize>> = HashMap::new();
+    let mut on_stmt = |_stmt: &HirStmt| {};
+    let mut on_expr = |expr: &HirExpr| {
+        let HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ..
+        } = expr
+        else {
+            return;
+        };
+        let Some(class_name) = hir_expr_class_name(object) else {
+            return;
+        };
+        let method_key = result_method_key(&class_name, method);
+        let Some(params) = module_method_params.get(&method_key) else {
+            return;
+        };
+        for (idx, arg) in args.iter().enumerate() {
+            let Some(param_ty) = params.get(idx) else {
+                continue;
+            };
+            if is_result_int_type(param_ty)
+                && hir_expr_returns_sifr_int_result(
+                    arg,
+                    result_function_returns,
+                    result_method_returns,
+                    &local_result_bindings,
+                )
+            {
+                discovered
+                    .entry(method_key.clone())
+                    .or_default()
+                    .insert(idx);
+            }
+        }
+    };
+    traversal::walk_stmts(
+        body,
         TraversalConfig::LOCAL_SCOPE_ONLY,
         &mut on_stmt,
         &mut on_expr,

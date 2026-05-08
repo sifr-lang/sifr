@@ -2267,7 +2267,20 @@ impl RustEmitter {
             if let Some(method_params) =
                 self.resolve_registry_method_params(&effective_object_ty, method)
             {
+                let method_receiver_class =
+                    match crate::resolve_alias_type_for_plain_call(&effective_object_ty) {
+                        Type::Class { name, .. } => Some(name.clone()),
+                        _ => None,
+                    };
                 for (idx, lowered_arg) in lowered_args.iter_mut().enumerate() {
+                    if method_receiver_class.as_ref().is_some_and(|class_name| {
+                        self.method_param_lowers_to_sifr_int_result(class_name, method, idx)
+                    }) {
+                        *lowered_arg = self.coerce_result_int_expr_to_sifr_int_value(
+                            self.rewrite_stdlib_constant_idents_in_expr(lowered_arg.clone()),
+                        );
+                        continue;
+                    }
                     if let (Some((param_ty, convention)), Some(arg)) =
                         (method_params.get(idx), args.get(idx))
                     {
