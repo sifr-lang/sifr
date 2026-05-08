@@ -10,7 +10,7 @@ This issue is the implementation phase tracker. It intentionally does not restat
 
 ## Status
 
-- Phase state: ad-hoc, ready for implementation breakdown.
+- Phase state: ad-hoc, completed.
 - Compatibility stance: pre-production clean break; no long-term compatibility layer for the historical machine-integer model or user-facing `bigint`.
 - Required local validation before each implementation PR: `scripts/run_all_tests.sh --profile quick`.
 - Required full closure validation: `scripts/run_all_tests.sh`.
@@ -492,6 +492,7 @@ Validation:
 - [x] INT-8 closure hardening gates review pass 1 satisfied: the Sifr small-int loop fixture, integer closure performance runner, ratified 10x pre-Phase-35 throughput threshold, zero-allocation probes, integer JSON/fixed-width property seeds, and closure hardening artifact satisfy the implementation wave with no blockers: `reviews/integer-model-int-8-closure-hardening-gates-review-pass-1.md`; PR #1901.
 - [x] INT-8 clippy closure cleanup review pass 1 satisfied: mechanical codegen iterator/helper refactors preserve behavior while restoring `cargo clippy --workspace -- -D warnings` for the closure gate: `reviews/integer-model-int-8-clippy-closure-cleanup-review-pass-1.md`; PR #1902.
 - [x] INT-8 milestone closure review pass 1 satisfied: the integer closure performance runner reports zero allocations for small `SifrInt` accumulation/counter/hash loops and a latest local observed slowdown of 3.03x under the ratified 10x pre-Phase-35 threshold; integer external-boundary and fixed-width helper property/fuzz-smoke seeds are registered and green; `cargo clippy --workspace -- -D warnings`, `cargo fmt --check`, HIR guardrails, `scripts/run_integer_model_closure_perf.py`, and full `scripts/run_all_tests.sh` pass locally: `reviews/integer-model-int-8-milestone-closure-review-pass-1.md`; PR #1903.
+- [x] Final whole-phase closure review pass 1 satisfied: all 11 milestones (INT-0 through INT-8) have individually satisfied closure reviews, complete implementation checklists, and documented review-history entries; every deferral is explicit, owned, and bounded (dtype runtime -> Phase 42, performance tooling -> Phase 35 with ratified 10x threshold, web/schema emitters -> Phase 40/41, public `bigint` fixtures -> quarantined); no code or docs blockers remain; only tracker phase-state wording update required: `reviews/integer-model-phase-closure-review-pass-1.md`; PR #1904.
 
 ## Implementation Checklist
 
