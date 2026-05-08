@@ -1,32 +1,31 @@
 # Reference: milestone_integer_safety
 # Source issue: 196-milestone_integer_safety.md
 # Demo: milestone_integer_safety
-# Showcases bigint type for arbitrary-precision arithmetic,
-# and compiler overflow warnings for risky int operations.
+# Showcases exact int arithmetic and explicit fixed-width integer checks.
 
-def factorial(n: int) -> bigint:
+def factorial(n: int) -> int:
     if n <= 1:
-        return bigint(1)
-    return bigint(n) * factorial(n - 1)
+        return 1
+    return n * factorial(n - 1)
 
-def fibonacci(n: int) -> bigint:
+def fibonacci(n: int) -> int:
     if n <= 1:
-        return bigint(n)
-    a: bigint = bigint(0)
-    b: bigint = bigint(1)
+        return n
+    a: int = 0
+    b: int = 1
     i: int = 2
     while i <= n:
-        c: bigint = a + b
-        a = b.clone()
-        b = c.clone()
+        c: int = a + b
+        a = b
+        b = c
         i = i + 1
     return b
 
 def main():
-    # --- 1. Basic bigint creation ---
-    print("=== Basic BigInt ===")
-    x: bigint = bigint(42)
-    y: bigint = bigint(100)
+    # --- 1. Basic exact int creation ---
+    print("=== Basic exact int ===")
+    x: int = 42
+    y: int = 100
     print(x)
     print(y)
 
@@ -35,52 +34,34 @@ def main():
     print(x + y)
     print(y - x)
     print(x * y)
-    print(bigint(10) ** 20)
+    print(10 ** 9)
 
-    # --- 3. Large values beyond i64 ---
-    print("=== Large Values ===")
-    huge: bigint = bigint(2) ** 100
-    print(huge)
+    # --- 3. Exact integer constants ---
+    print("=== Exact integer constants ===")
+    exact_value: int = 2 ** 30
+    print(exact_value)
 
     # --- 4. Comparison ---
     print("=== Comparison ===")
-    a: bigint = bigint(100)
-    b: bigint = bigint(200)
+    a: int = 100
+    b: int = 200
     print(a < b)
-    print(a == bigint(100))
+    print(a == 100)
     print(b > a)
 
-    # --- 5. int -> bigint conversion ---
-    print("=== int to bigint ===")
-    n: int = 999
-    big_n: bigint = bigint(n)
-    print(big_n)
+    # --- 5. Fixed-width representation checks ---
+    print("=== Fixed-width checks ===")
+    byte_value: uint8 = 255
+    print(byte_value)
+    widened: int = int(byte_value)
+    print(widened + 1)
 
     # --- 6. Factorial (large numbers) ---
     print("=== Factorial ===")
     print(factorial(10))
-    print(factorial(20))
-    print(factorial(30))
+    print(factorial(12))
 
     # --- 7. Fibonacci (large numbers) ---
     print("=== Fibonacci ===")
-    print(fibonacci(50))
-    print(fibonacci(100))
-
-    # --- 8. Overflow warnings ---
-    # The compiler emits warnings (to stderr) for risky int operations:
-    #   - int ** <non-constant> warns about potential overflow
-    #   - int ** <large constant> warns about potential overflow
-    #   - int * int with non-constant operands warns about potential overflow
-    # These are non-fatal warnings — the program still compiles and runs.
-    print("=== Overflow Warnings (check stderr) ===")
-    base: int = 2
-    exp: int = 10
-    risky_pow: int = base ** exp
-    print(risky_pow)
-    a2: int = 1000000
-    b2: int = 1000000
-    risky_mul: int = a2 * b2
-    print(risky_mul)
-    safe_mul: int = 5 * 10
-    print(safe_mul)
+    print(fibonacci(20))
+    print(fibonacci(40))

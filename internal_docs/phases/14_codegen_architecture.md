@@ -481,7 +481,7 @@ Target: `RustItem::Static` with `RustType::Named("std::sync::LazyLock<Mutex<i64>
 
 #### 4. Import collection (lines 754-768)
 
-Currently: Boolean flags (`needs_hashmap`, `needs_hashset`, `needs_vecdeque`, `needs_bigint`) checked individually to emit `use` statements.
+Current bootstrap notes referred to per-feature boolean import flags such as `needs_hashmap`, `needs_hashset`, `needs_vecdeque`, and the historical `needs_bigint`. The canonical integer model routes exact integer support through `sifr_runtime::SifrInt`; future import/dependency collection should operate on structured runtime needs rather than a public `bigint` flag.
 
 Target: A `Vec<RustItem::Use>` collected during emission, deduplicated, and prepended to the file. The boolean flags remain for now (they're set during HIR traversal) but the emission path uses IR.
 
@@ -774,7 +774,7 @@ This:
 - Enables intrinsic discovery (list all registered intrinsics)
 - Reduces the size of any single function
 - Is essential for maintainability as future phases (async, typed serde, web framework, FFI) will add hundreds of new intrinsics
-- **Eliminates the driver's string-scanning hack** for Cargo dependency detection. Currently the driver uses fragile patterns like `if rust_source.contains("num_bigint::BigInt")` to decide which crates to add to `Cargo.toml`. With the registry, the codegen collects all required crate names into a `HashSet<String>` during lowering and returns them alongside the generated code. The driver uses this set directly — no string scanning needed. This is not a full package manager (deferred to Phase 18) but it removes the most fragile part of the current dependency detection.
+- **Eliminates the driver's string-scanning hack** for Cargo dependency detection. Historical code scanned generated Rust for crate-specific strings such as `num_bigint::BigInt`; the canonical integer model now depends on the shared runtime crate for exact integer support. With the registry, codegen collects all required crate names into a `HashSet<String>` during lowering and returns them alongside the generated code. The driver uses this set directly — no string scanning needed. This is not a full package manager (deferred to Phase 18) but it removes the most fragile part of dependency detection.
 
 The registry is built once at codegen initialization. Each intrinsic function lives in a domain-specific module:
 
@@ -827,7 +827,7 @@ status: done
 
 ### Pass 1: Import Collection
 
-Currently: Boolean flags (`needs_hashmap`, `needs_hashset`, `needs_vecdeque`, `needs_bigint`) are set during HIR traversal and checked during preamble generation.
+Currently: Boolean flags for collection/runtime needs are set during HIR traversal and checked during preamble generation. Historical notes named `needs_bigint`; exact integer support should instead be represented as a `sifr_runtime`/`SifrInt` runtime need.
 
 New approach: Walk the entire `RustFile` IR tree and collect all `RustType` nodes. If any node contains `RustType::HashMap`, add `use std::collections::HashMap;`. If any contains `RustType::HashSet`, add `use std::collections::HashSet;`. Etc. The walk must visit all IR nodes recursively — items, statements, expressions, types, and nested bodies.
 
@@ -872,7 +872,7 @@ This catches codegen bugs at Sifr compile time rather than at Rust compile time.
 ### Definition of Done (milestone_codegen_structural_passes)
 
 - **`RawCode`-zero gate met:** Zero `RawCode` nodes in all core codegen paths (user code expressions, statements, items, intrinsics, methods). The only acceptable `RawCode` remaining is in the stdlib preamble if any edge cases resist conversion — these must be explicitly documented and counted (target: zero, hard maximum: 5)
-- Import collection pass eliminates `needs_hashmap`, `needs_hashset`, `needs_vecdeque`, `needs_bigint` boolean flags
+- Import collection pass eliminates ad hoc collection/runtime boolean flags and replaces the historical `needs_bigint` path with structured `sifr_runtime` dependency tracking for exact integers.
 - Dead code elimination pass replaces `filter_rust_code_to_needed` (the old string-parsing function is deleted)
 - Clone optimization pass removes clones on literals and `Copy` types (conservative scope — no ownership analysis)
 - IR validation pass catches at least 3 categories of structural issues

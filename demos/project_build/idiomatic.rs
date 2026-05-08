@@ -1,10 +1,6 @@
-use num_bigint::BigInt;
-
 mod formatter {
-    use num_bigint::BigInt;
-
     pub fn render_value() -> String {
-        BigInt::from(42_u8).to_string()
+        42_i64.to_string()
     }
 }
 
@@ -17,6 +13,5 @@ mod helper {
 }
 
 fn main() {
-    let _project_dependency_marker = BigInt::from(0_u8);
     println!("{}", helper::render());
 }

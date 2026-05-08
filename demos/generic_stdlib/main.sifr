@@ -3,7 +3,7 @@
 # Demo: milestone_stdlib_generic_rewrite
 # Showcases generic stdlib functions working with multiple types,
 # predicate-based itertools, generic Counter[T] with operator overloads,
-# generic deque[T], generic heapq with Comparable bounds, and bigint support.
+# generic deque[T], generic heapq with Comparable bounds, and exact int support.
 
 from sifr.itertools import chain, take, flatten, cycle, islice, compress, pairwise, repeat, zip_longest, accumulate, dropwhile, takewhile, filterfalse
 from sifr.heapq import heapify, heappop, heappush, nsmallest, nlargest, heapify_copy

@@ -43,17 +43,17 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 - Allowed `Decimal` constructors:
   - `Decimal("...")` (validated decimal string)
   - `Decimal(int_value)` (exact)
-  - `Decimal(bigint_value)` (exact)
+  - `Decimal(int_value)` (exact, including values beyond fixed-width ranges)
 - Allowed `BigDecimal` constructors:
   - `BigDecimal("...")` (validated decimal string)
   - `BigDecimal(int_value)` (exact)
-  - `BigDecimal(bigint_value)` (exact)
+  - `BigDecimal(int_value)` (exact, including values beyond fixed-width ranges)
 - Cross-decimal conversion:
   - `BigDecimal(decimal_value)` is explicit and exact, returning `bigdecimal`.
   - `Decimal(bigdecimal_value)` is explicit and fallible, returning `Result[decimal, DecimalConversionError]` (must be checked; no implicit narrowing).
 - Integer-target conversion semantics (Python parity):
   - `int(decimal_value)` and `int(bigdecimal_value)` are explicit and truncate toward zero (Python-compatible), returning `Result[int, DecimalConversionError]` for out-of-range or invalid values.
-  - `bigint(decimal_value)` and `bigint(bigdecimal_value)` are explicit and truncate toward zero (Python-compatible), with no implicit rounding.
+  - `int(decimal_value)` and `int(bigdecimal_value)` are explicit and truncate toward zero (Python-compatible), with no implicit rounding.
   - Truncating conversions are intentionally explicit; there are no implicit lossy integer conversions.
 - Disallowed constructors/conversions:
   - `Decimal(float_value)` (disallowed)
@@ -73,9 +73,7 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 
 ### Numeric mixing policy (final)
 - `int + decimal` -> `decimal` (allowed, exact)
-- `bigint + decimal` -> `decimal` (allowed, exact)
 - `int + bigdecimal` -> `bigdecimal` (allowed, exact)
-- `bigint + bigdecimal` -> `bigdecimal` (allowed, exact)
 - Any arithmetic/comparison mixing `decimal` with `bigdecimal` is rejected unless explicitly converted.
 - Any arithmetic/comparison mixing `float` with `decimal` is rejected unless explicitly redesigned in a future phase.
 - Any arithmetic/comparison mixing `float` with `bigdecimal` is rejected unless explicitly redesigned in a future phase.
@@ -136,8 +134,8 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
   - Define rendering contract:
     - Source/display names: `decimal`, `bigdecimal`
     - Rust type names: `Decimal`, `BigDecimal`
-  - Add parsing/lowering for `Decimal("...")`, `Decimal(int)`, `Decimal(bigint)`.
-  - Add parsing/lowering for `BigDecimal("...")`, `BigDecimal(int)`, `BigDecimal(bigint)`.
+  - Add parsing/lowering for `Decimal("...")` and `Decimal(int)`.
+  - Add parsing/lowering for `BigDecimal("...")` and `BigDecimal(int)`.
   - Add built-in call lowering/type-check paths for `Decimal(...)` and `BigDecimal(...)` (constructor arity/type validation + diagnostics).
   - Enforce constructor validity rules and mixed-numeric policy in type checking.
 - Definition of done:
@@ -162,14 +160,14 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 - Scope:
   - Implement explicit conversions:
     - `int <-> decimal`
-    - `bigint <-> decimal`
+    - `int <-> decimal`
     - `str <-> decimal`
     - `int <-> bigdecimal`
-    - `bigint <-> bigdecimal`
+    - `int <-> bigdecimal`
     - `str <-> bigdecimal`
   - Enforce Python-compatible integer-target conversion behavior:
     - `int(decimal|bigdecimal)` truncates toward zero and is fallible on range/invalid target values.
-    - `bigint(decimal|bigdecimal)` truncates toward zero and is explicit.
+    - `int(decimal|bigdecimal)` truncates toward zero and is explicit.
   - Implement explicit cross-decimal conversions:
     - `decimal -> bigdecimal` via `BigDecimal(decimal_value)` (exact)
     - `bigdecimal -> decimal` via `Decimal(bigdecimal_value)` (fallible `Result`, checked)
@@ -205,8 +203,8 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
   - Corpus coverage:
     - exact `Decimal` string construction
     - exact `BigDecimal` string construction
-    - int/bigint construction for both types
-    - `int(decimal|bigdecimal)` and `bigint(decimal|bigdecimal)` truncation-toward-zero behavior, including negative values
+    - exact `int` construction for both types
+    - `int(decimal|bigdecimal)` truncation-toward-zero behavior, including negative values
     - rounding boundaries
     - `//` floor-division behavior boundaries (including negative operands)
     - `quantize` and `sqrt` behavior boundaries (success/failure/rounding context)
