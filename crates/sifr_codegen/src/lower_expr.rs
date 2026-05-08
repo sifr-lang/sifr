@@ -2,7 +2,7 @@
 
 use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp, HirParam};
-use sifr_type_system::{FixedIntType, Type};
+use sifr_type_system::Type;
 use std::cell::RefCell;
 
 thread_local! {
@@ -1350,12 +1350,8 @@ fn is_int_like_simple(ty: &Type) -> bool {
 fn is_fixed_width_int_like_simple(ty: &Type) -> bool {
     matches!(
         resolve_alias_type(ty),
-        Type::FixedInt(fixed) if fixed_width_promotes_to_current_int(*fixed)
+        Type::FixedInt(fixed) if fixed.supports_current_scalar_promotion_to_int()
     )
-}
-
-fn fixed_width_promotes_to_current_int(fixed: FixedIntType) -> bool {
-    !matches!(fixed, FixedIntType::U64 | FixedIntType::USize)
 }
 
 fn is_float_like_simple(ty: &Type) -> bool {

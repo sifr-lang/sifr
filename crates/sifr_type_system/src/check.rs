@@ -1,6 +1,6 @@
 //! Type checking rules for Sifr operators and expressions.
 
-use crate::types::{FixedIntType, Type};
+use crate::types::Type;
 use crate::union::{remove_none_from_union, union_contains_none};
 use sifr_diagnostics::DiagnosticCode;
 
@@ -24,7 +24,7 @@ fn is_integral_numeric_type(ty: &Type) -> bool {
 
 fn is_exact_or_fixed_integer_type(ty: &Type) -> bool {
     matches!(ty, Type::Int | Type::LiteralInt(_))
-        || matches!(ty, Type::FixedInt(fixed) if fixed_width_promotes_to_current_int(*fixed))
+        || matches!(ty, Type::FixedInt(fixed) if fixed.supports_current_scalar_promotion_to_int())
 }
 
 fn is_bool_type(ty: &Type) -> bool {
@@ -47,10 +47,6 @@ fn is_exact_to_float_integer_type(ty: &Type) -> bool {
 
 fn is_bool_integer_mixed_comparison(left: &Type, right: &Type) -> bool {
     (is_bool_type(left) && is_integer_type(right)) || (is_integer_type(left) && is_bool_type(right))
-}
-
-fn fixed_width_promotes_to_current_int(fixed: FixedIntType) -> bool {
-    !matches!(fixed, FixedIntType::U64 | FixedIntType::USize)
 }
 
 /// Type-check a binary operation (e.g., `a + b`, `a - b`).
