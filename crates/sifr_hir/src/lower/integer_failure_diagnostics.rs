@@ -31,14 +31,6 @@ pub(super) fn exact_int_division_requires_handling(
         emit_exact_int_division_requires_handling(ctx, range);
         return true;
     }
-    if is_exact_int_like(left.ty())
-        && is_exact_int_like(right.ty())
-        && is_exact_int_division_or_modulo(op)
-        && !is_proven_nonzero_integer_expr(right, ctx)
-    {
-        emit_exact_int_division_requires_handling(ctx, range);
-        return true;
-    }
     false
 }
 

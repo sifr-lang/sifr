@@ -626,6 +626,9 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
                 name: name.clone(),
                 ty: if name == "_" || should_omit_local_type_annotation(effective_ty, value) {
                     None
+                } else if let Some(ty) = exact_int_floor_result_local_rust_type(effective_ty, value)
+                {
+                    Some(ty)
                 } else {
                     Some(crate::sifr_type_to_rust_type(effective_ty))
                 },
@@ -914,6 +917,51 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
         }
         _ => false,
     }
+}
+
+fn exact_int_floor_result_local_rust_type(ty: &Type, value: &HirExpr) -> Option<RustType> {
+    if matches!(
+        crate::resolve_alias_type_for_plain_call(ty),
+        Type::Int | Type::LiteralInt(_)
+    ) && matches!(
+        value,
+        HirExpr::QuestionMark { expr, .. } if is_exact_int_floor_result_expr(expr)
+    ) {
+        return Some(RustType::Named("SifrInt".to_string()));
+    }
+
+    if is_result_int_division_error_type(ty) && is_exact_int_floor_result_expr(value) {
+        let Type::Result(_, err_ty) = ty else {
+            return None;
+        };
+        return Some(RustType::Result(
+            Box::new(RustType::Named("SifrInt".to_string())),
+            Box::new(crate::sifr_type_to_rust_type(err_ty)),
+        ));
+    }
+
+    None
+}
+
+fn is_exact_int_floor_result_expr(value: &HirExpr) -> bool {
+    matches!(
+        value,
+        HirExpr::BinOp { op, ty, .. }
+            if matches!(op.as_str(), "//" | "%") && is_result_int_division_error_type(ty)
+    )
+}
+
+fn is_result_int_division_error_type(ty: &Type) -> bool {
+    let Type::Result(ok_ty, err_ty) = crate::resolve_alias_type_for_plain_call(ty) else {
+        return false;
+    };
+    matches!(
+        crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
+        Type::Int | Type::LiteralInt(_)
+    ) && matches!(
+        crate::resolve_alias_type_for_plain_call(err_ty.as_ref()),
+        Type::Class { name, .. } if name == "DivisionError"
+    )
 }
 
 fn should_force_mutable_binding(ty: &Type) -> bool {

@@ -1,0 +1,11 @@
+def main():
+    divisor: int = 0
+    try:
+        value: int = 10 // divisor
+        _ = value
+    except DivisionError as e:
+        assert str(e.message) == 'division by zero'
+
+    mod_divisor: int = 3
+    remainder: Result[int, DivisionError] = 10 % mod_divisor
+    _ = remainder

@@ -63,6 +63,14 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
     if generic_addition_requires_addable_bound(&left, op_str, &right, ctx, binop.range()) {
         return None;
     }
+    if let Some(result_ty) = exact_int_floor_result_type(&left, op_str, &right, ctx) {
+        return Some(HirExpr::BinOp {
+            left: Box::new(left),
+            op: op_str.to_string(),
+            right: Box::new(right),
+            ty: result_ty,
+        });
+    }
 
     match type_check_binary_op(left.ty(), op_str, right.ty()) {
         Ok(result_ty) => {
@@ -93,6 +101,58 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
             ctx.error_with_code_at(code, message, binop.range());
             None
         }
+    }
+}
+
+fn exact_int_floor_result_type(
+    left: &HirExpr,
+    op: &str,
+    right: &HirExpr,
+    ctx: &LowerCtx,
+) -> Option<Type> {
+    if ctx.is_stdlib_lowering() {
+        return None;
+    }
+    if !matches!(op, "//" | "%") {
+        return None;
+    }
+    if !is_exact_int_like(left.ty()) || !is_exact_int_like(right.ty()) {
+        return None;
+    }
+    if is_proven_nonzero_integer_expr(right, ctx) {
+        return None;
+    }
+    Some(Type::Result(
+        Box::new(Type::Int),
+        Box::new(division_error_type(ctx)),
+    ))
+}
+
+fn division_error_type(ctx: &LowerCtx) -> Type {
+    ctx.class_types
+        .get("DivisionError")
+        .cloned()
+        .unwrap_or(Type::Class {
+            name: "DivisionError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        })
+}
+
+fn is_exact_int_like(ty: &Type) -> bool {
+    matches!(ty, Type::Int | Type::LiteralInt(_))
+}
+
+fn is_proven_nonzero_integer_expr(expr: &HirExpr, ctx: &LowerCtx) -> bool {
+    match expr {
+        HirExpr::IntLiteral(value) => *value != 0,
+        HirExpr::LargeIntLiteral(value) => value != "0",
+        HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
+            is_proven_nonzero_integer_expr(operand, ctx)
+        }
+        HirExpr::Name { name, .. } => ctx.is_proven_nonzero_integer_binding(name),
+        _ => false,
     }
 }
 
