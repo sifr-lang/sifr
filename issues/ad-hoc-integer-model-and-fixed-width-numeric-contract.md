@@ -488,6 +488,7 @@ Validation:
 - [x] INT-7 closure gap review pass 1 completed with blockers for demo hygiene, phase docs, manifest cleanup, transition fixture quarantine, and diagnostic inventory sync: `reviews/integer-model-int-7-closure-gap-review-pass-1.md`.
 - [x] INT-7 demo hygiene and phase doc cleanup review satisfied after updating targeted demos from public `bigint` examples to exact `int`, refreshing generated/idiomatic artifacts, pointing phase docs 13/14/28 at the canonical integer model, and marking `SIFR-TYPE-0006` transition-only in the diagnostic emission inventory: `reviews/integer-model-int-7-demo-phase-doc-cleanup-review-pass-1.md`; PR #1898.
 - [x] INT-7 transition fixture quarantine review satisfied after removing `bigint_arithmetic` from quick/pr manifests, adding transition-quarantine comments and the quarantine tracking artifact for remaining alias fixtures, updating decimal demos/fixtures away from public `bigint(...)` forms, and syncing the implementation inventory: `reviews/integer-model-int-7-transition-fixture-quarantine-review-pass-1.md`; PR #1899.
+- [x] INT-7 milestone closure review pass 1 satisfied: all acceptance criteria are met, the five prior closure blockers are resolved by PRs #1897/#1898/#1899, quick validation passes, transition quarantine artifacts are in place, and `SIFR-TYPE-0006` is documented as transition-only until alias removal: `reviews/integer-model-int-7-milestone-closure-review-pass-1.md`; PR #1900.
 
 ## Implementation Checklist
 
@@ -577,8 +578,9 @@ Validation:
   - [x] Integer dtype semantics are locked in `verification/validation_contracts/integer_dtype_contract.md`: fixed-width dtype names, explicit `list[int]` compact-storage dtype selection, dtype-preserving fallible arithmetic, explicit checked/wrapping/saturating/overflowing/widen APIs, future `SIFR-INT-0008` emission, and Arrow/Parquet fixed-width mappings. The sentinel script is wired into quick/pr/nightly/release validation lanes; review is satisfied and quick validation is passing: PR #1895.
 - [x] INT-6B deferred dtype runtime integration
   - [x] Runtime array/tensor/dataframe kernels and Arrow/Parquet loaders are deferred to Phase 42, where the owning data-science surfaces are planned. This phase now closes the milestone by linking the future owner and relying on the INT-6A validation contract to preserve dtype-preserving fallible arithmetic, explicit overflow policy APIs, explicit widening, fixed-width external schema mapping, and future `SIFR-INT-0008` emission until implementation surfaces exist: PR #1896.
-- [ ] INT-7 diagnostics, documentation, and migration cleanup
+- [x] INT-7 diagnostics, documentation, and migration cleanup
   - [x] Reserved and documented the remaining non-emittable integer diagnostic slots `SIFR-INT-0002`, `SIFR-INT-0008`, `SIFR-INT-0009`, and `SIFR-INT-0010`, so the generated public and internal diagnostic tables now account for every `SIFR-INT-0001..0011` family code: PR #1897.
   - [x] Updated targeted demos and generated artifacts to use exact `int` instead of public `bigint`, refreshed phase docs 13/14/28 to defer integer semantics to `internal_docs/integer_model.md`, and documented `SIFR-TYPE-0006` as transition-only until public alias removal: PR #1898.
   - [x] Removed transition-only `bigint_arithmetic` from quick/pr pass manifests, quarantined remaining public `bigint` alias fixtures in `verification/integer_model_bigint_transition_quarantine.md`, and updated decimal demos/fixtures to use exact `int` source forms where the public alias was not needed: PR #1899.
+  - [x] INT-7 milestone closure review is satisfied with no blockers: `reviews/integer-model-int-7-milestone-closure-review-pass-1.md`; PR #1900.
 - [ ] INT-8 closure hardening and performance gates
