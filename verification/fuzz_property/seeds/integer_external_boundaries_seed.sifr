@@ -1,0 +1,28 @@
+from sifr.json import JsonValue, dumps_string_ints, dumps_web, from_array, from_int, loads, validate_integer_digit_limits
+
+
+def main() -> None:
+    unsafe: JsonValue = from_array([from_int(1), from_int(9007199254740992)])
+    try:
+        _: str = dumps_web(unsafe)
+        assert False
+    except JsonIntegerRangeError as e:
+        assert e.profile == "json.web"
+
+    assert dumps_string_ints(unsafe) == "[\"1\",\"9007199254740992\"]"
+
+    oversized_integer: str = "1"
+    for _index in range(0, 4097):
+        oversized_integer = oversized_integer + "0"
+
+    try:
+        _: None = validate_integer_digit_limits(oversized_integer)
+        assert False
+    except JsonLimitError as e:
+        assert e.limit == 4096
+
+    try:
+        _: JsonValue = loads("{\"value\":" + oversized_integer + "}")
+        assert False
+    except JSONDecodeError as e:
+        assert len(e.message) > 0

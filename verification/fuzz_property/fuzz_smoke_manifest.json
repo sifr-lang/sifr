@@ -7,7 +7,9 @@
     "verification/fuzz_property/seeds/type_mismatch_seed.sifr",
     "verification/fuzz_property/seeds/function_signature_seed.sifr",
     "verification/fuzz_property/seeds/import_callable_seed.sifr",
-    "verification/fuzz_property/seeds/string_numeric_literals_seed.sifr"
+    "verification/fuzz_property/seeds/string_numeric_literals_seed.sifr",
+    "verification/fuzz_property/seeds/integer_external_boundaries_seed.sifr",
+    "verification/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr"
   ],
   "iterations": 32,
   "random_seed": 1349393279,

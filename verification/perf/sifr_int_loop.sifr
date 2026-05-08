@@ -1,0 +1,20 @@
+def accumulate(limit: int) -> int:
+    total: int = 0
+    i: int = 0
+    while i < limit:
+        total = total + i
+        i = i + 1
+    return total
+
+
+def counter(limit: int) -> int:
+    i: int = 0
+    while i < limit:
+        i = i + 1
+    return i
+
+
+def main() -> None:
+    assert accumulate(10000) == 49995000
+    assert counter(10000) == 10000
+    print("sifr_int_loop: passed")
