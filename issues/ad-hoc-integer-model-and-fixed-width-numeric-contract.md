@@ -472,6 +472,7 @@ Validation:
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` class-method return review satisfied after adding `Class::method` result-return propagation and method call-site coverage: `reviews/integer-model-int-1-exact-int-method-result-return-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` field-receiver method call review satisfied after resolving promoted calls through `self.field.clone().method(...)`: `reviews/integer-model-int-1-exact-int-method-field-result-call-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` nested-field receiver review satisfied after recursively lowering structured field access receivers: `reviews/integer-model-int-1-exact-int-nested-field-result-call-review-pass-1.md`.
+- [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` class-method parameter review satisfied after promoting method parameters and direct promoted call arguments: `reviews/integer-model-int-1-exact-int-method-result-params-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -513,6 +514,7 @@ Validation:
   - [x] `Result[int, DivisionError]` class method returns now participate in exact result promotion, including method-to-method calls such as `self.divide(...)` and try-unwrapping of promoted method results; review is satisfied and quick validation is passing: PR #1882.
   - [x] Promoted `Result[int, DivisionError]` method calls through class fields now recover the receiver class from field metadata, so `self.calc.divide(...)` local aliases lower as `Result<SifrInt, DivisionError>` and unwrap through `SifrInt`; review is satisfied and quick validation is passing: PR #1883.
   - [x] Nested field receivers such as `self.holder.calc.divide(...)` now recursively lower through structured field access instead of falling into the production `compile_error!` stub, preserving promoted `Result<SifrInt, DivisionError>` local aliases; review is satisfied and quick validation is passing: PR #1884.
+  - [x] `Result[int, DivisionError]` class method parameters whose call sites receive promoted exact result expressions now lower as `Result<SifrInt, DivisionError>`, preserving method passthrough helpers and direct promoted call arguments; review is satisfied and quick validation is passing: PR #1885.
   - [ ] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: direct function-return promotion and remaining `Result[int, DivisionError]` integration surfaces still need support.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.

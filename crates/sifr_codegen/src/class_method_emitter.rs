@@ -236,6 +236,17 @@ impl RustEmitter {
             return self.rust_ir_type_with_generics(param_ty);
         }
 
+        let param_idx = method
+            .params
+            .iter()
+            .position(|param| param.name == param_name);
+        if param_idx.is_some_and(|idx| {
+            self.method_param_lowers_to_sifr_int_result(&class.name, &method.name, idx)
+        }) && is_result_int_type(param_ty)
+        {
+            return result_int_return_type_to_sifr_int(param_ty);
+        }
+
         let rust_ty = self.rust_type_with_generics(param_ty);
         if param_ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed()
         {
@@ -520,7 +531,7 @@ impl RustEmitter {
                 .contains(&result_method_key(&class.name, &method.name)),
         );
 
-        for param in &method.params {
+        for (param_idx, param) in method.params.iter().enumerate() {
             let effective_convention = if method.name == "new" {
                 ParamConvention::own()
             } else {
@@ -548,6 +559,11 @@ impl RustEmitter {
             }
             self.local_binding_types
                 .insert(param.name.clone(), param.ty.clone());
+            if self.method_param_lowers_to_sifr_int_result(&class.name, &method.name, param_idx) {
+                self.sifr_int_result_local_bindings
+                    .borrow_mut()
+                    .insert(param.name.clone());
+            }
         }
         self.register_local_body_binding_types(&method.body);
 
