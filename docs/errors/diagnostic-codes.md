@@ -150,6 +150,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-TYPE-0000` | `TYPE` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INT-0000` | `INT` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-INT-0002` | `INT` | Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets. |
+| `SIFR-INT-0008` | `INT` | Reserved for fixed-width array, tensor, or dataframe arithmetic without an explicit overflow policy. |
+| `SIFR-INT-0009` | `INT` | Reserved for JSON or web-safe integer serialization policy failures. |
+| `SIFR-INT-0010` | `INT` | Reserved for bytes or bytearray construction and mutation values that do not fit uint8. |
 | `SIFR-CALL-0000` | `CALL` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-OWN-0000` | `OWN` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-FLOW-0000` | `FLOW` | Reserved family base; not emitted as a diagnostic. |

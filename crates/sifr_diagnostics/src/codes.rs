@@ -394,6 +394,26 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-TYPE-0000", "TYPE"),
     reserved_family_base("SIFR-DECIMAL-0000", "DECIMAL"),
     reserved_family_base("SIFR-INT-0000", "INT"),
+    reserved_code(
+        "SIFR-INT-0002",
+        "INT",
+        "Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets.",
+    ),
+    reserved_code(
+        "SIFR-INT-0008",
+        "INT",
+        "Reserved for fixed-width array, tensor, or dataframe arithmetic without an explicit overflow policy.",
+    ),
+    reserved_code(
+        "SIFR-INT-0009",
+        "INT",
+        "Reserved for JSON or web-safe integer serialization policy failures.",
+    ),
+    reserved_code(
+        "SIFR-INT-0010",
+        "INT",
+        "Reserved for bytes or bytearray construction and mutation values that do not fit uint8.",
+    ),
     reserved_family_base("SIFR-CALL-0000", "CALL"),
     reserved_family_base("SIFR-OWN-0000", "OWN"),
     reserved_family_base("SIFR-FLOW-0000", "FLOW"),
@@ -1718,10 +1738,22 @@ pub fn active_registry_entries() -> impl Iterator<Item = &'static DiagnosticRegi
 }
 
 const fn reserved_family_base(id: &'static str, family: &'static str) -> DiagnosticRegistryEntry {
+    reserved_code(
+        id,
+        family,
+        "Reserved family base; not emitted as a diagnostic.",
+    )
+}
+
+const fn reserved_code(
+    id: &'static str,
+    family: &'static str,
+    summary: &'static str,
+) -> DiagnosticRegistryEntry {
     DiagnosticRegistryEntry {
         id,
         family,
-        summary: "Reserved family base; not emitted as a diagnostic.",
+        summary,
         state: DiagnosticState::Reserved,
         docs_path: "docs/errors/diagnostic-codes.md",
         representative_fixture_path: None,
