@@ -69,6 +69,11 @@ impl RustEmitter {
                     .borrow_mut()
                     .insert(param.name.clone());
             }
+            if self.function_param_lowers_to_sifr_int_result(func_name, param_idx) {
+                self.sifr_int_result_local_bindings
+                    .borrow_mut()
+                    .insert(param.name.clone());
+            }
         }
     }
 
@@ -391,6 +396,8 @@ impl RustEmitter {
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
+        let saved_sifr_int_result_local_bindings =
+            self.sifr_int_result_local_bindings.borrow().clone();
         let saved_current_sifr_int_return = self.current_sifr_int_return.get();
         let saved_current_sifr_int_result_return = self.current_sifr_int_result_return.get();
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
@@ -403,6 +410,7 @@ impl RustEmitter {
         self.none_widened_local_bindings.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
+        self.sifr_int_result_local_bindings.borrow_mut().clear();
         self.current_sifr_int_return.set(nested_returns_sifr_int);
         self.current_sifr_int_result_return
             .set(nested_returns_sifr_int_result);
@@ -464,6 +472,7 @@ impl RustEmitter {
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
+        *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;
         self.current_sifr_int_return
             .set(saved_current_sifr_int_return);
         self.current_sifr_int_result_return
@@ -836,6 +845,8 @@ impl RustEmitter {
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
+        let saved_sifr_int_result_local_bindings =
+            self.sifr_int_result_local_bindings.borrow().clone();
         let saved_sifr_int_function_returns = self.sifr_int_function_returns.borrow().clone();
         let saved_sifr_int_result_function_returns =
             self.sifr_int_result_function_returns.borrow().clone();
@@ -851,6 +862,7 @@ impl RustEmitter {
         self.none_widened_local_bindings.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
+        self.sifr_int_result_local_bindings.borrow_mut().clear();
         self.current_sifr_int_return
             .set(self.function_returns_sifr_int(&func.name));
         self.current_sifr_int_result_return.set(
@@ -963,6 +975,7 @@ impl RustEmitter {
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
+        *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;
         *self.sifr_int_function_returns.borrow_mut() = saved_sifr_int_function_returns;
         *self.sifr_int_result_function_returns.borrow_mut() =
             saved_sifr_int_result_function_returns;

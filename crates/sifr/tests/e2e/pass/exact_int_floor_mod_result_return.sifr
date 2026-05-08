@@ -37,6 +37,11 @@ def pass_result(own value: Result[int, DivisionError]) -> Result[int, DivisionEr
     return value
 
 
+def alias_result(own value: Result[int, DivisionError]) -> Result[int, DivisionError]:
+    other: Result[int, DivisionError] = value
+    return other
+
+
 def main():
     try:
         value: int = divide(10, 0)
@@ -77,4 +82,4 @@ def main():
     result_arg: Result[int, DivisionError] = divide(15, 5)
     direct_arg: Result[int, DivisionError] = pass_result(divide(18, 6))
     _ = pass_result(result_arg)
-    _ = direct_arg
+    _ = alias_result(direct_arg)
