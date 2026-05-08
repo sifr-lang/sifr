@@ -265,6 +265,9 @@ impl RustEmitter {
                             let arg = self.rewrite_stdlib_constant_idents_in_expr(arg);
                             if self.function_param_lowers_to_sifr_int(&func_name, idx) {
                                 self.coerce_expr_to_sifr_int_value(arg)
+                            } else if self.function_param_lowers_to_sifr_int_result(&func_name, idx)
+                            {
+                                self.coerce_result_int_expr_to_sifr_int_value(arg)
                             } else {
                                 arg
                             }
@@ -1581,6 +1584,13 @@ impl RustEmitter {
 
     pub(super) fn function_param_lowers_to_sifr_int(&self, name: &str, idx: usize) -> bool {
         self.sifr_int_function_params
+            .borrow()
+            .get(name)
+            .is_some_and(|params| params.contains(&idx))
+    }
+
+    pub(super) fn function_param_lowers_to_sifr_int_result(&self, name: &str, idx: usize) -> bool {
+        self.sifr_int_result_function_params
             .borrow()
             .get(name)
             .is_some_and(|params| params.contains(&idx))

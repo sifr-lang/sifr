@@ -5274,6 +5274,11 @@ impl RustEmitter {
                 adapted.push(self.coerce_expr_to_sifr_int_value(lowered_arg));
                 continue;
             }
+            if self.function_param_lowers_to_sifr_int_result(func, idx) {
+                let lowered_arg = self.rewrite_stdlib_constant_idents_in_expr(lowered_arg);
+                adapted.push(self.coerce_result_int_expr_to_sifr_int_value(lowered_arg));
+                continue;
+            }
 
             let param_rust_type = param_ty.rust_type();
             if param_rust_type.starts_with("Box<")
