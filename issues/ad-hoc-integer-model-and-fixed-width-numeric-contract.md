@@ -473,11 +473,12 @@ Validation:
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` field-receiver method call review satisfied after resolving promoted calls through `self.field.clone().method(...)`: `reviews/integer-model-int-1-exact-int-method-field-result-call-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` nested-field receiver review satisfied after recursively lowering structured field access receivers: `reviews/integer-model-int-1-exact-int-nested-field-result-call-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` class-method parameter review satisfied after promoting method parameters and direct promoted call arguments: `reviews/integer-model-int-1-exact-int-method-result-params-review-pass-1.md`.
+- [x] INT-1 milestone closure review pass 1 satisfied: INT-1 is ready to close; all 38 checklist items (including the broad `Type::Int` migration follow-up) are addressed by the landed PR sequence; remaining `bigint` transition fixtures are owned by INT-7; validation passes: `reviews/integer-model-int-1-milestone-closure-review-pass-1.md`.
 
 ## Implementation Checklist
 
 - [x] INT-0 contract lock and legacy audit
-- [ ] INT-1 runtime `SifrInt` and ownership semantics
+- [x] INT-1 runtime `SifrInt` and ownership semantics
   - [x] Wave 1 runtime substrate and generated Cargo dependency plumbing reviewed and quick-validated: PR #1789.
   - [x] Wave 1B typed fixed-width conversion substrate reviewed and quick-validated: PR #1790.
   - [x] Module-level `int` constants whose in-budget values exceed `i64` now lower through `SifrInt` helper codegen, removing the current module-constant production panic path tracked by the INT-2B module const/fixed-width fallback cleanup review; review is satisfied and quick validation is passing: PR #1817.
@@ -515,7 +516,7 @@ Validation:
   - [x] Promoted `Result[int, DivisionError]` method calls through class fields now recover the receiver class from field metadata, so `self.calc.divide(...)` local aliases lower as `Result<SifrInt, DivisionError>` and unwrap through `SifrInt`; review is satisfied and quick validation is passing: PR #1883.
   - [x] Nested field receivers such as `self.holder.calc.divide(...)` now recursively lower through structured field access instead of falling into the production `compile_error!` stub, preserving promoted `Result<SifrInt, DivisionError>` local aliases; review is satisfied and quick validation is passing: PR #1884.
   - [x] `Result[int, DivisionError]` class method parameters whose call sites receive promoted exact result expressions now lower as `Result<SifrInt, DivisionError>`, preserving method passthrough helpers and direct promoted call arguments; review is satisfied and quick validation is passing: PR #1885.
-  - [ ] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: direct function-return promotion and remaining `Result[int, DivisionError]` integration surfaces still need support.
+  - [x] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: direct function-return promotion and remaining `Result[int, DivisionError]` integration surfaces now fully covered (PRs #1876–#1885); closure review is satisfied and quick validation is passing: PR #1886.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
   - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.
