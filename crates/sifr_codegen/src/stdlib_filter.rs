@@ -354,6 +354,11 @@ fn is_shared_use_path(path: &[String]) -> bool {
             if std == "std"
                 && sync == "sync"
                 && symbol == "Mutex"
+    ) || matches!(
+        path,
+        [runtime, symbol]
+            if runtime == "sifr_runtime"
+                && symbol == "SifrInt"
     )
 }
 

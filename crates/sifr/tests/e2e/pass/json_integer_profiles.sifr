@@ -1,0 +1,36 @@
+from sifr.json import (
+    JsonValue,
+    dumps_exact,
+    dumps_string_ints,
+    dumps_web,
+    from_array,
+    from_int,
+    from_object,
+)
+
+
+def main() -> None:
+    safe_value: JsonValue = from_object(
+        [("items", from_array([from_int(1), from_int(9007199254740991)]))]
+    )
+    try:
+        safe_payload: str = dumps_web(safe_value)
+        assert safe_payload == "{\"items\":[1,9007199254740991]}"
+    except JsonIntegerRangeError as e:
+        assert False
+
+    unsafe_value: JsonValue = from_object(
+        [("items", from_array([from_int(1), from_int(9007199254740992)]))]
+    )
+    try:
+        bad_payload: str = dumps_web(unsafe_value)
+        _ = bad_payload
+        assert False
+    except JsonIntegerRangeError as e:
+        assert e.profile == "json.web"
+        assert e.path == "$.items[1]"
+
+    assert dumps_string_ints(unsafe_value) == "{\"items\":[\"1\",\"9007199254740992\"]}"
+    assert dumps_exact(safe_value) == "{\"items\":[1,9007199254740991]}"
+
+    print("json integer profiles ok")

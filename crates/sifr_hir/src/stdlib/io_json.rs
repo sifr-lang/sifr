@@ -24,6 +24,19 @@ fn json_decode_error_ty() -> Type {
     }
 }
 
+fn json_integer_range_error_ty() -> Type {
+    Type::Class {
+        name: "JsonIntegerRangeError".to_string(),
+        fields: vec![
+            ("message".to_string(), Type::Str),
+            ("path".to_string(), Type::Str),
+            ("profile".to_string(), Type::Str),
+        ],
+        methods: vec![],
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 /// _sifr.io — File I/O intrinsics
 pub(super) fn intrinsic_io() -> IntrinsicModule {
     let mut functions = HashMap::new();
@@ -95,6 +108,27 @@ pub(super) fn intrinsic_json() -> IntrinsicModule {
     // json_dumps_value(obj: JsonValue) -> str
     functions.insert(
         "json_dumps_value".to_string(),
+        FunctionType::all_borrow(vec![("obj".to_string(), json_value_stub())], Type::Str),
+    );
+
+    // json_dumps_value_exact(obj: JsonValue) -> str
+    functions.insert(
+        "json_dumps_value_exact".to_string(),
+        FunctionType::all_borrow(vec![("obj".to_string(), json_value_stub())], Type::Str),
+    );
+
+    // json_dumps_value_web(obj: JsonValue) -> Result[str, JsonIntegerRangeError]
+    functions.insert(
+        "json_dumps_value_web".to_string(),
+        FunctionType::all_borrow(
+            vec![("obj".to_string(), json_value_stub())],
+            Type::Result(Box::new(Type::Str), Box::new(json_integer_range_error_ty())),
+        ),
+    );
+
+    // json_dumps_value_string_ints(obj: JsonValue) -> str
+    functions.insert(
+        "json_dumps_value_string_ints".to_string(),
         FunctionType::all_borrow(vec![("obj".to_string(), json_value_stub())], Type::Str),
     );
 

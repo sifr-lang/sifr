@@ -48,6 +48,8 @@ pub(crate) fn collect_referenced_builtin_error_classes(
             "ParseError",
             "ValueError",
             "JSONDecodeError",
+            "JsonIntegerRangeError",
+            "JsonLimitError",
             "TOMLDecodeError",
             "RegexError",
         ] {
