@@ -1010,14 +1010,19 @@ fn function_returns_result_sifr_int(
         return false;
     }
 
+    let mut result_function_returns = result_function_returns.clone();
+    result_function_returns.extend(collect_nested_sifr_int_result_function_returns(
+        &func.body,
+        &result_function_returns,
+    ));
     let local_result_bindings =
-        collect_sifr_int_result_local_bindings(&func.body, result_function_returns);
+        collect_sifr_int_result_local_bindings(&func.body, &result_function_returns);
     let mut returns_sifr_int_result = false;
     let mut on_stmt = |stmt: &HirStmt| {
         if let HirStmt::Return { value: Some(value) } = stmt {
             returns_sifr_int_result |= hir_expr_returns_sifr_int_result(
                 value,
-                result_function_returns,
+                &result_function_returns,
                 &local_result_bindings,
             );
         }
@@ -1030,6 +1035,36 @@ fn function_returns_result_sifr_int(
         &mut on_expr,
     );
     returns_sifr_int_result
+}
+
+fn collect_nested_sifr_int_result_function_returns(
+    body: &[HirStmt],
+    inherited_result_function_returns: &HashSet<String>,
+) -> HashSet<String> {
+    let mut nested_returns = HashSet::new();
+    loop {
+        let before = nested_returns.len();
+        let mut available_result_returns = inherited_result_function_returns.clone();
+        available_result_returns.extend(nested_returns.iter().cloned());
+        let mut on_stmt = |stmt: &HirStmt| {
+            if let HirStmt::NestedFunction { func } = stmt {
+                if function_returns_result_sifr_int(func, &available_result_returns) {
+                    nested_returns.insert(func.name.clone());
+                }
+            }
+        };
+        let mut on_expr = |_expr: &HirExpr| {};
+        traversal::walk_stmts(
+            body,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        if nested_returns.len() == before {
+            break;
+        }
+    }
+    nested_returns
 }
 
 fn collect_sifr_int_result_local_bindings(
