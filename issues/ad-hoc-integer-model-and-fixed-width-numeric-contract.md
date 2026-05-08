@@ -482,6 +482,7 @@ Validation:
 - [x] INT-5 schema/client/generated-serde/storage boundary contract review satisfied after locking OpenAPI/JSON Schema mappings, TypeScript precision-safe client types, generated serde profile routing, SQL/storage explicit representation rules, and the `SIFR-INT-0009` diagnostic contract: `reviews/integer-model-int-5-schema-boundary-contracts-review-pass-1.md`; PR #1892.
 - [x] INT-5 JSON load digit-limit review satisfied after adding runtime JSON integer-token scanning, pre-`serde_json` `json_loads` budget enforcement, a typed `sifr.json.validate_integer_digit_limits` `JsonLimitError` boundary, and quick-lane fixture coverage: `reviews/integer-model-int-5-json-load-digit-limits-review-pass-1.md`; PR #1893.
 - [x] INT-5 milestone closure review pass 1 satisfied: runtime JSON exact/web/string profile machinery, public `sifr.json` profile wrappers, JSON load digit limits, builtin error surfaces, and the schema/client/generated-serde/storage/`SIFR-INT-0009` boundary contract are complete for current surfaces; web/schema/model emitters remain explicitly deferred to later surface-owning phases: `reviews/integer-model-int-5-milestone-closure-review-pass-1.md`; PR #1894.
+- [x] INT-6A dtype contract lock review satisfied after adding the test-owned integer dtype contract artifact, quick/pr validation sentinels, fixed-width dtype construction/arithmetic/Arrow/Parquet rules, and the future `SIFR-INT-0008` emission contract: `reviews/integer-model-int-6a-dtype-contract-lock-review-pass-1.md`; PR #1895.
 
 ## Implementation Checklist
 
@@ -567,7 +568,8 @@ Validation:
   - [x] Current `sifr.json` `JsonValue` serialization exposes explicit `dumps_exact`, `dumps_web`, and `dumps_string_ints` wrappers. The wrappers call the shared runtime profile policy through codegen intrinsics, apply the selected integer profile recursively to nested arrays/objects, and report `JsonIntegerRangeError` paths such as `$.items[1]`; review is satisfied and quick validation is passing: PR #1891.
   - [x] OpenAPI/JSON Schema, TypeScript client, generated serde, SQL/storage, and `SIFR-INT-0009` boundary rules are locked in `verification/integer_model_serialization_boundary_contract.md`; review is satisfied and quick validation is passing: PR #1892.
   - [x] JSON input integer tokens are scanned against `DEFAULT_JSON_INTEGER_DIGIT_LIMIT` before `serde_json` parsing, and `sifr.json.validate_integer_digit_limits` exposes typed `JsonLimitError` validation for callers that need the explicit limit boundary; review is satisfied and quick validation is passing: PR #1893.
-- [ ] INT-6A dtype contract lock
+- [x] INT-6A dtype contract lock
+  - [x] Integer dtype semantics are locked in `verification/validation_contracts/integer_dtype_contract.md`: fixed-width dtype names, explicit `list[int]` compact-storage dtype selection, dtype-preserving fallible arithmetic, explicit checked/wrapping/saturating/overflowing/widen APIs, future `SIFR-INT-0008` emission, and Arrow/Parquet fixed-width mappings. The sentinel script is wired into quick/pr/nightly/release validation lanes; review is satisfied and quick validation is passing: PR #1895.
 - [ ] INT-6B deferred dtype runtime integration
 - [ ] INT-7 diagnostics, documentation, and migration cleanup
 - [ ] INT-8 closure hardening and performance gates

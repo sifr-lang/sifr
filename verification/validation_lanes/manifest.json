@@ -14,7 +14,8 @@
       "memory_policy": "avoid-swap-defaults",
       "matrix_suites": [
         "frontend_mode_parity",
-        "phase23_graph_isolation"
+        "phase23_graph_isolation",
+        "integer_dtype_contract"
       ],
       "e2e": {
         "fixture_manifest": "verification/validation_lanes/quick_e2e_manifest.json",
@@ -38,6 +39,7 @@
       "matrix_suites": [
         "frontend_mode_parity",
         "phase23_graph_isolation",
+        "integer_dtype_contract",
         "phase24_hir_analysis",
         "phase25_cfg_flow"
       ],
@@ -69,6 +71,7 @@
       "matrix_suites": [
         "frontend_mode_parity",
         "phase23_graph_isolation",
+        "integer_dtype_contract",
         "phase24_hir_analysis",
         "phase25_cfg_flow"
       ],
@@ -104,6 +107,7 @@
       "matrix_suites": [
         "frontend_mode_parity",
         "phase23_graph_isolation",
+        "integer_dtype_contract",
         "phase24_hir_analysis",
         "phase25_cfg_flow"
       ],

@@ -267,6 +267,10 @@ On `wasm32` or any 32-bit target, compiler-owned `usize` conversions use the tar
 `bytearray` follows the same element type rule on reads and iteration: elements are `uint8`. Writes require a fitting literal or a `uint8` value. Assigning an arbitrary `int` to a bytearray element requires explicit fallible narrowing through `uint8(value)` so mutation cannot silently truncate.
 
 `array` is a future dtype-bearing surface in this design context; references to `array[int32]` describe the required contract for the data-science phase even when the runtime container is not implemented yet.
+The reviewable and test-owned contract artifact for this deferred dtype surface
+is `verification/validation_contracts/integer_dtype_contract.md`; the quick
+validation lane runs its sentinel check so future runtime work cannot remove the
+no-silent-wrap and no-implicit-widen requirements by accident.
 
 Data science and AI surfaces treat fixed-width integers as dtype choices:
 
