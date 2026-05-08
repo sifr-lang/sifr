@@ -282,6 +282,30 @@
       ]
     },
     {
+      "name": "integer_dtype_contract",
+      "label": "Integer dtype contract sentinel checks",
+      "rows": [
+        {
+          "id": "contract_sentinels",
+          "commands": [
+            {
+              "id": "check_integer_dtype_contract",
+              "argv": ["python3", "scripts/check_integer_dtype_contract.py"],
+              "expected_exit": 0
+            }
+          ],
+          "assertions": [
+            {
+              "kind": "contains",
+              "command_id": "check_integer_dtype_contract",
+              "stream": "stdout",
+              "text": "integer dtype contract sentinels ok"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "phase24_hir_analysis",
       "label": "Phase 24 HIR analysis consolidation regression matrix",
       "rows": [
