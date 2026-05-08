@@ -302,6 +302,75 @@ fn json_profile_error_struct_from_runtime(err_name: &str) -> RustExpr {
     }
 }
 
+fn json_limit_error_struct_from_runtime(err_name: &str) -> RustExpr {
+    RustExpr::StructInit {
+        name: "JsonLimitError".to_string(),
+        fields: vec![
+            (
+                "message".to_string(),
+                RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(err_name.to_string())),
+                        method: "message".to_string(),
+                        args: vec![],
+                    }),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                },
+            ),
+            (
+                "limit".to_string(),
+                RustExpr::Cast {
+                    expr: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(err_name.to_string())),
+                        method: "limit".to_string(),
+                        args: vec![],
+                    }),
+                    ty: RustType::I64,
+                },
+            ),
+        ],
+    }
+}
+
+fn json_limit_error_as_decode_error(err_name: &str) -> RustExpr {
+    json_decode_error(
+        RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(err_name.to_string())),
+                method: "message".to_string(),
+                args: vec![],
+            }),
+            method: "to_string".to_string(),
+            args: vec![],
+        },
+        RustExpr::Literal(RustLiteral::Int(0)),
+        RustExpr::Literal(RustLiteral::Int(0)),
+    )
+}
+
+fn json_validate_integer_digit_limits_expr(input: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "sifr_runtime".to_string(),
+            "json".to_string(),
+            "validate_json_integer_digit_limits".to_string(),
+        ])),
+        args: vec![
+            RustExpr::MethodCall {
+                receiver: Box::new(input),
+                method: "as_ref".to_string(),
+                args: vec![],
+            },
+            RustExpr::Path(vec![
+                "sifr_runtime".to_string(),
+                "json".to_string(),
+                "DEFAULT_JSON_INTEGER_DIGIT_LIMIT".to_string(),
+            ]),
+        ],
+    }
+}
+
 fn json_integer_profile_encode_expr(profile: JsonIntegerProfileLowering) -> RustExpr {
     RustExpr::Try(Box::new(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::FnCall {
@@ -402,6 +471,17 @@ pub(super) fn lower_json_loads(args: &[RustExpr]) -> Option<RustExpr> {
                 name: "__json_input".to_string(),
                 ty: None,
                 value: args[0].clone(),
+            },
+            RustStmt::LocalFn {
+                name: "__sifr_json_limit_error_as_decode_error".to_string(),
+                params: vec![RustParam::Named {
+                    name: "err".to_string(),
+                    ty: RustType::Named("sifr_runtime::json::JsonLimitError".to_string()),
+                }],
+                ret: Some(RustType::Named("JSONDecodeError".to_string())),
+                body: vec![RustStmt::Return(Some(json_limit_error_as_decode_error(
+                    "err",
+                )))],
             },
             RustStmt::LocalFn {
                 name: "__sifr_json_value_from_serde".to_string(),
@@ -593,61 +673,118 @@ pub(super) fn lower_json_loads(args: &[RustExpr]) -> Option<RustExpr> {
         ],
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "serde_json".to_string(),
-                        "from_str::<serde_json::Value>".to_string(),
-                    ])),
-                    args: vec![RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__json_input".to_string())),
-                        method: "as_ref".to_string(),
-                        args: vec![],
-                    }],
-                }),
+                receiver: Box::new(json_validate_integer_digit_limits_expr(RustExpr::Ident(
+                    "__json_input".to_string(),
+                ))),
                 method: "map_err".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "e".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(json_decode_error(
-                        RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("e".to_string())),
-                            method: "to_string".to_string(),
-                            args: vec![],
-                        },
-                        RustExpr::Cast {
-                            expr: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("e".to_string())),
-                                method: "line".to_string(),
-                                args: vec![],
-                            }),
-                            ty: RustType::I64,
-                        },
-                        RustExpr::Cast {
-                            expr: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("e".to_string())),
-                                method: "column".to_string(),
-                                args: vec![],
-                            }),
-                            ty: RustType::I64,
-                        },
-                    )),
-                    is_move: false,
-                }],
+                args: vec![RustExpr::Ident(
+                    "__sifr_json_limit_error_as_decode_error".to_string(),
+                )],
             }),
             method: "and_then".to_string(),
             args: vec![RustExpr::Closure {
                 params: vec![RustParam::Named {
-                    name: "parsed".to_string(),
-                    ty: RustType::Named("serde_json::Value".to_string()),
+                    name: "_".to_string(),
+                    ty: RustType::Unit,
                 }],
-                body: Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Ident("__sifr_json_value_from_serde".to_string())),
-                    args: vec![RustExpr::Ident("parsed".to_string())],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "serde_json".to_string(),
+                                "from_str::<serde_json::Value>".to_string(),
+                            ])),
+                            args: vec![RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__json_input".to_string())),
+                                method: "as_ref".to_string(),
+                                args: vec![],
+                            }],
+                        }),
+                        method: "map_err".to_string(),
+                        args: vec![RustExpr::Closure {
+                            params: vec![RustParam::Named {
+                                name: "e".to_string(),
+                                ty: RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(json_decode_error(
+                                RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("e".to_string())),
+                                    method: "to_string".to_string(),
+                                    args: vec![],
+                                },
+                                RustExpr::Cast {
+                                    expr: Box::new(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("e".to_string())),
+                                        method: "line".to_string(),
+                                        args: vec![],
+                                    }),
+                                    ty: RustType::I64,
+                                },
+                                RustExpr::Cast {
+                                    expr: Box::new(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("e".to_string())),
+                                        method: "column".to_string(),
+                                        args: vec![],
+                                    }),
+                                    ty: RustType::I64,
+                                },
+                            )),
+                            is_move: false,
+                        }],
+                    }),
+                    method: "and_then".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "parsed".to_string(),
+                            ty: RustType::Named("serde_json::Value".to_string()),
+                        }],
+                        body: Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Ident(
+                                "__sifr_json_value_from_serde".to_string(),
+                            )),
+                            args: vec![RustExpr::Ident("parsed".to_string())],
+                        }),
+                        is_move: false,
+                    }],
                 }),
                 is_move: false,
             }],
+        })),
+    })
+}
+
+pub(super) fn lower_json_validate_integer_digit_limits(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__json_input".to_string(),
+                ty: None,
+                value: args[0].clone(),
+            },
+            RustStmt::LocalFn {
+                name: "__sifr_json_limit_error_from_runtime".to_string(),
+                params: vec![RustParam::Named {
+                    name: "err".to_string(),
+                    ty: RustType::Named("sifr_runtime::json::JsonLimitError".to_string()),
+                }],
+                ret: Some(RustType::Named("JsonLimitError".to_string())),
+                body: vec![RustStmt::Return(Some(
+                    json_limit_error_struct_from_runtime("err"),
+                ))],
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(json_validate_integer_digit_limits_expr(RustExpr::Ident(
+                "__json_input".to_string(),
+            ))),
+            method: "map_err".to_string(),
+            args: vec![RustExpr::Ident(
+                "__sifr_json_limit_error_from_runtime".to_string(),
+            )],
         })),
     })
 }

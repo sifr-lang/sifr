@@ -6,6 +6,7 @@ from _sifr.json import (
     json_dumps_value_string_ints,
     json_dumps_value_web,
     json_loads,
+    json_validate_integer_digit_limits,
 )
 from sifr.io import FileHandle
 
@@ -224,6 +225,10 @@ def from_object(items: list[tuple[str, JsonValue]]) -> JsonValue:
 
 def loads(s: str) -> Result[JsonValue, JSONDecodeError]:
     return json_loads(s)
+
+
+def validate_integer_digit_limits(s: str) -> Result[None, JsonLimitError]:
+    return json_validate_integer_digit_limits(s)
 
 
 def _decode_loaded_json(content: str) -> Result[JsonValue, Error]:

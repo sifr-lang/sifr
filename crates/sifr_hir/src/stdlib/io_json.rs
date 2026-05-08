@@ -37,6 +37,18 @@ fn json_integer_range_error_ty() -> Type {
     }
 }
 
+fn json_limit_error_ty() -> Type {
+    Type::Class {
+        name: "JsonLimitError".to_string(),
+        fields: vec![
+            ("message".to_string(), Type::Str),
+            ("limit".to_string(), Type::Int),
+        ],
+        methods: vec![],
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 /// _sifr.io — File I/O intrinsics
 pub(super) fn intrinsic_io() -> IntrinsicModule {
     let mut functions = HashMap::new();
@@ -96,6 +108,15 @@ pub(super) fn intrinsic_json() -> IntrinsicModule {
                 Box::new(json_value_stub()),
                 Box::new(json_decode_error_ty()),
             ),
+        ),
+    );
+
+    // json_validate_integer_digit_limits(s: str) -> Result[None, JsonLimitError]
+    functions.insert(
+        "json_validate_integer_digit_limits".to_string(),
+        FunctionType::all_borrow(
+            vec![("s".to_string(), Type::Str)],
+            Type::Result(Box::new(Type::None), Box::new(json_limit_error_ty())),
         ),
     );
 

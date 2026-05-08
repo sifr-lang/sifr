@@ -42,9 +42,11 @@ fn additional_required_crates(name: &str) -> &'static [&'static str] {
     match name {
         // random_gauss uses rand_distr::Normal in addition to rand::rng.
         "random_gauss" => &["rand_distr"],
-        "json_dumps_value_exact" | "json_dumps_value_web" | "json_dumps_value_string_ints" => {
-            &["sifr_runtime"]
-        }
+        "json_loads"
+        | "json_validate_integer_digit_limits"
+        | "json_dumps_value_exact"
+        | "json_dumps_value_web"
+        | "json_dumps_value_string_ints" => &["sifr_runtime"],
         _ => &[],
     }
 }
@@ -164,6 +166,9 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "file_read_bytes" => (file_handles::lower_file_read_bytes(args), None),
         "file_write_bytes" => (file_handles::lower_file_write_bytes(args), None),
         "json_loads" => (json::lower_json_loads(args), Some("serde_json")),
+        "json_validate_integer_digit_limits" => {
+            (json::lower_json_validate_integer_digit_limits(args), None)
+        }
         "json_dumps" => (json::lower_json_dumps(args), Some("serde_json")),
         "json_dumps_value" => (json::lower_json_dumps_value(args), Some("serde_json")),
         "json_dumps_value_exact" => (json::lower_json_dumps_value_exact(args), Some("serde_json")),
@@ -409,7 +414,21 @@ mod tests {
         let loads = lower_intrinsic("json_loads", &["payload".to_string()])
             .expect("json_loads should lower");
         assert_eq!(loads.required_crate, Some("serde_json"));
-        assert!(render_expr(&loads.expr).contains("serde_json::from_str"));
+        assert!(loads.additional_required_crates.contains(&"sifr_runtime"));
+        let loads_rendered = render_expr(&loads.expr);
+        assert!(loads_rendered.contains("serde_json::from_str"));
+        assert!(loads_rendered.contains("validate_json_integer_digit_limits"));
+
+        let validate = lower_intrinsic(
+            "json_validate_integer_digit_limits",
+            &["payload".to_string()],
+        )
+        .expect("json_validate_integer_digit_limits should lower");
+        assert_eq!(validate.required_crate, None);
+        assert!(validate
+            .additional_required_crates
+            .contains(&"sifr_runtime"));
+        assert!(render_expr(&validate.expr).contains("JsonLimitError"));
 
         let dumps =
             lower_intrinsic("json_dumps", &["value".to_string()]).expect("json_dumps should lower");
