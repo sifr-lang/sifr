@@ -2,6 +2,7 @@
 #![cfg_attr(test, allow(clippy::expect_used))]
 
 mod int;
+pub mod json;
 
 pub use int::{
     IntegerParseError, IntegerRangeError, NormalizedIntegerHash, SifrInt,

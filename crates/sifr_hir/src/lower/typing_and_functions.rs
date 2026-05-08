@@ -95,6 +95,47 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
         );
     }
 
+    // --- JSON integer boundary errors (parent: Error, profile-specific fields) ---
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("path".to_string(), Type::Str),
+            ("profile".to_string(), Type::Str),
+        ];
+        let class_ty = Type::Class {
+            name: "JsonIntegerRangeError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types
+            .insert("JsonIntegerRangeError".to_string(), class_ty.clone());
+        ctx.error_types.insert("JsonIntegerRangeError".to_string());
+        ctx.functions.insert(
+            "JsonIntegerRangeError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("limit".to_string(), Type::Int),
+        ];
+        let class_ty = Type::Class {
+            name: "JsonLimitError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types
+            .insert("JsonLimitError".to_string(), class_ty.clone());
+        ctx.error_types.insert("JsonLimitError".to_string());
+        ctx.functions.insert(
+            "JsonLimitError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+
     // --- IOError subclasses (parent: IOError) ---
     let io_subclasses = [
         "FileNotFoundError",

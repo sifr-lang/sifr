@@ -60,6 +60,8 @@ const GLOBAL_INFRA_TYPES: &[&str] = &[
     "NotImplementedError",
     "Error",
     "JSONDecodeError",
+    "JsonIntegerRangeError",
+    "JsonLimitError",
     "TOMLDecodeError",
     "FileNotFoundError",
     "PermissionError",
