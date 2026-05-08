@@ -160,6 +160,52 @@ pub fn validate_integer_token_digit_limit(token: &str, limit: usize) -> Result<(
     Ok(())
 }
 
+pub fn validate_json_integer_digit_limits(input: &str, limit: usize) -> Result<(), JsonLimitError> {
+    let bytes = input.as_bytes();
+    let mut index = 0;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'"' => {
+                index = skip_json_string(bytes, index + 1);
+            }
+            b'-' | b'0'..=b'9' if is_json_number_start_context(bytes, index) => {
+                let token_start = index;
+                if bytes[index] == b'-' {
+                    index += 1;
+                }
+                let digit_start = index;
+                while index < bytes.len() && bytes[index].is_ascii_digit() {
+                    index += 1;
+                }
+                let digit_count = index.saturating_sub(digit_start);
+                if digit_count == 0 {
+                    index = token_start + 1;
+                    continue;
+                }
+                let is_integer_token = index >= bytes.len()
+                    || matches!(bytes[index], b',' | b']' | b'}')
+                    || bytes[index].is_ascii_whitespace();
+                if is_integer_token {
+                    if digit_count > limit {
+                        return Err(JsonLimitError::new(
+                            format!(
+                                "json integer token at byte {token_start} has {digit_count} digits, exceeding limit {limit}"
+                            ),
+                            limit,
+                        ));
+                    }
+                } else {
+                    index = skip_json_number_suffix(bytes, index);
+                }
+            }
+            _ => {
+                index += 1;
+            }
+        }
+    }
+    Ok(())
+}
+
 fn encode_web_integer(
     value: &SifrInt,
     decimal: String,
@@ -194,6 +240,45 @@ fn json_integer_token_digit_count(token: &str) -> Option<usize> {
         return None;
     }
     Some(unsigned.len())
+}
+
+fn skip_json_string(bytes: &[u8], mut index: usize) -> usize {
+    let mut escaped = false;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        if escaped {
+            escaped = false;
+        } else if byte == b'\\' {
+            escaped = true;
+        } else if byte == b'"' {
+            return index + 1;
+        }
+        index += 1;
+    }
+    index
+}
+
+fn skip_json_number_suffix(bytes: &[u8], mut index: usize) -> usize {
+    while index < bytes.len()
+        && (bytes[index].is_ascii_digit()
+            || matches!(bytes[index], b'.' | b'e' | b'E' | b'+' | b'-'))
+    {
+        index += 1;
+    }
+    index
+}
+
+fn is_json_number_start_context(bytes: &[u8], index: usize) -> bool {
+    let mut cursor = index;
+    while cursor > 0 {
+        cursor -= 1;
+        let byte = bytes[cursor];
+        if byte.is_ascii_whitespace() {
+            continue;
+        }
+        return matches!(byte, b'[' | b',' | b':');
+    }
+    true
 }
 
 #[cfg(test)]
@@ -283,5 +368,32 @@ mod tests {
             .expect_err("non-integer token should be rejected");
 
         assert_eq!(err.limit(), 4);
+    }
+
+    #[test]
+    fn json_digit_limit_rejects_integer_tokens_outside_strings() {
+        let payload = format!(r#"{{"id":{},"quoted":"{}"}}"#, "9".repeat(5), "8".repeat(8));
+        let err = validate_json_integer_digit_limits(&payload, 4)
+            .expect_err("oversized JSON integer token should fail");
+
+        assert_eq!(err.limit(), 4);
+        assert!(err.message().contains("5 digits"));
+    }
+
+    #[test]
+    fn json_digit_limit_ignores_string_digits_and_fractional_numbers() {
+        let payload = r#"{"quoted":"123456","fraction":12345.25,"exp":12345e2}"#;
+
+        validate_json_integer_digit_limits(payload, 4)
+            .expect("only integer number tokens are limited in this phase");
+    }
+
+    #[test]
+    fn json_digit_limit_checks_nested_array_numbers() {
+        let payload = r#"{"items":[1,-2345]}"#;
+        let err = validate_json_integer_digit_limits(payload, 3)
+            .expect_err("nested oversized JSON integer token should fail");
+
+        assert!(err.message().contains("4 digits"));
     }
 }

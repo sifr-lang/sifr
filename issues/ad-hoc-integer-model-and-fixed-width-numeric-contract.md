@@ -480,6 +480,7 @@ Validation:
 - [x] INT-5 runtime JSON integer profile machinery review satisfied after adding `sifr_runtime::json` exact/web/string profile helpers, JS-safe integer enforcement, digit-limit validation, canonical builtin error registration, and focused runtime/e2e coverage: `reviews/integer-model-int-5-json-profile-runtime-review-pass-1.md`; PR #1890.
 - [x] INT-5 stdlib JSON profile wrapper review satisfied after exposing `dumps_exact`, `dumps_web`, and `dumps_string_ints` through the current `sifr.json` `JsonValue` boundary with recursive runtime-profile enforcement and focused e2e coverage: `reviews/integer-model-int-5-json-profile-stdlib-wrappers-review-pass-1.md`; PR #1891.
 - [x] INT-5 schema/client/generated-serde/storage boundary contract review satisfied after locking OpenAPI/JSON Schema mappings, TypeScript precision-safe client types, generated serde profile routing, SQL/storage explicit representation rules, and the `SIFR-INT-0009` diagnostic contract: `reviews/integer-model-int-5-schema-boundary-contracts-review-pass-1.md`; PR #1892.
+- [x] INT-5 JSON load digit-limit review satisfied after adding runtime JSON integer-token scanning, pre-`serde_json` `json_loads` budget enforcement, a typed `sifr.json.validate_integer_digit_limits` `JsonLimitError` boundary, and quick-lane fixture coverage: `reviews/integer-model-int-5-json-load-digit-limits-review-pass-1.md`; PR #1893.
 
 ## Implementation Checklist
 
@@ -563,7 +564,8 @@ Validation:
 - [ ] INT-5 serialization, web, and schema boundaries
   - [x] Shared runtime JSON integer profile primitives now live in `sifr_runtime::json`: `json.exact` emits exact integer numbers, `json.web` rejects JavaScript-unsafe JSON numbers with `JsonIntegerRangeError`, and `json.string_ints` emits decimal strings. `JsonIntegerRangeError` and `JsonLimitError` are registered as builtin errors and covered by runtime/e2e tests; review is satisfied and quick validation is passing: PR #1890.
   - [x] Current `sifr.json` `JsonValue` serialization exposes explicit `dumps_exact`, `dumps_web`, and `dumps_string_ints` wrappers. The wrappers call the shared runtime profile policy through codegen intrinsics, apply the selected integer profile recursively to nested arrays/objects, and report `JsonIntegerRangeError` paths such as `$.items[1]`; review is satisfied and quick validation is passing: PR #1891.
-- [x] OpenAPI/JSON Schema, TypeScript client, generated serde, SQL/storage, and `SIFR-INT-0009` boundary rules are locked in `verification/integer_model_serialization_boundary_contract.md`; review is satisfied and quick validation is passing: PR #1892.
+  - [x] OpenAPI/JSON Schema, TypeScript client, generated serde, SQL/storage, and `SIFR-INT-0009` boundary rules are locked in `verification/integer_model_serialization_boundary_contract.md`; review is satisfied and quick validation is passing: PR #1892.
+  - [x] JSON input integer tokens are scanned against `DEFAULT_JSON_INTEGER_DIGIT_LIMIT` before `serde_json` parsing, and `sifr.json.validate_integer_digit_limits` exposes typed `JsonLimitError` validation for callers that need the explicit limit boundary; review is satisfied and quick validation is passing: PR #1893.
 - [ ] INT-6A dtype contract lock
 - [ ] INT-6B deferred dtype runtime integration
 - [ ] INT-7 diagnostics, documentation, and migration cleanup

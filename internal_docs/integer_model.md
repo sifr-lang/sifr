@@ -350,6 +350,10 @@ corresponding runtime surfaces.
 Sifr's JSON parser parses integer number tokens into exact `int` values. A JSON number token with no `.`, `e`, or `E` is an integer token. Fractional or exponent-bearing number tokens follow the selected numeric profile, initially `float` unless a Phase 28 decimal profile is requested.
 
 JSON readers apply deterministic resource limits such as maximum integer digits and maximum document bytes. Exceeding those limits returns `JsonLimitError` rather than allocating unbounded memory from untrusted input.
+The current `sifr.json.loads` path validates JSON integer token digit budgets
+before handing input to `serde_json`; compatibility keeps `loads` on
+`JSONDecodeError`, while `sifr.json.validate_integer_digit_limits` exposes the
+typed `JsonLimitError` boundary directly.
 
 Recommended writing profiles:
 
