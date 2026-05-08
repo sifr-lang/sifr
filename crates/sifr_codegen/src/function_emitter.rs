@@ -1010,11 +1010,16 @@ fn function_returns_result_sifr_int(
         return false;
     }
 
+    let local_result_bindings =
+        collect_sifr_int_result_local_bindings(&func.body, result_function_returns);
     let mut returns_sifr_int_result = false;
     let mut on_stmt = |stmt: &HirStmt| {
         if let HirStmt::Return { value: Some(value) } = stmt {
-            returns_sifr_int_result |=
-                hir_expr_returns_sifr_int_result(value, result_function_returns);
+            returns_sifr_int_result |= hir_expr_returns_sifr_int_result(
+                value,
+                result_function_returns,
+                &local_result_bindings,
+            );
         }
     };
     let mut on_expr = |_expr: &HirExpr| {};
@@ -1027,15 +1032,56 @@ fn function_returns_result_sifr_int(
     returns_sifr_int_result
 }
 
+fn collect_sifr_int_result_local_bindings(
+    body: &[HirStmt],
+    result_function_returns: &HashSet<String>,
+) -> HashSet<String> {
+    let mut result_bindings = HashSet::new();
+    let mut on_stmt = |stmt: &HirStmt| match stmt {
+        HirStmt::Let {
+            name, ty, value, ..
+        } if is_result_int_type(ty)
+            && hir_expr_returns_sifr_int_result(
+                value,
+                result_function_returns,
+                &result_bindings,
+            ) =>
+        {
+            result_bindings.insert(name.clone());
+        }
+        HirStmt::Assign { name, value }
+            if result_bindings.contains(name)
+                && !hir_expr_returns_sifr_int_result(
+                    value,
+                    result_function_returns,
+                    &result_bindings,
+                ) =>
+        {
+            result_bindings.remove(name);
+        }
+        _ => {}
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    traversal::walk_stmts(
+        body,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    result_bindings
+}
+
 fn hir_expr_returns_sifr_int_result(
     expr: &HirExpr,
     result_function_returns: &HashSet<String>,
+    local_result_bindings: &HashSet<String>,
 ) -> bool {
     match expr {
         HirExpr::BinOp { op, ty, .. } => {
             matches!(op.as_str(), "//" | "%") && is_result_int_type(ty)
         }
         HirExpr::Call { func, .. } => result_function_returns.contains(func),
+        HirExpr::Name { name, .. } => local_result_bindings.contains(name),
         _ => false,
     }
 }

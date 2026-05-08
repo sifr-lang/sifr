@@ -465,6 +465,7 @@ Validation:
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` review satisfied after adding HIR typing, local/try `SifrInt` codegen, and focused e2e coverage: `reviews/integer-model-int-1-exact-int-floor-mod-result-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` return-boundary review pass 1 completed with recursive nested return-type blocker: `reviews/integer-model-int-1-exact-int-floor-mod-result-returns-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` return-boundary review pass 2 satisfied after making recursive nested return typing explicit: `reviews/integer-model-int-1-exact-int-floor-mod-result-returns-review-pass-2.md`.
+- [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` local-result return review satisfied after adding local binding promotion and chained helper coverage: `reviews/integer-model-int-1-exact-int-result-local-return-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -499,6 +500,7 @@ Validation:
   - [x] Exact-int non-zero proof now covers early-exit `elif` zero guards and nested boolean guard composition such as `not (left == 0 or right == 0)`, with focused HIR/e2e coverage, review satisfied, and quick validation passing: PR #1875.
   - [x] Unproven exact-int `//` and `%` now lower as `Result[int, DivisionError]` instead of `SIFR-INT-0005`, with local `Result` bindings and try-block unwrapping emitted through `Result<SifrInt, DivisionError>` and focused review/e2e coverage; direct `int` assignment remains a type mismatch outside handling, fixed-width and augassign remain fail-closed: PR #1876.
   - [x] `Result[int, DivisionError]` function return boundaries that directly return unproven exact-int `//`/`%` or call another promoted result-returning helper now lower as `Result<SifrInt, DivisionError>`; promoted callers, try-unwrapped locals, chained helpers, and mixed plain-`Ok(int)` branches are covered, review is satisfied, and quick validation is passing: PR #1877.
+  - [x] `Result[int, DivisionError]` function return boundaries now also promote local `Result` bindings initialized from exact floor/mod results or promoted helper calls, preserving chained local-result helper returns through `Result<SifrInt, DivisionError>`; review is satisfied and quick validation is passing: PR #1878.
   - [ ] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: direct function-return promotion and remaining `Result[int, DivisionError]` integration surfaces still need support.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
