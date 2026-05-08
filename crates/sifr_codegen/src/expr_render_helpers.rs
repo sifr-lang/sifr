@@ -1547,6 +1547,9 @@ impl RustEmitter {
             crate::RustExpr::MethodCall {
                 receiver, method, ..
             } if method == "ok_or_else" => self.is_sifr_int_checked_floor_option_expr(receiver),
+            crate::RustExpr::MethodCall {
+                receiver, method, ..
+            } => self.is_sifr_int_result_returning_method_call(receiver, method),
             crate::RustExpr::FnCall { func, .. } => {
                 self.is_sifr_int_result_returning_function_call(func)
             }
@@ -1588,6 +1591,33 @@ impl RustEmitter {
                 .borrow()
                 .contains(&name)
         })
+    }
+
+    fn is_sifr_int_result_returning_method_call(
+        &self,
+        receiver: &crate::RustExpr,
+        method: &str,
+    ) -> bool {
+        self.rust_expr_class_name(receiver)
+            .is_some_and(|class_name| {
+                self.sifr_int_result_method_returns.borrow().contains(
+                    &crate::function_emitter::result_method_key(&class_name, method),
+                )
+            })
+    }
+
+    fn rust_expr_class_name(&self, expr: &crate::RustExpr) -> Option<String> {
+        match expr {
+            crate::RustExpr::Ident(name) if name == "self" => self.current_class_name.clone(),
+            crate::RustExpr::Ident(name) => self.local_binding_types.get(name).and_then(|ty| {
+                match crate::resolve_alias_type_for_plain_call(ty) {
+                    Type::Class { name, .. } => Some(name.clone()),
+                    _ => None,
+                }
+            }),
+            crate::RustExpr::Paren(inner) => self.rust_expr_class_name(inner),
+            _ => None,
+        }
     }
 
     pub(super) fn function_returns_sifr_int(&self, name: &str) -> bool {

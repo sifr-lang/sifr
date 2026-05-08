@@ -142,6 +142,7 @@ impl RustEmitter {
         let module_sifr_int_bindings = self.module_sifr_int_bindings();
         let mut function_returns = HashSet::new();
         let mut result_function_returns = HashSet::new();
+        let mut result_method_returns = HashSet::new();
         let mut function_params: HashMap<String, HashSet<usize>> = HashMap::new();
         let mut result_function_params: HashMap<String, HashSet<usize>> = HashMap::new();
         let module_function_params = module
@@ -160,6 +161,7 @@ impl RustEmitter {
         loop {
             let before = function_returns.len();
             let before_result_returns = result_function_returns.len();
+            let before_result_methods = result_method_returns.len();
             let before_params = function_params.values().map(HashSet::len).sum::<usize>();
             let before_result_params = result_function_params
                 .values()
@@ -191,12 +193,29 @@ impl RustEmitter {
                     (function_returns_result_sifr_int(
                         func,
                         &result_function_returns,
+                        &result_method_returns,
                         &result_function_params,
                     ))
                     .then(|| func.name.clone())
                 })
                 .collect::<Vec<_>>();
             result_function_returns.extend(discovered_result_returns);
+            let discovered_result_method_returns = module
+                .classes
+                .iter()
+                .flat_map(|class| {
+                    class.methods.iter().filter_map(|method| {
+                        function_returns_result_sifr_int(
+                            method,
+                            &result_function_returns,
+                            &result_method_returns,
+                            &result_function_params,
+                        )
+                        .then(|| result_method_key(&class.name, &method.name))
+                    })
+                })
+                .collect::<Vec<_>>();
+            result_method_returns.extend(discovered_result_method_returns);
             for func in &module.functions {
                 let extra_forced_params =
                     collect_sifr_int_function_param_names(func, &function_params);
@@ -221,6 +240,7 @@ impl RustEmitter {
                     func,
                     &module_function_params,
                     &result_function_returns,
+                    &result_method_returns,
                     &result_function_params,
                 ) {
                     result_function_params
@@ -236,6 +256,7 @@ impl RustEmitter {
                 .sum::<usize>();
             if function_returns.len() == before
                 && result_function_returns.len() == before_result_returns
+                && result_method_returns.len() == before_result_methods
                 && after_params == before_params
                 && after_result_params == before_result_params
             {
@@ -244,6 +265,7 @@ impl RustEmitter {
         }
         *self.sifr_int_function_returns.borrow_mut() = function_returns;
         *self.sifr_int_result_function_returns.borrow_mut() = result_function_returns;
+        *self.sifr_int_result_method_returns.borrow_mut() = result_method_returns;
         *self.sifr_int_function_params.borrow_mut() = function_params;
         *self.sifr_int_result_function_params.borrow_mut() = result_function_params;
     }
@@ -366,6 +388,7 @@ impl RustEmitter {
         let nested_returns_sifr_int_result = function_returns_result_sifr_int(
             func,
             &self.sifr_int_result_function_returns.borrow(),
+            &self.sifr_int_result_method_returns.borrow(),
             &self.sifr_int_result_function_params.borrow(),
         );
         let post_stmt_callable_conventions = {
@@ -1052,6 +1075,7 @@ fn hir_function_returns_sifr_int(
 fn function_returns_result_sifr_int(
     func: &HirFunction,
     result_function_returns: &HashSet<String>,
+    result_method_returns: &HashSet<String>,
     result_function_params: &HashMap<String, HashSet<usize>>,
 ) -> bool {
     if !is_result_int_type(&func.return_type) {
@@ -1062,6 +1086,7 @@ fn function_returns_result_sifr_int(
     result_function_returns.extend(collect_nested_sifr_int_result_function_returns(
         &func.body,
         &result_function_returns,
+        result_method_returns,
         result_function_params,
     ));
     let result_param_bindings =
@@ -1069,6 +1094,7 @@ fn function_returns_result_sifr_int(
     let local_result_bindings = collect_sifr_int_result_local_bindings_with_initial(
         &func.body,
         &result_function_returns,
+        result_method_returns,
         result_param_bindings,
     );
     let mut returns_sifr_int_result = false;
@@ -1077,6 +1103,7 @@ fn function_returns_result_sifr_int(
             returns_sifr_int_result |= hir_expr_returns_sifr_int_result(
                 value,
                 &result_function_returns,
+                result_method_returns,
                 &local_result_bindings,
             );
         }
@@ -1094,6 +1121,7 @@ fn function_returns_result_sifr_int(
 fn collect_nested_sifr_int_result_function_returns(
     body: &[HirStmt],
     inherited_result_function_returns: &HashSet<String>,
+    result_method_returns: &HashSet<String>,
     result_function_params: &HashMap<String, HashSet<usize>>,
 ) -> HashSet<String> {
     let mut nested_returns = HashSet::new();
@@ -1106,6 +1134,7 @@ fn collect_nested_sifr_int_result_function_returns(
                 if function_returns_result_sifr_int(
                     func,
                     &available_result_returns,
+                    result_method_returns,
                     result_function_params,
                 ) {
                     nested_returns.insert(func.name.clone());
@@ -1133,6 +1162,7 @@ fn collect_sifr_int_result_local_bindings(
     collect_sifr_int_result_local_bindings_with_initial(
         body,
         result_function_returns,
+        &HashSet::new(),
         HashSet::new(),
     )
 }
@@ -1140,6 +1170,7 @@ fn collect_sifr_int_result_local_bindings(
 fn collect_sifr_int_result_local_bindings_with_initial(
     body: &[HirStmt],
     result_function_returns: &HashSet<String>,
+    result_method_returns: &HashSet<String>,
     mut result_bindings: HashSet<String>,
 ) -> HashSet<String> {
     let mut on_stmt = |stmt: &HirStmt| match stmt {
@@ -1149,6 +1180,7 @@ fn collect_sifr_int_result_local_bindings_with_initial(
             && hir_expr_returns_sifr_int_result(
                 value,
                 result_function_returns,
+                result_method_returns,
                 &result_bindings,
             ) =>
         {
@@ -1159,6 +1191,7 @@ fn collect_sifr_int_result_local_bindings_with_initial(
                 && !hir_expr_returns_sifr_int_result(
                     value,
                     result_function_returns,
+                    result_method_returns,
                     &result_bindings,
                 ) =>
         {
@@ -1193,6 +1226,7 @@ fn collect_sifr_int_result_function_param_names(
 fn hir_expr_returns_sifr_int_result(
     expr: &HirExpr,
     result_function_returns: &HashSet<String>,
+    result_method_returns: &HashSet<String>,
     local_result_bindings: &HashSet<String>,
 ) -> bool {
     match expr {
@@ -1200,12 +1234,17 @@ fn hir_expr_returns_sifr_int_result(
             matches!(op.as_str(), "//" | "%") && is_result_int_type(ty)
         }
         HirExpr::Call { func, .. } => result_function_returns.contains(func),
+        HirExpr::MethodCall { object, method, .. } => {
+            hir_expr_class_name(object).is_some_and(|class_name| {
+                result_method_returns.contains(&result_method_key(&class_name, method))
+            })
+        }
         HirExpr::Name { name, .. } => local_result_bindings.contains(name),
         _ => false,
     }
 }
 
-fn is_result_int_type(ty: &Type) -> bool {
+pub(crate) fn is_result_int_type(ty: &Type) -> bool {
     let Type::Result(ok_ty, _) = crate::resolve_alias_type_for_plain_call(ty) else {
         return false;
     };
@@ -1215,7 +1254,7 @@ fn is_result_int_type(ty: &Type) -> bool {
     )
 }
 
-fn result_int_return_type_to_sifr_int(ty: &Type) -> RustType {
+pub(crate) fn result_int_return_type_to_sifr_int(ty: &Type) -> RustType {
     let Type::Result(_, err_ty) = crate::resolve_alias_type_for_plain_call(ty) else {
         return RustType::Named(ty.rust_type());
     };
@@ -1223,6 +1262,17 @@ fn result_int_return_type_to_sifr_int(ty: &Type) -> RustType {
         Box::new(RustType::Named("SifrInt".to_string())),
         Box::new(crate::sifr_type_to_rust_type(err_ty)),
     )
+}
+
+pub(crate) fn result_method_key(class_name: &str, method_name: &str) -> String {
+    format!("{class_name}::{method_name}")
+}
+
+fn hir_expr_class_name(expr: &HirExpr) -> Option<String> {
+    match crate::resolve_alias_type_for_plain_call(expr.ty()) {
+        Type::Class { name, .. } => Some(name.clone()),
+        _ => None,
+    }
 }
 
 fn hir_function_returns_sifr_int_with_extra_forced(
@@ -1419,6 +1469,7 @@ fn collect_sifr_int_result_call_arg_function_params(
     caller: &HirFunction,
     module_function_params: &HashMap<String, Vec<Type>>,
     result_function_returns: &HashSet<String>,
+    result_method_returns: &HashSet<String>,
     result_function_params: &HashMap<String, HashSet<usize>>,
 ) -> HashMap<String, HashSet<usize>> {
     let result_param_bindings =
@@ -1426,6 +1477,7 @@ fn collect_sifr_int_result_call_arg_function_params(
     let local_result_bindings = collect_sifr_int_result_local_bindings_with_initial(
         &caller.body,
         result_function_returns,
+        result_method_returns,
         result_param_bindings,
     );
     let mut discovered: HashMap<String, HashSet<usize>> = HashMap::new();
@@ -1445,6 +1497,7 @@ fn collect_sifr_int_result_call_arg_function_params(
                 && hir_expr_returns_sifr_int_result(
                     arg,
                     result_function_returns,
+                    result_method_returns,
                     &local_result_bindings,
                 )
             {

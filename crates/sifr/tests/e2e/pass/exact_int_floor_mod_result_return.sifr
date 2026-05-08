@@ -42,6 +42,14 @@ def alias_result(own value: Result[int, DivisionError]) -> Result[int, DivisionE
     return other
 
 
+class Calculator:
+    def divide(self, a: int, b: int) -> Result[int, DivisionError]:
+        return a // b
+
+    def divide_again(self, a: int, b: int) -> Result[int, DivisionError]:
+        return self.divide(a, b)
+
+
 def main():
     try:
         value: int = divide(10, 0)
@@ -83,3 +91,10 @@ def main():
     direct_arg: Result[int, DivisionError] = pass_result(divide(18, 6))
     _ = pass_result(result_arg)
     _ = alias_result(direct_arg)
+
+    calc: Calculator = Calculator()
+    try:
+        method_result: int = calc.divide_again(21, 7)
+        assert str(method_result) == '3'
+    except DivisionError as e:
+        _ = e
