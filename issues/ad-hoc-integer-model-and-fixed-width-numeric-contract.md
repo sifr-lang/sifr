@@ -420,6 +420,7 @@ Validation:
 - [x] INT-1 exact-int division/modulo diagnostic scaffold review satisfied with non-blocking direct `//=` literal coverage follow-up: `reviews/integer-model-int-1-exact-int-division-diagnostic-scaffold-review-pass-1.md`.
 - [x] INT-1 exact-int augmented-assignment literal suppression coverage review satisfied with no blockers: `reviews/integer-model-int-1-exact-int-augassign-literal-coverage-review-pass-1.md`.
 - [x] INT-1 exact-int non-zero guard proof review satisfied with non-blocking `elif`/nested-logic coverage follow-ups: `reviews/integer-model-int-1-exact-int-nonzero-guards-review-pass-1.md`.
+- [x] INT-1 exact-int non-zero guard follow-up review satisfied after adding `elif` early-exit and nested boolean guard coverage: `reviews/integer-model-int-1-exact-int-nonzero-guards-review-pass-2.md`.
 - [x] INT-2A reserved-width diagnostic review pass 1 completed with doc-code normalization blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-1.md`.
 - [x] INT-2A reserved-width diagnostic review pass 2 satisfied after addressing blocker: `reviews/integer-model-int-2a-reserved-width-diagnostic-review-pass-2b.md`.
 - [x] INT-2A large integer literal HIR review pass 1 completed with canonical-representation blocker: `reviews/integer-model-int-2a-large-literal-hir-review-pass-1b.md`.
@@ -492,6 +493,7 @@ Validation:
   - [x] User-code exact-int `//`, `%`, `//=`, and `%=` with unproven exact-int divisors now fail closed with active `SIFR-INT-0005` diagnostics unless the divisor is a syntactically non-zero integer literal; trusted stdlib lowering remains exempt until broader guard/proof tracking covers its internal non-zero loops; review is satisfied and quick validation is passing: PR #1857.
   - [x] Direct HIR coverage now proves exact-int `//=` and `%=` with syntactically non-zero integer literal divisors still lower successfully, closing the scaffold review hardening note; review is satisfied and quick validation is passing: PR #1858.
   - [x] Conservative non-literal exact-int non-zero facts now suppress `SIFR-INT-0005` for guarded divisors in `x != 0` true branches, `if x == 0: return/raise` early-exit false paths, and `while x != 0` bodies; reassignment and augmented assignment clear those facts, and the guarded `DivisionError` pass fixture now uses the checked parameter divisor again; review is satisfied and quick validation is passing: PR #1859.
+  - [x] Exact-int non-zero proof now covers early-exit `elif` zero guards and nested boolean guard composition such as `not (left == 0 or right == 0)`, with focused HIR/e2e coverage, review satisfied, and quick validation passing: PR #1875.
   - [ ] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: full `Result[int, DivisionError]` expression/codegen integration and non-literal proven-nonzero analysis still need support.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.

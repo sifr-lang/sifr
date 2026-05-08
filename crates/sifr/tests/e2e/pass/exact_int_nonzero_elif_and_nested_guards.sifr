@@ -1,0 +1,17 @@
+def guarded_elif(flag: bool, divisor: int) -> int:
+    if flag:
+        return 0
+    elif divisor == 0:
+        return 0
+    return 10 // divisor
+
+
+def guarded_nested(left: int, right: int) -> int:
+    if not (left == 0 or right == 0):
+        return (10 // left) + (10 % right)
+    return 0
+
+
+def main():
+    assert str(guarded_elif(False, 3)) == '3'
+    assert str(guarded_nested(2, 3)) == '6'
