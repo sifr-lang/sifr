@@ -1,5 +1,12 @@
 from _sifr.fs import read_text, write_text
-from _sifr.json import json_dumps, json_dumps_value, json_loads
+from _sifr.json import (
+    json_dumps,
+    json_dumps_value,
+    json_dumps_value_exact,
+    json_dumps_value_string_ints,
+    json_dumps_value_web,
+    json_loads,
+)
 from sifr.io import FileHandle
 
 
@@ -247,6 +254,18 @@ def load(path: str) -> Result[JsonValue, Error]:
 
 def dumps(value: JsonValue) -> str:
     return json_dumps_value(value)
+
+
+def dumps_exact(value: JsonValue) -> str:
+    return json_dumps_value_exact(value)
+
+
+def dumps_web(value: JsonValue) -> Result[str, JsonIntegerRangeError]:
+    return json_dumps_value_web(value)
+
+
+def dumps_string_ints(value: JsonValue) -> str:
+    return json_dumps_value_string_ints(value)
 
 
 def dump_handle(value: JsonValue, fh: FileHandle) -> Result[None, IOError]:

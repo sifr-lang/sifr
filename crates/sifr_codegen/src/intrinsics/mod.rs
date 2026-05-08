@@ -42,6 +42,9 @@ fn additional_required_crates(name: &str) -> &'static [&'static str] {
     match name {
         // random_gauss uses rand_distr::Normal in addition to rand::rng.
         "random_gauss" => &["rand_distr"],
+        "json_dumps_value_exact" | "json_dumps_value_web" | "json_dumps_value_string_ints" => {
+            &["sifr_runtime"]
+        }
         _ => &[],
     }
 }
@@ -163,6 +166,12 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "json_loads" => (json::lower_json_loads(args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(args), Some("serde_json")),
         "json_dumps_value" => (json::lower_json_dumps_value(args), Some("serde_json")),
+        "json_dumps_value_exact" => (json::lower_json_dumps_value_exact(args), Some("serde_json")),
+        "json_dumps_value_web" => (json::lower_json_dumps_value_web(args), Some("serde_json")),
+        "json_dumps_value_string_ints" => (
+            json::lower_json_dumps_value_string_ints(args),
+            Some("serde_json"),
+        ),
         "assert_eq" => (test::lower_assert_eq(args), None),
         "assert_ne" => (test::lower_assert_ne(args), None),
         "assert_true" => (test::lower_assert_true(args), None),
