@@ -1,0 +1,42 @@
+def divide(a: int, b: int) -> Result[int, DivisionError]:
+    return a // b
+
+
+def modulo(a: int, b: int) -> Result[int, DivisionError]:
+    return a % b
+
+
+def divide_again(a: int, b: int) -> Result[int, DivisionError]:
+    return divide(a, b)
+
+
+def divide_or_one(a: int, b: int, use_division: bool) -> Result[int, DivisionError]:
+    if use_division:
+        return a // b
+    return 1
+
+
+def main():
+    try:
+        value: int = divide(10, 0)
+        _ = value
+    except DivisionError as e:
+        assert str(e.message) == 'division by zero'
+
+    try:
+        quotient: int = divide_again(10, 3)
+        assert str(quotient) == '3'
+    except DivisionError as e:
+        _ = e
+
+    try:
+        rem: int = modulo(10, 3)
+        assert str(rem) == '1'
+    except DivisionError as e:
+        _ = e
+
+    try:
+        fallback: int = divide_or_one(10, 0, False)
+        assert str(fallback) == '1'
+    except DivisionError as e:
+        _ = e
