@@ -427,67 +427,52 @@ Sifr intentionally does NOT support enums with associated data (algebraic data t
 
 ---
 
-## milestone_integer_safety: Integer Overflow and BigInt
+## milestone_integer_safety: Integer Overflow and Exact Int
 
 status: done
 
-**Goal:** Resolve the integer overflow contradiction with Sifr's "if it compiles, it works" guarantee. Currently, `int` maps to Rust `i64` — overflow panics in debug mode and wraps silently in release mode. Both behaviors violate the safety promise. This milestone introduces a `bigint` type for arbitrary-precision arithmetic (matching Python's `int` behavior) and adds compiler diagnostics for potential overflow in `int` operations.
+**Goal:** Resolve the integer overflow contradiction with Sifr's "if it compiles, it works" guarantee. This milestone originally experimented with a public `bigint` surface, but the canonical integer model now supersedes that bootstrap design: source-level `int` is exact arbitrary precision, fixed-width integer families are explicit representation choices, and `bigint` is only a temporary transition alias. See `internal_docs/integer_model.md` for the authoritative current contract.
 
 **Depends on:** milestone_enums (the full type system feature set should be in place before changing arithmetic semantics)
 
 ### Language Design
 
-#### `bigint` type — arbitrary-precision integers
+#### Exact `int` and explicit fixed-width integers
 
 ```python
-x: bigint = 10 ** 100
-y: bigint = factorial(1000)
+x: int = 10 ** 100
+port: uint16 = 443
 ```
 
-- `bigint` maps to Rust's `num_bigint::BigInt` crate
-- Supports all arithmetic operators: `+`, `-`, `*`, `/`, `//`, `%`, `**`
-- Supports comparison operators: `==`, `!=`, `<`, `>`, `<=`, `>=`
-- `bigint` is `Eq`, `Hash`, `Clone`, `Debug`, `Comparable` — usable as dict keys, in sets, and in sorted collections
-- `bigint` literals: any integer literal can be assigned to `bigint`; the compiler emits `BigInt::from(...)` for small values and `BigInt::parse_bytes(...)` for large literals
-- Conversion: `int(b)` converts `bigint` to `int`, returns `Result[int, OverflowError]` if the value doesn't fit in `i64`; `bigint(n)` converts `int` to `bigint` (always succeeds)
-- `bigint` is NOT `Copy` — it is heap-allocated and follows move semantics
-
-#### `int` stays as `i64` with compiler diagnostics
-
-- `int` remains `i64` for performance — most programs don't need arbitrary precision
-- The compiler emits a warning when `int` arithmetic could overflow at runtime (e.g., `**` with non-constant exponent, multiplication of user inputs)
-- `int` overflow behavior is unchanged: panic in debug, wrap in release (matching Rust defaults)
-- The Python divergences table in `architecture.md` is updated to document `bigint` as the opt-in arbitrary-precision alternative
+- `int` is the Python-simple exact arbitrary-precision scalar.
+- Fixed-width types (`int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `isize`, `usize`) are explicit for storage, schemas, dtypes, binary formats, and FFI.
+- Ordinary fixed-width scalar arithmetic promotes to exact `int`; representation-preserving behavior is exposed through explicit checked/wrapping/saturating/overflowing APIs.
+- Narrowing from exact `int` to fixed-width types is explicit and fallible unless the compiler proves a constant fits.
+- The temporary public `bigint` alias is covered by `SIFR-INT-0011` during migration and is not the long-term arbitrary-precision spelling.
 
 #### Type system integration
 
-- `bigint` is a new `Type::BigInt` variant in the type enum
-- `int` and `bigint` are NOT implicitly convertible — explicit conversion required
-- Mixed arithmetic (`int + bigint`) is a compile error — the user must convert explicitly
-- Mixed comparison (`int > bigint`, `bigint == int`) is also a compile error — explicit conversion required, consistent with the arithmetic rule
-- `bigint` works with generics, pattern matching, and all type system features
+- `Type::Int` represents exact source-level integers.
+- Fixed-width families are first-class type variants.
+- Bool/integer comparison mistakes use `SIFR-INT-0007`.
+- Exact integer failure boundaries use `Result` or active integer diagnostics instead of panics.
 
 ### Compiler Changes
 
-- Parser: no syntax changes needed — `bigint` is a type name, not a keyword
-- Type system: add `Type::BigInt` variant; implement subtyping rules (bigint is not a subtype of int or vice versa)
-- Codegen: `bigint` emits `num_bigint::BigInt`; add `num-bigint` as a Cargo dependency when `bigint` is used
-- Overflow warnings: static analysis pass that flags `int` expressions with potential overflow (exponentiation, multiplication in loops, user-input arithmetic)
+- Parser and HIR preserve large integer literal text without truncation.
+- Type checking performs fixed-width const fitting and rejects implicit narrowing.
+- Codegen uses the shared `sifr_runtime::SifrInt` runtime for exact integer values and keeps source-level `int` value-semantic.
+- Integer diagnostics live in the `SIFR-INT-*` family documented in `internal_docs/integer_model.md`.
 
 ### Definition of Done (milestone_integer_safety)
 
-- `bigint` type works end-to-end with all arithmetic and comparison operators
-- `bigint` literals of arbitrary size compile correctly
-- `int(bigint_val)` returns `Result[int, OverflowError]`
-- `bigint(int_val)` always succeeds
-- Mixed `int`/`bigint` arithmetic is a compile error with clear diagnostic
-- `bigint` works as dict keys, set members, and in sorted collections
-- Compiler emits warnings for potential `int` overflow in risky expressions
-- Python divergences table updated to document `bigint` as opt-in arbitrary-precision
+- `int` literals and ordinary arithmetic use exact integer semantics.
+- Fixed-width integer annotations and constructors require fitting constants or explicit fallible narrowing.
+- Fixed-width scalar arithmetic widens to `int` unless an explicit representation-preserving API is used.
+- Public docs and demos use `int` for arbitrary precision and fixed-width types for representation-sensitive values.
+- Transition `bigint` fixtures are quarantined until the alias is removed.
 - All existing E2E tests still pass
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
-- New E2E pass tests: `bigint_basic`, `bigint_large_value`, `bigint_arithmetic`, `bigint_comparison`, `bigint_to_int`, `int_to_bigint`, `bigint_as_dict_key`, `bigint_factorial`
-- New E2E fail tests: `bigint_int_mixed_arithmetic`, `bigint_overflow_conversion`
 - Milestone demo in `./demos/integer_safety/main.sifr`
 
 ---
@@ -498,7 +483,7 @@ status: done
 
 **Goal:** Rewrite the monomorphic stdlib to use generics. This is the integration test for the entire phase — every compiler feature from milestones 1-4 is exercised. After this milestone, the stdlib is type-safe, generic, and free of duplicated type-specific functions.
 
-**Depends on:** milestone_integer_safety (all type system features including bigint must be complete before rewriting the stdlib)
+**Depends on:** milestone_integer_safety (exact integer and fixed-width type-system features must be complete before rewriting the stdlib)
 
 ### Scope
 
@@ -614,7 +599,7 @@ All existing E2E tests that use the monomorphic stdlib functions must be updated
 - `test.assert_eq` is generic
 - All existing E2E tests still pass (with migration where needed)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
-- New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`, `generic_counter_bigint`, `generic_heapq_bigint`, `generic_accumulate_bigint`
+- New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`, plus quarantined transition-alias fixtures while `bigint` remains available.
 - New E2E fail tests: `generic_counter_unhashable` (float as Counter key), `generic_heapq_uncomparable` (type without Comparable)
 - API naming divergences table in `architecture.md` updated: remove `chain_str`, `accumulate_float`, and any other deleted type-specific entries; update `itertools.count_from` if its rationale changes
 - Milestone demo in `./demos/generic_stdlib/main.sifr`
@@ -627,5 +612,5 @@ All existing E2E tests that use the monomorphic stdlib functions must be updated
 - **milestone_generics_v2 second:** User-facing generics are the foundation for everything else in this phase. Pattern matching needs to work on generic types. Enums benefit from pattern matching which benefits from generics. The stdlib rewrite needs generic functions and classes.
 - **milestone_pattern_matching third:** Pattern matching depends on generics (matching on `Option[T]`, `Result[T, E]`). Enums depend on pattern matching for exhaustive variant handling.
 - **milestone_enums fourth:** Enums depend on pattern matching for exhaustive `match` on variants. They are the capstone language feature of this phase.
-- **milestone_integer_safety fifth:** Resolves the integer overflow contradiction with the safety guarantee. Introduces `bigint` for arbitrary-precision arithmetic and compiler diagnostics for `int` overflow. Must come after enums so the full type system is in place.
-- **milestone_stdlib_generic_rewrite last:** The stdlib rewrite exercises every feature from milestones 1-5 including `bigint` support where appropriate. It is the integration test for the entire phase and must come after all language features are stable.
+- **milestone_integer_safety fifth:** Resolves the integer overflow contradiction with the safety guarantee. The current canonical model uses exact `int`, explicit fixed-width integer families, typed failure boundaries, and stable `SIFR-INT-*` diagnostics. Must come after enums so the full type system is in place.
+- **milestone_stdlib_generic_rewrite last:** The stdlib rewrite exercises every feature from milestones 1-5 including exact `int` and fixed-width support where appropriate. It is the integration test for the entire phase and must come after all language features are stable.

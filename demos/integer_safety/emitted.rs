@@ -1,68 +1,56 @@
-use num_bigint::BigInt;
-
-fn factorial(n: i64) -> BigInt {
+// src/main.rs
+fn factorial(n: i64) -> i64 {
     if n <= (1 as i64) {
-        return BigInt::from(1 as i64);
+        return 1 as i64;
     }
-    return BigInt::from(n).clone() * factorial(n - (1 as i64)).clone();
+    return n * factorial(n - (1 as i64));
 }
 
-fn fibonacci(n: i64) -> BigInt {
+fn fibonacci(n: i64) -> i64 {
     if n <= (1 as i64) {
-        return BigInt::from(n);
+        return n;
     }
-    let mut a: BigInt = BigInt::from(0 as i64);
-    let mut b: BigInt = BigInt::from(1 as i64);
+    let mut a: i64 = 0 as i64;
+    let mut b: i64 = 1 as i64;
     let mut i: i64 = 2 as i64;
     while i <= n {
-        let c: BigInt = a.clone() + b.clone();
-        a = b.clone();
-        b = c.clone();
+        let c: i64 = a + b;
+        a = b;
+        b = c;
         i = i + (1 as i64);
     }
     return b;
 }
 
 fn main() {
-    println!("=== Basic BigInt ===");
-    let x: BigInt = BigInt::from(42 as i64);
-    let y: BigInt = BigInt::from(100 as i64);
+    println!("=== Basic exact int ===");
+    let x: i64 = 42 as i64;
+    let y: i64 = 100 as i64;
     println!("{}", x);
     println!("{}", y);
     println!("=== Arithmetic ===");
-    println!("{}", x.clone() + y.clone());
-    println!("{}", y.clone() - x.clone());
-    println!("{}", x.clone() * y.clone());
-    println!("{}", (BigInt::from(10 as i64).clone()).pow((20 as i64) as u32));
-    println!("=== Large Values ===");
-    let huge: BigInt = (BigInt::from(2 as i64).clone()).pow((100 as i64) as u32);
-    println!("{}", huge);
+    println!("{}", x + y);
+    println!("{}", y - x);
+    println!("{}", x * y);
+    println!("{}", (10 as i64).pow((9 as i64) as u32));
+    println!("=== Exact integer constants ===");
+    let exact_value: i64 = (2 as i64).pow((30 as i64) as u32);
+    println!("{}", exact_value);
     println!("=== Comparison ===");
-    let a: BigInt = BigInt::from(100 as i64);
-    let b: BigInt = BigInt::from(200 as i64);
-    println!("{}", a < b);
-    println!("{}", a == BigInt::from(100 as i64));
-    println!("{}", b > a);
-    println!("=== int to bigint ===");
-    let n: i64 = 999 as i64;
-    let big_n: BigInt = BigInt::from(n);
-    println!("{}", big_n);
+    let a: i64 = 100 as i64;
+    let b: i64 = 200 as i64;
+    println!("{}", (a < b));
+    println!("{}", (a == (100 as i64)));
+    println!("{}", (b > a));
+    println!("=== Fixed-width checks ===");
+    let byte_value: u8 = 255u8;
+    println!("{}", byte_value);
+    let widened: i64 = byte_value as i64;
+    println!("{}", widened + (1 as i64));
     println!("=== Factorial ===");
     println!("{}", factorial(10 as i64));
-    println!("{}", factorial(20 as i64));
-    println!("{}", factorial(30 as i64));
+    println!("{}", factorial(12 as i64));
     println!("=== Fibonacci ===");
-    println!("{}", fibonacci(50 as i64));
-    println!("{}", fibonacci(100 as i64));
-    println!("=== Overflow Warnings (check stderr) ===");
-    let base: i64 = 2 as i64;
-    let exp: i64 = 10 as i64;
-    let risky_pow: i64 = (base).pow(exp as u32);
-    println!("{}", risky_pow);
-    let a2: i64 = 1000000 as i64;
-    let b2: i64 = 1000000 as i64;
-    let risky_mul: i64 = a2 * b2;
-    println!("{}", risky_mul);
-    let safe_mul: i64 = (5 as i64) * (10 as i64);
-    println!("{}", safe_mul);
+    println!("{}", fibonacci(20 as i64));
+    println!("{}", fibonacci(40 as i64));
 }
