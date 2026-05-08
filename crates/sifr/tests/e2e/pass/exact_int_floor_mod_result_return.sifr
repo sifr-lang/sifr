@@ -58,6 +58,14 @@ class Holder:
         return result
 
 
+class Wrapper:
+    holder: Holder
+
+    def divide_nested_field(self, a: int, b: int) -> Result[int, DivisionError]:
+        result: Result[int, DivisionError] = self.holder.calc.divide(a, b)
+        return result
+
+
 def main():
     try:
         value: int = divide(10, 0)
@@ -111,5 +119,12 @@ def main():
     try:
         field_result: int = holder.divide_field(24, 8)
         assert str(field_result) == '3'
+    except DivisionError as e:
+        _ = e
+
+    wrapper: Wrapper = Wrapper(holder)
+    try:
+        nested_field_result: int = wrapper.divide_nested_field(30, 10)
+        assert str(nested_field_result) == '3'
     except DivisionError as e:
         _ = e
