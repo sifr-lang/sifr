@@ -765,9 +765,15 @@ impl RustEmitter {
         field: &str,
         ty: &Type,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        let Some(lowered_object) = crate::try_lower_leaf_or_name_expr_result(object)? else {
-            return Ok(None);
-        };
+        let lowered_object =
+            if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(object)? {
+                lowered_leaf
+            } else {
+                let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
+                    return Ok(None);
+                };
+                lowered_object
+            };
 
         Ok(Some(self.lower_field_access_expr_with_lowered_object(
             object,
