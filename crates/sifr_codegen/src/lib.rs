@@ -1157,6 +1157,8 @@ struct RustEmitter {
     recursive_field_rust_types: HashMap<(String, String), String>,
     /// Map from class name -> ordered list of field names (for constructor arg mapping)
     class_field_order: HashMap<String, Vec<String>>,
+    /// Map of (`class_name`, `field_name`) -> field type for method receiver recovery.
+    class_field_types: HashMap<(String, String), Type>,
     /// Map from nested function name -> list of captured variable (name, type) pairs
     /// Used to pass extra args at call sites for recursive+capturing nested functions
     nested_fn_captures: HashMap<String, Vec<NestedFnCapture>>,
@@ -1309,6 +1311,7 @@ impl RustEmitter {
             recursive_fields: HashSet::new(),
             recursive_field_rust_types: HashMap::new(),
             class_field_order: HashMap::new(),
+            class_field_types: HashMap::new(),
             nested_fn_captures: HashMap::new(),
             module_constants: HashMap::new(),
             generic_classes: HashSet::new(),

@@ -1615,6 +1615,21 @@ impl RustEmitter {
                     _ => None,
                 }
             }),
+            crate::RustExpr::Field { expr, field } => {
+                self.rust_expr_class_name(expr).and_then(|owner_class| {
+                    self.class_field_types
+                        .get(&(owner_class, field.clone()))
+                        .and_then(|ty| match crate::resolve_alias_type_for_plain_call(ty) {
+                            Type::Class { name, .. } => Some(name.clone()),
+                            _ => None,
+                        })
+                })
+            }
+            crate::RustExpr::MethodCall {
+                receiver,
+                method,
+                args,
+            } if method == "clone" && args.is_empty() => self.rust_expr_class_name(receiver),
             crate::RustExpr::Paren(inner) => self.rust_expr_class_name(inner),
             _ => None,
         }

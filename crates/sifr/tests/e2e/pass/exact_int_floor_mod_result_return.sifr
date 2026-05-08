@@ -50,6 +50,14 @@ class Calculator:
         return self.divide(a, b)
 
 
+class Holder:
+    calc: Calculator
+
+    def divide_field(self, a: int, b: int) -> Result[int, DivisionError]:
+        result: Result[int, DivisionError] = self.calc.divide(a, b)
+        return result
+
+
 def main():
     try:
         value: int = divide(10, 0)
@@ -96,5 +104,12 @@ def main():
     try:
         method_result: int = calc.divide_again(21, 7)
         assert str(method_result) == '3'
+    except DivisionError as e:
+        _ = e
+
+    holder: Holder = Holder(calc)
+    try:
+        field_result: int = holder.divide_field(24, 8)
+        assert str(field_result) == '3'
     except DivisionError as e:
         _ = e

@@ -83,6 +83,8 @@ impl RustEmitter {
                 .insert(class.name.clone(), field_names);
             let mut deps = HashSet::new();
             for (field_name, field_ty) in &class.fields {
+                self.class_field_types
+                    .insert((class.name.clone(), field_name.clone()), field_ty.clone());
                 for target in &class_names {
                     if type_references_class(field_ty, target) {
                         deps.insert(target.clone());
@@ -167,6 +169,10 @@ impl RustEmitter {
         let same_class_names =
             HashSet::from([local_class_name.to_string(), source_class_name.to_string()]);
         for (field_name, field_ty) in fields {
+            self.class_field_types.insert(
+                (local_class_name.to_string(), field_name.clone()),
+                field_ty.clone(),
+            );
             if type_references_any_class(field_ty, &same_class_names) {
                 let key = (local_class_name.to_string(), field_name.clone());
                 self.recursive_fields.insert(key.clone());
