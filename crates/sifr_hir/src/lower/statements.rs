@@ -1737,6 +1737,12 @@ pub(super) fn lower_if(
 
     let mut branch_moved_states: Vec<_> = vec![then_moved];
     let mut branch_sequence_states = vec![then_sequence_guards];
+    let mut post_if_false_nonzero_guards = Vec::new();
+    let mut all_previous_branches_exit = then_body_always_exits(&then_body);
+    if all_previous_branches_exit {
+        post_if_false_nonzero_guards
+            .extend(detect_false_nonzero_integer_guards(&if_stmt.test, ctx));
+    }
 
     let mut elif_clauses = Vec::new();
     for clause in &if_stmt.elif_else_clauses {
@@ -1767,6 +1773,11 @@ pub(super) fn lower_if(
             ctx.scope.push();
             let body = lower_stmts(&clause.body, func_type, ctx);
             ctx.scope.pop();
+            let elif_body_exits = then_body_always_exits(&body);
+            if all_previous_branches_exit && elif_body_exits {
+                post_if_false_nonzero_guards.extend(detect_false_nonzero_integer_guards(test, ctx));
+            }
+            all_previous_branches_exit &= elif_body_exits;
             elif_clauses.push((cond, body));
 
             branch_moved_states.push(ctx.scope.save_moved_state());
@@ -1831,9 +1842,9 @@ pub(super) fn lower_if(
         for guard in detect_false_exit_sequence_guards(&if_stmt.test, ctx) {
             ctx.add_sequence_guard(guard);
         }
-        for name in detect_false_nonzero_integer_guards(&if_stmt.test, ctx) {
-            ctx.add_proven_nonzero_integer_binding(name);
-        }
+    }
+    for name in post_if_false_nonzero_guards {
+        ctx.add_proven_nonzero_integer_binding(name);
     }
     ctx.clear_sequence_pointers();
     Some(HirStmt::If {

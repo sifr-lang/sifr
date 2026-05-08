@@ -666,6 +666,54 @@ def main() -> None:
 }
 
 #[test]
+fn test_exact_int_division_after_elif_zero_guard_early_exit_lowers() {
+    let module = lower_source(
+        "\
+def main(flag: bool) -> None:
+    divisor: int = 3
+    if flag:
+        return
+    elif divisor == 0:
+        return
+    value: int = 10 // divisor
+",
+    )
+    .expect("elif early-exit zero guard should prove the divisor is non-zero after the chain");
+
+    assert!(matches!(
+        function_let_value(&module, "value"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
+}
+
+#[test]
+fn test_exact_int_division_inside_nested_nonzero_guard_lowers() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    left: int = 3
+    right: int = 2
+    if not (left == 0 or right == 0):
+        a: int = 10 // left
+        b: int = 10 % right
+",
+    )
+    .expect("nested boolean zero guard should prove both divisors are non-zero inside the branch");
+
+    let HirStmt::If { then_body, .. } = &module.functions[0].body[2] else {
+        panic!("expected if statement");
+    };
+    let HirStmt::Let { value: a, .. } = &then_body[0] else {
+        panic!("expected first guarded let");
+    };
+    let HirStmt::Let { value: b, .. } = &then_body[1] else {
+        panic!("expected second guarded let");
+    };
+    assert!(matches!(a, HirExpr::BinOp { ty: Type::Int, .. }));
+    assert!(matches!(b, HirExpr::BinOp { ty: Type::Int, .. }));
+}
+
+#[test]
 fn test_exact_int_nonzero_guard_is_cleared_after_reassignment() {
     let source = "\
 def main() -> None:
