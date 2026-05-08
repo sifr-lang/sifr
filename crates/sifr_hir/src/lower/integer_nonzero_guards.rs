@@ -23,7 +23,7 @@ impl LowerCtx {
     }
 
     pub(super) fn restore_proven_nonzero_integer_bindings(&mut self, snapshot: &HashSet<String>) {
-        self.proven_nonzero_integer_bindings = snapshot.clone();
+        self.proven_nonzero_integer_bindings.clone_from(snapshot);
     }
 }
 
@@ -32,7 +32,7 @@ pub(super) fn detect_true_nonzero_integer_guards(expr: &Expr, ctx: &LowerCtx) ->
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             detect_compare_nonzero_guard(
                 cmp.left.as_ref(),
-                &cmp.ops[0],
+                cmp.ops[0],
                 &cmp.comparators[0],
                 true,
                 ctx,
@@ -57,7 +57,7 @@ pub(super) fn detect_false_nonzero_integer_guards(expr: &Expr, ctx: &LowerCtx) -
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             detect_compare_nonzero_guard(
                 cmp.left.as_ref(),
-                &cmp.ops[0],
+                cmp.ops[0],
                 &cmp.comparators[0],
                 false,
                 ctx,
@@ -79,7 +79,7 @@ pub(super) fn detect_false_nonzero_integer_guards(expr: &Expr, ctx: &LowerCtx) -
 
 fn detect_compare_nonzero_guard(
     left: &Expr,
-    op: &CmpOp,
+    op: CmpOp,
     right: &Expr,
     is_true_branch: bool,
     ctx: &LowerCtx,

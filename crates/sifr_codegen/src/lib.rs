@@ -140,6 +140,8 @@ const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "DivisionError",
     "KeyError",
     "JSONDecodeError",
+    "JsonIntegerRangeError",
+    "JsonLimitError",
     "TOMLDecodeError",
     "RegexError",
     "FileNotFoundError",
@@ -507,6 +509,40 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                             ("line".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
                             ("column".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
                         ],
+                    )
+                } else if error_name == "JsonIntegerRangeError" {
+                    (
+                        vec![
+                            ("path".to_string(), sifr_type_to_rust_type(&Type::Str)),
+                            ("profile".to_string(), sifr_type_to_rust_type(&Type::Str)),
+                        ],
+                        vec![
+                            (
+                                "path".to_string(),
+                                RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "String".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![],
+                                },
+                            ),
+                            (
+                                "profile".to_string(),
+                                RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "String".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![],
+                                },
+                            ),
+                        ],
+                    )
+                } else if error_name == "JsonLimitError" {
+                    (
+                        vec![("limit".to_string(), sifr_type_to_rust_type(&Type::Int))],
+                        vec![("limit".to_string(), RustExpr::Literal(RustLiteral::Int(0)))],
                     )
                 } else if error_name == "RegexError" {
                     (

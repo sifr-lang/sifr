@@ -50,6 +50,8 @@ fn can_construct_error_from_message_for_ir(ty_name: &str) -> bool {
             | "ImportError"
             | "IOError"
             | "RegexError"
+            | "JsonIntegerRangeError"
+            | "JsonLimitError"
             | "HashlibError"
             | "DecimalConversionError"
     )

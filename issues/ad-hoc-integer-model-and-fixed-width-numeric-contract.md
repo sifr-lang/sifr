@@ -477,6 +477,7 @@ Validation:
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` nested-field receiver review satisfied after recursively lowering structured field access receivers: `reviews/integer-model-int-1-exact-int-nested-field-result-call-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` class-method parameter review satisfied after promoting method parameters and direct promoted call arguments: `reviews/integer-model-int-1-exact-int-method-result-params-review-pass-1.md`.
 - [x] INT-1 milestone closure review pass 1 satisfied: INT-1 is ready to close; all 38 checklist items (including the broad `Type::Int` migration follow-up) are addressed by the landed PR sequence; remaining `bigint` transition fixtures are owned by INT-7; validation passes: `reviews/integer-model-int-1-milestone-closure-review-pass-1.md`.
+- [x] INT-5 runtime JSON integer profile machinery review satisfied after adding `sifr_runtime::json` exact/web/string profile helpers, JS-safe integer enforcement, digit-limit validation, canonical builtin error registration, and focused runtime/e2e coverage: `reviews/integer-model-int-5-json-profile-runtime-review-pass-1.md`; PR #1890.
 
 ## Implementation Checklist
 
@@ -558,6 +559,7 @@ Validation:
   - [x] Fixed-width match literal patterns now reuse the fixed-width fitting diagnostic path, so in-range `uint8` cases such as `case 255` lower and out-of-range cases such as `case 256` fail with `SIFR-INT-0001`; review is satisfied and quick validation is passing: PR #1873.
   - [x] `sum(list[int32])` and `abs(int8.MIN)` now widen to `int` for the currently safe fixed-width builtin families, with shared policy coverage, focused e2e coverage, review satisfied, and quick validation passing: PR #1874.
 - [ ] INT-5 serialization, web, and schema boundaries
+  - [x] Shared runtime JSON integer profile primitives now live in `sifr_runtime::json`: `json.exact` emits exact integer numbers, `json.web` rejects JavaScript-unsafe JSON numbers with `JsonIntegerRangeError`, and `json.string_ints` emits decimal strings. `JsonIntegerRangeError` and `JsonLimitError` are registered as builtin errors and covered by runtime/e2e tests; review is satisfied and quick validation is passing: PR #1890.
 - [ ] INT-6A dtype contract lock
 - [ ] INT-6B deferred dtype runtime integration
 - [ ] INT-7 diagnostics, documentation, and migration cleanup

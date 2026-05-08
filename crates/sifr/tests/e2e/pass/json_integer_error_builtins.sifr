@@ -1,0 +1,11 @@
+def main() -> None:
+    range_error: JsonIntegerRangeError = JsonIntegerRangeError("unsafe integer")
+    assert range_error.message == "unsafe integer"
+    assert range_error.path == ""
+    assert range_error.profile == ""
+
+    limit_error: JsonLimitError = JsonLimitError("too many digits")
+    assert limit_error.message == "too many digits"
+    assert limit_error.limit == 0
+
+    print("json integer error builtins ok")
