@@ -16,6 +16,16 @@ def divide_or_one(a: int, b: int, use_division: bool) -> Result[int, DivisionErr
     return 1
 
 
+def divide_local(a: int, b: int) -> Result[int, DivisionError]:
+    value: Result[int, DivisionError] = a // b
+    return value
+
+
+def divide_local_again(a: int, b: int) -> Result[int, DivisionError]:
+    value: Result[int, DivisionError] = divide_local(a, b)
+    return value
+
+
 def main():
     try:
         value: int = divide(10, 0)
@@ -38,5 +48,11 @@ def main():
     try:
         fallback: int = divide_or_one(10, 0, False)
         assert str(fallback) == '1'
+    except DivisionError as e:
+        _ = e
+
+    try:
+        local_result: int = divide_local_again(9, 3)
+        assert str(local_result) == '3'
     except DivisionError as e:
         _ = e
