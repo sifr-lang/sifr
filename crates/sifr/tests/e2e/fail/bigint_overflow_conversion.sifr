@@ -1,4 +1,5 @@
 # expect-error: SIFR-TYPE-0002
+# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
 # Test that bigint-to-int conversion without error handling is a compile error
 def main():
     big: bigint = bigint(10) ** 20

@@ -1,3 +1,4 @@
+# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
 # Test accumulate with bigint values
 from sifr.itertools import accumulate
 from sifr.test import assert_eq

@@ -1,4 +1,5 @@
 # expect-error: SIFR-TYPE-0006
+# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
 def main():
     x: int = 42
     y: bigint = bigint(100)

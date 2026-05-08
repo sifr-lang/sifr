@@ -13,11 +13,6 @@ def main():
     except DecimalConversionError as e:
         assert False
 
-    bi_from_decimal: bigint = bigint(d)
-    bi_from_bigdecimal: bigint = bigint(bd)
-    assert str(bi_from_decimal) == '-1'
-    assert str(bi_from_bigdecimal) == '-1'
-
     bd_from_decimal: bigdecimal = BigDecimal(Decimal("12.3400"))
     assert str(bd_from_decimal) == '12.3400'
 

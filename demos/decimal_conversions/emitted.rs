@@ -1,3 +1,4 @@
+// src/main.rs
 use num_bigint::BigInt;
 
 use rust_decimal::Decimal;
@@ -28,8 +29,8 @@ impl IOBase {
         return Ok(());
     }
     fn seek(&self, offset: i64, whence: i64) -> Result<i64, IOError> {
-        let _: i64 = offset;
-        let _: i64 = whence;
+        let _ = offset;
+        let _ = whence;
         return Err(IOError::new(_unsupported_seek_tell_error()));
     }
     fn tell(&self) -> Result<i64, IOError> {
@@ -285,8 +286,8 @@ impl FileHandle {
         })();
     }
     fn seek(&self, offset: i64, whence: i64) -> Result<i64, IOError> {
-        let _: i64 = offset;
-        let _: i64 = whence;
+        let _ = offset;
+        let _ = whence;
         return Err(IOError::new(_unsupported_seek_tell_error()));
     }
     fn tell(&self) -> Result<i64, IOError> {
@@ -354,7 +355,7 @@ impl BinaryFileHandle {
         return Ok(());
     }
     fn read_bytes(&self, size: Option<i64>) -> Result<Vec<u8>, IOError> {
-        let _: Option<i64> = size;
+        let _ = size;
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
@@ -408,8 +409,8 @@ impl BinaryFileHandle {
         })();
     }
     fn seek(&self, offset: i64, whence: i64) -> Result<i64, IOError> {
-        let _: i64 = offset;
-        let _: i64 = whence;
+        let _ = offset;
+        let _ = whence;
         return Err(IOError::new(_unsupported_seek_tell_error()));
     }
     fn tell(&self) -> Result<i64, IOError> {
@@ -471,7 +472,7 @@ impl StringIO {
         }
         let start: i64 = self._cursor;
         let mut end: i64 = self._buffer.clone().chars().count() as i64;
-        if let Some(size) = size {
+        if let Some(mut size) = size {
             let maybe_size: i64 = size;
             if maybe_size >= (0 as i64) {
                 let requested: i64 = start + maybe_size;
@@ -480,12 +481,26 @@ impl StringIO {
                 }
             }
         }
-        let piece: String = String::from_iter(
-            (self._buffer.clone())
-                .chars()
-                .skip((start).max(0) as usize)
-                .take(((end).max(0) - (start).max(0)).max(0) as usize),
-        );
+        let piece: String = {
+            let _slice_src = self._buffer.clone();
+            let _slice_len_i64 = _slice_src.chars().count() as i64;
+            let _slice_start_i64 = if start < 0 {
+                (_slice_len_i64 + start).max(0)
+            } else {
+                start.min(_slice_len_i64)
+            };
+            let _slice_stop_i64 = if end < 0 {
+                (_slice_len_i64 + end).max(0)
+            } else {
+                end.min(_slice_len_i64)
+            };
+            String::from_iter(
+                _slice_src
+                    .chars()
+                    .skip(_slice_start_i64 as usize)
+                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize),
+            )
+        };
         self._cursor = end;
         return Ok(piece);
     }
@@ -493,18 +508,41 @@ impl StringIO {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        let left: String = String::from_iter(
-            (self._buffer.clone())
-                .chars()
-                .skip(0 as usize)
-                .take(((self._cursor).max(0) - 0).max(0) as usize),
-        );
+        let left: String = {
+            let _slice_src = self._buffer.clone();
+            let _slice_len_i64 = _slice_src.chars().count() as i64;
+            let _slice_start_i64 = 0;
+            let _slice_stop_i64 = if self._cursor < 0 {
+                (_slice_len_i64 + self._cursor).max(0)
+            } else {
+                self._cursor.min(_slice_len_i64)
+            };
+            String::from_iter(
+                _slice_src
+                    .chars()
+                    .skip(_slice_start_i64 as usize)
+                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize),
+            )
+        };
         let tail_start: i64 = self._cursor + (data.chars().count() as i64);
         let mut right: String = "".to_string();
-        if tail_start < (self._buffer.clone().chars().count() as i64) {
-            right = String::from_iter(
-                (self._buffer.clone()).chars().skip((tail_start).max(0) as usize),
-            );
+        if (tail_start < (self._buffer.clone().chars().count() as i64)) {
+            right = {
+                let _slice_src = self._buffer.clone();
+                let _slice_len_i64 = _slice_src.chars().count() as i64;
+                let _slice_start_i64 = if tail_start < 0 {
+                    (_slice_len_i64 + tail_start).max(0)
+                } else {
+                    tail_start.min(_slice_len_i64)
+                };
+                let _slice_stop_i64 = _slice_len_i64;
+                String::from_iter(
+                    _slice_src
+                        .chars()
+                        .skip(_slice_start_i64 as usize)
+                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize),
+                )
+            };
         }
         self._buffer = format!("{}{}{}", left, data, right);
         self._cursor = self._cursor + (data.chars().count() as i64);
@@ -628,7 +666,7 @@ impl BytesIO {
         }
         let start: i64 = self._cursor;
         let mut end: i64 = self._buffer.clone().len() as i64;
-        if let Some(size) = size {
+        if let Some(mut size) = size {
             let maybe_size: i64 = size;
             if maybe_size >= (0 as i64) {
                 let requested: i64 = start + maybe_size;
@@ -637,13 +675,27 @@ impl BytesIO {
                 }
             }
         }
-        let chunk: Vec<i64> = Vec::from_iter(
-            (self._buffer.clone())
-                .iter()
-                .skip((start).max(0) as usize)
-                .take(((end).max(0) - (start).max(0)).max(0) as usize)
-                .cloned(),
-        );
+        let chunk: Vec<i64> = {
+            let _slice_src = self._buffer.clone();
+            let _slice_len_i64 = _slice_src.len() as i64;
+            let _slice_start_i64 = if start < 0 {
+                (_slice_len_i64 + start).max(0)
+            } else {
+                start.min(_slice_len_i64)
+            };
+            let _slice_stop_i64 = if end < 0 {
+                (_slice_len_i64 + end).max(0)
+            } else {
+                end.min(_slice_len_i64)
+            };
+            Vec::from_iter(
+                _slice_src
+                    .iter()
+                    .skip(_slice_start_i64 as usize)
+                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                    .cloned(),
+            )
+        };
         self._cursor = end;
         return self._slice_to_bytes(&chunk);
     }
@@ -656,13 +708,13 @@ impl BytesIO {
             .map(|__byte| *__byte as i64)
             .collect::<Vec<i64>>();
         let mut i: i64 = 0 as i64;
-        while i < (values.len() as i64) {
+        while (i < (values.len() as i64)) {
             let maybe_value: Option<i64> = Some(values[i as usize]);
-            let Some(maybe_value) = maybe_value else {
+            let Some(mut maybe_value) = maybe_value else {
                 return Err(IOError::new("bytes write invariant violation".to_string()));
             };
             let idx: i64 = self._cursor + i;
-            if idx < (self._buffer.clone().len() as i64) {
+            if (idx < (self._buffer.clone().len() as i64)) {
                 {
                     let __idx_raw = idx;
                     let __idx_norm = if __idx_raw < 0 {
@@ -1027,6 +1079,49 @@ impl std::error::Error for JSONDecodeError {
 }
 
 #[derive(Debug, Clone)]
+struct JsonIntegerRangeError {
+    message: String,
+    path: String,
+    profile: String,
+}
+
+impl JsonIntegerRangeError {
+    fn new(message: String) -> Self {
+        return Self { message: message, path: String::new(), profile: String::new() };
+    }
+}
+
+impl std::fmt::Display for JsonIntegerRangeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return std::fmt::Display::fmt(&self.message, f);
+    }
+}
+
+impl std::error::Error for JsonIntegerRangeError {
+}
+
+#[derive(Debug, Clone)]
+struct JsonLimitError {
+    message: String,
+    limit: i64,
+}
+
+impl JsonLimitError {
+    fn new(message: String) -> Self {
+        return Self { message: message, limit: 0 };
+    }
+}
+
+impl std::fmt::Display for JsonLimitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return std::fmt::Display::fmt(&self.message, f);
+    }
+}
+
+impl std::error::Error for JsonLimitError {
+}
+
+#[derive(Debug, Clone)]
 struct TOMLDecodeError {
     message: String,
     line: i64,
@@ -1125,8 +1220,6 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!("{}", format!("{}{}", "unexpected conversion failure: ".to_string(), e.message));
     }
-    println!("{}", BigInt::from((d).trunc().mantissa()));
-    println!("{}", (bd).with_scale(0).into_bigint_and_scale().0);
     let bd_from_decimal: BigDecimal = ((Decimal::from_str_exact(("12.3400".to_string()).as_str()).unwrap_or_else(|__e| unreachable!())).to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!());
     println!("{}", bd_from_decimal);
     let __sifr_try_res: Result<(), DecimalConversionError> = (|| {

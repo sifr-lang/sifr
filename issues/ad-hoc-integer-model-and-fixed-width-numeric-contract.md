@@ -487,6 +487,7 @@ Validation:
 - [x] INT-7 diagnostic family reservation wave 1 review satisfied after adding reserved non-emittable registry entries for `SIFR-INT-0002`, `SIFR-INT-0008`, `SIFR-INT-0009`, and `SIFR-INT-0010`, completing public/internal documentation coverage for `SIFR-INT-0001..0011`: `reviews/integer-model-int-7-diagnostic-family-reservation-review-pass-1.md`; PR #1897.
 - [x] INT-7 closure gap review pass 1 completed with blockers for demo hygiene, phase docs, manifest cleanup, transition fixture quarantine, and diagnostic inventory sync: `reviews/integer-model-int-7-closure-gap-review-pass-1.md`.
 - [x] INT-7 demo hygiene and phase doc cleanup review satisfied after updating targeted demos from public `bigint` examples to exact `int`, refreshing generated/idiomatic artifacts, pointing phase docs 13/14/28 at the canonical integer model, and marking `SIFR-TYPE-0006` transition-only in the diagnostic emission inventory: `reviews/integer-model-int-7-demo-phase-doc-cleanup-review-pass-1.md`; PR #1898.
+- [x] INT-7 transition fixture quarantine review satisfied after removing `bigint_arithmetic` from quick/pr manifests, adding transition-quarantine comments and the quarantine tracking artifact for remaining alias fixtures, updating decimal demos/fixtures away from public `bigint(...)` forms, and syncing the implementation inventory: `reviews/integer-model-int-7-transition-fixture-quarantine-review-pass-1.md`; PR #1899.
 
 ## Implementation Checklist
 
@@ -579,4 +580,5 @@ Validation:
 - [ ] INT-7 diagnostics, documentation, and migration cleanup
   - [x] Reserved and documented the remaining non-emittable integer diagnostic slots `SIFR-INT-0002`, `SIFR-INT-0008`, `SIFR-INT-0009`, and `SIFR-INT-0010`, so the generated public and internal diagnostic tables now account for every `SIFR-INT-0001..0011` family code: PR #1897.
   - [x] Updated targeted demos and generated artifacts to use exact `int` instead of public `bigint`, refreshed phase docs 13/14/28 to defer integer semantics to `internal_docs/integer_model.md`, and documented `SIFR-TYPE-0006` as transition-only until public alias removal: PR #1898.
+  - [x] Removed transition-only `bigint_arithmetic` from quick/pr pass manifests, quarantined remaining public `bigint` alias fixtures in `verification/integer_model_bigint_transition_quarantine.md`, and updated decimal demos/fixtures to use exact `int` source forms where the public alias was not needed: PR #1899.
 - [ ] INT-8 closure hardening and performance gates

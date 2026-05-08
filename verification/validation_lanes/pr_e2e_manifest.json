@@ -25,7 +25,6 @@
     "stdlib_tomllib",
     "stdlib_random",
     "decimal_type_system_basic",
-    "bigint_arithmetic",
     "auto_init_basic",
     "auto_init_defaults",
     "borrowed_parameters",

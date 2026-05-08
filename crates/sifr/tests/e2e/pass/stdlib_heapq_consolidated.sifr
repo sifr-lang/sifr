@@ -36,6 +36,7 @@ def collect_int_actual() -> list[bool]:
     return actual
 
 def collect_bigint_actual() -> list[bool]:
+    # TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
     actual: list[bool] = []
     data: list[bigint] = [bigint(30), bigint(10), bigint(40), bigint(20)]
     heapify(data)

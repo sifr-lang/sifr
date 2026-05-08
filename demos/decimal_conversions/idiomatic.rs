@@ -52,14 +52,6 @@ fn truncated_bigint_from_bigdecimal(value: &BigDecimal) -> BigInt {
     }
 }
 
-fn bigint_from_decimal(value: Decimal) -> BigInt {
-    truncated_bigint_from_decimal(value)
-}
-
-fn bigint_from_bigdecimal(value: &BigDecimal) -> BigInt {
-    truncated_bigint_from_bigdecimal(value)
-}
-
 fn json_dumps<T: std::fmt::Display>(value: T) -> String {
     format!("\"{value}\"")
 }
@@ -79,9 +71,6 @@ fn main() {
             println!("unexpected conversion failure: {}", err.message);
         }
     }
-
-    println!("{}", bigint_from_decimal(d));
-    println!("{}", bigint_from_bigdecimal(&bd));
 
     let bd_from_decimal = BigDecimal::from_str(&dec("12.3400").to_string())
         .expect("decimal should round-trip into bigdecimal");
