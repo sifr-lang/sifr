@@ -457,6 +457,7 @@ Validation:
 - [x] INT-3 fixed-width add API review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-add-apis-review-pass-1.md`.
 - [x] INT-3 fixed-width subtraction API review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-sub-apis-review-pass-1.md`.
 - [x] INT-3 fixed-width multiplication API review satisfied with no blockers: `reviews/integer-model-int-3-fixed-width-mul-apis-review-pass-1.md`.
+- [x] INT-3 milestone closure review pass 1 satisfied: INT-3 scalar arithmetic and numeric mixing is ready to close, with remaining serialization/web, dtype, docs, and hardening surfaces assigned to later milestones: `reviews/integer-model-int-3-milestone-closure-review-pass-1.md`; closure PR #1888.
 - [x] INT-4 bytes `uint8` surface review pass 1 satisfied with a non-blocking display-option fallback cleanup note: `reviews/integer-model-int-4-bytes-uint8-surface-review-pass-1.md`.
 - [x] INT-4 bytes `uint8` surface review pass 2 satisfied after addressing the pass 1 cleanup note: `reviews/integer-model-int-4-bytes-uint8-surface-review-pass-2.md`.
 - [x] INT-4 fixed-width literal pattern fitting review pass 1 satisfied with a non-blocking positive-coverage note: `reviews/integer-model-int-4-fixed-width-match-literal-review-pass-1.md`.
@@ -538,7 +539,7 @@ Validation:
   - [x] Reserved `int128`/`uint128` diagnostics are documented as applying after ordinary annotation name resolution, preserving user-defined type variable, alias, and class shadowing until a future language-wide reserved-identifier policy; review is satisfied and quick validation is passing: PR #1810.
   - [x] Fixed-width const-expression fail fixture markers are canonical top-level `expect-error` entries, so the e2e fail harness now enforces `SIFR-INT-0001` and `SIFR-INT-0004` columns; review is satisfied and quick validation is passing: PR #1812.
   - [x] Module constant integer fallback paths now preserve budget diagnostics for over-budget module `int`/fixed-width constants, support same-module `int` const reuse through names/unary/binops, reject mixed fixed-width-to-`int` const reuse before codegen, and smoke-test the new codegen shapes; review is satisfied and quick validation is passing: PR #1814.
-- [ ] INT-3 scalar arithmetic and numeric mixing
+- [x] INT-3 scalar arithmetic and numeric mixing
   - [x] Ordinary fixed-width scalar `+`, `-`, and `*` now promote fitting fixed-width operands to source-level `int` and cast operands before generated Rust arithmetic, preserving `int32(2_000_000_000) + int32(2_000_000_000) -> int`; review is satisfied and quick validation is passing: PR #1860.
   - [x] Fixed-width scalar promotion coverage now spans all fitting fixed-width families (`int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, and `isize`) while keeping `uint64` and `usize` blocked until the broader `SifrInt` promotion path; review is satisfied and quick validation is passing: PR #1861.
   - [x] Deduplicate the temporary `fixed_width_promotes_to_current_int` policy between type checking and codegen once the broader `SifrInt` promotion path lands; review is satisfied and quick validation is passing: PR #1887.
