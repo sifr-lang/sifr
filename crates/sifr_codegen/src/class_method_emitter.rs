@@ -1,4 +1,5 @@
 use crate::{
+    function_emitter::{is_result_int_type, result_int_return_type_to_sifr_int, result_method_key},
     helpers::{body_contains_field_assign_codegen, collect_mutated_vars_with_sigs},
     hir_analysis::traversal::{self, TraversalConfig},
     RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
@@ -258,6 +259,14 @@ impl RustEmitter {
         if method.return_type == Type::None {
             return None;
         }
+        if is_result_int_type(&method.return_type)
+            && self
+                .sifr_int_result_method_returns
+                .borrow()
+                .contains(&result_method_key(&class.name, &method.name))
+        {
+            return Some(result_int_return_type_to_sifr_int(&method.return_type));
+        }
         if let Type::Class { name: ret_name, .. } = &method.return_type {
             if !class.type_params.is_empty() && ret_name == &class.name {
                 return Some(RustType::Named(format!(
@@ -492,6 +501,9 @@ impl RustEmitter {
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
+        let saved_sifr_int_result_local_bindings =
+            self.sifr_int_result_local_bindings.borrow().clone();
+        let saved_current_sifr_int_result_return = self.current_sifr_int_result_return.get();
 
         self.current_return_type = Some(method.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&method.body, &self.func_signatures);
@@ -501,6 +513,12 @@ impl RustEmitter {
         self.local_binding_types.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
+        self.sifr_int_result_local_bindings.borrow_mut().clear();
+        self.current_sifr_int_result_return.set(
+            self.sifr_int_result_method_returns
+                .borrow()
+                .contains(&result_method_key(&class.name, &method.name)),
+        );
 
         for param in &method.params {
             let effective_convention = if method.name == "new" {
@@ -601,6 +619,9 @@ impl RustEmitter {
         self.local_binding_types = saved_local_binding_types;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
+        *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;
+        self.current_sifr_int_result_return
+            .set(saved_current_sifr_int_result_return);
 
         RustItem::Fn {
             name: method.name.clone(),

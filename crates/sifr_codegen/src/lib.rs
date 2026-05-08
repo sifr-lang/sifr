@@ -1219,6 +1219,8 @@ struct RustEmitter {
     sifr_int_function_returns: RefCell<HashSet<String>>,
     /// Function names whose `Result[int, E]` generated Rust return payload is `SifrInt`.
     sifr_int_result_function_returns: RefCell<HashSet<String>>,
+    /// Class method keys whose `Result[int, E]` generated Rust return payload is `SifrInt`.
+    sifr_int_result_method_returns: RefCell<HashSet<String>>,
     /// Module-level function `int` parameters promoted from legacy `i64` to `SifrInt`.
     sifr_int_function_params: RefCell<HashMap<String, HashSet<usize>>>,
     /// Module-level function `Result[int, E]` parameters promoted from legacy `i64` payloads to `SifrInt`.
@@ -1331,6 +1333,7 @@ impl RustEmitter {
             sifr_int_result_local_bindings: RefCell::new(HashSet::new()),
             sifr_int_function_returns: RefCell::new(HashSet::new()),
             sifr_int_result_function_returns: RefCell::new(HashSet::new()),
+            sifr_int_result_method_returns: RefCell::new(HashSet::new()),
             sifr_int_function_params: RefCell::new(HashMap::new()),
             sifr_int_result_function_params: RefCell::new(HashMap::new()),
             current_sifr_int_return: Cell::new(false),
