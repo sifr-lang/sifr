@@ -1213,6 +1213,8 @@ struct RustEmitter {
     sifr_int_local_bindings: RefCell<HashSet<String>>,
     /// Local names pre-promoted to `SifrInt` because a later assignment needs exact-int storage.
     sifr_int_forced_local_bindings: RefCell<HashSet<String>>,
+    /// Local names whose generated Rust `Result[int, E]` binding payload is `SifrInt`.
+    sifr_int_result_local_bindings: RefCell<HashSet<String>>,
     /// Function names whose generated Rust return type has been promoted from legacy `i64` to `SifrInt`.
     sifr_int_function_returns: RefCell<HashSet<String>>,
     /// Function names whose `Result[int, E]` generated Rust return payload is `SifrInt`.
@@ -1326,6 +1328,7 @@ impl RustEmitter {
             none_widened_local_bindings: HashSet::new(),
             sifr_int_local_bindings: RefCell::new(HashSet::new()),
             sifr_int_forced_local_bindings: RefCell::new(HashSet::new()),
+            sifr_int_result_local_bindings: RefCell::new(HashSet::new()),
             sifr_int_function_returns: RefCell::new(HashSet::new()),
             sifr_int_result_function_returns: RefCell::new(HashSet::new()),
             sifr_int_function_params: RefCell::new(HashMap::new()),

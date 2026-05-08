@@ -524,11 +524,17 @@ impl RustEmitter {
                             .insert(name.clone());
                         (Some(crate::RustType::Named("SifrInt".to_string())), value)
                     } else if is_result_legacy_i64_type(&ty) && value_is_sifr_int_result {
+                        self.sifr_int_result_local_bindings
+                            .borrow_mut()
+                            .insert(name.clone());
                         (ty.map(result_i64_type_to_sifr_int), value)
                     } else {
                         if !force_sifr_int {
                             self.sifr_int_local_bindings.borrow_mut().remove(&name);
                         }
+                        self.sifr_int_result_local_bindings
+                            .borrow_mut()
+                            .remove(&name);
                         (ty, value)
                     };
                 crate::RustStmt::Let {
@@ -566,6 +572,11 @@ impl RustEmitter {
                             .borrow_mut()
                             .insert(name.clone());
                         self.coerce_expr_to_sifr_int_value(value)
+                    }
+                    crate::RustExpr::Ident(name)
+                        if self.is_registered_sifr_int_result_local(name) =>
+                    {
+                        self.coerce_result_int_expr_to_sifr_int_value(value)
                     }
                     _ => value,
                 };
@@ -1539,6 +1550,7 @@ impl RustEmitter {
             crate::RustExpr::FnCall { func, .. } => {
                 self.is_sifr_int_result_returning_function_call(func)
             }
+            crate::RustExpr::Ident(name) => self.is_registered_sifr_int_result_local(name),
             crate::RustExpr::Paren(inner) => self.is_sifr_int_result_expr(inner),
             _ => false,
         }
@@ -1594,6 +1606,10 @@ impl RustEmitter {
             .borrow()
             .get(name)
             .is_some_and(|params| params.contains(&idx))
+    }
+
+    fn is_registered_sifr_int_result_local(&self, name: &str) -> bool {
+        self.sifr_int_result_local_bindings.borrow().contains(name)
     }
 }
 

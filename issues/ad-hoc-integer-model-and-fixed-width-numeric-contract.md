@@ -468,6 +468,7 @@ Validation:
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` local-result return review satisfied after adding local binding promotion and chained helper coverage: `reviews/integer-model-int-1-exact-int-result-local-return-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` nested result-helper return review satisfied after adding nested fixed-point propagation and e2e coverage: `reviews/integer-model-int-1-exact-int-nested-result-return-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` parameter-boundary review satisfied after promoting result params and passthrough returns: `reviews/integer-model-int-1-exact-int-result-param-boundary-review-pass-1.md`.
+- [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` local-alias review satisfied after registering `Result<SifrInt, E>` locals and alias coverage: `reviews/integer-model-int-1-exact-int-result-local-alias-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -505,6 +506,7 @@ Validation:
   - [x] `Result[int, DivisionError]` function return boundaries now also promote local `Result` bindings initialized from exact floor/mod results or promoted helper calls, preserving chained local-result helper returns through `Result<SifrInt, DivisionError>`; review is satisfied and quick validation is passing: PR #1878.
   - [x] Nested `Result[int, DivisionError]` helpers discovered inside a returning function now participate in result-return promotion, so outers returning nested helper calls lower through `Result<SifrInt, DivisionError>`; review is satisfied and quick validation is passing: PR #1879.
   - [x] `Result[int, DivisionError]` parameter boundaries whose call sites receive promoted exact result expressions now lower those params as `Result<SifrInt, DivisionError>`, preserving owned passthrough helpers and direct promoted call arguments; review is satisfied and quick validation is passing: PR #1880.
+  - [x] `Result[int, DivisionError]` local aliases that receive promoted result params or locals now register as `Result<SifrInt, DivisionError>`, preserving alias-return and downstream call shapes; review is satisfied and quick validation is passing: PR #1881.
   - [ ] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: direct function-return promotion and remaining `Result[int, DivisionError]` integration surfaces still need support.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
