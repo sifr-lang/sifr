@@ -1,0 +1,19 @@
+def main() -> None:
+    zero: uint8 = 0
+    high: uint8 = 255
+    one: uint8 = 1
+
+    wrapped: uint8 = high.wrapping_add(one)
+    saturated: uint8 = high.saturating_add(one)
+    overflowed: tuple[uint8, bool] = high.overflowing_add(one)
+    expected_overflowed: tuple[uint8, bool] = (zero, True)
+
+    assert wrapped == zero
+    assert saturated == high
+    assert overflowed == expected_overflowed
+
+    try:
+        _: uint8 = high.checked_add(one)
+        assert False
+    except OverflowError as e:
+        assert len(e.message) > 0
