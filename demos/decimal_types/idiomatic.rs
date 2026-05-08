@@ -1,5 +1,4 @@
 use bigdecimal::{BigDecimal, Context, RoundingMode};
-use num_bigint::BigInt;
 use rust_decimal::Decimal;
 
 fn dec(text: &str) -> Decimal {
@@ -23,7 +22,7 @@ fn main() {
     let b = big("3.25");
 
     let d_plus = d + Decimal::from(2_i64);
-    let b_plus = round_big(b + BigDecimal::from(BigInt::from(4_i64)));
+    let b_plus = round_big(b + BigDecimal::from(4_i64));
 
     assert_eq!(d_plus, dec("14.50"));
     assert_eq!(b_plus, big("7.25"));

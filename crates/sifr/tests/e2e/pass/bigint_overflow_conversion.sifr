@@ -1,3 +1,4 @@
+# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
 def main():
     big: bigint = bigint(10) ** 20
     try:

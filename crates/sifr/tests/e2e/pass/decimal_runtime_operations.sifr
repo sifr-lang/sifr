@@ -29,9 +29,6 @@ def main():
     except DecimalConversionError as e:
         assert False
 
-    assert str(bigint(Decimal("-1.9"))) == '-1'
-    assert str(bigint(BigDecimal("-1.9"))) == '-1'
-
     bd_from_decimal: bigdecimal = BigDecimal(Decimal("12.3400"))
     assert str(bd_from_decimal) == '12.3400'
 
