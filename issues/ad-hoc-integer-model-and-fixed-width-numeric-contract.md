@@ -490,6 +490,7 @@ Validation:
 - [x] INT-7 transition fixture quarantine review satisfied after removing `bigint_arithmetic` from quick/pr manifests, adding transition-quarantine comments and the quarantine tracking artifact for remaining alias fixtures, updating decimal demos/fixtures away from public `bigint(...)` forms, and syncing the implementation inventory: `reviews/integer-model-int-7-transition-fixture-quarantine-review-pass-1.md`; PR #1899.
 - [x] INT-7 milestone closure review pass 1 satisfied: all acceptance criteria are met, the five prior closure blockers are resolved by PRs #1897/#1898/#1899, quick validation passes, transition quarantine artifacts are in place, and `SIFR-TYPE-0006` is documented as transition-only until alias removal: `reviews/integer-model-int-7-milestone-closure-review-pass-1.md`; PR #1900.
 - [x] INT-8 closure hardening gates review pass 1 satisfied: the Sifr small-int loop fixture, integer closure performance runner, ratified 10x pre-Phase-35 throughput threshold, zero-allocation probes, integer JSON/fixed-width property seeds, and closure hardening artifact satisfy the implementation wave with no blockers: `reviews/integer-model-int-8-closure-hardening-gates-review-pass-1.md`; PR #1901.
+- [x] INT-8 clippy closure cleanup review pass 1 satisfied: mechanical codegen iterator/helper refactors preserve behavior while restoring `cargo clippy --workspace -- -D warnings` for the closure gate: `reviews/integer-model-int-8-clippy-closure-cleanup-review-pass-1.md`; PR #1902.
 
 ## Implementation Checklist
 
@@ -586,3 +587,4 @@ Validation:
   - [x] INT-7 milestone closure review is satisfied with no blockers: `reviews/integer-model-int-7-milestone-closure-review-pass-1.md`; PR #1900.
 - [ ] INT-8 closure hardening and performance gates
   - [x] Added `verification/perf/sifr_int_loop.sifr`, `scripts/run_integer_model_closure_perf.py`, integer external-boundary and fixed-width helper fuzz/property seeds, and `verification/integer_model_closure_hardening.md`; the runner reports zero heap allocations for small `SifrInt` accumulation/counter/hash loops and a local observed slowdown near 3.1x under the ratified 10x pre-Phase-35 threshold: PR #1901.
+  - [x] Cleaned up codegen clippy findings exposed by the INT-8 closure gate without semantic changes, restoring `cargo clippy --workspace -- -D warnings`: PR #1902.

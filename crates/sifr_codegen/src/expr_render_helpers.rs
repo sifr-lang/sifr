@@ -532,13 +532,13 @@ impl RustEmitter {
                 let value_is_sifr_int = self.is_sifr_int_expr(&value);
                 let value_is_sifr_int_result = self.is_sifr_int_result_expr(&value);
                 let (ty, value) =
-                    if is_legacy_i64_type(&ty) && (value_is_sifr_int || force_sifr_int) {
+                    if is_legacy_i64_type(ty.as_ref()) && (value_is_sifr_int || force_sifr_int) {
                         let value = self.coerce_expr_to_sifr_int_value(value);
                         self.sifr_int_local_bindings
                             .borrow_mut()
                             .insert(name.clone());
                         (Some(crate::RustType::Named("SifrInt".to_string())), value)
-                    } else if is_result_legacy_i64_type(&ty) && value_is_sifr_int_result {
+                    } else if is_result_legacy_i64_type(ty.as_ref()) && value_is_sifr_int_result {
                         self.sifr_int_result_local_bindings
                             .borrow_mut()
                             .insert(name.clone());
@@ -1567,7 +1567,7 @@ impl RustEmitter {
             } => self.is_sifr_int_result_expr(inner),
             crate::RustExpr::MethodCall {
                 receiver, method, ..
-            } if method == "ok_or_else" => self.is_sifr_int_checked_floor_option_expr(receiver),
+            } if method == "ok_or_else" => Self::is_sifr_int_checked_floor_option_expr(receiver),
             crate::RustExpr::MethodCall {
                 receiver, method, ..
             } => self.is_sifr_int_result_returning_method_call(receiver, method),
@@ -1580,7 +1580,7 @@ impl RustEmitter {
         }
     }
 
-    fn is_sifr_int_checked_floor_option_expr(&self, expr: &crate::RustExpr) -> bool {
+    fn is_sifr_int_checked_floor_option_expr(expr: &crate::RustExpr) -> bool {
         matches!(
             expr,
             crate::RustExpr::MethodCall {
@@ -1756,12 +1756,12 @@ fn is_sifr_int_operand_coercion_op(op: &str) -> bool {
     is_sifr_int_arithmetic_op(op) || is_sifr_int_comparison_op(op)
 }
 
-fn is_legacy_i64_type(ty: &Option<crate::RustType>) -> bool {
+fn is_legacy_i64_type(ty: Option<&crate::RustType>) -> bool {
     matches!(ty, Some(crate::RustType::I64))
         || matches!(ty, Some(crate::RustType::Named(name)) if name == "i64")
 }
 
-fn is_result_legacy_i64_type(ty: &Option<crate::RustType>) -> bool {
+fn is_result_legacy_i64_type(ty: Option<&crate::RustType>) -> bool {
     matches!(ty, Some(crate::RustType::Result(ok, _)) if is_legacy_i64_rust_type(ok))
         || matches!(ty, Some(crate::RustType::Named(name)) if name.starts_with("Result<i64, "))
 }

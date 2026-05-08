@@ -114,10 +114,8 @@ impl RustEmitter {
         let local_int_bindings = self
             .local_binding_types
             .iter()
-            .filter_map(|(name, ty)| {
-                matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
-                    .then(|| name.clone())
-            })
+            .filter(|(_, ty)| matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int))
+            .map(|(name, _)| name.clone())
             .collect::<HashSet<_>>();
         if local_int_bindings.is_empty() {
             return;
@@ -191,10 +189,10 @@ impl RustEmitter {
             let discovered = module
                 .functions
                 .iter()
-                .filter_map(|func| {
+                .filter(|func| {
                     let extra_forced_params =
                         collect_sifr_int_function_param_names(func, &function_params);
-                    (matches!(
+                    matches!(
                         crate::resolve_alias_type_for_plain_call(&func.return_type),
                         Type::Int
                     ) && hir_function_returns_sifr_int_with_extra_forced(
@@ -202,46 +200,49 @@ impl RustEmitter {
                         &module_sifr_int_bindings,
                         &function_returns,
                         &extra_forced_params,
-                    ))
-                    .then(|| func.name.clone())
+                    )
                 })
+                .map(|func| func.name.clone())
                 .collect::<Vec<_>>();
             function_returns.extend(discovered);
             let discovered_result_returns = module
                 .functions
                 .iter()
-                .filter_map(|func| {
-                    (function_returns_result_sifr_int(
+                .filter(|func| {
+                    function_returns_result_sifr_int(
                         func,
                         &result_function_returns,
                         &result_method_returns,
                         &result_function_params,
                         collect_sifr_int_result_function_param_names(func, &result_function_params),
-                    ))
-                    .then(|| func.name.clone())
+                    )
                 })
+                .map(|func| func.name.clone())
                 .collect::<Vec<_>>();
             result_function_returns.extend(discovered_result_returns);
             let discovered_result_method_returns = module
                 .classes
                 .iter()
                 .flat_map(|class| {
-                    class.methods.iter().filter_map(|method| {
-                        let method_key = result_method_key(&class.name, &method.name);
-                        let result_param_bindings = collect_sifr_int_result_method_param_names(
-                            method,
-                            &method_key,
-                            &result_method_params,
-                        );
-                        function_returns_result_sifr_int(
-                            method,
-                            &result_function_returns,
-                            &result_method_returns,
-                            &result_function_params,
-                            result_param_bindings,
-                        )
-                        .then(|| result_method_key(&class.name, &method.name))
-                    })
+                    class
+                        .methods
+                        .iter()
+                        .filter(|method| {
+                            let method_key = result_method_key(&class.name, &method.name);
+                            let result_param_bindings = collect_sifr_int_result_method_param_names(
+                                method,
+                                &method_key,
+                                &result_method_params,
+                            );
+                            function_returns_result_sifr_int(
+                                method,
+                                &result_function_returns,
+                                &result_method_returns,
+                                &result_function_params,
+                                result_param_bindings,
+                            )
+                        })
+                        .map(|method| result_method_key(&class.name, &method.name))
                 })
                 .collect::<Vec<_>>();
             result_method_returns.extend(discovered_result_method_returns);
@@ -356,11 +357,11 @@ impl RustEmitter {
     fn module_sifr_int_bindings(&self) -> HashSet<String> {
         self.module_constants
             .iter()
-            .filter_map(|(name, (ty, rust_name))| {
-                (matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
-                    && rust_name.ends_with("()"))
-                .then(|| name.clone())
+            .filter(|(_, (ty, rust_name))| {
+                matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int)
+                    && rust_name.ends_with("()")
             })
+            .map(|(name, _)| name.clone())
             .collect::<HashSet<_>>()
     }
 
@@ -450,10 +451,8 @@ impl RustEmitter {
         );
         let sifr_int_recursive_captures = recursive_captures
             .iter()
-            .filter_map(|capture| {
-                self.recursive_capture_lowers_to_sifr_int(capture)
-                    .then(|| capture.name.clone())
-            })
+            .filter(|capture| self.recursive_capture_lowers_to_sifr_int(capture))
+            .map(|capture| capture.name.clone())
             .collect::<HashSet<_>>();
         let mut sifr_int_nested_capture_bindings = sifr_int_recursive_captures.clone();
         sifr_int_nested_capture_bindings.extend(sifr_int_captured_forced_locals.iter().cloned());
@@ -1306,7 +1305,8 @@ fn collect_sifr_int_result_function_param_names(
     func.params
         .iter()
         .enumerate()
-        .filter_map(|(idx, param)| indexes.contains(&idx).then(|| param.name.clone()))
+        .filter(|(idx, _)| indexes.contains(idx))
+        .map(|(_, param)| param.name.clone())
         .collect()
 }
 
@@ -1322,7 +1322,8 @@ fn collect_sifr_int_result_method_param_names(
         .params
         .iter()
         .enumerate()
-        .filter_map(|(idx, param)| indexes.contains(&idx).then(|| param.name.clone()))
+        .filter(|(idx, _)| indexes.contains(idx))
+        .map(|(_, param)| param.name.clone())
         .collect()
 }
 
@@ -1514,7 +1515,8 @@ fn collect_sifr_int_function_param_names(
     func.params
         .iter()
         .enumerate()
-        .filter_map(|(idx, param)| indexes.contains(&idx).then(|| param.name.clone()))
+        .filter(|(idx, _)| indexes.contains(idx))
+        .map(|(_, param)| param.name.clone())
         .collect()
 }
 
@@ -1712,14 +1714,14 @@ fn collect_nested_sifr_int_function_returns(
         let before = function_returns.len();
         let discovered = nested_functions
             .iter()
-            .filter_map(|func| {
+            .filter(|func| {
                 let captured_forced =
                     collect_sifr_int_captured_forced_locals(func, outer_forced_locals);
                 let captured_shadowed = collect_sifr_int_captured_shadowed_module_bindings(
                     func,
                     outer_shadowed_module_bindings,
                 );
-                (matches!(
+                matches!(
                     crate::resolve_alias_type_for_plain_call(&func.return_type),
                     Type::Int
                 ) && hir_function_returns_sifr_int_with_extra_forced_and_shadowed(
@@ -1728,9 +1730,9 @@ fn collect_nested_sifr_int_function_returns(
                     &function_returns,
                     &captured_forced,
                     &captured_shadowed,
-                ))
-                .then(|| func.name.clone())
+                )
             })
+            .map(|func| func.name.clone())
             .collect::<Vec<_>>();
         function_returns.extend(discovered);
         if function_returns.len() == before {
@@ -1772,12 +1774,12 @@ fn collect_captured_outer_names(
     let locally_defined = collect_locally_defined_vars(&func.body);
     collect_referenced_vars_with_types(&func.body)
         .into_iter()
-        .filter_map(|(name, _)| {
-            (!param_names.contains(&name)
-                && !locally_defined.contains(&name)
-                && outer_names.contains(&name))
-            .then_some(name)
+        .filter(|(name, _)| {
+            !param_names.contains(name)
+                && !locally_defined.contains(name)
+                && outer_names.contains(name)
         })
+        .map(|(name, _)| name)
         .collect()
 }
 
