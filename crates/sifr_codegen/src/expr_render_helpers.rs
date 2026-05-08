@@ -625,6 +625,8 @@ impl RustEmitter {
                     let ret = self.rewrite_stdlib_constant_idents_in_expr(ret);
                     if self.current_sifr_int_return.get() {
                         self.coerce_expr_to_sifr_int_value(ret)
+                    } else if self.current_sifr_int_result_return.get() {
+                        self.coerce_result_int_expr_to_sifr_int_value(ret)
                     } else {
                         ret
                     }
@@ -1450,6 +1452,26 @@ impl RustEmitter {
         }
     }
 
+    pub(super) fn coerce_result_int_expr_to_sifr_int_value(
+        &self,
+        expr: crate::RustExpr,
+    ) -> crate::RustExpr {
+        match expr {
+            crate::RustExpr::FnCall { func, args } if is_ok_result_path(&func) => {
+                let args = args
+                    .into_iter()
+                    .map(|arg| self.coerce_expr_to_sifr_int_value(arg))
+                    .collect();
+                crate::RustExpr::FnCall { func, args }
+            }
+            crate::RustExpr::Paren(inner) => crate::RustExpr::Paren(Box::new(
+                self.coerce_result_int_expr_to_sifr_int_value(*inner),
+            )),
+            other if self.is_sifr_int_result_expr(&other) => other,
+            other => other,
+        }
+    }
+
     fn coerce_expr_to_sifr_int_comparison_operand(&self, expr: crate::RustExpr) -> crate::RustExpr {
         let coerced = self.coerce_expr_to_sifr_int(expr);
         if matches!(coerced, crate::RustExpr::Ref { .. }) {
@@ -1511,6 +1533,9 @@ impl RustEmitter {
             crate::RustExpr::MethodCall {
                 receiver, method, ..
             } if method == "ok_or_else" => self.is_sifr_int_checked_floor_option_expr(receiver),
+            crate::RustExpr::FnCall { func, .. } => {
+                self.is_sifr_int_result_returning_function_call(func)
+            }
             crate::RustExpr::Paren(inner) => self.is_sifr_int_result_expr(inner),
             _ => false,
         }
@@ -1540,6 +1565,14 @@ impl RustEmitter {
 
     fn is_sifr_int_returning_function_call(&self, func: &crate::RustExpr) -> bool {
         rust_expr_identifier_path(func).is_some_and(|name| self.function_returns_sifr_int(&name))
+    }
+
+    fn is_sifr_int_result_returning_function_call(&self, func: &crate::RustExpr) -> bool {
+        rust_expr_identifier_path(func).is_some_and(|name| {
+            self.sifr_int_result_function_returns
+                .borrow()
+                .contains(&name)
+        })
     }
 
     pub(super) fn function_returns_sifr_int(&self, name: &str) -> bool {
@@ -1683,6 +1716,14 @@ fn string_path_matches(path: &[String], expected: &[&str]) -> bool {
             .iter()
             .zip(expected)
             .all(|(segment, expected_segment)| segment == expected_segment)
+}
+
+fn is_ok_result_path(expr: &crate::RustExpr) -> bool {
+    match expr {
+        crate::RustExpr::Path(path) => string_path_matches(path, &["Ok"]),
+        crate::RustExpr::Ident(name) => name == "Ok",
+        _ => false,
+    }
 }
 
 #[cfg(test)]

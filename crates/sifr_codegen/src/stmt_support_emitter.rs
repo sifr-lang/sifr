@@ -5497,7 +5497,14 @@ impl RustEmitter {
                              lowered: crate::RustExpr|
          -> Result<crate::RustExpr, crate::CodegenError> {
             if let Some(target_ty) = return_ty {
-                return this.coerce_local_value_for_target_type_for_ir(target_ty, value, lowered);
+                let coerced =
+                    this.coerce_local_value_for_target_type_for_ir(target_ty, value, lowered)?;
+                if this.current_sifr_int_result_return.get()
+                    && is_result_int_division_error_type(target_ty)
+                {
+                    return Ok(this.coerce_result_int_expr_to_sifr_int_value(coerced));
+                }
+                return Ok(coerced);
             }
             Ok(lowered)
         };
