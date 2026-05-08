@@ -470,6 +470,7 @@ Validation:
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` parameter-boundary review satisfied after promoting result params and passthrough returns: `reviews/integer-model-int-1-exact-int-result-param-boundary-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` local-alias review satisfied after registering `Result<SifrInt, E>` locals and alias coverage: `reviews/integer-model-int-1-exact-int-result-local-alias-review-pass-1.md`.
 - [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` class-method return review satisfied after adding `Class::method` result-return propagation and method call-site coverage: `reviews/integer-model-int-1-exact-int-method-result-return-review-pass-1.md`.
+- [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` field-receiver method call review satisfied after resolving promoted calls through `self.field.clone().method(...)`: `reviews/integer-model-int-1-exact-int-method-field-result-call-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -509,6 +510,7 @@ Validation:
   - [x] `Result[int, DivisionError]` parameter boundaries whose call sites receive promoted exact result expressions now lower those params as `Result<SifrInt, DivisionError>`, preserving owned passthrough helpers and direct promoted call arguments; review is satisfied and quick validation is passing: PR #1880.
   - [x] `Result[int, DivisionError]` local aliases that receive promoted result params or locals now register as `Result<SifrInt, DivisionError>`, preserving alias-return and downstream call shapes; review is satisfied and quick validation is passing: PR #1881.
   - [x] `Result[int, DivisionError]` class method returns now participate in exact result promotion, including method-to-method calls such as `self.divide(...)` and try-unwrapping of promoted method results; review is satisfied and quick validation is passing: PR #1882.
+  - [x] Promoted `Result[int, DivisionError]` method calls through class fields now recover the receiver class from field metadata, so `self.calc.divide(...)` local aliases lower as `Result<SifrInt, DivisionError>` and unwrap through `SifrInt`; review is satisfied and quick validation is passing: PR #1883.
   - [ ] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: direct function-return promotion and remaining `Result[int, DivisionError]` integration surfaces still need support.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
