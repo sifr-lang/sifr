@@ -512,6 +512,7 @@ impl RustEmitter {
                 let value = self.rewrite_stdlib_constant_idents_in_expr(value);
                 let force_sifr_int = self.is_forced_sifr_int_local(&name);
                 let value_is_sifr_int = self.is_sifr_int_expr(&value);
+                let value_is_sifr_int_result = self.is_sifr_int_result_expr(&value);
                 let (ty, value) =
                     if is_legacy_i64_type(&ty) && (value_is_sifr_int || force_sifr_int) {
                         let value = self.coerce_expr_to_sifr_int_value(value);
@@ -519,6 +520,8 @@ impl RustEmitter {
                             .borrow_mut()
                             .insert(name.clone());
                         (Some(crate::RustType::Named("SifrInt".to_string())), value)
+                    } else if is_result_legacy_i64_type(&ty) && value_is_sifr_int_result {
+                        (ty.map(result_i64_type_to_sifr_int), value)
                     } else {
                         if !force_sifr_int {
                             self.sifr_int_local_bindings.borrow_mut().remove(&name);
@@ -1466,7 +1469,7 @@ impl RustEmitter {
         self.sifr_int_forced_local_bindings.borrow().contains(name)
     }
 
-    fn is_sifr_int_expr(&self, expr: &crate::RustExpr) -> bool {
+    pub(super) fn is_sifr_int_expr(&self, expr: &crate::RustExpr) -> bool {
         match expr {
             crate::RustExpr::FnCall { func, args } => {
                 (args.is_empty() && self.is_sifr_int_module_constant_func(func))
@@ -1495,8 +1498,32 @@ impl RustEmitter {
             crate::RustExpr::Paren(inner) => self.is_sifr_int_expr(inner),
             crate::RustExpr::Ref { expr, .. } => self.is_sifr_int_expr(expr),
             crate::RustExpr::Clone(expr) => self.is_sifr_int_expr(expr),
+            crate::RustExpr::Try(expr) => self.is_sifr_int_result_expr(expr),
             _ => false,
         }
+    }
+
+    pub(super) fn is_sifr_int_result_expr(&self, expr: &crate::RustExpr) -> bool {
+        match expr {
+            crate::RustExpr::Block {
+                expr: Some(inner), ..
+            } => self.is_sifr_int_result_expr(inner),
+            crate::RustExpr::MethodCall {
+                receiver, method, ..
+            } if method == "ok_or_else" => self.is_sifr_int_checked_floor_option_expr(receiver),
+            crate::RustExpr::Paren(inner) => self.is_sifr_int_result_expr(inner),
+            _ => false,
+        }
+    }
+
+    fn is_sifr_int_checked_floor_option_expr(&self, expr: &crate::RustExpr) -> bool {
+        matches!(
+            expr,
+            crate::RustExpr::MethodCall {
+                method,
+                ..
+            } if matches!(method.as_str(), "checked_floor_div" | "checked_floor_mod")
+        )
     }
 
     fn is_sifr_int_module_constant_func(&self, func: &crate::RustExpr) -> bool {
@@ -1592,6 +1619,28 @@ fn is_sifr_int_operand_coercion_op(op: &str) -> bool {
 fn is_legacy_i64_type(ty: &Option<crate::RustType>) -> bool {
     matches!(ty, Some(crate::RustType::I64))
         || matches!(ty, Some(crate::RustType::Named(name)) if name == "i64")
+}
+
+fn is_result_legacy_i64_type(ty: &Option<crate::RustType>) -> bool {
+    matches!(ty, Some(crate::RustType::Result(ok, _)) if is_legacy_i64_rust_type(ok))
+        || matches!(ty, Some(crate::RustType::Named(name)) if name.starts_with("Result<i64, "))
+}
+
+fn is_legacy_i64_rust_type(ty: &crate::RustType) -> bool {
+    matches!(ty, crate::RustType::I64)
+        || matches!(ty, crate::RustType::Named(name) if name == "i64")
+}
+
+fn result_i64_type_to_sifr_int(ty: crate::RustType) -> crate::RustType {
+    match ty {
+        crate::RustType::Result(ok, err) if is_legacy_i64_rust_type(&ok) => {
+            crate::RustType::Result(Box::new(crate::RustType::Named("SifrInt".to_string())), err)
+        }
+        crate::RustType::Named(name) if name.starts_with("Result<i64, ") => {
+            crate::RustType::Named(name.replacen("Result<i64, ", "Result<SifrInt, ", 1))
+        }
+        other => other,
+    }
 }
 
 fn is_proven_nonzero_integer_expr(expr: &crate::RustExpr) -> bool {

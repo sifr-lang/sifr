@@ -462,6 +462,7 @@ Validation:
 - [x] INT-4 fixed-width literal pattern fitting review pass 2 satisfied after adding positive in-range coverage: `reviews/integer-model-int-4-fixed-width-match-literal-review-pass-2.md`.
 - [x] INT-4 fixed-width `sum`/`abs` builtin review pass 1 completed with guardrail and duplicate-policy blockers: `reviews/integer-model-int-4-fixed-width-sum-abs-builtins-review-pass-1.md`.
 - [x] INT-4 fixed-width `sum`/`abs` builtin review pass 2 satisfied after extracting `abs` lowering and sharing the widening policy: `reviews/integer-model-int-4-fixed-width-sum-abs-builtins-review-pass-2.md`.
+- [x] INT-1 exact-int floor/mod `Result[int, DivisionError]` review satisfied after adding HIR typing, local/try `SifrInt` codegen, and focused e2e coverage: `reviews/integer-model-int-1-exact-int-floor-mod-result-review-pass-1.md`.
 
 ## Implementation Checklist
 
@@ -494,7 +495,8 @@ Validation:
   - [x] Direct HIR coverage now proves exact-int `//=` and `%=` with syntactically non-zero integer literal divisors still lower successfully, closing the scaffold review hardening note; review is satisfied and quick validation is passing: PR #1858.
   - [x] Conservative non-literal exact-int non-zero facts now suppress `SIFR-INT-0005` for guarded divisors in `x != 0` true branches, `if x == 0: return/raise` early-exit false paths, and `while x != 0` bodies; reassignment and augmented assignment clear those facts, and the guarded `DivisionError` pass fixture now uses the checked parameter divisor again; review is satisfied and quick validation is passing: PR #1859.
   - [x] Exact-int non-zero proof now covers early-exit `elif` zero guards and nested boolean guard composition such as `not (left == 0 or right == 0)`, with focused HIR/e2e coverage, review satisfied, and quick validation passing: PR #1875.
-  - [ ] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: full `Result[int, DivisionError]` expression/codegen integration and non-literal proven-nonzero analysis still need support.
+  - [x] Unproven exact-int `//` and `%` now lower as `Result[int, DivisionError]` instead of `SIFR-INT-0005`, with local `Result` bindings and try-block unwrapping emitted through `Result<SifrInt, DivisionError>` and focused review/e2e coverage; direct `int` assignment remains a type mismatch outside handling, fixed-width and augassign remain fail-closed: PR #1876.
+  - [ ] Continue the broader `Type::Int` migration beyond direct helper/local expression rewrites: direct function-return promotion and remaining `Result[int, DivisionError]` integration surfaces still need support.
 - [x] INT-2A parser boundary and literal capture
   - [x] Reserved `int128`/`uint128` names emit `SIFR-INT-0003`, with registry docs generated, review satisfied, and quick validation passing: PR #1791.
   - [x] Parsed integer literals beyond the historical `i64` slot lower to canonical decimal `LargeIntLiteral` HIR across decimal, hex, octal, and binary spellings, with review satisfied and quick validation passing: PR #1792.

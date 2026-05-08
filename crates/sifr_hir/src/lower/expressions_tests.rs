@@ -339,20 +339,46 @@ fn test_fixed_width_const_expression_assignment_fits_and_folds() {
 }
 
 #[test]
-fn test_exact_int_division_by_unproven_divisor_has_int0005() {
+fn test_exact_int_division_by_unproven_divisor_requires_result_target() {
     let source = "\
 def main() -> None:
     divisor: int = 3
     value: int = 10 // divisor
 ";
-    let errors = lower_source(source).expect_err("unproven exact-int divisor should fail");
+    let errors =
+        lower_source(source).expect_err("unproven exact-int divisor should produce Result[int]");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
-            && error.message
-                == "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe"
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("expected 'int', got 'Result[int, DivisionError]'")
             && error.primary_range == Some(range_for(source, "10 // divisor"))
     }));
+}
+
+#[test]
+fn test_exact_int_division_by_unproven_divisor_lowers_as_result() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    divisor: int = 3
+    value: Result[int, DivisionError] = 10 // divisor
+",
+    )
+    .expect("unproven exact-int divisor should lower as Result[int, DivisionError]");
+
+    let HirStmt::Let { value, .. } = &module.functions[0].body[1] else {
+        panic!("expected result let");
+    };
+    assert!(matches!(
+        value,
+        HirExpr::BinOp {
+            ty: Type::Result(ok, err),
+            ..
+        } if matches!(ok.as_ref(), Type::Int)
+            && matches!(err.as_ref(), Type::Class { name, .. } if name == "DivisionError")
+    ));
 }
 
 #[test]
@@ -725,7 +751,10 @@ def main() -> None:
     let errors = lower_source(source).expect_err("reassignment should clear non-zero proof");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("expected 'int', got 'Result[int, DivisionError]'")
             && error.primary_range == Some(range_for(source, "10 // divisor"))
     }));
 }

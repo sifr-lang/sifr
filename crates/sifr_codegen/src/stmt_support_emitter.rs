@@ -3968,6 +3968,62 @@ impl RustEmitter {
             let resolved_left_ty = crate::resolve_alias_type_for_plain_call(left.ty());
             let resolved_right_ty = crate::resolve_alias_type_for_plain_call(right.ty());
 
+            if matches!(op.as_str(), "//" | "%")
+                && matches!(resolved_left_ty, Type::Int | Type::LiteralInt(_))
+                && matches!(resolved_right_ty, Type::Int | Type::LiteralInt(_))
+                && is_result_int_division_error_type(resolved_result_ty)
+            {
+                let method = if op == "//" {
+                    "checked_floor_div"
+                } else {
+                    "checked_floor_mod"
+                };
+                return Ok(Some(crate::RustExpr::Block {
+                    stmts: vec![
+                        crate::RustStmt::Let {
+                            mutable: false,
+                            name: "__sifr_floor_left".to_string(),
+                            ty: Some(crate::RustType::Named("SifrInt".to_string())),
+                            value: self.coerce_expr_to_sifr_int_value(lowered_left),
+                        },
+                        crate::RustStmt::Let {
+                            mutable: false,
+                            name: "__sifr_floor_right".to_string(),
+                            ty: Some(crate::RustType::Named("SifrInt".to_string())),
+                            value: self.coerce_expr_to_sifr_int_value(lowered_right),
+                        },
+                    ],
+                    expr: Some(Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Ident(
+                                "__sifr_floor_left".to_string(),
+                            )),
+                            method: method.to_string(),
+                            args: vec![crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(crate::RustExpr::Ident(
+                                    "__sifr_floor_right".to_string(),
+                                )),
+                            }],
+                        }),
+                        method: "ok_or_else".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![],
+                            body: Box::new(crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec![
+                                    "DivisionError".to_string(),
+                                    "new".to_string(),
+                                ])),
+                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
+                                    "division by zero".to_string(),
+                                ))],
+                            }),
+                            is_move: false,
+                        }],
+                    })),
+                }));
+            }
+
             if op == "*" && matches!(resolved_result_ty, Type::Str) {
                 let (string_expr, count_expr) = match (
                     matches!(resolved_left_ty, Type::Str),
@@ -5633,19 +5689,30 @@ impl RustEmitter {
                     };
                     self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
                 };
+                let lowered_ty = if name == "_"
+                    || is_generic_class
+                    || should_omit_local_type_annotation(&effective_ty, value)
+                {
+                    None
+                } else if matches!(
+                    crate::resolve_alias_type_for_plain_call(&effective_ty),
+                    Type::Int | Type::LiteralInt(_)
+                ) && self.is_sifr_int_expr(&lowered_value)
+                {
+                    Some(crate::RustType::Named("SifrInt".to_string()))
+                } else if is_result_int_division_error_type(&effective_ty)
+                    && self.is_sifr_int_result_expr(&lowered_value)
+                {
+                    Some(result_int_to_sifr_int_rust_type(&effective_ty))
+                } else {
+                    Some(self.rust_ir_type_with_generics(&effective_ty))
+                };
                 (
                     vec![RustStmt::Let {
                         mutable: self.mutated_vars.contains(name)
                             || should_force_mutable_binding(&effective_ty),
                         name: name.clone(),
-                        ty: if name == "_"
-                            || is_generic_class
-                            || should_omit_local_type_annotation(&effective_ty, value)
-                        {
-                            None
-                        } else {
-                            Some(self.rust_ir_type_with_generics(&effective_ty))
-                        },
+                        ty: lowered_ty,
                         value: lowered_value,
                     }],
                     true,
@@ -8944,4 +9011,27 @@ impl RustEmitter {
         self.emit_lowered_stmts(std::slice::from_ref(&lowered));
         Ok(true)
     }
+}
+
+fn is_result_int_division_error_type(ty: &Type) -> bool {
+    let Type::Result(ok_ty, err_ty) = ty else {
+        return false;
+    };
+    matches!(
+        crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
+        Type::Int | Type::LiteralInt(_)
+    ) && matches!(
+        crate::resolve_alias_type_for_plain_call(err_ty.as_ref()),
+        Type::Class { name, .. } if name == "DivisionError"
+    )
+}
+
+fn result_int_to_sifr_int_rust_type(ty: &Type) -> crate::RustType {
+    let Type::Result(_, err_ty) = ty else {
+        return crate::RustType::Named(ty.rust_type());
+    };
+    crate::RustType::Result(
+        Box::new(crate::RustType::Named("SifrInt".to_string())),
+        Box::new(crate::sifr_type_to_rust_type(err_ty)),
+    )
 }
