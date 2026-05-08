@@ -26,6 +26,13 @@ def divide_local_again(a: int, b: int) -> Result[int, DivisionError]:
     return value
 
 
+def divide_nested_local(a: int, b: int) -> Result[int, DivisionError]:
+    def helper() -> Result[int, DivisionError]:
+        value: Result[int, DivisionError] = a // b
+        return value
+    return helper()
+
+
 def main():
     try:
         value: int = divide(10, 0)
@@ -54,5 +61,11 @@ def main():
     try:
         local_result: int = divide_local_again(9, 3)
         assert str(local_result) == '3'
+    except DivisionError as e:
+        _ = e
+
+    try:
+        nested_result: int = divide_nested_local(12, 4)
+        assert str(nested_result) == '3'
     except DivisionError as e:
         _ = e
