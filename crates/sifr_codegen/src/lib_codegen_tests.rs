@@ -3703,6 +3703,28 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
 }
 
 #[test]
+fn test_task_handle_join_lowers_to_task_result_observation() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle.join()\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("enum __SifrTaskResult<T, E>"));
+    assert!(result.rust_source.contains("async fn join(self)"));
+    assert!(result.rust_source.contains("handle.join().await"));
+    assert!(result
+        .rust_source
+        .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
+}
+
+#[test]
 fn test_sync_main_does_not_require_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(
