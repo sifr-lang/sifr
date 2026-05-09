@@ -501,6 +501,29 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
             ))],
             is_async: true,
         },
+        RustItem::Fn {
+            name: "__sifr_task_race".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![
+                crate::RustTypeParam {
+                    name: "T".to_string(),
+                    bounds: vec!["Send".to_string(), "'static".to_string()],
+                },
+                crate::RustTypeParam {
+                    name: "E".to_string(),
+                    bounds: vec!["Send".to_string(), "'static".to_string()],
+                },
+            ],
+            params: vec![RustParam::Named {
+                name: "handles".to_string(),
+                ty: RustType::Named("Vec<__SifrTask<T, E>>".to_string()),
+            }],
+            ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
+            body: vec![RustStmt::Expr(RustExpr::Ident(
+                "let mut abort_handles = Vec::new();\n        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();\n        let mut observer_count = 0usize;\n        for handle in handles {\n            let __SifrTask { receiver: task_receiver, abort_handle, _error } = handle;\n            abort_handles.push(abort_handle);\n            if let Some(task_receiver) = task_receiver {\n                observer_count += 1;\n                let sender = sender.clone();\n                tokio::spawn(async move {\n                    let result = match task_receiver.await {\n                        Ok(value) => __SifrTaskResult::Ok(value),\n                        Err(_) => __SifrTaskResult::Cancelled,\n                    };\n                    let _ = sender.send(result);\n                });\n            }\n        }\n        drop(sender);\n        let Some(first) = receiver.recv().await else {\n            return __SifrTaskResult::Cancelled;\n        };\n        for abort_handle in &abort_handles {\n            abort_handle.abort();\n        }\n        let mut remaining = observer_count.saturating_sub(1);\n        while remaining > 0 {\n            if receiver.recv().await.is_none() {\n                break;\n            }\n            remaining -= 1;\n        }\n        return first".to_string(),
+            ))],
+            is_async: true,
+        },
     ]
 }
 

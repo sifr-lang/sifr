@@ -535,6 +535,15 @@ fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> 
             args: vec![try_lower_leaf_or_name_expr(handles)?],
         });
     }
+    if func == "__sifr_task_race" {
+        let [handles] = args else {
+            return None;
+        };
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Ident(func.to_string())),
+            args: vec![try_lower_leaf_or_name_expr(handles)?],
+        });
+    }
     if func == "hash" {
         return try_lower_simple_hash_call_expr(args);
     }
