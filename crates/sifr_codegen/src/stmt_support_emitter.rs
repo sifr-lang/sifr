@@ -7243,7 +7243,7 @@ impl RustEmitter {
             lowered_body.insert(
                 0,
                 crate::RustStmt::Let {
-                    mutable: false,
+                    mutable: true,
                     name: target.to_string(),
                     ty: None,
                     value: crate::RustExpr::FnCall {
@@ -7255,6 +7255,15 @@ impl RustEmitter {
                     },
                 },
             );
+        }
+        if let (sifr_hir::HirAsyncWithKind::TaskScope, Some(target)) = (kind, target) {
+            lowered_body.push(crate::RustStmt::Expr(crate::RustExpr::Await(Box::new(
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident(target.to_string())),
+                    method: "__sifr_join_all".to_string(),
+                    args: vec![],
+                },
+            ))));
         }
         Ok(Some(RustStmt::Block(lowered_body)))
     }

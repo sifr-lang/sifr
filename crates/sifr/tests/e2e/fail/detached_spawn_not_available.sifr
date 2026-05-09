@@ -1,0 +1,7 @@
+async def worker() -> int:
+    return 1
+
+
+async def main() -> None:
+    handle = task.spawn(worker())
+    return None

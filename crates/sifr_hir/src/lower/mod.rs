@@ -98,6 +98,7 @@ mod statement_diagnostics_tests;
 mod statements;
 mod subscript_type;
 mod task_calls;
+mod task_scope_calls;
 mod tuple_unpack;
 #[cfg(test)]
 mod type_alias_tests;

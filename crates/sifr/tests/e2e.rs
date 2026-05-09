@@ -1259,7 +1259,8 @@ fn sifr_runtime_dependency_spec() -> String {
 }
 
 fn tokio_dependency_spec() -> String {
-    "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"time\"] }".to_string()
+    "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"sync\", \"time\"] }"
+        .to_string()
 }
 
 fn discover_sifr_runtime_path() -> Option<PathBuf> {
@@ -3675,8 +3676,9 @@ fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
     let required_crates = normalize_dependency_set(vec!["tokio".to_string()]);
 
     let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
-    assert!(cargo_toml
-        .contains("tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"time\"] }"));
+    assert!(cargo_toml.contains(
+        "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"sync\", \"time\"] }"
+    ));
 }
 
 fn sample_cache_entry(

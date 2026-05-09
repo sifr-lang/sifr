@@ -937,9 +937,35 @@ fn try_lower_simple_method_call_expr(
     method: &str,
     args: &[HirExpr],
 ) -> Option<RustExpr> {
-    let _ = object;
-    let _ = method;
-    let _ = args;
+    if method == "spawn"
+        && matches!(resolve_alias_type(object.ty()), Type::Class { name, .. } if name == "TaskScope")
+    {
+        let lowered_object = try_lower_leaf_or_name_expr(object)?;
+        let lowered_args = args
+            .iter()
+            .map(|arg| {
+                if let HirExpr::Call {
+                    func,
+                    args: call_args,
+                    ..
+                } = arg
+                {
+                    if call_args.is_empty() {
+                        return Some(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Ident(func.clone())),
+                            args: vec![],
+                        });
+                    }
+                }
+                try_lower_leaf_expr(arg)
+            })
+            .collect::<Option<Vec<_>>>()?;
+        return Some(RustExpr::MethodCall {
+            receiver: Box::new(lowered_object),
+            method: method.to_string(),
+            args: lowered_args,
+        });
+    }
     // Method-call lowering is ownership- and type-convention-sensitive.
     // Keep it on the structured emitter path where binding context is available.
     None

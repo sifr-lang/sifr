@@ -3671,7 +3671,35 @@ fn test_task_scope_context_materializes_runtime_container() {
     assert!(result.rust_source.contains("impl __SifrTaskScope"));
     assert!(result
         .rust_source
-        .contains("let scope = __SifrTaskScope::new();"));
+        .contains("let mut scope = __SifrTaskScope::new();"));
+    assert!(result
+        .rust_source
+        .contains("scope.__sifr_join_all().await;"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("struct __SifrTask<T, E>"));
+    assert!(result.rust_source.contains("fn spawn<"));
+    assert!(result.rust_source.contains("tokio::sync::oneshot::channel"));
+    assert!(result.rust_source.contains("scope.spawn(worker());"));
+    assert!(result
+        .rust_source
+        .contains("scope.__sifr_join_all().await;"));
+    assert!(result.required_crates.contains("tokio"));
 }
 
 #[test]
@@ -3703,8 +3731,9 @@ fn test_generate_project_emits_tokio_dependency_when_required() {
         &required_crates,
     );
 
-    assert!(cargo_toml
-        .contains("tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"time\"] }"));
+    assert!(cargo_toml.contains(
+        "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"sync\", \"time\"] }"
+    ));
 }
 
 #[test]

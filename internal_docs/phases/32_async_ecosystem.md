@@ -385,6 +385,8 @@ status: in_progress
 - Added positive validation fixture: `async_main_result_bootstrap.sifr`.
 - In progress task scope container slice: `async with task.scope() as scope` now materializes a private generated `TaskScope` runtime container instead of binding the placeholder unit value.
 - Added positive validation fixture: `task_scope_container.sifr`.
+- In progress conservative spawn slice: `scope.spawn(coro)` accepts no-argument infallible coroutine calls, returns a typed task observer handle, and records an owned child driver in the task scope so normal scope exit awaits dropped/unobserved handles instead of detaching them.
+- Added validation coverage for `scope_spawn_core.sifr`, `scope_spawn_capture_rejected.sifr`, `scope_spawn_non_coroutine_rejected.sifr`, and `detached_spawn_not_available.sifr`.
 
 ---
 
