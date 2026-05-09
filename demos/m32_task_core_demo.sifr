@@ -1,0 +1,24 @@
+async def quick_worker() -> int:
+    await task.sleep(0.0)
+    return 41
+
+
+async def slow_worker() -> int:
+    await task.sleep(10.0)
+    return 7
+
+
+async def main() -> Result[None, TimeoutError]:
+    async with task.timeout(1.0):
+        await task.sleep(0.0)
+
+    async with task.scope() as scope:
+        quick = scope.spawn(quick_worker())
+        quick_result = await task.timeout(quick, 1.0)
+
+    async with task.scope() as scope:
+        slow = scope.spawn(slow_worker())
+        slow.cancel()
+        cancelled = await slow
+
+    return None

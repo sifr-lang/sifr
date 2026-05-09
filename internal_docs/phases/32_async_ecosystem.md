@@ -302,7 +302,7 @@ status: completed
 
 ### milestone_async_2: Runtime Bootstrap and Core Task API
 
-status: in_progress
+status: completed
 
 **Goal:** Make ordinary async programs run without user-managed runtime setup.
 
@@ -364,12 +364,12 @@ status: in_progress
 - `task_timeout_completion_wins_tie.sifr`
 - `task_timeout_context_manager.sifr`
 - `task_cancel_basic.sifr`
-- `runtime_leak_rejected.sifr`
 
 **Negative validation:**
 
 - `detached_spawn_not_available.sifr`
 - `task_timeout_error_type.sifr`
+- `runtime_leak_rejected.sifr`
 
 **Demo:**
 
@@ -401,6 +401,8 @@ status: in_progress
 - Added same-tick timeout validation coverage with `task_timeout_completion_wins_tie.sifr`; the generated timeout race uses biased completion-first selection.
 - In progress timeout context-manager slice: `async with task.timeout(duration)` now wraps awaited operations in a same-task timeout check and exits through `TimeoutError` when the enclosing async function can propagate it.
 - Added validation coverage for `task_timeout_context_manager.sifr` and `task_timeout_context_manager_return_type_rejected.sifr`.
+- Completed milestone closure slice: added `scope_spawn_join.sifr`, `runtime_leak_rejected.sifr`, and `demos/m32_task_core_demo.sifr`.
+- Merged PRs: #1909 async main Tokio bootstrap, #1910 task sleep, #1911 async main Result bootstrap, #1912 task scope container, #1913 conservative scope spawn, #1914 task handle join, #1915 direct task await, #1916 affine task handle observation, #1917 task cancellation, #1918 task timeout handle, #1919 same-tick timeout validation, #1920 timeout context-manager awaits.
 
 ---
 

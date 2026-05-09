@@ -1,0 +1,4 @@
+# expect-error: SIFR-NAME-0001
+async def main() -> None:
+    await tokio.sleep(0.0)
+    return None
