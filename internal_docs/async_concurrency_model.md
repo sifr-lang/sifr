@@ -15,6 +15,7 @@ The phase should not be an ecosystem grab bag. Its job is to make one coherent m
 - Structured concurrency by default: parent scopes own child tasks
 - Typed cancellation and shutdown behavior
 - Explicit offload for CPU-bound or blocking work
+- Blocking/IO annotations that power diagnostics instead of hidden scheduling changes
 - Compatibility layers only after the canonical model exists
 
 The phase succeeds when users can write practical concurrent Sifr programs without learning raw event-loop internals and without escaping Sifr's core guarantee: no user-triggerable runtime panics.
@@ -47,6 +48,7 @@ The user-facing vocabulary is:
 - scoped task groups
 - explicit channels and locks
 - explicit blocking/thread offload
+- `@blocking_io` and `@cpu_bound` annotations for diagnostic guidance
 
 The primary model does not include:
 
@@ -55,6 +57,7 @@ The primary model does not include:
 - callback-first APIs
 - implicit detached tasks
 - implicit `Arc`, `Mutex`, or thread-safe wrapper insertion
+- implicit offload of blocking or CPU-heavy calls
 - raw `Future` manipulation as the normal user path
 
 ## Design Principles
@@ -73,10 +76,10 @@ Default APIs should prefer:
 
 - `task.scope(...)`
 - `task.TaskGroup`
-- `scope.spawn(...)`
-- `task.gather(...)`
-- `task.select(...)`
-- `task.race(...)`
+- `scope.spawn(...)`: canonical task creation; all spawned tasks are children of a scope
+- `task.gather(*handles)`: wait for multiple task handles, preserving input ordering
+- `task.select(*handles)`: first-completion semantics; losers are cancelled by default
+- `task.race(*handles)`: alias for `select`; losers are cancelled by default
 
 Default APIs should not encourage:
 
@@ -91,8 +94,12 @@ Async tasks are for I/O waiting and cooperative scheduling. CPU-bound work and b
 
 Required surfaces:
 
+- `@blocking_io` for sync functions that perform blocking I/O
+- `@cpu_bound` for sync functions expected to burn CPU
 - `task.spawn_blocking(...)`
-- `concurrent.ThreadPoolExecutor`
+- `sifr.concurrent.ThreadPoolExecutor`
+
+These annotations are diagnostic facts, not scheduling commands. Calling a `@blocking_io` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a `@cpu_bound` function from async code should suggest `spawn_blocking` or a thread-pool executor. The compiler must not silently rewrite either call into a task or thread.
 
 Deferred surfaces:
 
@@ -114,11 +121,19 @@ Allowed explicit surfaces:
 - `sync.Semaphore`
 - `sync.Notify`
 
+Deferred coordination primitives:
+
+- `sync.Barrier`
+- `sync.Condvar`
+
+`Barrier` and `Condvar` are useful, but they are not required to prove the first model. `Notify`, `Semaphore`, channels, and locks cover the common coordination paths with a smaller teaching surface.
+
 Rejected implicit behavior:
 
 - silently upgrading `Rc` to `Arc`
 - silently wrapping mutable values in `Mutex`
 - silently cloning captured mutable state for task safety
+- silently moving a blocking call onto another executor
 - implicitly detaching borrowed values from their owner
 
 ### Typed Failure and Cancellation
@@ -173,6 +188,12 @@ The compiler should:
 
 Some out-of-scope items may get thin compatibility wrappers later. They should not be allowed to shape the core model.
 
+`contextvars` is intentionally deferred. Sifr should prefer lexical scope and explicit task arguments over implicit task-local propagation. If later evidence shows a real need for task-local storage with structured inheritance, a `sifr.task.local[T]` primitive can be designed as a scoped, lexical value with structured inheritance, not as a global mutable copy-on-fork store.
+
+`selectors` is intentionally not a public phase requirement. Runtime internals may use readiness machinery, but users should compose tasks and channels rather than file-descriptor readiness APIs. If low-level socket work later requires a public module, it should land as a curated compatibility layer with CPython-derived tests, not as a core async concept.
+
+Async generators are distinct from async iteration. This phase owns the async iterable protocol and `async for` over channels/streams. User-defined `async def` with `yield` requires separate `AsyncGenerator` HIR and protocol work and remains a later feature.
+
 ## Architecture Targets
 
 ### Language and HIR
@@ -207,12 +228,13 @@ The type system needs first-class awaitability and task-boundary rules.
 Required rules:
 
 - `await x` is valid only when `x` has an awaitable type.
-- `await Task[T, E]` produces `Result[T, E]` or participates in existing `try`/`except` auto-unwrap rules.
-- `task.spawn` requires captures and return values to satisfy task-boundary requirements.
+- `await Task[T, E]` always produces `Result[T, E]`. Inside a `try` block, that `Result[T, E]` follows existing auto-unwrap semantics. Outside `try`, the caller observes the `Result[T, E]` expression type.
+- `scope.spawn` requires captures and return values to satisfy task-boundary requirements.
 - `scope.spawn` can use stricter lifetime-scoped rules than detached spawn.
-- `spawn_detached`, if exposed, requires owned, sendable, static captures.
+- detached spawn is not exposed in v1. A future `spawn_detached`, if added, must require explicit owned, sendable, static captures.
 - mutable cross-task access requires explicit synchronization.
 - values borrowed across `await` must be proven valid or rejected.
+- spawned tasks require sendable task boundaries in v1. Ordinary awaited futures within the same task do not introduce a spawn boundary.
 
 ### Runtime and Codegen
 
@@ -267,21 +289,57 @@ Work items:
   - `sifr.sync`
   - `sifr.concurrent`
 - Define initial types:
-  - `Task[T]`
+  - `Task[T, E]`
+  - `Task[T]` as shorthand for `Task[T, Never]` plus cancellation
   - `TaskGroup`
   - `TaskScope`
-  - `CancellationError` or `Cancelled`
+  - `CancellationError`
   - `TimeoutError`
   - `Channel[T]`
   - `Lock[T]`
+- Lock task result semantics:
+  - `await Task[T, E]` always yields `Result[T, E]`
+  - `await Task[T]` yields `Result[T, CancellationError]`
+  - existing `try`/`except` auto-unwrap works on that result inside `try` blocks
+  - outside `try`, the observable expression type remains `Result[T, E]`
 - Define detached task policy:
-  - either no detached tasks in the first phase
-  - or `spawn_detached` only with explicit owned/static/sendable captures
+  - v1 exposes scoped spawn only
+  - `scope.spawn(...)` is the canonical task creation API
+  - free-floating detached spawn is deferred
+  - any future `spawn_detached` must require explicit owned/static/sendable captures
 - Define cancellation policy:
+  - `CancellationError` and `TimeoutError` live in `sifr.task`
+  - `Task[T, E]` uses `CancellationError` when a task is cancelled before completing
+  - `task.timeout` uses `TimeoutError` when an operation exceeds its deadline
   - timeout cancels the enclosed operation
   - task-group failure cancels unfinished siblings
   - cancelling a task is observable and typed
   - cancellation waits for cleanup before scope exit
+- Define selection policy:
+  - `select` / `race` cancel losing tasks by default
+  - if multiple tasks complete in the same scheduler tick, handle creation order breaks ties deterministically
+  - users must not rely on tie-breaking order for correctness; use `gather` plus explicit priority logic when order matters
+  - users who need all results should use `gather`
+  - users who need non-cancelling competition must keep handles and perform explicit cleanup
+- Define channel policy:
+  - `sync.Channel[T]` is multi-producer, multi-consumer
+  - unbounded channels use `sync.channel[T]()`
+  - bounded channels use `sync.bounded_channel[T](capacity)`
+  - bounded channels apply backpressure when full
+- Define lock policy:
+  - `sync.Lock[T]` generates an async-aware lock internally
+  - the lock can wait without blocking the async runtime
+  - Sifr's guard type is still restricted to a synchronous scope
+  - lock guards must not cross `await` points in v1
+  - crossing `await` with a live lock guard is a compile-time diagnostic
+  - a distinct `sync.AsyncLock[T]`, if needed, is deferred
+- Define blocking annotation policy:
+  - `@blocking_io` and `@cpu_bound` are compile-time diagnostic annotations
+  - they never imply automatic task/thread scheduling
+  - stdlib blocking APIs should be annotated as the database of known blocking calls
+- Define runtime-neutral API gate:
+  - no public Sifr API may expose Tokio or runtime-specific types
+  - runtime internals stay behind `sifr._runtime` or an equivalent private boundary
 - Define validation fixture names and diagnostics codes before implementation begins.
 
 Acceptance criteria:
@@ -290,6 +348,7 @@ Acceptance criteria:
 - The phase explicitly rejects raw event-loop APIs as primary API.
 - Typed serialization, web, process pools, and full `asyncio` parity are documented as out of scope.
 - Every later milestone has positive and negative validation targets.
+- The previously open decisions are locked or explicitly moved to v2 with a dependency.
 
 Validation:
 
@@ -310,7 +369,7 @@ Work items:
 - Add awaitable/future type representation.
 - Reject `await` outside async functions.
 - Reject awaiting non-awaitable values.
-- Preserve existing `try`/`except` auto-unwrap behavior across await boundaries in HIR design, even if runtime execution arrives in the next milestone.
+- Preserve existing `try`/`except` auto-unwrap behavior for `Result` values produced by await expressions, even if runtime execution arrives in the next milestone.
 - Add source-span plumbing for async diagnostics.
 - Add initial codegen shape for async functions that do not spawn tasks.
 
@@ -319,6 +378,7 @@ Acceptance criteria:
 - `async def` is represented explicitly in HIR.
 - `await` is represented explicitly in HIR.
 - Type checking distinguishes awaitable and non-awaitable values.
+- Awaiting `Task[T, E]` has one stable type: `Result[T, E]`.
 - Invalid async syntax/use fails before Rust compilation.
 - The implementation does not introduce raw string fallback paths.
 
@@ -351,7 +411,8 @@ Work items:
 - Wire runtime dependencies only when async is used.
 - Implement `sifr.task.sleep`.
 - Implement `sifr.task.timeout`.
-- Implement `sifr.task.spawn` returning a typed task handle.
+- Implement the minimal `sifr.task.scope` runtime container needed for scoped spawn.
+- Implement `scope.spawn` returning a typed task handle.
 - Implement task-handle `join`.
 - Implement task-handle cancellation API.
 - Translate obvious runtime/task-boundary failures into Sifr diagnostics.
@@ -360,22 +421,26 @@ Acceptance criteria:
 
 - Async programs run through `sifr run`.
 - Sync programs do not gain async runtime dependencies.
-- `task.spawn` returns a handle that must be awaited or joined.
+- `scope.spawn` returns a handle that must be awaited or joined.
+- There is no free-floating detached spawn in v1.
 - `task.sleep` and `task.timeout` work.
 - Cancelling a task produces typed, deterministic behavior.
 - Runtime bootstrap does not require user-visible event-loop configuration.
+- Public `sifr.task`, `sifr.sync`, and `sifr.concurrent` APIs do not expose runtime-specific implementation types.
 
 Positive validation:
 
 - `async_runtime_bootstrap.sifr`
-- `task_spawn_join.sifr`
+- `scope_spawn_join.sifr`
 - `task_sleep.sifr`
 - `task_timeout_success.sifr`
 - `task_cancel_basic.sifr`
+- `runtime_leak_rejected.sifr`
 
 Negative validation:
 
-- `task_handle_unused_must_join_or_detach.sifr`
+- `task_handle_unused_must_join_or_cancel.sifr`
+- `detached_spawn_not_available.sifr`
 - `task_timeout_error_type.sifr`
 - `spawn_non_send_initial_diagnostic.sifr`
 
@@ -400,7 +465,8 @@ Work items:
   - and cleanup is awaited before exit.
 - Implement sibling cancellation on first failure for task groups.
 - Implement `task.gather` with deterministic result ordering.
-- Implement `task.select` or `task.race` for first-completion behavior.
+- Implement `task.select` and `task.race` for first-completion behavior.
+- Cancel losing tasks by default for `select` and `race`.
 - Define how cancellation composes with `Result`.
 - Add diagnostics for leaked task handles and invalid scope escape.
 
@@ -411,7 +477,8 @@ Acceptance criteria:
 - Task-group failure cancels unfinished siblings.
 - Cancellation is observable through the Sifr type model.
 - `gather` preserves input ordering.
-- `select`/`race` documents and tests loser cancellation behavior.
+- `select`/`race` deterministically cancel losing tasks by default.
+- Nested cancellation scopes propagate cancellation in a documented order.
 
 Positive validation:
 
@@ -421,6 +488,10 @@ Positive validation:
 - `task_gather_ordered.sifr`
 - `task_select_first_completion.sifr`
 - `task_race_cancels_losers.sifr`
+- `cancellation_scope_timeout.sifr`
+- `cancellation_group_sibling.sifr`
+- `cancellation_nested_scopes.sifr`
+- `cancellation_cleanup_runs.sifr`
 
 Negative validation:
 
@@ -445,7 +516,7 @@ Work items:
 - Check `Sync` eligibility where shared references cross boundaries.
 - Reject borrowed values that escape a task boundary.
 - Reject invalid borrows held across await points.
-- Distinguish scoped spawn from detached spawn requirements.
+- Validate scoped spawn requirements and keep detached spawn unavailable in v1.
 - Implement field-path diagnostics for non-sendable captures.
 - Ensure no compiler path silently inserts sharing wrappers.
 - Add regression tests for user-defined classes, lists, dicts, closures, nested functions, and captured `self`.
@@ -455,7 +526,7 @@ Acceptance criteria:
 - Spawn-boundary errors are reported as Sifr diagnostics.
 - Diagnostics identify the captured value and non-sendable field where possible.
 - Scoped spawn allows only lifetimes that the scope can prove safe.
-- Detached spawn, if present, requires owned/static/sendable captures.
+- Detached spawn remains unavailable; any attempt to use it receives an intentional diagnostic.
 - Borrow-across-await rejection is deterministic and documented.
 - No `rustc` Send/Sync diagnostic is the primary user-facing error for covered cases.
 
@@ -490,19 +561,29 @@ Work items:
 - Implement `sync.Lock[T]`.
 - Implement `sync.RwLock[T]`.
 - Implement `sync.Channel[T]`.
-- Implement bounded and unbounded channel creation.
-- Implement channel send/receive close semantics.
+- Implement unbounded MPMC channels via `sync.channel[T]()`.
+- Implement bounded MPMC channels via `sync.bounded_channel[T](capacity)`.
+- Implement channel send/receive close semantics:
+  - `channel.send(value)` on a closed channel returns `Result[None, ClosedError]`
+  - `channel.receive()` returns `Result[Option[T], ClosedError]`
+  - `None` indicates graceful end-of-stream after close and drain
+  - `channel.close()` wakes pending senders and receivers deterministically
+  - a task cancelled while blocked on `send` or `receive` propagates cancellation
+  - bounded channels apply backpressure when full
 - Implement `sync.Semaphore`.
 - Implement `sync.Notify`.
 - Define sync primitive behavior in async and blocking contexts.
+- Reject lock guards that remain live across an `await` point.
 - Add diagnostics for lock misuse where statically knowable.
 
 Acceptance criteria:
 
 - Shared immutable state works across tasks.
 - Mutable shared state requires `Lock` or `RwLock`.
-- Channels are the canonical queue-like concurrency primitive.
+- Channels are the canonical queue-like concurrency primitive and are MPMC in v1.
 - Channel close and receiver exhaustion behavior is typed and deterministic.
+- Channel cancellation behavior is typed and deterministic.
+- Lock guards cannot cross `await` points in v1.
 - Semaphore and notify primitives support common coordination patterns.
 - The compiler rejects unsynchronized shared mutable access.
 
@@ -514,6 +595,7 @@ Positive validation:
 - `channel_basic.sifr`
 - `channel_backpressure.sifr`
 - `channel_close.sifr`
+- `channel_cancel_pending_receive.sifr`
 - `semaphore_basic.sifr`
 - `notify_basic.sifr`
 
@@ -521,7 +603,10 @@ Negative validation:
 
 - `shared_mut_without_lock_rejected.sifr`
 - `channel_send_wrong_type_rejected.sifr`
+- `channel_non_send_element_rejected.sifr`
 - `lock_guard_escape_rejected.sifr`
+- `lock_guard_across_await_rejected.sifr`
+- `lock_across_task_boundary_rejected.sifr`
 
 Demo:
 
@@ -535,20 +620,39 @@ Goal: keep the async scheduler for waiting and provide explicit APIs for CPU-bou
 
 Work items:
 
+- Implement `@blocking_io` as a diagnostic annotation for sync functions that perform blocking I/O.
+- Implement `@cpu_bound` as a diagnostic annotation for sync functions that are CPU-heavy.
+- Annotate known blocking stdlib functions so async-context diagnostics can be precise.
 - Implement `task.spawn_blocking`.
-- Implement `concurrent.ThreadPoolExecutor`.
+- Implement `sifr.concurrent.ThreadPoolExecutor`.
+- Add `sifr.threading` as a compatibility veneer over the same thread and sync substrate where it can stay thin:
+  - `Thread`
+  - `Lock`
+  - `Event`
+  - `Condition`
 - Define return/error/cancellation behavior for blocking tasks.
 - Add diagnostics for known blocking stdlib calls used directly in async contexts.
 - Ensure blocking work cannot accidentally occupy cooperative async workers where Sifr can control the path.
 - Document when users should choose async tasks, channels, locks, or blocking offload.
+
+Compatibility mapping:
+
+| Compatibility API | Canonical Sifr equivalent |
+| --- | --- |
+| `sifr.threading.Thread` | `sifr.concurrent.Thread` or thread-pool-backed standalone thread API |
+| `sifr.threading.Lock` | `sifr.sync.Lock` compatibility wrapper |
+| `sifr.threading.Event` | `sifr.sync.Notify` compatibility wrapper |
+| `sifr.threading.Condition` | `sifr.sync.Notify` plus `sifr.sync.Lock` compatibility wrapper |
 
 Acceptance criteria:
 
 - CPU-bound functions can be offloaded explicitly.
 - Blocking work returns typed results.
 - Thread-pool tasks obey Send/Sync capture rules.
-- Direct known-blocking calls in async functions produce diagnostics where statically knowable.
-- Process pools remain explicitly deferred.
+- Direct known-blocking calls and annotated `@blocking_io` calls in async functions produce diagnostics where statically knowable.
+- Direct `@cpu_bound` calls in async functions suggest `spawn_blocking` or `ThreadPoolExecutor`.
+- `sifr.threading` compatibility APIs are thin wrappers and do not introduce a second synchronization model.
+- Process pools remain explicitly blocked on the future typed IPC/serialization contract.
 
 Positive validation:
 
@@ -556,6 +660,10 @@ Positive validation:
 - `spawn_blocking_result.sifr`
 - `thread_pool_executor_basic.sifr`
 - `thread_pool_executor_many_tasks.sifr`
+- `blocking_io_annotation_diagnostic.sifr`
+- `cpu_bound_annotation_diagnostic.sifr`
+- `threading_lock_subset.sifr`
+- `threading_event_subset.sifr`
 
 Negative validation:
 
@@ -581,12 +689,14 @@ Work items:
 - Implement `async for`.
 - Define cancellation cleanup behavior for async context managers.
 - Define channel-backed async iteration.
-- Keep async generators and async comprehensions deferred unless the implementation naturally falls out of the protocol work without scope expansion.
+- Keep async generators and async comprehensions deferred; they require separate `AsyncGenerator` HIR and protocol work.
 
 Acceptance criteria:
 
 - `async with` calls async enter/exit protocol methods correctly.
 - Async resource cleanup runs under cancellation.
+- When a task is cancelled inside an `async with` block, async exit/cleanup is called before scope exit completes.
+- If cleanup itself fails during cancellation, the cancellation remains the primary result and cleanup failure is surfaced as secondary structured error evidence through the owning scope.
 - `async for` works for channel/stream-like values.
 - Non-async iterables are rejected in `async for`.
 - Async protocol diagnostics are Sifr-native.
@@ -625,16 +735,33 @@ Work items:
   - `sleep`
   - `wait_for`
   - `Queue`
-- Add `sifr.concurrent.Future` as a compatibility type where it maps cleanly to task handles.
+- Add `sifr.concurrent.Future` as a type alias for `sifr.task.Task`, not a separate runtime primitive.
 - Keep raw event loops, loop policies, transports/protocols, public selectors, context variables, multiprocessing, and process pools deferred.
+- Treat `ProcessPoolExecutor` as blocked on the future typed IPC/serialization contract, not merely postponed.
+- Track `ProcessPoolExecutor` as a hard dependency on Phase 40 typed IPC/serialization before any process-pool implementation begins.
 - Add CPython-derived compatibility tests for the supported subset.
+- Add CPython-derived negative/waiver tests for unsupported raw loop, selector, transport/protocol, contextvars, multiprocessing, and process-pool APIs.
 - Document intentional divergences.
 - Run full phase closure validation.
+
+Compatibility mapping:
+
+| Compatibility API | Canonical Sifr equivalent |
+| --- | --- |
+| `sifr.asyncio.run(fn)` | direct async entrypoint bootstrap |
+| `sifr.asyncio.create_task(fn)` | `scope.spawn(fn)` inside an explicit task scope |
+| `sifr.asyncio.gather(*tasks)` | `sifr.task.gather(*tasks)` |
+| `sifr.asyncio.TaskGroup` | `sifr.task.TaskGroup` |
+| `sifr.asyncio.sleep(delay)` | `sifr.task.sleep(delay)` |
+| `sifr.asyncio.wait_for(task, timeout)` | `sifr.task.timeout(task, timeout)` |
+| `sifr.asyncio.Queue` | `sifr.sync.Channel` / `sifr.sync.bounded_channel` |
+| `sifr.concurrent.Future` | `sifr.task.Task` type alias |
 
 Acceptance criteria:
 
 - Compatibility APIs are thin wrappers over canonical model types.
 - No compatibility API introduces a second runtime model.
+- `sifr.concurrent.Future` is an alias over task handles, not a second future implementation.
 - Unsupported `asyncio` APIs fail with intentional diagnostics or remain absent from documented public surface.
 - Intentional divergences are documented.
 - The phase exit gate passes.
@@ -652,6 +779,8 @@ Negative validation:
 
 - `asyncio_loop_policy_not_supported.sifr`
 - `asyncio_transport_protocol_not_supported.sifr`
+- `selectors_public_api_deferred.sifr`
+- `contextvars_deferred.sifr`
 - `process_pool_not_available.sifr`
 
 Demo:
@@ -689,7 +818,7 @@ The phase is complete only when all of these are true:
 
 - `async def` and `await` are first-class typed Sifr constructs.
 - Async entrypoints run without user-visible runtime setup.
-- `sifr.task` supports spawn, scoped spawn, join, cancel, sleep, timeout, gather, select/race, and task groups.
+- `sifr.task` supports scoped spawn, join, cancel, sleep, timeout, gather, select/race, `TaskGroup` structured groups, and `TaskScope` containers via `async with task.scope()`.
 - Structured concurrency is the default successful path.
 - Detached task behavior is either absent or explicit and restricted.
 - Cancellation semantics are deterministic and typed.
@@ -728,28 +857,33 @@ The phase should add these validation families:
 - Send/Sync diagnostics fixtures
 - synchronization primitive fixtures
 - channel close/backpressure fixtures
+- channel cancellation fixtures
 - blocking offload fixtures
+- blocking/CPU annotation diagnostics fixtures
 - async context-manager fixtures
 - async iteration fixtures
 - compatibility veneer fixtures
+- runtime-neutrality checks proving Tokio/runtime-specific types do not leak into public Sifr APIs
 - generated-code panic sweep for async/runtime paths
 
-## Open Decisions
+## Locked V1 Decisions
 
-These should be resolved in `milestone_async_0` before implementation begins:
+These decisions are locked for the first async/concurrency model. `milestone_async_0` should copy them into the architecture contract before implementation begins.
 
-1. Should `task.spawn` mean scoped spawn only, with `spawn_detached` as the explicit detached API?
-2. Should task cancellation use a dedicated `Cancelled` result variant or a standard `CancellationError` error type?
-3. Should `Task[T]` await to `T` inside `try` contexts and `Result[T, E]` outside, or should task failure always be represented uniformly as a result?
-4. Should `task.select` cancel losing tasks by default, or should it return handles for explicit user cleanup?
-5. Should `sync.Channel[T]` be single-consumer, multi-consumer, or expose separate constructors?
-6. Should lock guards be allowed across `await` if the lock type is async-aware, or should the first version reject guard-across-await for simplicity?
-7. Should local, non-Send tasks exist for single-threaded runtimes, or should the first phase require sendable task boundaries everywhere?
-8. Should `sifr.asyncio` ship in this phase or be the first follow-up phase after the model closes?
+1. `scope.spawn` is the canonical v1 task creation API. Free-floating detached spawn is not exposed.
+2. Task cancellation is represented as a standard `CancellationError` in the task result/error model.
+3. `await Task[T, E]` always produces `Result[T, E]`. `try`/`except` auto-unwrap works on that result, but the expression type is not context-dependent.
+4. `task.select` and `task.race` cancel losing tasks by default.
+5. `sync.Channel[T]` is multi-producer, multi-consumer. Unbounded and bounded constructors are separate.
+6. Lock guards must not cross `await` points in v1.
+7. Spawned tasks require sendable task boundaries in v1. Local, non-Send task sets are deferred.
+8. `sifr.asyncio` ships only as a compatibility veneer after the canonical model is complete.
+9. Public selectors, contextvars, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
+10. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
+11. `@blocking_io` and `@cpu_bound` are diagnostics annotations, not implicit scheduling directives.
 
 ## Recommendation
 
 Use this proposal to rewrite Phase 32 from "Async and Ecosystem Foundation" into "Async and Concurrency Model".
 
 The phase should close the model first. Web, typed data, subprocess expansion, database clients, and broad CPython async parity should build on top later.
-
