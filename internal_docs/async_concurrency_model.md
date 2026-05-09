@@ -203,6 +203,8 @@ The compiler should:
 - gather/select/race composition
 - async context managers
 - async iteration
+- async generators
+- async comprehensions and async generator expressions
 - task-boundary ownership and Send/Sync checking
 - explicit synchronization primitives
 - explicit blocking/thread offload
@@ -220,7 +222,10 @@ The compiler should:
 - `contextvars`
 - multiprocessing
 - process pools
-- async generators and async comprehensions in the first async model
+- async generator `send()` and `throw()`
+- async `yield from` / generator delegation
+- async generator expressions as direct function-call arguments
+- nested async comprehensions and awaited comprehension filters
 
 Some out-of-scope items may get thin compatibility wrappers later. They should not be allowed to shape the core model.
 
@@ -228,7 +233,7 @@ Some out-of-scope items may get thin compatibility wrappers later. They should n
 
 `selectors` is intentionally not a public model requirement. Runtime internals may use readiness machinery, but users should compose tasks and channels rather than file-descriptor readiness APIs. If low-level socket work later requires a public module, it should land as a curated compatibility layer with CPython-derived tests, not as a core async concept.
 
-Async generators are distinct from async iteration. This model owns the async iterable protocol and `async for` over channels/streams. User-defined `async def` with `yield` requires separate `AsyncGenerator` HIR and protocol work and remains a later feature.
+Async generators are the user-defined producer side of async iteration. The first model owns the async iterable protocol, `async for` over channels/streams, user-defined `async def` bodies with `yield`, and first-class async comprehensions over async iterables. Advanced Python generator controls such as async `send()`, async `throw()`, and async `yield from` are deferred.
 
 ## Type System
 
@@ -246,20 +251,25 @@ Core types:
 - `SecondaryError`: structured evidence attached to a primary cancellation or failure when cleanup or sibling tasks also fail during unwinding.
 - `Awaitable[T]`: structural protocol for values that can be awaited. `Coroutine[T, E]` implements an awaitable whose result follows the async function's surface return type; `Task[T, E]` implements `Awaitable[TaskResult[T, E]]`.
 - `AsyncFunction[Params, T, E]`: the callable type of `async def`. The type checker must distinguish async callables from sync callables with the same parameters.
+- `AsyncIterator[T, E]`: structural protocol for async iteration. `anext()` returns `Result[Option[T], E]`: `Ok(Some(value))` for the next item, `Ok(None)` for normal exhaustion, and `Err(E)` for stream failure.
+- `AsyncGenerator[T, E, R]`: user-defined async producer created by an `async def` body that contains `yield`. `T` is the yielded item type, `E` is the ordinary error channel, and `R` is the generator return value available to internal cleanup/finalization machinery. `R` is `None` when the generator has no explicit return value.
 - `Never`: bottom type used by `Task[T, Never]`, exhaustive matches, and unreachable control flow.
 
 Async function lifting rules:
 
 - `async def f(...) -> T` has async callable type `AsyncFunction[Params, T, Never]`; calling it returns `Coroutine[T, Never]`.
 - `async def f(...) -> Result[T, E]` has async callable type `AsyncFunction[Params, T, E]`; calling it returns `Coroutine[T, E]`.
+- `async def f(...) -> AsyncGenerator[T, E, R]` is the type of an async generator function. Calling it returns an unscheduled async generator object, not `Coroutine[AsyncGenerator[T, E, R], E]`.
 - Nested results are not flattened beyond the outer async error channel: `async def f() -> Result[Result[A, E1], E2]` returns `Coroutine[Result[A, E1], E2]`.
 - Calling an async function returns a linear `Coroutine[T, E]`; it does not run as a sync function and does not schedule itself.
+- Calling an async generator function returns an `AsyncGenerator[T, E, R]`; it does not run until iterated, advanced with `anext()`, or consumed by an async comprehension.
 - `AsyncFunction` is not a subtype of sync `Function`/`Callable`. Storing an async function in a sync callable variable, passing it where a sync callable is required, or invoking it through a sync-call path is a compile-time error.
 
 Await rules:
 
 - `await x` is valid only when `x` has an awaitable type.
 - Awaiting a same-task coroutine consumes the coroutine and yields the async function's surface return type: `await Coroutine[T, Never] -> T`, and `await Coroutine[T, E] -> Result[T, E]`.
+- Awaiting an `AsyncGenerator[T, E, R]` is invalid. Users consume it with `async for`, `anext()`, async comprehensions, or explicit close.
 - `scope.spawn(Coroutine[T, E]) -> Task[T, E]`; spawning consumes the coroutine and schedules it as a child.
 - `await Task[T, E]` always produces `TaskResult[T, E]` when the awaiting task is not itself actively cancelled.
 - The `TaskResult.Err(Failure[E])` branch follows ordinary `Error` rules.
@@ -334,6 +344,58 @@ async def ChannelReceiver[T].receive() -> Result[T, ClosedError]
 ```
 
 `ClosedError` from `receive` means the channel is closed and drained. There is no separate `None` end-of-stream state in the first model.
+
+Async iteration uses `Option` for exhaustion and `Result` for stream failure:
+
+```sifr
+protocol AsyncIterator[T, E]:
+    async def anext(self) -> Result[Option[T], E]
+
+def anext[T, E](iterator: AsyncIterator[T, E]) -> Awaitable[Result[Option[T], E]]
+```
+
+Normal exhaustion is `Ok(None)`, not an exception-like sentinel. A stream failure is `Err(E)` and participates in ordinary Sifr error handling. `async for` desugars through this protocol and must handle the `Err(E)` channel according to the surrounding function's result/try rules.
+
+Async generator functions produce async iterator objects directly:
+
+```sifr
+async def stream_lines(path: str) -> AsyncGenerator[str, IOError, None]:
+    file = try await open_async(path)
+    async with file:
+        async for line in file.lines():
+            yield line
+```
+
+An `async def` body that contains `yield` is an async generator function. Calling it returns `AsyncGenerator[T, E, R]`; it does not create a coroutine and is not awaitable. The compiler rejects `await stream_lines(path)` and suggests `async for`, `anext()`, or an async comprehension.
+
+`AsyncGenerator[T, E, R]` implements `AsyncIterator[T, E]`. `T` is inferred from all yielded values and must converge to one yield type. `E` is inferred from fallible async operations inside the generator body and from the declared return/error surface. `R` is the generator's explicit return value type and defaults to `None`; v1 does not expose Python-style `StopAsyncIteration.value` as a public control-flow channel.
+
+Async generator cancellation and close use the same typed cancellation model as tasks:
+
+- `agen.aclose()` requests generator close, injects generator-close control, runs `finally` blocks and async context cleanup, then completes.
+- cancellation while an async generator is suspended or running unwinds the generator before the consuming task completes cancellation.
+- generator-close control is not an ordinary `Error` and is not caught by broad `except Error`.
+- cleanup failures become `SecondaryError` evidence attached to the owning cancellation/failure result.
+- yielding after close has begun is a compile-time or runtime protocol error surfaced as a typed diagnostic/error, not a panic.
+
+The first `anext()` call after `aclose()` has begun returns `Ok(None)`. If the generator was already exhausted before close began, `aclose()` runs cleanup and the final `anext()` still returns `Ok(None)`. Calling `anext()` while a `finally` block or async context-manager cleanup is executing waits until cleanup completes, then returns the final state. `Ok(None)` therefore covers both normal end and close end; callers that need to distinguish them must track generator state explicitly or use a higher-level abstraction. The first model does not add a `GeneratorClosedError` variant.
+
+`AsyncGenerator[T, E, R]` is sendable when all captured values and generated state-machine fields are sendable. Mutable borrows, unsynchronized interior mutability, and captured mutable references make the generator non-sendable. Passing a non-sendable async generator across a `scope.spawn` boundary is rejected at the spawn site with the same task-boundary diagnostics as any other non-sendable value.
+
+The first model supports these async comprehension forms:
+
+```sifr
+lines: list[str] = [line async for line in stream_lines(path)]
+unique: set[str] = {line async for line in stream_lines(path)}
+lookup: dict[str, int] = {item.key: item.value async for item in stream_items(path)}
+lazy: AsyncGenerator[str, IOError, None] = (line async for line in stream_lines(path))
+```
+
+List, set, and dict async comprehensions eagerly consume the async iterable in the current task and propagate `Err(E)` through ordinary Sifr error handling. Async generator expressions are lazy and produce `AsyncGenerator[T, E, None]`. They must be bound, returned, or consumed; creating one and discarding it is a diagnostic because it can hide resource cleanup work.
+
+The first async comprehension model supports a single `async for` clause with ordinary synchronous `if` filters. Nested async comprehensions, `await` inside comprehension filters, and passing an async generator expression directly as a function-call argument are deferred until the HIR and lifetime rules for those surfaces are proven.
+
+When an async comprehension is abandoned or cancelled, it closes the active async iterator it is consuming when that iterator has async-generator cleanup semantics. Eager comprehensions cancel at the same cancellation point as a manual `async for` loop over the same source. Lazy async generator expressions that are never consumed do not run cleanup because they never started. Lazy expressions that are partially consumed through `async for` or `anext()` close and unwind like any other async generator.
 
 ## Runtime Model
 
@@ -481,7 +543,7 @@ These annotations guide the developer, not the compiler. The compiler must not s
 - errors from async exit during cancellation become `SecondaryError` evidence attached to the owning task/scope result
 - panic-like failures from async exit are caught at task/runtime boundaries where technically possible and surfaced as structured failure evidence
 
-`async for` works for async iterable values such as channel-backed streams. Async generators and async comprehensions are separate future features.
+`async for` works for async iterable values such as channel-backed streams and user-defined async generators. Async comprehensions are surface syntax over the same protocol; they do not introduce a second iteration model.
 
 ## Compatibility Veneers
 
@@ -522,6 +584,12 @@ Diagnostic families cover:
 - `@io_bound`, `@cpu_bound`, or potentially blocking FFI call in async context
 - lock guard live at an `await` point
 - invalid async protocol implementation
+- invalid async generator use, including `await` on an async generator
+- inconsistent async generator yield types
+- live mutable borrow across an async generator `yield`
+- unsupported async generator controls such as `send()`, `throw()`, or async `yield from`
+- discarded async generator expression
+- unsupported async comprehension shapes
 - runtime-specific type leakage into public APIs
 
 ## Model Invariants
@@ -544,3 +612,9 @@ These decisions are part of the first async/concurrency model:
 14. `@io_bound` and `@cpu_bound` are declaration-site workload classification annotations. They power diagnostics but never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
 15. Subprocess and signal APIs require a later model amendment.
 16. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; graceful shutdown uses structured scope cancellation and explicit channels.
+17. `async def` with `yield` creates `AsyncGenerator[T, E, R]`, not `Coroutine[AsyncGenerator[T, E, R], E]`.
+18. `AsyncGenerator[T, E, R]` is an `AsyncIterator[T, E]` and is not awaitable.
+19. Async iteration exhaustion is `Ok(None)` through `Result[Option[T], E]`; stream failure remains `Err(E)`.
+20. Async generator close and cancellation run `finally` blocks and async context cleanup before termination.
+21. Async comprehensions are protocol sugar over `async for`; they must not introduce hidden task creation or detached work.
+22. Async generator `send()`, `throw()`, async `yield from`, nested async comprehensions, awaited comprehension filters, and async generator expressions as direct function-call arguments are deferred.

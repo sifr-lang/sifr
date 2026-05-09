@@ -50,7 +50,10 @@ The following are not Phase 32 v1 exit criteria:
 - multiprocessing
 - process pools and `ProcessPoolExecutor`
 - subprocess and signal APIs
-- async generators and async comprehensions
+- async generator `send()` and `throw()`
+- async `yield from` / generator delegation
+- async generator expressions as direct function-call arguments
+- nested async comprehensions and awaited comprehension filters
 
 `ProcessPoolExecutor`, multiprocessing, and hard interruption of CPU-bound work are blocked on the future Phase 40 typed data/IPC contract.
 
@@ -88,10 +91,16 @@ These are implementation constraints, not suggestions:
 16. `@io_bound` and `@cpu_bound` are declaration-site diagnostic annotations; they classify workload class for compiler diagnostics and never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
 17. Subprocess and signal APIs are out of scope for Phase 32 v1 and require a later model amendment.
 18. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; v1 graceful shutdown uses structured scope cancellation and explicit channels.
+19. `async def` with `yield` is a first-model feature and creates `AsyncGenerator[T, E, R]`, not a coroutine that returns a generator.
+20. `AsyncGenerator[T, E, R]` implements `AsyncIterator[T, E]`; it is consumed by `async for`, `anext()`, async comprehensions, or explicit close and is never directly awaitable.
+21. `AsyncIterator[T, E].anext()` returns `Result[Option[T], E]`, with `Ok(None)` as normal exhaustion and `Err(E)` as stream failure.
+22. Async generator cancellation and `aclose()` run `finally` blocks and async context cleanup before termination; cleanup failures become `SecondaryError` evidence.
+23. List, set, dict async comprehensions and lazy async generator expressions are in Phase 32 v1. They are protocol sugar over `async for`, not hidden task creation.
+24. Async generator `send()`, `throw()`, async `yield from`, nested async comprehensions, awaited comprehension filters, and async generator expressions as direct function-call arguments are deferred.
 
 ## Milestones
 
-The milestones below intentionally match `milestone_async_0` through `milestone_async_8` in the model file. Implementation must execute them in order unless a later PR updates both files with reviewed rationale.
+The milestones below intentionally match the async implementation plan from `milestone_async_0` through `milestone_async_8`, with `milestone_async_7` split into `milestone_async_7a` and `milestone_async_7b` so async generators/comprehensions land after the async iteration protocol is stable. Implementation must execute them in order unless a later PR updates both files with reviewed rationale.
 
 ### milestone_async_0: Model Contract and Runtime Architecture Lock
 
@@ -116,6 +125,8 @@ status: proposed
   - `Task[T, E]`
   - `Task[T]`
   - `TaskResult[T, E]`
+  - `AsyncIterator[T, E]`
+  - `AsyncGenerator[T, E, R]`
   - `Failure[E]`
   - `TaskScope`
   - `TaskGroup`
@@ -130,6 +141,8 @@ status: proposed
   - task-result type representation,
   - awaitable structural protocol representation,
   - async-callable representation,
+  - async-iterator representation,
+  - async-generator representation,
   - `Task[T, E]` ordinary error constraint (`E: Error`),
   - `Task[T, E]` await result (`TaskResult[T, E]`),
   - `Coroutine[T, E]` linear consumption by same-task `await` or `scope.spawn`,
@@ -141,6 +154,9 @@ status: proposed
   - task spawn representation,
   - async context-manager statement,
   - async iteration statement,
+  - async generator function marker,
+  - async yield expression,
+  - async comprehension expression,
   - task/awaitable type representation,
   - spawn capture metadata for sendability, borrowing, and lifetimes.
 - Define task container protocols:
@@ -161,8 +177,8 @@ status: proposed
   - both forms share the same completion-vs-deadline race policy,
   - the context-manager form is the canonical implementation target for `sifr.asyncio.timeout(duration)`,
   - arbitrary awaitables are not accepted by `task.timeout` in v1.
-- Define selection, channel, lock, annotation, and runtime-neutrality policies.
-- Rewrite or explicitly replace older Phase 32 planning with this nine-milestone plan.
+- Define selection, channel, lock, annotation, async-generator, async-comprehension, and runtime-neutrality policies.
+- Rewrite or explicitly replace older Phase 32 planning with this milestone plan.
 - Define validation fixture names and diagnostic families before implementation begins.
 
 **Definition of done:**
@@ -170,7 +186,7 @@ status: proposed
 - Architecture and phase docs reference the same semantic contract.
 - There are no conflicting Phase 32 exit criteria in `internal_docs/phases/32_async_ecosystem.md`.
 - All public modules/types for v1 are named and scoped.
-- `Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, cancellation, timeout, scope, lock, and channel semantics are specified enough for implementation PRs.
+- `Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, `AsyncIterator`, `AsyncGenerator`, cancellation, timeout, scope, lock, channel, async generator, and async comprehension semantics are specified enough for implementation PRs.
 - Deferred surfaces are explicit and cannot be inferred from older notes.
 
 **Validation planning goals:**
@@ -194,7 +210,7 @@ status: proposed
 
 - Parse and lower `async def`.
 - Parse and lower `await`.
-- Parse and lower minimal `async with task.scope() as scope` as a built-in scoped-task construct. General user-defined async context-manager protocol remains `milestone_async_7`.
+- Parse and lower minimal `async with task.scope() as scope` as a built-in scoped-task construct. General user-defined async context-manager protocol remains `milestone_async_7a`.
 - Add HIR nodes for async functions and await expressions.
 - Add awaitable/future/task type representation.
 - Add await type checking:
@@ -566,7 +582,7 @@ status: proposed
 
 ---
 
-### milestone_async_7: Async Context Managers, Async Iteration, and Resource Cleanup
+### milestone_async_7a: Async Context Managers, Async Iteration, and Resource Cleanup
 
 status: proposed
 
@@ -580,6 +596,11 @@ status: proposed
 - Define and enforce the user-defined async context-manager protocol.
 - Implement async iterable protocol.
 - Implement `async for`.
+- Define the `AsyncIterator[T, E]` protocol shape used by channels, streams, and async generators:
+  - `anext() -> Result[Option[T], E]`,
+  - `Ok(Some(value))` means one item,
+  - `Ok(None)` means normal exhaustion,
+  - `Err(E)` means stream failure and follows ordinary Sifr error handling.
 - Define cancellation cleanup behavior for async context managers:
   - cleanup order is LIFO,
   - cancelling inside `async with` unwinds active async context managers,
@@ -589,7 +610,7 @@ status: proposed
   - panic-like failures from async exit are caught at the runtime/codegen boundary and surfaced as secondary errors,
   - parent cancellation triggers child cancellation, but each task unwinds its own cleanup independently.
 - Define channel-backed async iteration.
-- Keep async generators and async comprehensions deferred.
+- Leave user-defined async generator bodies and async comprehensions to `milestone_async_7b`, after this protocol is stable.
 
 **Definition of done:**
 
@@ -600,9 +621,9 @@ status: proposed
 - Async exit cleanup order is LIFO.
 - Panic-like failures in async exit do not become process-terminating double-panic paths.
 - Nested cancellation is deterministic.
-- `async for` works for channel/stream-like values.
+- `async for` works for channel/stream-like values through `AsyncIterator[T, E]`.
 - Non-async iterables are rejected in `async for`.
-- Async comprehensions are explicitly deferred as sugar over stable `async for`.
+- Async generator and async comprehension implementation has a stable protocol target.
 
 **Positive validation:**
 
@@ -625,13 +646,118 @@ status: proposed
 
 ---
 
+### milestone_async_7b: Async Generators and Async Comprehensions
+
+status: proposed
+
+**Goal:** Make user-defined async streams and async collection-building part of the first async model.
+
+**Depends on:** `milestone_async_7a`
+
+**Scope:**
+
+- Parse and lower `yield` inside `async def` as an async generator function marker.
+- Type async generator functions as `AsyncGenerator[T, E, R]`:
+  - `T` is inferred from yielded values and must converge to a single yield type,
+  - `E` is the ordinary error channel from fallible async operations and declared result surfaces,
+  - `R` is the generator's explicit return value type and defaults to `None`.
+- Ensure calling an async generator function returns `AsyncGenerator[T, E, R]`, not `Coroutine[AsyncGenerator[T, E, R], E]`.
+- Reject direct `await` on an async generator and suggest `async for`, `anext()`, async comprehensions, or explicit close.
+- Implement `AsyncGenerator[T, E, R]` as an `AsyncIterator[T, E]`:
+  - `await anext(agen)` returns `Result[Option[T], E]`,
+  - normal exhaustion is `Ok(None)`,
+  - stream failure is `Err(E)`,
+  - cancellation propagates through the task cancellation model rather than the ordinary error channel.
+- Implement async-generator state-machine lowering without relying on unstable Rust generator features.
+- Implement async-generator lifecycle:
+  - lazy start on first `anext()` / `async for` / comprehension consumption,
+  - deterministic suspension at `yield`,
+  - explicit `agen.aclose()`,
+  - `anext()` after close begins returns `Ok(None)` after cleanup completes,
+  - concurrent `anext()` while cleanup is running waits for cleanup and then returns the final state,
+  - close/cancellation runs `finally` blocks and async context cleanup,
+  - cleanup failures become `SecondaryError` evidence,
+  - yielding after close begins is rejected or surfaced as a typed protocol error, never a panic.
+- Enforce ownership and borrow rules across async generator suspension:
+  - mutable borrows cannot remain live across `yield`,
+  - mutable borrows cannot remain live across `await` inside the generator,
+  - captured state crossing spawned-task boundaries must satisfy the same sendability rules as ordinary async tasks,
+  - async generator objects are sendable only when every captured value and generated state-machine field is sendable,
+  - async generator objects that cross task boundaries must satisfy the generated state-machine sendability facts.
+- Implement list, set, and dict async comprehensions over async iterables:
+  - `[expr async for item in source]`,
+  - `{expr async for item in source}`,
+  - `{key: value async for item in source}`,
+  - a single `async for` clause with ordinary synchronous `if` filters is supported in v1.
+- Implement lazy async generator expressions:
+  - `(expr async for item in source)` returns `AsyncGenerator[T, E, None]`,
+  - creating and discarding one is a diagnostic,
+  - never-started lazy expressions do not run cleanup,
+  - partially consumed lazy expressions close and unwind like async generators,
+  - direct function-call argument form is deferred to avoid parser/HIR ambiguity with normal generator-expression argument rules.
+- Ensure eager async comprehensions close the active async iterator they are consuming on cancellation or abandonment when that iterator has async-generator cleanup semantics.
+- Add diagnostics for unsupported async generator controls:
+  - `agen.send(...)`,
+  - `agen.throw(...)`,
+  - async `yield from`,
+  - nested async comprehensions,
+  - `await` inside comprehension filters.
+- Add CPython-derived parity/adaptation tests for async generator close, exhaustion, and async comprehension behavior, with Sifr-specific `Result[Option[T], E]` adaptation instead of `StopAsyncIteration`.
+
+**Definition of done:**
+
+- User-defined async generators are first-class async iterables.
+- Async generators are not awaitable and cannot be confused with coroutines.
+- `anext()` and `async for` expose normal exhaustion as `Ok(None)` and stream failure as `Err(E)`.
+- Async generator cleanup under close/cancellation is deterministic and cannot skip `finally` or async context-manager cleanup.
+- Async generator state machines preserve Sifr ownership rules across `await` and `yield`.
+- Async generator post-close observation returns `Ok(None)` and does not introduce a separate close error.
+- Async comprehensions work for list, set, dict, and lazy generator-expression forms.
+- Async comprehensions propagate cancellation to active async-generator iterators and do not leak started generators.
+- Unsupported Python async generator controls are rejected with intentional diagnostics.
+- No async generator or async comprehension lowering introduces hidden task creation, detached work, or user-triggerable panic paths.
+
+**Positive validation:**
+
+- `async_generator_basic.sifr`
+- `async_generator_yield_types.sifr`
+- `async_generator_return_value.sifr`
+- `async_generator_anext_result_option.sifr`
+- `async_generator_cancel_cleanup.sifr`
+- `async_generator_borrow_yield.sifr`
+- `async_generator_send_boundary.sifr`
+- `async_comprehension_list.sifr`
+- `async_comprehension_set.sifr`
+- `async_comprehension_dict.sifr`
+- `async_generator_expression.sifr`
+
+**Negative validation:**
+
+- `yield_outside_async_def_rejected.sifr`
+- `await_async_generator_rejected.sifr`
+- `async_generator_inconsistent_yield_types_rejected.sifr`
+- `async_generator_mut_borrow_across_yield_rejected.sifr`
+- `async_generator_send_not_supported.sifr`
+- `async_generator_throw_not_supported.sifr`
+- `async_yield_from_not_supported.sifr`
+- `nested_async_comprehension_deferred.sifr`
+- `async_comprehension_await_filter_deferred.sifr`
+- `async_generator_expr_not_consumed_warning.sifr`
+- `async_generator_expr_as_call_arg_deferred.sifr`
+
+**Demo:**
+
+- `demos/m32_async_generator_comprehension_demo.sifr`
+
+---
+
 ### milestone_async_8: Compatibility Veneers and Phase Closure
 
 status: proposed
 
 **Goal:** Expose limited compatibility surfaces only after the canonical model is proven.
 
-**Depends on:** `milestone_async_7`
+**Depends on:** `milestone_async_7b`
 
 **Scope:**
 
@@ -710,7 +836,8 @@ flowchart TD
     m4["m32.4 Ownership + Send/Sync"]
     m5["m32.5 Sync Primitives + Channels"]
     m6["m32.6 Blocking + Threads"]
-    m7["m32.7 Async Resources + Streams"]
+    m7a["m32.7a Async Resources + Streams"]
+    m7b["m32.7b Async Generators + Comprehensions"]
     m8["m32.8 Compatibility + Closure"]
 
     m0 --> m1
@@ -719,9 +846,10 @@ flowchart TD
     m3 --> m4
     m4 --> m5
     m4 --> m6
-    m5 --> m7
-    m6 --> m7
-    m7 --> m8
+    m5 --> m7a
+    m6 --> m7a
+    m7a --> m7b
+    m7b --> m8
 ```
 
 Implementation order:
@@ -732,8 +860,9 @@ Implementation order:
 - `milestone_async_3` fourth: structured concurrency and cancellation.
 - `milestone_async_4` fifth: ownership and Send/Sync task boundaries.
 - `milestone_async_5` and `milestone_async_6` can proceed after `milestone_async_4`, but must not write overlapping compiler/runtime internals without explicit coordination.
-- `milestone_async_7` waits for both sync primitives and blocking offload.
-- `milestone_async_8` closes compatibility only after the canonical model is validated.
+- `milestone_async_7a` waits for both sync primitives and blocking offload.
+- `milestone_async_7b` waits for the async iteration/resource protocol from `milestone_async_7a`.
+- `milestone_async_8` closes compatibility only after the canonical model, including async generators and async comprehensions, is validated.
 
 ## Quality Contract
 
@@ -803,6 +932,8 @@ The phase must add coverage for:
 - I/O-bound/CPU-bound annotation diagnostics fixtures
 - async context-manager fixtures
 - async iteration fixtures
+- async generator lifecycle fixtures
+- async comprehension fixtures
 - compatibility veneer fixtures
 - runtime-neutrality checks proving Tokio/runtime-specific types do not leak
 - async cleanup panic-boundary fixtures
@@ -834,6 +965,8 @@ Phase 32 is complete only when all of these are true:
 - Channels are the canonical producer/consumer primitive.
 - I/O-bound and CPU-bound sync work has explicit offload APIs and diagnostics.
 - `async with` and `async for` work for protocol-conforming values.
+- User-defined async generators work as first-class async iterables.
+- List, set, dict async comprehensions and lazy async generator expressions work over async iterables.
 - Compatibility veneers do not define a second async model.
 - Deferred APIs are documented with negative/waiver tests.
 - No new user-triggerable generated panic paths exist.

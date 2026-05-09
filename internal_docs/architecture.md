@@ -674,6 +674,9 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - **Async callables are distinct:** `AsyncFunction` is not a subtype of sync `Function`/`Callable`; async functions cannot be stored, passed, or invoked through a sync callable path.
 - **Coroutine/task/result ladder:** calling an async function returns a linear `Coroutine[T, E]`. Awaiting that coroutine in the same task yields the async function's surface return type. Spawning it with `scope.spawn` consumes the coroutine and returns `Task[T, E]`.
 - **Task error types are constrained:** `Task[T, E]` must satisfy `E: Error`, with `Never` accepted for no-error tasks. Awaiting a task from a non-cancelled owner produces `TaskResult[T, E]`; `CancellationError` is a separate `Cancelled(Failure[CancellationError])` branch, not an `Error` subclass, and is not caught by broad `except Error`.
+- **Async generators are async iterables:** `async def` with `yield` returns `AsyncGenerator[T, E, R]`, not a coroutine. `AsyncGenerator[T, E, R]` implements `AsyncIterator[T, E]`; `anext()` returns `Result[Option[T], E]`, where `Ok(None)` is normal exhaustion or completed close and `Err(E)` is stream failure. Async generators are not awaitable.
+- **Async generator suspension is ownership-checked:** mutable borrows cannot remain live across `yield` or `await` inside an async generator. If an async generator object crosses a spawned-task boundary, all captured values and generated state-machine fields must satisfy the same sendability facts as any other task-boundary value.
+- **Async comprehensions are protocol sugar:** list, set, dict async comprehensions and lazy async generator expressions consume `AsyncIterator[T, E]` through `anext()`; they do not create hidden tasks or detached work. Cancellation of a comprehension closes the active async-generator iterator it started.
 - **Async calls are async-only:** sync code cannot invoke an async function through the async-call path. The compiler rejects async calls from sync functions unless a future explicit runtime bridge is added. This prevents Python-style unawaited coroutine/task leaks.
 - **Borrow rules at async boundaries:** immutable borrows may cross `await` only when the borrow remains valid and no conflicting mutation exists; mutable borrows cannot remain live across `await`; owned values may cross spawn boundaries only when sendable; `sync.Shared[T]` is allowed for immutable shared data; unsynchronized mutable state is rejected.
 - **Task composition semantics:** `task.timeout` accepts task handles in v1, returns the inner result when the inner task completes before the deadline, timeout expiry cancels and awaits inner cleanup, same-tick completion wins over timeout, and outer cancellation cancels the inner task. `task.gather` is fail-fast with deterministic success ordering; first observed failure cancels unfinished children and cleanup/sibling failures become secondary evidence. `task.select` and `task.race` consume their input handles and cancel losing tasks by default.
@@ -686,6 +689,8 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - `milestone_async_4`: implement Send/Sync and borrow-boundary checking at spawn boundaries.
 - `milestone_async_5`: provide `sifr.sync.Shared`, `Lock`, `RwLock`, and `Channel` for explicit cross-task sharing.
 - `milestone_async_6`: implement `@io_bound` and `@cpu_bound` annotations, the stdlib workload annotation database, and async-context diagnostics.
+- `milestone_async_7a`: implement user-defined async context managers, `AsyncIterator[T, E]`, and `async for` over protocol-conforming streams.
+- `milestone_async_7b`: implement `AsyncGenerator[T, E, R]`, async generator lifecycle/cleanup, async comprehensions, and lazy async generator expressions.
 
 ### 9. Destruction and Cleanup Semantics
 
@@ -882,6 +887,8 @@ enum Type {
     TaskResult(Box<Type>, Box<Type>), // TaskResult[T, E] -- Ok(T), Err(Failure[E]), Cancelled(Failure[CancellationError])
     Awaitable(Box<Type>),             // structural awaitability protocol
     AsyncFunction(FunctionType),       // async callable, not a subtype of sync Function
+    AsyncIterator(Box<Type>, Box<Type>), // AsyncIterator[T, E] -- anext() yields Result[Option[T], E]
+    AsyncGenerator(Box<Type>, Box<Type>, Box<Type>), // AsyncGenerator[T, E, R] -- async def with yield
 
     // Class instance (milestone_classes)
     Instance(ClassId),
