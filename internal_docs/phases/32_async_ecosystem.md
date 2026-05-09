@@ -504,6 +504,7 @@ status: in_progress
 - In progress select slice: `task.select(a, b)` accepts heterogeneous task handles, consumes both handles, returns `Select2[TaskResult[A, EA], TaskResult[B, EB]]`, and requests cancellation for the losing handle; loser cleanup error evidence remains a follow-up slice once fallible spawn and scope-failure plumbing land.
 - In progress scope escape diagnostics slice: added negative validation that `TaskScope` bindings and task handles are unavailable after the built-in `async with task.scope()` lifetime ends.
 - In progress fallible task-result plumbing slice: private task receivers now carry `TaskResult[T, E]`, `scope.spawn` accepts no-argument fallible `Result[T, E]` coroutines, and observing the handle preserves the ordinary child error in `TaskResult.Err`.
+- In progress TaskGroup homogeneous-error slice: `task.TaskGroup()` records the first non-`Never` child error type and rejects later children with a different ordinary error type in v1.
 
 ---
 
