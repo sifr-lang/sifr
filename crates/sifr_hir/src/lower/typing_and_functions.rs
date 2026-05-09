@@ -78,6 +78,9 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
         "OverflowError",
         "DecimalConversionError",
         "TimeoutError",
+        "ScopeFailure",
+        "TaskCancelled",
+        "SecondaryError",
     ];
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
@@ -92,6 +95,20 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
         ctx.error_types.insert(error_name.to_string());
         ctx.functions.insert(
             error_name.to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+    {
+        let class_ty = Type::Class {
+            name: "CancellationError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: vec![],
+            parent_class: None,
+        };
+        ctx.class_types
+            .insert("CancellationError".to_string(), class_ty.clone());
+        ctx.functions.insert(
+            "CancellationError".to_string(),
             FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
         );
     }

@@ -73,6 +73,7 @@
     "task_select_first_completion",
     "task_spawn_fallible_result",
     "cancellation_scope_timeout",
-    "cancellation_nested_scopes"
+    "cancellation_nested_scopes",
+    "cancellation_error_type_surface"
   ]
 }

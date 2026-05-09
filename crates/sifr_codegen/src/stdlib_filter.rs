@@ -69,6 +69,9 @@ const GLOBAL_INFRA_TYPES: &[&str] = &[
     "IsADirectoryError",
     "NotADirectoryError",
     "DirectoryNotEmptyError",
+    "ScopeFailure",
+    "TaskCancelled",
+    "SecondaryError",
 ];
 
 /// Strip per-module shared imports/infrastructure and return dependency flags.

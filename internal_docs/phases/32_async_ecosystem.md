@@ -507,6 +507,7 @@ status: in_progress
 - In progress TaskGroup homogeneous-error slice: `task.TaskGroup()` records the first non-`Never` child error type and rejects later children with a different ordinary error type in v1.
 - In progress cancellation timeout validation slice: added PR-lane coverage for `async with task.timeout(...)` around await points and nested timeout scopes on the non-expiring path.
 - In progress TaskGroup openness slice: task handles spawned from a named `TaskGroup` remember their owner, and v1 conservatively rejects later `group.spawn(...)` on a path after one of that group's child handles has been observed.
+- In progress cancellation/error type surface slice: registered `ScopeFailure`, `TaskCancelled`, and `SecondaryError` as ordinary built-in error classes, and registered `CancellationError` as a non-`Error` control-evidence class so it cannot be used as a `Result` error.
 
 ---
 

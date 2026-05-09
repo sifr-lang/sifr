@@ -55,6 +55,9 @@ fn can_construct_error_from_message_for_ir(ty_name: &str) -> bool {
             | "HashlibError"
             | "DecimalConversionError"
             | "TimeoutError"
+            | "ScopeFailure"
+            | "TaskCancelled"
+            | "SecondaryError"
     )
 }
 
