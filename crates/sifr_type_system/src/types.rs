@@ -28,6 +28,8 @@ pub enum Type {
     Task(Box<Type>, Box<Type>),
     /// Result of observing a task handle.
     TaskResult(Box<Type>, Box<Type>),
+    /// Ordinary error result used by task timeout wrappers.
+    TimeoutResult(Box<Type>),
     /// Explicit blocking-offload observer handle.
     BlockingTask(Box<Type>, Box<Type>),
     /// Structural awaitability protocol.
@@ -559,6 +561,7 @@ impl Type {
             | Self::Coroutine(_, _)
             | Self::Task(_, _)
             | Self::TaskResult(_, _)
+            | Self::TimeoutResult(_)
             | Self::BlockingTask(_, _)
             | Self::Awaitable(_)
             | Self::AsyncIterator(_, _)
@@ -681,6 +684,7 @@ impl Type {
             Self::TaskResult(ok, err) => {
                 format!("TaskResult[{}, {}]", ok.display_name(), err.display_name())
             }
+            Self::TimeoutResult(err) => format!("TimeoutResult[{}]", err.display_name()),
             Self::BlockingTask(ok, err) => {
                 format!(
                     "BlockingTask[{}, {}]",
@@ -787,6 +791,7 @@ impl Type {
             Self::TaskResult(ok, err) => {
                 format!("TaskResult<{}, {}>", ok.rust_type(), err.rust_type())
             }
+            Self::TimeoutResult(err) => format!("TimeoutResult<{}>", err.rust_type()),
             Self::BlockingTask(ok, err) => {
                 format!("BlockingTask<{}, {}>", ok.rust_type(), err.rust_type())
             }
@@ -926,6 +931,7 @@ impl Type {
             Type::Coroutine(_, _) => "Coroutine".to_string(),
             Type::Task(_, _) => "Task".to_string(),
             Type::TaskResult(_, _) => "TaskResult".to_string(),
+            Type::TimeoutResult(_) => "TimeoutResult".to_string(),
             Type::BlockingTask(_, _) => "BlockingTask".to_string(),
             Type::Awaitable(_) => "Awaitable".to_string(),
             Type::AsyncIterator(_, _) => "AsyncIterator".to_string(),
@@ -1292,6 +1298,7 @@ impl Type {
                 | Type::BlockingTask(ok, err)
                 | Type::AsyncIterator(ok, err)
                 | Type::AsyncGenerator(ok, err) => contains_any(ok) || contains_any(err),
+                Type::TimeoutResult(err) => contains_any(err),
                 Type::Awaitable(result) => contains_any(result),
                 Type::Alias { body, .. } => contains_any(body),
                 Type::Function(ft) | Type::AsyncFunction(ft) => {
@@ -1464,6 +1471,9 @@ impl Type {
             | (Self::AsyncIterator(ok_a, err_a), Self::AsyncIterator(ok_b, err_b))
             | (Self::AsyncGenerator(ok_a, err_a), Self::AsyncGenerator(ok_b, err_b)) => {
                 ok_a.is_assignable_to(ok_b) && err_a.is_assignable_to(err_b)
+            }
+            (Self::TimeoutResult(err_a), Self::TimeoutResult(err_b)) => {
+                err_a.is_assignable_to(err_b)
             }
             (Self::Awaitable(a), Self::Awaitable(b)) => a.is_assignable_to(b),
             (Self::Coroutine(ok, err), Self::Awaitable(result))

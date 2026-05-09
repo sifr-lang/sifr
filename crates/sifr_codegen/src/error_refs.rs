@@ -97,6 +97,9 @@ fn collect_type_error_refs(
             collect_type_error_refs(key, referenced, builtin_error_classes);
             collect_type_error_refs(value, referenced, builtin_error_classes);
         }
+        Type::TimeoutResult(err) => {
+            collect_type_error_refs(err, referenced, builtin_error_classes);
+        }
         Type::Awaitable(inner) => collect_type_error_refs(inner, referenced, builtin_error_classes),
         Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
             for item in items {

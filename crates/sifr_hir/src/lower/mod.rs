@@ -424,6 +424,9 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),
         ),
+        Type::TimeoutResult(err) => {
+            Type::TimeoutResult(Box::new(substitute_type_vars(err, bindings)))
+        }
         Type::BlockingTask(ok, err) => Type::BlockingTask(
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),

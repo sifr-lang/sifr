@@ -574,11 +574,23 @@ fn try_lower_task_sleep_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [duration] = args else {
         return None;
     };
+    let duration_expr = try_lower_task_duration_expr(duration, "__sifr_task_sleep_seconds")?;
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "tokio".to_string(),
+            "time".to_string(),
+            "sleep".to_string(),
+        ])),
+        args: vec![duration_expr],
+    })
+}
+
+fn try_lower_task_duration_expr(duration: &HirExpr, seconds_name: &str) -> Option<RustExpr> {
     let seconds = RustExpr::Cast {
         expr: Box::new(try_lower_leaf_or_name_expr(duration)?),
         ty: RustType::F64,
     };
-    let seconds_name = "__sifr_task_sleep_seconds".to_string();
+    let seconds_name = seconds_name.to_string();
     let finite_positive = RustExpr::BinOp {
         left: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident(seconds_name.clone())),
@@ -592,7 +604,7 @@ fn try_lower_task_sleep_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
             right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
         }),
     };
-    let duration_expr = RustExpr::Block {
+    Some(RustExpr::Block {
         stmts: vec![RustStmt::Let {
             mutable: false,
             name: seconds_name.clone(),
@@ -612,14 +624,6 @@ fn try_lower_task_sleep_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
                 else_expr: Some(Box::new(RustExpr::Literal(RustLiteral::Float(0.0)))),
             }],
         })),
-    };
-    Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "tokio".to_string(),
-            "time".to_string(),
-            "sleep".to_string(),
-        ])),
-        args: vec![duration_expr],
     })
 }
 
@@ -994,6 +998,21 @@ fn try_lower_simple_method_call_expr(
             receiver: Box::new(lowered_object),
             method: method.to_string(),
             args: vec![],
+        });
+    }
+    if method == "__sifr_timeout" && matches!(resolve_alias_type(object.ty()), Type::Task(_, _)) {
+        let lowered_object = try_lower_leaf_or_name_expr(object)?;
+        let [duration] = args else {
+            return None;
+        };
+        let lowered_args = vec![try_lower_task_duration_expr(
+            duration,
+            "__sifr_task_timeout_seconds",
+        )?];
+        return Some(RustExpr::MethodCall {
+            receiver: Box::new(lowered_object),
+            method: method.to_string(),
+            args: lowered_args,
         });
     }
     // Method-call lowering is ownership- and type-convention-sensitive.

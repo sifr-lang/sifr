@@ -35,6 +35,10 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 task_error_type_to_rust_type(err),
             ],
         },
+        Type::TimeoutResult(err) => RustType::Generic {
+            base: "__SifrTimeoutResult".to_string(),
+            params: vec![task_error_type_to_rust_type(err)],
+        },
         Type::Union(members) => {
             let non_none: Vec<&Type> = members
                 .iter()
@@ -198,6 +202,26 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 },
             ],
         },
+        RustItem::Enum {
+            name: "__SifrTimeoutResult<E>".to_string(),
+            visibility: Visibility::Private,
+            derives: vec!["Debug".to_string()],
+            repr: None,
+            variants: vec![
+                crate::RustEnumVariant {
+                    name: "Inner".to_string(),
+                    tuple_fields: vec![RustType::Named("E".to_string())],
+                    fields: vec![],
+                    value: None,
+                },
+                crate::RustEnumVariant {
+                    name: "Timeout".to_string(),
+                    tuple_fields: vec![],
+                    fields: vec![],
+                    value: None,
+                },
+            ],
+        },
         RustItem::Impl {
             target: "__SifrTask<T, E>".to_string(),
             type_params: vec![
@@ -274,6 +298,25 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                         args: vec![],
                     })],
                     is_async: false,
+                },
+                RustItem::Fn {
+                    name: "__sifr_timeout".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![
+                        RustParam::SelfValue,
+                        RustParam::Named {
+                            name: "duration".to_string(),
+                            ty: RustType::Named("std::time::Duration".to_string()),
+                        },
+                    ],
+                    ret: Some(RustType::Named(
+                        "__SifrTaskResult<T, __SifrTimeoutResult<E>>".to_string(),
+                    )),
+                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                        "let __SifrTask { receiver, abort_handle, _error } = self;\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(value) => __SifrTaskResult::Ok(value),\n                        Err(_) => __SifrTaskResult::Cancelled,\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    abort_handle.abort();\n                    let _ = receiver.await;\n                    __SifrTaskResult::Err(__SifrTimeoutResult::Timeout)\n                }\n            };\n        }\n        return __SifrTaskResult::Cancelled".to_string(),
+                    ))],
+                    is_async: true,
                 },
             ],
         },

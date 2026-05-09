@@ -586,6 +586,10 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     let result_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::Awaitable(Box::new(result_ty))
                 }
+                "TimeoutResult" => {
+                    let err_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::TimeoutResult(Box::new(err_ty))
+                }
                 "Coroutine" | "Task" | "TaskResult" | "BlockingTask" | "AsyncIterator"
                 | "AsyncGenerator" => {
                     let Expr::Tuple(tuple) = sub.slice.as_ref() else {

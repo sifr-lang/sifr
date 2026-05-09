@@ -1568,6 +1568,19 @@ fn test_task_handle_cancel_after_await_rejects_moved_handle() {
 }
 
 #[test]
+fn test_task_timeout_consumes_handle_binding() {
+    let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n        second = await handle\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("moved value")
+            && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && e.primary_range == Some(range_for_after(source, "second = await ", "handle"))
+    }));
+}
+
+#[test]
 fn test_double_mutable_borrow_has_ownership_code() {
     let source = "def swap(mut a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    swap(items, items)\n";
     let result = lower_source(source);
