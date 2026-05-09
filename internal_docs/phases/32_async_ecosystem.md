@@ -398,6 +398,7 @@ status: in_progress
 - Added negative validation fixture: `task_handle_cancel_after_await_rejected.sifr`.
 - In progress task timeout handle slice: `task.timeout(handle, duration)` accepts task handles, consumes the handle, races observation against a private timeout, cancels on deadline expiry, and returns a private generated `TimeoutResult`-carrying `TaskResult`.
 - Added validation coverage for `task_timeout_success.sifr`, `task_timeout_expiry.sifr`, `task_timeout_error_type.sifr`, and `task_timeout_double_observe_rejected.sifr`.
+- Added same-tick timeout validation coverage with `task_timeout_completion_wins_tie.sifr`; the generated timeout race uses biased completion-first selection.
 
 ---
 
