@@ -155,6 +155,8 @@ pub(super) struct LowerCtx {
     class_types: HashMap<String, Type>,
     /// Current scope for name resolution
     scope: Scope,
+    /// First non-Never child error type observed for each in-scope `TaskGroup` binding.
+    task_group_error_types: HashMap<String, Type>,
     /// Collected diagnostics that stop successful lowering.
     errors: Vec<HirDiagnostic>,
     /// Proof for the latest emitted lowering diagnostic.
@@ -226,6 +228,7 @@ impl LowerCtx {
             function_defaults: HashMap::new(),
             class_types: HashMap::new(),
             scope: Scope::new(),
+            task_group_error_types: HashMap::new(),
             errors: Vec::new(),
             last_error_taint: None,
             loop_depth: 0,
@@ -313,19 +316,16 @@ impl LowerCtx {
     fn error_count(&self) -> usize {
         self.errors.len()
     }
-
     fn error_taint_since(&self, previous_error_count: usize) -> Option<ErrorTaint> {
         (self.errors.len() > previous_error_count)
             .then_some(self.last_error_taint)
             .flatten()
     }
-
     fn is_poisoned_binding(&self, name: &str) -> bool {
         self.scope
             .lookup(name)
             .is_some_and(crate::scope::VarInfo::is_poisoned_binding)
     }
-
     fn in_loop(&self) -> bool {
         self.loop_depth > 0
     }
