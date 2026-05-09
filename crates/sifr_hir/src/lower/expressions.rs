@@ -1,3 +1,4 @@
+use super::async_await::{coroutine_result_type, lower_await};
 use super::builtin_calls::{
     callable_builtin_element_type, lower_bytes_constructor_call, lower_bytes_type_factory_call,
     lower_chr_call, lower_defaultdict_constructor_call, lower_dict_constructor_call,
@@ -66,9 +67,9 @@ use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    BoolOp, Expr, ExprAttribute, ExprAwait, ExprBoolOp, ExprBytesLiteral, ExprCall, ExprDict,
-    ExprDictComp, ExprGenerator, ExprLambda, ExprList, ExprListComp, ExprName, ExprNamed,
-    ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript, ExprTuple, Number,
+    BoolOp, Expr, ExprAttribute, ExprBoolOp, ExprBytesLiteral, ExprCall, ExprDict, ExprDictComp,
+    ExprGenerator, ExprLambda, ExprList, ExprListComp, ExprName, ExprNamed, ExprNumberLiteral,
+    ExprSet, ExprSetComp, ExprSubscript, ExprTuple, Number,
 };
 use sifr_type_system::{
     make_union, type_check_bool_op, FunctionType, OwnershipKind, ParamConvention, Type,
@@ -113,56 +114,6 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
             );
             None
         }
-    }
-}
-
-fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    if !ctx.current_function_is_async {
-        expression_diagnostics::type_mismatch(
-            ctx,
-            "await is only valid inside async functions".to_string(),
-            await_expr.range(),
-        );
-        return None;
-    }
-
-    let value = lower_expr(await_expr.value.as_ref(), ctx)?;
-    let result_ty = await_result_type(value.ty());
-    let Some(ty) = result_ty else {
-        expression_diagnostics::type_mismatch(
-            ctx,
-            format!(
-                "await requires an awaitable value, got '{}'",
-                value.ty().display_name()
-            ),
-            await_expr.value.range(),
-        );
-        return None;
-    };
-
-    Some(HirExpr::Await {
-        value: Box::new(value),
-        ty,
-    })
-}
-
-fn await_result_type(ty: &Type) -> Option<Type> {
-    match ty.resolve_alias() {
-        Type::Coroutine(ok, err) if matches!(err.resolve_alias(), Type::Never) => {
-            Some(ok.as_ref().clone())
-        }
-        Type::Coroutine(ok, err) => Some(Type::Result(ok.clone(), err.clone())),
-        Type::Task(ok, err) => Some(Type::TaskResult(ok.clone(), err.clone())),
-        Type::BlockingTask(ok, err) => Some(Type::TaskResult(ok.clone(), err.clone())),
-        Type::Awaitable(result) => Some(result.as_ref().clone()),
-        _ => None,
-    }
-}
-
-fn coroutine_result_type(surface_return_type: &Type) -> Type {
-    match surface_return_type.resolve_alias() {
-        Type::Result(ok, err) => Type::Coroutine(ok.clone(), err.clone()),
-        other => Type::Coroutine(Box::new(other.clone()), Box::new(Type::Never)),
     }
 }
 

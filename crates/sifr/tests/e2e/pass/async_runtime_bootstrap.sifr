@@ -1,0 +1,7 @@
+async def answer() -> int:
+    return 42
+
+async def main() -> None:
+    value: int = await answer()
+    assert value == 42
+    return None

@@ -1227,6 +1227,9 @@ fn generate_cargo_toml(
             "sifr_runtime" | "sifr-runtime" => {
                 deps.insert(sifr_runtime_dependency_spec());
             }
+            "tokio" => {
+                deps.insert(tokio_dependency_spec());
+            }
             _ => {}
         }
     }
@@ -1253,6 +1256,10 @@ fn sifr_runtime_dependency_spec() -> String {
         .replace('\\', "\\\\")
         .replace('"', "\\\"");
     format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
+}
+
+fn tokio_dependency_spec() -> String {
+    "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"time\"] }".to_string()
 }
 
 fn discover_sifr_runtime_path() -> Option<PathBuf> {
@@ -3660,6 +3667,16 @@ fn test_generate_cargo_toml_required_sifr_runtime_uses_path_dependency() {
 
     let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
     assert!(cargo_toml.contains("sifr_runtime = { path = "));
+}
+
+#[test]
+fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
+    let stdlib_modules = BTreeSet::new();
+    let required_crates = normalize_dependency_set(vec!["tokio".to_string()]);
+
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
+    assert!(cargo_toml
+        .contains("tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"time\"] }"));
 }
 
 fn sample_cache_entry(

@@ -90,6 +90,10 @@ pub fn sifr_runtime_dependency_spec() -> String {
     format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
 }
 
+fn tokio_dependency_spec() -> String {
+    "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"time\"] }".to_string()
+}
+
 fn discover_sifr_runtime_path() -> Option<PathBuf> {
     env::var_os("SIFR_RUNTIME_PATH")
         .map(PathBuf::from)
@@ -591,6 +595,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if !emitter.body_items.is_empty() {
         assembled_body_items.extend(emitter.body_items.clone());
     }
+    let has_async_main_entrypoint = annotate_async_main_entrypoint(&mut assembled_body_items);
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
     let stdlib_import_needs = collect_import_needs_from_source(&stdlib_preamble);
     let needs_hashmap = body_import_needs.collections.needs_hashmap
@@ -738,11 +743,41 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             if needs_sifr_int {
                 crates.insert("sifr_runtime".to_string());
             }
+            if has_async_main_entrypoint {
+                crates.insert("tokio".to_string());
+            }
             crates
         },
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
     }
+}
+
+fn annotate_async_main_entrypoint(items: &mut Vec<RustItem>) -> bool {
+    for index in 0..items.len() {
+        if let RustItem::Fn {
+            name,
+            is_async: true,
+            ..
+        } = &items[index]
+        {
+            if name == "main" {
+                let already_annotated = index > 0
+                    && matches!(
+                        &items[index - 1],
+                        RustItem::Attr(attr) if attr.contains("tokio::main")
+                    );
+                if !already_annotated {
+                    items.insert(
+                        index,
+                        RustItem::Attr("#[tokio::main(flavor = \"current_thread\")]".to_string()),
+                    );
+                }
+                return true;
+            }
+        }
+    }
+    false
 }
 
 fn public_visibility() -> syn::Visibility {
@@ -1135,6 +1170,12 @@ edition = "2021"
             }
             "sifr_runtime" | "sifr-runtime" => {
                 let dep = sifr_runtime_dependency_spec();
+                if !deps.contains(&dep) {
+                    deps.push(dep);
+                }
+            }
+            "tokio" => {
+                let dep = tokio_dependency_spec();
                 if !deps.contains(&dep) {
                     deps.push(dep);
                 }

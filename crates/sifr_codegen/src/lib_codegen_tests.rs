@@ -3574,6 +3574,58 @@ fn test_generate_project_emits_sifr_runtime_path_dependency_when_required() {
 }
 
 #[test]
+fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module("async def main() -> None:\n    return None\n")
+                .expect("parse failed")
+                .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result
+        .rust_source
+        .contains("#[tokio::main(flavor = \"current_thread\")]"));
+    assert!(result.rust_source.contains("async fn main()"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_sync_main_does_not_require_tokio() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module("def main() -> None:\n    return None\n")
+                .expect("parse failed")
+                .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(!result
+        .rust_source
+        .contains("#[tokio::main(flavor = \"current_thread\")]"));
+    assert!(!result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_generate_project_emits_tokio_dependency_when_required() {
+    let module = empty_module();
+    let required_crates = HashSet::from(["tokio".to_string()]);
+    let (cargo_toml, _main_rs) = generate_project_with_deps_and_crates(
+        &module,
+        "sifr_output",
+        &HashSet::new(),
+        &required_crates,
+    );
+
+    assert!(cargo_toml
+        .contains("tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"time\"] }"));
+}
+
+#[test]
 fn test_module_constants_flow_through_assembled_body_items() {
     let module_constants_src = include_str!("module_constants.rs");
     let entrypoints_src = include_str!("entrypoints.rs");

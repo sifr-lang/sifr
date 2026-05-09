@@ -7,6 +7,8 @@ use std::collections::HashMap;
 mod append_growth_shapes;
 mod arithmetic_warnings;
 mod assignment_widening;
+mod async_await;
+mod async_with;
 mod attribute_access;
 mod aug_assign_lowering;
 mod binding_mutability;
@@ -33,6 +35,7 @@ mod expression_sum_sorted;
 mod expressions;
 #[cfg(test)]
 mod expressions_tests;
+mod external_defs;
 mod fixed_width_arithmetic_methods;
 mod fixed_width_class_payload;
 mod fixed_width_fitting;
@@ -104,6 +107,7 @@ mod typevar_annotations;
 mod typing_and_functions;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
+pub use external_defs::ExternalDefs;
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
 use len_aliases::LenAliasFact;
@@ -504,39 +508,6 @@ pub struct LoweringResult {
     pub reveal_types: Vec<RevealTypeDiagnostic>,
     /// Compiler warnings (non-fatal diagnostics)
     pub warnings: Vec<LoweringWarningDiagnostic>,
-}
-/// External module definitions that can be imported.
-#[derive(Debug, Clone, Default)]
-pub struct ExternalDefs {
-    /// Map of `module_name` -> (`function_name` -> `FunctionType`)
-    pub functions:
-        std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
-    /// Map of `module_name` -> (`class_name` -> Type)
-    pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
-    /// Map of `module_name` -> (`class_name` -> `type_param_names`)
-    pub class_type_params:
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
-    /// Map of `module_name` -> (`constant_name` -> Type)
-    pub constants: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
-    /// Map of `module_name` -> (`constant_name` -> compile-time integer value)
-    pub constant_integer_values:
-        std::collections::HashMap<String, std::collections::HashMap<String, num_bigint::BigInt>>,
-    /// Set of class names that are error types (class Foo(Error)) across all modules
-    pub error_types: std::collections::HashSet<String>,
-    /// Map of `module_name` -> (`owner_name` -> (`type_var_name` -> bounds))
-    pub type_param_bounds: std::collections::HashMap<
-        String,
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
-    >,
-    /// Map of `module_name` -> (`function_name` -> `type_var_names`)
-    pub generic_functions:
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
-    /// Map of `module_name` -> (`callable_name` -> vararg parameter index)
-    pub function_varargs:
-        std::collections::HashMap<String, std::collections::HashMap<String, usize>>,
-    /// Map of `module_name` -> (`callable_name` -> default argument expressions by parameter index)
-    pub function_defaults:
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<(usize, HirExpr)>>>,
 }
 /// Lower a parsed module AST into a typed HIR module.
 pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<HirDiagnostic>> {
