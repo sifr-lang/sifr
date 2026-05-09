@@ -373,7 +373,7 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (mile
 | Context                          | Error mechanism                   | Handling                                                    | Codegen                                                    |
 | -------------------------------- | --------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | Sync function                    | `Result[T, E]` return             | `try`/`except` with exhaustiveness checking                 | `Result<T, E>`                                             |
-| Async function (milestone_async_1/milestone_async_2) | `Result[T, E]` return             | `try`/`except` works across `.await`; task observation also carries `CancellationError` | `Result<T, E>` inside the task; task handles observe `Result[T, E | CancellationError]` |
+| Async function (milestone_async_1/milestone_async_2) | `Result[T, E]` return             | `try`/`except` works across same-task `.await`; spawned task observation returns `TaskResult[T, E]` | `Result<T, E>` inside the task; task handles observe `TaskResult<T, E>` |
 | `try`/`except` block             | Pattern match on `Result`         | `except` arms match error types; compiler checks coverage   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
 | Indexing                         | `Option[T]` return                | Type narrowing (`if val is not None`)                       | `.get(i).cloned()` / `.chars().nth(i)`                     |
 | Division                         | `Result[T, DivisionError]`        | `try`/`except`                                              | Checked division with zero-check                           |
@@ -416,7 +416,7 @@ The compiler enforces that all error types from fallible calls inside a `try` bl
 4. **Each `try` block is checked independently.** Nested or sequential `try` blocks each have their own exhaustiveness scope.
 5. **Uncovered error types are a compile error.** If any error type from a fallible call is not covered by an `except` arm, the compiler emits a diagnostic listing the uncovered types and the calls that produce them.
 
-**Error type constraint:** The ordinary `E` in `Result[T, E]` must always be a class that extends `Error`. Primitive types like `str` are not valid error types. This ensures every ordinary error has a structured type that the compiler can track for exhaustiveness checking, and that `except Error as e` is a true catch-all for ordinary errors. Task observation may add a separate `CancellationError` branch (`Result[T, E | CancellationError]`), but `CancellationError` is not an `Error` subclass and must be matched explicitly with `except task.CancellationError` or propagated.
+**Error type constraint:** The ordinary `E` in `Result[T, E]` must always be a class that extends `Error`. Primitive types like `str` are not valid error types. This ensures every ordinary error has a structured type that the compiler can track for exhaustiveness checking, and that `except Error as e` is a true catch-all for ordinary errors. Spawned task observation uses `TaskResult[T, E]`; its `Cancelled(Failure[CancellationError])` branch is not an ordinary `Result` error, and `CancellationError` is not an `Error` subclass.
 
 **Example -- catch-all (compiler satisfied):**
 
@@ -669,17 +669,20 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - **Spawn boundaries are checked:** when a value is sent to a spawned task (`scope.spawn`) or thread, the compiler verifies the value satisfies the task/thread boundary rules. If not, it emits a clear error explaining which captured value or field is not sendable/share-safe.
 - **No silent upgrades:** the compiler does NOT auto-upgrade `Rc` to `Arc` or `RefCell` to `Mutex`. If a non-sendable type is used across a task boundary, the programmer must fix it explicitly.
 - **Shared mutable state across tasks:** requires explicit primitives from the async/concurrency model (`sifr.sync.Lock`, `sifr.sync.RwLock`, or `sifr.sync.Channel`). The compiler rejects sharing mutable references across task boundaries without synchronization.
+- **Shared immutable state is deep-safe:** `sifr.sync.Shared[T]` requires `T` to satisfy the Phase 32 `ShareSafe` capability (`Send + Sync` and no unsynchronized interior mutability).
+- **Lock and channel safety:** `sifr.sync.Lock` is synchronous in v1 and may block an async runtime worker under contention, so it is for short critical sections only. Channels use explicit sender/receiver endpoints; send and receive are async and `receive` reports closed-and-drained with `ClosedError`, not `Option`.
 - **Async callables are distinct:** `AsyncFunction` is not a subtype of sync `Function`/`Callable`; async functions cannot be stored, passed, or invoked through a sync callable path.
-- **Task error types are constrained:** `Task[T, E]` must satisfy `E: Error`, with `Never` accepted for no-error tasks. Awaiting a task from a non-cancelled owner produces `Result[T, E | CancellationError]`; `CancellationError` is a separate task-control branch, not an `Error` subclass, and is not caught by broad `except Error`.
+- **Coroutine/task/result ladder:** calling an async function returns a linear `Coroutine[T, E]`. Awaiting that coroutine in the same task yields the async function's surface return type. Spawning it with `scope.spawn` consumes the coroutine and returns `Task[T, E]`.
+- **Task error types are constrained:** `Task[T, E]` must satisfy `E: Error`, with `Never` accepted for no-error tasks. Awaiting a task from a non-cancelled owner produces `TaskResult[T, E]`; `CancellationError` is a separate `Cancelled(Failure[CancellationError])` branch, not an `Error` subclass, and is not caught by broad `except Error`.
 - **Async calls are async-only:** sync code cannot invoke an async function through the async-call path. The compiler rejects async calls from sync functions unless a future explicit runtime bridge is added. This prevents Python-style unawaited coroutine/task leaks.
 - **Borrow rules at async boundaries:** immutable borrows may cross `await` only when the borrow remains valid and no conflicting mutation exists; mutable borrows cannot remain live across `await`; owned values may cross spawn boundaries only when sendable; `sync.Shared[T]` is allowed for immutable shared data; unsynchronized mutable state is rejected.
-- **Task composition semantics:** `task.timeout` returns the inner result when the inner task completes before the deadline, timeout expiry cancels and awaits inner cleanup, same-tick completion wins over timeout, and outer cancellation cancels the inner task. `task.gather` is fail-fast with deterministic success ordering; first failure cancels unfinished children and cleanup/sibling failures become secondary evidence. `task.select` and `task.race` cancel losing tasks by default.
+- **Task composition semantics:** `task.timeout` accepts task handles in v1, returns the inner result when the inner task completes before the deadline, timeout expiry cancels and awaits inner cleanup, same-tick completion wins over timeout, and outer cancellation cancels the inner task. `task.gather` is fail-fast with deterministic success ordering; first observed failure cancels unfinished children and cleanup/sibling failures become secondary evidence. `task.select` and `task.race` consume their input handles and cancel losing tasks by default.
 - **Single-threaded by default:** code that does not use `async` or `spawn` has no concurrency overhead. `Rc` and `RefCell` are used internally only when appropriate for single-threaded code.
 
 **Milestone responsibilities:**
 
 - `milestone_async_0`: copy the complete async/concurrency type, task, cancellation, and runtime contracts from `internal_docs/async_concurrency_model.md` into the architecture contract.
-- `milestone_async_1`: add async HIR/type substrate (`Task`, `Awaitable`, `AsyncFunction`, `await`, async calls).
+- `milestone_async_1`: add async HIR/type substrate (`Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, `await`, async calls).
 - `milestone_async_4`: implement Send/Sync and borrow-boundary checking at spawn boundaries.
 - `milestone_async_5`: provide `sifr.sync.Shared`, `Lock`, `RwLock`, and `Channel` for explicit cross-task sharing.
 
@@ -873,7 +876,9 @@ enum Type {
     Function(FunctionType),
 
     // Async/concurrency model (Phase 32)
-    Task(Box<Type>, Box<Type>),       // Task[T, E] -- awaitable task handle, yields Result[T, E | CancellationError]
+    Coroutine(Box<Type>, Box<Type>),  // Coroutine[T, E] -- linear async computation, consumed by await or spawn
+    Task(Box<Type>, Box<Type>),       // Task[T, E] -- awaitable task handle, yields TaskResult[T, E]
+    TaskResult(Box<Type>, Box<Type>), // TaskResult[T, E] -- Ok(T), Err(Failure[E]), Cancelled(Failure[CancellationError])
     Awaitable(Box<Type>),             // structural awaitability protocol
     AsyncFunction(FunctionType),       // async callable, not a subtype of sync Function
 

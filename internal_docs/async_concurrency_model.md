@@ -25,18 +25,33 @@ The phase succeeds when users can write practical concurrent Sifr programs witho
 The primary model is:
 
 ```sifr
-async def fetch_one(url: str) -> Result[str, NetworkError]:
-    response: Response = await http.get(url)
-    return response.text()
+async def fetch_one(label: str) -> Result[str, FetchError]:
+    await task.sleep(10.ms)
+    return Ok(label)
 
 async def main() -> Result[None, Error]:
     async with task.scope() as scope:
-        first = scope.spawn(fetch_one("https://example.com/a"))
-        second = scope.spawn(fetch_one("https://example.com/b"))
+        first = scope.spawn(fetch_one("a"))
+        second = scope.spawn(fetch_one("b"))
 
-        a: str = await first
-        b: str = await second
+        match await first:
+            Ok(a):
+                pass
+            Err(failure):
+                return Err(failure.primary)
+            Cancelled(cancelled):
+                return Err(task.ChildCancelled(cancelled.primary))
+
+        match await second:
+            Ok(b):
+                pass
+            Err(failure):
+                return Err(failure.primary)
+            Cancelled(cancelled):
+                return Err(task.ChildCancelled(cancelled.primary))
+
         print(a + b)
+        return Ok(None)
 ```
 
 The user-facing vocabulary is:
@@ -85,7 +100,7 @@ Default APIs should not encourage:
 
 - ambient global tasks
 - silent fire-and-forget work
-- orphaned task handles
+- detached task handles
 - shutdown behavior that depends on runtime accident
 
 ### Async Is For Waiting
@@ -140,7 +155,7 @@ Rejected implicit behavior:
 
 Cancellation is part of the contract, not an implementation detail.
 
-Timeouts, task cancellation, sibling failure, shutdown tokens, and resource cleanup must have deterministic behavior and Sifr-native diagnostics. Cancellation must not become an ambient exception leak.
+Timeouts, task cancellation, sibling failure, shutdown tokens, and resource cleanup must have deterministic behavior and Sifr-native diagnostics. Cancellation must not become an ambient exception leak or an ordinary `Result` error branch.
 
 Cancellation has two forms:
 
@@ -149,7 +164,20 @@ Cancellation has two forms:
 
 This split avoids Python's `CancelledError` footgun. Broad user handlers such as `except Error as e` can handle ordinary task failures, but they must not accidentally turn the current task's own cancellation into a successful recovery path. A task may intentionally observe a child task's materialized cancellation result, but active cancellation of the current task remains scope-exit semantics.
 
-`CancellationError` is not a subclass of `Error`. It belongs to the task cancellation control family and is therefore never matched by broad `except Error`. It must be handled by an explicit `except task.CancellationError` arm or propagated. This avoids Python-style cancellation swallowing without adding a hidden subclass-matching exception to the ordinary error hierarchy.
+`CancellationError` is not a subclass of `Error`. It belongs to the task cancellation control family and is therefore never matched by broad `except Error`. It is materialized only as the `Cancelled(...)` branch of `TaskResult[T, E]` or inside `SecondaryError` evidence. This avoids Python-style cancellation swallowing without adding a hidden subclass-matching exception to the ordinary error hierarchy.
+
+### Cancellation Progress Guarantees
+
+Cancellation is cooperative:
+
+- cancellation is requested at task boundaries and observed at await/cancellation points
+- active cancellation runs `finally` blocks and async context cleanup before the task is considered complete
+- cleanup is awaited to completion; if cleanup loops forever or deadlocks, the parent scope can hang
+- v1 does not expose forceful task abort, cancellation suppression, shielding, or uncancel counters
+- CPU loops that do not await cannot be interrupted until they reach a cooperative cancellation point
+- cleanup failures become structured secondary evidence instead of replacing the primary cancellation/failure cause
+
+The shutdown result is deterministic, but not guaranteed to make progress if user cleanup never completes. Cleanup hangs are programmer bugs; the v1 runtime does not paper over them with unsafe aborts.
 
 ### Runtime Is An Implementation Detail
 
@@ -248,24 +276,32 @@ The type system needs first-class awaitability and task-boundary rules.
 
 Required type additions:
 
-- `Task[T, E]`: a typed task handle. It is not a `Result`; it is an awaitable handle that yields `Result[T, E | CancellationError]` when observed from outside the task.
-- `Task[T]`: shorthand for `Task[T, Never]` plus cancellation, yielding `Result[T, CancellationError]`.
+- `Coroutine[T, E]`: an unscheduled async computation created by calling an async function. It is linear: awaiting it or spawning it consumes it. `E` is the ordinary error channel.
+- `Task[T, E]`: a typed task handle for a scheduled child task. It is not a `Result`; it is an awaitable handle that yields `TaskResult[T, E]` when observed from outside the task.
+- `Task[T]`: shorthand for `Task[T, Never]`. It still observes cancellation through `TaskResult[T, Never]`; cancellation is not part of the ordinary `E` channel.
+- `TaskResult[T, E]`: the result of observing a scheduled task handle. It has three branches: `Ok(T)`, `Err(Failure[E])`, and `Cancelled(Failure[CancellationError])`.
+- `Failure[E]`: a primary failure plus secondary evidence: `primary: E`, `secondary: list[SecondaryError]`.
 - `CancellationError`: materialized evidence that a child task was cancelled. It is not the in-task active cancellation signal and does not inherit from `Error`.
 - `TimeoutError`: ordinary timeout failure produced when a timeout scope wins its race and cancels the enclosed operation.
 - `SecondaryError`: structured evidence attached to a primary cancellation or failure when cleanup or sibling tasks also fail during unwinding.
-- `Awaitable[T]`: structural protocol for values that can be awaited. `Task[T, E]` implements `Awaitable[Result[T, E | CancellationError]]`.
+- `Awaitable[T]`: structural protocol for values that can be awaited. `Coroutine[T, E]` implements an awaitable whose result follows the async function's surface return type; `Task[T, E]` implements `Awaitable[TaskResult[T, E]]`.
 - `AsyncFunction[Params, T, E]`: the callable type of `async def`. This may be implemented as a distinct type or as a capability flag on `Callable`, but the type checker must distinguish async callables from sync callables with the same parameters.
 - `Never`: bottom type used by `Task[T, Never]`, exhaustive matches, and unreachable control flow. `Never` already exists in the architecture type enum and remains the no-value type.
 
 Required rules:
 
-- `Task[T, E]` requires `E: Error` for the task's ordinary error channel. `CancellationError` is a separate task-observation branch, not part of the ordinary `E` hierarchy. `Task[T, Never]` is valid because `Never` represents no possible ordinary error value.
+- `Task[T, E]` and `Coroutine[T, E]` require `E: Error` for their ordinary error channel. `CancellationError` is a separate task-observation branch, not part of the ordinary `E` hierarchy. `Task[T, Never]` is valid because `Never` represents no possible ordinary error value.
 - `await x` is valid only when `x` has an awaitable type.
-- `await Task[T, E]` always produces `Result[T, E | CancellationError]` when the awaiting task is not itself actively cancelled. The `E` branch follows ordinary `Error` rules. The `CancellationError` branch is a task-control branch that can only be matched explicitly or propagated.
-- Auto-unwrap applies to the `Result` produced by `await`, never to the `Task` handle itself.
+- `async def f(...) -> T` has async callable type `AsyncFunction[Params, T, Never]`; calling it returns `Coroutine[T, Never]`.
+- `async def f(...) -> Result[T, E]` has async callable type `AsyncFunction[Params, T, E]`; calling it returns `Coroutine[T, E]`.
+- Nested results are not flattened beyond the outer async error channel: `async def f() -> Result[Result[A, E1], E2]` returns `Coroutine[Result[A, E1], E2]`.
+- Awaiting a same-task coroutine consumes the coroutine and yields the async function's surface return type: `await Coroutine[T, Never] -> T`, and `await Coroutine[T, E] -> Result[T, E]`.
+- `scope.spawn(Coroutine[T, E]) -> Task[T, E]`; spawning consumes the coroutine and schedules it as a child.
+- `await Task[T, E]` always produces `TaskResult[T, E]` when the awaiting task is not itself actively cancelled. The `Err(Failure[E])` branch follows ordinary `Error` rules. The `Cancelled(Failure[CancellationError])` branch is task-control evidence that must be matched or converted explicitly.
+- `try await` is valid for same-task coroutines that produce `Result[T, E]`. `try await task_handle` is rejected in v1 because task cancellation is not an ordinary error branch; users must `match await task_handle` and convert cancellation into an ordinary error intentionally when that is what the enclosing API wants.
 - Active cancellation of the current task bypasses user `try`/`except` handlers, including `except Error`. It runs `finally`/context cleanup and is materialized as `CancellationError` only at the task or scope boundary.
 - `await` is protocol-based: any type implementing `Awaitable[T]` is awaitable, not only `Task`.
-- Calling an async function returns a `Task[T, E]` handle or equivalent awaitable value; it does not run as a sync function.
+- Calling an async function returns a linear `Coroutine[T, E]`; it does not run as a sync function and does not schedule itself.
 - `AsyncFunction` is not a subtype of sync `Function`/`Callable`. Storing an async function in a sync callable variable, passing it where a sync callable is required, or invoking it through a sync-call path is a compile-time error.
 - `scope.spawn` requires captures and return values to satisfy task-boundary requirements.
 - `scope.spawn` can use stricter lifetime-scoped rules than detached spawn.
@@ -273,6 +309,19 @@ Required rules:
 - mutable cross-task access requires explicit synchronization.
 - values borrowed across `await` must be proven valid or rejected.
 - spawned tasks require sendable task boundaries in v1. Ordinary awaited futures within the same task do not introduce a spawn boundary.
+
+`SecondaryError` is inspectable evidence attached to `Failure[E]`. It never masks the primary cause and does not participate in ordinary `except Error` matching unless a user explicitly inspects it.
+
+```sifr
+struct Failure[E]:
+    primary: E
+    secondary: list[SecondaryError]
+
+enum SecondaryError:
+    CleanupFailed(error: Error, location: str)
+    SiblingFailed(error: Error, task_id: str)
+    CancellationDuringCleanup(cause: CancellationError)
+```
 
 Borrow rules at async boundaries:
 
@@ -315,6 +364,61 @@ Diagnostic families should cover:
 
 Rust compiler errors can be used as implementation evidence, but they should not leak as the primary user experience.
 
+## Core API Signatures
+
+The first implementation must use these shapes unless a later reviewed model amendment changes them.
+
+```sifr
+# Async function call and spawn
+async def f() -> Result[T, E]
+f() -> Coroutine[T, E]
+scope.spawn(f()) -> Task[T, E]
+
+# Same-task await
+await Coroutine[T, Never] -> T
+await Coroutine[T, E] -> Result[T, E]
+
+# Task-handle observation
+await Task[T, E] -> TaskResult[T, E]
+
+enum TaskResult[T, E]:
+    Ok(T)
+    Err(Failure[E])
+    Cancelled(Failure[CancellationError])
+```
+
+Task composition APIs consume the task handles passed to them. Consumed handles are no longer usable by the caller.
+
+```sifr
+task.gather(handles: list[Task[T, E]]) -> TaskResult[list[T], E]
+
+task.select[A, EA, B, EB](a: Task[A, EA], b: Task[B, EB]) -> Select2[TaskResult[A, EA], TaskResult[B, EB]]
+
+enum Select2[A, B]:
+    First(A)
+    Second(B)
+
+task.race(handles: list[Task[T, E]]) -> TaskResult[T, E]
+
+task.timeout(handle: Task[T, E], duration: Duration) -> TaskResult[T, E | TimeoutError]
+```
+
+Timeout translates cancellation caused by the deadline into the ordinary `TimeoutError` branch. If the child was already externally cancelled before the deadline wins, the result remains `Cancelled(Failure[CancellationError])`. If the deadline and inner completion become ready in the same scheduler tick, inner completion wins.
+
+Channel endpoints are explicit so close and backpressure semantics are unambiguous:
+
+```sifr
+sync.channel[T]() -> (sync.ChannelSender[T], sync.ChannelReceiver[T])
+sync.bounded_channel[T](capacity: int) -> (sync.ChannelSender[T], sync.ChannelReceiver[T])
+
+async def ChannelSender[T].send(value: T) -> Result[None, ClosedError]
+def ChannelSender[T].close() -> None
+
+async def ChannelReceiver[T].receive() -> Result[T, ClosedError]
+```
+
+`ClosedError` from `receive` means the channel is closed and drained. There is no separate `None` end-of-stream state in v1.
+
 ## Milestone Sequence
 
 The milestones below are ordered by dependency. Later ecosystem work should not start until this sequence has closed.
@@ -337,8 +441,11 @@ Work items:
   - `sifr.sync`
   - `sifr.concurrent`
 - Define initial types:
+  - `Coroutine[T, E]`
   - `Task[T, E]`
-  - `Task[T]` as shorthand for `Task[T, Never]` plus cancellation
+  - `Task[T]` as shorthand for `Task[T, Never]`
+  - `TaskResult[T, E]`
+  - `Failure[E]`
   - `TaskGroup`
   - `TaskScope`
   - `CancellationError`
@@ -347,12 +454,15 @@ Work items:
   - `Lock[T]`
 - Define async type-system additions:
   - add task-handle type representation (`Type::Task` or equivalent)
+  - add coroutine type representation (`Type::Coroutine` or equivalent)
+  - add task-result type representation (`Type::TaskResult` or equivalent)
   - add awaitable protocol representation (`Type::Awaitable` or equivalent structural protocol)
   - add async-callable representation (`Type::AsyncFunction` or an async capability on `Callable`)
   - confirm async functions are not interchangeable with sync functions of the same signature
   - reject assigning, passing, or invoking an `AsyncFunction` through a sync callable type
   - require `Task[T, E]` to satisfy `E: Error`, with `Never` accepted as the no-error bottom type
-  - confirm `Task[T, E]` implements `Awaitable[Result[T, E | CancellationError]]`
+  - confirm `Task[T, E]` implements `Awaitable[TaskResult[T, E]]`
+  - confirm `Coroutine[T, E]` is linear and consumed by `await` or `scope.spawn`
 - Define task container protocols:
   - `task.scope()` returns a `TaskScope`
   - `TaskScope` is an async context manager implementing async `__aenter__` and `__aexit__`
@@ -374,12 +484,13 @@ Work items:
   - subprocess and signal handling are not Phase 32 exit criteria for this v1 model
   - any future subprocess/signal work requires a separate model amendment and cannot be inferred from the older phase document
 - Lock task result semantics:
-  - `await Task[T, E]` always yields `Result[T, E | CancellationError]` when observed by a non-cancelled task
-  - `await Task[T]` yields `Result[T, CancellationError]`
+  - `await Task[T, E]` always yields `TaskResult[T, E]` when observed by a non-cancelled task
+  - `await Task[T]` yields `TaskResult[T, Never]`
+  - `TaskResult[T, E]` has `Ok(T)`, `Err(Failure[E])`, and `Cancelled(Failure[CancellationError])` branches
   - existing `try`/`except` auto-unwrap works on ordinary `E` errors inside `try` blocks
-  - `CancellationError` is not a subclass of `Error` and is therefore never matched by broad `except Error`; it must be handled explicitly or propagated
-  - outside `try`, the observable expression type remains `Result[T, E | CancellationError]`
-  - auto-unwrap is sequenced after await: first `await` produces `Result[T, E | CancellationError]`, then `try` unwraps ordinary `E` errors or routes explicit cancellation matches
+  - `CancellationError` is not a subclass of `Error` and is therefore never matched by broad `except Error`; it must be handled explicitly or converted into an ordinary error
+  - outside `try`, the observable expression type remains `TaskResult[T, E]`
+  - `try await task_handle` is rejected in v1 because `try` cannot auto-unwrap the `Cancelled` branch; use `match await task_handle`
   - active cancellation of the current task is not routed through the ordinary `Result` auto-unwrap path and cannot be swallowed by `except Error`
   - `CancellationError` is produced only when cancellation is observed from outside the cancelled task, such as by awaiting or joining a cancelled child handle
 - Define detached task policy:
@@ -399,23 +510,29 @@ Work items:
   - materialized `CancellationError` evidence also does not match broad `except Error`
   - cancellation suppression, `uncancel` counters, and shield-like APIs are not exposed in v1
 - Define timeout API forms:
-  - `task.timeout(task, duration)` wraps a task handle or awaitable operation
+  - `task.timeout(task, duration)` wraps a task handle
   - `task.timeout(duration)` returns an async context manager usable as `async with task.timeout(duration):`
   - both forms share the same completion-vs-deadline race policy
   - the context-manager form is the canonical implementation target for `sifr.asyncio.timeout(duration)`
+  - arbitrary awaitables are not accepted by `task.timeout` in v1; spawn the awaitable into a child task first
 - Define selection policy:
   - `select` / `race` cancel losing tasks by default
-  - if multiple tasks complete in the same scheduler tick, handle creation order breaks ties deterministically
+  - `select` / `race` consume their input handles; losers cannot be awaited later
+  - if multiple tasks complete in the same scheduler tick, input order breaks ties deterministically
   - users must not rely on tie-breaking order for correctness; use `gather` plus explicit priority logic when order matters
   - users who need all results should use `gather`
   - users who need non-cancelling competition must keep handles and perform explicit cleanup
 - Define channel policy:
-  - `sync.Channel[T]` is multi-producer, multi-consumer
-  - unbounded channels use `sync.channel[T]()`
-  - bounded channels use `sync.bounded_channel[T](capacity)`
-  - bounded channels apply backpressure when full
+  - `sync.channel[T]()` returns `(ChannelSender[T], ChannelReceiver[T])`
+  - `sync.bounded_channel[T](capacity)` returns `(ChannelSender[T], ChannelReceiver[T])`
+  - senders are clonable; receivers are single-consumer handles in v1
+  - `await sender.send(value) -> Result[None, ClosedError]`
+  - `await receiver.receive() -> Result[T, ClosedError]`; `ClosedError` means closed and drained
+  - `sender.close()` wakes pending senders and receivers deterministically
+  - bounded channels apply async backpressure when full
 - Define lock policy:
   - `sync.Lock[T]` uses a synchronous Rust mutex internally in v1
+  - acquiring `sync.Lock` in async code may block the current runtime worker under contention and is permitted only for short, low-contention critical sections
   - `lock()` is not await-aware and returns a guard restricted to a synchronous lexical scope
   - lock guards must not cross `await` points in v1
   - the type checker rejects a live `LockGuard` or `RwLockGuard` at an `await` point
@@ -462,6 +579,7 @@ Work items:
 
 - Parse and lower `async def`.
 - Parse and lower `await`.
+- Parse and lower minimal `async with task.scope() as scope` as a built-in scoped-task construct. General user-defined async context-manager protocol remains `milestone_async_7`.
 - Add HIR nodes for async functions and await expressions.
 - Add awaitable/future type representation.
 - Add await type-checking: `await x` is valid only when `x: Awaitable[T]`, and the result type of the await expression is `T`.
@@ -470,6 +588,7 @@ Work items:
 - Reject `await` outside async functions.
 - Reject awaiting non-awaitable values.
 - Preserve existing `try`/`except` auto-unwrap behavior for `Result` values produced by await expressions, even if runtime execution arrives in the next milestone.
+- Reject `try await task_handle` in v1; task-handle cancellation must be matched or explicitly converted.
 - Add source-span plumbing for async diagnostics.
 - Add initial codegen shape for async functions that do not spawn tasks.
 
@@ -478,7 +597,8 @@ Acceptance criteria:
 - `async def` is represented explicitly in HIR.
 - `await` is represented explicitly in HIR.
 - Type checking distinguishes awaitable and non-awaitable values.
-- Awaiting `Task[T, E]` has one stable type: `Result[T, E | CancellationError]`.
+- Awaiting `Task[T, E]` has one stable type: `TaskResult[T, E]`.
+- `async with task.scope()` works as a built-in task-scope form before general async context-manager protocols land.
 - Invalid async syntax/use fails before Rust compilation.
 - The implementation does not introduce raw string fallback paths.
 
@@ -516,9 +636,10 @@ Work items:
 - Implement `sifr.task.timeout`.
 - Define `task.timeout(task, duration)` race behavior:
   - if the inner task completes before `duration`, timeout returns the inner result and does not cancel it
-  - if `duration` expires first, timeout cancels the inner task, waits for cleanup, and returns `Err(TimeoutError)`
+  - if `duration` expires first, timeout cancels the inner task, waits for cleanup, and returns `TaskResult.Err(Failure[TimeoutError])`
   - if inner completion and timeout expiry become ready in the same scheduler tick, inner completion wins
   - cancelling the outer scope while timeout is running cancels the inner task unconditionally
+  - arbitrary awaitables are not accepted; users must spawn them into a child task first
 - Define `task.timeout(duration)` context-manager form:
   - usable as `async with task.timeout(duration):`
   - applies the same completion-vs-deadline race policy to the enclosed block
@@ -534,7 +655,7 @@ Acceptance criteria:
 
 - Async programs run through `sifr run`.
 - Sync programs do not gain async runtime dependencies.
-- `scope.spawn` returns a handle that must be awaited or joined.
+- `scope.spawn` returns an observer handle; dropping the handle does not detach the child from the scope.
 - There is no free-floating detached spawn in v1.
 - `task.sleep` and `task.timeout` work.
 - `task.timeout` has deterministic completion-vs-deadline tie-breaking.
@@ -573,13 +694,14 @@ Work items:
 - Implement `task.scope`.
 - Implement `task.TaskGroup`.
 - Implement `scope.spawn`.
-- Define orphaned task-handle rules:
-  - every `scope.spawn` handle must be awaited, joined, explicitly cancelled, or moved into a tracked collection that is consumed before scope exit
-  - a handle moved into a collection is tracked only when the compiler can prove the collection is drained, consumed, or dropped before the task scope exits
-  - a task handle that reaches end-of-scope without a consuming operation is a compile-time diagnostic
-  - there is no implicit fire-and-forget path
-  - at `TaskScope.__aexit__`, any remaining unconsumed child handles are cancelled and awaited for cleanup as a runtime safety backstop
+- Define task-scope ownership rules:
+  - `TaskScope` uses nursery ownership: every spawned child belongs to the scope
+  - handles returned by `scope.spawn` are observers, not owners; dropping a handle does not detach or cancel the child
+  - on normal exit, `TaskScope.__aexit__` waits for all children
+  - on abnormal exit, `TaskScope.__aexit__` cancels unfinished children and waits for cleanup
+  - child failures that are not explicitly observed are surfaced at scope exit as structured scope failure evidence, never silently discarded
   - no task handle may escape its owning task scope silently
+  - general tracked-collection proof is deferred; v1 supports explicit consumption through `gather`, `select`, `race`, and simple `for h in handles: await h` loops
 - Implement deterministic scope exit:
   - all child tasks complete,
   - or unfinished children are cancelled,
@@ -587,20 +709,21 @@ Work items:
 - Implement sibling cancellation on first failure for task groups.
 - Implement `task.gather` with deterministic result ordering.
 - Define `task.gather` error behavior:
-  - by default, the first child error cancels unfinished children and returns that typed error
-  - if multiple children fail before cancellation completes, the earliest handle in input order is the primary error and later errors are secondary structured errors
-  - cleanup errors from cancelled children surface as `SecondaryError` values attached to the primary `gather` result
+  - by default, the first observed child error cancels unfinished children and returns `TaskResult.Err(Failure[E])`
+  - after cancellation cleanup, the earliest failed handle in input order is the primary error and later errors are secondary structured errors
+  - cleanup errors from cancelled children surface as `SecondaryError` values attached to the primary `Failure[E]`
   - a future collect-all API may return all `Result` values, but v1 `gather` is fail-fast and cancellation-safe
 - Implement `task.select` and `task.race` for first-completion behavior.
 - Cancel losing tasks by default for `select` and `race`.
-- Define how cancellation composes with `Result`.
+- `select` and `race` consume their input handles. A loser handle cannot be awaited or joined after the selection API owns it.
+- Define how cancellation composes with `TaskResult`.
 - Add diagnostics for leaked task handles and invalid scope escape.
 
 Acceptance criteria:
 
 - Task scopes own child task lifetimes.
 - A task spawned inside a scope cannot escape with borrowed state that outlives the scope.
-- Orphaned task handles are rejected before Rust compilation where statically knowable, and scope exit cancels/awaits any remaining children as a safety backstop.
+- Dropping a task handle does not detach the task; scope exit still waits for or cancels the child according to normal/abnormal exit rules.
 - Task-group failure cancels unfinished siblings.
 - Cancellation is observable through the Sifr type model.
 - `gather` preserves input ordering for successes and has documented fail-fast cancellation behavior for errors.
@@ -615,6 +738,7 @@ Positive validation:
 - `task_gather_ordered.sifr`
 - `task_gather_cleanup_error_secondary.sifr`
 - `task_handle_collection_consumed.sifr`
+- `task_scope_unobserved_child_waits.sifr`
 - `task_select_first_completion.sifr`
 - `task_race_cancels_losers.sifr`
 - `cancellation_scope_timeout.sifr`
@@ -625,9 +749,8 @@ Positive validation:
 Negative validation:
 
 - `task_escape_scope_rejected.sifr`
-- `task_handle_unused_must_join_or_cancel.sifr`
 - `cancelled_task_use_rejected.sifr`
-- `task_handle_dropped_without_consumption_rejected.sifr`
+- `task_handle_escape_scope_rejected.sifr`
 - `task_group_unhandled_error_rejected.sifr`
 
 Demo:
@@ -689,31 +812,36 @@ Goal: provide the explicit primitives users need when concurrency really require
 Work items:
 
 - Implement `sync.Shared[T]` for immutable shared ownership, mapping to atomic shared ownership (`Arc<T>`-style semantics) with no mutation API.
+- Require `sync.Shared[T]` to satisfy the v1 `ShareSafe` capability: `T` must be `Send + Sync` and must not contain unsynchronized interior mutability. Types with their own synchronization may satisfy `ShareSafe`; `Shared[Cell[int]]` and `Shared[list[MutableThing]]` are rejected.
 - Implement `sync.Lock[T]`.
 - Implement `sync.RwLock[T]`.
 - Implement `sync.Channel[T]`.
-- Implement unbounded MPMC channels via `sync.channel[T]()`.
-- Implement bounded MPMC channels via `sync.bounded_channel[T](capacity)`.
-- Implement channel send/receive close semantics:
-  - `channel.send(value)` on a closed channel returns `Result[None, ClosedError]`
-  - `channel.receive()` returns `Result[Option[T], ClosedError]`
-  - `None` indicates graceful end-of-stream after close and drain
-  - `channel.close()` wakes pending senders and receivers deterministically
-  - a task cancelled while blocked on `send` or `receive` propagates cancellation
-  - bounded channels apply backpressure when full
+- Implement unbounded multi-producer, single-receiver channels via `sync.channel[T]()`.
+- Implement bounded multi-producer, single-receiver channels via `sync.bounded_channel[T](capacity)`.
+- Implement channel endpoint and close semantics:
+  - `sync.channel[T]()` returns `(ChannelSender[T], ChannelReceiver[T])`
+  - `sync.bounded_channel[T](capacity)` returns `(ChannelSender[T], ChannelReceiver[T])`
+  - `ChannelSender[T]` is clonable; `ChannelReceiver[T]` is single-consumer in v1
+  - `await sender.send(value)` on a closed channel returns `Result[None, ClosedError]`
+  - `await receiver.receive()` returns `Result[T, ClosedError]`
+  - `ClosedError` from `receive` means closed and drained; there is no second `None` closed state
+  - `sender.close()` wakes pending senders and receivers deterministically
+  - a task cancelled while blocked on `send` or `receive` propagates task cancellation without duplicating or losing a message
+  - bounded channels apply async backpressure when full
 - Implement `sync.Semaphore`.
 - Implement `sync.Notify`.
 - Define sync primitive behavior in async and blocking contexts.
 - Implement static lock-guard liveness analysis at await points.
 - Reject lock guards that remain live across an `await` point using the v1 `LockGuard`/`RwLockGuard` liveness rule defined in `milestone_async_0`.
+- Warn in docs and diagnostics that acquiring `sync.Lock` in async code may block the runtime worker under contention; v1 permits it only for short, low-contention critical sections.
 - Add diagnostics for lock misuse where statically knowable.
 
 Acceptance criteria:
 
 - Shared immutable state works across tasks through `sync.Shared[T]`.
-- `sync.Shared[T]` exposes shared ownership only; mutation requires `Lock`, `RwLock`, or message passing.
+- `sync.Shared[T]` exposes shared ownership only for `ShareSafe` types; mutation requires `Lock`, `RwLock`, or message passing.
 - Mutable shared state requires `Lock` or `RwLock`.
-- Channels are the canonical queue-like concurrency primitive and are MPMC in v1.
+- Channels are the canonical queue-like concurrency primitive and use clonable senders plus a single receiver handle in v1.
 - Channel close and receiver exhaustion behavior is typed and deterministic.
 - Channel cancellation behavior is typed and deterministic.
 - Lock guard liveness at await points is rejected at compile time.
@@ -768,6 +896,8 @@ Work items:
   - cancelling `task.spawn_blocking` or thread-pool work requests cancellation and drops/abandons the handle result
   - v1 does not forcibly abort a running OS thread
   - already-running blocking work may continue to completion, but its result is discarded after cancellation
+  - `spawn_blocking` requires owned, sendable, `'static` captures in v1
+  - scoped borrowed captures are rejected for `spawn_blocking` because already-running OS work may outlive the async scope after cancellation
   - users who need hard interruption must use future process isolation/typed IPC, which is deferred
 - Add diagnostics for known blocking stdlib calls used directly in async contexts.
 - Ensure blocking work cannot accidentally occupy cooperative async workers where Sifr can control the path.
@@ -775,12 +905,12 @@ Work items:
 
 Compatibility mapping:
 
-| Compatibility API | Canonical Sifr equivalent |
-| --- | --- |
-| `sifr.threading.Thread` | `sifr.concurrent.Thread` or thread-pool-backed standalone thread API |
-| `sifr.threading.Lock` | `sifr.sync.Lock` compatibility wrapper |
-| `sifr.threading.Event` | `sifr.sync.Notify` compatibility wrapper |
-| `sifr.threading.Condition` | `sifr.sync.Notify` plus `sifr.sync.Lock` compatibility wrapper |
+| Compatibility API | Canonical Sifr equivalent | Intentional divergence |
+| --- | --- | --- |
+| `sifr.threading.Thread` | `sifr.concurrent.Thread` or thread-pool-backed standalone thread API | no detached unjoined thread by default; handles must remain observable |
+| `sifr.threading.Lock` | `sifr.sync.Lock` compatibility wrapper | synchronous lock; can block if used from async code |
+| `sifr.threading.Event` | `sifr.sync.Notify` or `sync.Shared[bool] + Notify` | Python Event is level-triggered; `Notify` is edge-triggered |
+| `sifr.threading.Condition` | `sifr.sync.Notify` plus `sifr.sync.Lock` | predicate discipline is explicit; not a transparent alias |
 
 Acceptance criteria:
 
@@ -886,8 +1016,9 @@ Work items:
   - `TaskGroup`
   - `sleep`
   - `wait_for`
+  - `timeout`
   - `Queue`
-- Add `sifr.concurrent.Future` as a type alias for `sifr.task.Task`, not a separate runtime primitive.
+- Add `sifr.concurrent.Future` as a compatibility wrapper over canonical task/blocking-work observation semantics, not a second runtime primitive.
 - Keep raw event loops, loop policies, transports/protocols, public selectors, context variables, multiprocessing, and process pools deferred.
 - Treat `ProcessPoolExecutor` as blocked on the future typed IPC/serialization contract, not merely postponed.
 - Track `ProcessPoolExecutor` as a hard dependency on Phase 40 typed IPC/serialization before any process-pool implementation begins.
@@ -898,22 +1029,24 @@ Work items:
 
 Compatibility mapping:
 
-| Compatibility API | Canonical Sifr equivalent |
-| --- | --- |
-| `sifr.asyncio.run(fn)` | compatibility shim over direct async entrypoint bootstrap; not needed for new Sifr code |
-| `sifr.asyncio.create_task(fn)` | `scope.spawn(fn)` inside an explicit task scope |
-| `sifr.asyncio.gather(*tasks)` | `sifr.task.gather(*tasks)` |
-| `sifr.asyncio.TaskGroup` | `sifr.task.TaskGroup` |
-| `sifr.asyncio.sleep(delay)` | `sifr.task.sleep(delay)` |
-| `sifr.asyncio.wait_for(task, timeout)` | `sifr.task.timeout(task, timeout)` |
-| `sifr.asyncio.timeout(duration)` | `sifr.task.timeout(duration)` context-manager form |
-| `sifr.asyncio.Queue` | `sifr.sync.Channel` / `sifr.sync.bounded_channel` |
-| `sifr.concurrent.Future` | `sifr.task.Task` type alias |
+| Compatibility API | Canonical Sifr equivalent | Intentional divergence |
+| --- | --- | --- |
+| `sifr.asyncio.run(fn)` | compatibility shim over direct async entrypoint bootstrap | not needed for new Sifr code; no public event loop is exposed |
+| `sifr.asyncio.create_task(fn)` | `scope.spawn(fn)` inside an explicit task scope | invalid outside a scope; does not create ambient orphan tasks |
+| `sifr.asyncio.gather(*tasks)` | `sifr.task.gather(*tasks)` | fail-fast by default; collect-all behavior is deferred |
+| `sifr.asyncio.TaskGroup` | `sifr.task.TaskGroup` | follows Sifr `TaskResult`/`Failure` semantics |
+| `sifr.asyncio.sleep(delay)` | `sifr.task.sleep(delay)` | no event-loop parameter |
+| `sifr.asyncio.wait_for(task, timeout)` | `sifr.task.timeout(task, timeout)` | accepts task handles, not arbitrary awaitables, in v1 |
+| `sifr.asyncio.timeout(duration)` | `sifr.task.timeout(duration)` context-manager form | implemented through structured scope cancellation |
+| `sifr.asyncio.Queue` | `sifr.sync.Channel` / `sifr.sync.bounded_channel` | no `task_done`/`join` queue accounting in v1 |
+| `asyncio.Event` / `threading.Event` | `sifr.sync.Notify` or `sync.Shared[bool] + Notify` | `Notify` is edge-triggered; level-triggered Event behavior needs explicit state |
+| `threading.Condition` | `sifr.sync.Notify` plus `sifr.sync.Lock` | predicate discipline is explicit; not a transparent alias |
+| `sifr.concurrent.Future` | compatibility wrapper over task/blocking handles | not a pure alias; blocking work has different cancellation/lifetime behavior |
 
 Curated subset rationale:
 
 - `sifr.asyncio` covers only common compatibility APIs that map cleanly to the canonical model.
-- `asyncio.Event` maps to `sifr.sync.Notify` where needed, but the canonical API remains `sifr.sync.Notify`.
+- `asyncio.Event` and `threading.Event` do not transparently alias to `Notify`; level-triggered semantics require explicit shared state plus notification.
 - `asyncio.Condition` maps to `sifr.sync.Notify` plus `sifr.sync.Lock` where needed.
 - `asyncio.Barrier` is deferred with `sifr.sync.Barrier`.
 - `asyncio.wait` maps to `task.gather` for all-results composition or `task.select` / `task.race` for first-completion behavior.
@@ -923,7 +1056,7 @@ Acceptance criteria:
 
 - Compatibility APIs are thin wrappers over canonical model types.
 - No compatibility API introduces a second runtime model.
-- `sifr.concurrent.Future` is an alias over task handles, not a second future implementation.
+- `sifr.concurrent.Future` is a compatibility wrapper over canonical observation semantics, not a separate future runtime.
 - Unsupported `asyncio` APIs fail with intentional diagnostics or remain absent from documented public surface.
 - Intentional divergences are documented.
 - The phase exit gate passes.
@@ -1036,9 +1169,9 @@ These decisions are locked for the first async/concurrency model. `milestone_asy
 1. `scope.spawn` is the canonical v1 task creation API. Free-floating detached spawn is not exposed.
 2. Active task cancellation is scope-exit semantics and is not catchable by ordinary `except Error`; `CancellationError` is the materialized boundary evidence observed from outside the cancelled task.
 3. `CancellationError` is not an `Error` subclass and is never matched by broad `except Error`.
-4. `await Task[T, E]` always produces `Result[T, E | CancellationError]` when observed by a non-cancelled task. `try`/`except` auto-unwrap works on ordinary `E` errors, while cancellation requires explicit handling or propagation.
+4. `await Task[T, E]` always produces `TaskResult[T, E]` when observed by a non-cancelled task. `try await task_handle` is rejected in v1; cancellation requires explicit matching and intentional conversion into an ordinary error when needed.
 5. `task.select` and `task.race` cancel losing tasks by default.
-6. `sync.Channel[T]` is multi-producer, multi-consumer. Unbounded and bounded constructors are separate.
+6. Channels use explicit sender/receiver endpoints. Send and receive are async operations; receive returns `Result[T, ClosedError]` with no second closed state.
 7. Lock guards must not cross `await` points in v1.
 8. Spawned tasks require sendable task boundaries in v1. Local, non-Send task sets are deferred.
 9. `sifr.asyncio` ships only as a compatibility veneer after the canonical model is complete.
