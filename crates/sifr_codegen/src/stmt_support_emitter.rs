@@ -7333,7 +7333,13 @@ impl RustEmitter {
                 },
             );
         }
-        if let (sifr_hir::HirAsyncWithKind::TaskScope, Some(target)) = (kind, target) {
+        if let (true, Some(target)) = (
+            matches!(
+                kind,
+                sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup
+            ),
+            target,
+        ) {
             lowered_body.push(crate::RustStmt::Expr(crate::RustExpr::Await(Box::new(
                 crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Ident(target.to_string())),

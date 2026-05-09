@@ -497,6 +497,7 @@ status: in_progress
 **Implementation progress:**
 
 - In progress task-scope ownership slice: added validation that an unobserved observer handle does not detach its child; normal `TaskScope` exit waits for the child before continuing.
+- In progress TaskGroup surface slice: `async with task.TaskGroup() as group` now lowers through the existing scope-owned child runtime for conservative infallible/no-capture children; group error policy and sibling cancellation remain follow-up milestone_async_3 slices.
 
 ---
 

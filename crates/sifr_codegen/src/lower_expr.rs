@@ -959,7 +959,7 @@ fn try_lower_simple_method_call_expr(
     args: &[HirExpr],
 ) -> Option<RustExpr> {
     if method == "spawn"
-        && matches!(resolve_alias_type(object.ty()), Type::Class { name, .. } if name == "TaskScope")
+        && matches!(resolve_alias_type(object.ty()), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
     {
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
         let lowered_args = args
