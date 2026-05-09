@@ -1904,7 +1904,13 @@ fn try_lower_simple_async_with_stmt(
             mutable: false,
             name: target.to_string(),
             ty: None,
-            value: RustExpr::Literal(RustLiteral::Unit),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "__SifrTaskScope".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            },
         });
     }
 

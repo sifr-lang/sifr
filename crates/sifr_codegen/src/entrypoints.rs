@@ -53,6 +53,9 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if !emitter.enum_items.is_empty() {
         emitted_items.extend(emitter.enum_items.clone());
     }
+    if super::module_uses_task_scope(module) {
+        emitted_items.extend(super::build_task_scope_items());
+    }
     if !emitter.body_items.is_empty() {
         emitted_items.extend(emitter.body_items.clone());
     }

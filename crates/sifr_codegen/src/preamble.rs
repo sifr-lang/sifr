@@ -127,6 +127,34 @@ pub fn build_error_type_items(
     ]
 }
 
+pub fn build_task_scope_items() -> Vec<RustItem> {
+    vec![
+        RustItem::Struct {
+            name: "__SifrTaskScope".to_string(),
+            visibility: Visibility::Private,
+            derives: vec!["Debug".to_string()],
+            fields: vec![],
+        },
+        RustItem::Impl {
+            target: "__SifrTaskScope".to_string(),
+            type_params: vec![],
+            trait_: None,
+            items: vec![RustItem::Fn {
+                name: "new".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: Some(RustType::Named("Self".to_string())),
+                body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                    name: "Self".to_string(),
+                    fields: vec![],
+                }))],
+                is_async: false,
+            }],
+        },
+    ]
+}
+
 pub fn build_io_error_items() -> Vec<RustItem> {
     let mut items = build_error_type_items(
         "IOError",

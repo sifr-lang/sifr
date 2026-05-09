@@ -3654,6 +3654,27 @@ fn test_task_sleep_requires_tokio_without_async_main() {
 }
 
 #[test]
+fn test_task_scope_context_materializes_runtime_container() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def main() -> None:\n    async with task.scope() as scope:\n        await task.sleep(0.0)\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("struct __SifrTaskScope"));
+    assert!(result.rust_source.contains("impl __SifrTaskScope"));
+    assert!(result
+        .rust_source
+        .contains("let scope = __SifrTaskScope::new();"));
+}
+
+#[test]
 fn test_sync_main_does_not_require_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(

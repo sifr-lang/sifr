@@ -585,6 +585,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if needs_random_module_state {
         preamble_items.extend(build_random_module_state_items());
     }
+    if module_uses_task_scope(module) {
+        preamble_items.extend(build_task_scope_items());
+    }
 
     let mut assembled_body_items: Vec<RustItem> = Vec::new();
     if !emitter.enum_items.is_empty() {
@@ -835,6 +838,66 @@ fn module_uses_task_sleep(module: &HirModule) -> bool {
                     TraversalControl::Continue
                 }
             };
+            if matches!(
+                traversal::walk_stmts_until(
+                    &method.body,
+                    TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                    &mut on_stmt,
+                    &mut on_expr
+                ),
+                TraversalControl::Stop
+            ) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+fn module_uses_task_scope(module: &HirModule) -> bool {
+    fn stmt_is_task_scope(stmt: &HirStmt) -> bool {
+        matches!(
+            stmt,
+            HirStmt::AsyncWith {
+                kind: sifr_hir::HirAsyncWithKind::TaskScope,
+                ..
+            }
+        )
+    }
+
+    for func in &module.functions {
+        let mut on_stmt = |stmt: &HirStmt| {
+            if stmt_is_task_scope(stmt) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
+        if matches!(
+            traversal::walk_stmts_until(
+                &func.body,
+                TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                &mut on_stmt,
+                &mut on_expr
+            ),
+            TraversalControl::Stop
+        ) {
+            return true;
+        }
+    }
+
+    for class in &module.classes {
+        for method in &class.methods {
+            let mut on_stmt = |stmt: &HirStmt| {
+                if stmt_is_task_scope(stmt) {
+                    TraversalControl::Stop
+                } else {
+                    TraversalControl::Continue
+                }
+            };
+            let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
             if matches!(
                 traversal::walk_stmts_until(
                     &method.body,

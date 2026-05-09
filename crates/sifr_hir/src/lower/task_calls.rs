@@ -7,25 +7,25 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprAttribute, ExprCall};
 use sifr_type_system::Type;
 
-pub(super) enum TaskModuleCall {
+pub(super) enum TaskCallLowering {
     Lowered(HirExpr),
     Rejected,
-    NotTaskModuleCall,
+    NoMatch,
 }
 
 pub(super) fn lower_task_module_call(
     attr: &ExprAttribute,
     call: &ExprCall,
     ctx: &mut LowerCtx,
-) -> TaskModuleCall {
+) -> TaskCallLowering {
     let Expr::Name(module_name) = attr.value.as_ref() else {
-        return TaskModuleCall::NotTaskModuleCall;
+        return TaskCallLowering::NoMatch;
     };
     if module_name.id.as_str() != "task" {
-        return TaskModuleCall::NotTaskModuleCall;
+        return TaskCallLowering::NoMatch;
     }
     if attr.attr.as_str() != "sleep" {
-        return TaskModuleCall::NotTaskModuleCall;
+        return TaskCallLowering::NoMatch;
     }
     if !ctx.current_function_is_async {
         ctx.error_with_code_at(
@@ -33,7 +33,7 @@ pub(super) fn lower_task_module_call(
             "task.sleep() is only valid inside async functions".to_string(),
             call.range(),
         );
-        return TaskModuleCall::Rejected;
+        return TaskCallLowering::Rejected;
     }
     if !call.arguments.keywords.is_empty() {
         expression_diagnostics::call_unexpected_keyword(
@@ -41,7 +41,7 @@ pub(super) fn lower_task_module_call(
             "task.sleep() does not accept keyword arguments".to_string(),
             first_call_keyword_range(call),
         );
-        return TaskModuleCall::Rejected;
+        return TaskCallLowering::Rejected;
     }
     if call.arguments.args.len() != 1 {
         expression_diagnostics::call_wrong_positional_count(
@@ -49,10 +49,10 @@ pub(super) fn lower_task_module_call(
             "task.sleep() takes exactly one duration argument".to_string(),
             call_arity_range(call),
         );
-        return TaskModuleCall::Rejected;
+        return TaskCallLowering::Rejected;
     }
     let Some(duration) = lower_expr(&call.arguments.args[0], ctx) else {
-        return TaskModuleCall::Rejected;
+        return TaskCallLowering::Rejected;
     };
     if !matches!(duration.ty().resolve_alias(), Type::Int | Type::Float) {
         expression_diagnostics::type_mismatch(
@@ -63,9 +63,9 @@ pub(super) fn lower_task_module_call(
             ),
             call.arguments.args[0].range(),
         );
-        return TaskModuleCall::Rejected;
+        return TaskCallLowering::Rejected;
     }
-    TaskModuleCall::Lowered(HirExpr::Call {
+    TaskCallLowering::Lowered(HirExpr::Call {
         func: "__sifr_task_sleep".to_string(),
         args: vec![duration],
         ty: Type::Awaitable(Box::new(Type::None)),

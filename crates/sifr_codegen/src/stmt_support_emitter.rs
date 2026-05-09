@@ -7246,7 +7246,13 @@ impl RustEmitter {
                     mutable: false,
                     name: target.to_string(),
                     ty: None,
-                    value: crate::RustExpr::Literal(crate::RustLiteral::Unit),
+                    value: crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "__SifrTaskScope".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![],
+                    },
                 },
             );
         }
