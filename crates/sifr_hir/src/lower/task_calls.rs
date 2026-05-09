@@ -28,6 +28,7 @@ pub(super) fn lower_task_module_call(
         "sleep" => lower_task_sleep_call(call, ctx),
         "timeout" => lower_task_timeout_call(call, ctx),
         "gather" => lower_task_gather_call(call, ctx),
+        "race" => lower_task_race_call(call, ctx),
         "spawn" => {
             expression_diagnostics::type_mismatch(
                 ctx,
@@ -102,6 +103,68 @@ fn lower_task_gather_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLoweri
             Box::new(Type::List(result_ok_ty)),
             result_err_ty,
         ))),
+    })
+}
+
+fn lower_task_race_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {
+    if !ctx.current_function_is_async {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "task.race() is only valid inside async functions".to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if !call.arguments.keywords.is_empty() {
+        expression_diagnostics::call_unexpected_keyword(
+            ctx,
+            "task.race() does not accept keyword arguments".to_string(),
+            first_call_keyword_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if call.arguments.args.len() != 1 {
+        expression_diagnostics::call_wrong_positional_count(
+            ctx,
+            "task.race() takes exactly one list of task handles".to_string(),
+            call_arity_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+
+    let Some(handles) = lower_expr(&call.arguments.args[0], ctx) else {
+        return TaskCallLowering::Rejected;
+    };
+    let handles_ty = handles.ty().clone();
+    let Type::List(element_ty) = handles_ty.resolve_alias() else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "task.race() argument must be list[Task[T, E]], got '{}'",
+                handles.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    let Type::Task(ok_ty, err_ty) = element_ty.resolve_alias() else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "task.race() argument must be list[Task[T, E]], got '{}'",
+                handles.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    let result_ok_ty = ok_ty.clone();
+    let result_err_ty = err_ty.clone();
+    mark_task_handle_names_moved(&handles, ctx);
+    TaskCallLowering::Lowered(HirExpr::Call {
+        func: "__sifr_task_race".to_string(),
+        args: vec![handles],
+        ty: Type::Awaitable(Box::new(Type::TaskResult(result_ok_ty, result_err_ty))),
     })
 }
 

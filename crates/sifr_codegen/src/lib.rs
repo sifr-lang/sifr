@@ -888,7 +888,7 @@ fn module_uses_task_scope(module: &HirModule) -> bool {
         )
     }
     fn expr_uses_task_scope_runtime(expr: &HirExpr) -> bool {
-        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_gather")
+        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_gather" || func == "__sifr_task_race")
     }
 
     for func in &module.functions {

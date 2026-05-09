@@ -1581,6 +1581,24 @@ fn test_task_timeout_consumes_handle_binding() {
 }
 
 #[test]
+fn test_task_race_consumes_handle_collection_binding() {
+    let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handles = [scope.spawn(worker()), scope.spawn(worker())]\n        result = await task.race(handles)\n        second = await task.race(handles)\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("moved value")
+            && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && e.primary_range
+                == Some(range_for_after(
+                    source,
+                    "second = await task.race(",
+                    "handles",
+                ))
+    }));
+}
+
+#[test]
 fn test_task_timeout_context_manager_requires_timeout_error_result_for_awaits() {
     let source = "async def main() -> None:\n    async with task.timeout(1.0):\n        await task.sleep(0.0)\n    return None\n";
     let result = lower_source(source);
