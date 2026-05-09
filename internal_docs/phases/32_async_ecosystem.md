@@ -408,7 +408,7 @@ status: completed
 
 ### milestone_async_3: Structured Concurrency and Cancellation Semantics
 
-status: proposed
+status: in_progress
 
 **Goal:** Make scoped concurrency the default composition model.
 
@@ -493,6 +493,10 @@ status: proposed
 **Demo:**
 
 - `demos/m32_structured_concurrency_demo.sifr`
+
+**Implementation progress:**
+
+- In progress task-scope ownership slice: added validation that an unobserved observer handle does not detach its child; normal `TaskScope` exit waits for the child before continuing.
 
 ---
 

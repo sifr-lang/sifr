@@ -64,6 +64,7 @@
     "stdlib_base64_intrinsics",
     "stdlib_subprocess",
     "cpython_json_subset",
-    "cpython_math_semantic_corrections_subset"
+    "cpython_math_semantic_corrections_subset",
+    "task_scope_unobserved_child_waits"
   ]
 }
