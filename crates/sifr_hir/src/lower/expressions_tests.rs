@@ -1581,6 +1581,18 @@ fn test_task_timeout_consumes_handle_binding() {
 }
 
 #[test]
+fn test_task_timeout_context_manager_requires_timeout_error_result_for_awaits() {
+    let source = "async def main() -> None:\n    async with task.timeout(1.0):\n        await task.sleep(0.0)\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("must return Result[..., TimeoutError]")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+    }));
+}
+
+#[test]
 fn test_double_mutable_borrow_has_ownership_code() {
     let source = "def swap(mut a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    swap(items, items)\n";
     let result = lower_source(source);

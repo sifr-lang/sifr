@@ -616,6 +616,7 @@ fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
             | "JsonLimitError"
             | "HashlibError"
             | "DecimalConversionError"
+            | "TimeoutError"
     )
 }
 

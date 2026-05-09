@@ -585,7 +585,10 @@ fn try_lower_task_sleep_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     })
 }
 
-fn try_lower_task_duration_expr(duration: &HirExpr, seconds_name: &str) -> Option<RustExpr> {
+pub(crate) fn try_lower_task_duration_expr(
+    duration: &HirExpr,
+    seconds_name: &str,
+) -> Option<RustExpr> {
     let seconds = RustExpr::Cast {
         expr: Box::new(try_lower_leaf_or_name_expr(duration)?),
         ty: RustType::F64,

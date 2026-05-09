@@ -253,6 +253,10 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
                 collect_expr(arg, needs);
             }
         }
+        RustExpr::TimeoutAwait { duration, future } => {
+            collect_expr(duration, needs);
+            collect_expr(future, needs);
+        }
         RustExpr::FormatMacro { args, .. } => {
             for arg in args {
                 collect_expr(arg, needs);

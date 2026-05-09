@@ -1313,6 +1313,10 @@ fn append_recursive_capture_args_to_expr(
                 append_recursive_capture_args_to_expr(item, fn_name, capture_names);
             }
         }
+        RustExpr::TimeoutAwait { duration, future } => {
+            append_recursive_capture_args_to_expr(duration, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(future, fn_name, capture_names);
+        }
         RustExpr::FormatMacro { args, .. } => {
             for arg in args {
                 append_recursive_capture_args_to_expr(arg, fn_name, capture_names);
