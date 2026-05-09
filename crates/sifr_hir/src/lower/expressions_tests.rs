@@ -1536,6 +1536,38 @@ fn test_task_handle_join_consumes_handle_binding() {
 }
 
 #[test]
+fn test_task_handle_cancel_does_not_consume_handle_binding() {
+    let source = concat!(
+        "async def worker() -> int:\n    return 41\n\n",
+        "async def main() -> None:\n    async with task.scope() as scope:\n",
+        "        handle = scope.spawn(worker())\n        handle.",
+        "cancel",
+        "()\n        result = await handle\n    return None\n",
+    );
+    let result = lower_source(source);
+    assert!(result.is_ok(), "cancel should borrow the task handle");
+}
+
+#[test]
+fn test_task_handle_cancel_after_await_rejects_moved_handle() {
+    let source = concat!(
+        "async def worker() -> int:\n    return 41\n\n",
+        "async def main() -> None:\n    async with task.scope() as scope:\n",
+        "        handle = scope.spawn(worker())\n        result = await handle\n        handle.",
+        "cancel",
+        "()\n    return None\n",
+    );
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("moved value")
+            && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && e.primary_range == Some(range_for_after(source, "        handle.", "handle"))
+    }));
+}
+
+#[test]
 fn test_double_mutable_borrow_has_ownership_code() {
     let source = "def swap(mut a: list[int], mut b: list[int]):\n    pass\n\ndef main():\n    items: list[int] = [1, 2, 3]\n    swap(items, items)\n";
     let result = lower_source(source);

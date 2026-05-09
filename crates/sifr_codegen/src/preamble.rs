@@ -163,6 +163,10 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     ))),
                 ),
                 (
+                    "abort_handle".to_string(),
+                    RustType::Named("tokio::task::AbortHandle".to_string()),
+                ),
+                (
                     "_error".to_string(),
                     RustType::Named("std::marker::PhantomData<E>".to_string()),
                 ),
@@ -207,51 +211,71 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 },
             ],
             trait_: None,
-            items: vec![RustItem::Fn {
-                name: "join".to_string(),
-                visibility: Visibility::Private,
-                type_params: vec![],
-                params: vec![RustParam::SelfValue],
-                ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
-                body: vec![RustStmt::IfLet {
-                    pattern: "Some(receiver)".to_string(),
-                    expr: RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident("self".to_string())),
-                        field: "receiver".to_string(),
-                    },
-                    then_body: vec![RustStmt::Match {
-                        expr: RustExpr::Await(Box::new(RustExpr::Ident("receiver".to_string()))),
-                        arms: vec![
-                            RustMatchArm {
-                                pattern: "Ok(value)".to_string(),
-                                bindings: vec![],
-                                guard: None,
-                                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                                    func: Box::new(RustExpr::Path(vec![
+            items: vec![
+                RustItem::Fn {
+                    name: "join".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfValue],
+                    ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
+                    body: vec![RustStmt::IfLet {
+                        pattern: "Some(receiver)".to_string(),
+                        expr: RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field: "receiver".to_string(),
+                        },
+                        then_body: vec![RustStmt::Match {
+                            expr: RustExpr::Await(Box::new(RustExpr::Ident(
+                                "receiver".to_string(),
+                            ))),
+                            arms: vec![
+                                RustMatchArm {
+                                    pattern: "Ok(value)".to_string(),
+                                    bindings: vec![],
+                                    guard: None,
+                                    body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "__SifrTaskResult".to_string(),
+                                            "Ok".to_string(),
+                                        ])),
+                                        args: vec![RustExpr::Ident("value".to_string())],
+                                    }))],
+                                },
+                                RustMatchArm {
+                                    pattern: "Err(_)".to_string(),
+                                    bindings: vec![],
+                                    guard: None,
+                                    body: vec![RustStmt::Return(Some(RustExpr::Path(vec![
                                         "__SifrTaskResult".to_string(),
-                                        "Ok".to_string(),
-                                    ])),
-                                    args: vec![RustExpr::Ident("value".to_string())],
-                                }))],
-                            },
-                            RustMatchArm {
-                                pattern: "Err(_)".to_string(),
-                                bindings: vec![],
-                                guard: None,
-                                body: vec![RustStmt::Return(Some(RustExpr::Path(vec![
-                                    "__SifrTaskResult".to_string(),
-                                    "Cancelled".to_string(),
-                                ])))],
-                            },
-                        ],
+                                        "Cancelled".to_string(),
+                                    ])))],
+                                },
+                            ],
+                        }],
+                        else_body: Some(vec![RustStmt::Return(Some(RustExpr::Path(vec![
+                            "__SifrTaskResult".to_string(),
+                            "Cancelled".to_string(),
+                        ])))]),
                     }],
-                    else_body: Some(vec![RustStmt::Return(Some(RustExpr::Path(vec![
-                        "__SifrTaskResult".to_string(),
-                        "Cancelled".to_string(),
-                    ])))]),
-                }],
-                is_async: true,
-            }],
+                    is_async: true,
+                },
+                RustItem::Fn {
+                    name: "cancel".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfParam { mutable: false }],
+                    ret: Some(RustType::Unit),
+                    body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field: "abort_handle".to_string(),
+                        }),
+                        method: "abort".to_string(),
+                        args: vec![],
+                    })],
+                    is_async: false,
+                },
+            ],
         },
         RustItem::Struct {
             name: "__SifrTaskScope".to_string(),
@@ -336,6 +360,16 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                                     .to_string(),
                             ),
                         },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "abort_handle".to_string(),
+                            ty: None,
+                            value: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("child".to_string())),
+                                method: "abort_handle".to_string(),
+                                args: vec![],
+                            },
+                        },
                         RustStmt::Expr(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Field {
                                 expr: Box::new(RustExpr::Ident("self".to_string())),
@@ -353,6 +387,10 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                                         func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
                                         args: vec![RustExpr::Ident("receiver".to_string())],
                                     },
+                                ),
+                                (
+                                    "abort_handle".to_string(),
+                                    RustExpr::Ident("abort_handle".to_string()),
                                 ),
                                 (
                                     "_error".to_string(),

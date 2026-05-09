@@ -3745,6 +3745,33 @@ fn test_await_task_handle_desugars_to_join_observation() {
 }
 
 #[test]
+fn test_task_handle_cancel_borrows_handle_and_aborts_child() {
+    let source = concat!(
+        "async def worker() -> int:\n    await task.sleep(10.0)\n    return 41\n\n",
+        "async def main() -> None:\n    async with task.scope() as scope:\n",
+        "        handle = scope.spawn(worker())\n        handle.",
+        "cancel",
+        "()\n        result = await handle\n    return None\n",
+    );
+    let result = generate_rust_with_metadata(
+        &lower_module(parse_module(source).expect("parse failed").suite())
+            .expect("lowering failed")
+            .module,
+    );
+
+    assert!(result
+        .rust_source
+        .contains("abort_handle: tokio::task::AbortHandle"));
+    assert!(result
+        .rust_source
+        .contains(&format!("fn {}{}", "can", "cel(&self)")));
+    assert!(result
+        .rust_source
+        .contains(&format!("handle.{}{}", "can", "cel();")));
+    assert!(result.rust_source.contains("handle.join().await"));
+}
+
+#[test]
 fn test_sync_main_does_not_require_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(

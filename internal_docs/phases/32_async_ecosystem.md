@@ -393,6 +393,9 @@ status: in_progress
 - Added positive validation fixture: `task_handle_await.sifr`.
 - In progress task-handle affine slice: observing a task handle through direct `await handle` or `await handle.join()` now consumes the handle binding through the HIR ownership tracker.
 - Added negative validation fixture: `task_handle_double_await_rejected.sifr`.
+- In progress task cancellation slice: `handle.cancel()` borrows the task handle, requests private runtime cancellation, and leaves the handle observable for `await handle` / `await handle.join()` cleanup observation.
+- Added positive validation fixture: `task_cancel_basic.sifr`.
+- Added negative validation fixture: `task_handle_cancel_after_await_rejected.sifr`.
 
 ---
 
