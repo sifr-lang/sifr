@@ -38,6 +38,7 @@ pub(super) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             collect_type_vars(ok, vars);
             collect_type_vars(err, vars);
         }
+        Type::TimeoutResult(err) => collect_type_vars(err, vars),
         Type::Awaitable(result) => collect_type_vars(result, vars),
         Type::Alias {
             type_args, body, ..

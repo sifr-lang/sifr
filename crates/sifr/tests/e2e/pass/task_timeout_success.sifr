@@ -1,0 +1,10 @@
+async def worker() -> int:
+    await task.sleep(0.0)
+    return 41
+
+
+async def main() -> None:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        result = await task.timeout(handle, 1.0)
+    return None

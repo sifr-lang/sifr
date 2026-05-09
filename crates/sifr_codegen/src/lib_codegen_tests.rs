@@ -3772,6 +3772,28 @@ fn test_task_handle_cancel_borrows_handle_and_aborts_child() {
 }
 
 #[test]
+fn test_task_timeout_handle_lowers_to_private_timeout_result() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("enum __SifrTimeoutResult<E>"));
+    assert!(result.rust_source.contains("async fn __sifr_timeout"));
+    assert!(result.rust_source.contains("handle.__sifr_timeout"));
+    assert!(result.rust_source.contains(
+        "let result: __SifrTaskResult<i64, __SifrTimeoutResult<std::convert::Infallible>>"
+    ));
+}
+
+#[test]
 fn test_sync_main_does_not_require_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(

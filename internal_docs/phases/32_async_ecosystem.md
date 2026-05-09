@@ -396,6 +396,8 @@ status: in_progress
 - In progress task cancellation slice: `handle.cancel()` borrows the task handle, requests private runtime cancellation, and leaves the handle observable for `await handle` / `await handle.join()` cleanup observation.
 - Added positive validation fixture: `task_cancel_basic.sifr`.
 - Added negative validation fixture: `task_handle_cancel_after_await_rejected.sifr`.
+- In progress task timeout handle slice: `task.timeout(handle, duration)` accepts task handles, consumes the handle, races observation against a private timeout, cancels on deadline expiry, and returns a private generated `TimeoutResult`-carrying `TaskResult`.
+- Added validation coverage for `task_timeout_success.sifr`, `task_timeout_expiry.sifr`, `task_timeout_error_type.sifr`, and `task_timeout_double_observe_rejected.sifr`.
 
 ---
 
