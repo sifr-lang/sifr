@@ -3728,6 +3728,28 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
 }
 
 #[test]
+fn test_task_gather_lowers_to_private_gather_helper() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    return 2\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("async fn __sifr_task_gather"));
+    assert!(result.rust_source.contains("__sifr_task_gather(vec!["));
+    assert!(result
+        .rust_source
+        .contains("let result: __SifrTaskResult<Vec<i64>, std::convert::Infallible>"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
 fn test_task_handle_join_lowers_to_task_result_observation() {
     let result = generate_rust_with_metadata(
         &lower_module(

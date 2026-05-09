@@ -476,6 +476,31 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 },
             ],
         },
+        RustItem::Fn {
+            name: "__sifr_task_gather".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![
+                crate::RustTypeParam {
+                    name: "T".to_string(),
+                    bounds: vec![],
+                },
+                crate::RustTypeParam {
+                    name: "E".to_string(),
+                    bounds: vec![],
+                },
+            ],
+            params: vec![RustParam::Named {
+                name: "handles".to_string(),
+                ty: RustType::Named("Vec<__SifrTask<T, E>>".to_string()),
+            }],
+            ret: Some(RustType::Named(
+                "__SifrTaskResult<Vec<T>, E>".to_string(),
+            )),
+            body: vec![RustStmt::Expr(RustExpr::Ident(
+                "let mut values = Vec::new();\n        for handle in handles {\n            match handle.join().await {\n                __SifrTaskResult::Ok(value) => values.push(value),\n                __SifrTaskResult::Err(err) => return __SifrTaskResult::Err(err),\n                __SifrTaskResult::Cancelled => return __SifrTaskResult::Cancelled,\n            }\n        }\n        return __SifrTaskResult::Ok(values)".to_string(),
+            ))],
+            is_async: true,
+        },
     ]
 }
 

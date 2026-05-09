@@ -66,6 +66,7 @@
     "cpython_json_subset",
     "cpython_math_semantic_corrections_subset",
     "task_scope_unobserved_child_waits",
-    "task_group_basic"
+    "task_group_basic",
+    "task_gather_ordered"
   ]
 }
