@@ -197,15 +197,23 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Iterable(_) => (14, String::new()),
         Type::Iterator(_) => (15, String::new()),
         Type::Function(_) => (16, String::new()),
-        Type::Unknown => (17, String::new()),
-        Type::Any => (18, String::new()),
-        Type::Never => (19, String::new()),
-        Type::Union(_) => (20, String::new()),
-        Type::Intersection(_) => (21, String::new()),
+        Type::AsyncFunction(_) => (17, String::new()),
+        Type::Coroutine(_, _) => (18, String::new()),
+        Type::Task(_, _) => (19, String::new()),
+        Type::TaskResult(_, _) => (20, String::new()),
+        Type::BlockingTask(_, _) => (21, String::new()),
+        Type::Awaitable(_) => (22, String::new()),
+        Type::AsyncIterator(_, _) => (23, String::new()),
+        Type::AsyncGenerator(_, _) => (24, String::new()),
+        Type::Unknown => (25, String::new()),
+        Type::Any => (26, String::new()),
+        Type::Never => (27, String::new()),
+        Type::Union(_) => (28, String::new()),
+        Type::Intersection(_) => (29, String::new()),
         Type::Alias {
             name, type_args, ..
         } => (
-            22,
+            30,
             if type_args.is_empty() {
                 name.clone()
             } else {
@@ -220,16 +228,16 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
                 )
             },
         ),
-        Type::Class { name, .. } => (23, name.clone()),
-        Type::Result(_, _) => (24, String::new()),
-        Type::Protocol { name, .. } => (25, name.clone()),
-        Type::Newtype { name, .. } => (26, name.clone()),
-        Type::TypeVar(name) => (27, name.clone()),
-        Type::Callable(..) => (28, String::new()),
-        Type::Enum { name, .. } => (29, name.clone()),
-        Type::BigInt => (30, String::new()),
-        Type::Decimal => (31, String::new()),
-        Type::BigDecimal => (32, String::new()),
+        Type::Class { name, .. } => (31, name.clone()),
+        Type::Result(_, _) => (32, String::new()),
+        Type::Protocol { name, .. } => (33, name.clone()),
+        Type::Newtype { name, .. } => (34, name.clone()),
+        Type::TypeVar(name) => (35, name.clone()),
+        Type::Callable(..) => (36, String::new()),
+        Type::Enum { name, .. } => (37, name.clone()),
+        Type::BigInt => (38, String::new()),
+        Type::Decimal => (39, String::new()),
+        Type::BigDecimal => (40, String::new()),
     }
 }
 

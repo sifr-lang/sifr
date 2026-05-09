@@ -1,0 +1,10 @@
+# expect-error: SIFR-TYPE-0002
+
+def apply(f: Callable[[int], int]) -> int:
+    return f(1)
+
+async def double(x: int) -> int:
+    return x * 2
+
+def main() -> int:
+    return apply(double)

@@ -66,6 +66,18 @@ pub(super) fn infer_type_var_bindings(
             infer_type_var_bindings(p_ok, a_ok, bindings);
             infer_type_var_bindings(p_err, a_err, bindings);
         }
+        (Type::Coroutine(p_ok, p_err), Type::Coroutine(a_ok, a_err))
+        | (Type::Task(p_ok, p_err), Type::Task(a_ok, a_err))
+        | (Type::TaskResult(p_ok, p_err), Type::TaskResult(a_ok, a_err))
+        | (Type::BlockingTask(p_ok, p_err), Type::BlockingTask(a_ok, a_err))
+        | (Type::AsyncIterator(p_ok, p_err), Type::AsyncIterator(a_ok, a_err))
+        | (Type::AsyncGenerator(p_ok, p_err), Type::AsyncGenerator(a_ok, a_err)) => {
+            infer_type_var_bindings(p_ok, a_ok, bindings);
+            infer_type_var_bindings(p_err, a_err, bindings);
+        }
+        (Type::Awaitable(p_result), Type::Awaitable(a_result)) => {
+            infer_type_var_bindings(p_result, a_result, bindings);
+        }
         (Type::Callable(p_params, _, p_ret), Type::Callable(a_params, _, a_ret))
             if p_params.len() == a_params.len() =>
         {

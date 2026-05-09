@@ -1072,7 +1072,7 @@ impl RustEmitter {
             params,
             ret: self.lower_function_return_type(func, is_generator),
             body: lowered_body,
-            is_async: false,
+            is_async: func.is_async,
         });
 
         self.current_return_type = saved_return_type;
@@ -1976,6 +1976,7 @@ mod tests {
             params,
             return_type: Type::Int,
             body,
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             type_params: vec![],
@@ -1990,6 +1991,7 @@ mod tests {
             body: vec![HirStmt::Return {
                 value: Some(int_binop_name(name)),
             }],
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             type_params: vec![],
@@ -2013,6 +2015,7 @@ mod tests {
                     }),
                 },
             ],
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             type_params: vec![],

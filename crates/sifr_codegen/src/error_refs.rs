@@ -86,16 +86,24 @@ fn collect_type_error_refs(
             }
             collect_type_error_refs(body, referenced, builtin_error_classes);
         }
-        Type::Dict(key, value) | Type::Result(key, value) => {
+        Type::Dict(key, value)
+        | Type::Result(key, value)
+        | Type::Coroutine(key, value)
+        | Type::Task(key, value)
+        | Type::TaskResult(key, value)
+        | Type::BlockingTask(key, value)
+        | Type::AsyncIterator(key, value)
+        | Type::AsyncGenerator(key, value) => {
             collect_type_error_refs(key, referenced, builtin_error_classes);
             collect_type_error_refs(value, referenced, builtin_error_classes);
         }
+        Type::Awaitable(inner) => collect_type_error_refs(inner, referenced, builtin_error_classes),
         Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
             for item in items {
                 collect_type_error_refs(item, referenced, builtin_error_classes);
             }
         }
-        Type::Function(sig) => {
+        Type::Function(sig) | Type::AsyncFunction(sig) => {
             for (_, param_ty, _) in &sig.params {
                 collect_type_error_refs(param_ty, referenced, builtin_error_classes);
             }
@@ -301,6 +309,7 @@ fn collect_expr_error_refs(
             collect_expr_error_refs(right, referenced, builtin_error_classes);
         }
         HirExpr::UnaryOp { operand, .. }
+        | HirExpr::Await { value: operand, .. }
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
         | HirExpr::ErrWrap { value: operand, .. }
@@ -520,6 +529,7 @@ mod tests {
             }],
             return_type: Type::Result(Box::new(Type::Int), Box::new(error_type("IOError"))),
             body: Vec::new(),
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: Vec::new(),
             type_params: Vec::new(),
@@ -554,6 +564,7 @@ mod tests {
                 }],
                 return_type: Type::None,
                 body: Vec::new(),
+                is_async: false,
                 method_kind: MethodKind::Regular,
                 decorators: Vec::new(),
                 type_params: Vec::new(),

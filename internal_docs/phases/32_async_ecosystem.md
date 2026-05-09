@@ -1,6 +1,6 @@
 # Phase 32: Async and Concurrency Model
 
-status: proposed
+status: in_progress
 
 ## Objective
 
@@ -110,7 +110,7 @@ The milestones below intentionally match the async implementation plan from `mil
 
 ### milestone_async_0: Model Contract and Runtime Architecture Lock
 
-status: proposed
+status: completed
 
 **Goal:** Lock the async/concurrency semantic contract before adding compiler/runtime code.
 
@@ -234,7 +234,7 @@ status: proposed
 
 ### milestone_async_1: Async Syntax, Awaitability, and HIR Substrate
 
-status: proposed
+status: in_progress
 
 **Goal:** Teach the compiler to understand async syntax as typed Sifr semantics without task scheduling.
 
@@ -282,6 +282,13 @@ status: proposed
 - `async_return_type_mismatch.sifr`
 - `async_call_without_await_from_sync_rejected.sifr`
 - `cancelled_task_except_error_does_not_swallow.sifr`
+
+**Implementation progress (2026-05-09):**
+
+- Completed first substrate slice: `async def` HIR marking, `await` HIR expression, async call typing as `Coroutine[T, E]`, async function value typing as `AsyncFunction`, await type checks, initial async/await codegen shape, and async type annotations for `Coroutine`, `Task`, `TaskResult`, `BlockingTask`, `Awaitable`, `AsyncIterator`, and `AsyncGenerator`.
+- Added positive validation fixtures: `async_basic.sifr`, `await_chain.sifr`, and `async_result_auto_unwrap.sifr`.
+- Added negative validation fixtures: `await_outside_async.sifr`, `await_non_awaitable.sifr`, `async_call_without_await_from_sync_rejected.sifr`, and `async_function_not_sync_callable.sifr`.
+- Remaining before milestone closure: built-in `async with task.scope()`, built-in `async with task.timeout(duration)`, `try await task_handle` rejection, and cancellation-specific negative validation once task handles exist.
 
 **Demo:**
 

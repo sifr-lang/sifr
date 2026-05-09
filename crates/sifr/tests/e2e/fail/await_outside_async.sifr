@@ -1,0 +1,4 @@
+# expect-error: SIFR-TYPE-0002
+def f() -> int:
+    x: int = await 1
+    return x

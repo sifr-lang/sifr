@@ -405,6 +405,7 @@ fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
             validate_expr_lowering_shape(left)?;
             validate_expr_lowering_shape(right)
         }
+        HirExpr::Await { value, .. } => validate_expr_lowering_shape(value),
         HirExpr::UnaryOp { operand, .. } => validate_expr_lowering_shape(operand),
         HirExpr::Compare {
             left, comparators, ..
@@ -1451,6 +1452,7 @@ fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
 fn expr_has_result_flow(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::QuestionMark { .. } | HirExpr::OkWrap { .. } | HirExpr::ErrWrap { .. } => true,
+        HirExpr::Await { value, .. } => expr_has_result_flow(value),
         HirExpr::UnaryOp { operand, .. } => expr_has_result_flow(operand),
         HirExpr::BinOp { left, right, .. } => {
             expr_has_result_flow(left) || expr_has_result_flow(right)
@@ -9296,6 +9298,7 @@ mod tests {
                 body: vec![HirStmt::Return {
                     value: Some(HirExpr::IntLiteral(1)),
                 }],
+                is_async: false,
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 type_params: vec![],
@@ -9328,6 +9331,7 @@ mod tests {
                         ty: Type::Int,
                     },
                 }],
+                is_async: false,
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 type_params: vec![],
@@ -9353,6 +9357,7 @@ mod tests {
                     op: "+=".to_string(),
                     value: HirExpr::IntLiteral(1),
                 }],
+                is_async: false,
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 type_params: vec![],

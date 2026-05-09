@@ -3206,6 +3206,7 @@ fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
                 call_uses_legacy_iterator_builtin(left) || call_uses_legacy_iterator_builtin(right)
             }
             HirExpr::UnaryOp { operand, .. }
+            | HirExpr::Await { value: operand, .. }
             | HirExpr::QuestionMark { expr: operand, .. }
             | HirExpr::OkWrap { value: operand, .. }
             | HirExpr::ErrWrap { value: operand, .. }

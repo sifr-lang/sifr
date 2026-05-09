@@ -20,6 +20,22 @@ pub enum Type {
     None,
     /// Function type with parameter types and return type
     Function(FunctionType),
+    /// Async callable type. Not assignable to sync `Function`/`Callable`.
+    AsyncFunction(FunctionType),
+    /// Linear coroutine produced by calling an async function.
+    Coroutine(Box<Type>, Box<Type>),
+    /// Scoped task observer handle produced by spawning a coroutine.
+    Task(Box<Type>, Box<Type>),
+    /// Result of observing a task handle.
+    TaskResult(Box<Type>, Box<Type>),
+    /// Explicit blocking-offload observer handle.
+    BlockingTask(Box<Type>, Box<Type>),
+    /// Structural awaitability protocol.
+    Awaitable(Box<Type>),
+    /// Structural async iteration protocol.
+    AsyncIterator(Box<Type>, Box<Type>),
+    /// User-defined async generator object.
+    AsyncGenerator(Box<Type>, Box<Type>),
     /// List type (`list[T]` in Sifr, `Vec<T>` in Rust)
     List(Box<Type>),
     /// Dictionary type (`dict[K, V]` in Sifr, `HashMap<K, V>` in Rust)
@@ -536,10 +552,17 @@ impl Type {
             | Self::Range
             | Self::Decimal => OwnershipKind::Copy,
             Self::LiteralInt(_) | Self::LiteralBool(_) => OwnershipKind::Copy,
-            Self::Function(_) => OwnershipKind::Copy,
+            Self::Function(_) | Self::AsyncFunction(_) => OwnershipKind::Copy,
             Self::Str
             | Self::Bytes
             | Self::Any
+            | Self::Coroutine(_, _)
+            | Self::Task(_, _)
+            | Self::TaskResult(_, _)
+            | Self::BlockingTask(_, _)
+            | Self::Awaitable(_)
+            | Self::AsyncIterator(_, _)
+            | Self::AsyncGenerator(_, _)
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
@@ -638,6 +661,48 @@ impl Type {
             Self::Result(ok, err) => {
                 format!("Result[{}, {}]", ok.display_name(), err.display_name())
             }
+            Self::AsyncFunction(ft) => {
+                let params = ft
+                    .params
+                    .iter()
+                    .map(|(_, ty, _)| ty.display_name())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!(
+                    "AsyncFunction[[{}], {}]",
+                    params,
+                    ft.return_type.display_name()
+                )
+            }
+            Self::Coroutine(ok, err) => {
+                format!("Coroutine[{}, {}]", ok.display_name(), err.display_name())
+            }
+            Self::Task(ok, err) => format!("Task[{}, {}]", ok.display_name(), err.display_name()),
+            Self::TaskResult(ok, err) => {
+                format!("TaskResult[{}, {}]", ok.display_name(), err.display_name())
+            }
+            Self::BlockingTask(ok, err) => {
+                format!(
+                    "BlockingTask[{}, {}]",
+                    ok.display_name(),
+                    err.display_name()
+                )
+            }
+            Self::Awaitable(result) => format!("Awaitable[{}]", result.display_name()),
+            Self::AsyncIterator(item, err) => {
+                format!(
+                    "AsyncIterator[{}, {}]",
+                    item.display_name(),
+                    err.display_name()
+                )
+            }
+            Self::AsyncGenerator(item, err) => {
+                format!(
+                    "AsyncGenerator[{}, {}]",
+                    item.display_name(),
+                    err.display_name()
+                )
+            }
             Self::Protocol { name, .. } => name.clone(),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(),
@@ -706,6 +771,35 @@ impl Type {
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
             Self::Class { name, .. } => name.clone(),
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
+            Self::AsyncFunction(ft) => {
+                let params: Vec<String> = ft.params.iter().map(|(_, t, _)| t.rust_type()).collect();
+                let ret = ft.return_type.rust_type();
+                format!("fn({}) -> {}", params.join(", "), ret)
+            }
+            Self::Coroutine(ok, err) => {
+                format!(
+                    "std::pin::Pin<Box<dyn std::future::Future<Output = Result<{}, {}>>>>",
+                    ok.rust_type(),
+                    err.rust_type()
+                )
+            }
+            Self::Task(ok, err) => format!("Task<{}, {}>", ok.rust_type(), err.rust_type()),
+            Self::TaskResult(ok, err) => {
+                format!("TaskResult<{}, {}>", ok.rust_type(), err.rust_type())
+            }
+            Self::BlockingTask(ok, err) => {
+                format!("BlockingTask<{}, {}>", ok.rust_type(), err.rust_type())
+            }
+            Self::Awaitable(result) => format!(
+                "std::pin::Pin<Box<dyn std::future::Future<Output = {}>>>",
+                result.rust_type()
+            ),
+            Self::AsyncIterator(item, err) => {
+                format!("AsyncIterator<{}, {}>", item.rust_type(), err.rust_type())
+            }
+            Self::AsyncGenerator(item, err) => {
+                format!("AsyncGenerator<{}, {}>", item.rust_type(), err.rust_type())
+            }
             Self::Protocol { name, .. } => format!("Box<dyn {name}>"),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
@@ -828,6 +922,14 @@ impl Type {
             Type::Iterable(_) => "Iterable".to_string(),
             Type::Iterator(_) => "Iterator".to_string(),
             Type::Function(_) => "Fn".to_string(),
+            Type::AsyncFunction(_) => "AsyncFn".to_string(),
+            Type::Coroutine(_, _) => "Coroutine".to_string(),
+            Type::Task(_, _) => "Task".to_string(),
+            Type::TaskResult(_, _) => "TaskResult".to_string(),
+            Type::BlockingTask(_, _) => "BlockingTask".to_string(),
+            Type::Awaitable(_) => "Awaitable".to_string(),
+            Type::AsyncIterator(_, _) => "AsyncIterator".to_string(),
+            Type::AsyncGenerator(_, _) => "AsyncGenerator".to_string(),
             Type::Unknown => "Unknown".to_string(),
             Type::Any => "Any".to_string(),
             Type::Never => "Never".to_string(),
@@ -1183,9 +1285,16 @@ impl Type {
                 Type::Callable(params, _, ret) => {
                     params.iter().any(contains_any) || contains_any(ret)
                 }
-                Type::Result(ok, err) => contains_any(ok) || contains_any(err),
+                Type::Result(ok, err)
+                | Type::Coroutine(ok, err)
+                | Type::Task(ok, err)
+                | Type::TaskResult(ok, err)
+                | Type::BlockingTask(ok, err)
+                | Type::AsyncIterator(ok, err)
+                | Type::AsyncGenerator(ok, err) => contains_any(ok) || contains_any(err),
+                Type::Awaitable(result) => contains_any(result),
                 Type::Alias { body, .. } => contains_any(body),
-                Type::Function(ft) => {
+                Type::Function(ft) | Type::AsyncFunction(ft) => {
                     ft.params.iter().any(|(_, ty, _)| contains_any(ty))
                         || contains_any(&ft.return_type)
                 }
@@ -1347,6 +1456,34 @@ impl Type {
             // Result types: covariant in both T and E
             (Self::Result(ok_a, err_a), Self::Result(ok_b, err_b)) => {
                 ok_a.is_assignable_to(ok_b) && err_a.is_assignable_to(err_b)
+            }
+            (Self::Coroutine(ok_a, err_a), Self::Coroutine(ok_b, err_b))
+            | (Self::Task(ok_a, err_a), Self::Task(ok_b, err_b))
+            | (Self::TaskResult(ok_a, err_a), Self::TaskResult(ok_b, err_b))
+            | (Self::BlockingTask(ok_a, err_a), Self::BlockingTask(ok_b, err_b))
+            | (Self::AsyncIterator(ok_a, err_a), Self::AsyncIterator(ok_b, err_b))
+            | (Self::AsyncGenerator(ok_a, err_a), Self::AsyncGenerator(ok_b, err_b)) => {
+                ok_a.is_assignable_to(ok_b) && err_a.is_assignable_to(err_b)
+            }
+            (Self::Awaitable(a), Self::Awaitable(b)) => a.is_assignable_to(b),
+            (Self::Coroutine(ok, err), Self::Awaitable(result))
+                if matches!(err.resolve_alias(), Type::Never) =>
+            {
+                ok.is_assignable_to(result)
+            }
+            (Self::Coroutine(ok, err), Self::Awaitable(result)) => {
+                Type::Result(ok.clone(), err.clone()).is_assignable_to(result)
+            }
+            (Self::Task(ok, err), Self::Awaitable(result)) => {
+                Type::TaskResult(ok.clone(), err.clone()).is_assignable_to(result)
+            }
+            (Self::AsyncFunction(a), Self::AsyncFunction(b)) => {
+                a.params.len() == b.params.len()
+                    && a.params
+                        .iter()
+                        .zip(b.params.iter())
+                        .all(|((_, at, _), (_, bt, _))| at.is_assignable_to(bt))
+                    && a.return_type.is_assignable_to(&b.return_type)
             }
             // Protocol: a class satisfies a protocol if it has all required methods
             (

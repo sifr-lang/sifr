@@ -653,7 +653,7 @@ impl RustEmitter {
             params,
             ret: self.lower_class_method_return_type(method, class),
             body,
-            is_async: false,
+            is_async: method.is_async,
         }
     }
 }

@@ -1,0 +1,5 @@
+async def compute() -> int:
+    return 41
+
+def main() -> None:
+    return None
