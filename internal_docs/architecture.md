@@ -410,13 +410,13 @@ def main():
 
 The compiler enforces that all error types from fallible calls inside a `try` block are covered by the `except` arms. The rules are:
 
-1. **`except Error as e`** is the catch-all. All error types are classes that extend `Error`. Since `Error` is the root of the error hierarchy, this covers every possible error type. The compiler is satisfied -- no further checking needed.
+1. **`except Error as e`** is the catch-all for ordinary errors. All ordinary error types are classes that extend `Error`. Since `Error` is the root of the ordinary error hierarchy, this covers every possible ordinary error type. The compiler is satisfied -- no further checking needed.
 2. **`except SpecificError as e`** triggers exhaustiveness checking. The compiler collects every error type from every `Result`-returning call in the `try` block and verifies that each one is covered by some `except` arm.
-3. **Mixing is allowed.** Specific `except` arms are checked first; an `except Error as e` arm at the end covers all remaining uncovered types. This mirrors Python's `except` ordering (specific before general).
+3. **Mixing is allowed.** Specific `except` arms are checked first; an `except Error as e` arm at the end covers all remaining uncovered ordinary error types. This mirrors Python's `except` ordering (specific before general).
 4. **Each `try` block is checked independently.** Nested or sequential `try` blocks each have their own exhaustiveness scope.
 5. **Uncovered error types are a compile error.** If any error type from a fallible call is not covered by an `except` arm, the compiler emits a diagnostic listing the uncovered types and the calls that produce them.
 
-**Error type constraint:** The `E` in `Result[T, E]` must always be a class that extends `Error`. Primitive types like `str` are not valid error types. This ensures every error has a structured type that the compiler can track for exhaustiveness checking, and that `except Error as e` is a true catch-all.
+**Error type constraint:** The ordinary `E` in `Result[T, E]` must always be a class that extends `Error`. Primitive types like `str` are not valid error types. This ensures every ordinary error has a structured type that the compiler can track for exhaustiveness checking, and that `except Error as e` is a true catch-all for ordinary errors. Task observation may add a separate `CancellationError` branch (`Result[T, E | CancellationError]`), but `CancellationError` is not an `Error` subclass and must be matched explicitly with `except task.CancellationError` or propagated.
 
 **Example -- catch-all (compiler satisfied):**
 
@@ -480,7 +480,7 @@ def pipeline(path: str) -> Result[str, PipelineError]:
         raise PipelineError(f"other: {e}")          # covers TOMLDecodeError, ValidationError
 ```
 
-**Typed error hierarchies:** All error types are classes that extend `Error`. The `raise` keyword maps to `Err(ErrorInstance)`. `return value` in a `Result`-returning function auto-wraps in `Ok(value)`. Using a non-`Error` type (e.g., `str`, `int`) as the `E` in `Result[T, E]` is a compile-time error.
+**Typed error hierarchies:** All ordinary error types are classes that extend `Error`. The `raise` keyword maps to `Err(ErrorInstance)`. `return value` in a `Result`-returning function auto-wraps in `Ok(value)`. Using a non-`Error` type (e.g., `str`, `int`) as the `E` in `Result[T, E]` is a compile-time error. Task cancellation is handled by the async cancellation contract rather than ordinary catch-all matching.
 
 **Built-in error classes:** Sifr provides a standard set of error classes for common failure modes (e.g., I/O, parsing, validation). These are used by the stdlib and available to user code.
 
@@ -520,6 +520,9 @@ All errors have `message: str` populated from Rust's `Display` (for built-ins) o
 | `FloatPrecisionLossError` | `OverflowError` | `message: str` | Exact integer to `float` conversion would silently lose precision |
 | `JsonIntegerRangeError` | `Error` | `message: str`, `path: str`, `profile: str` | JSON integer output violates selected precision/range profile |
 | `JsonLimitError` | `Error` | `message: str`, `limit: int` | JSON/text integer token or document exceeds configured decoder limit |
+| `CancellationError` | -- | `message: str` | Task-control evidence for a cancelled child task; not an `Error` subclass and never matched by broad `except Error` |
+| `TimeoutError` | `Error` | `message: str`, `duration: float` | `sifr.task.timeout` deadline expiry |
+| `SecondaryError` | `Error` | `message: str`, `primary: str`, `secondary: Error` | Cleanup or sibling failure evidence attached to a primary cancellation/failure; never masks the primary result |
 
 **Exhaustiveness with Subclasses:**
 
@@ -581,7 +584,7 @@ except DbError as e:
 
 **Common error type patterns:**
 
-- **Application code:** define a simple error class per module or feature (e.g., `class AppError(Error)`). The inherited `message` field carries the human-readable text. Use `except Error as e` as a catch-all when fine-grained handling is not needed.
+- **Application code:** define a simple error class per module or feature (e.g., `class AppError(Error)`). The inherited `message` field carries the human-readable text. Use `except Error as e` as a catch-all when fine-grained ordinary error handling is not needed.
 - **Library code:** define a domain error class (e.g., `class ConfigError(Error)`) and wrap internal errors at API boundaries. Callers only see the domain error type.
 - **Stdlib functions:** return `Result[T, SpecificError]` using the built-in error classes. For example, `read_text(path)` returns `Result[str, IOError]`, `int(s)` returns `Result[int, ParseError]`.
 
@@ -667,7 +670,7 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - **No silent upgrades:** the compiler does NOT auto-upgrade `Rc` to `Arc` or `RefCell` to `Mutex`. If a non-sendable type is used across a task boundary, the programmer must fix it explicitly.
 - **Shared mutable state across tasks:** requires explicit primitives from the async/concurrency model (`sifr.sync.Lock`, `sifr.sync.RwLock`, or `sifr.sync.Channel`). The compiler rejects sharing mutable references across task boundaries without synchronization.
 - **Async callables are distinct:** `AsyncFunction` is not a subtype of sync `Function`/`Callable`; async functions cannot be stored, passed, or invoked through a sync callable path.
-- **Task error types are constrained:** `Task[T, E]` must satisfy `E: Error`, with `Never` accepted for no-error tasks, so awaiting a task always produces a valid `Result[T, E]`.
+- **Task error types are constrained:** `Task[T, E]` must satisfy `E: Error`, with `Never` accepted for no-error tasks. Awaiting a task from a non-cancelled owner produces `Result[T, E | CancellationError]`; `CancellationError` is a separate task-control branch, not an `Error` subclass, and is not caught by broad `except Error`.
 - **Single-threaded by default:** code that does not use `async` or `spawn` has no concurrency overhead. `Rc` and `RefCell` are used internally only when appropriate for single-threaded code.
 
 **Milestone responsibilities:**
@@ -867,7 +870,7 @@ enum Type {
     Function(FunctionType),
 
     // Async/concurrency model (Phase 32)
-    Task(Box<Type>, Box<Type>),       // Task[T, E] -- awaitable task handle, E must satisfy Error or Never
+    Task(Box<Type>, Box<Type>),       // Task[T, E] -- awaitable task handle, yields Result[T, E | CancellationError]
     Awaitable(Box<Type>),             // structural awaitability protocol
     AsyncFunction(FunctionType),       // async callable, not a subtype of sync Function
 
