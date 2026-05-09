@@ -1,0 +1,9 @@
+async def worker() -> int:
+    return 41
+
+
+async def main() -> None:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        result = await handle.join()
+    return None
