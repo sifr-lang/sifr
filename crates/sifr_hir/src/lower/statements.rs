@@ -696,6 +696,7 @@ pub(super) fn lower_stmt(
                     params,
                     return_type: inferred_return_type,
                     body,
+                    is_async: false,
                     method_kind: MethodKind::Regular,
                     decorators,
                     type_params: Vec::new(),

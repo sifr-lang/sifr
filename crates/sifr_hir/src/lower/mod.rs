@@ -140,6 +140,8 @@ impl std::fmt::Display for HirDiagnostic {
 pub(super) struct LowerCtx {
     /// Function signatures (name -> type)
     functions: HashMap<String, FunctionType>,
+    /// Names of functions declared with `async def`.
+    async_functions: std::collections::HashSet<String>,
     /// Default parameter values for functions (name -> vec of (`param_index`, `default_expr`))
     function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     /// Class type definitions (name -> `Type::Class`)
@@ -164,6 +166,8 @@ pub(super) struct LowerCtx {
     current_parent_class: Option<String>,
     /// Whether we're inside a try block (auto-unwrap Result values)
     in_try_block: bool,
+    /// Whether the currently lowered function body is async.
+    current_function_is_async: bool,
     /// Error types collected from Result-returning calls during try body lowering.
     /// Each entry is the name of an error class encountered via auto-unwrap in the current try block.
     try_block_error_types: std::collections::HashSet<String>,
@@ -211,6 +215,7 @@ impl LowerCtx {
     fn new() -> Self {
         Self {
             functions: HashMap::new(),
+            async_functions: std::collections::HashSet::new(),
             function_defaults: HashMap::new(),
             class_types: HashMap::new(),
             scope: Scope::new(),
@@ -223,6 +228,7 @@ impl LowerCtx {
             current_owner: None,
             current_parent_class: None,
             in_try_block: false,
+            current_function_is_async: false,
             try_block_error_types: std::collections::HashSet::new(),
             error_types: std::collections::HashSet::new(),
             error_hierarchy: HashMap::new(),
@@ -399,6 +405,33 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),
         ),
+        Type::Coroutine(ok, err) => Type::Coroutine(
+            Box::new(substitute_type_vars(ok, bindings)),
+            Box::new(substitute_type_vars(err, bindings)),
+        ),
+        Type::Task(ok, err) => Type::Task(
+            Box::new(substitute_type_vars(ok, bindings)),
+            Box::new(substitute_type_vars(err, bindings)),
+        ),
+        Type::TaskResult(ok, err) => Type::TaskResult(
+            Box::new(substitute_type_vars(ok, bindings)),
+            Box::new(substitute_type_vars(err, bindings)),
+        ),
+        Type::BlockingTask(ok, err) => Type::BlockingTask(
+            Box::new(substitute_type_vars(ok, bindings)),
+            Box::new(substitute_type_vars(err, bindings)),
+        ),
+        Type::Awaitable(result) => {
+            Type::Awaitable(Box::new(substitute_type_vars(result, bindings)))
+        }
+        Type::AsyncIterator(item, err) => Type::AsyncIterator(
+            Box::new(substitute_type_vars(item, bindings)),
+            Box::new(substitute_type_vars(err, bindings)),
+        ),
+        Type::AsyncGenerator(item, err) => Type::AsyncGenerator(
+            Box::new(substitute_type_vars(item, bindings)),
+            Box::new(substitute_type_vars(err, bindings)),
+        ),
         Type::Alias {
             name,
             type_args,
@@ -412,6 +445,7 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             body: Box::new(substitute_type_vars(body, bindings)),
         },
         Type::Function(ft) => Type::Function(substitute_function_type(ft, bindings)),
+        Type::AsyncFunction(ft) => Type::AsyncFunction(substitute_function_type(ft, bindings)),
         Type::Class {
             name,
             fields,
@@ -685,6 +719,9 @@ fn lower_module_impl(
             }
 
             collect_function_defaults(&mut ctx, &function_name, func);
+            if func.is_async {
+                ctx.async_functions.insert(function_name.clone());
+            }
             ctx.functions.insert(function_name.clone(), ft);
             // Track vararg functions
             if func.parameters.vararg.is_some() {

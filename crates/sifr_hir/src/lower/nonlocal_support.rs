@@ -232,6 +232,7 @@ fn hir_expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
                     .any(|expr| hir_expr_calls_function(expr, func_name))
         }
         HirExpr::UnaryOp { operand, .. }
+        | HirExpr::Await { value: operand, .. }
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
         | HirExpr::ErrWrap { value: operand, .. }

@@ -778,6 +778,7 @@ mod tests {
             params: vec![],
             return_type: Type::None,
             body,
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             type_params: vec![],
@@ -1075,6 +1076,7 @@ mod tests {
                     ty: Type::Int,
                 }),
             }],
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             type_params: vec![],
@@ -1183,6 +1185,7 @@ mod tests {
             body: vec![HirStmt::Return {
                 value: Some(HirExpr::IntLiteral(1)),
             }],
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             type_params: vec![],

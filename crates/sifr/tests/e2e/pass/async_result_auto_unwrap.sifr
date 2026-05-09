@@ -1,0 +1,9 @@
+async def fetch() -> Result[int, ValueError]:
+    return 7
+
+async def observe() -> Result[int, ValueError]:
+    _value: Result[int, ValueError] = await fetch()
+    return 1
+
+def main() -> None:
+    return None

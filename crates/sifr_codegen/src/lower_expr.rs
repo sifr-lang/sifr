@@ -103,6 +103,7 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
         | HirExpr::FieldAccess { .. }
         | HirExpr::ContainsOp { .. }
         | HirExpr::QuestionMark { .. }
+        | HirExpr::Await { .. }
         | HirExpr::OkWrap { .. }
         | HirExpr::ErrWrap { .. }
         | HirExpr::WalrusExpr { .. }
@@ -380,6 +381,21 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         }
         HirExpr::QuestionMark { expr, .. } => {
             Some(RustExpr::Try(Box::new(try_lower_leaf_or_name_expr(expr)?)))
+        }
+        HirExpr::Await { value, .. } => {
+            let lowered_value = if let HirExpr::Call { func, args, .. } = value.as_ref() {
+                let lowered_args = args
+                    .iter()
+                    .map(try_lower_leaf_or_name_expr)
+                    .collect::<Option<Vec<_>>>()?;
+                RustExpr::FnCall {
+                    func: Box::new(RustExpr::Ident(func.clone())),
+                    args: lowered_args,
+                }
+            } else {
+                try_lower_leaf_or_name_expr(value)?
+            };
+            Some(RustExpr::Await(Box::new(lowered_value)))
         }
         HirExpr::OkWrap { value, .. } => Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),

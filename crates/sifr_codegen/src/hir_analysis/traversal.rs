@@ -57,6 +57,7 @@ where
             }
         }
         HirExpr::UnaryOp { operand, .. }
+        | HirExpr::Await { value: operand, .. }
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
         | HirExpr::ErrWrap { value: operand, .. }
@@ -697,6 +698,7 @@ mod tests {
                     ty: Type::None,
                 },
             }],
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             type_params: vec![],
@@ -792,6 +794,7 @@ mod tests {
                     ty: Type::None,
                 },
             }],
+            is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             type_params: vec![],

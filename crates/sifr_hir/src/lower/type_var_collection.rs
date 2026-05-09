@@ -29,6 +29,16 @@ pub(super) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             collect_type_vars(ok, vars);
             collect_type_vars(err, vars);
         }
+        Type::Coroutine(ok, err)
+        | Type::Task(ok, err)
+        | Type::TaskResult(ok, err)
+        | Type::BlockingTask(ok, err)
+        | Type::AsyncIterator(ok, err)
+        | Type::AsyncGenerator(ok, err) => {
+            collect_type_vars(ok, vars);
+            collect_type_vars(err, vars);
+        }
+        Type::Awaitable(result) => collect_type_vars(result, vars),
         Type::Alias {
             type_args, body, ..
         } => {
@@ -37,7 +47,7 @@ pub(super) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             }
             collect_type_vars(body, vars);
         }
-        Type::Function(ft) => {
+        Type::Function(ft) | Type::AsyncFunction(ft) => {
             for (_, param_ty, _) in &ft.params {
                 collect_type_vars(param_ty, vars);
             }

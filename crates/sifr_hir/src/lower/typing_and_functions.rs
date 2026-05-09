@@ -582,6 +582,42 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::Iterator(Box::new(elem_ty))
                 }
+                "Awaitable" => {
+                    let result_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::Awaitable(Box::new(result_ty))
+                }
+                "Coroutine" | "Task" | "TaskResult" | "BlockingTask" | "AsyncIterator"
+                | "AsyncGenerator" => {
+                    let Expr::Tuple(tuple) = sub.slice.as_ref() else {
+                        invalid_type_annotation(
+                            ctx,
+                            format!("{base_name} type annotation requires [T, E] syntax"),
+                            sub.slice.range(),
+                        );
+                        return Type::Any;
+                    };
+                    if tuple.elts.len() != 2 {
+                        invalid_type_annotation(
+                            ctx,
+                            format!(
+                                "{base_name} type annotation requires exactly 2 type parameters"
+                            ),
+                            sub.slice.range(),
+                        );
+                        return Type::Any;
+                    }
+                    let ok_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
+                    let err_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
+                    match base_name.as_str() {
+                        "Coroutine" => Type::Coroutine(Box::new(ok_ty), Box::new(err_ty)),
+                        "Task" => Type::Task(Box::new(ok_ty), Box::new(err_ty)),
+                        "TaskResult" => Type::TaskResult(Box::new(ok_ty), Box::new(err_ty)),
+                        "BlockingTask" => Type::BlockingTask(Box::new(ok_ty), Box::new(err_ty)),
+                        "AsyncIterator" => Type::AsyncIterator(Box::new(ok_ty), Box::new(err_ty)),
+                        "AsyncGenerator" => Type::AsyncGenerator(Box::new(ok_ty), Box::new(err_ty)),
+                        _ => Type::Any,
+                    }
+                }
                 "Reversible" => {
                     let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::reversible(elem_ty)
@@ -910,7 +946,10 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
 
     // Lower body
     let previous_owner = ctx.current_owner.replace(func.name.to_string());
+    let previous_async = ctx.current_function_is_async;
+    ctx.current_function_is_async = func.is_async;
     let body = lower_stmts(&func.body, &ft, ctx);
+    ctx.current_function_is_async = previous_async;
     ctx.current_owner = previous_owner;
 
     ctx.borrowed_params.clear();
@@ -995,6 +1034,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         params,
         return_type: inferred_return_type,
         body,
+        is_async: func.is_async,
         method_kind: MethodKind::Regular,
         decorators,
         type_params,

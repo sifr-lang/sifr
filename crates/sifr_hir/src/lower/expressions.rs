@@ -66,9 +66,9 @@ use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    BoolOp, Expr, ExprAttribute, ExprBoolOp, ExprBytesLiteral, ExprCall, ExprDict, ExprDictComp,
-    ExprGenerator, ExprLambda, ExprList, ExprListComp, ExprName, ExprNamed, ExprNumberLiteral,
-    ExprSet, ExprSetComp, ExprSubscript, ExprTuple, Number,
+    BoolOp, Expr, ExprAttribute, ExprAwait, ExprBoolOp, ExprBytesLiteral, ExprCall, ExprDict,
+    ExprDictComp, ExprGenerator, ExprLambda, ExprList, ExprListComp, ExprName, ExprNamed,
+    ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript, ExprTuple, Number,
 };
 use sifr_type_system::{
     make_union, type_check_bool_op, FunctionType, OwnershipKind, ParamConvention, Type,
@@ -90,6 +90,7 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Compare(cmp) => lower_compare(cmp, ctx),
         Expr::BoolOp(boolop) => lower_boolop(boolop, ctx),
         Expr::Call(call) => lower_call(call, ctx),
+        Expr::Await(await_expr) => lower_await(await_expr, ctx),
         Expr::If(if_expr) => super::if_expression::lower_if_expr(if_expr, ctx),
         Expr::List(list) => lower_list_literal(list, ctx),
         Expr::Set(set) => lower_set_literal(set, ctx),
@@ -112,6 +113,56 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
             );
             None
         }
+    }
+}
+
+fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if !ctx.current_function_is_async {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            "await is only valid inside async functions".to_string(),
+            await_expr.range(),
+        );
+        return None;
+    }
+
+    let value = lower_expr(await_expr.value.as_ref(), ctx)?;
+    let result_ty = await_result_type(value.ty());
+    let Some(ty) = result_ty else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "await requires an awaitable value, got '{}'",
+                value.ty().display_name()
+            ),
+            await_expr.value.range(),
+        );
+        return None;
+    };
+
+    Some(HirExpr::Await {
+        value: Box::new(value),
+        ty,
+    })
+}
+
+fn await_result_type(ty: &Type) -> Option<Type> {
+    match ty.resolve_alias() {
+        Type::Coroutine(ok, err) if matches!(err.resolve_alias(), Type::Never) => {
+            Some(ok.as_ref().clone())
+        }
+        Type::Coroutine(ok, err) => Some(Type::Result(ok.clone(), err.clone())),
+        Type::Task(ok, err) => Some(Type::TaskResult(ok.clone(), err.clone())),
+        Type::BlockingTask(ok, err) => Some(Type::TaskResult(ok.clone(), err.clone())),
+        Type::Awaitable(result) => Some(result.as_ref().clone()),
+        _ => None,
+    }
+}
+
+fn coroutine_result_type(surface_return_type: &Type) -> Type {
+    match surface_return_type.resolve_alias() {
+        Type::Result(ok, err) => Type::Coroutine(ok.clone(), err.clone()),
+        other => Type::Coroutine(Box::new(other.clone()), Box::new(Type::Never)),
     }
 }
 
@@ -250,10 +301,12 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     if let Some(ft) = ctx.functions.get(&var_name) {
         let ft = ft.clone();
-        return Some(HirExpr::Name {
-            name: var_name,
-            ty: Type::Function(ft),
-        });
+        let ty = if ctx.async_functions.contains(&var_name) {
+            Type::AsyncFunction(ft)
+        } else {
+            Type::Function(ft)
+        };
+        return Some(HirExpr::Name { name: var_name, ty });
     }
 
     match var_name.as_str() {
@@ -1350,6 +1403,17 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         name_diagnostics::undefined_function(ctx, &func_name, call.func.range());
         None
     })?;
+    let is_async_function = ctx.async_functions.contains(&func_name);
+    if is_async_function && !ctx.current_function_is_async {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "async function '{func_name}' cannot be called from sync code; call it from an async function and await the returned coroutine"
+            ),
+            call.func.range(),
+        );
+        return None;
+    }
 
     let call_defaults = ctx.function_defaults.get(&func_name).cloned();
     let call_vararg = ctx.vararg_functions.get(&func_name).copied();
@@ -1640,19 +1704,24 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     };
 
     let return_type = refine_constructor_return_type_from_args(&ft, &args, &return_type);
+    let call_type = if is_async_function {
+        coroutine_result_type(&return_type)
+    } else {
+        return_type
+    };
 
     // If this is a class constructor call, emit ConstructorCall
     if ctx.class_types.contains_key(&func_name) {
         Some(HirExpr::ConstructorCall {
             class_name: func_name,
             args,
-            ty: return_type,
+            ty: call_type,
         })
     } else {
         Some(HirExpr::Call {
             func: func_name,
             args,
-            ty: return_type,
+            ty: call_type,
         })
     }
 }

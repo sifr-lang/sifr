@@ -91,6 +91,8 @@ pub struct HirFunction {
     pub params: Vec<HirParam>,
     pub return_type: Type,
     pub body: Vec<HirStmt>,
+    /// Whether this function was declared with `async def`.
+    pub is_async: bool,
     /// Method kind: Regular, `ClassMethod`, or `StaticMethod`
     pub method_kind: MethodKind,
     /// User-defined decorators (excluding classmethod/staticmethod)
@@ -389,6 +391,8 @@ pub enum HirExpr {
         args: Vec<HirExpr>,
         ty: Type,
     },
+    /// Await expression. The operand must have an awaitable type.
+    Await { value: Box<HirExpr>, ty: Type },
     /// Canonical iterator operation call.
     IteratorCall {
         op: HirIteratorOp,
@@ -561,6 +565,7 @@ impl HirExpr {
             | Self::Compare { ty, .. }
             | Self::BoolOp { ty, .. }
             | Self::Call { ty, .. }
+            | Self::Await { ty, .. }
             | Self::IteratorCall { ty, .. }
             | Self::IfExpr { ty, .. }
             | Self::RangeLiteral { ty, .. }
