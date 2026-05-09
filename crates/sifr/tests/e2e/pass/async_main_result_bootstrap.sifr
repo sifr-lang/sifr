@@ -1,0 +1,3 @@
+async def main() -> Result[None, ValueError]:
+    await task.sleep(0.0)
+    return None

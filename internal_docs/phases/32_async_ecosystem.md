@@ -381,6 +381,8 @@ status: in_progress
 - Added positive validation fixture: `async_runtime_bootstrap.sifr`.
 - In progress task sleep slice: lower `task.sleep(duration)` inside async functions to the private runtime substrate, reject invalid duration/call sites during HIR lowering, and require Tokio only when generated code references the private sleep primitive.
 - Added validation coverage for `task_sleep.sifr`, `task_sleep_outside_async.sifr`, and `task_sleep_invalid_duration.sifr`.
+- Locked async `main() -> Result[None, E]` bootstrap coverage; generated Rust preserves `Result<(), E>` under the private Tokio entrypoint.
+- Added positive validation fixture: `async_main_result_bootstrap.sifr`.
 
 ---
 
