@@ -1,0 +1,4 @@
+async def main() -> None:
+    async with task.scope() as scope:
+        await task.sleep(0.0)
+    return None

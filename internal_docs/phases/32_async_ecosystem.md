@@ -383,6 +383,8 @@ status: in_progress
 - Added validation coverage for `task_sleep.sifr`, `task_sleep_outside_async.sifr`, and `task_sleep_invalid_duration.sifr`.
 - Locked async `main() -> Result[None, E]` bootstrap coverage; generated Rust preserves `Result<(), E>` under the private Tokio entrypoint.
 - Added positive validation fixture: `async_main_result_bootstrap.sifr`.
+- In progress task scope container slice: `async with task.scope() as scope` now materializes a private generated `TaskScope` runtime container instead of binding the placeholder unit value.
+- Added positive validation fixture: `task_scope_container.sifr`.
 
 ---
 
