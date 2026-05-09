@@ -95,8 +95,8 @@ Default APIs should prefer:
 - `task.TaskGroup`
 - `scope.spawn(...)`: canonical task creation; all spawned tasks are children of a scope
 - `task.gather(*handles)`: wait for multiple task handles, preserving input ordering
-- `task.select(*handles)`: first-completion semantics; losers are cancelled by default
-- `task.race(*handles)`: the homogeneous convenience form of `select` that discards winner identity; losers are cancelled by default
+- `task.select(a, b)`: binary heterogeneous first-completion semantics; losers are cancelled by default
+- `task.race(handles)`: homogeneous first-completion over a list that discards winner identity; losers are cancelled by default
 
 Default APIs should not encourage:
 
@@ -255,6 +255,8 @@ Core types:
 - `TimeoutResult[E]`: explicit ordinary error enum for timeout wrappers. It has `Inner(E)` and `Timeout(TimeoutError)` branches.
 - `ScopeFailure`: ordinary `Error` produced by scope exit when unobserved child task failure or cancellation must be surfaced.
 - `SecondaryError`: structured evidence attached to a primary cancellation or failure when cleanup or sibling tasks also fail during unwinding.
+- `ClosedError`: ordinary error returned when an explicit channel or synchronization endpoint is closed.
+- `WouldBlockError`: ordinary error returned by non-blocking synchronization probes such as `try_lock` and `try_acquire`.
 - `Awaitable[T]`: structural protocol for values that can be awaited. `Coroutine[T, E]` implements an awaitable whose result follows the async function's surface return type; `Task[T, E]` implements `Awaitable[TaskResult[T, E]]`.
 - `AsyncFunction[Params, T, E]`: the callable type of `async def`. The type checker must distinguish async callables from sync callables with the same parameters.
 - `AsyncIterator[T, E]`: structural protocol for async iteration. `anext()` returns `Result[Option[T], E]`: `Ok(Some(value))` for the next item, `Ok(None)` for normal exhaustion, and `Err(E)` for stream failure.
@@ -289,6 +291,8 @@ Await rules:
 
 `SecondaryError` is inspectable evidence attached to `Failure[E]`. It never masks the primary cause and does not participate in ordinary `except Error` matching unless a user explicitly inspects it.
 
+**Same-task coroutine secondary evidence:** Secondary evidence produced inside a same-task coroutine is accumulated on the currently running task. Same-task `await Coroutine[T, E]` returns only `Result[T, E]`; accumulated secondary evidence becomes observable only when the current task is later observed through `TaskResult`, or through diagnostics/logging if the top-level task exits.
+
 ```sifr
 struct Failure[E]:
     primary: E
@@ -300,9 +304,11 @@ class TaskCancelled(Error):
 enum TimeoutResult[E]:
     Inner(E)
     Timeout(TimeoutError)
+```
 
 `TimeoutResult[E]` implements `Error` when `E: Error`. This makes it usable in ordinary error handlers.
 
+```sifr
 struct ScopeFailure:
     primary: ScopeFailureCause
     secondary: list[SecondaryError]
@@ -500,6 +506,8 @@ async with task.TaskGroup[MyError]() as group:
 
 `TaskGroup.spawn` returns the same affine observer handle as `scope.spawn`. V1 task groups require all spawned children to share one ordinary error type `E`; heterogeneous task groups are deferred. `Never` coerces into `E` for children that cannot fail. When one child fails, the group requests cancellation of all unfinished siblings and waits for their cleanup before group exit completes. If the failing child was not explicitly observed, group exit returns `Err(ScopeFailure(...))` with the first failed child as primary evidence and cleanup or later sibling failures as secondary evidence.
 
+**`TaskGroup` and `TaskScope` closed/cancelling spawn rules:** A `TaskGroup` has `Open`, `Cancelling`, `Closing`, and `Closed` states. `group.spawn(...)` is valid only in `Open` and returns `Task[T, E]`, not a fallible union. V1 treats group openness as a flow-checked capability: after child failure or cancellation is observed, explicit group cancellation or timeout occurs, or scope exit begins, later `group.spawn(...)` on that control path is rejected unless the compiler can prove the group is still `Open`. The same principle applies to `TaskScope`: once `__aexit__` begins, spawning is invalid. A future fallible spawn API would be a separate surface rather than changing `TaskGroup.spawn`.
+
 General tracked-collection proof is not part of the first model. Handles may be consumed by explicit composition APIs (`gather`, `select`, `race`) or by simple explicit loops such as `for h in handles: await h`; the scope still owns child lifetime regardless of handle observation.
 
 ## Task Composition
@@ -511,6 +519,7 @@ General tracked-collection proof is not part of the first model. Handles may be 
 - after cancellation cleanup, the earliest failed handle in input order is the primary error if multiple failures surface
 - later sibling failures and cleanup failures are recorded as `SecondaryError` values on the primary `Failure[E]`
 - collect-all semantics require a future separate API
+- if a gathered child is observed as `Cancelled(Failure[CancellationError])` before an ordinary child error is selected as primary, gather cancels unfinished siblings and returns `TaskResult.Cancelled(Failure[CancellationError])`. If cancellation and ordinary errors are both observed during the same drain, deterministic input order chooses the primary among failure-like outcomes; the rest become `SecondaryError` evidence.
 
 `task.select` and `task.race` are first-completion APIs:
 
@@ -520,6 +529,8 @@ General tracked-collection proof is not part of the first model. Handles may be 
 - if multiple tasks complete in the same scheduler tick, input order breaks ties deterministically
 - users who need all results should use `gather`
 - users who need non-cancelling competition must keep explicit handles and perform explicit cleanup through a future API
+
+**Loser cleanup failure handling:** If the selected winner result is `Err(...)` or `Cancelled(...)`, any loser cleanup failures attach as `SecondaryError` evidence to that result. If the selected winner result is `Ok(...)`, loser cleanup failures surface at the owning `TaskScope` exit as `ScopeFailure` rather than being dropped. Same-tick cases where one ready task wins by input order but another ready loser has already failed follow the same rule.
 
 ## Timeout Semantics
 
@@ -587,6 +598,8 @@ Channels are the canonical queue-like concurrency primitive:
 - `ClosedError` from `receive` means closed and drained; there is no second `None` closed state
 - `sender.close()` wakes pending senders and receivers deterministically
 - cancellation while blocked on send or receive propagates task cancellation without duplicating or losing a message
+- cancellation while blocked on send is exactly-once: the value is either not enqueued and dropped, or enqueued exactly once
+- cancellation while blocked on receive is exactly-once: if a receive is cancelled before `Ok(value)` is returned to user code, the message remains available to another receive or is otherwise not lost. Once `Ok(value)` has been returned, ownership has transferred to the receiver task.
 - bounded channels apply async backpressure when full
 
 **Channel endpoint lifetime rules:**
@@ -627,6 +640,8 @@ task.spawn_blocking(fn: Fn() -> Result[T, E]) -> BlockingTask[T, E]
 
 `BlockingTask[T, E]` is distinct from cooperative `Task[T, E]` because cancellation means result abandonment, not guaranteed work stoppage. `BlockingTask.cancel()` requests cancellation and marks the result as abandoned if the work cannot stop cooperatively. `BlockingTask.join()` returns `TaskResult[T, E]`; a `Cancelled(Failure[CancellationError])` branch means the observer abandoned the result after cancellation, even if the OS work later completed.
 
+**`BlockingTask` lifecycle:** `BlockingTask` handles are affine. `join()` and `cancel_and_join()` consume them. Dropping a `BlockingTask` handle abandons observation but does not stop already-running OS work. Blocking work requires owned/sendable/static captures precisely because it may outlive the async scope after abandonment. Scope exit requests cancellation/abandonment for unresolved blocking work created inside the scope but does not guarantee OS-thread interruption.
+
 ## Async Resource Protocols
 
 `async with` is part of the user-facing async model.
@@ -640,6 +655,28 @@ task.spawn_blocking(fn: Fn() -> Result[T, E]) -> BlockingTask[T, E]
 - async exit cleanup runs to completion unless the runtime is forcefully aborted by an unrecoverable system failure
 - errors from async exit during cancellation become `SecondaryError` evidence attached to the owning task/scope result
 - panic-like failures from async exit are caught at task/runtime boundaries where technically possible and surfaced as structured failure evidence
+
+**User-defined async context manager protocol:**
+
+```sifr
+protocol AsyncContextManager[T, EnterE, ExitE]:
+    async def __aenter__(self) -> Result[T, EnterE]
+    async def __aexit__(self, cause: AsyncExitCause) -> Result[None, ExitE]
+```
+
+`__aenter__` and `__aexit__` are the async context-manager methods. If `__aenter__` fails, `__aexit__` is not called, because the resource was not acquired.
+
+```sifr
+enum AsyncExitCause:
+    Normal
+    Return
+    OrdinaryError(Error)
+    Timeout(TimeoutError)
+    Cancellation(CancellationError)
+    RuntimeFault(...)
+```
+
+`AsyncExitCause` is passed to `__aexit__` so the async context manager can distinguish normal exit from error/timeout/cancellation paths. `RuntimeFault` covers unrecoverable runtime failures; cleanup runs best-effort and the fault remains primary.
 
 `async for` works for async iterable values such as channel-backed streams and user-defined async generators. Async comprehensions are surface syntax over the same protocol; they do not introduce a second iteration model.
 
@@ -690,6 +727,8 @@ loop:
 - `anext()` returning `Ok(Some(item))` yields the item and continues the loop.
 - `anext()` returning `Ok(None)` breaks normally (normal exhaustion).
 - `anext()` returning `Err(E)` causes automatic propagation through ordinary Sifr error handling. The enclosing function must be able to carry `E`, or the compiler rejects the `async for`.
+
+If an early-exit path from `async for` may call `aclose()`, the enclosing function must be able to propagate the iterator's close error type, or the close error must be handled explicitly. This applies to both the `IterE` error from `anext()` and the `CloseE` error from `aclose()` on early exit.
 
 If the loop exits before iterator exhaustion via `break`, `return`, ordinary error propagation, timeout, or active cancellation, and the iterator implements `AsyncClosable`, the compiler awaits `aclose()` before leaving the loop:
 - On normal `break` or `return`, `aclose()` failure is a primary ordinary error.

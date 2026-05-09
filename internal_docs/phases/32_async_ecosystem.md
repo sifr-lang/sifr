@@ -148,7 +148,24 @@ status: proposed
   - `GeneratorCloseError`
   - `GeneratorBusyError`
   - `Channel[T]`
+  - `ChannelSender[T]`
+  - `ChannelReceiver[T]`
+  - `ClosedError`
+  - `WouldBlockError`
   - `Lock[T]`
+  - `LockGuard[T]`
+  - `RwLock[T]`
+  - `RwLockReadGuard[T]`
+  - `RwLockWriteGuard[T]`
+  - `Shared[T]`
+  - `Semaphore`
+  - `SemaphorePermit`
+  - `Notify`
+  - `Select2[A, B]`
+  - `ThreadPoolExecutor`
+  - `ShareSafe` (capability bound, not a public instantiable type)
+  - `AsyncContextManager[T, EnterE, ExitE]` (user-defined async context manager protocol, defined in `milestone_async_7a`)
+  - `AsyncExitCause` (exit cause enum for user-defined async context managers, defined in `milestone_async_7a`)
 - Define async type-system additions:
   - coroutine type representation,
   - task-handle type representation,
@@ -377,15 +394,18 @@ status: proposed
   - and cleanup is awaited before exit.
 - Implement `TaskGroup[E]` with homogeneous child error type `E`.
 - Implement sibling cancellation on first failure for task groups.
+- Define `TaskGroup` closed/cancelling spawn rules: a `TaskGroup` has `Open`, `Cancelling`, `Closing`, and `Closed` states. `group.spawn(...)` is valid only in `Open` and returns `Task[T, E]`, not a fallible union. V1 treats group openness as a flow-checked capability: after child failure or cancellation is observed, explicit group cancellation or timeout occurs, or scope exit begins, later `group.spawn(...)` on that control path is rejected unless the compiler can prove the group is still `Open`. The same principle applies to `TaskScope`: once `__aexit__` begins, spawning is invalid.
 - Implement `task.gather` with deterministic success ordering and fail-fast error behavior:
   - first observed child error cancels unfinished children and returns `TaskResult.Err(Failure[E])`,
   - after cancellation cleanup, the earliest failed handle in input order is the primary error if multiple failures surface,
   - cleanup errors from cancelled children surface as `SecondaryError` values attached to the primary `Failure[E]`,
   - later failures are secondary evidence,
+  - if any gathered child is observed as `Cancelled(Failure[CancellationError])` before an ordinary child error is selected as primary, gather cancels unfinished siblings and returns `TaskResult.Cancelled(Failure[CancellationError])`. If cancellation and ordinary errors are both observed during the same drain, deterministic input order chooses the primary among failure-like outcomes; the rest become `SecondaryError` evidence.
   - collect-all semantics are deferred to a future API.
-- Implement `task.select` and `task.race`.
+- Implement binary heterogeneous `task.select(a, b)` and homogeneous-list `task.race(handles)`.
 - Cancel losing tasks by default for `select` and `race`.
 - `select` and `race` consume their input handles; losers cannot be awaited later.
+- Define loser cleanup failure handling for `select` and `race`: if the selected winner result is `Err(...)` or `Cancelled(...)`, any loser cleanup failures attach as `SecondaryError` evidence to that result. If the selected winner result is `Ok(...)`, loser cleanup failures surface at the owning `TaskScope` exit as `ScopeFailure` rather than being dropped.
 - Define how cancellation composes with `TaskResult`.
 - Add diagnostics for leaked task handles and invalid scope escape.
 
@@ -426,7 +446,9 @@ status: proposed
 - `task_handle_escape_scope_rejected.sifr`
 - `task_handle_double_await_rejected.sifr`
 - `task_group_heterogeneous_error_rejected.sifr`
-- `task_group_unhandled_error_rejected.sifr`
+- `task_group_error_type_not_carried_rejected.sifr`
+- `task_group_unobserved_failure_scope_failure.sifr`
+- `task_group_spawn_after_failure_rejected.sifr`
 
 **Demo:**
 
@@ -522,6 +544,13 @@ status: proposed
 - Reject live `LockGuard`/`RwLockGuard` across `await`.
 - Warn in docs and diagnostics that acquiring `sync.Lock` in async code may block the runtime worker under contention; v1 permits it only for short, low-contention critical sections.
 - Add diagnostics for statically knowable lock misuse.
+- Define method signatures for sync primitives before milestone close:
+  - `sync.Shared[T](value: T) -> Shared[T]`
+  - `sync.Lock[T](value: T) -> Lock[T]` with `def Lock[T].lock(self) -> LockGuard[T]` and `def Lock[T].try_lock(self) -> Result[LockGuard[T], WouldBlockError]`
+  - `sync.RwLock[T](value: T) -> RwLock[T]` with `def RwLock[T].read(self) -> RwLockReadGuard[T]` and `def RwLock[T].write(self) -> RwLockWriteGuard[T]`
+  - `sync.Semaphore(permits: int) -> Semaphore` with `async def Semaphore.acquire(self) -> Result[SemaphorePermit, ClosedError]` and `def Semaphore.try_acquire(self) -> Result[SemaphorePermit, WouldBlockError]`
+  - `sync.Notify() -> Notify` with `async def Notify.notified(self) -> None`, `def Notify.notify_one(self) -> None`, and `def Notify.notify_all(self) -> None`
+- Add receive cancellation exactly-once rule: if a receive is cancelled before `Ok(value)` is returned to user code, the message remains available to another receive or is otherwise not lost. Once `Ok(value)` has been returned, ownership has transferred to the receiver task.
 
 **Definition of done:**
 
@@ -544,6 +573,11 @@ status: proposed
 - `channel_backpressure.sifr`
 - `channel_close.sifr`
 - `channel_cancel_pending_receive.sifr`
+- `channel_drop_last_sender_closes_after_drain.sifr`
+- `channel_drop_receiver_closes_senders.sifr`
+- `channel_sender_close_clone_closes_all.sifr`
+- `channel_fifo_order.sifr`
+- `channel_cancel_receive_no_loss.sifr`
 - `semaphore_basic.sifr`
 - `notify_basic.sifr`
 
@@ -591,6 +625,7 @@ status: proposed
   - `spawn_blocking` requires owned, sendable, `'static` captures in v1,
   - scoped borrowed captures are rejected for `spawn_blocking` because already-running OS work may outlive the async scope after cancellation,
   - hard interruption requires future process isolation/typed IPC.
+  - `BlockingTask` handles are affine. `join()` and `cancel_and_join()` consume them. Dropping a `BlockingTask` handle abandons observation but does not stop already-running OS work. Blocking work requires owned/sendable/static captures precisely because it may outlive the async scope after abandonment. Scope exit requests cancellation/abandonment for unresolved blocking work created inside the scope but does not guarantee OS-thread interruption.
 - Ensure blocking work cannot occupy cooperative async workers where Sifr controls the path.
 - Document when users should choose async tasks, channels, locks, or blocking offload.
 
@@ -634,7 +669,23 @@ status: proposed
 **Scope:**
 
 - Generalize `async with` beyond the built-in `task.scope()` form from `milestone_async_1`.
-- Define and enforce the user-defined async context-manager protocol.
+- Define and enforce the user-defined async context-manager protocol with these signatures:
+  ```sifr
+  protocol AsyncContextManager[T, EnterE, ExitE]:
+      async def __aenter__(self) -> Result[T, EnterE]
+      async def __aexit__(self, cause: AsyncExitCause) -> Result[None, ExitE]
+  ```
+  If `__aenter__` fails, `__aexit__` is not called because the resource was not acquired.
+- Implement `AsyncExitCause` enum:
+  ```sifr
+  enum AsyncExitCause:
+      Normal
+      Return
+      OrdinaryError(Error)
+      Timeout(TimeoutError)
+      Cancellation(CancellationError)
+      RuntimeFault(...)
+  ```
 - Implement async iterable protocol.
 - Implement `async for`.
 - Define the `AsyncIterator[T, E]` protocol shape used by channels, streams, and async generators:
@@ -659,6 +710,7 @@ status: proposed
 - Define `async for` desugaring:
   - desugars to explicit `anext()` loop with `try await` for error propagation,
   - `Err(E)` from `anext()` propagates through ordinary error handling,
+  - if an early-exit path from `async for` may call `aclose()`, the enclosing function must be able to propagate the iterator's close error type, or the close error must be handled explicitly. This applies to both the `IterE` error from `anext()` and the `CloseE` error from `aclose()` on early exit.
   - early exit (`break`, `return`, cancellation, timeout) awaits `aclose()` if iterator implements `AsyncClosable`,
   - normal `aclose()` failure is primary error; cancellation-context failure is secondary evidence.
 - Define channel-backed async iteration as `AsyncIterator[T, Never]` that maps closed-and-drained `ClosedError` to `Ok(None)`.
