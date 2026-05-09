@@ -396,6 +396,14 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                         args: lowered_args,
                     }
                 }
+            } else if let HirExpr::MethodCall {
+                object,
+                method,
+                args,
+                ..
+            } = value.as_ref()
+            {
+                try_lower_simple_method_call_expr(object, method, args)?
             } else {
                 try_lower_leaf_or_name_expr(value)?
             };
@@ -964,6 +972,14 @@ fn try_lower_simple_method_call_expr(
             receiver: Box::new(lowered_object),
             method: method.to_string(),
             args: lowered_args,
+        });
+    }
+    if method == "join" && matches!(resolve_alias_type(object.ty()), Type::Task(_, _)) {
+        let lowered_object = try_lower_leaf_or_name_expr(object)?;
+        return Some(RustExpr::MethodCall {
+            receiver: Box::new(lowered_object),
+            method: method.to_string(),
+            args: vec![],
         });
     }
     // Method-call lowering is ownership- and type-convention-sensitive.

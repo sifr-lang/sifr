@@ -57,6 +57,7 @@ use super::sequence_guard_detection::{
 };
 use super::subscript_type::resolve_subscript_result_type;
 use super::task_calls::{lower_task_module_call, TaskCallLowering};
+use super::task_handle_calls::{is_task_handle_type, lower_task_handle_method_call};
 use super::task_scope_calls::{is_task_scope_type, lower_task_scope_spawn_call};
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
@@ -2133,6 +2134,11 @@ pub(super) fn lower_method_call(
     let method_name = attr.attr.to_string();
     if is_task_scope_type(object.ty()) && method_name == "spawn" {
         return lower_task_scope_spawn_call(object, attr, call, ctx);
+    }
+    if is_task_handle_type(object.ty()) {
+        if let Some(expr) = lower_task_handle_method_call(object.clone(), &method_name, call, ctx) {
+            return Some(expr);
+        }
     }
     let object_ty_for_args = canonicalize_class_surface_type(object.ty().resolve_alias());
     let args = match &object_ty_for_args {

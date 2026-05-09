@@ -387,6 +387,8 @@ status: in_progress
 - Added positive validation fixture: `task_scope_container.sifr`.
 - In progress conservative spawn slice: `scope.spawn(coro)` accepts no-argument infallible coroutine calls, returns a typed task observer handle, and records an owned child driver in the task scope so normal scope exit awaits dropped/unobserved handles instead of detaching them.
 - Added validation coverage for `scope_spawn_core.sifr`, `scope_spawn_capture_rejected.sifr`, `scope_spawn_non_coroutine_rejected.sifr`, and `detached_spawn_not_available.sifr`.
+- In progress task-handle observation slice: `handle.join()` is recognized as an async task observation operation and lowers to a private generated `TaskResult` substrate for conservative infallible task handles.
+- Added positive validation fixture: `task_handle_join.sifr`.
 
 ---
 
