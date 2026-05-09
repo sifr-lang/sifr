@@ -121,6 +121,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     );
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
+    let uses_task_sleep = super::module_uses_task_sleep(module);
 
     CodegenResult {
         rust_source,
@@ -140,6 +141,9 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             }
             if import_needs.runtime.needs_sifr_int {
                 crates.insert("sifr_runtime".to_string());
+            }
+            if uses_task_sleep {
+                crates.insert("tokio".to_string());
             }
             crates
         },

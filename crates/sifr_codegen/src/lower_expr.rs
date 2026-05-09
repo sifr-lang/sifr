@@ -384,13 +384,17 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         }
         HirExpr::Await { value, .. } => {
             let lowered_value = if let HirExpr::Call { func, args, .. } = value.as_ref() {
-                let lowered_args = args
-                    .iter()
-                    .map(try_lower_leaf_or_name_expr)
-                    .collect::<Option<Vec<_>>>()?;
-                RustExpr::FnCall {
-                    func: Box::new(RustExpr::Ident(func.clone())),
-                    args: lowered_args,
+                if func == "__sifr_task_sleep" {
+                    try_lower_task_sleep_call_expr(args)?
+                } else {
+                    let lowered_args = args
+                        .iter()
+                        .map(try_lower_leaf_or_name_expr)
+                        .collect::<Option<Vec<_>>>()?;
+                    RustExpr::FnCall {
+                        func: Box::new(RustExpr::Ident(func.clone())),
+                        args: lowered_args,
+                    }
                 }
             } else {
                 try_lower_leaf_or_name_expr(value)?
@@ -505,6 +509,9 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
 }
 
 fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> {
+    if func == "__sifr_task_sleep" {
+        return try_lower_task_sleep_call_expr(args);
+    }
     if func == "hash" {
         return try_lower_simple_hash_call_expr(args);
     }
@@ -546,6 +553,59 @@ fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> 
     Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Ident(func.to_string())),
         args: lowered_args,
+    })
+}
+
+fn try_lower_task_sleep_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
+    let [duration] = args else {
+        return None;
+    };
+    let seconds = RustExpr::Cast {
+        expr: Box::new(try_lower_leaf_or_name_expr(duration)?),
+        ty: RustType::F64,
+    };
+    let seconds_name = "__sifr_task_sleep_seconds".to_string();
+    let finite_positive = RustExpr::BinOp {
+        left: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(seconds_name.clone())),
+            method: "is_finite".to_string(),
+            args: vec![],
+        }),
+        op: "&&".to_string(),
+        right: Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident(seconds_name.clone())),
+            op: ">".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+        }),
+    };
+    let duration_expr = RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: seconds_name.clone(),
+            ty: Some(RustType::F64),
+            value: seconds,
+        }],
+        expr: Some(Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "time".to_string(),
+                "Duration".to_string(),
+                "from_secs_f64".to_string(),
+            ])),
+            args: vec![RustExpr::If {
+                cond: Box::new(finite_positive),
+                then_expr: Box::new(RustExpr::Ident(seconds_name)),
+                else_expr: Some(Box::new(RustExpr::Literal(RustLiteral::Float(0.0)))),
+            }],
+        })),
+    };
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "tokio".to_string(),
+            "time".to_string(),
+            "sleep".to_string(),
+        ])),
+        args: vec![duration_expr],
     })
 }
 

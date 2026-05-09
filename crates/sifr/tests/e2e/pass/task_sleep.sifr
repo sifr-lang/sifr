@@ -1,0 +1,4 @@
+async def main() -> None:
+    await task.sleep(0.0)
+    await task.sleep(-0.01)
+    return None

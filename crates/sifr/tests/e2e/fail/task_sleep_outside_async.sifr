@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0002
+
+def main() -> None:
+    task.sleep(0.0)
+    return None

@@ -56,6 +56,7 @@ use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_true_sequence_guards,
 };
 use super::subscript_type::resolve_subscript_result_type;
+use super::task_calls::{lower_task_module_call, TaskModuleCall};
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
@@ -388,6 +389,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     if let (None, Expr::Attribute(attr)) = (&compat_alias, call.func.as_ref()) {
         if let Some(factory_call) = lower_bytes_type_factory_call(attr, call, ctx) {
             return Some(factory_call);
+        }
+        match lower_task_module_call(attr, call, ctx) {
+            TaskModuleCall::Lowered(expr) => return Some(expr),
+            TaskModuleCall::Rejected => return None,
+            TaskModuleCall::NotTaskModuleCall => {}
         }
         return lower_method_call(attr, call, ctx);
     }
