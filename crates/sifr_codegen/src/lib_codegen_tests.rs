@@ -3787,6 +3787,7 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
 
     assert!(result.rust_source.contains("enum __SifrTimeoutResult<E>"));
     assert!(result.rust_source.contains("async fn __sifr_timeout"));
+    assert!(result.rust_source.contains("biased;"));
     assert!(result.rust_source.contains("handle.__sifr_timeout"));
     assert!(result.rust_source.contains(
         "let result: __SifrTaskResult<i64, __SifrTimeoutResult<std::convert::Infallible>>"
