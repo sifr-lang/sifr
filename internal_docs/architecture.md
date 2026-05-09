@@ -658,20 +658,24 @@ Sifr's `str` maps to Rust `String` (UTF-8). String indexing and length must be d
 
 ### 8. Concurrency Safety
 
-Sifr must define which types can cross thread/task boundaries. This extends the async capture rules in contract #2 to cover all concurrency scenarios.
+Sifr must define which types can cross thread/task boundaries. Phase 32 planning follows `internal_docs/async_concurrency_model.md`; this section records the high-level contract that implementation milestones must preserve.
 
 **Contract:**
 
 - **Auto-derived Send/Sync:** Sifr types are `Send` and `Sync` when all their fields are `Send` and `Sync` (matches Rust's auto-derivation). The compiler tracks this automatically.
-- **Spawn boundaries are checked:** when a value is sent to a spawned task (`sifr.task.spawn`) or thread, the compiler verifies the value is `Send`. If not, it emits a clear error explaining which field is not sendable.
+- **Spawn boundaries are checked:** when a value is sent to a spawned task (`scope.spawn`) or thread, the compiler verifies the value satisfies the task/thread boundary rules. If not, it emits a clear error explaining which captured value or field is not sendable/share-safe.
 - **No silent upgrades:** the compiler does NOT auto-upgrade `Rc` to `Arc` or `RefCell` to `Mutex`. If a non-sendable type is used across a task boundary, the programmer must fix it explicitly.
-- **Shared mutable state across tasks:** requires explicit primitives (deferred to milestone_async_sync). The compiler rejects sharing mutable references across task boundaries without synchronization.
+- **Shared mutable state across tasks:** requires explicit primitives from the async/concurrency model (`sifr.sync.Lock`, `sifr.sync.RwLock`, or `sifr.sync.Channel`). The compiler rejects sharing mutable references across task boundaries without synchronization.
+- **Async callables are distinct:** `AsyncFunction` is not a subtype of sync `Function`/`Callable`; async functions cannot be stored, passed, or invoked through a sync callable path.
+- **Task error types are constrained:** `Task[T, E]` must satisfy `E: Error`, with `Never` accepted for no-error tasks, so awaiting a task always produces a valid `Result[T, E]`.
 - **Single-threaded by default:** code that does not use `async` or `spawn` has no concurrency overhead. `Rc` and `RefCell` are used internally only when appropriate for single-threaded code.
 
 **Milestone responsibilities:**
 
-- milestone_async_sync: implement Send/Sync checking at spawn boundaries
-- milestone_async_sync: provide `sifr.sync.Lock` (maps to `Arc<Mutex<T>>`) and `sifr.sync.Channel` for explicit cross-task sharing
+- `milestone_async_0`: copy the complete async/concurrency type, task, cancellation, and runtime contracts from `internal_docs/async_concurrency_model.md` into the architecture contract.
+- `milestone_async_1`: add async HIR/type substrate (`Task`, `Awaitable`, `AsyncFunction`, `await`, async calls).
+- `milestone_async_4`: implement Send/Sync and borrow-boundary checking at spawn boundaries.
+- `milestone_async_5`: provide `sifr.sync.Shared`, `Lock`, `RwLock`, and `Channel` for explicit cross-task sharing.
 
 ### 9. Destruction and Cleanup Semantics
 
@@ -861,6 +865,11 @@ enum Type {
 
     // Function
     Function(FunctionType),
+
+    // Async/concurrency model (Phase 32)
+    Task(Box<Type>, Box<Type>),       // Task[T, E] -- awaitable task handle, E must satisfy Error or Never
+    Awaitable(Box<Type>),             // structural awaitability protocol
+    AsyncFunction(FunctionType),       // async callable, not a subtype of sync Function
 
     // Class instance (milestone_classes)
     Instance(ClassId),

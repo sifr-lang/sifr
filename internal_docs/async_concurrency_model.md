@@ -212,6 +212,18 @@ Required concepts:
 - async iterable protocol
 - spawn-boundary capture model
 
+Required HIR additions:
+
+- async function metadata, either `HirStmt::AsyncFnDef` or `HirFunction::is_async`
+- `HirExpr::Await`
+- async function invocation metadata so async calls are distinguishable from sync calls before codegen
+- `HirExpr::TaskSpawn` or an equivalent canonical task-spawn expression
+- `HirStmt::AsyncWith`
+- `HirStmt::AsyncFor`
+- HIR type representation for `Task[T, E]`
+- HIR type representation for `Awaitable[T]`
+- capture metadata for spawn-boundary sendability, borrowing, and lifetime diagnostics
+
 The HIR must preserve enough source information to emit Sifr diagnostics for:
 
 - `await` outside async
@@ -225,16 +237,39 @@ The HIR must preserve enough source information to emit Sifr diagnostics for:
 
 The type system needs first-class awaitability and task-boundary rules.
 
+Required type additions:
+
+- `Task[T, E]`: a typed task handle. It is not a `Result`; it is an awaitable handle that yields `Result[T, E]`.
+- `Task[T]`: shorthand for `Task[T, Never]` plus cancellation, yielding `Result[T, CancellationError]`.
+- `Awaitable[T]`: structural protocol for values that can be awaited. `Task[T, E]` implements `Awaitable[Result[T, E]]`.
+- `AsyncFunction[Params, T, E]`: the callable type of `async def`. This may be implemented as a distinct type or as a capability flag on `Callable`, but the type checker must distinguish async callables from sync callables with the same parameters.
+- `Never`: bottom type used by `Task[T, Never]`, exhaustive matches, and unreachable control flow. `Never` already exists in the architecture type enum and remains the no-value type.
+
 Required rules:
 
+- `Task[T, E]` requires `E: Error`, matching `Result[T, E]`. `Task[T, Never]` is valid because `Never` represents no possible error value.
 - `await x` is valid only when `x` has an awaitable type.
 - `await Task[T, E]` always produces `Result[T, E]`. Inside a `try` block, that `Result[T, E]` follows existing auto-unwrap semantics. Outside `try`, the caller observes the `Result[T, E]` expression type.
+- Auto-unwrap applies to the `Result` produced by `await`, never to the `Task` handle itself.
+- `await` is protocol-based: any type implementing `Awaitable[T]` is awaitable, not only `Task`.
+- Calling an async function returns a `Task[T, E]` handle or equivalent awaitable value; it does not run as a sync function.
+- `AsyncFunction` is not a subtype of sync `Function`/`Callable`. Storing an async function in a sync callable variable, passing it where a sync callable is required, or invoking it through a sync-call path is a compile-time error.
 - `scope.spawn` requires captures and return values to satisfy task-boundary requirements.
 - `scope.spawn` can use stricter lifetime-scoped rules than detached spawn.
 - detached spawn is not exposed in v1. A future `spawn_detached`, if added, must require explicit owned, sendable, static captures.
 - mutable cross-task access requires explicit synchronization.
 - values borrowed across `await` must be proven valid or rejected.
 - spawned tasks require sendable task boundaries in v1. Ordinary awaited futures within the same task do not introduce a spawn boundary.
+
+Borrow rules at async boundaries:
+
+| Value form | Across `await` in same task | Across `scope.spawn` |
+| --- | --- | --- |
+| immutable borrow | allowed only when the borrow remains valid and no conflicting mutation exists | allowed only when the scoped lifetime proves the task cannot outlive the borrow and the referent is share-safe |
+| mutable borrow | rejected when it would remain live across `await` | rejected; use explicit synchronization or ownership transfer |
+| owned value | allowed | allowed when the type is sendable across task boundaries |
+| `sync.Shared[T]` | allowed for immutable shared data | allowed when `T` satisfies the share/send requirements |
+| unsynchronized mutable state | rejected | rejected |
 
 ### Runtime and Codegen
 
@@ -297,11 +332,40 @@ Work items:
   - `TimeoutError`
   - `Channel[T]`
   - `Lock[T]`
+- Define async type-system additions:
+  - add task-handle type representation (`Type::Task` or equivalent)
+  - add awaitable protocol representation (`Type::Awaitable` or equivalent structural protocol)
+  - add async-callable representation (`Type::AsyncFunction` or an async capability on `Callable`)
+  - confirm async functions are not interchangeable with sync functions of the same signature
+  - reject assigning, passing, or invoking an `AsyncFunction` through a sync callable type
+  - require `Task[T, E]` to satisfy `E: Error`, with `Never` accepted as the no-error bottom type
+  - confirm `Task[T, E]` implements `Awaitable[Result[T, E]]`
+- Define task container protocols:
+  - `task.scope()` returns a `TaskScope`
+  - `TaskScope` is an async context manager implementing async `__aenter__` and `__aexit__`
+  - `async with task.scope() as scope` binds `scope` to the `TaskScope` instance
+  - `TaskScope.__aexit__` waits for all children to finish, or cancels unfinished children on abnormal exit, and waits for cleanup before the scope exits
+  - `TaskScope` cannot be used outside its `async with` lifetime
+  - `TaskGroup` is the higher-level sibling-failure composition API built on top of task scopes; `TaskScope` owns lifetime, while `TaskGroup` owns group error policy
+- Define HIR additions:
+  - async function marker
+  - await expression
+  - async call representation
+  - task spawn representation
+  - async context-manager statement
+  - async iteration statement
+  - spawn capture metadata
+- Resolve scope conflict with `internal_docs/phases/32_async_ecosystem.md`:
+  - Phase 32 planning must follow this 9-milestone async/concurrency model
+  - the older 4-milestone phase doc must be rewritten or explicitly marked superseded before implementation begins
+  - subprocess and signal handling are not Phase 32 exit criteria for this v1 model
+  - any future subprocess/signal work requires a separate model amendment and cannot be inferred from the older phase document
 - Lock task result semantics:
   - `await Task[T, E]` always yields `Result[T, E]`
   - `await Task[T]` yields `Result[T, CancellationError]`
   - existing `try`/`except` auto-unwrap works on that result inside `try` blocks
   - outside `try`, the observable expression type remains `Result[T, E]`
+  - auto-unwrap is sequenced after await: first `await` produces `Result[T, E]`, then `try` unwraps that result or routes `E` to the matching `except`
 - Define detached task policy:
   - v1 exposes scoped spawn only
   - `scope.spawn(...)` is the canonical task creation API
@@ -327,19 +391,28 @@ Work items:
   - bounded channels use `sync.bounded_channel[T](capacity)`
   - bounded channels apply backpressure when full
 - Define lock policy:
-  - `sync.Lock[T]` generates an async-aware lock internally
-  - the lock can wait without blocking the async runtime
-  - Sifr's guard type is still restricted to a synchronous scope
+  - `sync.Lock[T]` uses a synchronous Rust mutex internally in v1
+  - `lock()` is not await-aware and returns a guard restricted to a synchronous lexical scope
   - lock guards must not cross `await` points in v1
-  - crossing `await` with a live lock guard is a compile-time diagnostic
+  - the type checker rejects a live `LockGuard` or `RwLockGuard` at an `await` point
+  - diagnostic family: async safety
+  - message: "lock guard is still live at this await point; lock guards cannot cross await points in v1"
+  - help: "release the lock before the await, or use a channel to communicate results instead"
   - a distinct `sync.AsyncLock[T]`, if needed, is deferred
 - Define blocking annotation policy:
   - `@blocking_io` and `@cpu_bound` are compile-time diagnostic annotations
   - they never imply automatic task/thread scheduling
   - stdlib blocking APIs should be annotated as the database of known blocking calls
+  - diagnostics are warning-level in v1 unless the called API is known to break runtime safety
+  - a formal effect/capability system can be evaluated after the v1 annotation model has evidence
 - Define runtime-neutral API gate:
   - no public Sifr API may expose Tokio or runtime-specific types
   - runtime internals stay behind `sifr._runtime` or an equivalent private boundary
+- Define runtime selection policy:
+  - Tokio or the chosen Tokio-compatible substrate is the only v1 runtime
+  - users do not configure or select runtimes in the primary model
+  - multiple runtime instances in one generated binary are unsupported in v1
+  - custom runtime injection and runtime tuning are deferred
 - Define validation fixture names and diagnostics codes before implementation begins.
 
 Acceptance criteria:
@@ -367,6 +440,8 @@ Work items:
 - Parse and lower `await`.
 - Add HIR nodes for async functions and await expressions.
 - Add awaitable/future type representation.
+- Add await type-checking: `await x` is valid only when `x: Awaitable[T]`, and the result type of the await expression is `T`.
+- Add structural awaitable protocol checking. Nominal conformance is not required when a type structurally implements the await protocol.
 - Reject `await` outside async functions.
 - Reject awaiting non-awaitable values.
 - Preserve existing `try`/`except` auto-unwrap behavior for `Result` values produced by await expressions, even if runtime execution arrives in the next milestone.
@@ -407,7 +482,8 @@ Goal: make ordinary async programs run without user-managed runtime setup.
 Work items:
 
 - Auto-detect async entrypoints.
-- Generate runtime bootstrap for async `main`.
+- Generate runtime bootstrap for `async def main()`.
+- Support `async def main() -> Result[None, E]` where `E: Error` as the canonical async program entrypoint.
 - Wire runtime dependencies only when async is used.
 - Implement `sifr.task.sleep`.
 - Implement `sifr.task.timeout`.
@@ -465,6 +541,10 @@ Work items:
   - and cleanup is awaited before exit.
 - Implement sibling cancellation on first failure for task groups.
 - Implement `task.gather` with deterministic result ordering.
+- Define `task.gather` error behavior:
+  - by default, the first child error cancels unfinished children and returns that typed error
+  - if multiple children fail before cancellation completes, the earliest handle in input order is the primary error and later errors are secondary structured errors
+  - a future collect-all API may return all `Result` values, but v1 `gather` is fail-fast and cancellation-safe
 - Implement `task.select` and `task.race` for first-completion behavior.
 - Cancel losing tasks by default for `select` and `race`.
 - Define how cancellation composes with `Result`.
@@ -476,7 +556,7 @@ Acceptance criteria:
 - A task spawned inside a scope cannot escape with borrowed state that outlives the scope.
 - Task-group failure cancels unfinished siblings.
 - Cancellation is observable through the Sifr type model.
-- `gather` preserves input ordering.
+- `gather` preserves input ordering for successes and has documented fail-fast cancellation behavior for errors.
 - `select`/`race` deterministically cancel losing tasks by default.
 - Nested cancellation scopes propagate cancellation in a documented order.
 
@@ -557,7 +637,7 @@ Goal: provide the explicit primitives users need when concurrency really require
 
 Work items:
 
-- Implement `sync.Shared[T]` for immutable shared ownership.
+- Implement `sync.Shared[T]` for immutable shared ownership, mapping to atomic shared ownership (`Arc<T>`-style semantics) with no mutation API.
 - Implement `sync.Lock[T]`.
 - Implement `sync.RwLock[T]`.
 - Implement `sync.Channel[T]`.
@@ -573,12 +653,13 @@ Work items:
 - Implement `sync.Semaphore`.
 - Implement `sync.Notify`.
 - Define sync primitive behavior in async and blocking contexts.
-- Reject lock guards that remain live across an `await` point.
+- Reject lock guards that remain live across an `await` point using the v1 `LockGuard`/`RwLockGuard` liveness rule defined in `milestone_async_0`.
 - Add diagnostics for lock misuse where statically knowable.
 
 Acceptance criteria:
 
-- Shared immutable state works across tasks.
+- Shared immutable state works across tasks through `sync.Shared[T]`.
+- `sync.Shared[T]` exposes shared ownership only; mutation requires `Lock`, `RwLock`, or message passing.
 - Mutable shared state requires `Lock` or `RwLock`.
 - Channels are the canonical queue-like concurrency primitive and are MPMC in v1.
 - Channel close and receiver exhaustion behavior is typed and deterministic.
@@ -687,7 +768,14 @@ Work items:
 - Define and enforce the async context-manager protocol.
 - Implement async iterable protocol.
 - Implement `async for`.
-- Define cancellation cleanup behavior for async context managers.
+- Define cancellation cleanup behavior for async context managers:
+  - cleanup order is LIFO, matching acquisition order in reverse
+  - cancelling a task inside `async with` unwinds all active async context managers
+  - async exit receives the cancellation cause
+  - async exit runs to completion unless the enclosing runtime is forcefully aborted
+  - errors from async exit during cancellation are secondary structured errors
+  - panic-like failures from async exit must be caught at the runtime/codegen boundary and surfaced as secondary structured errors, not process aborts
+  - parent cancellation triggers child cancellation, but each task unwinds its own cleanup independently
 - Define channel-backed async iteration.
 - Keep async generators and async comprehensions deferred; they require separate `AsyncGenerator` HIR and protocol work.
 
@@ -697,7 +785,11 @@ Acceptance criteria:
 - Async resource cleanup runs under cancellation.
 - When a task is cancelled inside an `async with` block, async exit/cleanup is called before scope exit completes.
 - If cleanup itself fails during cancellation, the cancellation remains the primary result and cleanup failure is surfaced as secondary structured error evidence through the owning scope.
+- Async exit cleanup order is LIFO.
+- Panic-like failures in async exit do not become process-terminating double-panic paths.
+- Nested cancellation is deterministic: parent cancellation triggers child cancellation, and every task unwinds its own cleanup independently.
 - `async for` works for channel/stream-like values.
+- Async comprehensions are explicitly deferred as syntax sugar over stable `async for`.
 - Non-async iterables are rejected in `async for`.
 - Async protocol diagnostics are Sifr-native.
 
@@ -705,6 +797,7 @@ Positive validation:
 
 - `async_with_basic.sifr`
 - `async_with_cancel_cleanup.sifr`
+- `async_with_nested_cleanup_order.sifr`
 - `async_for_channel.sifr`
 - `async_for_stream_result.sifr`
 
@@ -713,6 +806,7 @@ Negative validation:
 - `async_with_missing_protocol_rejected.sifr`
 - `async_for_non_async_iterable_rejected.sifr`
 - `async_resource_cleanup_error_typed.sifr`
+- `async_with_cleanup_panic_secondary.sifr`
 
 Demo:
 
@@ -748,14 +842,24 @@ Compatibility mapping:
 
 | Compatibility API | Canonical Sifr equivalent |
 | --- | --- |
-| `sifr.asyncio.run(fn)` | direct async entrypoint bootstrap |
+| `sifr.asyncio.run(fn)` | compatibility shim over direct async entrypoint bootstrap; not needed for new Sifr code |
 | `sifr.asyncio.create_task(fn)` | `scope.spawn(fn)` inside an explicit task scope |
 | `sifr.asyncio.gather(*tasks)` | `sifr.task.gather(*tasks)` |
 | `sifr.asyncio.TaskGroup` | `sifr.task.TaskGroup` |
 | `sifr.asyncio.sleep(delay)` | `sifr.task.sleep(delay)` |
 | `sifr.asyncio.wait_for(task, timeout)` | `sifr.task.timeout(task, timeout)` |
+| `sifr.asyncio.timeout(duration)` | `sifr.task.timeout(duration)` context-manager form |
 | `sifr.asyncio.Queue` | `sifr.sync.Channel` / `sifr.sync.bounded_channel` |
 | `sifr.concurrent.Future` | `sifr.task.Task` type alias |
+
+Curated subset rationale:
+
+- `sifr.asyncio` covers only common compatibility APIs that map cleanly to the canonical model.
+- `asyncio.Event` maps to `sifr.sync.Notify` where needed, but the canonical API remains `sifr.sync.Notify`.
+- `asyncio.Condition` maps to `sifr.sync.Notify` plus `sifr.sync.Lock` where needed.
+- `asyncio.Barrier` is deferred with `sifr.sync.Barrier`.
+- `asyncio.wait` maps to `task.gather` for all-results composition or `task.select` / `task.race` for first-completion behavior.
+- `asyncio.as_completed` should be modeled with channel-backed producers and `async for` rather than a distinct core primitive.
 
 Acceptance criteria:
 
@@ -864,6 +968,7 @@ The phase should add these validation families:
 - async iteration fixtures
 - compatibility veneer fixtures
 - runtime-neutrality checks proving Tokio/runtime-specific types do not leak into public Sifr APIs
+- async cleanup panic-boundary fixtures
 - generated-code panic sweep for async/runtime paths
 
 ## Locked V1 Decisions
@@ -881,6 +986,7 @@ These decisions are locked for the first async/concurrency model. `milestone_asy
 9. Public selectors, contextvars, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
 10. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
 11. `@blocking_io` and `@cpu_bound` are diagnostics annotations, not implicit scheduling directives.
+12. Subprocess and signal APIs are out of scope for Phase 32 v1 and require a later model amendment.
 
 ## Recommendation
 

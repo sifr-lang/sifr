@@ -1,5 +1,7 @@
 # Phase 32: Async and Ecosystem Foundation
 
+Status note: superseded for planning by `../async_concurrency_model.md`. The older 4-milestone structure in this file is retained as historical context until Phase 32 is rewritten. Implementation planning must follow the 9-milestone async/concurrency model (`milestone_async_0` through `milestone_async_8`) unless that model is explicitly amended. Older references below to subprocess or signal delivery are not Phase 32 v1 exit criteria.
+
 **Why now:** Safety, ownership, diagnostics, and stdlib parity are established enough that Sifr can add concurrency without importing Python's sharp edges wholesale. This phase must turn async into a simple, explicit model that fits Sifr's borrow-by-default and `Result`/`Option` contracts instead of exposing the full complexity of Python's event-loop ecosystem.
 
 **Scope note:** Typed serialization and validation remain deferred to Phase 40. That matters directly for concurrency: anything that needs stable cross-process transport of arbitrary values is not in scope until Sifr has a canonical typed data/IPC story.
