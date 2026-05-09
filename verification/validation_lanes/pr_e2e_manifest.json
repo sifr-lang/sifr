@@ -67,6 +67,7 @@
     "cpython_math_semantic_corrections_subset",
     "task_scope_unobserved_child_waits",
     "task_group_basic",
-    "task_gather_ordered"
+    "task_gather_ordered",
+    "task_handle_collection_consumed"
   ]
 }

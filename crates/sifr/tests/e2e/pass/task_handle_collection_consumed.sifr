@@ -1,0 +1,15 @@
+async def first() -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def second() -> int:
+    await task.sleep(0.0)
+    return 2
+
+
+async def main() -> None:
+    async with task.scope() as scope:
+        handles = [scope.spawn(first()), scope.spawn(second())]
+        result = await task.gather(handles)
+    return None
