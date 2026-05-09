@@ -1,0 +1,42 @@
+from sifr.io import exists, read_text, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_task_scope_unobserved_child_waits_" + str(getpid()) + ".txt"
+
+
+async def write_marker() -> None:
+    await task.sleep(0.05)
+    try:
+        _written: None = write_text(marker_path(), "done")
+    except IOError as e:
+        _message: str = str(e.message)
+    return None
+
+
+async def main() -> None:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    async with task.scope() as scope:
+        handle = scope.spawn(write_marker())
+
+    observed: bool = False
+    try:
+        content: str = read_text(path)
+        observed = content == "done"
+    except IOError as e:
+        _read_message: str = str(e.message)
+
+    assert observed
+
+    try:
+        _removed: None = remove_file(path)
+    except IOError as e:
+        _final_cleanup_message: str = str(e.message)
+    return None
