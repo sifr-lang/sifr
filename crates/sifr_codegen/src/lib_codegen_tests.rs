@@ -3725,6 +3725,26 @@ fn test_task_handle_join_lowers_to_task_result_observation() {
 }
 
 #[test]
+fn test_await_task_handle_desugars_to_join_observation() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("handle.join().await"));
+    assert!(result
+        .rust_source
+        .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
+}
+
+#[test]
 fn test_sync_main_does_not_require_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(
