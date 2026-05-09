@@ -55,6 +55,7 @@ use helpers::{
     collect_referenced_vars_with_types, default_param_convention, is_hashable_type_codegen,
     module_uses_bigint,
 };
+use hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
@@ -596,6 +597,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         assembled_body_items.extend(emitter.body_items.clone());
     }
     let has_async_main_entrypoint = annotate_async_main_entrypoint(&mut assembled_body_items);
+    let uses_task_sleep = module_uses_task_sleep(module);
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
     let stdlib_import_needs = collect_import_needs_from_source(&stdlib_preamble);
     let needs_hashmap = body_import_needs.collections.needs_hashmap
@@ -743,7 +745,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             if needs_sifr_int {
                 crates.insert("sifr_runtime".to_string());
             }
-            if has_async_main_entrypoint {
+            if has_async_main_entrypoint || uses_task_sleep {
                 crates.insert("tokio".to_string());
             }
             crates
@@ -777,6 +779,76 @@ fn annotate_async_main_entrypoint(items: &mut Vec<RustItem>) -> bool {
             }
         }
     }
+    false
+}
+
+fn module_uses_task_sleep(module: &HirModule) -> bool {
+    fn expr_is_task_sleep(expr: &HirExpr) -> bool {
+        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_sleep")
+    }
+
+    for (_, _, value) in &module.constants {
+        let mut on_expr = |expr: &HirExpr| {
+            if expr_is_task_sleep(expr) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        if matches!(
+            traversal::walk_expr_until(value, &mut on_expr),
+            TraversalControl::Stop
+        ) {
+            return true;
+        }
+    }
+
+    for func in &module.functions {
+        let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+        let mut on_expr = |expr: &HirExpr| {
+            if expr_is_task_sleep(expr) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        if matches!(
+            traversal::walk_stmts_until(
+                &func.body,
+                TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                &mut on_stmt,
+                &mut on_expr
+            ),
+            TraversalControl::Stop
+        ) {
+            return true;
+        }
+    }
+
+    for class in &module.classes {
+        for method in &class.methods {
+            let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+            let mut on_expr = |expr: &HirExpr| {
+                if expr_is_task_sleep(expr) {
+                    TraversalControl::Stop
+                } else {
+                    TraversalControl::Continue
+                }
+            };
+            if matches!(
+                traversal::walk_stmts_until(
+                    &method.body,
+                    TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                    &mut on_stmt,
+                    &mut on_expr
+                ),
+                TraversalControl::Stop
+            ) {
+                return true;
+            }
+        }
+    }
+
     false
 }
 

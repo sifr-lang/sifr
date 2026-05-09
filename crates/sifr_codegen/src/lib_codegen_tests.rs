@@ -3593,6 +3593,45 @@ fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
 }
 
 #[test]
+fn test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module("async def main() -> None:\n    await task.sleep(0.0)\n    return None\n")
+                .expect("parse failed")
+                .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("tokio::time::sleep"));
+    assert!(result
+        .rust_source
+        .contains("std::time::Duration::from_secs_f64"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_task_sleep_requires_tokio_without_async_main() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def wait_once() -> None:\n    await task.sleep(0.0)\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(!result
+        .rust_source
+        .contains("#[tokio::main(flavor = \"current_thread\")]"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
 fn test_sync_main_does_not_require_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(
