@@ -1,0 +1,37 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_task_select_first_completion_" + str(getpid()) + ".txt"
+
+
+async def fast_int() -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def slow_string_writes_marker() -> str:
+    await task.sleep(0.20)
+    try:
+        _written: None = write_text(marker_path(), "lost")
+    except IOError as e:
+        _message: str = str(e.message)
+    return "two"
+
+
+async def main() -> None:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    async with task.scope() as scope:
+        first = scope.spawn(fast_int())
+        second = scope.spawn(slow_string_writes_marker())
+        _selected = await task.select(first, second)
+
+    assert not exists(path)
+    return None

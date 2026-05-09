@@ -591,8 +591,8 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     let err_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::TimeoutResult(Box::new(err_ty))
                 }
-                "Coroutine" | "Task" | "TaskResult" | "BlockingTask" | "AsyncIterator"
-                | "AsyncGenerator" => {
+                "Coroutine" | "Task" | "TaskResult" | "Select2" | "BlockingTask"
+                | "AsyncIterator" | "AsyncGenerator" => {
                     let Expr::Tuple(tuple) = sub.slice.as_ref() else {
                         invalid_type_annotation(
                             ctx,
@@ -617,6 +617,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         "Coroutine" => Type::Coroutine(Box::new(ok_ty), Box::new(err_ty)),
                         "Task" => Type::Task(Box::new(ok_ty), Box::new(err_ty)),
                         "TaskResult" => Type::TaskResult(Box::new(ok_ty), Box::new(err_ty)),
+                        "Select2" => Type::Select2(Box::new(ok_ty), Box::new(err_ty)),
                         "BlockingTask" => Type::BlockingTask(Box::new(ok_ty), Box::new(err_ty)),
                         "AsyncIterator" => Type::AsyncIterator(Box::new(ok_ty), Box::new(err_ty)),
                         "AsyncGenerator" => Type::AsyncGenerator(Box::new(ok_ty), Box::new(err_ty)),

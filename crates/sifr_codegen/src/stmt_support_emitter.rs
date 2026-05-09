@@ -405,6 +405,7 @@ impl RustEmitter {
             | Type::Task(_, _)
             | Type::TaskResult(_, _)
             | Type::TimeoutResult(_)
+            | Type::Select2(_, _)
             | Type::BlockingTask(_, _)
             | Type::Awaitable(_)
             | Type::AsyncIterator(_, _)

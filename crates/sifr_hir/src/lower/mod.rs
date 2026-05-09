@@ -424,6 +424,10 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),
         ),
+        Type::Select2(first, second) => Type::Select2(
+            Box::new(substitute_type_vars(first, bindings)),
+            Box::new(substitute_type_vars(second, bindings)),
+        ),
         Type::TimeoutResult(err) => {
             Type::TimeoutResult(Box::new(substitute_type_vars(err, bindings)))
         }
@@ -595,15 +599,12 @@ fn lower_module_impl(
             }
         }
     }
-
     // Early import pass: resolve imported types so they're available for function signatures.
     // This must happen before function signature extraction so that imported error classes
     // (e.g., StatisticsError from sifr.statistics) can be used in Result[T, E] annotations.
     resolve_imports_early(stmts, externals, &mut ctx);
-
     let alias_decls = collect_type_alias_decls(stmts, &mut ctx);
     predeclare_type_aliases(&alias_decls, &mut ctx);
-
     // First class pass materializes full class shapes before alias resolution so aliases like
     // `type Shape = Circle | Square` see concrete class fields.
     for stmt in stmts {
@@ -611,7 +612,6 @@ fn lower_module_impl(
             collect_class_type(class_def, &mut ctx, false);
         }
     }
-
     resolve_type_aliases(&alias_decls, &mut ctx);
 
     // Refresh class definitions after alias resolution so class field/method annotations that

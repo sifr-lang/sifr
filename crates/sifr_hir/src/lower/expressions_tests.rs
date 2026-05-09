@@ -1599,6 +1599,19 @@ fn test_task_race_consumes_handle_collection_binding() {
 }
 
 #[test]
+fn test_task_select_consumes_handle_bindings() {
+    let source = "async def first() -> int:\n    return 1\n\nasync def second() -> str:\n    return \"two\"\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        one = scope.spawn(first())\n        two = scope.spawn(second())\n        selected = await task.select(one, two)\n        late = await one\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("moved value")
+            && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && e.primary_range == Some(range_for_after(source, "late = await ", "one"))
+    }));
+}
+
+#[test]
 fn test_task_timeout_context_manager_requires_timeout_error_result_for_awaits() {
     let source = "async def main() -> None:\n    async with task.timeout(1.0):\n        await task.sleep(0.0)\n    return None\n";
     let result = lower_source(source);

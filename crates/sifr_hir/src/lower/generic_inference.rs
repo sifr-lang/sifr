@@ -69,6 +69,7 @@ pub(super) fn infer_type_var_bindings(
         (Type::Coroutine(p_ok, p_err), Type::Coroutine(a_ok, a_err))
         | (Type::Task(p_ok, p_err), Type::Task(a_ok, a_err))
         | (Type::TaskResult(p_ok, p_err), Type::TaskResult(a_ok, a_err))
+        | (Type::Select2(p_ok, p_err), Type::Select2(a_ok, a_err))
         | (Type::BlockingTask(p_ok, p_err), Type::BlockingTask(a_ok, a_err))
         | (Type::AsyncIterator(p_ok, p_err), Type::AsyncIterator(a_ok, a_err))
         | (Type::AsyncGenerator(p_ok, p_err), Type::AsyncGenerator(a_ok, a_err)) => {

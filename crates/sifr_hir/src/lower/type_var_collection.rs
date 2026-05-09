@@ -32,6 +32,7 @@ pub(super) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
         Type::Coroutine(ok, err)
         | Type::Task(ok, err)
         | Type::TaskResult(ok, err)
+        | Type::Select2(ok, err)
         | Type::BlockingTask(ok, err)
         | Type::AsyncIterator(ok, err)
         | Type::AsyncGenerator(ok, err) => {

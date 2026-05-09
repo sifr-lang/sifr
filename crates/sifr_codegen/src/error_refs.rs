@@ -92,6 +92,7 @@ fn collect_type_error_refs(
         | Type::Coroutine(key, value)
         | Type::Task(key, value)
         | Type::TaskResult(key, value)
+        | Type::Select2(key, value)
         | Type::BlockingTask(key, value)
         | Type::AsyncIterator(key, value)
         | Type::AsyncGenerator(key, value) => {
