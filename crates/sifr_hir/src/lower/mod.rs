@@ -157,6 +157,10 @@ pub(super) struct LowerCtx {
     scope: Scope,
     /// First non-Never child error type observed for each in-scope `TaskGroup` binding.
     task_group_error_types: HashMap<String, Type>,
+    /// In-scope task handle binding -> owning `TaskGroup` binding.
+    task_handle_group_owners: HashMap<String, String>,
+    /// `TaskGroup` bindings that are no longer proven Open after observing a child handle.
+    task_groups_not_proven_open: std::collections::HashSet<String>,
     /// Collected diagnostics that stop successful lowering.
     errors: Vec<HirDiagnostic>,
     /// Proof for the latest emitted lowering diagnostic.
@@ -229,6 +233,8 @@ impl LowerCtx {
             class_types: HashMap::new(),
             scope: Scope::new(),
             task_group_error_types: HashMap::new(),
+            task_handle_group_owners: HashMap::new(),
+            task_groups_not_proven_open: std::collections::HashSet::new(),
             errors: Vec::new(),
             last_error_taint: None,
             loop_depth: 0,
@@ -272,7 +278,6 @@ impl LowerCtx {
     fn is_stdlib_lowering(&self) -> bool {
         self.allow_intrinsic_imports
     }
-
     fn warn_arithmetic_overflow_risk(&mut self, operation: &'static str, range: TextRange) {
         self.warnings
             .push(LoweringWarningDiagnostic::ArithmeticOverflowRisk {
@@ -280,21 +285,18 @@ impl LowerCtx {
                 primary_range: Some(range),
             });
     }
-
     fn warn_unreachable_statement(&mut self, range: TextRange) {
         self.warnings
             .push(LoweringWarningDiagnostic::UnreachableStatement {
                 primary_range: Some(range),
             });
     }
-
     fn warn_bigint_transition_alias(&mut self, range: TextRange) {
         self.warnings
             .push(LoweringWarningDiagnostic::BigIntTransitionAlias {
                 primary_range: Some(range),
             });
     }
-
     fn error_with_code_at(
         &mut self,
         code: DiagnosticCode,
@@ -351,7 +353,6 @@ impl LowerCtx {
             .unwrap_or(false)
     }
 }
-
 #[cfg(test)]
 mod diagnostic_transport_tests;
 /// Substitute type variables in a type with concrete types.
@@ -487,7 +488,6 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
         _ => ty.clone(),
     }
 }
-
 /// Result of lowering, including the HIR module and any diagnostics.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RevealTypeDiagnostic {

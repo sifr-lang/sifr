@@ -1,4 +1,5 @@
 use super::expression_diagnostics;
+use super::task_scope_calls::mark_task_handle_observed;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
@@ -48,6 +49,7 @@ pub(super) fn lower_task_handle_method_call(
     let result_ok_ty = ok_ty.clone();
     let result_err_ty = err_ty.clone();
     if let HirExpr::Name { name, .. } = &object {
+        mark_task_handle_observed(name, ctx);
         ctx.scope.mark_moved(name);
     }
     Some(HirExpr::MethodCall {
