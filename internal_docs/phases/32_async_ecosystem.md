@@ -499,6 +499,7 @@ status: in_progress
 - In progress task-scope ownership slice: added validation that an unobserved observer handle does not detach its child; normal `TaskScope` exit waits for the child before continuing.
 - In progress TaskGroup surface slice: `async with task.TaskGroup() as group` now lowers through the existing scope-owned child runtime for conservative infallible/no-capture children; group error policy and sibling cancellation remain follow-up milestone_async_3 slices.
 - In progress gather slice: `task.gather([...])` accepts homogeneous task-handle lists, consumes the handles, awaits them in deterministic input order, and returns a `TaskResult[list[T], E]` through a private runtime helper; fail-fast fallible child policy remains a follow-up slice once fallible spawn lands.
+- In progress gather collection-consumption slice: added validation for gathering a named task-handle list so the milestone's explicit handle-collection consumption path is covered.
 
 ---
 
