@@ -3593,6 +3593,28 @@ fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
 }
 
 #[test]
+fn test_async_result_main_entrypoint_keeps_result_return() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module("async def main() -> Result[None, ValueError]:\n    return None\n")
+                .expect("parse failed")
+                .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result
+        .rust_source
+        .contains("#[tokio::main(flavor = \"current_thread\")]"));
+    assert!(result
+        .rust_source
+        .contains("async fn main() -> Result<(), ValueError>"));
+    assert!(result.rust_source.contains("return Ok(());"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
 fn test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(
