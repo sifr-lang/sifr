@@ -404,6 +404,12 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             } = value.as_ref()
             {
                 try_lower_simple_method_call_expr(object, method, args)?
+            } else if matches!(resolve_alias_type(value.ty()), Type::Task(_, _)) {
+                RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(value)?),
+                    method: "join".to_string(),
+                    args: vec![],
+                }
             } else {
                 try_lower_leaf_or_name_expr(value)?
             };

@@ -389,6 +389,8 @@ status: in_progress
 - Added validation coverage for `scope_spawn_core.sifr`, `scope_spawn_capture_rejected.sifr`, `scope_spawn_non_coroutine_rejected.sifr`, and `detached_spawn_not_available.sifr`.
 - In progress task-handle observation slice: `handle.join()` is recognized as an async task observation operation and lowers to a private generated `TaskResult` substrate for conservative infallible task handles.
 - Added positive validation fixture: `task_handle_join.sifr`.
+- In progress task-handle await slice: direct `await handle` now desugars to the same private join observation path as `await handle.join()`.
+- Added positive validation fixture: `task_handle_await.sifr`.
 
 ---
 
