@@ -887,6 +887,9 @@ fn module_uses_task_scope(module: &HirModule) -> bool {
             }
         )
     }
+    fn expr_uses_task_scope_runtime(expr: &HirExpr) -> bool {
+        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_gather")
+    }
 
     for func in &module.functions {
         let mut on_stmt = |stmt: &HirStmt| {
@@ -896,7 +899,13 @@ fn module_uses_task_scope(module: &HirModule) -> bool {
                 TraversalControl::Continue
             }
         };
-        let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
+        let mut on_expr = |expr: &HirExpr| {
+            if expr_uses_task_scope_runtime(expr) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
         if matches!(
             traversal::walk_stmts_until(
                 &func.body,
@@ -919,7 +928,13 @@ fn module_uses_task_scope(module: &HirModule) -> bool {
                     TraversalControl::Continue
                 }
             };
-            let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
+            let mut on_expr = |expr: &HirExpr| {
+                if expr_uses_task_scope_runtime(expr) {
+                    TraversalControl::Stop
+                } else {
+                    TraversalControl::Continue
+                }
+            };
             if matches!(
                 traversal::walk_stmts_until(
                     &method.body,
