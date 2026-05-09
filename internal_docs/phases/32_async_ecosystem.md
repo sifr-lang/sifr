@@ -501,6 +501,7 @@ status: in_progress
 - In progress gather slice: `task.gather([...])` accepts homogeneous task-handle lists, consumes the handles, awaits them in deterministic input order, and returns a `TaskResult[list[T], E]` through a private runtime helper; fail-fast fallible child policy remains a follow-up slice once fallible spawn lands.
 - In progress gather collection-consumption slice: added validation for gathering a named task-handle list so the milestone's explicit handle-collection consumption path is covered.
 - In progress race slice: `task.race([...])` accepts homogeneous task-handle lists, consumes the handles, returns the first completed `TaskResult[T, E]`, and requests cancellation for losing handles; loser cleanup error evidence remains a follow-up slice once fallible spawn and scope-failure plumbing land.
+- In progress select slice: `task.select(a, b)` accepts heterogeneous task handles, consumes both handles, returns `Select2[TaskResult[A, EA], TaskResult[B, EB]]`, and requests cancellation for the losing handle; loser cleanup error evidence remains a follow-up slice once fallible spawn and scope-failure plumbing land.
 
 ---
 

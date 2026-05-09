@@ -29,6 +29,7 @@ pub(super) fn lower_task_module_call(
         "timeout" => lower_task_timeout_call(call, ctx),
         "gather" => lower_task_gather_call(call, ctx),
         "race" => lower_task_race_call(call, ctx),
+        "select" => lower_task_select_call(call, ctx),
         "spawn" => {
             expression_diagnostics::type_mismatch(
                 ctx,
@@ -102,6 +103,79 @@ fn lower_task_gather_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLoweri
         ty: Type::Awaitable(Box::new(Type::TaskResult(
             Box::new(Type::List(result_ok_ty)),
             result_err_ty,
+        ))),
+    })
+}
+
+fn lower_task_select_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {
+    if !ctx.current_function_is_async {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "task.select() is only valid inside async functions".to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if !call.arguments.keywords.is_empty() {
+        expression_diagnostics::call_unexpected_keyword(
+            ctx,
+            "task.select() does not accept keyword arguments".to_string(),
+            first_call_keyword_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if call.arguments.args.len() != 2 {
+        expression_diagnostics::call_wrong_positional_count(
+            ctx,
+            "task.select() takes exactly two task handles".to_string(),
+            call_arity_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+
+    let Some(first) = lower_expr(&call.arguments.args[0], ctx) else {
+        return TaskCallLowering::Rejected;
+    };
+    let Type::Task(first_ok_ty, first_err_ty) = first.ty().resolve_alias() else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "task.select() first argument must be a task handle, got '{}'",
+                first.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    let (first_ok_ty, first_err_ty) = (first_ok_ty.clone(), first_err_ty.clone());
+
+    let Some(second) = lower_expr(&call.arguments.args[1], ctx) else {
+        return TaskCallLowering::Rejected;
+    };
+    let Type::Task(second_ok_ty, second_err_ty) = second.ty().resolve_alias() else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "task.select() second argument must be a task handle, got '{}'",
+                second.ty().display_name()
+            ),
+            call.arguments.args[1].range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    let (second_ok_ty, second_err_ty) = (second_ok_ty.clone(), second_err_ty.clone());
+
+    mark_task_handle_names_moved(&first, ctx);
+    mark_task_handle_names_moved(&second, ctx);
+
+    let first_result_ty = Type::TaskResult(first_ok_ty, first_err_ty);
+    let second_result_ty = Type::TaskResult(second_ok_ty, second_err_ty);
+    TaskCallLowering::Lowered(HirExpr::Call {
+        func: "__sifr_task_select".to_string(),
+        args: vec![first, second],
+        ty: Type::Awaitable(Box::new(Type::Select2(
+            Box::new(first_result_ty),
+            Box::new(second_result_ty),
         ))),
     })
 }

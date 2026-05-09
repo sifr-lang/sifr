@@ -69,6 +69,7 @@
     "task_group_basic",
     "task_gather_ordered",
     "task_handle_collection_consumed",
-    "task_race_cancels_losers"
+    "task_race_cancels_losers",
+    "task_select_first_completion"
   ]
 }

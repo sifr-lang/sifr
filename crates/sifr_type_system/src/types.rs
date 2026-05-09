@@ -30,6 +30,8 @@ pub enum Type {
     TaskResult(Box<Type>, Box<Type>),
     /// Ordinary error result used by task timeout wrappers.
     TimeoutResult(Box<Type>),
+    /// Binary first-completion result for task.select.
+    Select2(Box<Type>, Box<Type>),
     /// Explicit blocking-offload observer handle.
     BlockingTask(Box<Type>, Box<Type>),
     /// Structural awaitability protocol.
@@ -562,6 +564,7 @@ impl Type {
             | Self::Task(_, _)
             | Self::TaskResult(_, _)
             | Self::TimeoutResult(_)
+            | Self::Select2(_, _)
             | Self::BlockingTask(_, _)
             | Self::Awaitable(_)
             | Self::AsyncIterator(_, _)
@@ -685,6 +688,13 @@ impl Type {
                 format!("TaskResult[{}, {}]", ok.display_name(), err.display_name())
             }
             Self::TimeoutResult(err) => format!("TimeoutResult[{}]", err.display_name()),
+            Self::Select2(first, second) => {
+                format!(
+                    "Select2[{}, {}]",
+                    first.display_name(),
+                    second.display_name()
+                )
+            }
             Self::BlockingTask(ok, err) => {
                 format!(
                     "BlockingTask[{}, {}]",
@@ -792,6 +802,9 @@ impl Type {
                 format!("TaskResult<{}, {}>", ok.rust_type(), err.rust_type())
             }
             Self::TimeoutResult(err) => format!("TimeoutResult<{}>", err.rust_type()),
+            Self::Select2(first, second) => {
+                format!("Select2<{}, {}>", first.rust_type(), second.rust_type())
+            }
             Self::BlockingTask(ok, err) => {
                 format!("BlockingTask<{}, {}>", ok.rust_type(), err.rust_type())
             }
@@ -932,6 +945,7 @@ impl Type {
             Type::Task(_, _) => "Task".to_string(),
             Type::TaskResult(_, _) => "TaskResult".to_string(),
             Type::TimeoutResult(_) => "TimeoutResult".to_string(),
+            Type::Select2(_, _) => "Select2".to_string(),
             Type::BlockingTask(_, _) => "BlockingTask".to_string(),
             Type::Awaitable(_) => "Awaitable".to_string(),
             Type::AsyncIterator(_, _) => "AsyncIterator".to_string(),
@@ -1295,6 +1309,7 @@ impl Type {
                 | Type::Coroutine(ok, err)
                 | Type::Task(ok, err)
                 | Type::TaskResult(ok, err)
+                | Type::Select2(ok, err)
                 | Type::BlockingTask(ok, err)
                 | Type::AsyncIterator(ok, err)
                 | Type::AsyncGenerator(ok, err) => contains_any(ok) || contains_any(err),
@@ -1467,6 +1482,7 @@ impl Type {
             (Self::Coroutine(ok_a, err_a), Self::Coroutine(ok_b, err_b))
             | (Self::Task(ok_a, err_a), Self::Task(ok_b, err_b))
             | (Self::TaskResult(ok_a, err_a), Self::TaskResult(ok_b, err_b))
+            | (Self::Select2(ok_a, err_a), Self::Select2(ok_b, err_b))
             | (Self::BlockingTask(ok_a, err_a), Self::BlockingTask(ok_b, err_b))
             | (Self::AsyncIterator(ok_a, err_a), Self::AsyncIterator(ok_b, err_b))
             | (Self::AsyncGenerator(ok_a, err_a), Self::AsyncGenerator(ok_b, err_b)) => {
