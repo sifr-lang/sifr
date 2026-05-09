@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0002
+
+def main() -> None:
+    async with task.scope() as scope:
+        return None

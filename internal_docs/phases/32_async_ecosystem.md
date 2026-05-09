@@ -234,7 +234,7 @@ status: completed
 
 ### milestone_async_1: Async Syntax, Awaitability, and HIR Substrate
 
-status: in_progress
+status: completed
 
 **Goal:** Teach the compiler to understand async syntax as typed Sifr semantics without task scheduling.
 
@@ -282,13 +282,17 @@ status: in_progress
 - `async_return_type_mismatch.sifr`
 - `async_call_without_await_from_sync_rejected.sifr`
 - `cancelled_task_except_error_does_not_swallow.sifr`
+- `async_with_outside_async.sifr`
+- `async_with_unsupported_context.sifr`
+- `try_await_task_handle_rejected.sifr`
 
 **Implementation progress (2026-05-09):**
 
 - Completed first substrate slice: `async def` HIR marking, `await` HIR expression, async call typing as `Coroutine[T, E]`, async function value typing as `AsyncFunction`, await type checks, initial async/await codegen shape, and async type annotations for `Coroutine`, `Task`, `TaskResult`, `BlockingTask`, `Awaitable`, `AsyncIterator`, and `AsyncGenerator`.
-- Added positive validation fixtures: `async_basic.sifr`, `await_chain.sifr`, and `async_result_auto_unwrap.sifr`.
-- Added negative validation fixtures: `await_outside_async.sifr`, `await_non_awaitable.sifr`, `async_call_without_await_from_sync_rejected.sifr`, and `async_function_not_sync_callable.sifr`.
-- Remaining before milestone closure: built-in `async with task.scope()`, built-in `async with task.timeout(duration)`, `try await task_handle` rejection, and cancellation-specific negative validation once task handles exist.
+- Completed milestone closure slice: built-in `async with task.scope()`, built-in `async with task.timeout(duration)`, and `try await task_handle` rejection.
+- Added positive validation fixtures: `async_basic.sifr`, `await_chain.sifr`, `async_result_auto_unwrap.sifr`, `async_with_scope_builtin.sifr`, and `async_with_timeout_builtin.sifr`.
+- Added negative validation fixtures: `await_outside_async.sifr`, `await_non_awaitable.sifr`, `async_return_type_mismatch.sifr`, `async_call_without_await_from_sync_rejected.sifr`, `async_function_not_sync_callable.sifr`, `async_with_outside_async.sifr`, `async_with_unsupported_context.sifr`, and `try_await_task_handle_rejected.sifr`.
+- Deferred cancellation-swallow validation until `milestone_async_2` introduces materialized task handles and cancellation evidence.
 
 **Demo:**
 

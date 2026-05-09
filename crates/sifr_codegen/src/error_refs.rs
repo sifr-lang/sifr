@@ -256,6 +256,12 @@ fn collect_stmt_error_refs(
                 }
                 collect_stmt_error_refs(body, referenced, builtin_error_classes);
             }
+            HirStmt::AsyncWith { kind, body, .. } => {
+                if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
+                    collect_expr_error_refs(duration, referenced, builtin_error_classes);
+                }
+                collect_stmt_error_refs(body, referenced, builtin_error_classes);
+            }
             HirStmt::NestedFunction { func } => {
                 collect_stmt_error_refs(&func.body, referenced, builtin_error_classes);
             }

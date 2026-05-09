@@ -570,6 +570,19 @@ where
                 return TraversalControl::Stop;
             }
         }
+        HirStmt::AsyncWith { kind, body, .. } => {
+            if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
+                if matches!(walk_expr_until(duration, on_expr), TraversalControl::Stop) {
+                    return TraversalControl::Stop;
+                }
+            }
+            if matches!(
+                walk_stmts_until(body, config, on_stmt, on_expr),
+                TraversalControl::Stop
+            ) {
+                return TraversalControl::Stop;
+            }
+        }
         HirStmt::NestedFunction { func } => {
             if config.descend_nested_functions {
                 if matches!(

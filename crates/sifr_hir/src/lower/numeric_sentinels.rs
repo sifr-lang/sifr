@@ -261,7 +261,9 @@ fn patch_stmt_numeric_sentinels(
                 apply_numeric_sentinel_patches(&mut handler.body, pending);
             }
         }
-        HirStmt::With { body, .. } => apply_numeric_sentinel_patches(body, pending),
+        HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
+            apply_numeric_sentinel_patches(body, pending);
+        }
         HirStmt::NestedFunction { func } => {
             apply_numeric_sentinel_patches(&mut func.body, pending);
         }

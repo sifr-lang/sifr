@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0002
+
+async def main() -> None:
+    async with other.scope() as scope:
+        return None

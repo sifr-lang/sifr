@@ -1,0 +1,6 @@
+async def worker() -> None:
+    async with task.timeout(1):
+        return None
+
+def main() -> None:
+    return None

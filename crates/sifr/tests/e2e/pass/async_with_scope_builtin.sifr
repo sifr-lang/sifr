@@ -1,0 +1,6 @@
+async def worker() -> None:
+    async with task.scope() as scope:
+        return None
+
+def main() -> None:
+    return None

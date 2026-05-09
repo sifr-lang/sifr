@@ -1217,7 +1217,9 @@ pub(super) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
                         .iter()
                         .any(|handler| body_contains_field_assign(&handler.body))
             }
-            HirStmt::With { body, .. } => body_contains_field_assign(body),
+            HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
+                body_contains_field_assign(body)
+            }
             HirStmt::Match { arms, .. } => {
                 arms.iter().any(|arm| body_contains_field_assign(&arm.body))
             }
