@@ -12,7 +12,7 @@ pub(super) fn is_task_scope_type(ty: &Type) -> bool {
 
 pub(super) fn lower_task_scope_spawn_call(
     object: HirExpr,
-    attr: &ExprAttribute,
+    _attr: &ExprAttribute,
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
@@ -55,14 +55,6 @@ pub(super) fn lower_task_scope_spawn_call(
     };
     let task_ok_ty = ok_ty.clone();
     let task_err_ty = err_ty.clone();
-    if !matches!(task_err_ty.resolve_alias(), Type::Never) {
-        expression_diagnostics::type_mismatch(
-            ctx,
-            "scope.spawn() currently accepts only infallible coroutine arguments until task error plumbing lands".to_string(),
-            call.arguments.args[0].range(),
-        );
-        return None;
-    }
     if !matches!(&coroutine, HirExpr::Call { args, .. } if args.is_empty()) {
         expression_diagnostics::type_mismatch(
             ctx,
@@ -74,7 +66,11 @@ pub(super) fn lower_task_scope_spawn_call(
 
     Some(HirExpr::MethodCall {
         object: Box::new(object),
-        method: attr.attr.to_string(),
+        method: if matches!(task_err_ty.resolve_alias(), Type::Never) {
+            "__sifr_spawn_infallible".to_string()
+        } else {
+            "__sifr_spawn_result".to_string()
+        },
         args: vec![coroutine],
         ty: Type::Task(task_ok_ty, task_err_ty),
     })
