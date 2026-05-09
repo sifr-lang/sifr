@@ -165,6 +165,9 @@ const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "NotImplementedError",
     "DecimalConversionError",
     "TimeoutError",
+    "ScopeFailure",
+    "TaskCancelled",
+    "SecondaryError",
 ];
 
 const IO_ERROR_SUBCLASSES: &[&str] = &[

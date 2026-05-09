@@ -1,0 +1,14 @@
+def scope_failure_surface() -> Result[None, ScopeFailure]:
+    return None
+
+
+def task_cancelled_surface() -> Result[None, TaskCancelled]:
+    return None
+
+
+def secondary_error_surface() -> Result[None, SecondaryError]:
+    return None
+
+
+def main() -> None:
+    return None
