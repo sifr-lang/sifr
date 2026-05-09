@@ -3695,7 +3695,9 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
     assert!(result.rust_source.contains("struct __SifrTask<T, E>"));
     assert!(result.rust_source.contains("fn spawn<"));
     assert!(result.rust_source.contains("tokio::sync::oneshot::channel"));
-    assert!(result.rust_source.contains("scope.spawn(worker());"));
+    assert!(result
+        .rust_source
+        .contains("scope.__sifr_spawn_infallible(worker());"));
     assert!(result
         .rust_source
         .contains("scope.__sifr_join_all().await;"));
@@ -3720,7 +3722,9 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
     assert!(result
         .rust_source
         .contains("let mut group = __SifrTaskScope::new();"));
-    assert!(result.rust_source.contains("group.spawn(worker());"));
+    assert!(result
+        .rust_source
+        .contains("group.__sifr_spawn_infallible(worker());"));
     assert!(result
         .rust_source
         .contains("group.__sifr_join_all().await;"));
@@ -3746,6 +3750,32 @@ fn test_task_gather_lowers_to_private_gather_helper() {
     assert!(result
         .rust_source
         .contains("let result: __SifrTaskResult<Vec<i64>, std::convert::Infallible>"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result
+        .rust_source
+        .contains("tokio::sync::oneshot::Receiver<__SifrTaskResult<T, E>>"));
+    assert!(result
+        .rust_source
+        .contains("scope.__sifr_spawn_result(worker());"));
+    assert!(result
+        .rust_source
+        .contains("let result: __SifrTaskResult<i64, ValueError>"));
     assert!(result.required_crates.contains("tokio"));
 }
 
