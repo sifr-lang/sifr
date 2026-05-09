@@ -1,12 +1,12 @@
-# Async and Concurrency Model Proposal
+# Async and Concurrency Model Contract
 
-Status: proposal
-Target phase: Phase 32 replacement candidate
+Status: canonical Phase 32 model contract
+Target phase: Phase 32
 Last updated: 2026-05-09
 
 ## Purpose
 
-This document proposes the Sifr async and concurrency model and, more importantly, the milestone sequence for building it correctly.
+This document defines the Sifr async and concurrency model and, more importantly, the milestone sequence for building it correctly. `internal_docs/phases/32_async_ecosystem.md` is the phase execution plan and must reference this file for the semantic contract instead of restating or weakening it.
 
 The phase should not be an ecosystem grab bag. Its job is to make one coherent model real:
 
@@ -398,6 +398,11 @@ Work items:
   - broad `except Error` handlers in a cancelled task do not intercept the active cancellation signal
   - materialized `CancellationError` evidence also does not match broad `except Error`
   - cancellation suppression, `uncancel` counters, and shield-like APIs are not exposed in v1
+- Define timeout API forms:
+  - `task.timeout(task, duration)` wraps a task handle or awaitable operation
+  - `task.timeout(duration)` returns an async context manager usable as `async with task.timeout(duration):`
+  - both forms share the same completion-vs-deadline race policy
+  - the context-manager form is the canonical implementation target for `sifr.asyncio.timeout(duration)`
 - Define selection policy:
   - `select` / `race` cancel losing tasks by default
   - if multiple tasks complete in the same scheduler tick, handle creation order breaks ties deterministically
@@ -461,6 +466,7 @@ Work items:
 - Add awaitable/future type representation.
 - Add await type-checking: `await x` is valid only when `x: Awaitable[T]`, and the result type of the await expression is `T`.
 - Add structural awaitable protocol checking. Nominal conformance is not required when a type structurally implements the await protocol.
+- Reject async function calls from sync functions. A sync function cannot create a `Task` by calling an async function directly; it must enter through an async entrypoint or a future explicit runtime bridge.
 - Reject `await` outside async functions.
 - Reject awaiting non-awaitable values.
 - Preserve existing `try`/`except` auto-unwrap behavior for `Result` values produced by await expressions, even if runtime execution arrives in the next milestone.
@@ -487,6 +493,8 @@ Negative validation:
 - `await_outside_async.sifr`
 - `await_non_awaitable.sifr`
 - `async_return_type_mismatch.sifr`
+- `async_call_without_await_from_sync_rejected.sifr`
+- `cancelled_task_except_error_does_not_swallow.sifr`
 
 Demo:
 
@@ -511,6 +519,11 @@ Work items:
   - if `duration` expires first, timeout cancels the inner task, waits for cleanup, and returns `Err(TimeoutError)`
   - if inner completion and timeout expiry become ready in the same scheduler tick, inner completion wins
   - cancelling the outer scope while timeout is running cancels the inner task unconditionally
+- Define `task.timeout(duration)` context-manager form:
+  - usable as `async with task.timeout(duration):`
+  - applies the same completion-vs-deadline race policy to the enclosed block
+  - cancellation or timeout of the enclosed block awaits cleanup before scope exit
+  - this is the canonical implementation target for `sifr.asyncio.timeout(duration)`
 - Implement the minimal `sifr.task.scope` runtime container needed for scoped spawn.
 - Implement `scope.spawn` returning a typed task handle.
 - Implement task-handle `join`.
@@ -536,16 +549,14 @@ Positive validation:
 - `task_sleep.sifr`
 - `task_timeout_success.sifr`
 - `task_timeout_completion_wins_tie.sifr`
+- `task_timeout_context_manager.sifr`
 - `task_cancel_basic.sifr`
 - `runtime_leak_rejected.sifr`
 
 Negative validation:
 
-- `task_handle_unused_must_join_or_cancel.sifr`
 - `detached_spawn_not_available.sifr`
 - `task_timeout_error_type.sifr`
-- `cancelled_task_except_error_does_not_swallow.sifr`
-- `spawn_non_send_initial_diagnostic.sifr`
 
 Demo:
 
@@ -578,6 +589,7 @@ Work items:
 - Define `task.gather` error behavior:
   - by default, the first child error cancels unfinished children and returns that typed error
   - if multiple children fail before cancellation completes, the earliest handle in input order is the primary error and later errors are secondary structured errors
+  - cleanup errors from cancelled children surface as `SecondaryError` values attached to the primary `gather` result
   - a future collect-all API may return all `Result` values, but v1 `gather` is fail-fast and cancellation-safe
 - Implement `task.select` and `task.race` for first-completion behavior.
 - Cancel losing tasks by default for `select` and `race`.
@@ -601,6 +613,7 @@ Positive validation:
 - `task_group_basic.sifr`
 - `task_group_error_cancels_siblings.sifr`
 - `task_gather_ordered.sifr`
+- `task_gather_cleanup_error_secondary.sifr`
 - `task_handle_collection_consumed.sifr`
 - `task_select_first_completion.sifr`
 - `task_race_cancels_losers.sifr`
@@ -612,6 +625,7 @@ Positive validation:
 Negative validation:
 
 - `task_escape_scope_rejected.sifr`
+- `task_handle_unused_must_join_or_cancel.sifr`
 - `cancelled_task_use_rejected.sifr`
 - `task_handle_dropped_without_consumption_rejected.sifr`
 - `task_group_unhandled_error_rejected.sifr`
@@ -690,6 +704,7 @@ Work items:
 - Implement `sync.Semaphore`.
 - Implement `sync.Notify`.
 - Define sync primitive behavior in async and blocking contexts.
+- Implement static lock-guard liveness analysis at await points.
 - Reject lock guards that remain live across an `await` point using the v1 `LockGuard`/`RwLockGuard` liveness rule defined in `milestone_async_0`.
 - Add diagnostics for lock misuse where statically knowable.
 
@@ -701,6 +716,7 @@ Acceptance criteria:
 - Channels are the canonical queue-like concurrency primitive and are MPMC in v1.
 - Channel close and receiver exhaustion behavior is typed and deterministic.
 - Channel cancellation behavior is typed and deterministic.
+- Lock guard liveness at await points is rejected at compile time.
 - Lock guards cannot cross `await` points in v1.
 - Semaphore and notify primitives support common coordination patterns.
 - The compiler rejects unsynchronized shared mutable access.
@@ -1019,20 +1035,21 @@ These decisions are locked for the first async/concurrency model. `milestone_asy
 
 1. `scope.spawn` is the canonical v1 task creation API. Free-floating detached spawn is not exposed.
 2. Active task cancellation is scope-exit semantics and is not catchable by ordinary `except Error`; `CancellationError` is the materialized boundary evidence observed from outside the cancelled task.
-3. `await Task[T, E]` always produces `Result[T, E | CancellationError]` when observed by a non-cancelled task. `try`/`except` auto-unwrap works on ordinary `E` errors, while cancellation requires explicit handling or propagation.
-4. `task.select` and `task.race` cancel losing tasks by default.
-5. `sync.Channel[T]` is multi-producer, multi-consumer. Unbounded and bounded constructors are separate.
-6. Lock guards must not cross `await` points in v1.
-7. Spawned tasks require sendable task boundaries in v1. Local, non-Send task sets are deferred.
-8. `sifr.asyncio` ships only as a compatibility veneer after the canonical model is complete.
-9. Public selectors, contextvars, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
-10. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
-11. `@blocking_io` and `@cpu_bound` are diagnostics annotations, not implicit scheduling directives.
-12. Subprocess and signal APIs are out of scope for Phase 32 v1 and require a later model amendment.
-13. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; v1 graceful shutdown uses structured scope cancellation and explicit channels.
+3. `CancellationError` is not an `Error` subclass and is never matched by broad `except Error`.
+4. `await Task[T, E]` always produces `Result[T, E | CancellationError]` when observed by a non-cancelled task. `try`/`except` auto-unwrap works on ordinary `E` errors, while cancellation requires explicit handling or propagation.
+5. `task.select` and `task.race` cancel losing tasks by default.
+6. `sync.Channel[T]` is multi-producer, multi-consumer. Unbounded and bounded constructors are separate.
+7. Lock guards must not cross `await` points in v1.
+8. Spawned tasks require sendable task boundaries in v1. Local, non-Send task sets are deferred.
+9. `sifr.asyncio` ships only as a compatibility veneer after the canonical model is complete.
+10. Public selectors, contextvars, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
+11. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
+12. `@blocking_io` and `@cpu_bound` are diagnostics annotations, not implicit scheduling directives.
+13. Subprocess and signal APIs are out of scope for Phase 32 v1 and require a later model amendment.
+14. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; v1 graceful shutdown uses structured scope cancellation and explicit channels.
 
 ## Recommendation
 
-Use this proposal to rewrite Phase 32 from "Async and Ecosystem Foundation" into "Async and Concurrency Model".
+Use this contract as the semantic source for Phase 32 implementation. The phase execution plan lives in `internal_docs/phases/32_async_ecosystem.md` and should stay synchronized with this model.
 
 The phase should close the model first. Web, typed data, subprocess expansion, database clients, and broad CPython async parity should build on top later.

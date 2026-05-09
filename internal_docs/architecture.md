@@ -359,7 +359,7 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
 - milestone_borrow_hardening: implement exclusivity checking and error diagnostics
 - ad-hoc-own-mut-parameter-convention: extend parameter conventions so owned mutable parameters are first-class and lower canonically to Rust `mut x: T`
 - milestone_generics: implement closure capture inference
-- milestone_async_sync: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
+- milestone_async_4: implement task/thread boundary ownership and Send/Sync capture rules.
 - Post-milestone_protocols: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
 
 ### 3. Error Semantics
@@ -373,7 +373,7 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (mile
 | Context                          | Error mechanism                   | Handling                                                    | Codegen                                                    |
 | -------------------------------- | --------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | Sync function                    | `Result[T, E]` return             | `try`/`except` with exhaustiveness checking                 | `Result<T, E>`                                             |
-| Async function (milestone_async_core) | `Result[T, E]` return             | `try`/`except` (same rules, works across `.await`)          | `Result<T, E>`                                             |
+| Async function (milestone_async_1/milestone_async_2) | `Result[T, E]` return             | `try`/`except` works across `.await`; task observation also carries `CancellationError` | `Result<T, E>` inside the task; task handles observe `Result[T, E | CancellationError]` |
 | `try`/`except` block             | Pattern match on `Result`         | `except` arms match error types; compiler checks coverage   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
 | Indexing                         | `Option[T]` return                | Type narrowing (`if val is not None`)                       | `.get(i).cloned()` / `.chars().nth(i)`                     |
 | Division                         | `Result[T, DivisionError]`        | `try`/`except`                                              | Checked division with zero-check                           |
@@ -671,6 +671,9 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - **Shared mutable state across tasks:** requires explicit primitives from the async/concurrency model (`sifr.sync.Lock`, `sifr.sync.RwLock`, or `sifr.sync.Channel`). The compiler rejects sharing mutable references across task boundaries without synchronization.
 - **Async callables are distinct:** `AsyncFunction` is not a subtype of sync `Function`/`Callable`; async functions cannot be stored, passed, or invoked through a sync callable path.
 - **Task error types are constrained:** `Task[T, E]` must satisfy `E: Error`, with `Never` accepted for no-error tasks. Awaiting a task from a non-cancelled owner produces `Result[T, E | CancellationError]`; `CancellationError` is a separate task-control branch, not an `Error` subclass, and is not caught by broad `except Error`.
+- **Async calls are async-only:** sync code cannot invoke an async function through the async-call path. The compiler rejects async calls from sync functions unless a future explicit runtime bridge is added. This prevents Python-style unawaited coroutine/task leaks.
+- **Borrow rules at async boundaries:** immutable borrows may cross `await` only when the borrow remains valid and no conflicting mutation exists; mutable borrows cannot remain live across `await`; owned values may cross spawn boundaries only when sendable; `sync.Shared[T]` is allowed for immutable shared data; unsynchronized mutable state is rejected.
+- **Task composition semantics:** `task.timeout` returns the inner result when the inner task completes before the deadline, timeout expiry cancels and awaits inner cleanup, same-tick completion wins over timeout, and outer cancellation cancels the inner task. `task.gather` is fail-fast with deterministic success ordering; first failure cancels unfinished children and cleanup/sibling failures become secondary evidence. `task.select` and `task.race` cancel losing tasks by default.
 - **Single-threaded by default:** code that does not use `async` or `spawn` has no concurrency overhead. `Rc` and `RefCell` are used internally only when appropriate for single-threaded code.
 
 **Milestone responsibilities:**
