@@ -527,6 +527,7 @@ fn stmt_label(stmt: &HirStmt) -> &'static str {
         HirStmt::Delete { .. } => "delete",
         HirStmt::Yield { .. } => "yield",
         HirStmt::With { .. } => "with",
+        HirStmt::AsyncWith { .. } => "async_with",
         HirStmt::NestedFunction { .. } => "nested_function",
         HirStmt::Match { .. } => "match",
     }

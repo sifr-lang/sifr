@@ -46,6 +46,7 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::Delete { .. }
         | HirStmt::Yield { .. }
         | HirStmt::With { .. }
+        | HirStmt::AsyncWith { .. }
         | HirStmt::Match { .. }
         | HirStmt::NestedFunction { .. }
         | HirStmt::TryExcept { .. } => true,
@@ -328,6 +329,12 @@ fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
         HirStmt::With { items, body } => {
             for (_, context_expr, _) in items {
                 validate_expr_lowering_shape(context_expr)?;
+            }
+            validate_stmt_block_lowering_shape(body)
+        }
+        HirStmt::AsyncWith { kind, body, .. } => {
+            if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
+                validate_expr_lowering_shape(duration)?;
             }
             validate_stmt_block_lowering_shape(body)
         }
@@ -832,6 +839,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         HirStmt::With { items, body } => {
             try_lower_simple_with_stmt(items, body, in_loop_with_else, bindings, ctx)
         }
+        HirStmt::AsyncWith { kind, target, body } => try_lower_simple_async_with_stmt(
+            kind,
+            target.as_deref(),
+            body,
+            in_loop_with_else,
+            bindings,
+            ctx,
+        ),
         HirStmt::Match {
             subject,
             subject_ty,
@@ -1443,6 +1458,7 @@ fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
         | HirStmt::Continue
         | HirStmt::TryExcept { .. }
         | HirStmt::With { .. }
+        | HirStmt::AsyncWith { .. }
         | HirStmt::Match { .. }
         | HirStmt::Yield { .. }
         | HirStmt::NestedFunction { .. } => false,
@@ -1856,6 +1872,39 @@ fn try_lower_simple_with_stmt(
             name: name.clone(),
             ty: None,
             value: try_lower_leaf_or_name_expr(value)?,
+        });
+    }
+
+    block.extend(try_lower_simple_stmt_block(
+        body,
+        in_loop_with_else,
+        bindings.mutated_vars,
+        bindings.borrowed_params,
+        ctx,
+    )?);
+
+    Some(vec![RustStmt::Block(block)])
+}
+
+fn try_lower_simple_async_with_stmt(
+    kind: &sifr_hir::HirAsyncWithKind,
+    target: Option<&str>,
+    body: &[HirStmt],
+    in_loop_with_else: bool,
+    bindings: SimpleStmtBindings<'_>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
+        let _ = try_lower_leaf_or_name_expr(duration)?;
+    }
+
+    let mut block = Vec::new();
+    if let Some(target) = target {
+        block.push(RustStmt::Let {
+            mutable: false,
+            name: target.to_string(),
+            ty: None,
+            value: RustExpr::Literal(RustLiteral::Unit),
         });
     }
 

@@ -184,6 +184,13 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
                 .any(|(_, expr, _)| hir_expr_calls_function(expr, func_name))
                 || hir_body_calls_function(body, func_name)
         }
+        HirStmt::AsyncWith { kind, body, .. } => {
+            matches!(
+                kind,
+                crate::hir_nodes::HirAsyncWithKind::TaskTimeout { duration }
+                    if hir_expr_calls_function(duration, func_name)
+            ) || hir_body_calls_function(body, func_name)
+        }
         HirStmt::Match { subject, arms, .. } => {
             hir_expr_calls_function(subject, func_name)
                 || arms.iter().any(|arm| {

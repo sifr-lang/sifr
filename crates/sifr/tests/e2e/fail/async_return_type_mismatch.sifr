@@ -1,0 +1,4 @@
+# expect-error: SIFR-TYPE-0002
+
+async def broken() -> int:
+    return "bad"

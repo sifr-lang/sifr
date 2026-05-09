@@ -101,6 +101,13 @@ pub struct HirFunction {
     pub type_params: Vec<String>,
 }
 
+/// Built-in async-with forms recognized before general async context managers.
+#[derive(Debug, Clone)]
+pub enum HirAsyncWithKind {
+    TaskScope,
+    TaskTimeout { duration: HirExpr },
+}
+
 /// A function parameter with its type, convention, and optional default value.
 #[derive(Debug, Clone)]
 pub struct HirParam {
@@ -259,6 +266,12 @@ pub enum HirStmt {
     /// Each item is (`var_name`, `context_expr`, `has_context_manager_protocol`)
     With {
         items: Vec<(String, HirExpr, bool)>,
+        body: Vec<HirStmt>,
+    },
+    /// Built-in async with forms: `async with task.scope()` and `async with task.timeout(...)`.
+    AsyncWith {
+        kind: HirAsyncWithKind,
+        target: Option<String>,
         body: Vec<HirStmt>,
     },
     /// Nested function definition: def inside def

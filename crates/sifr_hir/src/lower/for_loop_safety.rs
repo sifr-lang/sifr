@@ -66,7 +66,9 @@ fn stmt_mutates_iter_source(stmt: &HirStmt, source_name: &str) -> bool {
                     .iter()
                     .any(|handler| loop_body_mutates_iter_source(&handler.body, source_name))
         }
-        HirStmt::With { body, .. } => loop_body_mutates_iter_source(body, source_name),
+        HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
+            loop_body_mutates_iter_source(body, source_name)
+        }
         HirStmt::Match { arms, .. } => arms
             .iter()
             .any(|arm| loop_body_mutates_iter_source(&arm.body, source_name)),

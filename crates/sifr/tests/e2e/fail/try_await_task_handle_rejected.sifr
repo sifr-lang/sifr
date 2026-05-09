@@ -1,0 +1,4 @@
+# expect-error: SIFR-PARSE-0002
+
+async def observe(handle: Task[int, ValueError]) -> TaskResult[int, ValueError]:
+    return try await handle

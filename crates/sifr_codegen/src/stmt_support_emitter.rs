@@ -6349,6 +6349,13 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 (vec![lowered_with], true)
+            } else if let HirStmt::AsyncWith { kind, target, body } = stmt {
+                let Some(lowered_async_with) =
+                    self.try_lower_async_with_stmt_for_ir(kind, target.as_deref(), body)?
+                else {
+                    return Ok(None);
+                };
+                (vec![lowered_async_with], true)
             } else if let HirStmt::TryExcept { body, handlers, .. } = stmt {
                 let Some(lowered_try_except) =
                     self.try_lower_try_except_stmt_for_ir(body, handlers)?
@@ -7216,6 +7223,34 @@ impl RustEmitter {
             items: lowered_items,
             body: lowered_body,
         }))
+    }
+
+    fn try_lower_async_with_stmt_for_ir(
+        &mut self,
+        kind: &sifr_hir::HirAsyncWithKind,
+        target: Option<&str>,
+        body: &[HirStmt],
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
+            let Some(_) = self.lower_rendered_expr_for_ir(duration)? else {
+                return Ok(None);
+            };
+        }
+        let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+            return Ok(None);
+        };
+        if let Some(target) = target {
+            lowered_body.insert(
+                0,
+                crate::RustStmt::Let {
+                    mutable: false,
+                    name: target.to_string(),
+                    ty: None,
+                    value: crate::RustExpr::Literal(crate::RustLiteral::Unit),
+                },
+            );
+        }
+        Ok(Some(RustStmt::Block(lowered_body)))
     }
 
     fn try_lower_borrowed_name_compare_condition_for_ir(
