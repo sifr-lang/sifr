@@ -878,11 +878,11 @@ fn body_contains_await(body: &[HirStmt]) -> bool {
 }
 
 fn module_uses_task_scope(module: &HirModule) -> bool {
-    fn stmt_is_task_scope(stmt: &HirStmt) -> bool {
+    fn stmt_uses_task_scope_runtime(stmt: &HirStmt) -> bool {
         matches!(
             stmt,
             HirStmt::AsyncWith {
-                kind: sifr_hir::HirAsyncWithKind::TaskScope,
+                kind: sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup,
                 ..
             }
         )
@@ -890,7 +890,7 @@ fn module_uses_task_scope(module: &HirModule) -> bool {
 
     for func in &module.functions {
         let mut on_stmt = |stmt: &HirStmt| {
-            if stmt_is_task_scope(stmt) {
+            if stmt_uses_task_scope_runtime(stmt) {
                 TraversalControl::Stop
             } else {
                 TraversalControl::Continue
@@ -913,7 +913,7 @@ fn module_uses_task_scope(module: &HirModule) -> bool {
     for class in &module.classes {
         for method in &class.methods {
             let mut on_stmt = |stmt: &HirStmt| {
-                if stmt_is_task_scope(stmt) {
+                if stmt_uses_task_scope_runtime(stmt) {
                     TraversalControl::Stop
                 } else {
                     TraversalControl::Continue

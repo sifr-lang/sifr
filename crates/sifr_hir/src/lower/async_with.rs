@@ -17,6 +17,15 @@ fn task_scope_type() -> Type {
     }
 }
 
+fn task_group_type() -> Type {
+    Type::Class {
+        name: "TaskGroup".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    }
+}
+
 fn simple_with_target_name(optional_vars: Option<&Expr>, ctx: &mut LowerCtx) -> Option<String> {
     let vars = optional_vars?;
     if let Expr::Name(n) = vars {
@@ -283,7 +292,7 @@ pub(super) fn lower_async_with(
     let Some((task_fn, call)) = async_task_call_name(&item.context_expr) else {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
-            "async with only supports task.scope() and task.timeout(duration) in v1".to_string(),
+            "async with only supports task.scope(), task.TaskGroup(), and task.timeout(duration) in v1".to_string(),
             item.context_expr.range(),
         );
         return None;
@@ -314,6 +323,21 @@ pub(super) fn lower_async_with(
                     ctx.scope.define(name.clone(), task_scope_type());
                 }
                 (HirAsyncWithKind::TaskScope, target)
+            }
+            "TaskGroup" => {
+                if !call.arguments.args.is_empty() {
+                    ctx.error_with_code_at(
+                        DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
+                        "task.TaskGroup() takes no arguments in v1".to_string(),
+                        item.context_expr.range(),
+                    );
+                    return None;
+                }
+                let target = simple_with_target_name(item.optional_vars.as_deref(), ctx);
+                if let Some(name) = &target {
+                    ctx.scope.define(name.clone(), task_group_type());
+                }
+                (HirAsyncWithKind::TaskGroup, target)
             }
             "timeout" => {
                 if call.arguments.args.len() != 1 {
@@ -351,7 +375,7 @@ pub(super) fn lower_async_with(
             _ => {
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISMATCH,
-                    "async with only supports task.scope() and task.timeout(duration) in v1"
+                    "async with only supports task.scope(), task.TaskGroup(), and task.timeout(duration) in v1"
                         .to_string(),
                     item.context_expr.range(),
                 );

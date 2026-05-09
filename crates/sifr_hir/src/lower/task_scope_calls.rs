@@ -7,7 +7,7 @@ use sifr_python_ast::{ExprAttribute, ExprCall};
 use sifr_type_system::Type;
 
 pub(super) fn is_task_scope_type(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskScope")
+    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
 }
 
 pub(super) fn lower_task_scope_spawn_call(

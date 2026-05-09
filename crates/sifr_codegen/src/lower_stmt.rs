@@ -1925,7 +1925,13 @@ fn try_lower_simple_async_with_stmt(
         bindings.borrowed_params,
         ctx,
     )?);
-    if let (sifr_hir::HirAsyncWithKind::TaskScope, Some(target)) = (kind, target) {
+    if let (true, Some(target)) = (
+        matches!(
+            kind,
+            sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup
+        ),
+        target,
+    ) {
         block.push(RustStmt::Expr(RustExpr::Await(Box::new(
             RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident(target.to_string())),

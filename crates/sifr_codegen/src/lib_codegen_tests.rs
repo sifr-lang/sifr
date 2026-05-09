@@ -3703,6 +3703,31 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
 }
 
 #[test]
+fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.TaskGroup() as group:\n        handle = group.spawn(worker())\n        result = await handle.join()\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("struct __SifrTaskScope"));
+    assert!(result
+        .rust_source
+        .contains("let mut group = __SifrTaskScope::new();"));
+    assert!(result.rust_source.contains("group.spawn(worker());"));
+    assert!(result
+        .rust_source
+        .contains("group.__sifr_join_all().await;"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
 fn test_task_handle_join_lowers_to_task_result_observation() {
     let result = generate_rust_with_metadata(
         &lower_module(
