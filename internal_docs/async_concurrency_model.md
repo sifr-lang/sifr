@@ -96,7 +96,7 @@ Default APIs should prefer:
 - `scope.spawn(...)`: canonical task creation; all spawned tasks are children of a scope
 - `task.gather(*handles)`: wait for multiple task handles, preserving input ordering
 - `task.select(*handles)`: first-completion semantics; losers are cancelled by default
-- `task.race(*handles)`: alias for `select`; losers are cancelled by default
+- `task.race(*handles)`: the homogeneous convenience form of `select` that discards winner identity; losers are cancelled by default
 
 Default APIs should not encourage:
 
@@ -258,7 +258,7 @@ Core types:
 - `Awaitable[T]`: structural protocol for values that can be awaited. `Coroutine[T, E]` implements an awaitable whose result follows the async function's surface return type; `Task[T, E]` implements `Awaitable[TaskResult[T, E]]`.
 - `AsyncFunction[Params, T, E]`: the callable type of `async def`. The type checker must distinguish async callables from sync callables with the same parameters.
 - `AsyncIterator[T, E]`: structural protocol for async iteration. `anext()` returns `Result[Option[T], E]`: `Ok(Some(value))` for the next item, `Ok(None)` for normal exhaustion, and `Err(E)` for stream failure.
-- `AsyncClosable`: structural protocol for async iterators that own cleanup work.
+- `AsyncClosable[E]`: structural protocol for async iterators that own cleanup work. `aclose()` returns `Result[None, E]`. General enough for streams, files, sockets, and database cursors; not tied to `GeneratorCloseError`.
 - `AsyncGenerator[T, E]`: user-defined async producer created by an `async def` body that contains `yield`. `T` is the yielded item type and `E` is the ordinary error channel. Non-`None` async generator return values are rejected in v1; generator return values remain internal cleanup/finalization machinery.
 - `GeneratorCloseError`: ordinary error returned when explicit async generator close fails.
 - `GeneratorBusyError`: ordinary protocol error for reentrant async generator advancement.
@@ -300,6 +300,8 @@ class TaskCancelled(Error):
 enum TimeoutResult[E]:
     Inner(E)
     Timeout(TimeoutError)
+
+`TimeoutResult[E]` implements `Error` when `E: Error`. This makes it usable in ordinary error handlers.
 
 struct ScopeFailure:
     primary: ScopeFailureCause
@@ -394,8 +396,8 @@ Async iteration uses `Option` for exhaustion and `Result` for stream failure:
 protocol AsyncIterator[T, E]:
     async def anext(self) -> Result[Option[T], E]
 
-protocol AsyncClosable:
-    async def aclose(self) -> Result[None, GeneratorCloseError]
+protocol AsyncClosable[E]:
+    async def aclose(self) -> Result[None, E]
 
 def anext[T, E](iterator: AsyncIterator[T, E]) -> Awaitable[Result[Option[T], E]]
 ```
@@ -414,7 +416,7 @@ async def stream_lines(path: str) -> AsyncGenerator[str, IOError]:
 
 An `async def` body that contains `yield` is an async generator function. Calling it returns `AsyncGenerator[T, E]`; it does not create a coroutine and is not awaitable. The compiler rejects `await stream_lines(path)` and suggests `async for`, `anext()`, or an async comprehension.
 
-`AsyncGenerator[T, E]` implements `AsyncIterator[T, E]` and `AsyncClosable`. `T` is inferred from all yielded values and must converge to one yield type. `E` is inferred from fallible async operations inside the generator body and from the declared return/error surface. Public v1 async generators do not expose generator return values; non-`None` return values from async generators are rejected at compile time.
+`AsyncGenerator[T, E]` implements `AsyncIterator[T, E]` and `AsyncClosable[GeneratorCloseError]`. `T` is inferred from all yielded values and must converge to one yield type. `E` is inferred from fallible async operations inside the generator body and from the declared return/error surface. Public v1 async generators do not expose generator return values; non-`None` return values from async generators are rejected at compile time.
 
 Async generator cancellation and close use the same typed cancellation model as tasks:
 
@@ -476,12 +478,27 @@ The implementation may use Tokio or a compatible runtime substrate, but ordinary
 
 `TaskGroup` adds sibling-failure policy on top of task scopes. A plain `TaskScope` owns lifetime; a `TaskGroup` owns group error behavior and cancels unfinished siblings when any child completes with failure.
 
+**Sibling cancellation observation rule:** A `TaskGroup` internally observes policy-triggered sibling cancellations. They do not produce `ScopeFailure` merely because the user did not await every cancelled sibling. If an explicitly observed child failed and triggered sibling cancellation, and the failing child result was already consumed by the user, the group's cancellation of remaining siblings is an internally observed policy action. Cleanup failures from those siblings attach as `SecondaryError` to the group failure if a group failure exists; otherwise they surface as `ScopeFailure`.
+
 ```sifr
-async with task.TaskGroup[E]() as group:
-    group.spawn(coro: Coroutine[T, E]) -> Task[T, E]
+async with task.TaskGroup[MyError]() as group:
+    a = group.spawn(fails())   # explicitly observed by user below
+    b = group.spawn(slow())
+
+    match await a:            # user explicitly observes a's failure
+        Err(failure):
+            handle(failure.primary)
+        Ok(_):
+            pass
+        Cancelled(c):
+            pass
+    # group already cancelled b due to a's failure
+    # b's cancellation is internally observed by the group
+    # group exit returns Ok(None) if a was the only failure and b cleaned up normally
+    # if b's cleanup fails, it attaches as SecondaryError to any existing group failure
 ```
 
-`TaskGroup.spawn` returns the same affine observer handle as `scope.spawn`. V1 task groups require all spawned children to share one ordinary error type `E`; heterogeneous task groups are deferred. When one child fails, the group requests cancellation of all unfinished siblings and waits for their cleanup before group exit completes. If the failing child was not explicitly observed, group exit returns `Err(ScopeFailure(...))` with the first failed child as primary evidence and cleanup or later sibling failures as secondary evidence.
+`TaskGroup.spawn` returns the same affine observer handle as `scope.spawn`. V1 task groups require all spawned children to share one ordinary error type `E`; heterogeneous task groups are deferred. `Never` coerces into `E` for children that cannot fail. When one child fails, the group requests cancellation of all unfinished siblings and waits for their cleanup before group exit completes. If the failing child was not explicitly observed, group exit returns `Err(ScopeFailure(...))` with the first failed child as primary evidence and cleanup or later sibling failures as secondary evidence.
 
 General tracked-collection proof is not part of the first model. Handles may be consumed by explicit composition APIs (`gather`, `select`, `race`) or by simple explicit loops such as `for h in handles: await h`; the scope still owns child lifetime regardless of handle observation.
 
@@ -510,15 +527,19 @@ General tracked-collection proof is not part of the first model. Handles may be 
 
 Timeout behavior:
 
-- if the inner task completes before `duration`, timeout returns the inner `TaskResult` and does not cancel it
+- if the inner task succeeds before `duration`, timeout returns `TaskResult.Ok(T)`
+- if the inner task fails before `duration`, timeout maps the ordinary failure to `TaskResult.Err(Failure[TimeoutResult.Inner(E)])`
+- if the inner task is cancelled before `duration`, timeout preserves `Cancelled(Failure[CancellationError])`
 - if `duration` expires first, timeout cancels the inner task, waits for cleanup, and returns `TaskResult.Err(Failure[TimeoutResult.Timeout(TimeoutError)])`
 - if inner completion and timeout expiry become ready in the same scheduler tick, inner completion wins
 - cancelling the outer scope while timeout is running cancels the inner task unconditionally
 - cleanup failures after timeout cancellation become secondary evidence on the timeout failure
 
-`task.timeout(duration)` is the async context-manager form used for inline blocks and compatibility with `sifr.asyncio.timeout(duration)`. It is a compiler-recognized timeout scope, not an ordinary user-defined context manager. The compiler lowers the block into a temporary child task owned by the current structured scope, applies the same completion-vs-deadline race policy as `task.timeout(handle, duration)`, and then rejoins cleanup before scope exit completes.
+`task.timeout(duration)` is the async context-manager form used for inline blocks and compatibility with `sifr.asyncio.timeout(duration)`. It is a compiler-recognized cancellation scope, not an ordinary user-defined context manager. The compiler lowers the block into a same-task cancellation scope using internal delimited cancellation: deadline expiry sets an internal cancellation flag, cooperative await points observe it, and cleanup runs normally before scope exit completes.
 
-If the block finishes before the deadline, scope exit returns `Ok(None)`. If the deadline wins, timeout cancels the block child, awaits cleanup, and scope exit returns `Err(TimeoutError)` through the ordinary error channel. The deadline is not materialized as `Cancelled(Failure[CancellationError])`; timeout is an ordinary fallible operation that must be handled by `try`/`except` or by an enclosing `Result` type that can carry `TimeoutError` or `Error`. Outer cancellation remains active cancellation and cancels the temporary child unconditionally.
+Timeout context blocks do not introduce a spawn boundary and can access surrounding locals naturally. `await` and `try await` inside the block follow the normal same-task rules. If code inside the block spawns child tasks, those children follow the ordinary `scope.spawn` task-boundary rules. Nested timeout context blocks are allowed and compose as inner-first cancellation.
+
+If the block finishes before the deadline, scope exit returns `Ok(None)`. If the deadline wins, the internal cancellation flag causes cooperative unwinding, cleanup runs, and scope exit returns `Err(TimeoutError)` through the ordinary error channel. The deadline is not materialized as `Cancelled(Failure[CancellationError])`; timeout is an ordinary fallible operation that must be handled by `try`/`except` or by an enclosing `Result` type that can carry `TimeoutError` or `Error`. Outer cancellation remains active cancellation and cancels the inner scope unconditionally.
 
 ## Ownership And Borrowing
 
@@ -568,6 +589,13 @@ Channels are the canonical queue-like concurrency primitive:
 - cancellation while blocked on send or receive propagates task cancellation without duplicating or losing a message
 - bounded channels apply async backpressure when full
 
+**Channel endpoint lifetime rules:**
+- Dropping the last sender closes the channel after buffered messages drain.
+- Dropping the receiver closes the channel immediately to senders.
+- Calling `close()` on any sender closes the whole channel to future sends.
+- Buffered messages remain receivable after close.
+- Messages are received in channel enqueue order (FIFO).
+
 `sync.Semaphore` and `sync.Notify` cover common coordination patterns. `Notify` is edge-triggered; level-triggered event behavior requires explicit state such as `sync.Shared[bool] + Notify`.
 
 ## Blocking And Thread Offload
@@ -614,6 +642,74 @@ task.spawn_blocking(fn: Fn() -> Result[T, E]) -> BlockingTask[T, E]
 - panic-like failures from async exit are caught at task/runtime boundaries where technically possible and surfaced as structured failure evidence
 
 `async for` works for async iterable values such as channel-backed streams and user-defined async generators. Async comprehensions are surface syntax over the same protocol; they do not introduce a second iteration model.
+
+### Control-Flow Desugaring
+
+#### Fallible `async with` Exit Propagation
+
+Fallible async context managers expose an exit error type `ExitE`. For `TaskScope` and `TaskGroup`, `ExitE` is `ScopeFailure`; for `task.timeout(duration)`, it is `TimeoutError`; user-defined async context managers choose their own ordinary `Error` type. The interaction with body result, return value, cancellation, and exit error follows this exact rule:
+
+| Body outcome | Exit outcome | Final result |
+|---|---|---|
+| Body completes normally, exit succeeds | `Ok(None)` | body value or normal fallthrough |
+| Body completes normally, exit fails | `Err(ExitE)` | exit failure is primary |
+| Body performs explicit `return`, exit succeeds | `Ok(None)` | return proceeds |
+| Body performs explicit `return`, exit fails | `Err(ExitE)` | exit failure is primary; the return is not performed |
+| Body propagates ordinary `Err(E)`, exit succeeds | `Ok(None)` | body `Err(E)` propagates |
+| Body propagates ordinary `Err(E)`, exit fails | `Err(ExitE)` | body `Err(E)` remains primary; exit failure is secondary evidence at the task/scope observation boundary |
+| Body is actively cancelled or times out, exit succeeds | `Ok(None)` | cancellation or timeout remains primary |
+| Body is actively cancelled or times out, exit fails | `Err(ExitE)` | cancellation or timeout remains primary; exit failure is secondary evidence |
+| Body hits unrecoverable runtime fault, exit fails | best-effort cleanup | runtime fault remains primary at the runtime boundary |
+
+**Key rules:**
+- A fallible async context manager in a non-fallible function is rejected unless the exit failure is handled locally.
+- When the body is actively cancelled or timed out, that control cause takes precedence over exit failure.
+- During ordinary error propagation, the body error remains primary; exit failure becomes secondary evidence instead of replacing the body error.
+- Unrecoverable runtime faults remain outside ordinary `Error` handling, but generated/runtime boundaries still run best-effort cleanup before surfacing the fault.
+
+#### `async for` Desugaring
+
+```sifr
+async for item in source:
+    body
+```
+
+desugars to:
+
+```sifr
+loop:
+    next = try await anext(source)
+    match next:
+        Some(item):
+            body
+        None:
+            break
+```
+
+`async for` is fallible when the iterator is fallible:
+- `anext()` returning `Ok(Some(item))` yields the item and continues the loop.
+- `anext()` returning `Ok(None)` breaks normally (normal exhaustion).
+- `anext()` returning `Err(E)` causes automatic propagation through ordinary Sifr error handling. The enclosing function must be able to carry `E`, or the compiler rejects the `async for`.
+
+If the loop exits before iterator exhaustion via `break`, `return`, ordinary error propagation, timeout, or active cancellation, and the iterator implements `AsyncClosable`, the compiler awaits `aclose()` before leaving the loop:
+- On normal `break` or `return`, `aclose()` failure is a primary ordinary error.
+- During cancellation or timeout, `aclose()` failure is secondary evidence attached to the owning cancellation/failure result.
+
+Users who want to handle iterator errors without propagation must use the explicit form:
+
+```sifr
+loop:
+    next = await anext(source)
+    match next:
+        Ok(Some(item)):
+            body
+        Ok(None):
+            break
+        Err(e):
+            match e:
+                # explicit error handling here
+            break
+```
 
 ## Compatibility Veneers
 

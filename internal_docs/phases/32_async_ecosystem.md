@@ -99,7 +99,10 @@ These are implementation constraints, not suggestions:
 24. Async generator `send()`, `throw()`, async `yield from`, async generator expressions, nested async comprehensions, and awaited comprehension filters are deferred.
 25. `TaskScope.__aexit__` returns `Result[None, ScopeFailure]`; unobserved child failure or cancellation must surface as `ScopeFailure`.
 26. `TaskGroup[E]` requires homogeneous child error type `E` in v1 and cancels unfinished siblings on first child failure.
-27. `BlockingTask[T, E]` is distinct from cooperative `Task[T, E]`; blocking cancellation means result abandonment, not guaranteed OS-thread interruption.
+27. `BlockingTask[T, E]` is distinct from cooperative `Task[T, E]`; blocking cancellation means result abandonment (the observer abandoned the result after cancellation), not guaranteed OS-thread interruption or work stoppage.
+28. `AsyncClosable` is parameterized: `AsyncClosable[E]` with `aclose() -> Result[None, E]`; `AsyncGenerator` implements `AsyncClosable[GeneratorCloseError]`.
+29. Channel endpoint lifetime: dropping last sender closes channel after buffered messages drain; dropping receiver closes immediately to senders; `close()` on any sender closes whole channel; buffered messages remain receivable after close; messages received in FIFO order.
+30. `task.timeout(duration)` context-manager form uses same-task cancellation scoping with internal delimited cancellation; does not introduce a spawn boundary.
 
 ## Milestones
 
@@ -130,7 +133,7 @@ status: proposed
   - `TaskResult[T, E]`
   - `BlockingTask[T, E]`
   - `AsyncIterator[T, E]`
-  - `AsyncClosable`
+  - `AsyncClosable[E]`
   - `AsyncGenerator[T, E]`
   - `Failure[E]`
   - `TaskScope`
@@ -293,10 +296,13 @@ status: proposed
   - arbitrary awaitables are not accepted; users must spawn them into child tasks first.
 - Define `task.timeout(duration)` context-manager form:
   - usable as `async with task.timeout(duration):`,
-  - applies the same completion-vs-deadline race policy to the enclosed block,
+  - is a compiler-recognized same-task cancellation scope using internal delimited cancellation,
+  - does not introduce a spawn boundary; surrounding locals are accessible naturally,
+  - deadline expiry sets an internal cancellation flag; cooperative await points observe it and unwind,
   - deadline first exits through ordinary `TimeoutError`, not child cancellation evidence,
   - cancellation or timeout of the enclosed block awaits cleanup before scope exit,
   - this is the canonical implementation target for `sifr.asyncio.timeout(duration)`.
+- **Conservative spawn until milestone_async_4:** Before milestone_async_4, `scope.spawn` accepts only trivially owned/static captures or fixture-limited no-capture coroutines. Nontrivial captures are rejected with a diagnostic until full task-boundary checking lands.
 - Implement the minimal `sifr.task.scope` runtime container needed for scoped spawn.
 - Implement `scope.spawn` returning a typed task handle.
 - Implement task-handle `join`.
@@ -314,7 +320,8 @@ status: proposed
 - `scope.spawn` returns an observer handle; dropping the handle does not detach the child from the owning scope.
 - Awaiting or joining a task handle consumes it; consumed handles cannot be observed again.
 - There is no free-floating detached spawn in v1.
-- `task.sleep` and `task.timeout` work.
+- `scope.spawn` is conservative in milestone_async_2; captures are restricted until milestone_async_4 ownership checking exists.
+- `task.timeout(duration)` context-manager form uses same-task cancellation scoping, not a spawned child task.
 - `task.timeout` has deterministic completion-vs-deadline tie-breaking.
 - Cancelling a task produces typed, deterministic behavior.
 - Runtime bootstrap does not require user-visible event-loop configuration.
@@ -635,7 +642,7 @@ status: proposed
   - `Ok(Some(value))` means one item,
   - `Ok(None)` means normal exhaustion,
   - `Err(E)` means stream failure and follows ordinary Sifr error handling.
-- Define `AsyncClosable` for async iterators that own cleanup work.
+- Define `AsyncClosable[E]` for async iterators that own cleanup work: `aclose() -> Result[None, E]`.
 - Define cancellation cleanup behavior for async context managers:
   - cleanup order is LIFO,
   - cancelling inside `async with` unwinds active async context managers,
@@ -644,7 +651,16 @@ status: proposed
   - errors from async exit during cancellation become `SecondaryError` evidence attached to the owning scope result,
   - panic-like failures from async exit are caught at the runtime/codegen boundary and surfaced as secondary errors,
   - parent cancellation triggers child cancellation, but each task unwinds its own cleanup independently.
-- Define channel-backed async iteration.
+- Define `async with` exit propagation rules (see model `Control-Flow Desugaring` section for the authoritative propagation table):
+  - Fallible async context managers expose an exit error type `ExitE`. For `TaskScope` and `TaskGroup`, `ExitE` is `ScopeFailure`; for `task.timeout(duration)`, it is `TimeoutError`; user-defined async context managers choose their own ordinary `Error` type.
+  - body `Err(E)` takes precedence over the async context manager's exit error,
+  - during active cancellation, cancellation takes precedence over exit failure,
+  - cleanup failures during cancellation become secondary evidence.
+- Define `async for` desugaring:
+  - desugars to explicit `anext()` loop with `try await` for error propagation,
+  - `Err(E)` from `anext()` propagates through ordinary error handling,
+  - early exit (`break`, `return`, cancellation, timeout) awaits `aclose()` if iterator implements `AsyncClosable`,
+  - normal `aclose()` failure is primary error; cancellation-context failure is secondary evidence.
 - Define channel-backed async iteration as `AsyncIterator[T, Never]` that maps closed-and-drained `ClosedError` to `Ok(None)`.
 - Leave user-defined async generator bodies and async comprehensions to `milestone_async_7b`, after this protocol is stable.
 
