@@ -45,6 +45,7 @@ use super::sequence_guard_updates::{
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
 use super::statement_diagnostics;
+use super::task_scope_calls::task_group_spawn_owner;
 use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
     resolve_annotation_expr,
@@ -1565,6 +1566,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
         // Reset moved state on reassignment
         ctx.scope.reset_moved(&name);
+        ctx.task_handle_group_owners.remove(&name);
         invalidate_rebound_binding_facts(ctx, &name);
         if ctx.numeric_sentinel_fact(&name).is_some() {
             if let Some(domain) = numeric_domain_for_type(&value_ty) {
@@ -1592,6 +1594,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             .cloned()
             .unwrap_or_else(|| value_ty.clone());
         ctx.scope.define(name.clone(), binding_ty.clone());
+        if let Some(group_name) = task_group_spawn_owner(&value) {
+            ctx.task_handle_group_owners
+                .insert(name.clone(), group_name);
+        }
         if let Some(kind) = numeric_sentinel_kind(&assign.value) {
             ctx.record_numeric_sentinel_initializer(name.clone(), kind);
         } else {

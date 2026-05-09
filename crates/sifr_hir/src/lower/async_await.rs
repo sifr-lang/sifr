@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::task_scope_calls::mark_task_handle_observed;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
@@ -35,6 +36,7 @@ pub(super) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<
         Type::Task(_, _) | Type::BlockingTask(_, _)
     ) {
         if let HirExpr::Name { name, .. } = &value {
+            mark_task_handle_observed(name, ctx);
             ctx.scope.mark_moved(name);
         }
     }

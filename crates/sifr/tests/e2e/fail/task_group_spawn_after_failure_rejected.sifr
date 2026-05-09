@@ -1,0 +1,12 @@
+# expect-error: SIFR-TYPE-0002
+
+async def child() -> Result[int, ValueError]:
+    raise ValueError("child failed")
+
+
+async def main() -> None:
+    async with task.TaskGroup() as group:
+        first = group.spawn(child())
+        result = await first
+        second = group.spawn(child())
+    return None

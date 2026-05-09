@@ -60,6 +60,7 @@ pub(super) fn lower_task_scope_spawn_call(
     let task_ok_ty = ok_ty.clone();
     let task_err_ty = err_ty.clone();
     if is_task_group_type(object.ty()) {
+        enforce_task_group_is_open(&object, call, ctx)?;
         enforce_task_group_error_type(&object, &task_err_ty, call, ctx)?;
     }
     if !matches!(&coroutine, HirExpr::Call { args, .. } if args.is_empty()) {
@@ -81,6 +82,42 @@ pub(super) fn lower_task_scope_spawn_call(
         args: vec![coroutine],
         ty: Type::Task(task_ok_ty, task_err_ty),
     })
+}
+
+pub(super) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {
+    let HirExpr::MethodCall { object, method, .. } = expr else {
+        return None;
+    };
+    if method != "__sifr_spawn_infallible" && method != "__sifr_spawn_result" {
+        return None;
+    }
+    let HirExpr::Name { name, ty } = object.as_ref() else {
+        return None;
+    };
+    is_task_group_type(ty).then(|| name.clone())
+}
+
+pub(super) fn mark_task_handle_observed(name: &str, ctx: &mut LowerCtx) {
+    if let Some(group_name) = ctx.task_handle_group_owners.get(name).cloned() {
+        ctx.task_groups_not_proven_open.insert(group_name);
+    }
+}
+
+fn enforce_task_group_is_open(object: &HirExpr, call: &ExprCall, ctx: &mut LowerCtx) -> Option<()> {
+    let HirExpr::Name { name, .. } = object else {
+        return Some(());
+    };
+    if !ctx.task_groups_not_proven_open.contains(name) {
+        return Some(());
+    }
+    expression_diagnostics::type_mismatch(
+        ctx,
+        format!(
+            "task.TaskGroup() binding '{name}' is no longer proven Open after observing a child task; spawn before observation or use a new group"
+        ),
+        call.range(),
+    );
+    None
 }
 
 fn enforce_task_group_error_type(

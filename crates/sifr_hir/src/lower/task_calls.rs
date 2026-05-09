@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::task_scope_calls::mark_task_handle_observed;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
@@ -344,6 +345,7 @@ fn lower_task_timeout_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLower
         return TaskCallLowering::Rejected;
     }
     if let HirExpr::Name { name, .. } = &handle {
+        mark_task_handle_observed(name, ctx);
         ctx.scope.mark_moved(name);
     }
     TaskCallLowering::Lowered(HirExpr::MethodCall {
@@ -360,6 +362,7 @@ fn lower_task_timeout_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLower
 fn mark_task_handle_names_moved(expr: &HirExpr, ctx: &mut LowerCtx) {
     match expr {
         HirExpr::Name { name, .. } if matches!(expr.ty().resolve_alias(), Type::Task(_, _)) => {
+            mark_task_handle_observed(name, ctx);
             ctx.scope.mark_moved(name);
         }
         HirExpr::Name { name, .. } if matches!(expr.ty().resolve_alias(), Type::List(_)) => {
