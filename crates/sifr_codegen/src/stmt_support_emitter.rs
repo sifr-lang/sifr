@@ -54,6 +54,7 @@ fn can_construct_error_from_message_for_ir(ty_name: &str) -> bool {
             | "JsonLimitError"
             | "HashlibError"
             | "DecimalConversionError"
+            | "TimeoutError"
     )
 }
 
@@ -242,6 +243,49 @@ fn type_contains_any_or_unknown(ty: &Type) -> bool {
 }
 
 impl RustEmitter {
+    fn lower_timeout_aware_await_future_for_ir(
+        &mut self,
+        value: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::Call { func, args, .. } = value {
+            if func == "__sifr_task_sleep" {
+                let [duration] = args.as_slice() else {
+                    return Ok(None);
+                };
+                let Some(duration_expr) = crate::try_lower_task_duration_expr(
+                    duration,
+                    "__sifr_task_timeout_sleep_seconds",
+                ) else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "tokio".to_string(),
+                        "time".to_string(),
+                        "sleep".to_string(),
+                    ])),
+                    args: vec![duration_expr],
+                }));
+            }
+        }
+
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(value.ty()),
+            Type::Task(_, _)
+        ) {
+            let Some(receiver) = crate::try_lower_leaf_or_name_expr_result(value)? else {
+                return Ok(None);
+            };
+            return Ok(Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(receiver),
+                method: "join".to_string(),
+                args: vec![],
+            }));
+        }
+
+        self.lower_stmt_expr_for_ir(value)
+    }
+
     pub(super) fn wrap_option_local_value_for_ir(
         target_ty: &Type,
         value: &HirExpr,
@@ -1721,6 +1765,18 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::Await { value, .. } = expr {
+            if let Some(duration) = self.active_timeout_durations.last().cloned() {
+                let Some(future) = self.lower_timeout_aware_await_future_for_ir(value)? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::TimeoutAwait {
+                    duration: Box::new(duration),
+                    future: Box::new(future),
+                }));
+            }
+        }
+
         let skip_leaf_registry_lowering = matches!(
             expr,
             HirExpr::Call { .. }
@@ -5607,6 +5663,13 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::Await { .. } = expr {
+            if let Some(lowered_expr) = self.lower_stmt_expr_for_ir(expr)? {
+                return Ok(Some(
+                    self.rewrite_stdlib_constant_idents_in_expr(lowered_expr),
+                ));
+            }
+        }
         if let HirExpr::Index {
             object, index, ty, ..
         } = expr
@@ -5646,17 +5709,18 @@ impl RustEmitter {
 
         let mut lowered_block = Vec::new();
         for stmt in stmts {
-            let maybe_simple_lowered = if self.try_closure_depth == 0 {
-                crate::try_lower_simple_stmt_with_scope_result_and_bindings(
-                    stmt,
-                    &self.mutated_vars,
-                    &self.borrowed_params,
-                    &self.local_binding_types,
-                    &scope_ctx,
-                )?
-            } else {
-                None
-            };
+            let maybe_simple_lowered =
+                if self.try_closure_depth == 0 && self.active_timeout_durations.is_empty() {
+                    crate::try_lower_simple_stmt_with_scope_result_and_bindings(
+                        stmt,
+                        &self.mutated_vars,
+                        &self.borrowed_params,
+                        &self.local_binding_types,
+                        &scope_ctx,
+                    )?
+                } else {
+                    None
+                };
 
             let should_bypass_simple_lowering = matches!(
                 stmt,
@@ -7226,18 +7290,30 @@ impl RustEmitter {
         }))
     }
 
-    fn try_lower_async_with_stmt_for_ir(
+    pub(crate) fn try_lower_async_with_stmt_for_ir(
         &mut self,
         kind: &sifr_hir::HirAsyncWithKind,
         target: Option<&str>,
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
-            let Some(_) = self.lower_rendered_expr_for_ir(duration)? else {
+        let timeout_duration = if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
+            let Some(duration) =
+                crate::try_lower_task_duration_expr(duration, "__sifr_task_timeout_seconds")
+            else {
                 return Ok(None);
             };
+            Some(duration)
+        } else {
+            None
+        };
+        if let Some(duration) = timeout_duration.clone() {
+            self.active_timeout_durations.push(duration);
         }
-        let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+        let lowered_body_result = self.try_lower_stmt_block_for_ir(body);
+        if timeout_duration.is_some() {
+            let _ = self.active_timeout_durations.pop();
+        }
+        let Some(mut lowered_body) = lowered_body_result? else {
             return Ok(None);
         };
         if let Some(target) = target {

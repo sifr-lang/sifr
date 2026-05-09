@@ -3795,6 +3795,26 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
 }
 
 #[test]
+fn test_task_timeout_context_manager_wraps_awaits() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def main() -> Result[None, TimeoutError]:\n    async with task.timeout(1.0):\n        await task.sleep(0.0)\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("match tokio::time::timeout"));
+    assert!(result.rust_source.contains("return Err(TimeoutError::new"));
+    assert!(result.rust_source.contains("struct TimeoutError"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
 fn test_sync_main_does_not_require_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(

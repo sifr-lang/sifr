@@ -164,6 +164,7 @@ const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "RuntimeError",
     "NotImplementedError",
     "DecimalConversionError",
+    "TimeoutError",
 ];
 
 const IO_ERROR_SUBCLASSES: &[&str] = &[
@@ -856,6 +857,26 @@ fn module_uses_task_sleep(module: &HirModule) -> bool {
     false
 }
 
+fn body_contains_await(body: &[HirStmt]) -> bool {
+    let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+    let mut on_expr = |expr: &HirExpr| {
+        if matches!(expr, HirExpr::Await { .. }) {
+            TraversalControl::Stop
+        } else {
+            TraversalControl::Continue
+        }
+    };
+    matches!(
+        traversal::walk_stmts_until(
+            body,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr
+        ),
+        TraversalControl::Stop
+    )
+}
+
 fn module_uses_task_scope(module: &HirModule) -> bool {
     fn stmt_is_task_scope(stmt: &HirStmt) -> bool {
         matches!(
@@ -1343,6 +1364,8 @@ struct RustEmitter {
     body_items: Vec<RustItem>,
     /// The return type of the function currently being emitted
     current_return_type: Option<Type>,
+    /// Active `async with task.timeout(...)` duration expressions for await lowering.
+    active_timeout_durations: Vec<RustExpr>,
     /// Set of variable names currently narrowed via `if let Some(...)` unwrap
     option_unwrapped_vars: HashSet<String>,
     /// Function signatures: name -> (`param_types_with_conventions`, `return_type`)
@@ -1513,6 +1536,7 @@ impl RustEmitter {
             enum_items: Vec::new(),
             body_items: Vec::new(),
             current_return_type: None,
+            active_timeout_durations: Vec::new(),
             option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
             loop_else_stack: Vec::new(),
@@ -1648,6 +1672,13 @@ impl RustEmitter {
         let should_bypass_simple_lowering = matches!(
             stmt,
             HirStmt::NestedFunction { .. } | HirStmt::Assign { .. }
+        ) || matches!(
+            stmt,
+            HirStmt::AsyncWith {
+                kind: sifr_hir::HirAsyncWithKind::TaskTimeout { .. },
+                body,
+                ..
+            } if body_contains_await(body)
         ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
         if !should_bypass_simple_lowering {
             if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result_and_bindings(
@@ -1674,6 +1705,17 @@ impl RustEmitter {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
+        }
+
+        if let HirStmt::AsyncWith { kind, target, body } = stmt {
+            if let Some(lowered_stmt) =
+                self.try_lower_async_with_stmt_for_ir(kind, target.as_deref(), body)?
+            {
+                self.push_captured_stmt(&self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt));
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
+            }
         }
 
         if let HirStmt::TupleUnpack { targets, value } = stmt {

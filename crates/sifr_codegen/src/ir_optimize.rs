@@ -189,6 +189,9 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
             }
             removed
         }
+        RustExpr::TimeoutAwait { duration, future } => {
+            optimize_expr(duration) + optimize_expr(future)
+        }
         RustExpr::FormatMacro { args, .. } => {
             let mut removed = 0usize;
             for arg in args {

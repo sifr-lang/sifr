@@ -48,6 +48,215 @@ fn async_task_call_name(expr: &Expr) -> Option<(&str, &sifr_python_ast::ExprCall
     }
 }
 
+fn timeout_error_type() -> Type {
+    Type::Class {
+        name: "TimeoutError".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: vec![],
+        parent_class: Some("Error".to_string()),
+    }
+}
+
+fn return_type_accepts_timeout_error(return_type: &Type) -> bool {
+    let Type::Result(_, err) = return_type.resolve_alias() else {
+        return false;
+    };
+    timeout_error_type().is_assignable_to(err)
+}
+
+fn expr_contains_await(expr: &crate::hir_nodes::HirExpr) -> bool {
+    use crate::hir_nodes::HirExpr;
+
+    match expr {
+        HirExpr::Await { .. } => true,
+        HirExpr::QuestionMark { expr, .. }
+        | HirExpr::OkWrap { value: expr, .. }
+        | HirExpr::ErrWrap { value: expr, .. }
+        | HirExpr::FieldAccess { object: expr, .. } => expr_contains_await(expr),
+        HirExpr::Call { args, .. }
+        | HirExpr::ConstructorCall { args, .. }
+        | HirExpr::IteratorCall { args, .. } => args.iter().any(expr_contains_await),
+        HirExpr::FString { parts, .. } => parts.iter().any(|part| match part {
+            crate::hir_nodes::HirFStringPart::Literal(_) => false,
+            crate::hir_nodes::HirFStringPart::Expr(expr) => expr_contains_await(expr),
+        }),
+        HirExpr::MethodCall { object, args, .. } => {
+            expr_contains_await(object) || args.iter().any(expr_contains_await)
+        }
+        HirExpr::BinOp { left, right, .. } => {
+            expr_contains_await(left) || expr_contains_await(right)
+        }
+        HirExpr::Compare {
+            left, comparators, ..
+        } => expr_contains_await(left) || comparators.iter().any(expr_contains_await),
+        HirExpr::BoolOp { values, .. }
+        | HirExpr::ListLiteral {
+            elements: values, ..
+        }
+        | HirExpr::TupleLiteral {
+            elements: values, ..
+        }
+        | HirExpr::SetLiteral {
+            elements: values, ..
+        } => values.iter().any(expr_contains_await),
+        HirExpr::UnaryOp { operand, .. } => expr_contains_await(operand),
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            expr_contains_await(condition)
+                || expr_contains_await(then_expr)
+                || expr_contains_await(else_expr)
+        }
+        HirExpr::Index { object, index, .. } => {
+            expr_contains_await(object) || expr_contains_await(index)
+        }
+        HirExpr::Slice {
+            object,
+            start,
+            stop,
+            step,
+            ..
+        } => {
+            expr_contains_await(object)
+                || start.as_deref().is_some_and(expr_contains_await)
+                || stop.as_deref().is_some_and(expr_contains_await)
+                || step.as_deref().is_some_and(expr_contains_await)
+        }
+        HirExpr::DictLiteral { keys, values, .. } => {
+            keys.iter().any(expr_contains_await) || values.iter().any(expr_contains_await)
+        }
+        HirExpr::ContainsOp {
+            element,
+            collection,
+            ..
+        } => expr_contains_await(element) || expr_contains_await(collection),
+        HirExpr::RangeLiteral {
+            start, end, step, ..
+        } => {
+            expr_contains_await(start)
+                || expr_contains_await(end)
+                || step.as_deref().is_some_and(expr_contains_await)
+        }
+        HirExpr::WalrusExpr { value, .. } => expr_contains_await(value),
+        HirExpr::SuperCall { args, .. } => args.iter().any(expr_contains_await),
+        HirExpr::Lambda { body, .. } => expr_contains_await(body),
+        HirExpr::ListComp {
+            expr, generators, ..
+        }
+        | HirExpr::SetComp {
+            expr, generators, ..
+        } => {
+            expr_contains_await(expr)
+                || generators.iter().any(|(_, iter, filter)| {
+                    expr_contains_await(iter) || filter.as_ref().is_some_and(expr_contains_await)
+                })
+        }
+        HirExpr::DictComp {
+            key_expr,
+            val_expr,
+            generators,
+            ..
+        } => {
+            expr_contains_await(key_expr)
+                || expr_contains_await(val_expr)
+                || generators.iter().any(|(_, iter, filter)| {
+                    expr_contains_await(iter) || filter.as_ref().is_some_and(expr_contains_await)
+                })
+        }
+        HirExpr::GeneratorExpr {
+            expr, iter, filter, ..
+        } => {
+            expr_contains_await(expr)
+                || expr_contains_await(iter)
+                || filter.as_deref().is_some_and(expr_contains_await)
+        }
+        _ => false,
+    }
+}
+
+fn stmt_contains_await(stmt: &HirStmt) -> bool {
+    match stmt {
+        HirStmt::Expr { expr }
+        | HirStmt::Let { value: expr, .. }
+        | HirStmt::Assign { value: expr, .. }
+        | HirStmt::AugAssign { value: expr, .. }
+        | HirStmt::AttributeAugAssign { value: expr, .. }
+        | HirStmt::FieldAssign { value: expr, .. }
+        | HirStmt::NestedFieldAssign { value: expr, .. }
+        | HirStmt::Return { value: Some(expr) }
+        | HirStmt::Assert { test: expr, .. }
+        | HirStmt::Raise { value: expr }
+        | HirStmt::TupleUnpack { value: expr, .. }
+        | HirStmt::StarUnpack { value: expr, .. }
+        | HirStmt::SubscriptAssign { value: expr, .. }
+        | HirStmt::NestedSubscriptAssign { value: expr, .. }
+        | HirStmt::AttributeNestedSubscriptAssign { value: expr, .. }
+        | HirStmt::SubscriptAugAssign { value: expr, .. }
+        | HirStmt::AttributeSubscriptAssign { value: expr, .. }
+        | HirStmt::Yield { value: expr } => expr_contains_await(expr),
+        HirStmt::If {
+            condition,
+            then_body,
+            elif_clauses,
+            else_body,
+        } => {
+            expr_contains_await(condition)
+                || then_body.iter().any(stmt_contains_await)
+                || elif_clauses.iter().any(|(condition, body)| {
+                    expr_contains_await(condition) || body.iter().any(stmt_contains_await)
+                })
+                || else_body
+                    .as_ref()
+                    .is_some_and(|body| body.iter().any(stmt_contains_await))
+        }
+        HirStmt::While {
+            condition, body, ..
+        } => expr_contains_await(condition) || body.iter().any(stmt_contains_await),
+        HirStmt::For {
+            iter,
+            body,
+            else_body,
+            ..
+        } => {
+            expr_contains_await(iter)
+                || body.iter().any(stmt_contains_await)
+                || else_body
+                    .as_ref()
+                    .is_some_and(|body| body.iter().any(stmt_contains_await))
+        }
+        HirStmt::AsyncWith { kind, body, .. } => {
+            matches!(kind, HirAsyncWithKind::TaskTimeout { .. })
+                || body.iter().any(stmt_contains_await)
+        }
+        HirStmt::Delete { object, index } => {
+            expr_contains_await(object) || expr_contains_await(index)
+        }
+        HirStmt::With { items, body } => {
+            items
+                .iter()
+                .any(|(_, context_expr, _)| expr_contains_await(context_expr))
+                || body.iter().any(stmt_contains_await)
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            body.iter().any(stmt_contains_await)
+                || handlers
+                    .iter()
+                    .any(|handler| handler.body.iter().any(stmt_contains_await))
+        }
+        HirStmt::Match { subject, arms, .. } => {
+            expr_contains_await(subject)
+                || arms.iter().any(|arm| {
+                    arm.guard.as_ref().is_some_and(expr_contains_await)
+                        || arm.body.iter().any(stmt_contains_await)
+                })
+        }
+        _ => false,
+    }
+}
+
 pub(super) fn lower_async_with(
     with_stmt: &StmtWith,
     func_type: &FunctionType,
@@ -150,6 +359,18 @@ pub(super) fn lower_async_with(
             }
         };
         let body = lower_stmts(&with_stmt.body, func_type, ctx);
+        if matches!(kind, HirAsyncWithKind::TaskTimeout { .. })
+            && body.iter().any(stmt_contains_await)
+            && !return_type_accepts_timeout_error(&func_type.return_type)
+        {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "async with task.timeout(duration) can time out at await points; enclosing function must return Result[..., TimeoutError]"
+                    .to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        }
         Some(HirStmt::AsyncWith { kind, target, body })
     })
 }

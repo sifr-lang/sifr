@@ -52,6 +52,7 @@ pub(crate) fn collect_referenced_builtin_error_classes(
             "JsonLimitError",
             "TOMLDecodeError",
             "RegexError",
+            "TimeoutError",
         ] {
             referenced.insert(error_name.to_string());
         }

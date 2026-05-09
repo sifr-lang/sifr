@@ -1,0 +1,5 @@
+# expect-error SIFR-TYPE-0002
+async def main() -> None:
+    async with task.timeout(1.0):
+        await task.sleep(0.0)
+    return None

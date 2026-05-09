@@ -77,6 +77,7 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
         "KeyError",
         "OverflowError",
         "DecimalConversionError",
+        "TimeoutError",
     ];
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];

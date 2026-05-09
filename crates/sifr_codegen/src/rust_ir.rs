@@ -243,6 +243,10 @@ pub enum RustExpr {
     Tuple(Vec<RustExpr>),
     Array(Vec<RustExpr>),
     Vec(Vec<RustExpr>),
+    TimeoutAwait {
+        duration: Box<RustExpr>,
+        future: Box<RustExpr>,
+    },
     Try(Box<RustExpr>),
     Await(Box<RustExpr>),
     Paren(Box<RustExpr>),
