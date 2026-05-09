@@ -13,7 +13,7 @@ Phase 32 is not an ecosystem grab bag. It closes one coherent model:
 - structured concurrency by default: parent scopes own child tasks
 - typed cancellation, timeout, and cleanup behavior
 - explicit offload for CPU-bound or blocking work
-- blocking/CPU annotations that power diagnostics instead of hidden scheduling
+- I/O-bound/CPU-bound annotations that power diagnostics instead of hidden scheduling
 - compatibility veneers only after the canonical model works
 
 The phase is complete when practical async/concurrent Sifr programs run without user-managed event loops and without escaping Sifr's core guarantee: no user-triggerable runtime panics.
@@ -60,7 +60,7 @@ Subprocess and signal integration require a later model amendment. Older Phase 3
 
 - **One canonical async model:** user code should learn `async def`, `await`, `sifr.task`, and `sifr.sync`; not event-loop objects, loop policies, or callback orchestration.
 - **Structured concurrency first:** child tasks belong to parent scopes. Fire-and-forget is absent in v1.
-- **Async is for waiting:** CPU-bound and blocking work must use explicit offload APIs. The compiler never silently schedules work on another executor.
+- **Async is for waiting:** I/O-bound and CPU-bound sync work must use async APIs or explicit offload when it would otherwise occupy cooperative runtime workers. The compiler never silently schedules work on another executor.
 - **No implicit shared mutable memory:** cross-task/thread sharing requires explicit primitives. The compiler never invents `Arc`, `Mutex`, clones, or detached ownership on the user's behalf.
 - **Cancellation is typed control flow:** active cancellation is scope-exit semantics, not a broad-catchable ordinary error. Materialized child cancellation is explicit evidence.
 - **Compatibility is layered:** `sifr.asyncio` and `sifr.concurrent` can wrap the canonical model, but cannot define a second model.
@@ -85,7 +85,7 @@ These are implementation constraints, not suggestions:
 13. `sifr.asyncio` ships only as a compatibility veneer after the canonical model is complete.
 14. Public selectors, contextvars, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
 15. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
-16. `@blocking_io` and `@cpu_bound` are diagnostic annotations, not implicit scheduling directives.
+16. `@io_bound` and `@cpu_bound` are declaration-site diagnostic annotations; they classify workload class for compiler diagnostics and never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
 17. Subprocess and signal APIs are out of scope for Phase 32 v1 and require a later model amendment.
 18. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; v1 graceful shutdown uses structured scope cancellation and explicit channels.
 
@@ -518,8 +518,9 @@ status: proposed
 
 **Scope:**
 
-- Add `@blocking_io` and `@cpu_bound` annotations.
-- Add diagnostics for calling annotated functions directly from async contexts.
+- Add `@io_bound` and `@cpu_bound` declaration-site annotations.
+- Add a stdlib annotation database of known I/O-bound and CPU-bound functions.
+- Add diagnostics for calling `@io_bound` or `@cpu_bound` functions directly from async contexts.
 - Implement `task.spawn_blocking`.
 - Implement `sifr.concurrent.ThreadPoolExecutor`.
 - Add `sifr.threading` as a thin compatibility veneer where it can stay canonical:
@@ -539,7 +540,7 @@ status: proposed
 
 **Definition of done:**
 
-- Annotated blocking/CPU functions produce diagnostics in async contexts.
+- Annotated I/O-bound/CPU-bound functions produce diagnostics in async contexts.
 - Diagnostics suggest async alternatives or explicit offload.
 - `spawn_blocking` works and returns typed results.
 - `ThreadPoolExecutor` works as a compatibility layer.
@@ -548,14 +549,14 @@ status: proposed
 
 **Positive validation:**
 
-- `blocking_io_annotation_warning.sifr`
+- `io_bound_annotation_warning.sifr`
 - `cpu_bound_annotation_warning.sifr`
 - `spawn_blocking_basic.sifr`
 - `thread_pool_executor_basic.sifr`
 
 **Negative validation:**
 
-- `blocking_call_in_async_diagnostic.sifr`
+- `io_bound_call_in_async_diagnostic.sifr`
 - `cpu_bound_call_in_async_diagnostic.sifr`
 - `spawn_blocking_non_send_rejected.sifr`
 
@@ -799,7 +800,7 @@ The phase must add coverage for:
 - channel close/backpressure fixtures
 - channel cancellation fixtures
 - blocking offload fixtures
-- blocking/CPU annotation diagnostics fixtures
+- I/O-bound/CPU-bound annotation diagnostics fixtures
 - async context-manager fixtures
 - async iteration fixtures
 - compatibility veneer fixtures
@@ -831,7 +832,7 @@ Phase 32 is complete only when all of these are true:
 - Task-boundary Send/Sync and borrow rules are enforced by Sifr diagnostics.
 - Explicit synchronization primitives exist for shared state.
 - Channels are the canonical producer/consumer primitive.
-- CPU-bound and blocking work has explicit offload APIs and diagnostics.
+- I/O-bound and CPU-bound sync work has explicit offload APIs and diagnostics.
 - `async with` and `async for` work for protocol-conforming values.
 - Compatibility veneers do not define a second async model.
 - Deferred APIs are documented with negative/waiver tests.

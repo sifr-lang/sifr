@@ -62,7 +62,7 @@ The user-facing vocabulary is:
 - scoped task groups
 - explicit channels and locks
 - explicit blocking/thread offload
-- `@blocking_io` and `@cpu_bound` annotations for diagnostic guidance
+- `@io_bound` and `@cpu_bound` annotations for diagnostic guidance
 
 The primary model does not include:
 
@@ -104,16 +104,16 @@ Default APIs should not encourage:
 
 ### Async Is For Waiting
 
-Async tasks are for I/O waiting and cooperative scheduling. CPU-bound work and blocking OS calls must use explicit offload APIs.
+Async tasks are for I/O waiting and cooperative scheduling. CPU-intensive work and synchronous I/O calls must use explicit offload APIs when they would otherwise occupy a cooperative runtime worker.
 
 Required surfaces:
 
-- `@blocking_io` for sync functions that perform blocking I/O
-- `@cpu_bound` for sync functions expected to burn CPU
+- `@io_bound` for sync functions that perform synchronous I/O such as file, network, database, pipe, or blocking timer waits
+- `@cpu_bound` for sync functions expected to be CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing
 - `task.spawn_blocking(...)`
 - `sifr.concurrent.ThreadPoolExecutor`
 
-These annotations are diagnostic facts, not scheduling commands. Calling a `@blocking_io` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a `@cpu_bound` function from async code should suggest `spawn_blocking` or a thread-pool executor. The compiler must not silently rewrite either call into a task or thread.
+These annotations are declaration-site workload facts, not scheduling commands. Calling a known `@io_bound` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a known `@cpu_bound` function from async code should suggest `spawn_blocking` or a thread-pool executor. The compiler must not silently rewrite either call into a task or thread.
 
 Deferred surfaces:
 
@@ -448,7 +448,14 @@ Channels are the canonical queue-like concurrency primitive:
 
 Async tasks are for waiting and cooperative scheduling. CPU-bound work and blocking OS calls must use explicit offload.
 
-`@blocking_io` and `@cpu_bound` are diagnostic annotations. They never imply automatic task or thread scheduling. Calling a known blocking or CPU-heavy function from async code should produce a diagnostic that suggests an async API when one exists or explicit offload when it does not.
+`@io_bound` and `@cpu_bound` are declaration-site workload classification annotations. They never imply automatic task or thread scheduling.
+
+- `@io_bound`: the function performs synchronous I/O that can block an OS thread, such as file read/write, network I/O, database calls, pipe operations, or blocking timer waits. Calling a known `@io_bound` function from an `async def` body produces a warning: use an async API if available, or wrap the call with `spawn_blocking`.
+- `@cpu_bound`: the function is CPU-intensive with no I/O, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing. Calling a known `@cpu_bound` function from an `async def` body produces a warning: use `spawn_blocking` or a `ThreadPoolExecutor` to avoid starving the runtime.
+
+The stdlib maintains a built-in annotation database for stdlib functions. User code can annotate declarations with `@io_bound` or `@cpu_bound`. Unannotated user functions are assumed to be cheap compute and do not warn by default; this avoids making every short helper look like a scheduler problem. External/FFI calls are treated conservatively as potentially blocking in async contexts unless a future FFI contract classifies them more precisely.
+
+These annotations guide the developer, not the compiler. The compiler must not silently rewrite either call.
 
 `task.spawn_blocking` and `sifr.concurrent.ThreadPoolExecutor` provide explicit offload:
 
@@ -512,7 +519,7 @@ Diagnostic families cover:
 - borrowed values escaping task boundaries
 - detached-task capture failure if detached tasks are added later
 - cancellation misuse
-- blocking call in async context
+- `@io_bound`, `@cpu_bound`, or potentially blocking FFI call in async context
 - lock guard live at an `await` point
 - invalid async protocol implementation
 - runtime-specific type leakage into public APIs
@@ -534,6 +541,6 @@ These decisions are part of the first async/concurrency model:
 11. Compatibility veneers must not introduce a second runtime model.
 12. Public selectors, `contextvars`, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
 13. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
-14. `@blocking_io` and `@cpu_bound` are diagnostic annotations, not implicit scheduling directives.
+14. `@io_bound` and `@cpu_bound` are declaration-site workload classification annotations. They power diagnostics but never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
 15. Subprocess and signal APIs require a later model amendment.
 16. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; graceful shutdown uses structured scope cancellation and explicit channels.

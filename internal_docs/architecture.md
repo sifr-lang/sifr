@@ -685,6 +685,7 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - `milestone_async_1`: add async HIR/type substrate (`Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, `await`, async calls).
 - `milestone_async_4`: implement Send/Sync and borrow-boundary checking at spawn boundaries.
 - `milestone_async_5`: provide `sifr.sync.Shared`, `Lock`, `RwLock`, and `Channel` for explicit cross-task sharing.
+- `milestone_async_6`: implement `@io_bound` and `@cpu_bound` annotations, the stdlib workload annotation database, and async-context diagnostics.
 
 ### 9. Destruction and Cleanup Semantics
 
