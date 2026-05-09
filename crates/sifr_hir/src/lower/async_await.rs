@@ -30,6 +30,15 @@ pub(super) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<
         return None;
     };
 
+    if matches!(
+        value.ty().resolve_alias(),
+        Type::Task(_, _) | Type::BlockingTask(_, _)
+    ) {
+        if let HirExpr::Name { name, .. } = &value {
+            ctx.scope.mark_moved(name);
+        }
+    }
+
     Some(HirExpr::Await {
         value: Box::new(value),
         ty,

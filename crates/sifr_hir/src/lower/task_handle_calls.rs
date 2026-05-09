@@ -39,6 +39,9 @@ pub(super) fn lower_task_handle_method_call(
     };
     let result_ok_ty = ok_ty.clone();
     let result_err_ty = err_ty.clone();
+    if let HirExpr::Name { name, .. } = &object {
+        ctx.scope.mark_moved(name);
+    }
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method_name.to_string(),

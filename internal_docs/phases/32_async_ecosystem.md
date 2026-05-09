@@ -391,6 +391,8 @@ status: in_progress
 - Added positive validation fixture: `task_handle_join.sifr`.
 - In progress task-handle await slice: direct `await handle` now desugars to the same private join observation path as `await handle.join()`.
 - Added positive validation fixture: `task_handle_await.sifr`.
+- In progress task-handle affine slice: observing a task handle through direct `await handle` or `await handle.join()` now consumes the handle binding through the HIR ownership tracker.
+- Added negative validation fixture: `task_handle_double_await_rejected.sifr`.
 
 ---
 
