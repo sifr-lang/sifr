@@ -302,7 +302,7 @@ status: completed
 
 ### milestone_async_2: Runtime Bootstrap and Core Task API
 
-status: proposed
+status: in_progress
 
 **Goal:** Make ordinary async programs run without user-managed runtime setup.
 
@@ -374,6 +374,11 @@ status: proposed
 **Demo:**
 
 - `demos/m32_task_core_demo.sifr`
+
+**Implementation progress (2026-05-09):**
+
+- Completed first runtime bootstrap slice: auto-detect `async def main()`, emit a private Tokio-backed runtime bootstrap with `#[tokio::main(flavor = "current_thread")]`, and add the Tokio dependency only for async entrypoints.
+- Added positive validation fixture: `async_runtime_bootstrap.sifr`.
 
 ---
 
