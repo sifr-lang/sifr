@@ -1901,7 +1901,7 @@ fn try_lower_simple_async_with_stmt(
     let mut block = Vec::new();
     if let Some(target) = target {
         block.push(RustStmt::Let {
-            mutable: false,
+            mutable: true,
             name: target.to_string(),
             ty: None,
             value: RustExpr::FnCall {
@@ -1921,6 +1921,15 @@ fn try_lower_simple_async_with_stmt(
         bindings.borrowed_params,
         ctx,
     )?);
+    if let (sifr_hir::HirAsyncWithKind::TaskScope, Some(target)) = (kind, target) {
+        block.push(RustStmt::Expr(RustExpr::Await(Box::new(
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(target.to_string())),
+                method: "__sifr_join_all".to_string(),
+                args: vec![],
+            },
+        ))));
+    }
 
     Some(vec![RustStmt::Block(block)])
 }
@@ -4335,6 +4344,12 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     }
     if is_none_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::Unit));
+    }
+    if matches!(
+        crate::resolve_alias_type_for_plain_call(ty),
+        Type::Task(_, _)
+    ) {
+        return try_lower_leaf_expr(value);
     }
     if !is_alias_equivalent_type(ty, value.ty()) {
         return None;

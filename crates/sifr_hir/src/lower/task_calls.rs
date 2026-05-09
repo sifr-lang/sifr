@@ -25,6 +25,14 @@ pub(super) fn lower_task_module_call(
         return TaskCallLowering::NoMatch;
     }
     if attr.attr.as_str() != "sleep" {
+        if attr.attr.as_str() == "spawn" {
+            expression_diagnostics::type_mismatch(
+                ctx,
+                "task.spawn() is not available in v1; use scope.spawn(...) inside async with task.scope()".to_string(),
+                call.range(),
+            );
+            return TaskCallLowering::Rejected;
+        }
         return TaskCallLowering::NoMatch;
     }
     if !ctx.current_function_is_async {

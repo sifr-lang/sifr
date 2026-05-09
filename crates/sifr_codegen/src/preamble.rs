@@ -21,6 +21,13 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
             Box::new(sifr_type_to_rust_type(ok)),
             Box::new(sifr_type_to_rust_type(err)),
         ),
+        Type::Task(ok, err) => RustType::Generic {
+            base: "__SifrTask".to_string(),
+            params: vec![
+                sifr_type_to_rust_type(ok),
+                task_error_type_to_rust_type(err),
+            ],
+        },
         Type::Union(members) => {
             let non_none: Vec<&Type> = members
                 .iter()
@@ -34,6 +41,14 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
             }
         }
         _ => RustType::Named(ty.rust_type()),
+    }
+}
+
+fn task_error_type_to_rust_type(ty: &Type) -> RustType {
+    if matches!(ty.resolve_alias(), Type::Never) {
+        RustType::Named("std::convert::Infallible".to_string())
+    } else {
+        sifr_type_to_rust_type(ty)
     }
 }
 
@@ -130,27 +145,163 @@ pub fn build_error_type_items(
 pub fn build_task_scope_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
+            name: "__SifrTask<T, E>".to_string(),
+            visibility: Visibility::Private,
+            derives: vec![],
+            fields: vec![
+                (
+                    "receiver".to_string(),
+                    RustType::Option(Box::new(RustType::Named(
+                        "tokio::sync::oneshot::Receiver<T>".to_string(),
+                    ))),
+                ),
+                (
+                    "_error".to_string(),
+                    RustType::Named("std::marker::PhantomData<E>".to_string()),
+                ),
+            ],
+        },
+        RustItem::Struct {
             name: "__SifrTaskScope".to_string(),
             visibility: Visibility::Private,
-            derives: vec!["Debug".to_string()],
-            fields: vec![],
+            derives: vec![],
+            fields: vec![(
+                "children".to_string(),
+                RustType::Vec(Box::new(RustType::Named(
+                    "tokio::task::JoinHandle<()>".to_string(),
+                ))),
+            )],
         },
         RustItem::Impl {
             target: "__SifrTaskScope".to_string(),
             type_params: vec![],
             trait_: None,
-            items: vec![RustItem::Fn {
-                name: "new".to_string(),
-                visibility: Visibility::Private,
-                type_params: vec![],
-                params: vec![],
-                ret: Some(RustType::Named("Self".to_string())),
-                body: vec![RustStmt::Return(Some(RustExpr::StructInit {
-                    name: "Self".to_string(),
-                    fields: vec![],
-                }))],
-                is_async: false,
-            }],
+            items: vec![
+                RustItem::Fn {
+                    name: "new".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![],
+                    ret: Some(RustType::Named("Self".to_string())),
+                    body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                        name: "Self".to_string(),
+                        fields: vec![(
+                            "children".to_string(),
+                            RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+                                args: vec![],
+                            },
+                        )],
+                    }))],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "spawn".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![
+                        crate::RustTypeParam {
+                            name: "T".to_string(),
+                            bounds: vec!["Send".to_string(), "'static".to_string()],
+                        },
+                        crate::RustTypeParam {
+                            name: "F".to_string(),
+                            bounds: vec![
+                                "std::future::Future<Output = T>".to_string(),
+                                "Send".to_string(),
+                                "'static".to_string(),
+                            ],
+                        },
+                    ],
+                    params: vec![
+                        RustParam::SelfParam { mutable: true },
+                        RustParam::Named {
+                            name: "future".to_string(),
+                            ty: RustType::Named("F".to_string()),
+                        },
+                    ],
+                    ret: Some(RustType::Named(
+                        "__SifrTask<T, std::convert::Infallible>".to_string(),
+                    )),
+                    body: vec![
+                        RustStmt::LetPattern {
+                            pattern: "(sender, receiver)".to_string(),
+                            value: RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "tokio".to_string(),
+                                    "sync".to_string(),
+                                    "oneshot".to_string(),
+                                    "channel".to_string(),
+                                ])),
+                                args: vec![],
+                            },
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "child".to_string(),
+                            ty: None,
+                            value: RustExpr::Ident(
+                                "tokio::spawn(async move { let result = future.await; let _ = sender.send(result); })"
+                                    .to_string(),
+                            ),
+                        },
+                        RustStmt::Expr(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("self".to_string())),
+                                field: "children".to_string(),
+                            }),
+                            method: "push".to_string(),
+                            args: vec![RustExpr::Ident("child".to_string())],
+                        }),
+                        RustStmt::Return(Some(RustExpr::StructInit {
+                            name: "__SifrTask".to_string(),
+                            fields: vec![
+                                (
+                                    "receiver".to_string(),
+                                    RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                                        args: vec![RustExpr::Ident("receiver".to_string())],
+                                    },
+                                ),
+                                (
+                                    "_error".to_string(),
+                                    RustExpr::Path(vec![
+                                        "std".to_string(),
+                                        "marker".to_string(),
+                                        "PhantomData".to_string(),
+                                    ]),
+                                ),
+                            ],
+                        })),
+                    ],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "__sifr_join_all".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfParam { mutable: true }],
+                    ret: Some(RustType::Unit),
+                    body: vec![RustStmt::Loop {
+                        body: vec![RustStmt::IfLet {
+                            pattern: "Some(child)".to_string(),
+                            expr: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Field {
+                                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                                    field: "children".to_string(),
+                                }),
+                                method: "pop".to_string(),
+                                args: vec![],
+                            },
+                            then_body: vec![RustStmt::LetPattern {
+                                pattern: "_".to_string(),
+                                value: RustExpr::Await(Box::new(RustExpr::Ident("child".to_string()))),
+                            }],
+                            else_body: Some(vec![RustStmt::Break]),
+                        }],
+                    }],
+                    is_async: true,
+                },
+            ],
         },
     ]
 }

@@ -92,7 +92,8 @@ pub fn sifr_runtime_dependency_spec() -> String {
 }
 
 fn tokio_dependency_spec() -> String {
-    "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"time\"] }".to_string()
+    "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"sync\", \"time\"] }"
+        .to_string()
 }
 
 fn discover_sifr_runtime_path() -> Option<PathBuf> {
@@ -748,7 +749,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             if needs_sifr_int {
                 crates.insert("sifr_runtime".to_string());
             }
-            if has_async_main_entrypoint || uses_task_sleep {
+            if has_async_main_entrypoint || uses_task_sleep || module_uses_task_scope(module) {
                 crates.insert("tokio".to_string());
             }
             crates

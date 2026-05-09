@@ -1,0 +1,4 @@
+async def main() -> None:
+    async with task.scope() as scope:
+        handle = scope.spawn(1)
+    return None
