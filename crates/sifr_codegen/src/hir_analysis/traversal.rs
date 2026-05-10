@@ -495,6 +495,20 @@ where
                 }
             }
         }
+        HirStmt::TryFinally { body, finalbody } => {
+            if matches!(
+                walk_stmts_until(body, config, on_stmt, on_expr),
+                TraversalControl::Stop
+            ) {
+                return TraversalControl::Stop;
+            }
+            if matches!(
+                walk_stmts_until(finalbody, config, on_stmt, on_expr),
+                TraversalControl::Stop
+            ) {
+                return TraversalControl::Stop;
+            }
+        }
         HirStmt::SubscriptAssign { index, value, .. }
         | HirStmt::SubscriptAugAssign { index, value, .. }
         | HirStmt::AttributeSubscriptAssign { index, value, .. } => {

@@ -1,0 +1,17 @@
+async def fail_first() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("first")
+
+
+async def fail_second() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("second")
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        result = await task.gather([scope.spawn(fail_first()), scope.spawn(fail_second())])
+        summary: str = str(result)
+        assert summary.find("Err(") is not None
+        assert summary.find("sibling task failed") is not None
+    return None

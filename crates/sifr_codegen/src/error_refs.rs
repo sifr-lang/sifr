@@ -232,6 +232,10 @@ fn collect_stmt_error_refs(
                     collect_stmt_error_refs(&handler.body, referenced, builtin_error_classes);
                 }
             }
+            HirStmt::TryFinally { body, finalbody } => {
+                collect_stmt_error_refs(body, referenced, builtin_error_classes);
+                collect_stmt_error_refs(finalbody, referenced, builtin_error_classes);
+            }
             HirStmt::SubscriptAssign { index, value, .. }
             | HirStmt::SubscriptAugAssign { index, value, .. }
             | HirStmt::AttributeSubscriptAssign { index, value, .. } => {

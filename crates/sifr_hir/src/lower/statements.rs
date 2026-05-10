@@ -158,18 +158,18 @@ pub(super) fn lower_stmts(
         }
         if let Stmt::Try(try_stmt) = stmt {
             if !try_stmt.finalbody.is_empty() {
-                if try_stmt.handlers.is_empty() {
-                    let body = lower_stmts(&try_stmt.body, func_type, ctx);
-                    result.extend(body);
-                    if !try_stmt.orelse.is_empty() {
-                        let orelse = lower_stmts(&try_stmt.orelse, func_type, ctx);
-                        result.extend(orelse);
-                    }
-                } else if let Some(hir_stmt) = lower_stmt(stmt, func_type, ctx) {
-                    result.push(hir_stmt);
+                let has_handlers = !try_stmt.handlers.is_empty();
+                let mut body = if has_handlers {
+                    lower_stmt(stmt, func_type, ctx).into_iter().collect()
+                } else {
+                    lower_stmts(&try_stmt.body, func_type, ctx)
+                };
+                if !has_handlers && !try_stmt.orelse.is_empty() {
+                    let orelse = lower_stmts(&try_stmt.orelse, func_type, ctx);
+                    body.extend(orelse);
                 }
                 let finalbody = lower_stmts(&try_stmt.finalbody, func_type, ctx);
-                result.extend(finalbody);
+                result.push(HirStmt::TryFinally { body, finalbody });
                 apply_numeric_sentinel_patches(
                     &mut result,
                     &mut ctx.pending_numeric_sentinel_patches,

@@ -157,7 +157,7 @@ def main():
 }
 
 #[test]
-fn try_finally_without_except_lowers_body_then_finalbody() {
+fn try_finally_without_except_preserves_cleanup_boundary() {
     let source = "\
 def main():
     value: int = 1
@@ -170,20 +170,21 @@ def main():
     let module = lower_module(parsed.suite()).expect("lowering should succeed");
     let body = &module.module.functions[0].body;
 
-    assert_eq!(body.len(), 3);
+    assert_eq!(body.len(), 2);
     assert!(matches!(body[0], HirStmt::Let { .. }));
+    let HirStmt::TryFinally {
+        body: try_body,
+        finalbody,
+    } = &body[1]
+    else {
+        panic!("expected try/finally HIR node");
+    };
     assert!(matches!(
-        body[1],
-        HirStmt::Assign {
-            ref name,
-            ..
-        } if name == "value"
+        try_body.as_slice(),
+        [HirStmt::Assign { name, .. }] if name == "value"
     ));
     assert!(matches!(
-        body[2],
-        HirStmt::Assign {
-            ref name,
-            ..
-        } if name == "value"
+        finalbody.as_slice(),
+        [HirStmt::Assign { name, .. }] if name == "value"
     ));
 }

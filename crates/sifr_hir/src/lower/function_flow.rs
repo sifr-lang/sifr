@@ -45,6 +45,10 @@ pub(super) fn collect_yield_types(stmts: &[HirStmt]) -> Vec<Type> {
                         walk(&handler.body, out);
                     }
                 }
+                HirStmt::TryFinally { body, finalbody } => {
+                    walk(body, out);
+                    walk(finalbody, out);
+                }
                 HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => walk(body, out),
                 HirStmt::Match { arms, .. } => {
                     for arm in arms {

@@ -391,6 +391,9 @@ fn stmt_contains_await(stmt: &HirStmt) -> bool {
                     .iter()
                     .any(|handler| handler.body.iter().any(stmt_contains_await))
         }
+        HirStmt::TryFinally { body, finalbody } => {
+            body.iter().any(stmt_contains_await) || finalbody.iter().any(stmt_contains_await)
+        }
         HirStmt::Match { subject, arms, .. } => {
             expr_contains_await(subject)
                 || arms.iter().any(|arm| {
@@ -468,6 +471,10 @@ fn stmt_contains_task_spawn(stmt: &HirStmt) -> bool {
                     .iter()
                     .any(|handler| handler.body.iter().any(stmt_contains_task_spawn))
         }
+        HirStmt::TryFinally { body, finalbody } => {
+            body.iter().any(stmt_contains_task_spawn)
+                || finalbody.iter().any(stmt_contains_task_spawn)
+        }
         HirStmt::Match { subject, arms, .. } => {
             expr_contains_task_spawn(subject)
                 || arms.iter().any(|arm| {
@@ -515,6 +522,10 @@ fn stmt_contains_scope_early_exit(stmt: &HirStmt) -> bool {
                 || handlers
                     .iter()
                     .any(|handler| handler.body.iter().any(stmt_contains_scope_early_exit))
+        }
+        HirStmt::TryFinally { body, finalbody } => {
+            body.iter().any(stmt_contains_scope_early_exit)
+                || finalbody.iter().any(stmt_contains_scope_early_exit)
         }
         HirStmt::Match { arms, .. } => arms
             .iter()

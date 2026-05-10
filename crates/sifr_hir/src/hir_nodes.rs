@@ -195,6 +195,11 @@ pub enum HirStmt {
         /// Error types that can arise from the try body (collected during lowering)
         body_error_types: Vec<String>,
     },
+    /// Try/finally: finalbody runs before normal completion, return, or error propagation.
+    TryFinally {
+        body: Vec<HirStmt>,
+        finalbody: Vec<HirStmt>,
+    },
     /// Field assignment: self.field = value (inside methods)
     FieldAssign {
         object: String,
