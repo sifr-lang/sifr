@@ -1,0 +1,25 @@
+from sifr.sync import ChannelReceiver, ChannelSender, ClosedError, channel
+
+
+async def main() -> Result[None, Error]:
+    endpoints: tuple[ChannelSender[int], ChannelReceiver[int]] = channel()
+    sender, receiver = endpoints
+    cancelled: bool = False
+
+    try:
+        async with task.timeout(0.0):
+            pending: Result[int, ClosedError] = await receiver.receive()
+    except TimeoutError:
+        cancelled = True
+
+    first_send: Result[None, ClosedError] = await sender.send(10)
+    second_send: Result[None, ClosedError] = await sender.send(20)
+    first_received: Result[int, ClosedError] = await receiver.receive()
+    second_received: Result[int, ClosedError] = await receiver.receive()
+
+    assert cancelled
+    assert str(first_send) == "Ok(())"
+    assert str(second_send) == "Ok(())"
+    assert str(first_received) == "Ok(10)"
+    assert str(second_received) == "Ok(20)"
+    return None
