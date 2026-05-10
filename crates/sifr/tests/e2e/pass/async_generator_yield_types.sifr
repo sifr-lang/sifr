@@ -1,0 +1,17 @@
+async def offsets(seed: int) -> AsyncGenerator[int, GeneratorCloseError]:
+    first: int = seed + 1
+    second: int = first + 2
+
+    yield first
+    yield second
+
+
+async def main() -> Result[None, GeneratorCloseError]:
+    agen = offsets(10)
+    total: int = 0
+
+    async for value in agen:
+        total = total + value
+
+    assert total == 24
+    return None
