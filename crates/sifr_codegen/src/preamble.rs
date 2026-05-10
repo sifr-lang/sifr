@@ -728,11 +728,11 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
             type_params: vec![
                 crate::RustTypeParam {
                     name: "T".to_string(),
-                    bounds: vec![],
+                    bounds: vec!["Send".to_string(), "'static".to_string()],
                 },
                 crate::RustTypeParam {
                     name: "E".to_string(),
-                    bounds: vec![],
+                    bounds: vec!["Send".to_string(), "'static".to_string()],
                 },
             ],
             params: vec![RustParam::Named {
@@ -743,7 +743,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 "__SifrTaskResult<Vec<T>, E>".to_string(),
             )),
             body: vec![RustStmt::Expr(RustExpr::Ident(
-                "let mut values = Vec::new();\n        for handle in handles {\n            match handle.join().await {\n                __SifrTaskResult::Ok(value) => values.push(value),\n                __SifrTaskResult::Err(err) => return __SifrTaskResult::Err(err),\n                __SifrTaskResult::Cancelled => return __SifrTaskResult::Cancelled,\n            }\n        }\n        return __SifrTaskResult::Ok(values)".to_string(),
+                "let input_len = handles.len();\n        let mut values: Vec<Option<T>> = std::iter::repeat_with(|| None).take(input_len).collect();\n        let mut abort_handles = Vec::with_capacity(input_len);\n        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();\n        let mut observer_count = 0usize;\n        for (index, handle) in handles.into_iter().enumerate() {\n            let __SifrTask { receiver: task_receiver, abort_handle, observed, _error } = handle;\n            observed.store(true, std::sync::atomic::Ordering::SeqCst);\n            abort_handles.push(abort_handle);\n            observer_count += 1;\n            let sender = sender.clone();\n            if let Some(task_receiver) = task_receiver {\n                tokio::spawn(async move {\n                    let result = match task_receiver.await {\n                        Ok(result) => result,\n                        Err(_) => __SifrTaskResult::Cancelled,\n                    };\n                    let _ = sender.send((index, result));\n                });\n            } else {\n                let _ = sender.send((index, __SifrTaskResult::Cancelled));\n            }\n        }\n        drop(sender);\n        let mut remaining = observer_count;\n        while remaining > 0 {\n            let Some((index, result)) = receiver.recv().await else {\n                break;\n            };\n            remaining -= 1;\n            match result {\n                __SifrTaskResult::Ok(value) => values[index] = Some(value),\n                __SifrTaskResult::Err(err) => {\n                    for abort_handle in &abort_handles {\n                        abort_handle.abort();\n                    }\n                    while remaining > 0 {\n                        if receiver.recv().await.is_none() {\n                            break;\n                        }\n                        remaining -= 1;\n                    }\n                    return __SifrTaskResult::Err(err);\n                }\n                __SifrTaskResult::Cancelled => {\n                    for abort_handle in &abort_handles {\n                        abort_handle.abort();\n                    }\n                    while remaining > 0 {\n                        if receiver.recv().await.is_none() {\n                            break;\n                        }\n                        remaining -= 1;\n                    }\n                    return __SifrTaskResult::Cancelled;\n                }\n            }\n        }\n        let mut ordered_values = Vec::with_capacity(input_len);\n        for value in values {\n            let Some(value) = value else {\n                return __SifrTaskResult::Cancelled;\n            };\n            ordered_values.push(value);\n        }\n        return __SifrTaskResult::Ok(ordered_values)".to_string(),
             ))],
             is_async: true,
         },
