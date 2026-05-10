@@ -586,12 +586,11 @@ status: in_progress
 - PR [#1961](https://github.com/sifr-lang/sifr/pull/1961) borrow-across-await validation slice: async functions reject live mutable-borrow parameters at await points, while completed same-task mutable borrows can be followed by ordinary awaits.
 - PR [#1963](https://github.com/sifr-lang/sifr/pull/1963) scoped-borrow spawn validation slice: the deferred v1 scoped-borrow model is covered by an explicit fail fixture that rejects borrowed parameters crossing `scope.spawn`.
 - PR [#1965](https://github.com/sifr-lang/sifr/pull/1965) non-send task-boundary slice: `scope.spawn` derives structural sendability for direct coroutine arguments and rejects classes containing the zero-runtime `NonSend` marker with `SIFR-OWN-0010`.
-
 ---
 
 ### milestone_async_5: Synchronization Primitives and Channels
 
-status: proposed
+status: in_progress
 
 **Goal:** Provide explicit primitives for sharing and coordination when concurrency requires it.
 
@@ -674,6 +673,10 @@ status: proposed
 **Demo:**
 
 - `demos/m32_sync_channel_demo.sifr`
+
+**Implementation progress:**
+
+- In progress `sync.Shared` surface slice: `sifr.sync.Shared[T]` is available as the first immutable sharing primitive, with basic construction/access validation and the `spawn_capture_immutable_shared_ok.sifr` milestone fixture in the quick lane.
 
 ---
 

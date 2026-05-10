@@ -22,6 +22,7 @@
     "nested_function_basic",
     "nested_function_recursive_capture",
     "spawn_owned_move_value",
+    "spawn_capture_immutable_shared_ok",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",
