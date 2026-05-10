@@ -28,6 +28,13 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 task_error_type_to_rust_type(err),
             ],
         },
+        Type::BlockingTask(ok, err) => RustType::Generic {
+            base: "__SifrBlockingTask".to_string(),
+            params: vec![
+                sifr_type_to_rust_type(ok),
+                task_error_type_to_rust_type(err),
+            ],
+        },
         Type::TaskResult(ok, err) => RustType::Generic {
             base: "__SifrTaskResult".to_string(),
             params: vec![
@@ -369,6 +376,29 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
             ],
         },
         RustItem::Struct {
+            name: "__SifrBlockingTask<T, E>".to_string(),
+            visibility: Visibility::Private,
+            derives: vec![],
+            fields: vec![
+                (
+                    "handle".to_string(),
+                    RustType::Option(Box::new(RustType::Named(
+                        "tokio::task::JoinHandle<__SifrTaskResult<T, E>>".to_string(),
+                    ))),
+                ),
+                (
+                    "observed".to_string(),
+                    RustType::Named(
+                        "std::sync::Arc<std::sync::atomic::AtomicBool>".to_string(),
+                    ),
+                ),
+                (
+                    "_error".to_string(),
+                    RustType::Named("std::marker::PhantomData<E>".to_string()),
+                ),
+            ],
+        },
+        RustItem::Struct {
             name: "__SifrScopeChild".to_string(),
             visibility: Visibility::Private,
             derives: vec![],
@@ -564,6 +594,17 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     is_async: false,
                 },
                 RustItem::Fn {
+                    name: "cancel_and_join".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfValue],
+                    ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
+                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                        "let __SifrTask { receiver, abort_handle, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        abort_handle.abort();\n        if let Some(receiver) = receiver {\n            let _ = receiver.await;\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
+                    ))],
+                    is_async: true,
+                },
+                RustItem::Fn {
                     name: "__sifr_timeout".to_string(),
                     visibility: Visibility::Private,
                     type_params: vec![],
@@ -579,6 +620,56 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     )),
                     body: vec![RustStmt::Expr(RustExpr::Ident(
                         "let __SifrTask { receiver, abort_handle, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                        Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                        Ok(__SifrTaskResult::Cancelled(failure)) => __SifrTaskResult::Cancelled(failure),\n                        Err(_) => __SifrTaskResult::cancelled(),\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    abort_handle.abort();\n                    let _ = receiver.await;\n                    __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout))\n                }\n            };\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
+                    ))],
+                    is_async: true,
+                },
+            ],
+        },
+        RustItem::Impl {
+            target: "__SifrBlockingTask<T, E>".to_string(),
+            type_params: vec![
+                crate::RustTypeParam {
+                    name: "T".to_string(),
+                    bounds: vec![],
+                },
+                crate::RustTypeParam {
+                    name: "E".to_string(),
+                    bounds: vec![],
+                },
+            ],
+            trait_: None,
+            items: vec![
+                RustItem::Fn {
+                    name: "join".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfValue],
+                    ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
+                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                        "let __SifrBlockingTask { handle, observed, .. } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(handle) = handle {\n            return match handle.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::cancelled(),\n            };\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
+                    ))],
+                    is_async: true,
+                },
+                RustItem::Fn {
+                    name: "cancel".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfParam { mutable: false }],
+                    ret: Some(RustType::Unit),
+                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                        "if let Some(handle) = &self.handle {\n            handle.abort();\n        }"
+                            .to_string(),
+                    ))],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "cancel_and_join".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfValue],
+                    ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
+                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                        "if let Some(handle) = &self.handle {\n            handle.abort();\n        }\n        return self.join().await".to_string(),
                     ))],
                     is_async: true,
                 },
@@ -997,6 +1088,66 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     is_async: true,
                 },
             ],
+        },
+        RustItem::Fn {
+            name: "__sifr_spawn_blocking_infallible".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![
+                crate::RustTypeParam {
+                    name: "T".to_string(),
+                    bounds: vec!["Send".to_string(), "'static".to_string()],
+                },
+                crate::RustTypeParam {
+                    name: "F".to_string(),
+                    bounds: vec![
+                        "FnOnce() -> T".to_string(),
+                        "Send".to_string(),
+                        "'static".to_string(),
+                    ],
+                },
+            ],
+            params: vec![RustParam::Named {
+                name: "work".to_string(),
+                ty: RustType::Named("F".to_string()),
+            }],
+            ret: Some(RustType::Named(
+                "__SifrBlockingTask<T, std::convert::Infallible>".to_string(),
+            )),
+            body: vec![RustStmt::Expr(RustExpr::Ident(
+                "let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let handle = tokio::task::spawn_blocking(move || __SifrTaskResult::Ok(work()));\n        return __SifrBlockingTask { handle: Some(handle), observed, _error: std::marker::PhantomData }".to_string(),
+            ))],
+            is_async: false,
+        },
+        RustItem::Fn {
+            name: "__sifr_spawn_blocking_result".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![
+                crate::RustTypeParam {
+                    name: "T".to_string(),
+                    bounds: vec!["Send".to_string(), "'static".to_string()],
+                },
+                crate::RustTypeParam {
+                    name: "E".to_string(),
+                    bounds: vec!["Send".to_string(), "'static".to_string()],
+                },
+                crate::RustTypeParam {
+                    name: "F".to_string(),
+                    bounds: vec![
+                        "FnOnce() -> Result<T, E>".to_string(),
+                        "Send".to_string(),
+                        "'static".to_string(),
+                    ],
+                },
+            ],
+            params: vec![RustParam::Named {
+                name: "work".to_string(),
+                ty: RustType::Named("F".to_string()),
+            }],
+            ret: Some(RustType::Named("__SifrBlockingTask<T, E>".to_string())),
+            body: vec![RustStmt::Expr(RustExpr::Ident(
+                "let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let handle = tokio::task::spawn_blocking(move || match work() { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) });\n        return __SifrBlockingTask { handle: Some(handle), observed, _error: std::marker::PhantomData }".to_string(),
+            ))],
+            is_async: false,
         },
         RustItem::Fn {
             name: "__sifr_task_gather".to_string(),

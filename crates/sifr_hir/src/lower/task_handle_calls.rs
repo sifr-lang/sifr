@@ -7,7 +7,10 @@ use sifr_python_ast::ExprCall;
 use sifr_type_system::Type;
 
 pub(super) fn is_task_handle_type(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Task(_, _))
+    matches!(
+        ty.resolve_alias(),
+        Type::Task(_, _) | Type::BlockingTask(_, _)
+    )
 }
 
 pub(super) fn lower_task_handle_method_call(
@@ -16,7 +19,7 @@ pub(super) fn lower_task_handle_method_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
-    if method_name != "join" && method_name != "cancel" {
+    if method_name != "join" && method_name != "cancel" && method_name != "cancel_and_join" {
         return None;
     }
     if !call.arguments.keywords.is_empty() {
@@ -35,8 +38,9 @@ pub(super) fn lower_task_handle_method_call(
         );
         return None;
     }
-    let Type::Task(ok_ty, err_ty) = object.ty().resolve_alias() else {
-        return None;
+    let (ok_ty, err_ty) = match object.ty().resolve_alias() {
+        Type::Task(ok_ty, err_ty) | Type::BlockingTask(ok_ty, err_ty) => (ok_ty, err_ty),
+        _ => return None,
     };
     if method_name == "cancel" {
         return Some(HirExpr::MethodCall {

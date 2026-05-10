@@ -404,7 +404,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             } = value.as_ref()
             {
                 try_lower_simple_method_call_expr(object, method, args)?
-            } else if matches!(resolve_alias_type(value.ty()), Type::Task(_, _)) {
+            } else if matches!(
+                resolve_alias_type(value.ty()),
+                Type::Task(_, _) | Type::BlockingTask(_, _)
+            ) {
                 RustExpr::MethodCall {
                     receiver: Box::new(try_lower_leaf_or_name_expr(value)?),
                     method: "join".to_string(),
@@ -554,6 +557,15 @@ fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> 
                 try_lower_leaf_or_name_expr(first)?,
                 try_lower_leaf_or_name_expr(second)?,
             ],
+        });
+    }
+    if func == "__sifr_spawn_blocking_infallible" || func == "__sifr_spawn_blocking_result" {
+        let [worker] = args else {
+            return None;
+        };
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Ident(func.to_string())),
+            args: vec![try_lower_leaf_or_name_expr(worker)?],
         });
     }
     if func == "hash" {
@@ -1020,7 +1032,12 @@ fn try_lower_simple_method_call_expr(
             args: lowered_args,
         });
     }
-    if method == "join" && matches!(resolve_alias_type(object.ty()), Type::Task(_, _)) {
+    if (method == "join" || method == "cancel_and_join")
+        && matches!(
+            resolve_alias_type(object.ty()),
+            Type::Task(_, _) | Type::BlockingTask(_, _)
+        )
+    {
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
         return Some(RustExpr::MethodCall {
             receiver: Box::new(lowered_object),
@@ -1028,7 +1045,12 @@ fn try_lower_simple_method_call_expr(
             args: vec![],
         });
     }
-    if method == "cancel" && matches!(resolve_alias_type(object.ty()), Type::Task(_, _)) {
+    if method == "cancel"
+        && matches!(
+            resolve_alias_type(object.ty()),
+            Type::Task(_, _) | Type::BlockingTask(_, _)
+        )
+    {
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
         return Some(RustExpr::MethodCall {
             receiver: Box::new(lowered_object),

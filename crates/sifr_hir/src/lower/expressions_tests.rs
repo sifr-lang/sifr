@@ -1549,6 +1549,32 @@ fn test_task_handle_cancel_does_not_consume_handle_binding() {
 }
 
 #[test]
+fn test_spawn_blocking_lowers_to_blocking_task_handle() {
+    let source = "def compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    handle = task.spawn_blocking(compute_value)\n    result = await handle\n    return None\n";
+    let module = lower_source(source).expect("lowering should succeed");
+    let main = module
+        .functions
+        .iter()
+        .find(|function| function.name == "main")
+        .expect("main should exist");
+    let handle_assignment = main
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::Let { name, .. } if name == "handle"))
+        .expect("handle assignment should exist");
+    let HirStmt::Let { value, .. } = handle_assignment else {
+        panic!("expected handle assignment");
+    };
+    let HirExpr::Call { func, ty, .. } = value else {
+        panic!("expected spawn_blocking call");
+    };
+    assert_eq!(func, "__sifr_spawn_blocking_infallible");
+    assert!(
+        matches!(ty, Type::BlockingTask(ok, err) if matches!(ok.as_ref(), Type::Int) && matches!(err.as_ref(), Type::Never))
+    );
+}
+
+#[test]
 fn test_task_handle_cancel_after_await_rejects_moved_handle() {
     let source = concat!(
         "async def worker() -> int:\n    return 41\n\n",
