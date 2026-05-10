@@ -639,6 +639,7 @@ impl RustEmitter {
                     params,
                     body: lowered_body,
                     is_move: false,
+                    is_async: false,
                 },
             }
         };
@@ -923,6 +924,7 @@ impl RustEmitter {
                 params: vec![],
                 body: closure_body,
                 is_move: true,
+                is_async: false,
             }],
         };
 

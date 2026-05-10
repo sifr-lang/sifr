@@ -974,6 +974,7 @@ fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
                 RustStmt::Return(Some(predicate_expr)),
             ],
             is_move: false,
+            is_async: false,
         }],
     };
 

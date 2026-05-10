@@ -235,6 +235,7 @@ pub enum RustExpr {
         params: Vec<RustParam>,
         body: Vec<RustStmt>,
         is_move: bool,
+        is_async: bool,
     },
     StructInit {
         name: String,

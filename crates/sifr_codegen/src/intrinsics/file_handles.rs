@@ -145,6 +145,7 @@ fn wrap_handle_result(
             params: vec![],
             body,
             is_move: false,
+            is_async: false,
         }),
         args: vec![],
     }
@@ -427,6 +428,7 @@ pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
                 build_open_match(&success_expr, invalid_mode_error_expr()),
             ],
             is_move: false,
+            is_async: false,
         }),
         args: vec![],
     })))
@@ -465,6 +467,7 @@ pub(super) fn lower_open_file(args: &[RustExpr]) -> Option<RustExpr> {
                 build_open_match(&success_expr, invalid_mode_error_expr()),
             ],
             is_move: false,
+            is_async: false,
         }),
         args: vec![],
     })

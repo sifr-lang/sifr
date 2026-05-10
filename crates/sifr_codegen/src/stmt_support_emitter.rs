@@ -7286,6 +7286,152 @@ impl RustEmitter {
         }
     }
 
+    fn rust_stmts_contain_await(stmts: &[RustStmt]) -> bool {
+        stmts.iter().any(Self::rust_stmt_contains_await)
+    }
+
+    fn rust_stmt_contains_await(stmt: &RustStmt) -> bool {
+        match stmt {
+            RustStmt::Let { value, .. }
+            | RustStmt::LetPattern { value, .. }
+            | RustStmt::Expr(value)
+            | RustStmt::Return(Some(value)) => Self::rust_expr_contains_await(value),
+            RustStmt::LetElse {
+                value, else_body, ..
+            } => Self::rust_expr_contains_await(value) || Self::rust_stmts_contain_await(else_body),
+            RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
+                Self::rust_expr_contains_await(target) || Self::rust_expr_contains_await(value)
+            }
+            RustStmt::Assert { cond, msg } => {
+                Self::rust_expr_contains_await(cond)
+                    || msg.as_ref().is_some_and(Self::rust_expr_contains_await)
+            }
+            RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => false,
+            RustStmt::If {
+                cond,
+                then_body,
+                else_body,
+            } => {
+                Self::rust_expr_contains_await(cond)
+                    || Self::rust_stmts_contain_await(then_body)
+                    || else_body
+                        .as_ref()
+                        .is_some_and(|body| Self::rust_stmts_contain_await(body))
+            }
+            RustStmt::IfLet {
+                expr,
+                then_body,
+                else_body,
+                ..
+            } => {
+                Self::rust_expr_contains_await(expr)
+                    || Self::rust_stmts_contain_await(then_body)
+                    || else_body
+                        .as_ref()
+                        .is_some_and(|body| Self::rust_stmts_contain_await(body))
+            }
+            RustStmt::Match { expr, arms } => {
+                Self::rust_expr_contains_await(expr)
+                    || arms.iter().any(Self::rust_match_arm_contains_await)
+            }
+            RustStmt::For { iter, body, .. } => {
+                Self::rust_expr_contains_await(iter) || Self::rust_stmts_contain_await(body)
+            }
+            RustStmt::With { items, body } => {
+                items
+                    .iter()
+                    .any(|item| Self::rust_expr_contains_await(&item.value))
+                    || Self::rust_stmts_contain_await(body)
+            }
+            RustStmt::While { cond, body } => {
+                Self::rust_expr_contains_await(cond) || Self::rust_stmts_contain_await(body)
+            }
+            RustStmt::Loop { body } | RustStmt::Block(body) | RustStmt::LocalFn { body, .. } => {
+                Self::rust_stmts_contain_await(body)
+            }
+        }
+    }
+
+    fn rust_match_arm_contains_await(arm: &crate::RustMatchArm) -> bool {
+        arm.guard
+            .as_ref()
+            .is_some_and(Self::rust_expr_contains_await)
+            || Self::rust_stmts_contain_await(&arm.body)
+    }
+
+    fn rust_expr_contains_await(expr: &crate::RustExpr) -> bool {
+        match expr {
+            crate::RustExpr::Await(_) | crate::RustExpr::TimeoutAwait { .. } => true,
+            crate::RustExpr::Ident(value) => value.contains(".await"),
+            crate::RustExpr::Literal(_) | crate::RustExpr::Path(_) => false,
+            crate::RustExpr::MethodCall { receiver, args, .. } => {
+                Self::rust_expr_contains_await(receiver)
+                    || args.iter().any(Self::rust_expr_contains_await)
+            }
+            crate::RustExpr::FnCall { func, args } => {
+                Self::rust_expr_contains_await(func)
+                    || args.iter().any(Self::rust_expr_contains_await)
+            }
+            crate::RustExpr::MacroCall { args, .. }
+            | crate::RustExpr::FormatMacro { args, .. }
+            | crate::RustExpr::Tuple(args)
+            | crate::RustExpr::Array(args)
+            | crate::RustExpr::Vec(args) => args.iter().any(Self::rust_expr_contains_await),
+            crate::RustExpr::BinOp { left, right, .. } => {
+                Self::rust_expr_contains_await(left) || Self::rust_expr_contains_await(right)
+            }
+            crate::RustExpr::UnaryOp { operand, .. }
+            | crate::RustExpr::Deref(operand)
+            | crate::RustExpr::Clone(operand)
+            | crate::RustExpr::Cast { expr: operand, .. }
+            | crate::RustExpr::Ref { expr: operand, .. }
+            | crate::RustExpr::Try(operand)
+            | crate::RustExpr::Paren(operand) => Self::rust_expr_contains_await(operand),
+            crate::RustExpr::Field { expr, .. } => Self::rust_expr_contains_await(expr),
+            crate::RustExpr::Index { expr, index } => {
+                Self::rust_expr_contains_await(expr) || Self::rust_expr_contains_await(index)
+            }
+            crate::RustExpr::Slice { expr, start, stop } => {
+                Self::rust_expr_contains_await(expr)
+                    || start
+                        .as_ref()
+                        .is_some_and(|start| Self::rust_expr_contains_await(start))
+                    || stop
+                        .as_ref()
+                        .is_some_and(|stop| Self::rust_expr_contains_await(stop))
+            }
+            crate::RustExpr::Block { stmts, expr } => {
+                Self::rust_stmts_contain_await(stmts)
+                    || expr
+                        .as_ref()
+                        .is_some_and(|expr| Self::rust_expr_contains_await(expr))
+            }
+            crate::RustExpr::If {
+                cond,
+                then_expr,
+                else_expr,
+            } => {
+                Self::rust_expr_contains_await(cond)
+                    || Self::rust_expr_contains_await(then_expr)
+                    || else_expr
+                        .as_ref()
+                        .is_some_and(|expr| Self::rust_expr_contains_await(expr))
+            }
+            crate::RustExpr::Match { expr, arms } => {
+                Self::rust_expr_contains_await(expr)
+                    || arms.iter().any(Self::rust_match_arm_contains_await)
+            }
+            crate::RustExpr::Closure { body, .. } => Self::rust_expr_contains_await(body),
+            crate::RustExpr::ClosureBlock { body, .. } => Self::rust_stmts_contain_await(body),
+            crate::RustExpr::StructInit { fields, .. } => fields
+                .iter()
+                .any(|(_, value)| Self::rust_expr_contains_await(value)),
+            crate::RustExpr::Range { start, end } => {
+                Self::rust_expr_contains_await(start) || Self::rust_expr_contains_await(end)
+            }
+        }
+    }
+
     fn try_lower_with_stmt_for_ir(
         &mut self,
         items: &[(String, HirExpr, bool)],
@@ -8584,6 +8730,22 @@ impl RustEmitter {
             })));
         }
 
+        let closure_is_async = Self::rust_stmts_contain_await(&closure_body);
+        let try_call = RustExpr::FnCall {
+            func: Box::new(RustExpr::Paren(Box::new(RustExpr::ClosureBlock {
+                params: vec![],
+                body: closure_body,
+                is_move: false,
+                is_async: closure_is_async,
+            }))),
+            args: vec![],
+        };
+        let try_value = if closure_is_async {
+            RustExpr::Await(Box::new(try_call))
+        } else {
+            try_call
+        };
+
         let mut lowered = vec![RustStmt::Let {
             mutable: false,
             name: "__sifr_try_res".to_string(),
@@ -8591,14 +8753,7 @@ impl RustEmitter {
                 Box::new(crate::RustType::Named(ok_ty.clone())),
                 Box::new(crate::RustType::Named(err_ty.clone())),
             )),
-            value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Paren(Box::new(RustExpr::ClosureBlock {
-                    params: vec![],
-                    body: closure_body,
-                    is_move: false,
-                }))),
-                args: vec![],
-            },
+            value: try_value,
         }];
 
         if capture_returns {
