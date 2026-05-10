@@ -128,3 +128,19 @@ pub(super) fn mutable_borrow_across_await(ctx: &mut LowerCtx, name: &str, range:
         range,
     );
 }
+
+pub(super) fn non_send_task_capture(
+    ctx: &mut LowerCtx,
+    value: &str,
+    ty: &str,
+    reason: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_NON_SEND_TASK_CAPTURE,
+        format!(
+            "scope.spawn() cannot move `{value}` of type `{ty}` across a task boundary because {reason}; use an explicit synchronization primitive or keep the value in the current task"
+        ),
+        range,
+    );
+}

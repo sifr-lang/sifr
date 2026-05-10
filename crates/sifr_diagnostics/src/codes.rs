@@ -86,6 +86,7 @@ impl DiagnosticCode {
     pub const OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT: Self =
         Self::new("SIFR-OWN-0008", Severity::Error);
     pub const OWN_BORROW_ACROSS_AWAIT: Self = Self::new("SIFR-OWN-0009", Severity::Error);
+    pub const OWN_NON_SEND_TASK_CAPTURE: Self = Self::new("SIFR-OWN-0010", Severity::Error);
 
     pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
@@ -1102,6 +1103,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["binding"]
     ),
     active_entry!(
+        "SIFR-OWN-0010",
+        "OWN",
+        "Non-sendable value crosses a spawned task boundary.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/spawn_non_send_field_rejected.sifr",
+        "scope.spawn() cannot move {value} of type {type_name} across a task boundary",
+        "sifr_hir::lower::task_scope_calls",
+        [arg!("value"), arg!("type_name"), json_arg!("reason")],
+        ["value", "type_name", "reason"]
+    ),
+    active_entry!(
         "SIFR-FLOW-0001",
         "FLOW",
         "Break outside a loop.",
@@ -1690,6 +1702,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::OWN_IMMUTABLE_BYTES_ASSIGNMENT,
     DiagnosticCode::OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT,
     DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
+    DiagnosticCode::OWN_NON_SEND_TASK_CAPTURE,
     DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,

@@ -50,6 +50,19 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
         );
     }
 
+    // --- Ownership marker classes ---
+    // NonSend is a zero-runtime marker base used by task-boundary checking. Classes that inherit
+    // from it, or structurally contain fields that do, cannot cross `scope.spawn`.
+    {
+        let class_ty = Type::Class {
+            name: "NonSend".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        ctx.class_types.insert("NonSend".to_string(), class_ty);
+    }
+
     // --- Mid-level error classes (parent: Error) ---
     // IOError has an extra `kind` field for subclass dispatch; constructor accepts only message
     {

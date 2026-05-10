@@ -568,6 +568,8 @@ Borrow rules at async boundaries:
 
 Spawned tasks require owned, sendable, static task boundaries in the first model. Ordinary awaited coroutines within the same task do not introduce a spawn boundary. Local non-send task sets and scoped borrowed spawn are deferred. Scoped borrowed spawn is conceptually valid, but it requires a runtime strategy that polls child futures inside the parent scope rather than plain `'static` runtime spawn.
 
+Sendability is derived structurally for ordinary values crossing `scope.spawn`. Built-in scalar and owned collection values are sendable when their component types are sendable. User classes are sendable when all stored fields are sendable and the class does not inherit the zero-runtime `NonSend` marker. `NonSend` is a source-level type fact for local executor state and other intentionally thread-local values; it is not emitted as a runtime parent field.
+
 ## Synchronization Primitives
 
 The compiler does not silently turn local state into shared state. Shared memory and coordination are explicit.

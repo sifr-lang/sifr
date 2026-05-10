@@ -1,0 +1,17 @@
+# expect-error[col=30]: SIFR-OWN-0010
+class LocalCell(NonSend):
+    pass
+
+
+class Owner:
+    cell: LocalCell
+
+
+async def worker(own owner: Owner) -> int:
+    return 1
+
+
+async def launch(own self: Owner) -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker(self))
+    return None

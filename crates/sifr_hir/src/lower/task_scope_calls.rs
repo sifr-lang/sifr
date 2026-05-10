@@ -1,10 +1,12 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::ownership_diagnostics;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::{ExprAttribute, ExprCall};
 use sifr_type_system::Type;
+use std::collections::HashSet;
 
 pub(super) fn is_task_scope_type(ty: &Type) -> bool {
     matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
@@ -81,6 +83,16 @@ pub(super) fn lower_task_scope_spawn_call(
         );
         return None;
     }
+    if let Some(non_send) = non_send_task_boundary_argument(args) {
+        ownership_diagnostics::non_send_task_capture(
+            ctx,
+            &non_send.value,
+            &non_send.ty,
+            &non_send.reason,
+            call.arguments.args[0].range(),
+        );
+        return None;
+    }
 
     Some(HirExpr::MethodCall {
         object: Box::new(object),
@@ -116,6 +128,94 @@ fn borrowed_task_boundary_argument_in_expr(expr: &HirExpr, ctx: &LowerCtx) -> Op
             .find_map(|expr| borrowed_task_boundary_argument_in_expr(expr, ctx)),
         _ => None,
     }
+}
+
+struct NonSendTaskBoundaryArgument {
+    value: String,
+    ty: String,
+    reason: String,
+}
+
+fn non_send_task_boundary_argument(args: &[HirExpr]) -> Option<NonSendTaskBoundaryArgument> {
+    args.iter()
+        .find_map(non_send_task_boundary_argument_in_expr)
+}
+
+fn non_send_task_boundary_argument_in_expr(expr: &HirExpr) -> Option<NonSendTaskBoundaryArgument> {
+    let reason = non_send_reason(expr.ty())?;
+    Some(NonSendTaskBoundaryArgument {
+        value: task_boundary_expr_label(expr),
+        ty: expr.ty().display_name(),
+        reason,
+    })
+}
+
+fn task_boundary_expr_label(expr: &HirExpr) -> String {
+    match expr {
+        HirExpr::Name { name, .. } => name.clone(),
+        HirExpr::FieldAccess { field, .. } => format!("field `{field}`"),
+        _ => "spawn argument".to_string(),
+    }
+}
+
+fn non_send_reason(ty: &Type) -> Option<String> {
+    non_send_reason_inner(ty.resolve_alias(), &mut HashSet::new())
+}
+
+fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<String> {
+    match ty {
+        Type::Class {
+            name,
+            fields,
+            parent_class,
+            ..
+        } => {
+            if class_has_non_send_marker(name, parent_class.as_deref()) {
+                return Some(format!("`{name}` inherits the `NonSend` marker"));
+            }
+            if !visiting.insert(name.clone()) {
+                return None;
+            }
+            let found = fields.iter().find_map(|(field, field_ty)| {
+                non_send_reason_inner(field_ty.resolve_alias(), visiting)
+                    .map(|reason| format!("field `{field}` is not sendable: {reason}"))
+            });
+            visiting.remove(name);
+            found
+        }
+        Type::List(elem)
+        | Type::Set(elem)
+        | Type::Iterable(elem)
+        | Type::Iterator(elem)
+        | Type::Awaitable(elem)
+        | Type::Failure(elem)
+        | Type::TimeoutResult(elem) => non_send_reason_inner(elem.resolve_alias(), visiting),
+        Type::Dict(key, value)
+        | Type::Result(key, value)
+        | Type::Select2(key, value)
+        | Type::BlockingTask(key, value)
+        | Type::Task(key, value)
+        | Type::TaskResult(key, value)
+        | Type::Coroutine(key, value)
+        | Type::AsyncIterator(key, value)
+        | Type::AsyncGenerator(key, value) => non_send_reason_inner(key.resolve_alias(), visiting)
+            .or_else(|| non_send_reason_inner(value.resolve_alias(), visiting)),
+        Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => elems
+            .iter()
+            .find_map(|elem| non_send_reason_inner(elem.resolve_alias(), visiting)),
+        Type::Alias { body, .. } => non_send_reason_inner(body.resolve_alias(), visiting),
+        Type::Newtype { inner, .. } => non_send_reason_inner(inner.resolve_alias(), visiting),
+        Type::Callable(params, _, ret) => params
+            .iter()
+            .find_map(|param| non_send_reason_inner(param.resolve_alias(), visiting))
+            .or_else(|| non_send_reason_inner(ret.resolve_alias(), visiting)),
+        _ => None,
+    }
+}
+
+fn class_has_non_send_marker(name: &str, parent_chain: Option<&str>) -> bool {
+    name == "NonSend"
+        || parent_chain.is_some_and(|parents| parents.split('|').any(|parent| parent == "NonSend"))
 }
 
 pub(super) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {
