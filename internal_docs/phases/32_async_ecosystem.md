@@ -525,7 +525,7 @@ status: in_progress
 - PR [#1949](https://github.com/sifr-lang/sifr/pull/1949) cancelled Failure payload slice: private `__SifrTaskResult<T, E>` now materializes cancellation as `Cancelled(__SifrFailure<CancellationError>)`, preserving the design split between ordinary `E` failures and non-`Error` child-cancellation evidence.
 - PR [#1951](https://github.com/sifr-lang/sifr/pull/1951) gather secondary-evidence slice: `task.gather([...])` now drains remaining child observations after fail-fast cancellation and records later sibling failures or cancellations as `SecondaryError` evidence on the selected primary `Failure`.
 - PR [#1953](https://github.com/sifr-lang/sifr/pull/1953) race secondary-evidence slice: `task.race([...])` now drains losing child observations after cancelling losers and attaches loser failure or cancellation evidence to a failure-like winning result.
-- In progress select secondary-evidence slice: `task.select(a, b)` now awaits the losing child after cancellation, attaches loser failure or cancellation evidence to a failure-like selected result, and leaves explicit failure-like loser results visible to scope exit when the selected result is successful.
+- PR [#1955](https://github.com/sifr-lang/sifr/pull/1955) select secondary-evidence slice: `task.select(a, b)` now awaits the losing child after cancellation, attaches loser failure or cancellation evidence to a failure-like selected result, and leaves explicit failure-like loser results visible to scope exit when the selected result is successful.
 
 ---
 
