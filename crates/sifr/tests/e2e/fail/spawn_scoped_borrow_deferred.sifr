@@ -1,0 +1,15 @@
+# expect-error[col=30]: SIFR-TYPE-0002
+async def worker(items: list[int]) -> int:
+    return len(items)
+
+
+async def launch(items: list[int]) -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker(items))
+    return None
+
+
+async def main() -> None:
+    values: list[int] = [1, 2, 3]
+    result = await launch(values)
+    return None
