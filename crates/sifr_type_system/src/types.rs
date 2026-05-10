@@ -28,6 +28,8 @@ pub enum Type {
     Task(Box<Type>, Box<Type>),
     /// Result of observing a task handle.
     TaskResult(Box<Type>, Box<Type>),
+    /// Materialized task failure evidence with secondary cleanup/sibling errors.
+    Failure(Box<Type>),
     /// Ordinary error result used by task timeout wrappers.
     TimeoutResult(Box<Type>),
     /// Binary first-completion result for task.select.
@@ -563,6 +565,7 @@ impl Type {
             | Self::Coroutine(_, _)
             | Self::Task(_, _)
             | Self::TaskResult(_, _)
+            | Self::Failure(_)
             | Self::TimeoutResult(_)
             | Self::Select2(_, _)
             | Self::BlockingTask(_, _)
@@ -687,6 +690,7 @@ impl Type {
             Self::TaskResult(ok, err) => {
                 format!("TaskResult[{}, {}]", ok.display_name(), err.display_name())
             }
+            Self::Failure(err) => format!("Failure[{}]", err.display_name()),
             Self::TimeoutResult(err) => format!("TimeoutResult[{}]", err.display_name()),
             Self::Select2(first, second) => {
                 format!(
@@ -801,6 +805,7 @@ impl Type {
             Self::TaskResult(ok, err) => {
                 format!("TaskResult<{}, {}>", ok.rust_type(), err.rust_type())
             }
+            Self::Failure(err) => format!("Failure<{}>", err.rust_type()),
             Self::TimeoutResult(err) => format!("TimeoutResult<{}>", err.rust_type()),
             Self::Select2(first, second) => {
                 format!("Select2<{}, {}>", first.rust_type(), second.rust_type())
@@ -944,6 +949,7 @@ impl Type {
             Type::Coroutine(_, _) => "Coroutine".to_string(),
             Type::Task(_, _) => "Task".to_string(),
             Type::TaskResult(_, _) => "TaskResult".to_string(),
+            Type::Failure(_) => "Failure".to_string(),
             Type::TimeoutResult(_) => "TimeoutResult".to_string(),
             Type::Select2(_, _) => "Select2".to_string(),
             Type::BlockingTask(_, _) => "BlockingTask".to_string(),
@@ -1313,6 +1319,7 @@ impl Type {
                 | Type::BlockingTask(ok, err)
                 | Type::AsyncIterator(ok, err)
                 | Type::AsyncGenerator(ok, err) => contains_any(ok) || contains_any(err),
+                Type::Failure(err) => contains_any(err),
                 Type::TimeoutResult(err) => contains_any(err),
                 Type::Awaitable(result) => contains_any(result),
                 Type::Alias { body, .. } => contains_any(body),
@@ -1491,6 +1498,7 @@ impl Type {
             (Self::TimeoutResult(err_a), Self::TimeoutResult(err_b)) => {
                 err_a.is_assignable_to(err_b)
             }
+            (Self::Failure(err_a), Self::Failure(err_b)) => err_a.is_assignable_to(err_b),
             (Self::Awaitable(a), Self::Awaitable(b)) => a.is_assignable_to(b),
             (Self::Coroutine(ok, err), Self::Awaitable(result))
                 if matches!(err.resolve_alias(), Type::Never) =>

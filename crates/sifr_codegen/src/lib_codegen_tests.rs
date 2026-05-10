@@ -3923,6 +3923,28 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
 }
 
 #[test]
+fn test_failure_annotation_lowers_to_private_failure_type() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module("def observe(failure: Failure[ValueError]) -> None:\n    return None\n")
+                .expect("parse failed")
+                .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("struct __SifrFailure<E>"));
+    assert!(result.rust_source.contains("primary: E"));
+    assert!(result
+        .rust_source
+        .contains("secondary: Vec<SecondaryError>"));
+    assert!(result
+        .rust_source
+        .contains("fn observe(failure: &__SifrFailure<ValueError>)"));
+}
+
+#[test]
 fn test_task_timeout_context_manager_wraps_awaits() {
     let result = generate_rust_with_metadata(
         &lower_module(

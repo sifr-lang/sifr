@@ -38,6 +38,7 @@ pub(super) fn is_error_class(class_def: &StmtClassDef) -> bool {
 pub(super) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty {
         Type::Class { name, .. } => ctx.error_types.contains(name),
+        Type::TimeoutResult(inner) => is_valid_error_type(inner, ctx),
         _ => false,
     }
 }
@@ -54,6 +55,8 @@ pub(super) fn format_type_name(ty: &Type) -> String {
         Type::Class { name, .. } => name.clone(),
         Type::List(inner) => format!("list[{}]", format_type_name(inner)),
         Type::Dict(k, v) => format!("dict[{}, {}]", format_type_name(k), format_type_name(v)),
+        Type::Failure(inner) => format!("Failure[{}]", format_type_name(inner)),
+        Type::TimeoutResult(inner) => format!("TimeoutResult[{}]", format_type_name(inner)),
         _ => format!("{ty:?}"),
     }
 }

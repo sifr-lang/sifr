@@ -35,6 +35,10 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 task_error_type_to_rust_type(err),
             ],
         },
+        Type::Failure(err) => RustType::Generic {
+            base: "__SifrFailure".to_string(),
+            params: vec![task_error_type_to_rust_type(err)],
+        },
         Type::TimeoutResult(err) => RustType::Generic {
             base: "__SifrTimeoutResult".to_string(),
             params: vec![task_error_type_to_rust_type(err)],
@@ -184,6 +188,44 @@ pub fn build_error_into_error_impl(source_name: &str) -> RustItem {
             is_async: false,
         }],
     }
+}
+
+pub fn build_failure_type_items() -> Vec<RustItem> {
+    vec![RustItem::Struct {
+        name: "__SifrFailure<E>".to_string(),
+        visibility: Visibility::Private,
+        derives: vec!["Debug".to_string()],
+        fields: vec![
+            ("primary".to_string(), RustType::Named("E".to_string())),
+            (
+                "secondary".to_string(),
+                RustType::Vec(Box::new(RustType::Named("SecondaryError".to_string()))),
+            ),
+        ],
+    }]
+}
+
+pub fn build_timeout_result_type_items() -> Vec<RustItem> {
+    vec![RustItem::Enum {
+        name: "__SifrTimeoutResult<E>".to_string(),
+        visibility: Visibility::Private,
+        derives: vec!["Debug".to_string()],
+        repr: None,
+        variants: vec![
+            crate::RustEnumVariant {
+                name: "Inner".to_string(),
+                tuple_fields: vec![RustType::Named("E".to_string())],
+                fields: vec![],
+                value: None,
+            },
+            crate::RustEnumVariant {
+                name: "Timeout".to_string(),
+                tuple_fields: vec![],
+                fields: vec![],
+                value: None,
+            },
+        ],
+    }]
 }
 
 pub fn build_task_scope_items() -> Vec<RustItem> {

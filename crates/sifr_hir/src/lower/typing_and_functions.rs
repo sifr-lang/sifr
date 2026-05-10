@@ -605,8 +605,28 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     Type::Awaitable(Box::new(result_ty))
                 }
                 "TimeoutResult" => {
+                    if matches!(sub.slice.as_ref(), Expr::Tuple(_)) {
+                        invalid_type_annotation(
+                            ctx,
+                            "TimeoutResult type annotation requires exactly 1 type parameter",
+                            sub.slice.range(),
+                        );
+                        return Type::Any;
+                    }
                     let err_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::TimeoutResult(Box::new(err_ty))
+                }
+                "Failure" => {
+                    if matches!(sub.slice.as_ref(), Expr::Tuple(_)) {
+                        invalid_type_annotation(
+                            ctx,
+                            "Failure type annotation requires exactly 1 type parameter",
+                            sub.slice.range(),
+                        );
+                        return Type::Any;
+                    }
+                    let err_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::Failure(Box::new(err_ty))
                 }
                 "Coroutine" | "Task" | "TaskResult" | "Select2" | "BlockingTask"
                 | "AsyncIterator" | "AsyncGenerator" => {

@@ -314,7 +314,6 @@ impl LowerCtx {
         self.last_error_taint = Some(taint);
         taint
     }
-
     fn error_count(&self) -> usize {
         self.errors.len()
     }
@@ -425,6 +424,7 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),
         ),
+        Type::Failure(err) => Type::Failure(Box::new(substitute_type_vars(err, bindings))),
         Type::Select2(first, second) => Type::Select2(
             Box::new(substitute_type_vars(first, bindings)),
             Box::new(substitute_type_vars(second, bindings)),

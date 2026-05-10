@@ -112,3 +112,40 @@ def broken() -> Result[int, str]:
         "expected SIFR-RESULT-0002 on invalid error type range, got {errors:?}"
     );
 }
+
+#[test]
+fn failure_type_is_not_valid_result_error_channel() {
+    let source = "\
+def broken() -> Result[None, Failure[ValueError]]:
+    return None
+";
+    let result = lower_source(source);
+    let errors = result.expect_err("Failure should not be a Result error type");
+
+    assert!(
+        errors.iter().any(
+            |error| error.code == Some(DiagnosticCode::RESULT_INVALID_ERROR_TYPE)
+                && error.primary_range
+                    == Some(range_for_after(
+                        source,
+                        "Result[None, ",
+                        "Failure[ValueError]"
+                    ))
+        ),
+        "expected SIFR-RESULT-0002 on Failure error channel range, got {errors:?}"
+    );
+}
+
+#[test]
+fn timeout_result_type_is_valid_result_error_channel_when_inner_error_is_valid() {
+    let source = "\
+def ok() -> Result[None, TimeoutResult[ValueError]]:
+    return None
+";
+    let result = lower_source(source);
+
+    assert!(
+        result.is_ok(),
+        "TimeoutResult[E] should be valid when E is a valid Error: {result:?}"
+    );
+}

@@ -407,6 +407,7 @@ impl RustEmitter {
             | Type::Coroutine(_, _)
             | Type::Task(_, _)
             | Type::TaskResult(_, _)
+            | Type::Failure(_)
             | Type::TimeoutResult(_)
             | Type::Select2(_, _)
             | Type::BlockingTask(_, _)

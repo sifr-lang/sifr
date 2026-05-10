@@ -1,0 +1,10 @@
+def observe_failure(failure: Failure[ValueError]) -> None:
+    return None
+
+
+def observe_timeout_failure(failure: Failure[TimeoutResult[ValueError]]) -> None:
+    return None
+
+
+def main() -> None:
+    return None

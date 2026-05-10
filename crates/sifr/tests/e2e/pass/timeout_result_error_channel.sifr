@@ -1,0 +1,6 @@
+def timeout_result_surface() -> Result[None, TimeoutResult[ValueError]]:
+    return None
+
+
+def main() -> None:
+    return None
