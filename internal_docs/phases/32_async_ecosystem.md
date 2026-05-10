@@ -591,7 +591,7 @@ status: completed
 
 ### milestone_async_5: Synchronization Primitives and Channels
 
-status: in_progress
+status: completed
 
 **Goal:** Provide explicit primitives for sharing and coordination when concurrency requires it.
 
@@ -697,6 +697,7 @@ status: in_progress
 - PR [#2003](https://github.com/sifr-lang/sifr/pull/2003) channel pending receive cancellation validation slice: `channel_cancel_pending_receive.sifr` validates that timing out a pending same-task receive leaves the receiver usable and does not poison later channel delivery.
 - PR [#2005](https://github.com/sifr-lang/sifr/pull/2005) channel cancelled receive no-loss validation slice: `channel_cancel_receive_no_loss.sifr` validates that a cancelled pending receive does not consume or reorder later messages.
 - PR [#2007](https://github.com/sifr-lang/sifr/pull/2007) milestone_async_5 sync/channel demo slice: `demos/m32_sync_channel_demo.sifr` showcases shared-state, guard, semaphore, notify, channel, backpressure, close/drain, and cancellation surfaces together.
+- Current slice: close milestone_async_5 after validating that its listed positive fixtures, negative fixtures, channel semantics, guard diagnostics, and demo are present.
 
 ---
 
