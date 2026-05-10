@@ -1,0 +1,34 @@
+async def readings() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 2
+    yield 3
+    yield 4
+    yield 5
+
+
+async def main() -> Result[None, GeneratorCloseError]:
+    shifted: list[int] = [value + 10 async for value in readings() if value > 2]
+    selected: set[int] = {value async for value in readings() if value > 3}
+    labeled: dict[int, int] = {value: value + 100 async for value in readings() if value > 3}
+
+    total: int = 0
+    async for value in readings():
+        total = total + value
+
+    agen = readings()
+    first: Result[Option[int], GeneratorCloseError] = await anext(agen)
+    closed: Result[None, GeneratorCloseError] = await agen.aclose()
+    after: Result[Option[int], GeneratorCloseError] = await anext(agen)
+
+    assert str(shifted) == "[13, 14, 15]"
+    assert len(selected) == 2
+    assert 4 in selected
+    assert 5 in selected
+    assert labeled[4] == 104
+    assert labeled[5] == 105
+    assert total == 14
+    assert str(first) == "Ok(Some(2))"
+    assert str(closed) == "Ok(())"
+    assert str(after) == "Ok(None)"
+
+    print("async generator/comprehension demo ok")
+    return None
