@@ -531,7 +531,7 @@ status: in_progress
 
 ### milestone_async_4: Ownership, Borrowing, and Send/Sync Task Boundaries
 
-status: proposed
+status: in_progress
 
 **Goal:** Make task boundaries enforce Sifr ownership and Rust-like sendability with Sifr-native diagnostics.
 
@@ -578,6 +578,10 @@ status: proposed
 **Demo:**
 
 - `demos/m32_ownership_concurrency_demo.sifr`
+
+**Implementation progress:**
+
+- In progress owned spawn-argument boundary slice: `scope.spawn(coro(...))` now accepts direct coroutine calls with simple owned arguments, while borrowed parameters crossing the task boundary are rejected before Rust codegen.
 
 ---
 

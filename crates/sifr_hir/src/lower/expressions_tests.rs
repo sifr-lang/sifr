@@ -1568,6 +1568,29 @@ fn test_task_handle_cancel_after_await_rejects_moved_handle() {
 }
 
 #[test]
+fn test_scope_spawn_accepts_owned_coroutine_arguments() {
+    let source = "async def worker(value: int) -> int:\n    return value\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        value: int = 41\n        handle = scope.spawn(worker(value))\n        result = await handle\n    return None\n";
+    let result = lower_source(source);
+    assert!(
+        result.is_ok(),
+        "owned sendable spawn arguments should lower: {result:?}"
+    );
+}
+
+#[test]
+fn test_scope_spawn_rejects_borrowed_parameter_argument() {
+    let source = "async def worker(own items: list[int]) -> int:\n    return len(items)\n\nasync def main(items: list[int]) -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(items))\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("scope.spawn() cannot move borrowed parameter 'items' across a task boundary")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+    }));
+}
+
+#[test]
 fn test_task_timeout_consumes_handle_binding() {
     let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n        second = await handle\n    return None\n";
     let result = lower_source(source);

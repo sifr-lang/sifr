@@ -1001,12 +1001,14 @@ fn try_lower_simple_method_call_expr(
                     ..
                 } = arg
                 {
-                    if call_args.is_empty() {
-                        return Some(RustExpr::FnCall {
-                            func: Box::new(RustExpr::Ident(func.clone())),
-                            args: vec![],
-                        });
-                    }
+                    let lowered_call_args = call_args
+                        .iter()
+                        .map(try_lower_leaf_or_name_expr)
+                        .collect::<Option<Vec<_>>>()?;
+                    return Some(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Ident(func.clone())),
+                        args: lowered_call_args,
+                    });
                 }
                 try_lower_leaf_expr(arg)
             })
