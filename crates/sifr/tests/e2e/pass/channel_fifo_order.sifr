@@ -1,0 +1,10 @@
+from sifr.sync import Channel, ChannelReceiver, ClosedError
+
+
+async def main() -> Result[None, ClosedError]:
+    receiver: ChannelReceiver[int] = ChannelReceiver(Channel([1, 2, 3], -1))
+    first: Result[int, ClosedError] = await receiver.receive()
+    second: Result[int, ClosedError] = await receiver.receive()
+    assert str(first) == "Ok(1)"
+    assert str(second) == "Ok(2)"
+    return None
