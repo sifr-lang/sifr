@@ -585,7 +585,7 @@ status: in_progress
 - PR [#1959](https://github.com/sifr-lang/sifr/pull/1959) spawn move-boundary validation slice: owned move arguments can cross into spawned coroutine calls, and the original binding is consumed so later mutation is rejected before Rust codegen.
 - PR [#1961](https://github.com/sifr-lang/sifr/pull/1961) borrow-across-await validation slice: async functions reject live mutable-borrow parameters at await points, while completed same-task mutable borrows can be followed by ordinary awaits.
 - PR [#1963](https://github.com/sifr-lang/sifr/pull/1963) scoped-borrow spawn validation slice: the deferred v1 scoped-borrow model is covered by an explicit fail fixture that rejects borrowed parameters crossing `scope.spawn`.
-- In progress non-send task-boundary slice: `scope.spawn` derives structural sendability for direct coroutine arguments and rejects classes containing the zero-runtime `NonSend` marker with `SIFR-OWN-0010`.
+- PR [#1965](https://github.com/sifr-lang/sifr/pull/1965) non-send task-boundary slice: `scope.spawn` derives structural sendability for direct coroutine arguments and rejects classes containing the zero-runtime `NonSend` marker with `SIFR-OWN-0010`.
 
 ---
 
