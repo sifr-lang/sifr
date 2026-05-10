@@ -512,6 +512,7 @@ status: in_progress
 - In progress unobserved scope-failure runtime validation slice: added runtime-failure coverage for unobserved fallible children in both `task.scope()` and `task.TaskGroup()` surfacing `ScopeFailure` at scope exit.
 - In progress TaskGroup fail-fast exit slice: `task.TaskGroup()` now constructs a fail-fast private scope runtime that cancels remaining children when a group child failure is observed during scope exit, with marker-file validation for sibling cancellation.
 - In progress structured-concurrency validation/demo slice: added milestone negative coverage for consumed cancelled task handles and TaskGroup scope-failure error typing, plus `demos/m32_structured_concurrency_demo.sifr`.
+- In progress gather fail-fast cancellation slice: `task.gather([...])` now observes all input handles, preserves ordered success values, and cancels unfinished siblings after the first failure-like child result.
 
 ---
 

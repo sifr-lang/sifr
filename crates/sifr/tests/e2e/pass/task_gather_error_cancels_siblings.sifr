@@ -1,0 +1,35 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_task_gather_error_cancels_siblings_" + str(getpid()) + ".txt"
+
+
+async def fail_fast() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("gather child failed")
+
+
+async def slow_writes_marker() -> Result[int, ValueError]:
+    await task.sleep(0.20)
+    try:
+        _written: None = write_text(marker_path(), "not cancelled")
+    except IOError as e:
+        _message: str = str(e.message)
+    return 2
+
+
+async def main() -> Result[None, ScopeFailure]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    async with task.scope() as scope:
+        result = await task.gather([scope.spawn(fail_fast()), scope.spawn(slow_writes_marker())])
+
+    assert not exists(path)
+    return None
