@@ -3837,6 +3837,10 @@ fn test_task_race_lowers_to_private_race_helper() {
 
     assert!(result.rust_source.contains("async fn __sifr_task_race"));
     assert!(result.rust_source.contains("__sifr_task_race(vec!["));
+    assert!(result.rust_source.contains("let Some(mut first)"));
+    assert!(result
+        .rust_source
+        .contains("race loser task failed\".to_string()"));
     assert!(result
         .rust_source
         .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
@@ -3860,6 +3864,9 @@ fn test_task_race_fallible_tasks_keeps_error_parameter_unwrapped() {
     assert!(result.rust_source.contains("async fn __sifr_task_race"));
     assert!(result.rust_source.contains("__SifrTaskResult<T, E>"));
     assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
+    assert!(result
+        .rust_source
+        .contains("race loser task was cancelled\".to_string()"));
     assert!(result
         .rust_source
         .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));

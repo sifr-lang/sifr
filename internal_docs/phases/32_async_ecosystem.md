@@ -524,6 +524,7 @@ status: in_progress
 - PR [#1947](https://github.com/sifr-lang/sifr/pull/1947) task-result Failure payload slice: private `__SifrTaskResult<T, E>` now carries ordinary child failures as `__SifrFailure<E>` evidence, fallible task spawns wrap primary child errors, and timeout maps child failure evidence into `TimeoutResult.Inner(E)` while preserving secondary evidence storage.
 - PR [#1949](https://github.com/sifr-lang/sifr/pull/1949) cancelled Failure payload slice: private `__SifrTaskResult<T, E>` now materializes cancellation as `Cancelled(__SifrFailure<CancellationError>)`, preserving the design split between ordinary `E` failures and non-`Error` child-cancellation evidence.
 - PR [#1951](https://github.com/sifr-lang/sifr/pull/1951) gather secondary-evidence slice: `task.gather([...])` now drains remaining child observations after fail-fast cancellation and records later sibling failures or cancellations as `SecondaryError` evidence on the selected primary `Failure`.
+- In progress race secondary-evidence slice: `task.race([...])` now drains losing child observations after cancelling losers and attaches loser failure or cancellation evidence to a failure-like winning result.
 
 ---
 
