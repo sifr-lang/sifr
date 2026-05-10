@@ -112,8 +112,10 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Named(named) => lower_named_expr(named, ctx),
         Expr::Lambda(lambda) => lower_lambda(lambda, ctx),
         Expr::ListComp(comp) => lower_list_comp(comp, ctx),
-        Expr::SetComp(comp) => lower_set_comp(comp, ctx),
-        Expr::DictComp(comp) => lower_dict_comp(comp, ctx),
+        Expr::SetComp(comp) => super::async_comprehensions::lower_set_comp(comp, ctx)
+            .unwrap_or_else(|| lower_set_comp(comp, ctx)),
+        Expr::DictComp(comp) => super::async_comprehensions::lower_dict_comp(comp, ctx)
+            .unwrap_or_else(|| lower_dict_comp(comp, ctx)),
         Expr::Generator(gen) => lower_generator_expr(gen, ctx),
         Expr::YieldFrom(yield_from) if ctx.current_function_is_async_generator => {
             expression_diagnostics::unsupported_form(
