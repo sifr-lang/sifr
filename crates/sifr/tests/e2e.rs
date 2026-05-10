@@ -1297,42 +1297,6 @@ fn compile_time_sifr_runtime_path() -> PathBuf {
         .join("sifr_runtime")
 }
 
-fn make_entry_function_public(source: &str, entry_fn: &str) -> String {
-    let marker = format!("fn {}(", entry_fn);
-    let mut output = String::new();
-    let mut changed = false;
-
-    for line in source.lines() {
-        let mut indent_len = 0;
-        for (index, ch) in line.char_indices() {
-            if ch == ' ' || ch == '\t' {
-                indent_len = index + ch.len_utf8();
-                continue;
-            }
-            break;
-        }
-
-        let indent = &line[..indent_len];
-        let body = &line[indent_len..];
-        if body.starts_with(&marker) {
-            output.push_str(indent);
-            output.push_str("pub ");
-            output.push_str(body);
-            output.push('\n');
-            changed = true;
-            continue;
-        }
-        output.push_str(line);
-        output.push('\n');
-    }
-
-    if changed {
-        output
-    } else {
-        source.to_string()
-    }
-}
-
 fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, String> {
     let mut cases = group_cases;
     cases.sort_by(|left, right| left.fixture.name.cmp(&right.fixture.name));
@@ -1352,12 +1316,19 @@ fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, Str
     for (ordinal, case) in cases.iter().enumerate() {
         let module_name = case.fixture.module_name(ordinal);
         let entry_fn = fixture_entry_name(&module_name);
+        let wrapper_fn = format!("{entry_fn}_batch_run");
         let rust_source = build_rust_source_from_module(&case.rust_source, &entry_fn)
             .map_err(|err| format!("fixture {}: {}", case.fixture.name, err))?;
 
         let _ = writeln!(generated_modules, "pub mod {module_name} {{");
-        generated_modules.push_str(&make_entry_function_public(&rust_source, &entry_fn));
+        generated_modules.push_str(&rust_source);
         generated_modules.push('\n');
+        let _ = writeln!(generated_modules, "pub fn {wrapper_fn}() {{");
+        let _ = writeln!(
+            generated_modules,
+            "    super::__SifrBatchTermination::__sifr_finish({entry_fn}());"
+        );
+        generated_modules.push_str("}\n");
         generated_modules.push_str("}\n\n");
 
         let _ = write!(
@@ -1367,7 +1338,7 @@ fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, Str
         );
         case_signature.push('|');
 
-        case_modules.push((case.fixture.name.clone(), module_name, entry_fn));
+        case_modules.push((case.fixture.name.clone(), module_name, wrapper_fn));
     }
 
     let _union_stdlib = cases
@@ -1380,6 +1351,21 @@ fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, Str
         .collect::<BTreeSet<_>>();
 
     let mut generated_main = String::new();
+    generated_main.push_str("trait __SifrBatchTermination {\n");
+    generated_main.push_str("    fn __sifr_finish(self);\n");
+    generated_main.push_str("}\n\n");
+    generated_main.push_str("impl __SifrBatchTermination for () {\n");
+    generated_main.push_str("    fn __sifr_finish(self) {}\n");
+    generated_main.push_str("}\n\n");
+    generated_main
+        .push_str("impl<E: std::fmt::Debug> __SifrBatchTermination for Result<(), E> {\n");
+    generated_main.push_str("    fn __sifr_finish(self) {\n");
+    generated_main.push_str("        if let Err(error) = self {\n");
+    generated_main.push_str("            eprintln!(\"{:?}\", error);\n");
+    generated_main.push_str("            std::process::exit(1);\n");
+    generated_main.push_str("        }\n");
+    generated_main.push_str("    }\n");
+    generated_main.push_str("}\n\n");
     generated_main.push_str("fn usage() -> ! {\n");
     generated_main.push_str("    eprintln!(\"usage: --case <fixture_name>\");\n");
     generated_main.push_str("    std::process::exit(2);\n");
@@ -1397,7 +1383,7 @@ fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, Str
     for module in &case_modules {
         let _ = writeln!(
             generated_main,
-            "        \"{}\" => {}::{}(),",
+            "        \"{}\" => __SifrBatchTermination::__sifr_finish({}::{}()),",
             module.0, module.1, module.2
         );
     }
@@ -3641,6 +3627,41 @@ fn test_dependency_fingerprint_and_cache_key_determinism() {
     let key_b = cache_key_for_group(&group, &toolchain, "different");
     assert_ne!(key_a, key_b);
     assert!(group.id.len() > 0);
+}
+
+#[test]
+fn test_batch_group_dispatch_uses_entry_termination_trait() {
+    let case = FixtureCase {
+        name: "async_result_fixture".to_string(),
+        path: PathBuf::from("tests/e2e/pass/async_result_fixture.sifr"),
+        source: "async def main() -> Result[None, ValueError]:\n    return None".to_string(),
+        source_hash: "async-result".to_string(),
+        expected_stdout: None,
+        _expected_stderr: Vec::new(),
+    };
+    let compiled = CompiledCase {
+        fixture: case,
+        rust_source: "#[tokio::main]\nasync fn main() -> Result<(), ValueError> {\n    Ok(())\n}\n"
+            .to_string(),
+        stdlib_modules: BTreeSet::new(),
+        required_crates: BTreeSet::new(),
+        _compile_duration_ms: 0,
+    };
+    let group = build_group_sources(vec![compiled]).expect("batch group");
+
+    assert!(group
+        .generated_main
+        .contains("impl<E: std::fmt::Debug> __SifrBatchTermination for Result<(), E>"));
+    assert!(group
+        .generated_main
+        .contains("=> __SifrBatchTermination::__sifr_finish("));
+    assert!(group
+        .generated_main
+        .contains("pub fn sifr_case_async_result_fixture_0_"));
+    assert!(group
+        .generated_main
+        .contains("super::__SifrBatchTermination::__sifr_finish("));
+    assert!(!group.generated_main.contains("pub async fn"));
 }
 
 #[test]

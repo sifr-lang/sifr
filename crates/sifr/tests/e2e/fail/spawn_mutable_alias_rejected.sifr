@@ -1,0 +1,10 @@
+async def worker(own items: list[int]) -> int:
+    return len(items)
+
+
+async def main() -> Result[None, ScopeFailure]:
+    items: list[int] = [1]
+    async with task.scope() as scope:
+        handle = scope.spawn(worker(items))
+        items.append(2)
+    return None
