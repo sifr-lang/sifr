@@ -1,0 +1,28 @@
+from sifr.concurrent import ThreadPoolExecutor
+
+
+def compute_value() -> int:
+    return 41
+
+
+def compute_other() -> int:
+    return 7
+
+
+async def main() -> Result[None, ScopeFailure]:
+    joined_handle = task.spawn_blocking(compute_value)
+    joined_result = await joined_handle.join()
+
+    cancelled_handle = task.spawn_blocking(compute_value)
+    cancelled_handle.cancel()
+    cancelled_result = await cancelled_handle
+
+    cancel_join_handle = task.spawn_blocking(compute_other)
+    cancel_join_result = await cancel_join_handle.cancel_and_join()
+
+    executor: ThreadPoolExecutor = ThreadPoolExecutor()
+    executor_handle = executor.submit(compute_value)
+    executor_handle.cancel()
+    executor_result = await executor_handle.cancel_and_join()
+
+    return None
