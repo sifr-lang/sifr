@@ -367,6 +367,10 @@ fn first_await_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
     stmts.iter().find_map(first_await_range_in_stmt)
 }
 
+fn first_yield_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
+    stmts.iter().find_map(first_yield_range_in_stmt)
+}
+
 pub(super) fn function_body_contains_yield(stmts: &[Stmt]) -> bool {
     let mut visitor = sifr_python_ast::helpers::ReturnStatementVisitor::default();
     for stmt in stmts {
@@ -423,6 +427,54 @@ fn first_await_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
     }
 }
 
+fn first_yield_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
+    match stmt {
+        Stmt::Expr(expr_stmt) => first_yield_range_in_expr(expr_stmt.value.as_ref()),
+        Stmt::Return(ret) => ret
+            .value
+            .as_ref()
+            .and_then(|expr| first_yield_range_in_expr(expr.as_ref())),
+        Stmt::AnnAssign(ann) => ann
+            .value
+            .as_ref()
+            .and_then(|expr| first_yield_range_in_expr(expr.as_ref())),
+        Stmt::Assign(assign) => first_yield_range_in_expr(assign.value.as_ref()),
+        Stmt::AugAssign(aug) => first_yield_range_in_expr(aug.value.as_ref()),
+        Stmt::If(if_stmt) => first_yield_range_in_expr(if_stmt.test.as_ref())
+            .or_else(|| first_yield_range_in_stmts(&if_stmt.body))
+            .or_else(|| {
+                if_stmt.elif_else_clauses.iter().find_map(|clause| {
+                    clause
+                        .test
+                        .as_ref()
+                        .and_then(first_yield_range_in_expr)
+                        .or_else(|| first_yield_range_in_stmts(&clause.body))
+                })
+            }),
+        Stmt::While(while_stmt) => first_yield_range_in_expr(while_stmt.test.as_ref())
+            .or_else(|| first_yield_range_in_stmts(&while_stmt.body))
+            .or_else(|| first_yield_range_in_stmts(&while_stmt.orelse)),
+        Stmt::For(for_stmt) => first_yield_range_in_expr(for_stmt.iter.as_ref())
+            .or_else(|| first_yield_range_in_stmts(&for_stmt.body))
+            .or_else(|| first_yield_range_in_stmts(&for_stmt.orelse)),
+        Stmt::With(with_stmt) => with_stmt
+            .items
+            .iter()
+            .find_map(|item| first_yield_range_in_expr(&item.context_expr))
+            .or_else(|| first_yield_range_in_stmts(&with_stmt.body)),
+        Stmt::Try(try_stmt) => first_yield_range_in_stmts(&try_stmt.body)
+            .or_else(|| {
+                try_stmt.handlers.iter().find_map(|handler| {
+                    let sifr_python_ast::ExceptHandler::ExceptHandler(handler) = handler;
+                    first_yield_range_in_stmts(&handler.body)
+                })
+            })
+            .or_else(|| first_yield_range_in_stmts(&try_stmt.orelse))
+            .or_else(|| first_yield_range_in_stmts(&try_stmt.finalbody)),
+        _ => None,
+    }
+}
+
 fn first_await_range_in_expr(expr: &Expr) -> Option<TextRange> {
     match expr {
         Expr::Await(await_expr) => Some(await_expr.range()),
@@ -462,6 +514,51 @@ fn first_await_range_in_expr(expr: &Expr) -> Option<TextRange> {
                 .as_ref()
                 .and_then(first_await_range_in_expr)
                 .or_else(|| first_await_range_in_expr(&item.value))
+        }),
+        _ => None,
+    }
+}
+
+fn first_yield_range_in_expr(expr: &Expr) -> Option<TextRange> {
+    match expr {
+        Expr::Yield(yield_expr) => Some(yield_expr.range()),
+        Expr::YieldFrom(yield_from) => Some(yield_from.range()),
+        Expr::Call(call) => first_yield_range_in_expr(call.func.as_ref()).or_else(|| {
+            call.arguments
+                .args
+                .iter()
+                .find_map(first_yield_range_in_expr)
+                .or_else(|| {
+                    call.arguments
+                        .keywords
+                        .iter()
+                        .find_map(|keyword| first_yield_range_in_expr(&keyword.value))
+                })
+        }),
+        Expr::Attribute(attr) => first_yield_range_in_expr(attr.value.as_ref()),
+        Expr::Subscript(sub) => first_yield_range_in_expr(sub.value.as_ref())
+            .or_else(|| first_yield_range_in_expr(sub.slice.as_ref())),
+        Expr::BinOp(bin) => first_yield_range_in_expr(bin.left.as_ref())
+            .or_else(|| first_yield_range_in_expr(bin.right.as_ref())),
+        Expr::BoolOp(bool_op) => bool_op.values.iter().find_map(first_yield_range_in_expr),
+        Expr::UnaryOp(unary) => first_yield_range_in_expr(unary.operand.as_ref()),
+        Expr::Compare(compare) => first_yield_range_in_expr(compare.left.as_ref()).or_else(|| {
+            compare
+                .comparators
+                .iter()
+                .find_map(first_yield_range_in_expr)
+        }),
+        Expr::If(if_expr) => first_yield_range_in_expr(if_expr.test.as_ref())
+            .or_else(|| first_yield_range_in_expr(if_expr.body.as_ref()))
+            .or_else(|| first_yield_range_in_expr(if_expr.orelse.as_ref())),
+        Expr::List(list) => list.elts.iter().find_map(first_yield_range_in_expr),
+        Expr::Tuple(tuple) => tuple.elts.iter().find_map(first_yield_range_in_expr),
+        Expr::Set(set) => set.elts.iter().find_map(first_yield_range_in_expr),
+        Expr::Dict(dict) => dict.items.iter().find_map(|item| {
+            item.key
+                .as_ref()
+                .and_then(first_yield_range_in_expr)
+                .or_else(|| first_yield_range_in_expr(&item.value))
         }),
         _ => None,
     }
@@ -1125,6 +1222,20 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
     let is_async_generator = func.is_async && function_body_contains_yield(&func.body);
     if func.is_async {
         if is_async_generator {
+            if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
+                for param in &params {
+                    if param.convention.is_mut_borrow()
+                        && param.ty.ownership() == OwnershipKind::Move
+                        && !matches!(param.ty, Type::TypeVar(_))
+                    {
+                        ownership_diagnostics::mutable_borrow_across_yield(
+                            ctx,
+                            &param.name,
+                            yield_range,
+                        );
+                    }
+                }
+            }
             if let Some(await_range) = first_await_range_in_stmts(&func.body) {
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISMATCH,

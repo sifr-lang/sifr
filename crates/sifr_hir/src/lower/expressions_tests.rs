@@ -1756,6 +1756,20 @@ fn test_mutable_borrow_parameter_across_await_rejected() {
 }
 
 #[test]
+fn test_mutable_borrow_parameter_across_async_generator_yield_rejected() {
+    let source = "async def stream(mut items: list[int]) -> AsyncGenerator[int, GeneratorCloseError]:\n    yield len(items)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("mutable borrow `items` cannot cross async generator yield")
+            && e.code == Some(DiagnosticCode::OWN_BORROW_ACROSS_AWAIT)
+            && e.primary_range == Some(range_for(source, "yield len(items)"))
+    }));
+}
+
+#[test]
 fn test_await_after_completed_mutable_borrow_lowers() {
     let source = "def mutate_local(mut items: list[int]) -> None:\n    items.append(2)\n    return None\n\nasync def main() -> None:\n    items: list[int] = [1]\n    mutate_local(items)\n    await task.sleep(0.0)\n    return None\n";
     let result = lower_source(source);
