@@ -70,6 +70,22 @@ fn async_iterator_parts(ty: &Type) -> Option<(Type, Type)> {
     }
 }
 
+fn async_closable_error_type(ty: &Type) -> Option<Type> {
+    let (Type::Class { methods, .. } | Type::Protocol { methods, .. }) = ty.resolve_alias() else {
+        return None;
+    };
+    let aclose_ft = method_signature(methods, "aclose")?;
+    if !aclose_ft.params.is_empty() {
+        return None;
+    }
+    let (close_ok_ty, close_error_ty) = async_result_parts(&aclose_ft.return_type)?;
+    if matches!(close_ok_ty.resolve_alias(), Type::None) {
+        Some(close_error_ty)
+    } else {
+        None
+    }
+}
+
 fn return_type_accepts_error(return_type: &Type, error_ty: &Type) -> bool {
     if matches!(error_ty.resolve_alias(), Type::Never) {
         return true;
@@ -78,6 +94,48 @@ fn return_type_accepts_error(return_type: &Type, error_ty: &Type) -> bool {
         return false;
     };
     error_ty.is_assignable_to(err)
+}
+
+fn stmts_contain_break_for_current_loop(stmts: &[HirStmt]) -> bool {
+    stmts.iter().any(stmt_contains_break_for_current_loop)
+}
+
+fn stmt_contains_break_for_current_loop(stmt: &HirStmt) -> bool {
+    match stmt {
+        HirStmt::Break => true,
+        HirStmt::If {
+            then_body,
+            elif_clauses,
+            else_body,
+            ..
+        } => {
+            stmts_contain_break_for_current_loop(then_body)
+                || elif_clauses
+                    .iter()
+                    .any(|(_, body)| stmts_contain_break_for_current_loop(body))
+                || else_body
+                    .as_ref()
+                    .is_some_and(|body| stmts_contain_break_for_current_loop(body))
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            stmts_contain_break_for_current_loop(body)
+                || handlers
+                    .iter()
+                    .any(|handler| stmts_contain_break_for_current_loop(&handler.body))
+        }
+        HirStmt::TryFinally { body, finalbody } => {
+            stmts_contain_break_for_current_loop(body)
+                || stmts_contain_break_for_current_loop(finalbody)
+        }
+        HirStmt::Match { arms, .. } => arms
+            .iter()
+            .any(|arm| stmts_contain_break_for_current_loop(&arm.body)),
+        HirStmt::AsyncWith { body, .. } | HirStmt::With { body, .. } => {
+            stmts_contain_break_for_current_loop(body)
+        }
+        HirStmt::While { .. } | HirStmt::For { .. } | HirStmt::AsyncFor { .. } => false,
+        _ => false,
+    }
 }
 
 fn simple_for_target_name(target: &Expr, ctx: &mut LowerCtx) -> Option<(String, TextRange)> {
@@ -128,6 +186,7 @@ pub(super) fn lower_async_for(
         );
         return None;
     };
+    let close_error_ty = async_closable_error_type(&iter_ty);
     if !return_type_accepts_error(&func_type.return_type, &iter_error_ty) {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
@@ -144,12 +203,25 @@ pub(super) fn lower_async_for(
     let body = lower_stmts(&for_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
+    if let Some(close_error_ty) = &close_error_ty {
+        if stmts_contain_break_for_current_loop(&body)
+            && !return_type_accepts_error(&func_type.return_type, close_error_ty)
+        {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "closable async iterator break cleanup requires the enclosing function to return a compatible Result error type".to_string(),
+                for_stmt.iter.range(),
+            );
+            return None;
+        }
+    }
 
     Some(HirStmt::AsyncFor {
         target,
         target_ty,
         iter,
         iter_error_ty,
+        close_error_ty,
         body,
         else_body: None,
     })

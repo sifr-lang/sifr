@@ -177,6 +177,7 @@ pub enum HirStmt {
         target_ty: Type,
         iter: HirExpr,
         iter_error_ty: Type,
+        close_error_ty: Option<Type>,
         body: Vec<HirStmt>,
         else_body: Option<Vec<HirStmt>>,
     },

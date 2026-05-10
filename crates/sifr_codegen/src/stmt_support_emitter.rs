@@ -6452,12 +6452,18 @@ impl RustEmitter {
                 target,
                 iter,
                 iter_error_ty,
+                close_error_ty,
                 body,
                 ..
             } = stmt
             {
-                let Some(lowered_async_for) =
-                    self.try_lower_async_for_stmt_for_ir(target, iter, iter_error_ty, body)?
+                let Some(lowered_async_for) = self.try_lower_async_for_stmt_for_ir(
+                    target,
+                    iter,
+                    iter_error_ty,
+                    close_error_ty.as_ref(),
+                    body,
+                )?
                 else {
                     return Ok(None);
                 };
@@ -7649,6 +7655,7 @@ impl RustEmitter {
         target: &str,
         iter: &HirExpr,
         iter_error_ty: &Type,
+        close_error_ty: Option<&Type>,
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
@@ -7661,6 +7668,11 @@ impl RustEmitter {
         };
         let infallible_iter = matches!(iter_error_ty.resolve_alias(), Type::Never);
         let loop_body = |receiver: crate::RustExpr| {
+            let lowered_body = if let Some(close_error_ty) = close_error_ty {
+                inject_async_for_break_cleanup(&lowered_body, &receiver, close_error_ty)
+            } else {
+                lowered_body.clone()
+            };
             let next_call = crate::RustExpr::Await(Box::new(crate::RustExpr::MethodCall {
                 receiver: Box::new(receiver),
                 method: "anext".to_string(),
@@ -9746,4 +9758,90 @@ fn result_int_to_sifr_int_rust_type(ty: &Type) -> crate::RustType {
         Box::new(crate::RustType::Named("SifrInt".to_string())),
         Box::new(crate::sifr_type_to_rust_type(err_ty)),
     )
+}
+
+fn inject_async_for_break_cleanup(
+    stmts: &[RustStmt],
+    receiver: &RustExpr,
+    close_error_ty: &Type,
+) -> Vec<RustStmt> {
+    stmts
+        .iter()
+        .flat_map(|stmt| inject_async_for_break_cleanup_stmt(stmt, receiver, close_error_ty))
+        .collect()
+}
+
+fn inject_async_for_break_cleanup_stmt(
+    stmt: &RustStmt,
+    receiver: &RustExpr,
+    close_error_ty: &Type,
+) -> Vec<RustStmt> {
+    match stmt {
+        RustStmt::Break => vec![
+            RustStmt::Expr(async_for_close_call(receiver.clone(), close_error_ty)),
+            RustStmt::Break,
+        ],
+        RustStmt::If {
+            cond,
+            then_body,
+            else_body,
+        } => vec![RustStmt::If {
+            cond: cond.clone(),
+            then_body: inject_async_for_break_cleanup(then_body, receiver, close_error_ty),
+            else_body: else_body
+                .as_ref()
+                .map(|body| inject_async_for_break_cleanup(body, receiver, close_error_ty)),
+        }],
+        RustStmt::IfLet {
+            pattern,
+            expr,
+            then_body,
+            else_body,
+        } => vec![RustStmt::IfLet {
+            pattern: pattern.clone(),
+            expr: expr.clone(),
+            then_body: inject_async_for_break_cleanup(then_body, receiver, close_error_ty),
+            else_body: else_body
+                .as_ref()
+                .map(|body| inject_async_for_break_cleanup(body, receiver, close_error_ty)),
+        }],
+        RustStmt::Match { expr, arms } => vec![RustStmt::Match {
+            expr: expr.clone(),
+            arms: arms
+                .iter()
+                .map(|arm| crate::RustMatchArm {
+                    pattern: arm.pattern.clone(),
+                    bindings: arm.bindings.clone(),
+                    guard: arm.guard.clone(),
+                    body: inject_async_for_break_cleanup(&arm.body, receiver, close_error_ty),
+                })
+                .collect(),
+        }],
+        RustStmt::With { items, body } => vec![RustStmt::With {
+            items: items.clone(),
+            body: inject_async_for_break_cleanup(body, receiver, close_error_ty),
+        }],
+        RustStmt::Block(body) => vec![RustStmt::Block(inject_async_for_break_cleanup(
+            body,
+            receiver,
+            close_error_ty,
+        ))],
+        RustStmt::For { .. } | RustStmt::While { .. } | RustStmt::Loop { .. } => {
+            vec![stmt.clone()]
+        }
+        _ => vec![stmt.clone()],
+    }
+}
+
+fn async_for_close_call(receiver: RustExpr, close_error_ty: &Type) -> RustExpr {
+    let close_call = RustExpr::Await(Box::new(RustExpr::MethodCall {
+        receiver: Box::new(receiver),
+        method: "aclose".to_string(),
+        args: vec![],
+    }));
+    if matches!(close_error_ty.resolve_alias(), Type::Never) {
+        close_call
+    } else {
+        RustExpr::Try(Box::new(close_call))
+    }
 }
