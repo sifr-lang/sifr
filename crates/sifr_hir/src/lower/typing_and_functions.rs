@@ -96,6 +96,7 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
         "ScopeFailure",
         "TaskCancelled",
         "SecondaryError",
+        "GeneratorCloseError",
     ];
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
@@ -364,6 +365,14 @@ fn collect_function_defaults(
 
 fn first_await_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
     stmts.iter().find_map(first_await_range_in_stmt)
+}
+
+pub(super) fn function_body_contains_yield(stmts: &[Stmt]) -> bool {
+    let mut visitor = sifr_python_ast::helpers::ReturnStatementVisitor::default();
+    for stmt in stmts {
+        sifr_python_ast::visitor::Visitor::visit_stmt(&mut visitor, stmt);
+    }
+    visitor.is_generator
 }
 
 fn first_await_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
@@ -1114,6 +1123,15 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         }
     }
     if func.is_async {
+        if function_body_contains_yield(&func.body) {
+            if let Some(await_range) = first_await_range_in_stmts(&func.body) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    "await inside async generator bodies requires async generator state-machine lowering and is not supported yet".to_string(),
+                    await_range,
+                );
+            }
+        }
         if let Some(await_range) = first_await_range_in_stmts(&func.body) {
             for param in &params {
                 if param.convention.is_mut_borrow()
@@ -1178,6 +1196,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         .map_or_else(|| func.name.range(), |returns| returns.range());
     let inferred_return_type = infer_function_return_type(
         func.name.as_ref(),
+        func.is_async,
         ft.return_type.as_ref(),
         func.returns.is_some(),
         &body,

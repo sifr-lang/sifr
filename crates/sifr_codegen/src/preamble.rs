@@ -57,6 +57,13 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 sifr_type_to_rust_type(second),
             ],
         },
+        Type::AsyncGenerator(item, err) => RustType::Generic {
+            base: "AsyncGenerator".to_string(),
+            params: vec![
+                sifr_type_to_rust_type(item),
+                task_error_type_to_rust_type(err),
+            ],
+        },
         Type::Union(members) => {
             let non_none: Vec<&Type> = members
                 .iter()
@@ -316,6 +323,140 @@ pub fn build_timeout_result_type_items() -> Vec<RustItem> {
             },
         ],
     }]
+}
+
+pub fn build_async_generator_type_items() -> Vec<RustItem> {
+    let type_params = vec![
+        crate::RustTypeParam {
+            name: "T".to_string(),
+            bounds: vec![],
+        },
+        crate::RustTypeParam {
+            name: "E".to_string(),
+            bounds: vec![],
+        },
+    ];
+
+    vec![
+        RustItem::Struct {
+            name: "AsyncGenerator<T, E>".to_string(),
+            visibility: Visibility::Private,
+            derives: vec![],
+            fields: vec![
+                (
+                    "items".to_string(),
+                    RustType::Named("std::vec::IntoIter<T>".to_string()),
+                ),
+                ("closed".to_string(), RustType::Bool),
+                (
+                    "_err".to_string(),
+                    RustType::Named("std::marker::PhantomData<E>".to_string()),
+                ),
+            ],
+        },
+        RustItem::Impl {
+            target: "AsyncGenerator<T, E>".to_string(),
+            type_params,
+            trait_: None,
+            items: vec![
+                RustItem::Fn {
+                    name: "new".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::Named {
+                        name: "items".to_string(),
+                        ty: RustType::Vec(Box::new(RustType::Named("T".to_string()))),
+                    }],
+                    ret: Some(RustType::Named("Self".to_string())),
+                    body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                        name: "Self".to_string(),
+                        fields: vec![
+                            (
+                                "items".to_string(),
+                                RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("items".to_string())),
+                                    method: "into_iter".to_string(),
+                                    args: vec![],
+                                },
+                            ),
+                            (
+                                "closed".to_string(),
+                                RustExpr::Literal(crate::RustLiteral::Bool(false)),
+                            ),
+                            (
+                                "_err".to_string(),
+                                RustExpr::Path(vec![
+                                    "std".to_string(),
+                                    "marker".to_string(),
+                                    "PhantomData".to_string(),
+                                ]),
+                            ),
+                        ],
+                    }))],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "anext".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfParam { mutable: true }],
+                    ret: Some(RustType::Result(
+                        Box::new(RustType::Option(Box::new(RustType::Named("T".to_string())))),
+                        Box::new(RustType::Named("E".to_string())),
+                    )),
+                    body: vec![
+                        RustStmt::If {
+                            cond: RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("self".to_string())),
+                                field: "closed".to_string(),
+                            },
+                            then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                                args: vec![RustExpr::Ident("None".to_string())],
+                            }))],
+                            else_body: None,
+                        },
+                        RustStmt::Return(Some(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                            args: vec![RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Field {
+                                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                                    field: "items".to_string(),
+                                }),
+                                method: "next".to_string(),
+                                args: vec![],
+                            }],
+                        })),
+                    ],
+                    is_async: true,
+                },
+                RustItem::Fn {
+                    name: "aclose".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfParam { mutable: true }],
+                    ret: Some(RustType::Result(
+                        Box::new(RustType::Unit),
+                        Box::new(RustType::Named("GeneratorCloseError".to_string())),
+                    )),
+                    body: vec![
+                        RustStmt::Assign {
+                            target: RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("self".to_string())),
+                                field: "closed".to_string(),
+                            },
+                            value: RustExpr::Literal(crate::RustLiteral::Bool(true)),
+                        },
+                        RustStmt::Return(Some(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                            args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
+                        })),
+                    ],
+                    is_async: true,
+                },
+            ],
+        },
+    ]
 }
 
 pub fn build_cancellation_error_type_items() -> Vec<RustItem> {

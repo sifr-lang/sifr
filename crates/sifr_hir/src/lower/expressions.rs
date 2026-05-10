@@ -249,7 +249,9 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
     }
     if let Some(ft) = ctx.functions.get(&var_name) {
         let ft = ft.clone();
-        let ty = if ctx.async_functions.contains(&var_name) {
+        let ty = if ctx.async_functions.contains(&var_name)
+            && !ctx.async_generator_functions.contains(&var_name)
+        {
             Type::AsyncFunction(ft)
         } else {
             Type::Function(ft)
@@ -1300,6 +1302,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         None
     })?;
     let is_async_function = ctx.async_functions.contains(&func_name);
+    let is_async_generator_function = ctx.async_generator_functions.contains(&func_name);
     if is_async_function && !ctx.current_function_is_async {
         expression_diagnostics::type_mismatch(
             ctx,
@@ -1601,7 +1604,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     let return_type = refine_constructor_return_type_from_args(&ft, &args, &return_type);
     tsc::validate_shared_constructor(&func_name, &args, &arg_ranges, call, ctx);
-    let call_type = if is_async_function {
+    let call_type = if is_async_function && !is_async_generator_function {
         coroutine_result_type(&return_type)
     } else {
         return_type

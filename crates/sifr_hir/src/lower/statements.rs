@@ -697,6 +697,7 @@ pub(super) fn lower_stmt(
                 .map_or_else(|| func.name.range(), |returns| returns.range());
             let inferred_return_type = infer_function_return_type(
                 func.name.as_ref(),
+                func.is_async,
                 ft.return_type.as_ref(),
                 func.returns.is_some(),
                 &body,

@@ -108,6 +108,7 @@ pub(super) fn collapse_types(types: Vec<Type>, empty_type: Type) -> Type {
 
 pub(super) fn infer_function_return_type(
     function_name: &str,
+    is_async: bool,
     declared_return_type: &Type,
     has_explicit_return_annotation: bool,
     body: &[HirStmt],
@@ -116,31 +117,61 @@ pub(super) fn infer_function_return_type(
     let yielded_types = collect_yield_types(body);
     if !yielded_types.is_empty() {
         let yielded_type = normalize_generator_yield_type(collapse_types(yielded_types, Type::Any));
-        let inferred_iterator = Type::Iterator(Box::new(yielded_type.clone()));
-        if has_explicit_return_annotation {
-            match declared_return_type.resolve_alias() {
-                Type::Iterator(elem_ty) => {
-                    if !yielded_type.is_assignable_to(elem_ty.as_ref()) {
+        if is_async {
+            let inferred_generator =
+                Type::AsyncGenerator(Box::new(yielded_type.clone()), Box::new(Type::Never));
+            if has_explicit_return_annotation {
+                match declared_return_type.resolve_alias() {
+                    Type::AsyncGenerator(elem_ty, err_ty) => {
+                        if !yielded_type.is_assignable_to(elem_ty.as_ref()) {
+                            report_error(format!(
+                                "async generator '{}' yields '{}', which is not assignable to declared async generator element type '{}'",
+                                function_name,
+                                yielded_type.display_name(),
+                                elem_ty.display_name()
+                            ));
+                        }
+                        Type::AsyncGenerator(elem_ty.clone(), err_ty.clone())
+                    }
+                    declared => {
                         report_error(format!(
+                            "async generator function '{}' must declare return type 'AsyncGenerator[T, E]', got '{}'",
+                            function_name,
+                            declared.display_name()
+                        ));
+                        inferred_generator
+                    }
+                }
+            } else {
+                inferred_generator
+            }
+        } else {
+            let inferred_iterator = Type::Iterator(Box::new(yielded_type.clone()));
+            if has_explicit_return_annotation {
+                match declared_return_type.resolve_alias() {
+                    Type::Iterator(elem_ty) => {
+                        if !yielded_type.is_assignable_to(elem_ty.as_ref()) {
+                            report_error(format!(
                             "generator '{}' yields '{}', which is not assignable to declared iterator element type '{}'",
                             function_name,
                             yielded_type.display_name(),
                             elem_ty.display_name()
                         ));
+                        }
+                        Type::Iterator(elem_ty.clone())
                     }
-                    Type::Iterator(elem_ty.clone())
-                }
-                declared => {
-                    report_error(format!(
+                    declared => {
+                        report_error(format!(
                         "generator function '{}' must declare return type 'Iterator[T]', got '{}'",
                         function_name,
                         declared.display_name()
                     ));
-                    inferred_iterator
+                        inferred_iterator
+                    }
                 }
+            } else {
+                inferred_iterator
             }
-        } else {
-            inferred_iterator
         }
     } else if *declared_return_type == Type::Any && !has_explicit_return_annotation {
         let return_types = collect_return_types(body);
