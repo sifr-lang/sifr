@@ -644,6 +644,8 @@ task.spawn_blocking(fn: Fn() -> Result[T, E]) -> BlockingTask[T, E]
 
 **`BlockingTask` lifecycle:** `BlockingTask` handles are affine. `join()` and `cancel_and_join()` consume them. Dropping a `BlockingTask` handle abandons observation but does not stop already-running OS work. Blocking work requires owned/sendable/static captures precisely because it may outlive the async scope after abandonment. Scope exit requests cancellation/abandonment for unresolved blocking work created inside the scope but does not guarantee OS-thread interruption.
 
+`sifr.threading` is a compatibility coordination veneer over the native model, not a second way to schedule CPU-bound work. `threading.Lock`, `threading.Event`, and `threading.Condition` keep the familiar names for code that can map cleanly to Sifr-native synchronization. `threading.Thread` is a lifecycle surface only in v1; users should choose `task.spawn_blocking` or `sifr.concurrent.ThreadPoolExecutor` for actual blocking or CPU-heavy offload.
+
 ## Async Resource Protocols
 
 `async with` is part of the user-facing async model.

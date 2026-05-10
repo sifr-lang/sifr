@@ -126,6 +126,7 @@ status: completed
   - `sifr.task`
   - `sifr.sync`
   - `sifr.concurrent`
+  - `sifr.threading`
 - Define initial public types:
   - `Coroutine[T, E]`
   - `Task[T, E]`
@@ -163,6 +164,9 @@ status: completed
   - `Notify`
   - `Select2[A, B]`
   - `ThreadPoolExecutor`
+  - `Thread`
+  - `Event`
+  - `Condition[T]`
   - `ShareSafe` (capability bound, not a public instantiable type)
   - `AsyncContextManager[T, EnterE, ExitE]` (user-defined async context manager protocol, defined in `milestone_async_7a`)
   - `AsyncExitCause` (exit cause enum for user-defined async context managers, defined in `milestone_async_7a`)
@@ -752,6 +756,7 @@ status: in_progress
 - `cpu_bound_annotation_warning.sifr`
 - `spawn_blocking_basic.sifr`
 - `thread_pool_executor_basic.sifr`
+- `threading_compat_basic.sifr`
 
 **Negative validation:**
 
@@ -769,6 +774,7 @@ status: in_progress
 - [#2015](https://github.com/sifr-lang/sifr/pull/2015): Added declaration-site `@io_bound` and `@cpu_bound` workload annotations with async-context diagnostics, plus quick-lane validation fixtures for annotated blocking and CPU-heavy calls.
 - [#2017](https://github.com/sifr-lang/sifr/pull/2017): Implemented `task.spawn_blocking` for direct zero-argument sync functions with distinct `BlockingTask[T, E]` observation and non-send return rejection validation.
 - [#2019](https://github.com/sifr-lang/sifr/pull/2019): Added `sifr.concurrent.ThreadPoolExecutor` as a thin compatibility offload surface backed by the `BlockingTask[T, E]` substrate, including submit lowering, non-send return validation, and quick-lane fixture coverage.
+- Current slice: add the `sifr.threading` compatibility coordination surface for `Thread`, `Lock`, `Event`, and `Condition` without introducing a second offload runtime.
 
 ---
 
