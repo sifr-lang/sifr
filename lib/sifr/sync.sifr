@@ -8,3 +8,67 @@ class Shared[T]:
 
     def get(self) -> T:
         return self._value
+
+
+class WouldBlockError(Error):
+    pass
+
+
+class ClosedError(Error):
+    pass
+
+
+class LockGuard[T]:
+    _value: T
+
+    def __init__(self, own value: T):
+        self._value = value
+
+    def get(self) -> T:
+        return self._value
+
+
+class Lock[T]:
+    _value: T
+
+    def __init__(self, own value: T):
+        self._value = value
+
+    def lock(self) -> LockGuard[T]:
+        return LockGuard(self._value)
+
+    def try_lock(self) -> Result[LockGuard[T], WouldBlockError]:
+        return LockGuard(self._value)
+
+
+class RwLockReadGuard[T]:
+    _value: T
+
+    def __init__(self, own value: T):
+        self._value = value
+
+    def get(self) -> T:
+        return self._value
+
+
+class RwLockWriteGuard[T]:
+    _value: T
+
+    def __init__(self, own value: T):
+        self._value = value
+
+    def get(self) -> T:
+        return self._value
+
+
+class RwLock[T]:
+    _value: T
+
+    def __init__(self, own value: T):
+        self._value = value
+
+    def read(self) -> RwLockReadGuard[T]:
+        return RwLockReadGuard(self._value)
+
+    def write(self) -> RwLockWriteGuard[T]:
+        return RwLockWriteGuard(self._value)

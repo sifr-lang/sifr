@@ -1,0 +1,7 @@
+from sifr.sync import Lock
+
+
+def main() -> None:
+    lock: Lock[int] = Lock(41)
+    guard = lock.lock()
+    assert guard.get() == 41
