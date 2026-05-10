@@ -777,6 +777,7 @@ status: in_progress
 - [#2019](https://github.com/sifr-lang/sifr/pull/2019): Added `sifr.concurrent.ThreadPoolExecutor` as a thin compatibility offload surface backed by the `BlockingTask[T, E]` substrate, including submit lowering, non-send return validation, and quick-lane fixture coverage.
 - [#2021](https://github.com/sifr-lang/sifr/pull/2021): Added the `sifr.threading` compatibility coordination surface for `Thread`, `Lock`, `Event`, and `Condition` without introducing a second offload runtime.
 - [#2023](https://github.com/sifr-lang/sifr/pull/2023): Added explicit `BlockingTask` join/cancel/cancel-and-join validation for `task.spawn_blocking` and `ThreadPoolExecutor.submit`.
+- Current slice: add `demos/m32_blocking_offload_demo.sifr` to showcase annotated workloads, explicit blocking offload, blocking-task cancellation, and threading compatibility surfaces.
 
 ---
 
