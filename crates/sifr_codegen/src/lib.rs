@@ -237,6 +237,10 @@ pub struct StdlibCode {
     pub generator_functions: HashMap<String, HashSet<String>>,
     /// Set of class names that have generic type parameters across all stdlib modules.
     pub generic_classes: HashSet<String>,
+    /// Map of stdlib generic class name -> declared type parameter names.
+    pub generic_class_params: HashMap<String, Vec<String>>,
+    /// Map of stdlib generic class name -> template HIR class for concrete type-argument inference.
+    pub generic_class_templates: HashMap<String, sifr_hir::HirClass>,
     /// Map of `module_name` -> (`class_name` -> ordered class fields).
     /// Multi-module project codegen also uses this for local helper modules.
     pub module_class_fields: HashMap<String, HashMap<String, Vec<(String, Type)>>>,
@@ -316,6 +320,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     emitter
         .generic_classes
         .extend(stdlib_code.generic_classes.iter().cloned());
+    emitter
+        .generic_class_params
+        .extend(stdlib_code.generic_class_params.clone());
+    emitter
+        .generic_class_templates
+        .extend(stdlib_code.generic_class_templates.clone());
 
     // Pre-register stdlib constants and function signatures so user code can reference them correctly
     for import in &module.imports {

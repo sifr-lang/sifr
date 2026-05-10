@@ -1,0 +1,6 @@
+from sifr.sync import Shared
+
+
+def main() -> None:
+    shared: Shared[int] = Shared(41)
+    assert shared.get() == 41

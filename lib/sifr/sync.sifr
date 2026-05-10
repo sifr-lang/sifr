@@ -1,0 +1,10 @@
+# sifr.sync — Explicit synchronization and sharing primitives
+
+class Shared[T]:
+    _value: T
+
+    def __init__(self, own value: T):
+        self._value = value
+
+    def get(self) -> T:
+        return self._value

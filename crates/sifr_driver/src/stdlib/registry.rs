@@ -27,6 +27,7 @@ pub(super) const STDLIB_FILES: &[(&str, &str)] = &[
         "sifr.collections",
         include_str!("../../../../lib/sifr/collections.sifr"),
     ),
+    ("sifr.sync", include_str!("../../../../lib/sifr/sync.sifr")),
     (
         "sifr.string",
         include_str!("../../../../lib/sifr/string.sifr"),

@@ -199,6 +199,8 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 transitive_deps: stdlib_code.transitive_deps.clone(),
                 generator_functions: stdlib_code.generator_functions.clone(),
                 generic_classes: stdlib_code.generic_classes.clone(),
+                generic_class_params: stdlib_code.generic_class_params.clone(),
+                generic_class_templates: stdlib_code.generic_class_templates.clone(),
                 module_class_fields: stdlib_code.module_class_fields.clone(),
             };
             let codegen_result = run_codegen_with_boundary(
@@ -285,6 +287,12 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
             for class in &result.module.classes {
                 if !class.type_params.is_empty() {
                     stdlib_code.generic_classes.insert(class.name.clone());
+                    stdlib_code
+                        .generic_class_params
+                        .insert(class.name.clone(), class.type_params.clone());
+                    stdlib_code
+                        .generic_class_templates
+                        .insert(class.name.clone(), class.clone());
                 }
             }
             let class_fields = result

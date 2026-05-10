@@ -1,0 +1,13 @@
+from sifr.sync import Shared
+
+
+async def worker(own shared: Shared[int]) -> int:
+    return shared.get()
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        shared: Shared[int] = Shared(41)
+        handle = scope.spawn(worker(shared))
+        result = await handle
+    return None
