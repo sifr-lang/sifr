@@ -3427,6 +3427,15 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
         return None;
     }
 
+    if super::async_comprehension_diagnostics::reject_deferred_async_comprehension_shape(
+        ctx,
+        "list",
+        &comp.generators,
+        comp.range(),
+    ) {
+        return None;
+    }
+
     let mut generators = Vec::new();
     let mut pushed_scopes = 0;
     let result = (|| {
@@ -3531,6 +3540,15 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
 }
 
 pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if super::async_comprehension_diagnostics::reject_deferred_async_comprehension_shape(
+        ctx,
+        "set",
+        &comp.generators,
+        comp.range(),
+    ) {
+        return None;
+    }
+
     let mut generators = Vec::new();
     let mut pushed_scopes = 0;
     let result = (|| {
@@ -3576,6 +3594,15 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<H
 }
 
 pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if super::async_comprehension_diagnostics::reject_deferred_async_comprehension_shape(
+        ctx,
+        "dict",
+        &comp.generators,
+        comp.range(),
+    ) {
+        return None;
+    }
+
     let mut generators = Vec::new();
     let mut pushed_scopes = 0;
     let result = (|| {
@@ -3661,6 +3688,11 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
 }
 
 pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if gen.generators.iter().any(|generator| generator.is_async) {
+        super::async_comprehension_diagnostics::reject_async_generator_expression(ctx, gen.range());
+        return None;
+    }
+
     // Only support single generator: (expr for var in iter) or (expr for var in iter if cond)
     if gen.generators.len() != 1 {
         reject_unsupported_expression_form(

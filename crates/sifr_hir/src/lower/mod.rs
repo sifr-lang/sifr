@@ -8,6 +8,7 @@ mod append_growth_shapes;
 mod arithmetic_warnings;
 mod assignment_widening;
 mod async_await;
+mod async_comprehension_diagnostics;
 mod async_for;
 mod async_generator_methods;
 mod async_with;

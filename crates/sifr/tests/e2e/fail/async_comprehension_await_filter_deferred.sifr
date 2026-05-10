@@ -1,0 +1,10 @@
+# expect-error: SIFR-TYPE-0012
+
+async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 1
+
+async def keep(value: int) -> bool:
+    return value > 0
+
+async def main() -> None:
+    values = [x async for x in numbers() if await keep(x)]
