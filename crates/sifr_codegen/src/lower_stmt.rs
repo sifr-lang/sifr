@@ -49,7 +49,8 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::AsyncWith { .. }
         | HirStmt::Match { .. }
         | HirStmt::NestedFunction { .. }
-        | HirStmt::TryExcept { .. } => true,
+        | HirStmt::TryExcept { .. }
+        | HirStmt::TryFinally { .. } => true,
     }
 }
 
@@ -363,6 +364,10 @@ fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
                 validate_stmt_block_lowering_shape(&handler.body)?;
             }
             Ok(())
+        }
+        HirStmt::TryFinally { body, finalbody } => {
+            validate_stmt_block_lowering_shape(body)?;
+            validate_stmt_block_lowering_shape(finalbody)
         }
         HirStmt::Pass | HirStmt::Continue | HirStmt::Break | HirStmt::Return { value: None } => {
             Ok(())
@@ -860,6 +865,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         HirStmt::TryExcept { body, handlers, .. } => {
             try_lower_simple_try_except_stmt(body, handlers, in_loop_with_else, bindings, ctx)
         }
+        HirStmt::TryFinally { .. } => None,
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -1463,6 +1469,7 @@ fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
         | HirStmt::Break
         | HirStmt::Continue
         | HirStmt::TryExcept { .. }
+        | HirStmt::TryFinally { .. }
         | HirStmt::With { .. }
         | HirStmt::AsyncWith { .. }
         | HirStmt::Match { .. }

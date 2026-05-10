@@ -469,6 +469,16 @@ impl CfgBuilder {
                 }
                 block
             }
+            HirStmt::TryFinally { body, finalbody } => {
+                let block = self.new_block(
+                    CfgBlockLabel::Statement("try_finally"),
+                    top_level_stmt_index,
+                );
+                let final_entry = self.build_stmt_list(finalbody, next, loop_targets, false);
+                let body_entry = self.build_stmt_list(body, final_entry, loop_targets, false);
+                self.set_terminator(block, CfgTerminator::Goto(body_entry));
+                block
+            }
             HirStmt::With { body, .. } => {
                 let body_entry = self.build_stmt_list(body, next, loop_targets, false);
                 let block = self.new_block(CfgBlockLabel::Statement("with"), top_level_stmt_index);
@@ -516,6 +526,7 @@ fn stmt_label(stmt: &HirStmt) -> &'static str {
         HirStmt::Assert { .. } => "assert",
         HirStmt::Raise { .. } => "raise",
         HirStmt::TryExcept { .. } => "try_except",
+        HirStmt::TryFinally { .. } => "try_finally",
         HirStmt::FieldAssign { .. } => "field_assign",
         HirStmt::NestedFieldAssign { .. } => "nested_field_assign",
         HirStmt::SubscriptAssign { .. } => "subscript_assign",

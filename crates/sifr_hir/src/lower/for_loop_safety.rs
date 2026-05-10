@@ -66,6 +66,10 @@ fn stmt_mutates_iter_source(stmt: &HirStmt, source_name: &str) -> bool {
                     .iter()
                     .any(|handler| loop_body_mutates_iter_source(&handler.body, source_name))
         }
+        HirStmt::TryFinally { body, finalbody } => {
+            loop_body_mutates_iter_source(body, source_name)
+                || loop_body_mutates_iter_source(finalbody, source_name)
+        }
         HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
             loop_body_mutates_iter_source(body, source_name)
         }

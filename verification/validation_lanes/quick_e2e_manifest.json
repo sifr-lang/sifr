@@ -25,6 +25,8 @@
     "spawn_owned_move_value",
     "spawn_capture_immutable_shared_ok",
     "await_without_live_borrow",
+    "task_gather_cleanup_error_secondary",
+    "cancellation_cleanup_runs",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",

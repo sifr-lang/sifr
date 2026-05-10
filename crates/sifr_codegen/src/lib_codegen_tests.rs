@@ -4159,6 +4159,33 @@ fn test_try_except_with_async_body_lowers_to_async_try_closure() {
 }
 
 #[test]
+fn test_try_finally_runs_cleanup_before_timeout_propagates() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def main() -> Result[None, Error]:\n    try:\n        async with task.timeout(0.0):\n            try:\n                await task.sleep(10.0)\n            finally:\n                marker: int = 1\n    except TimeoutError:\n        return None\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    let cleanup_pos = result
+        .rust_source
+        .find("let marker: i64 = 1 as i64;")
+        .expect("cleanup marker should be emitted");
+    let rethrow_pos = result
+        .rust_source
+        .find("if let Err(__sifr_finally_err) = __sifr_try_finally_res")
+        .expect("try/finally should rethrow after cleanup");
+
+    assert!(result.rust_source.contains("let __sifr_try_finally_res"));
+    assert!(cleanup_pos < rethrow_pos);
+}
+
+#[test]
 fn test_async_generated_errors_convert_to_error_return_type() {
     let result = generate_rust_with_metadata(
         &lower_module(

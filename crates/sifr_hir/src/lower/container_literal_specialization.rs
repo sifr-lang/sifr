@@ -302,6 +302,10 @@ fn patch_stmt_container_specialization(stmt: &mut HirStmt, pending: &mut HashMap
                 apply_container_specialization_patches(&mut handler.body, pending);
             }
         }
+        HirStmt::TryFinally { body, finalbody } => {
+            apply_container_specialization_patches(body, pending);
+            apply_container_specialization_patches(finalbody, pending);
+        }
         HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
             apply_container_specialization_patches(body, pending);
         }

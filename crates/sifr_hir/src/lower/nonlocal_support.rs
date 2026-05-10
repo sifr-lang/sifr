@@ -206,6 +206,10 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
                     .iter()
                     .any(|handler| hir_body_calls_function(&handler.body, func_name))
         }
+        HirStmt::TryFinally { body, finalbody } => {
+            hir_body_calls_function(body, func_name)
+                || hir_body_calls_function(finalbody, func_name)
+        }
         HirStmt::Break | HirStmt::Continue | HirStmt::Pass | HirStmt::NestedFunction { .. } => {
             false
         }
