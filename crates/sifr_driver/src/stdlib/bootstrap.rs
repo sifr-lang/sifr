@@ -6,7 +6,7 @@ use crate::stdlib::registry::STDLIB_FILES;
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_hir::{lower_module_stdlib_with_externals, ExternalDefs, HirParam};
+use sifr_hir::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -158,12 +158,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 let mut methods: Vec<(String, FunctionType)> = class
                     .methods
                     .iter()
-                    .map(|method| {
-                        (
-                            method.name.clone(),
-                            function_type_from_params(&method.params, &method.return_type),
-                        )
-                    })
+                    .map(|method| (method.name.clone(), method_type_from_hir(method)))
                     .collect();
                 for (dunder_name, op_func) in &class.operator_impls {
                     methods.push((
@@ -370,6 +365,22 @@ fn function_type_from_params(params: &[HirParam], return_type: &Type) -> Functio
     FunctionType {
         params: named_params(params),
         return_type: Box::new(return_type.clone()),
+    }
+}
+
+fn method_type_from_hir(method: &HirFunction) -> FunctionType {
+    let return_type = if method.is_async {
+        coroutine_type_from_surface_return(&method.return_type)
+    } else {
+        method.return_type.clone()
+    };
+    function_type_from_params(&method.params, &return_type)
+}
+
+fn coroutine_type_from_surface_return(surface_return_type: &Type) -> Type {
+    match surface_return_type.resolve_alias() {
+        Type::Result(ok, err) => Type::Coroutine(ok.clone(), err.clone()),
+        other => Type::Coroutine(Box::new(other.clone()), Box::new(Type::Never)),
     }
 }
 

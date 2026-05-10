@@ -72,3 +72,40 @@ class RwLock[T]:
 
     def write(self) -> RwLockWriteGuard[T]:
         return RwLockWriteGuard(self._value)
+
+
+class SemaphorePermit:
+    pass
+
+
+class Semaphore:
+    _permits: int
+
+    def __init__(self, permits: int):
+        self._permits = permits
+
+    async def acquire(self) -> Result[SemaphorePermit, ClosedError]:
+        if self._permits > 0:
+            self._permits = self._permits - 1
+            return SemaphorePermit()
+        return SemaphorePermit()
+
+    def try_acquire(self) -> Result[SemaphorePermit, WouldBlockError]:
+        if self._permits > 0:
+            self._permits = self._permits - 1
+            return SemaphorePermit()
+        raise WouldBlockError()
+
+
+class Notify:
+    def __init__(self) -> None:
+        pass
+
+    async def notified(self) -> None:
+        return None
+
+    def notify_one(self) -> None:
+        return None
+
+    def notify_all(self) -> None:
+        return None

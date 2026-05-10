@@ -1780,6 +1780,40 @@ impl RustEmitter {
                     future: Box::new(future),
                 }));
             }
+            if let HirExpr::Call { func, args, .. } = value.as_ref() {
+                if func == "__sifr_task_sleep" {
+                    let [duration] = args.as_slice() else {
+                        return Ok(None);
+                    };
+                    let Some(duration_expr) =
+                        crate::try_lower_task_duration_expr(duration, "__sifr_task_sleep_seconds")
+                    else {
+                        return Ok(None);
+                    };
+                    return Ok(Some(crate::RustExpr::Await(Box::new(
+                        crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "tokio".to_string(),
+                                "time".to_string(),
+                                "sleep".to_string(),
+                            ])),
+                            args: vec![duration_expr],
+                        },
+                    ))));
+                }
+            }
+            let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                return Ok(None);
+            };
+            let awaited_value = match crate::resolve_alias_type_for_plain_call(value.ty()) {
+                Type::Task(_, _) | Type::BlockingTask(_, _) => crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_value),
+                    method: "join".to_string(),
+                    args: vec![],
+                },
+                _ => lowered_value,
+            };
+            return Ok(Some(crate::RustExpr::Await(Box::new(awaited_value))));
         }
 
         let skip_leaf_registry_lowering = matches!(

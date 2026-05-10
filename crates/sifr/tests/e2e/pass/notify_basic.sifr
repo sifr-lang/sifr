@@ -1,0 +1,9 @@
+from sifr.sync import Notify
+
+
+async def main() -> None:
+    notify: Notify = Notify()
+    notify.notify_one()
+    await notify.notified()
+    notify.notify_all()
+    return None

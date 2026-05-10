@@ -27,6 +27,8 @@
     "await_without_live_borrow",
     "lock_basic",
     "rwlock_readers",
+    "semaphore_basic",
+    "notify_basic",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",

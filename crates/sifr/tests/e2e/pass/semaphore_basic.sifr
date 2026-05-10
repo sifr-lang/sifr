@@ -1,0 +1,7 @@
+from sifr.sync import ClosedError, Semaphore
+
+
+async def main() -> Result[None, ClosedError]:
+    semaphore: Semaphore = Semaphore(1)
+    permit = await semaphore.acquire()
+    return None
