@@ -694,6 +694,7 @@ status: in_progress
 - PR [#1997](https://github.com/sifr-lang/sifr/pull/1997) channel sender clone-close validation slice: `channel_sender_close_clone_closes_all.sifr` validates that cloned senders share channel state, sender `close()` closes the whole channel, and buffered messages remain receivable after close.
 - PR [#1999](https://github.com/sifr-lang/sifr/pull/1999) channel receiver-drop validation slice: `channel_drop_receiver_closes_senders.sifr` validates that dropping the receiver endpoint closes the channel immediately to senders.
 - PR [#2001](https://github.com/sifr-lang/sifr/pull/2001) bounded channel backpressure validation slice: `channel_backpressure.sifr` validates bounded channel send/receive coordination across a task boundary.
+- Current slice: add `channel_cancel_pending_receive.sifr` to validate that timing out a pending same-task receive leaves the receiver usable and does not poison later channel delivery.
 
 ---
 

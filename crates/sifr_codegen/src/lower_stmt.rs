@@ -1121,6 +1121,7 @@ fn try_lower_simple_nested_function_stmt(
             params: lowered_params,
             body: lowered_body,
             is_move: false,
+            is_async: false,
         },
     }])
 }
@@ -1392,6 +1393,7 @@ fn try_lower_simple_try_except_stmt(
                     params: vec![],
                     body: closure_body,
                     is_move: false,
+                    is_async: false,
                 }),
                 args: vec![],
             },

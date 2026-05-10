@@ -2405,6 +2405,7 @@ impl RustEmitter {
                                     })),
                                 ],
                                 is_move: false,
+                                is_async: false,
                             }],
                         }));
                     } else {
@@ -2467,6 +2468,7 @@ impl RustEmitter {
                                     })),
                                 ],
                                 is_move: false,
+                                is_async: false,
                             }],
                         }));
                     }
@@ -2577,6 +2579,7 @@ impl RustEmitter {
                             )?)),
                         ],
                         is_move: false,
+                        is_async: false,
                     }],
                 };
                 Some(registry_box_iterator_expr(filtered_iter))
@@ -2606,6 +2609,7 @@ impl RustEmitter {
                                     )?,
                                 ))],
                                 is_move: false,
+                                is_async: false,
                             }],
                         }),
                         method: "into_iter".to_string(),
@@ -2644,6 +2648,7 @@ impl RustEmitter {
                                 }],
                                 body,
                                 is_move: false,
+                                is_async: false,
                             }],
                         }),
                         method: "into_iter".to_string(),

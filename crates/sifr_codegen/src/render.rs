@@ -837,15 +837,17 @@ impl Renderer {
                 params,
                 body,
                 is_move,
+                is_async,
             } => {
                 let move_kw = if *is_move { "move " } else { "" };
+                let async_kw = if *is_async { "async " } else { "" };
                 let params = params
                     .iter()
                     .map(Self::render_closure_param_string)
                     .collect::<Vec<_>>()
                     .join(", ");
                 let mut renderer = Renderer::new();
-                renderer.append(&format!("{move_kw}|{params}| {{\n"));
+                renderer.append(&format!("{async_kw}{move_kw}|{params}| {{\n"));
                 renderer.indent();
                 for stmt in body {
                     renderer.render_stmt(stmt);

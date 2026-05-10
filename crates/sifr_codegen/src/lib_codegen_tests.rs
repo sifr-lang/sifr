@@ -4140,6 +4140,25 @@ fn test_task_timeout_context_manager_wraps_awaits() {
 }
 
 #[test]
+fn test_try_except_with_async_body_lowers_to_async_try_closure() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def main() -> Result[None, Error]:\n    try:\n        async with task.timeout(1.0):\n            await task.sleep(0.0)\n    except TimeoutError:\n        return None\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("async ||"));
+    assert!(result.rust_source.contains(")().await"));
+    assert!(result.rust_source.contains("let __sifr_try_res"));
+}
+
+#[test]
 fn test_async_generated_errors_convert_to_error_return_type() {
     let result = generate_rust_with_metadata(
         &lower_module(

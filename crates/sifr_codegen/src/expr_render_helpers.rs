@@ -456,6 +456,7 @@ impl RustEmitter {
                 params,
                 body,
                 is_move,
+                is_async,
             } => {
                 let saved_current_sifr_int_return = self.current_sifr_int_return.get();
                 self.current_sifr_int_return.set(false);
@@ -469,6 +470,7 @@ impl RustEmitter {
                     params,
                     body,
                     is_move,
+                    is_async,
                 }
             }
             crate::RustExpr::StructInit { name, fields } => crate::RustExpr::StructInit {
@@ -2437,6 +2439,7 @@ mod tests {
                 ty: RustType::I64,
             }))],
             is_move: false,
+            is_async: false,
         });
 
         let RustExpr::ClosureBlock { body, .. } = rewritten else {
