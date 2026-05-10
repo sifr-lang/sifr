@@ -683,7 +683,7 @@ status: in_progress
 - PR [#1975](https://github.com/sifr-lang/sifr/pull/1975) channel endpoint surface slice: `sync.Channel[T]`, `sync.ChannelSender[T]`, and `sync.ChannelReceiver[T]` are available through `sifr.sync`, with direct-construction surface fixtures `channel_basic.sifr` and `bounded_channel_basic.sifr` in the quick lane. `sync.channel[T]()`/`sync.bounded_channel[T](capacity)` factories, runtime-backed shared queues, sender clone sharing, close/drop semantics, backpressure, FIFO guarantees, async iteration, and cancellation exactness remain deferred to later milestone_async_5 channel slices.
 - PR [#1977](https://github.com/sifr-lang/sifr/pull/1977) lock-guard await validation slice: live `LockGuard`, `RwLockReadGuard`, and `RwLockWriteGuard` bindings are rejected at await points with `SIFR-OWN-0009`, with `lock_guard_across_await_rejected.sifr` covering the negative path.
 - PR [#1979](https://github.com/sifr-lang/sifr/pull/1979) lock-guard task-boundary validation slice: `LockGuard`, `RwLockReadGuard`, and `RwLockWriteGuard` values are rejected when passed into `scope.spawn` with `SIFR-OWN-0010`, with `lock_across_task_boundary_rejected.sifr` covering the negative path.
-- In progress lock-guard return-escape validation slice: user code cannot return `LockGuard`, `RwLockReadGuard`, or `RwLockWriteGuard` values from functions, with `lock_guard_escape_rejected.sifr` covering the negative path.
+- PR [#1981](https://github.com/sifr-lang/sifr/pull/1981) lock-guard return-escape validation slice: user code cannot return `LockGuard`, `RwLockReadGuard`, or `RwLockWriteGuard` values from functions, with `lock_guard_escape_rejected.sifr` covering the negative path.
 
 ---
 
