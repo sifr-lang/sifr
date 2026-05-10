@@ -774,7 +774,7 @@ status: in_progress
 - [#2015](https://github.com/sifr-lang/sifr/pull/2015): Added declaration-site `@io_bound` and `@cpu_bound` workload annotations with async-context diagnostics, plus quick-lane validation fixtures for annotated blocking and CPU-heavy calls.
 - [#2017](https://github.com/sifr-lang/sifr/pull/2017): Implemented `task.spawn_blocking` for direct zero-argument sync functions with distinct `BlockingTask[T, E]` observation and non-send return rejection validation.
 - [#2019](https://github.com/sifr-lang/sifr/pull/2019): Added `sifr.concurrent.ThreadPoolExecutor` as a thin compatibility offload surface backed by the `BlockingTask[T, E]` substrate, including submit lowering, non-send return validation, and quick-lane fixture coverage.
-- Current slice: add the `sifr.threading` compatibility coordination surface for `Thread`, `Lock`, `Event`, and `Condition` without introducing a second offload runtime.
+- [#2021](https://github.com/sifr-lang/sifr/pull/2021): Added the `sifr.threading` compatibility coordination surface for `Thread`, `Lock`, `Event`, and `Condition` without introducing a second offload runtime.
 
 ---
 
