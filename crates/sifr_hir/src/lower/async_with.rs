@@ -479,6 +479,50 @@ fn stmt_contains_task_spawn(stmt: &HirStmt) -> bool {
     }
 }
 
+fn stmt_contains_scope_early_exit(stmt: &HirStmt) -> bool {
+    match stmt {
+        HirStmt::Return { .. } | HirStmt::Raise { .. } | HirStmt::Yield { .. } => true,
+        HirStmt::If {
+            then_body,
+            elif_clauses,
+            else_body,
+            ..
+        } => {
+            then_body.iter().any(stmt_contains_scope_early_exit)
+                || elif_clauses
+                    .iter()
+                    .any(|(_, body)| body.iter().any(stmt_contains_scope_early_exit))
+                || else_body
+                    .as_ref()
+                    .is_some_and(|body| body.iter().any(stmt_contains_scope_early_exit))
+        }
+        HirStmt::While {
+            body, else_body, ..
+        }
+        | HirStmt::For {
+            body, else_body, ..
+        } => {
+            body.iter().any(stmt_contains_scope_early_exit)
+                || else_body
+                    .as_ref()
+                    .is_some_and(|body| body.iter().any(stmt_contains_scope_early_exit))
+        }
+        HirStmt::AsyncWith { body, .. } | HirStmt::With { body, .. } => {
+            body.iter().any(stmt_contains_scope_early_exit)
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            body.iter().any(stmt_contains_scope_early_exit)
+                || handlers
+                    .iter()
+                    .any(|handler| handler.body.iter().any(stmt_contains_scope_early_exit))
+        }
+        HirStmt::Match { arms, .. } => arms
+            .iter()
+            .any(|arm| arm.body.iter().any(stmt_contains_scope_early_exit)),
+        _ => false,
+    }
+}
+
 pub(super) fn lower_async_with(
     with_stmt: &StmtWith,
     func_type: &FunctionType,
@@ -615,6 +659,18 @@ pub(super) fn lower_async_with(
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 "async task scopes that spawn children can fail at exit; enclosing function must return Result[..., ScopeFailure] or Result[..., Error]"
+                    .to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        }
+        if matches!(kind, HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup)
+            && body.iter().any(stmt_contains_task_spawn)
+            && body.iter().any(stmt_contains_scope_early_exit)
+        {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "async task scopes that spawn children cannot use return, raise, or yield inside the scope until abnormal-exit cleanup lowering is implemented"
                     .to_string(),
                 item.context_expr.range(),
             );

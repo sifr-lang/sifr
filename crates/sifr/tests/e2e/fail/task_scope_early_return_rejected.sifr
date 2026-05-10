@@ -1,0 +1,12 @@
+# expect-error: SIFR-TYPE-0002
+
+async def slow() -> int:
+    await task.sleep(0.20)
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(slow())
+        return None
+    return None

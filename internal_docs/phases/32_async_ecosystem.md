@@ -514,6 +514,7 @@ status: in_progress
 - In progress structured-concurrency validation/demo slice: added milestone negative coverage for consumed cancelled task handles and TaskGroup scope-failure error typing, plus `demos/m32_structured_concurrency_demo.sifr`.
 - In progress gather fail-fast cancellation slice: `task.gather([...])` now observes all input handles, preserves ordered success values, and cancels unfinished siblings after the first failure-like child result.
 - In progress cancellation group-sibling validation slice: added `cancellation_group_sibling.sifr` as direct milestone coverage for TaskGroup sibling cancellation through the cancellation validation naming.
+- PR [#1940](https://github.com/sifr-lang/sifr/pull/1940) scope early-exit guard slice: task scopes that spawn children now reject `return`, `raise`, and `yield` inside the scope until abnormal-exit cleanup lowering can guarantee `__sifr_join_all()` runs on every exit path; local loop `break`/`continue` remain allowed because they do not exit the scope.
 
 ---
 
