@@ -27,6 +27,8 @@
     "await_without_live_borrow",
     "lock_basic",
     "rwlock_readers",
+    "channel_basic",
+    "bounded_channel_basic",
     "semaphore_basic",
     "notify_basic",
     "stdlib_json_consolidated",
