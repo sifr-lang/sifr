@@ -3735,6 +3735,32 @@ fn test_spawn_blocking_lowers_to_distinct_blocking_task_substrate() {
 }
 
 #[test]
+fn test_thread_pool_executor_submit_reuses_blocking_task_substrate() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "class ThreadPoolExecutor:\n    pass\n\n\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(compute_value)\n    result = await handle\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result
+        .rust_source
+        .contains("struct __SifrBlockingTask<T, E>"));
+    assert!(result
+        .rust_source
+        .contains("fn __sifr_spawn_blocking_infallible<"));
+    assert!(result
+        .rust_source
+        .contains("__sifr_spawn_blocking_infallible(compute_value);"));
+    assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
 fn test_scope_spawn_lowers_owned_coroutine_arguments() {
     let result = generate_rust_with_metadata(
         &lower_module(

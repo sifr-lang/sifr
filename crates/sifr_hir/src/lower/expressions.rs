@@ -61,6 +61,7 @@ use super::task_handle_calls::{is_task_handle_type, lower_task_handle_method_cal
 use super::task_scope_calls as tsc;
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
+use super::typevar_shape_compat::is_compatible_with_unresolved_typevars;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{
     collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars,
@@ -263,62 +264,6 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     name_diagnostics::undefined_variable(ctx, &var_name, name.range());
     None
-}
-
-/// Shape compatibility used when generic inference leaves unresolved `TypeVar`s.
-/// `TypeVar`s are treated as wildcards, but container/class structure must still match.
-fn is_compatible_with_unresolved_typevars(source: &Type, target: &Type) -> bool {
-    match target {
-        Type::TypeVar(_) => true,
-        Type::List(target_elem) => match source {
-            Type::List(source_elem) => {
-                is_compatible_with_unresolved_typevars(source_elem, target_elem)
-            }
-            _ => false,
-        },
-        Type::Set(target_elem) => match source {
-            Type::Set(source_elem) => {
-                is_compatible_with_unresolved_typevars(source_elem, target_elem)
-            }
-            _ => false,
-        },
-        Type::Dict(target_key, target_val) => match source {
-            Type::Dict(source_key, source_val) => {
-                is_compatible_with_unresolved_typevars(source_key, target_key)
-                    && is_compatible_with_unresolved_typevars(source_val, target_val)
-            }
-            _ => false,
-        },
-        Type::Tuple(target_elems) => match source {
-            Type::Tuple(source_elems) => {
-                source_elems.len() == target_elems.len()
-                    && source_elems
-                        .iter()
-                        .zip(target_elems.iter())
-                        .all(|(src, dst)| is_compatible_with_unresolved_typevars(src, dst))
-            }
-            _ => false,
-        },
-        Type::Result(target_ok, target_err) => match source {
-            Type::Result(source_ok, source_err) => {
-                is_compatible_with_unresolved_typevars(source_ok, target_ok)
-                    && is_compatible_with_unresolved_typevars(source_err, target_err)
-            }
-            _ => false,
-        },
-        Type::Class {
-            name: target_name, ..
-        } => match source {
-            Type::Class {
-                name: source_name, ..
-            } => source_name == target_name,
-            _ => false,
-        },
-        Type::Union(target_members) => target_members
-            .iter()
-            .any(|member| is_compatible_with_unresolved_typevars(source, member)),
-        _ => source.is_assignable_to(target),
-    }
 }
 
 pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -2124,6 +2069,14 @@ pub(super) fn lower_method_call(
 
     let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
+    if let Some(result) = super::blocking_executor_calls::lower_thread_pool_submit_call(
+        &object,
+        &method_name,
+        call,
+        ctx,
+    ) {
+        return result;
+    }
     if tsc::is_task_scope_type(object.ty()) && method_name == "spawn" {
         return tsc::lower_task_scope_spawn_call(object, attr, call, ctx);
     }
