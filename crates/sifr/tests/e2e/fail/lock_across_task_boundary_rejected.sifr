@@ -1,0 +1,14 @@
+# expect-error[col=30]: SIFR-OWN-0010
+from sifr.sync import Lock, LockGuard
+
+
+async def worker(own guard: LockGuard[int]) -> int:
+    return guard.get()
+
+
+async def main() -> Result[None, ScopeFailure]:
+    lock: Lock[int] = Lock(1)
+    guard = lock.lock()
+    async with task.scope() as scope:
+        handle = scope.spawn(worker(guard))
+    return None
