@@ -685,7 +685,7 @@ status: in_progress
 - PR [#1979](https://github.com/sifr-lang/sifr/pull/1979) lock-guard task-boundary validation slice: `LockGuard`, `RwLockReadGuard`, and `RwLockWriteGuard` values are rejected when passed into `scope.spawn` with `SIFR-OWN-0010`, with `lock_across_task_boundary_rejected.sifr` covering the negative path.
 - PR [#1981](https://github.com/sifr-lang/sifr/pull/1981) lock-guard return-escape validation slice: user code cannot return `LockGuard`, `RwLockReadGuard`, or `RwLockWriteGuard` values from functions, with `lock_guard_escape_rejected.sifr` covering the negative path.
 - PR [#1983](https://github.com/sifr-lang/sifr/pull/1983) channel send type validation slice: `ChannelSender[T].send(value: T)` rejects mismatched value types, with `channel_send_wrong_type_rejected.sifr` covering the negative path.
-- In progress channel non-send element validation slice: `ChannelSender[T].send(value: T)` rejects non-send values before they enter a channel, with `channel_non_send_element_rejected.sifr` covering the negative path.
+- PR [#1985](https://github.com/sifr-lang/sifr/pull/1985) channel non-send element validation slice: `ChannelSender[T].send(value: T)` rejects non-send values before they enter a channel, with `channel_non_send_element_rejected.sifr` covering the negative path.
 
 ---
 
