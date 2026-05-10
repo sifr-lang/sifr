@@ -478,6 +478,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Emit built-in error class struct definitions for referenced error types.
     let uses_task_scope = module_uses_task_scope(module);
     let uses_failure_type = module_uses_failure_type(module);
+    let uses_cancellation_error_type = module_uses_cancellation_error_type(module);
     let uses_timeout_result_type = module_uses_timeout_result_type(module);
     let mut referenced_error_classes = collect_referenced_builtin_error_classes(
         module,
@@ -594,6 +595,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     if uses_task_scope || uses_failure_type {
         preamble_items.extend(build_failure_type_items());
+    }
+    if uses_task_scope || uses_cancellation_error_type {
+        preamble_items.extend(build_cancellation_error_type_items());
     }
     if uses_timeout_result_type && !uses_task_scope {
         preamble_items.extend(build_timeout_result_type_items());
@@ -956,20 +960,21 @@ fn type_contains_timeout_result(ty: &Type) -> bool {
     type_contains_by(ty, |candidate| matches!(candidate, Type::TimeoutResult(_)))
 }
 
+fn type_contains_cancellation_error(ty: &Type) -> bool {
+    type_contains_by(
+        ty,
+        |candidate| matches!(candidate, Type::Class { name, .. } if name == "CancellationError"),
+    )
+}
+
 fn module_uses_failure_type(module: &HirModule) -> bool {
-    module
-        .functions
-        .iter()
-        .any(|func| function_uses_failure_type(func))
+    module.functions.iter().any(function_uses_failure_type)
         || module.classes.iter().any(|class| {
             class
                 .fields
                 .iter()
                 .any(|(_, field_ty)| type_contains_failure(field_ty))
-                || class
-                    .methods
-                    .iter()
-                    .any(|method| function_uses_failure_type(method))
+                || class.methods.iter().any(function_uses_failure_type)
         })
         || module
             .constants
@@ -977,25 +982,50 @@ fn module_uses_failure_type(module: &HirModule) -> bool {
             .any(|(_, ty, _)| type_contains_failure(ty))
 }
 
+fn module_uses_cancellation_error_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(function_uses_cancellation_error_type)
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_cancellation_error(field_ty))
+                || class
+                    .methods
+                    .iter()
+                    .any(function_uses_cancellation_error_type)
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_cancellation_error(ty))
+}
+
 fn module_uses_timeout_result_type(module: &HirModule) -> bool {
     module
         .functions
         .iter()
-        .any(|func| function_uses_timeout_result_type(func))
+        .any(function_uses_timeout_result_type)
         || module.classes.iter().any(|class| {
             class
                 .fields
                 .iter()
                 .any(|(_, field_ty)| type_contains_timeout_result(field_ty))
-                || class
-                    .methods
-                    .iter()
-                    .any(|method| function_uses_timeout_result_type(method))
+                || class.methods.iter().any(function_uses_timeout_result_type)
         })
         || module
             .constants
             .iter()
             .any(|(_, ty, _)| type_contains_timeout_result(ty))
+}
+
+fn function_uses_cancellation_error_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_cancellation_error(&param.ty))
+        || type_contains_cancellation_error(&func.return_type)
 }
 
 fn function_uses_failure_type(func: &HirFunction) -> bool {
