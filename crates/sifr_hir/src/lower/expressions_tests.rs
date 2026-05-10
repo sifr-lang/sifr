@@ -1637,6 +1637,20 @@ fn test_scope_spawn_rejects_self_with_non_send_field() {
 }
 
 #[test]
+fn test_scope_spawn_rejects_lock_guard_argument() {
+    let source = "class LockGuard[T]:\n    pass\n\nasync def worker(own guard: LockGuard[int]) -> int:\n    return 1\n\nasync def main() -> Result[None, ScopeFailure]:\n    guard: LockGuard[int] = LockGuard()\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(guard))\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("scope.spawn() cannot move `guard`")
+            && e.message.contains("across a task boundary")
+            && e.message.contains("`LockGuard` is a lock guard")
+            && e.code == Some(DiagnosticCode::OWN_NON_SEND_TASK_CAPTURE)
+    }));
+}
+
+#[test]
 fn test_mutable_borrow_parameter_across_await_rejected() {
     let source = "async def mutate_after_await(mut items: list[int]) -> int:\n    await task.sleep(0.0)\n    items.append(2)\n    return len(items)\n";
     let result = lower_source(source);

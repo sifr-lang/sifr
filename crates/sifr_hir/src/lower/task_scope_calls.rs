@@ -170,6 +170,9 @@ fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<St
             parent_class,
             ..
         } => {
+            if is_lock_guard_type_name(name) {
+                return Some(format!("`{}` is a lock guard", public_type_name(name)));
+            }
             if class_has_non_send_marker(name, parent_class.as_deref()) {
                 return Some(format!("`{name}` inherits the `NonSend` marker"));
             }
@@ -216,6 +219,17 @@ fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<St
 fn class_has_non_send_marker(name: &str, parent_chain: Option<&str>) -> bool {
     name == "NonSend"
         || parent_chain.is_some_and(|parents| parents.split('|').any(|parent| parent == "NonSend"))
+}
+
+fn is_lock_guard_type_name(name: &str) -> bool {
+    matches!(
+        public_type_name(name),
+        "LockGuard" | "RwLockReadGuard" | "RwLockWriteGuard"
+    )
+}
+
+fn public_type_name(name: &str) -> &str {
+    name.strip_prefix("__compat_sifr_sync_").unwrap_or(name)
 }
 
 pub(super) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {
