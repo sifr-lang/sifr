@@ -115,6 +115,14 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::SetComp(comp) => lower_set_comp(comp, ctx),
         Expr::DictComp(comp) => lower_dict_comp(comp, ctx),
         Expr::Generator(gen) => lower_generator_expr(gen, ctx),
+        Expr::YieldFrom(yield_from) if ctx.current_function_is_async_generator => {
+            expression_diagnostics::unsupported_form(
+                ctx,
+                "async yield from is not supported in v1; use async for over the source and yield values explicitly",
+                yield_from.range(),
+            );
+            None
+        }
         _ => {
             expression_diagnostics::unsupported_form(
                 ctx,

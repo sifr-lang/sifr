@@ -24,6 +24,16 @@ pub(super) fn resolve_async_generator_method_type(
                 Box::new(generator_close_error_type(ctx)),
             ))))
         }
+        "send" | "throw" => {
+            ctx.error_with_code_at(
+                DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                format!(
+                    "AsyncGenerator.{method}() is not supported in v1; consume async generators with async for, anext(), async comprehensions, or aclose()"
+                ),
+                method_range,
+            );
+            None
+        }
         _ => {
             ctx.error_with_code_at(
                 DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
