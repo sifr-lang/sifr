@@ -803,6 +803,7 @@ Implementation notes:
 - PR [#2058](https://github.com/sifr-lang/sifr/pull/2058) async-generator deferred return validation slice: `return None` and bare `return` inside async generators are now covered by e2e fail fixtures, keeping those paths fail-closed until async-generator state-machine return lowering lands.
 - PR [#2060](https://github.com/sifr-lang/sifr/pull/2060) async-generator yield-type positive validation slice: `async_generator_yield_types.sifr` now covers converged async-generator yield typing through computed values consumed by `async for`, complementing the literal-yield smoke test without claiming lazy state-machine lowering.
 - PR [#2062](https://github.com/sifr-lang/sifr/pull/2062) async list-comprehension lowering slice: single-clause async list comprehensions over `AsyncIterator`/`AsyncGenerator` now lower to an `anext().await` loop with compatible error propagation and `None` exhaustion, while nested async comprehensions, awaited filters, and async set/dict comprehensions remain deferred.
+- PR [#2064](https://github.com/sifr-lang/sifr/pull/2064) async set/dict comprehension lowering slice: single-clause async set and dict comprehensions over `AsyncIterator`/`AsyncGenerator` now share the async comprehension `anext().await` lowering with compatible error propagation and exhaustion handling; nested async comprehensions and awaited filters remain deferred.
 
 **Goal:** Complete general user-defined async control-flow protocols without dragging in broad ecosystem APIs.
 
