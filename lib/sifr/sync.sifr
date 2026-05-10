@@ -67,10 +67,15 @@ class ChannelSender[T]:
         return "ChannelSender"
 
     async def send(self, own value: T) -> Result[None, ClosedError]:
-        return self._channel.push(value)
+        channel: Channel[T] = self._channel
+        sent: Result[None, ClosedError] = channel.push(value)
+        self._channel = channel
+        return sent
 
     def close(self) -> None:
-        self._channel.close()
+        channel: Channel[T] = self._channel
+        channel.close()
+        self._channel = channel
 
     def clone(self) -> ChannelSender[T]:
         return ChannelSender(self._channel)
@@ -86,7 +91,10 @@ class ChannelReceiver[T]:
         return "ChannelReceiver"
 
     async def receive(self) -> Result[T, ClosedError]:
-        return self._channel.pop()
+        channel: Channel[T] = self._channel
+        received: Result[T, ClosedError] = channel.pop()
+        self._channel = channel
+        return received
 
 
 def channel[T]() -> tuple[ChannelSender[T], ChannelReceiver[T]]:

@@ -1,0 +1,9 @@
+from sifr.sync import Channel, ChannelSender, ClosedError
+
+
+async def main() -> Result[None, ClosedError]:
+    sender: ChannelSender[int] = ChannelSender(Channel([], -1))
+    sender.close()
+    sent: Result[None, ClosedError] = await sender.send(1)
+    assert str(sent) == "Err(ClosedError)"
+    return None

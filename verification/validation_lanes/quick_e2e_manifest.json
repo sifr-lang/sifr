@@ -31,6 +31,8 @@
     "bounded_channel_basic",
     "channel_factory_basic",
     "bounded_channel_factory_basic",
+    "channel_close",
+    "channel_fifo_order",
     "semaphore_basic",
     "notify_basic",
     "stdlib_json_consolidated",
