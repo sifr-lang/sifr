@@ -3901,6 +3901,10 @@ fn test_task_handle_join_lowers_to_task_result_observation() {
 
     assert!(result.rust_source.contains("enum __SifrTaskResult<T, E>"));
     assert!(result.rust_source.contains("async fn join(self)"));
+    assert!(result
+        .rust_source
+        .contains("Cancelled(__SifrFailure<CancellationError>)"));
+    assert!(result.rust_source.contains("fn cancelled() -> Self"));
     assert!(result.rust_source.contains("handle.join().await"));
     assert!(result
         .rust_source
@@ -3951,6 +3955,8 @@ fn test_task_handle_cancel_borrows_handle_and_aborts_child() {
     assert!(result
         .rust_source
         .contains(&format!("handle.{}{}", "can", "cel();")));
+    assert!(result.rust_source.contains("struct CancellationError"));
+    assert!(result.rust_source.contains("__SifrTaskResult::cancelled()"));
     assert!(result.rust_source.contains("handle.join().await"));
 }
 
@@ -3981,6 +3987,27 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
     assert!(result.rust_source.contains(
         "let result: __SifrTaskResult<i64, __SifrTimeoutResult<std::convert::Infallible>>"
     ));
+}
+
+#[test]
+fn test_failure_cancellation_error_annotation_lowers_to_private_evidence_type() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "def observe(failure: Failure[CancellationError]) -> None:\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("struct __SifrFailure<E>"));
+    assert!(result.rust_source.contains("struct CancellationError"));
+    assert!(result
+        .rust_source
+        .contains("fn observe(failure: &__SifrFailure<CancellationError>)"));
 }
 
 #[test]

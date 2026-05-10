@@ -294,6 +294,34 @@ pub fn build_timeout_result_type_items() -> Vec<RustItem> {
     }]
 }
 
+pub fn build_cancellation_error_type_items() -> Vec<RustItem> {
+    vec![
+        RustItem::Struct {
+            name: "CancellationError".to_string(),
+            visibility: Visibility::Private,
+            derives: vec!["Debug".to_string()],
+            fields: vec![],
+        },
+        RustItem::Impl {
+            target: "CancellationError".to_string(),
+            type_params: vec![],
+            trait_: None,
+            items: vec![RustItem::Fn {
+                name: "new".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: Some(RustType::Named("Self".to_string())),
+                body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                    name: "Self".to_string(),
+                    fields: vec![],
+                }))],
+                is_async: false,
+            }],
+        },
+    ]
+}
+
 pub fn build_task_scope_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
@@ -388,11 +416,54 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 },
                 crate::RustEnumVariant {
                     name: "Cancelled".to_string(),
-                    tuple_fields: vec![],
+                    tuple_fields: vec![RustType::Named(
+                        "__SifrFailure<CancellationError>".to_string(),
+                    )],
                     fields: vec![],
                     value: None,
                 },
             ],
+        },
+        RustItem::Impl {
+            target: "__SifrTaskResult<T, E>".to_string(),
+            type_params: vec![
+                crate::RustTypeParam {
+                    name: "T".to_string(),
+                    bounds: vec![],
+                },
+                crate::RustTypeParam {
+                    name: "E".to_string(),
+                    bounds: vec![],
+                },
+            ],
+            trait_: None,
+            items: vec![RustItem::Fn {
+                name: "cancelled".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: Some(RustType::Named("Self".to_string())),
+                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "Self".to_string(),
+                        "Cancelled".to_string(),
+                    ])),
+                    args: vec![RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "__SifrFailure".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "CancellationError".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![],
+                        }],
+                    }],
+                }))],
+                is_async: false,
+            }],
         },
         RustItem::Enum {
             name: "__SifrSelect2<A, B>".to_string(),
@@ -455,7 +526,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     params: vec![RustParam::SelfValue],
                     ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
                     body: vec![RustStmt::Expr(RustExpr::Ident(
-                        "let __SifrTask { receiver, observed, .. } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(receiver) = receiver {\n            return match receiver.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::Cancelled,\n            };\n        }\n        return __SifrTaskResult::Cancelled".to_string(),
+                        "let __SifrTask { receiver, observed, .. } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(receiver) = receiver {\n            return match receiver.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::cancelled(),\n            };\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
                     ))],
                     is_async: true,
                 },
@@ -490,7 +561,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                         "__SifrTaskResult<T, __SifrTimeoutResult<E>>".to_string(),
                     )),
                     body: vec![RustStmt::Expr(RustExpr::Ident(
-                        "let __SifrTask { receiver, abort_handle, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                        Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                        Ok(__SifrTaskResult::Cancelled) | Err(_) => __SifrTaskResult::Cancelled,\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    abort_handle.abort();\n                    let _ = receiver.await;\n                    __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout))\n                }\n            };\n        }\n        return __SifrTaskResult::Cancelled".to_string(),
+                        "let __SifrTask { receiver, abort_handle, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                        Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                        Ok(__SifrTaskResult::Cancelled(failure)) => __SifrTaskResult::Cancelled(failure),\n                        Err(_) => __SifrTaskResult::cancelled(),\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    abort_handle.abort();\n                    let _ = receiver.await;\n                    __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout))\n                }\n            };\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
                     ))],
                     is_async: true,
                 },
@@ -755,7 +826,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                             name: "child".to_string(),
                             ty: None,
                             value: RustExpr::Ident(
-                                "tokio::spawn(async move { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome })"
+                                "tokio::spawn(async move { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled(_) => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome })"
                                     .to_string(),
                             ),
                         },
@@ -931,7 +1002,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 "__SifrTaskResult<Vec<T>, E>".to_string(),
             )),
             body: vec![RustStmt::Expr(RustExpr::Ident(
-                "let input_len = handles.len();\n        let mut values: Vec<Option<T>> = std::iter::repeat_with(|| None).take(input_len).collect();\n        let mut abort_handles = Vec::with_capacity(input_len);\n        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();\n        let mut observer_count = 0usize;\n        for (index, handle) in handles.into_iter().enumerate() {\n            let __SifrTask { receiver: task_receiver, abort_handle, observed, _error } = handle;\n            observed.store(true, std::sync::atomic::Ordering::SeqCst);\n            abort_handles.push(abort_handle);\n            observer_count += 1;\n            let sender = sender.clone();\n            if let Some(task_receiver) = task_receiver {\n                tokio::spawn(async move {\n                    let result = match task_receiver.await {\n                        Ok(result) => result,\n                        Err(_) => __SifrTaskResult::Cancelled,\n                    };\n                    let _ = sender.send((index, result));\n                });\n            } else {\n                let _ = sender.send((index, __SifrTaskResult::Cancelled));\n            }\n        }\n        drop(sender);\n        let mut remaining = observer_count;\n        while remaining > 0 {\n            let Some((index, result)) = receiver.recv().await else {\n                break;\n            };\n            remaining -= 1;\n            match result {\n                __SifrTaskResult::Ok(value) => values[index] = Some(value),\n                __SifrTaskResult::Err(err) => {\n                    for abort_handle in &abort_handles {\n                        abort_handle.abort();\n                    }\n                    while remaining > 0 {\n                        if receiver.recv().await.is_none() {\n                            break;\n                        }\n                        remaining -= 1;\n                    }\n                    return __SifrTaskResult::Err(err);\n                }\n                __SifrTaskResult::Cancelled => {\n                    for abort_handle in &abort_handles {\n                        abort_handle.abort();\n                    }\n                    while remaining > 0 {\n                        if receiver.recv().await.is_none() {\n                            break;\n                        }\n                        remaining -= 1;\n                    }\n                    return __SifrTaskResult::Cancelled;\n                }\n            }\n        }\n        let mut ordered_values = Vec::with_capacity(input_len);\n        for value in values {\n            let Some(value) = value else {\n                return __SifrTaskResult::Cancelled;\n            };\n            ordered_values.push(value);\n        }\n        return __SifrTaskResult::Ok(ordered_values)".to_string(),
+                "let input_len = handles.len();\n        let mut values: Vec<Option<T>> = std::iter::repeat_with(|| None).take(input_len).collect();\n        let mut abort_handles = Vec::with_capacity(input_len);\n        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();\n        let mut observer_count = 0usize;\n        for (index, handle) in handles.into_iter().enumerate() {\n            let __SifrTask { receiver: task_receiver, abort_handle, observed, _error } = handle;\n            observed.store(true, std::sync::atomic::Ordering::SeqCst);\n            abort_handles.push(abort_handle);\n            observer_count += 1;\n            let sender = sender.clone();\n            if let Some(task_receiver) = task_receiver {\n                tokio::spawn(async move {\n                    let result = match task_receiver.await {\n                        Ok(result) => result,\n                        Err(_) => __SifrTaskResult::cancelled(),\n                    };\n                    let _ = sender.send((index, result));\n                });\n            } else {\n                let _ = sender.send((index, __SifrTaskResult::cancelled()));\n            }\n        }\n        drop(sender);\n        let mut remaining = observer_count;\n        while remaining > 0 {\n            let Some((index, result)) = receiver.recv().await else {\n                break;\n            };\n            remaining -= 1;\n            match result {\n                __SifrTaskResult::Ok(value) => values[index] = Some(value),\n                __SifrTaskResult::Err(err) => {\n                    for abort_handle in &abort_handles {\n                        abort_handle.abort();\n                    }\n                    while remaining > 0 {\n                        if receiver.recv().await.is_none() {\n                            break;\n                        }\n                        remaining -= 1;\n                    }\n                    return __SifrTaskResult::Err(err);\n                }\n                __SifrTaskResult::Cancelled(failure) => {\n                    for abort_handle in &abort_handles {\n                        abort_handle.abort();\n                    }\n                    while remaining > 0 {\n                        if receiver.recv().await.is_none() {\n                            break;\n                        }\n                        remaining -= 1;\n                    }\n                    return __SifrTaskResult::Cancelled(failure);\n                }\n            }\n        }\n        let mut ordered_values = Vec::with_capacity(input_len);\n        for value in values {\n            let Some(value) = value else {\n                return __SifrTaskResult::cancelled();\n            };\n            ordered_values.push(value);\n        }\n        return __SifrTaskResult::Ok(ordered_values)".to_string(),
             ))],
             is_async: true,
         },
@@ -954,7 +1025,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
             }],
             ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
             body: vec![RustStmt::Expr(RustExpr::Ident(
-                "let mut abort_handles = Vec::new();\n        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();\n        let mut observer_count = 0usize;\n        for handle in handles {\n            let __SifrTask { receiver: task_receiver, abort_handle, observed, _error } = handle;\n            observed.store(true, std::sync::atomic::Ordering::SeqCst);\n            abort_handles.push(abort_handle);\n            if let Some(task_receiver) = task_receiver {\n                observer_count += 1;\n                let sender = sender.clone();\n                tokio::spawn(async move {\n                    let result = match task_receiver.await {\n                        Ok(result) => result,\n                        Err(_) => __SifrTaskResult::Cancelled,\n                    };\n                    let _ = sender.send(result);\n                });\n            }\n        }\n        drop(sender);\n        let Some(first) = receiver.recv().await else {\n            return __SifrTaskResult::Cancelled;\n        };\n        for abort_handle in &abort_handles {\n            abort_handle.abort();\n        }\n        let mut remaining = observer_count.saturating_sub(1);\n        while remaining > 0 {\n            if receiver.recv().await.is_none() {\n                break;\n            }\n            remaining -= 1;\n        }\n        return first".to_string(),
+                "let mut abort_handles = Vec::new();\n        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();\n        let mut observer_count = 0usize;\n        for handle in handles {\n            let __SifrTask { receiver: task_receiver, abort_handle, observed, _error } = handle;\n            observed.store(true, std::sync::atomic::Ordering::SeqCst);\n            abort_handles.push(abort_handle);\n            if let Some(task_receiver) = task_receiver {\n                observer_count += 1;\n                let sender = sender.clone();\n                tokio::spawn(async move {\n                    let result = match task_receiver.await {\n                        Ok(result) => result,\n                        Err(_) => __SifrTaskResult::cancelled(),\n                    };\n                    let _ = sender.send(result);\n                });\n            }\n        }\n        drop(sender);\n        let Some(first) = receiver.recv().await else {\n            return __SifrTaskResult::cancelled();\n        };\n        for abort_handle in &abort_handles {\n            abort_handle.abort();\n        }\n        let mut remaining = observer_count.saturating_sub(1);\n        while remaining > 0 {\n            if receiver.recv().await.is_none() {\n                break;\n            }\n            remaining -= 1;\n        }\n        return first".to_string(),
             ))],
             is_async: true,
         },
@@ -993,7 +1064,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 "__SifrSelect2<__SifrTaskResult<A, EA>, __SifrTaskResult<B, EB>>".to_string(),
             )),
             body: vec![RustStmt::Expr(RustExpr::Ident(
-                "let __SifrTask { receiver: first_receiver, abort_handle: first_abort, observed: first_observed, _error: _first_error } = first;\n        let __SifrTask { receiver: second_receiver, abort_handle: second_abort, observed: second_observed, _error: _second_error } = second;\n        first_observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        second_observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        let (Some(mut first_receiver), Some(mut second_receiver)) = (first_receiver, second_receiver) else {\n            return __SifrSelect2::First(__SifrTaskResult::Cancelled);\n        };\n        return tokio::select! {\n            biased;\n            first_result = &mut first_receiver => {\n                second_abort.abort();\n                let _ = second_receiver.await;\n                let result = match first_result {\n                    Ok(result) => result,\n                    Err(_) => __SifrTaskResult::Cancelled,\n                };\n                __SifrSelect2::First(result)\n            },\n            second_result = &mut second_receiver => {\n                first_abort.abort();\n                let _ = first_receiver.await;\n                let result = match second_result {\n                    Ok(result) => result,\n                    Err(_) => __SifrTaskResult::Cancelled,\n                };\n                __SifrSelect2::Second(result)\n            }\n        }".to_string(),
+                "let __SifrTask { receiver: first_receiver, abort_handle: first_abort, observed: first_observed, _error: _first_error } = first;\n        let __SifrTask { receiver: second_receiver, abort_handle: second_abort, observed: second_observed, _error: _second_error } = second;\n        first_observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        second_observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        let (Some(mut first_receiver), Some(mut second_receiver)) = (first_receiver, second_receiver) else {\n            return __SifrSelect2::First(__SifrTaskResult::cancelled());\n        };\n        return tokio::select! {\n            biased;\n            first_result = &mut first_receiver => {\n                second_abort.abort();\n                let _ = second_receiver.await;\n                let result = match first_result {\n                    Ok(result) => result,\n                    Err(_) => __SifrTaskResult::cancelled(),\n                };\n                __SifrSelect2::First(result)\n            },\n            second_result = &mut second_receiver => {\n                first_abort.abort();\n                let _ = first_receiver.await;\n                let result = match second_result {\n                    Ok(result) => result,\n                    Err(_) => __SifrTaskResult::cancelled(),\n                };\n                __SifrSelect2::Second(result)\n            }\n        }".to_string(),
             ))],
             is_async: true,
         },
