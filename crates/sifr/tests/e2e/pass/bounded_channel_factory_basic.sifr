@@ -1,0 +1,8 @@
+from sifr.sync import ChannelReceiver, ChannelSender, bounded_channel
+
+
+def main() -> None:
+    endpoints: tuple[ChannelSender[int], ChannelReceiver[int]] = bounded_channel(2)
+    sender, receiver = endpoints
+    assert str(sender) == "ChannelSender"
+    assert str(receiver) == "ChannelReceiver"

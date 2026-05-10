@@ -89,6 +89,18 @@ class ChannelReceiver[T]:
         return self._channel.pop()
 
 
+def channel[T]() -> tuple[ChannelSender[T], ChannelReceiver[T]]:
+    sender_channel: Channel[T] = Channel([], -1)
+    receiver_channel: Channel[T] = Channel([], -1)
+    return (ChannelSender(sender_channel), ChannelReceiver(receiver_channel))
+
+
+def bounded_channel[T](capacity: int) -> tuple[ChannelSender[T], ChannelReceiver[T]]:
+    sender_channel: Channel[T] = Channel([], capacity)
+    receiver_channel: Channel[T] = Channel([], capacity)
+    return (ChannelSender(sender_channel), ChannelReceiver(receiver_channel))
+
+
 class LockGuard[T]:
     _value: T
 

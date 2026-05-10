@@ -29,6 +29,8 @@
     "rwlock_readers",
     "channel_basic",
     "bounded_channel_basic",
+    "channel_factory_basic",
+    "bounded_channel_factory_basic",
     "semaphore_basic",
     "notify_basic",
     "stdlib_json_consolidated",
