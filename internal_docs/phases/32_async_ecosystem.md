@@ -792,6 +792,7 @@ Implementation notes:
 - PR [#2036](https://github.com/sifr-lang/sifr/pull/2036) `AsyncClosable` break-cleanup slice: user-defined async iterators with `aclose() -> Result[None, E]` now run cleanup before `break` exits an `async for`, while nested-loop breaks are ignored for the outer iterator; `async_for_closable_iterator_cleanup.sifr` covers the positive path and `async_for_closable_break_return_type_rejected.sifr` covers incompatible close-error propagation.
 - PR [#2038](https://github.com/sifr-lang/sifr/pull/2038) `AsyncClosable` return-cleanup slice: user-defined async iterators now run `aclose()` before direct and nested-loop `return` exits an `async for`, preserving return-value evaluation before cleanup; `async_for_closable_iterator_return_cleanup.sifr` and `async_for_closable_iterator_nested_return_cleanup.sifr` are in the quick lane, with fail fixtures covering incompatible close-error propagation.
 - PR [#2040](https://github.com/sifr-lang/sifr/pull/2040) user-defined `async with` return-cleanup slice: explicit `return` inside a user-defined async context manager now evaluates the return payload, awaits `__aexit__(&AsyncExitCause::Return)`, and only then returns, while `raise` and `yield` remain rejected until ordinary-error cleanup lowering lands; `async_with_return_cleanup.sifr` is in the quick lane.
+- PR [#2042](https://github.com/sifr-lang/sifr/pull/2042) basic async-generator value-surface slice: `async def` bodies containing `yield` are now typed as `AsyncGenerator[T, E]`, calls return generator values directly instead of coroutines, generated Rust emits a non-async function returning the initial `AsyncGenerator<T, E>` helper, and `async_generator_basic.sifr` is in the quick lane. `await` inside async-generator bodies is explicitly rejected until state-machine lowering lands.
 
 **Goal:** Complete general user-defined async control-flow protocols without dragging in broad ecosystem APIs.
 
@@ -886,7 +887,7 @@ Implementation notes:
 
 ### milestone_async_7b: Async Generators and Async Comprehensions
 
-status: proposed
+status: in progress
 
 **Goal:** Make user-defined async streams and async collection-building part of the first async model.
 
