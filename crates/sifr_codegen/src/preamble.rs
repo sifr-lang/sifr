@@ -191,18 +191,84 @@ pub fn build_error_into_error_impl(source_name: &str) -> RustItem {
 }
 
 pub fn build_failure_type_items() -> Vec<RustItem> {
-    vec![RustItem::Struct {
-        name: "__SifrFailure<E>".to_string(),
-        visibility: Visibility::Private,
-        derives: vec!["Debug".to_string()],
-        fields: vec![
-            ("primary".to_string(), RustType::Named("E".to_string())),
-            (
-                "secondary".to_string(),
-                RustType::Vec(Box::new(RustType::Named("SecondaryError".to_string()))),
-            ),
-        ],
-    }]
+    vec![
+        RustItem::Struct {
+            name: "__SifrFailure<E>".to_string(),
+            visibility: Visibility::Private,
+            derives: vec!["Debug".to_string()],
+            fields: vec![
+                ("primary".to_string(), RustType::Named("E".to_string())),
+                (
+                    "secondary".to_string(),
+                    RustType::Vec(Box::new(RustType::Named("SecondaryError".to_string()))),
+                ),
+            ],
+        },
+        RustItem::Impl {
+            target: "__SifrFailure<E>".to_string(),
+            type_params: vec![crate::RustTypeParam {
+                name: "E".to_string(),
+                bounds: vec![],
+            }],
+            trait_: None,
+            items: vec![
+                RustItem::Fn {
+                    name: "new".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::Named {
+                        name: "primary".to_string(),
+                        ty: RustType::Named("E".to_string()),
+                    }],
+                    ret: Some(RustType::Named("Self".to_string())),
+                    body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                        name: "Self".to_string(),
+                        fields: vec![
+                            (
+                                "primary".to_string(),
+                                RustExpr::Ident("primary".to_string()),
+                            ),
+                            (
+                                "secondary".to_string(),
+                                RustExpr::Ident("Vec::new()".to_string()),
+                            ),
+                        ],
+                    }))],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "map_primary".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![crate::RustTypeParam {
+                        name: "F".to_string(),
+                        bounds: vec![],
+                    }],
+                    params: vec![
+                        RustParam::SelfValue,
+                        RustParam::Named {
+                            name: "f".to_string(),
+                            ty: RustType::Named("impl FnOnce(E) -> F".to_string()),
+                        },
+                    ],
+                    ret: Some(RustType::Named("__SifrFailure<F>".to_string())),
+                    body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                        name: "__SifrFailure".to_string(),
+                        fields: vec![
+                            (
+                                "primary".to_string(),
+                                RustExpr::Ident("f(self.primary)".to_string()),
+                            ),
+                            (
+                                "secondary".to_string(),
+                                RustExpr::Ident("self.secondary".to_string()),
+                            ),
+                        ],
+                    }))],
+                    is_async: false,
+                },
+            ],
+        },
+    ]
 }
 
 pub fn build_timeout_result_type_items() -> Vec<RustItem> {
@@ -316,7 +382,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 },
                 crate::RustEnumVariant {
                     name: "Err".to_string(),
-                    tuple_fields: vec![RustType::Named("E".to_string())],
+                    tuple_fields: vec![RustType::Named("__SifrFailure<E>".to_string())],
                     fields: vec![],
                     value: None,
                 },
@@ -424,7 +490,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                         "__SifrTaskResult<T, __SifrTimeoutResult<E>>".to_string(),
                     )),
                     body: vec![RustStmt::Expr(RustExpr::Ident(
-                        "let __SifrTask { receiver, abort_handle, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                        Ok(__SifrTaskResult::Err(err)) => __SifrTaskResult::Err(__SifrTimeoutResult::Inner(err)),\n                        Ok(__SifrTaskResult::Cancelled) | Err(_) => __SifrTaskResult::Cancelled,\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    abort_handle.abort();\n                    let _ = receiver.await;\n                    __SifrTaskResult::Err(__SifrTimeoutResult::Timeout)\n                }\n            };\n        }\n        return __SifrTaskResult::Cancelled".to_string(),
+                        "let __SifrTask { receiver, abort_handle, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                        Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                        Ok(__SifrTaskResult::Cancelled) | Err(_) => __SifrTaskResult::Cancelled,\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    abort_handle.abort();\n                    let _ = receiver.await;\n                    __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout))\n                }\n            };\n        }\n        return __SifrTaskResult::Cancelled".to_string(),
                     ))],
                     is_async: true,
                 },
@@ -689,7 +755,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                             name: "child".to_string(),
                             ty: None,
                             value: RustExpr::Ident(
-                                "tokio::spawn(async move { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(err) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome })"
+                                "tokio::spawn(async move { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome })"
                                     .to_string(),
                             ),
                         },
