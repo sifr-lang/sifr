@@ -212,6 +212,20 @@ fn collect_stmt_error_refs(
                     collect_stmt_error_refs(else_body, referenced, builtin_error_classes);
                 }
             }
+            HirStmt::AsyncFor {
+                iter,
+                iter_error_ty,
+                body,
+                else_body,
+                ..
+            } => {
+                collect_expr_error_refs(iter, referenced, builtin_error_classes);
+                collect_type_error_refs(iter_error_ty, referenced, builtin_error_classes);
+                collect_stmt_error_refs(body, referenced, builtin_error_classes);
+                if let Some(else_body) = else_body {
+                    collect_stmt_error_refs(else_body, referenced, builtin_error_classes);
+                }
+            }
             HirStmt::TupleUnpack { value, .. } | HirStmt::StarUnpack { value, .. } => {
                 collect_expr_error_refs(value, referenced, builtin_error_classes);
             }

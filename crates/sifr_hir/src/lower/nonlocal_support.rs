@@ -147,6 +147,12 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
             body,
             else_body,
             ..
+        }
+        | HirStmt::AsyncFor {
+            iter,
+            body,
+            else_body,
+            ..
         } => {
             hir_expr_calls_function(iter, func_name)
                 || hir_body_calls_function(body, func_name)

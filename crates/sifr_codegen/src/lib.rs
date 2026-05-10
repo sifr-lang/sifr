@@ -2251,6 +2251,18 @@ impl RustEmitter {
             }
         }
 
+        if let HirStmt::AsyncFor {
+            target, iter, body, ..
+        } = stmt
+        {
+            if let Some(lowered_stmt) = self.try_lower_async_for_stmt_for_ir(target, iter, body)? {
+                self.push_captured_stmt(&self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt));
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+
         if let HirStmt::TupleUnpack { targets, value } = stmt {
             if let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? {
                 let lowered_stmts = crate::lower_tuple_unpack_targets(

@@ -33,6 +33,9 @@ pub(super) fn collect_yield_types(stmts: &[HirStmt]) -> Vec<Type> {
                 }
                 | HirStmt::For {
                     body, else_body, ..
+                }
+                | HirStmt::AsyncFor {
+                    body, else_body, ..
                 } => {
                     walk(body, out);
                     if let Some(else_body) = else_body {

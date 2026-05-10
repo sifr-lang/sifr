@@ -54,6 +54,9 @@ fn stmt_mutates_iter_source(stmt: &HirStmt, source_name: &str) -> bool {
         }
         | HirStmt::For {
             body, else_body, ..
+        }
+        | HirStmt::AsyncFor {
+            body, else_body, ..
         } => {
             loop_body_mutates_iter_source(body, source_name)
                 || else_body

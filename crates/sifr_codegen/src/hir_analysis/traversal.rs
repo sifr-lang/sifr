@@ -445,6 +445,12 @@ where
             body,
             else_body,
             ..
+        }
+        | HirStmt::AsyncFor {
+            iter,
+            body,
+            else_body,
+            ..
         } => {
             if matches!(walk_expr_until(iter, on_expr), TraversalControl::Stop) {
                 return TraversalControl::Stop;

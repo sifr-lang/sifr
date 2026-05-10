@@ -33,6 +33,7 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::If { .. }
         | HirStmt::While { .. }
         | HirStmt::For { .. }
+        | HirStmt::AsyncFor { .. }
         | HirStmt::Pass
         | HirStmt::Continue
         | HirStmt::Break
@@ -285,6 +286,12 @@ fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
             Ok(())
         }
         HirStmt::For {
+            iter,
+            body,
+            else_body,
+            ..
+        }
+        | HirStmt::AsyncFor {
             iter,
             body,
             else_body,
@@ -1472,6 +1479,7 @@ fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
         | HirStmt::If { .. }
         | HirStmt::While { .. }
         | HirStmt::For { .. }
+        | HirStmt::AsyncFor { .. }
         | HirStmt::Break
         | HirStmt::Continue
         | HirStmt::TryExcept { .. }

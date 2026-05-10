@@ -1,4 +1,5 @@
 use super::assignment_widening::reconcile_optional_reassignment;
+use super::async_for::lower_async_for;
 use super::async_with::lower_async_with;
 use super::aug_assign_lowering::lower_aug_assign as lower_aug_assign_impl;
 use super::binding_mutability::ensure_mutable_parameter_binding;
@@ -251,7 +252,13 @@ pub(super) fn lower_stmt(
         }
         Stmt::If(if_stmt) => lower_if(if_stmt, func_type, ctx),
         Stmt::While(while_stmt) => lower_while(while_stmt, func_type, ctx),
-        Stmt::For(for_stmt) => lower_for(for_stmt, func_type, ctx),
+        Stmt::For(for_stmt) => {
+            if for_stmt.is_async {
+                lower_async_for(for_stmt, func_type, ctx)
+            } else {
+                lower_for(for_stmt, func_type, ctx)
+            }
+        }
         Stmt::Break(break_stmt) => {
             if !ctx.in_loop() {
                 super::flow_diagnostics::break_outside_loop(ctx, break_stmt.range());

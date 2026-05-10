@@ -517,6 +517,7 @@ fn stmt_contains_await(stmt: &HirStmt) -> bool {
                     .as_ref()
                     .is_some_and(|body| body.iter().any(stmt_contains_await))
         }
+        HirStmt::AsyncFor { .. } => true,
         HirStmt::AsyncWith { kind, body, .. } => {
             matches!(
                 kind,
@@ -595,6 +596,12 @@ fn stmt_contains_task_spawn(stmt: &HirStmt) -> bool {
             body,
             else_body,
             ..
+        }
+        | HirStmt::AsyncFor {
+            iter,
+            body,
+            else_body,
+            ..
         } => {
             expr_contains_task_spawn(iter)
                 || body.iter().any(stmt_contains_task_spawn)
@@ -654,6 +661,9 @@ fn stmt_contains_scope_early_exit(stmt: &HirStmt) -> bool {
             body, else_body, ..
         }
         | HirStmt::For {
+            body, else_body, ..
+        }
+        | HirStmt::AsyncFor {
             body, else_body, ..
         } => {
             body.iter().any(stmt_contains_scope_early_exit)

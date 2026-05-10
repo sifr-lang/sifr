@@ -1,0 +1,26 @@
+# expect-error: SIFR-TYPE-0002
+
+class StreamError(Error):
+    pass
+
+
+class OneShotStream:
+    done: bool
+
+    def __init__(self):
+        self.done = False
+
+    async def anext(self) -> Result[Option[int], StreamError]:
+        if self.done:
+            return None
+        self.done = True
+        value: Option[int] = 1
+        return value
+
+
+async def main() -> Result[None, StreamError]:
+    stream: OneShotStream = OneShotStream()
+    async with task.timeout(1.0):
+        async for value in stream:
+            assert value == 1
+    return None

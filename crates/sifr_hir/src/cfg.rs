@@ -417,9 +417,14 @@ impl CfgBuilder {
             }
             HirStmt::For {
                 body, else_body, ..
+            }
+            | HirStmt::AsyncFor {
+                body, else_body, ..
             } => {
-                let for_block =
-                    self.new_block(CfgBlockLabel::Statement("for"), top_level_stmt_index);
+                let for_block = self.new_block(
+                    CfgBlockLabel::Statement(stmt_label(stmt)),
+                    top_level_stmt_index,
+                );
                 let false_target = if let Some(else_body) = else_body {
                     self.build_stmt_list(else_body, next, loop_targets, false)
                 } else {
@@ -518,6 +523,7 @@ fn stmt_label(stmt: &HirStmt) -> &'static str {
         HirStmt::If { .. } => "if",
         HirStmt::While { .. } => "while",
         HirStmt::For { .. } => "for",
+        HirStmt::AsyncFor { .. } => "async_for",
         HirStmt::Break => "break",
         HirStmt::Continue => "continue",
         HirStmt::TupleUnpack { .. } => "tuple_unpack",

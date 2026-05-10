@@ -787,6 +787,7 @@ Implementation notes:
 
 - PR [#2028](https://github.com/sifr-lang/sifr/pull/2028) user-defined `async with` protocol slice: structural async context managers with `__aenter__() -> Result[T, E]` and `__aexit__(AsyncExitCause) -> Result[None, E]` now lower on the normal-exit path, with `async_with_basic.sifr` in the quick lane and `async_with_missing_protocol_rejected.sifr` covering missing protocol rejection. Abnormal-exit cleanup, cancellation causes, secondary cleanup evidence, and `async for` remain follow-up slices in this milestone.
 - PR [#2030](https://github.com/sifr-lang/sifr/pull/2030) named async context state slice: named user-defined async context managers are preserved across the normal-exit lowering so post-body state validates LIFO cleanup order through `async_with_nested_cleanup_order.sifr`.
+- Async iteration protocol slice: user-defined async iterators with `anext() -> Result[Option[T], E]` are lowered for normal exhaustion and fallible propagation through `async_for_stream_result.sifr`, with non-async iterable rejection and timeout await-point validation covered by fail fixtures.
 
 **Goal:** Complete general user-defined async control-flow protocols without dragging in broad ecosystem APIs.
 
