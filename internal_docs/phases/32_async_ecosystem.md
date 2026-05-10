@@ -679,7 +679,7 @@ status: in_progress
 
 - PR [#1967](https://github.com/sifr-lang/sifr/pull/1967) `sync.Shared` surface slice: `sifr.sync.Shared[T]` is available as the first immutable sharing primitive, with basic construction/access validation and the `spawn_capture_immutable_shared_ok.sifr` milestone fixture in the quick lane.
 - PR [#1971](https://github.com/sifr-lang/sifr/pull/1971) `sync.Lock`/`sync.RwLock` surface slice: basic lock/read/write guard types are available through `sifr.sync`, with `lock_basic.sifr` and `rwlock_readers.sifr` in the quick lane. Guard liveness diagnostics and contention semantics remain deferred to later milestone_async_5 slices.
-- In progress `sync.Semaphore`/`sync.Notify` surface slice: basic permit and notification coordination surfaces are available through `sifr.sync`, async stdlib class methods are preserved as coroutine-returning method signatures, and `semaphore_basic.sifr` plus `notify_basic.sifr` are in the quick lane. Real blocking/wakeup semantics and cancellation-aware coordination remain deferred to later milestone_async_5 slices.
+- PR [#1973](https://github.com/sifr-lang/sifr/pull/1973) `sync.Semaphore`/`sync.Notify` surface slice: basic permit and notification coordination surfaces are available through `sifr.sync`, async stdlib class methods are preserved as coroutine-returning method signatures, and `semaphore_basic.sifr` plus `notify_basic.sifr` are in the quick lane. Real blocking/wakeup semantics and cancellation-aware coordination remain deferred to later milestone_async_5 slices.
 
 ---
 
