@@ -1,0 +1,17 @@
+from sifr.sync import ChannelReceiver, ChannelSender, ClosedError, channel
+
+
+async def main() -> Result[None, ClosedError]:
+    endpoints: tuple[ChannelSender[int], ChannelReceiver[int]] = channel()
+    sender, receiver = endpoints
+    cloned_sender: ChannelSender[int] = sender.clone()
+
+    sent_before_close: Result[None, ClosedError] = await cloned_sender.send(11)
+    sender.close()
+    received: Result[int, ClosedError] = await receiver.receive()
+    sent_after_close: Result[None, ClosedError] = await cloned_sender.send(12)
+
+    assert str(sent_before_close) == "Ok(())"
+    assert str(received) == "Ok(11)"
+    assert str(sent_after_close) == "Err(ClosedError)"
+    return None
