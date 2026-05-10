@@ -35,6 +35,7 @@
     "channel_fifo_order",
     "channel_drop_last_sender_closes_after_drain",
     "channel_sender_close_clone_closes_all",
+    "channel_drop_receiver_closes_senders",
     "semaphore_basic",
     "notify_basic",
     "stdlib_json_consolidated",

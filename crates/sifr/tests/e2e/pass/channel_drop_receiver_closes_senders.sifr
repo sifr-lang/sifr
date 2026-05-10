@@ -1,0 +1,15 @@
+from sifr.sync import ChannelReceiver, ChannelSender, ClosedError, channel
+
+
+def sender_after_receiver_drop() -> ChannelSender[int]:
+    endpoints: tuple[ChannelSender[int], ChannelReceiver[int]] = channel()
+    sender, receiver = endpoints
+    assert str(receiver) == "ChannelReceiver"
+    return sender
+
+
+async def main() -> Result[None, ClosedError]:
+    sender: ChannelSender[int] = sender_after_receiver_drop()
+    sent: Result[None, ClosedError] = await sender.send(9)
+    assert str(sent) == "Err(ClosedError)"
+    return None
