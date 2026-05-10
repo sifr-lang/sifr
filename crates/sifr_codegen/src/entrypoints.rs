@@ -60,6 +60,9 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if uses_task_scope || super::module_uses_cancellation_error_type(module) {
         emitted_items.extend(super::build_cancellation_error_type_items());
     }
+    if super::module_uses_async_exit_cause_type(module) {
+        emitted_items.extend(super::build_async_exit_cause_type_items());
+    }
     if uses_task_scope {
         emitted_items.extend(super::build_task_scope_items());
     }

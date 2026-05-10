@@ -101,12 +101,20 @@ pub struct HirFunction {
     pub type_params: Vec<String>,
 }
 
-/// Built-in async-with forms recognized before general async context managers.
+/// Async-with forms recognized by the compiler.
 #[derive(Debug, Clone)]
 pub enum HirAsyncWithKind {
     TaskScope,
     TaskGroup,
-    TaskTimeout { duration: HirExpr },
+    TaskTimeout {
+        duration: HirExpr,
+    },
+    UserDefined {
+        context: HirExpr,
+        enter_value_ty: Type,
+        enter_error_ty: Type,
+        exit_error_ty: Type,
+    },
 }
 
 /// A function parameter with its type, convention, and optional default value.

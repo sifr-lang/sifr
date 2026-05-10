@@ -278,6 +278,9 @@ fn collect_stmt_error_refs(
                         referenced.insert("TimeoutError".to_string());
                         collect_expr_error_refs(duration, referenced, builtin_error_classes);
                     }
+                    sifr_hir::HirAsyncWithKind::UserDefined { context, .. } => {
+                        collect_expr_error_refs(context, referenced, builtin_error_classes);
+                    }
                     sifr_hir::HirAsyncWithKind::TaskScope
                     | sifr_hir::HirAsyncWithKind::TaskGroup => {
                         referenced.insert("ScopeFailure".to_string());

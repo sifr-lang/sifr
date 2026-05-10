@@ -89,6 +89,151 @@ fn return_type_accepts_scope_failure(return_type: &Type) -> bool {
     scope_failure_type().is_assignable_to(err)
 }
 
+fn async_exit_cause_type() -> Type {
+    Type::Class {
+        name: "AsyncExitCause".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    }
+}
+
+fn return_type_accepts_error(return_type: &Type, error_ty: &Type) -> bool {
+    let Type::Result(_, err) = return_type.resolve_alias() else {
+        return false;
+    };
+    error_ty.is_assignable_to(err)
+}
+
+fn method_signature<'a>(
+    methods: &'a [(String, FunctionType)],
+    method_name: &str,
+) -> Option<&'a FunctionType> {
+    methods.iter().find_map(
+        |(name, ft)| {
+            if name == method_name {
+                Some(ft)
+            } else {
+                None
+            }
+        },
+    )
+}
+
+fn async_context_methods(ty: &Type) -> Option<(&FunctionType, &FunctionType)> {
+    match ty.resolve_alias() {
+        Type::Class { methods, .. } | Type::Protocol { methods, .. } => Some((
+            method_signature(methods, "__aenter__")?,
+            method_signature(methods, "__aexit__")?,
+        )),
+        _ => None,
+    }
+}
+
+fn async_result_parts(ty: &Type) -> Option<(Type, Type)> {
+    let Type::Coroutine(ok_ty, err_ty) = ty.resolve_alias() else {
+        return None;
+    };
+    Some((ok_ty.as_ref().clone(), err_ty.as_ref().clone()))
+}
+
+fn lower_user_async_with(
+    with_stmt: &StmtWith,
+    item: &sifr_python_ast::WithItem,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
+    ctx.with_pushed_scope(|ctx| {
+        let context = lower_expr(&item.context_expr, ctx)?;
+        let context_ty = context.ty().clone();
+        let Some((enter_ft, exit_ft)) = async_context_methods(&context_ty) else {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "async with requires an async context manager with __aenter__() and __aexit__(AsyncExitCause), got '{}'",
+                    context_ty.display_name()
+                ),
+                item.context_expr.range(),
+            );
+            return None;
+        };
+        if !enter_ft.params.is_empty() {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "__aenter__ for async with must take no arguments".to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        }
+        if exit_ft.params.len() != 1 || !async_exit_cause_type().is_assignable_to(&exit_ft.params[0].1) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "__aexit__ for async with must take exactly one AsyncExitCause argument".to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        }
+        let Some((enter_value_ty, enter_error_ty)) = async_result_parts(&enter_ft.return_type)
+        else {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "__aenter__ for async with must be async and return Result[T, E]".to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        };
+        let Some((exit_value_ty, exit_error_ty)) = async_result_parts(&exit_ft.return_type) else {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "__aexit__ for async with must be async and return Result[None, E]".to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        };
+        if !matches!(exit_value_ty.resolve_alias(), Type::None) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "__aexit__ for async with must return Result[None, E]".to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        }
+        if !return_type_accepts_error(&func_type.return_type, &enter_error_ty)
+            || !return_type_accepts_error(&func_type.return_type, &exit_error_ty)
+        {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "fallible async context manager enter/exit requires the enclosing function to return a compatible Result error type".to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        }
+        let target = simple_with_target_name(item.optional_vars.as_deref(), ctx);
+        if let Some(name) = &target {
+            ctx.scope.define(name.clone(), enter_value_ty.clone());
+        }
+        let body = lower_stmts(&with_stmt.body, func_type, ctx);
+        if body.iter().any(stmt_contains_scope_early_exit) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "user-defined async context managers cannot use return, raise, or yield inside the body until abnormal-exit cleanup lowering is implemented".to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        }
+        Some(HirStmt::AsyncWith {
+            kind: HirAsyncWithKind::UserDefined {
+                context,
+                enter_value_ty,
+                enter_error_ty,
+                exit_error_ty,
+            },
+            target,
+            body,
+        })
+    })
+}
+
 fn expr_contains_await(expr: &crate::hir_nodes::HirExpr) -> bool {
     use crate::hir_nodes::HirExpr;
 
@@ -373,8 +518,10 @@ fn stmt_contains_await(stmt: &HirStmt) -> bool {
                     .is_some_and(|body| body.iter().any(stmt_contains_await))
         }
         HirStmt::AsyncWith { kind, body, .. } => {
-            matches!(kind, HirAsyncWithKind::TaskTimeout { .. })
-                || body.iter().any(stmt_contains_await)
+            matches!(
+                kind,
+                HirAsyncWithKind::TaskTimeout { .. } | HirAsyncWithKind::UserDefined { .. }
+            ) || body.iter().any(stmt_contains_await)
         }
         HirStmt::Delete { object, index } => {
             expr_contains_await(object) || expr_contains_await(index)
@@ -550,7 +697,7 @@ pub(super) fn lower_async_with(
     if with_stmt.items.len() != 1 {
         statement_diagnostics::unsupported_form(
             ctx,
-            "async with supports exactly one built-in context item in v1",
+            "async with supports exactly one context item in v1",
             with_stmt.range(),
         );
         return None;
@@ -558,12 +705,7 @@ pub(super) fn lower_async_with(
 
     let item = &with_stmt.items[0];
     let Some((task_fn, call)) = async_task_call_name(&item.context_expr) else {
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            "async with only supports task.scope(), task.TaskGroup(), and task.timeout(duration) in v1".to_string(),
-            item.context_expr.range(),
-        );
-        return None;
+        return lower_user_async_with(with_stmt, item, func_type, ctx);
     };
 
     if !call.arguments.keywords.is_empty() {

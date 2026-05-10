@@ -127,6 +127,16 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
             FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
         );
     }
+    {
+        let class_ty = Type::Class {
+            name: "AsyncExitCause".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        ctx.class_types
+            .insert("AsyncExitCause".to_string(), class_ty);
+    }
 
     // --- JSON integer boundary errors (parent: Error, profile-specific fields) ---
     {

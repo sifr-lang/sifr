@@ -1,5 +1,9 @@
 # expect-error: SIFR-TYPE-0002
 
+class PlainContext:
+    pass
+
+
 async def main() -> None:
-    async with other.scope() as scope:
-        return None
+    async with PlainContext() as scope:
+        observed: int = 1

@@ -346,6 +346,53 @@ pub fn build_cancellation_error_type_items() -> Vec<RustItem> {
     ]
 }
 
+pub fn build_async_exit_cause_type_items() -> Vec<RustItem> {
+    vec![RustItem::Enum {
+        name: "AsyncExitCause".to_string(),
+        visibility: Visibility::Private,
+        derives: vec!["Clone".to_string(), "Debug".to_string()],
+        repr: None,
+        variants: vec![
+            crate::RustEnumVariant {
+                name: "Normal".to_string(),
+                tuple_fields: vec![],
+                fields: vec![],
+                value: None,
+            },
+            crate::RustEnumVariant {
+                name: "Return".to_string(),
+                tuple_fields: vec![],
+                fields: vec![],
+                value: None,
+            },
+            crate::RustEnumVariant {
+                name: "OrdinaryError".to_string(),
+                tuple_fields: vec![RustType::Named("String".to_string())],
+                fields: vec![],
+                value: None,
+            },
+            crate::RustEnumVariant {
+                name: "Timeout".to_string(),
+                tuple_fields: vec![],
+                fields: vec![],
+                value: None,
+            },
+            crate::RustEnumVariant {
+                name: "Cancellation".to_string(),
+                tuple_fields: vec![],
+                fields: vec![],
+                value: None,
+            },
+            crate::RustEnumVariant {
+                name: "RuntimeFault".to_string(),
+                tuple_fields: vec![RustType::Named("String".to_string())],
+                fields: vec![],
+                value: None,
+            },
+        ],
+    }]
+}
+
 pub fn build_task_scope_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
