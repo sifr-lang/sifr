@@ -1,0 +1,25 @@
+from sifr.sync import ChannelReceiver, ChannelSender, ClosedError, bounded_channel
+
+
+async def drain_two(own mut receiver: ChannelReceiver[int]) -> Result[int, ClosedError]:
+    first: Result[int, ClosedError] = await receiver.receive()
+    await task.sleep(0.0)
+    second: Result[int, ClosedError] = await receiver.receive()
+    assert str(first) == "Ok(1)"
+    assert str(second) == "Ok(2)"
+    return 3
+
+
+async def main() -> Result[None, ScopeFailure]:
+    endpoints: tuple[ChannelSender[int], ChannelReceiver[int]] = bounded_channel(1)
+    sender, receiver = endpoints
+
+    async with task.scope() as scope:
+        first_send: Result[None, ClosedError] = await sender.send(1)
+        handle = scope.spawn(drain_two(receiver))
+        second_send: Result[None, ClosedError] = await sender.send(2)
+        drained = await handle
+        assert str(first_send) == "Ok(())"
+        assert str(second_send) == "Ok(())"
+        assert str(drained) == "Ok(3)"
+    return None

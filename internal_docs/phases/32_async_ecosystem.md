@@ -693,6 +693,7 @@ status: in_progress
 - PR [#1995](https://github.com/sifr-lang/sifr/pull/1995) shared channel runtime slice: `sync.channel[T]()` and `sync.bounded_channel[T](capacity)` now use shared queue endpoint state in generated Rust, and the factory fixtures prove values sent through the paired sender are received through the paired receiver.
 - PR [#1997](https://github.com/sifr-lang/sifr/pull/1997) channel sender clone-close validation slice: `channel_sender_close_clone_closes_all.sifr` validates that cloned senders share channel state, sender `close()` closes the whole channel, and buffered messages remain receivable after close.
 - PR [#1999](https://github.com/sifr-lang/sifr/pull/1999) channel receiver-drop validation slice: `channel_drop_receiver_closes_senders.sifr` validates that dropping the receiver endpoint closes the channel immediately to senders.
+- Current slice: add `channel_backpressure.sifr` to validate bounded channel send/receive coordination across a task boundary.
 
 ---
 
