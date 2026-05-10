@@ -8,6 +8,7 @@ use sifr_python_ast::{Expr, Stmt, StmtClassDef};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::HashMap;
 
+use super::async_await::coroutine_result_type;
 use super::class_field_inference::collect_constructor_self_field_assignments;
 use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
@@ -32,6 +33,14 @@ fn class_method_signature<'a>(
             }
         },
     )
+}
+
+fn method_signature_return_type(func: &sifr_python_ast::StmtFunctionDef, return_ty: Type) -> Type {
+    if func.is_async {
+        coroutine_result_type(&return_ty)
+    } else {
+        return_ty
+    }
 }
 
 fn option_member_type(ty: &Type) -> Option<Type> {
@@ -373,7 +382,7 @@ pub(super) fn collect_class_type(
                 } else {
                     Type::None
                 };
-                let ft = FunctionType::new(params, return_ty);
+                let ft = FunctionType::new(params, method_signature_return_type(func, return_ty));
                 // Register method as ClassName.method_name for lookup
                 ctx.functions
                     .insert(format!("{class_name}.{method_name}"), ft.clone());
@@ -414,7 +423,10 @@ pub(super) fn collect_class_type(
                 } else {
                     Type::None
                 };
-                methods.push((method_name, FunctionType::new(params, return_ty)));
+                methods.push((
+                    method_name,
+                    FunctionType::new(params, method_signature_return_type(func, return_ty)),
+                ));
             }
         }
         let proto_ty = Type::Protocol {
@@ -625,7 +637,10 @@ pub(super) fn collect_class_type(
                         ctx.function_defaults
                             .insert(format!("{class_name}.{method_name}"), defaults);
                     }
-                    methods.push((method_name, FunctionType::new(params, return_ty)));
+                    methods.push((
+                        method_name,
+                        FunctionType::new(params, method_signature_return_type(func, return_ty)),
+                    ));
 
                     collect_constructor_self_field_assignments(
                         &func.body,
