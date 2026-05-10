@@ -1122,8 +1122,9 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             ctx.borrowed_params.insert(param.name.clone());
         }
     }
+    let is_async_generator = func.is_async && function_body_contains_yield(&func.body);
     if func.is_async {
-        if function_body_contains_yield(&func.body) {
+        if is_async_generator {
             if let Some(await_range) = first_await_range_in_stmts(&func.body) {
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISMATCH,
@@ -1151,9 +1152,12 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
     // Lower body
     let previous_owner = ctx.current_owner.replace(func.name.to_string());
     let previous_async = ctx.current_function_is_async;
+    let previous_async_generator = ctx.current_function_is_async_generator;
     ctx.current_function_is_async = func.is_async;
+    ctx.current_function_is_async_generator = is_async_generator;
     let body = lower_stmts(&func.body, &ft, ctx);
     ctx.current_function_is_async = previous_async;
+    ctx.current_function_is_async_generator = previous_async_generator;
     ctx.current_owner = previous_owner;
 
     ctx.borrowed_params.clear();

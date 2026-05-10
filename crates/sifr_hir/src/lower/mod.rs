@@ -176,6 +176,8 @@ pub(super) struct LowerCtx {
     in_try_block: bool,
     /// Whether the currently lowered function body is async.
     current_function_is_async: bool,
+    /// Whether the currently lowered function body is an `async def` containing `yield`.
+    current_function_is_async_generator: bool,
     /// Error types collected from Result-returning calls during try body lowering.
     /// Each entry is the name of an error class encountered via auto-unwrap in the current try block.
     try_block_error_types: std::collections::HashSet<String>,
@@ -242,6 +244,7 @@ impl LowerCtx {
             current_parent_class: None,
             in_try_block: false,
             current_function_is_async: false,
+            current_function_is_async_generator: false,
             try_block_error_types: std::collections::HashSet::new(),
             error_types: std::collections::HashSet::new(),
             error_hierarchy: HashMap::new(),
