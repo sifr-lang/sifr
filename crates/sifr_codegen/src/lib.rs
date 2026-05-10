@@ -1360,7 +1360,7 @@ fn module_uses_task_scope(module: &HirModule) -> bool {
         )
     }
     fn expr_uses_task_scope_runtime(expr: &HirExpr) -> bool {
-        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_gather" || func == "__sifr_task_race" || func == "__sifr_task_select")
+        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_gather" || func == "__sifr_task_race" || func == "__sifr_task_select" || func == "__sifr_spawn_blocking_infallible" || func == "__sifr_spawn_blocking_result")
     }
 
     for func in &module.functions {

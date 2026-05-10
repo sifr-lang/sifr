@@ -29,6 +29,7 @@
     "cancellation_cleanup_runs",
     "io_bound_annotation_warning",
     "cpu_bound_annotation_warning",
+    "spawn_blocking_basic",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",

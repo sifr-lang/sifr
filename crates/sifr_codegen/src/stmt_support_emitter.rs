@@ -274,7 +274,7 @@ impl RustEmitter {
 
         if matches!(
             crate::resolve_alias_type_for_plain_call(value.ty()),
-            Type::Task(_, _)
+            Type::Task(_, _) | Type::BlockingTask(_, _)
         ) {
             let Some(receiver) = crate::try_lower_leaf_or_name_expr_result(value)? else {
                 return Ok(None);

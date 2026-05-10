@@ -1,6 +1,7 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::task_scope_calls::mark_task_handle_observed;
+use super::task_scope_calls::non_send_reason;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
@@ -31,6 +32,7 @@ pub(super) fn lower_task_module_call(
         "gather" => lower_task_gather_call(call, ctx),
         "race" => lower_task_race_call(call, ctx),
         "select" => lower_task_select_call(call, ctx),
+        "spawn_blocking" => lower_task_spawn_blocking_call(call, ctx),
         "spawn" => {
             expression_diagnostics::type_mismatch(
                 ctx,
@@ -41,6 +43,100 @@ pub(super) fn lower_task_module_call(
         }
         _ => TaskCallLowering::NoMatch,
     }
+}
+
+fn lower_task_spawn_blocking_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {
+    if !ctx.current_function_is_async {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "task.spawn_blocking() is only valid inside async functions".to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if !call.arguments.keywords.is_empty() {
+        expression_diagnostics::call_unexpected_keyword(
+            ctx,
+            "task.spawn_blocking() does not accept keyword arguments".to_string(),
+            first_call_keyword_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if call.arguments.args.len() != 1 {
+        expression_diagnostics::call_wrong_positional_count(
+            ctx,
+            "task.spawn_blocking() takes exactly one sync function argument".to_string(),
+            call_arity_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+
+    let worker = lower_expr(&call.arguments.args[0], ctx);
+    let Some(worker) = worker else {
+        return TaskCallLowering::Rejected;
+    };
+    let Type::Function(ft) = worker.ty().resolve_alias() else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "task.spawn_blocking() requires a sync function argument, got '{}'",
+                worker.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    if !ft.params.is_empty() {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            "task.spawn_blocking() v1 requires a zero-argument function; wrap owned inputs in a dedicated helper before offloading".to_string(),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+
+    let (ok_ty, err_ty, result_func) = match ft.return_type.resolve_alias() {
+        Type::Result(ok, err) => (
+            ok.as_ref().clone(),
+            err.as_ref().clone(),
+            "__sifr_spawn_blocking_result",
+        ),
+        other => (
+            other.clone(),
+            Type::Never,
+            "__sifr_spawn_blocking_infallible",
+        ),
+    };
+    if let Some(reason) = non_send_reason(&ok_ty) {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "task.spawn_blocking() cannot return non-send value type '{}': {reason}",
+                ok_ty.display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if !matches!(err_ty.resolve_alias(), Type::Never) {
+        if let Some(reason) = non_send_reason(&err_ty) {
+            expression_diagnostics::type_mismatch(
+                ctx,
+                format!(
+                    "task.spawn_blocking() cannot return non-send error type '{}': {reason}",
+                    err_ty.display_name()
+                ),
+                call.arguments.args[0].range(),
+            );
+            return TaskCallLowering::Rejected;
+        }
+    }
+
+    TaskCallLowering::Lowered(HirExpr::Call {
+        func: result_func.to_string(),
+        args: vec![worker],
+        ty: Type::BlockingTask(Box::new(ok_ty), Box::new(err_ty)),
+    })
 }
 
 fn lower_task_gather_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {

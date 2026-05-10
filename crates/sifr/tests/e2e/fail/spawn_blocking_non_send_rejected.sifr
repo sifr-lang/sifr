@@ -1,0 +1,13 @@
+# expect-error: SIFR-TYPE-0002
+class LocalCell(NonSend):
+    pass
+
+
+def build_cell() -> LocalCell:
+    return LocalCell()
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_blocking(build_cell)
+    result = await handle
+    return None
