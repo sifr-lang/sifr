@@ -1,0 +1,67 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path(name: str) -> str:
+    return "/tmp/sifr_async_with_return_cleanup_" + name + "_" + str(getpid()) + ".txt"
+
+
+class MarkerResource:
+    path: str
+    value: int
+
+    def __init__(self, path: str, value: int):
+        self.path = path
+        self.value = value
+
+    async def __aenter__(self) -> Result[int, IOError]:
+        return self.value
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, IOError]:
+        return write_text(self.path, "cleanup")
+
+
+async def direct_return(own path: str) -> Result[int, Error]:
+    async with MarkerResource(path, 7) as value:
+        return value
+    return 0
+
+
+async def nested_return(own path: str) -> Result[int, Error]:
+    async with MarkerResource(path, 11) as value:
+        while value == 11:
+            return value
+    return 0
+
+
+async def main() -> Result[None, Error]:
+    direct_path: str = marker_path("direct")
+    nested_path: str = marker_path("nested")
+    if exists(direct_path):
+        try:
+            _removed_direct_existing: None = remove_file(direct_path)
+        except IOError as e:
+            _direct_existing_cleanup_message: str = str(e.message)
+    if exists(nested_path):
+        try:
+            _removed_nested_existing: None = remove_file(nested_path)
+        except IOError as e:
+            _nested_existing_cleanup_message: str = str(e.message)
+
+    direct_result = await direct_return(marker_path("direct"))
+    nested_result = await nested_return(marker_path("nested"))
+
+    assert str(direct_result) == "Ok(7)"
+    assert str(nested_result) == "Ok(11)"
+    assert exists(direct_path)
+    assert exists(nested_path)
+
+    try:
+        _removed_direct: None = remove_file(direct_path)
+    except IOError as e:
+        _direct_cleanup_message: str = str(e.message)
+    try:
+        _removed_nested: None = remove_file(nested_path)
+    except IOError as e:
+        _nested_cleanup_message: str = str(e.message)
+    return None
