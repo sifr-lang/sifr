@@ -7489,10 +7489,42 @@ impl RustEmitter {
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         if let sifr_hir::HirAsyncWithKind::UserDefined { context, .. } = kind {
-            let Some(lowered_context) = self.lower_stmt_expr_for_ir(context)? else {
+            let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
                 return Ok(None);
             };
-            let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+            if let HirExpr::Name { name, .. } = context {
+                let enter_stmt = crate::RustStmt::Let {
+                    mutable: false,
+                    name: target.unwrap_or("_").to_string(),
+                    ty: None,
+                    value: crate::RustExpr::Try(Box::new(crate::RustExpr::Await(Box::new(
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Ident(name.clone())),
+                            method: "__aenter__".to_string(),
+                            args: vec![],
+                        },
+                    )))),
+                };
+                let exit_stmt = crate::RustStmt::Expr(crate::RustExpr::Try(Box::new(
+                    crate::RustExpr::Await(Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(name.clone())),
+                        method: "__aexit__".to_string(),
+                        args: vec![crate::RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(crate::RustExpr::Ident(
+                                "AsyncExitCause::Normal".to_string(),
+                            )),
+                        }],
+                    })),
+                )));
+                let mut stmts = Vec::with_capacity(lowered_body.len() + 2);
+                stmts.push(enter_stmt);
+                stmts.append(&mut lowered_body);
+                stmts.push(exit_stmt);
+                return Ok(Some(RustStmt::Block(stmts)));
+            }
+
+            let Some(lowered_context) = self.lower_stmt_expr_for_ir(context)? else {
                 return Ok(None);
             };
             let enter_call = crate::RustExpr::Try(Box::new(crate::RustExpr::Await(Box::new(

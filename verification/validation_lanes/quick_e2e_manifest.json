@@ -34,6 +34,7 @@
     "thread_pool_executor_basic",
     "threading_compat_basic",
     "async_with_basic",
+    "async_with_nested_cleanup_order",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",
