@@ -520,7 +520,7 @@ status: in_progress
 - PR [#1942](https://github.com/sifr-lang/sifr/pull/1942) task-scope basic validation slice: added the canonical `task_scope_basic.sifr` milestone fixture for a normal multi-child scoped-task path with both `join()` and direct handle await observation.
 - PR [#1943](https://github.com/sifr-lang/sifr/pull/1943) task-handle loop-consumption slice: simple `for handle in handles: await handle` now consumes a named task-handle list instead of cloning one-shot handles, with ownership diagnostics preventing reuse of the consumed collection.
 - PR [#1944](https://github.com/sifr-lang/sifr/pull/1944) try/finally cleanup prerequisite slice: `try/finally` without `except` now lowers the body followed by the `finally` body on non-early-exit paths, covering the basic cleanup execution needed before cancellation-specific cleanup lowering can be completed.
-- In progress Failure type surface slice: added first-class `Failure[E]` type annotation support, private `__SifrFailure<E>` codegen with `primary` and `secondary` fields, and validation that `Failure[E]` is evidence rather than a valid ordinary `Result[..., E]` error channel.
+- PR [#1945](https://github.com/sifr-lang/sifr/pull/1945) Failure type surface slice: added first-class `Failure[E]` type annotation support, private `__SifrFailure<E>` codegen with `primary` and `secondary` fields, and validation that `Failure[E]` is evidence rather than a valid ordinary `Result[..., E]` error channel.
 
 ---
 
