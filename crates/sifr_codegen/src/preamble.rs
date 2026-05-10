@@ -716,7 +716,87 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     params: vec![RustParam::SelfParam { mutable: true }],
                     ret: Some(RustType::Named("Result<(), ScopeFailure>".to_string())),
                     body: vec![RustStmt::Expr(RustExpr::Ident(
-                        "let mut failure: Option<ScopeFailure> = None;\n        let mut policy_cancelling = false;\n        while let Some(child) = self.children.pop() {\n            let observed = child.observed.load(std::sync::atomic::Ordering::SeqCst);\n            let policy_observed = self.fail_fast && policy_cancelling;\n            let mut group_failure_seen = false;\n            match child.handle.await {\n                Ok(__SifrScopeChildOutcome::Ok) => {}\n                Ok(__SifrScopeChildOutcome::Failed) => {\n                    group_failure_seen = self.fail_fast;\n                    if !observed && failure.is_none() {\n                        failure = Some(ScopeFailure::new(\"unobserved child task failed\".to_string()));\n                    }\n                }\n                Ok(__SifrScopeChildOutcome::Cancelled) => {\n                    group_failure_seen = self.fail_fast;\n                    if !observed && !policy_observed && failure.is_none() {\n                        failure = Some(ScopeFailure::new(\"unobserved child task was cancelled\".to_string()));\n                    }\n                }\n                Err(join_error) => {\n                    group_failure_seen = self.fail_fast && !join_error.is_cancelled();\n                    if !observed && !policy_observed && failure.is_none() {\n                        let message = if join_error.is_cancelled() { \"unobserved child task was cancelled\" } else { \"unobserved child task failed\" };\n                        failure = Some(ScopeFailure::new(message.to_string()));\n                    }\n                }\n            }\n            if group_failure_seen {\n                policy_cancelling = true;\n                for pending in &self.children {\n                    pending.handle.abort();\n                }\n            }\n        }\n        if let Some(failure) = failure {\n            return Err(failure);\n        }\n        return Ok(())".to_string(),
+                        r#"if self.fail_fast {
+            let mut failure: Option<ScopeFailure> = None;
+            let mut policy_cancelling = false;
+            let mut abort_handles = Vec::with_capacity(self.children.len());
+            let mut join_set = tokio::task::JoinSet::new();
+            for child in self.children.drain(..) {
+                abort_handles.push(child.handle.abort_handle());
+                join_set.spawn(async move {
+                    let observed = child.observed.load(std::sync::atomic::Ordering::SeqCst);
+                    (observed, child.handle.await)
+                });
+            }
+            while let Some(joined) = join_set.join_next().await {
+                let mut group_failure_seen = false;
+                match joined {
+                    Ok((observed, Ok(__SifrScopeChildOutcome::Ok))) => {}
+                    Ok((observed, Ok(__SifrScopeChildOutcome::Failed))) => {
+                        group_failure_seen = true;
+                        if !observed && failure.is_none() {
+                            failure = Some(ScopeFailure::new("unobserved child task failed".to_string()));
+                        }
+                    }
+                    Ok((observed, Ok(__SifrScopeChildOutcome::Cancelled))) => {
+                        group_failure_seen = true;
+                        if !observed && !policy_cancelling && failure.is_none() {
+                            failure = Some(ScopeFailure::new("unobserved child task was cancelled".to_string()));
+                        }
+                    }
+                    Ok((observed, Err(join_error))) => {
+                        group_failure_seen = !join_error.is_cancelled();
+                        if !observed && !policy_cancelling && failure.is_none() {
+                            let message = if join_error.is_cancelled() { "unobserved child task was cancelled" } else { "unobserved child task failed" };
+                            failure = Some(ScopeFailure::new(message.to_string()));
+                        }
+                    }
+                    Err(_) => {
+                        group_failure_seen = true;
+                        if !policy_cancelling && failure.is_none() {
+                            failure = Some(ScopeFailure::new("task group child observer failed".to_string()));
+                        }
+                    }
+                }
+                if group_failure_seen && !policy_cancelling {
+                    policy_cancelling = true;
+                    for abort_handle in &abort_handles {
+                        abort_handle.abort();
+                    }
+                }
+            }
+            if let Some(failure) = failure {
+                return Err(failure);
+            }
+            return Ok(());
+        }
+        let mut failure: Option<ScopeFailure> = None;
+        while let Some(child) = self.children.pop() {
+            let observed = child.observed.load(std::sync::atomic::Ordering::SeqCst);
+            match child.handle.await {
+                Ok(__SifrScopeChildOutcome::Ok) => {}
+                Ok(__SifrScopeChildOutcome::Failed) => {
+                    if !observed && failure.is_none() {
+                        failure = Some(ScopeFailure::new("unobserved child task failed".to_string()));
+                    }
+                }
+                Ok(__SifrScopeChildOutcome::Cancelled) => {
+                    if !observed && failure.is_none() {
+                        failure = Some(ScopeFailure::new("unobserved child task was cancelled".to_string()));
+                    }
+                }
+                Err(join_error) => {
+                    if !observed && failure.is_none() {
+                        let message = if join_error.is_cancelled() { "unobserved child task was cancelled" } else { "unobserved child task failed" };
+                        failure = Some(ScopeFailure::new(message.to_string()));
+                    }
+                }
+            }
+        }
+        if let Some(failure) = failure {
+            return Err(failure);
+        }
+        return Ok(())"#.to_string(),
                     ))],
                     is_async: true,
                 },
