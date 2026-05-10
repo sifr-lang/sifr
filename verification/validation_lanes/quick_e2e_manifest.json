@@ -30,6 +30,7 @@
     "io_bound_annotation_warning",
     "cpu_bound_annotation_warning",
     "spawn_blocking_basic",
+    "thread_pool_executor_basic",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",

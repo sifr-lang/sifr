@@ -1,0 +1,4 @@
+# sifr.concurrent — explicit blocking offload compatibility surfaces
+
+class ThreadPoolExecutor:
+    pass

@@ -1,0 +1,16 @@
+# expect-error: SIFR-TYPE-0002
+from sifr.concurrent import ThreadPoolExecutor
+
+
+class LocalCell(NonSend):
+    pass
+
+
+def build_cell() -> LocalCell:
+    return LocalCell()
+
+
+async def main() -> Result[None, ScopeFailure]:
+    executor: ThreadPoolExecutor = ThreadPoolExecutor()
+    handle = executor.submit(build_cell)
+    return None
