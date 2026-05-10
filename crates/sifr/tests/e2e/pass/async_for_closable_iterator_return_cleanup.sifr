@@ -1,0 +1,38 @@
+class StreamCloseError(Error):
+    pass
+
+
+class ClosableCounter:
+    current: int
+    stop: int
+    closed: bool
+
+    def __init__(self, start: int, stop: int):
+        self.current = start
+        self.stop = stop
+        self.closed = False
+
+    async def anext(self) -> Result[Option[int], StreamCloseError]:
+        if self.current >= self.stop:
+            return None
+        value: int = self.current
+        self.current = self.current + 1
+        next_value: Option[int] = value
+        return next_value
+
+    async def aclose(self) -> Result[None, StreamCloseError]:
+        self.closed = True
+        return None
+
+
+async def first_value() -> Result[int, StreamCloseError]:
+    stream: ClosableCounter = ClosableCounter(0, 3)
+    async for value in stream:
+        return value
+    return 99
+
+
+async def main() -> Result[None, StreamCloseError]:
+    result = await first_value()
+    assert str(result) == "Ok(0)"
+    return None

@@ -96,46 +96,65 @@ fn return_type_accepts_error(return_type: &Type, error_ty: &Type) -> bool {
     error_ty.is_assignable_to(err)
 }
 
-fn stmts_contain_break_for_current_loop(stmts: &[HirStmt]) -> bool {
-    stmts.iter().any(stmt_contains_break_for_current_loop)
+fn stmts_contain_early_exit_for_current_loop(stmts: &[HirStmt]) -> bool {
+    stmts
+        .iter()
+        .any(|stmt| stmt_contains_early_exit_for_current_loop(stmt, true))
 }
 
-fn stmt_contains_break_for_current_loop(stmt: &HirStmt) -> bool {
+fn stmt_contains_early_exit_for_current_loop(stmt: &HirStmt, count_break: bool) -> bool {
     match stmt {
-        HirStmt::Break => true,
+        HirStmt::Break => count_break,
+        HirStmt::Return { .. } => true,
         HirStmt::If {
             then_body,
             elif_clauses,
             else_body,
             ..
         } => {
-            stmts_contain_break_for_current_loop(then_body)
-                || elif_clauses
-                    .iter()
-                    .any(|(_, body)| stmts_contain_break_for_current_loop(body))
-                || else_body
-                    .as_ref()
-                    .is_some_and(|body| stmts_contain_break_for_current_loop(body))
+            stmts_contain_early_exit_for_current_loop_with_breaks(then_body, count_break)
+                || elif_clauses.iter().any(|(_, body)| {
+                    stmts_contain_early_exit_for_current_loop_with_breaks(body, count_break)
+                })
+                || else_body.as_ref().is_some_and(|body| {
+                    stmts_contain_early_exit_for_current_loop_with_breaks(body, count_break)
+                })
         }
         HirStmt::TryExcept { body, handlers, .. } => {
-            stmts_contain_break_for_current_loop(body)
-                || handlers
-                    .iter()
-                    .any(|handler| stmts_contain_break_for_current_loop(&handler.body))
+            stmts_contain_early_exit_for_current_loop_with_breaks(body, count_break)
+                || handlers.iter().any(|handler| {
+                    stmts_contain_early_exit_for_current_loop_with_breaks(
+                        &handler.body,
+                        count_break,
+                    )
+                })
         }
         HirStmt::TryFinally { body, finalbody } => {
-            stmts_contain_break_for_current_loop(body)
-                || stmts_contain_break_for_current_loop(finalbody)
+            stmts_contain_early_exit_for_current_loop_with_breaks(body, count_break)
+                || stmts_contain_early_exit_for_current_loop_with_breaks(finalbody, count_break)
         }
-        HirStmt::Match { arms, .. } => arms
-            .iter()
-            .any(|arm| stmts_contain_break_for_current_loop(&arm.body)),
+        HirStmt::Match { arms, .. } => arms.iter().any(|arm| {
+            stmts_contain_early_exit_for_current_loop_with_breaks(&arm.body, count_break)
+        }),
         HirStmt::AsyncWith { body, .. } | HirStmt::With { body, .. } => {
-            stmts_contain_break_for_current_loop(body)
+            stmts_contain_early_exit_for_current_loop_with_breaks(body, count_break)
         }
-        HirStmt::While { .. } | HirStmt::For { .. } | HirStmt::AsyncFor { .. } => false,
+        HirStmt::While { body, .. }
+        | HirStmt::For { body, .. }
+        | HirStmt::AsyncFor { body, .. } => {
+            stmts_contain_early_exit_for_current_loop_with_breaks(body, false)
+        }
         _ => false,
     }
+}
+
+fn stmts_contain_early_exit_for_current_loop_with_breaks(
+    stmts: &[HirStmt],
+    count_break: bool,
+) -> bool {
+    stmts
+        .iter()
+        .any(|stmt| stmt_contains_early_exit_for_current_loop(stmt, count_break))
 }
 
 fn simple_for_target_name(target: &Expr, ctx: &mut LowerCtx) -> Option<(String, TextRange)> {
@@ -204,12 +223,12 @@ pub(super) fn lower_async_for(
     ctx.loop_depth -= 1;
     ctx.scope.pop();
     if let Some(close_error_ty) = &close_error_ty {
-        if stmts_contain_break_for_current_loop(&body)
+        if stmts_contain_early_exit_for_current_loop(&body)
             && !return_type_accepts_error(&func_type.return_type, close_error_ty)
         {
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
-                "closable async iterator break cleanup requires the enclosing function to return a compatible Result error type".to_string(),
+                "closable async iterator early-exit cleanup requires the enclosing function to return a compatible Result error type".to_string(),
                 for_stmt.iter.range(),
             );
             return None;

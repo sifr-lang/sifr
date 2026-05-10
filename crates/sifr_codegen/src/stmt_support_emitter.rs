@@ -7669,7 +7669,7 @@ impl RustEmitter {
         let infallible_iter = matches!(iter_error_ty.resolve_alias(), Type::Never);
         let loop_body = |receiver: crate::RustExpr| {
             let lowered_body = if let Some(close_error_ty) = close_error_ty {
-                inject_async_for_break_cleanup(&lowered_body, &receiver, close_error_ty)
+                inject_async_for_early_exit_cleanup(&lowered_body, &receiver, close_error_ty)
             } else {
                 lowered_body.clone()
             };
@@ -9760,26 +9760,56 @@ fn result_int_to_sifr_int_rust_type(ty: &Type) -> crate::RustType {
     )
 }
 
-fn inject_async_for_break_cleanup(
+fn inject_async_for_early_exit_cleanup(
     stmts: &[RustStmt],
     receiver: &RustExpr,
     close_error_ty: &Type,
 ) -> Vec<RustStmt> {
+    inject_async_for_early_exit_cleanup_with_breaks(stmts, receiver, close_error_ty, true)
+}
+
+fn inject_async_for_early_exit_cleanup_with_breaks(
+    stmts: &[RustStmt],
+    receiver: &RustExpr,
+    close_error_ty: &Type,
+    include_breaks: bool,
+) -> Vec<RustStmt> {
     stmts
         .iter()
-        .flat_map(|stmt| inject_async_for_break_cleanup_stmt(stmt, receiver, close_error_ty))
+        .flat_map(|stmt| {
+            inject_async_for_early_exit_cleanup_stmt(stmt, receiver, close_error_ty, include_breaks)
+        })
         .collect()
 }
 
-fn inject_async_for_break_cleanup_stmt(
+fn inject_async_for_early_exit_cleanup_stmt(
     stmt: &RustStmt,
     receiver: &RustExpr,
     close_error_ty: &Type,
+    include_breaks: bool,
 ) -> Vec<RustStmt> {
     match stmt {
-        RustStmt::Break => vec![
+        RustStmt::Break if include_breaks => vec![
             RustStmt::Expr(async_for_close_call(receiver.clone(), close_error_ty)),
             RustStmt::Break,
+        ],
+        RustStmt::Return(Some(value)) => vec![RustStmt::Return(Some(RustExpr::Block {
+            stmts: vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_async_for_return".to_string(),
+                    ty: None,
+                    value: value.clone(),
+                },
+                RustStmt::Expr(async_for_close_call(receiver.clone(), close_error_ty)),
+            ],
+            expr: Some(Box::new(RustExpr::Ident(
+                "__sifr_async_for_return".to_string(),
+            ))),
+        }))],
+        RustStmt::Return(None) => vec![
+            RustStmt::Expr(async_for_close_call(receiver.clone(), close_error_ty)),
+            RustStmt::Return(None),
         ],
         RustStmt::If {
             cond,
@@ -9787,10 +9817,20 @@ fn inject_async_for_break_cleanup_stmt(
             else_body,
         } => vec![RustStmt::If {
             cond: cond.clone(),
-            then_body: inject_async_for_break_cleanup(then_body, receiver, close_error_ty),
-            else_body: else_body
-                .as_ref()
-                .map(|body| inject_async_for_break_cleanup(body, receiver, close_error_ty)),
+            then_body: inject_async_for_early_exit_cleanup_with_breaks(
+                then_body,
+                receiver,
+                close_error_ty,
+                include_breaks,
+            ),
+            else_body: else_body.as_ref().map(|body| {
+                inject_async_for_early_exit_cleanup_with_breaks(
+                    body,
+                    receiver,
+                    close_error_ty,
+                    include_breaks,
+                )
+            }),
         }],
         RustStmt::IfLet {
             pattern,
@@ -9800,10 +9840,20 @@ fn inject_async_for_break_cleanup_stmt(
         } => vec![RustStmt::IfLet {
             pattern: pattern.clone(),
             expr: expr.clone(),
-            then_body: inject_async_for_break_cleanup(then_body, receiver, close_error_ty),
-            else_body: else_body
-                .as_ref()
-                .map(|body| inject_async_for_break_cleanup(body, receiver, close_error_ty)),
+            then_body: inject_async_for_early_exit_cleanup_with_breaks(
+                then_body,
+                receiver,
+                close_error_ty,
+                include_breaks,
+            ),
+            else_body: else_body.as_ref().map(|body| {
+                inject_async_for_early_exit_cleanup_with_breaks(
+                    body,
+                    receiver,
+                    close_error_ty,
+                    include_breaks,
+                )
+            }),
         }],
         RustStmt::Match { expr, arms } => vec![RustStmt::Match {
             expr: expr.clone(),
@@ -9813,22 +9863,59 @@ fn inject_async_for_break_cleanup_stmt(
                     pattern: arm.pattern.clone(),
                     bindings: arm.bindings.clone(),
                     guard: arm.guard.clone(),
-                    body: inject_async_for_break_cleanup(&arm.body, receiver, close_error_ty),
+                    body: inject_async_for_early_exit_cleanup_with_breaks(
+                        &arm.body,
+                        receiver,
+                        close_error_ty,
+                        include_breaks,
+                    ),
                 })
                 .collect(),
         }],
         RustStmt::With { items, body } => vec![RustStmt::With {
             items: items.clone(),
-            body: inject_async_for_break_cleanup(body, receiver, close_error_ty),
+            body: inject_async_for_early_exit_cleanup_with_breaks(
+                body,
+                receiver,
+                close_error_ty,
+                include_breaks,
+            ),
         }],
-        RustStmt::Block(body) => vec![RustStmt::Block(inject_async_for_break_cleanup(
-            body,
-            receiver,
-            close_error_ty,
-        ))],
-        RustStmt::For { .. } | RustStmt::While { .. } | RustStmt::Loop { .. } => {
-            vec![stmt.clone()]
-        }
+        RustStmt::Block(body) => vec![RustStmt::Block(
+            inject_async_for_early_exit_cleanup_with_breaks(
+                body,
+                receiver,
+                close_error_ty,
+                include_breaks,
+            ),
+        )],
+        RustStmt::For { var, iter, body } => vec![RustStmt::For {
+            var: var.clone(),
+            iter: iter.clone(),
+            body: inject_async_for_early_exit_cleanup_with_breaks(
+                body,
+                receiver,
+                close_error_ty,
+                false,
+            ),
+        }],
+        RustStmt::While { cond, body } => vec![RustStmt::While {
+            cond: cond.clone(),
+            body: inject_async_for_early_exit_cleanup_with_breaks(
+                body,
+                receiver,
+                close_error_ty,
+                false,
+            ),
+        }],
+        RustStmt::Loop { body } => vec![RustStmt::Loop {
+            body: inject_async_for_early_exit_cleanup_with_breaks(
+                body,
+                receiver,
+                close_error_ty,
+                false,
+            ),
+        }],
         _ => vec![stmt.clone()],
     }
 }
