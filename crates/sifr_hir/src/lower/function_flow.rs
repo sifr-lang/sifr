@@ -118,6 +118,14 @@ pub(super) fn infer_function_return_type(
     if !yielded_types.is_empty() {
         let yielded_type = normalize_generator_yield_type(collapse_types(yielded_types, Type::Any));
         if is_async {
+            if let Type::Union(members) = yielded_type.resolve_alias() {
+                if members.len() > 1 {
+                    report_error(format!(
+                        "async generator '{function_name}' has inconsistent yield types '{}'; yielded values must converge to one async generator element type",
+                        yielded_type.display_name()
+                    ));
+                }
+            }
             let inferred_generator =
                 Type::AsyncGenerator(Box::new(yielded_type.clone()), Box::new(Type::Never));
             if has_explicit_return_annotation {
