@@ -1655,6 +1655,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     };
 
     let return_type = refine_constructor_return_type_from_args(&ft, &args, &return_type);
+    tsc::validate_shared_constructor(&func_name, &args, &arg_ranges, call, ctx);
     let call_type = if is_async_function {
         coroutine_result_type(&return_type)
     } else {
@@ -1702,7 +1703,6 @@ pub(super) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<
         ty: list_ty,
     })
 }
-
 pub(super) fn lower_set_literal(set: &ExprSet, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut elements = Vec::new();
     let mut elem_ty: Option<Type> = None;

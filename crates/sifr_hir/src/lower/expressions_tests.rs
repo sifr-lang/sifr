@@ -1665,6 +1665,19 @@ fn test_channel_send_rejects_non_send_element() {
 }
 
 #[test]
+fn test_shared_rejects_mutable_list_value() {
+    let source = "class Shared[T]:\n    def __init__(self, own value: T):\n        pass\n\ndef main() -> None:\n    items: list[int] = [1]\n    shared: Shared[list[int]] = Shared(items)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("Shared cannot publish `items`")
+            && e.message.contains("list values are mutable")
+            && e.code == Some(DiagnosticCode::OWN_NON_SHARE_SAFE_SHARED_VALUE)
+    }));
+}
+
+#[test]
 fn test_mutable_borrow_parameter_across_await_rejected() {
     let source = "async def mutate_after_await(mut items: list[int]) -> int:\n    await task.sleep(0.0)\n    items.append(2)\n    return len(items)\n";
     let result = lower_source(source);
