@@ -18,6 +18,7 @@ use super::nonlocal_support::collect_declared_nonlocals;
 use super::ownership_diagnostics;
 use super::simple_expr::lower_expr_simple;
 use super::statements::lower_stmts;
+use super::workload_annotations;
 use super::{substitute_type_vars, LowerCtx};
 
 pub(super) fn register_builtins(ctx: &mut LowerCtx) {
@@ -462,6 +463,12 @@ pub(super) fn register_local_function_signature(
     }
     ctx.scope.define(function_name.clone(), callable_ty);
     ctx.functions.insert(function_name.clone(), ft.clone());
+    if let Some(workload) =
+        workload_annotations::annotation_for_decorators(func.decorator_list.iter())
+    {
+        ctx.function_workload_annotations
+            .insert(function_name.clone(), workload);
+    }
     if func.parameters.vararg.is_some() {
         ctx.vararg_functions
             .insert(function_name, func.parameters.args.len());

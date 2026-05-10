@@ -27,6 +27,8 @@
     "await_without_live_borrow",
     "task_gather_cleanup_error_secondary",
     "cancellation_cleanup_runs",
+    "io_bound_annotation_warning",
+    "cpu_bound_annotation_warning",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",

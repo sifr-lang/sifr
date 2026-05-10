@@ -705,7 +705,7 @@ status: completed
 
 ### milestone_async_6: Blocking I/O, CPU-Bound Work, and Thread Offload
 
-status: proposed
+status: in_progress
 
 **Goal:** Keep cooperative async tasks from becoming the accidental path for blocking or CPU-heavy work.
 
@@ -762,6 +762,10 @@ status: proposed
 **Demo:**
 
 - `demos/m32_blocking_offload_demo.sifr`
+
+**Implementation progress:**
+
+- Current slice: add declaration-site `@io_bound` and `@cpu_bound` workload annotations with async-context diagnostics, plus quick-lane validation fixtures for annotated blocking and CPU-heavy calls.
 
 ---
 

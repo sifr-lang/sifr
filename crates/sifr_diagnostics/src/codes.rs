@@ -45,6 +45,7 @@ impl DiagnosticCode {
     pub const TYPE_UNSUPPORTED_EXPRESSION_FORM: Self = Self::new("SIFR-TYPE-0012", Severity::Error);
     pub const TYPE_ARITHMETIC_OVERFLOW_RISK: Self = Self::new("SIFR-TYPE-0901", Severity::Warning);
     pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
+    pub const TYPE_BLOCKING_WORK_IN_ASYNC: Self = Self::new("SIFR-TYPE-0903", Severity::Warning);
 
     pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
     pub const DECIMAL_BIGDECIMAL_INVALID_LITERAL: Self =
@@ -770,6 +771,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::builtin_calls",
         [arg!("revealed_type")],
         ["revealed_type"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0903",
+        "TYPE",
+        "Blocking or CPU-bound workload called directly from async code.",
+        Severity::Warning,
+        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_workload_annotation_warning",
+        "{workload} function '{function}' called directly from async context; {suggestion}",
+        "sifr_hir::lower::expressions",
+        [arg!("workload"), arg!("function"), arg!("suggestion")],
+        ["function", "workload"]
     ),
     active_entry!(
         "SIFR-DECIMAL-0001",
@@ -1697,6 +1709,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
     DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
     DiagnosticCode::TYPE_REVEAL_TYPE,
+    DiagnosticCode::TYPE_BLOCKING_WORK_IN_ASYNC,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_FLOAT_MIXED,
