@@ -1,0 +1,16 @@
+async def worker() -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    total: int = 0
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        for value in range(3):
+            if value == 1:
+                continue
+            total = total + value
+            if total > 1:
+                break
+    return None
