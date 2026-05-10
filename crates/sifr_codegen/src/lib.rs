@@ -71,6 +71,7 @@ use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
+    strip_rust_items_by_name,
 };
 
 type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
@@ -430,7 +431,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         }
         if let Some(rust_code) = stdlib_code.module_rust_code.get(module_name) {
             if !rust_code.is_empty() {
-                let filtered =
+                let mut filtered =
                     if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
                         let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
                         let pure_sifr_imports: HashSet<String> = imported_names
@@ -454,6 +455,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     } else {
                         rust_code.clone()
                     };
+                if module_name == "sifr.sync" && sync_channel_runtime_needed(&filtered) {
+                    filtered = replace_sync_channel_runtime_items(&filtered);
+                }
                 if !filtered.trim().is_empty() {
                     let prepared = collect_and_strip_shared_prelude(&filtered);
                     stdlib_needs_file_handles |=
@@ -791,7 +795,11 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             if needs_sifr_int {
                 crates.insert("sifr_runtime".to_string());
             }
-            if has_async_main_entrypoint || uses_task_sleep || module_uses_task_scope(module) {
+            if has_async_main_entrypoint
+                || uses_task_sleep
+                || module_uses_task_scope(module)
+                || stdlib_preamble.contains("tokio::")
+            {
                 crates.insert("tokio".to_string());
             }
             crates
@@ -799,6 +807,275 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
     }
+}
+
+fn sync_channel_runtime_needed(rust_code: &str) -> bool {
+    rust_code.contains("struct Channel<")
+        || rust_code.contains("struct ChannelSender<")
+        || rust_code.contains("struct ChannelReceiver<")
+        || rust_code.contains("fn channel<")
+        || rust_code.contains("fn bounded_channel<")
+}
+
+fn replace_sync_channel_runtime_items(rust_code: &str) -> String {
+    let strip_names = HashSet::from([
+        "Channel",
+        "ChannelSender",
+        "ChannelReceiver",
+        "channel",
+        "bounded_channel",
+    ]);
+    let mut replaced = strip_rust_items_by_name(rust_code, &strip_names);
+    if !replaced.trim().is_empty() {
+        replaced.push('\n');
+    }
+    replaced.push_str(sync_channel_runtime_rust_code());
+    replaced
+}
+
+fn sync_channel_runtime_rust_code() -> &'static str {
+    r#"
+#[derive(Debug)]
+struct __SifrChannelState<T> {
+    buffer: std::collections::VecDeque<T>,
+    closed: bool,
+    capacity: i64,
+    sender_count: i64,
+    receiver_alive: bool,
+}
+
+enum __SifrChannelPushState {
+    Sent,
+    Closed,
+    Full,
+}
+
+enum __SifrChannelPopState<T> {
+    Item(T),
+    Empty,
+    Closed,
+}
+
+#[derive(Debug)]
+struct Channel<T: Clone> {
+    _state: std::sync::Arc<std::sync::Mutex<__SifrChannelState<T>>>,
+}
+
+impl<T: Clone> Clone for Channel<T> {
+    fn clone(&self) -> Self {
+        return Self {
+            _state: std::sync::Arc::clone(&self._state),
+        };
+    }
+}
+
+impl<T: Clone> Channel<T> {
+    fn new(buffer: Vec<T>, capacity: i64) -> Self {
+        return Self {
+            _state: std::sync::Arc::new(std::sync::Mutex::new(__SifrChannelState {
+                buffer: buffer.into_iter().collect(),
+                closed: false,
+                capacity,
+                sender_count: 0,
+                receiver_alive: true,
+            })),
+        };
+    }
+
+    fn with_state<R>(&self, f: impl FnOnce(&mut __SifrChannelState<T>) -> R) -> R {
+        match self._state.lock() {
+            Ok(mut state) => f(&mut state),
+            Err(poisoned) => {
+                let mut state = poisoned.into_inner();
+                f(&mut state)
+            }
+        }
+    }
+
+    fn is_closed(&self) -> bool {
+        return self.with_state(|state| state.closed || !state.receiver_alive);
+    }
+
+    fn close(&mut self) {
+        self.with_state(|state| {
+            state.closed = true;
+        });
+    }
+
+    fn clone(&self) -> Channel<T> {
+        return Clone::clone(self);
+    }
+
+    fn register_sender(&self) {
+        self.with_state(|state| {
+            state.sender_count += 1;
+        });
+    }
+
+    fn release_sender(&self) {
+        self.with_state(|state| {
+            if state.sender_count > 0 {
+                state.sender_count -= 1;
+            }
+            if state.sender_count == 0 {
+                state.closed = true;
+            }
+        });
+    }
+
+    fn release_receiver(&self) {
+        self.with_state(|state| {
+            state.receiver_alive = false;
+            state.closed = true;
+        });
+    }
+
+    fn try_push_ref(&self, value: &T) -> __SifrChannelPushState {
+        self.with_state(|state| {
+            if state.closed || !state.receiver_alive {
+                return __SifrChannelPushState::Closed;
+            }
+            if state.capacity >= 0 && (state.buffer.len() as i64) >= state.capacity {
+                return __SifrChannelPushState::Full;
+            }
+            state.buffer.push_back(value.clone());
+            __SifrChannelPushState::Sent
+        })
+    }
+
+    fn push(&mut self, value: &T) -> Result<(), ClosedError> {
+        self.with_state(|state| {
+            if state.closed || !state.receiver_alive {
+                return Err(ClosedError::new());
+            }
+            state.buffer.push_back(value.clone());
+            Ok(())
+        })
+    }
+
+    fn try_pop(&self) -> __SifrChannelPopState<T> {
+        self.with_state(|state| {
+            if let Some(value) = state.buffer.pop_front() {
+                return __SifrChannelPopState::Item(value);
+            }
+            if state.closed || state.sender_count == 0 {
+                return __SifrChannelPopState::Closed;
+            }
+            __SifrChannelPopState::Empty
+        })
+    }
+
+    fn pop(&mut self) -> Result<T, ClosedError> {
+        match self.try_pop() {
+            __SifrChannelPopState::Item(value) => Ok(value),
+            __SifrChannelPopState::Empty | __SifrChannelPopState::Closed => Err(ClosedError::new()),
+        }
+    }
+}
+
+impl<T: Clone> std::fmt::Display for Channel<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{}", "Channel".to_string());
+    }
+}
+
+#[derive(Debug)]
+struct ChannelSender<T: Clone> {
+    _channel: Channel<T>,
+}
+
+impl<T: Clone> ChannelSender<T> {
+    fn new(channel: Channel<T>) -> Self {
+        channel.register_sender();
+        return Self { _channel: channel };
+    }
+
+    async fn send(&mut self, value: &T) -> Result<(), ClosedError> {
+        loop {
+            match self._channel.try_push_ref(value) {
+                __SifrChannelPushState::Sent => return Ok(()),
+                __SifrChannelPushState::Closed => return Err(ClosedError::new()),
+                __SifrChannelPushState::Full => tokio::task::yield_now().await,
+            }
+        }
+    }
+
+    fn close(&mut self) {
+        self._channel.close();
+    }
+
+    fn clone(&self) -> ChannelSender<T> {
+        return ChannelSender::new(self._channel.clone());
+    }
+}
+
+impl<T: Clone> Clone for ChannelSender<T> {
+    fn clone(&self) -> Self {
+        return ChannelSender::new(self._channel.clone());
+    }
+}
+
+impl<T: Clone> Drop for ChannelSender<T> {
+    fn drop(&mut self) {
+        self._channel.release_sender();
+    }
+}
+
+impl<T: Clone> std::fmt::Display for ChannelSender<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{}", "ChannelSender".to_string());
+    }
+}
+
+#[derive(Debug)]
+struct ChannelReceiver<T: Clone> {
+    _channel: Channel<T>,
+}
+
+impl<T: Clone> ChannelReceiver<T> {
+    fn new(channel: Channel<T>) -> Self {
+        return Self { _channel: channel };
+    }
+
+    async fn receive(&mut self) -> Result<T, ClosedError> {
+        loop {
+            match self._channel.try_pop() {
+                __SifrChannelPopState::Item(value) => return Ok(value),
+                __SifrChannelPopState::Closed => return Err(ClosedError::new()),
+                __SifrChannelPopState::Empty => tokio::task::yield_now().await,
+            }
+        }
+    }
+}
+
+impl<T: Clone> Drop for ChannelReceiver<T> {
+    fn drop(&mut self) {
+        self._channel.release_receiver();
+    }
+}
+
+impl<T: Clone> std::fmt::Display for ChannelReceiver<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{}", "ChannelReceiver".to_string());
+    }
+}
+
+fn channel<T: Clone + 'static>() -> (ChannelSender<T>, ChannelReceiver<T>) {
+    let shared_channel = Channel::new(vec![], -(1 as i64));
+    return (
+        ChannelSender::new(shared_channel.clone()),
+        ChannelReceiver::new(shared_channel),
+    );
+}
+
+fn bounded_channel<T: Clone + 'static>(capacity: i64) -> (ChannelSender<T>, ChannelReceiver<T>) {
+    let shared_channel = Channel::new(vec![], capacity);
+    return (
+        ChannelSender::new(shared_channel.clone()),
+        ChannelReceiver::new(shared_channel),
+    );
+}
+"#
 }
 
 fn annotate_async_main_entrypoint(items: &mut Vec<RustItem>) -> bool {

@@ -148,6 +148,24 @@ pub(crate) fn dedup_rust_items(
     render_items(&kept_items)
 }
 
+pub(crate) fn strip_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -> String {
+    let Ok(parsed) = syn::parse_file(rust_code) else {
+        return rust_code.to_string();
+    };
+
+    let kept_items: Vec<Item> = parsed
+        .items
+        .into_iter()
+        .filter(|item| {
+            parse_item_name(item)
+                .as_deref()
+                .is_none_or(|name| !names.contains(name))
+        })
+        .collect();
+
+    render_items(&kept_items)
+}
+
 fn parse_stdlib_ir_file(rust_code: &str) -> Option<StdlibIrFile> {
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return None;

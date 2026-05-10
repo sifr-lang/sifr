@@ -1,8 +1,13 @@
-from sifr.sync import ChannelReceiver, ChannelSender, bounded_channel
+from sifr.sync import ChannelReceiver, ChannelSender, ClosedError, bounded_channel
 
 
-def main() -> None:
+async def main() -> Result[None, ClosedError]:
     endpoints: tuple[ChannelSender[int], ChannelReceiver[int]] = bounded_channel(2)
     sender, receiver = endpoints
     assert str(sender) == "ChannelSender"
     assert str(receiver) == "ChannelReceiver"
+    sent: Result[None, ClosedError] = await sender.send(7)
+    received: Result[int, ClosedError] = await receiver.receive()
+    assert str(sent) == "Ok(())"
+    assert str(received) == "Ok(7)"
+    return None
