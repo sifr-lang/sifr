@@ -457,7 +457,9 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
     fn stmt_type_has_bigint(stmt: &HirStmt) -> bool {
         match stmt {
             HirStmt::Let { ty, .. } => type_has_bigint(ty),
-            HirStmt::For { target_ty, .. } => type_has_bigint(target_ty),
+            HirStmt::For { target_ty, .. } | HirStmt::AsyncFor { target_ty, .. } => {
+                type_has_bigint(target_ty)
+            }
             HirStmt::TupleUnpack { targets, .. } => {
                 targets.iter().any(|target| type_has_bigint(&target.ty))
             }

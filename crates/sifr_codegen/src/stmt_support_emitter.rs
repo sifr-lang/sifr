@@ -6448,6 +6448,16 @@ impl RustEmitter {
                     }],
                     true,
                 )
+            } else if let HirStmt::AsyncFor {
+                target, iter, body, ..
+            } = stmt
+            {
+                let Some(lowered_async_for) =
+                    self.try_lower_async_for_stmt_for_ir(target, iter, body)?
+                else {
+                    return Ok(None);
+                };
+                (vec![lowered_async_for], true)
             } else if let HirStmt::With { items, body } = stmt {
                 let Some(lowered_with) = self.try_lower_with_stmt_for_ir(items, body)? else {
                     return Ok(None);
@@ -7628,6 +7638,76 @@ impl RustEmitter {
             lowered_body.push(crate::RustStmt::Expr(crate::RustExpr::Ident(stmt)));
         }
         Ok(Some(RustStmt::Block(lowered_body)))
+    }
+
+    pub(crate) fn try_lower_async_for_stmt_for_ir(
+        &mut self,
+        target: &str,
+        iter: &HirExpr,
+        body: &[HirStmt],
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+            return Ok(None);
+        };
+        let target_pattern = if queries::stmts_reference_var(body, target) {
+            target.to_string()
+        } else {
+            format!("_{target}")
+        };
+        let loop_body = |receiver: crate::RustExpr| {
+            vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_async_next".to_string(),
+                    ty: None,
+                    value: crate::RustExpr::Try(Box::new(crate::RustExpr::Await(Box::new(
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(receiver),
+                            method: "anext".to_string(),
+                            args: vec![],
+                        },
+                    )))),
+                },
+                RustStmt::Match {
+                    expr: crate::RustExpr::Ident("__sifr_async_next".to_string()),
+                    arms: vec![
+                        crate::RustMatchArm {
+                            pattern: format!("Some({target_pattern})"),
+                            bindings: vec![target.to_string()],
+                            guard: None,
+                            body: lowered_body.clone(),
+                        },
+                        crate::RustMatchArm {
+                            pattern: "None".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![RustStmt::Break],
+                        },
+                    ],
+                },
+            ]
+        };
+
+        if let HirExpr::Name { name, .. } = iter {
+            return Ok(Some(RustStmt::Loop {
+                body: loop_body(crate::RustExpr::Ident(name.clone())),
+            }));
+        }
+
+        let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter)? else {
+            return Ok(None);
+        };
+        Ok(Some(RustStmt::Block(vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "__sifr_async_iter".to_string(),
+                ty: None,
+                value: lowered_iter,
+            },
+            RustStmt::Loop {
+                body: loop_body(crate::RustExpr::Ident("__sifr_async_iter".to_string())),
+            },
+        ])))
     }
 
     fn try_lower_borrowed_name_compare_condition_for_ir(

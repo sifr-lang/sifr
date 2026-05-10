@@ -289,6 +289,12 @@ pub(crate) fn collect_mutated_vars(
         } => {
             mutated.borrow_mut().insert(name.clone());
         }
+        HirStmt::AsyncFor {
+            iter: HirExpr::Name { name, .. },
+            ..
+        } => {
+            mutated.borrow_mut().insert(name.clone());
+        }
         HirStmt::Delete {
             object: HirExpr::Name { name, .. },
             ..
@@ -432,7 +438,7 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
         HirStmt::Let { name, .. } => {
             defined.insert(name.clone());
         }
-        HirStmt::For { target, .. } => {
+        HirStmt::For { target, .. } | HirStmt::AsyncFor { target, .. } => {
             defined.insert(target.clone());
         }
         HirStmt::TupleUnpack { targets, .. } => {

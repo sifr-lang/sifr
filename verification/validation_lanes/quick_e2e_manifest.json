@@ -35,6 +35,7 @@
     "threading_compat_basic",
     "async_with_basic",
     "async_with_nested_cleanup_order",
+    "async_for_stream_result",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",

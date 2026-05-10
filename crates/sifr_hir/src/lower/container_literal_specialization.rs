@@ -290,6 +290,9 @@ fn patch_stmt_container_specialization(stmt: &mut HirStmt, pending: &mut HashMap
         }
         | HirStmt::For {
             body, else_body, ..
+        }
+        | HirStmt::AsyncFor {
+            body, else_body, ..
         } => {
             apply_container_specialization_patches(body, pending);
             if let Some(body) = else_body {

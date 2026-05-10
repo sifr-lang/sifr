@@ -1,0 +1,34 @@
+class StreamError(Error):
+    pass
+
+
+class CounterStream:
+    current: int
+    stop: int
+
+    def __init__(self, start: int, stop: int):
+        self.current = start
+        self.stop = stop
+
+    async def anext(self) -> Result[Option[int], StreamError]:
+        if self.current >= self.stop:
+            return None
+        value: int = self.current
+        self.current = self.current + 1
+        next_value: Option[int] = value
+        return next_value
+
+
+async def main() -> Result[None, StreamError]:
+    stream: CounterStream = CounterStream(0, 4)
+    total: int = 0
+    count: int = 0
+
+    async for value in stream:
+        total = total + value
+        count = count + 1
+
+    assert total == 6
+    assert count == 4
+    assert stream.current == 4
+    return None

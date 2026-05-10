@@ -104,7 +104,9 @@ pub(super) fn collect_raise_error_types(
                     collect_raise_error_types(eb, errors);
                 }
             }
-            HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
+            HirStmt::While { body, .. }
+            | HirStmt::For { body, .. }
+            | HirStmt::AsyncFor { body, .. } => {
                 collect_raise_error_types(body, errors);
             }
             _ => {}

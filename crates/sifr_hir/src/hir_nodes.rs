@@ -171,6 +171,15 @@ pub enum HirStmt {
         body: Vec<HirStmt>,
         else_body: Option<Vec<HirStmt>>,
     },
+    /// Async for loop over `AsyncIterator[T, E]`.
+    AsyncFor {
+        target: String,
+        target_ty: Type,
+        iter: HirExpr,
+        iter_error_ty: Type,
+        body: Vec<HirStmt>,
+        else_body: Option<Vec<HirStmt>>,
+    },
     /// Break statement
     Break,
     /// Continue statement

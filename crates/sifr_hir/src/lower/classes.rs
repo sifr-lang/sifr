@@ -1223,6 +1223,9 @@ pub(super) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
             }
             | HirStmt::For {
                 body, else_body, ..
+            }
+            | HirStmt::AsyncFor {
+                body, else_body, ..
             } => {
                 body_contains_field_assign(body)
                     || else_body

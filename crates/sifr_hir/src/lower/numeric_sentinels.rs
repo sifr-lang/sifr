@@ -249,6 +249,9 @@ fn patch_stmt_numeric_sentinels(
         }
         HirStmt::For {
             body, else_body, ..
+        }
+        | HirStmt::AsyncFor {
+            body, else_body, ..
         } => {
             apply_numeric_sentinel_patches(body, pending);
             if let Some(body) = else_body {
