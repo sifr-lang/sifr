@@ -130,7 +130,9 @@ pub(super) use typevar_annotations::{
     decode_typevar_constraint, encode_typevar_constraint, parse_typevar_bound_expr,
     parse_typevar_declaration_specs,
 };
-use typing_and_functions::{extract_function_type, lower_function, register_builtins};
+use typing_and_functions::{
+    extract_function_type, function_body_contains_yield, lower_function, register_builtins,
+};
 use workload_annotations::WorkloadKind;
 /// The lowering context that tracks state during AST->HIR conversion.
 pub(super) struct LowerCtx {
@@ -138,6 +140,8 @@ pub(super) struct LowerCtx {
     functions: HashMap<String, FunctionType>,
     /// Names of functions declared with `async def`.
     async_functions: std::collections::HashSet<String>,
+    /// Names of `async def` functions whose body contains `yield`.
+    async_generator_functions: std::collections::HashSet<String>,
     /// Workload classification decorators for user-defined functions.
     function_workload_annotations: HashMap<String, WorkloadKind>,
     /// Default parameter values for functions (name -> vec of (`param_index`, `default_expr`))
@@ -220,6 +224,7 @@ impl LowerCtx {
         Self {
             functions: HashMap::new(),
             async_functions: std::collections::HashSet::new(),
+            async_generator_functions: std::collections::HashSet::new(),
             function_workload_annotations: HashMap::new(),
             function_defaults: HashMap::new(),
             class_types: HashMap::new(),
@@ -668,7 +673,9 @@ fn lower_module_impl(
             }
 
             collect_function_defaults(&mut ctx, &function_name, func);
-            if func.is_async {
+            if func.is_async && function_body_contains_yield(&func.body) {
+                ctx.async_generator_functions.insert(function_name.clone());
+            } else if func.is_async {
                 ctx.async_functions.insert(function_name.clone());
             }
             if let Some(workload) =

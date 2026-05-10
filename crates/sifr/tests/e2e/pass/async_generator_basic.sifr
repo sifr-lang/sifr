@@ -1,0 +1,18 @@
+async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 1
+    yield 2
+    yield 3
+
+
+async def main() -> Result[None, GeneratorCloseError]:
+    total: int = 0
+    count: int = 0
+    agen = numbers()
+
+    async for value in agen:
+        total = total + value
+        count = count + 1
+
+    assert total == 6
+    assert count == 3
+    return None

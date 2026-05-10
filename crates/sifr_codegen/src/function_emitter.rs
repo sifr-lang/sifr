@@ -935,6 +935,82 @@ impl RustEmitter {
         body
     }
 
+    fn lower_async_generator_function_body(
+        &mut self,
+        func: &HirFunction,
+        mutable_param_shadows: &[(String, RustExpr)],
+    ) -> Vec<RustStmt> {
+        let yield_ty = if let Type::AsyncGenerator(elem, _) = func.return_type.resolve_alias() {
+            self.rust_ir_type_with_generics(elem)
+        } else {
+            RustType::I64
+        };
+
+        let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
+        for param in &func.params {
+            if mutable_param_shadows
+                .iter()
+                .any(|(name, _)| name == &param.name)
+                || !param.convention.is_borrowed()
+                || param.ty.ownership() == OwnershipKind::Copy
+            {
+                continue;
+            }
+            body.push(RustStmt::Let {
+                mutable: false,
+                name: param.name.clone(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone()))),
+            });
+        }
+
+        let cloned_borrowed_param_names: Vec<String> = func
+            .params
+            .iter()
+            .filter(|param| {
+                !mutable_param_shadows
+                    .iter()
+                    .any(|(name, _)| name == &param.name)
+                    && param.convention.is_borrowed()
+                    && param.ty.ownership() != OwnershipKind::Copy
+            })
+            .map(|param| param.name.clone())
+            .collect();
+
+        let saved_borrowed_params = self.borrowed_params.clone();
+        let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+        for name in &cloned_borrowed_param_names {
+            self.borrowed_params.remove(name);
+            self.mut_borrowed_params.remove(name);
+        }
+
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "_yields".to_string(),
+            ty: Some(RustType::Vec(Box::new(yield_ty))),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+                args: vec![],
+            },
+        });
+        for stmt in &func.body {
+            body.extend(self.lower_stmt_strict_for_function(
+                stmt,
+                "async generator materialization statement lowering",
+            ));
+        }
+        self.borrowed_params = saved_borrowed_params;
+        self.mut_borrowed_params = saved_mut_borrowed_params;
+        body.push(RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "AsyncGenerator".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![RustExpr::Ident("_yields".to_string())],
+        })));
+        body
+    }
+
     pub(super) fn emit_function(
         &mut self,
         func: &HirFunction,
@@ -992,6 +1068,8 @@ impl RustEmitter {
             Visibility::Private
         };
         let is_generator = body_contains_yield(&func.body);
+        let is_async_generator =
+            is_generator && matches!(func.return_type.resolve_alias(), Type::AsyncGenerator(_, _));
         if is_generator {
             self.generator_functions.insert(func.name.clone());
         }
@@ -1021,7 +1099,9 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>();
 
-        let mut lowered_body = if is_generator {
+        let mut lowered_body = if is_async_generator {
+            self.lower_async_generator_function_body(func, &mutable_param_shadows)
+        } else if is_generator {
             self.lower_generator_function_body(func, &mutable_param_shadows)
         } else {
             let mut lowered = Self::emit_mutable_param_shadow_stmts(&mutable_param_shadows);
@@ -1074,7 +1154,7 @@ impl RustEmitter {
             params,
             ret: self.lower_function_return_type(func, is_generator),
             body: lowered_body,
-            is_async: func.is_async,
+            is_async: func.is_async && !is_async_generator,
         });
 
         self.current_return_type = saved_return_type;

@@ -169,6 +169,7 @@ const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "ScopeFailure",
     "TaskCancelled",
     "SecondaryError",
+    "GeneratorCloseError",
 ];
 
 const IO_ERROR_SUBCLASSES: &[&str] = &[
@@ -495,6 +496,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let uses_cancellation_error_type = module_uses_cancellation_error_type(module);
     let uses_async_exit_cause_type = module_uses_async_exit_cause_type(module);
     let uses_timeout_result_type = module_uses_timeout_result_type(module);
+    let uses_async_generator_type = module_uses_async_generator_type(module);
     let mut referenced_error_classes = collect_referenced_builtin_error_classes(
         module,
         &stdlib_preamble,
@@ -504,6 +506,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     );
     if uses_task_scope || uses_failure_type {
         referenced_error_classes.insert("SecondaryError".to_string());
+    }
+    if uses_async_generator_type {
+        referenced_error_classes.insert("GeneratorCloseError".to_string());
     }
     let user_defined_error_classes: HashSet<String> = module
         .classes
@@ -619,6 +624,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     if uses_timeout_result_type && !uses_task_scope {
         preamble_items.extend(build_timeout_result_type_items());
+    }
+    if uses_async_generator_type {
+        preamble_items.extend(build_async_generator_type_items());
     }
 
     // Emit file handle global state if open() built-in or any file handle intrinsic is used.
@@ -1258,6 +1266,12 @@ fn type_contains_timeout_result(ty: &Type) -> bool {
     type_contains_by(ty, |candidate| matches!(candidate, Type::TimeoutResult(_)))
 }
 
+fn type_contains_async_generator(ty: &Type) -> bool {
+    type_contains_by(ty, |candidate| {
+        matches!(candidate, Type::AsyncGenerator(_, _))
+    })
+}
+
 fn type_contains_cancellation_error(ty: &Type) -> bool {
     type_contains_by(
         ty,
@@ -1347,6 +1361,24 @@ fn module_uses_timeout_result_type(module: &HirModule) -> bool {
             .any(|(_, ty, _)| type_contains_timeout_result(ty))
 }
 
+fn module_uses_async_generator_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(function_uses_async_generator_type)
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_async_generator(field_ty))
+                || class.methods.iter().any(function_uses_async_generator_type)
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_async_generator(ty))
+}
+
 fn function_uses_cancellation_error_type(func: &HirFunction) -> bool {
     func.params
         .iter()
@@ -1373,6 +1405,13 @@ fn function_uses_timeout_result_type(func: &HirFunction) -> bool {
         .iter()
         .any(|param| type_contains_timeout_result(&param.ty))
         || type_contains_timeout_result(&func.return_type)
+}
+
+fn function_uses_async_generator_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_async_generator(&param.ty))
+        || type_contains_async_generator(&func.return_type)
 }
 
 fn body_contains_await(body: &[HirStmt]) -> bool {

@@ -107,6 +107,11 @@ impl RustEmitter {
             Type::TimeoutResult(err) => {
                 format!("__SifrTimeoutResult<{}>", self.rust_type_with_generics(err))
             }
+            Type::AsyncGenerator(item, err) => format!(
+                "AsyncGenerator<{}, {}>",
+                self.rust_type_with_generics(item),
+                self.rust_generator_error_type_with_generics(err)
+            ),
             Type::TypeVar(name) => name.clone(),
             Type::Callable(params, conventions, ret) => {
                 let param_types = params
@@ -168,6 +173,14 @@ impl RustEmitter {
 
     pub(super) fn rust_ir_type_with_generics(&self, ty: &Type) -> crate::RustType {
         crate::RustType::Named(self.rust_type_with_generics(ty))
+    }
+
+    fn rust_generator_error_type_with_generics(&self, ty: &Type) -> String {
+        if matches!(ty.resolve_alias(), Type::Never) {
+            "std::convert::Infallible".to_string()
+        } else {
+            self.rust_type_with_generics(ty)
+        }
     }
 
     pub(super) fn type_contains_generic_class(&self, ty: &Type) -> bool {

@@ -1,0 +1,5 @@
+# expect-error[col=5]: SIFR-TYPE-0002
+
+async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
+    await task.sleep(0.0)
+    yield 1
