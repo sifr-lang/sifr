@@ -1,0 +1,37 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_task_group_fail_fast_spawn_order_" + str(getpid()) + ".txt"
+
+
+async def fail_fast() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("group child failed")
+
+
+async def slow_writes_marker() -> int:
+    await task.sleep(0.20)
+    try:
+        _written: None = write_text(marker_path(), "sibling was not cancelled")
+    except IOError as e:
+        _message: str = str(e.message)
+    return 2
+
+
+async def main() -> Result[None, ScopeFailure]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    async with task.TaskGroup() as group:
+        failing = group.spawn(fail_fast())
+        sibling = group.spawn(slow_writes_marker())
+        result = await failing
+
+    assert not exists(path)
+    return None
