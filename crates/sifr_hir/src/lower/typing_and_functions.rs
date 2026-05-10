@@ -1,8 +1,8 @@
 use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
-use ruff_text_size::Ranged;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    AstParamConvention, AstParamMutability, AstParamOwnership, Expr, Number, Operator,
+    AstParamConvention, AstParamMutability, AstParamOwnership, Expr, Number, Operator, Stmt,
     StmtFunctionDef,
 };
 use sifr_type_system::infer::resolve_type_annotation;
@@ -15,6 +15,7 @@ use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
 use super::function_flow::{collect_yield_types, infer_function_return_type};
 use super::nonlocal_support::collect_declared_nonlocals;
+use super::ownership_diagnostics;
 use super::simple_expr::lower_expr_simple;
 use super::statements::lower_stmts;
 use super::{substitute_type_vars, LowerCtx};
@@ -335,6 +336,102 @@ fn collect_function_defaults(
     }
 
     defaults
+}
+
+fn first_await_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
+    stmts.iter().find_map(first_await_range_in_stmt)
+}
+
+fn first_await_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
+    match stmt {
+        Stmt::Expr(expr_stmt) => first_await_range_in_expr(expr_stmt.value.as_ref()),
+        Stmt::Return(ret) => ret
+            .value
+            .as_ref()
+            .and_then(|expr| first_await_range_in_expr(expr.as_ref())),
+        Stmt::AnnAssign(ann) => ann
+            .value
+            .as_ref()
+            .and_then(|expr| first_await_range_in_expr(expr.as_ref())),
+        Stmt::Assign(assign) => first_await_range_in_expr(assign.value.as_ref()),
+        Stmt::AugAssign(aug) => first_await_range_in_expr(aug.value.as_ref()),
+        Stmt::If(if_stmt) => first_await_range_in_expr(if_stmt.test.as_ref())
+            .or_else(|| first_await_range_in_stmts(&if_stmt.body))
+            .or_else(|| {
+                if_stmt.elif_else_clauses.iter().find_map(|clause| {
+                    clause
+                        .test
+                        .as_ref()
+                        .and_then(first_await_range_in_expr)
+                        .or_else(|| first_await_range_in_stmts(&clause.body))
+                })
+            }),
+        Stmt::While(while_stmt) => first_await_range_in_expr(while_stmt.test.as_ref())
+            .or_else(|| first_await_range_in_stmts(&while_stmt.body))
+            .or_else(|| first_await_range_in_stmts(&while_stmt.orelse)),
+        Stmt::For(for_stmt) => first_await_range_in_expr(for_stmt.iter.as_ref())
+            .or_else(|| first_await_range_in_stmts(&for_stmt.body))
+            .or_else(|| first_await_range_in_stmts(&for_stmt.orelse)),
+        Stmt::With(with_stmt) => with_stmt
+            .items
+            .iter()
+            .find_map(|item| first_await_range_in_expr(&item.context_expr))
+            .or_else(|| first_await_range_in_stmts(&with_stmt.body)),
+        Stmt::Try(try_stmt) => first_await_range_in_stmts(&try_stmt.body)
+            .or_else(|| {
+                try_stmt.handlers.iter().find_map(|handler| {
+                    let sifr_python_ast::ExceptHandler::ExceptHandler(handler) = handler;
+                    first_await_range_in_stmts(&handler.body)
+                })
+            })
+            .or_else(|| first_await_range_in_stmts(&try_stmt.orelse))
+            .or_else(|| first_await_range_in_stmts(&try_stmt.finalbody)),
+        _ => None,
+    }
+}
+
+fn first_await_range_in_expr(expr: &Expr) -> Option<TextRange> {
+    match expr {
+        Expr::Await(await_expr) => Some(await_expr.range()),
+        Expr::Call(call) => first_await_range_in_expr(call.func.as_ref()).or_else(|| {
+            call.arguments
+                .args
+                .iter()
+                .find_map(first_await_range_in_expr)
+                .or_else(|| {
+                    call.arguments
+                        .keywords
+                        .iter()
+                        .find_map(|keyword| first_await_range_in_expr(&keyword.value))
+                })
+        }),
+        Expr::Attribute(attr) => first_await_range_in_expr(attr.value.as_ref()),
+        Expr::Subscript(sub) => first_await_range_in_expr(sub.value.as_ref())
+            .or_else(|| first_await_range_in_expr(sub.slice.as_ref())),
+        Expr::BinOp(bin) => first_await_range_in_expr(bin.left.as_ref())
+            .or_else(|| first_await_range_in_expr(bin.right.as_ref())),
+        Expr::BoolOp(bool_op) => bool_op.values.iter().find_map(first_await_range_in_expr),
+        Expr::UnaryOp(unary) => first_await_range_in_expr(unary.operand.as_ref()),
+        Expr::Compare(compare) => first_await_range_in_expr(compare.left.as_ref()).or_else(|| {
+            compare
+                .comparators
+                .iter()
+                .find_map(first_await_range_in_expr)
+        }),
+        Expr::If(if_expr) => first_await_range_in_expr(if_expr.test.as_ref())
+            .or_else(|| first_await_range_in_expr(if_expr.body.as_ref()))
+            .or_else(|| first_await_range_in_expr(if_expr.orelse.as_ref())),
+        Expr::List(list) => list.elts.iter().find_map(first_await_range_in_expr),
+        Expr::Tuple(tuple) => tuple.elts.iter().find_map(first_await_range_in_expr),
+        Expr::Set(set) => set.elts.iter().find_map(first_await_range_in_expr),
+        Expr::Dict(dict) => dict.items.iter().find_map(|item| {
+            item.key
+                .as_ref()
+                .and_then(first_await_range_in_expr)
+                .or_else(|| first_await_range_in_expr(&item.value))
+        }),
+        _ => None,
+    }
 }
 
 pub(super) fn register_local_function_signature(
@@ -984,6 +1081,22 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             && !matches!(param.ty, Type::TypeVar(_))
         {
             ctx.borrowed_params.insert(param.name.clone());
+        }
+    }
+    if func.is_async {
+        if let Some(await_range) = first_await_range_in_stmts(&func.body) {
+            for param in &params {
+                if param.convention.is_mut_borrow()
+                    && param.ty.ownership() == OwnershipKind::Move
+                    && !matches!(param.ty, Type::TypeVar(_))
+                {
+                    ownership_diagnostics::mutable_borrow_across_await(
+                        ctx,
+                        &param.name,
+                        await_range,
+                    );
+                }
+            }
         }
     }
 

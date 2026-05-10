@@ -1,0 +1,10 @@
+def mutate_local(mut items: list[int]) -> None:
+    items.append(2)
+    return None
+
+
+async def main() -> None:
+    items: list[int] = [1]
+    mutate_local(items)
+    await task.sleep(0.0)
+    return None
