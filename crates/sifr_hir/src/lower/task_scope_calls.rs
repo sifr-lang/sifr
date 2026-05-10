@@ -63,10 +63,20 @@ pub(super) fn lower_task_scope_spawn_call(
         enforce_task_group_is_open(&object, call, ctx)?;
         enforce_task_group_error_type(&object, &task_err_ty, call, ctx)?;
     }
-    if !matches!(&coroutine, HirExpr::Call { args, .. } if args.is_empty()) {
+    let HirExpr::Call { args, .. } = &coroutine else {
         expression_diagnostics::type_mismatch(
             ctx,
-            "scope.spawn() currently accepts only no-argument coroutine calls until task-boundary checking lands".to_string(),
+            "scope.spawn() requires a direct coroutine call in v1".to_string(),
+            call.arguments.args[0].range(),
+        );
+        return None;
+    };
+    if let Some(name) = borrowed_task_boundary_argument(args, ctx) {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "scope.spawn() cannot move borrowed parameter '{name}' across a task boundary; pass an owned value or clone it before spawning"
+            ),
             call.arguments.args[0].range(),
         );
         return None;
@@ -82,6 +92,30 @@ pub(super) fn lower_task_scope_spawn_call(
         args: vec![coroutine],
         ty: Type::Task(task_ok_ty, task_err_ty),
     })
+}
+
+fn borrowed_task_boundary_argument(args: &[HirExpr], ctx: &LowerCtx) -> Option<String> {
+    args.iter()
+        .find_map(|arg| borrowed_task_boundary_argument_in_expr(arg, ctx))
+}
+
+fn borrowed_task_boundary_argument_in_expr(expr: &HirExpr, ctx: &LowerCtx) -> Option<String> {
+    match expr {
+        HirExpr::Name { name, ty }
+            if ctx.borrowed_params.contains(name.as_str())
+                && matches!(ty.ownership(), sifr_type_system::OwnershipKind::Move) =>
+        {
+            Some(name.clone())
+        }
+        HirExpr::TupleLiteral { elements, .. }
+        | HirExpr::ListLiteral { elements, .. }
+        | HirExpr::SetLiteral { elements, .. } => borrowed_task_boundary_argument(elements, ctx),
+        HirExpr::DictLiteral { keys, values, .. } => keys
+            .iter()
+            .chain(values.iter())
+            .find_map(|expr| borrowed_task_boundary_argument_in_expr(expr, ctx)),
+        _ => None,
+    }
 }
 
 pub(super) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {

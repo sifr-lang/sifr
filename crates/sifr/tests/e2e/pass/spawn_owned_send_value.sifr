@@ -1,0 +1,10 @@
+async def worker(value: int) -> int:
+    return value
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        value: int = 41
+        handle = scope.spawn(worker(value))
+        result = await handle
+    return None
