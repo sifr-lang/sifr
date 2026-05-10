@@ -150,6 +150,32 @@ fn non_send_task_boundary_argument_in_expr(expr: &HirExpr) -> Option<NonSendTask
     })
 }
 
+pub(super) fn validate_channel_send_element(
+    object_ty: &Type,
+    method_name: &str,
+    args: &[HirExpr],
+    arg_ranges: &[TextRange],
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) {
+    if method_name != "send" || !is_channel_sender_type(object_ty) {
+        return;
+    }
+    let Some(arg) = args.first() else {
+        return;
+    };
+    let Some(reason) = non_send_reason(arg.ty()) else {
+        return;
+    };
+    ownership_diagnostics::non_send_channel_element(
+        ctx,
+        &channel_send_arg_label(arg),
+        &arg.ty().display_name(),
+        &reason,
+        arg_ranges.first().copied().unwrap_or_else(|| call.range()),
+    );
+}
+
 fn task_boundary_expr_label(expr: &HirExpr) -> String {
     match expr {
         HirExpr::Name { name, .. } => name.clone(),
@@ -158,7 +184,22 @@ fn task_boundary_expr_label(expr: &HirExpr) -> String {
     }
 }
 
-fn non_send_reason(ty: &Type) -> Option<String> {
+fn channel_send_arg_label(expr: &HirExpr) -> String {
+    match expr {
+        HirExpr::Name { name, .. } => name.clone(),
+        HirExpr::FieldAccess { field, .. } => format!("field `{field}`"),
+        _ => "value".to_string(),
+    }
+}
+
+fn is_channel_sender_type(ty: &Type) -> bool {
+    matches!(
+        ty.resolve_alias(),
+        Type::Class { name, .. } if public_type_name(name) == "ChannelSender"
+    )
+}
+
+pub(super) fn non_send_reason(ty: &Type) -> Option<String> {
     non_send_reason_inner(ty.resolve_alias(), &mut HashSet::new())
 }
 
@@ -235,7 +276,7 @@ fn is_lock_guard_type_name(name: &str) -> bool {
     )
 }
 
-fn public_type_name(name: &str) -> &str {
+pub(super) fn public_type_name(name: &str) -> &str {
     name.strip_prefix("__compat_sifr_sync_").unwrap_or(name)
 }
 

@@ -1,0 +1,13 @@
+# expect-error[col=30]: SIFR-OWN-0011
+from sifr.sync import Channel, ChannelSender, ClosedError
+
+
+class LocalCell(NonSend):
+    pass
+
+
+async def main() -> Result[None, ClosedError]:
+    sender: ChannelSender[LocalCell] = ChannelSender(Channel([], -1))
+    cell: LocalCell = LocalCell()
+    sent = await sender.send(cell)
+    return None

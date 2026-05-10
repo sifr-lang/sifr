@@ -161,3 +161,19 @@ pub(super) fn non_send_task_capture(
         range,
     );
 }
+
+pub(super) fn non_send_channel_element(
+    ctx: &mut LowerCtx,
+    value: &str,
+    ty: &str,
+    reason: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_NON_SEND_CHANNEL_ELEMENT,
+        format!(
+            "channel send cannot transfer `{value}` of type `{ty}` because {reason}; use an explicit synchronization primitive or keep the value in the current task"
+        ),
+        range,
+    );
+}

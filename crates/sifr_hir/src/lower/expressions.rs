@@ -58,7 +58,7 @@ use super::sequence_guard_detection::{
 use super::subscript_type::resolve_subscript_result_type;
 use super::task_calls::{lower_task_module_call, TaskCallLowering};
 use super::task_handle_calls::{is_task_handle_type, lower_task_handle_method_call};
-use super::task_scope_calls::{is_task_scope_type, lower_task_scope_spawn_call};
+use super::task_scope_calls as tsc;
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
@@ -119,7 +119,6 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     }
 }
-
 pub(super) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
     match &num.value {
         Number::Int(i) => {
@@ -135,7 +134,6 @@ pub(super) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
         Number::Complex { .. } => None, // Not supported.
     }
 }
-
 pub(super) fn lower_bytes_literal(bytes: &ExprBytesLiteral) -> HirExpr {
     let mut elements = Vec::new();
     for part in &bytes.value {
@@ -148,7 +146,6 @@ pub(super) fn lower_bytes_literal(bytes: &ExprBytesLiteral) -> HirExpr {
         ty: Type::Bytes,
     }
 }
-
 pub(super) fn callable_signature(
     expr: &HirExpr,
 ) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {
@@ -180,7 +177,6 @@ pub(super) fn callable_signature(
         _ => None,
     }
 }
-
 fn canonicalize_class_surface_type(ty: &Type) -> Type {
     match ty {
         Type::List(elem) => Type::List(Box::new(canonicalize_class_surface_type(elem))),
@@ -240,10 +236,8 @@ fn canonicalize_class_surface_type(ty: &Type) -> Type {
         _ => ty.clone(),
     }
 }
-
 pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let var_name = name.id.to_string();
-
     if let Some(info) = ctx.scope.lookup(&var_name) {
         let is_moved = info.is_moved;
         let ty = info.effective_type().clone();
@@ -252,7 +246,6 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
         }
         return Some(HirExpr::Name { name: var_name, ty });
     }
-
     if let Some(ft) = ctx.functions.get(&var_name) {
         let ft = ft.clone();
         let ty = if ctx.async_functions.contains(&var_name) {
@@ -262,7 +255,6 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
         };
         return Some(HirExpr::Name { name: var_name, ty });
     }
-
     match var_name.as_str() {
         "True" => return Some(HirExpr::BoolLiteral(true)),
         "False" => return Some(HirExpr::BoolLiteral(false)),
@@ -2132,8 +2124,8 @@ pub(super) fn lower_method_call(
 
     let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
-    if is_task_scope_type(object.ty()) && method_name == "spawn" {
-        return lower_task_scope_spawn_call(object, attr, call, ctx);
+    if tsc::is_task_scope_type(object.ty()) && method_name == "spawn" {
+        return tsc::lower_task_scope_spawn_call(object, attr, call, ctx);
     }
     if is_task_handle_type(object.ty()) {
         if let Some(expr) = lower_task_handle_method_call(object.clone(), &method_name, call, ctx) {
@@ -2217,6 +2209,14 @@ pub(super) fn lower_method_call(
         &method_name,
         &args,
         &resolved_method_type,
+        ctx,
+    );
+    tsc::validate_channel_send_element(
+        &object_ty,
+        &method_name,
+        &args,
+        &method_arg_ranges,
+        call,
         ctx,
     );
     invalidate_collection_flow_facts_for_method(ctx, &object, &object_ty, &method_name);
