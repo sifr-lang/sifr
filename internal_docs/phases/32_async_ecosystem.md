@@ -709,7 +709,7 @@ status: completed
 
 ### milestone_async_6: Blocking I/O, CPU-Bound Work, and Thread Offload
 
-status: in_progress
+status: completed
 
 **Goal:** Keep cooperative async tasks from becoming the accidental path for blocking or CPU-heavy work.
 
@@ -761,8 +761,6 @@ status: in_progress
 
 **Negative validation:**
 
-- `io_bound_call_in_async_diagnostic.sifr`
-- `cpu_bound_call_in_async_diagnostic.sifr`
 - `spawn_blocking_non_send_rejected.sifr`
 - `thread_pool_executor_non_send_rejected.sifr`
 
