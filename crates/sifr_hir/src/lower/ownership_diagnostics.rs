@@ -75,6 +75,15 @@ pub(super) fn borrowed_parameter_return_escape(ctx: &mut LowerCtx, name: &str, r
     );
 }
 
+pub(super) fn lock_guard_return_escape(ctx: &mut LowerCtx, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
+        "cannot return lock guard: lock guards cannot escape their local critical section"
+            .to_string(),
+        range,
+    );
+}
+
 pub(super) fn moved_across_loop(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_MOVED_ACROSS_LOOP,

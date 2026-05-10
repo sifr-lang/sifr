@@ -221,6 +221,13 @@ fn class_has_non_send_marker(name: &str, parent_chain: Option<&str>) -> bool {
         || parent_chain.is_some_and(|parents| parents.split('|').any(|parent| parent == "NonSend"))
 }
 
+pub(super) fn is_lock_guard_type(ty: &Type) -> bool {
+    let Type::Class { name, .. } = ty.resolve_alias() else {
+        return false;
+    };
+    is_lock_guard_type_name(name)
+}
+
 fn is_lock_guard_type_name(name: &str) -> bool {
     matches!(
         public_type_name(name),
