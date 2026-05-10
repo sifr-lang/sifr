@@ -1,0 +1,35 @@
+from sifr.sync import Shared
+
+
+def append_before_await(mut items: list[int]) -> None:
+    items.append(2)
+    return None
+
+
+async def count_items(own items: list[int]) -> int:
+    await task.sleep(0.0)
+    return len(items)
+
+
+async def read_shared(own shared: Shared[int]) -> int:
+    await task.sleep(0.0)
+    return shared.get()
+
+
+async def main() -> Result[None, ScopeFailure]:
+    # Same-task mutable borrows are fine when the borrow is no longer live at await.
+    local_items: list[int] = [1]
+    append_before_await(local_items)
+    await task.sleep(0.0)
+    assert len(local_items) == 2
+
+    # Spawned tasks require owned task-boundary inputs.
+    async with task.scope() as scope:
+        owned_handle = scope.spawn(count_items([1, 2, 3]))
+        shared_value: Shared[int] = Shared(41)
+        shared_handle = scope.spawn(read_shared(shared_value))
+
+        _owned_result = await owned_handle
+        _immutable_shared_result = await shared_handle
+
+    return None
