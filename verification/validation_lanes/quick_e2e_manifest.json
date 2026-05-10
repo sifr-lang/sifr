@@ -38,6 +38,8 @@
     "async_for_stream_result",
     "async_for_channel",
     "async_for_closable_iterator_cleanup",
+    "async_for_closable_iterator_return_cleanup",
+    "async_for_closable_iterator_nested_return_cleanup",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",
