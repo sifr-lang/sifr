@@ -138,6 +138,16 @@ pub(super) fn mutable_borrow_across_await(ctx: &mut LowerCtx, name: &str, range:
     );
 }
 
+pub(super) fn mutable_borrow_across_yield(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
+        format!(
+            "mutable borrow `{name}` cannot cross async generator yield; finish the mutation before yielding or transfer ownership with `own`"
+        ),
+        range,
+    );
+}
+
 pub(super) fn lock_guard_across_await(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
