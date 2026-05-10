@@ -35,6 +35,7 @@
     "threading_compat_basic",
     "async_with_basic",
     "async_with_nested_cleanup_order",
+    "async_with_return_cleanup",
     "async_for_stream_result",
     "async_for_channel",
     "async_for_closable_iterator_cleanup",

@@ -7509,10 +7509,15 @@ impl RustEmitter {
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         if let sifr_hir::HirAsyncWithKind::UserDefined { context, .. } = kind {
+            let body_always_exits = queries::block_control_flow_effect(body).always_exits();
             let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
                 return Ok(None);
             };
             if let HirExpr::Name { name, .. } = context {
+                lowered_body = inject_async_with_return_cleanup(
+                    &lowered_body,
+                    &crate::RustExpr::Ident(name.clone()),
+                );
                 let enter_stmt = crate::RustStmt::Let {
                     mutable: false,
                     name: target.unwrap_or("_").to_string(),
@@ -7540,13 +7545,19 @@ impl RustEmitter {
                 let mut stmts = Vec::with_capacity(lowered_body.len() + 2);
                 stmts.push(enter_stmt);
                 stmts.append(&mut lowered_body);
-                stmts.push(exit_stmt);
+                if !body_always_exits {
+                    stmts.push(exit_stmt);
+                }
                 return Ok(Some(RustStmt::Block(stmts)));
             }
 
             let Some(lowered_context) = self.lower_stmt_expr_for_ir(context)? else {
                 return Ok(None);
             };
+            lowered_body = inject_async_with_return_cleanup(
+                &lowered_body,
+                &crate::RustExpr::Ident("__sifr_async_cm".to_string()),
+            );
             let enter_call = crate::RustExpr::Try(Box::new(crate::RustExpr::Await(Box::new(
                 crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Ident("__sifr_async_cm".to_string())),
@@ -7581,7 +7592,9 @@ impl RustEmitter {
             });
             stmts.push(enter_stmt);
             stmts.append(&mut lowered_body);
-            stmts.push(exit_stmt);
+            if !body_always_exits {
+                stmts.push(exit_stmt);
+            }
             return Ok(Some(RustStmt::Block(stmts)));
         }
 
@@ -9758,6 +9771,105 @@ fn result_int_to_sifr_int_rust_type(ty: &Type) -> crate::RustType {
         Box::new(crate::RustType::Named("SifrInt".to_string())),
         Box::new(crate::sifr_type_to_rust_type(err_ty)),
     )
+}
+
+fn inject_async_with_return_cleanup(stmts: &[RustStmt], receiver: &RustExpr) -> Vec<RustStmt> {
+    stmts
+        .iter()
+        .flat_map(|stmt| inject_async_with_return_cleanup_stmt(stmt, receiver))
+        .collect()
+}
+
+fn inject_async_with_return_cleanup_stmt(stmt: &RustStmt, receiver: &RustExpr) -> Vec<RustStmt> {
+    match stmt {
+        RustStmt::Return(Some(value)) => vec![RustStmt::Return(Some(RustExpr::Block {
+            stmts: vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_async_with_return".to_string(),
+                    ty: None,
+                    value: value.clone(),
+                },
+                RustStmt::Expr(async_with_exit_call(receiver.clone(), "Return")),
+            ],
+            expr: Some(Box::new(RustExpr::Ident(
+                "__sifr_async_with_return".to_string(),
+            ))),
+        }))],
+        RustStmt::Return(None) => vec![
+            RustStmt::Expr(async_with_exit_call(receiver.clone(), "Return")),
+            RustStmt::Return(None),
+        ],
+        RustStmt::If {
+            cond,
+            then_body,
+            else_body,
+        } => vec![RustStmt::If {
+            cond: cond.clone(),
+            then_body: inject_async_with_return_cleanup(then_body, receiver),
+            else_body: else_body
+                .as_ref()
+                .map(|body| inject_async_with_return_cleanup(body, receiver)),
+        }],
+        RustStmt::IfLet {
+            pattern,
+            expr,
+            then_body,
+            else_body,
+        } => vec![RustStmt::IfLet {
+            pattern: pattern.clone(),
+            expr: expr.clone(),
+            then_body: inject_async_with_return_cleanup(then_body, receiver),
+            else_body: else_body
+                .as_ref()
+                .map(|body| inject_async_with_return_cleanup(body, receiver)),
+        }],
+        RustStmt::Match { expr, arms } => vec![RustStmt::Match {
+            expr: expr.clone(),
+            arms: arms
+                .iter()
+                .map(|arm| crate::RustMatchArm {
+                    pattern: arm.pattern.clone(),
+                    bindings: arm.bindings.clone(),
+                    guard: arm.guard.clone(),
+                    body: inject_async_with_return_cleanup(&arm.body, receiver),
+                })
+                .collect(),
+        }],
+        RustStmt::With { items, body } => vec![RustStmt::With {
+            items: items.clone(),
+            body: inject_async_with_return_cleanup(body, receiver),
+        }],
+        RustStmt::Block(body) => {
+            vec![RustStmt::Block(inject_async_with_return_cleanup(
+                body, receiver,
+            ))]
+        }
+        RustStmt::For { var, iter, body } => vec![RustStmt::For {
+            var: var.clone(),
+            iter: iter.clone(),
+            body: inject_async_with_return_cleanup(body, receiver),
+        }],
+        RustStmt::While { cond, body } => vec![RustStmt::While {
+            cond: cond.clone(),
+            body: inject_async_with_return_cleanup(body, receiver),
+        }],
+        RustStmt::Loop { body } => vec![RustStmt::Loop {
+            body: inject_async_with_return_cleanup(body, receiver),
+        }],
+        _ => vec![stmt.clone()],
+    }
+}
+
+fn async_with_exit_call(receiver: RustExpr, cause_variant: &str) -> RustExpr {
+    RustExpr::Try(Box::new(RustExpr::Await(Box::new(RustExpr::MethodCall {
+        receiver: Box::new(receiver),
+        method: "__aexit__".to_string(),
+        args: vec![RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::Ident(format!("AsyncExitCause::{cause_variant}"))),
+        }],
+    }))))
 }
 
 fn inject_async_for_early_exit_cleanup(
