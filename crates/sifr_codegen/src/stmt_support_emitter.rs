@@ -700,6 +700,222 @@ impl RustEmitter {
         }))
     }
 
+    fn try_lower_async_set_comp_for_ir(
+        &mut self,
+        value_expr: &HirExpr,
+        generators: &[(String, HirExpr, Option<HirExpr>)],
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        let Some((var, iter_expr, maybe_filter)) = generators.first() else {
+            return Ok(None);
+        };
+        if generators.len() != 1 || var.contains(',') {
+            return Ok(None);
+        }
+        let Some(iter_error_ty) = Self::async_iterator_error_type_for_ir(iter_expr) else {
+            return Ok(None);
+        };
+        let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter_expr)? else {
+            return Ok(None);
+        };
+        let Some(lowered_value) = self.lower_stmt_expr_for_ir(value_expr)? else {
+            return Ok(None);
+        };
+
+        let result_ident = "__sifr_async_set_comp".to_string();
+        let iter_ident = "__sifr_async_set_iter".to_string();
+        let next_ident = "__sifr_async_set_next".to_string();
+
+        let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(result_ident.clone())),
+            method: "insert".to_string(),
+            args: vec![lowered_value],
+        });
+        let value_body = if let Some(filter) = maybe_filter {
+            let Some(lowered_filter) = self.lower_stmt_expr_for_ir(filter)? else {
+                return Ok(None);
+            };
+            vec![RustStmt::If {
+                cond: lowered_filter,
+                then_body: vec![insert_stmt],
+                else_body: None,
+            }]
+        } else {
+            vec![insert_stmt]
+        };
+
+        let next_call = RustExpr::Await(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(iter_ident.clone())),
+            method: "anext".to_string(),
+            args: vec![],
+        }));
+        let next_value = if matches!(iter_error_ty.resolve_alias(), Type::Never) {
+            next_call
+        } else {
+            RustExpr::Try(Box::new(next_call))
+        };
+
+        Ok(Some(RustExpr::Block {
+            stmts: vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: result_ident.clone(),
+                    ty: None,
+                    value: RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "HashSet".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![],
+                    },
+                },
+                RustStmt::Let {
+                    mutable: true,
+                    name: iter_ident,
+                    ty: None,
+                    value: lowered_iter,
+                },
+                RustStmt::Loop {
+                    body: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: next_ident.clone(),
+                            ty: None,
+                            value: next_value,
+                        },
+                        RustStmt::Match {
+                            expr: RustExpr::Ident(next_ident),
+                            arms: vec![
+                                crate::RustMatchArm {
+                                    pattern: format!("Some({var})"),
+                                    bindings: vec![var.clone()],
+                                    guard: None,
+                                    body: value_body,
+                                },
+                                crate::RustMatchArm {
+                                    pattern: "None".to_string(),
+                                    bindings: vec![],
+                                    guard: None,
+                                    body: vec![RustStmt::Break],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            expr: Some(Box::new(RustExpr::Ident(result_ident))),
+        }))
+    }
+
+    fn try_lower_async_dict_comp_for_ir(
+        &mut self,
+        key_expr: &HirExpr,
+        val_expr: &HirExpr,
+        generators: &[(String, HirExpr, Option<HirExpr>)],
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        let Some((var, iter_expr, maybe_filter)) = generators.first() else {
+            return Ok(None);
+        };
+        if generators.len() != 1 || var.contains(',') {
+            return Ok(None);
+        }
+        let Some(iter_error_ty) = Self::async_iterator_error_type_for_ir(iter_expr) else {
+            return Ok(None);
+        };
+        let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter_expr)? else {
+            return Ok(None);
+        };
+        let Some(lowered_key) = self.lower_stmt_expr_for_ir(key_expr)? else {
+            return Ok(None);
+        };
+        let Some(lowered_value) = self.lower_stmt_expr_for_ir(val_expr)? else {
+            return Ok(None);
+        };
+
+        let result_ident = "__sifr_async_dict_comp".to_string();
+        let iter_ident = "__sifr_async_dict_iter".to_string();
+        let next_ident = "__sifr_async_dict_next".to_string();
+
+        let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(result_ident.clone())),
+            method: "insert".to_string(),
+            args: vec![lowered_key, lowered_value],
+        });
+        let value_body = if let Some(filter) = maybe_filter {
+            let Some(lowered_filter) = self.lower_stmt_expr_for_ir(filter)? else {
+                return Ok(None);
+            };
+            vec![RustStmt::If {
+                cond: lowered_filter,
+                then_body: vec![insert_stmt],
+                else_body: None,
+            }]
+        } else {
+            vec![insert_stmt]
+        };
+
+        let next_call = RustExpr::Await(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(iter_ident.clone())),
+            method: "anext".to_string(),
+            args: vec![],
+        }));
+        let next_value = if matches!(iter_error_ty.resolve_alias(), Type::Never) {
+            next_call
+        } else {
+            RustExpr::Try(Box::new(next_call))
+        };
+
+        Ok(Some(RustExpr::Block {
+            stmts: vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: result_ident.clone(),
+                    ty: None,
+                    value: RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "HashMap".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![],
+                    },
+                },
+                RustStmt::Let {
+                    mutable: true,
+                    name: iter_ident,
+                    ty: None,
+                    value: lowered_iter,
+                },
+                RustStmt::Loop {
+                    body: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: next_ident.clone(),
+                            ty: None,
+                            value: next_value,
+                        },
+                        RustStmt::Match {
+                            expr: RustExpr::Ident(next_ident),
+                            arms: vec![
+                                crate::RustMatchArm {
+                                    pattern: format!("Some({var})"),
+                                    bindings: vec![var.clone()],
+                                    guard: None,
+                                    body: value_body,
+                                },
+                                crate::RustMatchArm {
+                                    pattern: "None".to_string(),
+                                    bindings: vec![],
+                                    guard: None,
+                                    body: vec![RustStmt::Break],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            expr: Some(Box::new(RustExpr::Ident(result_ident))),
+        }))
+    }
+
     fn try_lower_comprehension_expr_for_ir(
         &mut self,
         expr: &HirExpr,
@@ -786,6 +1002,9 @@ impl RustEmitter {
                 if var.contains(',') {
                     return Ok(None);
                 }
+                if Self::async_iterator_error_type_for_ir(iter_expr).is_some() {
+                    return self.try_lower_async_dict_comp_for_ir(key_expr, val_expr, generators);
+                }
                 let Some(iter) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
                     return Ok(None);
                 };
@@ -854,6 +1073,9 @@ impl RustEmitter {
                 };
                 if var.contains(',') {
                     return Ok(None);
+                }
+                if Self::async_iterator_error_type_for_ir(iter_expr).is_some() {
+                    return self.try_lower_async_set_comp_for_ir(expr, generators);
                 }
                 let Some(iter) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
                     return Ok(None);

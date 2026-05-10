@@ -1,0 +1,13 @@
+async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 1
+    yield 2
+    yield 3
+
+
+async def main() -> Result[None, GeneratorCloseError]:
+    offsets: dict[int, int] = {x: x + 10 async for x in numbers() if x > 1}
+
+    assert len(offsets) == 2
+    assert offsets[2] == 12
+    assert offsets[3] == 13
+    return None
