@@ -1050,6 +1050,13 @@ impl<T: Clone> ChannelReceiver<T> {
             }
         }
     }
+
+    async fn anext(&mut self) -> Option<T> {
+        match self.receive().await {
+            Ok(value) => Some(value),
+            Err(_) => None,
+        }
+    }
 }
 
 impl<T: Clone> Drop for ChannelReceiver<T> {
@@ -2252,10 +2259,16 @@ impl RustEmitter {
         }
 
         if let HirStmt::AsyncFor {
-            target, iter, body, ..
+            target,
+            iter,
+            iter_error_ty,
+            body,
+            ..
         } = stmt
         {
-            if let Some(lowered_stmt) = self.try_lower_async_for_stmt_for_ir(target, iter, body)? {
+            if let Some(lowered_stmt) =
+                self.try_lower_async_for_stmt_for_ir(target, iter, iter_error_ty, body)?
+            {
                 self.push_captured_stmt(&self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt));
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;

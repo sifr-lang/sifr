@@ -96,6 +96,9 @@ class ChannelReceiver[T]:
         self._channel = channel
         return received
 
+    async def anext(self) -> Option[T]:
+        return None
+
 
 def channel[T]() -> tuple[ChannelSender[T], ChannelReceiver[T]]:
     sender_channel: Channel[T] = Channel([], -1)

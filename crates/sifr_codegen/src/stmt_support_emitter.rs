@@ -6449,11 +6449,15 @@ impl RustEmitter {
                     true,
                 )
             } else if let HirStmt::AsyncFor {
-                target, iter, body, ..
+                target,
+                iter,
+                iter_error_ty,
+                body,
+                ..
             } = stmt
             {
                 let Some(lowered_async_for) =
-                    self.try_lower_async_for_stmt_for_ir(target, iter, body)?
+                    self.try_lower_async_for_stmt_for_ir(target, iter, iter_error_ty, body)?
                 else {
                     return Ok(None);
                 };
@@ -7644,6 +7648,7 @@ impl RustEmitter {
         &mut self,
         target: &str,
         iter: &HirExpr,
+        iter_error_ty: &Type,
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
@@ -7654,19 +7659,24 @@ impl RustEmitter {
         } else {
             format!("_{target}")
         };
+        let infallible_iter = matches!(iter_error_ty.resolve_alias(), Type::Never);
         let loop_body = |receiver: crate::RustExpr| {
+            let next_call = crate::RustExpr::Await(Box::new(crate::RustExpr::MethodCall {
+                receiver: Box::new(receiver),
+                method: "anext".to_string(),
+                args: vec![],
+            }));
+            let next_value = if infallible_iter {
+                next_call
+            } else {
+                crate::RustExpr::Try(Box::new(next_call))
+            };
             vec![
                 RustStmt::Let {
                     mutable: false,
                     name: "__sifr_async_next".to_string(),
                     ty: None,
-                    value: crate::RustExpr::Try(Box::new(crate::RustExpr::Await(Box::new(
-                        crate::RustExpr::MethodCall {
-                            receiver: Box::new(receiver),
-                            method: "anext".to_string(),
-                            args: vec![],
-                        },
-                    )))),
+                    value: next_value,
                 },
                 RustStmt::Match {
                     expr: crate::RustExpr::Ident("__sifr_async_next".to_string()),

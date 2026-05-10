@@ -1,0 +1,21 @@
+from sifr.sync import ChannelReceiver, ChannelSender, channel
+
+
+async def main() -> None:
+    endpoints: tuple[ChannelSender[int], ChannelReceiver[int]] = channel()
+    sender, receiver = endpoints
+
+    first = await sender.send(10)
+    second = await sender.send(20)
+    sender.close()
+
+    total: int = 0
+    count: int = 0
+    async for value in receiver:
+        total = total + value
+        count = count + 1
+
+    assert str(first) == "Ok(())"
+    assert str(second) == "Ok(())"
+    assert total == 30
+    assert count == 2
