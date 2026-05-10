@@ -1,0 +1,7 @@
+# expect-error[col=40]: SIFR-OWN-0012
+from sifr.sync import Shared
+
+
+def main() -> None:
+    items: list[int] = [1]
+    shared: Shared[list[int]] = Shared(items)

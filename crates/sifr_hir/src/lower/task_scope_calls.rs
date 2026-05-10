@@ -176,6 +176,35 @@ pub(super) fn validate_channel_send_element(
     );
 }
 
+pub(super) fn validate_shared_constructor(
+    func_name: &str,
+    args: &[HirExpr],
+    arg_ranges: &[Option<TextRange>],
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) {
+    if public_type_name(func_name) != "Shared" {
+        return;
+    }
+    let Some(arg) = args.first() else {
+        return;
+    };
+    let Some(reason) = non_share_safe_reason(arg.ty()) else {
+        return;
+    };
+    ownership_diagnostics::non_share_safe_shared_value(
+        ctx,
+        &channel_send_arg_label(arg),
+        &arg.ty().display_name(),
+        &reason,
+        arg_ranges
+            .first()
+            .copied()
+            .flatten()
+            .unwrap_or_else(|| call.range()),
+    );
+}
+
 fn task_boundary_expr_label(expr: &HirExpr) -> String {
     match expr {
         HirExpr::Name { name, .. } => name.clone(),
@@ -201,6 +230,73 @@ fn is_channel_sender_type(ty: &Type) -> bool {
 
 pub(super) fn non_send_reason(ty: &Type) -> Option<String> {
     non_send_reason_inner(ty.resolve_alias(), &mut HashSet::new())
+}
+
+fn non_share_safe_reason(ty: &Type) -> Option<String> {
+    non_share_safe_reason_inner(ty.resolve_alias(), &mut HashSet::new())
+}
+
+fn non_share_safe_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<String> {
+    match ty {
+        Type::List(_) => {
+            Some("list values are mutable and require explicit synchronization".to_string())
+        }
+        Type::Dict(_, _) => {
+            Some("dict values are mutable and require explicit synchronization".to_string())
+        }
+        Type::Set(_) => {
+            Some("set values are mutable and require explicit synchronization".to_string())
+        }
+        Type::Class {
+            name,
+            fields,
+            parent_class,
+            ..
+        } => {
+            if is_share_safe_sync_wrapper(name) {
+                return None;
+            }
+            if class_has_non_send_marker(name, parent_class.as_deref()) {
+                return Some(format!("`{name}` inherits the `NonSend` marker"));
+            }
+            if !visiting.insert(name.clone()) {
+                return None;
+            }
+            let field_reason = fields.iter().find_map(|(field, field_ty)| {
+                non_share_safe_reason_inner(field_ty.resolve_alias(), visiting)
+                    .map(|reason| format!("field `{field}` is not share-safe: {reason}"))
+            });
+            visiting.remove(name);
+            field_reason.or_else(|| {
+                Some(format!(
+                    "`{}` is a mutable class without an explicit synchronization wrapper",
+                    public_type_name(name)
+                ))
+            })
+        }
+        Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => elems
+            .iter()
+            .find_map(|elem| non_share_safe_reason_inner(elem.resolve_alias(), visiting)),
+        Type::Iterable(elem)
+        | Type::Iterator(elem)
+        | Type::Awaitable(elem)
+        | Type::Failure(elem)
+        | Type::TimeoutResult(elem) => non_share_safe_reason_inner(elem.resolve_alias(), visiting),
+        Type::Result(key, value)
+        | Type::Select2(key, value)
+        | Type::BlockingTask(key, value)
+        | Type::Task(key, value)
+        | Type::TaskResult(key, value)
+        | Type::Coroutine(key, value)
+        | Type::AsyncIterator(key, value)
+        | Type::AsyncGenerator(key, value) => {
+            non_share_safe_reason_inner(key.resolve_alias(), visiting)
+                .or_else(|| non_share_safe_reason_inner(value.resolve_alias(), visiting))
+        }
+        Type::Alias { body, .. } => non_share_safe_reason_inner(body.resolve_alias(), visiting),
+        Type::Newtype { inner, .. } => non_share_safe_reason_inner(inner.resolve_alias(), visiting),
+        other => non_send_reason(other),
+    }
 }
 
 fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<String> {
@@ -273,6 +369,13 @@ fn is_lock_guard_type_name(name: &str) -> bool {
     matches!(
         public_type_name(name),
         "LockGuard" | "RwLockReadGuard" | "RwLockWriteGuard"
+    )
+}
+
+fn is_share_safe_sync_wrapper(name: &str) -> bool {
+    matches!(
+        public_type_name(name),
+        "Shared" | "Lock" | "RwLock" | "Semaphore" | "Notify" | "ChannelSender" | "ChannelReceiver"
     )
 }
 

@@ -177,3 +177,19 @@ pub(super) fn non_send_channel_element(
         range,
     );
 }
+
+pub(super) fn non_share_safe_shared_value(
+    ctx: &mut LowerCtx,
+    value: &str,
+    ty: &str,
+    reason: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_NON_SHARE_SAFE_SHARED_VALUE,
+        format!(
+            "Shared cannot publish `{value}` of type `{ty}` because {reason}; wrap mutable state in `sync.Lock`/`sync.RwLock` or keep ownership local"
+        ),
+        range,
+    );
+}
