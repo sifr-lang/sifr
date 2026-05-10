@@ -408,7 +408,7 @@ status: completed
 
 ### milestone_async_3: Structured Concurrency and Cancellation Semantics
 
-status: in_progress
+status: completed
 
 **Goal:** Make scoped concurrency the default composition model.
 
@@ -527,6 +527,7 @@ status: in_progress
 - PR [#1953](https://github.com/sifr-lang/sifr/pull/1953) race secondary-evidence slice: `task.race([...])` now drains losing child observations after cancelling losers and attaches loser failure or cancellation evidence to a failure-like winning result.
 - PR [#1955](https://github.com/sifr-lang/sifr/pull/1955) select secondary-evidence slice: `task.select(a, b)` now awaits the losing child after cancellation, attaches loser failure or cancellation evidence to a failure-like selected result, and leaves explicit failure-like loser results visible to scope exit when the selected result is successful.
 - PR [#2011](https://github.com/sifr-lang/sifr/pull/2011) structured cancellation cleanup validation slice: `try/finally` now remains a HIR cleanup boundary so timeout cancellation runs finalbody before propagating `TimeoutError`, and the remaining milestone_async_3 gather secondary-evidence and cancellation cleanup fixtures are in the quick validation lane.
+- Current slice: close milestone_async_3 after verifying all structured-concurrency positive, negative, runtime-failure, and demo artifacts are present and the quick validation lane passes with the completed fixture set.
 
 ---
 
