@@ -1651,6 +1651,20 @@ fn test_scope_spawn_rejects_lock_guard_argument() {
 }
 
 #[test]
+fn test_channel_send_rejects_non_send_element() {
+    let source = "class ChannelSender[T]:\n    async def send(self, own value: T) -> None:\n        return None\n\nclass LocalCell(NonSend):\n    pass\n\nasync def main() -> None:\n    sender: ChannelSender[LocalCell] = ChannelSender()\n    cell: LocalCell = LocalCell()\n    await sender.send(cell)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("channel send cannot transfer `cell`")
+            && e.message
+                .contains("`LocalCell` inherits the `NonSend` marker")
+            && e.code == Some(DiagnosticCode::OWN_NON_SEND_CHANNEL_ELEMENT)
+    }));
+}
+
+#[test]
 fn test_mutable_borrow_parameter_across_await_rejected() {
     let source = "async def mutate_after_await(mut items: list[int]) -> int:\n    await task.sleep(0.0)\n    items.append(2)\n    return len(items)\n";
     let result = lower_source(source);

@@ -87,6 +87,7 @@ impl DiagnosticCode {
         Self::new("SIFR-OWN-0008", Severity::Error);
     pub const OWN_BORROW_ACROSS_AWAIT: Self = Self::new("SIFR-OWN-0009", Severity::Error);
     pub const OWN_NON_SEND_TASK_CAPTURE: Self = Self::new("SIFR-OWN-0010", Severity::Error);
+    pub const OWN_NON_SEND_CHANNEL_ELEMENT: Self = Self::new("SIFR-OWN-0011", Severity::Error);
 
     pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
@@ -1114,6 +1115,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["value", "type_name", "reason"]
     ),
     active_entry!(
+        "SIFR-OWN-0011",
+        "OWN",
+        "Non-sendable value is sent through a channel.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/channel_non_send_element_rejected.sifr",
+        "channel send cannot transfer {value} of type {type_name}",
+        "sifr_hir::lower",
+        [arg!("value"), arg!("type_name"), json_arg!("reason")],
+        ["value", "type_name", "reason"]
+    ),
+    active_entry!(
         "SIFR-FLOW-0001",
         "FLOW",
         "Break outside a loop.",
@@ -1703,6 +1715,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT,
     DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
     DiagnosticCode::OWN_NON_SEND_TASK_CAPTURE,
+    DiagnosticCode::OWN_NON_SEND_CHANNEL_ELEMENT,
     DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,
