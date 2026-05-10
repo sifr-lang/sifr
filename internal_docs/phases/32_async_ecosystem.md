@@ -766,7 +766,7 @@ status: in_progress
 **Implementation progress:**
 
 - [#2015](https://github.com/sifr-lang/sifr/pull/2015): Added declaration-site `@io_bound` and `@cpu_bound` workload annotations with async-context diagnostics, plus quick-lane validation fixtures for annotated blocking and CPU-heavy calls.
-- Current slice: implement `task.spawn_blocking` for direct zero-argument sync functions with distinct `BlockingTask[T, E]` observation and non-send return rejection validation.
+- [#2017](https://github.com/sifr-lang/sifr/pull/2017): Implemented `task.spawn_blocking` for direct zero-argument sync functions with distinct `BlockingTask[T, E]` observation and non-send return rejection validation.
 
 ---
 
