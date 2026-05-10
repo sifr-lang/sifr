@@ -493,6 +493,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let uses_task_scope = module_uses_task_scope(module);
     let uses_failure_type = module_uses_failure_type(module);
     let uses_cancellation_error_type = module_uses_cancellation_error_type(module);
+    let uses_async_exit_cause_type = module_uses_async_exit_cause_type(module);
     let uses_timeout_result_type = module_uses_timeout_result_type(module);
     let mut referenced_error_classes = collect_referenced_builtin_error_classes(
         module,
@@ -612,6 +613,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     if uses_task_scope || uses_cancellation_error_type {
         preamble_items.extend(build_cancellation_error_type_items());
+    }
+    if uses_async_exit_cause_type {
+        preamble_items.extend(build_async_exit_cause_type_items());
     }
     if uses_timeout_result_type && !uses_task_scope {
         preamble_items.extend(build_timeout_result_type_items());
@@ -1254,6 +1258,13 @@ fn type_contains_cancellation_error(ty: &Type) -> bool {
     )
 }
 
+fn type_contains_async_exit_cause(ty: &Type) -> bool {
+    type_contains_by(
+        ty,
+        |candidate| matches!(candidate, Type::Class { name, .. } if name == "AsyncExitCause"),
+    )
+}
+
 fn module_uses_failure_type(module: &HirModule) -> bool {
     module.functions.iter().any(function_uses_failure_type)
         || module.classes.iter().any(|class| {
@@ -1290,6 +1301,27 @@ fn module_uses_cancellation_error_type(module: &HirModule) -> bool {
             .any(|(_, ty, _)| type_contains_cancellation_error(ty))
 }
 
+fn module_uses_async_exit_cause_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(function_uses_async_exit_cause_type)
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_async_exit_cause(field_ty))
+                || class
+                    .methods
+                    .iter()
+                    .any(function_uses_async_exit_cause_type)
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_async_exit_cause(ty))
+}
+
 fn module_uses_timeout_result_type(module: &HirModule) -> bool {
     module
         .functions
@@ -1313,6 +1345,13 @@ fn function_uses_cancellation_error_type(func: &HirFunction) -> bool {
         .iter()
         .any(|param| type_contains_cancellation_error(&param.ty))
         || type_contains_cancellation_error(&func.return_type)
+}
+
+fn function_uses_async_exit_cause_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_async_exit_cause(&param.ty))
+        || type_contains_async_exit_cause(&func.return_type)
 }
 
 fn function_uses_failure_type(func: &HirFunction) -> bool {
@@ -2162,10 +2201,17 @@ impl RustEmitter {
         ) || matches!(
             stmt,
             HirStmt::AsyncWith {
-                kind: sifr_hir::HirAsyncWithKind::TaskTimeout { .. },
+                kind: sifr_hir::HirAsyncWithKind::TaskTimeout { .. }
+                    | sifr_hir::HirAsyncWithKind::UserDefined { .. },
                 body,
                 ..
             } if body_contains_await(body)
+        ) || matches!(
+            stmt,
+            HirStmt::AsyncWith {
+                kind: sifr_hir::HirAsyncWithKind::UserDefined { .. },
+                ..
+            }
         ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
         if !should_bypass_simple_lowering {
             if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result_and_bindings(

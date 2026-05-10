@@ -1,0 +1,17 @@
+# expect-error: SIFR-TYPE-0002
+
+class ResourceError(Error):
+    pass
+
+
+class NotAsyncContextManager:
+    value: int
+
+    def __init__(self, value: int):
+        self.value = value
+
+
+async def main() -> Result[None, ResourceError]:
+    async with NotAsyncContextManager(1) as value:
+        observed: int = value
+    return None

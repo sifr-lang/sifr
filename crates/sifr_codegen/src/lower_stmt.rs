@@ -334,8 +334,14 @@ fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
             validate_stmt_block_lowering_shape(body)
         }
         HirStmt::AsyncWith { kind, body, .. } => {
-            if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
-                validate_expr_lowering_shape(duration)?;
+            match kind {
+                sifr_hir::HirAsyncWithKind::TaskTimeout { duration } => {
+                    validate_expr_lowering_shape(duration)?;
+                }
+                sifr_hir::HirAsyncWithKind::UserDefined { context, .. } => {
+                    validate_expr_lowering_shape(context)?;
+                }
+                sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup => {}
             }
             validate_stmt_block_lowering_shape(body)
         }
@@ -1907,6 +1913,10 @@ fn try_lower_simple_async_with_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
+    if matches!(kind, sifr_hir::HirAsyncWithKind::UserDefined { .. }) {
+        return None;
+    }
+
     if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
         let _ = try_lower_leaf_or_name_expr(duration)?;
     }

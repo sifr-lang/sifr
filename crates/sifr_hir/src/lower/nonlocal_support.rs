@@ -185,11 +185,17 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
                 || hir_body_calls_function(body, func_name)
         }
         HirStmt::AsyncWith { kind, body, .. } => {
-            matches!(
-                kind,
-                crate::hir_nodes::HirAsyncWithKind::TaskTimeout { duration }
-                    if hir_expr_calls_function(duration, func_name)
-            ) || hir_body_calls_function(body, func_name)
+            let context_calls = match kind {
+                crate::hir_nodes::HirAsyncWithKind::TaskTimeout { duration } => {
+                    hir_expr_calls_function(duration, func_name)
+                }
+                crate::hir_nodes::HirAsyncWithKind::UserDefined { context, .. } => {
+                    hir_expr_calls_function(context, func_name)
+                }
+                crate::hir_nodes::HirAsyncWithKind::TaskScope
+                | crate::hir_nodes::HirAsyncWithKind::TaskGroup => false,
+            };
+            context_calls || hir_body_calls_function(body, func_name)
         }
         HirStmt::Match { subject, arms, .. } => {
             hir_expr_calls_function(subject, func_name)

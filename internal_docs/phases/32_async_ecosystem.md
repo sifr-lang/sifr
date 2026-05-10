@@ -783,6 +783,10 @@ status: completed
 
 status: proposed
 
+Implementation notes:
+
+- In progress user-defined `async with` protocol slice: structural async context managers with `__aenter__() -> Result[T, E]` and `__aexit__(AsyncExitCause) -> Result[None, E]` now lower on the normal-exit path, with `async_with_basic.sifr` in the quick lane and `async_with_missing_protocol_rejected.sifr` covering missing protocol rejection. Abnormal-exit cleanup, cancellation causes, secondary cleanup evidence, and `async for` remain follow-up slices in this milestone.
+
 **Goal:** Complete general user-defined async control-flow protocols without dragging in broad ecosystem APIs.
 
 **Depends on:** `milestone_async_5` and `milestone_async_6`

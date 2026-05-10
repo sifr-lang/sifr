@@ -1,0 +1,31 @@
+class ResourceError(Error):
+    pass
+
+
+class AsyncResource:
+    value: int
+    entered: bool
+    exited: bool
+
+    def __init__(self, value: int):
+        self.value = value
+        self.entered = False
+        self.exited = False
+
+    async def __aenter__(self) -> Result[int, ResourceError]:
+        self.entered = True
+        return self.value
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, ResourceError]:
+        assert self.entered
+        assert not self.exited
+        self.exited = True
+        return None
+
+
+async def main() -> Result[None, ResourceError]:
+    observed: int = 0
+    async with AsyncResource(41) as value:
+        observed = value + 1
+    assert observed == 42
+    return None

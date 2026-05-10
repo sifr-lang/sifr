@@ -33,6 +33,7 @@
     "blocking_task_cancel_join",
     "thread_pool_executor_basic",
     "threading_compat_basic",
+    "async_with_basic",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",

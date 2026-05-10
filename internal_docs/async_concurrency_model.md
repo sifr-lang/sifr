@@ -670,6 +670,8 @@ protocol AsyncContextManager[T, EnterE, ExitE]:
 
 `__aenter__` and `__aexit__` are the async context-manager methods. If `__aenter__` fails, `__aexit__` is not called, because the resource was not acquired.
 
+Implementation status: the first milestone_async_7a compiler slice supports the normal-exit path for user-defined async context managers that structurally provide async `__aenter__` and `__aexit__` methods. Abnormal body exit, cancellation-specific causes, secondary cleanup evidence, and `async for` cleanup are still tracked as follow-up slices in the same milestone.
+
 ```sifr
 enum AsyncExitCause:
     Normal
