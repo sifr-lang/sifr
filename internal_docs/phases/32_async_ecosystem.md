@@ -531,7 +531,7 @@ status: in_progress
 
 ### milestone_async_4: Ownership, Borrowing, and Send/Sync Task Boundaries
 
-status: in_progress
+status: completed
 
 **Goal:** Make task boundaries enforce Sifr ownership and Rust-like sendability with Sifr-native diagnostics.
 
@@ -586,7 +586,7 @@ status: in_progress
 - PR [#1961](https://github.com/sifr-lang/sifr/pull/1961) borrow-across-await validation slice: async functions reject live mutable-borrow parameters at await points, while completed same-task mutable borrows can be followed by ordinary awaits.
 - PR [#1963](https://github.com/sifr-lang/sifr/pull/1963) scoped-borrow spawn validation slice: the deferred v1 scoped-borrow model is covered by an explicit fail fixture that rejects borrowed parameters crossing `scope.spawn`.
 - PR [#1965](https://github.com/sifr-lang/sifr/pull/1965) non-send task-boundary slice: `scope.spawn` derives structural sendability for direct coroutine arguments and rejects classes containing the zero-runtime `NonSend` marker with `SIFR-OWN-0010`.
-- In progress ownership/concurrency closure slice: the remaining milestone positive fixtures are in the quick lane and `demos/m32_ownership_concurrency_demo.sifr` exercises owned spawn inputs, immutable shared task inputs, and completed same-task mutable borrows before await.
+- PR [#1969](https://github.com/sifr-lang/sifr/pull/1969) ownership/concurrency closure slice: the remaining milestone positive fixtures are in the quick lane and `demos/m32_ownership_concurrency_demo.sifr` exercises owned spawn inputs, immutable shared task inputs, and completed same-task mutable borrows before await.
 ---
 
 ### milestone_async_5: Synchronization Primitives and Channels
