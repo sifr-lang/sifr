@@ -18,6 +18,77 @@ class ClosedError(Error):
     pass
 
 
+class Channel[T]:
+    _buffer: list[T]
+    _closed: bool
+    _capacity: int
+
+    def __init__(self, own buffer: list[T], capacity: int):
+        self._buffer = buffer
+        self._closed = False
+        self._capacity = capacity
+
+    def __str__(self) -> str:
+        return "Channel"
+
+    def is_closed(self) -> bool:
+        return self._closed
+
+    def close(self) -> None:
+        self._closed = True
+
+    def clone(self) -> Channel[T]:
+        copy: Channel[T] = Channel(self._buffer, self._capacity)
+        if self._closed:
+            copy.close()
+        return copy
+
+    def push(self, own value: T) -> Result[None, ClosedError]:
+        if self._closed:
+            raise ClosedError()
+        self._buffer.append(value)
+        return None
+
+    def pop(self) -> Result[T, ClosedError]:
+        if len(self._buffer) == 0:
+            raise ClosedError()
+        value: T = self._buffer[0]
+        self._buffer.pop(0)
+        return value
+
+
+class ChannelSender[T]:
+    _channel: Channel[T]
+
+    def __init__(self, own channel: Channel[T]):
+        self._channel = channel
+
+    def __str__(self) -> str:
+        return "ChannelSender"
+
+    async def send(self, own value: T) -> Result[None, ClosedError]:
+        return self._channel.push(value)
+
+    def close(self) -> None:
+        self._channel.close()
+
+    def clone(self) -> ChannelSender[T]:
+        return ChannelSender(self._channel)
+
+
+class ChannelReceiver[T]:
+    _channel: Channel[T]
+
+    def __init__(self, own channel: Channel[T]):
+        self._channel = channel
+
+    def __str__(self) -> str:
+        return "ChannelReceiver"
+
+    async def receive(self) -> Result[T, ClosedError]:
+        return self._channel.pop()
+
+
 class LockGuard[T]:
     _value: T
 

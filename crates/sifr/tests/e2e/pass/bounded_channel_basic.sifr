@@ -1,0 +1,13 @@
+from sifr.sync import Channel, ChannelReceiver, ChannelSender, ClosedError
+
+
+async def main() -> Result[None, ClosedError]:
+    # Surface validation only: the capacity field is stored, while real bounded
+    # backpressure and shared factory wiring are follow-up channel slices.
+    sender: ChannelSender[int] = ChannelSender(Channel([], 1))
+    sent: Result[None, ClosedError] = await sender.send(7)
+    receiver: ChannelReceiver[int] = ChannelReceiver(Channel([7], 1))
+    received: Result[int, ClosedError] = await receiver.receive()
+    assert str(sent) == "Ok(())"
+    assert str(received) == "Ok(7)"
+    return None
