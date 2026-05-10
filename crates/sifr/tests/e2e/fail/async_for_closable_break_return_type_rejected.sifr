@@ -1,0 +1,30 @@
+# expect-error[col=24]: SIFR-TYPE-0002
+
+class StreamCloseError(Error):
+    pass
+
+
+class ClosableCounter:
+    current: int
+    closed: bool
+
+    def __init__(self):
+        self.current = 0
+        self.closed = False
+
+    async def anext(self) -> Result[Option[int], StreamCloseError]:
+        if self.current > 0:
+            return None
+        self.current = self.current + 1
+        value: Option[int] = self.current
+        return value
+
+    async def aclose(self) -> Result[None, StreamCloseError]:
+        self.closed = True
+        return None
+
+
+async def main() -> None:
+    stream: ClosableCounter = ClosableCounter()
+    async for value in stream:
+        break

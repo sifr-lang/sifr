@@ -2262,13 +2262,18 @@ impl RustEmitter {
             target,
             iter,
             iter_error_ty,
+            close_error_ty,
             body,
             ..
         } = stmt
         {
-            if let Some(lowered_stmt) =
-                self.try_lower_async_for_stmt_for_ir(target, iter, iter_error_ty, body)?
-            {
+            if let Some(lowered_stmt) = self.try_lower_async_for_stmt_for_ir(
+                target,
+                iter,
+                iter_error_ty,
+                close_error_ty.as_ref(),
+                body,
+            )? {
                 self.push_captured_stmt(&self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt));
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
