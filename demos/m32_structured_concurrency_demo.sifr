@@ -1,0 +1,61 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_m32_structured_concurrency_demo_" + str(getpid()) + ".txt"
+
+
+async def one() -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def two() -> int:
+    await task.sleep(0.0)
+    return 2
+
+
+async def fast() -> int:
+    await task.sleep(0.0)
+    return 10
+
+
+async def slow_writes_marker() -> int:
+    await task.sleep(0.20)
+    try:
+        _written: None = write_text(marker_path(), "not cancelled")
+    except IOError as e:
+        _message: str = str(e.message)
+    return 20
+
+
+async def fail_fast() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("group child failed")
+
+
+async def main() -> Result[None, Error]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    # Scoped gather preserves deterministic input ownership and ordering.
+    async with task.scope() as scope:
+        gathered = await task.gather([scope.spawn(one()), scope.spawn(two())])
+
+    # Select consumes both handles and cancels the losing child.
+    async with task.scope() as scope:
+        selected = await task.select(scope.spawn(fast()), scope.spawn(slow_writes_marker()))
+
+    # TaskGroup observes the failing child and cancels unfinished siblings at exit.
+    async with task.TaskGroup() as group:
+        slow = group.spawn(slow_writes_marker())
+        failing = group.spawn(fail_fast())
+        failure = await failing
+
+    assert not exists(path)
+    return None

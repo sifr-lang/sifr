@@ -511,6 +511,7 @@ status: in_progress
 - In progress scope-failure exit slice: task scopes now track whether child handles were observed, return `ScopeFailure` for unobserved child failure or cancellation at scope exit, and require enclosing async functions that spawn children to return `Result[..., ScopeFailure]` or `Result[..., Error]`.
 - In progress unobserved scope-failure runtime validation slice: added runtime-failure coverage for unobserved fallible children in both `task.scope()` and `task.TaskGroup()` surfacing `ScopeFailure` at scope exit.
 - In progress TaskGroup fail-fast exit slice: `task.TaskGroup()` now constructs a fail-fast private scope runtime that cancels remaining children when a group child failure is observed during scope exit, with marker-file validation for sibling cancellation.
+- In progress structured-concurrency validation/demo slice: added milestone negative coverage for consumed cancelled task handles and TaskGroup scope-failure error typing, plus `demos/m32_structured_concurrency_demo.sifr`.
 
 ---
 
