@@ -64,6 +64,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0012`](SIFR-TYPE-0012.md) | Error | Unsupported expression form. |
 | [`SIFR-TYPE-0901`](SIFR-TYPE-0901.md) | Warning | Integer arithmetic may overflow at runtime. |
 | [`SIFR-TYPE-0902`](SIFR-TYPE-0902.md) | Note | Reveal the inferred static type of an expression. |
+| [`SIFR-TYPE-0903`](SIFR-TYPE-0903.md) | Warning | Blocking or CPU-bound workload called directly from async code. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
 | [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.md) | Error | Invalid BigDecimal exact literal. |
 | [`SIFR-DECIMAL-0003`](SIFR-DECIMAL-0003.md) | Error | Float mixed with a decimal numeric type. |

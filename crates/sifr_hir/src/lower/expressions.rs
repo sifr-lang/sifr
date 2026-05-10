@@ -1365,7 +1365,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         );
         return None;
     }
-
+    super::workload_annotations::warn_async_direct_call(ctx, &func_name, call.func.range());
     let call_defaults = ctx.function_defaults.get(&func_name).cloned();
     let call_vararg = ctx.vararg_functions.get(&func_name).copied();
 

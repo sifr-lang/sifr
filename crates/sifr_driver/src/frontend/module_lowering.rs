@@ -187,6 +187,24 @@ fn warning_diagnostic(
             Vec::new(),
             *primary_range,
         ),
+        LoweringWarningDiagnostic::BlockingWorkInAsync {
+            function,
+            workload,
+            suggestion,
+            primary_range,
+        } => (
+            DiagnosticCode::TYPE_BLOCKING_WORK_IN_ASYNC,
+            format!(
+                "{workload} function '{function}' called directly from async context; {suggestion}"
+            ),
+            "{workload} function '{function}' called directly from async context; {suggestion}",
+            vec![
+                ("workload", DiagnosticArg::String(workload.clone())),
+                ("function", DiagnosticArg::String(function.clone())),
+                ("suggestion", DiagnosticArg::String(suggestion.clone())),
+            ],
+            *primary_range,
+        ),
     };
     if let (Some(context), Some(range)) = (source_context, primary_range) {
         return diagnostic_with_source_range(code, context, range, message_template, &args);

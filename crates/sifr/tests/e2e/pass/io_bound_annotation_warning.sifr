@@ -1,0 +1,9 @@
+@io_bound
+def read_blocking() -> int:
+    return 41
+
+
+async def main() -> None:
+    value: int = read_blocking()
+    assert value == 41
+    return None

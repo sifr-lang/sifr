@@ -229,6 +229,54 @@ fn test_type_check_source_surfaces_arithmetic_warning_as_structured_warning() {
 }
 
 #[test]
+fn test_type_check_source_surfaces_workload_annotation_warning() {
+    let diagnostics = type_check_source(
+        r"@io_bound
+def read_file() -> int:
+    return 1
+
+async def main() -> None:
+    value: int = read_file()
+    return None
+",
+    );
+
+    let diagnostic = diagnostics
+        .iter()
+        .find(|diagnostic| diagnostic.code == DiagnosticCode::TYPE_BLOCKING_WORK_IN_ASYNC.code())
+        .expect("workload annotation should produce an async-context warning");
+    assert_eq!(
+        diagnostic.code,
+        DiagnosticCode::TYPE_BLOCKING_WORK_IN_ASYNC.code()
+    );
+    assert_eq!(diagnostic.severity, sifr_diagnostics::Severity::Warning);
+    assert_eq!(
+        diagnostic.message_template,
+        "{workload} function '{function}' called directly from async context; {suggestion}"
+    );
+    assert_eq!(
+        diagnostic.message,
+        "io_bound function 'read_file' called directly from async context; use an async API or task.spawn_blocking"
+    );
+    assert_eq!(
+        diagnostic.args.get("workload"),
+        Some(&DiagnosticArg::String("io_bound".to_string()))
+    );
+    assert_eq!(
+        diagnostic.args.get("function"),
+        Some(&DiagnosticArg::String("read_file".to_string()))
+    );
+    let primary_span = diagnostic
+        .spans
+        .iter()
+        .find(|span| span.is_primary)
+        .expect("workload warning should carry a primary span");
+    assert_eq!(primary_span.file.as_deref(), Some("main"));
+    assert_eq!(primary_span.line, Some(6));
+    assert!(primary_span.byte_end > primary_span.byte_start);
+}
+
+#[test]
 fn test_type_check_source_surfaces_unreachable_statement_as_structured_warning() {
     let diagnostics = type_check_source("def value() -> int:\n    return 1\n    return 2\n");
 

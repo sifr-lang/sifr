@@ -24,6 +24,7 @@ mod control_flow_conditions;
 mod decimal_methods;
 mod default_args;
 mod defaultdict_refinement;
+mod diagnostic_types;
 mod diagnostics;
 mod empty_collection_refinement;
 mod expression_abs;
@@ -108,8 +109,10 @@ mod type_bounds;
 mod type_var_collection;
 mod typevar_annotations;
 mod typing_and_functions;
+mod workload_annotations;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
+pub use diagnostic_types::{HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic};
 pub use external_defs::ExternalDefs;
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
@@ -125,30 +128,15 @@ pub(super) use typevar_annotations::{
     parse_typevar_declaration_specs,
 };
 use typing_and_functions::{extract_function_type, lower_function, register_builtins};
-/// Structured diagnostics produced during HIR lowering.
-#[derive(Debug, Clone)]
-pub struct HirDiagnostic {
-    pub code: Option<DiagnosticCode>,
-    pub message: String,
-    pub primary_range: Option<TextRange>,
-    pub line: Option<u32>,
-    pub col: Option<u32>,
-}
-impl std::fmt::Display for HirDiagnostic {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let (Some(line), Some(col)) = (self.line, self.col) {
-            write!(f, "{}:{}: {}", line, col, self.message)
-        } else {
-            write!(f, "{}", self.message)
-        }
-    }
-}
+use workload_annotations::WorkloadKind;
 /// The lowering context that tracks state during AST->HIR conversion.
 pub(super) struct LowerCtx {
     /// Function signatures (name -> type)
     functions: HashMap<String, FunctionType>,
     /// Names of functions declared with `async def`.
     async_functions: std::collections::HashSet<String>,
+    /// Workload classification decorators for user-defined functions.
+    function_workload_annotations: HashMap<String, WorkloadKind>,
     /// Default parameter values for functions (name -> vec of (`param_index`, `default_expr`))
     function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     /// Class type definitions (name -> `Type::Class`)
@@ -229,6 +217,7 @@ impl LowerCtx {
         Self {
             functions: HashMap::new(),
             async_functions: std::collections::HashSet::new(),
+            function_workload_annotations: HashMap::new(),
             function_defaults: HashMap::new(),
             class_types: HashMap::new(),
             scope: Scope::new(),
@@ -489,26 +478,6 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
     }
 }
 /// Result of lowering, including the HIR module and any diagnostics.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct RevealTypeDiagnostic {
-    pub revealed_type: String,
-    pub primary_range: Option<TextRange>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum LoweringWarningDiagnostic {
-    ArithmeticOverflowRisk {
-        operation: String,
-        primary_range: Option<TextRange>,
-    },
-    UnreachableStatement {
-        primary_range: Option<TextRange>,
-    },
-    BigIntTransitionAlias {
-        primary_range: Option<TextRange>,
-    },
-}
-
 pub struct LoweringResult {
     pub module: HirModule,
     pub function_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
@@ -698,6 +667,12 @@ fn lower_module_impl(
             collect_function_defaults(&mut ctx, &function_name, func);
             if func.is_async {
                 ctx.async_functions.insert(function_name.clone());
+            }
+            if let Some(workload) =
+                workload_annotations::annotation_for_decorators(func.decorator_list.iter())
+            {
+                ctx.function_workload_annotations
+                    .insert(function_name.clone(), workload);
             }
             ctx.functions.insert(function_name.clone(), ft);
             // Track vararg functions

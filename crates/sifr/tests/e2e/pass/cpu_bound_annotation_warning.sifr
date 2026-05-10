@@ -1,0 +1,12 @@
+@cpu_bound
+def compute_heavy() -> int:
+    total: int = 0
+    for value in range(5):
+        total = total + value
+    return total
+
+
+async def main() -> None:
+    value: int = compute_heavy()
+    assert value == 10
+    return None
