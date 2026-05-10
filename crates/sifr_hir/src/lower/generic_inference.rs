@@ -79,6 +79,9 @@ pub(super) fn infer_type_var_bindings(
         (Type::TimeoutResult(p_err), Type::TimeoutResult(a_err)) => {
             infer_type_var_bindings(p_err, a_err, bindings);
         }
+        (Type::Failure(p_err), Type::Failure(a_err)) => {
+            infer_type_var_bindings(p_err, a_err, bindings);
+        }
         (Type::Awaitable(p_result), Type::Awaitable(a_result)) => {
             infer_type_var_bindings(p_result, a_result, bindings);
         }

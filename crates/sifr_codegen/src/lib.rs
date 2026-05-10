@@ -586,6 +586,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             }
         }
     }
+    if module_uses_failure_type(module) {
+        preamble_items.extend(build_failure_type_items());
+    }
+    if module_uses_timeout_result_type(module) && !module_uses_task_scope(module) {
+        preamble_items.extend(build_timeout_result_type_items());
+    }
 
     // Emit file handle global state if open() built-in or any file handle intrinsic is used.
     if needs_file_handles {
@@ -870,6 +876,134 @@ fn module_uses_task_sleep(module: &HirModule) -> bool {
     }
 
     false
+}
+
+fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool {
+    if predicate(ty) {
+        return true;
+    }
+
+    match ty {
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Newtype { inner, .. }
+        | Type::Failure(inner)
+        | Type::TimeoutResult(inner)
+        | Type::Awaitable(inner) => type_contains_by(inner, predicate),
+        Type::Dict(key, value)
+        | Type::Result(key, value)
+        | Type::Coroutine(key, value)
+        | Type::Task(key, value)
+        | Type::TaskResult(key, value)
+        | Type::Select2(key, value)
+        | Type::BlockingTask(key, value)
+        | Type::AsyncIterator(key, value)
+        | Type::AsyncGenerator(key, value) => {
+            type_contains_by(key, predicate) || type_contains_by(value, predicate)
+        }
+        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+            items.iter().any(|item| type_contains_by(item, predicate))
+        }
+        Type::Alias {
+            type_args, body, ..
+        } => {
+            type_args.iter().any(|arg| type_contains_by(arg, predicate))
+                || type_contains_by(body, predicate)
+        }
+        Type::Function(sig) | Type::AsyncFunction(sig) => {
+            sig.params
+                .iter()
+                .any(|(_, param_ty, _)| type_contains_by(param_ty, predicate))
+                || type_contains_by(&sig.return_type, predicate)
+        }
+        Type::Callable(params, _, ret) => {
+            params
+                .iter()
+                .any(|param| type_contains_by(param, predicate))
+                || type_contains_by(ret, predicate)
+        }
+        Type::Class {
+            fields, methods, ..
+        } => {
+            fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_by(field_ty, predicate))
+                || methods.iter().any(|(_, method_sig)| {
+                    method_sig
+                        .params
+                        .iter()
+                        .any(|(_, param_ty, _)| type_contains_by(param_ty, predicate))
+                        || type_contains_by(&method_sig.return_type, predicate)
+                })
+        }
+        _ => false,
+    }
+}
+
+fn type_contains_failure(ty: &Type) -> bool {
+    type_contains_by(ty, |candidate| matches!(candidate, Type::Failure(_)))
+}
+
+fn type_contains_timeout_result(ty: &Type) -> bool {
+    type_contains_by(ty, |candidate| matches!(candidate, Type::TimeoutResult(_)))
+}
+
+fn module_uses_failure_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(|func| function_uses_failure_type(func))
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_failure(field_ty))
+                || class
+                    .methods
+                    .iter()
+                    .any(|method| function_uses_failure_type(method))
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_failure(ty))
+}
+
+fn module_uses_timeout_result_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(|func| function_uses_timeout_result_type(func))
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_timeout_result(field_ty))
+                || class
+                    .methods
+                    .iter()
+                    .any(|method| function_uses_timeout_result_type(method))
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_timeout_result(ty))
+}
+
+fn function_uses_failure_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_failure(&param.ty))
+        || type_contains_failure(&func.return_type)
+}
+
+fn function_uses_timeout_result_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_timeout_result(&param.ty))
+        || type_contains_timeout_result(&func.return_type)
 }
 
 fn body_contains_await(body: &[HirStmt]) -> bool {

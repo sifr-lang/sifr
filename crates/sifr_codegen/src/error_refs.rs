@@ -100,6 +100,12 @@ fn collect_type_error_refs(
             collect_type_error_refs(key, referenced, builtin_error_classes);
             collect_type_error_refs(value, referenced, builtin_error_classes);
         }
+        Type::Failure(err) => {
+            collect_type_error_refs(err, referenced, builtin_error_classes);
+            if builtin_error_classes.contains(&"SecondaryError") {
+                referenced.insert("SecondaryError".to_string());
+            }
+        }
         Type::TimeoutResult(err) => {
             collect_type_error_refs(err, referenced, builtin_error_classes);
         }

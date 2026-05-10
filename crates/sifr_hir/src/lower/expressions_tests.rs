@@ -1617,6 +1617,24 @@ fn test_for_loop_consumes_task_handle_collection_binding() {
 }
 
 #[test]
+fn test_failure_annotation_resolves_in_function_signature() {
+    let source = "def observe(failure: Failure[ValueError]) -> None:\n    return None\n";
+    let module = lower_source(source).expect("Failure annotation should lower");
+    let param_ty = &module.functions[0].params[0].ty;
+
+    assert_eq!(
+        param_ty,
+        &Type::Failure(Box::new(Type::Class {
+            name: "ValueError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        }))
+    );
+    assert_eq!(param_ty.display_name(), "Failure[ValueError]");
+}
+
+#[test]
 fn test_task_select_consumes_handle_bindings() {
     let source = "async def first() -> int:\n    return 1\n\nasync def second() -> str:\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        one = scope.spawn(first())\n        two = scope.spawn(second())\n        selected = await task.select(one, two)\n        late = await one\n    return None\n";
     let result = lower_source(source);
