@@ -1,0 +1,17 @@
+async def first() -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def second() -> int:
+    await task.sleep(0.0)
+    return 2
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        first_handle = scope.spawn(first())
+        second_handle = scope.spawn(second())
+        first_result = await first_handle.join()
+        second_result = await second_handle
+    return None
