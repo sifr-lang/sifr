@@ -476,13 +476,19 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let needs_random_module_state = emitter.runtime_needs.random_module_state();
 
     // Emit built-in error class struct definitions for referenced error types.
-    let referenced_error_classes = collect_referenced_builtin_error_classes(
+    let uses_task_scope = module_uses_task_scope(module);
+    let uses_failure_type = module_uses_failure_type(module);
+    let uses_timeout_result_type = module_uses_timeout_result_type(module);
+    let mut referenced_error_classes = collect_referenced_builtin_error_classes(
         module,
         &stdlib_preamble,
         &emitter.intrinsic_functions,
         needs_file_handles,
         BUILTIN_ERROR_CLASSES,
     );
+    if uses_task_scope || uses_failure_type {
+        referenced_error_classes.insert("SecondaryError".to_string());
+    }
     let user_defined_error_classes: HashSet<String> = module
         .classes
         .iter()
@@ -586,10 +592,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             }
         }
     }
-    if module_uses_failure_type(module) {
+    if uses_task_scope || uses_failure_type {
         preamble_items.extend(build_failure_type_items());
     }
-    if module_uses_timeout_result_type(module) && !module_uses_task_scope(module) {
+    if uses_timeout_result_type && !uses_task_scope {
         preamble_items.extend(build_timeout_result_type_items());
     }
 
@@ -608,7 +614,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if needs_random_module_state {
         preamble_items.extend(build_random_module_state_items());
     }
-    if module_uses_task_scope(module) {
+    if uses_task_scope {
         preamble_items.extend(build_task_scope_items());
     }
 

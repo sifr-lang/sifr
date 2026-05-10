@@ -3777,10 +3777,40 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
     assert!(result
         .rust_source
         .contains("scope.__sifr_spawn_result(worker());"));
+    assert!(result.rust_source.contains("enum __SifrTaskResult<T, E>"));
+    assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
+    assert!(result
+        .rust_source
+        .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));
     assert!(result
         .rust_source
         .contains("let result: __SifrTaskResult<i64, ValueError>"));
     assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_task_gather_fallible_tasks_keeps_error_parameter_unwrapped() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(worker()), scope.spawn(worker())])\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("async fn __sifr_task_gather"));
+    assert!(result.rust_source.contains("__SifrTaskResult<Vec<T>, E>"));
+    assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
+    assert!(result
+        .rust_source
+        .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));
+    assert!(result
+        .rust_source
+        .contains("let result: __SifrTaskResult<Vec<i64>, ValueError>"));
 }
 
 #[test]
@@ -3803,6 +3833,31 @@ fn test_task_race_lowers_to_private_race_helper() {
         .rust_source
         .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
     assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_task_race_fallible_tasks_keeps_error_parameter_unwrapped() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(worker()), scope.spawn(worker())])\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("async fn __sifr_task_race"));
+    assert!(result.rust_source.contains("__SifrTaskResult<T, E>"));
+    assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
+    assert!(result
+        .rust_source
+        .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));
+    assert!(result
+        .rust_source
+        .contains("let result: __SifrTaskResult<i64, ValueError>"));
 }
 
 #[test]
@@ -3917,6 +3972,12 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
     assert!(result.rust_source.contains("async fn __sifr_timeout"));
     assert!(result.rust_source.contains("biased;"));
     assert!(result.rust_source.contains("handle.__sifr_timeout"));
+    assert!(result
+        .rust_source
+        .contains("failure.map_primary(__SifrTimeoutResult::Inner)"));
+    assert!(result
+        .rust_source
+        .contains("__SifrFailure::new(__SifrTimeoutResult::Timeout)"));
     assert!(result.rust_source.contains(
         "let result: __SifrTaskResult<i64, __SifrTimeoutResult<std::convert::Infallible>>"
     ));

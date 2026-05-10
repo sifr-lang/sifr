@@ -53,13 +53,14 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if !emitter.enum_items.is_empty() {
         emitted_items.extend(emitter.enum_items.clone());
     }
-    if super::module_uses_task_scope(module) {
-        emitted_items.extend(super::build_task_scope_items());
-    }
-    if super::module_uses_failure_type(module) {
+    let uses_task_scope = super::module_uses_task_scope(module);
+    if uses_task_scope || super::module_uses_failure_type(module) {
         emitted_items.extend(super::build_failure_type_items());
     }
-    if super::module_uses_timeout_result_type(module) && !super::module_uses_task_scope(module) {
+    if uses_task_scope {
+        emitted_items.extend(super::build_task_scope_items());
+    }
+    if super::module_uses_timeout_result_type(module) && !uses_task_scope {
         emitted_items.extend(super::build_timeout_result_type_items());
     }
     if !emitter.body_items.is_empty() {
