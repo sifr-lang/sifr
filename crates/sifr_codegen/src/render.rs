@@ -897,7 +897,7 @@ impl Renderer {
                     .join(", ")
             ),
             RustExpr::TimeoutAwait { duration, future } => format!(
-                "match tokio::time::timeout({}, {}).await {{ Ok(__sifr_timeout_value) => __sifr_timeout_value, Err(_) => return Err(TimeoutError::new(\"task timeout expired\".to_string())) }}",
+                "match tokio::time::timeout({}, {}).await {{ Ok(__sifr_timeout_value) => __sifr_timeout_value, Err(_) => return Err(TimeoutError::new(\"task timeout expired\".to_string()).into()) }}",
                 Self::render_expr_string(duration),
                 Self::render_expr_string(future)
             ),

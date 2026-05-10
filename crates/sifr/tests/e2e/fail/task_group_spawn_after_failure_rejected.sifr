@@ -4,7 +4,7 @@ async def child() -> Result[int, ValueError]:
     raise ValueError("child failed")
 
 
-async def main() -> None:
+async def main() -> Result[None, ScopeFailure]:
     async with task.TaskGroup() as group:
         first = group.spawn(child())
         result = await first

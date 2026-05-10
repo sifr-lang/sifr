@@ -8,7 +8,7 @@ async def second() -> int:
     return 2
 
 
-async def main() -> None:
+async def main() -> Result[None, ScopeFailure]:
     async with task.scope() as scope:
         result = await task.gather([scope.spawn(first()), scope.spawn(second())])
     return None

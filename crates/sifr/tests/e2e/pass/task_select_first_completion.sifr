@@ -20,7 +20,7 @@ async def slow_string_writes_marker() -> str:
     return "two"
 
 
-async def main() -> None:
+async def main() -> Result[None, ScopeFailure]:
     path: str = marker_path()
     if exists(path):
         try:

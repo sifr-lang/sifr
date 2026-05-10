@@ -66,11 +66,27 @@ fn timeout_error_type() -> Type {
     }
 }
 
+fn scope_failure_type() -> Type {
+    Type::Class {
+        name: "ScopeFailure".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: vec![],
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 fn return_type_accepts_timeout_error(return_type: &Type) -> bool {
     let Type::Result(_, err) = return_type.resolve_alias() else {
         return false;
     };
     timeout_error_type().is_assignable_to(err)
+}
+
+fn return_type_accepts_scope_failure(return_type: &Type) -> bool {
+    let Type::Result(_, err) = return_type.resolve_alias() else {
+        return false;
+    };
+    scope_failure_type().is_assignable_to(err)
 }
 
 fn expr_contains_await(expr: &crate::hir_nodes::HirExpr) -> bool {
@@ -186,6 +202,126 @@ fn expr_contains_await(expr: &crate::hir_nodes::HirExpr) -> bool {
     }
 }
 
+fn expr_contains_task_spawn(expr: &crate::hir_nodes::HirExpr) -> bool {
+    use crate::hir_nodes::HirExpr;
+
+    match expr {
+        HirExpr::MethodCall { method, .. }
+            if method == "__sifr_spawn_infallible" || method == "__sifr_spawn_result" =>
+        {
+            true
+        }
+        HirExpr::Await { value, .. }
+        | HirExpr::QuestionMark { expr: value, .. }
+        | HirExpr::OkWrap { value, .. }
+        | HirExpr::ErrWrap { value, .. }
+        | HirExpr::FieldAccess { object: value, .. } => expr_contains_task_spawn(value),
+        HirExpr::Call { args, .. }
+        | HirExpr::ConstructorCall { args, .. }
+        | HirExpr::IteratorCall { args, .. } => args.iter().any(expr_contains_task_spawn),
+        HirExpr::FString { parts, .. } => parts.iter().any(|part| match part {
+            crate::hir_nodes::HirFStringPart::Literal(_) => false,
+            crate::hir_nodes::HirFStringPart::Expr(expr) => expr_contains_task_spawn(expr),
+        }),
+        HirExpr::MethodCall { object, args, .. } => {
+            expr_contains_task_spawn(object) || args.iter().any(expr_contains_task_spawn)
+        }
+        HirExpr::BinOp { left, right, .. } => {
+            expr_contains_task_spawn(left) || expr_contains_task_spawn(right)
+        }
+        HirExpr::Compare {
+            left, comparators, ..
+        } => expr_contains_task_spawn(left) || comparators.iter().any(expr_contains_task_spawn),
+        HirExpr::BoolOp { values, .. }
+        | HirExpr::ListLiteral {
+            elements: values, ..
+        }
+        | HirExpr::TupleLiteral {
+            elements: values, ..
+        }
+        | HirExpr::SetLiteral {
+            elements: values, ..
+        } => values.iter().any(expr_contains_task_spawn),
+        HirExpr::UnaryOp { operand, .. } => expr_contains_task_spawn(operand),
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            expr_contains_task_spawn(condition)
+                || expr_contains_task_spawn(then_expr)
+                || expr_contains_task_spawn(else_expr)
+        }
+        HirExpr::Index { object, index, .. } => {
+            expr_contains_task_spawn(object) || expr_contains_task_spawn(index)
+        }
+        HirExpr::Slice {
+            object,
+            start,
+            stop,
+            step,
+            ..
+        } => {
+            expr_contains_task_spawn(object)
+                || start.as_deref().is_some_and(expr_contains_task_spawn)
+                || stop.as_deref().is_some_and(expr_contains_task_spawn)
+                || step.as_deref().is_some_and(expr_contains_task_spawn)
+        }
+        HirExpr::DictLiteral { keys, values, .. } => {
+            keys.iter().any(expr_contains_task_spawn) || values.iter().any(expr_contains_task_spawn)
+        }
+        HirExpr::ContainsOp {
+            element,
+            collection,
+            ..
+        } => expr_contains_task_spawn(element) || expr_contains_task_spawn(collection),
+        HirExpr::RangeLiteral {
+            start, end, step, ..
+        } => {
+            expr_contains_task_spawn(start)
+                || expr_contains_task_spawn(end)
+                || step.as_deref().is_some_and(expr_contains_task_spawn)
+        }
+        HirExpr::WalrusExpr { value, .. } => expr_contains_task_spawn(value),
+        HirExpr::SuperCall { args, .. } => args.iter().any(expr_contains_task_spawn),
+        HirExpr::Lambda { body, .. } => expr_contains_task_spawn(body),
+        HirExpr::ListComp {
+            expr, generators, ..
+        }
+        | HirExpr::SetComp {
+            expr, generators, ..
+        } => {
+            expr_contains_task_spawn(expr)
+                || generators.iter().any(|(_, iter, filter)| {
+                    expr_contains_task_spawn(iter)
+                        || filter.as_ref().is_some_and(expr_contains_task_spawn)
+                })
+        }
+        HirExpr::DictComp {
+            key_expr,
+            val_expr,
+            generators,
+            ..
+        } => {
+            expr_contains_task_spawn(key_expr)
+                || expr_contains_task_spawn(val_expr)
+                || generators.iter().any(|(_, iter, filter)| {
+                    expr_contains_task_spawn(iter)
+                        || filter.as_ref().is_some_and(expr_contains_task_spawn)
+                })
+        }
+        HirExpr::GeneratorExpr {
+            expr, iter, filter, ..
+        } => {
+            expr_contains_task_spawn(expr)
+                || expr_contains_task_spawn(iter)
+                || filter.as_deref().is_some_and(expr_contains_task_spawn)
+        }
+        _ => false,
+    }
+}
+
 fn stmt_contains_await(stmt: &HirStmt) -> bool {
     match stmt {
         HirStmt::Expr { expr }
@@ -260,6 +396,83 @@ fn stmt_contains_await(stmt: &HirStmt) -> bool {
                 || arms.iter().any(|arm| {
                     arm.guard.as_ref().is_some_and(expr_contains_await)
                         || arm.body.iter().any(stmt_contains_await)
+                })
+        }
+        _ => false,
+    }
+}
+
+fn stmt_contains_task_spawn(stmt: &HirStmt) -> bool {
+    match stmt {
+        HirStmt::Expr { expr }
+        | HirStmt::Let { value: expr, .. }
+        | HirStmt::Assign { value: expr, .. }
+        | HirStmt::AugAssign { value: expr, .. }
+        | HirStmt::AttributeAugAssign { value: expr, .. }
+        | HirStmt::FieldAssign { value: expr, .. }
+        | HirStmt::NestedFieldAssign { value: expr, .. }
+        | HirStmt::Return { value: Some(expr) }
+        | HirStmt::Assert { test: expr, .. }
+        | HirStmt::Raise { value: expr }
+        | HirStmt::TupleUnpack { value: expr, .. }
+        | HirStmt::StarUnpack { value: expr, .. }
+        | HirStmt::SubscriptAssign { value: expr, .. }
+        | HirStmt::NestedSubscriptAssign { value: expr, .. }
+        | HirStmt::AttributeNestedSubscriptAssign { value: expr, .. }
+        | HirStmt::SubscriptAugAssign { value: expr, .. }
+        | HirStmt::AttributeSubscriptAssign { value: expr, .. }
+        | HirStmt::Yield { value: expr } => expr_contains_task_spawn(expr),
+        HirStmt::If {
+            condition,
+            then_body,
+            elif_clauses,
+            else_body,
+        } => {
+            expr_contains_task_spawn(condition)
+                || then_body.iter().any(stmt_contains_task_spawn)
+                || elif_clauses.iter().any(|(condition, body)| {
+                    expr_contains_task_spawn(condition) || body.iter().any(stmt_contains_task_spawn)
+                })
+                || else_body
+                    .as_ref()
+                    .is_some_and(|body| body.iter().any(stmt_contains_task_spawn))
+        }
+        HirStmt::While {
+            condition, body, ..
+        } => expr_contains_task_spawn(condition) || body.iter().any(stmt_contains_task_spawn),
+        HirStmt::For {
+            iter,
+            body,
+            else_body,
+            ..
+        } => {
+            expr_contains_task_spawn(iter)
+                || body.iter().any(stmt_contains_task_spawn)
+                || else_body
+                    .as_ref()
+                    .is_some_and(|body| body.iter().any(stmt_contains_task_spawn))
+        }
+        HirStmt::AsyncWith { body, .. } => body.iter().any(stmt_contains_task_spawn),
+        HirStmt::Delete { object, index } => {
+            expr_contains_task_spawn(object) || expr_contains_task_spawn(index)
+        }
+        HirStmt::With { items, body } => {
+            items
+                .iter()
+                .any(|(_, context_expr, _)| expr_contains_task_spawn(context_expr))
+                || body.iter().any(stmt_contains_task_spawn)
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            body.iter().any(stmt_contains_task_spawn)
+                || handlers
+                    .iter()
+                    .any(|handler| handler.body.iter().any(stmt_contains_task_spawn))
+        }
+        HirStmt::Match { subject, arms, .. } => {
+            expr_contains_task_spawn(subject)
+                || arms.iter().any(|arm| {
+                    arm.guard.as_ref().is_some_and(expr_contains_task_spawn)
+                        || arm.body.iter().any(stmt_contains_task_spawn)
                 })
         }
         _ => false,
@@ -390,6 +603,18 @@ pub(super) fn lower_async_with(
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 "async with task.timeout(duration) can time out at await points; enclosing function must return Result[..., TimeoutError]"
+                    .to_string(),
+                item.context_expr.range(),
+            );
+            return None;
+        }
+        if matches!(kind, HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup)
+            && body.iter().any(stmt_contains_task_spawn)
+            && !return_type_accepts_scope_failure(&func_type.return_type)
+        {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                "async task scopes that spawn children can fail at exit; enclosing function must return Result[..., ScopeFailure] or Result[..., Error]"
                     .to_string(),
                 item.context_expr.range(),
             );

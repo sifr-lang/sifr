@@ -7344,13 +7344,18 @@ impl RustEmitter {
             ),
             target,
         ) {
-            lowered_body.push(crate::RustStmt::Expr(crate::RustExpr::Await(Box::new(
-                crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Ident(target.to_string())),
-                    method: "__sifr_join_all".to_string(),
-                    args: vec![],
-                },
-            ))));
+            let propagates_scope_failure = self.current_return_type.as_ref().is_some_and(|ty| {
+                matches!(ty.resolve_alias(), Type::Result(_, err) if matches!(err.resolve_alias(), Type::Class { name, .. } if name == "ScopeFailure" || name == "Error"))
+            });
+            let join_expr = format!("{target}.__sifr_join_all().await");
+            let stmt = if propagates_scope_failure {
+                format!(
+                    "if let Err(__sifr_scope_failure) = {join_expr} {{ return Err(__sifr_scope_failure.into()); }}"
+                )
+            } else {
+                format!("let _ = {join_expr};")
+            };
+            lowered_body.push(crate::RustStmt::Expr(crate::RustExpr::Ident(stmt)));
         }
         Ok(Some(RustStmt::Block(lowered_body)))
     }

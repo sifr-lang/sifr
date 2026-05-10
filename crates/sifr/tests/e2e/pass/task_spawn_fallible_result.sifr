@@ -3,7 +3,7 @@ async def fail_later() -> Result[int, ValueError]:
     raise ValueError("task failed")
 
 
-async def main() -> None:
+async def main() -> Result[None, ScopeFailure]:
     async with task.scope() as scope:
         handle = scope.spawn(fail_later())
         result = await handle

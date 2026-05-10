@@ -3,7 +3,7 @@ async def worker() -> int:
     return 41
 
 
-async def main() -> None:
+async def main() -> Result[None, ScopeFailure]:
     async with task.scope() as scope:
         handle = scope.spawn(worker())
         handle.cancel()

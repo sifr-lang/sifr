@@ -2,7 +2,7 @@ async def worker(value: int) -> int:
     return value
 
 
-async def main() -> None:
+async def main() -> Result[None, ScopeFailure]:
     async with task.scope() as scope:
         handle = scope.spawn(worker(1))
     return None

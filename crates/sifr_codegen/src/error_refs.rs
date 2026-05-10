@@ -53,6 +53,7 @@ pub(crate) fn collect_referenced_builtin_error_classes(
             "TOMLDecodeError",
             "RegexError",
             "TimeoutError",
+            "ScopeFailure",
         ] {
             referenced.insert(error_name.to_string());
         }
@@ -262,8 +263,15 @@ fn collect_stmt_error_refs(
                 collect_stmt_error_refs(body, referenced, builtin_error_classes);
             }
             HirStmt::AsyncWith { kind, body, .. } => {
-                if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
-                    collect_expr_error_refs(duration, referenced, builtin_error_classes);
+                match kind {
+                    sifr_hir::HirAsyncWithKind::TaskTimeout { duration } => {
+                        referenced.insert("TimeoutError".to_string());
+                        collect_expr_error_refs(duration, referenced, builtin_error_classes);
+                    }
+                    sifr_hir::HirAsyncWithKind::TaskScope
+                    | sifr_hir::HirAsyncWithKind::TaskGroup => {
+                        referenced.insert("ScopeFailure".to_string());
+                    }
                 }
                 collect_stmt_error_refs(body, referenced, builtin_error_classes);
             }
@@ -502,7 +510,10 @@ fn collect_text_error_refs(
 #[cfg(test)]
 mod tests {
     use super::collect_referenced_builtin_error_classes;
-    use sifr_hir::{HirClass, HirClassKind, HirFunction, HirModule, HirParam, MethodKind};
+    use sifr_hir::{
+        HirAsyncWithKind, HirClass, HirClassKind, HirExpr, HirFunction, HirModule, HirParam,
+        HirStmt, MethodKind,
+    };
     use sifr_type_system::{ParamConvention, Type};
     use std::collections::{HashMap, HashSet};
 
@@ -607,5 +618,61 @@ mod tests {
         assert!(referenced.contains("ParseError"));
         assert!(referenced.contains("RegexError"));
         assert!(referenced.contains("JSONDecodeError"));
+    }
+
+    #[test]
+    fn intrinsic_helpers_reference_scope_failure() {
+        let intrinsic_functions = HashSet::from(["__sifr_spawn_infallible".to_string()]);
+
+        let referenced = collect_referenced_builtin_error_classes(
+            &empty_module(),
+            "",
+            &intrinsic_functions,
+            false,
+            &["ScopeFailure", "TimeoutError"],
+        );
+
+        assert!(referenced.contains("ScopeFailure"));
+        assert!(referenced.contains("TimeoutError"));
+    }
+
+    #[test]
+    fn async_task_runtime_helpers_reference_generated_error_types() {
+        let mut module = empty_module();
+        module.functions.push(HirFunction {
+            name: "main".to_string(),
+            params: Vec::new(),
+            return_type: Type::Result(Box::new(Type::None), Box::new(error_type("Error"))),
+            body: vec![
+                HirStmt::AsyncWith {
+                    kind: HirAsyncWithKind::TaskScope,
+                    target: Some("scope".to_string()),
+                    body: Vec::new(),
+                },
+                HirStmt::AsyncWith {
+                    kind: HirAsyncWithKind::TaskTimeout {
+                        duration: HirExpr::FloatLiteral(1.0),
+                    },
+                    target: None,
+                    body: Vec::new(),
+                },
+            ],
+            is_async: true,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            type_params: Vec::new(),
+        });
+
+        let referenced = collect_referenced_builtin_error_classes(
+            &module,
+            "",
+            &HashSet::new(),
+            false,
+            &["Error", "ScopeFailure", "TimeoutError"],
+        );
+
+        assert!(referenced.contains("Error"));
+        assert!(referenced.contains("ScopeFailure"));
+        assert!(referenced.contains("TimeoutError"));
     }
 }

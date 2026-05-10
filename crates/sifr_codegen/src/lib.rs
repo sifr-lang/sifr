@@ -574,6 +574,18 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             preamble_items.extend(build_error_type_items(error_name, &extra_fields, &defaults));
         }
     }
+    if referenced_error_classes.contains("Error") && !user_defined_error_classes.contains("Error") {
+        for &error_name in BUILTIN_ERROR_CLASSES {
+            if error_name == "Error" || IO_ERROR_SUBCLASSES.contains(&error_name) {
+                continue;
+            }
+            if referenced_error_classes.contains(error_name)
+                && !user_defined_error_classes.contains(error_name)
+            {
+                preamble_items.push(build_error_into_error_impl(error_name));
+            }
+        }
+    }
 
     // Emit file handle global state if open() built-in or any file handle intrinsic is used.
     if needs_file_handles {
