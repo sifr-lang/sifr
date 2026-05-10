@@ -765,7 +765,7 @@ status: in_progress
 
 **Implementation progress:**
 
-- Current slice: add declaration-site `@io_bound` and `@cpu_bound` workload annotations with async-context diagnostics, plus quick-lane validation fixtures for annotated blocking and CPU-heavy calls.
+- [#2015](https://github.com/sifr-lang/sifr/pull/2015): Added declaration-site `@io_bound` and `@cpu_bound` workload annotations with async-context diagnostics, plus quick-lane validation fixtures for annotated blocking and CPU-heavy calls.
 
 ---
 
