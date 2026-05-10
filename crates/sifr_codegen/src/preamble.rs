@@ -392,10 +392,13 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
             name: "__SifrTaskScope".to_string(),
             visibility: Visibility::Private,
             derives: vec![],
-            fields: vec![(
-                "children".to_string(),
-                RustType::Vec(Box::new(RustType::Named("__SifrScopeChild".to_string()))),
-            )],
+            fields: vec![
+                (
+                    "children".to_string(),
+                    RustType::Vec(Box::new(RustType::Named("__SifrScopeChild".to_string()))),
+                ),
+                ("fail_fast".to_string(), RustType::Bool),
+            ],
         },
         RustItem::Impl {
             target: "__SifrTaskScope".to_string(),
@@ -410,13 +413,49 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     ret: Some(RustType::Named("Self".to_string())),
                     body: vec![RustStmt::Return(Some(RustExpr::StructInit {
                         name: "Self".to_string(),
-                        fields: vec![(
-                            "children".to_string(),
-                            RustExpr::FnCall {
-                                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
-                                args: vec![],
-                            },
-                        )],
+                        fields: vec![
+                            (
+                                "children".to_string(),
+                                RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "Vec".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![],
+                                },
+                            ),
+                            (
+                                "fail_fast".to_string(),
+                                RustExpr::Literal(crate::RustLiteral::Bool(false)),
+                            ),
+                        ],
+                    }))],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "new_task_group".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![],
+                    ret: Some(RustType::Named("Self".to_string())),
+                    body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                        name: "Self".to_string(),
+                        fields: vec![
+                            (
+                                "children".to_string(),
+                                RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "Vec".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![],
+                                },
+                            ),
+                            (
+                                "fail_fast".to_string(),
+                                RustExpr::Literal(crate::RustLiteral::Bool(true)),
+                            ),
+                        ],
                     }))],
                     is_async: false,
                 },
@@ -677,7 +716,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     params: vec![RustParam::SelfParam { mutable: true }],
                     ret: Some(RustType::Named("Result<(), ScopeFailure>".to_string())),
                     body: vec![RustStmt::Expr(RustExpr::Ident(
-                        "let mut failure: Option<ScopeFailure> = None;\n        while let Some(child) = self.children.pop() {\n            let observed = child.observed.load(std::sync::atomic::Ordering::SeqCst);\n            match child.handle.await {\n                Ok(__SifrScopeChildOutcome::Ok) => {}\n                Ok(__SifrScopeChildOutcome::Failed) if !observed && failure.is_none() => {\n                    failure = Some(ScopeFailure::new(\"unobserved child task failed\".to_string()));\n                }\n                Ok(__SifrScopeChildOutcome::Cancelled) if !observed && failure.is_none() => {\n                    failure = Some(ScopeFailure::new(\"unobserved child task was cancelled\".to_string()));\n                }\n                Err(join_error) if !observed && failure.is_none() => {\n                    let message = if join_error.is_cancelled() { \"unobserved child task was cancelled\" } else { \"unobserved child task failed\" };\n                    failure = Some(ScopeFailure::new(message.to_string()));\n                }\n                _ => {}\n            }\n        }\n        if let Some(failure) = failure {\n            return Err(failure);\n        }\n        return Ok(())".to_string(),
+                        "let mut failure: Option<ScopeFailure> = None;\n        let mut policy_cancelling = false;\n        while let Some(child) = self.children.pop() {\n            let observed = child.observed.load(std::sync::atomic::Ordering::SeqCst);\n            let policy_observed = self.fail_fast && policy_cancelling;\n            let mut group_failure_seen = false;\n            match child.handle.await {\n                Ok(__SifrScopeChildOutcome::Ok) => {}\n                Ok(__SifrScopeChildOutcome::Failed) => {\n                    group_failure_seen = self.fail_fast;\n                    if !observed && failure.is_none() {\n                        failure = Some(ScopeFailure::new(\"unobserved child task failed\".to_string()));\n                    }\n                }\n                Ok(__SifrScopeChildOutcome::Cancelled) => {\n                    group_failure_seen = self.fail_fast;\n                    if !observed && !policy_observed && failure.is_none() {\n                        failure = Some(ScopeFailure::new(\"unobserved child task was cancelled\".to_string()));\n                    }\n                }\n                Err(join_error) => {\n                    group_failure_seen = self.fail_fast && !join_error.is_cancelled();\n                    if !observed && !policy_observed && failure.is_none() {\n                        let message = if join_error.is_cancelled() { \"unobserved child task was cancelled\" } else { \"unobserved child task failed\" };\n                        failure = Some(ScopeFailure::new(message.to_string()));\n                    }\n                }\n            }\n            if group_failure_seen {\n                policy_cancelling = true;\n                for pending in &self.children {\n                    pending.handle.abort();\n                }\n            }\n        }\n        if let Some(failure) = failure {\n            return Err(failure);\n        }\n        return Ok(())".to_string(),
                     ))],
                     is_async: true,
                 },

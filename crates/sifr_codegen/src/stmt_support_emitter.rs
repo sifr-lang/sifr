@@ -7321,6 +7321,11 @@ impl RustEmitter {
             return Ok(None);
         };
         if let Some(target) = target {
+            let constructor = if matches!(kind, sifr_hir::HirAsyncWithKind::TaskGroup) {
+                "new_task_group"
+            } else {
+                "new"
+            };
             lowered_body.insert(
                 0,
                 crate::RustStmt::Let {
@@ -7330,7 +7335,7 @@ impl RustEmitter {
                     value: crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec![
                             "__SifrTaskScope".to_string(),
-                            "new".to_string(),
+                            constructor.to_string(),
                         ])),
                         args: vec![],
                     },
