@@ -51,7 +51,10 @@ def collect_runtime_iterator_actual() -> list[bool]:
         _ = str(e.message)
         actual = [False, False]
     finally:
-        _rm: str = run_command("rm -rf " + base)
+        try:
+            _rm: str = run_command("rm -rf " + base)
+        except IOError as e:
+            _rm_message: str = str(e.message)
 
     return actual
 
