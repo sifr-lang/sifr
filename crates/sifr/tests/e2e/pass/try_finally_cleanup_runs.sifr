@@ -1,0 +1,33 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_try_finally_cleanup_runs_" + str(getpid()) + ".txt"
+
+
+def main() -> None:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    try:
+        _body: int = 1
+    finally:
+        try:
+            _written: None = write_text(path, "cleanup")
+        except IOError as e:
+            _write_message: str = str(e.message)
+
+    assert exists(path)
+
+    try:
+        _removed: None = remove_file(path)
+    except IOError as e:
+        _remove_message: str = str(e.message)
+
+
+main()

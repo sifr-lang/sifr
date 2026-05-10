@@ -65,7 +65,10 @@ def main():
         actual.append(False)
         actual.append(False)
     finally:
-        _rm: str = run_command("rm -rf " + base)
+        try:
+            _rm: str = run_command("rm -rf " + base)
+        except IOError as e:
+            _rm_message: str = str(e.message)
 
     expected: list[bool] = [True, True, True, True, True, True]
     assert_bool_vector_eq(actual, expected)

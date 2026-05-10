@@ -156,6 +156,31 @@ pub(super) fn lower_stmts(
                 continue;
             }
         }
+        if let Stmt::Try(try_stmt) = stmt {
+            if !try_stmt.finalbody.is_empty() {
+                if try_stmt.handlers.is_empty() {
+                    let body = lower_stmts(&try_stmt.body, func_type, ctx);
+                    result.extend(body);
+                    if !try_stmt.orelse.is_empty() {
+                        let orelse = lower_stmts(&try_stmt.orelse, func_type, ctx);
+                        result.extend(orelse);
+                    }
+                } else if let Some(hir_stmt) = lower_stmt(stmt, func_type, ctx) {
+                    result.push(hir_stmt);
+                }
+                let finalbody = lower_stmts(&try_stmt.finalbody, func_type, ctx);
+                result.extend(finalbody);
+                apply_numeric_sentinel_patches(
+                    &mut result,
+                    &mut ctx.pending_numeric_sentinel_patches,
+                );
+                apply_container_specialization_patches(
+                    &mut result,
+                    &mut ctx.pending_container_specialization_patches,
+                );
+                continue;
+            }
+        }
         if let Some(hir_stmt) = lower_stmt(stmt, func_type, ctx) {
             result.push(hir_stmt);
         }

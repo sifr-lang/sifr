@@ -48,7 +48,10 @@ def collect_glob_actual() -> list[bool]:
         _ = str(e.message)
         actual = [False, False, False, False, False, False, False, False]
     finally:
-        _clean: str = run_command("rm -rf " + base)
+        try:
+            _clean: str = run_command("rm -rf " + base)
+        except IOError as e:
+            _clean_message: str = str(e.message)
     return actual
 
 

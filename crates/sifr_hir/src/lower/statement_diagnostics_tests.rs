@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic};
+use crate::{lower_module, HirDiagnostic, HirStmt};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
@@ -154,4 +154,36 @@ def main():
             && error.primary_range.map(|range| range.start())
                 == Some(range_for(source, "try:").start())
     }));
+}
+
+#[test]
+fn try_finally_without_except_lowers_body_then_finalbody() {
+    let source = "\
+def main():
+    value: int = 1
+    try:
+        value = 2
+    finally:
+        value = 3
+";
+    let parsed = parse_module(source).expect("parse failed");
+    let module = lower_module(parsed.suite()).expect("lowering should succeed");
+    let body = &module.module.functions[0].body;
+
+    assert_eq!(body.len(), 3);
+    assert!(matches!(body[0], HirStmt::Let { .. }));
+    assert!(matches!(
+        body[1],
+        HirStmt::Assign {
+            ref name,
+            ..
+        } if name == "value"
+    ));
+    assert!(matches!(
+        body[2],
+        HirStmt::Assign {
+            ref name,
+            ..
+        } if name == "value"
+    ));
 }
