@@ -3725,6 +3725,25 @@ fn test_scope_spawn_lowers_owned_coroutine_arguments() {
 }
 
 #[test]
+fn test_scope_spawn_lowers_owned_move_coroutine_arguments() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker(own items: list[int]) -> int:\n    return len(items)\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker([1, 2]))\n        result = await handle\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result
+        .rust_source
+        .contains("scope.__sifr_spawn_infallible(worker(vec![1 as i64, 2 as i64]));"));
+}
+
+#[test]
 fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(

@@ -21,6 +21,7 @@
     "recursive_tree_traversal_runtime",
     "nested_function_basic",
     "nested_function_recursive_capture",
+    "spawn_owned_move_value",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",

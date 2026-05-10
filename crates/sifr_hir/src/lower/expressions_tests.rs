@@ -1591,6 +1591,24 @@ fn test_scope_spawn_rejects_borrowed_parameter_argument() {
 }
 
 #[test]
+fn test_scope_spawn_consumes_owned_move_argument() {
+    let source = "async def worker(own items: list[int]) -> int:\n    return len(items)\n\nasync def main() -> Result[None, ScopeFailure]:\n    items: list[int] = [1]\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(items))\n        items.append(2)\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("moved value")
+            && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && e.primary_range
+                == Some(range_for_after_anchor(
+                    source,
+                    "handle = scope.spawn(worker(items))\n",
+                    "items",
+                ))
+    }));
+}
+
+#[test]
 fn test_task_timeout_consumes_handle_binding() {
     let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n        second = await handle\n    return None\n";
     let result = lower_source(source);
