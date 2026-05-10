@@ -1,0 +1,12 @@
+from sifr.sync import RwLock
+
+
+def main() -> None:
+    lock: RwLock[int] = RwLock(41)
+    first = lock.read()
+    second = lock.read()
+    assert first.get() == 41
+    assert second.get() == 41
+
+    writer = lock.write()
+    assert writer.get() == 41
