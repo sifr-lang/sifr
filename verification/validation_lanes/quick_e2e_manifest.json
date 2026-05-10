@@ -43,6 +43,7 @@
     "async_for_closable_iterator_nested_return_cleanup",
     "async_generator_basic",
     "async_generator_anext_result_option",
+    "async_generator_aclose_result",
     "lock_basic",
     "rwlock_readers",
     "channel_basic",

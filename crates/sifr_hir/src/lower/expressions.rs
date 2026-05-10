@@ -42,6 +42,10 @@ use super::method_call_args::{
     resolved_method_arg_ranges, validate_dict_update_arg, validate_list_extend_arg,
     validate_set_iterable_arg,
 };
+use super::method_diagnostics::{
+    method_count_range, reject_exact_method_arg_count, reject_max_method_arg_count,
+    reject_method_arg_count, reject_no_method_args,
+};
 use super::min_max_validation::validate_variadic_min_max_operands;
 use super::mutating_methods::{
     invalidate_collection_flow_facts_for_method, reject_immutable_parameter_method_mutation,
@@ -2261,68 +2265,6 @@ pub(super) fn lower_method_call(
     })
 }
 
-fn method_count_range(
-    actual: usize,
-    max_allowed: usize,
-    arg_ranges: &[TextRange],
-    method_range: TextRange,
-) -> TextRange {
-    if actual > max_allowed {
-        arg_ranges.get(max_allowed).copied().unwrap_or(method_range)
-    } else {
-        method_range
-    }
-}
-
-fn reject_method_arg_count(ctx: &mut LowerCtx, message: String, range: TextRange) {
-    expression_diagnostics::call_wrong_positional_count(ctx, message, range);
-}
-
-fn reject_exact_method_arg_count(
-    ctx: &mut LowerCtx,
-    method: &str,
-    expected: usize,
-    actual: usize,
-    arg_ranges: &[TextRange],
-    method_range: TextRange,
-) {
-    let suffix = if expected == 1 { "" } else { "s" };
-    reject_method_arg_count(
-        ctx,
-        format!("{method}() takes exactly {expected} argument{suffix}, got {actual}"),
-        method_count_range(actual, expected, arg_ranges, method_range),
-    );
-}
-
-fn reject_max_method_arg_count(
-    ctx: &mut LowerCtx,
-    method: &str,
-    max_allowed: usize,
-    actual: usize,
-    arg_ranges: &[TextRange],
-    method_range: TextRange,
-) {
-    let suffix = if max_allowed == 1 { "" } else { "s" };
-    reject_method_arg_count(
-        ctx,
-        format!("{method}() takes at most {max_allowed} argument{suffix}, got {actual}"),
-        method_count_range(actual, max_allowed, arg_ranges, method_range),
-    );
-}
-
-fn reject_no_method_args(
-    ctx: &mut LowerCtx,
-    method: &str,
-    arg_ranges: &[TextRange],
-    method_range: TextRange,
-) {
-    reject_method_arg_count(
-        ctx,
-        format!("{method}() takes no arguments"),
-        method_count_range(arg_ranges.len(), 0, arg_ranges, method_range),
-    );
-}
-
 /// Resolve the return type of a method call on a given type.
 pub(super) fn resolve_method_type(
     object_ty: &Type,
@@ -2346,6 +2288,16 @@ pub(super) fn resolve_method_type(
         ) {
             return resolve_method_type(body, method, args, arg_ranges, method_range, ctx);
         }
+    }
+    if matches!(object_ty, Type::AsyncGenerator(_, _)) {
+        return super::async_generator_methods::resolve_async_generator_method_type(
+            object_ty,
+            method,
+            args,
+            arg_ranges,
+            method_range,
+            ctx,
+        );
     }
     match object_ty {
         Type::List(elem_ty) => match method {
