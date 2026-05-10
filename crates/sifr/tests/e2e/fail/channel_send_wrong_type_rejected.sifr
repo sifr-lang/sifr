@@ -1,0 +1,8 @@
+# expect-error[col=30]: SIFR-TYPE-0002
+from sifr.sync import Channel, ChannelSender, ClosedError
+
+
+async def main() -> Result[None, ClosedError]:
+    sender: ChannelSender[int] = ChannelSender(Channel([], -1))
+    sent = await sender.send("bad")
+    return None
