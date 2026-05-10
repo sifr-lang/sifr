@@ -38,6 +38,7 @@
     "channel_drop_receiver_closes_senders",
     "channel_backpressure",
     "channel_cancel_pending_receive",
+    "channel_cancel_receive_no_loss",
     "semaphore_basic",
     "notify_basic",
     "stdlib_json_consolidated",
