@@ -692,7 +692,7 @@ status: in_progress
 - PR [#1993](https://github.com/sifr-lang/sifr/pull/1993) channel close-drain fixture slice: a closed channel keeps buffered values receivable and reports `ClosedError` once drained, with `channel_drop_last_sender_closes_after_drain.sifr` covering the current value-backed surface.
 - PR [#1995](https://github.com/sifr-lang/sifr/pull/1995) shared channel runtime slice: `sync.channel[T]()` and `sync.bounded_channel[T](capacity)` now use shared queue endpoint state in generated Rust, and the factory fixtures prove values sent through the paired sender are received through the paired receiver.
 - PR [#1997](https://github.com/sifr-lang/sifr/pull/1997) channel sender clone-close validation slice: `channel_sender_close_clone_closes_all.sifr` validates that cloned senders share channel state, sender `close()` closes the whole channel, and buffered messages remain receivable after close.
-- Current slice: add `channel_drop_receiver_closes_senders.sifr` to validate that dropping the receiver endpoint closes the channel immediately to senders.
+- PR [#1999](https://github.com/sifr-lang/sifr/pull/1999) channel receiver-drop validation slice: `channel_drop_receiver_closes_senders.sifr` validates that dropping the receiver endpoint closes the channel immediately to senders.
 
 ---
 
