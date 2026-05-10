@@ -33,6 +33,7 @@
     "bounded_channel_factory_basic",
     "channel_close",
     "channel_fifo_order",
+    "channel_drop_last_sender_closes_after_drain",
     "semaphore_basic",
     "notify_basic",
     "stdlib_json_consolidated",
