@@ -1661,6 +1661,19 @@ fn test_await_after_completed_mutable_borrow_lowers() {
 }
 
 #[test]
+fn test_lock_guard_across_await_rejected() {
+    let source = "class LockGuard[T]:\n    pass\n\nasync def main() -> None:\n    guard: LockGuard[int] = LockGuard()\n    await task.sleep(0.0)\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("lock guard `guard` cannot cross await")
+            && e.code == Some(DiagnosticCode::OWN_BORROW_ACROSS_AWAIT)
+            && e.primary_range == Some(range_for(source, "await task.sleep(0.0)"))
+    }));
+}
+
+#[test]
 fn test_task_timeout_consumes_handle_binding() {
     let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n        second = await handle\n    return None\n";
     let result = lower_source(source);

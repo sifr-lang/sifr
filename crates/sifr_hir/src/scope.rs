@@ -233,6 +233,19 @@ impl Scope {
         self.lookup_var(name)
     }
 
+    pub(crate) fn active_bindings(&self) -> Vec<(String, Type)> {
+        let mut bindings = Vec::new();
+        for frame in &self.frames {
+            for (name, info) in frame {
+                if info.is_moved || info.is_poisoned_binding() {
+                    continue;
+                }
+                bindings.push((name.clone(), info.effective_type().clone()));
+            }
+        }
+        bindings
+    }
+
     /// Look up a variable within an inclusive frame range.
     pub fn lookup_in_frame_range(&self, name: &str, start: usize, end: usize) -> Option<&VarInfo> {
         if start > end || end >= self.frames.len() {

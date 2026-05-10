@@ -1,0 +1,9 @@
+# expect-error[col=5]: SIFR-OWN-0009
+from sifr.sync import Lock
+
+
+async def main() -> None:
+    lock: Lock[int] = Lock(1)
+    guard = lock.lock()
+    await task.sleep(0.0)
+    assert guard.get() == 1
