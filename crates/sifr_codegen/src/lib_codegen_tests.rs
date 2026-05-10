@@ -3894,10 +3894,44 @@ fn test_task_select_lowers_to_private_select_helper() {
     assert!(result
         .rust_source
         .contains("__sifr_task_select(first_handle, second_handle)"));
+    assert!(result
+        .rust_source
+        .contains("select loser task failed\".to_string()"));
+    assert!(result
+        .rust_source
+        .contains("select loser task was cancelled\".to_string()"));
+    assert!(result
+        .rust_source
+        .contains("second_observed.store(false, std::sync::atomic::Ordering::SeqCst)"));
+    assert!(result
+        .rust_source
+        .contains("first_observed.store(false, std::sync::atomic::Ordering::SeqCst)"));
     assert!(result.rust_source.contains(
         "let result: __SifrSelect2<__SifrTaskResult<i64, std::convert::Infallible>, __SifrTaskResult<String, std::convert::Infallible>>"
     ));
     assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_task_select_fallible_tasks_preserves_distinct_error_parameters() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def first() -> Result[int, ValueError]:\n    raise ValueError(\"first\")\n\nasync def second() -> Result[str, IOError]:\n    raise IOError(\"second\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first_handle, second_handle)\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result.rust_source.contains("__SifrTaskResult<A, EA>"));
+    assert!(result.rust_source.contains("__SifrTaskResult<B, EB>"));
+    assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
+    assert!(result.rust_source.contains(
+        "let result: __SifrSelect2<__SifrTaskResult<i64, ValueError>, __SifrTaskResult<String, IOError>>"
+    ));
 }
 
 #[test]
