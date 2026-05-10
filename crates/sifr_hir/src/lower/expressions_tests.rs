@@ -1599,6 +1599,24 @@ fn test_task_race_consumes_handle_collection_binding() {
 }
 
 #[test]
+fn test_for_loop_consumes_task_handle_collection_binding() {
+    let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handles = [scope.spawn(worker()), scope.spawn(worker())]\n        for handle in handles:\n            result = await handle\n        second = await task.gather(handles)\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("moved value")
+            && e.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && e.primary_range
+                == Some(range_for_after(
+                    source,
+                    "second = await task.gather(",
+                    "handles",
+                ))
+    }));
+}
+
+#[test]
 fn test_task_select_consumes_handle_bindings() {
     let source = "async def first() -> int:\n    return 1\n\nasync def second() -> str:\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        one = scope.spawn(first())\n        two = scope.spawn(second())\n        selected = await task.select(one, two)\n        late = await one\n    return None\n";
     let result = lower_source(source);
