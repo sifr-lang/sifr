@@ -129,6 +129,14 @@ pub(super) fn mutable_borrow_across_await(ctx: &mut LowerCtx, name: &str, range:
     );
 }
 
+pub(super) fn lock_guard_across_await(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
+        format!("lock guard `{name}` cannot cross await; release the guard before awaiting"),
+        range,
+    );
+}
+
 pub(super) fn non_send_task_capture(
     ctx: &mut LowerCtx,
     value: &str,

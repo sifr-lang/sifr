@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::ownership_diagnostics;
 use super::task_scope_calls::mark_task_handle_observed;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
@@ -15,6 +16,12 @@ pub(super) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<
             await_expr.range(),
         );
         return None;
+    }
+
+    for (name, ty) in ctx.scope.active_bindings() {
+        if is_lock_guard_type(&ty) {
+            ownership_diagnostics::lock_guard_across_await(ctx, &name, await_expr.range());
+        }
     }
 
     let value = lower_expr(await_expr.value.as_ref(), ctx)?;
@@ -45,6 +52,19 @@ pub(super) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<
         value: Box::new(value),
         ty,
     })
+}
+
+fn is_lock_guard_type(ty: &Type) -> bool {
+    let Type::Class { name, .. } = ty.resolve_alias() else {
+        return false;
+    };
+    let public_name = name
+        .strip_prefix("__compat_sifr_sync_")
+        .unwrap_or(name.as_str());
+    matches!(
+        public_name,
+        "LockGuard" | "RwLockReadGuard" | "RwLockWriteGuard"
+    )
 }
 
 fn await_result_type(ty: &Type) -> Option<Type> {
