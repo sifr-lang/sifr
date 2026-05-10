@@ -582,7 +582,7 @@ status: in_progress
 **Implementation progress:**
 
 - PR [#1957](https://github.com/sifr-lang/sifr/pull/1957) owned spawn-argument boundary slice: `scope.spawn(coro(...))` now accepts direct coroutine calls with simple owned arguments, while borrowed parameters crossing the task boundary are rejected before Rust codegen.
-- In progress spawn move-boundary validation slice: owned move arguments can cross into spawned coroutine calls, and the original binding is consumed so later mutation is rejected before Rust codegen.
+- PR [#1959](https://github.com/sifr-lang/sifr/pull/1959) spawn move-boundary validation slice: owned move arguments can cross into spawned coroutine calls, and the original binding is consumed so later mutation is rejected before Rust codegen.
 
 ---
 
