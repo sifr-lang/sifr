@@ -676,7 +676,7 @@ status: in_progress
 
 **Implementation progress:**
 
-- In progress `sync.Shared` surface slice: `sifr.sync.Shared[T]` is available as the first immutable sharing primitive, with basic construction/access validation and the `spawn_capture_immutable_shared_ok.sifr` milestone fixture in the quick lane.
+- PR [#1967](https://github.com/sifr-lang/sifr/pull/1967) `sync.Shared` surface slice: `sifr.sync.Shared[T]` is available as the first immutable sharing primitive, with basic construction/access validation and the `spawn_capture_immutable_shared_ok.sifr` milestone fixture in the quick lane.
 
 ---
 
