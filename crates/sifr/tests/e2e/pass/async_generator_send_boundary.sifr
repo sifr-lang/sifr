@@ -1,0 +1,19 @@
+async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 2
+    yield 3
+
+
+async def consume(own mut agen: AsyncGenerator[int, GeneratorCloseError]) -> Result[int, GeneratorCloseError]:
+    total: int = 0
+    async for value in agen:
+        total = total + value
+    return total
+
+
+async def main() -> Result[None, ScopeFailure]:
+    agen = numbers()
+    async with task.scope() as scope:
+        handle = scope.spawn(consume(agen))
+        result = await handle
+        assert str(result) == "Ok(5)"
+    return None
