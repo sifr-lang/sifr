@@ -86,7 +86,7 @@ fn async_closable_error_type(ty: &Type) -> Option<Type> {
     }
 }
 
-fn return_type_accepts_error(return_type: &Type, error_ty: &Type) -> bool {
+pub(super) fn return_type_accepts_error(return_type: &Type, error_ty: &Type) -> bool {
     if matches!(error_ty.resolve_alias(), Type::Never) {
         return true;
     }

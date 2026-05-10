@@ -591,6 +591,115 @@ impl RustEmitter {
         self.lower_structural_iter_source_expr_for_ir(iter_expr, None)
     }
 
+    fn async_iterator_error_type_for_ir(iter_expr: &HirExpr) -> Option<Type> {
+        match Self::resolve_alias_type_for_loop_iter(iter_expr.ty()) {
+            Type::AsyncIterator(_, err_ty) | Type::AsyncGenerator(_, err_ty) => {
+                Some(err_ty.as_ref().clone())
+            }
+            _ => None,
+        }
+    }
+
+    fn try_lower_async_list_comp_for_ir(
+        &mut self,
+        value_expr: &HirExpr,
+        generators: &[(String, HirExpr, Option<HirExpr>)],
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        let Some((var, iter_expr, maybe_filter)) = generators.first() else {
+            return Ok(None);
+        };
+        if generators.len() != 1 || var.contains(',') {
+            return Ok(None);
+        }
+        let Some(iter_error_ty) = Self::async_iterator_error_type_for_ir(iter_expr) else {
+            return Ok(None);
+        };
+        let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter_expr)? else {
+            return Ok(None);
+        };
+        let Some(lowered_value) = self.lower_stmt_expr_for_ir(value_expr)? else {
+            return Ok(None);
+        };
+
+        let result_ident = "__sifr_async_list_comp".to_string();
+        let iter_ident = "__sifr_async_list_iter".to_string();
+        let next_ident = "__sifr_async_list_next".to_string();
+
+        let push_stmt = RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(result_ident.clone())),
+            method: "push".to_string(),
+            args: vec![lowered_value],
+        });
+        let value_body = if let Some(filter) = maybe_filter {
+            let Some(lowered_filter) = self.lower_stmt_expr_for_ir(filter)? else {
+                return Ok(None);
+            };
+            vec![RustStmt::If {
+                cond: lowered_filter,
+                then_body: vec![push_stmt],
+                else_body: None,
+            }]
+        } else {
+            vec![push_stmt]
+        };
+
+        let next_call = RustExpr::Await(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(iter_ident.clone())),
+            method: "anext".to_string(),
+            args: vec![],
+        }));
+        let next_value = if matches!(iter_error_ty.resolve_alias(), Type::Never) {
+            next_call
+        } else {
+            RustExpr::Try(Box::new(next_call))
+        };
+
+        Ok(Some(RustExpr::Block {
+            stmts: vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: result_ident.clone(),
+                    ty: None,
+                    value: RustExpr::Vec(vec![]),
+                },
+                RustStmt::Let {
+                    mutable: true,
+                    name: iter_ident,
+                    ty: None,
+                    value: lowered_iter,
+                },
+                RustStmt::Loop {
+                    body: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: next_ident.clone(),
+                            ty: None,
+                            value: next_value,
+                        },
+                        RustStmt::Match {
+                            expr: RustExpr::Ident(next_ident),
+                            arms: vec![
+                                crate::RustMatchArm {
+                                    pattern: format!("Some({var})"),
+                                    bindings: vec![var.clone()],
+                                    guard: None,
+                                    body: value_body,
+                                },
+                                crate::RustMatchArm {
+                                    pattern: "None".to_string(),
+                                    bindings: vec![],
+                                    guard: None,
+                                    body: vec![RustStmt::Break],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            expr: Some(Box::new(RustExpr::Ident(result_ident))),
+        }))
+    }
+
     fn try_lower_comprehension_expr_for_ir(
         &mut self,
         expr: &HirExpr,
@@ -607,6 +716,11 @@ impl RustEmitter {
             {
                 if generators.is_empty() || generators.iter().any(|(var, _, _)| var.contains(',')) {
                     return Ok(None);
+                }
+                if generators.iter().any(|(_, iter_expr, _)| {
+                    Self::async_iterator_error_type_for_ir(iter_expr).is_some()
+                }) {
+                    return self.try_lower_async_list_comp_for_ir(expr, generators);
                 }
 
                 let result_ident = "__sifr_list_comp".to_string();

@@ -1264,11 +1264,15 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
     let previous_owner = ctx.current_owner.replace(func.name.to_string());
     let previous_async = ctx.current_function_is_async;
     let previous_async_generator = ctx.current_function_is_async_generator;
+    let previous_return_type = ctx
+        .current_function_return_type
+        .replace(ft.return_type.as_ref().clone());
     ctx.current_function_is_async = func.is_async;
     ctx.current_function_is_async_generator = is_async_generator;
     let body = lower_stmts(&func.body, &ft, ctx);
     ctx.current_function_is_async = previous_async;
     ctx.current_function_is_async_generator = previous_async_generator;
+    ctx.current_function_return_type = previous_return_type;
     ctx.current_owner = previous_owner;
 
     ctx.borrowed_params.clear();

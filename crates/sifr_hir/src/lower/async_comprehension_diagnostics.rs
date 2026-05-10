@@ -96,6 +96,39 @@ pub(super) fn reject_deferred_async_comprehension_shape(
     true
 }
 
+pub(super) fn reject_unsupported_basic_async_comprehension_shape(
+    ctx: &mut LowerCtx,
+    generators: &[Comprehension],
+    fallback_range: TextRange,
+) -> bool {
+    if !generators.iter().any(|generator| generator.is_async) {
+        return false;
+    }
+
+    if generators.len() != 1 {
+        reject_unsupported_expression_form(
+            ctx,
+            "nested async comprehensions are deferred in v1; use a single async for clause",
+            generators
+                .iter()
+                .find(|generator| generator.is_async)
+                .map_or(fallback_range, Ranged::range),
+        );
+        return true;
+    }
+
+    if let Some(await_range) = generators[0].ifs.iter().find_map(first_await_range_in_expr) {
+        reject_unsupported_expression_form(
+            ctx,
+            "await inside async comprehension filters is deferred in v1; compute the awaited value before the comprehension",
+            await_range,
+        );
+        return true;
+    }
+
+    false
+}
+
 pub(super) fn reject_async_generator_expression(ctx: &mut LowerCtx, range: TextRange) {
     reject_unsupported_expression_form(
         ctx,

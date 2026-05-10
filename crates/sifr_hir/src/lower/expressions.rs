@@ -3427,6 +3427,10 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
         return None;
     }
 
+    if let Some(result) = super::async_comprehensions::lower_list_comp(comp, ctx) {
+        return result;
+    }
+
     if super::async_comprehension_diagnostics::reject_deferred_async_comprehension_shape(
         ctx,
         "list",
