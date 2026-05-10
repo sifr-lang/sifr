@@ -45,7 +45,7 @@ use super::sequence_guard_updates::{
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
 use super::statement_diagnostics;
-use super::task_scope_calls::task_group_spawn_owner;
+use super::task_scope_calls::{is_lock_guard_type, task_group_spawn_owner};
 use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
     resolve_annotation_expr,
@@ -1673,6 +1673,9 @@ pub(super) fn lower_return(
                 let range = val.range();
                 ownership_diagnostics::borrowed_parameter_return_escape(ctx, name, range);
             }
+        }
+        if !ctx.allow_intrinsic_imports && is_lock_guard_type(&expr_ty) {
+            ownership_diagnostics::lock_guard_return_escape(ctx, val.range());
         }
 
         // If the function returns Result[T, E] and the value is T (not Result), wrap in Ok()

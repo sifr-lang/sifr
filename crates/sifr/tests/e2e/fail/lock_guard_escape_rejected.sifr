@@ -1,0 +1,13 @@
+# expect-error[col=12]: SIFR-OWN-0003
+from sifr.sync import Lock, LockGuard
+
+
+def make_guard(own lock: Lock[int]) -> LockGuard[int]:
+    guard = lock.lock()
+    return guard
+
+
+def main() -> None:
+    lock: Lock[int] = Lock(1)
+    guard = make_guard(lock)
+    assert guard.get() == 1

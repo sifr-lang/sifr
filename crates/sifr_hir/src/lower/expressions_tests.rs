@@ -1688,6 +1688,19 @@ fn test_lock_guard_across_await_rejected() {
 }
 
 #[test]
+fn test_lock_guard_return_escape_rejected() {
+    let source = "class LockGuard[T]:\n    pass\n\ndef make_guard() -> LockGuard[int]:\n    guard: LockGuard[int] = LockGuard()\n    return guard\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("cannot return lock guard")
+            && e.code == Some(DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES)
+            && e.primary_range == Some(range_for_after(source, "return ", "guard"))
+    }));
+}
+
+#[test]
 fn test_task_timeout_consumes_handle_binding() {
     let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n        second = await handle\n    return None\n";
     let result = lower_source(source);
