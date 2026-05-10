@@ -689,6 +689,7 @@ status: in_progress
 - PR [#1987](https://github.com/sifr-lang/sifr/pull/1987) ShareSafe validation slice: `Shared[T]` rejects mutable values without an explicit synchronization wrapper, with `shared_mut_without_lock_rejected.sifr` covering the negative path.
 - PR [#1989](https://github.com/sifr-lang/sifr/pull/1989) channel factory surface slice: `sync.channel[T]()` and `sync.bounded_channel[T](capacity)` return typed sender/receiver endpoint pairs, with runtime-backed shared queue semantics still deferred to a later channel slice.
 - PR [#1991](https://github.com/sifr-lang/sifr/pull/1991) channel endpoint state slice: `ChannelSender.send`/`close` and `ChannelReceiver.receive` update each endpoint's stored channel state, with `channel_close.sifr` and `channel_fifo_order.sifr` covering close-after-send rejection and repeated receive FIFO order on a single receiver.
+- In progress channel close-drain fixture slice: a closed channel keeps buffered values receivable and reports `ClosedError` once drained, with `channel_drop_last_sender_closes_after_drain.sifr` covering the current value-backed surface.
 
 ---
 
