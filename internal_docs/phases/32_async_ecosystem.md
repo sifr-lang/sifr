@@ -522,7 +522,7 @@ status: in_progress
 - PR [#1944](https://github.com/sifr-lang/sifr/pull/1944) try/finally cleanup prerequisite slice: `try/finally` without `except` now lowers the body followed by the `finally` body on non-early-exit paths, covering the basic cleanup execution needed before cancellation-specific cleanup lowering can be completed.
 - PR [#1945](https://github.com/sifr-lang/sifr/pull/1945) Failure type surface slice: added first-class `Failure[E]` type annotation support, private `__SifrFailure<E>` codegen with `primary` and `secondary` fields, and validation that `Failure[E]` is evidence rather than a valid ordinary `Result[..., E]` error channel.
 - PR [#1947](https://github.com/sifr-lang/sifr/pull/1947) task-result Failure payload slice: private `__SifrTaskResult<T, E>` now carries ordinary child failures as `__SifrFailure<E>` evidence, fallible task spawns wrap primary child errors, and timeout maps child failure evidence into `TimeoutResult.Inner(E)` while preserving secondary evidence storage.
-- In progress cancelled Failure payload slice: private `__SifrTaskResult<T, E>` now materializes cancellation as `Cancelled(__SifrFailure<CancellationError>)`, preserving the design split between ordinary `E` failures and non-`Error` child-cancellation evidence.
+- PR [#1949](https://github.com/sifr-lang/sifr/pull/1949) cancelled Failure payload slice: private `__SifrTaskResult<T, E>` now materializes cancellation as `Cancelled(__SifrFailure<CancellationError>)`, preserving the design split between ordinary `E` failures and non-`Error` child-cancellation evidence.
 
 ---
 
