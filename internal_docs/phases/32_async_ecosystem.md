@@ -470,6 +470,7 @@ status: in_progress
 - `task_gather_ordered.sifr`
 - `task_gather_cleanup_error_secondary.sifr`
 - `task_handle_collection_consumed.sifr`
+- `task_handle_collection_loop_consumed.sifr`
 - `task_scope_unobserved_child_waits.sifr`
 - `task_scope_unobserved_failure_scope_failure.sifr`
 - `task_select_first_completion.sifr`
@@ -517,6 +518,7 @@ status: in_progress
 - PR [#1940](https://github.com/sifr-lang/sifr/pull/1940) scope early-exit guard slice: task scopes that spawn children now reject `return`, `raise`, and `yield` inside the scope until abnormal-exit cleanup lowering can guarantee `__sifr_join_all()` runs on every exit path; local loop `break`/`continue` remain allowed because they do not exit the scope.
 - PR [#1941](https://github.com/sifr-lang/sifr/pull/1941) TaskGroup exit-order cancellation slice: fail-fast TaskGroup scope exit now observes children concurrently so a failed child cancels unfinished siblings regardless of spawn order.
 - PR [#1942](https://github.com/sifr-lang/sifr/pull/1942) task-scope basic validation slice: added the canonical `task_scope_basic.sifr` milestone fixture for a normal multi-child scoped-task path with both `join()` and direct handle await observation.
+- PR [#1943](https://github.com/sifr-lang/sifr/pull/1943) task-handle loop-consumption slice: simple `for handle in handles: await handle` now consumes a named task-handle list instead of cloning one-shot handles, with ownership diagnostics preventing reuse of the consumed collection.
 
 ---
 

@@ -2546,6 +2546,10 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<Ru
     };
     let iter_plan =
         crate::helpers::plan_iterator_ownership_with_element_hint(iter_source, Some(target_ty));
+    let consumes_task_handle_collection = matches!(
+        resolve_alias_type(iter_source.ty()),
+        Type::List(element_ty) if matches!(element_ty.resolve_alias(), Type::Task(_, _))
+    );
     let apply_copy_clone_yield = |iter_expr: RustExpr| match iter_plan.yield_mode {
         crate::helpers::YieldMode::Copy => RustExpr::MethodCall {
             receiver: Box::new(iter_expr),
@@ -2560,6 +2564,11 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<Ru
         crate::helpers::YieldMode::Move | crate::helpers::YieldMode::Borrow => iter_expr,
     };
     Some(match resolve_alias_type(iter_source.ty()) {
+        Type::List(_) if consumes_task_handle_collection => RustExpr::MethodCall {
+            receiver: Box::new(lowered_iter),
+            method: "into_iter".to_string(),
+            args: vec![],
+        },
         Type::List(_) | Type::Set(_) | Type::Iterable(_) => match iter_plan.source_access_mode {
             crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
                 receiver: Box::new(lowered_iter),
@@ -8878,6 +8887,40 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_for_over_task_handle_list_by_value() {
+        let handle_ty = Type::Task(Box::new(Type::Int), Box::new(Type::Never));
+        let for_stmt = HirStmt::For {
+            target: "handle".to_string(),
+            target_ty: handle_ty.clone(),
+            iter: HirExpr::Name {
+                name: "handles".to_string(),
+                ty: Type::List(Box::new(handle_ty)),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(&for_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("for with task handle list lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::For {
+                var: ref var_name,
+                iter: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if var_name == "handle"
+                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "handles")
+                && method == "into_iter"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
     fn lowers_simple_for_with_dict_iter_to_keys_cloned() {
         let for_stmt = HirStmt::For {
             target: "k".to_string(),
@@ -8912,7 +8955,7 @@ mod tests {
                     && method == "keys"
                     && args.is_empty()
             )
-                && method == "copied"
+                && method == "cloned"
                 && args.is_empty()
         ));
     }

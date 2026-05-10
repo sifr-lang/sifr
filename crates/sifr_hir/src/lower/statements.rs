@@ -1970,6 +1970,9 @@ pub(super) fn lower_for(
         args: vec![iterable_expr],
         ty: Type::Iterator(Box::new(elem_ty.clone())),
     };
+    let consumes_task_handle_collection = iter_source_name.is_some()
+        && matches!(iter_source_ty.resolve_alias(), Type::List(_))
+        && matches!(elem_ty.resolve_alias(), Type::Task(_, _));
 
     // Extract the target variable name(s)
     let (target_name, target_tuple_range): (String, Option<TextRange>) =
@@ -2007,6 +2010,12 @@ pub(super) fn lower_for(
                 return None;
             }
         };
+
+    if consumes_task_handle_collection {
+        if let Some(source_name) = iter_source_name.as_deref() {
+            ctx.scope.mark_moved(source_name);
+        }
+    }
 
     // Snapshot moved state before loop to detect moves inside the body
     let moved_before_loop = ctx.scope.save_moved_state();
