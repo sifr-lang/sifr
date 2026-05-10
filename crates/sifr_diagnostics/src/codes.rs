@@ -85,6 +85,7 @@ impl DiagnosticCode {
     pub const OWN_IMMUTABLE_BYTES_ASSIGNMENT: Self = Self::new("SIFR-OWN-0007", Severity::Error);
     pub const OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT: Self =
         Self::new("SIFR-OWN-0008", Severity::Error);
+    pub const OWN_BORROW_ACROSS_AWAIT: Self = Self::new("SIFR-OWN-0009", Severity::Error);
 
     pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
@@ -1090,6 +1091,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         []
     ),
     active_entry!(
+        "SIFR-OWN-0009",
+        "OWN",
+        "Mutable borrow remains live across an await point.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/borrow_across_await_rejected.sifr",
+        "mutable borrow {binding} cannot cross await",
+        "sifr_hir::lower",
+        [arg!("binding")],
+        ["binding"]
+    ),
+    active_entry!(
         "SIFR-FLOW-0001",
         "FLOW",
         "Break outside a loop.",
@@ -1677,6 +1689,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT,
     DiagnosticCode::OWN_IMMUTABLE_BYTES_ASSIGNMENT,
     DiagnosticCode::OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT,
+    DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
     DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,

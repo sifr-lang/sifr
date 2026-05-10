@@ -1609,6 +1609,30 @@ fn test_scope_spawn_consumes_owned_move_argument() {
 }
 
 #[test]
+fn test_mutable_borrow_parameter_across_await_rejected() {
+    let source = "async def mutate_after_await(mut items: list[int]) -> int:\n    await task.sleep(0.0)\n    items.append(2)\n    return len(items)\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("mutable borrow `items` cannot cross await")
+            && e.code == Some(DiagnosticCode::OWN_BORROW_ACROSS_AWAIT)
+            && e.primary_range == Some(range_for(source, "await task.sleep(0.0)"))
+    }));
+}
+
+#[test]
+fn test_await_after_completed_mutable_borrow_lowers() {
+    let source = "def mutate_local(mut items: list[int]) -> None:\n    items.append(2)\n    return None\n\nasync def main() -> None:\n    items: list[int] = [1]\n    mutate_local(items)\n    await task.sleep(0.0)\n    return None\n";
+    let result = lower_source(source);
+    assert!(
+        result.is_ok(),
+        "completed same-task mutable borrow should not block a later await: {result:?}"
+    );
+}
+
+#[test]
 fn test_task_timeout_consumes_handle_binding() {
     let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n        second = await handle\n    return None\n";
     let result = lower_source(source);

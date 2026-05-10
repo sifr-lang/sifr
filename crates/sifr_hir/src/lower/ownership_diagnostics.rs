@@ -118,3 +118,13 @@ pub(super) fn immutable_bytes_augmented_subscript_assignment(ctx: &mut LowerCtx,
         range,
     );
 }
+
+pub(super) fn mutable_borrow_across_await(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
+        format!(
+            "mutable borrow `{name}` cannot cross await; finish the mutation before awaiting or transfer ownership with `own`"
+        ),
+        range,
+    );
+}

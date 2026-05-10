@@ -1,0 +1,11 @@
+# expect-error[col=5]: SIFR-OWN-0009
+async def mutate_after_await(mut items: list[int]) -> int:
+    await task.sleep(0.0)
+    items.append(2)
+    return len(items)
+
+
+async def main() -> None:
+    items: list[int] = [1]
+    value: int = await mutate_after_await(items)
+    return None
