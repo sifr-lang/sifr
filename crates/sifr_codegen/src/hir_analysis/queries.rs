@@ -279,6 +279,16 @@ pub(crate) fn collect_mutated_vars(
         | HirStmt::AttributeSubscriptAssign { object, .. } => {
             mutated.borrow_mut().insert(object.clone());
         }
+        HirStmt::AsyncWith {
+            kind:
+                sifr_hir::HirAsyncWithKind::UserDefined {
+                    context: HirExpr::Name { name, .. },
+                    ..
+                },
+            ..
+        } => {
+            mutated.borrow_mut().insert(name.clone());
+        }
         HirStmt::Delete {
             object: HirExpr::Name { name, .. },
             ..

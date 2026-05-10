@@ -1,0 +1,47 @@
+class ResourceError(Error):
+    pass
+
+
+class OrderedResource:
+    value: int
+    entered: bool
+    exited: bool
+
+    def __init__(self, value: int):
+        self.value = value
+        self.entered = False
+        self.exited = False
+
+    async def __aenter__(self) -> Result[int, ResourceError]:
+        assert not self.entered
+        assert not self.exited
+        self.entered = True
+        return self.value
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, ResourceError]:
+        assert self.entered
+        assert not self.exited
+        self.exited = True
+        return None
+
+
+async def main() -> Result[None, ResourceError]:
+    outer: OrderedResource = OrderedResource(1)
+    inner: OrderedResource = OrderedResource(2)
+
+    async with outer as outer_value:
+        assert outer_value == 1
+        assert outer.entered
+        assert not outer.exited
+
+        async with inner as inner_value:
+            assert inner_value == 2
+            assert inner.entered
+            assert not inner.exited
+            assert not outer.exited
+
+        assert inner.exited
+        assert not outer.exited
+
+    assert outer.exited
+    return None
