@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0002
+
+async def mixed() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 1
+    yield "two"
