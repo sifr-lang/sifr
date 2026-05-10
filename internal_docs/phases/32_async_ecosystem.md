@@ -509,6 +509,7 @@ status: in_progress
 - In progress TaskGroup openness slice: task handles spawned from a named `TaskGroup` remember their owner, and v1 conservatively rejects later `group.spawn(...)` on a path after one of that group's child handles has been observed.
 - In progress cancellation/error type surface slice: registered `ScopeFailure`, `TaskCancelled`, and `SecondaryError` as ordinary built-in error classes, and registered `CancellationError` as a non-`Error` control-evidence class so it cannot be used as a `Result` error.
 - In progress scope-failure exit slice: task scopes now track whether child handles were observed, return `ScopeFailure` for unobserved child failure or cancellation at scope exit, and require enclosing async functions that spawn children to return `Result[..., ScopeFailure]` or `Result[..., Error]`.
+- In progress unobserved scope-failure runtime validation slice: added runtime-failure coverage for unobserved fallible children in both `task.scope()` and `task.TaskGroup()` surfacing `ScopeFailure` at scope exit.
 
 ---
 

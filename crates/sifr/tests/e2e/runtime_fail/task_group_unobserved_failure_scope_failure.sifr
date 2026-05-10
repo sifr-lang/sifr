@@ -1,0 +1,11 @@
+# expect-stderr: unobserved child task failed
+
+async def fail_later() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("group child failed")
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.TaskGroup() as group:
+        handle = group.spawn(fail_later())
+    return None
