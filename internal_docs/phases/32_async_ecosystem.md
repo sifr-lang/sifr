@@ -801,6 +801,7 @@ Implementation notes:
 - PR [#2054](https://github.com/sifr-lang/sifr/pull/2054) async-generator yield convergence slice: async generator yield inference now rejects multi-type yield unions instead of inferring `AsyncGenerator[Union[...], E]`, preserving the v1 rule that yielded values converge to one element type; `async_generator_inconsistent_yield_types_rejected.sifr` covers the negative path.
 - PR [#2056](https://github.com/sifr-lang/sifr/pull/2056) async-generator borrow-yield validation slice: async generator functions now reject mutable borrowed move-type parameters at yield suspension points, extending the existing ownership suspension diagnostic to the `yield` boundary; `async_generator_mut_borrow_across_yield_rejected.sifr` covers the negative path.
 - PR [#2058](https://github.com/sifr-lang/sifr/pull/2058) async-generator deferred return validation slice: `return None` and bare `return` inside async generators are now covered by e2e fail fixtures, keeping those paths fail-closed until async-generator state-machine return lowering lands.
+- PR [#2060](https://github.com/sifr-lang/sifr/pull/2060) async-generator yield-type positive validation slice: `async_generator_yield_types.sifr` now covers converged async-generator yield typing through computed values consumed by `async for`, complementing the literal-yield smoke test without claiming lazy state-machine lowering.
 
 **Goal:** Complete general user-defined async control-flow protocols without dragging in broad ecosystem APIs.
 
