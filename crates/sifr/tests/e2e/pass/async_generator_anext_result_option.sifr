@@ -1,0 +1,16 @@
+async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 4
+    yield 5
+
+
+async def main() -> Result[None, GeneratorCloseError]:
+    agen = numbers()
+
+    first: Result[Option[int], GeneratorCloseError] = await anext(agen)
+    second: Result[Option[int], GeneratorCloseError] = await anext(agen)
+    done: Result[Option[int], GeneratorCloseError] = await anext(agen)
+
+    assert str(first) == "Ok(Some(4))"
+    assert str(second) == "Ok(Some(5))"
+    assert str(done) == "Ok(None)"
+    return None

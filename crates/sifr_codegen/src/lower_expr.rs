@@ -568,6 +568,16 @@ fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> 
             args: vec![try_lower_leaf_or_name_expr(worker)?],
         });
     }
+    if func == "anext" {
+        let [iterator] = args else {
+            return None;
+        };
+        return Some(RustExpr::MethodCall {
+            receiver: Box::new(try_lower_leaf_or_name_expr(iterator)?),
+            method: "anext".to_string(),
+            args: vec![],
+        });
+    }
     if func == "hash" {
         return try_lower_simple_hash_call_expr(args);
     }

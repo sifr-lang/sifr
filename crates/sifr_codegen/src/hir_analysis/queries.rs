@@ -24,6 +24,8 @@ pub(crate) const MUTATING_METHODS: &[&str] = &[
     "difference_update",
     "symmetric_difference_update",
     "discard",
+    "anext",
+    "aclose",
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -366,6 +368,11 @@ pub(crate) fn collect_mutated_vars(
                     mutated.borrow_mut().insert(name.clone());
                 }
             }
+            if canonical_func == "anext" {
+                if let Some(HirExpr::Name { name, .. }) = args.first() {
+                    mutated.borrow_mut().insert(name.clone());
+                }
+            }
         }
         HirExpr::IteratorCall { op, args, .. } => {
             if *op == HirIteratorOp::Next {
@@ -675,6 +682,26 @@ mod tests {
 
         let mutated = collect_mutated_vars(&stmts, None);
         assert!(mutated.contains("it"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_anext_argument() {
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::Call {
+                func: "anext".to_string(),
+                args: vec![HirExpr::Name {
+                    name: "agen".to_string(),
+                    ty: Type::AsyncGenerator(Box::new(Type::Int), Box::new(Type::Never)),
+                }],
+                ty: Type::Awaitable(Box::new(Type::Result(
+                    Box::new(Type::Union(vec![Type::Int, Type::None])),
+                    Box::new(Type::Never),
+                ))),
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("agen"));
     }
 
     #[test]

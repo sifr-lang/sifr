@@ -1,0 +1,5 @@
+# expect-error[col=17]: SIFR-TYPE-0002
+
+async def main() -> None:
+    values: list[int] = [1, 2, 3]
+    await anext(values)

@@ -2153,6 +2153,16 @@ impl RustEmitter {
                     args: vec![],
                 }));
             }
+            if func == "anext" && args.len() == 1 {
+                let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iterator),
+                    method: "anext".to_string(),
+                    args: vec![],
+                }));
+            }
             if func == "str" && args.is_empty() {
                 return Ok(Some(crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
@@ -4935,6 +4945,16 @@ impl RustEmitter {
                 return Ok(Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_iterator),
                     method: "next".to_string(),
+                    args: vec![],
+                }));
+            }
+            if func == "anext" && args.len() == 1 {
+                let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iterator),
+                    method: "anext".to_string(),
                     args: vec![],
                 }));
             }
