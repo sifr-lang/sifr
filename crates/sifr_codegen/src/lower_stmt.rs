@@ -1932,13 +1932,18 @@ fn try_lower_simple_async_with_stmt(
         ),
         target,
     ) {
-        block.push(RustStmt::Expr(RustExpr::Await(Box::new(
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(target.to_string())),
-                method: "__sifr_join_all".to_string(),
-                args: vec![],
-            },
-        ))));
+        let propagates_scope_failure = ctx.return_type.is_some_and(|ty| {
+            matches!(ty.resolve_alias(), Type::Result(_, err) if matches!(err.resolve_alias(), Type::Class { name, .. } if name == "ScopeFailure" || name == "Error"))
+        });
+        let join_expr = format!("{target}.__sifr_join_all().await");
+        let stmt = if propagates_scope_failure {
+            format!(
+                "if let Err(__sifr_scope_failure) = {join_expr} {{ return Err(__sifr_scope_failure.into()); }}"
+            )
+        } else {
+            format!("let _ = {join_expr};")
+        };
+        block.push(RustStmt::Expr(RustExpr::Ident(stmt)));
     }
 
     Some(vec![RustStmt::Block(block)])

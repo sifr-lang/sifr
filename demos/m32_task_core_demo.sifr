@@ -8,7 +8,7 @@ async def slow_worker() -> int:
     return 7
 
 
-async def main() -> Result[None, TimeoutError]:
+async def main() -> Result[None, Error]:
     async with task.timeout(1.0):
         await task.sleep(0.0)
 

@@ -3683,7 +3683,7 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n    return None\n",
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3693,14 +3693,15 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
     );
 
     assert!(result.rust_source.contains("struct __SifrTask<T, E>"));
-    assert!(result.rust_source.contains("fn spawn<"));
+    assert!(result.rust_source.contains("fn __sifr_spawn_infallible<"));
+    assert!(result.rust_source.contains("struct __SifrScopeChild"));
     assert!(result.rust_source.contains("tokio::sync::oneshot::channel"));
     assert!(result
         .rust_source
         .contains("scope.__sifr_spawn_infallible(worker());"));
     assert!(result
         .rust_source
-        .contains("scope.__sifr_join_all().await;"));
+        .contains("if let Err(__sifr_scope_failure) = scope.__sifr_join_all().await"));
     assert!(result.required_crates.contains("tokio"));
 }
 
@@ -3709,7 +3710,7 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.TaskGroup() as group:\n        handle = group.spawn(worker())\n        result = await handle.join()\n    return None\n",
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.TaskGroup() as group:\n        handle = group.spawn(worker())\n        result = await handle.join()\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3727,7 +3728,7 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
         .contains("group.__sifr_spawn_infallible(worker());"));
     assert!(result
         .rust_source
-        .contains("group.__sifr_join_all().await;"));
+        .contains("if let Err(__sifr_scope_failure) = group.__sifr_join_all().await"));
     assert!(result.required_crates.contains("tokio"));
 }
 
@@ -3736,7 +3737,7 @@ fn test_task_gather_lowers_to_private_gather_helper() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    return 2\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
+                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    return 2\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3758,7 +3759,7 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
+                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3784,7 +3785,7 @@ fn test_task_race_lowers_to_private_race_helper() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    await task.sleep(1.0)\n    return 2\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
+                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    await task.sleep(1.0)\n    return 2\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3806,7 +3807,7 @@ fn test_task_select_lowers_to_private_select_helper() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> str:\n    await task.sleep(1.0)\n    return \"two\"\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first_handle, second_handle)\n    return None\n",
+                "async def first() -> int:\n    return 1\n\nasync def second() -> str:\n    await task.sleep(1.0)\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first_handle, second_handle)\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3831,7 +3832,7 @@ fn test_task_handle_join_lowers_to_task_result_observation() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle.join()\n    return None\n",
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle.join()\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3853,7 +3854,7 @@ fn test_await_task_handle_desugars_to_join_observation() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3872,7 +3873,7 @@ fn test_await_task_handle_desugars_to_join_observation() {
 fn test_task_handle_cancel_borrows_handle_and_aborts_child() {
     let source = concat!(
         "async def worker() -> int:\n    await task.sleep(10.0)\n    return 41\n\n",
-        "async def main() -> None:\n    async with task.scope() as scope:\n",
+        "async def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n",
         "        handle = scope.spawn(worker())\n        handle.",
         "cancel",
         "()\n        result = await handle\n    return None\n",
@@ -3900,7 +3901,7 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> None:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n    return None\n",
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -3936,6 +3937,34 @@ fn test_task_timeout_context_manager_wraps_awaits() {
     assert!(result.rust_source.contains("return Err(TimeoutError::new"));
     assert!(result.rust_source.contains("struct TimeoutError"));
     assert!(result.required_crates.contains("tokio"));
+}
+
+#[test]
+fn test_async_generated_errors_convert_to_error_return_type() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, Error]:\n    async with task.timeout(1.0):\n        await task.sleep(0.0)\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(result
+        .rust_source
+        .contains("impl From<TimeoutError> for Error"));
+    assert!(result
+        .rust_source
+        .contains("impl From<ScopeFailure> for Error"));
+    assert!(result
+        .rust_source
+        .contains("return Err(TimeoutError::new(\"task timeout expired\".to_string()).into())"));
+    assert!(result
+        .rust_source
+        .contains("return Err(__sifr_scope_failure.into());"));
 }
 
 #[test]

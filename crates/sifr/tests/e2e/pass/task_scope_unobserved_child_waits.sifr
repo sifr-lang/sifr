@@ -15,7 +15,7 @@ async def write_marker() -> None:
     return None
 
 
-async def main() -> None:
+async def main() -> Result[None, ScopeFailure]:
     path: str = marker_path()
     if exists(path):
         try:

@@ -1,0 +1,10 @@
+# expect-error: SIFR-TYPE-0002
+
+async def worker() -> Result[int, ValueError]:
+    raise ValueError("boom")
+
+
+async def main() -> None:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+    return None
