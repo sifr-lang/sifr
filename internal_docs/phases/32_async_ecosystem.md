@@ -510,6 +510,7 @@ status: in_progress
 - In progress cancellation/error type surface slice: registered `ScopeFailure`, `TaskCancelled`, and `SecondaryError` as ordinary built-in error classes, and registered `CancellationError` as a non-`Error` control-evidence class so it cannot be used as a `Result` error.
 - In progress scope-failure exit slice: task scopes now track whether child handles were observed, return `ScopeFailure` for unobserved child failure or cancellation at scope exit, and require enclosing async functions that spawn children to return `Result[..., ScopeFailure]` or `Result[..., Error]`.
 - In progress unobserved scope-failure runtime validation slice: added runtime-failure coverage for unobserved fallible children in both `task.scope()` and `task.TaskGroup()` surfacing `ScopeFailure` at scope exit.
+- In progress TaskGroup fail-fast exit slice: `task.TaskGroup()` now constructs a fail-fast private scope runtime that cancels remaining children when a group child failure is observed during scope exit, with marker-file validation for sibling cancellation.
 
 ---
 

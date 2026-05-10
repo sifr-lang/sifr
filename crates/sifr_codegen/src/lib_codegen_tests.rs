@@ -3722,7 +3722,8 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
     assert!(result.rust_source.contains("struct __SifrTaskScope"));
     assert!(result
         .rust_source
-        .contains("let mut group = __SifrTaskScope::new();"));
+        .contains("let mut group = __SifrTaskScope::new_task_group();"));
+    assert!(result.rust_source.contains("fail_fast"));
     assert!(result
         .rust_source
         .contains("group.__sifr_spawn_infallible(worker());"));

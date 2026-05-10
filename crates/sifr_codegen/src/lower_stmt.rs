@@ -1904,6 +1904,11 @@ fn try_lower_simple_async_with_stmt(
 
     let mut block = Vec::new();
     if let Some(target) = target {
+        let constructor = if matches!(kind, sifr_hir::HirAsyncWithKind::TaskGroup) {
+            "new_task_group"
+        } else {
+            "new"
+        };
         block.push(RustStmt::Let {
             mutable: true,
             name: target.to_string(),
@@ -1911,7 +1916,7 @@ fn try_lower_simple_async_with_stmt(
             value: RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
                     "__SifrTaskScope".to_string(),
-                    "new".to_string(),
+                    constructor.to_string(),
                 ])),
                 args: vec![],
             },
