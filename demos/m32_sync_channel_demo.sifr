@@ -1,0 +1,107 @@
+from sifr.sync import (
+    ChannelReceiver,
+    ChannelSender,
+    ClosedError,
+    Lock,
+    Notify,
+    RwLock,
+    Semaphore,
+    Shared,
+    bounded_channel,
+    channel,
+)
+
+
+async def drain_two(own mut receiver: ChannelReceiver[int]) -> Result[int, ClosedError]:
+    first: Result[int, ClosedError] = await receiver.receive()
+    await task.sleep(0.0)
+    second: Result[int, ClosedError] = await receiver.receive()
+    assert str(first) == "Ok(1)"
+    assert str(second) == "Ok(2)"
+    return 2
+
+
+def shared_and_guard_demo() -> None:
+    # Immutable shared state can cross task boundaries without mutation.
+    shared: Shared[int] = Shared(41)
+    assert shared.get() == 41
+
+    # Mutable state is accessed through lock guards.
+    lock: Lock[int] = Lock(10)
+    guard = lock.lock()
+    assert guard.get() == 10
+
+    readers: RwLock[int] = RwLock(20)
+    first_reader = readers.read()
+    second_reader = readers.read()
+    writer = readers.write()
+    assert first_reader.get() == 20
+    assert second_reader.get() == 20
+    assert writer.get() == 20
+    return None
+
+
+async def main() -> Result[None, Error]:
+    shared_and_guard_demo()
+
+    # Semaphore and notify cover basic async coordination surfaces.
+    semaphore: Semaphore = Semaphore(1)
+    permit = await semaphore.acquire()
+
+    notify: Notify = Notify()
+    notify.notify_one()
+    await notify.notified()
+    notify.notify_all()
+
+    # Channel factories pair a clonable sender with a single receiver.
+    endpoints: tuple[ChannelSender[int], ChannelReceiver[int]] = channel()
+    sender, receiver = endpoints
+    cloned_sender: ChannelSender[int] = sender.clone()
+    sent: Result[None, ClosedError] = await cloned_sender.send(7)
+    received: Result[int, ClosedError] = await receiver.receive()
+    assert str(sent) == "Ok(())"
+    assert str(received) == "Ok(7)"
+
+    # Bounded channels apply backpressure until another task drains capacity.
+    bounded: tuple[ChannelSender[int], ChannelReceiver[int]] = bounded_channel(1)
+    bounded_sender, bounded_receiver = bounded
+    async with task.scope() as scope:
+        first_send: Result[None, ClosedError] = await bounded_sender.send(1)
+        drain = scope.spawn(drain_two(bounded_receiver))
+        second_send: Result[None, ClosedError] = await bounded_sender.send(2)
+        drained = await drain
+        assert str(first_send) == "Ok(())"
+        assert str(second_send) == "Ok(())"
+        assert str(drained) == "Ok(2)"
+
+    # Closing a sender rejects later sends but still allows queued values to drain.
+    closing: tuple[ChannelSender[int], ChannelReceiver[int]] = channel()
+    closing_sender, closing_receiver = closing
+    queued: Result[None, ClosedError] = await closing_sender.send(30)
+    closing_sender.close()
+    drained_value: Result[int, ClosedError] = await closing_receiver.receive()
+    rejected: Result[None, ClosedError] = await closing_sender.send(40)
+    assert str(queued) == "Ok(())"
+    assert str(drained_value) == "Ok(30)"
+    assert str(rejected) == "Err(ClosedError)"
+
+    # Cancelling a pending receive leaves later messages available in order.
+    cancel_case: tuple[ChannelSender[int], ChannelReceiver[int]] = channel()
+    cancel_sender, cancel_receiver = cancel_case
+    cancelled: bool = False
+    try:
+        async with task.timeout(0.0):
+            pending: Result[int, ClosedError] = await cancel_receiver.receive()
+    except TimeoutError:
+        cancelled = True
+    cancel_first: Result[None, ClosedError] = await cancel_sender.send(50)
+    cancel_second: Result[None, ClosedError] = await cancel_sender.send(60)
+    cancel_received_first: Result[int, ClosedError] = await cancel_receiver.receive()
+    cancel_received_second: Result[int, ClosedError] = await cancel_receiver.receive()
+    assert cancelled
+    assert str(cancel_first) == "Ok(())"
+    assert str(cancel_second) == "Ok(())"
+    assert str(cancel_received_first) == "Ok(50)"
+    assert str(cancel_received_second) == "Ok(60)"
+
+    return None

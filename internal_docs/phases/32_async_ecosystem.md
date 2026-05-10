@@ -696,6 +696,7 @@ status: in_progress
 - PR [#2001](https://github.com/sifr-lang/sifr/pull/2001) bounded channel backpressure validation slice: `channel_backpressure.sifr` validates bounded channel send/receive coordination across a task boundary.
 - PR [#2003](https://github.com/sifr-lang/sifr/pull/2003) channel pending receive cancellation validation slice: `channel_cancel_pending_receive.sifr` validates that timing out a pending same-task receive leaves the receiver usable and does not poison later channel delivery.
 - PR [#2005](https://github.com/sifr-lang/sifr/pull/2005) channel cancelled receive no-loss validation slice: `channel_cancel_receive_no_loss.sifr` validates that a cancelled pending receive does not consume or reorder later messages.
+- Current slice: add `demos/m32_sync_channel_demo.sifr` to showcase the milestone_async_5 shared-state, guard, semaphore, notify, channel, backpressure, close/drain, and cancellation surfaces together.
 
 ---
 
