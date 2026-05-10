@@ -74,12 +74,14 @@ impl RustEmitter {
     ) -> Vec<(String, RustType)> {
         let mut fields = Vec::new();
         if let Some(parent) = &class.parent_class {
-            let field_name = if module_public {
-                format!("pub {}", parent.to_lowercase())
-            } else {
-                parent.to_lowercase()
-            };
-            fields.push((field_name, RustType::Named(parent.clone())));
+            if parent != "NonSend" {
+                let field_name = if module_public {
+                    format!("pub {}", parent.to_lowercase())
+                } else {
+                    parent.to_lowercase()
+                };
+                fields.push((field_name, RustType::Named(parent.clone())));
+            }
         }
 
         for (field_name, field_ty) in &class.fields {
@@ -350,7 +352,12 @@ impl RustEmitter {
         self.current_class_name = Some(class.name.clone());
         let mut impl_items = Vec::new();
         let has_constructor = class.methods.iter().any(|method| method.name == "new");
-        if !has_constructor && class.parent_class.is_none() {
+        if !has_constructor
+            && class
+                .parent_class
+                .as_deref()
+                .is_none_or(|parent| parent == "NonSend")
+        {
             impl_items.push(self.lower_default_constructor_item(class, module_public));
         }
         for method in &class.methods {

@@ -1609,6 +1609,34 @@ fn test_scope_spawn_consumes_owned_move_argument() {
 }
 
 #[test]
+fn test_scope_spawn_rejects_non_send_field_argument() {
+    let source = "class LocalCell(NonSend):\n    pass\n\nclass Job:\n    cell: LocalCell\n\nasync def worker(own job: Job) -> int:\n    return 1\n\nasync def main() -> Result[None, ScopeFailure]:\n    cell: LocalCell = LocalCell()\n    job: Job = Job(cell)\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(job))\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("scope.spawn() cannot move `job` of type `Job` across a task boundary")
+            && e.message.contains("field `cell` is not sendable")
+            && e.code == Some(DiagnosticCode::OWN_NON_SEND_TASK_CAPTURE)
+    }));
+}
+
+#[test]
+fn test_scope_spawn_rejects_self_with_non_send_field() {
+    let source = "class LocalCell(NonSend):\n    pass\n\nclass Owner:\n    cell: LocalCell\n\nasync def worker(own owner: Owner) -> int:\n    return 1\n\nasync def launch(own self: Owner) -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(self))\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("scope.spawn() cannot move `self` of type `Owner` across a task boundary")
+            && e.message.contains("field `cell` is not sendable")
+            && e.code == Some(DiagnosticCode::OWN_NON_SEND_TASK_CAPTURE)
+    }));
+}
+
+#[test]
 fn test_mutable_borrow_parameter_across_await_rejected() {
     let source = "async def mutate_after_await(mut items: list[int]) -> int:\n    await task.sleep(0.0)\n    items.append(2)\n    return len(items)\n";
     let result = lower_source(source);

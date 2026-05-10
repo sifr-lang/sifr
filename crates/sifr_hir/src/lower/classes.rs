@@ -688,7 +688,10 @@ pub(super) fn collect_class_type(
         }
 
         // Inheritance diagnostic: warn when child has own fields but no __init__ and extends a parent
-        if parent_class_name.is_some() {
+        if parent_class_name
+            .as_deref()
+            .is_some_and(|parent| parent != "NonSend")
+        {
             let parent_field_count = if let Some(ref pname) = parent_class_name {
                 ctx.class_types.get(pname).map_or(0, |ty| {
                     if let Type::Class { fields: pf, .. } = ty {
