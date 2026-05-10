@@ -52,7 +52,7 @@ fn option_value_type(ty: &Type) -> Option<Type> {
     }
 }
 
-fn async_iterator_parts(ty: &Type) -> Option<(Type, Type)> {
+pub(super) fn async_iterator_parts(ty: &Type) -> Option<(Type, Type)> {
     match ty.resolve_alias() {
         Type::AsyncIterator(item_ty, err_ty) | Type::AsyncGenerator(item_ty, err_ty) => {
             Some((item_ty.as_ref().clone(), err_ty.as_ref().clone()))

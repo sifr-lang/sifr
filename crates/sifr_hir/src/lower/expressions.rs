@@ -1,4 +1,5 @@
 use super::async_await::{coroutine_result_type, lower_await};
+use super::async_for::async_iterator_parts;
 use super::builtin_calls::{
     callable_builtin_element_type, lower_bytes_constructor_call, lower_bytes_type_factory_call,
     lower_chr_call, lower_defaultdict_constructor_call, lower_dict_constructor_call,
@@ -514,6 +515,49 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 op: HirIteratorOp::Next,
                 args: vec![iterator],
                 ty: Type::Union(vec![elem_ty, Type::None]),
+            });
+        }
+
+        // anext(async_iterator) -> Awaitable[Result[Option[T], E]]
+        if func_name == "anext" {
+            if !call.arguments.keywords.is_empty() {
+                expression_diagnostics::call_unexpected_keyword(
+                    ctx,
+                    "anext() does not accept keyword arguments".to_string(),
+                    first_call_keyword_range(call),
+                );
+                return None;
+            }
+            if call.arguments.args.len() != 1 {
+                expression_diagnostics::call_wrong_positional_count(
+                    ctx,
+                    format!(
+                        "anext() takes exactly 1 argument, got {}",
+                        call.arguments.args.len()
+                    ),
+                    call_arity_range(call),
+                );
+                return None;
+            }
+            let iterator = lower_expr(&call.arguments.args[0], ctx)?;
+            let Some((item_ty, err_ty)) = async_iterator_parts(iterator.ty()) else {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "anext() argument must be an async iterator, got '{}'",
+                        iterator.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
+                return None;
+            };
+            return Some(HirExpr::Call {
+                func: "anext".to_string(),
+                args: vec![iterator],
+                ty: Type::Awaitable(Box::new(Type::Result(
+                    Box::new(Type::Union(vec![item_ty, Type::None])),
+                    Box::new(err_ty),
+                ))),
             });
         }
 
