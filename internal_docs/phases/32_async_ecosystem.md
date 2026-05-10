@@ -687,7 +687,7 @@ status: in_progress
 - PR [#1983](https://github.com/sifr-lang/sifr/pull/1983) channel send type validation slice: `ChannelSender[T].send(value: T)` rejects mismatched value types, with `channel_send_wrong_type_rejected.sifr` covering the negative path.
 - PR [#1985](https://github.com/sifr-lang/sifr/pull/1985) channel non-send element validation slice: `ChannelSender[T].send(value: T)` rejects non-send values before they enter a channel, with `channel_non_send_element_rejected.sifr` covering the negative path.
 - PR [#1987](https://github.com/sifr-lang/sifr/pull/1987) ShareSafe validation slice: `Shared[T]` rejects mutable values without an explicit synchronization wrapper, with `shared_mut_without_lock_rejected.sifr` covering the negative path.
-- In progress channel factory surface slice: `sync.channel[T]()` and `sync.bounded_channel[T](capacity)` return typed sender/receiver endpoint pairs, with runtime-backed shared queue semantics still deferred to a later channel slice.
+- PR [#1989](https://github.com/sifr-lang/sifr/pull/1989) channel factory surface slice: `sync.channel[T]()` and `sync.bounded_channel[T](capacity)` return typed sender/receiver endpoint pairs, with runtime-backed shared queue semantics still deferred to a later channel slice.
 
 ---
 
