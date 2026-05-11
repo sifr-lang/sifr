@@ -1,0 +1,6 @@
+# expect-error: SIFR-NAME-0004
+from sifr.asyncio import get_event_loop_policy
+
+
+def main() -> None:
+    pass

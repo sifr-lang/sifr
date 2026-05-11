@@ -1,0 +1,6 @@
+# expect-error: SIFR-NAME-0004
+from sifr.asyncio import BaseTransport
+
+
+def main() -> None:
+    pass

@@ -1,0 +1,6 @@
+# expect-error: SIFR-IMPORT-0002
+from sifr.contextvars import ContextVar
+
+
+def main() -> None:
+    pass
