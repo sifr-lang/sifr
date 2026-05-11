@@ -2,6 +2,8 @@
 
 status: completed
 
+Corrective follow-up: the async effect and offload diagnostic seal is tracked in [Ad Hoc Async Effect And Offload Diagnostics](../../issues/ad-hoc-async-effect-and-offload-diagnostics.md). That ad hoc phase tightens the completed model by rejecting fake async functions, fake awaits, direct annotated blocking/CPU-heavy calls in async code, and unclassified blocking offload targets.
+
 ## Objective
 
 Implement the canonical async and concurrency model defined in `internal_docs/async_concurrency_model.md`.
@@ -103,6 +105,7 @@ These are implementation constraints, not suggestions:
 28. `AsyncClosable` is parameterized: `AsyncClosable[E]` with `aclose() -> Result[None, E]`; `AsyncGenerator` implements `AsyncClosable[GeneratorCloseError]`.
 29. Channel endpoint lifetime: dropping last sender closes channel after buffered messages drain; dropping receiver closes immediately to senders; `close()` on any sender closes whole channel; buffered messages remain receivable after close; messages received in FIFO order.
 30. `task.timeout(duration)` context-manager form uses same-task cancellation scoping with internal delimited cancellation; does not introduce a spawn boundary.
+31. Async functions must have a real suspension effect. `async def` with no suspension is rejected unless an explicit reviewed protocol-conformance escape hatch applies. Awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend` is rejected. Direct `@io_bound` or `@cpu_bound` sync calls from async code are errors. `spawn_blocking` and `ThreadPoolExecutor.submit` require explicit workload classification (`@io_bound`, `@cpu_bound`, stdlib-known, or external-contract-known work).
 
 ## Milestones
 
