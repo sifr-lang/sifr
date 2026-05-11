@@ -1014,7 +1014,8 @@ status: in progress
 
 Implementation notes:
 
-- PR [#2078](https://github.com/sifr-lang/sifr/pull/2078) basic `sifr.asyncio` veneer slice: imported `sleep`, `wait_for`, and `gather` now lower through the canonical `task.sleep`, `task.timeout`, and `task.gather` HIR paths, with `lib/sifr/asyncio.sifr` kept as declaration stubs so no second runtime model or event-loop surface is introduced; `asyncio_sleep_subset.sifr`, `asyncio_wait_for_subset.sifr`, and `asyncio_gather_subset.sifr` cover the supported subset while `run`, `create_task`, `TaskGroup`, `timeout`, `Queue`, and unsupported-event-loop diagnostics remain follow-up slices.
+- PR [#2078](https://github.com/sifr-lang/sifr/pull/2078) basic `sifr.asyncio` veneer slice: imported `sleep`, `wait_for`, and `gather` now lower through the canonical `task.sleep`, `task.timeout`, and `task.gather` HIR paths, with `lib/sifr/asyncio.sifr` kept as declaration stubs so no second runtime model or event-loop surface is introduced; `asyncio_sleep_subset.sifr`, `asyncio_wait_for_subset.sifr`, and `asyncio_gather_subset.sifr` cover that initial supported subset while `run`, `create_task`, `TaskGroup`, `timeout`, `Queue`, and unsupported-event-loop diagnostics remained follow-up slices.
+- PR [#2080](https://github.com/sifr-lang/sifr/pull/2080) `sifr.asyncio` context-manager veneer slice: imported `timeout` and `TaskGroup` now lower through the canonical `task.timeout(duration)` and `task.TaskGroup()` async-with paths, with no second runtime behavior; `asyncio_timeout_subset.sifr` and `asyncio_task_group_subset.sifr` cover the supported context-manager subset while `run`, `create_task`, `Queue`, `Future`, and unsupported-event-loop diagnostics remain follow-up slices.
 
 **Goal:** Expose limited compatibility surfaces only after the canonical model is proven.
 
@@ -1069,6 +1070,7 @@ Implementation notes:
 
 - `asyncio_sleep_subset.sifr`
 - `asyncio_gather_subset.sifr`
+- `asyncio_timeout_subset.sifr`
 - `asyncio_run_subset.sifr`
 - `asyncio_create_task_subset.sifr`
 - `asyncio_task_group_subset.sifr`
