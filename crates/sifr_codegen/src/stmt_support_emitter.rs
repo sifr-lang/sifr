@@ -32,6 +32,61 @@ fn select_try_error_type(handlers: &[HirExceptHandler]) -> String {
         .unwrap_or_else(|| "Error".to_string())
 }
 
+fn first_try_error_type_in_stmts(stmts: &[HirStmt]) -> Option<String> {
+    for stmt in stmts {
+        if let Some(error_type) = first_try_error_type_in_stmt(stmt) {
+            return Some(error_type);
+        }
+    }
+    None
+}
+
+fn first_try_error_type_in_stmt(stmt: &HirStmt) -> Option<String> {
+    match stmt {
+        HirStmt::TryExcept {
+            body,
+            handlers,
+            body_error_types,
+        } => body_error_types.first().cloned().or_else(|| {
+            first_try_error_type_in_stmts(body).or_else(|| {
+                handlers
+                    .iter()
+                    .find_map(|handler| first_try_error_type_in_stmts(&handler.body))
+            })
+        }),
+        HirStmt::TryFinally { body, finalbody } => {
+            first_try_error_type_in_stmts(body).or_else(|| first_try_error_type_in_stmts(finalbody))
+        }
+        HirStmt::If {
+            then_body,
+            elif_clauses,
+            else_body,
+            ..
+        } => first_try_error_type_in_stmts(then_body)
+            .or_else(|| {
+                elif_clauses
+                    .iter()
+                    .find_map(|(_, body)| first_try_error_type_in_stmts(body))
+            })
+            .or_else(|| else_body.as_deref().and_then(first_try_error_type_in_stmts)),
+        HirStmt::While {
+            body, else_body, ..
+        }
+        | HirStmt::For {
+            body, else_body, ..
+        } => first_try_error_type_in_stmts(body)
+            .or_else(|| else_body.as_deref().and_then(first_try_error_type_in_stmts)),
+        HirStmt::With { body, .. }
+        | HirStmt::AsyncWith { body, .. }
+        | HirStmt::AsyncFor { body, .. } => first_try_error_type_in_stmts(body),
+        HirStmt::NestedFunction { func } => first_try_error_type_in_stmts(&func.body),
+        HirStmt::Match { arms, .. } => arms
+            .iter()
+            .find_map(|arm| first_try_error_type_in_stmts(&arm.body)),
+        _ => None,
+    }
+}
+
 fn can_construct_error_from_message_for_ir(ty_name: &str) -> bool {
     matches!(
         ty_name,
@@ -6179,8 +6234,13 @@ impl RustEmitter {
                 let lowered_value = if let Some(clone_expr) = lowered_value {
                     clone_expr
                 } else {
-                    let Some(lowered) = self.lower_rendered_expr_for_ir(value)? else {
-                        return Ok(None);
+                    let lowered = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                        lowered
+                    } else {
+                        let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
+                            return Ok(None);
+                        };
+                        lowered
                     };
                     self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
                 };
@@ -6213,8 +6273,13 @@ impl RustEmitter {
                     true,
                 )
             } else if let HirStmt::Assign { name, value } = stmt {
-                let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
-                    return Ok(None);
+                let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                    lowered
+                } else {
+                    let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
+                        return Ok(None);
+                    };
+                    lowered
                 };
                 let lowered_value = if let Some(target_ty) =
                     self.local_binding_types.get(name).cloned()
@@ -6534,9 +6599,17 @@ impl RustEmitter {
                     true,
                 )
             } else if let HirStmt::Expr { expr } = stmt {
-                let Some(lowered_expr) = self.lower_rendered_expr_for_ir(expr)? else {
-                    return Ok(None);
-                };
+                let lowered_expr =
+                    if let Some(lowered) = self.try_lower_stmt_expr_statement_only(expr)? {
+                        lowered
+                    } else if let Some(lowered) = self.lower_rendered_expr_for_ir(expr)? {
+                        lowered
+                    } else {
+                        let Some(lowered) = self.lower_stmt_expr_for_ir(expr)? else {
+                            return Ok(None);
+                        };
+                        lowered
+                    };
                 (vec![RustStmt::Expr(lowered_expr)], true)
             } else if let HirStmt::Return { value } = stmt {
                 let return_ty_snapshot = self.current_return_type.clone();
@@ -9376,12 +9449,40 @@ impl RustEmitter {
             .unwrap_or_else(|| "Error".to_string())
     }
 
-    fn try_lower_try_finally_stmt_for_ir(
+    fn try_finally_error_type_name_for_ir(
+        &self,
+        body: &[HirStmt],
+        finalbody: &[HirStmt],
+    ) -> String {
+        self.try_closure_error_type
+            .last()
+            .cloned()
+            .or_else(|| {
+                let Type::Result(_, err_ty) = self.current_return_type.as_ref()? else {
+                    return None;
+                };
+                Some(crate::render_type(&crate::sifr_type_to_rust_type(err_ty)))
+            })
+            .or_else(|| {
+                first_try_error_type_in_stmts(body)
+                    .or_else(|| first_try_error_type_in_stmts(finalbody))
+            })
+            .unwrap_or_else(|| "Error".to_string())
+    }
+
+    pub(crate) fn try_lower_try_finally_stmt_for_ir(
         &mut self,
         body: &[HirStmt],
         finalbody: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
-        let err_ty = self.current_result_error_type_name_for_ir();
+        let err_ty = self.try_finally_error_type_name_for_ir(body, finalbody);
+        let can_return_error = self.try_closure_depth > 0
+            || self.current_return_type.as_ref().is_some_and(|return_ty| {
+                matches!(
+                    crate::resolve_alias_type_for_plain_call(return_ty),
+                    Type::Result(_, _)
+                )
+            });
         let capture_returns =
             queries::body_contains_return(body) && self.current_return_type.is_some();
         let direct_return_capture =
@@ -9498,14 +9599,23 @@ impl RustEmitter {
                 pattern: "Err(__sifr_finally_err)".to_string(),
                 bindings: vec!["__sifr_finally_err".to_string()],
                 guard: None,
-                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Ident("Err".to_string())),
-                    args: vec![RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
-                        method: "into".to_string(),
+                body: if can_return_error {
+                    vec![RustStmt::Return(Some(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Ident("Err".to_string())),
+                        args: vec![RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
+                            method: "into".to_string(),
+                            args: vec![],
+                        }],
+                    }))]
+                } else {
+                    vec![RustStmt::Expr(RustExpr::FormatMacro {
+                        name: "unreachable".to_string(),
+                        format_str: "sifr try/finally error propagation in non-Result function"
+                            .to_string(),
                         args: vec![],
-                    }],
-                }))],
+                    })]
+                },
             });
             lowered.push(RustStmt::Match {
                 expr: RustExpr::Ident("__sifr_try_finally_res".to_string()),
@@ -9515,14 +9625,23 @@ impl RustEmitter {
             lowered.push(RustStmt::IfLet {
                 pattern: "Err(__sifr_finally_err)".to_string(),
                 expr: RustExpr::Ident("__sifr_try_finally_res".to_string()),
-                then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Ident("Err".to_string())),
-                    args: vec![RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
-                        method: "into".to_string(),
+                then_body: if can_return_error {
+                    vec![RustStmt::Return(Some(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Ident("Err".to_string())),
+                        args: vec![RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
+                            method: "into".to_string(),
+                            args: vec![],
+                        }],
+                    }))]
+                } else {
+                    vec![RustStmt::Expr(RustExpr::FormatMacro {
+                        name: "unreachable".to_string(),
+                        format_str: "sifr try/finally error propagation in non-Result function"
+                            .to_string(),
                         args: vec![],
-                    }],
-                }))],
+                    })]
+                },
                 else_body: None,
             });
         }

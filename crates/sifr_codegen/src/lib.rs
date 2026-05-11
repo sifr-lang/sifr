@@ -2590,6 +2590,18 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
+        if let HirStmt::TryFinally { body, finalbody } = stmt {
+            let Some(lowered_stmts) = self.try_lower_try_finally_stmt_for_ir(body, finalbody)?
+            else {
+                return Ok(false);
+            };
+            for lowered_stmt in lowered_stmts {
+                self.push_captured_stmt(&lowered_stmt);
+            }
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
         if self.try_lower_structured_assert_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;

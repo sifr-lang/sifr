@@ -4252,6 +4252,40 @@ fn test_try_finally_runs_cleanup_before_timeout_propagates() {
 }
 
 #[test]
+fn test_try_finally_cleanup_try_except_lowers_question_mark_calls() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                r#"def fallible() -> Result[str, Error]:
+    return "ok"
+
+def main() -> Result[None, Error]:
+    try:
+        body_out: str = fallible()
+    except Error as e:
+        body_out = str(e.message)
+    finally:
+        try:
+            cleanup_out: str = fallible()
+        except Error as e:
+            cleanup_out = str(e.message)
+    return None
+"#,
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    assert!(!result.rust_source.contains("compile_error!"));
+    assert!(result.rust_source.contains("let __sifr_try_finally_res"));
+    assert!(result.rust_source.contains("let __sifr_try_res"));
+    assert!(result.rust_source.contains("fallible()?"));
+}
+
+#[test]
 fn test_async_generated_errors_convert_to_error_return_type() {
     let result = generate_rust_with_metadata(
         &lower_module(
