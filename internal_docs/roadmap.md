@@ -60,7 +60,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 
 | # | Phase | Status | Phase File | Unlocks |
 |---|---|---|---|---|
-| 32 | Async and Ecosystem Foundation | in_progress | [32_async_ecosystem.md](./phases/32_async_ecosystem.md) | Async runtime and ecosystem primitives; milestone_async_6 blocking/thread offload is complete with workload annotations, explicit `BlockingTask` offload, `ThreadPoolExecutor`, `sifr.threading`, cancellation validation, and `demos/m32_blocking_offload_demo.sifr` |
+| 32 | Async and Ecosystem Foundation | completed | [32_async_ecosystem.md](./phases/32_async_ecosystem.md) | Async runtime and ecosystem primitives completed on 2026-05-11: typed async/await, structured task scopes, cancellation/timeout semantics, synchronization/channels, explicit blocking offload, async context/iteration/generator/comprehension support, and limited runtime-neutral compatibility veneers are implemented with deferred APIs documented by negative fixtures. |
 | 33 | Preview Distribution and Release Automation (`alpha`/`beta`) | planned | [33_preview_distribution_and_release_automation.md](./phases/33_preview_distribution_and_release_automation.md) | Early adopter channels and release automation |
 | 34 | Generated Code Quality and Production Readiness | planned | [34_generated_code_quality_and_production_readiness.md](./phases/34_generated_code_quality_and_production_readiness.md) | Deterministic, lint-clean, production-safe generated Rust |
 | 35 | Performance Benchmarking and Shared Analysis Query Architecture | planned | [35_performance_benchmarking_and_budgets.md](./phases/35_performance_benchmarking_and_budgets.md) | Performance budgets plus a canonical reusable analysis/query foundation |

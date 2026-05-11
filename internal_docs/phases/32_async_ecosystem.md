@@ -1,6 +1,6 @@
 # Phase 32: Async and Concurrency Model
 
-status: in_progress
+status: completed
 
 ## Objective
 
@@ -781,7 +781,7 @@ status: completed
 
 ### milestone_async_7a: Async Context Managers, Async Iteration, and Resource Cleanup
 
-status: proposed
+status: completed
 
 Implementation notes:
 
@@ -904,7 +904,7 @@ Implementation notes:
 
 ### milestone_async_7b: Async Generators and Async Comprehensions
 
-status: in progress
+status: completed
 
 **Goal:** Make user-defined async streams and async collection-building part of the first async model.
 
@@ -1010,7 +1010,7 @@ status: in progress
 
 ### milestone_async_8: Compatibility Veneers and Phase Closure
 
-status: in progress
+status: completed
 
 Implementation notes:
 
@@ -1021,6 +1021,7 @@ Implementation notes:
 - PR [#2086](https://github.com/sifr-lang/sifr/pull/2086) `sifr.asyncio.run` veneer slice: imported `run(coro)` now lowers to a coroutine await while treating sync `main()` as the canonical async entrypoint bootstrap, so compatibility code does not construct a public event loop or nested runtime; `asyncio_run_subset.sifr` covers the supported subset, and `asyncio_run_requires_coroutine.sifr` records the coroutine-only diagnostic while `Future` and unsupported-event-loop diagnostics remain follow-up slices.
 - PR [#2088](https://github.com/sifr-lang/sifr/pull/2088) `sifr.concurrent.Future` veneer slice: `Future[T, E]` is now importable as a compatibility annotation name that resolves to the canonical affine `BlockingTask[T, E]` handle returned by `ThreadPoolExecutor.submit`, preserving existing `join()`/await observation semantics and avoiding a second future runtime; `concurrent_future_subset.sifr` covers the supported annotation path, and `concurrent_future_result_type_rejected.sifr` records result-type mismatch rejection while unsupported-event-loop diagnostics remain follow-up slices.
 - PR [#2090](https://github.com/sifr-lang/sifr/pull/2090) deferred compatibility diagnostics slice: raw event-loop policy imports, transport/protocol callback APIs, public selectors, contextvars, and `ProcessPoolExecutor` now fail with explicit structured deferred-surface diagnostics instead of generic missing-module/member messages; `asyncio_loop_policy_not_supported.sifr`, `asyncio_transport_protocol_not_supported.sifr`, `selectors_public_api_deferred.sifr`, `contextvars_deferred.sifr`, and `process_pool_not_available.sifr` cover the unsupported compatibility surface.
+- Phase closure slice: all Phase 32 milestones are marked completed after the compatibility veneer, deferred-surface diagnostics, local validation, and final implementation review gates.
 
 **Goal:** Expose limited compatibility surfaces only after the canonical model is proven.
 
