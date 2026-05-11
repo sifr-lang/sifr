@@ -206,12 +206,11 @@ pub(super) struct LowerCtx {
     /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
     allow_intrinsic_imports: bool,
     /// Set of parameter names that are immutably borrowed (&T) in the current function.
-    /// Used for escape analysis: returning or storing a borrowed param is a compile error.
     borrowed_params: std::collections::HashSet<String>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
     class_declared_type_params: HashMap<String, Vec<String>>,
-    /// External definitions available to compatibility shims.
     externals: ExternalDefs,
+    asyncio_compat_imports: HashMap<String, String>,
     synthetic_imports: Vec<HirImport>,
     synthetic_import_aliases: HashMap<String, String>,
     sequence_guards: Vec<SequenceGuard>,
@@ -267,6 +266,7 @@ impl LowerCtx {
             borrowed_params: std::collections::HashSet::new(),
             class_declared_type_params: HashMap::new(),
             externals: ExternalDefs::default(),
+            asyncio_compat_imports: HashMap::new(),
             synthetic_imports: Vec::new(),
             synthetic_import_aliases: HashMap::new(),
             sequence_guards: Vec::new(),
