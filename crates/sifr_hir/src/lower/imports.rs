@@ -43,6 +43,17 @@ pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ct
 
             // Only resolve from externals (stdlib and local modules)
             let module_key = module_name.clone();
+            if module_key == "sifr.asyncio" {
+                for name in &names {
+                    match name.as_str() {
+                        "sleep" | "wait_for" | "gather" => {
+                            ctx.asyncio_compat_imports
+                                .insert(local_name_for(name), name.clone());
+                        }
+                        _ => {}
+                    }
+                }
+            }
             if let Some(module_classes) = externals.classes.get(&module_key) {
                 for name in &names {
                     let local = local_name_for(name);

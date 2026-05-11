@@ -61,7 +61,7 @@ use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_true_sequence_guards,
 };
 use super::subscript_type::resolve_subscript_result_type;
-use super::task_calls::{lower_task_module_call, TaskCallLowering};
+use super::task_calls::{lower_asyncio_compat_call, lower_task_module_call, TaskCallLowering};
 use super::task_handle_calls::{is_task_handle_type, lower_task_handle_method_call};
 use super::task_scope_calls as tsc;
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
@@ -366,6 +366,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         );
         return None;
     };
+    match lower_asyncio_compat_call(&func_name, call, ctx) {
+        TaskCallLowering::Lowered(expr) => return Some(expr),
+        TaskCallLowering::Rejected => return None,
+        TaskCallLowering::NoMatch => {}
+    }
     // Handle `cls(...)` in @classmethod as constructor call for the current class
     if func_name == "cls" {
         if let Some(ref class_name) = ctx.current_class {

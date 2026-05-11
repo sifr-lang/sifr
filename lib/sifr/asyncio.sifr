@@ -1,0 +1,12 @@
+# sifr.asyncio — compatibility veneer over the canonical task model
+
+def sleep(delay: float) -> None:
+    return None
+
+
+def wait_for(handle: Any, delay: float) -> None:
+    return None
+
+
+def gather(handles: Any) -> None:
+    return None

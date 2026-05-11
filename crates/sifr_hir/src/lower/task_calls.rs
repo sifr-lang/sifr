@@ -15,6 +15,22 @@ pub(super) enum TaskCallLowering {
     NoMatch,
 }
 
+pub(super) fn lower_asyncio_compat_call(
+    func_name: &str,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> TaskCallLowering {
+    let Some(member_name) = ctx.asyncio_compat_imports.get(func_name).cloned() else {
+        return TaskCallLowering::NoMatch;
+    };
+    match member_name.as_str() {
+        "sleep" => lower_task_sleep_call(call, ctx),
+        "wait_for" => lower_task_timeout_call(call, ctx),
+        "gather" => lower_task_gather_call(call, ctx),
+        _ => TaskCallLowering::NoMatch,
+    }
+}
+
 pub(super) fn lower_task_module_call(
     attr: &ExprAttribute,
     call: &ExprCall,
