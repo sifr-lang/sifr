@@ -300,7 +300,7 @@ status: completed
 
 **Demo:**
 
-- `demos/m32_async_syntax_demo.sifr`
+- `demos/async_syntax_demo/main.sifr`
 
 ---
 
@@ -377,7 +377,7 @@ status: completed
 
 **Demo:**
 
-- `demos/m32_task_core_demo.sifr`
+- `demos/task_core_demo/main.sifr`
 
 **Implementation progress (2026-05-09):**
 
@@ -405,7 +405,7 @@ status: completed
 - Added same-tick timeout validation coverage with `task_timeout_completion_wins_tie.sifr`; the generated timeout race uses biased completion-first selection.
 - In progress timeout context-manager slice: `async with task.timeout(duration)` now wraps awaited operations in a same-task timeout check and exits through `TimeoutError` when the enclosing async function can propagate it.
 - Added validation coverage for `task_timeout_context_manager.sifr` and `task_timeout_context_manager_return_type_rejected.sifr`.
-- Completed milestone closure slice: added `scope_spawn_join.sifr`, `runtime_leak_rejected.sifr`, and `demos/m32_task_core_demo.sifr`.
+- Completed milestone closure slice: added `scope_spawn_join.sifr`, `runtime_leak_rejected.sifr`, and `demos/task_core_demo/main.sifr`.
 - Merged PRs: #1909 async main Tokio bootstrap, #1910 task sleep, #1911 async main Result bootstrap, #1912 task scope container, #1913 conservative scope spawn, #1914 task handle join, #1915 direct task await, #1916 affine task handle observation, #1917 task cancellation, #1918 task timeout handle, #1919 same-tick timeout validation, #1920 timeout context-manager awaits.
 
 ---
@@ -497,7 +497,7 @@ status: completed
 
 **Demo:**
 
-- `demos/m32_structured_concurrency_demo.sifr`
+- `demos/structured_concurrency_demo/main.sifr`
 
 **Implementation progress:**
 
@@ -516,7 +516,7 @@ status: completed
 - In progress scope-failure exit slice: task scopes now track whether child handles were observed, return `ScopeFailure` for unobserved child failure or cancellation at scope exit, and require enclosing async functions that spawn children to return `Result[..., ScopeFailure]` or `Result[..., Error]`.
 - In progress unobserved scope-failure runtime validation slice: added runtime-failure coverage for unobserved fallible children in both `task.scope()` and `task.TaskGroup()` surfacing `ScopeFailure` at scope exit.
 - In progress TaskGroup fail-fast exit slice: `task.TaskGroup()` now constructs a fail-fast private scope runtime that cancels remaining children when a group child failure is observed during scope exit, with marker-file validation for sibling cancellation.
-- In progress structured-concurrency validation/demo slice: added milestone negative coverage for consumed cancelled task handles and TaskGroup scope-failure error typing, plus `demos/m32_structured_concurrency_demo.sifr`.
+- In progress structured-concurrency validation/demo slice: added milestone negative coverage for consumed cancelled task handles and TaskGroup scope-failure error typing, plus `demos/structured_concurrency_demo/main.sifr`.
 - In progress gather fail-fast cancellation slice: `task.gather([...])` now observes all input handles, preserves ordered success values, and cancels unfinished siblings after the first failure-like child result.
 - In progress cancellation group-sibling validation slice: added `cancellation_group_sibling.sifr` as direct milestone coverage for TaskGroup sibling cancellation through the cancellation validation naming.
 - PR [#1940](https://github.com/sifr-lang/sifr/pull/1940) scope early-exit guard slice: task scopes that spawn children now reject `return`, `raise`, and `yield` inside the scope until abnormal-exit cleanup lowering can guarantee `__sifr_join_all()` runs on every exit path; local loop `break`/`continue` remain allowed because they do not exit the scope.
@@ -583,7 +583,7 @@ status: completed
 
 **Demo:**
 
-- `demos/m32_ownership_concurrency_demo.sifr`
+- `demos/ownership_concurrency_demo/main.sifr`
 
 **Implementation progress:**
 
@@ -592,7 +592,7 @@ status: completed
 - PR [#1961](https://github.com/sifr-lang/sifr/pull/1961) borrow-across-await validation slice: async functions reject live mutable-borrow parameters at await points, while completed same-task mutable borrows can be followed by ordinary awaits.
 - PR [#1963](https://github.com/sifr-lang/sifr/pull/1963) scoped-borrow spawn validation slice: the deferred v1 scoped-borrow model is covered by an explicit fail fixture that rejects borrowed parameters crossing `scope.spawn`.
 - PR [#1965](https://github.com/sifr-lang/sifr/pull/1965) non-send task-boundary slice: `scope.spawn` derives structural sendability for direct coroutine arguments and rejects classes containing the zero-runtime `NonSend` marker with `SIFR-OWN-0010`.
-- PR [#1969](https://github.com/sifr-lang/sifr/pull/1969) ownership/concurrency closure slice: the remaining milestone positive fixtures are in the quick lane and `demos/m32_ownership_concurrency_demo.sifr` exercises owned spawn inputs, immutable shared task inputs, and completed same-task mutable borrows before await.
+- PR [#1969](https://github.com/sifr-lang/sifr/pull/1969) ownership/concurrency closure slice: the remaining milestone positive fixtures are in the quick lane and `demos/ownership_concurrency_demo/main.sifr` exercises owned spawn inputs, immutable shared task inputs, and completed same-task mutable borrows before await.
 ---
 
 ### milestone_async_5: Synchronization Primitives and Channels
@@ -679,7 +679,7 @@ status: completed
 
 **Demo:**
 
-- `demos/m32_sync_channel_demo.sifr`
+- `demos/sync_channel_demo/main.sifr`
 
 **Implementation progress:**
 
@@ -702,7 +702,7 @@ status: completed
 - PR [#2001](https://github.com/sifr-lang/sifr/pull/2001) bounded channel backpressure validation slice: `channel_backpressure.sifr` validates bounded channel send/receive coordination across a task boundary.
 - PR [#2003](https://github.com/sifr-lang/sifr/pull/2003) channel pending receive cancellation validation slice: `channel_cancel_pending_receive.sifr` validates that timing out a pending same-task receive leaves the receiver usable and does not poison later channel delivery.
 - PR [#2005](https://github.com/sifr-lang/sifr/pull/2005) channel cancelled receive no-loss validation slice: `channel_cancel_receive_no_loss.sifr` validates that a cancelled pending receive does not consume or reorder later messages.
-- PR [#2007](https://github.com/sifr-lang/sifr/pull/2007) milestone_async_5 sync/channel demo slice: `demos/m32_sync_channel_demo.sifr` showcases shared-state, guard, semaphore, notify, channel, backpressure, close/drain, and cancellation surfaces together.
+- PR [#2007](https://github.com/sifr-lang/sifr/pull/2007) milestone_async_5 sync/channel demo slice: `demos/sync_channel_demo/main.sifr` showcases shared-state, guard, semaphore, notify, channel, backpressure, close/drain, and cancellation surfaces together.
 - PR [#2009](https://github.com/sifr-lang/sifr/pull/2009) milestone_async_5 closure slice: marked the synchronization/channel milestone completed after validating its listed positive fixtures, negative fixtures, channel semantics, guard diagnostics, and demo.
 
 ---
@@ -766,7 +766,7 @@ status: completed
 
 **Demo:**
 
-- `demos/m32_blocking_offload_demo.sifr`
+- `demos/blocking_offload_demo/main.sifr`
 
 **Implementation progress:**
 
@@ -775,7 +775,7 @@ status: completed
 - [#2019](https://github.com/sifr-lang/sifr/pull/2019): Added `sifr.concurrent.ThreadPoolExecutor` as a thin compatibility offload surface backed by the `BlockingTask[T, E]` substrate, including submit lowering, non-send return validation, and quick-lane fixture coverage.
 - [#2021](https://github.com/sifr-lang/sifr/pull/2021): Added the `sifr.threading` compatibility coordination surface for `Thread`, `Lock`, `Event`, and `Condition` without introducing a second offload runtime.
 - [#2023](https://github.com/sifr-lang/sifr/pull/2023): Added explicit `BlockingTask` join/cancel/cancel-and-join validation for `task.spawn_blocking` and `ThreadPoolExecutor.submit`.
-- [#2025](https://github.com/sifr-lang/sifr/pull/2025): Added `demos/m32_blocking_offload_demo.sifr` to showcase annotated workloads, explicit blocking offload, blocking-task cancellation, and threading compatibility surfaces.
+- [#2025](https://github.com/sifr-lang/sifr/pull/2025): Added `demos/blocking_offload_demo/main.sifr` to showcase annotated workloads, explicit blocking offload, blocking-task cancellation, and threading compatibility surfaces.
 
 ---
 
@@ -805,7 +805,7 @@ Implementation notes:
 - PR [#2062](https://github.com/sifr-lang/sifr/pull/2062) async list-comprehension lowering slice: single-clause async list comprehensions over `AsyncIterator`/`AsyncGenerator` now lower to an `anext().await` loop with compatible error propagation and `None` exhaustion, while nested async comprehensions, awaited filters, and async set/dict comprehensions remain deferred.
 - PR [#2064](https://github.com/sifr-lang/sifr/pull/2064) async set/dict comprehension lowering slice: single-clause async set and dict comprehensions over `AsyncIterator`/`AsyncGenerator` now share the async comprehension `anext().await` lowering with compatible error propagation and exhaustion handling; nested async comprehensions and awaited filters remain deferred.
 - PR [#2066](https://github.com/sifr-lang/sifr/pull/2066) async-generator task-boundary validation slice: `async_generator_send_boundary.sifr` proves `AsyncGenerator[int, GeneratorCloseError]` can move into a spawned worker when its element/error state is sendable, while `async_generator_non_send_boundary_rejected.sifr` rejects a generator yielding a `NonSend` type at `scope.spawn`.
-- PR [#2068](https://github.com/sifr-lang/sifr/pull/2068) async-generator/comprehension demo slice: `demos/m32_async_generator_comprehension_demo.sifr` now demonstrates supported async-generator consumption through `async for`, `anext()`, `aclose()`, and single-clause async list/set/dict comprehensions without claiming deferred state-machine, cancellation-cleanup, reentrant, `send()`, `throw()`, or `yield from` behavior.
+- PR [#2068](https://github.com/sifr-lang/sifr/pull/2068) async-generator/comprehension demo slice: `demos/async_generator_comprehension_demo/main.sifr` now demonstrates supported async-generator consumption through `async for`, `anext()`, `aclose()`, and single-clause async list/set/dict comprehensions without claiming deferred state-machine, cancellation-cleanup, reentrant, `send()`, `throw()`, or `yield from` behavior.
 - PR [#2070](https://github.com/sifr-lang/sifr/pull/2070) async-generator reentrant advance validation slice: pending same-task `anext(agen)` advances are now tracked in HIR and a second pending advance on the same async-generator binding is rejected with `SIFR-OWN-0002`; `async_generator_reentrant_anext_rejected.sifr` covers the fail-closed boundary while full runtime `GeneratorBusyError` state-machine behavior remains deferred.
 - PR [#2072](https://github.com/sifr-lang/sifr/pull/2072) async-generator borrowed-yield positive validation slice: `async_generator_borrow_yield.sifr` now proves immutable borrowed move-type parameters can be read across supported async-generator yield points and consumed through `anext()`, with the caller's list still usable after exhaustion; lazy state-machine lowering and cancellation cleanup remain deferred.
 - PR [#2074](https://github.com/sifr-lang/sifr/pull/2074) async-generator lazy-start slice: generated async-generator functions now return a one-shot materialization factory through `AsyncGenerator::new_lazy`, so body side effects begin on first `anext()` consumption rather than function call; `async_generator_lazy_start.sifr` covers the supported materialized backend while per-yield state-machine suspension and cancellation cleanup remain deferred.
@@ -898,7 +898,7 @@ Implementation notes:
 
 **Demo:**
 
-- `demos/m32_async_resource_demo.sifr`
+- `demos/async_resource_demo/main.sifr`
 
 ---
 
@@ -1004,7 +1004,7 @@ status: completed
 
 **Demo:**
 
-- `demos/m32_async_generator_comprehension_demo.sifr`
+- `demos/async_generator_comprehension_demo/main.sifr`
 
 ---
 
@@ -1097,7 +1097,7 @@ Implementation notes:
 
 **Demo:**
 
-- `demos/m32_async_concurrency_model_demo.sifr`
+- `demos/async_concurrency_model_demo/main.sifr`
 
 ## Milestone Ordering
 
