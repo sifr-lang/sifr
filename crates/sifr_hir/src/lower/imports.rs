@@ -1,8 +1,55 @@
+use ruff_text_size::TextRange;
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, Type};
 
 use super::imported_defaults::import_callable_vararg;
-use super::{ExternalDefs, LowerCtx};
+use super::{import_diagnostics, name_diagnostics, ExternalDefs, LowerCtx};
+
+pub(super) fn report_missing_stdlib_member(
+    ctx: &mut LowerCtx,
+    module: &str,
+    member: &str,
+    range: TextRange,
+) {
+    if let Some(reason) = deferred_member_reason(module, member) {
+        name_diagnostics::deferred_compat_member(ctx, module, member, reason, range);
+    } else {
+        name_diagnostics::missing_member(ctx, module, member, range);
+    }
+}
+
+pub(super) fn report_unknown_stdlib_module(ctx: &mut LowerCtx, module: &str, range: TextRange) {
+    if let Some(reason) = deferred_module_reason(module) {
+        import_diagnostics::deferred_compat_module(ctx, module, reason, range);
+    } else {
+        import_diagnostics::unknown_import_target(ctx, module, range);
+    }
+}
+
+fn deferred_module_reason(module: &str) -> Option<&'static str> {
+    match module {
+        "sifr.selectors" => {
+            Some("public selectors APIs are deferred; compose tasks and channels instead")
+        }
+        "sifr.contextvars" => Some("context-local state is deferred; pass task state explicitly"),
+        _ => None,
+    }
+}
+
+fn deferred_member_reason(module: &str, member: &str) -> Option<&'static str> {
+    match (module, member) {
+        ("sifr.asyncio", "get_event_loop_policy" | "set_event_loop_policy") => {
+            Some("event loop policies are deferred; Sifr exposes structured task scopes instead")
+        }
+        ("sifr.asyncio", "BaseTransport" | "BaseProtocol" | "Protocol") => Some(
+            "transport/protocol callback APIs are deferred; compose async tasks and channels instead",
+        ),
+        ("sifr.concurrent", "ProcessPoolExecutor") => {
+            Some("process pools are blocked on the Phase 40 typed IPC and serialization contract")
+        }
+        _ => None,
+    }
+}
 
 pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut LowerCtx) {
     for stmt in stmts {

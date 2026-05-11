@@ -973,7 +973,7 @@ fn lower_module_impl(
                             }
                         }
                         if !found {
-                            name_diagnostics::missing_member(
+                            imports::report_missing_stdlib_member(
                                 &mut ctx,
                                 &module_name,
                                 name,
@@ -988,8 +988,7 @@ fn lower_module_impl(
                     });
                     continue;
                 }
-                // Module doesn't exist in stdlib — emit clear error at the import site
-                import_diagnostics::unknown_import_target(&mut ctx, &module_name, import_range);
+                imports::report_unknown_stdlib_module(&mut ctx, &module_name, import_range);
                 continue;
             }
 

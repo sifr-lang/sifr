@@ -1,0 +1,6 @@
+# expect-error: SIFR-IMPORT-0002
+from sifr.selectors import DefaultSelector
+
+
+def main() -> None:
+    pass

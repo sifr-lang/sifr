@@ -19,6 +19,19 @@ pub(super) fn unknown_import_target(ctx: &mut LowerCtx, module: &str, range: Tex
     );
 }
 
+pub(super) fn deferred_compat_module(
+    ctx: &mut LowerCtx,
+    module: &str,
+    reason: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
+        format!("module '{module}' is intentionally deferred: {reason}"),
+        range,
+    );
+}
+
 pub(super) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::IMPORT_UNSUPPORTED_FORM,
