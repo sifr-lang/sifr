@@ -1,5 +1,8 @@
 use super::assignment_widening::reconcile_optional_reassignment;
 use super::async_for::lower_async_for;
+use super::async_generator_advances::{
+    finish_async_generator_advance_for_expr, record_async_generator_advance_binding,
+};
 use super::async_with::lower_async_with;
 use super::aug_assign_lowering::lower_aug_assign as lower_aug_assign_impl;
 use super::binding_mutability::ensure_mutable_parameter_binding;
@@ -248,6 +251,7 @@ pub(super) fn lower_stmt(
                     expr_stmt.value.range(),
                 );
             }
+            finish_async_generator_advance_for_expr(ctx, &expr);
             Some(HirStmt::Expr { expr })
         }
         Stmt::If(if_stmt) => lower_if(if_stmt, func_type, ctx),
@@ -1184,6 +1188,7 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
     let initializer = ann.value.as_ref()?;
     record_len_alias_fact(ctx, &name, initializer);
     record_sequence_pointer_fact(ctx, &name, initializer);
+    record_async_generator_advance_binding(ctx, &name, &value);
     Some(HirStmt::Let {
         name,
         ty: declared_type,
@@ -1529,6 +1534,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     if name == "_" {
         let value = lower_expr(&assign.value, ctx)?;
         let value_ty = value.ty().clone();
+        finish_async_generator_advance_for_expr(ctx, &value);
         return Some(HirStmt::Let {
             name: "_".to_string(),
             ty: value_ty,
@@ -1600,6 +1606,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         // Reset moved state on reassignment
         ctx.scope.reset_moved(&name);
         ctx.task_handle_group_owners.remove(&name);
+        record_async_generator_advance_binding(ctx, &name, &value);
         invalidate_rebound_binding_facts(ctx, &name);
         if ctx.numeric_sentinel_fact(&name).is_some() {
             if let Some(domain) = numeric_domain_for_type(&value_ty) {
@@ -1627,6 +1634,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             .cloned()
             .unwrap_or_else(|| value_ty.clone());
         ctx.scope.define(name.clone(), binding_ty.clone());
+        record_async_generator_advance_binding(ctx, &name, &value);
         if let Some(group_name) = task_group_spawn_owner(&value) {
             ctx.task_handle_group_owners
                 .insert(name.clone(), group_name);

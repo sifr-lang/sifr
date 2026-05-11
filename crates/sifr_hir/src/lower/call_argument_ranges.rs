@@ -45,3 +45,18 @@ pub(super) fn type_param_argument_range(
     }
     None
 }
+
+pub(super) fn first_call_keyword_range(call: &ExprCall) -> TextRange {
+    call.arguments
+        .keywords
+        .first()
+        .map_or_else(|| call.range(), Ranged::range)
+}
+
+pub(super) fn call_arity_range(call: &ExprCall) -> TextRange {
+    if call.arguments.args.is_empty() {
+        call.range()
+    } else {
+        call.arguments.range()
+    }
+}

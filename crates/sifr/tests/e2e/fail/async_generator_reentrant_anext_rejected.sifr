@@ -1,0 +1,14 @@
+# expect-error[col=20]: SIFR-OWN-0002
+
+async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 1
+    yield 2
+
+
+async def main() -> Result[None, GeneratorCloseError]:
+    agen = numbers()
+    first = anext(agen)
+    second = anext(agen)
+    observed: Result[Option[int], GeneratorCloseError] = await first
+    other: Result[Option[int], GeneratorCloseError] = await second
+    return None
