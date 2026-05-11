@@ -1,0 +1,18 @@
+async def lengths(items: list[int]) -> AsyncGenerator[int, GeneratorCloseError]:
+    yield len(items)
+    yield len(items) + 1
+
+
+async def main() -> Result[None, GeneratorCloseError]:
+    items: list[int] = [10, 20, 30]
+    agen = lengths(items)
+
+    first: Result[Option[int], GeneratorCloseError] = await anext(agen)
+    second: Result[Option[int], GeneratorCloseError] = await anext(agen)
+    done: Result[Option[int], GeneratorCloseError] = await anext(agen)
+
+    assert str(first) == "Ok(Some(3))"
+    assert str(second) == "Ok(Some(4))"
+    assert str(done) == "Ok(None)"
+    assert len(items) == 3
+    return None
