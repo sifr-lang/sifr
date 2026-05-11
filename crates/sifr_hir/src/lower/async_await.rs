@@ -1,3 +1,4 @@
+use super::async_generator_advances::finish_async_generator_advance_for_expr;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::ownership_diagnostics;
@@ -47,6 +48,7 @@ pub(super) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<
             ctx.scope.mark_moved(name);
         }
     }
+    finish_async_generator_advance_for_expr(ctx, &value);
 
     Some(HirExpr::Await {
         value: Box::new(value),

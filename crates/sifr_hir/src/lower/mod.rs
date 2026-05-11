@@ -11,6 +11,7 @@ mod async_await;
 mod async_comprehension_diagnostics;
 mod async_comprehensions;
 mod async_for;
+mod async_generator_advances;
 mod async_generator_methods;
 mod async_with;
 mod attribute_access;
@@ -219,6 +220,7 @@ pub(super) struct LowerCtx {
     numeric_sentinel_vars: HashMap<String, numeric_sentinels::NumericSentinelFact>,
     pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
     pending_container_specialization_patches: HashMap<String, Type>,
+    async_generator_advances: async_generator_advances::AsyncGeneratorAdvanceTracker,
     sequence_shapes: Vec<sequence_shapes::SequenceShapeFact>,
     proven_nonzero_integer_bindings: std::collections::HashSet<String>,
     function_scopes: Vec<function_scopes::FunctionScopeState>,
@@ -227,6 +229,7 @@ pub(super) struct LowerCtx {
     empty_dict_specializations: HashMap<String, Type>,
     const_integer_values: HashMap<String, num_bigint::BigInt>,
 }
+
 impl LowerCtx {
     fn new() -> Self {
         Self {
@@ -272,6 +275,7 @@ impl LowerCtx {
             numeric_sentinel_vars: HashMap::new(),
             pending_numeric_sentinel_patches: HashMap::new(),
             pending_container_specialization_patches: HashMap::new(),
+            async_generator_advances: Default::default(),
             sequence_shapes: Vec::new(),
             proven_nonzero_integer_bindings: std::collections::HashSet::new(),
             function_scopes: Vec::new(),
@@ -285,6 +289,7 @@ impl LowerCtx {
     fn is_stdlib_lowering(&self) -> bool {
         self.allow_intrinsic_imports
     }
+
     fn warn_arithmetic_overflow_risk(&mut self, operation: &'static str, range: TextRange) {
         self.warnings
             .push(LoweringWarningDiagnostic::ArithmeticOverflowRisk {

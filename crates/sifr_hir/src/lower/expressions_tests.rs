@@ -1770,6 +1770,30 @@ fn test_mutable_borrow_parameter_across_async_generator_yield_rejected() {
 }
 
 #[test]
+fn test_async_generator_pending_anext_rejects_reentrant_advance() {
+    let source = "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n\nasync def main() -> Result[None, GeneratorCloseError]:\n    agen = numbers()\n    first = anext(agen)\n    second = anext(agen)\n    observed: Result[Option[int], GeneratorCloseError] = await first\n    other: Result[Option[int], GeneratorCloseError] = await second\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("async generator `agen` already has a pending anext() advance")
+            && e.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && e.primary_range == Some(range_for_after(source, "second = anext(", "agen"))
+    }));
+}
+
+#[test]
+fn test_async_generator_anext_pending_state_clears_after_await() {
+    let source = "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n\nasync def main() -> Result[None, GeneratorCloseError]:\n    agen = numbers()\n    first = anext(agen)\n    observed: Result[Option[int], GeneratorCloseError] = await first\n    second = anext(agen)\n    other: Result[Option[int], GeneratorCloseError] = await second\n    return None\n";
+    let result = lower_source(source);
+    assert!(
+        result.is_ok(),
+        "awaited anext handle should release the async generator advance state: {result:?}"
+    );
+}
+
+#[test]
 fn test_await_after_completed_mutable_borrow_lowers() {
     let source = "def mutate_local(mut items: list[int]) -> None:\n    items.append(2)\n    return None\n\nasync def main() -> None:\n    items: list[int] = [1]\n    mutate_local(items)\n    await task.sleep(0.0)\n    return None\n";
     let result = lower_source(source);
