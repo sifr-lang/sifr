@@ -3,7 +3,7 @@ from sifr.os import getpid, remove_file
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_m32_structured_concurrency_demo_" + str(getpid()) + ".txt"
+    return "/tmp/sifr_structured_concurrency_demo_" + str(getpid()) + ".txt"
 
 
 async def one() -> int:
