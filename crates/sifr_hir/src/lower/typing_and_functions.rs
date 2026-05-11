@@ -11,6 +11,7 @@ use sifr_type_system::{
 };
 use std::collections::HashMap;
 
+use super::asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
 use super::function_flow::{collect_yield_types, infer_function_return_type};
@@ -1132,6 +1133,8 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
 
 pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunction> {
     let ft = ctx.functions.get::<str>(func.name.as_ref())?.clone();
+    let is_asyncio_run_entrypoint = function_uses_asyncio_run_entrypoint(func, ctx);
+    let effective_is_async = func.is_async || is_asyncio_run_entrypoint;
 
     ctx.enter_function_scope(collect_declared_nonlocals(&func.body));
 
@@ -1219,8 +1222,8 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             ctx.borrowed_params.insert(param.name.clone());
         }
     }
-    let is_async_generator = func.is_async && function_body_contains_yield(&func.body);
-    if func.is_async {
+    let is_async_generator = effective_is_async && function_body_contains_yield(&func.body);
+    if effective_is_async {
         if is_async_generator {
             if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
                 for param in &params {
@@ -1267,7 +1270,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
     let previous_return_type = ctx
         .current_function_return_type
         .replace(ft.return_type.as_ref().clone());
-    ctx.current_function_is_async = func.is_async;
+    ctx.current_function_is_async = effective_is_async;
     ctx.current_function_is_async_generator = is_async_generator;
     let body = lower_stmts(&func.body, &ft, ctx);
     ctx.current_function_is_async = previous_async;
@@ -1315,7 +1318,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         .map_or_else(|| func.name.range(), |returns| returns.range());
     let inferred_return_type = infer_function_return_type(
         func.name.as_ref(),
-        func.is_async,
+        effective_is_async,
         ft.return_type.as_ref(),
         func.returns.is_some(),
         &body,
@@ -1358,7 +1361,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         params,
         return_type: inferred_return_type,
         body,
-        is_async: func.is_async,
+        is_async: effective_is_async,
         method_kind: MethodKind::Regular,
         decorators,
         type_params,

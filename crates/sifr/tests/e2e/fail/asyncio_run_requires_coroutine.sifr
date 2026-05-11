@@ -1,0 +1,9 @@
+from sifr.asyncio import run
+
+
+def main() -> None:
+    value = run(42)
+    return None
+
+
+# EXPECT_ERROR: [type] asyncio.run() requires a coroutine returned by an async function

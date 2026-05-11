@@ -30,8 +30,60 @@ pub(super) fn lower_asyncio_compat_call(
         "wait_for" => lower_task_timeout_call(call, ctx),
         "gather" => lower_task_gather_call(call, ctx),
         "create_task" => lower_asyncio_create_task_call(call, ctx),
+        "run" => lower_asyncio_run_call(call, ctx),
         _ => TaskCallLowering::NoMatch,
     }
+}
+
+fn lower_asyncio_run_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {
+    if ctx.current_owner.as_deref() != Some("main") {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            "asyncio.run() is only supported as a main() entrypoint compatibility shim; call and await the coroutine directly inside async code".to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if !call.arguments.keywords.is_empty() {
+        expression_diagnostics::call_unexpected_keyword(
+            ctx,
+            "asyncio.run() does not accept keyword arguments".to_string(),
+            first_call_keyword_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if call.arguments.args.len() != 1 {
+        expression_diagnostics::call_wrong_positional_count(
+            ctx,
+            "asyncio.run() takes exactly one coroutine argument".to_string(),
+            call_arity_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+
+    let Some(coroutine) = lower_expr(&call.arguments.args[0], ctx) else {
+        return TaskCallLowering::Rejected;
+    };
+    let Type::Coroutine(ok_ty, err_ty) = coroutine.ty().resolve_alias() else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "asyncio.run() requires a coroutine returned by an async function, got '{}'",
+                coroutine.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    let ty = if matches!(err_ty.resolve_alias(), Type::Never) {
+        ok_ty.as_ref().clone()
+    } else {
+        Type::Result(ok_ty.clone(), err_ty.clone())
+    };
+    TaskCallLowering::Lowered(HirExpr::Await {
+        value: Box::new(coroutine),
+        ty,
+    })
 }
 
 fn lower_asyncio_create_task_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {

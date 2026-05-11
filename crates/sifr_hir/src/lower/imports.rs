@@ -47,7 +47,7 @@ pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ct
                 for name in &names {
                     match name.as_str() {
                         "sleep" | "wait_for" | "gather" | "timeout" | "TaskGroup"
-                        | "create_task" => {
+                        | "create_task" | "run" => {
                             ctx.asyncio_compat_imports
                                 .insert(local_name_for(name), name.clone());
                         }
