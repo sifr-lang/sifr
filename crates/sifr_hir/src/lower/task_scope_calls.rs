@@ -22,6 +22,14 @@ pub(super) fn lower_task_scope_spawn_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
+    lower_task_scope_spawn_from_object(object, call, ctx)
+}
+
+pub(super) fn lower_task_scope_spawn_from_object(
+    object: HirExpr,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if !ctx.current_function_is_async {
         expression_diagnostics::type_mismatch(
             ctx,

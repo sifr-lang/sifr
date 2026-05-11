@@ -1,7 +1,9 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
-use super::task_scope_calls::mark_task_handle_observed;
 use super::task_scope_calls::non_send_reason;
+use super::task_scope_calls::{
+    is_task_scope_type, lower_task_scope_spawn_from_object, mark_task_handle_observed,
+};
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
@@ -27,8 +29,32 @@ pub(super) fn lower_asyncio_compat_call(
         "sleep" => lower_task_sleep_call(call, ctx),
         "wait_for" => lower_task_timeout_call(call, ctx),
         "gather" => lower_task_gather_call(call, ctx),
+        "create_task" => lower_asyncio_create_task_call(call, ctx),
         _ => TaskCallLowering::NoMatch,
     }
+}
+
+fn lower_asyncio_create_task_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {
+    let active_scopes: Vec<(String, Type)> = ctx
+        .scope
+        .active_bindings()
+        .into_iter()
+        .filter(|(_, ty)| is_task_scope_type(ty))
+        .collect();
+    let [(scope_name, scope_ty)] = active_scopes.as_slice() else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            "asyncio.create_task() requires exactly one active task scope; use it inside async with task.scope() or task.TaskGroup()".to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    let scope_object = HirExpr::Name {
+        name: scope_name.clone(),
+        ty: scope_ty.clone(),
+    };
+    lower_task_scope_spawn_from_object(scope_object, call, ctx)
+        .map_or(TaskCallLowering::Rejected, TaskCallLowering::Lowered)
 }
 
 pub(super) fn lower_task_module_call(
