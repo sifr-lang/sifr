@@ -9,7 +9,7 @@ Now I have a complete picture. Let me do the systematic review.
 No remaining `@blocking_io` references in `internal_docs/`. All three docs use `@io_bound` and `@cpu_bound` consistently:
 
 - `async_concurrency_model.md`: 12 occurrences of `@io_bound`, 11 of `@cpu_bound` — all correct
-- `32_async_ecosystem.md`: 5 occurrences of `@io_bound`, 3 of `@cpu_bound` — all correct  
+- `32_async_ecosystem.md`: 5 occurrences of `@io_bound`, 3 of `@cpu_bound` — all correct
 - `architecture.md`: milestone_async_6 updated to reference `@io_bound` and `@cpu_bound`
 
 ### Task 2: Diagnostic model gaps

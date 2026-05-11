@@ -6,9 +6,9 @@ Now I have a full picture. Let me write the review memo.
 
 # REVIEW MEMO: Async Annotation Vocabulary — `@blocking_io` vs `@io_bound`
 
-**Date:** 2026-05-09  
-**From:** Claude Code (codex/figure-out-concurrency)  
-**Subject:** Annotation/effect vocabulary for blocking I/O and CPU-bound diagnostics in Sifr's async/concurrency model  
+**Date:** 2026-05-09
+**From:** Claude Code (codex/figure-out-concurrency)
+**Subject:** Annotation/effect vocabulary for blocking I/O and CPU-bound diagnostics in Sifr's async/concurrency model
 **Status:** SATISFIED (with required doc changes)
 
 ---
@@ -59,8 +59,8 @@ The fix is not to add new annotations — it's to make the mechanism explicit.
 
 ### Goal 1: Warn when sync/blocking I/O is called from async code without offload or async equivalent
 
-**Requires:** `@io_bound` (rename from `@blocking_io`)  
-**Mechanism:** stdlib annotation database + user `@io_bound` annotations → diagnostics in async contexts  
+**Requires:** `@io_bound` (rename from `@blocking_io`)
+**Mechanism:** stdlib annotation database + user `@io_bound` annotations → diagnostics in async contexts
 **Naming:** `@io_bound` is the right term because:
 - "I/O-bound" characterizes **what the workload does** (waits on disk/network)
 - It does NOT imply the compiler will do something to a thread
@@ -72,8 +72,8 @@ The fix is not to add new annotations — it's to make the mechanism explicit.
 
 ### Goal 2: Warn when CPU-heavy work runs on async cooperative runtime instead of `spawn_blocking`/executor
 
-**Requires:** `@cpu_bound` (keep as-is)  
-**Mechanism:** stdlib annotation database + user `@cpu_bound` annotations → diagnostics in async contexts  
+**Requires:** `@cpu_bound` (keep as-is)
+**Mechanism:** stdlib annotation database + user `@cpu_bound` annotations → diagnostics in async contexts
 **Naming:** `@cpu_bound` is already correct:
 - It characterizes **what the workload does** (burns CPU cycles)
 - The opposite of "CPU-bound" is "I/O-bound" — symmetry is good
@@ -235,7 +235,7 @@ New:
 
 Some might argue for keeping `@blocking_io` (for API-level blocking) and adding `@io_bound` (for workload classification). This creates **overlap without benefit**:
 
-- `@blocking_io` implies scheduling mechanism ("it blocks something")  
+- `@blocking_io` implies scheduling mechanism ("it blocks something")
 - `@io_bound` implies workload type ("it waits on I/O")
 
 In a **diagnostic-only model** where neither annotation triggers scheduling, the mechanism implication is misleading. `@io_bound` is semantically cleaner because it tells the developer what *kind of work* the function does, not what the compiler should do about it.

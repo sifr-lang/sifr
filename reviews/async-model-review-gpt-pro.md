@@ -2,7 +2,7 @@ Here is the ruthless version.
 
 The proposal is **not trash**. The core instinct is strong: one canonical async model, structured concurrency first, no raw event loop surface, explicit sharing, explicit offload, typed cancellation. That is the right shape.
 
-But the document currently has a dangerous problem: it **sounds more precise than it is**. Several parts are semantically contradictory. If implementation starts from this as-is, the compiler/runtime team will invent missing rules ad hoc, and the model will drift into exactly the mess the proposal is trying to avoid. 
+But the document currently has a dangerous problem: it **sounds more precise than it is**. Several parts are semantically contradictory. If implementation starts from this as-is, the compiler/runtime team will invent missing rules ad hoc, and the model will drift into exactly the mess the proposal is trying to avoid.
 
 The biggest issue: the proposal has not fully decided what an async computation *is*.
 
