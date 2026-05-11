@@ -15,6 +15,10 @@ def gather(handles: Any) -> None:
     return None
 
 
+def create_task(coroutine: Any) -> None:
+    return None
+
+
 class TaskGroup:
     pass
 
