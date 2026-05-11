@@ -10,3 +10,11 @@ def wait_for(handle: Any, delay: float) -> None:
 
 def gather(handles: Any) -> None:
     return None
+
+
+class TaskGroup:
+    pass
+
+
+def timeout(delay: float) -> None:
+    return None

@@ -46,7 +46,7 @@ pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ct
             if module_key == "sifr.asyncio" {
                 for name in &names {
                     match name.as_str() {
-                        "sleep" | "wait_for" | "gather" => {
+                        "sleep" | "wait_for" | "gather" | "timeout" | "TaskGroup" => {
                             ctx.asyncio_compat_imports
                                 .insert(local_name_for(name), name.clone());
                         }
