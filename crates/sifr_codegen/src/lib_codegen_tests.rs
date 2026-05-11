@@ -17,6 +17,17 @@ fn generate_rust_from_source(source: &str) -> String {
     generate_rust(&lowering.module)
 }
 
+#[test]
+fn test_async_generator_codegen_uses_lazy_materialization() {
+    let rust_code = generate_rust_from_source(
+        "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n",
+    );
+
+    assert!(rust_code.contains("AsyncGenerator::new_lazy"));
+    assert!(rust_code.contains("move ||"));
+    assert!(!rust_code.contains("AsyncGenerator::new(_yields)"));
+}
+
 fn empty_module() -> HirModule {
     HirModule {
         functions: vec![],

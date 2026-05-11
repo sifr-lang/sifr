@@ -984,7 +984,8 @@ impl RustEmitter {
             self.mut_borrowed_params.remove(name);
         }
 
-        body.push(RustStmt::Let {
+        let mut materialize_body = Vec::new();
+        materialize_body.push(RustStmt::Let {
             mutable: true,
             name: "_yields".to_string(),
             ty: Some(RustType::Vec(Box::new(yield_ty))),
@@ -994,19 +995,27 @@ impl RustEmitter {
             },
         });
         for stmt in &func.body {
-            body.extend(self.lower_stmt_strict_for_function(
+            materialize_body.extend(self.lower_stmt_strict_for_function(
                 stmt,
-                "async generator materialization statement lowering",
+                "async generator lazy materialization statement lowering",
             ));
         }
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
+        materialize_body.push(RustStmt::Return(Some(RustExpr::Ident(
+            "_yields".to_string(),
+        ))));
         body.push(RustStmt::Return(Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec![
                 "AsyncGenerator".to_string(),
-                "new".to_string(),
+                "new_lazy".to_string(),
             ])),
-            args: vec![RustExpr::Ident("_yields".to_string())],
+            args: vec![RustExpr::ClosureBlock {
+                params: vec![],
+                body: materialize_body,
+                is_move: true,
+                is_async: false,
+            }],
         })));
         body
     }

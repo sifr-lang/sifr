@@ -1,0 +1,42 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_async_generator_lazy_start_" + str(getpid()) + ".txt"
+
+
+async def numbers(path: str) -> AsyncGenerator[int, IOError]:
+    try:
+        _written: None = write_text(path, "started")
+    except IOError as e:
+        _write_error: str = str(e.message)
+    yield 1
+    yield 2
+
+
+async def main() -> Result[None, IOError]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _existing_cleanup_error: str = str(e.message)
+
+    agen = numbers(path)
+    assert not exists(path)
+
+    first: Result[Option[int], IOError] = await anext(agen)
+    second: Result[Option[int], IOError] = await anext(agen)
+    done: Result[Option[int], IOError] = await anext(agen)
+
+    assert exists(path)
+    assert str(first) == "Ok(Some(1))"
+    assert str(second) == "Ok(Some(2))"
+    assert str(done) == "Ok(None)"
+
+    try:
+        _removed: None = remove_file(path)
+    except IOError as e:
+        _cleanup_error: str = str(e.message)
+    return None

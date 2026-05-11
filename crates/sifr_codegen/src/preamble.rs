@@ -347,6 +347,12 @@ pub fn build_async_generator_type_items() -> Vec<RustItem> {
                     "items".to_string(),
                     RustType::Named("std::vec::IntoIter<T>".to_string()),
                 ),
+                (
+                    "factory".to_string(),
+                    RustType::Named(
+                        "Option<Box<dyn FnOnce() -> Vec<T> + Send + 'static>>".to_string(),
+                    ),
+                ),
                 ("closed".to_string(), RustType::Bool),
                 (
                     "_err".to_string(),
@@ -377,6 +383,63 @@ pub fn build_async_generator_type_items() -> Vec<RustItem> {
                                     receiver: Box::new(RustExpr::Ident("items".to_string())),
                                     method: "into_iter".to_string(),
                                     args: vec![],
+                                },
+                            ),
+                            ("factory".to_string(), RustExpr::Ident("None".to_string())),
+                            (
+                                "closed".to_string(),
+                                RustExpr::Literal(crate::RustLiteral::Bool(false)),
+                            ),
+                            (
+                                "_err".to_string(),
+                                RustExpr::Path(vec![
+                                    "std".to_string(),
+                                    "marker".to_string(),
+                                    "PhantomData".to_string(),
+                                ]),
+                            ),
+                        ],
+                    }))],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "new_lazy".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![crate::RustTypeParam {
+                        name: "F".to_string(),
+                        bounds: vec![
+                            "FnOnce() -> Vec<T>".to_string(),
+                            "Send".to_string(),
+                            "'static".to_string(),
+                        ],
+                    }],
+                    params: vec![RustParam::Named {
+                        name: "factory".to_string(),
+                        ty: RustType::Named("F".to_string()),
+                    }],
+                    ret: Some(RustType::Named("Self".to_string())),
+                    body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                        name: "Self".to_string(),
+                        fields: vec![
+                            (
+                                "items".to_string(),
+                                RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Vec(vec![])),
+                                    method: "into_iter".to_string(),
+                                    args: vec![],
+                                },
+                            ),
+                            (
+                                "factory".to_string(),
+                                RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                                    args: vec![RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "Box".to_string(),
+                                            "new".to_string(),
+                                        ])),
+                                        args: vec![RustExpr::Ident("factory".to_string())],
+                                    }],
                                 },
                             ),
                             (
@@ -414,6 +477,34 @@ pub fn build_async_generator_type_items() -> Vec<RustItem> {
                                 func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
                                 args: vec![RustExpr::Ident("None".to_string())],
                             }))],
+                            else_body: None,
+                        },
+                        RustStmt::IfLet {
+                            pattern: "Some(__sifr_async_generator_factory)".to_string(),
+                            expr: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Field {
+                                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                                    field: "factory".to_string(),
+                                }),
+                                method: "take".to_string(),
+                                args: vec![],
+                            },
+                            then_body: vec![RustStmt::Assign {
+                                target: RustExpr::Field {
+                                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                                    field: "items".to_string(),
+                                },
+                                value: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Ident(
+                                            "__sifr_async_generator_factory".to_string(),
+                                        )),
+                                        args: vec![],
+                                    }),
+                                    method: "into_iter".to_string(),
+                                    args: vec![],
+                                },
+                            }],
                             else_body: None,
                         },
                         RustStmt::Return(Some(RustExpr::FnCall {
