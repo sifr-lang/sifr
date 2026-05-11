@@ -809,6 +809,7 @@ Implementation notes:
 - PR [#2070](https://github.com/sifr-lang/sifr/pull/2070) async-generator reentrant advance validation slice: pending same-task `anext(agen)` advances are now tracked in HIR and a second pending advance on the same async-generator binding is rejected with `SIFR-OWN-0002`; `async_generator_reentrant_anext_rejected.sifr` covers the fail-closed boundary while full runtime `GeneratorBusyError` state-machine behavior remains deferred.
 - PR [#2072](https://github.com/sifr-lang/sifr/pull/2072) async-generator borrowed-yield positive validation slice: `async_generator_borrow_yield.sifr` now proves immutable borrowed move-type parameters can be read across supported async-generator yield points and consumed through `anext()`, with the caller's list still usable after exhaustion; lazy state-machine lowering and cancellation cleanup remain deferred.
 - PR [#2074](https://github.com/sifr-lang/sifr/pull/2074) async-generator lazy-start slice: generated async-generator functions now return a one-shot materialization factory through `AsyncGenerator::new_lazy`, so body side effects begin on first `anext()` consumption rather than function call; `async_generator_lazy_start.sifr` covers the supported materialized backend while per-yield state-machine suspension and cancellation cleanup remain deferred.
+- PR [#2076](https://github.com/sifr-lang/sifr/pull/2076) async-generator close-before-start validation slice: `async_generator_aclose_before_start.sifr` proves `aclose()` before the first `anext()` closes a lazy async generator without starting its body, and a later `anext()` observes `Ok(None)`; cleanup/finally behavior and per-yield state-machine suspension remain deferred.
 
 **Goal:** Complete general user-defined async control-flow protocols without dragging in broad ecosystem APIs.
 
@@ -977,6 +978,7 @@ status: in progress
 - `async_generator_yield_types.sifr`
 - `async_generator_anext_result_option.sifr`
 - `async_generator_lazy_start.sifr`
+- `async_generator_aclose_before_start.sifr`
 - `async_generator_cancel_cleanup.sifr`
 - `async_generator_borrow_yield.sifr`
 - `async_generator_send_boundary.sifr`
