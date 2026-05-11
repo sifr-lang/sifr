@@ -1018,6 +1018,7 @@ Implementation notes:
 - PR [#2080](https://github.com/sifr-lang/sifr/pull/2080) `sifr.asyncio` context-manager veneer slice: imported `timeout` and `TaskGroup` now lower through the canonical `task.timeout(duration)` and `task.TaskGroup()` async-with paths, with no second runtime behavior; `asyncio_timeout_subset.sifr` and `asyncio_task_group_subset.sifr` cover the supported context-manager subset while `run`, `create_task`, `Queue`, `Future`, and unsupported-event-loop diagnostics remain follow-up slices.
 - PR [#2082](https://github.com/sifr-lang/sifr/pull/2082) `sifr.asyncio.Queue` veneer slice: `Queue[T]` now provides the v1 `put`, `get`, and `close` subset with FIFO behavior and `sifr.sync.ClosedError` typing, intentionally omitting `task_done`/`join` accounting and event-loop behavior; `asyncio_queue_via_channel.sifr` covers the supported subset while `run`, `create_task`, `Future`, and unsupported-event-loop diagnostics remain follow-up slices.
 - PR [#2084](https://github.com/sifr-lang/sifr/pull/2084) `sifr.asyncio.create_task` veneer slice: imported `create_task(coro)` now lowers through the canonical scope-owned `spawn` path when exactly one active `task.scope()` or `task.TaskGroup()` binding is in scope, preserving the no-orphan-task model and existing spawn validation; `asyncio_create_task_subset.sifr` covers the supported subset, and `asyncio_create_task_outside_scope_rejected.sifr` records the explicit-scope requirement while `run`, `Future`, and unsupported-event-loop diagnostics remain follow-up slices.
+- PR [#2086](https://github.com/sifr-lang/sifr/pull/2086) `sifr.asyncio.run` veneer slice: imported `run(coro)` now lowers to a coroutine await while treating sync `main()` as the canonical async entrypoint bootstrap, so compatibility code does not construct a public event loop or nested runtime; `asyncio_run_subset.sifr` covers the supported subset, and `asyncio_run_requires_coroutine.sifr` records the coroutine-only diagnostic while `Future` and unsupported-event-loop diagnostics remain follow-up slices.
 
 **Goal:** Expose limited compatibility surfaces only after the canonical model is proven.
 
@@ -1085,6 +1086,7 @@ Implementation notes:
 - `asyncio_loop_policy_not_supported.sifr`
 - `asyncio_transport_protocol_not_supported.sifr`
 - `asyncio_create_task_outside_scope_rejected.sifr`
+- `asyncio_run_requires_coroutine.sifr`
 - `selectors_public_api_deferred.sifr`
 - `contextvars_deferred.sifr`
 - `process_pool_not_available.sifr`
