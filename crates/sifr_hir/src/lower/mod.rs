@@ -14,6 +14,7 @@ mod async_for;
 mod async_generator_advances;
 mod async_generator_methods;
 mod async_with;
+mod asyncio_run_entrypoint;
 mod attribute_access;
 mod aug_assign_lowering;
 mod binding_mutability;
@@ -118,6 +119,7 @@ mod typevar_annotations;
 mod typevar_shape_compat;
 mod typing_and_functions;
 mod workload_annotations;
+use asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
 pub use diagnostic_types::{HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic};
@@ -605,7 +607,6 @@ fn lower_module_impl(
         }
     }
     resolve_type_aliases(&alias_decls, &mut ctx);
-
     // Refresh class definitions after alias resolution so class field/method annotations that
     // depend on aliases declared later in the module see the final alias shapes.
     for stmt in stmts {
@@ -613,7 +614,6 @@ fn lower_module_impl(
             collect_class_type(class_def, &mut ctx, true);
         }
     }
-
     let mut function_name_registry = module_function_registry::ModuleFunctionRegistry::default();
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
@@ -688,9 +688,11 @@ fn lower_module_impl(
             }
 
             collect_function_defaults(&mut ctx, &function_name, func);
-            if func.is_async && function_body_contains_yield(&func.body) {
+            let effective_is_async =
+                func.is_async || function_uses_asyncio_run_entrypoint(func, &ctx);
+            if effective_is_async && function_body_contains_yield(&func.body) {
                 ctx.async_generator_functions.insert(function_name.clone());
-            } else if func.is_async {
+            } else if effective_is_async {
                 ctx.async_functions.insert(function_name.clone());
             }
             if let Some(workload) =
@@ -1151,9 +1153,7 @@ fn lower_module_impl(
             }
         }
     }
-
     let constants = module_constants_lowering::collect_module_constants(stmts, &mut ctx);
-
     // Second pass: lower function bodies and class method bodies
     let mut functions = Vec::new();
     let mut classes = Vec::new();
@@ -1176,7 +1176,6 @@ fn lower_module_impl(
             _ => {}
         }
     }
-
     if ctx.errors.is_empty() {
         imports.extend(ctx.synthetic_imports.clone());
         Ok(LoweringResult {
