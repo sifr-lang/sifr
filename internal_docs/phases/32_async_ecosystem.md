@@ -1019,6 +1019,7 @@ Implementation notes:
 - PR [#2082](https://github.com/sifr-lang/sifr/pull/2082) `sifr.asyncio.Queue` veneer slice: `Queue[T]` now provides the v1 `put`, `get`, and `close` subset with FIFO behavior and `sifr.sync.ClosedError` typing, intentionally omitting `task_done`/`join` accounting and event-loop behavior; `asyncio_queue_via_channel.sifr` covers the supported subset while `run`, `create_task`, `Future`, and unsupported-event-loop diagnostics remain follow-up slices.
 - PR [#2084](https://github.com/sifr-lang/sifr/pull/2084) `sifr.asyncio.create_task` veneer slice: imported `create_task(coro)` now lowers through the canonical scope-owned `spawn` path when exactly one active `task.scope()` or `task.TaskGroup()` binding is in scope, preserving the no-orphan-task model and existing spawn validation; `asyncio_create_task_subset.sifr` covers the supported subset, and `asyncio_create_task_outside_scope_rejected.sifr` records the explicit-scope requirement while `run`, `Future`, and unsupported-event-loop diagnostics remain follow-up slices.
 - PR [#2086](https://github.com/sifr-lang/sifr/pull/2086) `sifr.asyncio.run` veneer slice: imported `run(coro)` now lowers to a coroutine await while treating sync `main()` as the canonical async entrypoint bootstrap, so compatibility code does not construct a public event loop or nested runtime; `asyncio_run_subset.sifr` covers the supported subset, and `asyncio_run_requires_coroutine.sifr` records the coroutine-only diagnostic while `Future` and unsupported-event-loop diagnostics remain follow-up slices.
+- PR [#2088](https://github.com/sifr-lang/sifr/pull/2088) `sifr.concurrent.Future` veneer slice: `Future[T, E]` is now importable as a compatibility annotation name that resolves to the canonical affine `BlockingTask[T, E]` handle returned by `ThreadPoolExecutor.submit`, preserving existing `join()`/await observation semantics and avoiding a second future runtime; `concurrent_future_subset.sifr` covers the supported annotation path, and `concurrent_future_result_type_rejected.sifr` records result-type mismatch rejection while unsupported-event-loop diagnostics remain follow-up slices.
 
 **Goal:** Expose limited compatibility surfaces only after the canonical model is proven.
 
@@ -1058,7 +1059,7 @@ Implementation notes:
 | `sifr.asyncio.Queue` | `sifr.sync.Channel` / `sifr.sync.bounded_channel` | no `task_done`/`join` queue accounting in v1 |
 | `asyncio.Event` / `threading.Event` | `sifr.sync.Notify` or `sync.Shared[bool] + Notify` | `Notify` is edge-triggered; level-triggered Event behavior needs explicit state |
 | `threading.Condition` | `sifr.sync.Notify` plus `sifr.sync.Lock` | predicate discipline is explicit; not a transparent alias |
-| `sifr.concurrent.Future` | compatibility wrapper over task/blocking handles | not a pure alias; blocking work has different cancellation/lifetime behavior |
+| `sifr.concurrent.Future` | annotation veneer over `BlockingTask[T, E]` for blocking offload handles | not a second future runtime; cooperative task handles remain `Task[T, E]` |
 
 **Definition of done:**
 
@@ -1087,6 +1088,7 @@ Implementation notes:
 - `asyncio_transport_protocol_not_supported.sifr`
 - `asyncio_create_task_outside_scope_rejected.sifr`
 - `asyncio_run_requires_coroutine.sifr`
+- `concurrent_future_result_type_rejected.sifr`
 - `selectors_public_api_deferred.sifr`
 - `contextvars_deferred.sifr`
 - `process_pool_not_available.sifr`
