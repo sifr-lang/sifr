@@ -1,0 +1,15 @@
+from sifr.concurrent import Future, ThreadPoolExecutor
+
+
+def compute_value() -> int:
+    return 42
+
+
+async def main() -> Result[None, ScopeFailure]:
+    executor: ThreadPoolExecutor = ThreadPoolExecutor()
+    future: Future[str, Never] = executor.submit(compute_value)
+    result = await future.join()
+    return None
+
+
+# EXPECT_ERROR: [type] type mismatch: expected 'BlockingTask[str, Never]', got 'BlockingTask[int, Never]'
