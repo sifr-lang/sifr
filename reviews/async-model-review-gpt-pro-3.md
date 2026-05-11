@@ -1,6 +1,6 @@
 This is now **very close**.
 
-You fixed the big stuff: `Coroutine`/`Task`/`TaskResult` are separated, `CancellationError` is no longer shoved into ordinary `Result`, task handles are affine, `ScopeFailure` exists, `TaskGroup[E]` is homogeneous, timeout uses `TimeoutResult[E]`, scoped borrowed spawn is deferred, async generators dropped public `R`, lazy async generator expressions are deferred, and `BlockingTask` is distinct from cooperative `Task`. Those were the right moves. 
+You fixed the big stuff: `Coroutine`/`Task`/`TaskResult` are separated, `CancellationError` is no longer shoved into ordinary `Result`, task handles are affine, `ScopeFailure` exists, `TaskGroup[E]` is homogeneous, timeout uses `TimeoutResult[E]`, scoped borrowed spawn is deferred, async generators dropped public `R`, lazy async generator expressions are deferred, and `BlockingTask` is distinct from cooperative `Task`. Those were the right moves.
 
 My verdict now:
 
@@ -21,13 +21,13 @@ scope.spawn(f(...)) -> Task[T, E]
 await Task[T, E] -> TaskResult[T, E]
 ```
 
-That is clean. It avoids Python’s coroutine/task confusion and avoids Rust/Tokio leaking into the public surface. The explicit `TaskResult.Ok / Err / Cancelled` split is the right shape. 
+That is clean. It avoids Python’s coroutine/task confusion and avoids Rust/Tokio leaking into the public surface. The explicit `TaskResult.Ok / Err / Cancelled` split is the right shape.
 
-The `ScopeFailure` fix is also important. You now have a way to surface unobserved child failure at scope exit instead of silently discarding it. That makes nursery ownership safe without returning to the old “every handle must be manually consumed” model. 
+The `ScopeFailure` fix is also important. You now have a way to surface unobserved child failure at scope exit instead of silently discarding it. That makes nursery ownership safe without returning to the old “every handle must be manually consumed” model.
 
-The Phase 32 plan is also much tighter. The phase file now treats the model contract as the source of truth, separates milestones cleanly, and moves compatibility to the end. That was the right structural decision. 
+The Phase 32 plan is also much tighter. The phase file now treats the model contract as the source of truth, separates milestones cleanly, and moves compatibility to the end. That was the right structural decision.
 
-The decision to defer scoped borrowed spawn is especially good. Earlier, that was a hidden implementation landmine. Now v1 requires owned, sendable, static captures, and the model admits that scoped borrowed spawn needs a different runtime strategy. That is honest. 
+The decision to defer scoped borrowed spawn is especially good. Earlier, that was a hidden implementation landmine. Now v1 requires owned, sendable, static captures, and the model admits that scoped borrowed spawn needs a different runtime strategy. That is honest.
 
 ---
 
@@ -42,11 +42,11 @@ async with task.timeout(duration):
     ...
 ```
 
-as a compiler-recognized timeout scope lowered into a temporary child task owned by the current structured scope. The deadline cancels that child and exits through ordinary `TimeoutError`. 
+as a compiler-recognized timeout scope lowered into a temporary child task owned by the current structured scope. The deadline cancels that child and exits through ordinary `TimeoutError`.
 
 That sounds clean, but it collides with your v1 spawn rule:
 
-> v1 `scope.spawn` requires owned, sendable, static captures. Scoped borrowed spawn is deferred. 
+> v1 `scope.spawn` requires owned, sendable, static captures. Scoped borrowed spawn is deferred.
 
 Now consider ordinary user code:
 
@@ -106,7 +106,7 @@ You now say:
 TaskScope.__aexit__ -> Result[None, ScopeFailure]
 ```
 
-and timeout context exit can produce ordinary `TimeoutError`. 
+and timeout context exit can produce ordinary `TimeoutError`.
 
 But what does `async with` do with a fallible `__aexit__` result?
 
@@ -141,7 +141,7 @@ body is actively cancelled, exit fails
 body panics/runtime-faults, exit fails
 ```
 
-Right now the model says cleanup errors become secondary during cancellation, but it does not fully define fallible context-manager exit during normal or ordinary-error paths. 
+Right now the model says cleanup errors become secondary during cancellation, but it does not fully define fallible context-manager exit during normal or ordinary-error paths.
 
 This is not cosmetic. `TaskScope`, `TaskGroup`, `task.timeout`, async generators, async iterators, and user-defined async context managers all depend on it.
 
@@ -163,7 +163,7 @@ You define:
 AsyncIterator[T, E].anext() -> Result[Option[T], E]
 ```
 
-Good. Normal exhaustion is `Ok(None)`, stream failure is `Err(E)`. 
+Good. Normal exhaustion is `Ok(None)`, stream failure is `Err(E)`.
 
 But this needs one more type rule:
 
@@ -195,7 +195,7 @@ or:
 user must write a special form to handle iterator failure
 ```
 
-The model currently says `async for` follows surrounding result/try rules, but that is not a complete lowering rule. 
+The model currently says `async for` follows surrounding result/try rules, but that is not a complete lowering rule.
 
 I would define it like this:
 
@@ -224,7 +224,7 @@ Then document how users explicitly handle iterator errors if they do not want pr
 
 # Fourth redline: `TaskGroup` still has an observation edge case
 
-The new `TaskGroup[E]` is much better: homogeneous child error type, sibling cancellation on first failure, group owns error policy. 
+The new `TaskGroup[E]` is much better: homogeneous child error type, sibling cancellation on first failure, group owns error policy.
 
 But this case is still unclear:
 
@@ -272,7 +272,7 @@ task.timeout(handle: Task[T, E], duration: Duration)
     -> TaskResult[T, TimeoutResult[E]]
 ```
 
-Good. 
+Good.
 
 But the prose says:
 
@@ -309,7 +309,7 @@ Small wording bug, but type bugs in specs become implementation bugs.
 
 # Sixth redline: channel endpoint lifetime still needs rules
 
-Channels are much better now: explicit sender/receiver endpoints, async send/receive, single receiver, no double closed state. 
+Channels are much better now: explicit sender/receiver endpoints, async send/receive, single receiver, no double closed state.
 
 But you still need endpoint lifetime rules:
 
@@ -347,7 +347,7 @@ protocol AsyncClosable:
     async def aclose(self) -> Result[None, GeneratorCloseError]
 ```
 
-That is too generator-specific. 
+That is too generator-specific.
 
 Async closable iterators are not always generators. A stream, file-line iterator, socket-frame iterator, or database cursor should not have to pretend its close failure is a `GeneratorCloseError`.
 
@@ -411,7 +411,7 @@ That makes async generators resource-safe.
 
 # Ninth redline: milestone 2 implements spawn before ownership checking
 
-Milestone 2 implements `scope.spawn`, task handles, join, cancellation, and timeout. Milestone 4 later implements Send/Sync and borrow task-boundary checking. 
+Milestone 2 implements `scope.spawn`, task handles, join, cancellation, and timeout. Milestone 4 later implements Send/Sync and borrow task-boundary checking.
 
 That is fine only if milestone 2 is deliberately conservative.
 
@@ -435,7 +435,7 @@ You made `BlockingTask[T, E]` distinct from `Task[T, E]`. Good. But then:
 BlockingTask.join() -> TaskResult[T, E]
 ```
 
-and `Cancelled` means “observer abandoned the result,” not necessarily “work stopped.” 
+and `Cancelled` means “observer abandoned the result,” not necessarily “work stopped.”
 
 That is technically documented, but still semantically sharp.
 
@@ -462,12 +462,12 @@ Otherwise users will infer the wrong thing.
 
 These were the right ruthless cuts:
 
-* Deferring scoped borrowed spawn. This avoids a very hard runtime/codegen problem in v1. 
-* Deferring process pools until typed IPC/serialization exists. Correct. 
-* Deferring cancellation suppression/shield/uncancel APIs. Correct for public v1. 
-* Deferring lazy async generator expressions. Correct. They were pure complexity at this stage. 
-* Making `Future` a compatibility wrapper, not a pure alias. Correct. 
-* Making `Event` not equal to `Notify`. Correct. 
+* Deferring scoped borrowed spawn. This avoids a very hard runtime/codegen problem in v1.
+* Deferring process pools until typed IPC/serialization exists. Correct.
+* Deferring cancellation suppression/shield/uncancel APIs. Correct for public v1.
+* Deferring lazy async generator expressions. Correct. They were pure complexity at this stage.
+* Making `Future` a compatibility wrapper, not a pure alias. Correct.
+* Making `Event` not equal to `Notify`. Correct.
 
 This shows the proposal is converging instead of accumulating features.
 
@@ -525,7 +525,7 @@ You have channel signatures, task signatures, and generator signatures. The sync
 
 ## Rename or justify `sifr.threading`
 
-The phase file says `sifr.threading` is Sifr-native thread coordination, not Python compatibility. 
+The phase file says `sifr.threading` is Sifr-native thread coordination, not Python compatibility.
 
 That is defensible, but the name will read as Python compatibility. Consider making canonical thread APIs live under:
 

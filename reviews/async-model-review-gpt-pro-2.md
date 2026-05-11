@@ -1,6 +1,6 @@
 This is **much better**. You fixed the original fatal problem.
 
-The old version blurred async functions, coroutine values, task handles, `Result`, and cancellation. The new version separates them cleanly: calling an async function returns a linear `Coroutine[T, E]`; `scope.spawn` consumes that coroutine and returns `Task[T, E]`; awaiting a task gives `TaskResult[T, E]`; and `try await task_handle` is rejected because cancellation is not an ordinary error branch. That is the right move. 
+The old version blurred async functions, coroutine values, task handles, `Result`, and cancellation. The new version separates them cleanly: calling an async function returns a linear `Coroutine[T, E]`; `scope.spawn` consumes that coroutine and returns `Task[T, E]`; awaiting a task gives `TaskResult[T, E]`; and `try await task_handle` is rejected because cancellation is not an ordinary error branch. That is the right move.
 
 My current verdict:
 
@@ -14,15 +14,15 @@ The remaining problems are not philosophical anymore. They are mostly **state-ma
 
 You fixed the biggest structural defects.
 
-The `Coroutine` / `Task` / `TaskResult` split is now strong. `CancellationError` no longer sits inside an ordinary `Result` error union; it appears through `TaskResult.Cancelled(Failure[CancellationError])`, while ordinary task failure appears through `TaskResult.Err(Failure[E])`. That is much cleaner and much harder for users to misuse. 
+The `Coroutine` / `Task` / `TaskResult` split is now strong. `CancellationError` no longer sits inside an ordinary `Result` error union; it appears through `TaskResult.Cancelled(Failure[CancellationError])`, while ordinary task failure appears through `TaskResult.Err(Failure[E])`. That is much cleaner and much harder for users to misuse.
 
-You also fixed the task-ownership model. `TaskScope` now uses nursery ownership: the scope owns children, handles are observers, dropping a handle does not detach the task, normal scope exit waits for children, abnormal exit cancels unfinished children, and handles cannot silently escape the owning scope. That is a coherent structured-concurrency model. 
+You also fixed the task-ownership model. `TaskScope` now uses nursery ownership: the scope owns children, handles are observers, dropping a handle does not detach the task, normal scope exit waits for children, abnormal exit cancels unfinished children, and handles cannot silently escape the owning scope. That is a coherent structured-concurrency model.
 
-Channels are much better now too. Explicit sender/receiver endpoints, async `send`, async `receive`, single receiver in v1, no duplicate `None`/`ClosedError` end state — all of that is a major improvement over the previous channel shape. 
+Channels are much better now too. Explicit sender/receiver endpoints, async `send`, async `receive`, single receiver in v1, no duplicate `None`/`ClosedError` end state — all of that is a major improvement over the previous channel shape.
 
-The compatibility section is also no longer lying. `Future` is now a compatibility wrapper rather than a pure alias, `Event` is not blindly equated with `Notify`, and `asyncio.wait_for` is explicitly limited to task handles in v1. That is the right level of honesty. 
+The compatibility section is also no longer lying. `Future` is now a compatibility wrapper rather than a pure alias, `Event` is not blindly equated with `Notify`, and `asyncio.wait_for` is explicitly limited to task handles in v1. That is the right level of honesty.
 
-The phase file is also much cleaner. It correctly says the model file is the semantic source of truth, and the phase file is only the implementation plan. That prevents implementation drift. 
+The phase file is also much cleaner. It correctly says the model file is the semantic source of truth, and the phase file is only the implementation plan. That prevents implementation drift.
 
 ---
 
@@ -36,7 +36,7 @@ You fixed `task.timeout(handle, duration)`. That one is now mostly clear:
 task.timeout(handle: Task[T, E], duration: Duration) -> TaskResult[T, E | TimeoutError]
 ```
 
-It accepts task handles, not arbitrary awaitables; timeout wins by cancelling the child, awaiting cleanup, and returning `TaskResult.Err(Failure[TimeoutError])`. Good. 
+It accepts task handles, not arbitrary awaitables; timeout wins by cancelling the child, awaiting cleanup, and returning `TaskResult.Err(Failure[TimeoutError])`. Good.
 
 But this is still underdefined:
 
@@ -45,7 +45,7 @@ async with task.timeout(5.s):
     await slow()
 ```
 
-The contract says this form “uses the same completion-vs-deadline policy through structured scope cancellation,” and the phase file says it is usable as `async with task.timeout(duration):`.  
+The contract says this form “uses the same completion-vs-deadline policy through structured scope cancellation,” and the phase file says it is usable as `async with task.timeout(duration):`.
 
 That is not enough.
 
@@ -118,7 +118,7 @@ Right now the handle form is solid. The inline block form is still hand-wavy.
 
 This line is good but incomplete:
 
-> child failures that are not explicitly observed are surfaced at scope exit as structured scope failure evidence, never silently discarded. 
+> child failures that are not explicitly observed are surfaced at scope exit as structured scope failure evidence, never silently discarded.
 
 Good instinct. But surfaced **how**?
 
@@ -197,7 +197,7 @@ Without this, implementers will make incompatible choices.
 
 ## 3. `TaskGroup` is still mostly a name, not an API
 
-The document says `TaskGroup` adds sibling-failure policy on top of task scopes. Good. 
+The document says `TaskGroup` adds sibling-failure policy on top of task scopes. Good.
 
 But I still do not know the API.
 
@@ -234,7 +234,7 @@ task.select(a, b)
 # a and b are no longer usable
 ```
 
-Good. 
+Good.
 
 But what about plain `await handle`?
 
@@ -282,7 +282,7 @@ This needs to be explicit.
 
 ## 5. `join` and `cancel` are mentioned but not typed
 
-The phase file says milestone 2 implements task-handle `join` and task-handle cancellation. 
+The phase file says milestone 2 implements task-handle `join` and task-handle cancellation.
 
 But the model file does not give signatures.
 
@@ -320,7 +320,7 @@ But timeout still says:
 task.timeout(handle: Task[T, E], duration: Duration) -> TaskResult[T, E | TimeoutError]
 ```
 
-That uses `E | TimeoutError`. 
+That uses `E | TimeoutError`.
 
 Does Sifr have union types?
 
@@ -400,7 +400,7 @@ The example should not use undefined API.
 
 ## 8. Scoped borrows across spawned tasks are still a major implementation risk
 
-The model allows immutable borrows across `scope.spawn` when the scoped lifetime proves safety and the referent is share-safe. 
+The model allows immutable borrows across `scope.spawn` when the scoped lifetime proves safety and the referent is share-safe.
 
 The phase file even has:
 
@@ -408,7 +408,7 @@ The phase file even has:
 spawn_scoped_borrow_ok.sifr
 ```
 
-as a positive validation target. 
+as a positive validation target.
 
 This is conceptually good, but implementation-heavy.
 
@@ -441,7 +441,7 @@ The phase file says milestone 1 parses and lowers minimal:
 async with task.scope() as scope
 ```
 
-as a built-in scoped-task construct, while general user-defined async context managers wait until milestone 7a. 
+as a built-in scoped-task construct, while general user-defined async context managers wait until milestone 7a.
 
 But milestone 2 already wants this:
 
@@ -449,7 +449,7 @@ But milestone 2 already wants this:
 async with task.timeout(duration):
 ```
 
-as a usable context-manager form. 
+as a usable context-manager form.
 
 That is a dependency bug.
 
@@ -472,13 +472,13 @@ The simplest fix is Option A.
 
 ## 10. Async generators are now in v1, and that makes the phase much bigger
 
-You added async generators and async comprehensions to the first model. The spec is thoughtful: async generator functions are not coroutines, `AsyncGenerator[T, E, R]` implements `AsyncIterator[T, E]`, direct `await` is rejected, close/cancellation runs cleanup, and unsupported Python controls like `send`, `throw`, and async `yield from` are deferred. 
+You added async generators and async comprehensions to the first model. The spec is thoughtful: async generator functions are not coroutines, `AsyncGenerator[T, E, R]` implements `AsyncIterator[T, E]`, direct `await` is rejected, close/cancellation runs cleanup, and unsupported Python controls like `send`, `throw`, and async `yield from` are deferred.
 
 This is coherent.
 
 But it is a lot.
 
-Async generator lowering without unstable Rust generator features is a nontrivial compiler project. The phase file correctly calls that out, but it still makes Phase 32 much larger. 
+Async generator lowering without unstable Rust generator features is a nontrivial compiler project. The phase file correctly calls that out, but it still makes Phase 32 much larger.
 
 My ruthless advice: either accept that Phase 32 is now a major compiler phase, or cut async generator expressions from v1.
 
@@ -502,7 +502,7 @@ Lazy async generator expressions are pure ergonomics. They add parser/HIR/lifeti
 
 ## 11. `AsyncGenerator[T, E, R]` exposes `R` before users can observe it
 
-The model says `R` is the generator return value available to internal cleanup/finalization machinery, while v1 does not expose Python-style `StopAsyncIteration.value` publicly. 
+The model says `R` is the generator return value available to internal cleanup/finalization machinery, while v1 does not expose Python-style `StopAsyncIteration.value` publicly.
 
 Then why is `R` public?
 
@@ -537,7 +537,7 @@ The model says:
 agen.aclose()
 ```
 
-requests generator close, runs cleanup, and then completes. It also says cleanup failures become `SecondaryError` evidence attached to the owning cancellation/failure result. 
+requests generator close, runs cleanup, and then completes. It also says cleanup failures become `SecondaryError` evidence attached to the owning cancellation/failure result.
 
 But if the user explicitly calls `aclose()`, what is the owning primary result?
 
@@ -586,7 +586,7 @@ If cleanup fails during cancellation or timeout, it is secondary.
 
 ## 13. Concurrent `anext()` is underdefined
 
-You define what happens if `anext()` is called while cleanup is running: it waits for cleanup and then returns final state. 
+You define what happens if `anext()` is called while cleanup is running: it waits for cleanup and then returns final state.
 
 But what about two concurrent `anext()` calls while the generator is active?
 
@@ -618,7 +618,7 @@ Do not silently queue concurrent `anext()` calls unless you want generators to b
 
 ## 14. Async iterator close needs a protocol
 
-The model says eager async comprehensions close the active iterator on cancellation or abandonment “when that iterator has async-generator cleanup semantics.” 
+The model says eager async comprehensions close the active iterator on cancellation or abandonment “when that iterator has async-generator cleanup semantics.”
 
 That phrase is doing too much work.
 
@@ -647,7 +647,7 @@ Otherwise “has async-generator cleanup semantics” is a vibes-based runtime c
 
 Channel endpoints are much better now, but you still need to define endpoint lifetime behavior.
 
-Current rules say sender is clonable, receiver is single-consumer, `sender.close()` wakes pending senders and receivers, and `receive()` returns `ClosedError` when closed and drained. 
+Current rules say sender is clonable, receiver is single-consumer, `sender.close()` wakes pending senders and receivers, and `receive()` returns `ClosedError` when closed and drained.
 
 Missing rules:
 
@@ -690,7 +690,7 @@ Async iteration:
 anext() -> Result[Option[T], E]
 ```
 
-Normal exhaustion is `Ok(None)`. 
+Normal exhaustion is `Ok(None)`.
 
 So for channel-backed async iteration, channel close must be translated:
 
@@ -725,7 +725,7 @@ enum SecondaryError:
     CancellationDuringCleanup(cause: CancellationError)
 ```
 
-Good. 
+Good.
 
 But this is not enough.
 
@@ -748,7 +748,7 @@ Right now it says inspectable evidence. That implies public stable shape. Be rea
 
 ## 18. `sifr.threading` in milestone 6 may violate “compatibility after canonical model”
 
-The model says compatibility layers come after the canonical model exists. The phase file follows that for `sifr.asyncio` in milestone 8. 
+The model says compatibility layers come after the canonical model exists. The phase file follows that for `sifr.asyncio` in milestone 8.
 
 But milestone 6 adds:
 
@@ -756,7 +756,7 @@ But milestone 6 adds:
 sifr.threading
 ```
 
-as a compatibility veneer before async resources, async iteration, async generators, comprehensions, and phase closure. 
+as a compatibility veneer before async resources, async iteration, async generators, comprehensions, and phase closure.
 
 That is inconsistent with the stated principle.
 
@@ -770,7 +770,7 @@ Do not sneak compatibility into milestone 6 while saying compatibility waits unt
 
 ## 19. `ThreadPoolExecutor` and blocking futures need signatures
 
-You fixed `spawn_blocking` lifetime policy: owned, sendable, static captures; cancellation does not abort already-running OS work; result may be abandoned. Good. 
+You fixed `spawn_blocking` lifetime policy: owned, sendable, static captures; cancellation does not abort already-running OS work; result may be abandoned. Good.
 
 But the return type is not specified.
 
@@ -794,7 +794,7 @@ task.spawn_blocking(fn) -> concurrent.Future[T, E]
 
 It should probably not be ordinary `Task[T, E]`, because cancellation/lifetime semantics differ from cooperative async tasks.
 
-You already say `sifr.concurrent.Future` is a compatibility wrapper over task/blocking handles, not a pure alias. 
+You already say `sifr.concurrent.Future` is a compatibility wrapper over task/blocking handles, not a pure alias.
 
 So define a canonical blocking handle:
 
@@ -814,7 +814,7 @@ That second option is dangerous because it overloads task cancellation semantics
 
 ## 20. The old proposal file should be deleted or marked superseded
 
-The new files are much better. But the old uploaded proposal still contains the old wrong ideas: `await Task[T, E] -> Result[T, E | CancellationError]`, MPMC channels, `Future = Task` alias, and must-consume orphaned handles.  
+The new files are much better. But the old uploaded proposal still contains the old wrong ideas: `await Task[T, E] -> Result[T, E | CancellationError]`, MPMC channels, `Future = Task` alias, and must-consume orphaned handles.
 
 If that old file still lives in the repo, it is now dangerous.
 
@@ -826,7 +826,7 @@ superseded_async_concurrency_model_2026_05_09.txt
 
 or delete it.
 
-The new phase file says the model file is authoritative. Good. Now make sure there is no stale document that a future implementer can accidentally follow. 
+The new phase file says the model file is authoritative. Good. Now make sure there is no stale document that a future implementer can accidentally follow.
 
 ---
 

@@ -12,16 +12,16 @@ None.
 
 ### 2. Non-Blocking Observations
 
-**O1 (Pass 1) — Negative fixture added.**  
+**O1 (Pass 1) — Negative fixture added.**
 `task_handle_cancel_after_await_rejected.sifr` correctly asserts `OWN_USE_AFTER_MOVE` on `handle.cancel()` after `await handle`. Verified: `cargo run -q -p sifr -- check` emits `use of moved value: 'handle'`. ✅
 
-**O2 (Pass 1) — Codegen obfuscation is intentional.**  
+**O2 (Pass 1) — Codegen obfuscation is intentional.**
 `lib_codegen_tests.rs:3767–3770` uses `format!("fn {}{}", "can", "cel(&self)")`. The pass-1 note about simplifying to plain string was explicitly addressed: `scripts/check_diagnostic_cancel_usage.py` uses the regex `(?:\.\s*)?cancel\s*\(` to detect and reject literal cancel-call syntax outside the diagnostics model. The test legitimately constructs Rust source strings that would trigger this guard, so obfuscation is required. Confirmed the script passes. ✅
 
-**O3 (Pass 1) — Zero-variant `Cancelled` is correct for milestone_async_2.**  
+**O3 (Pass 1) — Zero-variant `Cancelled` is correct for milestone_async_2.**
 Conservative infallible spawn uses `Infallible` as `E`, so `Cancelled` carries no payload. Schema migration for `Cancelled(Failure[CancellationError])` is deferred to milestone_async_3. No action needed. ✅
 
-**O4 (Pass 1) — No dedicated cancel arity diagnostic test.**  
+**O4 (Pass 1) — No dedicated cancel arity diagnostic test.**
 `task_handle_calls.rs:29–35` guards arity for both `join` and `cancel`. The infrastructure is correct; test gap is non-blocking for this PR.
 
 ### 3. Design Consistency

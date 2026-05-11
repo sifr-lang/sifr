@@ -20,7 +20,7 @@
 ---
 
 ### 3. Fixture in phase positive validation set and PR manifest
-**SATISFIED.** 
+**SATISFIED.**
 - Phase doc line 472: `task_handle_collection_consumed.sifr` is listed under the milestone_async_3 positive validation set.
 - PR manifest: `task_handle_collection_consumed` added with correct JSON syntax (trailing comma after `task_gather_ordered`).
 
@@ -41,7 +41,7 @@ This is accurate — it's a validation slice, not implementation, and correctly 
 ---
 
 ### 6. No additional blocking changes required
-**SATISFIED.** 
+**SATISFIED.**
 - JSON syntax valid.
 - Local validation passed: `scripts/run_all_tests.sh --profile quick` reports 23/23 pass, including the new fixture.
 - Fixture is lexically placed in the correct e2e pass directory.

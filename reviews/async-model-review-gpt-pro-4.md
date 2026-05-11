@@ -1,6 +1,6 @@
 Now it’s **almost there**.
 
-I’d call this version **implementation-ready after a short cleanup pass**, not a redesign pass. The model now has a coherent semantic core: `Coroutine[T, E]`, affine `Task[T, E]`, `TaskResult[T, E]`, `ScopeFailure`, `TimeoutResult[E]`, parameterized `AsyncClosable[E]`, same-task timeout scopes, v1 owned/static spawn boundaries, explicit channels, and a milestone plan that mostly lines up with the contract. That is a huge improvement.  
+I’d call this version **implementation-ready after a short cleanup pass**, not a redesign pass. The model now has a coherent semantic core: `Coroutine[T, E]`, affine `Task[T, E]`, `TaskResult[T, E]`, `ScopeFailure`, `TimeoutResult[E]`, parameterized `AsyncClosable[E]`, same-task timeout scopes, v1 owned/static spawn boundaries, explicit channels, and a milestone plan that mostly lines up with the contract. That is a huge improvement.
 
 But I would still block implementation on a few precise contract holes.
 
@@ -21,7 +21,7 @@ The big wins:
 * v1 `scope.spawn` requires owned/sendable/static captures, deferring scoped borrowed spawn.
 * async generators are `AsyncGenerator[T, E]`, not coroutine-returning generators.
 * channel endpoint lifetime rules are finally explicit.
-* phase milestones now mostly respect dependency order.  
+* phase milestones now mostly respect dependency order.
 
 That is strong.
 
@@ -239,7 +239,7 @@ Select2
 ThreadPoolExecutor
 ```
 
-But the milestone 0 public type list only includes some of them, like `Channel[T]` and `Lock[T]`. The phase file says all public modules/types for v1 must be named and scoped, so the list should be exhaustive. 
+But the milestone 0 public type list only includes some of them, like `Channel[T]` and `Lock[T]`. The phase file says all public modules/types for v1 must be named and scoped, so the list should be exhaustive.
 
 Add every public type. If some are private implementation details, say so.
 
@@ -363,7 +363,7 @@ Cancelled does not mean work stopped.
 
 This one matters because tests encode semantics.
 
-`task_group_unhandled_error_rejected.sifr` sounds like a compile-time rejection, but the model says unobserved child failure surfaces as `ScopeFailure` at scope exit. That may be a runtime/task result behavior, not necessarily a static rejection. 
+`task_group_unhandled_error_rejected.sifr` sounds like a compile-time rejection, but the model says unobserved child failure surfaces as `ScopeFailure` at scope exit. That may be a runtime/task result behavior, not necessarily a static rejection.
 
 Use clearer names:
 

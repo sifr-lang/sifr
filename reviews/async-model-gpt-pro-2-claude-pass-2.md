@@ -18,7 +18,7 @@ Satisfied. All five accepted blockers from pass 1 are fully closed.
 
 All three documents agree on:
 - `ScopeFailure` / `ScopeFailureCause` / `SecondaryError` — model + phase + architecture
-- `TaskGroup[E]` homogeneous requirement + sibling cancellation — model + phase + architecture  
+- `TaskGroup[E]` homogeneous requirement + sibling cancellation — model + phase + architecture
 - `BlockingTask[T, E]` distinct from cooperative `Task[T, E]` — model + phase + architecture
 - `TimeoutResult[E]` with `Inner(E)` / `Timeout(TimeoutError)` branches — model + phase + architecture
 - `AsyncClosable` protocol for cleanup — model + phase + architecture

@@ -23,7 +23,7 @@ This is a clean, well-scoped implementation of `task.select(a, b)` for milestone
 
 **Tests**:
 - HIR unit test: `test_task_select_consumes_handle_bindings`
-- Codegen unit test: `test_task_select_lowers_to_private_select_helper`  
+- Codegen unit test: `test_task_select_lowers_to_private_select_helper`
 - E2E: `task_select_first_completion.sifr` validates the losing task (slow 200ms) does not write its marker file when the fast task wins
 
 ### Non-blocking notes:
