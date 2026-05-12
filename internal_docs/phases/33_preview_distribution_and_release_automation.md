@@ -1,6 +1,6 @@
 # Phase 33: Preview Distribution and Release Automation (`alpha`/`beta`)
 
-status: refining
+status: in progress
 
 ## Objective
 

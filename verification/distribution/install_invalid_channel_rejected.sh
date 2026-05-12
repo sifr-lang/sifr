@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source "$(dirname "$0")/common.sh"
+
+require_failure_contains \
+  "unknown preview channel: nightly" \
+  run_dispatcher index --channel nightly

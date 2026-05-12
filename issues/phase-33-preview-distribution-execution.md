@@ -1,0 +1,59 @@
+# Phase 33 Preview Distribution Execution Checklist
+
+Status: in progress
+
+Phase source: `internal_docs/phases/33_preview_distribution_and_release_automation.md`
+
+## Milestone 33.1: Generated Installer and Channel Dispatchers
+
+- [x] Sifr-owned generated dispatcher path selected.
+- [x] uv-derived code status recorded: no copied or adapted uv code in milestone 33.1.
+- [x] Public site dispatcher files generated under `apps/sifr-site/public/install/`.
+- [x] Default beta, alpha, beta, and explicit preview version dispatch are deterministic.
+- [x] Stable channel and stable-looking versions are rejected before download.
+- [x] Invalid channel, conflicting inputs, missing immutable installer, and malformed dispatcher config are rejected.
+- [x] Reviewer satisfied.
+- [ ] PR merged.
+
+Validation evidence:
+
+- `verification/distribution/install_default_beta_dispatcher.sh`
+- `verification/distribution/install_alpha_dispatcher.sh`
+- `verification/distribution/install_version_pin_dispatcher.sh`
+- `verification/distribution/install_stable_channel_gated.sh`
+- `verification/distribution/install_invalid_channel_rejected.sh`
+- `verification/distribution/install_conflicting_channel_and_version_rejected.sh`
+- `verification/distribution/install_stable_version_pin_rejected.sh`
+- `verification/distribution/install_missing_generated_installer_rejected.sh`
+- `verification/distribution/install_dispatcher_malformed_config_rejected.sh`
+
+## Milestone 33.2: Artifact and Generated Installer Pipeline
+
+- [ ] Artifact build automation.
+- [ ] SHA-256 checksum generation and validation.
+- [ ] Immutable generated version installer.
+- [ ] Channel dispatchers point to generated installers.
+- [ ] Demo evidence recorded.
+- [ ] Reviewer satisfied.
+- [ ] PR merged.
+
+## Milestone 33.3: Agentic Preview Release Command
+
+- [ ] `.cursor/commands/create-new-version.md` added.
+- [ ] Dry-run planner.
+- [ ] Authorized real-run workflow.
+- [ ] Release checklist and recovery note generation.
+- [ ] Stable release attempts rejected before mutation.
+- [ ] Reviewer satisfied.
+- [ ] PR merged.
+
+## Phase Exit Gate
+
+- [ ] Public beta installer resolves through `/install`.
+- [ ] Public alpha installer resolves through `/install/alpha`.
+- [ ] Explicit preview version pin installs exact immutable version.
+- [ ] Artifact downloads are SHA-256 validated before install.
+- [ ] `/create-new-version` dry-run and real-run flows are repeatable.
+- [ ] Stable channel and stable-looking version pins remain impossible.
+- [ ] Site deployment path has been exercised.
+- [ ] Phase 27 non-regression contract remains green.
