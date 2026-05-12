@@ -13,13 +13,13 @@ proposed
 
 ### adhoc_async_effect_0: Effect Summary Infrastructure
 
-- [ ] Add internal async suspension summaries.
-- [ ] Mark known async primitives with direct suspension effects.
-- [ ] Compute transitive summaries through same-task coroutine awaits.
-- [ ] Add positive validation fixtures:
-  - [ ] `async_effect_summary_sleep.sifr`
-  - [ ] `async_effect_summary_channel_receive.sifr`
-  - [ ] `async_effect_summary_transitive_await.sifr`
+- [x] Add internal async suspension summaries.
+- [x] Mark known async primitives with direct suspension effects.
+- [x] Compute transitive summaries through same-task coroutine awaits.
+- [x] Add positive validation fixtures:
+  - [x] `async_effect_summary_sleep.sifr`
+  - [x] `async_effect_summary_channel_receive.sifr`
+  - [x] `async_effect_summary_transitive_await.sifr`
 
 ### adhoc_async_effect_1: Reject Fake Async And Fake Await
 
