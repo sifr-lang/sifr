@@ -13,7 +13,7 @@ Phase source: `internal_docs/phases/33_preview_distribution_and_release_automati
 - [x] Stable channel and stable-looking versions are rejected before download.
 - [x] Invalid channel, conflicting inputs, missing immutable installer, and malformed dispatcher config are rejected.
 - [x] Reviewer satisfied.
-- [ ] PR merged.
+- [x] PR merged.
 
 PRs:
 
@@ -34,13 +34,30 @@ Validation evidence:
 
 ## Milestone 33.2: Artifact and Generated Installer Pipeline
 
-- [ ] Artifact build automation.
-- [ ] SHA-256 checksum generation and validation.
-- [ ] Immutable generated version installer.
-- [ ] Channel dispatchers point to generated installers.
-- [ ] Demo evidence recorded.
-- [ ] Reviewer satisfied.
+- [x] Artifact build automation.
+- [x] SHA-256 checksum generation and validation.
+- [x] Immutable generated version installer.
+- [x] Channel dispatchers point to generated installers.
+- [x] Demo evidence recorded.
+- [x] Reviewer satisfied.
 - [ ] PR merged.
+
+Validation evidence:
+
+- `verification/distribution/artifact_generated_installer_all_preview_targets.sh`
+- `verification/distribution/artifact_sha256_validated.sh`
+- `verification/distribution/install_matching_target_artifact.sh`
+- `verification/distribution/channel_dispatcher_points_to_generated_installer.sh`
+- `verification/distribution/artifact_missing_target_rejected.sh`
+- `verification/distribution/artifact_checksum_mismatch_rejected.sh`
+- `verification/distribution/artifact_target_mismatch_rejected.sh`
+- `verification/distribution/stable_entrypoints_unchanged_by_preview_release.sh`
+- `scripts/run_distribution_validation.sh`
+
+PRs:
+
+- Compiler repo: https://github.com/sifr-lang/sifr/pull/2106
+- Site repo: https://github.com/sifr-lang/sifr-website/pull/4
 
 ## Milestone 33.3: Agentic Preview Release Command
 

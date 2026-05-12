@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
+use_mock_dispatcher_fixture
 
 require_failure_contains \
   "unknown preview channel: nightly" \

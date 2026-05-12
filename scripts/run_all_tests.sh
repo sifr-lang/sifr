@@ -117,6 +117,9 @@ python3 "${SCRIPT_DIR}/check_diagnostic_transport_cleanup.py"
 echo "Running verification hardening script self-tests"
 python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
 
+echo "Running distribution validation"
+bash "${SCRIPT_DIR}/run_distribution_validation.sh"
+
 echo "Running sifr_diagnostics tests"
 cargo test -p sifr_diagnostics
 

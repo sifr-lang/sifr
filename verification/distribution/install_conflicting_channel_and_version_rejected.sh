@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
+use_mock_dispatcher_fixture
 
 require_failure_contains \
   "--version 0.1.0-alpha.1 conflicts with selected channel beta" \
