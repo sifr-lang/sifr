@@ -65,7 +65,7 @@ The user-facing vocabulary is:
 - scoped task groups
 - explicit channels and locks
 - explicit blocking/thread offload
-- `@io_bound` and `@cpu_bound` annotations for diagnostic guidance
+- `@blocking_io` and `@cpu_heavy` annotations for synchronous workload classification
 
 The primary model does not include:
 
@@ -111,12 +111,12 @@ Async tasks are for I/O waiting and cooperative scheduling. CPU-intensive work a
 
 Required surfaces:
 
-- `@io_bound` for sync functions that perform synchronous I/O such as file, network, database, pipe, or blocking timer waits
-- `@cpu_bound` for sync functions expected to be CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing
+- `@blocking_io` for sync functions that perform synchronous I/O such as file, network, database, pipe, or blocking timer waits
+- `@cpu_heavy` for sync functions expected to be CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing
 - `task.spawn_blocking(...)`
 - `sifr.concurrent.ThreadPoolExecutor`
 
-These annotations are declaration-site workload facts, not scheduling commands. Calling a known `@io_bound` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a known `@cpu_bound` function from async code should suggest `spawn_blocking` or a thread-pool executor. The compiler must not silently rewrite either call into a task or thread.
+These annotations are declaration-site workload facts for synchronous functions, not scheduling commands and not async effects. Calling a known `@blocking_io` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a known `@cpu_heavy` function from async code should suggest `spawn_blocking` or a thread-pool executor. The compiler must not silently rewrite either call into a task or thread.
 
 Deferred surfaces:
 
@@ -617,14 +617,36 @@ Channels are the canonical queue-like concurrency primitive:
 
 Async tasks are for waiting and cooperative scheduling. CPU-bound work and blocking OS calls must use explicit offload.
 
-`@io_bound` and `@cpu_bound` are declaration-site workload classification annotations. They never imply automatic task or thread scheduling.
+`@blocking_io` and `@cpu_heavy` are declaration-site workload classification annotations for synchronous functions. They never imply automatic task or thread scheduling.
 
-- `@io_bound`: the function performs synchronous I/O that can block an OS thread, such as file read/write, network I/O, database calls, pipe operations, or blocking timer waits. Calling a known `@io_bound` function from an `async def` body produces a warning: use an async API if available, or wrap the call with `spawn_blocking`.
-- `@cpu_bound`: the function is CPU-intensive with no I/O, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing. Calling a known `@cpu_bound` function from an `async def` body produces a warning: use `spawn_blocking` or a `ThreadPoolExecutor` to avoid starving the runtime.
+- `@blocking_io`: the sync function performs I/O that can block an OS thread, such as file read/write, network I/O, database calls, pipe operations, or blocking timer waits. Calling a known `@blocking_io` function from an `async def` body is an error in the sealed async model: use an async API if available, or wrap the call with `spawn_blocking`.
+- `@cpu_heavy`: the sync function is CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing. Calling a known `@cpu_heavy` function from an `async def` body is an error in the sealed async model: use `spawn_blocking` or a `ThreadPoolExecutor` to avoid starving the runtime.
 
-The stdlib maintains a built-in annotation database for stdlib functions. User code can annotate declarations with `@io_bound` or `@cpu_bound`. Unannotated user functions are assumed to be cheap compute and do not warn by default; this avoids making every short helper look like a scheduler problem. External/FFI calls are treated conservatively as potentially blocking in async contexts unless a future FFI contract classifies them more precisely.
+The stdlib maintains a built-in annotation database for stdlib functions. User code can annotate sync declarations with `@blocking_io` or `@cpu_heavy`. Unannotated user functions are assumed to be cheap compute and do not warn by default; this avoids making every short helper look like a scheduler problem. External/FFI calls are treated conservatively as potentially blocking in async contexts unless a future FFI contract classifies them more precisely.
 
-These annotations guide the developer, not the compiler. The compiler must not silently rewrite either call.
+These annotations guide diagnostics and offload validation. The compiler must not silently rewrite either call.
+
+## Async Effect Discipline
+
+Async functions must be async for a real reason. The compiler tracks an internal suspension summary for async bodies. The exact internal enum is not public API, but the semantic categories are:
+
+- `NoSuspend`: no operation in the body can suspend.
+- `AsyncIo`: awaiting a native async I/O operation or an async API with transitive I/O wait.
+- `TimerWait`: awaiting sleep, timeout, or timer-backed scheduling.
+- `ChannelWait`: awaiting channel send/receive or async iteration over a channel-backed stream.
+- `TaskWait`: awaiting task handles, blocking task handles, task composition APIs, task scope/group cleanup, or same-task coroutines with a non-empty suspension summary.
+- `AsyncResourceWait`: awaiting async context-manager enter/exit, async iterator advancement, or async cleanup.
+- `GeneratorSuspend`: suspension at an async generator `yield`, or an async generator await with a non-empty suspension summary.
+
+`async def` with a `NoSuspend` summary is rejected. The user should write `def` instead. Async protocol conformance may require an async-shaped method with no current suspension, but that must use an explicit reviewed escape hatch with a reason; the compiler must not silently accept fake async functions.
+
+`await` remains valid only for awaitable values. Awaiting a non-awaitable value, including the result of a sync function call, is a hard error. In addition, awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend` is rejected because the callee is async in shape only.
+
+`@blocking_io` and `@cpu_heavy` do not create async effects and do not make sync functions awaitable. They are sync workload facts. Applying either annotation to `async def` is an error; async APIs receive suspension summaries such as `AsyncIo`, not sync workload annotations. Calling a known `@blocking_io` or `@cpu_heavy` function directly from an `async def` body is an error in the sealed async model. Users must choose a native async API, `task.spawn_blocking`, or `sifr.concurrent.ThreadPoolExecutor`.
+
+`task.spawn_blocking(fn)` and `ThreadPoolExecutor.submit(fn)` require classified sync work. The target function must be annotated `@blocking_io` or `@cpu_heavy`, known by the stdlib annotation database as blocking or CPU-heavy, or known by an external/FFI contract as blocking or CPU-heavy. Unannotated cheap sync helpers are rejected as offload targets; the diagnostic should say to call them directly, or annotate the declaration if it is genuinely blocking or expensive.
+
+`spawn_blocking` on `@blocking_io` work is valid and should not warn by default. A later informational diagnostic may suggest a specific native async replacement only when the compiler knows one.
 
 `task.spawn_blocking` and `sifr.concurrent.ThreadPoolExecutor` provide explicit offload:
 
@@ -785,6 +807,8 @@ Diagnostic families cover:
 - invalid async syntax/use
 - `await` outside async
 - awaiting non-awaitable values
+- async functions with no real suspension effect
+- awaiting same-task coroutines with no transitive suspension effect
 - async calls from sync callable paths
 - `try await` on task handles
 - task-boundary Send/Sync failure
@@ -795,7 +819,17 @@ Diagnostic families cover:
 - detached-task capture failure if detached tasks are added later
 - cancellation misuse
 - timeout scope failure not handled by surrounding error type
-- `@io_bound`, `@cpu_bound`, or potentially blocking FFI call in async context
+- `@blocking_io`, `@cpu_heavy`, or potentially blocking FFI call in async context
+- unclassified functions passed to `spawn_blocking` or `ThreadPoolExecutor.submit`
+
+New diagnostic codes for the ad hoc async effect seal (`SIFR-ASYNC-*`):
+
+- `SIFR-ASYNC-0001`: `async def` body has no real suspension effect (transitive `NoSuspend`).
+- `SIFR-ASYNC-0002`: awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend`.
+- `SIFR-ASYNC-0003`: direct `@blocking_io` call from async context.
+- `SIFR-ASYNC-0004`: direct `@cpu_heavy` call from async context.
+- `SIFR-ASYNC-0005`: `spawn_blocking` target is unannotated and not classified by stdlib/FFI contract.
+- `SIFR-ASYNC-0006`: `@blocking_io` or `@cpu_heavy` applied to `async def`.
 - lock guard live at an `await` point
 - invalid async protocol implementation
 - invalid async generator use, including `await` on an async generator
@@ -824,21 +858,25 @@ These decisions are part of the first async/concurrency model:
 11. Compatibility veneers must not introduce a second runtime model.
 12. Public selectors, `contextvars`, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
 13. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
-14. `@io_bound` and `@cpu_bound` are declaration-site workload classification annotations. They power diagnostics but never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
-15. Subprocess and signal APIs require a later model amendment.
-16. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; graceful shutdown uses structured scope cancellation and explicit channels.
-17. `async def` with `yield` creates `AsyncGenerator[T, E]`, not `Coroutine[AsyncGenerator[T, E], E]`.
-18. `AsyncGenerator[T, E]` is an `AsyncIterator[T, E]` and is not awaitable.
-19. Async iteration exhaustion is `Ok(None)` through `Result[Option[T], E]`; stream failure remains `Err(E)`.
-20. Async generator close and cancellation run `finally` blocks and async context cleanup before termination.
-21. Async comprehensions are protocol sugar over `async for`; they must not introduce hidden task creation or detached work.
-22. Async generator `send()`, `throw()`, async `yield from`, async generator expressions, nested async comprehensions, and awaited comprehension filters are deferred.
-23. `TaskScope.__aexit__` returns `Result[None, ScopeFailure]`; unobserved child failure or cancellation must be surfaced, never dropped.
-24. Task handles are affine. `await Task[T, E]`, `join()`, `cancel_and_join()`, `gather`, `select`, `race`, and `timeout` consume the handle. Task handles are not clonable in v1.
-25. `TaskGroup[E]` requires homogeneous child error type `E` in v1 and cancels unfinished siblings on first child failure.
-26. `task.timeout(handle, duration)` returns `TaskResult[T, TimeoutResult[E]]`; timeout is an ordinary timeout failure, not child cancellation evidence.
-27. `async with task.timeout(duration)` is a compiler-recognized timeout scope whose deadline failure exits with ordinary `TimeoutError`.
-28. V1 `scope.spawn` requires owned, sendable, static captures. Scoped borrowed spawn and local non-send task sets are deferred.
-29. Public v1 `AsyncGenerator` is `AsyncGenerator[T, E]`; non-`None` async generator return values and lazy async generator expressions are deferred.
-30. `AsyncGenerator` is single-consumer and non-reentrant in v1.
-31. `TaskCancelled` is the canonical ordinary `Error` wrapper when a caller intentionally converts materialized child cancellation into its own error channel.
+14. `@blocking_io` and `@cpu_heavy` are declaration-site workload classification annotations for sync functions. They power diagnostics and offload validation but never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
+15. Async functions must have a real suspension effect. `async def` with no suspension is rejected unless an explicit reviewed protocol-conformance escape hatch applies.
+16. Awaiting a same-task coroutine with no transitive suspension effect is rejected.
+17. Direct `@blocking_io` or `@cpu_heavy` sync calls from async code are errors in the sealed model; cheap unannotated sync helper calls remain allowed.
+18. `task.spawn_blocking` and `ThreadPoolExecutor.submit` require classified `@blocking_io`, `@cpu_heavy`, stdlib-known, or external-contract-known blocking/CPU-heavy work.
+19. Subprocess and signal APIs require a later model amendment.
+20. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; graceful shutdown uses structured scope cancellation and explicit channels.
+21. `async def` with `yield` creates `AsyncGenerator[T, E]`, not `Coroutine[AsyncGenerator[T, E], E]`.
+22. `AsyncGenerator[T, E]` is an `AsyncIterator[T, E]` and is not awaitable.
+23. Async iteration exhaustion is `Ok(None)` through `Result[Option[T], E]`; stream failure remains `Err(E)`.
+24. Async generator close and cancellation run `finally` blocks and async context cleanup before termination.
+25. Async comprehensions are protocol sugar over `async for`; they must not introduce hidden task creation or detached work.
+26. Async generator `send()`, `throw()`, async `yield from`, async generator expressions, nested async comprehensions, and awaited comprehension filters are deferred.
+27. `TaskScope.__aexit__` returns `Result[None, ScopeFailure]`; unobserved child failure or cancellation must be surfaced, never dropped.
+28. Task handles are affine. `await Task[T, E]`, `join()`, `cancel_and_join()`, `gather`, `select`, `race`, and `timeout` consume the handle. Task handles are not clonable in v1.
+29. `TaskGroup[E]` requires homogeneous child error type `E` in v1 and cancels unfinished siblings on first child failure.
+30. `task.timeout(handle, duration)` returns `TaskResult[T, TimeoutResult[E]]`; timeout is an ordinary timeout failure, not child cancellation evidence.
+31. `async with task.timeout(duration)` is a compiler-recognized timeout scope whose deadline failure exits with ordinary `TimeoutError`.
+32. V1 `scope.spawn` requires owned, sendable, static captures. Scoped borrowed spawn and local non-send task sets are deferred.
+33. Public v1 `AsyncGenerator` is `AsyncGenerator[T, E]`; non-`None` async generator return values and lazy async generator expressions are deferred.
+34. `AsyncGenerator` is single-consumer and non-reentrant in v1.
+35. `TaskCancelled` is the canonical ordinary `Error` wrapper when a caller intentionally converts materialized child cancellation into its own error channel.

@@ -2,6 +2,8 @@
 
 status: completed
 
+Corrective follow-up: the async effect and offload diagnostic seal is tracked in [Ad Hoc Async Effect And Offload Diagnostics](../../issues/ad-hoc-async-effect-and-offload-diagnostics.md). That ad hoc phase tightens the completed model by rejecting fake async functions, fake awaits, direct annotated blocking/CPU-heavy calls in async code, and unclassified blocking offload targets.
+
 ## Objective
 
 Implement the canonical async and concurrency model defined in `internal_docs/async_concurrency_model.md`.
@@ -88,7 +90,7 @@ These are implementation constraints, not suggestions:
 13. `sifr.asyncio` ships only as a compatibility veneer after the canonical model is complete.
 14. Public selectors, contextvars, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
 15. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
-16. `@io_bound` and `@cpu_bound` are declaration-site diagnostic annotations; they classify workload class for compiler diagnostics and never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
+16. `@blocking_io` and `@cpu_heavy` are declaration-site diagnostic annotations; they classify workload class for compiler diagnostics and never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
 17. Subprocess and signal APIs are out of scope for Phase 32 v1 and require a later model amendment.
 18. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; v1 graceful shutdown uses structured scope cancellation and explicit channels.
 19. `async def` with `yield` is a first-model feature and creates `AsyncGenerator[T, E]`, not a coroutine that returns a generator.
@@ -103,6 +105,7 @@ These are implementation constraints, not suggestions:
 28. `AsyncClosable` is parameterized: `AsyncClosable[E]` with `aclose() -> Result[None, E]`; `AsyncGenerator` implements `AsyncClosable[GeneratorCloseError]`.
 29. Channel endpoint lifetime: dropping last sender closes channel after buffered messages drain; dropping receiver closes immediately to senders; `close()` on any sender closes whole channel; buffered messages remain receivable after close; messages received in FIFO order.
 30. `task.timeout(duration)` context-manager form uses same-task cancellation scoping with internal delimited cancellation; does not introduce a spawn boundary.
+31. Async functions must have a real suspension effect. `async def` with no suspension is rejected unless an explicit reviewed protocol-conformance escape hatch applies. Awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend` is rejected. Direct `@blocking_io` or `@cpu_heavy` sync calls from async code are errors. `spawn_blocking` and `ThreadPoolExecutor.submit` require explicit workload classification (`@blocking_io`, `@cpu_heavy`, stdlib-known, or external-contract-known work).
 
 ## Milestones
 
@@ -717,9 +720,9 @@ status: completed
 
 **Scope:**
 
-- Add `@io_bound` and `@cpu_bound` declaration-site annotations.
-- Add a stdlib annotation database of known I/O-bound and CPU-bound functions.
-- Add diagnostics for calling `@io_bound` or `@cpu_bound` functions directly from async contexts.
+- Add `@blocking_io` and `@cpu_heavy` declaration-site annotations.
+- Add a stdlib annotation database of known blocking I/O and CPU-heavy functions.
+- Add diagnostics for calling `@blocking_io` or `@cpu_heavy` functions directly from async contexts.
 - Implement `task.spawn_blocking`.
 - Implement `sifr.concurrent.ThreadPoolExecutor`.
 - Add `sifr.threading` as a thin compatibility veneer where it can stay canonical:
@@ -770,7 +773,7 @@ status: completed
 
 **Implementation progress:**
 
-- [#2015](https://github.com/sifr-lang/sifr/pull/2015): Added declaration-site `@io_bound` and `@cpu_bound` workload annotations with async-context diagnostics, plus quick-lane validation fixtures for annotated blocking and CPU-heavy calls.
+- [#2015](https://github.com/sifr-lang/sifr/pull/2015): Added declaration-site `@blocking_io` and `@cpu_heavy` workload annotations with async-context diagnostics, plus quick-lane validation fixtures for annotated blocking and CPU-heavy calls.
 - [#2017](https://github.com/sifr-lang/sifr/pull/2017): Implemented `task.spawn_blocking` for direct zero-argument sync functions with distinct `BlockingTask[T, E]` observation and non-send return rejection validation.
 - [#2019](https://github.com/sifr-lang/sifr/pull/2019): Added `sifr.concurrent.ThreadPoolExecutor` as a thin compatibility offload surface backed by the `BlockingTask[T, E]` substrate, including submit lowering, non-send return validation, and quick-lane fixture coverage.
 - [#2021](https://github.com/sifr-lang/sifr/pull/2021): Added the `sifr.threading` compatibility coordination surface for `Thread`, `Lock`, `Event`, and `Condition` without introducing a second offload runtime.
