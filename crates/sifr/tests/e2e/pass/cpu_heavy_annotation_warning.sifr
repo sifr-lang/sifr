@@ -1,4 +1,4 @@
-@cpu_bound
+@cpu_heavy
 def compute_heavy() -> int:
     total: int = 0
     for value in range(5):
