@@ -82,6 +82,10 @@ Validation evidence:
 - `verification/distribution/create_new_version_site_dispatcher_drift_rejected.sh`
 - `scripts/run_distribution_validation.sh`
 
+PR:
+
+- Compiler repo: https://github.com/sifr-lang/sifr/pull/2107
+
 ## Phase Exit Gate
 
 - [ ] Public beta installer resolves through `/install`.
