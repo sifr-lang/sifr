@@ -10,6 +10,7 @@ mod assignment_widening;
 mod async_await;
 mod async_comprehension_diagnostics;
 mod async_comprehensions;
+mod async_effects;
 mod async_for;
 mod async_generator_advances;
 mod async_generator_methods;
@@ -119,6 +120,7 @@ mod typevar_annotations;
 mod typevar_shape_compat;
 mod typing_and_functions;
 mod workload_annotations;
+use async_effects::AsyncSuspensionSummary;
 use asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
@@ -145,10 +147,9 @@ use workload_annotations::WorkloadKind;
 pub(super) struct LowerCtx {
     /// Function signatures (name -> type)
     functions: HashMap<String, FunctionType>,
-    /// Names of functions declared with `async def`.
     async_functions: std::collections::HashSet<String>,
-    /// Names of `async def` functions whose body contains `yield`.
     async_generator_functions: std::collections::HashSet<String>,
+    async_suspension_summaries: HashMap<String, AsyncSuspensionSummary>,
     /// Workload classification decorators for user-defined functions.
     function_workload_annotations: HashMap<String, WorkloadKind>,
     /// Default parameter values for functions (name -> vec of (`param_index`, `default_expr`))
@@ -237,6 +238,7 @@ impl LowerCtx {
             functions: HashMap::new(),
             async_functions: std::collections::HashSet::new(),
             async_generator_functions: std::collections::HashSet::new(),
+            async_suspension_summaries: HashMap::new(),
             function_workload_annotations: HashMap::new(),
             function_defaults: HashMap::new(),
             class_types: HashMap::new(),
@@ -702,14 +704,13 @@ fn lower_module_impl(
                     .insert(function_name.clone(), workload);
             }
             ctx.functions.insert(function_name.clone(), ft);
-            // Track vararg functions
             if func.parameters.vararg.is_some() {
                 ctx.vararg_functions
                     .insert(function_name, func.parameters.args.len());
             }
         }
     }
-
+    ctx.async_suspension_summaries = async_effects::collect_async_suspension_summaries(stmts);
     // Collect import statements and resolve imported names
     let mut imports = Vec::new();
     for stmt in stmts {

@@ -1,0 +1,14 @@
+async def leaf() -> int:
+    await task.sleep(0.0)
+    return 41
+
+
+async def wrapper() -> int:
+    value: int = await leaf()
+    return value + 1
+
+
+async def main() -> None:
+    result: int = await wrapper()
+    assert result == 42
+    return None
