@@ -6,6 +6,7 @@ class LocalCell(NonSend):
     pass
 
 
+@cpu_heavy
 def build_cell() -> LocalCell:
     return LocalCell()
 

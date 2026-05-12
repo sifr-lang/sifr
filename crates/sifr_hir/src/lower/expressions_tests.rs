@@ -1550,7 +1550,7 @@ fn test_task_handle_cancel_does_not_consume_handle_binding() {
 
 #[test]
 fn test_spawn_blocking_lowers_to_blocking_task_handle() {
-    let source = "def compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    handle = task.spawn_blocking(compute_value)\n    result = await handle\n    return None\n";
+    let source = "@cpu_heavy\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    handle = task.spawn_blocking(compute_value)\n    result = await handle\n    return None\n";
     let module = lower_source(source).expect("lowering should succeed");
     let main = module
         .functions
@@ -1576,7 +1576,7 @@ fn test_spawn_blocking_lowers_to_blocking_task_handle() {
 
 #[test]
 fn test_thread_pool_executor_submit_lowers_to_blocking_task_handle() {
-    let source = "class ThreadPoolExecutor:\n    pass\n\n\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(compute_value)\n    result = await handle\n    return None\n";
+    let source = "class ThreadPoolExecutor:\n    pass\n\n\n@cpu_heavy\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(compute_value)\n    result = await handle\n    return None\n";
     let module = lower_source(source).expect("lowering should succeed");
     let main = module
         .functions
@@ -1601,8 +1601,34 @@ fn test_thread_pool_executor_submit_lowers_to_blocking_task_handle() {
 }
 
 #[test]
+fn test_spawn_blocking_rejects_unclassified_target() {
+    let source = "def compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    handle = task.spawn_blocking(compute_value)\n    result = await handle\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("task.spawn_blocking() target 'compute_value' is not classified")
+            && e.code == Some(DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET)
+    }));
+}
+
+#[test]
+fn test_thread_pool_executor_submit_rejects_unclassified_target() {
+    let source = "class ThreadPoolExecutor:\n    pass\n\n\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(compute_value)\n    result = await handle\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("ThreadPoolExecutor.submit() target 'compute_value' is not classified")
+            && e.code == Some(DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET)
+    }));
+}
+
+#[test]
 fn test_thread_pool_executor_submit_rejects_non_send_return() {
-    let source = "class ThreadPoolExecutor:\n    pass\n\nclass LocalCell(NonSend):\n    pass\n\n\ndef build_cell() -> LocalCell:\n    return LocalCell()\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(build_cell)\n    result = await handle\n    return None\n";
+    let source = "class ThreadPoolExecutor:\n    pass\n\nclass LocalCell(NonSend):\n    pass\n\n\n@cpu_heavy\ndef build_cell() -> LocalCell:\n    return LocalCell()\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(build_cell)\n    result = await handle\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();

@@ -1,10 +1,12 @@
 from sifr.concurrent import ThreadPoolExecutor
 
 
+@cpu_heavy
 def compute_value() -> int:
     return 41
 
 
+@blocking_io
 def compute_other() -> int:
     return 7
 

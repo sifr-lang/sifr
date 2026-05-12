@@ -757,6 +757,9 @@ status: completed
 
 - `cheap_sync_helper_in_async_allowed.sifr`
 - `spawn_blocking_basic.sifr`
+- `spawn_blocking_blocking_io_allowed.sifr`
+- `spawn_blocking_cpu_heavy_allowed.sifr`
+- `spawn_blocking_known_stdlib_blocking_allowed.sifr`
 - `blocking_task_cancel_join.sifr`
 - `thread_pool_executor_basic.sifr`
 - `threading_compat_basic.sifr`

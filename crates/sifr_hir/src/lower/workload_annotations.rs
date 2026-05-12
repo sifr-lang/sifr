@@ -94,3 +94,47 @@ pub(super) fn reject_async_direct_call(ctx: &mut LowerCtx, function: &str, range
         range,
     );
 }
+
+pub(super) fn reject_unclassified_offload_target(
+    ctx: &mut LowerCtx,
+    target: &Expr,
+    api_name: &str,
+) -> bool {
+    let Some(function) = target_name(target) else {
+        ctx.error_with_code_at(
+            DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
+            format!(
+                "{api_name} target must be a named sync function classified as @blocking_io, @cpu_heavy, or known blocking external work"
+            ),
+            target.range(),
+        );
+        return true;
+    };
+    if ctx.function_workload_annotations.contains_key(function)
+        || known_stdlib_offload_target(function).is_some()
+    {
+        return false;
+    }
+    ctx.error_with_code_at(
+        DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
+        format!(
+            "{api_name} target '{function}' is not classified as @blocking_io, @cpu_heavy, or known blocking external work; call it directly or annotate it if it is genuinely blocking or expensive"
+        ),
+        target.range(),
+    );
+    true
+}
+
+fn target_name(target: &Expr) -> Option<&str> {
+    let Expr::Name(name) = target else {
+        return None;
+    };
+    Some(name.id.as_str())
+}
+
+fn known_stdlib_offload_target(function: &str) -> Option<WorkloadKind> {
+    match function {
+        "uuid4_obj" => Some(WorkloadKind::BlockingIo),
+        _ => None,
+    }
+}

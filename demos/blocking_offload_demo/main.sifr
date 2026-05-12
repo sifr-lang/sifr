@@ -18,6 +18,7 @@ def read_legacy_counter() -> int:
     return 21
 
 
+@cpu_heavy
 def double_counter() -> int:
     value: int = read_legacy_counter()
     return value * 2

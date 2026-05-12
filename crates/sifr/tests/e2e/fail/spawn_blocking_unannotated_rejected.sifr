@@ -1,4 +1,4 @@
-@cpu_heavy
+# expect-error: SIFR-ASYNC-0005
 def compute_value() -> int:
     return 42
 
