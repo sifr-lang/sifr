@@ -60,3 +60,72 @@ make_dispatcher_fixture() {
     --beta-version "${beta_version}" \
     --base-url "file://${target_root}" >/dev/null
 }
+
+make_mock_version_installers() {
+  local target_root="$1"
+  mkdir -p "${target_root}/versions"
+  cat >"${target_root}/versions/0.1.0-alpha.1" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+echo "sifr mock generated installer version=0.1.0-alpha.1"
+EOF
+  cat >"${target_root}/versions/0.1.0-beta.1" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+echo "sifr mock generated installer version=0.1.0-beta.1"
+EOF
+  chmod 755 "${target_root}/versions/0.1.0-alpha.1" "${target_root}/versions/0.1.0-beta.1"
+}
+
+use_mock_dispatcher_fixture() {
+  MOCK_DISPATCHER_TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sifr-dispatcher-fixture.XXXXXX")"
+  cleanup_mock_dispatcher_fixture() {
+    rm -rf "${MOCK_DISPATCHER_TMP_DIR}"
+  }
+  trap cleanup_mock_dispatcher_fixture EXIT HUP INT TERM
+  make_dispatcher_fixture "${MOCK_DISPATCHER_TMP_DIR}"
+  make_mock_version_installers "${MOCK_DISPATCHER_TMP_DIR}"
+  SITE_INSTALL_ROOT="${MOCK_DISPATCHER_TMP_DIR}"
+  DISPATCH_BASE_URL="file://${MOCK_DISPATCHER_TMP_DIR}"
+}
+
+sha256_fixture_file() {
+  local path="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${path}" | awk '{print $1}'
+  else
+    shasum -a 256 "${path}" | awk '{print $1}'
+  fi
+}
+
+make_mock_binary() {
+  local path="$1"
+  local message="$2"
+  cat >"${path}" <<EOF
+#!/usr/bin/env sh
+set -eu
+echo "${message}"
+EOF
+  chmod 755 "${path}"
+}
+
+make_target_specific_artifacts() {
+  local version="$1"
+  local artifact_dir="$2"
+  local target
+  mkdir -p "${artifact_dir}"
+  for target in \
+    aarch64-apple-darwin \
+    x86_64-apple-darwin \
+    x86_64-unknown-linux-gnu \
+    aarch64-unknown-linux-gnu
+  do
+    local tmp_dir archive_path
+    tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/sifr-target-artifact.XXXXXX")"
+    make_mock_binary "${tmp_dir}/sifr" "target=${target}"
+    archive_path="${artifact_dir}/sifr-${version}-${target}.tar.gz"
+    tar -C "${tmp_dir}" -czf "${archive_path}" sifr
+    sha256_fixture_file "${archive_path}" >"${archive_path}.sha256"
+    rm -rf "${tmp_dir}"
+  done
+}

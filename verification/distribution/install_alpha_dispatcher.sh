@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
+use_mock_dispatcher_fixture
 
 require_success_contains \
   "sifr dispatcher channel=alpha version=0.1.0-alpha.1" \
