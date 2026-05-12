@@ -1,6 +1,7 @@
 from sifr.concurrent import ThreadPoolExecutor
 
 
+@cpu_heavy
 def compute_value() -> int:
     return 42
 

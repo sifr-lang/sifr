@@ -1,0 +1,8 @@
+from sifr.uuid import uuid4_obj
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_blocking(uuid4_obj)
+    result = await handle
+    assert len(str(result)) > 3
+    return None

@@ -61,6 +61,13 @@ pub(super) fn lower_thread_pool_submit_call(
         );
         return Some(None);
     }
+    if super::workload_annotations::reject_unclassified_offload_target(
+        ctx,
+        &call.arguments.args[0],
+        "ThreadPoolExecutor.submit()",
+    ) {
+        return Some(None);
+    }
 
     let (ok_ty, err_ty, submit_func) = match ft.return_type.resolve_alias() {
         Type::Result(ok, err) => (

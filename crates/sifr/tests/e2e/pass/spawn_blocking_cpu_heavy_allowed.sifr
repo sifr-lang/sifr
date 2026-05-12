@@ -1,0 +1,13 @@
+@cpu_heavy
+def compute_heavy() -> int:
+    total: int = 0
+    for value in range(5):
+        total = total + value
+    return total
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_blocking(compute_heavy)
+    result = await handle
+    assert str(result) == "Ok(10)"
+    return None

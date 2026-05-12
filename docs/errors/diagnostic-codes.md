@@ -69,6 +69,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-ASYNC-0002`](SIFR-ASYNC-0002.md) | Error | Awaited same-task coroutine has no real suspension effect. |
 | [`SIFR-ASYNC-0003`](SIFR-ASYNC-0003.md) | Error | Blocking I/O function called directly from async context. |
 | [`SIFR-ASYNC-0004`](SIFR-ASYNC-0004.md) | Error | CPU-heavy function called directly from async context. |
+| [`SIFR-ASYNC-0005`](SIFR-ASYNC-0005.md) | Error | Blocking offload target is not classified as blocking I/O or CPU-heavy work. |
 | [`SIFR-ASYNC-0006`](SIFR-ASYNC-0006.md) | Error | Synchronous workload annotation applied to async function. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
 | [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.md) | Error | Invalid BigDecimal exact literal. |

@@ -188,6 +188,13 @@ fn lower_task_spawn_blocking_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCa
         );
         return TaskCallLowering::Rejected;
     }
+    if super::workload_annotations::reject_unclassified_offload_target(
+        ctx,
+        &call.arguments.args[0],
+        "task.spawn_blocking()",
+    ) {
+        return TaskCallLowering::Rejected;
+    }
 
     let (ok_ty, err_ty, result_func) = match ft.return_type.resolve_alias() {
         Type::Result(ok, err) => (

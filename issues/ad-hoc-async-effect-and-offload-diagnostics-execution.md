@@ -50,17 +50,17 @@ proposed
 
 ### adhoc_async_effect_3: Restrict Blocking Offload Targets
 
-- [ ] Reject `task.spawn_blocking` on unannotated local sync functions.
-- [ ] Reject `ThreadPoolExecutor.submit` on unannotated local sync functions.
-- [ ] Allow annotated `@blocking_io` targets.
-- [ ] Allow annotated `@cpu_heavy` targets.
-- [ ] Preserve existing sendability, arity, and result/error constraints.
-- [ ] Add validation fixtures:
-  - [ ] `spawn_blocking_blocking_io_allowed.sifr`
-  - [ ] `spawn_blocking_cpu_heavy_allowed.sifr`
-  - [ ] `spawn_blocking_unannotated_rejected.sifr`
-  - [ ] `thread_pool_submit_unannotated_rejected.sifr`
-  - [ ] `spawn_blocking_known_stdlib_blocking_allowed.sifr`
+- [x] Reject `task.spawn_blocking` on unannotated local sync functions.
+- [x] Reject `ThreadPoolExecutor.submit` on unannotated local sync functions.
+- [x] Allow annotated `@blocking_io` targets.
+- [x] Allow annotated `@cpu_heavy` targets.
+- [x] Preserve existing sendability, arity, and result/error constraints.
+- [x] Add validation fixtures:
+  - [x] `spawn_blocking_blocking_io_allowed.sifr`
+  - [x] `spawn_blocking_cpu_heavy_allowed.sifr`
+  - [x] `spawn_blocking_unannotated_rejected.sifr`
+  - [x] `thread_pool_submit_unannotated_rejected.sifr`
+  - [x] `spawn_blocking_known_stdlib_blocking_allowed.sifr`
 
 ## Local Validation
 

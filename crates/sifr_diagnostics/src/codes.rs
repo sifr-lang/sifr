@@ -49,6 +49,8 @@ impl DiagnosticCode {
     pub const ASYNC_AWAIT_NO_SUSPEND: Self = Self::new("SIFR-ASYNC-0002", Severity::Error);
     pub const ASYNC_DIRECT_BLOCKING_IO_CALL: Self = Self::new("SIFR-ASYNC-0003", Severity::Error);
     pub const ASYNC_DIRECT_CPU_HEAVY_CALL: Self = Self::new("SIFR-ASYNC-0004", Severity::Error);
+    pub const ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET: Self =
+        Self::new("SIFR-ASYNC-0005", Severity::Error);
     pub const ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF: Self =
         Self::new("SIFR-ASYNC-0006", Severity::Error);
 
@@ -827,6 +829,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "CPU-heavy function called directly from async context.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/cpu_heavy_direct_call_in_async_rejected.sifr",
+        "{message}",
+        "sifr_hir::lower::workload_annotations",
+        [arg!("message")],
+        ["message"]
+    ),
+    active_entry!(
+        "SIFR-ASYNC-0005",
+        "ASYNC",
+        "Blocking offload target is not classified as blocking I/O or CPU-heavy work.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/spawn_blocking_unannotated_rejected.sifr",
         "{message}",
         "sifr_hir::lower::workload_annotations",
         [arg!("message")],
@@ -1773,6 +1786,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::ASYNC_AWAIT_NO_SUSPEND,
     DiagnosticCode::ASYNC_DIRECT_BLOCKING_IO_CALL,
     DiagnosticCode::ASYNC_DIRECT_CPU_HEAVY_CALL,
+    DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
     DiagnosticCode::ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
