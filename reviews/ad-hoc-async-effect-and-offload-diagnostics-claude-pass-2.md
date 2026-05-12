@@ -57,17 +57,18 @@ All prior conditional concerns have been verified as resolved:
 Scanned all reviewed design and phase files for ambiguous transition phrasing. None found.
 
 ### Diagnostic-code reservations
-`SIFR-ASYNC-0001` through `SIFR-ASYNC-0005` are reserved and documented:
+`SIFR-ASYNC-0001` through `SIFR-ASYNC-0006` are reserved and documented:
 
 | Code | Semantic |
 |---|---|
 | `SIFR-ASYNC-0001` | `async def` body has no real suspension effect (transitive `NoSuspend`) |
 | `SIFR-ASYNC-0002` | awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend` |
-| `SIFR-ASYNC-0003` | direct `@io_bound` call from async context |
-| `SIFR-ASYNC-0004` | direct `@cpu_bound` call from async context |
+| `SIFR-ASYNC-0003` | direct `@blocking_io` call from async context |
+| `SIFR-ASYNC-0004` | direct `@cpu_heavy` call from async context |
 | `SIFR-ASYNC-0005` | `spawn_blocking` target is unannotated and not classified by stdlib/FFI contract |
+| `SIFR-ASYNC-0006` | `@blocking_io` or `@cpu_heavy` applied to `async def` |
 
-These are the only five new diagnostic codes for this phase. No other `SIFR-ASYNC-*` reservations exist in the codebase.
+These are the six new diagnostic codes for this phase after the workload-annotation clarification.
 
 ### Phase/model leakage
 No references to future phases (33-41) appear in the ad hoc docs. No model-level leakage from the ad hoc into Phase 32's completed milestone scope. The boundary is clean.

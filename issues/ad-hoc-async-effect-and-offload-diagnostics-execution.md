@@ -33,27 +33,31 @@ proposed
   - [ ] `await_sync_function_rejected.sifr`
   - [ ] `async_protocol_no_suspend_requires_escape_hatch.sifr`
 
-### adhoc_async_effect_2: Upgrade Direct Workload Calls In Async
+### adhoc_async_effect_2: Enforce Workload Annotations
 
-- [ ] Change direct `@io_bound` calls in async code from warning to error.
-- [ ] Change direct `@cpu_bound` calls in async code from warning to error.
+- [ ] Reject `@blocking_io` on `async def`.
+- [ ] Reject `@cpu_heavy` on `async def`.
+- [ ] Reject direct `@blocking_io` calls in async code.
+- [ ] Reject direct `@cpu_heavy` calls in async code.
 - [ ] Keep direct cheap sync helper calls in async code allowed.
 - [ ] Update diagnostic docs and registry metadata.
 - [ ] Add validation fixtures:
-  - [ ] `io_bound_direct_call_in_async_rejected.sifr`
-  - [ ] `cpu_bound_direct_call_in_async_rejected.sifr`
+  - [ ] `blocking_io_on_async_def_rejected.sifr`
+  - [ ] `cpu_heavy_on_async_def_rejected.sifr`
+  - [ ] `blocking_io_direct_call_in_async_rejected.sifr`
+  - [ ] `cpu_heavy_direct_call_in_async_rejected.sifr`
   - [ ] `cheap_sync_helper_in_async_allowed.sifr`
 
 ### adhoc_async_effect_3: Restrict Blocking Offload Targets
 
 - [ ] Reject `task.spawn_blocking` on unannotated local sync functions.
 - [ ] Reject `ThreadPoolExecutor.submit` on unannotated local sync functions.
-- [ ] Allow annotated `@io_bound` targets.
-- [ ] Allow annotated `@cpu_bound` targets.
+- [ ] Allow annotated `@blocking_io` targets.
+- [ ] Allow annotated `@cpu_heavy` targets.
 - [ ] Preserve existing sendability, arity, and result/error constraints.
 - [ ] Add validation fixtures:
-  - [ ] `spawn_blocking_io_bound_allowed.sifr`
-  - [ ] `spawn_blocking_cpu_bound_allowed.sifr`
+  - [ ] `spawn_blocking_blocking_io_allowed.sifr`
+  - [ ] `spawn_blocking_cpu_heavy_allowed.sifr`
   - [ ] `spawn_blocking_unannotated_rejected.sifr`
   - [ ] `thread_pool_submit_unannotated_rejected.sifr`
   - [ ] `spawn_blocking_known_stdlib_blocking_allowed.sifr`
@@ -65,6 +69,6 @@ proposed
 
 ## Review Notes
 
-- Existing Phase 32 fixtures `io_bound_annotation_warning.sifr` and `cpu_bound_annotation_warning.sifr` (currently in the quick lane) test the exact behavior being upgraded from warning to error. They must be updated to negative fixtures or removed. `spawn_blocking_basic.sifr` passes an unannotated sync function and will also need updating (add `@io_bound` to the helper).
+- Existing Phase 32 workload-annotation warning fixtures must be replaced by `blocking_io` / `cpu_heavy` fixtures with the new error expectations. `spawn_blocking_basic.sifr` passes an unannotated sync function and will also need updating by annotating the helper with `@blocking_io` or replacing the fixture with a negative offload-target check.
 - The stdlib annotation database and FFI/external contract classification registry are infrastructure for `adhoc_async_effect_3`. Implementation should define the registry interface and note it as deferred infrastructure while unannotated functions remain rejected as offload targets.
 - Claude reviewer sign-off recorded in `reviews/ad-hoc-async-effect-and-offload-diagnostics-claude-pass-1.md`.

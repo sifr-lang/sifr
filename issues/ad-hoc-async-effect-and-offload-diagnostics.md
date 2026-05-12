@@ -22,14 +22,13 @@ Add a compiler-enforced async effect discipline:
 - every `async def` has a real suspension reason,
 - every `await` targets an awaitable with a real async effect,
 - direct annotated blocking or CPU-heavy sync work in async code is an error,
-- `spawn_blocking` is reserved for sync work classified as `@io_bound`, `@cpu_bound`, or known blocking external work.
+- `spawn_blocking` is reserved for sync work classified as `@blocking_io`, `@cpu_heavy`, or known blocking external work.
 
 ## Non-Goals
 
 - Do not add a public effect type system to user syntax.
-- Do not make `@io_bound` awaitable. It remains a sync workload annotation.
+- Do not make `@blocking_io` awaitable. It remains a sync workload annotation.
 - Do not silently rewrite direct calls into async tasks or blocking offload.
-- Do not introduce a new `blocking_io` annotation.
 - Do not reject cheap sync helper calls inside async functions unless they are awaited, offloaded, or annotated as blocking/CPU-heavy.
 
 ## Model Decisions
@@ -47,6 +46,8 @@ The compiler computes an internal async suspension summary for each async functi
 - `GeneratorSuspend`: an async generator body suspends at `yield` or awaits a non-empty suspension effect.
 
 The exact enum names are implementation details. The semantic rule is public: async code must suspend for a real reason.
+
+Suspension summaries are transitive across same-task async calls. If an async function only awaits another async function, the compiler follows that downstream coroutine chain until it reaches a real suspension source such as async I/O, a timer, a channel operation, task wait, async resource wait, or async generator suspension. Awaiting a wrapper coroutine is valid when any downstream same-task callee has a non-`NoSuspend` summary. It is rejected only when the whole downstream same-task chain computes to `NoSuspend`.
 
 ### `async def` Must Suspend
 
@@ -69,14 +70,14 @@ Awaiting task handles, blocking task handles, async context-manager operations, 
 
 ### Workload Annotations Stay Sync
 
-`@io_bound` and `@cpu_bound` classify synchronous functions:
+`@blocking_io` and `@cpu_heavy` classify synchronous functions:
 
-- `@io_bound` means synchronous I/O or blocking OS waits.
-- `@cpu_bound` means CPU-heavy synchronous compute.
+- `@blocking_io` means synchronous I/O or blocking OS waits.
+- `@cpu_heavy` means CPU-heavy synchronous compute.
 
-They do not make a function awaitable and do not schedule anything.
+They do not make a function awaitable and do not schedule anything. They are valid only on sync `def`. Applying either annotation to `async def` is an error because async APIs use suspension summaries such as `AsyncIo`, not sync workload annotations.
 
-Calling a known `@io_bound` or `@cpu_bound` function directly from an `async def` body is an error. The existing warning is changed to an error for the finalized async model.
+Calling a known `@blocking_io` or `@cpu_heavy` function directly from an `async def` body is an error.
 
 Allowed fixes:
 
@@ -88,14 +89,14 @@ Allowed fixes:
 
 `task.spawn_blocking(fn)` and `ThreadPoolExecutor.submit(fn)` are accepted only when `fn` is one of:
 
-- annotated `@io_bound`,
-- annotated `@cpu_bound`,
+- annotated `@blocking_io`,
+- annotated `@cpu_heavy`,
 - known by the stdlib annotation database as blocking or CPU-heavy,
 - known by an FFI/external contract as blocking or CPU-heavy.
 
-Unannotated cheap sync helpers are rejected as offload targets. The diagnostic should say to call the helper directly, or add `@io_bound` / `@cpu_bound` if the declaration is genuinely blocking or expensive.
+Unannotated cheap sync helpers are rejected as offload targets. The diagnostic should say to call the helper directly, or add `@blocking_io` / `@cpu_heavy` if the declaration is genuinely blocking or expensive.
 
-`spawn_blocking` on `@io_bound` work is correct and should not warn by default. A later optional info diagnostic may suggest a native async API only when the compiler knows a specific replacement.
+`spawn_blocking` on `@blocking_io` work is correct and should not warn by default. A later optional info diagnostic may suggest a native async API only when the compiler knows a specific replacement.
 
 ### Direct Cheap Sync Helpers Stay Allowed
 
@@ -130,7 +131,7 @@ Scope:
   - async context-manager enter/exit,
   - async iterator `anext`,
   - async generator `yield`.
-- Compute transitive summaries through same-task coroutine calls.
+- Compute transitive summaries through same-task coroutine calls to a deterministic call-graph fixpoint, including recursive/SCC handling.
 - Keep summaries internal; do not expose public effect syntax.
 
 Validation:
@@ -155,11 +156,12 @@ Validation:
 - `await_sync_function_rejected.sifr`
 - `async_protocol_no_suspend_requires_escape_hatch.sifr`
 
-### adhoc_async_effect_2: Upgrade Direct Workload Calls In Async
+### adhoc_async_effect_2: Enforce Workload Annotations
 
 Scope:
 
-- Upgrade direct `@io_bound` and `@cpu_bound` calls from async contexts from warning to error.
+- Reject `@blocking_io` or `@cpu_heavy` on `async def`.
+- Reject direct `@blocking_io` and `@cpu_heavy` calls from async contexts.
 - Preserve structured diagnostic code coverage and docs.
 - Keep direct cheap sync helper calls allowed.
 - Ensure diagnostics distinguish:
@@ -169,8 +171,10 @@ Scope:
 
 Validation:
 
-- `io_bound_direct_call_in_async_rejected.sifr`
-- `cpu_bound_direct_call_in_async_rejected.sifr`
+- `blocking_io_on_async_def_rejected.sifr`
+- `cpu_heavy_on_async_def_rejected.sifr`
+- `blocking_io_direct_call_in_async_rejected.sifr`
+- `cpu_heavy_direct_call_in_async_rejected.sifr`
 - `cheap_sync_helper_in_async_allowed.sifr`
 
 ### adhoc_async_effect_3: Restrict Blocking Offload Targets
@@ -179,14 +183,14 @@ Scope:
 
 - Reject `task.spawn_blocking` on unannotated local sync functions.
 - Reject `ThreadPoolExecutor.submit` on unannotated local sync functions.
-- Allow `@io_bound`, `@cpu_bound`, stdlib-classified, and external-contract-classified targets.
+- Allow `@blocking_io`, `@cpu_heavy`, stdlib-classified, and external-contract-classified targets.
 - Keep existing sendability, zero-argument v1, and result/error constraints.
-- Do not warn for valid `@io_bound` offload by default.
+- Do not warn for valid `@blocking_io` offload by default.
 
 Validation:
 
-- `spawn_blocking_io_bound_allowed.sifr`
-- `spawn_blocking_cpu_bound_allowed.sifr`
+- `spawn_blocking_blocking_io_allowed.sifr`
+- `spawn_blocking_cpu_heavy_allowed.sifr`
 - `spawn_blocking_unannotated_rejected.sifr`
 - `thread_pool_submit_unannotated_rejected.sifr`
 - `spawn_blocking_known_stdlib_blocking_allowed.sifr`
