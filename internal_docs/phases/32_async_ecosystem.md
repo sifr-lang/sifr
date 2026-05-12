@@ -745,7 +745,7 @@ status: completed
 
 **Definition of done:**
 
-- Annotated I/O-bound/CPU-bound functions produce diagnostics in async contexts.
+- Annotated blocking-I/O/CPU-heavy functions produce diagnostics in async contexts.
 - Diagnostics suggest async alternatives or explicit offload.
 - `spawn_blocking` works and returns typed results.
 - `BlockingTask[T, E]` is distinct from cooperative `Task[T, E]` and documents result-abandonment cancellation.
@@ -755,8 +755,7 @@ status: completed
 
 **Positive validation:**
 
-- `blocking_io_annotation_warning.sifr`
-- `cpu_heavy_annotation_warning.sifr`
+- `cheap_sync_helper_in_async_allowed.sifr`
 - `spawn_blocking_basic.sifr`
 - `blocking_task_cancel_join.sifr`
 - `thread_pool_executor_basic.sifr`

@@ -1,0 +1,11 @@
+# expect-error: SIFR-ASYNC-0003
+@blocking_io
+def read_blocking() -> int:
+    return 41
+
+
+async def main() -> None:
+    value: int = read_blocking()
+    await task.sleep(0.0)
+    assert value == 41
+    return None

@@ -65,9 +65,11 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0012`](SIFR-TYPE-0012.md) | Error | Unsupported expression form. |
 | [`SIFR-TYPE-0901`](SIFR-TYPE-0901.md) | Warning | Integer arithmetic may overflow at runtime. |
 | [`SIFR-TYPE-0902`](SIFR-TYPE-0902.md) | Note | Reveal the inferred static type of an expression. |
-| [`SIFR-TYPE-0903`](SIFR-TYPE-0903.md) | Warning | Blocking or CPU-bound workload called directly from async code. |
 | [`SIFR-ASYNC-0001`](SIFR-ASYNC-0001.md) | Error | Async function body has no real suspension effect. |
 | [`SIFR-ASYNC-0002`](SIFR-ASYNC-0002.md) | Error | Awaited same-task coroutine has no real suspension effect. |
+| [`SIFR-ASYNC-0003`](SIFR-ASYNC-0003.md) | Error | Blocking I/O function called directly from async context. |
+| [`SIFR-ASYNC-0004`](SIFR-ASYNC-0004.md) | Error | CPU-heavy function called directly from async context. |
+| [`SIFR-ASYNC-0006`](SIFR-ASYNC-0006.md) | Error | Synchronous workload annotation applied to async function. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
 | [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.md) | Error | Invalid BigDecimal exact literal. |
 | [`SIFR-DECIMAL-0003`](SIFR-DECIMAL-0003.md) | Error | Float mixed with a decimal numeric type. |
@@ -163,6 +165,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-INT-0008` | `INT` | Reserved for fixed-width array, tensor, or dataframe arithmetic without an explicit overflow policy. |
 | `SIFR-INT-0009` | `INT` | Reserved for JSON or web-safe integer serialization policy failures. |
 | `SIFR-INT-0010` | `INT` | Reserved for bytes or bytearray construction and mutation values that do not fit uint8. |
+| `SIFR-TYPE-0903` | `TYPE` | Retired: direct annotated workload calls from async code are now ASYNC-family errors. |
 | `SIFR-CALL-0000` | `CALL` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-OWN-0000` | `OWN` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-FLOW-0000` | `FLOW` | Reserved family base; not emitted as a diagnostic. |

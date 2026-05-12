@@ -1,3 +1,4 @@
+# expect-error: SIFR-ASYNC-0004
 @cpu_heavy
 def compute_heavy() -> int:
     total: int = 0

@@ -1,0 +1,9 @@
+# expect-error: SIFR-ASYNC-0006
+@cpu_heavy
+async def compute_async() -> None:
+    await task.sleep(0.0)
+    return None
+
+
+def main() -> None:
+    return None

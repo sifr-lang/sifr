@@ -1225,6 +1225,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         }
     }
     let is_async_generator = effective_is_async && function_body_contains_yield(&func.body);
+    workload_annotations::reject_async_function_annotation(ctx, func, effective_is_async);
     if effective_is_async
         && matches!(
             ctx.async_suspension_summaries.get(func.name.as_str()),

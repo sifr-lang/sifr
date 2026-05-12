@@ -35,18 +35,18 @@ proposed
 
 ### adhoc_async_effect_2: Enforce Workload Annotations
 
-- [ ] Reject `@blocking_io` on `async def`.
-- [ ] Reject `@cpu_heavy` on `async def`.
-- [ ] Reject direct `@blocking_io` calls in async code.
-- [ ] Reject direct `@cpu_heavy` calls in async code.
-- [ ] Keep direct cheap sync helper calls in async code allowed.
-- [ ] Update diagnostic docs and registry metadata.
-- [ ] Add validation fixtures:
-  - [ ] `blocking_io_on_async_def_rejected.sifr`
-  - [ ] `cpu_heavy_on_async_def_rejected.sifr`
-  - [ ] `blocking_io_direct_call_in_async_rejected.sifr`
-  - [ ] `cpu_heavy_direct_call_in_async_rejected.sifr`
-  - [ ] `cheap_sync_helper_in_async_allowed.sifr`
+- [x] Reject `@blocking_io` on `async def`.
+- [x] Reject `@cpu_heavy` on `async def`.
+- [x] Reject direct `@blocking_io` calls in async code.
+- [x] Reject direct `@cpu_heavy` calls in async code.
+- [x] Keep direct cheap sync helper calls in async code allowed.
+- [x] Update diagnostic docs and registry metadata.
+- [x] Add validation fixtures:
+  - [x] `blocking_io_on_async_def_rejected.sifr`
+  - [x] `cpu_heavy_on_async_def_rejected.sifr`
+  - [x] `blocking_io_direct_call_in_async_rejected.sifr`
+  - [x] `cpu_heavy_direct_call_in_async_rejected.sifr`
+  - [x] `cheap_sync_helper_in_async_allowed.sifr`
 
 ### adhoc_async_effect_3: Restrict Blocking Offload Targets
 
