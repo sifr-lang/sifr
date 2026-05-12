@@ -153,3 +153,53 @@ verification/distribution/artifact_checksum_mismatch_rejected.sh
 verification/distribution/artifact_target_mismatch_rejected.sh
 verification/distribution/stable_entrypoints_unchanged_by_preview_release.sh
 ```
+
+## Preview Release Command
+
+The `/create-new-version` workflow is backed by:
+
+```bash
+scripts/distribution/create_new_version.sh
+```
+
+Dry-run example:
+
+```bash
+scripts/distribution/create_new_version.sh \
+  --channel beta \
+  --version 0.1.0-beta.2 \
+  --dry-run
+```
+
+Real-run example:
+
+```bash
+scripts/distribution/create_new_version.sh \
+  --channel beta \
+  --version 0.1.0-beta.2 \
+  --real-run \
+  --artifact-dir target/preview-artifacts/0.1.0-beta.2 \
+  --mutation-mode github
+```
+
+Dry-run validates inputs, resolves the base commit, computes every target artifact name, detects site dispatcher drift, confirms stable entrypoints remain absent, and prints the exact GitHub Release and site mutations.
+
+Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable version installer, regenerates channel dispatchers, writes a release checklist, writes a recovery note, and publishes GitHub Release assets when `--mutation-mode github` is selected. Validation uses `--mutation-mode local` to exercise the same file mutations without publishing assets.
+
+The Cursor command wrapper lives at `.cursor/commands/create-new-version.md`.
+
+## Phase 33.3 Validation
+
+The milestone 33.3-specific checks are:
+
+```bash
+verification/distribution/create_new_version_alpha_dry_run.sh
+verification/distribution/create_new_version_beta_dry_run.sh
+verification/distribution/create_new_version_real_run_plan_reuse.sh
+verification/distribution/create_new_version_release_checklist.sh
+verification/distribution/create_new_version_attribution_checklist.sh
+verification/distribution/create_new_version_stable_rejected.sh
+verification/distribution/create_new_version_bad_semver_rejected.sh
+verification/distribution/create_new_version_missing_artifact_rejected.sh
+verification/distribution/create_new_version_site_dispatcher_drift_rejected.sh
+```

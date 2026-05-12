@@ -129,3 +129,9 @@ make_target_specific_artifacts() {
     rm -rf "${tmp_dir}"
   done
 }
+
+make_site_repo_fixture() {
+  local target_repo="$1"
+  mkdir -p "${target_repo}/apps/sifr-site/public"
+  cp -R "${SITE_INSTALL_ROOT}" "${target_repo}/apps/sifr-site/public/install"
+}
