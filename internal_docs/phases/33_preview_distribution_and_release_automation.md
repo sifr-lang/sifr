@@ -6,28 +6,30 @@ status: refining
 
 Ship preview release channels early for adoption while keeping stable GA promotion gated for Phase 39.
 
-Phase 33 is not a compiler-feature phase. It establishes the first canonical distribution path for preview binaries:
+Phase 33 establishes the first public distribution path for preview binaries with the least custom release infrastructure that still satisfies Sifr's safety bar:
 
-- a public installer entrypoint at `https://sifr.sh/install`,
-- channel metadata for `alpha`, `beta`, and gated `stable`,
+- public installer entrypoints under `https://sifr.sh/install`,
+- immutable generated installer scripts for each preview version,
+- thin `alpha`/`beta` channel dispatchers that point at immutable version installers,
 - reproducible multi-platform preview artifacts,
-- checksum and signature verification before install,
-- release automation for repeatable `alpha`/`beta` publication.
+- checksum verification before install,
+- repeatable release automation for `alpha`/`beta` publication.
 
 The phase is complete when a user can install an `alpha` or `beta` preview from the public installer and the project can cut another preview release through the documented automation without enabling stable GA promotion.
 
 ## Distribution Source Of Truth
 
-This file is the authoritative contract for Phase 33 until implementation creates supporting docs. It records the channel protocol, artifact layout, milestone order, validation goals, deferrals, and phase exit gate. Implementation PRs may add a dedicated `internal_docs/distribution_pipeline.md`, but they must not introduce behavior that conflicts with this phase file unless a review PR updates this file first.
+This file is the authoritative contract for Phase 33 until implementation creates supporting docs. It records the installer model, channel behavior, artifact layout, milestone order, validation goals, deferrals, and phase exit gate. Implementation PRs may add a dedicated `internal_docs/distribution_pipeline.md`, but they must not introduce behavior that conflicts with this phase file unless a review PR updates this file first.
 
 The Sifr site repository is part of this phase:
 
 - Site repo: `/Users/yaseralnajjar/work/sifr/sifr-blog-website/`
-- Public installer source: `apps/sifr-site/public/install`
-- Public manifest roots: `apps/sifr-site/public/releases/channels/` and `apps/sifr-site/public/releases/versions/`
+- Public default installer source: `apps/sifr-site/public/install`
+- Public channel installer sources: `apps/sifr-site/public/install/alpha` and `apps/sifr-site/public/install/beta`
+- Public pinned installer roots: `apps/sifr-site/public/install/versions/`
 - Deployment target: the existing `sifr.sh` site deployment
 
-The compiler repository owns release automation, artifact building, verification scripts, and the `/create-new-version` workflow.
+The compiler repository owns release automation, artifact building, generated installer creation, verification scripts, and the `/create-new-version` workflow.
 
 ## Depends On
 
@@ -40,67 +42,104 @@ The compiler repository owns release automation, artifact building, verification
 The following are not Phase 33 exit criteria:
 
 - Stable GA promotion.
+- Custom channel manifest and version manifest schemas, unless generated installer entrypoints cannot satisfy a concrete Phase 33 requirement.
 - Package-manager distribution (`brew`, `apt`, `npm`, `pip`, `cargo install`, Windows package managers).
 - Automatic runtime telemetry or update checks from installed binaries.
-- Rollback and incident governance beyond preview manifest rollback mechanics; Phase 39 owns GA rollback governance.
+- Rollback and incident governance beyond reverting preview channel pointers; Phase 39 (`internal_docs/phases/39_stable_channel_ga_promotion_and_release_governance.md`) owns GA rollback governance.
 - Windows installer support for `curl | bash`; Windows artifacts may be added later behind a separate installer contract.
-- Long-term signing authority rotation policy; Phase 33 only locks the preview verification mechanism.
+- Long-term signing authority rotation policy.
+
+## Generated Installer Baseline And Attribution
+
+Phase 33 starts from a generated-installer model rather than a bespoke hand-written artifact resolver. The baseline is the same shape used by Astral's uv installer at `https://astral.sh/uv/install.sh`: a shell installer generated from release metadata that embeds the app version, release asset URLs, target-to-archive mapping, SHA-256 checksums, platform detection, download, verification, extraction, and install-path handling.
+
+Implementation should prefer `cargo-dist` or an equivalent generator so Sifr owns release metadata and generated output, not a manually maintained 2,000-line installer fork.
+
+If any code is copied or adapted from the Astral uv installer or the `astral-sh/uv` repository, the implementation PR must:
+
+- retain the complete MIT license header, including both the copyright notice and the permission notice, in the copied/adapted file,
+- add explicit attribution to `astral-sh/uv` as the source project,
+- pin to a specific installer version, release tag, or git commit SHA and never use `/latest/` URLs or auto-redirecting URLs as the recorded source,
+- record the exact pinned source URL and pinned reference used,
+- document why that pinned source was chosen over other available versions,
+- keep the Sifr-specific delta reviewable,
+- record why generation alone was insufficient.
+
+This attribution requirement applies even if the adapted code is later checked in under a generated file path.
 
 ## Locked Preview Distribution Decisions
 
 1. `alpha` and `beta` are the only installable moving channels in Phase 33.
-2. `stable` channel metadata is allowed to exist, but it must be explicitly gated with `enabled: false` and no installer path may install from it before Phase 39.
-3. Explicit `--version` pinning accepts only preview versions published in the version manifest tree, for example `0.1.0-alpha.1` or `0.1.0-beta.1`. Stable-looking versions without preview prerelease labels are rejected until Phase 39.
-4. Channel resolution order is deterministic: `--version` wins over `--channel`; otherwise `--channel`; otherwise `SIFR_CHANNEL`; otherwise `beta`.
-5. Invalid combinations are hard errors. `--version` with a conflicting `--channel` is rejected instead of silently choosing one.
-6. The installer never compiles Sifr from source and never falls back to an alternate artifact if the resolved artifact is missing or invalid.
-7. The installer validates checksum and signature before replacing or creating the installed binary.
-8. The preview target set is initially:
-   - `aarch64-apple-darwin`
-   - `x86_64-apple-darwin`
-   - `x86_64-unknown-linux-gnu`
-   - `aarch64-unknown-linux-gnu`
-9. Artifacts are published as GitHub Release assets in `sifr-lang/sifr`; the website hosts only installer and manifest files.
-10. Checksums use SHA-256. Signatures use the selected repository-supported signing mechanism documented by the implementation PR before first real release; unsigned artifacts are never accepted by the installer.
-11. Channel manifests point to immutable version manifests. Version manifests point to immutable artifact URLs and verification metadata.
-12. Preview release automation must support dry-run and real-run modes with identical planning logic. Real-run is the dry-run plan plus authorized mutations.
+2. `stable` has no installable public entrypoint in Phase 33. Any `stable` channel request is rejected before download or installation.
+3. Each preview version has an immutable generated installer script under `https://sifr.sh/install/versions/<version>`.
+4. The default `https://sifr.sh/install` entrypoint resolves to the current `beta` preview.
+5. `https://sifr.sh/install/alpha` resolves to the current `alpha` preview, and `https://sifr.sh/install/beta` resolves to the current `beta` preview.
+6. `--version <preview>` selects the immutable generated installer for that preview version. Stable-looking versions without preview prerelease labels are rejected until Phase 39.
+7. `SIFR_CHANNEL` and `--channel` are thin dispatcher inputs only. They select `alpha` or `beta` and then delegate to the immutable generated installer for the selected channel. They must not implement independent artifact resolution.
+8. Invalid combinations are hard errors. `--version` with a conflicting `--channel` or `SIFR_CHANNEL` is rejected instead of silently choosing one.
+9. The installer never compiles Sifr from source and never falls back to an alternate artifact if the resolved artifact is missing or invalid.
+10. The generated version installer validates SHA-256 before replacing or creating the installed binary. Detached signatures may be added if supported by the generator, but Phase 33 does not require a custom signature layer on top of generated installers.
+11. The preview target set is initially:
+    - `aarch64-apple-darwin`
+    - `x86_64-apple-darwin`
+    - `x86_64-unknown-linux-gnu`
+    - `aarch64-unknown-linux-gnu`
+12. Artifacts are published as GitHub Release assets in `sifr-lang/sifr`; the website hosts only dispatcher scripts and immutable generated installer scripts.
+13. Preview release automation must support dry-run and real-run modes with identical planning logic. Real-run is the dry-run plan plus authorized mutations.
 
-## Manifest Contract
+## Stable-Looking Version Detection Rules
 
-Channel manifests live at:
+The installer and release command must reject stable-looking versions using these rules:
 
-- `https://sifr.sh/releases/channels/alpha.json`
-- `https://sifr.sh/releases/channels/beta.json`
-- `https://sifr.sh/releases/channels/stable.json`
+1. Versions matching `X.Y.Z` without prerelease labels, for example `1.0.0` or `2.0.0`, are rejected.
+2. Versions with `-alpha.N`, `-beta.N`, or `-rc.N` prerelease labels, for example `1.0.0-alpha.1` or `2.0.0-beta.2`, are accepted as preview versions.
+3. Versions matching `0.X.Y` without prerelease labels are treated as stable-looking. Phase 33 does not define 0.x preview semantics without explicit prerelease labels.
+4. Stable-looking versions remain rejected regardless of what Phase 39 later permits.
 
-Each channel manifest contains:
+## Artifact Format Specification
 
-- `schema_version`
-- `channel`
-- `enabled`
-- `version`
-- `version_manifest_url`
-- `updated_at`
+Preview artifacts are published with these conventions:
 
-Version manifests live at `https://sifr.sh/releases/versions/<version>.json` and contain:
+- Archive format: `.tar.gz` (gzip-compressed tar).
+- Naming convention: `sifr-<version>-<target>.tar.gz`.
+- Target mapping:
+  - `aarch64-apple-darwin` maps to `sifr-<version>-aarch64-apple-darwin.tar.gz`.
+  - `x86_64-apple-darwin` maps to `sifr-<version>-x86_64-apple-darwin.tar.gz`.
+  - `x86_64-unknown-linux-gnu` maps to `sifr-<version>-x86_64-unknown-linux-gnu.tar.gz`.
+  - `aarch64-unknown-linux-gnu` maps to `sifr-<version>-aarch64-unknown-linux-gnu.tar.gz`.
+- Archive contents: a single `sifr` binary at the archive root with no nested directory required for extraction.
+- Checksum file: `sifr-<version>-<target>.tar.gz.sha256` is published alongside each artifact.
+- Generated installer behavior: the generated version installer embeds the SHA-256 checksum inline and verifies it before extraction.
 
-- `schema_version`
-- `version`
-- `channel`
-- `git_sha`
-- `created_at`
-- `artifacts[]`
+## Installer Entrypoint Contract
 
-Each artifact entry contains:
+Phase 33 uses shell entrypoints instead of a custom JSON channel manifest protocol:
 
-- `target`
-- `asset_url`
-- `sha256`
-- `signature_url`
-- `archive_format`
-- `binary_path`
+- `https://sifr.sh/install`
+- `https://sifr.sh/install/alpha`
+- `https://sifr.sh/install/beta`
+- `https://sifr.sh/install/versions/<version>`
 
-The installer must reject unknown schema versions, disabled channels, missing fields, target mismatches, checksum mismatches, signature failures, unavailable manifests, and unavailable assets.
+The channel entrypoints are small Sifr-owned dispatchers. They may be static scripts rewritten during release or redirects served by the site deployment, but their behavior is intentionally narrow:
+
+- resolve exactly one preview version,
+- reject disabled or unknown channels,
+- reject stable,
+- optionally map `SIFR_CHANNEL`, `--channel`, and `--version` to another public entrypoint,
+- download or exec the immutable generated version installer,
+- preserve generated installer output and exit status.
+
+The generated version installer owns:
+
+- platform detection,
+- artifact URL selection,
+- archive format selection,
+- SHA-256 verification,
+- extraction,
+- binary installation,
+- install-path messaging.
+
+Any implementation that reintroduces a custom JSON manifest protocol must first update this phase file with reviewed rationale showing why generated installers and static dispatchers are insufficient.
 
 ## `/create-new-version` Workflow Contract
 
@@ -118,27 +157,41 @@ Dry-run behavior:
 
 - Validate channel/version compatibility.
 - Resolve the base commit.
-- Compute artifact names and manifest changes for every target.
+- Compute artifact names for every target.
+- Generate or preview the immutable version installer for the requested version.
+- Compute the site dispatcher changes for the selected channel.
 - Verify release notes source and checklist links.
-- Verify that `stable` will not be changed.
-- Print the exact GitHub Release, manifest, and site-deployment mutations that a real run would perform.
+- Verify that no stable entrypoint, stable pointer, or stable-looking version is changed.
+- Print the exact GitHub Release, installer, site-deployment, and repository mutations that a real run would perform.
 - Exit non-zero if any precondition fails.
 
 Real-run behavior:
 
 - Re-run the dry-run planner and require the same plan.
 - Build and validate all target artifacts.
+- Generate the immutable version installer.
 - Create or update the preview GitHub Release for the exact version.
-- Upload artifacts, checksum files, and signatures.
-- Update the immutable version manifest and the selected channel manifest.
-- Open PRs for repository changes that must be reviewed before deployment.
-- Trigger or document the `sifr.sh` deployment step for manifest publication.
+- Upload artifacts and checksum evidence.
+- Open PRs for site dispatcher and generated installer changes that must be reviewed before deployment.
+- Trigger or document the `sifr.sh` deployment step for installer publication.
 
 Failure behavior:
 
-- Any failed artifact, checksum, signature, or manifest validation aborts the release.
+- Any failed artifact, checksum, generated installer, or dispatcher validation aborts the release.
 - A failed real run must leave a written recovery note with completed and incomplete mutations.
-- The command must not update `stable` manifests or stable release metadata in Phase 33.
+- The command must not update stable entrypoints or stable release metadata in Phase 33.
+
+### Attribution Checklist Contract
+
+When uv-derived installer code is used, the attribution checklist must record:
+
+- which files contain copied or adapted uv code,
+- the complete MIT license header text retained in each file,
+- the pinned source URL, which must not use `/latest/` or auto-redirecting URLs,
+- the pinned reference used, either installer version, release tag, or git commit SHA,
+- the date the adaptation was performed,
+- the rationale for why generated installers alone were insufficient for that component,
+- confirmation that the MIT permission notice and copyright notice are both retained verbatim.
 
 ## Milestone Sequencing
 
@@ -146,8 +199,8 @@ Implementation must execute the milestones in order unless a later reviewed PR u
 
 ```mermaid
 flowchart TD
-    m33_1["m33.1 Installer + Channel Resolution"]
-    m33_2["m33.2 Artifact + Manifest Pipeline"]
+    m33_1["m33.1 Generated Installer + Channel Dispatchers"]
+    m33_2["m33.2 Artifact + Generated Installer Pipeline"]
     m33_3["m33.3 Agentic Preview Release Command"]
 
     m33_1 --> m33_2
@@ -156,30 +209,31 @@ flowchart TD
 
 ## Milestones
 
-### milestone_33_1: Installer and Channel Resolution
+### milestone_33_1: Generated Installer and Channel Dispatchers
 
-**Goal:** Publish the installer entrypoint and lock deterministic channel/version resolution without requiring real release artifacts yet.
+**Goal:** Lock the generated-installer baseline and publish deterministic channel dispatch behavior without requiring real release artifacts yet.
 
 **Scope:**
 
-- Add the `https://sifr.sh/install` static installer entrypoint in the site repo.
-- Implement installer argument parsing for `--channel` and `--version`.
-- Support `SIFR_CHANNEL`.
-- Resolve channel metadata from the public manifest roots.
-- Reject stable channel installs while preserving explicit stable metadata for Phase 39.
-- Reject invalid channel names, conflicting channel/version inputs, unavailable manifests, unsupported platforms, and malformed manifests.
+- Decide and document the installer generator path: `cargo-dist`, equivalent generator, or attributed uv-derived adaptation.
+- If uv code is adapted, add attribution and license-retention requirements directly to the implementation PR.
+- Add public dispatcher entrypoints for `/install`, `/install/alpha`, and `/install/beta` in the site repo.
+- Implement dispatcher argument handling for `--channel`, `--version`, and `SIFR_CHANNEL`.
+- Reject stable channel installs and stable-looking version pins.
+- Reject invalid channel names, conflicting channel/version inputs, unavailable generated installers, unsupported platforms, and malformed dispatcher configuration.
 
 **Definition of done:**
 
-- Installer resolution is deterministic for `alpha`, `beta`, gated `stable`, and explicit preview version pins.
-- Installer does not install anything until a valid enabled preview manifest and supported target are resolved.
-- The site repo deployment path for `/install` and preview manifests is documented in the PR.
+- Dispatcher resolution is deterministic for default `beta`, explicit `alpha`, explicit `beta`, gated `stable`, and explicit preview version pins.
+- Dispatchers delegate to immutable generated version installers instead of resolving artifacts themselves.
+- The site repo deployment path for `/install` entrypoints is documented in the PR.
+- Any copied/adapted installer code is attributed to `astral-sh/uv` with MIT license notice retained.
 
 **Positive validation:**
 
-- `verification/distribution/install_default_beta_channel.sh`
-- `verification/distribution/install_alpha_channel.sh`
-- `verification/distribution/install_version_pin_preview.sh`
+- `verification/distribution/install_default_beta_dispatcher.sh`
+- `verification/distribution/install_alpha_dispatcher.sh`
+- `verification/distribution/install_version_pin_dispatcher.sh`
 - `verification/distribution/install_stable_channel_gated.sh`
 
 **Negative validation:**
@@ -187,14 +241,14 @@ flowchart TD
 - `verification/distribution/install_invalid_channel_rejected.sh`
 - `verification/distribution/install_conflicting_channel_and_version_rejected.sh`
 - `verification/distribution/install_stable_version_pin_rejected.sh`
-- `verification/distribution/install_manifest_unavailable_rejected.sh`
-- `verification/distribution/install_malformed_manifest_rejected.sh`
+- `verification/distribution/install_missing_generated_installer_rejected.sh`
+- `verification/distribution/install_dispatcher_malformed_config_rejected.sh`
 
-**Demo:** none yet; installer resolution uses mocked manifests until real artifacts exist.
+**Demo:** none yet; dispatcher validation uses mocked generated installers until real artifacts exist.
 
-### milestone_33_2: Artifact and Manifest Pipeline
+### milestone_33_2: Artifact and Generated Installer Pipeline
 
-**Goal:** Publish verifiable preview artifacts and wire installer installation to immutable version manifests.
+**Goal:** Publish verifiable preview artifacts and immutable generated installers.
 
 **Depends on:** `milestone_33_1`
 
@@ -202,36 +256,33 @@ flowchart TD
 
 - Add release artifact build automation for the preview target set.
 - Publish GitHub Release assets for each target.
-- Generate SHA-256 checksums and signatures.
-- Generate immutable version manifests.
-- Update channel manifests to point at the selected version manifest.
-- Extend the installer to download, verify, extract, and install the matching artifact.
+- Generate SHA-256 checksums.
+- Generate immutable version installers that embed artifact names, target mappings, and checksums.
+- Update channel dispatchers to point at the selected immutable version installer.
 - Ensure failed verification never replaces an existing installed binary.
 
 **Definition of done:**
 
-- Installer validates checksum and signature before installation.
-- Installer installs the artifact matching the local OS/architecture target.
-- Channel manifests point to immutable version manifests.
-- Stable manifest remains disabled and unmodified by preview publication.
+- The generated version installer validates SHA-256 before installation.
+- The generated version installer installs the artifact matching the local OS/architecture target.
+- Channel dispatchers point to immutable version installers.
+- Stable entrypoints remain absent or rejected and are unmodified by preview publication.
 
 **Positive validation:**
 
-- `verification/distribution/artifact_manifest_all_preview_targets.sh`
+- `verification/distribution/artifact_generated_installer_all_preview_targets.sh`
 - `verification/distribution/artifact_sha256_validated.sh`
-- `verification/distribution/artifact_signature_validated.sh`
 - `verification/distribution/install_matching_target_artifact.sh`
-- `verification/distribution/channel_manifest_points_to_version_manifest.sh`
+- `verification/distribution/channel_dispatcher_points_to_generated_installer.sh`
 
 **Negative validation:**
 
 - `verification/distribution/artifact_missing_target_rejected.sh`
 - `verification/distribution/artifact_checksum_mismatch_rejected.sh`
-- `verification/distribution/artifact_signature_failure_rejected.sh`
 - `verification/distribution/artifact_target_mismatch_rejected.sh`
-- `verification/distribution/stable_manifest_unchanged_by_preview_release.sh`
+- `verification/distribution/stable_entrypoints_unchanged_by_preview_release.sh`
 
-**Demo:** `demos/preview_distribution_demo/README.md` records a local mocked-manifest install walkthrough and the commands used to verify checksum/signature handling.
+**Demo:** `demos/preview_distribution_demo/README.md` records a local mocked-installer walkthrough and the commands used to verify checksum handling.
 
 ### milestone_33_3: Agentic Preview Release Command
 
@@ -245,15 +296,16 @@ flowchart TD
 - Implement the dry-run planner for `alpha` and `beta`.
 - Implement the authorized real-run workflow for preview releases.
 - Validate version/channel compatibility and reject stable releases.
-- Produce a release checklist with artifact, manifest, installer, site deployment, and validation evidence.
+- Produce a release checklist with artifact, generated installer, dispatcher, site deployment, attribution, and validation evidence.
 - Record recovery information when a real run partially completes.
 
 **Definition of done:**
 
 - `/create-new-version --channel alpha --version <preview> --dry-run` produces the exact mutation plan without side effects.
 - `/create-new-version --channel beta --version <preview> --real-run` can publish a validated preview release end to end after review.
-- Stable release attempts fail before artifact or manifest mutation.
+- Stable release attempts fail before artifact, installer, or dispatcher mutation.
 - The generated checklist maps every validation artifact to the phase exit gate.
+- The checklist confirms whether uv-derived code was used and, if so, where attribution and license retention live.
 
 **Positive validation:**
 
@@ -261,43 +313,47 @@ flowchart TD
 - `verification/distribution/create_new_version_beta_dry_run.sh`
 - `verification/distribution/create_new_version_real_run_plan_reuse.sh`
 - `verification/distribution/create_new_version_release_checklist.sh`
+- `verification/distribution/create_new_version_attribution_checklist.sh`
 
 **Negative validation:**
 
 - `verification/distribution/create_new_version_stable_rejected.sh`
 - `verification/distribution/create_new_version_bad_semver_rejected.sh`
 - `verification/distribution/create_new_version_missing_artifact_rejected.sh`
-- `verification/distribution/create_new_version_site_manifest_drift_rejected.sh`
+- `verification/distribution/create_new_version_site_dispatcher_drift_rejected.sh`
 
-**Demo:** `demos/preview_release_lifecycle/README.md` captures a dry-run transcript and a mocked real-run transcript showing release planning, artifact verification, manifest publication, and stable gating.
+**Demo:** `demos/preview_release_lifecycle/README.md` captures a dry-run transcript and a mocked real-run transcript showing release planning, artifact verification, generated installer publication, dispatcher publication, stable gating, and attribution evidence when applicable.
 
 ## Quality Contract
 
 - Entry criteria: Phase 32 is completed and async/runtime ecosystem primitives are stable.
 - Phase 27 non-regression baseline is required at phase start and must remain green through completion.
 - Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
+- Phase 27 invariants apply to the preview compiler binaries being distributed. Installer shell code is validated under the distribution checks in this phase, not under compiler diagnostic invariants.
 - Any milestone that regresses these invariants is incomplete, even if its local scope passes.
 - Exit criteria: Preview release lifecycle works reliably without enabling stable GA promotion.
 - Milestone quality checks:
-  - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
+  - No fallback, migration, or legacy compatibility code is allowed; implement the canonical generated-installer architecture directly with clean code only.
   - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
-  - All implementations must be production-grade release automation: deterministic behavior, explicit invariants, auditable mutations, and hard failure on ambiguity.
+  - All implementations must be production-grade release automation: deterministic behavior, explicit invariants, auditable mutations, license-compliant attribution, and hard failure on ambiguity.
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_33_1` (Installer and Channel Resolution): validation goals cover installer entrypoint publication, channel/default/version resolution, stable gating, invalid input rejection, malformed manifest rejection, and unsupported target rejection.
-  - `milestone_33_2` (Artifact and Manifest Pipeline): validation goals cover multi-platform artifact publication, immutable version manifests, channel manifest pointers, checksum validation, signature validation, target matching, and no stable manifest mutation.
-  - `milestone_33_3` (Agentic Preview Release Command): validation goals cover dry-run planning, real-run plan reuse, release checklist generation, stable release rejection, malformed version rejection, missing artifact rejection, and site manifest drift rejection.
+  - `milestone_33_1` (Generated Installer and Channel Dispatchers): validation goals cover installer generator selection, attribution requirements, dispatcher publication, channel/default/version resolution, stable gating, invalid input rejection, missing generated installer rejection, and unsupported target rejection.
+  - `milestone_33_2` (Artifact and Generated Installer Pipeline): validation goals cover multi-platform artifact publication, immutable generated installers, channel dispatcher pointers, checksum validation, target matching, and no stable entrypoint mutation.
+  - `milestone_33_3` (Agentic Preview Release Command): validation goals cover dry-run planning, real-run plan reuse, release checklist generation, attribution checklist generation, stable release rejection, malformed version rejection, missing artifact rejection, and site dispatcher drift rejection.
   - Exit-gate evidence explicitly demonstrates an end-to-end preview release lifecycle for `alpha` or `beta` and separately demonstrates that stable GA promotion remains impossible.
 
 ## Exit Gate
 
-- `https://sifr.sh/install` resolves and installs a validated `alpha` or `beta` preview artifact on supported platforms.
-- Explicit preview version pinning installs the exact requested version.
-- All artifact downloads are checksum- and signature-validated before installation.
-- Channel manifests point to immutable version manifests.
+- `https://sifr.sh/install` resolves and installs a validated `beta` preview artifact on supported platforms.
+- `https://sifr.sh/install/alpha` resolves and installs a validated `alpha` preview artifact on supported platforms.
+- Explicit preview version pinning installs the exact requested immutable version installer.
+- All artifact downloads are SHA-256 validated before installation.
+- Channel dispatchers point to immutable generated version installers.
 - `/create-new-version` dry-run and real-run flows are repeatable for preview releases.
-- `stable` channel and stable-looking version pins are rejected before any artifact or manifest mutation.
-- The site deployment path for installer and manifests has been exercised.
+- `stable` channel and stable-looking version pins are rejected before any artifact, installer, or dispatcher mutation.
+- If uv-derived installer code is used, attribution to `astral-sh/uv` and the MIT license notice are present in the copied/adapted file and release checklist.
+- The site deployment path for installer dispatchers and immutable generated installers has been exercised.
 - Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.
