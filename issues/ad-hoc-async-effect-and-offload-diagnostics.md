@@ -2,7 +2,7 @@
 
 ## Status
 
-proposed
+completed
 
 ## Problem
 
@@ -197,9 +197,19 @@ Validation:
 
 ## Definition Of Done
 
-- Async effect summaries are computed deterministically.
-- Fake async functions and fake awaits are rejected with Sifr diagnostics.
-- Direct annotated blocking/CPU-heavy calls in async code are errors.
-- Blocking offload requires workload classification.
-- Existing Phase 32 positive async fixtures remain valid unless they intentionally covered now-rejected fake async/offload behavior.
-- The quick validation lane includes representative positive and negative fixtures.
+- [x] Async effect summaries are computed deterministically.
+- [x] Fake async functions and fake awaits are rejected with Sifr diagnostics.
+- [x] Direct annotated blocking/CPU-heavy calls in async code are errors.
+- [x] Blocking offload requires workload classification.
+- [x] Existing Phase 32 positive async fixtures remain valid unless they intentionally covered now-rejected fake async/offload behavior.
+- [x] The quick validation lane includes representative positive and negative fixtures.
+
+## Completion
+
+Completed on 2026-05-12 through milestone PRs:
+
+- [#2096](https://github.com/sifr-lang/sifr/pull/2096): renamed workload annotations to `@blocking_io` and `@cpu_heavy`.
+- [#2097](https://github.com/sifr-lang/sifr/pull/2097): added async suspension summary infrastructure.
+- [#2098](https://github.com/sifr-lang/sifr/pull/2098): rejected fake async functions and fake awaits.
+- [#2099](https://github.com/sifr-lang/sifr/pull/2099): enforced workload annotations in async contexts.
+- [#2100](https://github.com/sifr-lang/sifr/pull/2100): restricted blocking offload targets to classified work.
