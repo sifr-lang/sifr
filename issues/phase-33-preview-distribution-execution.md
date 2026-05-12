@@ -101,6 +101,7 @@ Closure evidence:
 
 - Merged milestone PRs: https://github.com/sifr-lang/sifr/pull/2105, https://github.com/sifr-lang/sifr/pull/2106, https://github.com/sifr-lang/sifr/pull/2107
 - Merged site PRs: https://github.com/sifr-lang/sifr-website/pull/3, https://github.com/sifr-lang/sifr-website/pull/4
+- Closure PR: https://github.com/sifr-lang/sifr/pull/2108
 - Milestone reviews: `reviews/phase-33-m33-1-generated-dispatchers-review-pass-2.md`, `reviews/phase-33-m33-2-artifact-installer-review-pass-1.md`, `reviews/phase-33-m33-3-create-new-version-review-pass-1.md`
 - Final closure review: `reviews/phase-33-full-implementation-closure-review-pass-1.md`
 - Distribution validation: `scripts/run_distribution_validation.sh`
