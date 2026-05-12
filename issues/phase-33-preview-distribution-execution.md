@@ -15,6 +15,11 @@ Phase source: `internal_docs/phases/33_preview_distribution_and_release_automati
 - [x] Reviewer satisfied.
 - [ ] PR merged.
 
+PRs:
+
+- Compiler repo: https://github.com/sifr-lang/sifr/pull/2105
+- Site repo: https://github.com/sifr-lang/sifr-website/pull/3
+
 Validation evidence:
 
 - `verification/distribution/install_default_beta_dispatcher.sh`
