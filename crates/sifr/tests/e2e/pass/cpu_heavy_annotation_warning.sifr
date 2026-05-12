@@ -8,5 +8,6 @@ def compute_heavy() -> int:
 
 async def main() -> None:
     value: int = compute_heavy()
+    await task.sleep(0.0)
     assert value == 10
     return None

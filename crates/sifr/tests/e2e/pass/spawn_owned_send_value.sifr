@@ -1,4 +1,5 @@
 async def worker(value: int) -> int:
+    await task.sleep(0.0)
     return value
 
 

@@ -47,6 +47,9 @@ impl DiagnosticCode {
     pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
     pub const TYPE_BLOCKING_WORK_IN_ASYNC: Self = Self::new("SIFR-TYPE-0903", Severity::Warning);
 
+    pub const ASYNC_NO_SUSPEND: Self = Self::new("SIFR-ASYNC-0001", Severity::Error);
+    pub const ASYNC_AWAIT_NO_SUSPEND: Self = Self::new("SIFR-ASYNC-0002", Severity::Error);
+
     pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
     pub const DECIMAL_BIGDECIMAL_INVALID_LITERAL: Self =
         Self::new("SIFR-DECIMAL-0002", Severity::Error);
@@ -284,6 +287,11 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-TYPE-0000",
     },
     DiagnosticFamily {
+        name: "ASYNC",
+        summary: "Async effect, awaitability, and blocking-offload diagnostics.",
+        reserved_base: "SIFR-ASYNC-0000",
+    },
+    DiagnosticFamily {
         name: "DECIMAL",
         summary: "Decimal literal and fixed-point arithmetic diagnostics.",
         reserved_base: "SIFR-DECIMAL-0000",
@@ -397,6 +405,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-NAME-0000", "NAME"),
     reserved_family_base("SIFR-IMPORT-0000", "IMPORT"),
     reserved_family_base("SIFR-TYPE-0000", "TYPE"),
+    reserved_family_base("SIFR-ASYNC-0000", "ASYNC"),
     reserved_family_base("SIFR-DECIMAL-0000", "DECIMAL"),
     reserved_family_base("SIFR-INT-0000", "INT"),
     reserved_code(
@@ -782,6 +791,28 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_hir::lower::expressions",
         [arg!("workload"), arg!("function"), arg!("suggestion")],
         ["function", "workload"]
+    ),
+    active_entry!(
+        "SIFR-ASYNC-0001",
+        "ASYNC",
+        "Async function body has no real suspension effect.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/async_no_suspend_rejected.sifr",
+        "{message}",
+        "sifr_hir::lower::typing_and_functions",
+        [arg!("message")],
+        ["message"]
+    ),
+    active_entry!(
+        "SIFR-ASYNC-0002",
+        "ASYNC",
+        "Awaited same-task coroutine has no real suspension effect.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/async_transitive_no_suspend_await_rejected.sifr",
+        "{message}",
+        "sifr_hir::lower::async_await",
+        [arg!("message")],
+        ["message"]
     ),
     active_entry!(
         "SIFR-DECIMAL-0001",
@@ -1710,6 +1741,8 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
     DiagnosticCode::TYPE_REVEAL_TYPE,
     DiagnosticCode::TYPE_BLOCKING_WORK_IN_ASYNC,
+    DiagnosticCode::ASYNC_NO_SUSPEND,
+    DiagnosticCode::ASYNC_AWAIT_NO_SUSPEND,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_FLOAT_MIXED,

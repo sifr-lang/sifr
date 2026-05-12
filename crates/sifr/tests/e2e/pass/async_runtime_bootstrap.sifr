@@ -1,4 +1,5 @@
 async def answer() -> int:
+    await task.sleep(0.0)
     return 42
 
 async def main() -> None:

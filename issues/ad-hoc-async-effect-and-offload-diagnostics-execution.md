@@ -23,15 +23,15 @@ proposed
 
 ### adhoc_async_effect_1: Reject Fake Async And Fake Await
 
-- [ ] Reject `async def` bodies with `NoSuspend`.
-- [ ] Reject awaiting same-task coroutines with transitive `NoSuspend`.
-- [ ] Preserve existing non-awaitable hard errors.
-- [ ] Add explicit protocol-conformance escape hatch only if implementation requires it.
-- [ ] Add validation fixtures:
-  - [ ] `async_no_suspend_rejected.sifr`
-  - [ ] `async_transitive_no_suspend_await_rejected.sifr`
-  - [ ] `await_sync_function_rejected.sifr`
-  - [ ] `async_protocol_no_suspend_requires_escape_hatch.sifr`
+- [x] Reject `async def` bodies with `NoSuspend`.
+- [x] Reject awaiting same-task coroutines with transitive `NoSuspend`.
+- [x] Preserve existing non-awaitable hard errors.
+- [x] Add explicit protocol-conformance escape hatch only if implementation requires it.
+- [x] Add validation fixtures:
+  - [x] `async_no_suspend_rejected.sifr`
+  - [x] `async_transitive_no_suspend_await_rejected.sifr`
+  - [x] `await_sync_function_rejected.sifr`
+  - [x] `async_protocol_no_suspend_requires_escape_hatch.sifr`
 
 ### adhoc_async_effect_2: Enforce Workload Annotations
 
