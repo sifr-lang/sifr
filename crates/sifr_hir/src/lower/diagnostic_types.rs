@@ -39,10 +39,4 @@ pub enum LoweringWarningDiagnostic {
     BigIntTransitionAlias {
         primary_range: Option<TextRange>,
     },
-    BlockingWorkInAsync {
-        function: String,
-        workload: String,
-        suggestion: String,
-        primary_range: Option<TextRange>,
-    },
 }

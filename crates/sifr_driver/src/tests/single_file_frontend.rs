@@ -229,7 +229,7 @@ fn test_type_check_source_surfaces_arithmetic_warning_as_structured_warning() {
 }
 
 #[test]
-fn test_type_check_source_surfaces_workload_annotation_warning() {
+fn test_type_check_source_surfaces_blocking_io_direct_call_error() {
     let diagnostics = type_check_source(
         r"@blocking_io
 def read_file() -> int:
@@ -244,34 +244,29 @@ async def main() -> None:
 
     let diagnostic = diagnostics
         .iter()
-        .find(|diagnostic| diagnostic.code == DiagnosticCode::TYPE_BLOCKING_WORK_IN_ASYNC.code())
-        .expect("workload annotation should produce an async-context warning");
+        .find(|diagnostic| diagnostic.code == DiagnosticCode::ASYNC_DIRECT_BLOCKING_IO_CALL.code())
+        .expect("workload annotation should produce an async-context error");
     assert_eq!(
         diagnostic.code,
-        DiagnosticCode::TYPE_BLOCKING_WORK_IN_ASYNC.code()
+        DiagnosticCode::ASYNC_DIRECT_BLOCKING_IO_CALL.code()
     );
-    assert_eq!(diagnostic.severity, sifr_diagnostics::Severity::Warning);
-    assert_eq!(
-        diagnostic.message_template,
-        "{workload} function '{function}' called directly from async context; {suggestion}"
-    );
+    assert_eq!(diagnostic.severity, sifr_diagnostics::Severity::Error);
+    assert_eq!(diagnostic.message_template, "{message}");
     assert_eq!(
         diagnostic.message,
         "blocking_io function 'read_file' called directly from async context; use an async API or task.spawn_blocking"
     );
     assert_eq!(
-        diagnostic.args.get("workload"),
-        Some(&DiagnosticArg::String("blocking_io".to_string()))
-    );
-    assert_eq!(
-        diagnostic.args.get("function"),
-        Some(&DiagnosticArg::String("read_file".to_string()))
+        diagnostic.args.get("message"),
+        Some(&DiagnosticArg::String(
+            "blocking_io function 'read_file' called directly from async context; use an async API or task.spawn_blocking".to_string()
+        ))
     );
     let primary_span = diagnostic
         .spans
         .iter()
         .find(|span| span.is_primary)
-        .expect("workload warning should carry a primary span");
+        .expect("workload error should carry a primary span");
     assert_eq!(primary_span.file.as_deref(), Some("main"));
     assert_eq!(primary_span.line, Some(6));
     assert!(primary_span.byte_end > primary_span.byte_start);

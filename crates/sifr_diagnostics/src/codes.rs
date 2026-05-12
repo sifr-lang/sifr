@@ -45,10 +45,12 @@ impl DiagnosticCode {
     pub const TYPE_UNSUPPORTED_EXPRESSION_FORM: Self = Self::new("SIFR-TYPE-0012", Severity::Error);
     pub const TYPE_ARITHMETIC_OVERFLOW_RISK: Self = Self::new("SIFR-TYPE-0901", Severity::Warning);
     pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
-    pub const TYPE_BLOCKING_WORK_IN_ASYNC: Self = Self::new("SIFR-TYPE-0903", Severity::Warning);
-
     pub const ASYNC_NO_SUSPEND: Self = Self::new("SIFR-ASYNC-0001", Severity::Error);
     pub const ASYNC_AWAIT_NO_SUSPEND: Self = Self::new("SIFR-ASYNC-0002", Severity::Error);
+    pub const ASYNC_DIRECT_BLOCKING_IO_CALL: Self = Self::new("SIFR-ASYNC-0003", Severity::Error);
+    pub const ASYNC_DIRECT_CPU_HEAVY_CALL: Self = Self::new("SIFR-ASYNC-0004", Severity::Error);
+    pub const ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF: Self =
+        Self::new("SIFR-ASYNC-0006", Severity::Error);
 
     pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
     pub const DECIMAL_BIGDECIMAL_INVALID_LITERAL: Self =
@@ -428,6 +430,11 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "INT",
         "Reserved for bytes or bytearray construction and mutation values that do not fit uint8.",
     ),
+    reserved_code(
+        "SIFR-TYPE-0903",
+        "TYPE",
+        "Retired: direct annotated workload calls from async code are now ASYNC-family errors.",
+    ),
     reserved_family_base("SIFR-CALL-0000", "CALL"),
     reserved_family_base("SIFR-OWN-0000", "OWN"),
     reserved_family_base("SIFR-FLOW-0000", "FLOW"),
@@ -782,17 +789,6 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["revealed_type"]
     ),
     active_entry!(
-        "SIFR-TYPE-0903",
-        "TYPE",
-        "Blocking or CPU-bound workload called directly from async code.",
-        Severity::Warning,
-        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_workload_annotation_warning",
-        "{workload} function '{function}' called directly from async context; {suggestion}",
-        "sifr_hir::lower::expressions",
-        [arg!("workload"), arg!("function"), arg!("suggestion")],
-        ["function", "workload"]
-    ),
-    active_entry!(
         "SIFR-ASYNC-0001",
         "ASYNC",
         "Async function body has no real suspension effect.",
@@ -811,6 +807,39 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "crates/sifr/tests/e2e/fail/async_transitive_no_suspend_await_rejected.sifr",
         "{message}",
         "sifr_hir::lower::async_await",
+        [arg!("message")],
+        ["message"]
+    ),
+    active_entry!(
+        "SIFR-ASYNC-0003",
+        "ASYNC",
+        "Blocking I/O function called directly from async context.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/blocking_io_direct_call_in_async_rejected.sifr",
+        "{message}",
+        "sifr_hir::lower::workload_annotations",
+        [arg!("message")],
+        ["message"]
+    ),
+    active_entry!(
+        "SIFR-ASYNC-0004",
+        "ASYNC",
+        "CPU-heavy function called directly from async context.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/cpu_heavy_direct_call_in_async_rejected.sifr",
+        "{message}",
+        "sifr_hir::lower::workload_annotations",
+        [arg!("message")],
+        ["message"]
+    ),
+    active_entry!(
+        "SIFR-ASYNC-0006",
+        "ASYNC",
+        "Synchronous workload annotation applied to async function.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/blocking_io_on_async_def_rejected.sifr",
+        "{message}",
+        "sifr_hir::lower::typing_and_functions",
         [arg!("message")],
         ["message"]
     ),
@@ -1740,9 +1769,11 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
     DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
     DiagnosticCode::TYPE_REVEAL_TYPE,
-    DiagnosticCode::TYPE_BLOCKING_WORK_IN_ASYNC,
     DiagnosticCode::ASYNC_NO_SUSPEND,
     DiagnosticCode::ASYNC_AWAIT_NO_SUSPEND,
+    DiagnosticCode::ASYNC_DIRECT_BLOCKING_IO_CALL,
+    DiagnosticCode::ASYNC_DIRECT_CPU_HEAVY_CALL,
+    DiagnosticCode::ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_FLOAT_MIXED,

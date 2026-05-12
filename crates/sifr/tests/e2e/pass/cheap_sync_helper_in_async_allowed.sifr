@@ -1,10 +1,9 @@
-@blocking_io
-def read_blocking() -> int:
-    return 41
+def normalize(value: int) -> int:
+    return value + 1
 
 
 async def main() -> None:
-    value: int = read_blocking()
+    value: int = normalize(40)
     await task.sleep(0.0)
     assert value == 41
     return None
