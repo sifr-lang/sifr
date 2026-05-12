@@ -1225,6 +1225,21 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         }
     }
     let is_async_generator = effective_is_async && function_body_contains_yield(&func.body);
+    if effective_is_async
+        && matches!(
+            ctx.async_suspension_summaries.get(func.name.as_str()),
+            Some(super::async_effects::AsyncSuspensionSummary::NoSuspend)
+        )
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::ASYNC_NO_SUSPEND,
+            format!(
+                "async function '{}' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required",
+                func.name
+            ),
+            func.name.range(),
+        );
+    }
     if effective_is_async {
         if is_async_generator {
             if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {

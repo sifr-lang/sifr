@@ -237,6 +237,7 @@ def read_file() -> int:
 
 async def main() -> None:
     value: int = read_file()
+    await task.sleep(0.0)
     return None
 ",
     );

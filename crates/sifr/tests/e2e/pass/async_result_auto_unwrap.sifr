@@ -1,4 +1,5 @@
 async def fetch() -> Result[int, ValueError]:
+    await task.sleep(0.0)
     return 7
 
 async def observe() -> Result[int, ValueError]:

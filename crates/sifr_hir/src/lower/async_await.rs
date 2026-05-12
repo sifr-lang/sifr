@@ -39,6 +39,23 @@ pub(super) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<
         return None;
     };
 
+    if let HirExpr::Call { func, .. } = &value {
+        if ctx.async_functions.contains(func)
+            && matches!(
+                ctx.async_suspension_summaries.get(func),
+                Some(super::async_effects::AsyncSuspensionSummary::NoSuspend)
+            )
+        {
+            ctx.error_with_code_at(
+                sifr_diagnostics::DiagnosticCode::ASYNC_AWAIT_NO_SUSPEND,
+                format!(
+                    "awaited async function '{func}' has no real suspension effect; remove await and make it a synchronous function"
+                ),
+                await_expr.value.range(),
+            );
+        }
+    }
+
     if matches!(
         value.ty().resolve_alias(),
         Type::Task(_, _) | Type::BlockingTask(_, _)

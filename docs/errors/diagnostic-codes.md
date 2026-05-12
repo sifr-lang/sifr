@@ -14,6 +14,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `NAME` | `SIFR-NAME-0000` | Name binding and resolution diagnostics. |
 | `IMPORT` | `SIFR-IMPORT-0000` | Module import and path resolution diagnostics. |
 | `TYPE` | `SIFR-TYPE-0000` | Static type compatibility and inference diagnostics. |
+| `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
 | `DECIMAL` | `SIFR-DECIMAL-0000` | Decimal literal and fixed-point arithmetic diagnostics. |
 | `INT` | `SIFR-INT-0000` | Exact and fixed-width integer model diagnostics. |
 | `CALL` | `SIFR-CALL-0000` | Function, method, constructor, and overload call diagnostics. |
@@ -65,6 +66,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0901`](SIFR-TYPE-0901.md) | Warning | Integer arithmetic may overflow at runtime. |
 | [`SIFR-TYPE-0902`](SIFR-TYPE-0902.md) | Note | Reveal the inferred static type of an expression. |
 | [`SIFR-TYPE-0903`](SIFR-TYPE-0903.md) | Warning | Blocking or CPU-bound workload called directly from async code. |
+| [`SIFR-ASYNC-0001`](SIFR-ASYNC-0001.md) | Error | Async function body has no real suspension effect. |
+| [`SIFR-ASYNC-0002`](SIFR-ASYNC-0002.md) | Error | Awaited same-task coroutine has no real suspension effect. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
 | [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.md) | Error | Invalid BigDecimal exact literal. |
 | [`SIFR-DECIMAL-0003`](SIFR-DECIMAL-0003.md) | Error | Float mixed with a decimal numeric type. |
@@ -153,6 +156,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-NAME-0000` | `NAME` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-IMPORT-0000` | `IMPORT` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-TYPE-0000` | `TYPE` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-ASYNC-0000` | `ASYNC` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INT-0000` | `INT` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INT-0002` | `INT` | Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets. |

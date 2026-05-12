@@ -1511,7 +1511,7 @@ fn test_use_after_move() {
 
 #[test]
 fn test_await_task_handle_consumes_handle_binding() {
-    let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        first = await handle\n        second = await handle\n    return None\n";
+    let source = "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        first = await handle\n        second = await handle\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1524,7 +1524,7 @@ fn test_await_task_handle_consumes_handle_binding() {
 
 #[test]
 fn test_task_handle_join_consumes_handle_binding() {
-    let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        first = await handle.join()\n        second = await handle\n    return None\n";
+    let source = "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        first = await handle.join()\n        second = await handle\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1538,7 +1538,7 @@ fn test_task_handle_join_consumes_handle_binding() {
 #[test]
 fn test_task_handle_cancel_does_not_consume_handle_binding() {
     let source = concat!(
-        "async def worker() -> int:\n    return 41\n\n",
+        "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\n",
         "async def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n",
         "        handle = scope.spawn(worker())\n        handle.",
         "cancel",
@@ -1615,7 +1615,7 @@ fn test_thread_pool_executor_submit_rejects_non_send_return() {
 #[test]
 fn test_task_handle_cancel_after_await_rejects_moved_handle() {
     let source = concat!(
-        "async def worker() -> int:\n    return 41\n\n",
+        "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\n",
         "async def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n",
         "        handle = scope.spawn(worker())\n        result = await handle\n        handle.",
         "cancel",
@@ -1633,7 +1633,7 @@ fn test_task_handle_cancel_after_await_rejects_moved_handle() {
 
 #[test]
 fn test_scope_spawn_accepts_owned_coroutine_arguments() {
-    let source = "async def worker(value: int) -> int:\n    return value\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        value: int = 41\n        handle = scope.spawn(worker(value))\n        result = await handle\n    return None\n";
+    let source = "async def worker(value: int) -> int:\n    await task.sleep(0.0)\n    return value\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        value: int = 41\n        handle = scope.spawn(worker(value))\n        result = await handle\n    return None\n";
     let result = lower_source(source);
     assert!(
         result.is_ok(),
@@ -1643,7 +1643,7 @@ fn test_scope_spawn_accepts_owned_coroutine_arguments() {
 
 #[test]
 fn test_scope_spawn_rejects_borrowed_parameter_argument() {
-    let source = "async def worker(own items: list[int]) -> int:\n    return len(items)\n\nasync def main(items: list[int]) -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(items))\n    return None\n";
+    let source = "async def worker(own items: list[int]) -> int:\n    await task.sleep(0.0)\n    return len(items)\n\nasync def main(items: list[int]) -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(items))\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1656,7 +1656,7 @@ fn test_scope_spawn_rejects_borrowed_parameter_argument() {
 
 #[test]
 fn test_scope_spawn_consumes_owned_move_argument() {
-    let source = "async def worker(own items: list[int]) -> int:\n    return len(items)\n\nasync def main() -> Result[None, ScopeFailure]:\n    items: list[int] = [1]\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(items))\n        items.append(2)\n    return None\n";
+    let source = "async def worker(own items: list[int]) -> int:\n    await task.sleep(0.0)\n    return len(items)\n\nasync def main() -> Result[None, ScopeFailure]:\n    items: list[int] = [1]\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(items))\n        items.append(2)\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1674,7 +1674,7 @@ fn test_scope_spawn_consumes_owned_move_argument() {
 
 #[test]
 fn test_scope_spawn_rejects_non_send_field_argument() {
-    let source = "class LocalCell(NonSend):\n    pass\n\nclass Job:\n    cell: LocalCell\n\nasync def worker(own job: Job) -> int:\n    return 1\n\nasync def main() -> Result[None, ScopeFailure]:\n    cell: LocalCell = LocalCell()\n    job: Job = Job(cell)\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(job))\n    return None\n";
+    let source = "class LocalCell(NonSend):\n    pass\n\nclass Job:\n    cell: LocalCell\n\nasync def worker(own job: Job) -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def main() -> Result[None, ScopeFailure]:\n    cell: LocalCell = LocalCell()\n    job: Job = Job(cell)\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(job))\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1688,7 +1688,7 @@ fn test_scope_spawn_rejects_non_send_field_argument() {
 
 #[test]
 fn test_scope_spawn_rejects_self_with_non_send_field() {
-    let source = "class LocalCell(NonSend):\n    pass\n\nclass Owner:\n    cell: LocalCell\n\nasync def worker(own owner: Owner) -> int:\n    return 1\n\nasync def launch(own self: Owner) -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(self))\n    return None\n";
+    let source = "class LocalCell(NonSend):\n    pass\n\nclass Owner:\n    cell: LocalCell\n\nasync def worker(own owner: Owner) -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def launch(own self: Owner) -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(self))\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1702,7 +1702,7 @@ fn test_scope_spawn_rejects_self_with_non_send_field() {
 
 #[test]
 fn test_scope_spawn_rejects_lock_guard_argument() {
-    let source = "class LockGuard[T]:\n    pass\n\nasync def worker(own guard: LockGuard[int]) -> int:\n    return 1\n\nasync def main() -> Result[None, ScopeFailure]:\n    guard: LockGuard[int] = LockGuard()\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(guard))\n    return None\n";
+    let source = "class LockGuard[T]:\n    pass\n\nasync def worker(own guard: LockGuard[int]) -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def main() -> Result[None, ScopeFailure]:\n    guard: LockGuard[int] = LockGuard()\n    async with task.scope() as scope:\n        handle = scope.spawn(worker(guard))\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1831,7 +1831,7 @@ fn test_lock_guard_return_escape_rejected() {
 
 #[test]
 fn test_task_timeout_consumes_handle_binding() {
-    let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n        second = await handle\n    return None\n";
+    let source = "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n        second = await handle\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1844,7 +1844,7 @@ fn test_task_timeout_consumes_handle_binding() {
 
 #[test]
 fn test_task_race_consumes_handle_collection_binding() {
-    let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handles = [scope.spawn(worker()), scope.spawn(worker())]\n        result = await task.race(handles)\n        second = await task.race(handles)\n    return None\n";
+    let source = "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handles = [scope.spawn(worker()), scope.spawn(worker())]\n        result = await task.race(handles)\n        second = await task.race(handles)\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1862,7 +1862,7 @@ fn test_task_race_consumes_handle_collection_binding() {
 
 #[test]
 fn test_for_loop_consumes_task_handle_collection_binding() {
-    let source = "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handles = [scope.spawn(worker()), scope.spawn(worker())]\n        for handle in handles:\n            result = await handle\n        second = await task.gather(handles)\n    return None\n";
+    let source = "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handles = [scope.spawn(worker()), scope.spawn(worker())]\n        for handle in handles:\n            result = await handle\n        second = await task.gather(handles)\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -1898,7 +1898,7 @@ fn test_failure_annotation_resolves_in_function_signature() {
 
 #[test]
 fn test_task_select_consumes_handle_bindings() {
-    let source = "async def first() -> int:\n    return 1\n\nasync def second() -> str:\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        one = scope.spawn(first())\n        two = scope.spawn(second())\n        selected = await task.select(one, two)\n        late = await one\n    return None\n";
+    let source = "async def first() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def second() -> str:\n    await task.sleep(0.0)\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        one = scope.spawn(first())\n        two = scope.spawn(second())\n        selected = await task.select(one, two)\n        late = await one\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();

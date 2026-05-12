@@ -1,0 +1,7 @@
+# expect-error: SIFR-ASYNC-0001
+async def value() -> int:
+    return 1
+
+
+def main() -> None:
+    return None

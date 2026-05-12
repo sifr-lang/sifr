@@ -1,0 +1,8 @@
+# expect-error: SIFR-ASYNC-0001
+# Protocol-shaped async functions still need a reviewed reason-bearing escape hatch.
+async def protocol_value() -> int:
+    return 1
+
+
+def main() -> None:
+    return None

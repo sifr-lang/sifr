@@ -2,6 +2,7 @@ from sifr.sync import Shared
 
 
 async def worker(own shared: Shared[int]) -> int:
+    await task.sleep(0.0)
     return shared.get()
 
 

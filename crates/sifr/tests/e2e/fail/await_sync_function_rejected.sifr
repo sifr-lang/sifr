@@ -1,0 +1,9 @@
+# expect-error: SIFR-TYPE-0002
+def value() -> int:
+    return 1
+
+
+async def main() -> None:
+    result: int = await value()
+    assert result == 1
+    return None
