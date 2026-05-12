@@ -5,7 +5,7 @@ from sifr.threading import Lock
 from sifr.threading import Thread
 
 
-@cpu_bound
+@cpu_heavy
 def compute_score() -> int:
     total: int = 0
     for value in range(0, 7):
@@ -13,7 +13,7 @@ def compute_score() -> int:
     return total
 
 
-@io_bound
+@blocking_io
 def read_legacy_counter() -> int:
     return 21
 

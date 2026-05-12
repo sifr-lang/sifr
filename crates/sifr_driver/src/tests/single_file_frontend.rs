@@ -231,7 +231,7 @@ fn test_type_check_source_surfaces_arithmetic_warning_as_structured_warning() {
 #[test]
 fn test_type_check_source_surfaces_workload_annotation_warning() {
     let diagnostics = type_check_source(
-        r"@io_bound
+        r"@blocking_io
 def read_file() -> int:
     return 1
 
@@ -256,11 +256,11 @@ async def main() -> None:
     );
     assert_eq!(
         diagnostic.message,
-        "io_bound function 'read_file' called directly from async context; use an async API or task.spawn_blocking"
+        "blocking_io function 'read_file' called directly from async context; use an async API or task.spawn_blocking"
     );
     assert_eq!(
         diagnostic.args.get("workload"),
-        Some(&DiagnosticArg::String("io_bound".to_string()))
+        Some(&DiagnosticArg::String("blocking_io".to_string()))
     );
     assert_eq!(
         diagnostic.args.get("function"),

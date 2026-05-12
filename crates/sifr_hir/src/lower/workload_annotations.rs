@@ -4,22 +4,22 @@ use sifr_python_ast::Expr;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum WorkloadKind {
-    IoBound,
-    CpuBound,
+    BlockingIo,
+    CpuHeavy,
 }
 
 impl WorkloadKind {
     fn label(self) -> &'static str {
         match self {
-            Self::IoBound => "io_bound",
-            Self::CpuBound => "cpu_bound",
+            Self::BlockingIo => "blocking_io",
+            Self::CpuHeavy => "cpu_heavy",
         }
     }
 
     fn suggestion(self) -> &'static str {
         match self {
-            Self::IoBound => "use an async API or task.spawn_blocking",
-            Self::CpuBound => "use task.spawn_blocking or ThreadPoolExecutor",
+            Self::BlockingIo => "use an async API or task.spawn_blocking",
+            Self::CpuHeavy => "use task.spawn_blocking or ThreadPoolExecutor",
         }
     }
 }
@@ -33,8 +33,8 @@ pub(super) fn annotation_for_decorators<'a>(
             continue;
         };
         match name.id.as_str() {
-            "io_bound" => workload = Some(WorkloadKind::IoBound),
-            "cpu_bound" => workload = Some(WorkloadKind::CpuBound),
+            "blocking_io" => workload = Some(WorkloadKind::BlockingIo),
+            "cpu_heavy" => workload = Some(WorkloadKind::CpuHeavy),
             _ => {}
         }
     }

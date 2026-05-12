@@ -755,8 +755,8 @@ status: completed
 
 **Positive validation:**
 
-- `io_bound_annotation_warning.sifr`
-- `cpu_bound_annotation_warning.sifr`
+- `blocking_io_annotation_warning.sifr`
+- `cpu_heavy_annotation_warning.sifr`
 - `spawn_blocking_basic.sifr`
 - `blocking_task_cancel_join.sifr`
 - `thread_pool_executor_basic.sifr`

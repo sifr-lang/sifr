@@ -1,4 +1,4 @@
-@io_bound
+@blocking_io
 def read_blocking() -> int:
     return 41
 
