@@ -61,13 +61,26 @@ PRs:
 
 ## Milestone 33.3: Agentic Preview Release Command
 
-- [ ] `.cursor/commands/create-new-version.md` added.
-- [ ] Dry-run planner.
-- [ ] Authorized real-run workflow.
-- [ ] Release checklist and recovery note generation.
-- [ ] Stable release attempts rejected before mutation.
-- [ ] Reviewer satisfied.
+- [x] `.cursor/commands/create-new-version.md` added.
+- [x] Dry-run planner.
+- [x] Authorized real-run workflow.
+- [x] Release checklist and recovery note generation.
+- [x] Stable release attempts rejected before mutation.
+- [x] Reviewer satisfied.
 - [ ] PR merged.
+
+Validation evidence:
+
+- `verification/distribution/create_new_version_alpha_dry_run.sh`
+- `verification/distribution/create_new_version_beta_dry_run.sh`
+- `verification/distribution/create_new_version_real_run_plan_reuse.sh`
+- `verification/distribution/create_new_version_release_checklist.sh`
+- `verification/distribution/create_new_version_attribution_checklist.sh`
+- `verification/distribution/create_new_version_stable_rejected.sh`
+- `verification/distribution/create_new_version_bad_semver_rejected.sh`
+- `verification/distribution/create_new_version_missing_artifact_rejected.sh`
+- `verification/distribution/create_new_version_site_dispatcher_drift_rejected.sh`
+- `scripts/run_distribution_validation.sh`
 
 ## Phase Exit Gate
 
