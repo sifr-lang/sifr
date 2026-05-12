@@ -54,6 +54,11 @@ Validation evidence:
 - `verification/distribution/stable_entrypoints_unchanged_by_preview_release.sh`
 - `scripts/run_distribution_validation.sh`
 
+PRs:
+
+- Compiler repo: https://github.com/sifr-lang/sifr/pull/2106
+- Site repo: https://github.com/sifr-lang/sifr-website/pull/4
+
 ## Milestone 33.3: Agentic Preview Release Command
 
 - [ ] `.cursor/commands/create-new-version.md` added.
