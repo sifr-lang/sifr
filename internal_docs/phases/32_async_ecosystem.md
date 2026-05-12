@@ -2,7 +2,7 @@
 
 status: completed
 
-Corrective follow-up: the async effect and offload diagnostic seal is tracked in [Ad Hoc Async Effect And Offload Diagnostics](../../issues/ad-hoc-async-effect-and-offload-diagnostics.md). That ad hoc phase tightens the completed model by rejecting fake async functions, fake awaits, direct annotated blocking/CPU-heavy calls in async code, and unclassified blocking offload targets.
+Corrective follow-up completed on 2026-05-12: the async effect and offload diagnostic seal is tracked in [Ad Hoc Async Effect And Offload Diagnostics](../../issues/ad-hoc-async-effect-and-offload-diagnostics.md). That ad hoc phase tightens the completed model by rejecting fake async functions, fake awaits, direct annotated blocking/CPU-heavy calls in async code, and unclassified blocking offload targets.
 
 ## Objective
 
