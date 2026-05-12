@@ -1168,6 +1168,7 @@ cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification lane
 ./scripts/run_all_tests.sh --profile full    # Legacy alias for `pr`
 ./scripts/run_all_tests.sh --profile stress  # Legacy alias for `release`
+./scripts/run_distribution_validation.sh     # Preview installer/artifact/release automation checks
 ./scripts/check_e2e_report_determinism.sh --profile release # Stable e2e report signature across reruns
 ./scripts/run_smoke_fuzz_property.sh         # Opt-in nightly smoke property/fuzz validation
 cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # Parser snapshots
