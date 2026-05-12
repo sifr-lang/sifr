@@ -69,7 +69,7 @@ proposed
 
 ## Review Notes
 
-- 2026-05-12 annotation vocabulary slice: compiler workload annotations, quick-lane fixtures, and the blocking-offload demo now use `@blocking_io` / `@cpu_heavy`. Focused fixture checks and `scripts/run_all_tests.sh --profile quick` passed; the quick run reported a warm wall-time advisory but exited successfully.
+- 2026-05-12 annotation vocabulary slice ([#2096](https://github.com/sifr-lang/sifr/pull/2096)): compiler workload annotations, quick-lane fixtures, and the blocking-offload demo now use `@blocking_io` / `@cpu_heavy`. Focused fixture checks and `scripts/run_all_tests.sh --profile quick` passed; the quick run reported a warm wall-time advisory but exited successfully.
 - Existing Phase 32 workload-annotation warning fixtures must be replaced by `blocking_io` / `cpu_heavy` fixtures with the new error expectations. `spawn_blocking_basic.sifr` passes an unannotated sync function and will also need updating by annotating the helper with `@blocking_io` or replacing the fixture with a negative offload-target check.
 - The stdlib annotation database and FFI/external contract classification registry are infrastructure for `adhoc_async_effect_3`. Implementation should define the registry interface and note it as deferred infrastructure while unannotated functions remain rejected as offload targets.
 - Claude reviewer sign-off recorded in `reviews/ad-hoc-async-effect-and-offload-diagnostics-claude-pass-1.md`.
