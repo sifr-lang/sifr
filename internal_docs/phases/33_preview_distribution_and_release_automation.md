@@ -2,7 +2,7 @@
 
 status: completed
 
-Completed on 2026-05-12. Closure evidence is recorded in `../../issues/phase-33-preview-distribution-execution.md`.
+Completed on 2026-05-12. Closure evidence is recorded in `../../issues/phase-33-preview-distribution-execution.md`, including corrective public release publication evidence for `0.1.0-alpha.1` and `0.1.0-beta.1`.
 
 ## Objective
 

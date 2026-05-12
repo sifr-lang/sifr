@@ -1,6 +1,6 @@
 # Phase 33 Preview Distribution Execution Checklist
 
-Status: in progress
+Status: completed
 
 Phase source: `internal_docs/phases/33_preview_distribution_and_release_automation.md`
 
@@ -40,7 +40,7 @@ Validation evidence:
 - [x] Channel dispatchers point to generated installers.
 - [x] Demo evidence recorded.
 - [x] Reviewer satisfied.
-- [ ] PR merged.
+- [x] PR merged.
 
 Validation evidence:
 
@@ -102,8 +102,16 @@ Closure evidence:
 - Merged milestone PRs: https://github.com/sifr-lang/sifr/pull/2105, https://github.com/sifr-lang/sifr/pull/2106, https://github.com/sifr-lang/sifr/pull/2107
 - Merged site PRs: https://github.com/sifr-lang/sifr-website/pull/3, https://github.com/sifr-lang/sifr-website/pull/4
 - Closure PR: https://github.com/sifr-lang/sifr/pull/2108
+- Corrective release publication workflow PR: https://github.com/sifr-lang/sifr/pull/2109
+- Corrective submodule checkout PR: https://github.com/sifr-lang/sifr/pull/2110
+- Published alpha release: https://github.com/sifr-lang/sifr/releases/tag/0.1.0-alpha.1
+- Published beta release: https://github.com/sifr-lang/sifr/releases/tag/0.1.0-beta.1
+- Release workflow runs: https://github.com/sifr-lang/sifr/actions/runs/25767509795, https://github.com/sifr-lang/sifr/actions/runs/25767509841
+- Public release assets verified: each preview release has eight assets, covering four target archives and four `.sha256` checksum files.
 - Milestone reviews: `reviews/phase-33-m33-1-generated-dispatchers-review-pass-2.md`, `reviews/phase-33-m33-2-artifact-installer-review-pass-1.md`, `reviews/phase-33-m33-3-create-new-version-review-pass-1.md`
 - Final closure review: `reviews/phase-33-full-implementation-closure-review-pass-1.md`
+- Corrective workflow review: `reviews/phase33-release-submodules-review.md`
+- Corrective release publication closure review: `reviews/phase-33-release-publication-closure-review-pass-1.md`
 - Distribution validation: `scripts/run_distribution_validation.sh`
 - Site build: `npm run build:site` in `/Users/yaseralnajjar/work/sifr/sifr-blog-website`
 - Site preview smoke: local Astro preview served `/install` and `/install/alpha` with HTTP 200 and generated shell scripts.
