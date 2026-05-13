@@ -119,11 +119,43 @@ set -eu
 APP_NAME="sifr"
 APP_VERSION="${VERSION}"
 ARTIFACT_BASE_URL="${ARTIFACT_BASE_URL}"
+NO_MODIFY_PATH="\${SIFR_NO_MODIFY_PATH:-0}"
 
 fail() {
   echo "sifr installer: \$*" >&2
   exit 2
 }
+
+usage() {
+  cat <<'EOFUSAGE'
+Usage: sifr-installer.sh [options]
+
+Options:
+  --no-modify-path    Do not update shell profiles to add Sifr to PATH
+  --help              Show this help
+
+Environment:
+  SIFR_INSTALL_DIR        Install directory (default: \$HOME/.sifr/bin)
+  SIFR_NO_MODIFY_PATH=1   Do not update shell profiles
+  SIFR_TARGET             Override target triple for validation
+EOFUSAGE
+}
+
+while [ "\$#" -gt 0 ]; do
+  case "\$1" in
+    --no-modify-path)
+      NO_MODIFY_PATH=1
+      shift
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      fail "unknown option: \$1"
+      ;;
+  esac
+done
 
 download() {
   if command -v curl >/dev/null 2>&1; then
@@ -168,8 +200,118 @@ detect_target() {
       ;;
     *)
       fail "unsupported platform: \${os}/\${arch}"
+    ;;
+  esac
+}
+
+profile_path_expr() {
+  path="\$1"
+  if [ -n "\${HOME:-}" ]; then
+    case "\${path}" in
+      "\${HOME}/"*)
+        suffix="\${path#"\${HOME}/"}"
+        printf '\${HOME}/%s\n' "\${suffix}"
+        return 0
+        ;;
+    esac
+  fi
+  printf '%s\n' "\${path}"
+}
+
+write_env_script_sh() {
+  install_dir_expr="\$1"
+  env_script_path="\$2"
+  {
+    printf '%s\n' '#!/usr/bin/env sh'
+    printf '%s\n' '# Adds Sifr binaries to PATH if needed.'
+    printf '%s\n' 'case ":\${PATH}:" in'
+    printf '  *:"%s":*)\n' "\${install_dir_expr}"
+    printf '%s\n' '    ;;'
+    printf '%s\n' '  *)'
+    printf '    export PATH="%s:\${PATH}"\n' "\${install_dir_expr}"
+    printf '%s\n' '    ;;'
+    printf '%s\n' 'esac'
+  } >"\${env_script_path}"
+}
+
+write_env_script_fish() {
+  install_dir_expr="\$1"
+  fish_env_script_path="\$2"
+  {
+    printf 'if not contains "%s" \$PATH\n' "\${install_dir_expr}"
+    printf '    set -x PATH "%s" \$PATH\n' "\${install_dir_expr}"
+    printf '%s\n' 'end'
+  } >"\${fish_env_script_path}"
+}
+
+append_source_line() {
+  profile_path="\$1"
+  source_line="\$2"
+  if [ -f "\${profile_path}" ] && grep -F "\${source_line}" "\${profile_path}" >/dev/null 2>&1; then
+    return 0
+  fi
+  {
+    [ ! -f "\${profile_path}" ] || printf '\n'
+    printf '%s\n' "\${source_line}"
+  } >>"\${profile_path}"
+  return 1
+}
+
+configure_path() {
+  [ "\${NO_MODIFY_PATH}" = "1" ] && return 0
+  [ -n "\${HOME:-}" ] || return 0
+
+  case ":\${PATH}:" in
+    *:"\${install_dir}":*)
+      return 0
       ;;
   esac
+
+  sifr_home="\${HOME}/.sifr"
+  env_script_path="\${sifr_home}/env"
+  fish_config_dir="\${HOME}/.config/fish/conf.d"
+  fish_env_script_path="\${fish_config_dir}/sifr.env.fish"
+  install_dir_expr="\$(profile_path_expr "\${install_dir}")"
+  env_script_expr="\$(profile_path_expr "\${env_script_path}")"
+  fish_env_script_expr="\$(profile_path_expr "\${fish_env_script_path}")"
+  source_line=". \"\${env_script_expr}\""
+  shell_name="\${SHELL##*/}"
+  changed=0
+
+  mkdir -p "\${sifr_home}"
+  write_env_script_sh "\${install_dir_expr}" "\${env_script_path}"
+
+  if append_source_line "\${HOME}/.profile" "\${source_line}"; then
+    :
+  else
+    changed=1
+  fi
+
+  if [ -f "\${HOME}/.bashrc" ] || [ "\${shell_name}" = "bash" ]; then
+    if append_source_line "\${HOME}/.bashrc" "\${source_line}"; then :; else changed=1; fi
+  fi
+  if [ -f "\${HOME}/.bash_profile" ]; then
+    if append_source_line "\${HOME}/.bash_profile" "\${source_line}"; then :; else changed=1; fi
+  fi
+
+  zsh_home="\${ZDOTDIR:-\${HOME}}"
+  if [ -f "\${zsh_home}/.zshrc" ] || [ "\${shell_name}" = "zsh" ]; then
+    if append_source_line "\${zsh_home}/.zshrc" "\${source_line}"; then :; else changed=1; fi
+  fi
+
+  if [ -d "\${HOME}/.config/fish" ] || [ "\${shell_name}" = "fish" ]; then
+    mkdir -p "\${fish_config_dir}"
+    write_env_script_fish "\${install_dir_expr}" "\${fish_env_script_path}"
+    changed=1
+  fi
+
+  if [ "\${changed}" = "1" ]; then
+    echo "configured Sifr PATH via \${env_script_path}"
+    echo "restart your shell or run: . \"\${env_script_path}\""
+    if [ -f "\${fish_env_script_path}" ]; then
+      echo "fish users can also run: source \"\${fish_env_script_expr}\""
+    fi
+  fi
 }
 
 target="\$(detect_target)"
@@ -184,7 +326,11 @@ esac
 
 base_url="\${SIFR_ARTIFACT_BASE_URL:-\${ARTIFACT_BASE_URL}}"
 artifact_url="\${base_url%/}/\${archive_name}"
-install_dir="\${SIFR_INSTALL_DIR:-\${HOME}/.sifr/bin}"
+install_dir="\${SIFR_INSTALL_DIR:-}"
+if [ -z "\${install_dir}" ]; then
+  [ -n "\${HOME:-}" ] || fail "HOME or SIFR_INSTALL_DIR is required"
+  install_dir="\${HOME}/.sifr/bin"
+fi
 
 if [ "\${SIFR_INSTALLER_TRACE:-0}" = "1" ]; then
   echo "sifr installer version=\${APP_VERSION} target=\${target} archive=\${archive_name}"
@@ -218,6 +364,7 @@ chmod 755 "\${tmp_binary}"
 mv "\${tmp_binary}" "\${install_dir}/sifr"
 
 echo "installed sifr \${APP_VERSION} to \${install_dir}/sifr"
+configure_path
 EOF
 
 chmod 755 "${OUT}"

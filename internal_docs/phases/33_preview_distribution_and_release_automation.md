@@ -55,6 +55,8 @@ The following are not Phase 33 exit criteria:
 
 Phase 33 starts from a generated-installer model rather than a bespoke hand-written artifact resolver. The baseline is the same shape used by Astral's uv installer at `https://astral.sh/uv/install.sh`: a shell installer generated from release metadata that embeds the app version, release asset URLs, target-to-archive mapping, SHA-256 checksums, platform detection, download, verification, extraction, and install-path handling.
 
+The generated installer should also follow uv's default PATH ergonomics: after installing the binary, it updates shell profiles through an env script so users do not need a separate persistent `PATH` setup step. Users can opt out with `SIFR_NO_MODIFY_PATH=1` or `--no-modify-path`.
+
 Implementation should prefer `cargo-dist` or an equivalent generator so Sifr owns release metadata and generated output, not a manually maintained 2,000-line installer fork.
 
 If any code is copied or adapted from the Astral uv installer or the `astral-sh/uv` repository, the implementation PR must:
