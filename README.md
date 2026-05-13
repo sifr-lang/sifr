@@ -75,13 +75,56 @@ def main():
     print(names)           # ["alice", "bob", "charlie"] - still yours
 ```
 
+## Installation
+
+Install the current beta preview:
+
+```bash
+curl -fsSL https://sifr.sh/install | sh
+```
+
+The installer downloads a prebuilt preview binary for your platform, verifies
+its SHA-256 checksum, and installs it to `~/.sifr/bin/sifr`.
+
+Add Sifr to your shell path:
+
+```bash
+export PATH="$HOME/.sifr/bin:$PATH"
+```
+
+Install the alpha preview instead:
+
+```bash
+curl -fsSL https://sifr.sh/install/alpha | sh
+```
+
+Pin an exact preview version:
+
+```bash
+curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.1
+```
+
+Install to a custom directory:
+
+```bash
+curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
+```
+
+Supported preview targets:
+
+- `aarch64-apple-darwin`
+- `x86_64-apple-darwin`
+- `x86_64-unknown-linux-gnu`
+- `aarch64-unknown-linux-gnu`
+
+Windows installer support is not available yet.
+
 ## Getting started
 
-### Prerequisites
+### Build the compiler from source
 
-- [Rust toolchain](https://rustup.rs/) (rustc + cargo)
-
-### Build the compiler
+Source builds require the [Rust toolchain](https://rustup.rs/) with `rustc` and
+`cargo`.
 
 ```bash
 git clone https://github.com/sifr-lang/sifr.git
