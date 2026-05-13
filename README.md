@@ -84,13 +84,8 @@ curl -fsSL https://sifr.sh/install | sh
 ```
 
 The installer downloads a prebuilt preview binary for your platform, verifies
-its SHA-256 checksum, and installs it to `~/.sifr/bin/sifr`.
-
-Add Sifr to your shell path:
-
-```bash
-export PATH="$HOME/.sifr/bin:$PATH"
-```
+its SHA-256 checksum, installs it to `~/.sifr/bin/sifr`, and updates your shell
+profile so new shells can find `sifr`.
 
 Install the alpha preview instead:
 
@@ -108,6 +103,14 @@ Install to a custom directory:
 
 ```bash
 curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
+```
+
+Disable shell profile changes:
+
+```bash
+curl -fsSL https://sifr.sh/install | SIFR_NO_MODIFY_PATH=1 sh
+# or
+curl -fsSL https://sifr.sh/install | sh -s -- --no-modify-path
 ```
 
 Supported preview targets:

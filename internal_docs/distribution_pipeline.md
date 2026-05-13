@@ -129,9 +129,11 @@ The generated installer embeds:
 - the default GitHub Release asset base URL,
 - platform detection for the Phase 33 targets,
 - checksum validation before extraction or replacement,
-- atomic replacement of the installed `sifr` binary after validation.
+- atomic replacement of the installed `sifr` binary after validation,
+- shell profile wiring through `~/.sifr/env`, unless `SIFR_NO_MODIFY_PATH=1`
+  or `--no-modify-path` is used.
 
-The generated installer honors `SIFR_ARTIFACT_BASE_URL`, `SIFR_TARGET`, and `SIFR_INSTALL_DIR` for local validation.
+The generated installer honors `SIFR_ARTIFACT_BASE_URL`, `SIFR_TARGET`, `SIFR_INSTALL_DIR`, and `SIFR_NO_MODIFY_PATH` for local validation.
 
 ## Phase 33.2 Validation
 
