@@ -1,6 +1,8 @@
 # Phase 34 Generated Code Quality Execution
 
-Status: completed locally
+Status: completed and merged
+
+Merged PR: https://github.com/sifr-lang/sifr/pull/2114
 
 ## Milestones
 
