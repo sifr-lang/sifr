@@ -2,7 +2,7 @@
 
 use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp, HirParam};
-use sifr_type_system::Type;
+use sifr_type_system::{ParamConvention, Type};
 use std::cell::RefCell;
 
 thread_local! {
@@ -929,7 +929,7 @@ fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [callable, iter] = args else {
         return None;
     };
-    let lowered_callable = try_lower_simple_callable_expr(callable)?;
+    let lowered_callable = lower_simple_map_callable_expr(callable, iter)?;
     let iter_source = try_lower_simple_iter_source_expr(iter)?;
     let mapped_iter = RustExpr::MethodCall {
         receiver: Box::new(iter_source),
@@ -940,6 +940,96 @@ fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
         func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
         args: vec![mapped_iter],
     })
+}
+
+fn lower_simple_map_callable_expr(callable: &HirExpr, iter: &HirExpr) -> Option<RustExpr> {
+    let lowered_callable = try_lower_simple_callable_expr(callable)?;
+    let Some((param_types, conventions)) = simple_callable_param_info(callable) else {
+        return Some(lowered_callable);
+    };
+    if param_types.len() != 1 || conventions.len() != 1 {
+        return Some(lowered_callable);
+    }
+    let iter_elem_ty =
+        resolve_alias_type(unwrap_simple_iter_source_expr(iter).ty()).iterable_element_type()?;
+    let adapted_arg = adapt_simple_map_callable_arg(
+        RustExpr::Ident("__sifr_map_item".to_string()),
+        &iter_elem_ty,
+        &param_types[0],
+        conventions[0],
+    );
+    Some(RustExpr::Closure {
+        params: vec![RustParam::Named {
+            name: "__sifr_map_item".to_string(),
+            ty: RustType::Named("_".to_string()),
+        }],
+        body: Box::new(RustExpr::FnCall {
+            func: Box::new(lowered_callable),
+            args: vec![adapted_arg],
+        }),
+        is_move: false,
+    })
+}
+
+fn simple_callable_param_info(callable: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>)> {
+    match resolve_alias_type(callable.ty()) {
+        Type::Function(ft) | Type::AsyncFunction(ft) => Some((
+            ft.params
+                .iter()
+                .map(|(_, ty, _)| ty.clone())
+                .collect::<Vec<_>>(),
+            ft.params
+                .iter()
+                .map(|(_, _, convention)| *convention)
+                .collect::<Vec<_>>(),
+        )),
+        Type::Callable(param_types, conventions, _) => {
+            Some((param_types.clone(), conventions.clone()))
+        }
+        _ => None,
+    }
+}
+
+fn adapt_simple_map_callable_arg(
+    mut lowered_arg: RustExpr,
+    arg_ty: &Type,
+    param_ty: &Type,
+    convention: ParamConvention,
+) -> RustExpr {
+    let resolved_param = resolve_alias_type(param_ty);
+    let arg_is_option = is_option_like_simple(arg_ty);
+    if is_option_like_simple(resolved_param) && !arg_is_option {
+        lowered_arg = RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered_arg],
+        };
+    }
+
+    let expects_shared_ref_type =
+        param_ty.rust_type().starts_with('&') && !param_ty.rust_type().starts_with("&mut ");
+    let expects_mut_ref_type = param_ty.rust_type().starts_with("&mut ");
+    let requires_shared_borrow = expects_shared_ref_type
+        || (convention.is_shared_borrow()
+            && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
+    let requires_mut_borrow = expects_mut_ref_type
+        || (convention.is_mut_borrow()
+            && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
+
+    if requires_shared_borrow {
+        RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(lowered_arg),
+        }
+    } else if requires_mut_borrow {
+        RustExpr::Ref {
+            mutable: true,
+            expr: Box::new(lowered_arg),
+        }
+    } else {
+        lowered_arg
+    }
 }
 
 fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
@@ -3795,6 +3885,68 @@ mod tests {
             ty: Type::Iterator(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_some());
+    }
+
+    #[test]
+    fn lowers_map_named_callable_with_optional_widening_closure() {
+        let node_ty = Type::Class {
+            name: "TreeNode".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        let optional_node_ty = Type::Union(vec![node_ty.clone(), Type::None]);
+        let expr = HirExpr::Call {
+            func: "map".to_string(),
+            args: vec![
+                HirExpr::Name {
+                    name: "treeToString".to_string(),
+                    ty: Type::Function(sifr_type_system::FunctionType {
+                        params: vec![(
+                            "node".to_string(),
+                            optional_node_ty,
+                            sifr_type_system::ParamConvention::borrow(),
+                        )],
+                        return_type: Box::new(Type::Str),
+                    }),
+                },
+                HirExpr::Name {
+                    name: "nodes".to_string(),
+                    ty: Type::List(Box::new(node_ty)),
+                },
+            ],
+            ty: Type::Iterator(Box::new(Type::Str)),
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("map lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::FnCall { args, .. }
+                if matches!(
+                    args.first(),
+                    Some(RustExpr::MethodCall { method, args: map_args, .. })
+                        if method == "map"
+                            && matches!(
+                                map_args.first(),
+                                Some(RustExpr::Closure { body, .. })
+                                    if matches!(
+                                        body.as_ref(),
+                                        RustExpr::FnCall { func, args }
+                                            if matches!(func.as_ref(), RustExpr::Ident(name) if name == "treeToString")
+                                                && matches!(
+                                                    args.first(),
+                                                    Some(RustExpr::Ref { mutable: false, expr })
+                                                        if matches!(
+                                                            expr.as_ref(),
+                                                            RustExpr::FnCall { func, args }
+                                                                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
+                                                                    && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "__sifr_map_item")
+                                                        )
+                                                )
+                                    )
+                            )
+                )
+        ));
     }
 
     #[test]

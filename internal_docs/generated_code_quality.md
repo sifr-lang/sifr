@@ -150,3 +150,46 @@ Result:
   gates. The 29 fixtures that previously emitted boolean literal comparisons
   were rechecked after the optimizer cleanup and now pass with zero remaining
   `== true`, `== false`, `!= true`, or `!= false` occurrences.
+
+## NeetCode Group Audit Wave
+
+The NeetCode-oriented audit reviewed fixtures by README problem group, then
+reran the full demo and LeetCode emitted-code corpora. One generated Rust
+blocker was found in the Trees group and fixed in compiler codegen:
+
+- `map(treeToString, nodes)` now emits a closure that applies optional widening
+  and borrowing for typed callable arguments instead of a direct function
+  pointer call when the iterable element is `T` and the callable parameter is
+  `T | None`.
+- The fixed Trees fixture now emits
+  `.map(|__sifr_map_item| treeToString(&Some(__sifr_map_item)))`.
+
+Evidence:
+
+- Trees post-fix group rerun:
+  `target/neetcode_group_quality/trees-post-map-1778787311/report.jsonl`.
+- Final demos full scan:
+  `target/full_emitted_quality/demos-neetcode-final-1778787559/report.jsonl`.
+- Final LeetCode full scan:
+  `target/full_emitted_quality/leetcode-neetcode-final-1778788537/report.jsonl`.
+- Claude review artifacts:
+  `reviews/phase34-neetcode-group-01-arrays-hashing-review.md`,
+  `reviews/phase34-neetcode-group-02-two-pointers-review.md`,
+  `reviews/phase34-neetcode-groups-03-through-18-review.md`, and
+  `reviews/phase34-neetcode-trees-map-fix-review.md`.
+- Final closing review:
+  `reviews/phase34-neetcode-final-review.md`.
+
+Result:
+
+- Trees group: 32/32 mapped fixtures reach generated Rust and pass build,
+  forbidden scan, `cargo fmt`, `cargo fmt --check`, generated clippy, and
+  fixed-pattern regression scans.
+- Demos: 261 entries pass the emitted-code gate; 49 fail before emitted Rust
+  quality due to expected negative diagnostics or frontend/type/demo-contract
+  gaps.
+- LeetCode: 378 fixtures pass the emitted-code gate; 33 remain pre-emission
+  frontend/type/lowering failures.
+- Final fixed-pattern scans report zero boolean literal comparisons, zero
+  identity `map_or_else`, zero `while true`, zero `.skip(0)`, and zero
+  `println!("")`.

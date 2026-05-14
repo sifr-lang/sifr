@@ -335,3 +335,58 @@ Wave 3 result:
 
 - Demos: 261 entries reach generated Rust and pass build, forbidden scan, `cargo fmt`, `cargo fmt --check`, and generated clippy; 49 entries remain pre-emitted-code expected negative diagnostics or frontend/type/demo-contract failures.
 - LeetCode: 377 entries reach generated Rust and pass the same emitted-code gates; 34 entries remain pre-emitted-code frontend/type/lowering compatibility failures. The 29 fixtures that previously emitted boolean literal comparisons were rechecked and now have zero remaining boolean-literal comparison occurrences.
+
+### Audit Wave 4: NeetCode Group Review (2026-05-14)
+
+Fourth-round emitted-code review followed the NeetCode README problem groups one
+group at a time, then reran full demo and LeetCode emitted-code scans.
+
+Group-by-group review:
+
+- Arrays & Hashing and Two Pointers were reviewed individually with Claude.
+- Groups 3 through 18 were audited sequentially in NeetCode README order.
+- The JavaScript README group has no mapped Sifr fixtures and was recorded as
+  not applicable for emitted Rust quality.
+- The Trees group exposed one real generated Rust blocker in
+  `0894_all_possible_full_binary_trees.sifr`: `map(treeToString, nodes)`
+  emitted a direct `.map(treeToString)` even though `treeToString` accepts
+  `TreeNode | None` and lowers to `&Option<TreeNode>`.
+
+Compiler improvement:
+
+- Simple `map` lowering now adapts typed single-argument callables with an
+  explicit closure when the callable parameter requires optional widening or
+  borrowing. The Trees fixture now emits
+  `.map(|__sifr_map_item| treeToString(&Some(__sifr_map_item)))`.
+- Regression coverage was added for named callable map optional widening.
+
+Wave 4 evidence:
+
+- Arrays & Hashing review:
+  `reviews/phase34-neetcode-group-01-arrays-hashing-review.md`.
+- Two Pointers review:
+  `reviews/phase34-neetcode-group-02-two-pointers-review.md`.
+- Groups 3 through 18 review:
+  `reviews/phase34-neetcode-groups-03-through-18-review.md`.
+- Trees fix review:
+  `reviews/phase34-neetcode-trees-map-fix-review.md`.
+- Final closing review:
+  `reviews/phase34-neetcode-final-review.md`.
+- Trees post-fix group rerun:
+  `target/neetcode_group_quality/trees-post-map-1778787311/report.jsonl`.
+- Final demos full scan:
+  `target/full_emitted_quality/demos-neetcode-final-1778787559/report.jsonl`.
+- Final LeetCode full scan:
+  `target/full_emitted_quality/leetcode-neetcode-final-1778788537/report.jsonl`.
+
+Wave 4 result:
+
+- Trees group: 32 fixtures reach generated Rust and pass build, forbidden scan,
+  `cargo fmt`, `cargo fmt --check`, generated clippy, and fixed-pattern
+  regression scans.
+- Demos: 261 entries reach generated Rust and pass the full emitted-code gate;
+  49 entries remain pre-emission build/type/negative-demo failures.
+- LeetCode: 378 fixtures reach generated Rust and pass the full emitted-code
+  gate; 33 fixtures remain pre-emission frontend/type/lowering failures.
+- Final fixed-pattern scans are zero for boolean literal comparisons,
+  identity `map_or_else`, `while true`, `.skip(0)`, and `println!("")`.
