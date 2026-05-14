@@ -108,8 +108,6 @@ GENERATED_CLIPPY_ARGS = [
     "-A",
     "clippy::box_collection",
     "-A",
-    "clippy::bool_comparison",
-    "-A",
     "clippy::borrow_deref_ref",
     "-A",
     "clippy::cmp_owned",

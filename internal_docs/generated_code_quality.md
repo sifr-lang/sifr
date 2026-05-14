@@ -113,3 +113,40 @@ Result:
 - LeetCode: 377 entries reach generated Rust and pass the emitted-code quality
   gates. The remaining 34 fail before emitted-code quality due to
   frontend/type/lowering compatibility gaps.
+
+## Post-Closure Audit Wave 3 (2026-05-14)
+
+The third emitted-code audit wave expanded the demo sweep to every
+`demos/**/main.sifr` entry, including negative demo cases, and rechecked all
+top-level LeetCode fixtures. It removed two additional generated Rust artifacts:
+
+- Known `Decimal::checked_div(...).map_or_else(default, |value| value)` calls
+  now optimize to `unwrap_or_else(default)`, removing a generated clippy failure
+  in the decimal division negative demo without rewriting unknown receivers.
+- Boolean literal comparisons now simplify during IR optimization, for example
+  `flag == false` becomes `!flag` and `flag != false` becomes `flag`.
+- The generated clippy profile no longer allows `clippy::bool_comparison`.
+
+Evidence:
+
+- All-demo pre-patch sweep:
+  `target/full_emitted_quality/demos-wave3-all-1778776830/report.jsonl`.
+- Demo failed-subset recheck after optimizer cleanup:
+  `target/full_emitted_quality/demos-wave3-failed-subset-post-bool-map-1778779394/report.jsonl`.
+- LeetCode full sweep:
+  `target/full_emitted_quality/leetcode-wave3-all-1778778208/report.jsonl`.
+- LeetCode boolean-comparison subset recheck:
+  `target/full_emitted_quality/leetcode-wave3-bool-subset-post-bool-map-1778779466/report.jsonl`.
+- Reduced-allowlist generated clippy gate:
+  `target/sifr_generated_code_quality/evidence/clippy-1778780702-5147.json`.
+
+Result:
+
+- Demos: 261 entries reach generated Rust and pass build, forbidden scan,
+  `cargo fmt`, `cargo fmt --check`, and generated clippy. The remaining 49
+  entries fail before emitted-code quality due to expected negative demo
+  diagnostics or frontend/type/demo-contract gaps.
+- LeetCode: 377 entries reach generated Rust and pass the emitted-code quality
+  gates. The 29 fixtures that previously emitted boolean literal comparisons
+  were rechecked after the optimizer cleanup and now pass with zero remaining
+  `== true`, `== false`, `!= true`, or `!= false` occurrences.
