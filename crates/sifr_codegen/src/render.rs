@@ -755,6 +755,9 @@ impl Renderer {
                 format_str,
                 args,
             } => {
+                if args.is_empty() && format_str.is_empty() && matches!(name.as_str(), "println" | "eprintln") {
+                    return format!("{name}!()");
+                }
                 let escaped = format!("\"{}\"", format_str.escape_default());
                 if args.is_empty() {
                     format!("{name}!({escaped})")
@@ -1667,6 +1670,18 @@ mod tests {
 
         let rendered = render_expr(&expr);
         assert_eq!(rendered, "write!(f, \"{}\", v)");
+    }
+
+    #[test]
+    fn renders_empty_println_format_macro_without_empty_string_literal() {
+        let expr = RustExpr::FormatMacro {
+            name: "println".to_string(),
+            format_str: String::new(),
+            args: vec![],
+        };
+
+        let rendered = render_expr(&expr);
+        assert_eq!(rendered, "println!()");
     }
 
     #[test]

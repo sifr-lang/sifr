@@ -901,6 +901,20 @@ fn test_empty_print() {
     );
 }
 
+#[test]
+fn test_empty_string_print_emits_empty_println_macro() {
+    let rust_code = generate_rust_from_source("def main():\n    print(\"\")\n");
+
+    assert!(
+        rust_code.contains("println!()"),
+        "should emit println!() for print(\"\")"
+    );
+    assert!(
+        !rust_code.contains("println!(\"\")"),
+        "should not emit println with an empty string literal"
+    );
+}
+
 fn render_strict_lowered_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> String {
     let Some(lowered_expr) = emitter.try_lower_registry_expr_strict(expr) else {
         panic!("strict IR rendering path missing for expression: {expr:?}");
