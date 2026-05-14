@@ -7,21 +7,40 @@ const MUTATING_METHODS: &[&str] = &[
     "by_index",
     "by_name",
     "clear",
+    "entry",
     "extend",
+    "flush",
     "get_mut",
     "insert",
+    "kill",
+    "increment",
+    "merge_from",
+    "next",
     "pop",
     "push",
+    "push_str",
+    "read_string",
     "remove",
     "reverse",
+    "rotate",
+    "seek",
+    "set",
+    "set_bool",
+    "set_level",
+    "set_list",
     "setstate",
     "sort",
     "sort_by",
+    "take",
+    "try_wait",
     "write",
     "write_all",
+    "writerow",
+    "writerows",
     "writeln",
     "__aenter__",
     "__aexit__",
+    "__next__",
     "__sifr_join_all",
     "__sifr_spawn_infallible",
     "__sifr_spawn_result",
@@ -63,6 +82,13 @@ fn remove_unneeded_mutability_in_item(item: &mut RustItem) -> usize {
 }
 
 fn remove_unneeded_mutability_in_block(body: &mut [RustStmt]) -> usize {
+    remove_unneeded_mutability_in_block_with_tail_expr(body, None)
+}
+
+fn remove_unneeded_mutability_in_block_with_tail_expr(
+    body: &mut [RustStmt],
+    tail_expr: Option<&RustExpr>,
+) -> usize {
     let mut removed = 0usize;
     for stmt in body.iter_mut() {
         removed += remove_nested_unneeded_mutability(stmt);
@@ -75,8 +101,12 @@ fn remove_unneeded_mutability_in_block(body: &mut [RustStmt]) -> usize {
             RustStmt::Let {
                 mutable: true,
                 name,
+                value,
                 ..
-            } if !stmts_mutate_name(tail, name) => {
+            } if !is_callable_binding_value(value)
+                && !stmts_mutate_name(tail, name)
+                && !tail_expr.is_some_and(|expr| expr_mutates_name(expr, name)) =>
+            {
                 removed += 1;
                 if let RustStmt::Let { mutable, .. } = stmt {
                     *mutable = false;
@@ -179,7 +209,9 @@ fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
 fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
     match expr {
         RustExpr::Block { stmts, expr } => {
-            remove_unneeded_mutability_in_block(stmts)
+            let removed =
+                remove_unneeded_mutability_in_block_with_tail_expr(stmts, expr.as_deref());
+            removed
                 + expr
                     .as_mut()
                     .map(|expr| remove_expr_unneeded_mutability(expr))
@@ -280,6 +312,13 @@ fn option_mut_pattern_name(pattern: &str) -> Option<String> {
     }
 }
 
+fn is_callable_binding_value(value: &RustExpr) -> bool {
+    matches!(
+        value,
+        RustExpr::Closure { .. } | RustExpr::ClosureBlock { .. }
+    )
+}
+
 fn stmts_mutate_name(stmts: &[RustStmt], name: &str) -> bool {
     stmts.iter().any(|stmt| stmt_mutates_name(stmt, name))
 }
@@ -367,6 +406,8 @@ fn assignment_target_mutates_name(target: &RustExpr, name: &str) -> bool {
 fn root_expr_is_name(expr: &RustExpr, name: &str) -> bool {
     match expr {
         RustExpr::Ident(target_name) => target_name == name,
+        RustExpr::Path(parts) => parts.len() == 1 && parts[0] == name,
+        RustExpr::Paren(expr) => root_expr_is_name(expr, name),
         RustExpr::Field { expr, .. } | RustExpr::Index { expr, .. } => {
             root_expr_is_name(expr, name)
         }
@@ -394,7 +435,9 @@ fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
                 || args.iter().any(|arg| expr_mutates_name(arg, name))
         }
         RustExpr::FnCall { func, args } => {
-            expr_mutates_name(func, name) || args.iter().any(|arg| expr_mutates_name(arg, name))
+            root_expr_is_name(func, name)
+                || expr_mutates_name(func, name)
+                || args.iter().any(|arg| expr_mutates_name(arg, name))
         }
         RustExpr::MacroCall { args, .. }
         | RustExpr::FormatMacro { args, .. }
@@ -485,17 +528,31 @@ fn optimize_item(item: &mut RustItem) -> usize {
             }
             removed
         }
-        RustItem::Fn { body, .. } => {
-            let mut removed = 0usize;
-            for stmt in body {
-                removed += optimize_stmt(stmt);
-            }
-            removed
-        }
+        RustItem::Fn { body, .. } => optimize_block(body),
         RustItem::TraitMethodSig { .. } => 0,
         RustItem::TypeAlias { .. } => 0,
         RustItem::Const { value, .. } | RustItem::Static { value, .. } => optimize_expr(value),
     }
+}
+
+fn optimize_block(body: &mut Vec<RustStmt>) -> usize {
+    let mut removed = 0usize;
+    for stmt in body.iter_mut() {
+        removed += optimize_stmt(stmt);
+    }
+    let before = body.len();
+    body.retain(|stmt| !is_self_assignment(stmt));
+    removed + (before - body.len())
+}
+
+fn is_self_assignment(stmt: &RustStmt) -> bool {
+    matches!(
+        stmt,
+        RustStmt::Assign {
+            target: RustExpr::Ident(target),
+            value: RustExpr::Ident(value),
+        } if target == value
+    )
 }
 
 fn optimize_stmt(stmt: &mut RustStmt) -> usize {
@@ -506,9 +563,7 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             value, else_body, ..
         } => {
             let mut removed = optimize_expr(value);
-            for stmt in else_body {
-                removed += optimize_stmt(stmt);
-            }
+            removed += optimize_block(else_body);
             removed
         }
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
@@ -525,13 +580,13 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             else_body,
         } => {
             let mut removed = optimize_expr(cond);
-            for stmt in then_body {
-                removed += optimize_stmt(stmt);
-            }
+            removed += optimize_block(then_body);
             if let Some(else_body) = else_body {
-                for stmt in else_body {
-                    removed += optimize_stmt(stmt);
-                }
+                removed += optimize_block(else_body);
+            }
+            if else_body.as_ref().is_some_and(Vec::is_empty) {
+                *else_body = None;
+                removed += 1;
             }
             removed
         }
@@ -542,13 +597,13 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             ..
         } => {
             let mut removed = optimize_expr(expr);
-            for stmt in then_body {
-                removed += optimize_stmt(stmt);
-            }
+            removed += optimize_block(then_body);
             if let Some(else_body) = else_body {
-                for stmt in else_body {
-                    removed += optimize_stmt(stmt);
-                }
+                removed += optimize_block(else_body);
+            }
+            if else_body.as_ref().is_some_and(Vec::is_empty) {
+                *else_body = None;
+                removed += 1;
             }
             removed
         }
@@ -558,17 +613,13 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
                 if let Some(guard) = &mut arm.guard {
                     removed += optimize_expr(guard);
                 }
-                for stmt in &mut arm.body {
-                    removed += optimize_stmt(stmt);
-                }
+                removed += optimize_block(&mut arm.body);
             }
             removed
         }
         RustStmt::For { iter, body, .. } => {
             let mut removed = optimize_expr(iter);
-            for stmt in body {
-                removed += optimize_stmt(stmt);
-            }
+            removed += optimize_block(body);
             removed
         }
         RustStmt::With { items, body } => {
@@ -576,31 +627,16 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             for item in items {
                 removed += optimize_expr(&mut item.value);
             }
-            for stmt in body {
-                removed += optimize_stmt(stmt);
-            }
+            removed += optimize_block(body);
             removed
         }
         RustStmt::While { cond, body } => {
             let mut removed = optimize_expr(cond);
-            for stmt in body {
-                removed += optimize_stmt(stmt);
-            }
+            removed += optimize_block(body);
             removed
         }
-        RustStmt::Loop { body } | RustStmt::Block(body) => {
-            let mut removed = 0usize;
-            for stmt in body {
-                removed += optimize_stmt(stmt);
-            }
-            removed
-        }
-        RustStmt::LocalFn { body, .. } => {
-            let mut removed = 0usize;
-            for stmt in body {
-                removed += optimize_stmt(stmt);
-            }
-            removed
+        RustStmt::Loop { body } | RustStmt::Block(body) | RustStmt::LocalFn { body, .. } => {
+            optimize_block(body)
         }
     }
 }
@@ -668,10 +704,7 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
         RustExpr::Ref { expr, .. } => optimize_expr(expr),
         RustExpr::Cast { expr, .. } => optimize_expr(expr),
         RustExpr::Block { stmts, expr } => {
-            let mut removed = 0usize;
-            for stmt in stmts {
-                removed += optimize_stmt(stmt);
-            }
+            let mut removed = optimize_block(stmts);
             if let Some(expr) = expr {
                 removed += optimize_expr(expr);
             }
@@ -694,20 +727,12 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
                 if let Some(guard) = &mut arm.guard {
                     removed += optimize_expr(guard);
                 }
-                for stmt in &mut arm.body {
-                    removed += optimize_stmt(stmt);
-                }
+                removed += optimize_block(&mut arm.body);
             }
             removed
         }
         RustExpr::Closure { body, .. } => optimize_expr(body),
-        RustExpr::ClosureBlock { body, .. } => {
-            let mut removed = 0usize;
-            for stmt in body {
-                removed += optimize_stmt(stmt);
-            }
-            removed
-        }
+        RustExpr::ClosureBlock { body, .. } => optimize_block(body),
         RustExpr::StructInit { fields, .. } => {
             let mut removed = 0usize;
             for (_, value) in fields {
@@ -836,6 +861,50 @@ mod tests {
         assert!(matches!(
             args.first(),
             Some(RustExpr::Literal(RustLiteral::Str(s))) if s == "x"
+        ));
+    }
+
+    #[test]
+    fn preserves_mutable_callable_bindings() {
+        let mut items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: "apply".to_string(),
+                    ty: None,
+                    value: RustExpr::ClosureBlock {
+                        params: vec![],
+                        body: vec![],
+                        is_move: false,
+                        is_async: false,
+                    },
+                },
+                RustStmt::Expr(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Ident("apply".to_string())),
+                    args: vec![],
+                }),
+            ],
+            is_async: false,
+        }];
+
+        let removed = remove_unneeded_mutability_in_items(&mut items);
+        assert_eq!(removed, 0);
+
+        let RustItem::Fn { body, .. } = &items[0] else {
+            panic!("expected fn item");
+        };
+        assert!(matches!(
+            body.first(),
+            Some(RustStmt::Let {
+                mutable: true,
+                name,
+                ..
+            }) if name == "apply"
         ));
     }
 }
