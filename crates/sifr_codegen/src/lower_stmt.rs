@@ -1086,10 +1086,6 @@ fn try_lower_simple_nested_function_stmt(
         }
         Some(lowered)
     })?;
-    let mutates_captures = nested_mutated_vars
-        .iter()
-        .any(|name| !param_names.contains(name) && !locally_defined.contains(name));
-
     if is_recursive {
         let capture_names = captures
             .iter()
@@ -1131,9 +1127,14 @@ fn try_lower_simple_nested_function_stmt(
             ty: RustType::Named("_".to_string()),
         })
         .collect::<Vec<_>>();
+    let mutates_captures = nested_mutated_vars
+        .iter()
+        .any(|name| !param_names.contains(name) && !locally_defined.contains(name));
+    let nested_binding_mutable =
+        outer_bindings.mutated_vars.contains(&func.name) || mutates_captures;
 
     Some(vec![RustStmt::Let {
-        mutable: outer_bindings.mutated_vars.contains(&func.name) || mutates_captures,
+        mutable: nested_binding_mutable,
         name: func.name.clone(),
         ty: None,
         value: RustExpr::ClosureBlock {

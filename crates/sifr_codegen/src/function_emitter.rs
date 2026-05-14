@@ -509,7 +509,8 @@ impl RustEmitter {
             self.sifr_int_result_local_bindings.borrow().clone();
         let saved_current_sifr_int_return = self.current_sifr_int_return.get();
         let saved_current_sifr_int_result_return = self.current_sifr_int_result_return.get();
-        let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
+        let nested_binding_mutable = saved_mutated_vars.contains(&func.name)
+            || nested_function_mutates_capture(func, &nested_mutated_vars);
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = nested_mutated_vars;
@@ -1872,6 +1873,21 @@ fn collect_captured_outer_names(
         })
         .map(|(name, _)| name)
         .collect()
+}
+
+fn nested_function_mutates_capture(
+    func: &HirFunction,
+    nested_mutated_vars: &HashSet<String>,
+) -> bool {
+    let param_names = func
+        .params
+        .iter()
+        .map(|param| param.name.clone())
+        .collect::<HashSet<_>>();
+    let locally_defined = collect_locally_defined_vars(&func.body);
+    nested_mutated_vars
+        .iter()
+        .any(|name| !param_names.contains(name) && !locally_defined.contains(name))
 }
 
 fn collect_captured_outer_names_transitively(

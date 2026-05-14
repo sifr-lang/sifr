@@ -57,7 +57,7 @@ use helpers::{
 };
 use hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
-use ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
+use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
 pub(crate) use lib_support::{
     resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
@@ -416,7 +416,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut stdlib_provides_file_handle_struct = false;
     for module_name in BTreeSet::from_iter(emitter.used_stdlib_modules.iter()) {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
-            for dep in deps {
+            for dep in BTreeSet::from_iter(deps.iter()) {
                 if dep.starts_with("sifr.") && !all_needed.contains(dep) {
                     all_needed.push(dep.clone());
                 }
@@ -658,6 +658,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if !emitter.body_items.is_empty() {
         assembled_body_items.extend(emitter.body_items.clone());
     }
+    remove_trivial_clones_in_items(&mut assembled_body_items);
     let has_async_main_entrypoint = annotate_async_main_entrypoint(&mut assembled_body_items);
     let uses_task_sleep = module_uses_task_sleep(module);
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
@@ -739,8 +740,6 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut file_items: Vec<RustItem> = Vec::new();
     file_items.extend(import_items.clone());
     file_items.extend(assembled_body_items.clone());
-    remove_trivial_clones_in_items(&mut file_items);
-    remove_unneeded_mutability_in_items(&mut file_items);
     let file_issues = validate_items(&file_items);
     assert!(
         file_issues.is_empty(),

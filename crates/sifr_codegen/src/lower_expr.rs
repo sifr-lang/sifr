@@ -1191,15 +1191,22 @@ fn try_lower_simple_index_expr(
             } else {
                 // Type checking proved this keyed read is present (e.g. guarded by `key in dict`).
                 // Keep runtime behavior explicit while avoiding Optional leakage in emitted Rust types.
-                Some(RustExpr::MethodCall {
-                    receiver: Box::new(projected),
-                    method: "expect".to_string(),
-                    args: vec![RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(RustExpr::Literal(RustLiteral::Str(
-                            "dict index proven by guard".to_string(),
-                        ))),
+                Some(RustExpr::Block {
+                    stmts: vec![RustStmt::LetElse {
+                        pattern: "Some(__sifr_proven_dict_value)".to_string(),
+                        value: projected,
+                        else_body: vec![RustStmt::Expr(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "std".to_string(),
+                                "process".to_string(),
+                                "abort".to_string(),
+                            ])),
+                            args: vec![],
+                        })],
                     }],
+                    expr: Some(Box::new(RustExpr::Ident(
+                        "__sifr_proven_dict_value".to_string(),
+                    ))),
                 })
             }
         }
@@ -3929,7 +3936,7 @@ mod tests {
     }
 
     #[test]
-    fn lowers_dict_index_to_expect_for_non_optional_hir_type() {
+    fn lowers_dict_index_to_proven_some_block_for_non_optional_hir_type() {
         let expr = HirExpr::Index {
             object: Box::new(HirExpr::Name {
                 name: "table".to_string(),
@@ -3940,16 +3947,30 @@ mod tests {
         };
 
         let lowered = try_lower_leaf_expr(&expr).expect("dict index lowered");
-        let RustExpr::MethodCall {
-            receiver, method, ..
-        } = lowered
-        else {
-            panic!("expected method-call lowering");
+        let RustExpr::Block { stmts, expr } = lowered else {
+            panic!("expected block lowering");
         };
-        assert_eq!(method, "expect");
         assert!(matches!(
-            receiver.as_ref(),
-            RustExpr::MethodCall { method, .. } if method == "copied"
+            stmts.first(),
+            Some(RustStmt::LetElse {
+                pattern,
+                value: RustExpr::MethodCall { method, .. },
+                else_body,
+            }) if pattern == "Some(__sifr_proven_dict_value)"
+                && method == "copied"
+                && matches!(
+                    else_body.first(),
+                    Some(RustStmt::Expr(RustExpr::FnCall { func, .. }))
+                        if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec![
+                            "std".to_string(),
+                            "process".to_string(),
+                            "abort".to_string()
+                        ])
+                )
+        ));
+        assert!(matches!(
+            expr.as_deref(),
+            Some(RustExpr::Ident(name)) if name == "__sifr_proven_dict_value"
         ));
     }
 

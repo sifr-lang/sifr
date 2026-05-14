@@ -161,17 +161,21 @@ pub(super) fn lower_touch(args: &[RustExpr]) -> Option<RustExpr> {
         receiver: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec![
-                            "std".to_string(),
-                            "fs".to_string(),
-                            "OpenOptions".to_string(),
-                            "new".to_string(),
-                        ])),
-                        args: vec![],
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "std".to_string(),
+                                "fs".to_string(),
+                                "OpenOptions".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![],
+                        }),
+                        method: "create".to_string(),
+                        args: vec![bool_lit(true)],
                     }),
-                    method: "create".to_string(),
-                    args: vec![bool_lit(true)],
+                    method: "truncate".to_string(),
+                    args: vec![bool_lit(false)],
                 }),
                 method: "write".to_string(),
                 args: vec![bool_lit(true)],

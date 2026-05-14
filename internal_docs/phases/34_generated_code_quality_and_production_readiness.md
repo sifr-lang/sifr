@@ -256,3 +256,31 @@ Generated-code quality checks must run in `scripts/run_all_tests.sh --profile pr
 ## Exit Gate
 Generated Rust satisfies all Phase 34 quality guarantees with zero critical violations: corpus emission works through transient generated Rust projects, forbidden user-path constructs are blocked, `rustfmt --check` passes, generated clippy runs with `-D warnings` plus an explicit generated-code style-debt allowlist, deterministic repeated emission is byte-stable for generated source, and required demos pass quality gates with recorded evidence.
 Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.
+
+## Post-Closure Emitted Corpus Audit (2026-05-14)
+
+Follow-up audit scope:
+
+- Every non-negative `demos/**/main.sifr` entry was checked one by one with emitted generated Rust build, forbidden construct scan, official `cargo fmt`, `cargo fmt --check`, and the generated-code clippy profile.
+- Every `audits/leetcode/src/*.sifr` fixture was checked one by one with the same emitted-code quality sequence.
+- Review rounds are recorded in `reviews/phase34-demo-leetcode-emitted-audit-review-1.md`, `reviews/phase34-demo-leetcode-emitted-audit-review-2.md`, and `reviews/phase34-demo-leetcode-emitted-audit-review-3.md`.
+
+Demo audit evidence:
+
+- Full sweep report: `target/full_emitted_quality/demos-full-final3-1778757911/report.jsonl`.
+- Current failed-subset recheck: `target/full_emitted_quality/demos-failed-subset-final-1778759486/report.jsonl`.
+- The full sweep recorded 256 passing demos and 16 build failures. The failed-subset recheck, run after final mutability fixes, moved `demos/collections_and_argparse/main.sifr` to pass, leaving 257 demos whose emitted Rust reaches and passes the quality gates.
+- The remaining 15 demos fail before emitted Rust quality can be evaluated, with frontend/type/demo-contract issues including bytes `uint8` optional typing, exact integer-to-float conversion requirements, `Result` arithmetic shape, `Result[str, IOError]` versus `str` expectations, and pure-stdlib inference gaps.
+
+LeetCode audit evidence:
+
+- Full sweep report: `target/full_emitted_quality/leetcode-1778753354/report.jsonl`.
+- Current failed-subset recheck: `target/full_emitted_quality/leetcode-failed-subset-final-1778756628/report.jsonl`.
+- The full sweep recorded 347 passing fixtures, 49 build failures, 13 clippy failures, and 2 emit failures. The failed-subset recheck under the final implementation moved 16 former failures to pass, proving the earlier emit, rustfmt, clippy, and stale build failures were fixed or stale.
+- The remaining 48 LeetCode failures fail before emitted Rust quality can be evaluated, dominated by exact numeric conversion contracts, `Result[int, DivisionError]` arithmetic, `Any`/`None` indexing, and class/object lowering gaps.
+
+Phase 34 interpretation:
+
+- The required Phase 34 corpus and required demos remain the formal phase exit gate.
+- This follow-up audit expands confidence beyond the required corpus: every demo and every LeetCode fixture that currently reaches generated Rust passes forbidden construct, format, lint, and build gates.
+- The remaining demo and LeetCode failures are not generated-code quality violations; they are tracked as frontend/type-system/stdlib compatibility work for later phases or continuation issues.
