@@ -311,3 +311,27 @@ Wave 2 result:
 
 - Demos: 259 entries reach generated Rust and pass build, forbidden scan, `cargo fmt`, `cargo fmt --check`, and generated clippy; 13 entries remain pre-emitted-code frontend/type/demo-contract failures.
 - LeetCode: 377 entries reach generated Rust and pass the same emitted-code gates; 34 entries remain pre-emitted-code frontend/type/lowering compatibility failures.
+
+### Audit Wave 3 (2026-05-14)
+
+Third-round emitted-code review expanded the demo audit to every
+`demos/**/main.sifr` entry and removed two more generated Rust artifacts:
+
+- Known `Decimal::checked_div(...).map_or_else(default, |value| value)` calls
+  now optimize to `unwrap_or_else(default)` without rewriting unknown receivers.
+- Boolean literal comparisons now simplify during IR optimization.
+- The generated-code clippy allowlist no longer includes
+  `clippy::bool_comparison`.
+
+Wave 3 evidence:
+
+- All-demo pre-patch sweep: `target/full_emitted_quality/demos-wave3-all-1778776830/report.jsonl`.
+- Demo failed-subset recheck after optimizer cleanup: `target/full_emitted_quality/demos-wave3-failed-subset-post-bool-map-1778779394/report.jsonl`.
+- LeetCode full sweep: `target/full_emitted_quality/leetcode-wave3-all-1778778208/report.jsonl`.
+- LeetCode boolean-comparison subset recheck: `target/full_emitted_quality/leetcode-wave3-bool-subset-post-bool-map-1778779466/report.jsonl`.
+- Reduced-allowlist clippy gate: `target/sifr_generated_code_quality/evidence/clippy-1778780702-5147.json`.
+
+Wave 3 result:
+
+- Demos: 261 entries reach generated Rust and pass build, forbidden scan, `cargo fmt`, `cargo fmt --check`, and generated clippy; 49 entries remain pre-emitted-code expected negative diagnostics or frontend/type/demo-contract failures.
+- LeetCode: 377 entries reach generated Rust and pass the same emitted-code gates; 34 entries remain pre-emitted-code frontend/type/lowering compatibility failures. The 29 fixtures that previously emitted boolean literal comparisons were rechecked and now have zero remaining boolean-literal comparison occurrences.

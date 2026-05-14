@@ -1,4 +1,4 @@
-use crate::{RustExpr, RustItem, RustLiteral, RustStmt, RustType};
+use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType};
 
 const MUTATING_METHODS: &[&str] = &[
     "append",
@@ -674,6 +674,12 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
                     *std::mem::replace(receiver, Box::new(RustExpr::Literal(RustLiteral::Unit)));
                 *expr = replacement;
                 removed += 1;
+            } else if method == "map_or_else" && args.len() == 2 && is_identity_closure(&args[1]) {
+                if is_known_std_fallible_receiver(receiver.as_ref()) {
+                    *method = "unwrap_or_else".to_string();
+                    args.pop();
+                    removed += 1;
+                }
             }
             removed
         }
@@ -704,7 +710,14 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
             }
             removed
         }
-        RustExpr::BinOp { left, right, .. } => optimize_expr(left) + optimize_expr(right),
+        RustExpr::BinOp { left, op, right } => {
+            let mut removed = optimize_expr(left) + optimize_expr(right);
+            if let Some(replacement) = simplified_bool_comparison(left, op, right) {
+                *expr = replacement;
+                removed += 1;
+            }
+            removed
+        }
         RustExpr::UnaryOp { operand, .. }
         | RustExpr::Deref(operand)
         | RustExpr::Try(operand)
@@ -777,6 +790,69 @@ fn is_zero_usize_expr(expr: &RustExpr) -> bool {
         }
         RustExpr::Paren(inner) => is_zero_usize_expr(inner),
         _ => false,
+    }
+}
+
+fn is_identity_closure(expr: &RustExpr) -> bool {
+    let RustExpr::Closure { params, body, .. } = expr else {
+        return false;
+    };
+    let [RustParam::Named { name, .. }] = params.as_slice() else {
+        return false;
+    };
+    match body.as_ref() {
+        RustExpr::Ident(body_name) => body_name == name,
+        RustExpr::Paren(inner) => {
+            matches!(inner.as_ref(), RustExpr::Ident(body_name) if body_name == name)
+        }
+        _ => false,
+    }
+}
+
+fn is_known_std_fallible_receiver(expr: &RustExpr) -> bool {
+    matches!(
+        expr,
+        RustExpr::FnCall { func, .. }
+            if matches!(
+                func.as_ref(),
+                RustExpr::Path(parts)
+                    if matches!(
+                        parts.as_slice(),
+                        [type_name, method] if type_name == "Decimal" && method == "checked_div"
+                    )
+            )
+    )
+}
+
+fn simplified_bool_comparison(left: &RustExpr, op: &str, right: &RustExpr) -> Option<RustExpr> {
+    if !matches!(op, "==" | "!=") {
+        return None;
+    }
+    if let RustExpr::Literal(RustLiteral::Bool(value)) = right {
+        return Some(if (*value && op == "==") || (!*value && op == "!=") {
+            left.clone()
+        } else {
+            not_expr(left.clone())
+        });
+    }
+    if let RustExpr::Literal(RustLiteral::Bool(value)) = left {
+        return Some(if (*value && op == "==") || (!*value && op == "!=") {
+            right.clone()
+        } else {
+            not_expr(right.clone())
+        });
+    }
+    None
+}
+
+fn not_expr(expr: RustExpr) -> RustExpr {
+    match expr {
+        RustExpr::Literal(RustLiteral::Bool(value)) => RustExpr::Literal(RustLiteral::Bool(!value)),
+        RustExpr::UnaryOp { op, operand } if op == "!" => *operand,
+        other => RustExpr::UnaryOp {
+            op: "!".to_string(),
+            operand: Box::new(other),
+        },
     }
 }
 
@@ -996,5 +1072,140 @@ mod tests {
         };
         assert_eq!(method, "take");
         assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "items"));
+    }
+
+    #[test]
+    fn rewrites_identity_map_or_else_to_unwrap_or_else() {
+        let mut items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "Decimal".to_string(),
+                        "checked_div".to_string(),
+                    ])),
+                    args: vec![
+                        RustExpr::Ident("left".to_string()),
+                        RustExpr::Ident("right".to_string()),
+                    ],
+                }),
+                method: "map_or_else".to_string(),
+                args: vec![
+                    RustExpr::Closure {
+                        params: vec![],
+                        body: Box::new(RustExpr::Ident("fallback".to_string())),
+                        is_move: false,
+                    },
+                    RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "value".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Ident("value".to_string())),
+                        is_move: false,
+                    },
+                ],
+            })],
+            is_async: false,
+        }];
+
+        let removed = remove_trivial_clones_in_items(&mut items);
+        assert_eq!(removed, 1);
+
+        let RustItem::Fn { body, .. } = &items[0] else {
+            panic!("expected fn item");
+        };
+        let Some(RustStmt::Expr(RustExpr::MethodCall { method, args, .. })) = body.first() else {
+            panic!("expected method call");
+        };
+        assert_eq!(method, "unwrap_or_else");
+        assert_eq!(args.len(), 1);
+    }
+
+    #[test]
+    fn keeps_identity_map_or_else_on_unknown_receivers() {
+        let mut items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("maybe_value".to_string())),
+                method: "map_or_else".to_string(),
+                args: vec![
+                    RustExpr::Closure {
+                        params: vec![],
+                        body: Box::new(RustExpr::Ident("fallback".to_string())),
+                        is_move: false,
+                    },
+                    RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "value".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Ident("value".to_string())),
+                        is_move: false,
+                    },
+                ],
+            })],
+            is_async: false,
+        }];
+
+        let removed = remove_trivial_clones_in_items(&mut items);
+        assert_eq!(removed, 0);
+
+        let RustItem::Fn { body, .. } = &items[0] else {
+            panic!("expected fn item");
+        };
+        let Some(RustStmt::Expr(RustExpr::MethodCall { method, args, .. })) = body.first() else {
+            panic!("expected method call");
+        };
+        assert_eq!(method, "map_or_else");
+        assert_eq!(args.len(), 2);
+    }
+
+    #[test]
+    fn simplifies_bool_literal_comparisons() {
+        let mut items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![
+                RustStmt::Expr(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("flag".to_string())),
+                    op: "==".to_string(),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Bool(false))),
+                }),
+                RustStmt::Expr(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Literal(RustLiteral::Bool(false))),
+                    op: "!=".to_string(),
+                    right: Box::new(RustExpr::Ident("other".to_string())),
+                }),
+            ],
+            is_async: false,
+        }];
+
+        let removed = remove_trivial_clones_in_items(&mut items);
+        assert_eq!(removed, 2);
+
+        let RustItem::Fn { body, .. } = &items[0] else {
+            panic!("expected fn item");
+        };
+        assert!(matches!(
+            body.first(),
+            Some(RustStmt::Expr(RustExpr::UnaryOp { op, operand }))
+                if op == "!" && matches!(operand.as_ref(), RustExpr::Ident(name) if name == "flag")
+        ));
+        assert!(matches!(
+            body.get(1),
+            Some(RustStmt::Expr(RustExpr::Ident(name))) if name == "other"
+        ));
     }
 }
