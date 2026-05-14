@@ -5,6 +5,7 @@ Promote stable channel only after reliability/parity/performance evidence is com
 
 ## Depends on
 - Phase 38
+- Phase 34 generated-code quality gates pass before stable artifacts are eligible for GA promotion.
 
 ## Milestones
 
