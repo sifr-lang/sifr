@@ -72,3 +72,44 @@ Result:
   `reviews/phase34-demo-leetcode-emitted-audit-review-1.md`,
   `reviews/phase34-demo-leetcode-emitted-audit-review-2.md`, and
   `reviews/phase34-demo-leetcode-emitted-audit-review-3.md`.
+
+## Post-Closure Audit Wave 2 (2026-05-14)
+
+The second emitted-code audit wave rechecked all non-negative demos and all
+top-level LeetCode fixtures after removing additional generated-code artifacts:
+
+- `while true` now optimizes to `loop`.
+- `.skip(0)` iterator calls are removed from generated IR.
+- `print("")` and empty generated `println` format macros render as
+  `println!()`.
+- Fallible bytes constructors now emit typed `Ok::<Vec<u8>, ...>(...)` results
+  so standalone ignored results do not leave the Rust error type ambiguous.
+- The generated clippy profile no longer allows `while_true`,
+  `clippy::iter_skip_zero`, or `clippy::println_empty_string`.
+
+Evidence:
+
+- Demos post-patch sweep:
+  `target/full_emitted_quality/demos-wave2-postpatch-1778765101/report.jsonl`.
+- Demos failed-subset recheck after `pure_stdlib` demo cleanup:
+  `target/full_emitted_quality/demos-wave2-failed-subset-after-pure-1778768309/report.jsonl`.
+- Demos failed-subset recheck after bytes constructor typing:
+  `target/full_emitted_quality/demos-wave2-failed-subset-after-bytes-1778769453/report.jsonl`.
+- LeetCode post-patch sweep:
+  `target/full_emitted_quality/leetcode-wave2-postpatch-1778766274/report.jsonl`.
+- Reduced-allowlist generated clippy gate:
+  `target/sifr_generated_code_quality/evidence/clippy-1778769689-83126.json`.
+- Review rounds:
+  `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-1.md`,
+  `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-2.md`, and
+  `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-3.md`.
+
+Result:
+
+- Demos: 259 entries reach generated Rust and pass build, forbidden scan,
+  `cargo fmt`, `cargo fmt --check`, and generated clippy. The remaining 13
+  entries fail before emitted-code quality due to frontend/type/demo-contract
+  gaps.
+- LeetCode: 377 entries reach generated Rust and pass the emitted-code quality
+  gates. The remaining 34 fail before emitted-code quality due to
+  frontend/type/lowering compatibility gaps.

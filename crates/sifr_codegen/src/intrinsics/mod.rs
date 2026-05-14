@@ -638,11 +638,15 @@ mod tests {
 
         let with_size =
             lower_intrinsic("bytes_with_size", &["n".to_string()]).expect("bytes_with_size");
-        assert!(render_expr(&with_size.expr).contains("non-negative size"));
+        let with_size_rendered = render_expr(&with_size.expr);
+        assert!(with_size_rendered.contains("non-negative size"));
+        assert!(with_size_rendered.contains("Ok::<Vec<u8>, ValueError>"));
 
         let from_ints =
             lower_intrinsic("bytes_from_ints", &["vals".to_string()]).expect("bytes_from_ints");
-        assert!(render_expr(&from_ints.expr).contains("byte out of range at index"));
+        let from_ints_rendered = render_expr(&from_ints.expr);
+        assert!(from_ints_rendered.contains("byte out of range at index"));
+        assert!(from_ints_rendered.contains("Ok::<Vec<u8>, ValueError>"));
 
         let to_hex = lower_intrinsic("bytes_to_hex", &["vals".to_string()]).expect("bytes_to_hex");
         assert!(render_expr(&to_hex.expr).contains("{:02x}"));
@@ -655,7 +659,9 @@ mod tests {
 
         let from_hex =
             lower_intrinsic("bytes_from_hex", &["hex".to_string()]).expect("bytes_from_hex");
-        assert!(render_expr(&from_hex.expr).contains("invalid hex character"));
+        let from_hex_rendered = render_expr(&from_hex.expr);
+        assert!(from_hex_rendered.contains("invalid hex character"));
+        assert!(from_hex_rendered.contains("Ok::<Vec<u8>, ParseError>"));
     }
 
     #[test]

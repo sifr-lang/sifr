@@ -110,6 +110,12 @@ fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
             name: "println".to_string(),
             args: vec![],
         })),
+        [HirExpr::StringLiteral(value)] if value.is_empty() => {
+            Some(RustStmt::Expr(RustExpr::MacroCall {
+                name: "println".to_string(),
+                args: vec![],
+            }))
+        }
         [HirExpr::StringLiteral(value)] => Some(RustStmt::Expr(RustExpr::MacroCall {
             name: "println".to_string(),
             args: vec![RustExpr::Ident(format!("{value:?}"))],

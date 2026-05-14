@@ -68,6 +68,13 @@ fn ok_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
+fn typed_ok_expr(expr: RustExpr, ok_ty: &str, err_ty: &str) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![format!("Ok::<{ok_ty}, {err_ty}>")])),
+        args: vec![expr],
+    }
+}
+
 fn utf8_only_guard_expr(
     encoding_expr: RustExpr,
     surface: &str,
@@ -387,10 +394,11 @@ pub(super) fn lower_bytes_from_hex(args: &[RustExpr]) -> Option<RustExpr> {
                 ],
             },
         ],
-        expr: Some(Box::new(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-            args: vec![RustExpr::Ident("result".to_string())],
-        })),
+        expr: Some(Box::new(typed_ok_expr(
+            RustExpr::Ident("result".to_string()),
+            "Vec<u8>",
+            "ParseError",
+        ))),
     })
 }
 
@@ -422,28 +430,32 @@ pub(super) fn lower_bytes_with_size(args: &[RustExpr]) -> Option<RustExpr> {
                 else_body: None,
             },
         ],
-        expr: Some(Box::new(ok_expr(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Range {
-                    start: Box::new(int(0)),
-                    end: Box::new(RustExpr::Ident("__size".to_string())),
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "_".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(int(0)),
-                        ty: RustType::Named("u8".to_string()),
+        expr: Some(Box::new(typed_ok_expr(
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Range {
+                        start: Box::new(int(0)),
+                        end: Box::new(RustExpr::Ident("__size".to_string())),
                     }),
-                    is_move: false,
-                }],
-            }),
-            method: "collect::<Vec<u8>>".to_string(),
-            args: vec![],
-        }))),
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "_".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Cast {
+                            expr: Box::new(int(0)),
+                            ty: RustType::Named("u8".to_string()),
+                        }),
+                        is_move: false,
+                    }],
+                }),
+                method: "collect::<Vec<u8>>".to_string(),
+                args: vec![],
+            },
+            "Vec<u8>",
+            "ValueError",
+        ))),
     })
 }
 
@@ -532,6 +544,10 @@ pub(super) fn lower_bytes_from_ints(args: &[RustExpr]) -> Option<RustExpr> {
                 ],
             },
         ],
-        expr: Some(Box::new(ok_expr(RustExpr::Ident("__out".to_string())))),
+        expr: Some(Box::new(typed_ok_expr(
+            RustExpr::Ident("__out".to_string()),
+            "Vec<u8>",
+            "ValueError",
+        ))),
     })
 }

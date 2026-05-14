@@ -284,3 +284,30 @@ Phase 34 interpretation:
 - The required Phase 34 corpus and required demos remain the formal phase exit gate.
 - This follow-up audit expands confidence beyond the required corpus: every demo and every LeetCode fixture that currently reaches generated Rust passes forbidden construct, format, lint, and build gates.
 - The remaining demo and LeetCode failures are not generated-code quality violations; they are tracked as frontend/type-system/stdlib compatibility work for later phases or continuation issues.
+
+### Audit Wave 2 (2026-05-14)
+
+Second-round emitted-code review removed additional generated Rust artifacts that
+were previously tolerated by the generated clippy allowlist:
+
+- `while true` generated from `while True` now optimizes to native Rust `loop`.
+- No-op `.skip(0)` iterator calls are removed during IR optimization.
+- Empty string print lowering now emits `println!()` instead of `println!("")`.
+- Fallible bytes constructors now emit typed `Ok::<Vec<u8>, ...>(...)` results
+  so generated Rust remains inferable even when the result is ignored.
+- The generated-code clippy allowlist no longer includes `while_true`,
+  `clippy::iter_skip_zero`, or `clippy::println_empty_string`.
+
+Wave 2 evidence:
+
+- Demos post-patch sweep: `target/full_emitted_quality/demos-wave2-postpatch-1778765101/report.jsonl`.
+- Demos failed-subset recheck after `pure_stdlib` demo cleanup: `target/full_emitted_quality/demos-wave2-failed-subset-after-pure-1778768309/report.jsonl`.
+- Demos failed-subset recheck after bytes constructor typing: `target/full_emitted_quality/demos-wave2-failed-subset-after-bytes-1778769453/report.jsonl`.
+- LeetCode post-patch sweep: `target/full_emitted_quality/leetcode-wave2-postpatch-1778766274/report.jsonl`.
+- Reduced-allowlist clippy gate: `target/sifr_generated_code_quality/evidence/clippy-1778769689-83126.json`.
+- Review rounds: `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-1.md`, `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-2.md`, `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-3.md`.
+
+Wave 2 result:
+
+- Demos: 259 entries reach generated Rust and pass build, forbidden scan, `cargo fmt`, `cargo fmt --check`, and generated clippy; 13 entries remain pre-emitted-code frontend/type/demo-contract failures.
+- LeetCode: 377 entries reach generated Rust and pass the same emitted-code gates; 34 entries remain pre-emitted-code frontend/type/lowering compatibility failures.

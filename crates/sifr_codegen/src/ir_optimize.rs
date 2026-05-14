@@ -633,6 +633,12 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
         RustStmt::While { cond, body } => {
             let mut removed = optimize_expr(cond);
             removed += optimize_block(body);
+            if matches!(cond, RustExpr::Literal(RustLiteral::Bool(true))) {
+                *stmt = RustStmt::Loop {
+                    body: std::mem::take(body),
+                };
+                removed += 1;
+            }
             removed
         }
         RustStmt::Loop { body } | RustStmt::Block(body) | RustStmt::LocalFn { body, .. } => {
@@ -654,10 +660,20 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
             removed
         }
         RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
-        RustExpr::MethodCall { receiver, args, .. } => {
+        RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } => {
             let mut removed = optimize_expr(receiver);
-            for arg in args {
+            for arg in args.iter_mut() {
                 removed += optimize_expr(arg);
+            }
+            if method == "skip" && args.len() == 1 && is_zero_usize_expr(&args[0]) {
+                let replacement =
+                    *std::mem::replace(receiver, Box::new(RustExpr::Literal(RustLiteral::Unit)));
+                *expr = replacement;
+                removed += 1;
             }
             removed
         }
@@ -749,6 +765,17 @@ fn should_remove_clone(inner: &RustExpr) -> bool {
         RustExpr::Literal(_) => true,
         RustExpr::Ref { .. } => true,
         RustExpr::Cast { ty, .. } => is_copy_type(ty),
+        _ => false,
+    }
+}
+
+fn is_zero_usize_expr(expr: &RustExpr) -> bool {
+    match expr {
+        RustExpr::Literal(RustLiteral::Int(0)) => true,
+        RustExpr::Cast { expr, ty } => {
+            matches!(ty, RustType::Named(name) if name == "usize") && is_zero_usize_expr(expr)
+        }
+        RustExpr::Paren(inner) => is_zero_usize_expr(inner),
         _ => false,
     }
 }
@@ -906,5 +933,68 @@ mod tests {
                 ..
             }) if name == "apply"
         ));
+    }
+
+    #[test]
+    fn rewrites_true_while_to_loop() {
+        let mut items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::While {
+                cond: RustExpr::Literal(RustLiteral::Bool(true)),
+                body: vec![RustStmt::Break],
+            }],
+            is_async: false,
+        }];
+
+        let removed = remove_trivial_clones_in_items(&mut items);
+        assert_eq!(removed, 1);
+
+        let RustItem::Fn { body, .. } = &items[0] else {
+            panic!("expected fn item");
+        };
+        assert!(matches!(body.first(), Some(RustStmt::Loop { .. })));
+    }
+
+    #[test]
+    fn removes_zero_skip_method_call() {
+        let mut items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("items".to_string())),
+                    method: "skip".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                }),
+                method: "take".to_string(),
+                args: vec![RustExpr::Literal(RustLiteral::Int(3))],
+            })],
+            is_async: false,
+        }];
+
+        let removed = remove_trivial_clones_in_items(&mut items);
+        assert_eq!(removed, 1);
+
+        let RustItem::Fn { body, .. } = &items[0] else {
+            panic!("expected fn item");
+        };
+        let Some(RustStmt::Expr(RustExpr::MethodCall {
+            receiver, method, ..
+        })) = body.first()
+        else {
+            panic!("expected outer method call");
+        };
+        assert_eq!(method, "take");
+        assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "items"));
     }
 }
