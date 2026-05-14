@@ -57,7 +57,7 @@ use helpers::{
 };
 use hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
-use ir_optimize::remove_trivial_clones_in_items;
+use ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
 use ir_validate::validate_items;
 pub(crate) use lib_support::{
     resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
@@ -65,7 +65,7 @@ pub(crate) use lib_support::{
 use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::cell::{Cell, RefCell};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::env;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
@@ -414,7 +414,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut all_needed: Vec<String> = Vec::new();
     let mut stdlib_needs_file_handles = false;
     let mut stdlib_provides_file_handle_struct = false;
-    for module_name in &emitter.used_stdlib_modules {
+    for module_name in BTreeSet::from_iter(emitter.used_stdlib_modules.iter()) {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             for dep in deps {
                 if dep.starts_with("sifr.") && !all_needed.contains(dep) {
@@ -740,6 +740,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     file_items.extend(import_items.clone());
     file_items.extend(assembled_body_items.clone());
     remove_trivial_clones_in_items(&mut file_items);
+    remove_unneeded_mutability_in_items(&mut file_items);
     let file_issues = validate_items(&file_items);
     assert!(
         file_issues.is_empty(),
@@ -782,7 +783,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
 
     // Add transitive dependencies from stdlib modules
     let mut all_used_modules = emitter.used_stdlib_modules.clone();
-    for module_name in &emitter.used_stdlib_modules {
+    for module_name in BTreeSet::from_iter(emitter.used_stdlib_modules.iter()) {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             all_used_modules.extend(deps.iter().cloned());
         }
@@ -1683,13 +1684,15 @@ pub fn generate_project_with_deps_and_crates(
 name = "{project_name}"
 version = "0.1.0"
 edition = "2021"
+
+[workspace]
 "#
     );
 
     // Add dependencies based on used stdlib/intrinsic modules
     let mut deps = Vec::new();
-    for module_name in stdlib_modules {
-        match module_name.as_str() {
+    for module_name in BTreeSet::from_iter(stdlib_modules.iter().map(String::as_str)) {
+        match module_name {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
                 if !deps.contains(
                     &"serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
@@ -1782,8 +1785,8 @@ edition = "2021"
         }
     }
 
-    for crate_name in required_crates {
-        match crate_name.as_str() {
+    for crate_name in BTreeSet::from_iter(required_crates.iter().map(String::as_str)) {
+        match crate_name {
             "serde_json" => {
                 if !deps.contains(
                     &"serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"

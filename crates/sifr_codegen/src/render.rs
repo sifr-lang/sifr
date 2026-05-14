@@ -248,9 +248,7 @@ impl Renderer {
                     ret
                 ));
                 self.indent();
-                for stmt in body {
-                    self.render_stmt(stmt);
-                }
+                self.render_body(body);
                 self.dedent();
                 self.emit_line("}");
             }
@@ -309,6 +307,17 @@ impl Renderer {
     }
 
     pub fn render_stmt(&mut self, stmt: &RustStmt) {
+        self.render_stmt_with_tail(stmt, false);
+    }
+
+    fn render_body(&mut self, body: &[RustStmt]) {
+        let last_idx = body.len().saturating_sub(1);
+        for (idx, stmt) in body.iter().enumerate() {
+            self.render_stmt_with_tail(stmt, idx == last_idx);
+        }
+    }
+
+    fn render_stmt_with_tail(&mut self, stmt: &RustStmt, tail: bool) {
         match stmt {
             RustStmt::Let {
                 mutable,
@@ -351,6 +360,14 @@ impl Renderer {
                 self.emit_line("};");
             }
             RustStmt::Assign { target, value } => {
+                if let Some((op, rhs)) = Self::render_assign_op(target, value) {
+                    self.emit_line(&format!(
+                        "{} {op}= {};",
+                        Self::render_expr_string(target),
+                        Self::render_expr_string(rhs)
+                    ));
+                    return;
+                }
                 self.emit_line(&format!(
                     "{} = {};",
                     Self::render_expr_string(target),
@@ -385,9 +402,17 @@ impl Renderer {
                 ));
             }
             RustStmt::Return(Some(expr)) => {
+                if tail {
+                    self.emit_line(&Self::render_expr_string(expr));
+                    return;
+                }
                 self.emit_line(&format!("return {};", Self::render_expr_string(expr)));
             }
-            RustStmt::Return(None) => self.emit_line("return;"),
+            RustStmt::Return(None) => {
+                if !tail {
+                    self.emit_line("return;");
+                }
+            }
             RustStmt::If {
                 cond,
                 then_body,
@@ -489,9 +514,7 @@ impl Renderer {
                         self.emit_line(&format!("let {} = {value};", item.binding));
                     }
                 }
-                for stmt in body {
-                    self.render_stmt(stmt);
-                }
+                self.render_body(body);
                 self.dedent();
                 self.emit_line("}");
             }
@@ -739,14 +762,16 @@ impl Renderer {
                     format!(
                         "{name}!({escaped}, {})",
                         args.iter()
-                            .map(Self::render_expr_string)
+                            .map(Self::render_format_arg_string)
                             .collect::<Vec<_>>()
                             .join(", ")
                     )
                 }
             }
             RustExpr::BinOp { left, op, right } => {
-                format!("{} {op} {}", Self::wrap_expr(left), Self::wrap_expr(right))
+                let left = Self::render_comparison_operand(op, left);
+                let right = Self::render_comparison_operand(op, right);
+                format!("{left} {op} {right}")
             }
             RustExpr::UnaryOp { op, operand } => format!("{op}{}", Self::wrap_expr(operand)),
             RustExpr::Field { expr, field } => {
@@ -789,6 +814,9 @@ impl Renderer {
             RustExpr::Deref(expr) => format!("*{}", Self::wrap_expr(expr)),
             RustExpr::Clone(expr) => format!("{}.clone()", Self::wrap_expr(expr)),
             RustExpr::Cast { expr, ty } => {
+                if let Some(literal) = Self::render_typed_numeric_literal(expr, ty) {
+                    return literal;
+                }
                 format!(
                     "{} as {}",
                     Self::wrap_expr(expr),
@@ -849,9 +877,7 @@ impl Renderer {
                 let mut renderer = Renderer::new();
                 renderer.append(&format!("{async_kw}{move_kw}|{params}| {{\n"));
                 renderer.indent();
-                for stmt in body {
-                    renderer.render_stmt(stmt);
-                }
+                renderer.render_body(body);
                 renderer.dedent();
                 renderer.append("}");
                 renderer.output
@@ -860,13 +886,7 @@ impl Renderer {
                 "{name} {{ {} }}",
                 fields
                     .iter()
-                    .map(|(field, value)| {
-                        format!(
-                            "{}: {}",
-                            Self::render_identifier(field),
-                            Self::render_expr_string(value)
-                        )
-                    })
+                    .map(|(field, value)| Self::render_struct_field_init(field, value))
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
@@ -966,6 +986,89 @@ impl Renderer {
             format!("({})", Self::render_expr_string(expr))
         } else {
             Self::render_expr_string(expr)
+        }
+    }
+
+    fn render_assign_op<'a>(
+        target: &RustExpr,
+        value: &'a RustExpr,
+    ) -> Option<(&'a str, &'a RustExpr)> {
+        let RustExpr::BinOp { left, op, right } = value else {
+            return None;
+        };
+        if !matches!(op.as_str(), "+" | "-" | "*" | "/" | "%") || left.as_ref() != target {
+            return None;
+        }
+        Some((op.as_str(), right.as_ref()))
+    }
+
+    fn render_comparison_operand(op: &str, expr: &RustExpr) -> String {
+        if matches!(op, "==" | "!=") {
+            if let RustExpr::Literal(RustLiteral::Str(value)) = expr {
+                return format!("\"{}\"", value.escape_default());
+            }
+        }
+        Self::wrap_expr(expr)
+    }
+
+    fn render_struct_field_init(field: &str, value: &RustExpr) -> String {
+        let rendered_field = Self::render_identifier(field);
+        if let RustExpr::Ident(name) = value {
+            if name == field {
+                return rendered_field;
+            }
+        }
+        format!("{rendered_field}: {}", Self::render_expr_string(value))
+    }
+
+    fn render_format_arg_string(expr: &RustExpr) -> String {
+        if let RustExpr::Literal(RustLiteral::Str(value)) = expr {
+            return format!("\"{}\"", value.escape_default());
+        }
+        Self::render_expr_string(expr)
+    }
+
+    fn render_typed_numeric_literal(expr: &RustExpr, ty: &RustType) -> Option<String> {
+        let suffix = Self::numeric_literal_suffix(ty)?;
+        match expr {
+            RustExpr::Literal(RustLiteral::Int(value)) => Some(format!("{value}_{suffix}")),
+            RustExpr::Literal(RustLiteral::Float(value)) if value.is_finite() => {
+                let rendered = if value.fract() == 0.0 {
+                    format!("{value:.1}")
+                } else {
+                    value.to_string()
+                };
+                Some(format!("{rendered}_{suffix}"))
+            }
+            _ => None,
+        }
+    }
+
+    fn numeric_literal_suffix(ty: &RustType) -> Option<&str> {
+        match ty {
+            RustType::I64 => Some("i64"),
+            RustType::F64 => Some("f64"),
+            RustType::Named(name)
+                if matches!(
+                    name.as_str(),
+                    "i8" | "i16"
+                        | "i32"
+                        | "i64"
+                        | "i128"
+                        | "isize"
+                        | "u8"
+                        | "u16"
+                        | "u32"
+                        | "u64"
+                        | "u128"
+                        | "usize"
+                        | "f32"
+                        | "f64"
+                ) =>
+            {
+                Some(name.as_str())
+            }
+            _ => None,
         }
     }
 
@@ -1271,13 +1374,13 @@ mod tests {
 
         pub trait Renderable {
             fn render(&self) -> String {
-                return "ok".to_string();
+                "ok".to_string()
             }
         }
 
         impl<T: Clone> Renderable for Point {
             fn render(&self) -> String {
-                return "Point".to_string();
+                "Point".to_string()
             }
         }
         "###);
@@ -1508,7 +1611,7 @@ mod tests {
         };
 
         let rendered = render_expr(&expr);
-        assert_eq!(rendered, "(1..10).step_by(2 as usize)");
+        assert_eq!(rendered, "(1..10).step_by(2_usize)");
     }
 
     #[test]

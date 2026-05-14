@@ -1,6 +1,6 @@
 use super::{CodegenResult, HirModule, Renderer, RustEmitter, RustFile, RustItem, StdlibCode};
 use crate::ir_imports::collect_import_needs_from_items;
-use crate::ir_optimize::remove_trivial_clones_in_items;
+use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
 use crate::ir_validate::validate_items;
 
 /// Generate Rust source code from a HIR module.
@@ -125,6 +125,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     file_items.extend(import_items);
     file_items.extend(emitted_items);
     remove_trivial_clones_in_items(&mut file_items);
+    remove_unneeded_mutability_in_items(&mut file_items);
     let file_issues = validate_items(&file_items);
     assert!(
         file_issues.is_empty(),

@@ -453,9 +453,11 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
         HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
         HirExpr::Call { func, args, .. } => try_lower_simple_call_expr(func, args),
-        HirExpr::IteratorCall { op, args, .. } => {
-            try_lower_simple_call_expr(iterator_op_func_name(op), args)
-        }
+        HirExpr::IteratorCall { op, args, .. } => match op {
+            HirIteratorOp::Map => try_lower_simple_map_call_expr(args),
+            HirIteratorOp::Filter => try_lower_simple_filter_call_expr(args),
+            _ => try_lower_simple_call_expr(iterator_op_func_name(op), args),
+        },
         HirExpr::MethodCall {
             object,
             method,
@@ -584,9 +586,11 @@ fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> 
     if func == "divmod" {
         return try_lower_simple_divmod_call_expr(args);
     }
-    if func == "map" || func == "filter" {
-        // Preserve callable/signature-aware adaptation on the structured path.
-        return None;
+    if func == "map" {
+        return try_lower_simple_map_call_expr(args);
+    }
+    if func == "filter" {
+        return try_lower_simple_filter_call_expr(args);
     }
 
     if is_reserved_builtin_call_func(func) {

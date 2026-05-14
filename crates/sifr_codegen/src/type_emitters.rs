@@ -7,12 +7,10 @@ use sifr_hir::{HirClass, HirFunction, MethodKind};
 use sifr_type_system::Type;
 
 impl RustEmitter {
-    pub(super) fn emit_protocol_trait(&mut self, class: &HirClass, module_public: bool) {
-        let visibility = if module_public {
-            Visibility::Pub
-        } else {
-            Visibility::Private
-        };
+    pub(super) fn emit_protocol_trait(&mut self, class: &HirClass, _module_public: bool) {
+        // Protocol traits are part of the generated structural interface even
+        // when only their impls are referenced directly in a binary crate.
+        let visibility = Visibility::Pub;
         let methods = class
             .methods
             .iter()

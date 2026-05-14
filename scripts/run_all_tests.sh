@@ -120,6 +120,16 @@ python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
 echo "Running distribution validation"
 bash "${SCRIPT_DIR}/run_distribution_validation.sh"
 
+if [[ "${PROFILE}" == "pr" || "${PROFILE}" == "nightly" || "${PROFILE}" == "release" ]]; then
+  echo "Running Generated Code Quality Checks"
+  bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_corpus.sh"
+  bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_panic_scan.sh"
+  bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_rustfmt.sh"
+  bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_clippy.sh"
+  bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_determinism.sh"
+  bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_demos.sh"
+fi
+
 echo "Running sifr_diagnostics tests"
 cargo test -p sifr_diagnostics
 
