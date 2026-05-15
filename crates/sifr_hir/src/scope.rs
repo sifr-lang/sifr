@@ -3,6 +3,7 @@
 //! Supports type narrowing: variables can have a `narrowed_type` that
 //! differs from their `declared_type` within control flow branches.
 
+use num_bigint::BigInt;
 use sifr_type_system::{OwnershipKind, Type};
 use std::collections::HashMap;
 
@@ -50,6 +51,8 @@ pub struct VarInfo {
     pub binding_kind: BindingKind,
     /// Whether the binding type was provided explicitly (annotation/parameter).
     pub type_source: BindingTypeSource,
+    /// Compile-time exact integer value known for this binding, if any.
+    pub const_integer_value: Option<BigInt>,
     /// Proof that this binding only exists to suppress cascades after an emitted error.
     error_taint: Option<ErrorTaint>,
 }
@@ -85,6 +88,9 @@ pub type NarrowingSnapshot = Vec<(String, Option<Type>)>;
 /// A snapshot of the moved state for all variables in scope.
 /// Used to save/restore moved state at branch points and loop boundaries.
 pub(crate) type MovedSnapshot = Vec<(String, bool)>;
+
+/// A snapshot of known compile-time integer values for all variables in scope.
+pub(crate) type ConstIntegerSnapshot = Vec<(String, Option<BigInt>)>;
 
 /// A scope for name resolution.
 #[derive(Debug, Clone)]
@@ -212,6 +218,7 @@ impl Scope {
                     mutability,
                     binding_kind,
                     type_source,
+                    const_integer_value: None,
                     error_taint,
                 },
             );
@@ -223,9 +230,47 @@ impl Scope {
         if let Some(info) = self.lookup_var_mut(name) {
             info.ty = ty;
             info.narrowed_type = None;
+            info.const_integer_value = None;
             return true;
         }
         false
+    }
+
+    pub(crate) fn set_const_integer_value(&mut self, name: &str, value: BigInt) -> bool {
+        if let Some(info) = self.lookup_var_mut(name) {
+            info.const_integer_value = Some(value);
+            return true;
+        }
+        false
+    }
+
+    pub(crate) fn clear_const_integer_value(&mut self, name: &str) {
+        if let Some(info) = self.lookup_var_mut(name) {
+            info.const_integer_value = None;
+        }
+    }
+
+    pub(crate) fn const_integer_value(&self, name: &str) -> Option<&BigInt> {
+        self.lookup_var(name)
+            .and_then(|info| info.const_integer_value.as_ref())
+    }
+
+    pub(crate) fn save_const_integer_state(&self) -> ConstIntegerSnapshot {
+        let mut snapshot = Vec::new();
+        for frame in &self.frames {
+            for (name, info) in frame {
+                snapshot.push((name.clone(), info.const_integer_value.clone()));
+            }
+        }
+        snapshot
+    }
+
+    pub(crate) fn restore_const_integer_state(&mut self, snapshot: &ConstIntegerSnapshot) {
+        for (name, const_integer_value) in snapshot {
+            if let Some(info) = self.lookup_var_mut(name) {
+                info.const_integer_value.clone_from(const_integer_value);
+            }
+        }
     }
 
     /// Look up a variable, searching from innermost to outermost scope.

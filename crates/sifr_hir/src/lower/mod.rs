@@ -1,4 +1,3 @@
-//! AST to HIR lowering with type checking and name resolution.
 use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 use crate::scope::{ErrorTaint, Scope};
 use sifr_python_ast::{Expr, Stmt};
@@ -63,6 +62,7 @@ mod if_expression;
 mod import_diagnostics;
 mod imported_defaults;
 mod imports;
+mod integer_const_facts;
 mod integer_failure_diagnostics;
 mod integer_literal_diagnostics;
 mod integer_literals;
@@ -95,6 +95,7 @@ mod protocol_diagnostics;
 mod result_diagnostics;
 #[cfg(test)]
 mod result_diagnostics_tests;
+mod return_lowering;
 mod scope_helpers;
 mod sequence_guard_detection;
 mod sequence_guard_updates;

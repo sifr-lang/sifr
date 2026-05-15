@@ -22,6 +22,9 @@ use super::function_flow::infer_function_return_type;
 use super::if_branch_bindings::{
     predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,
 };
+use super::integer_const_facts::{
+    record_const_integer_binding, restore_const_integer_state_after_branches,
+};
 use super::integer_nonzero_guards::{
     detect_false_nonzero_integer_guards, detect_true_nonzero_integer_guards,
 };
@@ -39,6 +42,7 @@ use super::numeric_sentinels::{
 };
 use super::ownership_diagnostics;
 use super::protocol_diagnostics;
+use super::return_lowering::lower_return;
 use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
     detect_while_sequence_guards,
@@ -49,7 +53,7 @@ use super::sequence_guard_updates::{
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
 use super::statement_diagnostics;
-use super::task_scope_calls::{is_lock_guard_type, task_group_spawn_owner};
+use super::task_scope_calls::task_group_spawn_owner;
 use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
     resolve_annotation_expr,
@@ -63,9 +67,9 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign, StmtAugAssign,
-    StmtFor, StmtIf, StmtReturn, StmtWhile,
+    StmtFor, StmtIf, StmtWhile,
 };
-use sifr_type_system::{make_union, FunctionType, NarrowingCondition, OwnershipKind, Type};
+use sifr_type_system::{make_union, FunctionType, NarrowingCondition, Type};
 
 fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
     match expr {
@@ -1031,6 +1035,7 @@ fn failed_initializer_taint(
 
 fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
     ctx.scope.clear_narrowing(name);
+    ctx.scope.clear_const_integer_value(name);
     ctx.clear_sequence_guards_for_binding(name);
     ctx.clear_proven_nonzero_integer_binding(name);
 }
@@ -1164,6 +1169,11 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
     ctx.pending_container_specialization_patches.remove(&name);
     ctx.scope
         .define_explicit_local(name.clone(), declared_type.clone());
+    if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
+        && value.ty().is_assignable_to(&declared_type)
+    {
+        record_const_integer_binding(ctx, &name, &value);
+    }
     if let Some(kind) = ann
         .value
         .as_ref()
@@ -1608,6 +1618,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         ctx.task_handle_group_owners.remove(&name);
         record_async_generator_advance_binding(ctx, &name, &value);
         invalidate_rebound_binding_facts(ctx, &name);
+        if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
+            && value.ty().is_assignable_to(&info_ty)
+        {
+            record_const_integer_binding(ctx, &name, &value);
+        }
         if ctx.numeric_sentinel_fact(&name).is_some() {
             if let Some(domain) = numeric_domain_for_type(&value_ty) {
                 ctx.resolve_numeric_sentinel_domain(&name, domain);
@@ -1634,6 +1649,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             .cloned()
             .unwrap_or_else(|| value_ty.clone());
         ctx.scope.define(name.clone(), binding_ty.clone());
+        if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
+            && value.ty().is_assignable_to(&binding_ty)
+        {
+            record_const_integer_binding(ctx, &name, &value);
+        }
         record_async_generator_advance_binding(ctx, &name, &value);
         if let Some(group_name) = task_group_spawn_owner(&value) {
             ctx.task_handle_group_owners
@@ -1666,122 +1686,6 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     lower_aug_assign_impl(aug, ctx)
 }
 
-pub(super) fn lower_return(
-    ret: &StmtReturn,
-    func_type: &FunctionType,
-    ctx: &mut LowerCtx,
-) -> HirStmt {
-    if ctx.current_function_is_async_generator {
-        if let Some(val) = &ret.value {
-            let Some(expr) = lower_expr(val, ctx) else {
-                return HirStmt::Return {
-                    value: Some(HirExpr::NoneLiteral),
-                };
-            };
-            let expr_ty = expr.ty().clone();
-            if matches!(expr_ty.resolve_alias(), Type::None) {
-                ctx.error_with_code_at(
-                    DiagnosticCode::TYPE_MISMATCH,
-                    "return with a value inside async generator bodies requires async generator state-machine lowering and is not supported yet"
-                        .to_string(),
-                    val.range(),
-                );
-            } else {
-                ctx.error_with_code_at(
-                    DiagnosticCode::TYPE_MISMATCH,
-                    "non-None async generator return values are rejected in v1; async generators expose yielded items through AsyncGenerator[T, E]"
-                        .to_string(),
-                    val.range(),
-                );
-            }
-            return HirStmt::Return { value: Some(expr) };
-        }
-
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            "return inside async generator bodies requires async generator state-machine lowering and is not supported yet"
-                .to_string(),
-            ret.range(),
-        );
-        return HirStmt::Return { value: None };
-    }
-
-    let value = if let Some(val) = &ret.value {
-        let Some(expr) = lower_expr(val, ctx) else {
-            // Keep control-flow shape intact after expression diagnostics so
-            // return-completeness analysis does not emit a cascade error.
-            return HirStmt::Return {
-                value: Some(HirExpr::NoneLiteral),
-            };
-        };
-        let expr_ty = expr.ty().clone();
-
-        // Escape analysis: returning a borrowed parameter is a compile error.
-        // The programmer must add `own` at the signature boundary, or call `.clone()` explicitly.
-        if let HirExpr::Name { name, ty } = &expr {
-            if ctx.borrowed_params.contains(name.as_str()) && ty.ownership() == OwnershipKind::Move
-            {
-                let range = val.range();
-                ownership_diagnostics::borrowed_parameter_return_escape(ctx, name, range);
-            }
-        }
-        if !ctx.allow_intrinsic_imports && is_lock_guard_type(&expr_ty) {
-            ownership_diagnostics::lock_guard_return_escape(ctx, val.range());
-        }
-
-        // If the function returns Result[T, E] and the value is T (not Result), wrap in Ok()
-        if let Type::Result(ref ok_ty, _) = *func_type.return_type {
-            if expr_ty.is_assignable_to(ok_ty) && !matches!(expr_ty, Type::Result(_, _)) {
-                // Wrap in Ok()
-                return HirStmt::Return {
-                    value: Some(HirExpr::OkWrap {
-                        ty: func_type.return_type.as_ref().clone(),
-                        value: Box::new(expr),
-                    }),
-                };
-            }
-        }
-
-        if !expr_ty.is_assignable_to(&func_type.return_type) {
-            ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                format!(
-                    "return type mismatch: expected '{}', got '{}'",
-                    func_type.return_type.display_name(),
-                    expr_ty.display_name()
-                ),
-                val.range(),
-            );
-        }
-        Some(expr)
-    } else {
-        if *func_type.return_type != Type::None {
-            // If function returns Result[(), E], wrap in Ok(())
-            if let Type::Result(ref ok_ty, _) = *func_type.return_type {
-                if **ok_ty == Type::None {
-                    return HirStmt::Return {
-                        value: Some(HirExpr::OkWrap {
-                            ty: func_type.return_type.as_ref().clone(),
-                            value: Box::new(HirExpr::NoneLiteral),
-                        }),
-                    };
-                }
-            }
-            ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                format!(
-                    "type mismatch: expected '{}', got 'None'",
-                    func_type.return_type.display_name()
-                ),
-                ret.range(),
-            );
-        }
-        None
-    };
-
-    HirStmt::Return { value }
-}
-
 pub(super) fn lower_if(
     if_stmt: &StmtIf,
     func_type: &FunctionType,
@@ -1795,6 +1699,7 @@ pub(super) fn lower_if(
 
     let saved_state = ctx.scope.save_narrowing_state();
     let saved_moved = ctx.scope.save_moved_state();
+    let saved_const_integer_state = ctx.scope.save_const_integer_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
     let saved_nonzero_integer_bindings = ctx.save_proven_nonzero_integer_bindings();
 
@@ -1813,10 +1718,13 @@ pub(super) fn lower_if(
     ctx.scope.pop();
 
     let then_moved = ctx.scope.save_moved_state();
+    let then_const_integer_state = ctx.scope.save_const_integer_state();
     let then_sequence_guards = ctx.save_sequence_guards();
 
     ctx.scope.restore_narrowing_state(&saved_state);
     ctx.scope.restore_moved_state(&saved_moved);
+    ctx.scope
+        .restore_const_integer_state(&saved_const_integer_state);
     ctx.restore_sequence_guards(&saved_sequence_guards);
     ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
 
@@ -1826,6 +1734,8 @@ pub(super) fn lower_if(
     }
 
     let mut branch_moved_states: Vec<_> = vec![then_moved];
+    let mut branch_const_integer_states =
+        vec![(then_const_integer_state, then_body_always_exits(&then_body))];
     let mut branch_sequence_states = vec![then_sequence_guards];
     let mut post_if_false_nonzero_guards = Vec::new();
     let mut all_previous_branches_exit = then_body_always_exits(&then_body);
@@ -1839,6 +1749,8 @@ pub(super) fn lower_if(
         if let Some(test) = &clause.test {
             ctx.scope.restore_narrowing_state(&saved_state);
             ctx.scope.restore_moved_state(&saved_moved);
+            ctx.scope
+                .restore_const_integer_state(&saved_const_integer_state);
             ctx.restore_sequence_guards(&saved_sequence_guards);
             ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
             for prev_cond in &all_conditions {
@@ -1871,10 +1783,14 @@ pub(super) fn lower_if(
             elif_clauses.push((cond, body));
 
             branch_moved_states.push(ctx.scope.save_moved_state());
+            branch_const_integer_states
+                .push((ctx.scope.save_const_integer_state(), elif_body_exits));
             branch_sequence_states.push(ctx.save_sequence_guards());
 
             ctx.scope.restore_narrowing_state(&elif_saved);
             ctx.scope.restore_moved_state(&saved_moved);
+            ctx.scope
+                .restore_const_integer_state(&saved_const_integer_state);
             ctx.restore_sequence_guards(&saved_sequence_guards);
             ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
 
@@ -1891,6 +1807,8 @@ pub(super) fn lower_if(
         .map(|clause| {
             ctx.scope.restore_narrowing_state(&saved_state);
             ctx.scope.restore_moved_state(&saved_moved);
+            ctx.scope
+                .restore_const_integer_state(&saved_const_integer_state);
             ctx.restore_sequence_guards(&saved_sequence_guards);
             ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
             for prev_cond in &all_conditions {
@@ -1900,12 +1818,21 @@ pub(super) fn lower_if(
             let body = lower_stmts(&clause.body, func_type, ctx);
             ctx.scope.pop();
             branch_moved_states.push(ctx.scope.save_moved_state());
+            branch_const_integer_states.push((
+                ctx.scope.save_const_integer_state(),
+                then_body_always_exits(&body),
+            ));
             branch_sequence_states.push(ctx.save_sequence_guards());
             body
         });
 
     ctx.scope.restore_narrowing_state(&saved_state);
     ctx.scope.restore_moved_state(&saved_moved);
+    restore_const_integer_state_after_branches(
+        ctx,
+        &saved_const_integer_state,
+        &branch_const_integer_states,
+    );
     ctx.restore_sequence_guards(&saved_sequence_guards);
     ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
 
@@ -1954,6 +1881,7 @@ pub(super) fn lower_while(
     let condition = lower_expr(&while_stmt.test, ctx)?;
     validate_control_flow_condition(&condition, "while", while_stmt.test.range(), ctx);
     let saved_narrowing_state = ctx.scope.save_narrowing_state();
+    let saved_const_integer_state = ctx.scope.save_const_integer_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
     let saved_nonzero_integer_bindings = ctx.save_proven_nonzero_integer_bindings();
     if let Some(ref cond) = narrowing_cond {
@@ -1974,7 +1902,13 @@ pub(super) fn lower_while(
     let body = lower_stmts(&while_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
+    let body_const_integer_state = ctx.scope.save_const_integer_state();
     ctx.scope.restore_narrowing_state(&saved_narrowing_state);
+    restore_const_integer_state_after_branches(
+        ctx,
+        &saved_const_integer_state,
+        &[(body_const_integer_state, false)],
+    );
     ctx.restore_sequence_guards(&saved_sequence_guards);
     ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
 
@@ -2098,6 +2032,7 @@ pub(super) fn lower_for(
 
     // Snapshot moved state before loop to detect moves inside the body
     let moved_before_loop = ctx.scope.save_moved_state();
+    let saved_const_integer_state = ctx.scope.save_const_integer_state();
 
     // Create a new scope for the loop body, define the loop variable(s)
     ctx.scope.push();
@@ -2145,6 +2080,12 @@ pub(super) fn lower_for(
     let body = lower_stmts(&for_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
+    let body_const_integer_state = ctx.scope.save_const_integer_state();
+    restore_const_integer_state_after_branches(
+        ctx,
+        &saved_const_integer_state,
+        &[(body_const_integer_state, false)],
+    );
     ctx.restore_sequence_guards(&saved_sequence_guards);
     super::append_growth_shapes::record_append_growth_sequence_shape_fact(
         for_stmt,

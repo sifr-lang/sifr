@@ -8,14 +8,17 @@ def safe_add_one(x: int | None) -> int:
         return 0
     return x + 1
 
-def safe_divide(total: float | None, count: float) -> float:
-    if total is None:
-        return 0.0
-    return total / count
-
 def main():
     print('m26_3 optional arithmetic soundness demo:')
     print(safe_add_one(5))
     print(safe_add_one(None))
-    print(safe_divide(9.0, 3.0))
-    print(safe_divide(None, 3.0))
+
+    total: int | None = 9
+    count: int | None = 3
+    if total is not None:
+        if count is not None:
+            print(total / count)
+
+    missing_total: int | None = None
+    if missing_total is None:
+        print(0)

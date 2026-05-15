@@ -428,5 +428,50 @@ Repair evidence:
 Positive-demo result:
 
 - All 272 non-negative `demos/**/main.sifr` entries now run successfully.
+
+### Integer Model Division Follow-Up (2026-05-15)
+
+Follow-up review corrected the demo repair that had converted some integer
+division examples to float operands. The compiler now accepts the safe subset
+of exact `int / int` true division only when both operands have reliable
+compile-time integer facts, the divisor is nonzero, and both integer operands
+are exactly representable as `float`. Runtime-dependent exact `int / int`
+continues to fail closed with `SIFR-INT-0006`.
+
+Follow-up PR: https://github.com/sifr-lang/sifr/pull/2121
+
+Integer-model hardening:
+
+- Local const-integer facts are tracked through HIR lowering and cleared or
+  conservatively merged across reassignment, augmented assignment, branches,
+  `while`, and `for` loops.
+- The generic type-system contract remains unchanged: unproven `int / int`
+  still requires explicit handling for possible overflow or precision loss.
+- `demos/code_generation/main.sifr` again demonstrates proven-safe integer
+  true division, and `demos/optional_arithmetic/main.sifr` demonstrates the
+  same contract through optional narrowing.
+
+Follow-up evidence:
+
+- Focused HIR regression coverage for proven-safe division, runtime-dependent
+  `SIFR-INT-0006`, large exact integers, branch/loop/augassign fact clearing,
+  and narrowed optional constants.
+- Targeted demo checks and runs pass for `demos/code_generation/main.sifr` and
+  `demos/optional_arithmetic/main.sifr`.
+- Reviewer handoff:
+  `reviews/phase34-integer-model-division-followup-review-2.md`.
+- Generated-code quality evidence:
+  `target/sifr_generated_code_quality/evidence/corpus-1778843374-68801.json`,
+  `target/sifr_generated_code_quality/evidence/panic-scan-1778843687-2237.json`,
+  `target/sifr_generated_code_quality/evidence/rustfmt-1778844934-23425.json`,
+  `target/sifr_generated_code_quality/evidence/clippy-1778849008-49051.json`,
+  `target/sifr_generated_code_quality/evidence/determinism-1778850320-82439.json`,
+  and `target/sifr_generated_code_quality/evidence/corpus-1778850957-90134.json`
+  from the required demo quality gate.
+- Local validation: `scripts/run_all_tests.sh --profile quick` passed, and
+  `scripts/run_all_tests.sh` passed with PR-profile report
+  `target/validation_lane_reports/pr.latest.json` on 2026-05-15. The full
+  run exceeded the warm-time target but had zero blocking failures and zero
+  hardening failures.
 - Remaining demo failures are expected negative demos, not positive
   pre-emission demo-contract failures.
