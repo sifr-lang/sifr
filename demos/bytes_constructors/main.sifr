@@ -13,8 +13,18 @@ def main() -> None:
     from_ints_ok: bool = False
     try:
         from_list: bytes = bytes.from_ints([83, 105, 102, 114])
-        assert from_list[0] == 83
-        assert from_list[3] == 114
+        first: uint8 | None = from_list[0]
+        last: uint8 | None = from_list[3]
+        if first is not None:
+            expected_first: uint8 = 83
+            assert first == expected_first
+        else:
+            assert False
+        if last is not None:
+            expected_last: uint8 = 114
+            assert last == expected_last
+        else:
+            assert False
         from_ints_ok = True
     except ValueError as e:
         print("unexpected ValueError: " + e.message)

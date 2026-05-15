@@ -141,6 +141,8 @@ def demo_power():
 
 # --- Multiple Return Values ---
 def divmod(a: int, b: int) -> tuple[int, int]:
+    if b == 0:
+        return 0, 0
     return a // b, a % b
 
 # --- Walrus Operator ---

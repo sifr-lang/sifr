@@ -6,7 +6,8 @@ from sifr.os import remove_file
 
 def sum_bytes(data: bytes) -> int:
     total: int = 0
-    for value in data:
+    values: list[int] = data.to_ints()
+    for value in values:
         total = total + value
     return total
 
@@ -16,10 +17,11 @@ def main():
     # read-only binary carrier and only widen to int at explicit read boundaries.
     payload: bytes = b"ffi-ready"
 
-    second: int | None = payload[1]
+    second: uint8 | None = payload[1]
     second_ok: bool = False
     if second is not None:
-        second_ok = second == 102
+        expected_second: uint8 = 102
+        second_ok = second == expected_second
 
     iter_ok: bool = sum_bytes(payload) > 0
     contains_ok: bool = payload.contains(102) and (not payload.contains(512))

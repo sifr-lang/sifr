@@ -4,7 +4,8 @@
 
 def total(data: bytes) -> int:
     out: int = 0
-    for value in data:
+    values: list[int] = data.to_ints()
+    for value in values:
         out += value
     return out
 
@@ -14,8 +15,12 @@ def main() -> None:
     combined: bytes = payload + suffix
 
     assert len(combined) == 6
-    head: int | None = combined[0]
-    assert head == 115
+    head: uint8 | None = combined[0]
+    if head is not None:
+        expected_head: uint8 = 115
+        assert head == expected_head
+    else:
+        assert False
 
     window: bytes = combined[1:4]
     assert total(window) == 321

@@ -23,10 +23,13 @@ def main():
         _w: None = write_text(base + "/a.txt", "demo")
         _w2: None = write_text(base + "/b.txt", "demo")
 
-        root: Path = Path(base)
+        root: Path = Path(base + "")
         entries_it: Iterator[str] = root.iterdir()
         print(len(list(islice(entries_it, 1))))
     except IOError as e:
         print("ioerror: " + str(e.message))
-    finally:
+
+    try:
         _rm: str = run_command("rm -rf " + base)
+    except IOError as e:
+        print("cleanup ioerror: " + str(e.message))

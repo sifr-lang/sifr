@@ -10,14 +10,27 @@ def main() -> None:
     assert a == c
     assert len(a) == 3
 
-    idx0: int | None = a[0]
-    idx1: int | None = a[1]
-    idx2: int | None = a[2]
-    assert idx0 == 1
-    assert idx1 == 2
-    assert idx2 == 3
+    idx0: uint8 | None = a[0]
+    idx1: uint8 | None = a[1]
+    idx2: uint8 | None = a[2]
+    if idx0 is not None:
+        expected0: uint8 = 1
+        assert idx0 == expected0
+    else:
+        assert False
+    if idx1 is not None:
+        expected1: uint8 = 2
+        assert idx1 == expected1
+    else:
+        assert False
+    if idx2 is not None:
+        expected2: uint8 = 3
+        assert idx2 == expected2
+    else:
+        assert False
 
     acc: int = 0
-    for item in a:
+    items: list[int] = a.to_ints()
+    for item in items:
         acc += item
     assert acc == 6

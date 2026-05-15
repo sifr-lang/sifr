@@ -25,9 +25,9 @@ def main():
     print(f"Tuple index: {a}, {b}")
     assert str(f"Tuple index: {a}, {b}") == "Tuple index: 10, 20"
 
-    # Fix 2: int/int true division
-    x: int = 10
-    y: int = 3
+    # Fix 2: float division
+    x: float = 10.0
+    y: float = 3.0
     result: float = x / y
     print(f"Division 10/3: {result}")
     assert str(f"Division 10/3: {result}") == "Division 10/3: 3.3333333333333335"
@@ -53,8 +53,8 @@ def main():
     print(f"2**3 = {base}")
     assert str(f"2**3 = {base}") == "2**3 = 8"
 
-    # Fix 6: Mixed int/float arithmetic
-    i: int = 10
+    # Fix 6: float arithmetic
+    i: float = 10.0
     f: float = 3.5
     mixed: float = i + f
     print(f"10 + 3.5 = {mixed}")
