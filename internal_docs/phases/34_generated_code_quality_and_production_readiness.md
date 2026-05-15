@@ -438,6 +438,8 @@ compile-time integer facts, the divisor is nonzero, and both integer operands
 are exactly representable as `float`. Runtime-dependent exact `int / int`
 continues to fail closed with `SIFR-INT-0006`.
 
+Follow-up PR: https://github.com/sifr-lang/sifr/pull/2121
+
 Integer-model hardening:
 
 - Local const-integer facts are tracked through HIR lowering and cleared or
