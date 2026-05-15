@@ -65,6 +65,48 @@ fn function_let_value<'a>(module: &'a HirModule, name: &str) -> &'a HirExpr {
         .expect("expected local binding")
 }
 
+fn let_value_in_stmts<'a>(stmts: &'a [HirStmt], name: &str) -> Option<&'a HirExpr> {
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Let {
+                name: local_name,
+                value,
+                ..
+            } if local_name == name => return Some(value),
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
+                if let Some(value) = let_value_in_stmts(then_body, name) {
+                    return Some(value);
+                }
+                for (_, body) in elif_clauses {
+                    if let Some(value) = let_value_in_stmts(body, name) {
+                        return Some(value);
+                    }
+                }
+                if let Some(else_body) = else_body {
+                    if let Some(value) = let_value_in_stmts(else_body, name) {
+                        return Some(value);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn function_nested_let_value<'a>(module: &'a HirModule, name: &str) -> &'a HirExpr {
+    module
+        .functions
+        .iter()
+        .find_map(|function| let_value_in_stmts(&function.body, name))
+        .expect("expected nested local binding")
+}
+
 #[test]
 fn test_simple_function() {
     let module = lower_source("def add(a: int, b: int) -> int:\n    return a + b\n").unwrap();
@@ -384,9 +426,7 @@ def main() -> None:
 #[test]
 fn test_exact_int_true_division_has_int0006() {
     let source = "\
-def main() -> None:
-    numerator: int = 10
-    denominator: int = 3
+def main(numerator: int, denominator: int) -> None:
     value: float = numerator / denominator
 ";
     let errors = lower_source(source).expect_err("exact-int true division should fail closed");
@@ -397,6 +437,119 @@ def main() -> None:
                 == "exact integer to float conversion requires handling possible overflow or precision loss"
             && error.primary_range == Some(range_for(source, "numerator / denominator"))
     }));
+}
+
+#[test]
+fn test_proven_safe_exact_int_true_division_lowers_as_float() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    numerator: int = 10
+    denominator: int = 3
+    value: float = numerator / denominator
+",
+    )
+    .expect("small exact-int constants should prove safe for true division");
+
+    assert!(matches!(
+        function_let_value(&module, "value"),
+        HirExpr::BinOp {
+            ty: Type::Float,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn test_large_exact_int_true_division_still_requires_handling() {
+    let source = "\
+def main() -> None:
+    numerator: int = 9007199254740993
+    denominator: int = 3
+    value: float = numerator / denominator
+";
+    let errors = lower_source(source).expect_err("precision-losing exact-int division should fail");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for(source, "numerator / denominator"))
+    }));
+}
+
+#[test]
+fn test_exact_int_true_division_branch_reassignment_does_not_leak_const_proof() {
+    let source = "\
+def main(flag: bool) -> None:
+    numerator: int = 10
+    denominator: int = 3
+    if flag:
+        numerator = 9007199254740993
+    value: float = numerator / denominator
+";
+    let errors = lower_source(source).expect_err("branch-dependent int should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for(source, "numerator / denominator"))
+    }));
+}
+
+#[test]
+fn test_exact_int_true_division_augassign_reassignment_does_not_leak_const_proof() {
+    let source = "\
+def main(delta: int) -> None:
+    numerator: int = 10
+    denominator: int = 3
+    numerator += delta
+    value: float = numerator / denominator
+";
+    let errors = lower_source(source).expect_err("augassigned int should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for(source, "numerator / denominator"))
+    }));
+}
+
+#[test]
+fn test_exact_int_true_division_loop_reassignment_does_not_leak_const_proof() {
+    let source = "\
+def main(items: list[int]) -> None:
+    numerator: int = 10
+    denominator: int = 3
+    for item in items:
+        numerator = item
+    value: float = numerator / denominator
+";
+    let errors = lower_source(source).expect_err("loop-dependent int should fail closed");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+            && error.primary_range == Some(range_for(source, "numerator / denominator"))
+    }));
+}
+
+#[test]
+fn test_exact_int_true_division_optional_narrowed_consts_lower_as_float() {
+    let module = lower_source(
+        "\
+def main() -> None:
+    total: int | None = 9
+    count: int | None = 3
+    if total is not None:
+        if count is not None:
+            value: float = total / count
+",
+    )
+    .expect("narrowed optional exact-int constants should prove safe for true division");
+
+    assert!(matches!(
+        function_nested_let_value(&module, "value"),
+        HirExpr::BinOp {
+            ty: Type::Float,
+            ..
+        }
+    ));
 }
 
 #[test]

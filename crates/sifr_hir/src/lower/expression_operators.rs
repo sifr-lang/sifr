@@ -9,6 +9,7 @@ use super::numeric_sentinels::{
 };
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
+use num_bigint::BigInt;
 use ruff_text_size::Ranged;
 use sifr_python_ast::{CmpOp, ExprBinOp, ExprCompare, ExprUnaryOp, Operator, UnaryOp};
 use sifr_type_system::{type_check_binary_op, type_check_comparison, type_check_unary_op, Type};
@@ -64,6 +65,14 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
         return None;
     }
     if let Some(result_ty) = exact_int_floor_result_type(&left, op_str, &right, ctx) {
+        return Some(HirExpr::BinOp {
+            left: Box::new(left),
+            op: op_str.to_string(),
+            right: Box::new(right),
+            ty: result_ty,
+        });
+    }
+    if let Some(result_ty) = exact_int_true_division_result_type(&left, op_str, &right, ctx) {
         return Some(HirExpr::BinOp {
             left: Box::new(left),
             op: op_str.to_string(),
@@ -140,8 +149,52 @@ fn division_error_type(ctx: &LowerCtx) -> Type {
         })
 }
 
+fn exact_int_true_division_result_type(
+    left: &HirExpr,
+    op: &str,
+    right: &HirExpr,
+    ctx: &LowerCtx,
+) -> Option<Type> {
+    if ctx.is_stdlib_lowering() || op != "/" {
+        return None;
+    }
+    if !is_exact_int_like(left.ty()) || !is_exact_int_like(right.ty()) {
+        return None;
+    }
+    let left_value = proven_exact_integer_value(left, ctx)?;
+    let right_value = proven_exact_integer_value(right, ctx)?;
+    if right_value == BigInt::from(0) {
+        return None;
+    }
+    (is_exactly_representable_as_float(&left_value)
+        && is_exactly_representable_as_float(&right_value))
+    .then_some(Type::Float)
+}
+
 fn is_exact_int_like(ty: &Type) -> bool {
     matches!(ty, Type::Int | Type::LiteralInt(_))
+}
+
+fn proven_exact_integer_value(expr: &HirExpr, ctx: &LowerCtx) -> Option<BigInt> {
+    match expr {
+        HirExpr::IntLiteral(value) => Some(BigInt::from(*value)),
+        HirExpr::LargeIntLiteral(value) => value.parse::<BigInt>().ok(),
+        HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
+            proven_exact_integer_value(operand, ctx).map(|value| -value)
+        }
+        HirExpr::Name { name, .. } => ctx
+            .scope
+            .const_integer_value(name)
+            .or_else(|| ctx.const_integer_values.get(name))
+            .cloned(),
+        _ => None,
+    }
+}
+
+fn is_exactly_representable_as_float(value: &BigInt) -> bool {
+    let max_exact = BigInt::from(9_007_199_254_740_992_i64);
+    let min_exact = -max_exact.clone();
+    value >= &min_exact && value <= &max_exact
 }
 
 fn is_proven_nonzero_integer_expr(expr: &HirExpr, ctx: &LowerCtx) -> bool {
