@@ -390,3 +390,43 @@ Wave 4 result:
   gate; 33 fixtures remain pre-emission frontend/type/lowering failures.
 - Final fixed-pattern scans are zero for boolean literal comparisons,
   identity `map_or_else`, `while true`, `.skip(0)`, and `println!("")`.
+
+### Positive Demo Contract Repair (2026-05-15)
+
+Follow-up review split the 49 Wave 4 demo failures into expected negative demos
+and positive demo contract gaps. The 13 positive demo failures were repaired in
+the demo sources without changing compiler behavior:
+
+- Bytes demos now use the canonical `bytes` contract: indexing and direct
+  iteration expose `uint8`, and demos widen to `int` explicitly through
+  `to_ints()` when summing byte values.
+- Arithmetic demos now express float division with `float` operands, and the
+  ergonomics `divmod` helper guards unproven zero divisors before `%` and `//`.
+- Filesystem/iterator demos no longer rely on `run_command` inside `finally`
+  cleanup blocks; cleanup is handled through explicit `try`/`except` blocks
+  that match the current supported error contract.
+- Iterator demos preserve ownership of cleanup paths by constructing `Path`
+  from an evaluated string expression instead of consuming the cleanup base
+  binding.
+
+Repair evidence:
+
+- Targeted type-check and run pass for all 13 repaired demos.
+- Full positive-demo run sweep:
+  `target/demo_positive_run_check/report-1778803647.jsonl`.
+- Full positive-demo run summary:
+  `target/demo_positive_run_check/summary-1778803647.json` recorded 272 passed,
+  0 failed.
+- Reviewer handoff:
+  `reviews/phase34-positive-demo-failures-fix-review-1.md`.
+- Required generated-code demo gate:
+  `target/sifr_generated_code_quality/evidence/corpus-1778804298-40476.json`.
+- Local validation:
+  `scripts/run_all_tests.sh --profile quick` and `scripts/run_all_tests.sh`
+  passed on 2026-05-15.
+
+Positive-demo result:
+
+- All 272 non-negative `demos/**/main.sifr` entries now run successfully.
+- Remaining demo failures are expected negative demos, not positive
+  pre-emission demo-contract failures.

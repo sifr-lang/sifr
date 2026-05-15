@@ -27,7 +27,7 @@ def main():
     print(list(via_return))
 
     payload: bytes = b"AZ"
-    byte_iter: Iterator[int] = iter(payload)
+    byte_iter: Iterator[uint8] = iter(payload)
     mapped_bytes: list[int] = list(map(lambda b: b + 1, byte_iter))
     print(mapped_bytes)
 
@@ -43,7 +43,7 @@ def main():
         _w1: None = write_text(base + "/a.txt", "a")
         _w2: None = write_text(base + "/nested/b.txt", "b")
 
-        root: Path = Path(base)
+        root: Path = Path(base + "")
         entries_it: Iterator[str] = root.iterdir()
         print(len(list(islice(entries_it, 2))))
 
@@ -51,8 +51,11 @@ def main():
         print(len(list(recursive_it)))
     except IOError as e:
         print(e.message)
-    finally:
+
+    try:
         _rm: str = run_command("rm -rf " + base)
+    except IOError as e:
+        print(e.message)
 
 
 main()

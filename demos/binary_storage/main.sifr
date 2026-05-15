@@ -7,7 +7,8 @@ from sifr.os import remove_file
 
 def sum_bytes(data: bytes) -> int:
     total: int = 0
-    for value in data:
+    values: list[int] = data.to_ints()
+    for value in values:
         total = total + value
     return total
 
@@ -15,10 +16,11 @@ def sum_bytes(data: bytes) -> int:
 def main():
     payload: bytes = b"wave4"
 
-    second: int | None = payload[1]
+    second: uint8 | None = payload[1]
     second_ok: bool = False
     if second is not None:
-        second_ok = second == 97
+        expected_second: uint8 = 97
+        second_ok = second == expected_second
 
     iter_ok: bool = sum_bytes(payload) == 487
     contains_ok: bool = payload.contains(119) and (not payload.contains(512))
