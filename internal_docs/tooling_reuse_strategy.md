@@ -90,7 +90,7 @@ The smart path is not to fork ty wholesale. The smart path is to reuse the gener
 | `ty_server` initialization and capability negotiation | adapt | Strong implementation pattern for client capabilities, position encodings, pull/push diagnostics, semantic tokens, inlay hints, rename, and workspace configuration. Must rename commands/settings and remove Python-specific capabilities. |
 | `ty_server` request dispatch traits and response discipline | adapt | The code enforces one response per request, structured protocol errors, cancellation retry paths, and clear sync/background handler separation. Sifr should adapt the pattern, not blindly copy all handlers. |
 | `ty_server` main loop and scheduler | adapt-with-review | Useful event loop, request queue, latency-sensitive worker split, cancellation, and snapshot model. However, current `Session` is coupled to `ty_project::ProjectDatabase`; Sifr should implement a Sifr-owned `Session` over `AnalysisHost` and may copy generic scheduler structure. |
-| `ty_server` document model | adapt | `TextDocument`, `DocumentVersion`, full/incremental change application, URI keys, UTF-8/UTF-16/UTF-32 position encoding, and stale-version discipline are directly useful. Remove notebook behavior from MVP unless explicitly added later. |
+| `ty_server` document model | adapt | `TextDocument`, `DocumentVersion`, full/incremental change application, URI keys, UTF-8/UTF-16/UTF-32 position encoding, and stale-version discipline are directly useful. Remove notebook behavior because notebooks are not part of the current Sifr production editor target. |
 | `ty_server` location/range conversion | adapt | Range conversion and URI-carrying location helpers are valuable. Replace `ruff_db::File` and notebook mapping with Sifr `FileId`, `SourceUri`, and `SourceMapView`. |
 | `ty_server` diagnostics publication lifecycle | adapt | Pull and push diagnostics, document-version tagging, dynamic registration, related information support, and settings diagnostics are good patterns. Diagnostic payloads must be generated from `sifr_diagnostics`. |
 | `ty_server` settings model | reference-only | Useful split between global/workspace/editor settings, unknown-option diagnostics, and dynamic updates. Current implementation imports Python versions, Python extension environment, and `ty_project` options. |
@@ -206,39 +206,35 @@ ty's language-server docs show the target class of editor experience Sifr should
 - folding
 - fine-grained incrementality
 
-Phase 36 MVP remains smaller, but the architecture must not block the full list.
-
-MVP:
+Phase 36's production target is the full current-workspace editor experience, not a reduced protocol slice. The required Sifr LSP/editor feature set includes:
 
 - initialize/shutdown/exit
-- full document sync
-- diagnostics
-- completion
+- workspace configuration and workspace commands
+- full and incremental document sync
+- push and pull diagnostics
+- `off`, `open-files`, and `workspace` diagnostics publication modes
+- completion, including current-workspace auto-import candidates
 - hover
-- definition
-- document symbols
-- semantic tokens
-
-Near-follow-up:
-
-- pull diagnostics
-- references
-- inlay hints
 - signature help
-- document highlight
-- folding
-- rename
-- code actions from Sifr diagnostic suggestions
-- workspace symbols
-- auto-import only after Sifr import/module indexing is stable
+- definition/declaration/type definition
+- references
+- prepare rename and rename
+- document and workspace symbols
+- semantic tokens, full and range
+- inlay hints
+- document highlights
+- folding ranges
+- code actions from Sifr diagnostic suggestions and safe policy-rule suppression insertion
+- document and range formatting
+- generated Rust preview command backed by Sifr codegen/source maps
+- explain diagnostic command
+- test discovery, test commands, and editor test explorer metadata backed by Sifr CLI metadata
 
-Explicit deferrals:
+The only feature classes intentionally outside Phase 36 are:
 
-- notebook support
-- formatting
-- type hierarchy/call hierarchy
-- generated Rust preview
-- test explorer
+- notebook support, because Sifr does not currently define notebooks as a production editor surface
+- package-registry and lockfile-aware external dependency intelligence, which belongs after Phase 37 package management
+- marketplace upload operations requiring credentials or release approvals, which belong to release governance once Phase 36 has produced packageable artifacts
 
 ## Accepted Dependency Graph
 
@@ -247,7 +243,7 @@ Production Phase 36 may depend on:
 - `lsp-server`
 - `lsp-types`
 - generic crates already used by ty/Ruff server shell patterns, after normal dependency review
-- Sifr-owned crates: `sifr_syntax`, `sifr_frontend`, `sifr_analysis`, `sifr_diagnostics`
+- Sifr-owned crates: `sifr_syntax`, `sifr_frontend`, `sifr_analysis`, `sifr_diagnostics`, plus reviewed Sifr-owned formatter and policy-rule modules
 - selected copied/adapted modules from `ty_server`, `ruff_server`, or `ty_project` after they are moved behind Sifr-owned APIs and cleaned of Python assumptions
 
 Production Phase 36 must not depend on:
@@ -272,7 +268,7 @@ Phase 35:
 
 Phase 36:
 
-- Do not start with a blank LSP server.
+- Do not start with a blank LSP server or a semantics-bearing editor plugin.
 - Start from the selected protocol shell patterns in `ty_server` and `ruff_server`.
 - Implement a Sifr-owned session:
   - open document index
@@ -281,8 +277,9 @@ Phase 36:
   - `AnalysisHost` ownership
   - request queue and cancellation state
 - Implement LSP handlers as protocol adapters over `sifr_analysis`.
-- Build dependency guardrails before the first LSP MVP merge.
+- Build dependency guardrails before the first production LSP merge.
 - Add completion quality evaluation inspired by `ty_completion_eval` once Sifr completion ranking exists.
+- Implement formatter, policy-rule, suppression, exclusion, generated-Rust preview, test commands, VS Code Test Explorer integration, VS Code packaging, and multi-editor asset validation as Phase 36 requirements, not as follow-up work.
 
 ## Verification Requirements
 
@@ -294,3 +291,4 @@ The planning decision is complete only when these are reflected in Phase 35/36:
 - Tooling guardrails reject forbidden Python semantic dependencies.
 - Diagnostics planning explicitly keeps `sifr_diagnostics` canonical and adopts only selected ty/Ruff concepts.
 - Rule/suppression/exclusion planning distinguishes hard correctness diagnostics from configurable policy rules.
+- Phase 36 remains production-grade for the current workspace/project model while leaving package-registry intelligence to Phase 37.

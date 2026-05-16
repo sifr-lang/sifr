@@ -208,10 +208,80 @@ Required Phase 35 exports for Phase 36:
 - per-module parsed syntax views from `sifr_syntax`
 - per-module lowered HIR views or approved read-only handles
 - canonical diagnostics before renderer/protocol conversion
-- symbol/definition ids where already available from HIR, or a documented gap for Phase 36 to close in `sifr_analysis`
+- stable symbol/definition ids, symbol kinds, declaration spans, definition spans, and reference-bearing HIR handles where already available from HIR, or a documented compiler gap that Phase 36 must close before references/rename implementation begins
+- type-display views for inferred expression types, callable signatures, generic parameters, ownership/mutability facts, and symbol documentation hooks where available
+- import/module resolution views sufficient for current-workspace completion, auto-import suggestions, workspace symbols, definition, references, and rename
+- token/trivia/comment access sufficient for a production formatter, syntax-asset drift checks, folding ranges, document symbols, semantic tokens, and doc extraction
+- diagnostic ids, rule metadata hooks, structured suggestions, related spans, docs URLs, and fix applicability before renderer/protocol conversion
+- codegen/source-map handoff data sufficient for Phase 36 generated-Rust preview without reimplementing lowering or codegen in tooling crates
+- test discovery handoff data when CLI test-runner metadata exists, or a documented gap that Phase 36 must close before editor test commands are marked complete
 - invalidation reports that identify stale modules and query classes after document changes
 
+Additional production tooling views required for Phase 36:
+
+```rust
+pub struct TypeDisplayView<'a> {
+    pub display: &'a str,
+    pub qualified_display: &'a str,
+    pub ownership: Option<OwnershipDisplay>,
+    pub mutability: Option<MutabilityDisplay>,
+}
+
+pub struct SignatureView<'a> {
+    pub callable: DefId,
+    pub parameters: &'a [ParameterView<'a>],
+    pub return_type: Option<TypeDisplayView<'a>>,
+    pub docs: Option<&'a str>,
+}
+
+pub struct ParameterView<'a> {
+    pub name: &'a str,
+    pub type_display: TypeDisplayView<'a>,
+    pub has_default: bool,
+    pub convention: Option<ParamConventionView>,
+}
+
+pub struct SymbolTableView<'a> {
+    pub revision: SymbolRevision,
+    pub definitions: &'a [SymbolDefinitionView<'a>],
+    pub uses: &'a [SymbolUseView],
+}
+
+pub struct SymbolDefinitionView<'a> {
+    pub id: DefId,
+    pub name: &'a str,
+    pub kind: SymbolKind,
+    pub declaration_span: Option<SourceSpan>,
+    pub definition_span: SourceSpan,
+    pub module: ModuleId,
+}
+
+pub struct SymbolUseView {
+    pub target: DefId,
+    pub span: SourceSpan,
+    pub module: ModuleId,
+    pub is_definition_site: bool,
+}
+
+pub trait CodegenPreviewQuery {
+    fn generated_rust_for_span(
+        &mut self,
+        file: FileId,
+        span: SourceSpan,
+    ) -> QueryResult<GeneratedRustPreviewView>;
+
+    fn generated_rust_for_module(
+        &mut self,
+        module: ModuleId,
+    ) -> QueryResult<GeneratedRustPreviewView>;
+}
+```
+
+The exact Rust names may change during implementation, but the final Phase 35 API must preserve the capability: Phase 36 must be able to render type/signature information, query all use sites for a symbol, perform current-workspace references and rename, and request generated Rust for a source span or module through compiler/codegen-owned paths.
+
 Phase 36 must define `sifr_analysis` or `sifr_ide` as the only editor-query owner. Phase 35 must not add editor semantics directly to `sifr_lsp` or VS Code integration.
+
+Phase 35 exit is incomplete if any Phase 36 production feature would require `sifr_lsp`, editor extensions, formatter/linter modules, or automation adapters to parse raw Ruff ASTs directly, traverse mutable HIR internals directly, run codegen independently, or derive diagnostics outside `sifr_frontend`/`sifr_diagnostics`.
 
 ## Source Map And Session Model
 
