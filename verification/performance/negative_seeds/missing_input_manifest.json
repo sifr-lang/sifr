@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "runner_version": 1,
+  "cases": [
+    {
+      "id": "negative-missing-input",
+      "group": "check-single-file",
+      "kind": "command",
+      "mode": "check",
+      "source_path": "verification/performance/does-not-exist.sifr",
+      "warmups": 1,
+      "measured": 5,
+      "timeout_ms": 60000,
+      "budget_id": "perf.negative.missing_input",
+      "evidence_category": "negative",
+      "expected_exit_codes": [0]
+    }
+  ],
+  "required_groups": {}
+}

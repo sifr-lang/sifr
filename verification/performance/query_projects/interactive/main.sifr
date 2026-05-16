@@ -1,0 +1,6 @@
+def scale(value: int) -> int:
+    return value + 1
+
+def main():
+    result: int = scale(41)
+    assert result == 42

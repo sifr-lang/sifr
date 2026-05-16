@@ -1,0 +1,6 @@
+from api import public_value
+from helper import value
+
+def main():
+    total: int = value() + public_value()
+    assert total == 3
