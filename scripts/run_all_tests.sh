@@ -120,6 +120,32 @@ python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.p
 python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/performance/check_frontend_cache_contract.py"
 
+echo "Running Performance Budget Checks"
+python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only
+python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/performance/check_budgets.py"
+python3 "${SCRIPT_DIR}/../verification/performance/check_budgets.py" --self-test
+if [[ "${PROFILE}" == "quick" ]]; then
+  python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" \
+    --sample-scale smoke \
+    --case incremental-local-loop-001-unchanged-file-update \
+    --case interactive-tooling-foundation-002-warm-diagnostics-query
+else
+  PERF_RESULTS="target/performance/${PROFILE}.budget.latest.json"
+  python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" \
+    --case check-single-file-001-arithmetic \
+    --case check-project-004-project-graph \
+    --case build-single-file-001-break-continue \
+    --case build-project-001-additional-modules \
+    --case incremental-local-loop-001-unchanged-file-update \
+    --case interactive-tooling-foundation-002-warm-diagnostics-query \
+    --case phase27-non-regression-002-json-diagnostic-schema \
+    --json-out "${PERF_RESULTS}"
+  python3 "${SCRIPT_DIR}/../verification/performance/check_budgets.py" \
+    --results "${PERF_RESULTS}" \
+    --allow-subset
+fi
+
 echo "Running verification hardening script self-tests"
 python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
 

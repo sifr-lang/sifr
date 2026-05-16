@@ -33,6 +33,7 @@ def main() -> int:
     parser.add_argument("--results", default=str(DEFAULT_BASELINES))
     parser.add_argument("--budgets", default=str(DEFAULT_BUDGETS))
     parser.add_argument("--waivers", default=str(DEFAULT_WAIVERS))
+    parser.add_argument("--allow-subset", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 
@@ -46,7 +47,7 @@ def main() -> int:
         budgets = load_json(Path(args.budgets))
         waivers = load_json(Path(args.waivers))
         results = load_json(Path(args.results))
-        check_budgets(manifest, budgets, waivers, results)
+        check_budgets(manifest, budgets, waivers, results, allow_subset=args.allow_subset)
         print("performance budget check passed")
         return 0
     except BudgetError as error:
@@ -59,18 +60,21 @@ def check_budgets(
     budgets: dict[str, Any],
     waivers: dict[str, Any],
     results: dict[str, Any],
+    *,
+    allow_subset: bool = False,
 ) -> None:
     cases = validate_manifest(manifest)
     budget_entries = validate_budgets(budgets, cases)
     waiver_entries = validate_waivers(waivers, cases, budget_entries)
-    validate_results_shape(results, cases)
+    validate_results_shape(results, cases, allow_subset=allow_subset)
 
     results_by_id = {result["id"]: result for result in results["results"]}
     failures: list[str] = []
     for case_id, budget in budget_entries.items():
         result = results_by_id.get(case_id)
         if result is None:
-            failures.append(f"{case_id}: missing result for budget {budget['budget_id']}")
+            if not allow_subset:
+                failures.append(f"{case_id}: missing result for budget {budget['budget_id']}")
             continue
         failures.extend(compare_result(result, budget, waiver_entries))
 
@@ -201,7 +205,12 @@ def validate_waivers(
     return validated
 
 
-def validate_results_shape(results: dict[str, Any], cases: dict[str, dict[str, Any]]) -> None:
+def validate_results_shape(
+    results: dict[str, Any],
+    cases: dict[str, dict[str, Any]],
+    *,
+    allow_subset: bool = False,
+) -> None:
     if results.get("schema_version") != 1:
         raise BudgetError("benchmark results schema_version must be 1")
     if results.get("runner_version") != RUNNER_VERSION:
@@ -235,7 +244,7 @@ def validate_results_shape(results: dict[str, Any], cases: dict[str, dict[str, A
             raise BudgetError(f"benchmark result {result_id} is missing cache hit/miss metrics")
 
     missing = sorted(set(cases) - seen)
-    if missing:
+    if missing and not allow_subset:
         raise BudgetError(f"benchmark results are missing benchmark ids: {missing}")
 
 

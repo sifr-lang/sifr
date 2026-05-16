@@ -11,7 +11,7 @@ status: in_progress
 - [x] m35.4a Ruff fork fixture revalidation contract added.
 - [x] m35.1 baseline benchmark suite.
 - [x] m35.2 budget and waiver policy.
-- [ ] m35.3 enforcement integration for performance budgets.
+- [x] m35.3 enforcement integration for performance budgets.
 - [ ] m35.4b full CLI adoption and query regression lock.
 
 ## Validation Evidence
@@ -26,7 +26,7 @@ status: in_progress
 - `python3 verification/performance/check_frontend_cache_contract.py` -> PASS.
 - `reviews/phase35-m35-4a-review-pass-1.md` -> NOT SATISFIED; blockers B1/B2 fixed.
 - `reviews/phase35-m35-4a-review-pass-2.md` -> SATISFIED for m35.4a.
-- `scripts/run_all_tests.sh --profile quick` -> PASS for m35.1 (`wall_time=944.94s`) and m35.2 (`wall_time=748.90s`); wall-time advisories recorded in `target/validation_lane_reports/quick.latest.json`, report signature `f808284595f17a99`.
+- `scripts/run_all_tests.sh --profile quick` -> PASS for m35.1 (`wall_time=944.94s`), m35.2 (`wall_time=748.90s`), and m35.3 (`wall_time=564.73s`); wall-time advisories recorded in `target/validation_lane_reports/quick.latest.json`, report signature `f808284595f17a99`.
 - `verification/performance/manifest.json` -> 45 benchmark cases across the required Phase 35 groups.
 - `verification/performance/baselines.json` -> captured with all 45 manifest cases; maximum coefficient of variation `0.091581`.
 - `python3 verification/performance/run_benchmarks.py --validate-only` -> PASS.
@@ -44,6 +44,12 @@ status: in_progress
 - `python3 verification/performance/check_budgets.py --self-test` -> PASS; seeded median, p95, RSS, timeout, missing-result, unknown-id, malformed-result, expired-waiver, malformed-waiver, and correctness-waiver failures are rejected.
 - `python3 -m py_compile verification/performance/check_budgets.py verification/performance/run_benchmarks.py` -> PASS.
 - `reviews/phase35-m35-2-review-pass-1.md` -> SATISFIED for m35.2.
+- `scripts/run_all_tests.sh` -> adds "Performance Budget Checks" after Phase 35 frontend/syntax guardrails.
+- Quick lane performance checks -> manifest validation, benchmark self-test, checked-in baseline budget gate, budget self-test, and a two-case frontend-query smoke.
+- PR/nightly/release performance checks -> same schema/negative checks plus a reviewed seven-case representative benchmark subset with budget comparison against `target/performance/<profile>.budget.latest.json`.
+- `python3 verification/performance/run_benchmarks.py --case check-single-file-001-arithmetic --case check-project-004-project-graph --case build-single-file-001-break-continue --case build-project-001-additional-modules --case incremental-local-loop-001-unchanged-file-update --case interactive-tooling-foundation-002-warm-diagnostics-query --case phase27-non-regression-002-json-diagnostic-schema --json-out target/performance/test.pr.subset.budget.json && python3 verification/performance/check_budgets.py --results target/performance/test.pr.subset.budget.json --allow-subset` -> PASS.
+- `bash -n scripts/run_all_tests.sh` -> PASS.
+- `reviews/phase35-m35-3-review-pass-1.md` -> SATISFIED for m35.3.
 
 ## Open Migration Targets
 
