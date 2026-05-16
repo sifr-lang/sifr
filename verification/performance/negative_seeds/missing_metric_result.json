@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "runner_version": 1,
+  "results": [
+    {
+      "id": "check-single-file-001-arithmetic",
+      "group": "check-single-file",
+      "kind": "command",
+      "budget_id": "perf.check.single.arithmetic",
+      "sample_count": 5,
+      "samples_ms": [10.0, 10.1, 9.9, 10.0, 10.1],
+      "metrics": {
+        "median_ms": 10.0,
+        "p95_ms": 10.1,
+        "mad_ms": 0.1,
+        "coefficient_variation": 0.005
+      },
+      "cache": {"hits": 0, "misses": 0},
+      "timed_out": false
+    }
+  ]
+}

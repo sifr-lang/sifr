@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "runner_version": 1,
+  "cases": [
+    {
+      "id": "negative-malformed"
+    }
+  ]
+}
