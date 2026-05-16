@@ -33,6 +33,17 @@ Run the budget gate against checked-in baselines:
 python3 verification/performance/check_budgets.py
 ```
 
+`scripts/run_all_tests.sh --profile quick` runs manifest validation, benchmark
+negative seeds, budget/waiver negative seeds, the checked-in baseline budget
+gate, and a minimal frontend-query smoke. `--profile pr`, `nightly`, and
+`release` run the same schema and negative checks, execute a reviewed
+representative subset with the manifest sample counts into
+`target/performance/<profile>.budget.latest.json`, and run `check_budgets.py
+--allow-subset` against that result file. The subset covers single-file check,
+project check, single-file build, project build, incremental cache behavior,
+interactive diagnostics, and Phase 27 diagnostic/exit-code non-regression.
+Full-corpus benchmark execution and baseline refresh remain explicit:
+
 Refresh baselines intentionally after review:
 
 ```bash

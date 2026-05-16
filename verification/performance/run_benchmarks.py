@@ -79,6 +79,7 @@ def main() -> int:
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument("--capture-baseline", action="store_true")
     parser.add_argument("--baseline-output", default="")
+    parser.add_argument("--json-out", default="")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 
@@ -105,6 +106,8 @@ def main() -> int:
 
         run_report = run_cases(selected, Path(args.output_root), args.sample_scale)
         evidence_path = write_run_report(run_report, Path(args.output_root))
+        if args.json_out:
+            write_json((REPO_ROOT / args.json_out).resolve(), run_report)
         if args.capture_baseline:
             validate_baseline_capture(run_report, {case.id: case for case in cases})
             baseline = baseline_from_run(run_report, manifest)
