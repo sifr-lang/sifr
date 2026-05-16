@@ -23,6 +23,7 @@ This file is the authoritative contract for Phase 35 until implementation create
 
 - Phase 36 must consume the canonical Phase 35 frontend/query API for CLI/tooling parity.
 - Phase 36 `milestone_36_1` enforces the no-split-brain rule by disallowing semantics reimplementation in tool-specific paths; Phase 35 provides the API and cache foundation that makes that enforcement possible.
+- The split-brain guardrail mechanism created in this phase must be extendable by Phase 36 to reject Python semantic dependencies in tooling and LSP paths, including `ty_python_semantic`, `ty_project` Python project semantics, Python module-resolution semantics, and Python environment discovery.
 - Phase 36 must add the editor-oriented analysis layer and native LSP adapter on top of this phase's syntax/frontend foundation.
 - Later editor, automation, lint, VS Code, Neovim, Zed, Helix, and LSP surfaces must wrap the same API and must not reimplement parse/lower/type-check or semantic diagnostic derivation.
 
@@ -88,7 +89,7 @@ Phase 35 migrates from today's `sifr_driver/src/frontend/` functions to crate-ow
 3. During migration, `sifr_driver` may temporarily re-export or wrap `sifr_frontend` so callers can move incrementally, but the temporary facade must not own independent semantics.
 4. Update `sifr_driver` CLI/project/test flows to call `sifr_frontend` directly.
 5. Remove temporary `sifr_driver::frontend_query` shims and document any remaining raw `sifr_python_ast`/`sifr_python_parser` dependencies with owner and removal criteria.
-6. Add a split-brain guardrail in `scripts/run_all_tests.sh --profile quick` that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` internals.
+6. Add a split-brain guardrail in `scripts/run_all_tests.sh --profile quick` that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` internals. The guardrail must be structured so Phase 36 can extend it to tooling dependency checks without rewriting the core mechanism.
 
 ## Shared Frontend API Contract
 

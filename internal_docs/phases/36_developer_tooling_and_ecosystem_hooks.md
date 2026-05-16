@@ -9,7 +9,7 @@ Phase 36 is complete only when tooling consumers can ask Sifr for diagnostics an
 
 ## Source Of Truth
 
-This file is the authoritative contract for Phase 36 until implementation creates supporting docs. Implementation PRs may add `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, and `internal_docs/vscode_extension.md`, but they must not introduce behavior that conflicts with this phase file unless a reviewed PR updates this file first.
+This file is the authoritative contract for Phase 36 until implementation creates supporting docs. Implementation PRs may add `internal_docs/tooling_reuse_strategy.md`, `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, and `internal_docs/vscode_extension.md`, but they must not introduce behavior that conflicts with this phase file unless a reviewed PR updates this file first.
 
 ## Depends On
 
@@ -62,7 +62,11 @@ The final crate name must be chosen by `milestone_36_1` and used consistently. T
 - conversion from `sifr_analysis` results to LSP response payloads
 - cancellation and request lifecycle behavior
 
+`sifr_lsp` must use `lsp-server` and `lsp-types` as the direct LSP protocol foundation. These crates are generic protocol/data-type dependencies, carry no Python semantics, and are already used by the Sifr Ruff fork's `ty_server`. The open reuse question for this phase is not whether to use LSP protocol crates; it is whether audited `ty_server` session, document, request-queue, cancellation, diagnostics-publication, logging, and test-shell patterns can be adapted cleanly without importing Python semantic or project assumptions.
+
 `sifr_lsp` must not own parser logic, type checking, HIR construction, symbol-table construction, diagnostic derivation, or Sifr semantic rules.
+
+Forbidden production dependencies for `sifr_lsp` and `sifr_analysis` include `ty_python_semantic`, Python module-resolution semantics from `ty_project`, Python environment discovery, Python diagnostic rules, and any `ruff_server`/`ty_server` path that answers semantic questions using Python rather than Sifr.
 
 `crates/sifr` owns the CLI command surface. Phase 36 adds:
 
@@ -204,6 +208,7 @@ Syntax highlighting strategy:
 
 Required documentation:
 
+- `internal_docs/tooling_reuse_strategy.md` documents audited `ty_server`, `ty_ide`, `ty_project`, and `ruff_server` reuse decisions and forbidden dependency boundaries.
 - `internal_docs/vscode_extension.md` documents repo boundary, launch settings, grammar strategy, testing strategy, and marketplace publication deferrals.
 
 ## Verification Infrastructure
@@ -247,11 +252,13 @@ Implementation must execute milestones in order unless a later reviewed PR updat
 
 ```mermaid
 flowchart TD
+    m36_0["m36.0 Tooling Reuse Audit And Architecture Spike"]
     m36_1["m36.1 Analysis Query Boundary"]
     m36_2["m36.2 Tooling/CLI/LSP Parity Matrix"]
     m36_3["m36.3 Native LSP MVP"]
     m36_4["m36.4 VS Code Extension Architecture"]
 
+    m36_0 --> m36_1
     m36_1 --> m36_2
     m36_2 --> m36_3
     m36_3 --> m36_4
@@ -259,10 +266,30 @@ flowchart TD
 
 ## Milestones
 
+### milestone_36_0: Tooling Reuse Audit And Architecture Spike
+- Scope:
+  - Audit `third_party/ruff/crates/ty_server/src/session.rs` for session state, document index, workspace/project state, request queue ownership, and Python project coupling.
+  - Audit `third_party/ruff/crates/ty_server/src/server.rs` and `third_party/ruff/crates/ty_server/src/server/` for initialization, capability negotiation, main loop, scheduling, cancellation, diagnostics publication, and protocol error handling.
+  - Audit `third_party/ruff/crates/ty_server/src/document/` for document sync, document-version handling, position encoding, and source-map conversion patterns.
+  - Audit `third_party/ruff/crates/ty_ide/src/` for completion, hover, goto, references, semantic-token, inlay-hint, document-symbol, code-action, ranking, and snapshot/test patterns.
+  - Audit `third_party/ruff/crates/ty_project/` for project discovery, module resolution, settings, watch behavior, and Salsa database structure; Python project semantics are presumed rejected unless the audit proves a narrow generic utility is separable.
+  - Audit `third_party/ruff/crates/ruff_server/` only for generic LSP/session/testing patterns; Ruff diagnostics, fixes, and formatting must not become Sifr semantic authority.
+  - Classify audited code into `reuse-direct`, `reference-only`, or `reject`. `reuse-direct` means the code can be adapted into Sifr-owned crates with clean ownership and no Python semantic dependency. `reference-only` means the implementation pattern is useful but Sifr must implement independently. `reject` means Python semantic/project/runtime assumptions make the code unsuitable for production reuse.
+  - Create `internal_docs/tooling_reuse_strategy.md` as the first Phase 36 artifact. It must contain the decision matrix, evidence for each classification, accepted dependency graph, forbidden dependency graph, and follow-up implementation plan.
+  - Build a short-lived spike that wires a mock or minimal Sifr `AnalysisHost` through the selected LSP shell path for document open, query dispatch, LSP response conversion, and shutdown. The spike must specifically test whether the chosen shell path can be separated from `ty_python_semantic`, Python project semantics, and Python environment discovery.
+  - Remove the spike or convert it into clean production code before phase exit; no throwaway spike path may remain as fallback behavior.
+- Definition of done:
+  - The reviewed decision matrix chooses one of: adapt selected `ty_server` shell code, implement a Sifr-native shell using `ty_server`/`ruff_server` as references, or defer reuse because extraction is not clean.
+  - The spike proves or disproves clean separation of the selected LSP shell path from Python semantic/project/runtime assumptions.
+  - `internal_docs/tooling_reuse_strategy.md` records the rationale, accepted code ownership, rejected dependencies, and test evidence.
+  - The forbidden dependency graph is documented and covers `ty_python_semantic`, `ty_project` Python project semantics, Python module-resolution semantics, Python environment discovery, Python diagnostic rules, and Ruff Server semantic authority.
+  - `verification/tooling/check_lsp_split_brain.py` or the Phase 35 guardrail extension plan explicitly covers forbidden Python semantic dependencies before `milestone_36_3` begins.
+
 ### milestone_36_1: Analysis Query Boundary
 - Scope:
   - Create `crates/sifr_analysis/` or the final reviewed crate name for editor-oriented queries.
   - Choose the final crate name within the first three working days of this milestone and record the rationale in the milestone tracking issue.
+  - Apply the `milestone_36_0` reuse decision before designing public `sifr_analysis` or `sifr_lsp` handoff types. Reuse decisions may shape protocol shell internals, but they must not shape Sifr semantic ownership.
   - Define `AnalysisHost` over `sifr_frontend` with diagnostics, completion, hover, definition, references, document symbols, semantic tokens, and inlay-hint APIs.
   - Make `internal_docs/tooling_analysis.md` the first supporting artifact, covering the `AnalysisHost` API, required `sifr_frontend` data, derived analysis data, approved HIR view contracts, and any explicit Phase 36 data gaps.
   - Adopt the canonical `sifr_frontend` API for all compiler CLI modes if any remaining mode still bypasses it.
@@ -347,6 +374,7 @@ flowchart TD
   - `scripts/run_all_tests.sh --profile pr`
 - No tooling path uses CI-only behavior.
 - No LSP or extension code reimplements parser, lowering, type-check, ownership, or semantic diagnostic logic.
+- No `sifr_lsp` or `sifr_analysis` production path depends on Python semantic/project/runtime authority from `ty_python_semantic`, Python module resolution in `ty_project`, Python environment discovery, Python diagnostic rules, or `ruff_server` semantic behavior.
 - LSP JSON-RPC output is deterministic for equivalent request sequences.
 - LSP and analysis conversions preserve diagnostic codes, severities, spans, URLs, help, child notes, and structured suggestions.
 - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
@@ -356,6 +384,9 @@ flowchart TD
 - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 
 ### Validation planning goals
+- `milestone_36_0`:
+  - Positive: reuse audit records at least one concrete `reuse-direct` or `reference-only` decision for LSP/session infrastructure and proves a mock or minimal Sifr `AnalysisHost` can be wired through the selected shell path.
+  - Negative: seeded imports or transitive dependencies on `ty_python_semantic`, Python project semantics, Python environment discovery, or Ruff Server semantic authority fail the documented dependency guardrail.
 - `milestone_36_1`:
   - Positive: `sifr_analysis` returns diagnostics, completion, hover, definition, document symbols, and semantic tokens through `sifr_frontend` for single-file and multi-file projects.
   - Negative: seeded direct parser/type-check/HIR semantic bypass in analysis/LSP code fails the guardrail.
@@ -377,6 +408,7 @@ Tooling checks must run in `scripts/run_all_tests.sh --profile pr` under a clear
 ## Exit criteria
 
 - All milestone DoDs are satisfied.
+- `internal_docs/tooling_reuse_strategy.md` exists and records the audited reuse decision before LSP implementation.
 - `crates/sifr_analysis/` or the reviewed final crate name exists and owns editor-oriented queries.
 - `crates/sifr_lsp/` or the reviewed final module boundary exists.
 - `sifr lsp --stdio` launches a native Rust LSP 3.17 server.
