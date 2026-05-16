@@ -11,6 +11,8 @@ Phase 35 is complete only when compiler performance is measured through checked-
 
 This file is the authoritative contract for Phase 35 until implementation creates supporting docs. Implementation PRs may add `internal_docs/performance_budgets.md`, `internal_docs/syntax_architecture.md`, `internal_docs/frontend_query_architecture.md`, and `internal_docs/frontend_cache_invalidation.md`, but they must not introduce behavior that conflicts with this phase file unless a reviewed PR updates this file first.
 
+`internal_docs/tooling_reuse_strategy.md` is the reviewed planning input for Phase 36's ty/Ruff reuse decisions. Phase 35 must leave syntax/frontend/diagnostics boundaries compatible with that strategy.
+
 ## Depends On
 
 - Phase 34 (`generated_code_quality_and_production_readiness`)
