@@ -1,0 +1,28 @@
+{
+  "id": "basic-module",
+  "source_path": "inline",
+  "ruff_fork_revision": "d2a5f1fb7fb3f8677607b52ef35d6fa6e3e3464f",
+  "source": "from helper import value\n\ndef main():\n    reveal_type(value)\n",
+  "expected_token_kinds": [
+    "From",
+    "Name",
+    "Import",
+    "Name",
+    "Newline",
+    "NonLogicalNewline",
+    "Def",
+    "Name",
+    "Lpar",
+    "Rpar",
+    "Colon",
+    "Newline",
+    "Indent",
+    "Name",
+    "Lpar",
+    "Name",
+    "Rpar",
+    "Newline",
+    "Dedent",
+    "EndOfFile"
+  ]
+}
