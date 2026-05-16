@@ -107,6 +107,7 @@ pub struct FrontendContext {
         &mut self,
         module: ModuleId,
         source: SourceText,
+        document_version: Option<DocumentVersion>,
     ) -> Result<InvalidationReport, Vec<RenderedDiagnostic>>;
 
     pub fn module_graph(&self) -> ModuleGraphView<'_>;
@@ -155,12 +156,33 @@ pub struct SourceMapView<'a> {
     pub revision: SourceRevision,
 }
 
+impl<'a> SourceMapView<'a> {
+    pub fn text_position_to_span(
+        &self,
+        file: FileId,
+        position: TextPosition,
+        encoding: PositionEncoding,
+    ) -> Option<SourceSpan>;
+
+    pub fn span_to_text_range(
+        &self,
+        span: SourceSpan,
+        encoding: PositionEncoding,
+    ) -> Option<TextRange>;
+}
+
 pub struct SourceFileView {
     pub id: FileId,
     pub canonical_path: SourcePath,
     pub uri: Option<SourceUri>,
     pub source_hash: SourceHash,
     pub document_version: Option<DocumentVersion>,
+}
+
+pub enum PositionEncoding {
+    UTF8,
+    UTF16,
+    UTF32,
 }
 
 pub struct ModuleGraphEdge {
@@ -173,6 +195,14 @@ pub struct InvalidationReport {
     pub next_revision: GraphRevision,
     pub invalidated_modules: Vec<ModuleId>,
     pub invalidated_queries: Vec<QueryKind>,
+    pub updated_documents: Vec<UpdatedDocumentInfo>,
+}
+
+pub struct UpdatedDocumentInfo {
+    pub file: FileId,
+    pub old_version: Option<DocumentVersion>,
+    pub new_version: Option<DocumentVersion>,
+    pub text_changed: bool,
 }
 
 pub enum QueryKind {
@@ -211,7 +241,9 @@ Required Phase 35 exports for Phase 36:
 - stable symbol/definition ids, symbol kinds, declaration spans, definition spans, and reference-bearing HIR handles where already available from HIR, or a documented compiler gap that Phase 36 must close before references/rename implementation begins
 - type-display views for inferred expression types, callable signatures, generic parameters, ownership/mutability facts, and symbol documentation hooks where available
 - import/module resolution views sufficient for current-workspace completion, auto-import suggestions, workspace symbols, definition, references, and rename
-- token/trivia/comment access sufficient for a production formatter, syntax-asset drift checks, folding ranges, document symbols, semantic tokens, and doc extraction
+- token/trivia/comment access sufficient for a production formatter, syntax-asset drift checks, folding ranges, selection ranges, document symbols, semantic tokens, and doc extraction
+- syntax-ancestry views for nested selection range expansion without requiring the LSP layer to traverse raw Ruff AST internals directly
+- type-relation views for prepare-type-hierarchy, supertypes, and subtypes when Sifr has class/trait/interface-style relationships; if the language model has no meaningful hierarchy for a symbol, Phase 36 must return an empty/unsupported query result through `sifr_analysis` rather than approximating Python hierarchy semantics
 - diagnostic ids, rule metadata hooks, structured suggestions, related spans, docs URLs, and fix applicability before renderer/protocol conversion
 - codegen/source-map handoff data sufficient for Phase 36 generated-Rust preview without reimplementing lowering or codegen in tooling crates
 - test discovery handoff data when CLI test-runner metadata exists, or a documented gap that Phase 36 must close before editor test commands are marked complete
@@ -241,6 +273,51 @@ pub struct ParameterView<'a> {
     pub convention: Option<ParamConventionView>,
 }
 
+pub struct SignatureHelpConfig {
+    pub trigger_characters: Vec<char>,
+    pub retrigger_characters: Vec<char>,
+}
+
+pub struct SemanticTokenLegend {
+    pub token_types: Vec<SifrSemanticTokenType>,
+    pub token_modifiers: Vec<SifrSemanticTokenModifier>,
+}
+
+pub enum SifrSemanticTokenType {
+    Keyword,
+    Type,
+    Function,
+    Method,
+    Variable,
+    Parameter,
+    Property,
+    Module,
+    Comment,
+    String,
+    Number,
+    Operator,
+    Attribute,
+    Mutable,
+    Ownership,
+    Deprecated,
+    Unsafe,
+}
+
+pub enum SifrSemanticTokenModifier {
+    Declaration,
+    Definition,
+    Reference,
+    Mutability,
+    Ownership,
+    Static,
+    Abstract,
+    Async,
+    ReadOnly,
+    Deprecated,
+    Modification,
+    Documentation,
+}
+
 pub struct SymbolTableView<'a> {
     pub revision: SymbolRevision,
     pub definitions: &'a [SymbolDefinitionView<'a>],
@@ -263,6 +340,37 @@ pub struct SymbolUseView {
     pub is_definition_site: bool,
 }
 
+pub struct SelectionRangeView {
+    pub ranges_outer_to_inner: Vec<SourceSpan>,
+}
+
+pub struct TypeHierarchyItemView<'a> {
+    pub id: DefId,
+    pub name: &'a str,
+    pub detail: Option<&'a str>,
+    pub definition_span: SourceSpan,
+    pub selection_span: SourceSpan,
+    pub module: ModuleId,
+}
+
+pub trait TypeHierarchyQuery {
+    fn prepare_type_hierarchy(
+        &mut self,
+        file: FileId,
+        position: TextPosition,
+    ) -> QueryResult<Option<TypeHierarchyItemView<'_>>>;
+
+    fn type_hierarchy_supertypes(
+        &mut self,
+        item: DefId,
+    ) -> QueryResult<Vec<TypeHierarchyItemView<'_>>>;
+
+    fn type_hierarchy_subtypes(
+        &mut self,
+        item: DefId,
+    ) -> QueryResult<Vec<TypeHierarchyItemView<'_>>>;
+}
+
 pub trait CodegenPreviewQuery {
     fn generated_rust_for_span(
         &mut self,
@@ -277,7 +385,7 @@ pub trait CodegenPreviewQuery {
 }
 ```
 
-The exact Rust names may change during implementation, but the final Phase 35 API must preserve the capability: Phase 36 must be able to render type/signature information, query all use sites for a symbol, perform current-workspace references and rename, and request generated Rust for a source span or module through compiler/codegen-owned paths.
+The exact Rust names may change during implementation, but the final Phase 35 API must preserve the capability: Phase 36 must be able to render type/signature information, query all use sites for a symbol, perform current-workspace references and rename, expand syntax-aware selection ranges, answer type-hierarchy requests where Sifr semantics support them, and request generated Rust for a source span or module through compiler/codegen-owned paths.
 
 Phase 36 must define `sifr_analysis` or `sifr_ide` as the only editor-query owner. Phase 35 must not add editor semantics directly to `sifr_lsp` or VS Code integration.
 
@@ -294,6 +402,7 @@ Concurrency model for Phase 35:
 - `FrontendContext::update_module_source` takes `&mut self`; concurrent document changes are serialized by the caller.
 - Long-running adapters such as `sifr lsp` must queue document updates and query requests so no query observes a partially applied edit.
 - If cancellation lands before Phase 36, cancellation may abort recomputation but must not publish partial query results or corrupt cache state.
+- Phase 35 does not need to expose live mutable frontend state to concurrent tooling. Phase 36 must implement an explicit snapshot discipline over `FrontendContext`/`AnalysisHost` for background LSP work. A snapshot must carry the source revision, graph revision, document versions, source text/source-map view, and query entrypoint used by one request; if a document update supersedes the snapshot, the LSP layer must return a deterministic cancellation/content-modified response or ignore the stale result. Stale snapshots must never publish diagnostics, edits, or navigation targets.
 
 ## Canonical Cache And Invalidation Rules
 

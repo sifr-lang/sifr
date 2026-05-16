@@ -33,6 +33,27 @@ Local fork code reviewed:
 - `third_party/ruff/crates/ruff_source_file/`
 - `third_party/ruff/crates/ruff_text_size/`
 
+Additional local LSP implementation files reviewed for the final Phase 35/36 contract:
+
+- `third_party/ruff/crates/ty_server/src/capabilities.rs`
+- `third_party/ruff/crates/ty_server/src/server/main_loop.rs`
+- `third_party/ruff/crates/ty_server/src/server/schedule.rs`
+- `third_party/ruff/crates/ty_server/src/server/api/traits.rs`
+- `third_party/ruff/crates/ty_server/src/session/request_queue.rs`
+- `third_party/ruff/crates/ty_server/src/document/text_document.rs`
+- `third_party/ruff/crates/ty_server/src/document/range.rs`
+- `third_party/ruff/crates/ty_server/src/server/api/diagnostics.rs`
+- `third_party/ruff/crates/ty_server/src/server/api/requests.rs`
+- `third_party/ruff/crates/ty_server/src/server/api/notifications.rs`
+- `third_party/ruff/crates/ty_ide/src/lib.rs`
+- `third_party/ruff/crates/ty_ide/src/selection_range.rs`
+- `third_party/ruff/crates/ty_ide/src/type_hierarchy.rs`
+- `third_party/ruff/crates/ruff_server/src/server/api/requests/code_action.rs`
+- `third_party/ruff/crates/ruff_server/src/fix.rs`
+- `third_party/ruff/crates/ruff_server/src/format.rs`
+- `third_party/ruff/crates/ty_server/tests/e2e/`
+- `third_party/ruff/crates/ty_completion_eval/`
+
 Current Sifr code reviewed:
 
 - `crates/sifr_diagnostics/`
@@ -95,6 +116,8 @@ The smart path is not to fork ty wholesale. The smart path is to reuse the gener
 | `ty_server` diagnostics publication lifecycle | adapt | Pull and push diagnostics, document-version tagging, dynamic registration, related information support, and settings diagnostics are good patterns. Diagnostic payloads must be generated from `sifr_diagnostics`. |
 | `ty_server` settings model | reference-only | Useful split between global/workspace/editor settings, unknown-option diagnostics, and dynamic updates. Current implementation imports Python versions, Python extension environment, and `ty_project` options. |
 | `ty_ide` public query surface | reference-only | The surface is a strong checklist: completion, hover, goto, references, document symbols, workspace symbols, semantic tokens, inlay hints, signature help, document highlights, folding, rename, code actions. Direct code is coupled to Python AST, Python semantic model, and Python module resolver. |
+| `ty_ide` selection range | adapt pattern | Mostly syntax-ancestry driven and useful for Sifr. Must be implemented through `sifr_syntax`/Phase 35 syntax views, not raw Ruff AST traversal in LSP handlers. |
+| `ty_ide` type hierarchy | reference-only | Useful protocol and UX target. Direct code depends on `ty_python_semantic`, Python class hierarchy, `object`, typeshed, and Python reachability; Sifr must implement hierarchy from Sifr-owned type relationships only. |
 | `ty_ide` completion ranking/evaluation | adapt pattern | Completion ranking and `ty_completion_eval` mean-reciprocal-rank evaluation are useful for Sifr completion quality gates. The semantic candidates must be Sifr-native. |
 | `ty_ide` semantic-token categories | reference-only | Useful LSP category benchmark. Sifr token meanings differ because of ownership, mutability, Result/Option, and Rust-codegen concepts. |
 | `ty_project` project database | reject for production | Deeply Python-specific: Python module resolution, Python settings, Python source types, Python environment discovery, vendored stubs/typeshed concepts. |
@@ -224,6 +247,8 @@ Phase 36's production target is the full current-workspace editor experience, no
 - inlay hints
 - document highlights
 - folding ranges
+- selection ranges
+- type hierarchy when Sifr semantics define a meaningful hierarchy
 - code actions from Sifr diagnostic suggestions and safe policy-rule suppression insertion
 - document and range formatting
 - generated Rust preview command backed by Sifr codegen/source maps

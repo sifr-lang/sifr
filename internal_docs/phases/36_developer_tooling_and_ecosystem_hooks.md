@@ -76,6 +76,8 @@ Those documents support this phase file; they must not introduce behavior that c
 - inlay hints
 - document highlights
 - folding ranges
+- selection ranges
+- type hierarchy where Sifr has meaningful type relationships
 - code actions from Sifr diagnostic suggestions and safe refactors
 - formatting and range-formatting requests
 - generated Rust preview query/command data
@@ -107,6 +109,17 @@ The reuse decisions in `internal_docs/tooling_reuse_strategy.md` are binding for
 - `ty_ide` query surface and completion-quality evaluation are `reference-only` or pattern adaptation; semantic query code is not reused directly.
 - `ty_project` as a project database and `ty_python_semantic` as a semantic/rule engine are rejected production dependencies.
 - Ruff parser/AST/trivia/text crates remain `reuse-direct` only through `sifr_syntax`.
+
+Local Ruff/ty implementation audit inputs for this phase contract:
+
+- `third_party/ruff/crates/ty_server/src/capabilities.rs` for resolved client capability flags, server capability construction, semantic-token legends, pull diagnostics, dynamic diagnostic registration, workspace folders, selection range, and type hierarchy capability wiring.
+- `third_party/ruff/crates/ty_server/src/server/main_loop.rs`, `server/schedule.rs`, `server/api/traits.rs`, and `session/request_queue.rs` for the Sifr-owned LSP session shape: one-response request tracking, cancellation tokens, deferred/retried requests, sync handlers, background document handlers, latency-sensitive work, worker work, and a separate formatting lane.
+- `third_party/ruff/crates/ty_server/src/document/text_document.rs` and `document/range.rs`, plus `third_party/ruff/crates/ruff_server/src/edit/text_document.rs`, for document versions, full and incremental sync application, multi-byte edit tests, line index updates, URI-carrying ranges, and client position-encoding conversion.
+- `third_party/ruff/crates/ty_server/src/server/api/diagnostics.rs` for push/pull diagnostics lifecycle patterns, document-version tagging, related information capability checks, result ids, stale-result clearing, and settings diagnostics.
+- `third_party/ruff/crates/ty_server/src/server/api/requests.rs` and `server/api/notifications.rs` for required handler coverage and one-file-per-protocol-method organization.
+- `third_party/ruff/crates/ty_ide/src/lib.rs`, `selection_range.rs`, and `type_hierarchy.rs` for the editor-query inventory and the distinction between generic syntax queries worth adapting and Python semantic hierarchy logic that must not be reused.
+- `third_party/ruff/crates/ruff_server/src/server/api/requests/code_action.rs`, `ruff_server/src/fix.rs`, and `ruff_server/src/format.rs` for deferred code-action resolution, workspace edit construction, fix-all/organize-import structure, and format/range-format edit behavior.
+- `third_party/ruff/crates/ty_server/tests/e2e/` and `third_party/ruff/crates/ty_completion_eval/` for protocol snapshot coverage and completion quality evaluation patterns.
 
 `crates/sifr` owns the CLI command surface. Phase 36 adds:
 
@@ -161,6 +174,10 @@ pub struct AnalysisHost {
     pub fn inlay_hints(&mut self, file: FileId, range: Option<TextRange>) -> QueryResult<Vec<InlayHint>>;
     pub fn document_highlights(&mut self, file: FileId, position: TextPosition) -> QueryResult<Vec<DocumentHighlight>>;
     pub fn folding_ranges(&mut self, file: FileId) -> QueryResult<Vec<FoldingRange>>;
+    pub fn selection_ranges(&mut self, file: FileId, positions: Vec<TextPosition>) -> QueryResult<Vec<SelectionRange>>;
+    pub fn prepare_type_hierarchy(&mut self, file: FileId, position: TextPosition) -> QueryResult<Option<TypeHierarchyItem>>;
+    pub fn type_hierarchy_supertypes(&mut self, item: TypeHierarchyItemId) -> QueryResult<Vec<TypeHierarchyItem>>;
+    pub fn type_hierarchy_subtypes(&mut self, item: TypeHierarchyItemId) -> QueryResult<Vec<TypeHierarchyItem>>;
     pub fn code_actions(&mut self, file: FileId, range: TextRange, context: CodeActionContext) -> QueryResult<Vec<CodeAction>>;
     pub fn format_document(&mut self, file: FileId, options: FormatOptions) -> QueryResult<TextEdits>;
     pub fn format_range(&mut self, file: FileId, range: TextRange, options: FormatOptions) -> QueryResult<TextEdits>;
@@ -179,11 +196,20 @@ Required production semantics:
 - Definition/declaration/type-definition cover local variables, functions, methods, classes/types, modules, imported symbols, current-workspace symbols, and stdlib symbols when source spans are available.
 - References and rename are workspace-wide for the current workspace/project graph and must reject unsafe or ambiguous rename targets.
 - Document symbols and workspace symbols are deterministic and stable across equivalent inputs.
-- Semantic tokens classify at least keyword, type, function, method, variable, parameter, property/field, module, comment, string, number, operator, decorator/attribute where applicable, mutable binding, ownership-sensitive parameter convention, deprecated symbol, and unsafe/error-prone operation categories supported by LSP.
+- Semantic tokens classify the following categories:
+  - required for every Sifr workspace: keyword, type, function, method, variable, and parameter
+  - required where the source contains the language concept: property/field, module, comment, string, number, operator, decorator/attribute
+  - Sifr-specific required categories: mutable binding and ownership-sensitive location
+  - optional until the compiler exposes the facts: deprecated symbol and unsafe/error-prone operation
+  The semantic token legend is Sifr-owned and must be locked in `milestone_36_1` before `sifr_lsp` advertises semantic-token capabilities.
 - Inlay hints include inferred variable types, parameter names, generic type parameters where useful, and ownership/borrow hints only where the type checker can state them precisely.
+- Selection ranges are syntax-aware, deterministic, ordered outer-to-inner to match Phase 35 `SelectionRangeView::ranges_outer_to_inner`, and backed by `sifr_syntax`/Phase 35 syntax-ancestry views rather than ad hoc text scanning.
+- Type hierarchy supports prepare, supertypes, and subtypes where Sifr has meaningful class/trait/interface/type-extension relationships; it must return precise empty results for symbols without hierarchy rather than borrowing Python `object`/class assumptions.
 - Code actions expose Sifr diagnostic suggestions, safe import insertion, suppression insertion only for suppressible policy rules, organize imports, and safe rename/format-related fixes.
 - Formatting preserves comments/trivia, is idempotent, and matches `sifr fmt --check`.
 - Generated Rust preview uses compiler/codegen APIs and source maps; it must not reimplement lowering or codegen in the LSP or extension.
+- Generated Rust preview is a potentially expensive background command. It must run on a cancellable background path, report progress when it exceeds the interactive threshold, obey the `lsp-generated-rust-preview` budget, and return a deterministic cancellation/content-modified response instead of partial generated code if a document change invalidates the request.
+- Explain diagnostic returns structured data for a diagnostic id: primary and concise messages, severity, code, docs URL, related annotations/spans, subdiagnostics, structured fix suggestions, and applicability. The Sifr-owned command name is locked in `milestone_36_1`; the payload must preserve the `sifr_diagnostics` schema rather than inventing an extension-only explanation format.
 - Test discovery and editor test explorer metadata must use CLI/test-runner metadata when available and must fail closed when a project has no test surface rather than guessing from Python semantics.
 
 Anti-split-brain rules:
@@ -197,6 +223,21 @@ Anti-split-brain rules:
 
 The external protocol target is LSP 3.17 over stdio.
 
+The LSP implementation must be a Sifr-owned protocol shell that adapts the generic architecture of the audited `ty_server`/`ruff_server` code, not a new semantic implementation. The required internal layers are:
+
+- `CapabilityRegistry`: resolves client capabilities once at initialization and records position encoding, workspace configuration support, dynamic diagnostic registration, pull diagnostics, related information, semantic-token multiline support, signature label-offset support, hierarchical document-symbol support, completion label-details/documentation support, work-done progress, file watchers, and code-action resolve support.
+- `DocumentStore`: tracks open `.sifr` documents by URI, document version, language id, source text, line index, canonical `FileId`, full/incremental edit application, and UTF-8/UTF-16/UTF-32 conversion through Sifr source maps.
+- `SifrLspSession`: owns `AnalysisHost`, open-document overrides, workspace folders, settings, diagnostics mode, request queues, suspended workspace diagnostics, stale-result rejection state, and client command/settings metadata.
+- `RequestQueue`: tracks incoming and outgoing request ids, method names, start times, cancellation tokens, response handlers, and exactly-one-response completion. Responses for canceled or superseded requests must be ignored deterministically.
+- `Scheduler`: separates sync state mutation from background document queries, workspace queries, latency-sensitive requests, and formatting/code-action work. Completion, hover, signature help, definition, and diagnostics refresh must not be starved by workspace diagnostics.
+- `SnapshotLayer`: creates coherent analysis snapshots per request so document changes can cancel/retry or reject stale work without corrupting frontend caches.
+- `ConversionLayer`: owns all LSP-to-Sifr URI/range/position/location/diagnostic/edit conversions and rejects invalid or out-of-date positions with protocol errors rather than panics.
+- `DiagnosticsController`: handles push diagnostics, pull document diagnostics, pull workspace diagnostics, result ids, diagnostic clearing, document-version tagging, related information/tags, and dynamic registration for `off`, `open-files`, and `workspace` modes.
+- `CommandRegistry`: owns restart, logs, explain diagnostic, generated Rust preview, check, test, and any future commands. Command names are Sifr-owned and must be versioned/documented.
+- `ProtocolTestHarness`: launches `sifr lsp --stdio`, drives JSON-RPC messages, records deterministic snapshots, and covers every handler family before VS Code or other editor adapters depend on it.
+
+Each LSP request handler must live in a module named after the LSP method or a clearly mapped Sifr command. Handlers may share helpers, but the user-facing request coverage must be discoverable from file names and test names.
+
 Required `sifr lsp --stdio` capabilities for phase exit:
 
 - `initialize`
@@ -204,6 +245,7 @@ Required `sifr lsp --stdio` capabilities for phase exit:
 - `shutdown`
 - `exit`
 - `workspace/didChangeConfiguration`
+- `workspace/didChangeWatchedFiles`
 - `workspace/symbol`
 - `workspace/executeCommand`
 - `textDocument/didOpen`
@@ -214,7 +256,7 @@ Required `sifr lsp --stdio` capabilities for phase exit:
 - `textDocument/diagnostic` where the client supports pull diagnostics
 - `workspace/diagnostic` where the client supports pull diagnostics
 - `textDocument/completion`
-- `completionItem/resolve` when completion details are lazily computed
+- `completionItem/resolve`
 - `textDocument/hover`
 - `textDocument/signatureHelp`
 - `textDocument/definition`
@@ -230,8 +272,12 @@ Required `sifr lsp --stdio` capabilities for phase exit:
 - `textDocument/inlayHint`
 - `textDocument/documentHighlight`
 - `textDocument/foldingRange`
+- `textDocument/selectionRange`
+- `textDocument/prepareTypeHierarchy`
+- `typeHierarchy/supertypes`
+- `typeHierarchy/subtypes`
 - `textDocument/codeAction`
-- `codeAction/resolve` when action edits are lazily computed
+- `codeAction/resolve`
 - `textDocument/formatting`
 - `textDocument/rangeFormatting`
 
@@ -243,6 +289,15 @@ Required workspace commands:
 - show generated Rust for current file or selection
 - run Sifr check for current workspace
 - run Sifr tests where the CLI exposes test metadata
+
+Required server-initiated client requests and notifications:
+
+- `workspace/configuration` to query workspace/global Sifr settings when the client supports workspace configuration.
+- `window/showMessage` for user-facing warnings or non-recoverable setup errors, including unknown initialization options and missing/invalid project configuration. Routine compiler diagnostics must remain diagnostics, not modal messages.
+- `window/logMessage` for protocol trace and server lifecycle logging.
+- Optional dynamic `client/registerCapability` requests for diagnostics and file watching when the client advertises support.
+
+Unknown initialization options and workspace configuration keys must produce deterministic warning messages and logs while continuing with default values. Unknown options must not prevent initialization unless they make the requested workspace impossible to load safely.
 
 Document sync model:
 
@@ -260,6 +315,23 @@ Cancellation and concurrency:
 - The LSP session must use explicit snapshots or equivalent revision discipline so each request sees a coherent source graph.
 - Internal errors are reported through LSP error responses and compiler diagnostics according to the Phase 27 exit-code/diagnostic contract where applicable.
 - Request scheduling, cancellation, and stale-version handling must have negative protocol tests.
+
+Explicitly unsupported protocol surfaces:
+
+- Notebook synchronization is not part of Phase 36. The audited ty server supports notebooks for Python, but Sifr has no production notebook target; the Sifr LSP must not advertise notebook capabilities unless a later reviewed phase adds that product surface.
+- Server capabilities must leave `notebook_document_sync` unset, must not register any notebook cell selectors, and must not expose notebook open/change/close handlers. Notebook URIs are rejected with a deterministic protocol error instead of being silently analyzed as regular files.
+- Python-specific import, environment, stub, interpreter, or settings protocol behavior is forbidden.
+- A custom public protocol alongside LSP is forbidden.
+
+Protocol features intentionally outside Phase 36 unless `milestone_36_1` proves they are necessary for current Sifr semantics:
+
+- `textDocument/implementation`; add only if the Sifr type model exposes interface/trait-to-implementation relationships during Phase 36.
+- `textDocument/linkedEditingRange`; Sifr has no required paired-edit surface yet.
+- `textDocument/prepareCallHierarchy`; references and workspace symbols cover the required navigation contract for this phase.
+- `textDocument/documentLink`; import path links may be added after package/module UX stabilizes.
+- `textDocument/willSave` and `textDocument/willSaveWaitUntil`; document formatting uses explicit formatting/range-formatting and editor save hooks configured by clients.
+
+Phase 36 v1 targets one active Sifr workspace/project per server session. The session model must still keep workspace folders and settings isolated enough that later multi-root support can add per-workspace diagnostics modes and language-services enablement without rewriting document storage, request dispatch, or `AnalysisHost` ownership.
 
 ## Diagnostics, Rules, Suppressions, And Exclusions
 
@@ -382,6 +454,7 @@ Required files:
 - `verification/tooling/run_tooling_parity.py` - compares CLI/frontend/analysis/LSP results for manifest entries.
 - `verification/tooling/lsp_protocol_smoke.py` - launches `sifr lsp --stdio`, performs initialize/open/change/query/shutdown, and validates JSON-RPC behavior.
 - `verification/tooling/lsp_protocol_stress.py` - validates cancellation, stale versions, incremental sync, request interleaving, malformed JSON-RPC, and workspace diagnostics behavior.
+- `verification/tooling/lsp_protocol_matrix.json` - checked-in request/notification/capability matrix covering every required LSP method, command, setting, diagnostic mode, and unsupported protocol surface.
 - `verification/tooling/check_lsp_split_brain.py` - verifies LSP handlers do not import or traverse forbidden semantic internals directly, including `ty_python_semantic`, `ty_project` Python semantics, `ruff_server` diagnostics as Sifr behavior, Python module-resolution paths, and direct HIR traversal for semantic answers.
 - `verification/tooling/check_tooling_dependency_boundaries.py` - verifies forbidden ty/Ruff/Python semantic dependencies are not introduced.
 - `verification/tooling/check_formatter_contract.py` - verifies idempotence, range-formatting, parser round trips, and formatter/LSP equivalence.
@@ -389,9 +462,27 @@ Required files:
 - `verification/tooling/check_editor_assets.py` - verifies syntax assets, extension metadata, editor configs, and drift checks.
 - `verification/tooling/check_vscode_extension_contract.py` - main-repo cross-repo contract validator that reads `vscode_extension_contract.json`, locates `sifr-lang/sifr-vscode` through `SIFR_VSCODE_REPO` or a sibling checkout, fails if the extension repo is missing, and validates language id, extension id, launch command, required settings, required commands, package/test commands, and forbidden semantics-bearing extension behavior.
 - `verification/tooling/check_vscode_extension.py` - verifies extension build/test/package behavior for the located extension repo.
-- `verification/tooling/completion_quality/` - completion ranking/evaluation fixtures inspired by `ty_completion_eval`.
+- `verification/tooling/completion_quality/` - completion ranking/evaluation fixtures inspired by `ty_completion_eval`, including `truth/` Sifr fixtures with cursor/expected-answer directives, per-task completion settings, mean reciprocal rank output, per-task rank CSV output, and thresholds for locals, functions, types, modules, imports, member access, and current-workspace auto-import candidates.
 - `verification/tooling/editor_query_snapshots/` - checked-in deterministic expected results for editor queries.
 - `verification/tooling/vscode_extension_contract.json` - extension settings, language id, command, and repository-boundary contract.
+
+The LSP protocol matrix must include positive and negative coverage for:
+
+- initialize/capabilities, dynamic diagnostic registration, workspace folders, workspace configuration, file watcher registration, and unsupported client capability combinations
+- open/change/save/close with full sync, incremental sync, multi-byte edits, stale versions, invalid ranges, and closed-document behavior
+- push diagnostics, pull document diagnostics, pull workspace diagnostics, diagnostics clearing, `off`/`open-files`/`workspace` modes, result ids, related information, tags, and document-version tagging
+- completion, completion resolve, hover, signature help, definition, declaration, type definition, references, prepare rename, rename, document symbols, workspace symbols, semantic tokens full/range, inlay hints, document highlights, folding ranges, selection ranges, prepare type hierarchy, type-hierarchy supertypes/subtypes, code action, code action resolve, formatting, range formatting, and execute command
+- cancellation of queued and running requests, retry or content-modified behavior after source changes, response suppression for canceled requests, malformed JSON-RPC, unsupported methods, shutdown/exit ordering, server logging, and command errors
+- explicit non-advertisement of notebook capabilities and rejection of Python-specific settings/import/environment behavior
+
+The protocol smoke/stress harness must be modeled on the audited `ty_server/tests/e2e` shape while targeting the production transport:
+
+- launch `sifr lsp --stdio` as a subprocess for authoritative protocol tests
+- provide an in-process or memory-transport mode only when it uses the same handlers and exists to speed local iteration
+- send initialize/initialized/shutdown/exit sequences with tracked request ids
+- expose helpers to await expected responses, requests, and notifications
+- validate that all expected server messages are consumed before test completion
+- inject request cancellation, timeouts, malformed JSON-RPC, invalid ranges, stale document versions, and unsupported methods
 
 Phase 36 extends Phase 35 `verification/performance/` with protocol-level `lsp-query` benchmark cases:
 
@@ -407,6 +498,8 @@ Phase 36 extends Phase 35 `verification/performance/` with protocol-level `lsp-q
 - `lsp-rename`: prepare and workspace edit generation
 - `lsp-semantic-tokens`: full and range semantic token requests
 - `lsp-inlay-hints`: representative file/range request
+- `lsp-selection-range`: nested syntax selection request
+- `lsp-type-hierarchy`: prepare/supertypes/subtypes request where Sifr hierarchy semantics exist
 - `lsp-code-actions`: diagnostic and organize-import actions
 - `lsp-formatting`: document and range formatting requests
 - `lsp-generated-rust-preview`: preview command latency
@@ -425,6 +518,8 @@ Default interactive budgets unless Phase 35 `budgets.json` records stricter valu
 - rename prepare median <= 150ms; rename edit generation median <= 750ms
 - semantic tokens median <= 250ms
 - inlay hints median <= 250ms
+- selection range median <= 100ms
+- type hierarchy median <= 250ms for representative current-workspace hierarchy queries
 - code actions median <= 250ms
 - formatting median <= 500ms for representative files
 - generated Rust preview median <= 750ms for representative selections
@@ -466,8 +561,9 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - Create or confirm the `sifr-lang/sifr-vscode` repository when the separate-repo default is kept.
   - Update `issues/phase36-vscode-extension-production-execution.md` with the final repository decision and any reviewed deviations from its default separate-repo plan.
   - Lock the LSP capability matrix, command set, diagnostics modes, settings schema, semantic token legend, code-action kinds, generated-Rust preview command shape, test explorer command shape, syntax asset source of truth, minimum VS Code engine version, and package-management boundary.
+  - Convert the local Ruff/ty LSP audit inputs in this file into `lsp_protocol_matrix.json`, including selection range, type hierarchy, dynamic diagnostics, request cancellation, workspace folders/configuration, and unsupported notebook/Python behavior.
   - Create `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, and `internal_docs/tooling_verification.md`.
-  - Confirm Phase 35 exports are sufficient for references, rename, signature help, semantic tokens, formatting, generated-Rust preview, test discovery, and editor test explorer metadata. Any missing export must be fixed in this milestone before feature implementation continues.
+  - Confirm Phase 35 exports are sufficient for references, rename, signature help, semantic tokens, selection ranges, type hierarchy, formatting, generated-Rust preview, test discovery, and editor test explorer metadata. Any missing export must be fixed in this milestone before feature implementation continues.
   - Apply `internal_docs/tooling_reuse_strategy.md` before designing public `sifr_analysis` or `sifr_lsp` handoff types.
   - Define the Sifr-owned diagnostics/rules/suppression/exclusion handoff for editor tooling.
   - Extend split-brain guardrails to reject semantics reimplementation in `sifr_lsp`, `sifr_lint`, formatter paths, editor adapters, automation adapters, and CLI-only analysis shims.
@@ -475,6 +571,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - Supporting architecture docs exist and agree with this phase file.
   - Extension repository boundary and validation commands are settled.
   - The complete production LSP/editor feature list is represented in contracts and tests-to-add.
+  - The protocol matrix maps each required LSP method and workspace command to a Sifr analysis/CLI owner, positive tests, negative tests, performance budget id, and unsupported-feature policy.
   - Missing Phase 35 exports are either implemented in this milestone or recorded as blockers that prevent moving to `milestone_36_2`.
   - Negative guardrail seeds prove forbidden parser/type-check/diagnostic/codegen paths fail validation.
 
@@ -498,7 +595,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
 - Scope:
   - Create `crates/sifr_analysis/` or the final reviewed crate name for editor-oriented queries.
   - Implement `AnalysisHost` over `sifr_frontend` with project/open-file session state, coherent source snapshots, document versions, invalidation reports, and stale-result rejection.
-  - Implement current-workspace symbol index, definition/reference identity, rename target validation, source-map handoff, type-display contract, doc comment extraction where available, generated-Rust preview handoff, test discovery handoff, and test command handoff.
+  - Implement current-workspace symbol index, definition/reference identity, rename target validation, source-map handoff, syntax-ancestry selection handoff, type-hierarchy handoff where Sifr semantics support it, type-display contract, doc comment extraction where available, generated-Rust preview handoff, test discovery handoff, and test command handoff.
   - Implement completion ranking/evaluation infrastructure inspired by `ty_completion_eval`.
   - Add first parity fixtures for single-file and multi-file projects.
 - Definition of done:
@@ -510,7 +607,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
 
 ### milestone_36_4: Full Editor Query Layer
 - Scope:
-  - Implement diagnostics, workspace diagnostics, completion, hover, signature help, definition, declaration, type definition, references, prepare rename, rename, document symbols, workspace symbols, semantic tokens, inlay hints, document highlights, folding ranges, code actions, formatting queries, generated Rust preview, explain diagnostic, test discovery, and test command metadata through `sifr_analysis`.
+  - Implement diagnostics, workspace diagnostics, completion, hover, signature help, definition, declaration, type definition, references, prepare rename, rename, document symbols, workspace symbols, semantic tokens, inlay hints, document highlights, folding ranges, selection ranges, type hierarchy, code actions, formatting queries, generated Rust preview, explain diagnostic, test discovery, and test command metadata through `sifr_analysis`.
   - Add `verification/tooling/parity_manifest.json`, `run_tooling_parity.py`, `editor_query_snapshots/`, and `completion_quality/`.
   - Cover diagnostics codes, URLs, spans, child note/help payloads, structured suggestion payloads, renderer outputs, type-check outcomes, symbol kinds, rename edits, code actions, generated Rust mappings, semantic-token ordering, inlay hints, and LSP severity mapping.
 - Definition of done:
@@ -525,7 +622,8 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - Add `crates/sifr_lsp/` or an equivalent reviewed module boundary.
   - Add `sifr lsp --stdio` to the CLI.
   - Implement all required LSP 3.17 capabilities listed in this file through `sifr_analysis`.
-  - Implement full and incremental sync, push and pull diagnostics, workspace configuration, workspace commands, cancellation, request scheduling, stale-version rejection, deterministic protocol errors, tracing/logging, and snapshot discipline.
+  - Implement full and incremental sync, push and pull diagnostics, workspace folders, file watching where supported by the client, workspace configuration, dynamic diagnostic registration, workspace commands, cancellation, request scheduling, stale-version rejection, deterministic protocol errors, tracing/logging, and snapshot discipline.
+  - Implement the required Sifr-owned LSP shell layers from this file: capability registry, document store, session, request queue, scheduler, snapshot layer, conversion layer, diagnostics controller, command registry, and protocol test harness.
   - Add `lsp_protocol_smoke.py`, `lsp_protocol_stress.py`, `check_lsp_split_brain.py`, and `check_tooling_dependency_boundaries.py`.
   - Add Phase 35 `lsp-query` performance cases and budget evidence for every implemented LSP request family.
 - Definition of done:
@@ -639,7 +737,7 @@ Tooling checks must run in `scripts/run_all_tests.sh --profile pr` under a clear
 - `sifr lsp --stdio` launches a native Rust LSP 3.17 server.
 - `sifr fmt --check` and `sifr lint` or reviewed equivalent CLI commands exist.
 - Required LSP capabilities pass protocol smoke and stress tests.
-- Diagnostics, workspace diagnostics, completion, hover, signature help, definition, declaration, type definition, references, rename, document symbols, workspace symbols, semantic tokens, inlay hints, document highlights, folding ranges, code actions, formatting, generated Rust preview, explain diagnostic, test discovery, and test command metadata are parity-covered.
+- Diagnostics, workspace diagnostics, completion, hover, signature help, definition, declaration, type definition, references, rename, document symbols, workspace symbols, semantic tokens, inlay hints, document highlights, folding ranges, selection ranges, type hierarchy, code actions, formatting, generated Rust preview, explain diagnostic, test discovery, and test command metadata are parity-covered.
 - Neovim, Zed, Helix, and Emacs integration assets/docs exist and are syntax/LSP contract-checked.
 - VS Code extension builds, tests, packages, integrates with VS Code Test Explorer, and delegates semantics to `sifr lsp --stdio` plus Sifr CLI commands.
 - Phase 35 `lsp-query` performance cases exist for every required LSP capability family and pass or have explicit reviewed waivers.
