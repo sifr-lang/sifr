@@ -342,6 +342,7 @@ Required files:
 - `verification/performance/waivers.json` - active waiver registry with owner, issue link, rationale, affected benchmark ids, override, and expiry.
 - `verification/performance/run_benchmarks.py` - local benchmark runner that emits machine-readable results under `target/performance/`.
 - `verification/performance/check_budgets.py` - compares benchmark results to budgets and validates waivers.
+- `verification/performance/lsp_query_budget_ids.md` - reserved Phase 36 LSP-query budget ids and naming rules so Phase 36 adds protocol benchmarks without inventing incompatible budget identifiers.
 - `verification/performance/check_frontend_cache_contract.py` - focused contract checks for cache invalidation, stale-result rejection, deterministic graph revision behavior, and query ordering.
 - `verification/performance/check_split_brain_guardrail.py` - rejects new parser/lowering/type-check/semantic diagnostic entrypoints outside approved syntax/frontend/HIR boundaries.
 - `verification/performance/negative_seeds/` - seed inputs or result fixtures proving budget and waiver gates fail when expected.
@@ -362,7 +363,7 @@ Benchmark harnesses may use Rust `criterion` where statistical microbenchmarks a
 6. `interactive-tooling-foundation`: in-process frontend workloads needed by future LSP/editor use, including cold context load, warm diagnostics query, unchanged-file update, changed-file invalidation, and source-map position lookup.
 7. `phase27-non-regression`: compact fixtures proving diagnostics, renderer, exit-code, recovery-limit, and panic-free contracts remain green while the benchmark/query infrastructure runs.
 
-Phase 36 extends this taxonomy with protocol-level `lsp-query` cases once `sifr lsp` exists. Phase 35 must reserve compatible budget ids for LSP cold-start, completion, hover, definition, semantic-token, and document-sync latency so Phase 36 does not retrofit performance policy after the server is built.
+Phase 36 extends this taxonomy with protocol-level `lsp-query` cases once `sifr lsp` exists. Phase 35 must reserve compatible budget ids for LSP cold-start, completion, hover, definition, semantic-token, and document-sync latency in `verification/performance/lsp_query_budget_ids.md` so Phase 36 does not retrofit performance policy after the server is built.
 
 Minimum corpus thresholds at phase exit:
 

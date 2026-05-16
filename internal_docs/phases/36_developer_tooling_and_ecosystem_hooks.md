@@ -382,12 +382,13 @@ Required files:
 - `verification/tooling/run_tooling_parity.py` - compares CLI/frontend/analysis/LSP results for manifest entries.
 - `verification/tooling/lsp_protocol_smoke.py` - launches `sifr lsp --stdio`, performs initialize/open/change/query/shutdown, and validates JSON-RPC behavior.
 - `verification/tooling/lsp_protocol_stress.py` - validates cancellation, stale versions, incremental sync, request interleaving, malformed JSON-RPC, and workspace diagnostics behavior.
-- `verification/tooling/check_lsp_split_brain.py` - verifies LSP handlers do not import or traverse forbidden semantic internals directly.
+- `verification/tooling/check_lsp_split_brain.py` - verifies LSP handlers do not import or traverse forbidden semantic internals directly, including `ty_python_semantic`, `ty_project` Python semantics, `ruff_server` diagnostics as Sifr behavior, Python module-resolution paths, and direct HIR traversal for semantic answers.
 - `verification/tooling/check_tooling_dependency_boundaries.py` - verifies forbidden ty/Ruff/Python semantic dependencies are not introduced.
 - `verification/tooling/check_formatter_contract.py` - verifies idempotence, range-formatting, parser round trips, and formatter/LSP equivalence.
 - `verification/tooling/check_rule_suppression_contract.py` - verifies hard-vs-policy diagnostics, suppression, unknown suppression, unused suppression, severity config, and exclusions.
 - `verification/tooling/check_editor_assets.py` - verifies syntax assets, extension metadata, editor configs, and drift checks.
-- `verification/tooling/check_vscode_extension.py` - verifies extension build/test/package and contract behavior.
+- `verification/tooling/check_vscode_extension_contract.py` - main-repo cross-repo contract validator that reads `vscode_extension_contract.json`, locates `sifr-lang/sifr-vscode` through `SIFR_VSCODE_REPO` or a sibling checkout, fails if the extension repo is missing, and validates language id, extension id, launch command, required settings, required commands, package/test commands, and forbidden semantics-bearing extension behavior.
+- `verification/tooling/check_vscode_extension.py` - verifies extension build/test/package behavior for the located extension repo.
 - `verification/tooling/completion_quality/` - completion ranking/evaluation fixtures inspired by `ty_completion_eval`.
 - `verification/tooling/editor_query_snapshots/` - checked-in deterministic expected results for editor queries.
 - `verification/tooling/vscode_extension_contract.json` - extension settings, language id, command, and repository-boundary contract.
@@ -462,8 +463,9 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
 - Scope:
   - Choose final crate/module names for `sifr_analysis`, formatter, policy-rule/lint, and LSP boundaries.
   - Decide whether the VS Code extension implementation lives in the recommended separate `sifr-lang/sifr-vscode` repository or in this repository, and record the validation checkout/release boundary.
+  - Create or confirm the `sifr-lang/sifr-vscode` repository when the separate-repo default is kept.
   - Update `issues/phase36-vscode-extension-production-execution.md` with the final repository decision and any reviewed deviations from its default separate-repo plan.
-  - Lock the LSP capability matrix, command set, diagnostics modes, settings schema, semantic token legend, code-action kinds, generated-Rust preview command shape, test explorer command shape, syntax asset source of truth, and package-management boundary.
+  - Lock the LSP capability matrix, command set, diagnostics modes, settings schema, semantic token legend, code-action kinds, generated-Rust preview command shape, test explorer command shape, syntax asset source of truth, minimum VS Code engine version, and package-management boundary.
   - Create `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, and `internal_docs/tooling_verification.md`.
   - Confirm Phase 35 exports are sufficient for references, rename, signature help, semantic tokens, formatting, generated-Rust preview, test discovery, and editor test explorer metadata. Any missing export must be fixed in this milestone before feature implementation continues.
   - Apply `internal_docs/tooling_reuse_strategy.md` before designing public `sifr_analysis` or `sifr_lsp` handoff types.
@@ -598,7 +600,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
 
 ### Validation planning goals
 - `milestone_36_1`:
-  - Positive: supporting docs lock crate names, repo boundary, LSP capability matrix, diagnostic/rule policy, formatter/lint strategy, syntax asset strategy, and package-management boundary.
+  - Positive: supporting docs lock crate names, repo boundary, LSP capability matrix, diagnostic/rule policy, formatter/lint strategy, syntax asset strategy, minimum VS Code engine version, and package-management boundary.
   - Negative: seeded missing Phase 35 export, forbidden Python semantic dependency, or extension-owned semantic path fails the guardrail.
 - `milestone_36_2`:
   - Positive: formatter, rule, suppression, exclusion, and diagnostics-mode checks pass for representative projects.
@@ -646,7 +648,8 @@ Tooling checks must run in `scripts/run_all_tests.sh --profile pr` under a clear
 - `verification/tooling/check_lsp_split_brain.py` and `check_tooling_dependency_boundaries.py` pass and fail on seeded split-brain violations.
 - `verification/tooling/check_formatter_contract.py` passes and fails on seeded formatting drift.
 - `verification/tooling/check_rule_suppression_contract.py` passes and fails on seeded rule/suppression/exclusion drift.
-- `verification/tooling/check_editor_assets.py` and `check_vscode_extension.py` pass and fail on seeded extension/editor asset drift.
+- `verification/tooling/check_editor_assets.py`, `check_vscode_extension_contract.py`, and `check_vscode_extension.py` pass and fail on seeded extension/editor asset drift.
+- Main-repo quick/pr validation runs the VS Code extension contract check when `SIFR_VSCODE_REPO` is set or when a sibling `../sifr-vscode` checkout exists; it fails with actionable setup instructions if Phase 36 extension validation is required and no extension checkout is available.
 - Completion quality fixtures pass configured ranking thresholds and fail on seeded regressions.
 - `scripts/run_all_tests.sh --profile quick` passes.
 - `scripts/run_all_tests.sh --profile pr` passes.

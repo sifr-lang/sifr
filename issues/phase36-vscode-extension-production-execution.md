@@ -202,8 +202,10 @@ All commands must call Sifr LSP/CLI surfaces. No command may compute Sifr semant
 Main `sifr-lang/sifr` repository must own or pin enough validation to prevent extension drift:
 
 - [ ] `verification/tooling/vscode_extension_contract.json` records language id, extension id, settings, commands, launch command, and repository boundary.
-- [ ] `verification/tooling/check_vscode_extension.py` validates the extension contract.
-- [ ] Main-repo validation can locate a sibling or pinned checkout of `sifr-lang/sifr-vscode`.
+- [ ] `verification/tooling/check_vscode_extension_contract.py` validates the main-repo contract against the extension repo.
+- [ ] `verification/tooling/check_vscode_extension.py` validates extension build/test/package behavior for the located extension repo.
+- [ ] Main-repo validation locates the extension repo by first checking `SIFR_VSCODE_REPO` as an absolute path, then a sibling `../sifr-vscode` checkout relative to the main repo root.
+- [ ] Main-repo validation fails with an actionable message if the extension repo cannot be found; it must not silently skip once Phase 36 extension validation is active.
 - [ ] Contract check fails if the extension declares parser/type-checker/formatter/linter/codegen behavior.
 - [ ] Contract check fails if the extension launch command is not `sifr lsp --stdio`.
 - [ ] Contract check fails if required settings or commands are missing.
@@ -223,14 +225,21 @@ Extension repository validation must include:
 
 All work stays sequential. Do not begin the next PR until the current PR is merged and the checklist is updated.
 
-1. [ ] Main repo PR: lock extension repo boundary, extension contract JSON, validation command, and this issue checklist.
-2. [ ] Extension repo PR: scaffold package, CI, language contribution, and grammar wiring.
-3. [ ] Extension repo PR: LSP launcher, settings, binary discovery, restart/log commands, and smoke tests.
-4. [ ] Extension repo PR: editor feature wiring for LSP diagnostics, completion, hover, navigation, symbols, semantic tokens, inlay hints, folding, highlights, code actions, formatting, and rename.
-5. [ ] Extension repo PR: generated Rust preview and explain diagnostic commands.
-6. [ ] Extension repo PR: VS Code Test Explorer integration.
-7. [ ] Main repo PR: cross-repo contract check, documentation, and validation evidence.
-8. [ ] Phase 36 closeout PR: package evidence, validation evidence, publication checklist, and reviewer approval.
+1. [ ] Main repo PR (`milestone_36_1`): lock extension repo boundary, extension contract JSON, validation command, and this issue checklist.
+2. [ ] Extension repo PR (`milestone_36_7`): scaffold package, CI, language contribution, and grammar wiring.
+3. [ ] Extension repo PR (`milestone_36_7`): LSP launcher, settings, binary discovery, restart/log commands, and smoke tests.
+4. [ ] Extension repo PR (`milestone_36_7`): editor feature wiring for LSP diagnostics, completion, hover, navigation, symbols, semantic tokens, inlay hints, folding, highlights, code actions, formatting, and rename.
+5. [ ] Extension repo PR (`milestone_36_7`): generated Rust preview and explain diagnostic commands.
+6. [ ] Extension repo PR (`milestone_36_7`): VS Code Test Explorer integration.
+7. [ ] Main repo PR (`milestone_36_7` -> `milestone_36_8` handoff): `verification/tooling/check_vscode_extension_contract.py`, `verification/tooling/check_vscode_extension.py`, documentation, and validation evidence.
+8. [ ] Phase 36 closeout PR (`milestone_36_8`): package evidence, validation evidence, publication checklist, and reviewer approval.
+
+PR-to-milestone mapping:
+
+- PR 1 belongs to `milestone_36_1`.
+- PRs 2 through 6 belong to `milestone_36_7`.
+- PR 7 closes the main-repo validation handoff required before `milestone_36_8`.
+- PR 8 belongs to `milestone_36_8`.
 
 ## Exit Gate
 
