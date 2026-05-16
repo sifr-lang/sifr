@@ -9,12 +9,13 @@ Phase 35 is complete only when compiler performance is measured through checked-
 
 ## Source Of Truth
 
-This file is the authoritative contract for Phase 35 until implementation creates supporting docs. Implementation PRs may add `internal_docs/performance_budgets.md`, `internal_docs/frontend_query_architecture.md`, and `internal_docs/frontend_cache_invalidation.md`, but they must not introduce behavior that conflicts with this phase file unless a reviewed PR updates this file first.
+This file is the authoritative contract for Phase 35 until implementation creates supporting docs. Implementation PRs may add `internal_docs/performance_budgets.md`, `internal_docs/syntax_architecture.md`, `internal_docs/frontend_query_architecture.md`, and `internal_docs/frontend_cache_invalidation.md`, but they must not introduce behavior that conflicts with this phase file unless a reviewed PR updates this file first.
 
 ## Depends On
 
 - Phase 34 (`generated_code_quality_and_production_readiness`)
 - Phase 27 runtime-safety and diagnostics invariants remain green.
+- The Sifr Ruff fork remains the canonical parser/AST/trivia/source-span substrate. Phase 35 wraps it for Sifr-owned compiler use; it must not adopt Ruff Server, ty, Pyright, or Python semantics as Sifr's semantic authority.
 - Existing frontend logic under `crates/sifr_driver/src/frontend/` and project discovery/build orchestration remain the migration source, not an alternate long-term frontend API.
 - Phase 19's process-local stdlib cache is existing infrastructure that must be preserved or explicitly integrated; Phase 35 must not create a second independent frontend cache with conflicting invalidation semantics.
 
@@ -22,19 +23,39 @@ This file is the authoritative contract for Phase 35 until implementation create
 
 - Phase 36 must consume the canonical Phase 35 frontend/query API for CLI/tooling parity.
 - Phase 36 `milestone_36_1` enforces the no-split-brain rule by disallowing semantics reimplementation in tool-specific paths; Phase 35 provides the API and cache foundation that makes that enforcement possible.
-- Later editor, automation, lint, and LSP surfaces must wrap the same API and must not reimplement parse/lower/type-check or semantic diagnostic derivation.
+- Phase 36 must add the editor-oriented analysis layer and native LSP adapter on top of this phase's syntax/frontend foundation.
+- Later editor, automation, lint, VS Code, Neovim, Zed, Helix, and LSP surfaces must wrap the same API and must not reimplement parse/lower/type-check or semantic diagnostic derivation.
 
 ## Non-Goals And Deferrals
 
 - Runtime performance optimization of emitted user programs.
 - Binary size budgets, except where a benchmark fixture records emitted-project build latency and generated-code checks already cover buildability.
 - Full persistent cross-process incremental compilation cache. Phase 35 v1 cache is process-local unless a reviewed PR updates this contract.
-- A full LSP server or editor protocol adapter; Phase 36 owns adapter proof surfaces.
+- A production LSP server or editor extension implementation; Phase 36 owns `sifr lsp`, editor-query parity, and VS Code extension architecture.
 - New language semantics or diagnostic taxonomy redesign.
 - CI-only benchmark behavior or cloud-only baseline generation.
 - Fallback, migration, or legacy compatibility paths around the canonical query API.
 
 ## Architecture Ownership
+
+The target owner for the stable Sifr-facing syntax API is `crates/sifr_syntax/`. It wraps the Ruff fork parser/AST/trivia/span crates and exposes only the syntax surface Sifr is willing to commit to. Most Sifr crates should depend on `sifr_syntax` instead of raw `sifr_python_ast` or `sifr_python_parser` once this phase exits, except for explicitly approved low-level migration shims.
+
+`sifr_syntax` owns:
+
+- parse entrypoints over Sifr source text
+- stable source maps, file ids, text ranges, and byte/line/column conversion
+- Sifr parameter-convention syntax mapping (borrow-by-default plus explicit `mut`, `own`, and `own mut`) from the Ruff fork AST into Sifr-owned syntax types
+- token/trivia access needed by diagnostics, future formatters, syntax highlighting, and editor semantic-token alignment
+- parser diagnostic category mapping before semantic lowering
+
+`sifr_syntax` must not own:
+
+- name resolution
+- type checking
+- ownership/move/borrow semantics
+- `Result`/`Option` exhaustiveness semantics
+- completion, hover, definition, references, or code action semantics
+- codegen decisions
 
 The target owner for the canonical frontend API is `crates/sifr_frontend/`. Phase 35 may create this crate or, if crate creation is intentionally deferred inside the phase, must first expose the same public contract from a clearly named `sifr_driver::frontend_query` facade and then migrate it to `sifr_frontend` before phase exit. Phase exit requires `sifr_frontend` as the consumer-facing crate.
 
@@ -56,6 +77,19 @@ The target owner for the canonical frontend API is `crates/sifr_frontend/`. Phas
 
 `sifr_hir` continues to own HIR data structures, lowering internals, type checking internals, ownership analysis, and semantic diagnostics. Phase 35 must not move CLI-specific policy into `sifr_hir`.
 
+`sifr_analysis` or `sifr_ide` is not implemented in Phase 35, but Phase 35 must leave an explicit extension boundary for it. Editor-oriented queries such as completion, hover, go-to-definition, references, document symbols, semantic tokens, and inlay hints belong above `sifr_frontend` and below `sifr_lsp`. They must consume `sifr_frontend` query results and approved HIR views; LSP handlers must not reach into `sifr_hir` directly for semantic answers.
+
+## Frontend Migration Path
+
+Phase 35 migrates from today's `sifr_driver/src/frontend/` functions to crate-owned syntax and frontend APIs without behavior drift:
+
+1. Create `crates/sifr_syntax/` as the stable wrapper around the Ruff fork parser/AST/trivia/span surface.
+2. Create `crates/sifr_frontend/` with `FrontendContext`, `ModuleId`, `ModuleGraphView`, `QueryResult`, and diagnostics/query methods extracted from `sifr_driver/src/frontend/api.rs`, `module_lowering.rs`, and project frontend helpers.
+3. During migration, `sifr_driver` may temporarily re-export or wrap `sifr_frontend` so callers can move incrementally, but the temporary facade must not own independent semantics.
+4. Update `sifr_driver` CLI/project/test flows to call `sifr_frontend` directly.
+5. Remove temporary `sifr_driver::frontend_query` shims and document any remaining raw `sifr_python_ast`/`sifr_python_parser` dependencies with owner and removal criteria.
+6. Add a split-brain guardrail in `scripts/run_all_tests.sh --profile quick` that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` internals.
+
 ## Shared Frontend API Contract
 
 Phase 35 must define and implement the minimum API below. Names may change during implementation only if the final reviewed API preserves the same capability, ownership boundary, and deterministic behavior.
@@ -73,6 +107,7 @@ pub struct FrontendContext {
     ) -> Result<InvalidationReport, Vec<RenderedDiagnostic>>;
 
     pub fn module_graph(&self) -> ModuleGraphView<'_>;
+    pub fn source_map(&self) -> SourceMapView<'_>;
     pub fn parse_module(&mut self, module: ModuleId) -> QueryResult<ParsedModuleView<'_>>;
     pub fn lower_module(&mut self, module: ModuleId) -> QueryResult<LoweredModuleView<'_>>;
     pub fn type_check_module(&mut self, module: ModuleId) -> QueryResult<ModuleDiagnostics<'_>>;
@@ -107,8 +142,22 @@ pub struct ModuleGraphView<'a> {
 
 pub struct ModuleGraphNode {
     pub id: ModuleId,
+    pub file: FileId,
     pub canonical_path: SourcePath,
     pub source_hash: SourceHash,
+}
+
+pub struct SourceMapView<'a> {
+    pub files: &'a [SourceFileView],
+    pub revision: SourceRevision,
+}
+
+pub struct SourceFileView {
+    pub id: FileId,
+    pub canonical_path: SourcePath,
+    pub uri: Option<SourceUri>,
+    pub source_hash: SourceHash,
+    pub document_version: Option<DocumentVersion>,
 }
 
 pub struct ModuleGraphEdge {
@@ -137,11 +186,41 @@ pub enum QueryKind {
 API invariants:
 
 - `ModuleId`, graph traversal, diagnostics, and query result ordering are deterministic for identical inputs.
+- `FileId`, `ModuleId`, and `DefId` identities are stable within one `FrontendContext` revision and never reused for a different canonical file/module/definition inside the same long-running session.
 - `QueryResult<T>` must be a typed result wrapper whose success value can expose cache-hit/cache-miss metadata without changing semantic output, and whose error variants represent frontend-internal query failures rather than user diagnostics. User diagnostics remain `RenderedDiagnostic` payloads returned by diagnostics queries.
 - `diagnostics_for_*` returns canonical `RenderedDiagnostic` values before presentation rendering. `human`, `json`, and `compact` are renderer views only.
 - Query failures are typed diagnostics or typed internal errors. User input must not trigger panics.
 - CLI modes (`check`, `build`, `run`, `emit`, and project/test frontend paths) must consume this API before phase exit.
-- Future tooling may add transport wrappers, but no consumer may derive semantic diagnostics by bypassing this API.
+- Future tooling may add analysis and transport wrappers, but no consumer may derive semantic diagnostics by bypassing this API.
+- LSP document-sync consumers must treat `InvalidationReport` as authoritative: every invalidated module/query is stale until recomputed through `sifr_frontend`.
+
+## Editor Analysis Boundary For Phase 36
+
+Phase 35 does not implement editor features, but it must expose enough stable data for Phase 36 to build them without bypassing compiler semantics.
+
+Required Phase 35 exports for Phase 36:
+
+- source maps with URI/path, document version, and byte/line/column conversion
+- module graph nodes/edges with deterministic ids and revisions
+- per-module parsed syntax views from `sifr_syntax`
+- per-module lowered HIR views or approved read-only handles
+- canonical diagnostics before renderer/protocol conversion
+- symbol/definition ids where already available from HIR, or a documented gap for Phase 36 to close in `sifr_analysis`
+- invalidation reports that identify stale modules and query classes after document changes
+
+Phase 36 must define `sifr_analysis` or `sifr_ide` as the only editor-query owner. Phase 35 must not add editor semantics directly to `sifr_lsp` or VS Code integration.
+
+## Source Map And Session Model
+
+`FrontendContext` owns a process-local source map for one CLI invocation or one long-running tooling session. The source map is distinct from the query cache: updating source text advances `SourceRevision`, may advance `GraphRevision`, and invalidates affected queries, but it does not require rebuilding unrelated file identity.
+
+`SourceFileView.uri` is optional because CLI/project dependency files may be path-only. For any file opened by a tooling session, `uri` must be `Some`; `None` is valid only for project dependencies that have not been opened by an editor client.
+
+Concurrency model for Phase 35:
+
+- `FrontendContext::update_module_source` takes `&mut self`; concurrent document changes are serialized by the caller.
+- Long-running adapters such as `sifr lsp` must queue document updates and query requests so no query observes a partially applied edit.
+- If cancellation lands before Phase 36, cancellation may abort recomputation but must not publish partial query results or corrupt cache state.
 
 ## Canonical Cache And Invalidation Rules
 
@@ -152,6 +231,8 @@ Cache key components:
 - compiler binary fingerprint
 - relevant Cargo.lock/toolchain fingerprint for frontend dependencies
 - frontend mode (`SingleFile` or `ProjectEntrypoint`)
+- source map revision
+- LSP/document version when present for open editor buffers
 - canonical source path
 - source content hash
 - parser/lowering/type-check configuration hash
@@ -189,6 +270,7 @@ Required files:
 - `verification/performance/run_benchmarks.py` - local benchmark runner that emits machine-readable results under `target/performance/`.
 - `verification/performance/check_budgets.py` - compares benchmark results to budgets and validates waivers.
 - `verification/performance/check_frontend_cache_contract.py` - focused contract checks for cache invalidation, stale-result rejection, deterministic graph revision behavior, and query ordering.
+- `verification/performance/check_split_brain_guardrail.py` - rejects new parser/lowering/type-check/semantic diagnostic entrypoints outside approved syntax/frontend/HIR boundaries.
 - `verification/performance/negative_seeds/` - seed inputs or result fixtures proving budget and waiver gates fail when expected.
 
 Negative seeds include JSON fixtures consumed by `check_budgets.py` that inject known-regression benchmark results and malformed waiver/budget states to verify gate failure behavior.
@@ -204,7 +286,10 @@ Benchmark harnesses may use Rust `criterion` where statistical microbenchmarks a
 3. `build-single-file`: representative `build` latency fixtures that include generated-code quality corpus overlap.
 4. `build-project`: multi-module project builds that exercise dependency ordering and generated transient cargo work.
 5. `incremental-local-loop`: edit-loop scenarios using `FrontendContext::update_module_source` for unchanged file, leaf module change, imported module change, public API change, and parse/type-check failure recovery.
-6. `phase27-non-regression`: compact fixtures proving diagnostics, renderer, exit-code, recovery-limit, and panic-free contracts remain green while the benchmark/query infrastructure runs.
+6. `interactive-tooling-foundation`: in-process frontend workloads needed by future LSP/editor use, including cold context load, warm diagnostics query, unchanged-file update, changed-file invalidation, and source-map position lookup.
+7. `phase27-non-regression`: compact fixtures proving diagnostics, renderer, exit-code, recovery-limit, and panic-free contracts remain green while the benchmark/query infrastructure runs.
+
+Phase 36 extends this taxonomy with protocol-level `lsp-query` cases once `sifr lsp` exists. Phase 35 must reserve compatible budget ids for LSP cold-start, completion, hover, definition, semantic-token, and document-sync latency so Phase 36 does not retrofit performance policy after the server is built.
 
 Minimum corpus thresholds at phase exit:
 
@@ -213,6 +298,7 @@ Minimum corpus thresholds at phase exit:
 - at least 10 `build-single-file` cases
 - at least 5 `build-project` cases
 - at least 5 `incremental-local-loop` cases
+- at least 5 `interactive-tooling-foundation` cases
 - at least 3 negative budget/waiver seeds
 
 The corpus must reuse representative Phase 34 generated-code-quality entries where possible (for example, entries from `verification/generated_code_quality/manifest.json`) so quality and performance gates do not drift onto unrelated fixture sets. Every benchmark case has a stable id, source path or project root, command or query scenario, warmup count, measured count, timeout, budget id, and evidence category.
@@ -266,6 +352,8 @@ Each waiver must include:
 
 Waivers may permit a measured performance regression to pass temporarily. They may not permit stale analysis results, split-brain semantics, data-dependent panics, diagnostic schema drift, renderer divergence, or exit-code contract regressions.
 
+LSP-query budget waivers follow the same policy as CLI benchmark waivers. Phase 36 adds `lsp-query` budget ids to `verification/performance/budgets.json`, and `check_budgets.py` must enforce them under the same owner, issue, expiry, override, and correctness-non-waiver rules.
+
 ## Milestone Sequencing
 
 Implementation must execute the milestones in order unless a later reviewed PR updates this file with rationale.
@@ -290,15 +378,20 @@ flowchart TD
 
 ### milestone_35_4a: Shared Frontend API Skeleton and Cache Contract
 - Scope:
+  - Before implementation, audit `crates/sifr_driver/src/frontend/` and adjacent project frontend helpers to confirm the extraction surface is mechanically clean. If coupling to driver-local build/artifact state is tighter than planned, split this milestone into reviewed `m35.4a-1` (`sifr_syntax`) and `m35.4a-2` (`sifr_frontend`) slices before editing behavior.
+  - Create `crates/sifr_syntax/` as the Sifr-owned wrapper around the Ruff fork parser/AST/trivia/span substrate.
   - Create `crates/sifr_frontend/` with the API surface described in this file, or create the temporary `sifr_driver::frontend_query` facade only as an internal stepping stone that is removed before phase exit.
   - Move or wrap existing `sifr_driver/src/frontend/` parse/lower/type-check/diagnostics entrypoints behind the canonical context/query model.
-  - Define `ModuleId`, `ModuleGraphView`, `FrontendContext`, query result wrappers, and deterministic graph ordering.
+  - Define `FileId`, `ModuleId`, `ModuleGraphView`, `SourceMapView`, `FrontendContext`, query result wrappers, and deterministic graph ordering.
   - Implement process-local module-level query cache keys and invalidation reports.
   - Integrate Phase 19 stdlib cache fingerprinting so stdlib reuse is an explicit query input.
+  - Add the split-brain guardrail script and wire it into the quick validation lane.
 - Definition of done:
-  - The API compiles and has unit tests for single-file load, project load, parse, lower, type-check, diagnostics, graph inspection, and per-module/project analysis queries.
+  - `sifr_syntax` compiles and wraps parse/source-map/token/trivia surfaces without owning semantics.
+  - The frontend API compiles and has unit tests for single-file load, project load, parse, lower, type-check, diagnostics, graph inspection, source-map inspection, and per-module/project analysis queries.
   - Cache invalidation tests cover unchanged source, leaf edit, imported-module edit, public API edit, removed import, added import, parse failure recovery, and type-check failure recovery.
   - Repeated identical queries prove deterministic module graph and diagnostic ordering.
+  - The split-brain guardrail fails on seeded new parse/lower/type-check/semantic diagnostic entrypoints outside approved boundaries.
   - No CLI mode has been allowed to create a new semantics-bearing path outside this API.
 
 ### milestone_35_1: Baseline Benchmark Suite
@@ -308,6 +401,7 @@ flowchart TD
   - Define benchmark suites for `check`, `build`, and incremental local loops using the corpus groups and measurement protocol in this file.
   - Capture initial `verification/performance/baselines.json` from the canonical benchmark runner.
   - Reuse representative Phase 34 generated-code-quality fixtures where possible.
+  - Include `interactive-tooling-foundation` cases and reserve protocol-level `lsp-query` budget ids for Phase 36.
 - Definition of done:
   - Baselines are versioned, reproducible locally, and include host/toolchain/compiler metadata.
   - The benchmark runner emits stable JSON under `target/performance/`.
@@ -347,6 +441,7 @@ flowchart TD
   - Add `verification/performance/check_frontend_cache_contract.py` and Rust tests proving no split-brain frontend path remains.
   - Add a reviewed split-brain guardrail. Prefer a code-level constraint when practical; otherwise use a focused script-level guardrail that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_frontend` and approved `sifr_hir` internals.
   - Document final architecture in `internal_docs/frontend_query_architecture.md` and `internal_docs/frontend_cache_invalidation.md`.
+  - Document final syntax wrapper architecture in `internal_docs/syntax_architecture.md`.
 - Definition of done:
   - Shared analysis/query design and cache contracts are explicit, deterministic, and regression-covered.
   - The anti-split-brain foundation is in place before standalone tooling surfaces begin.
@@ -372,6 +467,7 @@ flowchart TD
 - No benchmark, budget, waiver, or cache contract uses CI-only behavior.
 - No stale query result may be returned after source update.
 - No semantic diagnostics may be generated outside `sifr_frontend` plus approved `sifr_hir` internals.
+- Raw Ruff fork parser/AST dependencies outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` migration paths require documented owner and removal criteria.
 - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
 - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
 - All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.
@@ -380,10 +476,10 @@ flowchart TD
 
 ### Validation planning goals
 - `milestone_35_4a`:
-  - Positive: load a single file and a project, query parse/lower/type-check/diagnostics/analysis, and get deterministic graph/query ordering across repeated runs.
-  - Negative: changed source invalidates affected module queries, public API edits invalidate dependents, removed imports update the graph, failed parse/type-check states do not poison later successful queries, and stale cache hits are rejected.
+  - Positive: parse through `sifr_syntax`, load a single file and a project, query parse/lower/type-check/diagnostics/analysis, inspect source maps, and get deterministic graph/query ordering across repeated runs.
+  - Negative: changed source invalidates affected module queries, public API edits invalidate dependents, removed imports update the graph, failed parse/type-check states do not poison later successful queries, stale cache hits are rejected, and seeded split-brain entrypoints fail the guardrail.
 - `milestone_35_1`:
-  - Positive: benchmark runner executes representative `check`, `build`, and incremental query scenarios and writes complete JSON metrics.
+  - Positive: benchmark runner executes representative `check`, `build`, incremental query, and interactive-tooling-foundation scenarios and writes complete JSON metrics.
   - Negative: malformed manifest entries, missing input paths, missing metric fields, timeout results, and unstable high-variance samples fail baseline capture.
 - `milestone_35_2`:
   - Positive: clean benchmark output within median, p95, RSS, timeout, and cache-hit budgets passes.
@@ -404,6 +500,7 @@ Performance budget checks must run in `scripts/run_all_tests.sh --profile pr` un
 
 - All milestone DoDs are satisfied.
 - `crates/sifr_frontend/` exists and owns the canonical frontend query API.
+- `crates/sifr_syntax/` exists and owns the Sifr-facing Ruff fork syntax wrapper.
 - CLI frontend flows consume `sifr_frontend` without duplicate semantics-bearing paths.
 - `verification/performance/manifest.json` is checked in and meets corpus thresholds.
 - `verification/performance/baselines.json` and `verification/performance/budgets.json` are checked in and reproducible locally.
@@ -411,6 +508,7 @@ Performance budget checks must run in `scripts/run_all_tests.sh --profile pr` un
 - `verification/performance/run_benchmarks.py` passes on the required corpus.
 - `verification/performance/check_budgets.py` passes and fails on seeded regressions.
 - `verification/performance/check_frontend_cache_contract.py` passes and fails on seeded stale-result or invalidation violations.
+- `verification/performance/check_split_brain_guardrail.py` passes and fails on seeded split-brain entrypoints.
 - `scripts/run_all_tests.sh --profile quick` passes.
 - `scripts/run_all_tests.sh --profile pr` passes.
 - Phase 27 non-regression contract remains green.
