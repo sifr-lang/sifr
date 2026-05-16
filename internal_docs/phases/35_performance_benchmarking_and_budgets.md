@@ -18,6 +18,7 @@ This file is the authoritative contract for Phase 35 until implementation create
 - Phase 34 (`generated_code_quality_and_production_readiness`)
 - Phase 27 runtime-safety and diagnostics invariants remain green.
 - The Sifr Ruff fork remains the canonical parser/AST/trivia/source-span substrate. Phase 35 wraps it for Sifr-owned compiler use; it must not adopt Ruff Server, ty, Pyright, or Python semantics as Sifr's semantic authority.
+- The Sifr Ruff fork update/rebase policy is defined before Phase 35 exits. Upstream Ruff version bumps must be reviewed, validated against the `sifr_syntax` API surface, verified against all Phase 35 `sifr_syntax` fixtures and Phase 36 syntax-asset drift checks, and documented with the new upstream version/hash and migration rationale. Fork updates that change parser behavior, AST shape, trivia semantics, or token classification must trigger full Phase 35/36 syntax/tooling revalidation before the fork update merges. Automated checks must fail when the fork dependency pin advances without corresponding fixture revalidation evidence.
 - Existing frontend logic under `crates/sifr_driver/src/frontend/` and project discovery/build orchestration remain the migration source, not an alternate long-term frontend API.
 - Phase 19's process-local stdlib cache is existing infrastructure that must be preserved or explicitly integrated; Phase 35 must not create a second independent frontend cache with conflicting invalidation semantics.
 
@@ -242,6 +243,7 @@ Required Phase 35 exports for Phase 36:
 - type-display views for inferred expression types, callable signatures, generic parameters, ownership/mutability facts, and symbol documentation hooks where available
 - import/module resolution views sufficient for current-workspace completion, auto-import suggestions, workspace symbols, definition, references, and rename
 - token/trivia/comment access sufficient for a production formatter, syntax-asset drift checks, folding ranges, selection ranges, document symbols, semantic tokens, and doc extraction
+- checked-in `sifr_syntax` tokenization fixtures for representative corpus entries. These fixtures are the authoritative source of truth for generated or validated syntax assets, including TextMate grammar, Tree-sitter grammar/query assets, VS Code grammar contribution, and non-VS Code editor highlighting assets. Phase 36 editor integrations must use grammars generated from or validated against these fixtures; manually authored grammar rules without drift validation against `sifr_syntax` fixtures are forbidden.
 - syntax-ancestry views for nested selection range expansion without requiring the LSP layer to traverse raw Ruff AST internals directly
 - type-relation views for prepare-type-hierarchy, supertypes, and subtypes when Sifr has class/trait/interface-style relationships; if the language model has no meaningful hierarchy for a symbol, Phase 36 must return an empty/unsupported query result through `sifr_analysis` rather than approximating Python hierarchy semantics
 - diagnostic ids, rule metadata hooks, structured suggestions, related spans, docs URLs, and fix applicability before renderer/protocol conversion
@@ -454,6 +456,8 @@ Required files:
 - `verification/performance/lsp_query_budget_ids.md` - reserved Phase 36 LSP-query budget ids and naming rules so Phase 36 adds protocol benchmarks without inventing incompatible budget identifiers.
 - `verification/performance/check_frontend_cache_contract.py` - focused contract checks for cache invalidation, stale-result rejection, deterministic graph revision behavior, and query ordering.
 - `verification/performance/check_split_brain_guardrail.py` - rejects new parser/lowering/type-check/semantic diagnostic entrypoints outside approved syntax/frontend/HIR boundaries.
+- `verification/performance/check_ruff_fork_update_contract.py` - rejects Sifr Ruff fork dependency-pin/version/hash updates without reviewed `sifr_syntax` fixture revalidation evidence and recorded migration rationale.
+- `verification/performance/sifr_syntax_token_fixtures/` - checked-in representative token/trivia fixtures produced through `sifr_syntax` and consumed by Phase 36 syntax-asset drift checks.
 - `verification/performance/negative_seeds/` - seed inputs or result fixtures proving budget and waiver gates fail when expected.
 
 Negative seeds include JSON fixtures consumed by `check_budgets.py` that inject known-regression benchmark results and malformed waiver/budget states to verify gate failure behavior.
@@ -568,11 +572,13 @@ flowchart TD
   - Define `FileId`, `ModuleId`, `ModuleGraphView`, `SourceMapView`, `FrontendContext`, query result wrappers, and deterministic graph ordering.
   - Implement process-local module-level query cache keys and invalidation reports.
   - Integrate Phase 19 stdlib cache fingerprinting so stdlib reuse is an explicit query input.
+  - Add representative `sifr_syntax` token/trivia fixtures and the Sifr Ruff fork update/rebase contract check.
   - Add the split-brain guardrail script and wire it into the quick validation lane.
 - Definition of done:
   - `sifr_syntax` compiles and wraps parse/source-map/token/trivia surfaces without owning semantics.
   - The frontend API compiles and has unit tests for single-file load, project load, parse, lower, type-check, diagnostics, graph inspection, source-map inspection, and per-module/project analysis queries.
   - Cache invalidation tests cover unchanged source, leaf edit, imported-module edit, public API edit, removed import, added import, parse failure recovery, and type-check failure recovery.
+  - Token/trivia fixtures exist for representative syntax corpus entries and the fork update contract check fails on a seeded fork pin update without fixture revalidation evidence.
   - Repeated identical queries prove deterministic module graph and diagnostic ordering.
   - The split-brain guardrail fails on seeded new parse/lower/type-check/semantic diagnostic entrypoints outside approved boundaries.
   - No CLI mode has been allowed to create a new semantics-bearing path outside this API.

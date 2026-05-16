@@ -316,6 +316,14 @@ Cancellation and concurrency:
 - Internal errors are reported through LSP error responses and compiler diagnostics according to the Phase 27 exit-code/diagnostic contract where applicable.
 - Request scheduling, cancellation, and stale-version handling must have negative protocol tests.
 
+### LSP Protocol Versioning Policy
+
+- The target protocol version is LSP 3.17 at phase exit and must be recorded in `internal_docs/lsp_server.md` with the exact `lsp-types` crate version pinned in `Cargo.lock`.
+- Upstream `lsp-types` version bumps require a reviewed PR that documents which new capabilities are adopted, which are deferred, how compatibility with older LSP clients is preserved, and which protocol matrix entries changed.
+- New LSP capabilities are adopted only when Sifr's semantic model has a meaningful answer, the implementation does not require Python/ty semantics, and the capability has positive and negative protocol test coverage.
+- A capability must not be advertised in server capabilities unless it passes local protocol smoke tests.
+- Deferring a new LSP capability requires an explicit rationale in `internal_docs/lsp_server.md` or the protocol matrix, not silent omission.
+
 Explicitly unsupported protocol surfaces:
 
 - Notebook synchronization is not part of Phase 36. The audited ty server supports notebooks for Python, but Sifr has no production notebook target; the Sifr LSP must not advertise notebook capabilities unless a later reviewed phase adds that product surface.
@@ -341,6 +349,14 @@ Phase 36 must implement and document this diagnostic split:
 
 - hard correctness diagnostics are not suppressible and cannot be downgraded: parse errors, soundness-critical type errors, ownership/move/borrow errors, `Result`/`Option` safety errors, runtime-panic-prevention errors, and workspace/import errors that would make compilation ambiguous or unsound
 - policy rules are configurable when they do not affect Sifr's core guarantee: unused code/imports, unreachable-code warnings, migration advisories, style-adjacent static analysis, optional strictness checks, and tooling-quality advisories
+
+### Diagnostic Rule Lifecycle Policy
+
+- Every Sifr diagnostic rule id is stable once it ships in a release. Deprecated rules must retain their id for backward-compatible suppression comments, emit deprecation status in rule metadata, and document the replacement rule id when one exists.
+- New policy rules added in patch releases must be `off` by default or explicitly marked experimental. New policy rules added in minor releases may be `warn` by default if they do not conflict with existing accepted code behavior.
+- Experimental rules are allowed only with an explicit `experimental` status label and documentation URL. Experimental rules may be removed without a deprecation window if they prove unmaintainable.
+- `# sifr: ignore[deprecated-rule-id]` must continue to work for at least two minor releases after deprecation and must produce an actionable diagnostic or metadata hint that names the replacement rule when one exists.
+- Rule metadata (`id`, summary, docs URL, default level, status, and source location) belongs in `sifr_diagnostics` or a Sifr-owned rule registry. Rule metadata must not be sourced from `ty_python_semantic` or any Python semantic dependency.
 
 Rules and suppression requirements:
 
@@ -433,6 +449,14 @@ Publication readiness:
 - Phase 36 must produce a packageable extension artifact and publication checklist.
 - Actual marketplace upload may be performed by Phase 39 release governance if credentials or release approvals are required.
 
+### Extension Versioning Covenant
+
+- The VS Code extension version must either be explicitly coupled to the Sifr compiler version or have a documented version-independence policy before `milestone_36_7` closes.
+- When the main `sifr-lang/sifr` repository releases version `X.Y.Z`, the extension must either release a corresponding compatible version or document a supported Sifr version range in extension metadata and release notes.
+- Extension releases are gated on the extension contract check passing, `sifr lsp --stdio` smoke tests passing with the target Sifr version, and the `check_vscode_extension.py` build/test/package sequence passing.
+- Phase 39 owns marketplace publication governance, but this phase must establish the versioning covenant and validation coupling between the compiler, LSP, and extension.
+- Extension validation must not silently skip when the main Sifr version advances.
+
 ## Multi-Editor Integration Contract
 
 Phase 36 must deliver checked-in editor integration assets or contribution-ready docs for:
@@ -455,6 +479,7 @@ Required files:
 - `verification/tooling/lsp_protocol_smoke.py` - launches `sifr lsp --stdio`, performs initialize/open/change/query/shutdown, and validates JSON-RPC behavior.
 - `verification/tooling/lsp_protocol_stress.py` - validates cancellation, stale versions, incremental sync, request interleaving, malformed JSON-RPC, and workspace diagnostics behavior.
 - `verification/tooling/lsp_protocol_matrix.json` - checked-in request/notification/capability matrix covering every required LSP method, command, setting, diagnostic mode, and unsupported protocol surface.
+- `verification/tooling/check_analysis_snapshot_coherence.py` - verifies `sifr_analysis` snapshots cannot publish stale `sifr_frontend` query results, reject stale revision publications, and preserve the `InvalidationReport` boundary between `sifr_frontend` and `sifr_analysis`.
 - `verification/tooling/check_lsp_split_brain.py` - verifies LSP handlers do not import or traverse forbidden semantic internals directly, including `ty_python_semantic`, `ty_project` Python semantics, `ruff_server` diagnostics as Sifr behavior, Python module-resolution paths, and direct HIR traversal for semantic answers.
 - `verification/tooling/check_tooling_dependency_boundaries.py` - verifies forbidden ty/Ruff/Python semantic dependencies are not introduced.
 - `verification/tooling/check_formatter_contract.py` - verifies idempotence, range-formatting, parser round trips, and formatter/LSP equivalence.
@@ -602,6 +627,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - `AnalysisHost` compiles and exposes every query listed in this phase file, even if feature logic lands in `milestone_36_4`.
   - Symbol identity is stable within one analysis revision and safe for references/rename.
   - Stale document versions and invalidated snapshots are rejected deterministically.
+  - Snapshot coherence validation proves `AnalysisHost` snapshots reflect the latest `FrontendContext` revision, stale document versions are rejected at the snapshot boundary, invalidated `sifr_frontend` queries cannot produce results through `sifr_analysis` snapshots, and no `sifr_analysis` query method exposes a result whose source revision differs from the snapshot's captured revision.
   - The analysis crate owns editor queries and does not bypass `sifr_frontend`.
   - Positive tests cover session load/update/query plumbing; negative tests cover stale versions, direct semantic bypass, and forbidden ty/Ruff Python semantic dependencies.
 
@@ -662,7 +688,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - Finalize `internal_docs/tooling_verification.md`.
   - Ensure every Phase 36 verification script is wired into local validation.
   - Finalize LSP/editor performance baselines, budgets, waivers, and negative seeds.
-  - Run full parity, protocol, stress, dependency-boundary, formatter, rule/suppression/exclusion, editor asset, VS Code package, completion quality, performance, and split-brain checks.
+  - Run full parity, protocol, stress, analysis snapshot coherence, dependency-boundary, formatter, rule/suppression/exclusion, editor asset, VS Code package, completion quality, performance, and split-brain checks.
   - Audit implementation against `internal_docs/tooling_reuse_strategy.md`.
 - Definition of done:
   - `scripts/run_all_tests.sh --profile quick` passes.
@@ -742,6 +768,7 @@ Tooling checks must run in `scripts/run_all_tests.sh --profile pr` under a clear
 - VS Code extension builds, tests, packages, integrates with VS Code Test Explorer, and delegates semantics to `sifr lsp --stdio` plus Sifr CLI commands.
 - Phase 35 `lsp-query` performance cases exist for every required LSP capability family and pass or have explicit reviewed waivers.
 - `verification/tooling/run_tooling_parity.py` passes and fails on seeded divergences.
+- `verification/tooling/check_analysis_snapshot_coherence.py` passes and fails on seeded stale snapshot/revision-boundary violations.
 - `verification/tooling/lsp_protocol_smoke.py` and `verification/tooling/lsp_protocol_stress.py` pass and fail on seeded protocol failures.
 - `verification/tooling/check_lsp_split_brain.py` and `check_tooling_dependency_boundaries.py` pass and fail on seeded split-brain violations.
 - `verification/tooling/check_formatter_contract.py` passes and fails on seeded formatting drift.
