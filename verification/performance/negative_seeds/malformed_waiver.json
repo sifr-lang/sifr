@@ -1,0 +1,24 @@
+{
+  "description": "Negative and positive waiver validation seeds for check_budgets.py --self-test.",
+  "version": 1,
+  "waivers": [
+    {
+      "benchmark_ids": [
+        "check-single-file-001-arithmetic"
+      ],
+      "budget_ids": [
+        "perf.check.single.arithmetic"
+      ],
+      "created": "2026-05-16",
+      "expires": "2099-12-31",
+      "id": "malformed-waiver",
+      "issue": "https://github.com/sifr-lang/sifr/issues/35",
+      "override": {
+        "median_ms": 1344.139
+      },
+      "owner": "",
+      "rationale": "Self-test seed for active median regression waiver validation.",
+      "removal_criteria": "Remove when the self-test no longer needs a positive waiver seed."
+    }
+  ]
+}

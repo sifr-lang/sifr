@@ -1,0 +1,920 @@
+{
+  "budgets": [
+    {
+      "baseline": {
+        "coefficient_variation": 0.066129,
+        "median_ms": 11097.75,
+        "p95_ms": 12567.333,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-project-001-additional-modules",
+      "budget_id": "perf.build.project.additional_modules",
+      "cache": {},
+      "group": "build-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 12207.525,
+        "p95_ms": 14452.433,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.007308,
+        "median_ms": 1410.82,
+        "p95_ms": 1419.033,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-project-002-branch-paths",
+      "budget_id": "perf.build.project.branch_paths",
+      "cache": {},
+      "group": "build-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1551.902,
+        "p95_ms": 1631.888,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.012344,
+        "median_ms": 1431.337,
+        "p95_ms": 1475.042,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-project-003-cargo-manifest",
+      "budget_id": "perf.build.project.cargo_manifest",
+      "cache": {},
+      "group": "build-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1574.471,
+        "p95_ms": 1696.298,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.006416,
+        "median_ms": 4143.893,
+        "p95_ms": 4170.665,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-project-004-dependency-manifest",
+      "budget_id": "perf.build.project.dependency_manifest",
+      "cache": {},
+      "group": "build-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 4558.282,
+        "p95_ms": 4796.265,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.008012,
+        "median_ms": 1422.492,
+        "p95_ms": 1427.57,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-project-005-project-graph",
+      "budget_id": "perf.build.project.project_graph",
+      "cache": {},
+      "group": "build-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1564.741,
+        "p95_ms": 1641.705,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.0135,
+        "median_ms": 1428.25,
+        "p95_ms": 1437.945,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-001-break-continue",
+      "budget_id": "perf.build.single.break_continue",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1571.075,
+        "p95_ms": 1653.637,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.006483,
+        "median_ms": 1435.075,
+        "p95_ms": 1443.164,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-002-builtin-any-all",
+      "budget_id": "perf.build.single.builtin_any_all",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1578.583,
+        "p95_ms": 1659.639,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.007754,
+        "median_ms": 1463.876,
+        "p95_ms": 1489.194,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-003-builtin-enumerate-zip",
+      "budget_id": "perf.build.single.builtin_enumerate_zip",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1610.264,
+        "p95_ms": 1712.573,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.007815,
+        "median_ms": 1562.89,
+        "p95_ms": 1570.345,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-004-bytes-constructors",
+      "budget_id": "perf.build.single.bytes_constructors",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1719.179,
+        "p95_ms": 1805.897,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.01841,
+        "median_ms": 1416.903,
+        "p95_ms": 1481.411,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-005-class-methods",
+      "budget_id": "perf.build.single.class_methods",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1558.593,
+        "p95_ms": 1703.623,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.005662,
+        "median_ms": 1418.518,
+        "p95_ms": 1422.742,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-006-collection-len",
+      "budget_id": "perf.build.single.collection_len",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1560.37,
+        "p95_ms": 1636.153,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.032879,
+        "median_ms": 1488.198,
+        "p95_ms": 1602.286,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-007-comp-set",
+      "budget_id": "perf.build.single.comp_set",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1637.018,
+        "p95_ms": 1842.629,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.041827,
+        "median_ms": 7594.255,
+        "p95_ms": 8276.605,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-008-decimal-conversions",
+      "budget_id": "perf.build.single.decimal_conversions",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 8353.681,
+        "p95_ms": 9518.096,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.003674,
+        "median_ms": 1483.678,
+        "p95_ms": 1491.061,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-009-dict-get-option",
+      "budget_id": "perf.build.single.dict_get_option",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1632.046,
+        "p95_ms": 1714.72,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.011826,
+        "median_ms": 1426.988,
+        "p95_ms": 1459.45,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "build-single-file-010-generic-identity",
+      "budget_id": "perf.build.single.generic_identity",
+      "cache": {},
+      "group": "build-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1569.687,
+        "p95_ms": 1678.367,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 120000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.012505,
+        "median_ms": 1228.674,
+        "p95_ms": 1260.624,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-project-001-imports",
+      "budget_id": "perf.check.project.imports",
+      "cache": {},
+      "group": "check-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1351.541,
+        "p95_ms": 1449.718,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.015039,
+        "median_ms": 1236.185,
+        "p95_ms": 1263.315,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-project-002-mode-consistency",
+      "budget_id": "perf.check.project.mode_consistency",
+      "cache": {},
+      "group": "check-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1359.803,
+        "p95_ms": 1452.812,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.007054,
+        "median_ms": 1222.726,
+        "p95_ms": 1235.819,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-project-003-project-build",
+      "budget_id": "perf.check.project.project_build",
+      "cache": {},
+      "group": "check-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1344.999,
+        "p95_ms": 1421.192,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.004881,
+        "median_ms": 1234.113,
+        "p95_ms": 1242.342,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-project-004-project-graph",
+      "budget_id": "perf.check.project.project_graph",
+      "cache": {},
+      "group": "check-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1357.524,
+        "p95_ms": 1428.693,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.021288,
+        "median_ms": 1235.395,
+        "p95_ms": 1292.082,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-project-005-rooted-entrypoint",
+      "budget_id": "perf.check.project.rooted_entrypoint",
+      "cache": {},
+      "group": "check-project",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1358.935,
+        "p95_ms": 1485.894,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.007604,
+        "median_ms": 1212.854,
+        "p95_ms": 1234.384,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-001-arithmetic",
+      "budget_id": "perf.check.single.arithmetic",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1334.139,
+        "p95_ms": 1419.542,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.00501,
+        "median_ms": 1229.618,
+        "p95_ms": 1241.649,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-002-break-continue",
+      "budget_id": "perf.check.single.break_continue",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1352.58,
+        "p95_ms": 1427.896,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.041338,
+        "median_ms": 1231.305,
+        "p95_ms": 1347.412,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-003-builtin-any-all",
+      "budget_id": "perf.check.single.builtin_any_all",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1354.436,
+        "p95_ms": 1549.524,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.014622,
+        "median_ms": 1213.854,
+        "p95_ms": 1256.74,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-004-builtin-enumerate-zip",
+      "budget_id": "perf.check.single.builtin_enumerate_zip",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1335.239,
+        "p95_ms": 1445.251,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.008711,
+        "median_ms": 1217.271,
+        "p95_ms": 1234.049,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-005-bytes-constructors",
+      "budget_id": "perf.check.single.bytes_constructors",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1338.998,
+        "p95_ms": 1419.156,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.042849,
+        "median_ms": 1213.49,
+        "p95_ms": 1348.809,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-006-class-methods",
+      "budget_id": "perf.check.single.class_methods",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1334.839,
+        "p95_ms": 1551.13,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.017598,
+        "median_ms": 1223.064,
+        "p95_ms": 1276.113,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-007-collection-len",
+      "budget_id": "perf.check.single.collection_len",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1345.37,
+        "p95_ms": 1467.53,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.008055,
+        "median_ms": 1227.463,
+        "p95_ms": 1239.319,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-008-comp-set",
+      "budget_id": "perf.check.single.comp_set",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1350.209,
+        "p95_ms": 1425.217,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.010145,
+        "median_ms": 1222.887,
+        "p95_ms": 1236.324,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-009-decimal-conversions",
+      "budget_id": "perf.check.single.decimal_conversions",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1345.176,
+        "p95_ms": 1421.773,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.008175,
+        "median_ms": 1220.022,
+        "p95_ms": 1238.336,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "check-single-file-010-dict-get-option",
+      "budget_id": "perf.check.single.dict_get_option",
+      "cache": {},
+      "group": "check-single-file",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1342.024,
+        "p95_ms": 1424.086,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.02192,
+        "median_ms": 0.113,
+        "p95_ms": 0.117,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "incremental-local-loop-001-unchanged-file-update",
+      "budget_id": "perf.incremental.unchanged_file_update",
+      "cache": {
+        "min_hits": 2300
+      },
+      "group": "incremental-local-loop",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.113,
+        "p95_ms": 5.117,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.026896,
+        "median_ms": 0.111,
+        "p95_ms": 0.116,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "incremental-local-loop-002-leaf-module-change",
+      "budget_id": "perf.incremental.leaf_module_change",
+      "cache": {},
+      "group": "incremental-local-loop",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.111,
+        "p95_ms": 5.116,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.009029,
+        "median_ms": 0.44,
+        "p95_ms": 0.447,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "incremental-local-loop-003-imported-module-change",
+      "budget_id": "perf.incremental.imported_module_change",
+      "cache": {},
+      "group": "incremental-local-loop",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.44,
+        "p95_ms": 5.447,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.011271,
+        "median_ms": 0.456,
+        "p95_ms": 0.462,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "incremental-local-loop-004-public-api-change",
+      "budget_id": "perf.incremental.public_api_change",
+      "cache": {},
+      "group": "incremental-local-loop",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.456,
+        "p95_ms": 5.462,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.018871,
+        "median_ms": 0.285,
+        "p95_ms": 0.291,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "incremental-local-loop-005-failure-recovery",
+      "budget_id": "perf.incremental.failure_recovery",
+      "cache": {},
+      "group": "incremental-local-loop",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.285,
+        "p95_ms": 5.291,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.024,
+        "median_ms": 0.049,
+        "p95_ms": 0.052,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "interactive-tooling-foundation-001-cold-context-load",
+      "budget_id": "perf.interactive.cold_context_load",
+      "cache": {},
+      "group": "interactive-tooling-foundation",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.049,
+        "p95_ms": 5.052,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.091581,
+        "median_ms": 0.16,
+        "p95_ms": 0.204,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "interactive-tooling-foundation-002-warm-diagnostics-query",
+      "budget_id": "perf.interactive.warm_diagnostics_query",
+      "cache": {
+        "min_hits": 2300
+      },
+      "group": "interactive-tooling-foundation",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.16,
+        "p95_ms": 5.204,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.033337,
+        "median_ms": 0.066,
+        "p95_ms": 0.07,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "interactive-tooling-foundation-003-unchanged-file-update",
+      "budget_id": "perf.interactive.unchanged_file_update",
+      "cache": {
+        "min_hits": 2300
+      },
+      "group": "interactive-tooling-foundation",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.066,
+        "p95_ms": 5.07,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.014983,
+        "median_ms": 0.265,
+        "p95_ms": 0.27,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "interactive-tooling-foundation-004-changed-file-invalidation",
+      "budget_id": "perf.interactive.changed_file_invalidation",
+      "cache": {},
+      "group": "interactive-tooling-foundation",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.265,
+        "p95_ms": 5.27,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.025814,
+        "median_ms": 0.03,
+        "p95_ms": 0.031,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "interactive-tooling-foundation-005-source-map-lookup",
+      "budget_id": "perf.interactive.source_map_lookup",
+      "cache": {},
+      "group": "interactive-tooling-foundation",
+      "policy": "frontend-query-edit-loop",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 2.03,
+        "p95_ms": 5.031,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 30000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.005931,
+        "median_ms": 1227.674,
+        "p95_ms": 1238.76,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "phase27-non-regression-001-human-success-exit",
+      "budget_id": "perf.phase27.human_success_exit",
+      "cache": {},
+      "group": "phase27-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1350.441,
+        "p95_ms": 1424.574,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.026421,
+        "median_ms": 1214.504,
+        "p95_ms": 1293.217,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "phase27-non-regression-002-json-diagnostic-schema",
+      "budget_id": "perf.phase27.json_diagnostic_schema",
+      "cache": {},
+      "group": "phase27-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1335.954,
+        "p95_ms": 1487.2,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.015743,
+        "median_ms": 1227.41,
+        "p95_ms": 1272.689,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "phase27-non-regression-003-compact-diagnostic-schema",
+      "budget_id": "perf.phase27.compact_diagnostic_schema",
+      "cache": {},
+      "group": "phase27-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1350.151,
+        "p95_ms": 1463.592,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.015609,
+        "median_ms": 1231.518,
+        "p95_ms": 1259.924,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "phase27-non-regression-004-recovery-limit",
+      "budget_id": "perf.phase27.recovery_limit",
+      "cache": {},
+      "group": "phase27-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1354.67,
+        "p95_ms": 1448.913,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.002534,
+        "median_ms": 1217.324,
+        "p95_ms": 1221.378,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "phase27-non-regression-005-project-error-exit",
+      "budget_id": "perf.phase27.project_error_exit",
+      "cache": {},
+      "group": "phase27-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1339.056,
+        "p95_ms": 1404.585,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    }
+  ],
+  "derivation": {
+    "cache_hits": "frontend-query cases with baseline hits require at least the baseline hit count",
+    "command_median_ms": "max(baseline_median * 1.10, baseline_median + 25ms)",
+    "command_p95_ms": "max(baseline_p95 * 1.15, baseline_p95 + 50ms)",
+    "frontend_query_median_ms": "max(baseline_median * 1.05, baseline_median + 2ms)",
+    "frontend_query_p95_ms": "max(baseline_p95 * 1.10, baseline_p95 + 5ms)",
+    "peak_rss_bytes": "max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)"
+  },
+  "description": "Phase 35 performance budgets derived from verification/performance/baselines.json.",
+  "version": 1
+}
