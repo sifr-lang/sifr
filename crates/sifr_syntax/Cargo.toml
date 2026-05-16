@@ -1,0 +1,16 @@
+[package]
+name = "sifr_syntax"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+sifr_diagnostics = { workspace = true }
+sifr_python_ast = { workspace = true }
+sifr_python_parser = { workspace = true }
+ruff_text_size = { workspace = true }
+
+[lints]
+workspace = true

@@ -114,6 +114,12 @@ python3 "${SCRIPT_DIR}/check_diagnostic_cancel_usage.py"
 echo "Running diagnostic transport cleanup check"
 python3 "${SCRIPT_DIR}/check_diagnostic_transport_cleanup.py"
 
+echo "Running Phase 35 frontend and syntax guardrails"
+python3 "${SCRIPT_DIR}/../verification/performance/check_ruff_fork_update_contract.py"
+python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.py"
+python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/performance/check_frontend_cache_contract.py"
+
 echo "Running verification hardening script self-tests"
 python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
 
@@ -135,6 +141,12 @@ cargo test -p sifr_diagnostics
 
 echo "Running sifr_hir tests"
 cargo test -p sifr_hir -- --skip test_e2e_pass
+
+echo "Running sifr_syntax tests"
+cargo test -p sifr_syntax
+
+echo "Running sifr_frontend tests"
+cargo test -p sifr_frontend
 
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass

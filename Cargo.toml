@@ -4,6 +4,8 @@ members = [
     "crates/sifr_runtime",
     "crates/sifr_type_system",
     "crates/sifr_hir",
+    "crates/sifr_syntax",
+    "crates/sifr_frontend",
     "crates/sifr_codegen",
     "crates/sifr_driver",
     "crates/sifr",
@@ -38,6 +40,8 @@ sifr_diagnostics = { path = "crates/sifr_diagnostics" }
 sifr_runtime = { path = "crates/sifr_runtime" }
 sifr_type_system = { path = "crates/sifr_type_system" }
 sifr_hir = { path = "crates/sifr_hir" }
+sifr_syntax = { path = "crates/sifr_syntax" }
+sifr_frontend = { path = "crates/sifr_frontend" }
 sifr_codegen = { path = "crates/sifr_codegen" }
 sifr_driver = { path = "crates/sifr_driver" }
 
@@ -78,14 +82,19 @@ char_lit_as_u8 = "allow"
 collapsible_else_if = "allow"
 collapsible_if = "allow"
 implicit_hasher = "allow"
+large_enum_variant = "allow"
 map_unwrap_or = "allow"
+manual_let_else = "allow"
 match_same_arms = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 module_name_repetitions = "allow"
 must_use_candidate = "allow"
+option_option = "allow"
 similar_names = "allow"
+struct_excessive_bools = "allow"
 too_many_lines = "allow"
+default_trait_access = "allow"
 needless_raw_string_hashes = "allow"
 print_stdout = "warn"
 print_stderr = "warn"
