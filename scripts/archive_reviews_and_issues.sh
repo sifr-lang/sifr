@@ -5,9 +5,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
 
-"${SCRIPT_DIR}/archive_issues.sh"
-"${SCRIPT_DIR}/archive_reviews.sh"
-
 while IFS= read -r -d '' path; do
   rel="${path#"${REPO_ROOT}/"}"
   if git -C "${REPO_ROOT}" ls-files --error-unmatch -- "${rel}" >/dev/null 2>&1; then
@@ -26,3 +23,6 @@ done < <(
     -name '*.claude.log' \
     -print0 | sort -z
 )
+
+"${SCRIPT_DIR}/archive_issues.sh"
+"${SCRIPT_DIR}/archive_reviews.sh"

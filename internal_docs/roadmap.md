@@ -64,8 +64,8 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 32 | Async and Ecosystem Foundation | completed | [32_async_ecosystem.md](./phases/32_async_ecosystem.md) | Async runtime and ecosystem primitives completed on 2026-05-11: typed async/await, structured task scopes, cancellation/timeout semantics, synchronization/channels, explicit blocking offload, async context/iteration/generator/comprehension support, and limited runtime-neutral compatibility veneers are implemented with deferred APIs documented by negative fixtures. |
 | 33 | Preview Distribution and Release Automation (`alpha`/`beta`) | completed | [33_preview_distribution_and_release_automation.md](./phases/33_preview_distribution_and_release_automation.md) | Preview installer dispatchers, checksum-verified immutable installers, artifact packaging, `/create-new-version` automation, and public `0.1.0-alpha.1`/`0.1.0-beta.1` releases completed on 2026-05-12 |
 | 34 | Generated Code Quality and Production Readiness | completed, audited | [34_generated_code_quality_and_production_readiness.md](./phases/34_generated_code_quality_and_production_readiness.md) | Deterministic, lint-clean, production-safe generated Rust; post-closure emitted-code audit covered all demos and LeetCode fixtures on 2026-05-14 |
-| 35 | Performance Benchmarking and Shared Analysis Query Architecture | planned | [35_performance_benchmarking_and_budgets.md](./phases/35_performance_benchmarking_and_budgets.md) | Performance budgets plus a canonical reusable analysis/query foundation |
-| 36 | Developer Tooling and Ecosystem Hooks | planned | [36_developer_tooling_and_ecosystem_hooks.md](./phases/36_developer_tooling_and_ecosystem_hooks.md) | CLI/tooling convergence, renderer parity, and anti-split-brain validation before standalone tooling surfaces |
+| 35 | Performance Benchmarking and Shared Analysis Query Architecture | planned | [35_performance_benchmarking_and_budgets.md](./phases/35_performance_benchmarking_and_budgets.md) | Performance budgets plus the canonical syntax/frontend/query foundation required by production tooling |
+| 36 | Production Developer Tooling and Editor Ecosystem | planned | [36_developer_tooling_and_ecosystem_hooks.md](./phases/36_developer_tooling_and_ecosystem_hooks.md) | Eight sequential milestones for native LSP, formatter/linter policy surfaces, packageable VS Code extension, multi-editor assets, and anti-split-brain tooling validation |
 | 37 | Package Management | draft | [37_package_management.md](./phases/37_package_management.md) | Deterministic dependency and lockfile workflows |
 | 38 | Docs and Documentation | draft | [38_docs_and_documentation.md](./phases/38_docs_and_documentation.md) | Canonical versioned docs and local docs quality gates |
 | 39 | Stable Channel GA Promotion and Release Governance | planned | [39_stable_channel_ga_promotion_and_release_governance.md](./phases/39_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
@@ -96,7 +96,7 @@ flowchart LR
     p32 --> p33["Phase 33\nPreview Distribution"]
     p33 --> p34["Phase 34\nGenerated Code Quality"]
     p34 --> p35["Phase 35\nPerformance + Shared Analysis Query"]
-    p35 --> p36["Phase 36\nCLI/Tooling Convergence"]
+    p35 --> p36["Phase 36\nProduction Developer Tooling"]
     p36 --> p37["Phase 37\nPackage Management"]
     p37 --> p38["Phase 38\nDocs and Documentation"]
     p38 --> p39["Phase 39\nStable GA Governance"]
