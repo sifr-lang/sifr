@@ -168,6 +168,8 @@ def validate_vscode_contract(contract: dict[str, Any]) -> list[str]:
         failures.append("VS Code default launch command must be sifr")
     if contract.get("launch", {}).get("default_args") != ["lsp", "--stdio"]:
         failures.append("VS Code launch args must be lsp --stdio")
+    if repo.get("submodule_checkout") != "editor_integrations/vscode":
+        failures.append("VS Code extension submodule checkout must be editor_integrations/vscode")
     extension = contract.get("extension", {})
     if extension.get("language_id") != "sifr":
         failures.append("VS Code language id must be sifr")

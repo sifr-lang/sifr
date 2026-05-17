@@ -30,7 +30,7 @@ sifr-lang/sifr-vscode
   .vsix packaging
 ```
 
-`milestone_36_1` locked the separate-repository boundary. The main repository records the contract in `verification/tooling/vscode_extension_contract.json`; validation locates the extension repository through `SIFR_VSCODE_REPO` or sibling checkout `../sifr-vscode`. The extension remains separate because VS Code extensions have their own Node/TypeScript dependency graph, `.vsix` packaging, marketplace metadata, extension tests, and release cadence.
+`milestone_36_1` locked the separate-repository boundary. The main repository records the contract in `verification/tooling/vscode_extension_contract.json`; validation locates the extension repository through `editor_integrations/vscode`, `SIFR_VSCODE_REPO`, or sibling checkout `../sifr-vscode`. The extension remains separate because VS Code extensions have their own Node/TypeScript dependency graph, `.vsix` packaging, marketplace metadata, extension tests, and release cadence.
 
 ## Non-Negotiable Boundary
 
@@ -206,7 +206,7 @@ Main `sifr-lang/sifr` repository must own or pin enough validation to prevent ex
 - [x] `verification/tooling/vscode_extension_contract.json` records language id, extension id, settings, commands, launch command, and repository boundary.
 - [x] `verification/tooling/check_vscode_extension_contract.py` validates the main-repo contract against the extension repo.
 - [x] `verification/tooling/check_vscode_extension.py` validates extension build/test/package behavior for the located extension repo.
-- [x] Main-repo validation locates the extension repo by first checking `SIFR_VSCODE_REPO` as an absolute path, then a sibling `../sifr-vscode` checkout relative to the main repo root.
+- [x] Main-repo validation locates the extension repo by checking `SIFR_VSCODE_REPO`, then the `editor_integrations/vscode` submodule, then a sibling `../sifr-vscode` checkout relative to the main repo root.
 - [x] Main-repo validation fails with an actionable message if the extension repo cannot be found; it must not silently skip once Phase 36 extension validation is active.
 - [x] Contract check fails if the extension declares parser/type-checker/formatter/linter/codegen behavior.
 - [x] Contract check fails if the extension launch command is not `sifr lsp --stdio`.

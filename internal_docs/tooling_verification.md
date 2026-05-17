@@ -103,10 +103,11 @@ python3 verification/tooling/check_vscode_extension.py
 python3 verification/tooling/check_vscode_extension.py --self-test
 ```
 
-`check_vscode_extension.py` locates `SIFR_VSCODE_REPO` or sibling
-`../sifr-vscode`, validates required package metadata and syntax assets, runs
-the extension repo's lint, typecheck, unit test, extension smoke test, and
-package scripts, and checks that `dist/sifr-vscode-0.0.0.vsix` is produced.
+`check_vscode_extension.py` locates `editor_integrations/vscode`,
+`SIFR_VSCODE_REPO`, or sibling `../sifr-vscode`, validates required package
+metadata and syntax assets, runs the extension repo's lint, typecheck, unit
+test, extension smoke test, and package scripts, and checks that
+`dist/sifr-vscode-0.0.0.vsix` is produced.
 
 The m36.7 package check is wired into `scripts/run_all_tests.sh` under
 "Developer Tooling Checks".

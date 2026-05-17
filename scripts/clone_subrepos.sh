@@ -5,80 +5,54 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Format: local_path|remote_url|branch
-SUBREPOS=(
-  "audits/leetcode|https://github.com/sifr-lang/leetcode.git|main"
-)
+usage() {
+  cat <<'EOF'
+Usage: scripts/clone_subrepos.sh [--remote] [--status]
 
-ensure_clean_subrepo() {
-  local path="$1"
+Initialize and update Sifr submodules from .gitmodules.
 
-  if [[ -n "$(git -C "${path}" status --porcelain)" ]]; then
-    echo "Refusing to update dirty sub-repository: ${path}" >&2
-    echo "Commit, stash, or discard changes inside ${path} first." >&2
-    exit 1
-  fi
+Options:
+  --remote  Update submodules to their configured remote branch tips.
+  --status  Print recursive submodule status after updating.
+  --help    Show this help.
+EOF
 }
 
-ensure_expected_remote() {
-  local path="$1"
-  local expected_remote="$2"
-  local ssh_remote="$3"
-  local actual_remote
+UPDATE_REMOTE=0
+PRINT_STATUS=0
 
-  actual_remote="$(git -C "${path}" remote get-url origin)"
-  if [[ "${actual_remote}" != "${expected_remote}" && "${actual_remote}" != "${ssh_remote}" ]]; then
-    echo "Unexpected origin for ${path}: ${actual_remote}" >&2
-    echo "Expected ${expected_remote} or ${ssh_remote}." >&2
-    exit 1
-  fi
-}
-
-clone_or_update() {
-  local path="$1"
-  local remote="$2"
-  local branch="$3"
-  local absolute_path="${REPO_ROOT}/${path}"
-  local ssh_remote="git@github.com:sifr-lang/${remote##*/}"
-
-  if [[ ! -e "${absolute_path}" ]]; then
-    mkdir -p "$(dirname "${absolute_path}")"
-    echo "Cloning ${remote} into ${path}"
-    git clone --branch "${branch}" "${remote}" "${absolute_path}"
-    return
-  fi
-
-  if [[ ! -d "${absolute_path}/.git" ]]; then
-    local non_generated_file
-
-    non_generated_file="$(
-      find "${absolute_path}" -type f \
-        ! -name "*.pyc" \
-        ! -name ".DS_Store" \
-        -print -quit
-    )"
-    if [[ -z "${non_generated_file}" ]]; then
-      rm -rf "${absolute_path}"
-      mkdir -p "$(dirname "${absolute_path}")"
-      echo "Cloning ${remote} into ${path}"
-      git clone --branch "${branch}" "${remote}" "${absolute_path}"
-      return
-    fi
-
-    echo "${path} exists but is not a git repository." >&2
-    exit 1
-  fi
-
-  ensure_expected_remote "${absolute_path}" "${remote}" "${ssh_remote}"
-  ensure_clean_subrepo "${absolute_path}"
-
-  echo "Updating ${path}"
-  git -C "${absolute_path}" fetch origin "${branch}"
-  git -C "${absolute_path}" checkout "${branch}"
-  git -C "${absolute_path}" pull --ff-only origin "${branch}"
-}
-
-for entry in "${SUBREPOS[@]}"; do
-  IFS="|" read -r path remote branch <<< "${entry}"
-  clone_or_update "${path}" "${remote}" "${branch}"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --remote)
+      UPDATE_REMOTE=1
+      shift
+      ;;
+    --status)
+      PRINT_STATUS=1
+      shift
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
 done
+
+cd "${REPO_ROOT}"
+
+git submodule sync --recursive
+
+if [[ "${UPDATE_REMOTE}" == "1" ]]; then
+  git submodule update --init --recursive --remote
+else
+  git submodule update --init --recursive
+fi
+
+if [[ "${PRINT_STATUS}" == "1" ]]; then
+  git submodule status --recursive
+fi

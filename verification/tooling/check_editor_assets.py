@@ -78,7 +78,15 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 def all_asset_files(root: Path) -> list[Path]:
-    return sorted(path for path in root.rglob("*") if path.is_file())
+    files: list[Path] = []
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        parts = path.relative_to(root).parts
+        if parts and parts[0] in {".git", "vscode"}:
+            continue
+        files.append(path)
+    return sorted(files)
 
 
 def validate_required_files(root: Path) -> list[str]:
