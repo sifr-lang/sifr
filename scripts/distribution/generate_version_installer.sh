@@ -120,6 +120,7 @@ APP_NAME="sifr"
 APP_VERSION="${VERSION}"
 ARTIFACT_BASE_URL="${ARTIFACT_BASE_URL}"
 NO_MODIFY_PATH="\${SIFR_NO_MODIFY_PATH:-0}"
+FORCE_INSTALL=0
 
 fail() {
   echo "sifr installer: \$*" >&2
@@ -132,10 +133,14 @@ Usage: sifr-installer.sh [options]
 
 Options:
   --no-modify-path    Do not update shell profiles to add Sifr to PATH
+  --force             Reinstall the same version or downgrade from a newer installed version
   --help              Show this help
 
 Environment:
   SIFR_INSTALL_DIR        Install directory (default: \$HOME/.sifr/bin)
+  SIFR_INSTALL_MANIFEST_DIR
+                          Install manifest directory (default: \$HOME/.sifr for the default install dir,
+                          otherwise SIFR_INSTALL_DIR)
   SIFR_NO_MODIFY_PATH=1   Do not update shell profiles
   SIFR_TARGET             Override target triple for validation
 EOFUSAGE
@@ -145,6 +150,10 @@ while [ "\$#" -gt 0 ]; do
   case "\$1" in
     --no-modify-path)
       NO_MODIFY_PATH=1
+      shift
+      ;;
+    --force)
+      FORCE_INSTALL=1
       shift
       ;;
     --help)
@@ -175,6 +184,132 @@ sha256_file() {
   else
     fail "sha256sum or shasum is required to verify artifacts"
   fi
+}
+
+semver_parts() {
+  version="\$1"
+  core="\${version%%-*}"
+  prerelease=""
+  if [ "\${core}" != "\${version}" ]; then
+    prerelease="\${version#*-}"
+  fi
+
+  major="\${core%%.*}"
+  rest="\${core#*.}"
+  minor="\${rest%%.*}"
+  patch="\${rest#*.}"
+  rank=4
+  prerelease_number=0
+
+  if [ -n "\${prerelease}" ]; then
+    prerelease_label="\${prerelease%%.*}"
+    prerelease_number="\${prerelease#*.}"
+    case "\${prerelease_label}" in
+      alpha)
+        rank=1
+        ;;
+      beta)
+        rank=2
+        ;;
+      rc)
+        rank=3
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+  fi
+
+  printf '%s %s %s %s %s\n' "\${major}" "\${minor}" "\${patch}" "\${rank}" "\${prerelease_number}"
+}
+
+compare_numbers() {
+  left="\$1"
+  right="\$2"
+  if [ "\${left}" -lt "\${right}" ]; then
+    echo -1
+  elif [ "\${left}" -gt "\${right}" ]; then
+    echo 1
+  else
+    echo 0
+  fi
+}
+
+compare_versions() {
+  left_parts="\$(semver_parts "\$1")" || return 1
+  right_parts="\$(semver_parts "\$2")" || return 1
+
+  set -- \${left_parts}
+  left_major="\$1"
+  left_minor="\$2"
+  left_patch="\$3"
+  left_rank="\$4"
+  left_prerelease_number="\$5"
+
+  set -- \${right_parts}
+  right_major="\$1"
+  right_minor="\$2"
+  right_patch="\$3"
+  right_rank="\$4"
+  right_prerelease_number="\$5"
+
+  result="\$(compare_numbers "\${left_major}" "\${right_major}")"
+  [ "\${result}" = "0" ] || { echo "\${result}"; return 0; }
+  result="\$(compare_numbers "\${left_minor}" "\${right_minor}")"
+  [ "\${result}" = "0" ] || { echo "\${result}"; return 0; }
+  result="\$(compare_numbers "\${left_patch}" "\${right_patch}")"
+  [ "\${result}" = "0" ] || { echo "\${result}"; return 0; }
+  result="\$(compare_numbers "\${left_rank}" "\${right_rank}")"
+  [ "\${result}" = "0" ] || { echo "\${result}"; return 0; }
+  compare_numbers "\${left_prerelease_number}" "\${right_prerelease_number}"
+}
+
+manifest_version() {
+  manifest_path="\$1"
+  [ -f "\${manifest_path}" ] || return 1
+  sed -n 's/^.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*$/\1/p' "\${manifest_path}" | head -n 1
+}
+
+binary_version() {
+  binary_path="\$1"
+  [ -x "\${binary_path}" ] || return 1
+  version_output="\$("\${binary_path}" --version 2>/dev/null || true)"
+  set -- \${version_output}
+  [ "\${1:-}" = "\${APP_NAME}" ] || return 1
+  case "\${2:-}" in
+    0.0.0)
+      return 1
+      ;;
+    [0-9]*.[0-9]*.[0-9]*)
+      echo "\$2"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+detect_installed_version() {
+  version="\$(manifest_version "\${manifest_path}" || true)"
+  if [ -n "\${version}" ]; then
+    echo "\${version}"
+    return 0
+  fi
+
+  binary_version "\${installed_binary}" || true
+}
+
+write_install_manifest() {
+  mkdir -p "\${manifest_dir}"
+  {
+    printf '%s\n' '{'
+    printf '  "name": "%s",\n' "\${APP_NAME}"
+    printf '  "version": "%s",\n' "\${APP_VERSION}"
+    printf '  "target": "%s",\n' "\${target}"
+    printf '  "install_dir": "%s",\n' "\${install_dir}"
+    printf '  "artifact": "%s"\n' "\${archive_name}"
+    printf '%s\n' '}'
+  } >"\${manifest_path}"
 }
 
 detect_target() {
@@ -332,6 +467,48 @@ if [ -z "\${install_dir}" ]; then
   install_dir="\${HOME}/.sifr/bin"
 fi
 
+manifest_dir="\${SIFR_INSTALL_MANIFEST_DIR:-}"
+if [ -z "\${manifest_dir}" ]; then
+  if [ -n "\${HOME:-}" ] && [ "\${install_dir}" = "\${HOME}/.sifr/bin" ]; then
+    manifest_dir="\${HOME}/.sifr"
+  else
+    manifest_dir="\${install_dir}"
+  fi
+fi
+manifest_path="\${manifest_dir}/install.json"
+installed_binary="\${install_dir}/sifr"
+installed_version="\$(detect_installed_version)"
+
+if [ -x "\${installed_binary}" ] && [ -n "\${installed_version}" ]; then
+  version_order="\$(compare_versions "\${installed_version}" "\${APP_VERSION}")" || version_order=""
+  case "\${version_order}" in
+    0)
+      if [ "\${FORCE_INSTALL}" = "0" ]; then
+        echo "Sifr \${APP_VERSION} is already installed at \${installed_binary}"
+        configure_path
+        exit 0
+      fi
+      echo "Reinstalling Sifr \${APP_VERSION} at \${installed_binary}"
+      ;;
+    -1)
+      echo "Updating Sifr \${installed_version} -> \${APP_VERSION}"
+      ;;
+    1)
+      if [ "\${FORCE_INSTALL}" = "0" ]; then
+        fail "installed Sifr \${installed_version} is newer than requested \${APP_VERSION}; use --force to downgrade"
+      fi
+      echo "Downgrading Sifr \${installed_version} -> \${APP_VERSION} (--force)"
+      ;;
+    *)
+      echo "Updating existing Sifr installation (version unknown) -> \${APP_VERSION}"
+      ;;
+  esac
+elif [ -x "\${installed_binary}" ]; then
+  echo "Updating existing Sifr installation (version unknown) -> \${APP_VERSION}"
+else
+  echo "Installing Sifr \${APP_VERSION}"
+fi
+
 if [ "\${SIFR_INSTALLER_TRACE:-0}" = "1" ]; then
   echo "sifr installer version=\${APP_VERSION} target=\${target} archive=\${archive_name}"
 fi
@@ -362,6 +539,7 @@ tmp_binary="\${install_dir}/.sifr.\$\$.tmp"
 cp "\${extract_dir}/sifr" "\${tmp_binary}"
 chmod 755 "\${tmp_binary}"
 mv "\${tmp_binary}" "\${install_dir}/sifr"
+write_install_manifest
 
 echo "installed sifr \${APP_VERSION} to \${install_dir}/sifr"
 configure_path
