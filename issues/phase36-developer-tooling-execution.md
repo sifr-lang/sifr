@@ -13,7 +13,7 @@ This issue tracks the sequential implementation loop for Phase 36. Each mileston
 - [x] `milestone_36_4`: Full Editor Query Layer
 - [x] `milestone_36_5`: Production Native LSP Server
 - [x] `milestone_36_6`: Multi-Editor Syntax And Integration Assets
-- [ ] `milestone_36_7`: VS Code Extension
+- [x] `milestone_36_7`: VS Code Extension
 - [ ] `milestone_36_8`: Production Verification And Performance Closeout
 
 ## Active Milestone: milestone_36_1
@@ -274,8 +274,8 @@ Scope:
 - [x] Ensure extension tests can launch the locally built `sifr lsp --stdio`.
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
-- [ ] Open PR.
-- [ ] Merge PR.
+- [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2135>
+- [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2135>
 
 ## m36.7 Validation Evidence
 
@@ -290,3 +290,43 @@ Scope:
 ## m36.7 Review Evidence
 
 - `reviews/phase36-m36-7-review-pass-1.md` -> SATISFIED. Reviewer confirmed the extension identity, native LSP launcher, command/settings coverage, forbidden-behavior guardrails, Test Explorer delegation, syntax/language assets, package scripts, CI, cross-repo validation wiring, docs, and versioning notes are acceptable for PR after final quick validation.
+
+## m36.7 PR
+
+- PR: <https://github.com/sifr-lang/sifr/pull/2135>
+- Merge commit: `b519c597516bb8585d48211a7d7cadc264c7b90b`
+
+## Active Milestone: milestone_36_8
+
+Branch: `phase36-m36-8-verification-closeout`
+
+Scope:
+
+- [x] Finalize `internal_docs/tooling_verification.md` for closeout-level gates.
+- [x] Add `check_analysis_snapshot_coherence.py`, `check_completion_quality.py`, and `check_phase36_closeout.py`.
+- [x] Wire the m36.8 checks into `scripts/run_all_tests.sh`.
+- [x] Finalize LSP request-family budget coverage docs with no active LSP waivers.
+- [x] Run targeted closeout validation.
+- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run `scripts/run_all_tests.sh --profile quick`.
+- [x] Run `scripts/run_all_tests.sh --profile pr`.
+- [ ] Open PR.
+- [ ] Merge PR.
+
+## m36.8 Targeted Validation Evidence
+
+- `python3 -m py_compile verification/tooling/check_completion_quality.py verification/tooling/check_analysis_snapshot_coherence.py verification/tooling/check_phase36_closeout.py` -> PASS.
+- `python3 verification/tooling/check_completion_quality.py && python3 verification/tooling/check_completion_quality.py --self-test` -> PASS.
+- `python3 verification/tooling/check_analysis_snapshot_coherence.py && python3 verification/tooling/check_analysis_snapshot_coherence.py --self-test` -> PASS.
+- `python3 verification/tooling/check_phase36_closeout.py && python3 verification/tooling/check_phase36_closeout.py --self-test` -> PASS.
+
+## m36.8 Review Evidence
+
+- `reviews/phase36-m36-8-review-pass-1.md` -> SATISFIED. Reviewer confirmed the closeout scripts, validation wiring, docs, LSP budget coverage, no-waiver evidence, completion-quality negative seed, snapshot-coherence contract wrapper, and reuse-strategy consistency.
+- `reviews/phase36-final-implementation-review-pass-1.md` -> SATISFIED. Final full-implementation review confirmed all Phase 36 exit criteria are satisfied, no critical/high/medium findings remain, and only Phase 37 package-registry intelligence plus Phase 39 marketplace publication governance are deferred.
+
+## m36.8 Validation Evidence
+
+- `scripts/run_all_tests.sh --profile quick` -> PASS. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=1201.85s`; `max_rss=521.5MiB`; `e2e cache_hits=12/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
+- `scripts/run_all_tests.sh --profile pr` -> PASS on final rerun. Report: `target/validation_lane_reports/pr.latest.json`; `wall_time=2645.85s`; `max_rss=521.4MiB`; `e2e cache_hits=0/19`; `report_signature=6cd36071cf629b47`; `hardening variants=28 failures=0`; advisories: warm wall-time budget exceeded and high group skew.
+- Earlier `pr` attempts failed only in the performance budget batch with marginal median timing noise on `check-single-file-001-arithmetic` and `phase27-non-regression-002-json-diagnostic-schema`; both cases passed isolated reruns, no budgets or waivers were changed, and the final full `pr` lane passed.
