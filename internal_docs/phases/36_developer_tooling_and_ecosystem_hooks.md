@@ -9,7 +9,8 @@ status: in_progress
 - `milestone_36_3` is merged in PR #2131 at `5b2315e69aaead9269dd41a092e35b37c0968504`.
 - `milestone_36_4` is merged in PR #2132 at `348a3ff7c67a8740c87c7e387428b721812134bb`.
 - `milestone_36_5` is merged in PR #2133 at `a4a1297b1432598c98827ad98ba68293f33211c1`.
-- `milestone_36_6` is active in branch `phase36-m36-6-editor-assets`.
+- `milestone_36_6` is merged in PR #2134 at `ac42f73464903b75b6ab3639d5ff766f31c44341`.
+- `milestone_36_7` is active in branch `phase36-m36-7-vscode-extension`.
 - Final crate/module names are locked as `sifr_analysis`, `sifr_format`, `sifr_lint`, and `sifr_lsp`.
 - VS Code extension boundary is locked to a separate `sifr-lang/sifr-vscode` repository, validated from `SIFR_VSCODE_REPO` or sibling `../sifr-vscode`.
 - m36.1 contract artifacts live in `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, `internal_docs/tooling_verification.md`, `verification/tooling/lsp_protocol_matrix.json`, and `verification/tooling/vscode_extension_contract.json`.
@@ -19,6 +20,7 @@ status: in_progress
 - m36.4 adds token-backed editor query behavior, generated-Rust preview handoff, code actions, parity snapshots, completion-quality fixtures, and the tooling parity runner.
 - m36.5 adds `sifr_lsp`, `sifr lsp --stdio`, LSP 3.17 stdio protocol handling, document sync, push/pull diagnostics, editor query request adapters, workspace commands, protocol smoke/stress tests, and an enforced Phase 35 `lsp-query` budget case.
 - m36.6 adds checked-in Neovim, Zed, Helix, and Emacs integration assets, a TextMate grammar, parser-token scope mapping, and `check_editor_assets.py` guardrails.
+- m36.7 adds the `sifr-lang/sifr-vscode` extension repository scaffold, package metadata, language contribution, native LSP launcher, commands, generated-Rust/explain surfaces, test explorer, CI, `.vsix` packaging, and active cross-repo validation.
 
 ## Objective
 Deliver the complete production-grade Sifr developer tooling stack for the current workspace/project model: editor-oriented analysis queries, diagnostics policy infrastructure, formatter and policy-rule surfaces, a native Rust LSP server launched through `sifr lsp --stdio`, a packageable VS Code extension, multi-editor syntax/integration assets, and parity gates proving tooling and CLI share one compiler brain.
