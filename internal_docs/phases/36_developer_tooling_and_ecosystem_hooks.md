@@ -10,7 +10,8 @@ status: in_progress
 - `milestone_36_4` is merged in PR #2132 at `348a3ff7c67a8740c87c7e387428b721812134bb`.
 - `milestone_36_5` is merged in PR #2133 at `a4a1297b1432598c98827ad98ba68293f33211c1`.
 - `milestone_36_6` is merged in PR #2134 at `ac42f73464903b75b6ab3639d5ff766f31c44341`.
-- `milestone_36_7` is active in branch `phase36-m36-7-vscode-extension`.
+- `milestone_36_7` is merged in PR #2135 at `b519c597516bb8585d48211a7d7cadc264c7b90b`.
+- `milestone_36_8` is active in branch `phase36-m36-8-verification-closeout`.
 - Final crate/module names are locked as `sifr_analysis`, `sifr_format`, `sifr_lint`, and `sifr_lsp`.
 - VS Code extension boundary is locked to a separate `sifr-lang/sifr-vscode` repository, validated from `SIFR_VSCODE_REPO` or sibling `../sifr-vscode`.
 - m36.1 contract artifacts live in `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, `internal_docs/tooling_verification.md`, `verification/tooling/lsp_protocol_matrix.json`, and `verification/tooling/vscode_extension_contract.json`.

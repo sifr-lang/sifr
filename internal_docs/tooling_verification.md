@@ -1,6 +1,6 @@
 # Sifr Tooling Verification
 
-status: phase36-m36.7-implemented
+status: phase36-m36.8-closeout
 
 ## Verification Directory
 
@@ -111,9 +111,33 @@ package scripts, and checks that `dist/sifr-vscode-0.0.0.vsix` is produced.
 The m36.7 package check is wired into `scripts/run_all_tests.sh` under
 "Developer Tooling Checks".
 
-## Required Later Checks
+## m36.8 Checks
 
-- completion quality fixtures and thresholds
+Required m36.8 commands:
+
+```bash
+python3 verification/tooling/check_analysis_snapshot_coherence.py
+python3 verification/tooling/check_analysis_snapshot_coherence.py --self-test
+python3 verification/tooling/check_completion_quality.py
+python3 verification/tooling/check_completion_quality.py --self-test
+python3 verification/tooling/check_phase36_closeout.py
+python3 verification/tooling/check_phase36_closeout.py --self-test
+scripts/run_all_tests.sh --profile quick
+scripts/run_all_tests.sh --profile pr
+```
+
+`check_analysis_snapshot_coherence.py` preserves the phase-contract script name
+and delegates to the concrete `AnalysisHost` stale-version, stale-snapshot, and
+revision-boundary evidence in `check_analysis_snapshot_contract.py`.
+
+`check_completion_quality.py` validates the checked-in completion ranking
+fixtures and thresholds from `verification/tooling/completion_quality/`, reruns
+the required `sifr_analysis` cargo evidence, and fails on a seeded top-candidate
+regression.
+
+`check_phase36_closeout.py` verifies that all Phase 36 tooling and performance
+checks are present, wired into `scripts/run_all_tests.sh`, documented, backed by
+the LSP request-family budget, and free of active LSP performance waivers.
 
 Each script must pass on positive fixtures and fail on seeded negative fixtures.
 

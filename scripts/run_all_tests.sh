@@ -137,16 +137,22 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.p
 python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_coherence.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_coherence.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/run_tooling_parity.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/run_tooling_parity.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_completion_quality.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_completion_quality.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_editor_assets.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_editor_assets.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_phase36_closeout.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_phase36_closeout.py" --self-test
 
 echo "Running Performance Budget Checks"
 python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only

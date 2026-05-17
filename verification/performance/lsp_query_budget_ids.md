@@ -41,3 +41,33 @@ Reserved ids:
   workspace symbols, completion, hover, definition, references, semantic tokens,
   inlay hints, folding ranges, code actions, formatting, and pull diagnostics
   through one deterministic stdio LSP session.
+
+## m36.8 Closeout Coverage
+
+The Phase 36 protocol matrix keeps user-facing budget labels on individual LSP
+request families while the enforced Phase 35 budget model records the aggregate
+stdio-session budget as `perf.lsp.request_families`. The closeout gate verifies
+that every non-null matrix label below remains documented and covered by the
+aggregate benchmark until a later phase splits the aggregate case into separate
+per-family benchmarks:
+
+- `lsp-cold-start`
+- `lsp-code-actions`
+- `lsp-completion`
+- `lsp-definition`
+- `lsp-did-change-diagnostics`
+- `lsp-did-open-diagnostics`
+- `lsp-document-highlights`
+- `lsp-document-symbols`
+- `lsp-folding-ranges`
+- `lsp-formatting`
+- `lsp-hover`
+- `lsp-inlay-hints`
+- `lsp-references`
+- `lsp-rename`
+- `lsp-selection-range`
+- `lsp-semantic-tokens`
+- `lsp-signature-help`
+- `lsp-type-hierarchy`
+- `lsp-workspace-diagnostics`
+- `lsp-workspace-symbols`
