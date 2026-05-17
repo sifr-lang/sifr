@@ -27,10 +27,12 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::process;
 
+const SIFR_BUILD_VERSION: &str = env!("SIFR_BUILD_VERSION");
+
 #[derive(Parser)]
 #[command(
     name = "sifr",
-    version,
+    version = SIFR_BUILD_VERSION,
     about = "The Sifr programming language compiler"
 )]
 struct Cli {
