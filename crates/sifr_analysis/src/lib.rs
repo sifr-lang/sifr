@@ -20,8 +20,8 @@ pub use host::AnalysisHost;
 pub use queries::{
     CodeAction, CodeActionContext, CompletionItem, CompletionItems, Declaration,
     DiagnosticExplanation, DiagnosticId, DocumentHighlight, DocumentSymbol, FileDiagnostics,
-    FoldingRange, FormatOptions, GeneratedRustPreview, HoverInfo, InlayHint, Location,
-    RenameTarget, SelectionRange, SemanticToken, SignatureHelp, SymbolName, SymbolQuery,
+    FileTextEdits, FoldingRange, FormatOptions, GeneratedRustPreview, HoverInfo, InlayHint,
+    Location, RenameTarget, SelectionRange, SemanticToken, SignatureHelp, SymbolName, SymbolQuery,
     TestCommand, TestCommandKind, TestItem, TestItemId, TextEdit, TypeHierarchyItem,
     TypeHierarchyItemId, WorkspaceEdit, WorkspaceSymbol,
 };
@@ -32,6 +32,7 @@ pub use snapshot::{
 pub use symbols::{SymbolId, SymbolIndex, SymbolIndexEntry};
 
 pub use sifr_frontend::{
-    DocumentVersion, FileId, FrontendInput, InvalidationReport, ProjectRoot, SourcePath, SourceText,
+    DocumentVersion, FileId, FrontendInput, FrontendMode, InvalidationReport, ProjectRoot,
+    SourcePath, SourceText,
 };
 pub use sifr_syntax::TextPosition;

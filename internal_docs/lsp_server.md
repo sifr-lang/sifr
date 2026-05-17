@@ -1,6 +1,6 @@
 # Sifr LSP Server Architecture
 
-status: phase36-contract-locked
+status: phase36-m36.5-implemented
 
 ## Protocol Target
 
@@ -10,7 +10,7 @@ The production protocol is LSP 3.17 over stdio, launched by:
 sifr lsp --stdio
 ```
 
-The Rust implementation uses `lsp-server` and `lsp-types` directly. The exact crate versions are recorded by `Cargo.lock` when `crates/sifr_lsp` is added in m36.5. Notebook synchronization and Python-specific import, interpreter, environment, and settings behavior are explicitly unsupported.
+The Rust implementation uses `lsp-server` and `lsp-types` directly. m36.5 pins `lsp-server` 0.7.9 and `lsp-types` 0.97.0 in `Cargo.lock`. Notebook synchronization and Python-specific import, interpreter, environment, and settings behavior are explicitly unsupported.
 
 ## Server Ownership
 
@@ -40,6 +40,23 @@ The LSP implementation must expose these layers:
 - `DiagnosticsController`: handles push diagnostics, pull diagnostics, workspace diagnostics, result ids, clearing, versions, related information, tags, and dynamic registration.
 - `CommandRegistry`: owns restart, logs, explain diagnostic, generated Rust preview, check, and test commands.
 - `ProtocolTestHarness`: launches `sifr lsp --stdio`, drives JSON-RPC, and records deterministic protocol snapshots.
+
+The concrete m36.5 modules are:
+
+- `crates/sifr_lsp/src/capabilities.rs`
+- `crates/sifr_lsp/src/document_store.rs`
+- `crates/sifr_lsp/src/session.rs`
+- `crates/sifr_lsp/src/request_queue.rs`
+- `crates/sifr_lsp/src/scheduler.rs`
+- `crates/sifr_lsp/src/conversion.rs`
+- `crates/sifr_lsp/src/diagnostics.rs`
+- `crates/sifr_lsp/src/commands.rs`
+- `crates/sifr_lsp/src/requests/`
+- `crates/sifr_lsp/src/notifications/`
+
+The stdio server terminates explicitly on `exit` after a successful `shutdown`
+response. This avoids retaining protocol IO threads after the client completes
+the required LSP shutdown sequence.
 
 ## Capability Matrix
 
@@ -80,3 +97,15 @@ Command payloads are Sifr-owned and versioned through this document and the prot
 ## Versioning Policy
 
 LSP 3.17 is the Phase 36 target. Any `lsp-types` version bump requires a reviewed PR that records adopted capabilities, deferred capabilities, compatibility impact, and protocol matrix changes. Silent adoption of new LSP surfaces is forbidden.
+
+## m36.5 Protocol Coverage
+
+`verification/tooling/lsp_protocol_smoke.py` initializes the server, opens a
+`.sifr` buffer, validates versioned push diagnostics, runs the required
+document/workspace query families, exercises generated-Rust and test commands,
+and shuts down through `shutdown` plus `exit`.
+
+`verification/tooling/lsp_protocol_stress.py` covers cancellation
+notifications, full sync, stale-version rejection, invalid-range protocol
+errors, workspace configuration, watched-file refresh, save/close flows,
+unknown command errors, and closed-document query rejection.

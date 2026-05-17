@@ -1,0 +1,44 @@
+use crate::conversion;
+use crate::errors::{LspError, LspResult};
+use crate::requests::{position, text_document_uri};
+use crate::session::Session;
+use serde_json::{json, Value};
+
+pub(crate) fn completion(session: &mut Session, params: Value) -> LspResult<Value> {
+    let uri = text_document_uri(&params)?;
+    let position = position(&params)?;
+    let document = session.store_mut().document_mut(&uri)?;
+    document.with_host(|host, file, _source| {
+        let result = host
+            .completion(file, &position)
+            .map_err(|error| LspError::internal(error.message))?
+            .into_value();
+        Ok(json!({
+            "isIncomplete": false,
+            "items": result.items.into_iter().map(conversion::completion_item).collect::<Vec<_>>()
+        }))
+    })
+}
+
+pub(crate) fn resolve(mut params: Value) -> LspResult<Value> {
+    let label = params
+        .get("label")
+        .and_then(Value::as_str)
+        .unwrap_or("completion item")
+        .to_string();
+    let kind = params
+        .pointer("/data/sifrKind")
+        .and_then(Value::as_str)
+        .unwrap_or("symbol")
+        .to_string();
+    if params.get("detail").is_none() {
+        params["detail"] = Value::String(format!("Sifr {kind}"));
+    }
+    if params.get("documentation").is_none() {
+        params["documentation"] = serde_json::json!({
+            "kind": "markdown",
+            "value": format!("Resolved Sifr completion for `{label}`.")
+        });
+    }
+    Ok(params)
+}

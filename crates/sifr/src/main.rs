@@ -7,6 +7,7 @@
 //!   sifr emit <file.sifr>     Show generated Rust code
 //!   sifr fmt [--check] <path> Format Sifr source files
 //!   sifr lint <path>          Run suppressible policy diagnostics
+//!   sifr lsp --stdio          Run the native Language Server Protocol server
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{
@@ -74,6 +75,12 @@ enum Commands {
         /// Input .sifr file or directory
         path: PathBuf,
     },
+    /// Run the native Sifr Language Server Protocol server
+    Lsp {
+        /// Use stdio transport
+        #[arg(long)]
+        stdio: bool,
+    },
     /// Show the generated Rust source code
     Emit {
         /// Input .sifr file
@@ -140,8 +147,31 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Check { file } => cmd_check(&file, diagnostic_format),
         Commands::Fmt { check, path } => cmd_fmt(&path, check, diagnostic_format),
         Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
+        Commands::Lsp { stdio } => cmd_lsp(stdio),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
         Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
+    }
+}
+
+fn cmd_lsp(stdio: bool) -> i32 {
+    if !stdio {
+        let diagnostic = diagnostic_with_code(
+            "sifr lsp requires --stdio in Phase 36",
+            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+        );
+        render_diagnostics(&[diagnostic], DiagnosticFormat::Human);
+        return EXIT_USAGE_OR_CONFIG;
+    }
+    match sifr_lsp::run_stdio() {
+        Ok(()) => EXIT_SUCCESS,
+        Err(error) => {
+            let diagnostic = diagnostic_with_code(
+                format!("language server failed: {error}"),
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            );
+            render_diagnostics(&[diagnostic], DiagnosticFormat::Human);
+            EXIT_INTERNAL_COMPILER_FAILURE
+        }
     }
 }
 

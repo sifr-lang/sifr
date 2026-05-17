@@ -139,6 +139,10 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/run_tooling_parity.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/run_tooling_parity.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py" --self-test
 
 echo "Running Performance Budget Checks"
 python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only
@@ -196,6 +200,9 @@ cargo test -p sifr_frontend
 
 echo "Running sifr_analysis tests"
 cargo test -p sifr_analysis
+
+echo "Running sifr_lsp tests"
+cargo test -p sifr_lsp
 
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass

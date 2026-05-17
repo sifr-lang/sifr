@@ -32,3 +32,12 @@ Reserved ids:
 - `perf.lsp.document_sync.parse_error_recovery`
 - `perf.lsp.transport.initialize`
 - `perf.lsp.transport.shutdown`
+- `perf.lsp.request_families`
+
+## m36.5 Implemented Evidence
+
+- `perf.lsp.request_families` maps to `verification/performance/manifest.json` case
+  `lsp-query-001-request-families` and covers document sync plus document symbols,
+  workspace symbols, completion, hover, definition, references, semantic tokens,
+  inlay hints, folding ranges, code actions, formatting, and pull diagnostics
+  through one deterministic stdio LSP session.

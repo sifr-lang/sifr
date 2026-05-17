@@ -10,7 +10,7 @@ This issue tracks the sequential implementation loop for Phase 36. Each mileston
 - [x] `milestone_36_1`: Production Tooling Contract Lock
 - [x] `milestone_36_2`: Diagnostics, Rules, Suppressions, Exclusions, And Formatting Foundation
 - [x] `milestone_36_3`: AnalysisHost, Symbol Index, And Session Model
-- [ ] `milestone_36_4`: Full Editor Query Layer
+- [x] `milestone_36_4`: Full Editor Query Layer
 - [ ] `milestone_36_5`: Production Native LSP Server
 - [ ] `milestone_36_6`: Multi-Editor Syntax And Integration Assets
 - [ ] `milestone_36_7`: VS Code Extension
@@ -156,7 +156,7 @@ Scope:
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2132>
-- [ ] Merge PR.
+- [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2132>
 
 ## m36.4 Validation Evidence
 
@@ -177,3 +177,45 @@ Scope:
 ## m36.4 PR
 
 - PR: <https://github.com/sifr-lang/sifr/pull/2132>
+- Merge commit: `348a3ff7c67a8740c87c7e387428b721812134bb`
+
+## Active Milestone: milestone_36_5
+
+Branch: `phase36-m36-5-native-lsp-server`
+
+Scope:
+
+- [x] Add concrete `sifr_lsp` workspace crate.
+- [x] Add `sifr lsp --stdio` CLI command.
+- [x] Implement LSP 3.17 stdio initialize/shutdown/exit handling on `lsp-server` and `lsp-types`.
+- [x] Add capability registry, document store, session, request queue, scheduler, conversion layer, diagnostics controller, command registry, request handlers, and protocol harness.
+- [x] Implement full and incremental sync, push diagnostics, pull diagnostics, workspace diagnostics, workspace settings, watched-file refresh, save/close flows, cancellation notification handling, stale-version rejection, deterministic protocol errors, and snapshot discipline.
+- [x] Route required editor query families through `sifr_analysis`: completion, hover, signature help, navigation, references, rename, symbols, semantic tokens, inlay hints, document highlights, folding, selection ranges, type hierarchy, code actions, formatting, diagnostics, generated Rust preview, and test command metadata.
+- [x] Add `lsp_protocol_smoke.py` and `lsp_protocol_stress.py` with negative self-tests.
+- [x] Wire m36.5 protocol checks into `scripts/run_all_tests.sh`.
+- [x] Add Phase 35 `lsp-query-001-request-families` benchmark, baseline, and budget evidence.
+- [x] Run local validation.
+- [x] Run Claude Opus review rounds until satisfied.
+- [ ] Open PR.
+- [ ] Merge PR.
+
+## m36.5 Validation Evidence
+
+- `cargo fmt --check && git diff --check` -> PASS.
+- `cargo check -p sifr_lsp -p sifr` -> PASS.
+- `cargo clippy -p sifr_lsp -p sifr_analysis -p sifr -- -D warnings` -> PASS.
+- `cargo test -p sifr_lsp` -> PASS.
+- `python3 -m py_compile verification/tooling/lsp_protocol.py verification/tooling/lsp_protocol_smoke.py verification/tooling/lsp_protocol_stress.py verification/performance/lsp_query_bench.py verification/performance/run_benchmarks.py` -> PASS.
+- `python3 verification/tooling/lsp_protocol_smoke.py && python3 verification/tooling/lsp_protocol_smoke.py --self-test` -> PASS.
+- `python3 verification/tooling/lsp_protocol_stress.py && python3 verification/tooling/lsp_protocol_stress.py --self-test` -> PASS.
+- `python3 verification/tooling/check_lsp_split_brain.py && python3 verification/tooling/check_lsp_split_brain.py --self-test` -> PASS.
+- `python3 verification/tooling/check_tooling_dependency_boundaries.py && python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test` -> PASS.
+- `python3 verification/performance/run_benchmarks.py --validate-only && python3 verification/performance/run_benchmarks.py --self-test` -> PASS.
+- `python3 verification/performance/check_budgets.py && python3 verification/performance/check_budgets.py --self-test` -> PASS.
+- `python3 verification/performance/run_benchmarks.py --case lsp-query-001-request-families --sample-scale smoke` -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS on final pre-PR rerun. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=835.60s`; `max_rss=619.3MiB`; `e2e cache_hits=12/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
+
+## m36.5 Review Evidence
+
+- `reviews/phase36-m36-5-review-pass-1.md` -> CHANGES_REQUESTED. Reviewer requested explicit shutdown/exit exit-code behavior, explicit protocol stress-test `exit` notification, non-stub `completionItem/resolve`, request scheduler lane evidence, and diagnostic clearing on `didClose`.
+- `reviews/phase36-m36-5-review-pass-2.md` -> SATISFIED. Reviewer confirmed the blocking findings were resolved and approved proceeding to PR.
