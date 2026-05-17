@@ -67,6 +67,125 @@ Reference implementations, not direct semantic dependencies:
 
 The implementation must include a short dependency audit before `milestone_37_2`: licenses, maintenance status, public API stability, feature flags, transitive dependency risk, and whether each dependency is used in CLI, compiler, or registry paths.
 
+## Correctness Test Suite Reuse Plan
+
+Sifr must reuse the correctness lessons from Cargo and uv without depending on their unstable or language-specific test crates. Cargo's resolver tests are an oracle and edge-case corpus. uv's integration tests are a behavior matrix for lockfiles, workspaces, caches, registries, Git, auth, and snapshots. Both are ported into Sifr-owned fixtures, helpers, and property tests.
+
+Upstream test material to reuse by porting:
+- Cargo `crates/resolver-tests/tests/resolve.rs`: basic dependency resolution, transitive dependencies, same package name from different sources, dev dependencies, many versions, exact versions, maximal/minimal version ordering, incompatible versions, case/name normalization, backtracking, feature backtracking, deep traps, sys/links conflicts, incomplete information, missing packages, cycles, equality constraints, conflict cache regressions, missing features, cyclic error messages, and shortest conflict paths.
+- Cargo `crates/resolver-tests/tests/pubgrub.rs`: renamed packages, rename shadowing, pre-release semver, cyclic features, cyclic optional dependencies, package cycles/self-dependencies, build/dev dependencies with the same name, weak dependency-feature references, duplicate sys crates, missing optional dependencies, feature shadowing, repeated dependency feature unification, implicit/default feature edge cases, and dependency feature references.
+- Cargo `crates/resolver-tests/tests/validated.rs`: conflict-store regressions, bad-lockfile regressions, registry-with-features, missing feature/dep-feature/weak-feature diagnostics, feature-and-sys conflicts, multiple dependency kinds/targets, optional dependency features, optional dependency rename behavior, and default features across multiple major versions.
+- Cargo `crates/resolver-tests/tests/proptests.rs` and `src/sat.rs`: generated-registry validation, SAT-oracle validation, minimal-version existence agreement, dependency-removal monotonicity, irrelevant-version removal, deterministic pretty-printing of minimized failures, and time-bounded property checks.
+- uv `crates/uv/tests/it/lock.rs`, `lock_conflict.rs`, and resolver internals such as `preferences.rs`, `yanks.rs`, `upgrade.rs`, `version_map.rs`, `candidate_selector.rs`, and `error.rs`: lockfile snapshots, lock preferences, allowed yanks, upgrade sets, no-solution rendering, source metadata, locked/offline/frozen behavior, conflict declarations, marker/feature deduplication, and exponential lockfile growth guards.
+- uv `workspace.rs`, `workspace_list.rs`, and `init.rs`: root and virtual workspaces, from-member discovery, excluded/non-included/hidden/gitignored members, empty and malformed members, workspace path dependencies, workspace lock idempotence from subdirectories, member names shadowing dependencies, path hopping, Git workspaces, complex relative paths, unmanaged members, and deterministic workspace-list output.
+- uv `tree.rs`: normal and inverted trees, platform dependencies, repeated dependencies and repeated versions, dev and optional dependencies, cycles without infinite loops, workspace circular dependencies, frozen tree reads, and outdated reporting.
+- uv `cache.rs`, `cache_clean.rs`, and `cache_prune.rs`: cache init failures, permission errors, stale directories, stale symlinks, stale revisions, package/index-specific clean behavior, verbatim path handling, and corruption recovery.
+- uv `publish.rs` and `auth.rs`: missing/invalid/mixed credentials, token handling, trusted publishing permission failures, redirects, dubious filenames, dry-run reporting all publish errors, keyring/text/native auth behavior, prefix matching, host fallback, malformed helper responses, invalid URIs, and credential redaction.
+
+Do not reuse directly:
+- Cargo `resolver-tests` APIs, helper DSL, Cargo `Dependency` / `Summary` / `PackageId` types, or Cargo's internal resolver.
+- uv's `uv_snapshot!` macro, Python interpreter/venv fixtures, wheel/sdist metadata fixtures, PyPI-specific snapshots, or uv resolver crates as implementation dependencies.
+- uv resolver library implementation files such as `preferences.rs`, `version_map.rs`, `candidate_selector.rs`, and `error.rs` are reference patterns, not test ports. Port behavior from uv's `tests/it/` integration tests and encode Sifr-specific resolver checks in Sifr-owned tests.
+- Cargo's multiple-version behavior where it conflicts with Sifr import-root semantics.
+- Python-specific extras/groups/markers except as patterns that lower into Sifr features, target predicates, and workspace catalogs.
+
+Sifr-owned correctness harnesses:
+- Add a package-manager model test harness under the Phase 37 implementation crate, with Sifr-owned helpers such as `pkg`, `dep`, `feature`, `target_dep`, `workspace_member`, `registry_source`, `git_source`, `path_source`, and expected resolved graph snapshots.
+- Add a fake sparse registry server that can serve versions, yanks, auth failures, malformed records, checksum mismatches, conditional request responses, redirects, and offline/cache-only metadata.
+- Add temporary Git repository helpers using the selected `gix` stack for tags, branches, locked revisions, branch movement, subdirectories, workspaces inside Git dependencies, and changed-package selectors.
+- Use `insta` snapshots with deterministic filters for temp paths, registry URLs, commit ids, checksums, elapsed time, and target triples.
+
+Sifr SAT/metamorphic oracle:
+- Implement a Sifr-specific SAT oracle inspired by Cargo's `SatResolver`. It validates the existence or non-existence of a solution and validates that a PubGrub result satisfies Sifr package semantics.
+- The oracle must encode these constraints explicitly:
+  1. At most one selected version per Sifr import root in one dependency scope unless the consuming manifest aliases a package to a distinct import root.
+  2. At most one selected package per identical source identity: source kind, registry name, package name, and path/Git/URL identity.
+  3. Workspace members are fixed local candidates at their manifest version and source identity.
+  4. If a dependency edge is selected, exactly one package candidate satisfying its source, target, feature, and version requirement is selected.
+  5. Non-optional dependencies are always selected when their owning package is selected and their target predicate is active.
+  6. Optional dependencies are selected only through explicit feature activation semantics described below.
+  7. If a package feature is active, its owning package is selected.
+  8. If a dependency feature reference is active, the dependency package is selected and that dependency feature is active unless the reference is weak.
+  9. Feature conflicts are pre-solver constraints: two conflicting feature atoms cannot both be active in the same solve.
+  10. Target predicates are hard pre-filters for Phase 37: false-target dependencies and candidates never enter the active solver input.
+  11. Yanked versions are excluded unless the version is already locked with matching checksum or explicitly pinned by an allowed future policy.
+  12. Native-capable backend dependencies, build scripts, `links` crates, and proc macros require explicit root trust entries; every selected native-capable package without trust fails the oracle.
+  13. Path, Git, URL, registry, and workspace sources remain distinct solver identities and preserve their source constraints in conflict paths.
+  14. Structural workspace package cycles and non-dev package cycles are rejected before PubGrub and are not treated as valid SAT solutions.
+  15. Direct-dependency import boundaries are validated over the resolved graph: transitive dependencies are compiled but not directly importable from a consuming package unless explicitly declared or re-exported.
+
+Optional dependency activation semantics:
+- Optional dependencies are declared with `optional = true` or by being attached only to a feature.
+- `dep:name` activates optional dependency `name`.
+- `name/feature` activates feature `feature` on dependency `name` and requires `name` to be non-optional or activated by `dep:name` in the same feature fixed point; otherwise Sifr emits `SIFR-PACKAGE-0103`.
+- `name?/feature` is a weak dependency-feature reference. It activates `feature` only if dependency `name` is already active through another edge; otherwise it is a no-op.
+- Feature expansion runs to a deterministic fixed point before PubGrub input is built. Cyclic feature aliases are rejected; cyclic optional dependency graphs are rejected unless expansion reaches a stable finite fixed point without introducing a package cycle.
+
+Sifr versus Cargo multiple-version policy:
+- Same source identity and semver-incompatible versions of the same package are a hard error.
+- Different registries with the same package name and export root are a hard error unless the consuming manifest aliases one dependency to a distinct valid import root.
+- Path versus registry, workspace versus registry, and Git versus registry instances of the same package/export root are hard errors unless explicitly aliased.
+- Aliasing preserves package identity in diagnostics and generated Rust names but gives the consumer a distinct import root.
+- Every Cargo resolver case that Cargo accepts through multiple semver-incompatible versions must have a Sifr negative test showing the intentional rejection, plus a positive alias test where Sifr intentionally accepts the graph.
+
+Workspace catalog and selection tests:
+- A workspace catalog entry with no consumers is allowed and does not enter the solve.
+- A member using `{ workspace = true }` inherits version, default-features, features, target predicates, and source constraints from the catalog.
+- A member that references a catalog entry without `{ workspace = true }` does not inherit it.
+- A member may not silently override a catalog entry through `{ workspace = true }`; overrides require an explicit non-workspace dependency spec and must produce deterministic diagnostics when they conflict with other selected members.
+- Workspace-level target dependency catalogs are tested with active and inactive targets.
+- Selection tests cover `--workspace`, default members, `-p`, `--exclude`, `--filter pkg`, `{path/glob}`, `pkg...`, `...pkg`, `...^pkg`, `[base...head]`, empty selections, and global file changes that affect all members.
+
+Resolution mode and command matrix:
+
+| Command | Online | Offline | Locked | Frozen |
+| --- | --- | --- | --- | --- |
+| `sifr sync` | resolve, fetch, and write lock when needed | solve from cached metadata and fail on cache miss | validate lock and fail on required changes | locked plus offline cache enforcement |
+| `sifr fetch` | download locked or newly resolved sources as allowed | download nothing and fail on missing cache entries | fetch only packages already present in the lock | locked plus offline cache enforcement |
+| `sifr check` | resolve/fetch as needed, then type-check | solve from cache and fail on missing metadata/source | validate lock, then type-check | locked plus offline cache enforcement |
+| `sifr build` | resolve/fetch as needed, then build | solve from cache and fail on missing metadata/source | validate lock and backend Cargo lock, then build | locked plus offline cache enforcement |
+| `sifr run` | same as build, then execute | same as offline build, then execute | same as locked build, then execute | same as frozen build, then execute |
+| `sifr test` | resolve selected workspace/package graph, then test | solve from cache and fail on missing metadata/source | validate lock for selected graph, then test | locked plus offline cache enforcement |
+| `sifr tree` / `outdated` | read or refresh metadata according to command flags | use cached metadata only | read lock without mutation | read lock without mutation and no network |
+| `sifr publish --dry-run` | validate package, archive, lock, and registry metadata without upload | fail if registry metadata is required and absent | validate lock before packaging | locked plus offline cache enforcement |
+
+Mandatory property tests:
+- Repeated resolution of the same input produces byte-identical `sifr.lock`, resolved graph JSON, and diagnostics.
+- Solver results satisfy all active direct and transitive requirements.
+- PubGrub success implies SAT oracle success; SAT oracle unsat implies PubGrub unsat for the supported Sifr model subset.
+- Locked versions are preserved unless manifest, feature, target, source metadata, or update policy requires movement.
+- `--locked` and `--frozen` never write manifests, lockfiles, caches, or generated Cargo state.
+- Offline mode performs no network calls and fails on missing metadata or source archive cache entries.
+- Removing inactive package versions does not make a previously satisfiable graph unsatisfiable.
+- Removing dependency edges cannot make a satisfiable graph unsatisfiable.
+- Feature activation is order-independent and idempotent.
+- Optional dependency cycle expansion terminates in a deterministic bounded number of iterations derived from the feature/dependency graph's strongly connected components, or emits a stable package diagnostic before PubGrub runs.
+- Target-false dependencies never appear in solver input or lockfile dependency edges for the active-target solve.
+- Yanked versions are selected only through an existing valid lockfile or an explicitly pinned future policy.
+- Diagnostic conflict paths are deterministic and shortest according to package-edge count, then lexical tie-breakers.
+
+Mandatory integration categories:
+- Lockfile round-trip, schema version rejection, manifest digest/staleness, checksum mismatch, exact requirement-string preservation, and stable ordering.
+- Registry behavior: sparse-index metadata, yanks, malformed records, auth failures, alternate registries, registry priority, redirects, HTTPS enforcement, and credential redaction.
+- Git behavior: locked commit remains stable after branch movement, branch/tag specs lock to a commit, short revs normalize, subdirectories resolve, Git workspaces resolve, and changed-package selectors use Git ranges deterministically.
+- Package graph cycles: direct package cycles, self-dependencies, optional dependency cycles, workspace member cycles, dev-dependency cycles, and cycle diagnostics.
+- Source/package import integration: dependency source compiles through frontend/HIR/codegen, direct-dependency-only imports, private module rejection, explicit re-export validation, export-root ambiguity, aliasing, and PackageSourceMap stability.
+- Generated Cargo backend integration: backend dependency collection, native trust gates, `links` conflicts, generated `Cargo.lock` verification, backend lock drift under `--locked`, and cache invalidation.
+- CLI mutation: `sifr add/remove/update` TOML preservation, atomic write failure recovery, dry-run manifest/lock diffs, workspace package targeting, and idempotent repeated commands.
+- Cache and archive: cache init failure, corruption recovery, stale staged directory cleanup, deterministic `tar.zst` archive entries, path traversal rejection, symlink policy, and cache prune behavior once prune exists.
+- Publish/auth: missing metadata, duplicate immutable version, unauthorized namespace, invalid token, mixed credentials, no credentials, dry-run reporting all errors, suspicious filenames/paths, namespace ownership, token storage, token redaction, and helper/auth malformed responses.
+- Tree/outdated: normal and inverted tree, repeated dependency display, cycles without infinite loops, dev/optional/target dependency views, workspace selection, frozen mode, and outdated compatible/incompatible reporting.
+
+Traceability and upstream update process:
+- Maintain a Phase 37 traceability matrix mapping each borrowed Cargo/uv category to Sifr test files, milestone, diagnostic code, expected behavior, and intentional divergence.
+- When upgrading `astral-pubgrub`, `semver`, `gix`, registry/HTTP dependencies, archive/checksum dependencies, or solver-adjacent code, the implementation must:
+  1. Run the full Sifr SAT oracle suite.
+  2. Run property tests with recorded seeds for any failure.
+  3. Review upstream Cargo resolver-tests for new semver, feature, backtracking, lock, registry, or conflict cases and port relevant categories.
+  4. Review upstream uv lock/workspace/tree/cache/auth/publish tests for new behavior categories and port relevant categories.
+  5. Update the traceability matrix with new test files or explicit non-port decisions.
+  6. Run the repository validation gate before merging.
+
 ## Manifest Model
 
 `sifr.toml` remains the canonical manifest. Unknown tables may remain forward-compatible only when they cannot affect package resolution; resolution-related unknown keys must be rejected with package diagnostics once Phase 37 schema validation is active.
@@ -620,6 +739,7 @@ Concurrency:
 - Scope:
   - Implement Sifr source dependency solving through `astral-pubgrub`, including `SolverInput`, `FeaturePlan`, `ResolutionMode`, `ResolutionPreferences`, `ResolvedPackageGraph`, deterministic candidate ordering, lockfile preferences, and structured conflict paths.
   - Implement pre-expanded feature resolution, target predicate selection, `sifr.lock`, staleness detection, content checksums, and a content-addressed package cache.
+  - Implement the Sifr SAT/metamorphic oracle and port the Cargo resolver matrix categories that apply to Sifr's source package model.
   - Support registry, Git, URL, and path source records at the model level.
   - Implement `sifr sync`, `sifr fetch`, `--locked`, `--offline`, and `--frozen`.
 - Definition of done:
@@ -653,6 +773,7 @@ Concurrency:
 - Scope:
   - Implement `sifr init`, `add`, `remove`, `update`, `tree`, `outdated`, `vendor`, package-aware `check/build/run/test`, workspace selectors, filters, dry-run/json summaries, and TOML mutation.
   - Implement Turborepo-inspired package filters over Sifr's `petgraph` package graph and `gix` changed-file detection.
+  - Port uv workspace, tree, lock-mode, and CLI snapshot behavior categories into Sifr-owned integration tests.
   - Update Phase 36 analysis surfaces to use the package graph.
 - Definition of done:
   - Monorepo workflows support root/virtual workspaces, member package selection, dependency/dependent filtering, changed-package selection, and package boundary diagnostics.
@@ -672,6 +793,7 @@ Concurrency:
 - Scope:
   - Add positive and negative E2E fixtures, package registry test infrastructure, workspace fixtures, cache tests, CLI docs, public package docs, architecture updates, and phase execution checklist evidence.
   - Add maintainability guardrails for package manager module decomposition.
+  - Complete the Cargo/uv correctness traceability matrix and document every intentional divergence from Cargo or uv behavior.
 - Definition of done:
   - `scripts/run_all_tests.sh --profile quick` and full local validation pass.
   - Package workflows are stable enough for broader ecosystem usage.
@@ -699,6 +821,7 @@ Concurrency:
 - `milestone_37_2` (Resolver, Lockfile, And Source Cache):
   - Positive: resolve registry/path/Git graph, write stable `sifr.lock`, fetch into cache, rebuild without lockfile churn, build offline after fetch.
   - Negative: stale lock under `--locked`, cache miss under `--offline`, checksum mismatch, yanked version on new resolution, unsupported protocol, version conflict with clear conflict path.
+  - Oracle: port Cargo resolver matrix cases for semver/pre-release/backtracking/features/cycles/source identity, add Sifr multiple-version divergence tests, and pass Sifr SAT/metamorphic property checks.
 - `milestone_37_3` (Package-Aware Import Resolution):
   - Positive: import package modules, import re-exported symbols from `__init__.sifr`, compile transitive dependency source, support workspace member dependency import.
   - Negative: undeclared dependency import, ambiguous export root, local/dependency shadowing, private module access, missing `__init__.sifr`, package directory/file collision.
@@ -708,12 +831,14 @@ Concurrency:
 - `milestone_37_5` (Workspace CLI, Filters, And Tooling Integration):
   - Positive: `sifr add/remove/update` mutate selected member manifests, `--workspace` builds all members, `-p` builds one member, filters select dependencies/dependents/changed packages, dry-run/json reports planned changes.
   - Negative: unknown package selector, filter selecting no packages, import outside package root, dependency used but not declared, tool/editor query using stale package graph.
+  - Upstream reuse: port uv workspace/list/tree/init lock-idempotence categories into Sifr snapshot tests with Sifr package manifests and source packages.
 - `milestone_37_6` (Registry, Publish, Yank, And Credential Flows):
   - Positive: package dry-run archive is deterministic, publish uploads immutable package, yank hides package from new resolution, alternate registry resolves, credential redaction is verified.
   - Negative: publish missing metadata, duplicate immutable version, unauthorized namespace, insecure registry URL, archive path traversal, credential leak attempt, yanked package selected without existing lockfile.
 - `milestone_37_7` (Validation, Documentation, And Ecosystem Gate):
   - Positive: docs cover app/library/workspace/package-author flows; package fixtures cover single package, monorepo, registry, Git, path, features, native deps, publish, and cache workflows.
   - Negative: maintainability guardrail rejects monolithic package manager files; docs/fixture drift checks catch undocumented CLI flags or diagnostics.
+  - Traceability: Cargo resolver-tests and uv integration-test categories are mapped to Sifr tests, intentional divergences, or explicit non-port decisions.
 - Exit-gate evidence explicitly demonstrates: Package management workflows are stable enough for broader ecosystem usage with deterministic source package resolution, lockfiles, package-aware imports, generated Cargo/native integration, monorepo support, registry publishing, and Phase 27 non-regression guarantees.
 
 ## Exit Gate
