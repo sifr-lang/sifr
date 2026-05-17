@@ -1,6 +1,6 @@
 # Phase 36 VS Code Extension Production Execution Checklist
 
-Status: planned
+Status: in_progress
 Source phase: `internal_docs/phases/36_developer_tooling_and_ecosystem_hooks.md`
 Phase milestone: `milestone_36_7`
 Recommended extension repository: `sifr-lang/sifr-vscode`
@@ -9,7 +9,7 @@ This issue tracks the concrete VS Code extension implementation plan for Phase 3
 
 ## Decision
 
-Implement the VS Code extension as a separate repository by default:
+Implement the VS Code extension as a separate repository:
 
 ```text
 sifr-lang/sifr
@@ -30,7 +30,7 @@ sifr-lang/sifr-vscode
   .vsix packaging
 ```
 
-`milestone_36_1` may choose an in-repo extension only if it records a reviewed rationale and preserves the same validation, packaging, and release-boundary requirements. The default is separate repo because VS Code extensions have their own Node/TypeScript dependency graph, `.vsix` packaging, marketplace metadata, extension tests, and release cadence.
+`milestone_36_1` locked the separate-repository boundary. The main repository records the contract in `verification/tooling/vscode_extension_contract.json`; validation locates the extension repository through `SIFR_VSCODE_REPO` or sibling checkout `../sifr-vscode`. The extension remains separate because VS Code extensions have their own Node/TypeScript dependency graph, `.vsix` packaging, marketplace metadata, extension tests, and release cadence.
 
 ## Non-Negotiable Boundary
 
@@ -225,7 +225,7 @@ Extension repository validation must include:
 
 All work stays sequential. Do not begin the next PR until the current PR is merged and the checklist is updated.
 
-1. [ ] Main repo PR (`milestone_36_1`): lock extension repo boundary, extension contract JSON, validation command, and this issue checklist.
+1. [ ] Main repo PR (`milestone_36_1`): lock extension repo boundary, extension contract JSON, validation command, and this issue checklist. Active PR: <https://github.com/sifr-lang/sifr/pull/2129>; mark complete after merge.
 2. [ ] Extension repo PR (`milestone_36_7`): scaffold package, CI, language contribution, and grammar wiring.
 3. [ ] Extension repo PR (`milestone_36_7`): LSP launcher, settings, binary discovery, restart/log commands, and smoke tests.
 4. [ ] Extension repo PR (`milestone_36_7`): editor feature wiring for LSP diagnostics, completion, hover, navigation, symbols, semantic tokens, inlay hints, folding, highlights, code actions, formatting, and rename.
