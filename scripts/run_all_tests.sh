@@ -133,6 +133,10 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py" --self-test
 
 echo "Running Performance Budget Checks"
 python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only
@@ -187,6 +191,9 @@ cargo test -p sifr_syntax
 
 echo "Running sifr_frontend tests"
 cargo test -p sifr_frontend
+
+echo "Running sifr_analysis tests"
+cargo test -p sifr_analysis
 
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass
