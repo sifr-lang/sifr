@@ -120,6 +120,16 @@ python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.p
 python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/performance/check_frontend_cache_contract.py"
 
+echo "Running Developer Tooling Checks"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_contract_lock.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_contract_lock.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_dependency_boundaries.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_dependency_boundaries.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py" --self-test
+
 echo "Running Performance Budget Checks"
 python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only
 python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --self-test

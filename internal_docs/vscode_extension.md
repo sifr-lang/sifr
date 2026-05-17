@@ -1,0 +1,87 @@
+# Sifr VS Code Extension Contract
+
+status: phase36-contract-locked
+
+## Repository Boundary
+
+The VS Code extension lives in a separate repository:
+
+```text
+sifr-lang/sifr-vscode
+```
+
+The main `sifr-lang/sifr` repository owns compiler, CLI, LSP, formatter, linter, syntax assets, editor contracts, and cross-repository validation. The extension repository owns Node/TypeScript packaging, extension tests, `.vsix` packaging, marketplace metadata, and release artifacts.
+
+The repository is expected at `SIFR_VSCODE_REPO` or as a sibling checkout `../sifr-vscode`. m36.1 locks the contract. m36.7 makes the extension repository mandatory for package validation.
+
+## Manifest Contract
+
+The checked-in contract is `verification/tooling/vscode_extension_contract.json`.
+
+Required identity:
+
+- extension id: `sifr-lang.sifr-vscode`
+- language id: `sifr`
+- file extension: `.sifr`
+- minimum VS Code engine: `^1.90.0`
+
+Required default launch:
+
+```json
+{
+  "command": "sifr",
+  "args": ["lsp", "--stdio"]
+}
+```
+
+The extension must support `sifr.lsp.path` to override the executable path and `sifr.lsp.trace.server` for protocol tracing.
+
+## Allowed Responsibilities
+
+The extension may:
+
+- register the `sifr` language and `.sifr` files
+- contribute syntax-highlighting assets validated by the main repo
+- contribute language configuration
+- launch `sifr lsp --stdio`
+- send Sifr LSP requests and commands
+- call Sifr CLI commands for check, fmt, lint, and tests
+- present VS Code UI for Sifr-produced results
+- package `.vsix` artifacts
+
+## Forbidden Responsibilities
+
+The extension must not implement:
+
+- parser logic
+- type checking
+- ownership or move analysis
+- diagnostics derivation
+- symbol, reference, or rename analysis
+- formatter logic
+- linter or policy-rule logic
+- generated Rust decisions
+- fallback Python language-server behavior
+
+## Required Commands
+
+- `sifr.restartLanguageServer`
+- `sifr.showLanguageServerLogs`
+- `sifr.locateBinary`
+- `sifr.runCheck`
+- `sifr.runTests`
+- `sifr.formatDocument`
+- `sifr.showGeneratedRust`
+- `sifr.explainDiagnostic`
+
+All commands delegate to Sifr LSP or CLI surfaces.
+
+## Versioning Covenant
+
+Before m36.7 closes, the extension must document whether its version is coupled to the Sifr compiler version or declares an explicit supported Sifr version range. Extension releases are gated on the main-repo contract check, `sifr lsp --stdio` smoke tests, extension tests, and `.vsix` packaging.
+
+## Validation
+
+`verification/tooling/check_vscode_extension_contract.py` validates the main-repo contract and, once extension validation is active, checks the extension repository manifest, commands, settings, launch command, package scripts, and forbidden semantic behavior.
+
+`verification/tooling/check_vscode_extension.py` is reserved for m36.7 build/test/package validation against a real extension checkout.
