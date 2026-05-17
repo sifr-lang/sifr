@@ -1,5 +1,4 @@
 use crate::diagnostics::RenderedDiagnostic;
-use crate::frontend::parse_module_with_diagnostics;
 use crate::workspace::WorkspaceRoot;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Stmt;
@@ -417,8 +416,7 @@ pub(crate) fn parse_import_closure_source_modules(
             )]
         })?;
         let label = discovery_label(&module_name, &path, diagnostic_style);
-        let parsed = parse_module_with_diagnostics(&source, Some(&label))?;
-        let suite = parsed.into_suite();
+        let suite = sifr_frontend::parse_source(&source, Some(&label))?;
         for dependency in collect_import_closure_module_dependencies(&suite) {
             if parsed_names.contains(dependency.as_str()) {
                 continue;

@@ -1,8 +1,5 @@
 use super::execution::execute_test_runner_project;
 use crate::diagnostics::{run_codegen_with_boundary, write_stderr_line, RenderedDiagnostic};
-use crate::frontend::{
-    lower_frontend_module_with_source, FrontendDiagnosticStyle, FrontendSourceContext,
-};
 use crate::project::{
     collect_project_hir_source_modules, discover_test_root_modules,
     parse_import_closure_source_modules, DiscoveryDiagnosticStyle, ModuleResolver,
@@ -11,6 +8,9 @@ use crate::project::{
 use crate::stdlib::compile_stdlib;
 use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_test};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::{
+    compile_module_hir_with_source, FrontendDiagnosticStyle, FrontendSourceContext,
+};
 use sifr_hir::HirModule;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -100,7 +100,7 @@ pub(crate) fn build_test_runner_project(
             )]);
         };
 
-        let lowering_result = match lower_frontend_module_with_source(
+        let lowering_result = match compile_module_hir_with_source(
             module_name,
             &parsed.suite,
             &project_externals,

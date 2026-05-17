@@ -168,6 +168,13 @@ pub fn parse_module(
     })
 }
 
+pub fn parse_module_suite(
+    source: &str,
+    context: Option<&str>,
+) -> Result<Vec<Stmt>, Vec<RenderedDiagnostic>> {
+    parse_module_raw(source, context).map(Parsed::into_suite)
+}
+
 pub fn parse_module_raw(
     source: &str,
     context: Option<&str>,

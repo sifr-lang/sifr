@@ -16,7 +16,7 @@ use sifr_driver::{
     emit_project, find_workspace_root, run_tests, CachedBinaryArtifact, CompileResult,
 };
 use sifr_python_ast::Stmt;
-use sifr_python_parser::parse_module;
+use sifr_syntax::parse_module_suite;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::io::{self, Write};
@@ -150,12 +150,12 @@ fn has_local_project_imports(file: &Path) -> bool {
     let Ok(source) = std::fs::read_to_string(file) else {
         return false;
     };
-    let parsed = match parse_module(&source) {
-        Ok(parsed) if parsed.has_valid_syntax() => parsed,
+    let suite = match parse_module_suite(&source, Some(&file.display().to_string())) {
+        Ok(suite) => suite,
         _ => return false,
     };
 
-    parsed.suite().iter().any(|stmt| {
+    suite.iter().any(|stmt| {
         let Stmt::ImportFrom(import_from) = stmt else {
             return false;
         };

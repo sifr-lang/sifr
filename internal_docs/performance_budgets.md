@@ -59,6 +59,8 @@ Command benchmarks use:
 - p95 latency: `max(baseline_p95 * 1.15, baseline_p95 + 50ms)`
 - peak RSS: `max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)`
 
+Command benchmark RSS is measured per command invocation with `/usr/bin/time` when available (`-l` on macOS, `-v` on Linux). Python `RUSAGE_CHILDREN` is used only as a fallback because it is process-cumulative on some platforms and can otherwise contaminate later samples with earlier validation work.
+
 Frontend-query and local edit-loop benchmarks use stricter latency thresholds:
 
 - median latency: `max(baseline_median * 1.05, baseline_median + 2ms)`

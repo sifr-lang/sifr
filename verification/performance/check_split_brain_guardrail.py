@@ -16,22 +16,6 @@ APPROVED_PREFIXES = {
     Path("crates/sifr_hir/src"),
 }
 
-# Existing driver paths are migration-source shims until milestone_35_4b removes
-# duplicate frontend ownership. New files should not be added to this allowlist.
-APPROVED_MIGRATION_FILES = {
-    Path("crates/sifr_driver/src/frontend/api.rs"),
-    Path("crates/sifr_driver/src/frontend/mod.rs"),
-    Path("crates/sifr_driver/src/frontend/module_lowering.rs"),
-    Path("crates/sifr_driver/src/frontend/parser_diagnostics.rs"),
-    Path("crates/sifr_driver/src/project/frontend.rs"),
-    Path("crates/sifr_driver/src/project/discovery.rs"),
-    Path("crates/sifr_driver/src/project/compile_order.rs"),
-    Path("crates/sifr_driver/src/stdlib/bootstrap.rs"),
-    Path("crates/sifr_driver/src/build/entrypoint.rs"),
-    Path("crates/sifr_driver/src/test_runner/orchestrator.rs"),
-    Path("crates/sifr/src/main.rs"),
-}
-
 FORBIDDEN_PATTERNS = (
     "sifr_python_parser",
     "ruff_python_parser",
@@ -46,8 +30,6 @@ FORBIDDEN_PATTERNS = (
 def is_approved(path: Path) -> bool:
     rel = path.relative_to(REPO_ROOT)
     if "tests" in rel.parts or rel.name.endswith("_tests.rs"):
-        return True
-    if rel in APPROVED_MIGRATION_FILES:
         return True
     return any(rel.is_relative_to(prefix) for prefix in APPROVED_PREFIXES)
 

@@ -369,12 +369,35 @@ def command_for_case(case: BenchmarkCase, output_dir: Path) -> list[str]:
     return command
 
 
+def timed_command(command: list[str]) -> list[str]:
+    if platform.system() == "Darwin" and Path("/usr/bin/time").exists():
+        return ["/usr/bin/time", "-l", *command]
+    if platform.system() == "Linux" and Path("/usr/bin/time").exists():
+        return ["/usr/bin/time", "-v", *command]
+    return command
+
+
+def parse_peak_rss(stderr: str) -> int | None:
+    for line in stderr.splitlines():
+        stripped = line.strip()
+        if stripped.endswith("maximum resident set size"):
+            value = stripped.split(maxsplit=1)[0]
+            if value.isdigit():
+                return int(value)
+        if "Maximum resident set size (kbytes):" in stripped:
+            _, value = stripped.rsplit(":", maxsplit=1)
+            value = value.strip()
+            if value.isdigit():
+                return int(value) * 1024
+    return None
+
+
 def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
     started = time.perf_counter()
     rss_before = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     try:
         completed = subprocess.run(
-            command,
+            timed_command(command),
             cwd=REPO_ROOT,
             text=True,
             capture_output=True,
@@ -391,9 +414,12 @@ def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
             "stderr_tail": tail(error.stderr or ""),
         }
     rss_after = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+    peak_rss_bytes = parse_peak_rss(completed.stderr)
+    if peak_rss_bytes is None:
+        peak_rss_bytes = normalize_rss(rss_after if rss_after >= rss_before else rss_before)
     return {
         "duration_ms": (time.perf_counter() - started) * 1000.0,
-        "peak_rss_bytes": normalize_rss(rss_after if rss_after >= rss_before else rss_before),
+        "peak_rss_bytes": peak_rss_bytes,
         "exit_code": completed.returncode,
         "timed_out": False,
         "stdout": completed.stdout,

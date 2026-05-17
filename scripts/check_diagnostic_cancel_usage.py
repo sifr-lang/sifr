@@ -61,6 +61,8 @@ def strip_cfg_test_blocks(text: str) -> str:
 def main() -> int:
     errors: list[str] = []
     for path in git_ls_files("crates/**/*.rs"):
+        if not path.exists():
+            continue
         rel = path.relative_to(ROOT)
         text = strip_cfg_test_blocks(path.read_text(encoding="utf-8", errors="ignore"))
         for line_number, line in enumerate(text.splitlines(), 1):

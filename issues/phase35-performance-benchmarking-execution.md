@@ -12,7 +12,7 @@ status: in_progress
 - [x] m35.1 baseline benchmark suite.
 - [x] m35.2 budget and waiver policy.
 - [x] m35.3 enforcement integration for performance budgets.
-- [ ] m35.4b full CLI adoption and query regression lock.
+- [x] m35.4b full CLI adoption and query regression lock.
 
 ## Validation Evidence
 
@@ -26,7 +26,7 @@ status: in_progress
 - `python3 verification/performance/check_frontend_cache_contract.py` -> PASS.
 - `reviews/phase35-m35-4a-review-pass-1.md` -> NOT SATISFIED; blockers B1/B2 fixed.
 - `reviews/phase35-m35-4a-review-pass-2.md` -> SATISFIED for m35.4a.
-- `scripts/run_all_tests.sh --profile quick` -> PASS for m35.1 (`wall_time=944.94s`), m35.2 (`wall_time=748.90s`), and m35.3 (`wall_time=564.73s`); wall-time advisories recorded in `target/validation_lane_reports/quick.latest.json`, report signature `f808284595f17a99`.
+- `scripts/run_all_tests.sh --profile quick` -> PASS for m35.1 (`wall_time=944.94s`), m35.2 (`wall_time=748.90s`), m35.3 (`wall_time=564.73s`), and m35.4b (`wall_time=1236.88s`); wall-time advisories recorded in `target/validation_lane_reports/quick.latest.json`, report signature `f808284595f17a99`.
 - `verification/performance/manifest.json` -> 45 benchmark cases across the required Phase 35 groups.
 - `verification/performance/baselines.json` -> captured with all 45 manifest cases; maximum coefficient of variation `0.091581`.
 - `python3 verification/performance/run_benchmarks.py --validate-only` -> PASS.
@@ -50,9 +50,26 @@ status: in_progress
 - `python3 verification/performance/run_benchmarks.py --case check-single-file-001-arithmetic --case check-project-004-project-graph --case build-single-file-001-break-continue --case build-project-001-additional-modules --case incremental-local-loop-001-unchanged-file-update --case interactive-tooling-foundation-002-warm-diagnostics-query --case phase27-non-regression-002-json-diagnostic-schema --json-out target/performance/test.pr.subset.budget.json && python3 verification/performance/check_budgets.py --results target/performance/test.pr.subset.budget.json --allow-subset` -> PASS.
 - `bash -n scripts/run_all_tests.sh` -> PASS.
 - `reviews/phase35-m35-3-review-pass-1.md` -> SATISFIED for m35.3.
+- m35.4b removed the duplicate driver frontend parser/lowering/export shims and routes driver/CLI frontend flows through `sifr_frontend`/`sifr_syntax`.
+- m35.4b added `sifr_syntax::parse_module_suite` so CLI/project compiler paths keep the syntax ownership boundary without paying token/trivia collection cost when only the AST suite is needed.
+- m35.4b fixed command benchmark RSS measurement to use per-command `/usr/bin/time` output where available, avoiding cumulative `RUSAGE_CHILDREN` contamination from earlier validation subprocesses.
+- `verification/performance/check_split_brain_guardrail.py` -> PASS with no driver/CLI migration allowlist.
+- `cargo check -p sifr_frontend -p sifr_driver -p sifr` -> PASS.
+- `cargo clippy -p sifr_frontend -p sifr_driver -p sifr -- -D warnings` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_frontend` -> PASS.
+- `cargo test -p sifr_driver project_build_check -- --skip cached_project_binary` -> PASS.
+- `python3 verification/performance/check_frontend_cache_contract.py` -> PASS.
+- `python3 verification/performance/run_benchmarks.py --validate-only` -> PASS.
+- `python3 verification/performance/run_benchmarks.py --self-test` -> PASS.
+- `python3 verification/performance/check_budgets.py` -> PASS.
+- `python3 verification/performance/check_budgets.py --self-test` -> PASS.
+- CLI positive smoke: `target/debug/sifr check crates/sifr/tests/verification/project/multi_module_run/main.sifr` -> PASS with `no errors found`.
+- CLI emit smoke: `target/debug/sifr emit crates/sifr/tests/verification/project/multi_module_run/main.sifr >/tmp/sifr_emit_smoke.rs` -> PASS.
+- `reviews/phase35-m35-4b-review-pass-1.md` -> SATISFIED for m35.4b.
+- `reviews/phase35-m35-4b-review-pass-2.md` -> SATISFIED for post-review AST-only parser and benchmark RSS measurement deltas.
+- `scripts/run_all_tests.sh --profile pr` -> PASS for m35.4b (`wall_time=2662.52s`); warm wall-time and group-skew advisories recorded in `target/validation_lane_reports/pr.latest.json`, report signature `6cd36071cf629b47`.
 
 ## Open Migration Targets
 
-- Route all CLI frontend flows through `sifr_frontend` in m35.4b.
-- Replace remaining raw parser use in CLI mode detection and stdlib bootstrap with `sifr_syntax`.
-- Replace the temporary split-brain allowlist entries with the final strict approved-boundary policy.
+- None for Phase 35 after m35.4b; Phase 36 must build tooling on `sifr_frontend` without adding semantics-bearing adapter paths.

@@ -784,9 +784,9 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - milestone_core_language-milestone_type_system: basic span tracking (single-file, Sifr-native errors only)
 - milestone_imports: multi-file span tracking (import errors reference both files)
 - Phase 27 diagnostics contract: structured diagnostic schema, stable renderers, and recovery policy
-- Phase 35 shared analysis/query architecture: canonical query/database-backed frontend API consumed by CLI and tooling
+- Phase 35 shared analysis/query architecture: canonical query/database-backed frontend API consumed by CLI and future tooling
 - milestone_ffi: FFI-related `rustc` error translation (extern crate mismatches)
-- milestone_dev_tooling (Phase 36): CLI migration, parity validation, and thin tooling adapter boundaries
+- milestone_dev_tooling (Phase 36): editor/LSP parity validation and thin tooling adapter boundaries on top of `sifr_frontend`
 
 ### 12. Standard Protocol Primitives
 

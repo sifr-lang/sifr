@@ -1,7 +1,6 @@
 mod assembly;
 mod compile_order;
 mod discovery;
-mod exports;
 mod frontend;
 mod rust_module_layout;
 

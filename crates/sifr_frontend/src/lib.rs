@@ -259,6 +259,26 @@ pub struct LoweredModuleView {
     pub hir: HirModule,
 }
 
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct FrontendModuleDiagnostics {
+    pub reveal_types: Vec<RevealTypeDiagnostic>,
+    pub rendered_reveal_types: Vec<RenderedDiagnostic>,
+    pub warnings: Vec<LoweringWarningDiagnostic>,
+    pub rendered_warnings: Vec<RenderedDiagnostic>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FrontendDiagnosticStyle {
+    Bare,
+    ModulePrefixed,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FrontendSourceContext<'a> {
+    pub display_path: &'a str,
+    pub source: &'a str,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ModuleDiagnostics {
     pub module: ModuleId,
@@ -316,7 +336,43 @@ pub struct FrontendContext {
     edges: Vec<ModuleGraphEdge>,
     graph_revision: GraphRevision,
     source_revision: SourceRevision,
+    base_external_defs: ExternalDefs,
     external_defs: ExternalDefs,
+    lowering_modules: BTreeSet<ModuleId>,
+}
+
+pub fn parse_source(
+    source: &str,
+    context: Option<&str>,
+) -> Result<Vec<Stmt>, Vec<RenderedDiagnostic>> {
+    sifr_syntax::parse_module_suite(source, context)
+}
+
+pub fn compile_module_hir(
+    module_name: &str,
+    stmts: &[Stmt],
+    external_defs: &ExternalDefs,
+    diagnostic_style: FrontendDiagnosticStyle,
+) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
+    compile_module_hir_with_source(module_name, stmts, external_defs, diagnostic_style, None)
+}
+
+pub fn compile_module_hir_with_source(
+    module_name: &str,
+    stmts: &[Stmt],
+    external_defs: &ExternalDefs,
+    diagnostic_style: FrontendDiagnosticStyle,
+    source_context: Option<FrontendSourceContext<'_>>,
+) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
+    match lower_module_with_externals(stmts, external_defs) {
+        Ok(result) => Ok(result),
+        Err(errors) => Err(errors
+            .into_iter()
+            .map(|error| {
+                hir_diagnostic_to_rendered(module_name, diagnostic_style, source_context, error)
+            })
+            .collect()),
+    }
 }
 
 impl FrontendContext {
@@ -343,7 +399,9 @@ impl FrontendContext {
             edges: Vec::new(),
             graph_revision: GraphRevision(0),
             source_revision: SourceRevision(0),
+            base_external_defs: external_defs.clone(),
             external_defs,
+            lowering_modules: BTreeSet::new(),
         };
         context.rebuild_edges();
         Ok(context)
@@ -385,6 +443,8 @@ impl FrontendContext {
         }
         files.sort();
         files.dedup();
+        files.retain(|path| path != entrypoint);
+        files.insert(0, entrypoint.to_path_buf());
 
         let mut modules = Vec::with_capacity(files.len());
         for (idx, path) in files.into_iter().enumerate() {
@@ -436,7 +496,9 @@ impl FrontendContext {
             edges: Vec::new(),
             graph_revision: GraphRevision(0),
             source_revision: SourceRevision(0),
+            base_external_defs: ExternalDefs::default(),
             external_defs: ExternalDefs::default(),
+            lowering_modules: BTreeSet::new(),
         };
         context.rebuild_edges();
         Ok(context)
@@ -468,11 +530,19 @@ impl FrontendContext {
         let mut invalidated_modules = Vec::new();
         let mut invalidated_queries = Vec::new();
         if text_changed {
-            self.modules[index].parsed = None;
-            self.modules[index].lowered = None;
-            self.modules[index].diagnostics = None;
-            self.modules[index].analysis = None;
-            invalidated_modules.push(module);
+            self.external_defs = self.base_external_defs.clone();
+            self.lowering_modules.clear();
+            for module_state in &mut self.modules {
+                if module_state.id == module {
+                    module_state.parsed = None;
+                }
+                module_state.lowered = None;
+                module_state.diagnostics = None;
+                module_state.analysis = None;
+                invalidated_modules.push(module_state.id);
+            }
+            invalidated_modules.sort();
+            invalidated_modules.dedup();
             invalidated_queries.extend([
                 QueryKind::Parse,
                 QueryKind::Lower,
@@ -667,6 +737,9 @@ impl FrontendContext {
         if self.modules[index].lowered.is_some() {
             return CacheStatus::Hit;
         }
+        if !self.lowering_modules.insert(module) {
+            return CacheStatus::Miss;
+        }
         let parsed_status = self.ensure_parsed(module);
         let index = self.index_for_module(module);
         let parsed = match parsed_status {
@@ -677,32 +750,39 @@ impl FrontendContext {
                 .unwrap_or_default(),
             Err(errors) => {
                 self.modules[index].diagnostics = Some(errors);
+                self.lowering_modules.remove(&module);
                 return CacheStatus::Miss;
             }
         };
-        match lower_module_with_externals(&parsed, &self.external_defs) {
+        let module_names: BTreeMap<String, ModuleId> = self
+            .modules
+            .iter()
+            .map(|module| (module.module_name.clone(), module.id))
+            .collect();
+        for dependency in local_import_dependencies(&parsed, &module_names) {
+            let _ = self.ensure_lowered(dependency);
+        }
+        let index = self.index_for_module(module);
+        match compile_module_hir_with_source(
+            &self.modules[index].module_name,
+            &parsed,
+            &self.external_defs,
+            FrontendDiagnosticStyle::Bare,
+            Some(FrontendSourceContext {
+                display_path: &self.modules[index].module_name,
+                source: self.modules[index].source.as_str(),
+            }),
+        ) {
             Ok(lowered) => {
+                let module_name = self.modules[index].module_name.clone();
+                collect_module_exports(&module_name, &lowered, &mut self.external_defs);
                 self.modules[index].lowered = Some(lowered);
             }
             Err(errors) => {
-                self.modules[index].diagnostics = Some(
-                    errors
-                        .into_iter()
-                        .map(|error| {
-                            hir_diagnostic_to_rendered(
-                                &self.modules[index].module_name,
-                                FrontendDiagnosticStyle::Bare,
-                                Some(FrontendSourceContext {
-                                    display_path: &self.modules[index].module_name,
-                                    source: self.modules[index].source.as_str(),
-                                }),
-                                error,
-                            )
-                        })
-                        .collect(),
-                );
+                self.modules[index].diagnostics = Some(errors);
             }
         }
+        self.lowering_modules.remove(&module);
         CacheStatus::Miss
     }
 
@@ -874,19 +954,8 @@ fn empty_hir_module() -> HirModule {
     }
 }
 
-#[derive(Clone, Copy)]
-enum FrontendDiagnosticStyle {
-    Bare,
-}
-
-#[derive(Clone, Copy)]
-struct FrontendSourceContext<'a> {
-    display_path: &'a str,
-    source: &'a str,
-}
-
 fn hir_diagnostic_to_rendered(
-    _module_name: &str,
+    module_name: &str,
     diagnostic_style: FrontendDiagnosticStyle,
     source_context: Option<FrontendSourceContext<'_>>,
     error: HirDiagnostic,
@@ -898,6 +967,9 @@ fn hir_diagnostic_to_rendered(
     let primary_range = error.primary_range;
     let message = match diagnostic_style {
         FrontendDiagnosticStyle::Bare => error.message,
+        FrontendDiagnosticStyle::ModulePrefixed => {
+            format!("[{}] {}", module_name, error.message)
+        }
     };
     let message = if uncoded {
         format!(
@@ -953,7 +1025,7 @@ fn diagnostic_with_source_range(
     }
 }
 
-fn reveal_type_diagnostics(
+pub fn reveal_type_diagnostics(
     source_context: Option<FrontendSourceContext<'_>>,
     reveal_types: &[RevealTypeDiagnostic],
 ) -> Vec<RenderedDiagnostic> {
@@ -963,7 +1035,7 @@ fn reveal_type_diagnostics(
         .collect()
 }
 
-fn warning_diagnostics(
+pub fn warning_diagnostics(
     source_context: Option<FrontendSourceContext<'_>>,
     warnings: &[LoweringWarningDiagnostic],
 ) -> Vec<RenderedDiagnostic> {
@@ -1082,8 +1154,7 @@ fn should_export_callable(module_name: &str, callable_name: &str) -> bool {
         )
 }
 
-#[allow(dead_code)]
-fn collect_module_exports(
+pub fn collect_module_exports(
     module_name: &str,
     lowering_result: &LoweringResult,
     external_defs: &mut ExternalDefs,
@@ -1125,7 +1196,7 @@ fn collect_module_exports(
 
     for class in &module.classes {
         if !class.name.starts_with('_') {
-            let methods: Vec<(String, FunctionType)> = class
+            let mut methods: Vec<(String, FunctionType)> = class
                 .methods
                 .iter()
                 .map(|m| {
@@ -1143,6 +1214,20 @@ fn collect_module_exports(
                     )
                 })
                 .collect();
+            for (dunder_name, op_func) in &class.operator_impls {
+                let params: Vec<(String, Type, ParamConvention)> = op_func
+                    .params
+                    .iter()
+                    .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                    .collect();
+                methods.push((
+                    dunder_name.clone(),
+                    FunctionType {
+                        params,
+                        return_type: Box::new(op_func.return_type.clone()),
+                    },
+                ));
+            }
             let class_ty = Type::Class {
                 name: class.name.clone(),
                 fields: class.fields.clone(),
@@ -1269,12 +1354,20 @@ mod tests {
         std::fs::write(dir.join("helper.sifr"), "value: int = 1\n")
             .expect("helper should be written");
 
-        let context = FrontendContext::load_project(&super::ProjectRoot {
+        let mut context = FrontendContext::load_project(&super::ProjectRoot {
             root: SourcePath::new(&dir),
             entrypoint: SourcePath::new(dir.join("main.sifr")),
         })
         .expect("project should load");
 
-        assert_eq!(context.module_graph().edges.len(), 1);
+        let graph = context.module_graph();
+        assert_eq!(graph.entrypoint, ModuleId(0));
+        assert_eq!(graph.edges.len(), 1);
+
+        let diagnostics = context.diagnostics_for_project().into_value().diagnostics;
+        assert!(
+            diagnostics.is_empty(),
+            "project diagnostics should consume dependency exports from the canonical frontend: {diagnostics:?}"
+        );
     }
 }

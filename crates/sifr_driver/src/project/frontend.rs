@@ -1,14 +1,13 @@
 use super::compile_order::compute_module_compile_order;
 use super::discovery::ParsedProjectModule;
-use super::exports::collect_module_exports;
 use crate::diagnostics::{apply_diagnostic_recovery_limits, write_stderr_line, RenderedDiagnostic};
-#[cfg(test)]
-use crate::frontend::lower_frontend_module;
-use crate::frontend::{
-    lower_frontend_module_with_source, reveal_type_diagnostics, warning_diagnostics,
-    FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
-};
 use sifr_diagnostics::DiagnosticCode;
+#[cfg(test)]
+use sifr_frontend::compile_module_hir;
+use sifr_frontend::{
+    collect_module_exports, compile_module_hir_with_source, reveal_type_diagnostics,
+    warning_diagnostics, FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
+};
 use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
 use sifr_python_ast::Stmt;
 use std::collections::HashMap;
@@ -37,7 +36,7 @@ pub(crate) fn compile_frontend_modules(
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
         };
-        let result = lower_frontend_module(module_name, stmts, &external_defs, diagnostic_style)?;
+        let result = compile_module_hir(module_name, stmts, &external_defs, diagnostic_style)?;
         let LoweringResult {
             module,
             function_defaults,
@@ -82,7 +81,7 @@ pub(crate) fn compile_single_frontend_module_with_source(
     mut external_defs: ExternalDefs,
     diagnostic_style: FrontendDiagnosticStyle,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
-    let result = lower_frontend_module_with_source(
+    let result = compile_module_hir_with_source(
         module_name,
         stmts,
         &external_defs,
@@ -154,7 +153,7 @@ pub(crate) fn collect_project_hir_source_modules(
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
         };
-        let result = lower_frontend_module_with_source(
+        let result = compile_module_hir_with_source(
             module_name,
             &parsed_module.suite,
             &external_defs,
