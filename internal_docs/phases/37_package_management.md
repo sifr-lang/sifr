@@ -186,6 +186,164 @@ Traceability and upstream update process:
   5. Update the traceability matrix with new test files or explicit non-port decisions.
   6. Run the repository validation gate before merging.
 
+## Maintainability Architecture
+
+Phase 37 introduces one package-manager crate first: `crates/sifr_package`. This keeps implementation simple while giving the package manager a hard ownership boundary separate from the CLI, driver, frontend, HIR, and generated Cargo materialization code. The crate must be decomposed into focused modules with public facade types so it can later split into multiple crates only if compile time, ownership, or API pressure justifies it.
+
+Core maintainability rules:
+- `crates/sifr` remains a thin CLI parser/renderer layer. It does not resolve packages directly, mutate TOML directly, fetch registries, call Git, or inspect package cache internals.
+- `sifr_driver` consumes package operation plans and generated Cargo backend plans. It does not know registry HTTP, Git, sparse-index, or archive extraction details.
+- `sifr_frontend` and `sifr_hir` consume immutable `PackageSourceMap` / package-origin data for import closure, diagnostics, and analysis. They do not depend on registry, cache, Git, TOML mutation, or lockfile writer modules.
+- The package manager exposes Sifr-owned domain types: `SifrVersion`, `SifrVersionReq`, `PackageName`, `FeatureName`, `Checksum`, `PackageId`, `PackageIdentity`, `PackageSource`, `DependencySpec`, `ManifestGraph`, `FeaturePlan`, `SolverInput`, `ResolvedPackageGraph`, `SifrLock`, `NativeCapability`, `PackageSourceMap`, `CargoBackendPlan`, `CargoLockDiff`, and `OperationPlan`.
+- External package-manager/library types must not cross the public boundary of `sifr_package`. `Path`, `Url`, strings, byte buffers, and Sifr-owned newtypes are acceptable boundary types; `semver::Version`, PubGrub state/types, `gix` repository types, `toml_edit` AST nodes, `petgraph` graph types, `reqwest` responses, and archive implementation types are not.
+
+Anti-corruption adapter modules:
+- `version::semver_adapter` is the only module that imports `semver`.
+- `solver::pubgrub_adapter` is the only module that imports `pubgrub`.
+- `manifest::edit` is the only module that imports `toml_edit`.
+- `workspace::graph` / `graph::petgraph_adapter` are the only modules that import `petgraph`.
+- `sources::git::gix_adapter` and `workspace::changed` are the only modules that import `gix`.
+- `sources::registry::http_adapter` is the only module that imports the selected HTTP client.
+- `archive::tar_zstd_adapter` is the only module that imports `tar` and `zstd`.
+- `checksum::sha2_adapter` is the only module that imports `sha2` and checksum formatting helpers.
+
+Pure core versus IO:
+- Pure deterministic core includes manifest model validation, version requirements, feature fixed-point expansion, solver input construction, lockfile staleness checks, workspace selection, conflict path lowering, `PackageSourceMap` construction, trust validation, and `CargoBackendPlan` construction.
+- IO adapters include registry HTTP, Git fetch, source cache writes, archive extraction/creation, manifest mutation writes, lockfile writes, credential storage, and generated Cargo materialization.
+- The pure core must be testable without network, filesystem mutation, Git repositories, registry servers, or generated Cargo directories.
+
+Module map:
+
+```text
+crates/sifr_package/src/
+  lib.rs
+  manifest/{model,parse,validate,edit}.rs
+  workspace/{discover,catalog,select,filters,changed,graph}.rs
+  version/{model,req,semver_adapter}.rs
+  features/{model,expand,conflicts}.rs
+  solver/{input,provider,pubgrub_adapter,preferences,conflict}.rs
+  lockfile/{model,read,write,stale}.rs
+  sources/{model,registry,git,path,url,cache}.rs
+  archive/{pack,unpack,verify,tar_zstd_adapter}.rs
+  checksum/{model,sha2_adapter}.rs
+  trust/{model,validate}.rs
+  imports/{source_map,boundaries}.rs
+  backend/{cargo_plan,cargo_lock_verify,trust_bridge}.rs
+  ops/{plan,mutate,resolve,read,publish}.rs
+  diag/{origins,redaction}.rs
+  test_support/   # cfg(test) helpers only
+  test_assets/    # fixture packages, sparse registry fixtures, Git fixture templates
+```
+
+`diag` constructs `sifr_diagnostics::SifrDiagnostic` values and uses the existing diagnostic renderers. `SIFR-PACKAGE-*` codes are added to `sifr_diagnostics::codes` during `milestone_37_1`; `sifr_package` must not create a parallel diagnostic registry, renderer, JSON schema, or redaction pipeline.
+
+`ops` is grouped by mutation class rather than by every command name:
+- `ops::mutate` plans manifest-changing commands such as `add`, `remove`, and dependency-spec `update`.
+- `ops::resolve` plans `sync`, `fetch`, lock validation, cache fill, and source availability work.
+- `ops::read` plans `tree`, `outdated`, dry-run summaries, and graph-only queries.
+- `ops::publish` plans package/archive/registry/auth operations.
+- `ops::plan` defines shared plan types and execution boundaries.
+
+Operation planning:
+
+```rust
+struct OperationPlan {
+    selected_packages: Vec<PackageId>,
+    manifest_edits: Vec<ManifestEdit>,
+    lockfile_writes: Vec<LockfileWrite>,
+    fetch_actions: Vec<FetchAction>,
+    cache_actions: Vec<CacheAction>,
+    generated_cargo_changes: Vec<CargoEdit>,
+    diagnostics: Vec<SifrDiagnostic>,
+}
+
+enum ManifestEdit {
+    AddDependency { manifest_path: PathBuf, alias: DependencyAlias, spec: DependencySpec },
+    RemoveDependency { manifest_path: PathBuf, alias: DependencyAlias },
+    UpdateDependency { manifest_path: PathBuf, alias: DependencyAlias, spec: DependencySpec },
+}
+
+enum CacheAction {
+    Verify { package_id: PackageId, expected_checksum: Checksum },
+    Extract { package_id: PackageId, archive: PathBuf, destination: PathBuf },
+    Skip { package_id: PackageId, reason: CacheSkipReason },
+}
+```
+
+Every mutating command must produce an `OperationPlan` before it writes manifests, lockfiles, package caches, credentials, archives, or generated Cargo directories. `--dry-run` and `--dry-run=json` render the same plan without executing it. Editor/LSP paths may request read-only plans for diagnostics and graph previews, but they must not execute mutating plan actions.
+
+Integration with compiler and driver:
+- `PackageSourceMap` is produced by `imports::source_map` from `ResolvedPackageGraph` and passed into package-aware project assembly before import-closure discovery. It augments existing workspace source-root resolution; it does not replace embedded stdlib precedence or local package source roots.
+- `sifr_frontend` receives package origins as part of its project query input so editor diagnostics, completion, rename, references, and generated Rust preview use the same package graph as CLI builds.
+- `sifr_hir` receives package-origin metadata only for diagnostics, privacy/import-boundary checks, and source mapping. It does not fetch packages or read manifests.
+- `CargoBackendPlan` is produced by `backend::cargo_plan`, consumed by `sifr_driver` generated Cargo materialization, and verified after Cargo resolution.
+
+Generated Cargo verification:
+- `backend::cargo_lock_verify` produces a structured `CargoLockDiff`.
+- Critical diffs fail under package mode: package name, version, source, checksum, activated features, `links`, build script/proc-macro/native capability, or dependency edge changes.
+- Non-critical diffs such as ordering-only changes are normalized before comparison and must not produce false failures.
+- Any diff rendered to the user must map back to the Sifr package or backend dependency that introduced it.
+
+```rust
+struct CargoLockDiff {
+    critical: Vec<CriticalDiff>,
+    normalized: Vec<NormalizedDiff>,
+}
+
+enum CriticalDiff {
+    PackageNameMismatch { expected: PackageName, actual: PackageName },
+    VersionMismatch { expected: SifrVersion, actual: SifrVersion },
+    SourceMismatch { expected: PackageSource, actual: PackageSource },
+    ChecksumMismatch { expected: Checksum, actual: Checksum },
+    FeaturesMismatch {
+        package: PackageId,
+        expected: BTreeSet<FeatureName>,
+        actual: BTreeSet<FeatureName>,
+    },
+    LinksMismatch { expected: Option<String>, actual: Option<String> },
+    BuildScriptMismatch { package: PackageId, expected: bool, actual: bool },
+    ProcMacroMismatch { package: PackageId, expected: bool, actual: bool },
+    NativeCapabilityMismatch {
+        package: PackageId,
+        expected: NativeCapability,
+        actual: NativeCapability,
+    },
+    DependencyEdgeAdded { from: PackageId, to: PackageId },
+    DependencyEdgeRemoved { from: PackageId, to: PackageId },
+}
+
+enum NormalizedDiff {
+    OrderingOnly { reason: &'static str },
+    TimestampOnly,
+    OptionalMetadataOnly { field: &'static str },
+}
+```
+
+`trust::validate` owns Sifr package trust policy evaluation. `backend::trust_bridge` is only the adapter that translates reachable backend Cargo requirements into trust validation inputs and maps trust diagnostics back to the Sifr package or stdlib/codegen component that introduced the backend dependency.
+
+Feature expansion termination:
+- Feature expansion has an explicit bound derived from package count, feature count, and dependency-feature references in the selected graph.
+- If fixed-point expansion does not stabilize within that bound, Sifr emits `SIFR-PACKAGE-0103` before PubGrub runs.
+- The bound and the feature graph strongly connected components are included in debug/test traces for minimization.
+
+Dependency audit and adapter contracts:
+- `crates/sifr_package/DEPENDENCY_AUDIT.md` records each external crate, pinned version/source, owning adapter module, enabled features, public API stability, license, maintenance risk, adapter contract tests, and intentional behavior differences from upstream.
+- `crates/sifr_package/TRACEABILITY.md` maps Cargo/uv correctness categories to Sifr test files, milestones, diagnostics, and non-port decisions.
+- `crates/sifr_package/FEATURES.md` maps Sifr package-manager feature flags to external crate feature flags and explains why each is enabled.
+- If `Cargo.lock` changes for a `sifr_package` dependency, local validation must fail until `DEPENDENCY_AUDIT.md` is updated or the change is explicitly marked unrelated.
+- Before `milestone_37_5`, the implementation must open or complete a small design issue for `gix` runtime integration: blocking versus async calls, cancellation behavior, credential redaction, and Git range handling for changed-package filters.
+
+`TRACEABILITY.md` uses a stable table schema: borrowed category, upstream source/test reference, Sifr test file, milestone, expected diagnostic code, expected behavior, intentional divergence, and non-port decision. Empty divergence/non-port fields mean the upstream behavior is expected to be preserved in Sifr's model.
+
+Maintainability guardrails:
+- Add `scripts/check_package_manager_guardrails.py` and run it from local validation once `crates/sifr_package` exists.
+- The guardrail enforces file-size limits for package-manager modules, with no package-manager source file over 600 lines and stricter limits for adapter modules.
+- The guardrail enforces dependency boundaries: each external crate appears only in its approved adapter module subtree.
+- The guardrail rejects public `pub use`, public fields, or public function signatures that expose external crate types from `sifr_package`.
+- The guardrail verifies mutating CLI command paths call into `OperationPlan` planning before execution.
+- The guardrail verifies `TRACEABILITY.md`, `DEPENDENCY_AUDIT.md`, and `FEATURES.md` exist and are updated when package-manager dependency, adapter, or correctness-fixture files change.
+- Code review is supplementary; automated guardrails are the source of truth for module-boundary enforcement.
+
 ## Manifest Model
 
 `sifr.toml` remains the canonical manifest. Unknown tables may remain forward-compatible only when they cannot affect package resolution; resolution-related unknown keys must be rejected with package diagnostics once Phase 37 schema validation is active.
@@ -725,21 +883,26 @@ Concurrency:
 
 ### milestone_37_1: Manifest, Workspace, And Dependency Schema
 - Scope:
+  - Add `crates/sifr_package` with the documented maintainability module map, public facade types, adapter boundaries, and no external crate types in public APIs.
   - Extend manifest parsing with package metadata, dependency specs, source types, features, target dependencies, workspace inheritance, workspace members/default-members, exports, backend Cargo dependencies, and trust metadata.
   - Add deterministic schema diagnostics for invalid tables/keys/values.
   - Add workspace member discovery and package selection planning.
   - Add the Phase 37 dependency audit for `pubgrub`, `semver`, `toml_edit`, `petgraph`, `globset`, `ignore`, `gix`, HTTP, checksum, archive, and async dependencies.
+  - Add `crates/sifr_package/FEATURES.md` with initial entries mapping each enabled external crate feature flag to its corresponding Sifr package-manager capability.
+  - Add `SIFR-PACKAGE-*` diagnostic code definitions to `sifr_diagnostics`.
 - Definition of done:
   - Manifest and workspace graphs parse deterministically for root, virtual, and member workspaces.
   - Invalid dependency specs, invalid export roots, invalid workspace globs, package cycles, and invalid backend/native trust config produce stable package diagnostics.
   - Existing non-package workspace behavior remains compatible where manifests do not use Phase 37 package tables.
   - Dependency audit records license, maintenance status, public API stability, feature flags, transitive dependency risk, runtime path exposure, selected version, and fallback decision if a dependency fails the audit.
+  - `crates/sifr_package/DEPENDENCY_AUDIT.md`, `TRACEABILITY.md`, and `FEATURES.md` exist with initial entries for implemented modules.
 
 ### milestone_37_2: Resolver, Lockfile, And Source Cache
 - Scope:
   - Implement Sifr source dependency solving through `astral-pubgrub`, including `SolverInput`, `FeaturePlan`, `ResolutionMode`, `ResolutionPreferences`, `ResolvedPackageGraph`, deterministic candidate ordering, lockfile preferences, and structured conflict paths.
   - Implement pre-expanded feature resolution, target predicate selection, `sifr.lock`, staleness detection, content checksums, and a content-addressed package cache.
   - Implement the Sifr SAT/metamorphic oracle and port the Cargo resolver matrix categories that apply to Sifr's source package model.
+  - Implement package-manager adapter contract tests for `semver`, PubGrub, checksum, lockfile IO, and source-cache boundaries.
   - Support registry, Git, URL, and path source records at the model level.
   - Implement `sifr sync`, `sifr fetch`, `--locked`, `--offline`, and `--frozen`.
 - Definition of done:
@@ -751,6 +914,7 @@ Concurrency:
 - Scope:
   - Replace deferred package-directory behavior with `__init__.sifr`, explicit re-exports, public/private package APIs, and package-aware `ModuleOrigin`.
   - Build and consume `PackageSourceMap` from the resolved package graph.
+  - Integrate `PackageSourceMap` with `sifr_frontend` project query input and `sifr_driver` package-aware project assembly.
   - Enforce direct-dependency imports and transitive dependency boundaries.
   - Integrate package source modules into import-closure parsing and project lowering.
 - Definition of done:
@@ -762,6 +926,7 @@ Concurrency:
 - Scope:
   - Materialize generated Cargo projects from the selected Sifr package graph.
   - Resolve and lock reachable backend Cargo dependencies from stdlib/codegen/package metadata.
+  - Implement `CargoLockDiff` with critical versus normalized non-critical difference categories.
   - Gate native/build-script behavior through trust metadata.
   - Extend artifact cache keys and generated Rust preview metadata.
 - Definition of done:
@@ -772,7 +937,9 @@ Concurrency:
 ### milestone_37_5: Workspace CLI, Filters, And Tooling Integration
 - Scope:
   - Implement `sifr init`, `add`, `remove`, `update`, `tree`, `outdated`, `vendor`, package-aware `check/build/run/test`, workspace selectors, filters, dry-run/json summaries, and TOML mutation.
+  - Route mutating commands through `OperationPlan` planning before execution.
   - Implement Turborepo-inspired package filters over Sifr's `petgraph` package graph and `gix` changed-file detection.
+  - Complete the `gix` runtime integration design issue for blocking/async behavior, cancellation, credential redaction, and Git range handling.
   - Port uv workspace, tree, lock-mode, and CLI snapshot behavior categories into Sifr-owned integration tests.
   - Update Phase 36 analysis surfaces to use the package graph.
 - Definition of done:
@@ -792,12 +959,14 @@ Concurrency:
 ### milestone_37_7: Validation, Documentation, And Ecosystem Gate
 - Scope:
   - Add positive and negative E2E fixtures, package registry test infrastructure, workspace fixtures, cache tests, CLI docs, public package docs, architecture updates, and phase execution checklist evidence.
-  - Add maintainability guardrails for package manager module decomposition.
+  - Add `scripts/check_package_manager_guardrails.py` for package manager module decomposition, adapter boundaries, public API leakage, operation planning, and traceability/audit files.
   - Complete the Cargo/uv correctness traceability matrix and document every intentional divergence from Cargo or uv behavior.
+  - Complete `crates/sifr_package/FEATURES.md` with the full feature flag map, rationale for each enabled flag, and documentation of disabled flags that were considered.
 - Definition of done:
   - `scripts/run_all_tests.sh --profile quick` and full local validation pass.
   - Package workflows are stable enough for broader ecosystem usage.
   - Validation evidence is recorded in the phase execution checklist issue with fixture names, commands, expected diagnostics, and merged PR links.
+  - Package manager maintainability guardrails pass locally and are part of the authoritative validation gate.
 
 ## Quality Contract
 - Entry criteria: Phase 36 is completed and tooling contracts are stable.
@@ -818,20 +987,25 @@ Concurrency:
 - `milestone_37_1` (Manifest, Workspace, And Dependency Schema):
   - Positive: parse root package, virtual workspace, member workspace, dependency catalog inheritance, path/Git/registry specs, export roots, and backend Cargo dependency specs.
   - Negative: malformed dependency syntax, invalid export root, unknown resolution-affecting key, workspace member cycle, invalid glob, invalid target predicate, invalid trust entry.
+  - Maintainability: `sifr_package` public APIs expose only Sifr-owned types; adapter-only external crate usage is enforced for implemented modules.
 - `milestone_37_2` (Resolver, Lockfile, And Source Cache):
   - Positive: resolve registry/path/Git graph, write stable `sifr.lock`, fetch into cache, rebuild without lockfile churn, build offline after fetch.
   - Negative: stale lock under `--locked`, cache miss under `--offline`, checksum mismatch, yanked version on new resolution, unsupported protocol, version conflict with clear conflict path.
   - Oracle: port Cargo resolver matrix cases for semver/pre-release/backtracking/features/cycles/source identity, add Sifr multiple-version divergence tests, and pass Sifr SAT/metamorphic property checks.
+  - Maintainability: adapter contract tests cover semver/PubGrub/checksum/lockfile/source-cache wrappers and fail if external types leak.
 - `milestone_37_3` (Package-Aware Import Resolution):
   - Positive: import package modules, import re-exported symbols from `__init__.sifr`, compile transitive dependency source, support workspace member dependency import.
   - Negative: undeclared dependency import, ambiguous export root, local/dependency shadowing, private module access, missing `__init__.sifr`, package directory/file collision.
+  - Maintainability: frontend/HIR package integration consumes immutable package-origin inputs only and does not import registry/cache/Git/lockfile writer modules.
 - `milestone_37_4` (Cargo Backend And Native Dependency Bridge):
   - Positive: generated Cargo manifest includes reachable backend crates from stdlib and package metadata, generated Cargo lock verifies against `sifr.lock`, native cache invalidates on backend feature change.
   - Negative: untrusted build-script dependency, backend lock drift under `--locked`, unsupported native target, conflicting backend feature requirements.
+  - Maintainability: `CargoLockDiff` distinguishes critical semantic drift from normalized ordering-only changes.
 - `milestone_37_5` (Workspace CLI, Filters, And Tooling Integration):
   - Positive: `sifr add/remove/update` mutate selected member manifests, `--workspace` builds all members, `-p` builds one member, filters select dependencies/dependents/changed packages, dry-run/json reports planned changes.
   - Negative: unknown package selector, filter selecting no packages, import outside package root, dependency used but not declared, tool/editor query using stale package graph.
   - Upstream reuse: port uv workspace/list/tree/init lock-idempotence categories into Sifr snapshot tests with Sifr package manifests and source packages.
+  - Maintainability: mutating CLI paths produce and snapshot `OperationPlan` before execution; dry-run and execution use the same plan.
 - `milestone_37_6` (Registry, Publish, Yank, And Credential Flows):
   - Positive: package dry-run archive is deterministic, publish uploads immutable package, yank hides package from new resolution, alternate registry resolves, credential redaction is verified.
   - Negative: publish missing metadata, duplicate immutable version, unauthorized namespace, insecure registry URL, archive path traversal, credential leak attempt, yanked package selected without existing lockfile.
@@ -839,6 +1013,7 @@ Concurrency:
   - Positive: docs cover app/library/workspace/package-author flows; package fixtures cover single package, monorepo, registry, Git, path, features, native deps, publish, and cache workflows.
   - Negative: maintainability guardrail rejects monolithic package manager files; docs/fixture drift checks catch undocumented CLI flags or diagnostics.
   - Traceability: Cargo resolver-tests and uv integration-test categories are mapped to Sifr tests, intentional divergences, or explicit non-port decisions.
+  - Maintainability: package manager guardrail rejects oversized files, adapter boundary violations, external public API leaks, missing audit/traceability files, and mutation paths that bypass `OperationPlan`.
 - Exit-gate evidence explicitly demonstrates: Package management workflows are stable enough for broader ecosystem usage with deterministic source package resolution, lockfiles, package-aware imports, generated Cargo/native integration, monorepo support, registry publishing, and Phase 27 non-regression guarantees.
 
 ## Exit Gate
