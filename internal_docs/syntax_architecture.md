@@ -18,7 +18,8 @@ status: active
 ## Current API
 
 - `parse_module(source, context)` returns a `ParsedModule` with a Sifr-facing suite and token view.
-- `parse_module_raw(source, context)` preserves the raw Ruff parsed module for migration-source driver paths that still need raw AST access before m35.4b removes duplicate parser ownership.
+- `parse_module_suite(source, context)` returns only the Sifr-facing AST suite for compiler paths that do not need token/trivia data.
+- `parse_module_raw(source, context)` preserves the raw Ruff parsed module for the few low-level compiler internals that need raw parser metadata while still going through the Sifr-owned syntax wrapper.
 - `SourceText` converts UTF-8 text positions and byte offsets for frontend/tooling source-map use.
 
 ## Fork Update Contract
@@ -27,4 +28,4 @@ The current Ruff fork revision is recorded in `verification/performance/ruff_for
 
 ## Migration State
 
-`sifr_driver::frontend::parser_diagnostics` delegates to `sifr_syntax::parse_module_raw`. Existing raw parser use in CLI mode detection, stdlib bootstrap, tests, and codegen tests remains an explicit m35.4b migration target.
+Phase 35 m35.4b removed direct raw parser use from `sifr_driver` and the CLI. CLI mode detection, project discovery, stdlib bootstrap, and driver tests now parse through `sifr_syntax`/`sifr_frontend`; the split-brain guardrail rejects new `sifr_python_parser`, `ruff_python_parser`, or raw parse entrypoints outside approved syntax/frontend/HIR boundaries.

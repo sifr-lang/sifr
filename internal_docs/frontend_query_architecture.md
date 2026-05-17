@@ -9,17 +9,27 @@ status: active
 `FrontendContext` supports:
 
 - single-file context loading with optional external definitions for driver integration
-- project loading from an entrypoint directory
+- project loading from an entrypoint directory with the entrypoint pinned to `ModuleId(0)`
 - deterministic `FileId` and `ModuleId` assignment within a context revision
 - module graph and source map inspection
 - parse, lower, type-check, module diagnostics, project diagnostics, module analysis, and project analysis queries
 - query metadata with cache hit/miss status plus graph/source revisions
+- dependency-first project lowering so imported module exports are available before importers are checked
+- canonical HIR compile helpers used by the driver for CLI, project, and test-runner frontend flows
 
 `sifr_frontend` consumes `sifr_syntax` for parsing and `sifr_hir` for lowering and semantic diagnostics. It does not invoke codegen, rustc, cargo, CLI policy, or build artifact creation.
 
-## Driver Migration
+## Driver Consumption
 
-Phase 35 m35.4a introduced the crate and routed parser diagnostics through `sifr_syntax`. m35.4b must route `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing paths.
+Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.
+
+The deleted driver migration shims were:
+
+- `crates/sifr_driver/src/frontend/module_lowering.rs`
+- `crates/sifr_driver/src/frontend/parser_diagnostics.rs`
+- `crates/sifr_driver/src/project/exports.rs`
+
+`verification/performance/check_split_brain_guardrail.py` now has no driver/CLI migration allowlist. New parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` internals fail the local validation lane.
 
 ## Extension Boundary
 

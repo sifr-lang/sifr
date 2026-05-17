@@ -86,8 +86,8 @@ The public `CompileError` abstraction and the transitional `CompilerDiagnostic` 
 | Surface | Current construction count | Current code source | Target handling |
 | --- | ---: | --- | --- |
 | `crates/sifr_driver/src/diagnostics.rs` | 1 | `diagnostic_with_code` constructs the panic-boundary diagnostic as a canonical rendered diagnostic with active `SIFR-INTERNAL-0001` identity | Route already-structured diagnostics through shared renderer once `DiagnosticSink` is authoritative. |
-| `crates/sifr_driver/src/frontend/api.rs` | 2 | parser frontend errors carry active `PARSE-*`; HIR lowering errors carry the HIR-provided active code | Parser adapter emits `PARSE-*`; HIR returns `LoweringOutcome` diagnostics. |
-| `crates/sifr_driver/src/frontend/module_lowering.rs` | 1 | module lowering errors preserve the HIR-provided active code; uncoded lowering diagnostics are surfaced as internal compiler diagnostics | Preserve module/source span and direct HIR diagnostic identity. |
+| `crates/sifr_driver/src/frontend/api.rs` | 1 | public driver frontend facade delegates parser/lowering/type-check diagnostics to `sifr_frontend` and codegen errors to the panic boundary | Keep semantics-bearing parse/lower/type-check diagnostic construction in `sifr_frontend`/`sifr_hir`; driver remains a facade plus codegen boundary. |
+| `crates/sifr_frontend/src/lib.rs` | 1 | frontend HIR diagnostics preserve the HIR-provided active code; uncoded lowering diagnostics are surfaced as internal compiler diagnostics | Preserve module/source span and direct HIR diagnostic identity. |
 | `crates/sifr_driver/src/project/discovery.rs` | 6 | workspace discovery and reachable parse failures | Keep workspace discovery in `WORKSPACE-*`; reachable source parse failures are `PARSE-*`. |
 | `crates/sifr_driver/src/project/compile_order.rs` | 1 | dependency cycle carries `SIFR-WORKSPACE-0104` | Keep workspace graph cycle diagnostics in the `WORKSPACE-*` family. |
 | `crates/sifr_driver/src/project/frontend.rs` | 1 | project frontend setup carries `SIFR-INTERNAL-0001` for invariant-only failures | Use `WORKSPACE-*` for recoverable project assembly failures. |

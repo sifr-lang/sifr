@@ -414,9 +414,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut all_needed: Vec<String> = Vec::new();
     let mut stdlib_needs_file_handles = false;
     let mut stdlib_provides_file_handle_struct = false;
-    for module_name in BTreeSet::from_iter(emitter.used_stdlib_modules.iter()) {
+    for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
-            for dep in BTreeSet::from_iter(deps.iter()) {
+            for dep in deps.iter().collect::<BTreeSet<_>>() {
                 if dep.starts_with("sifr.") && !all_needed.contains(dep) {
                     all_needed.push(dep.clone());
                 }
@@ -782,7 +782,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
 
     // Add transitive dependencies from stdlib modules
     let mut all_used_modules = emitter.used_stdlib_modules.clone();
-    for module_name in BTreeSet::from_iter(emitter.used_stdlib_modules.iter()) {
+    for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             all_used_modules.extend(deps.iter().cloned());
         }
@@ -1690,7 +1690,11 @@ edition = "2021"
 
     // Add dependencies based on used stdlib/intrinsic modules
     let mut deps = Vec::new();
-    for module_name in BTreeSet::from_iter(stdlib_modules.iter().map(String::as_str)) {
+    for module_name in stdlib_modules
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>()
+    {
         match module_name {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
                 if !deps.contains(
@@ -1784,7 +1788,11 @@ edition = "2021"
         }
     }
 
-    for crate_name in BTreeSet::from_iter(required_crates.iter().map(String::as_str)) {
+    for crate_name in required_crates
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>()
+    {
         match crate_name {
             "serde_json" => {
                 if !deps.contains(

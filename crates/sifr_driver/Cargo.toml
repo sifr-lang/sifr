@@ -9,9 +9,9 @@ license = { workspace = true }
 [dependencies]
 # Wired early by milestone_diag_1; compiler emission migration starts in milestone_diag_4a.
 sifr_diagnostics = { workspace = true }
-sifr_python_parser = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_hir = { workspace = true }
+sifr_frontend = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_codegen = { workspace = true }
 sifr_type_system = { workspace = true }

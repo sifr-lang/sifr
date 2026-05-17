@@ -1,10 +1,7 @@
-use super::parse_module_with_diagnostics;
 use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_file_frontend};
 use crate::diagnostics::{CompileResult, CompileResultFull, RenderedDiagnostic};
-use crate::frontend::module_lowering::{
-    reveal_type_diagnostics, warning_diagnostics, FrontendSourceContext,
-};
 use crate::stdlib::StdlibCompiled;
+use sifr_frontend::{reveal_type_diagnostics, warning_diagnostics, FrontendSourceContext};
 use sifr_hir::LoweringResult;
 use sifr_python_ast::Stmt;
 
@@ -14,7 +11,7 @@ pub(crate) struct FrontendCompiled {
 }
 
 pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<RenderedDiagnostic>> {
-    parse_module_with_diagnostics(source, None).map(sifr_python_parser::Parsed::into_suite)
+    sifr_frontend::parse_source(source, None)
 }
 
 fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {

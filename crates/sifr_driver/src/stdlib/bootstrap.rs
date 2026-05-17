@@ -7,7 +7,7 @@ use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
-use sifr_python_parser::parse_module;
+use sifr_syntax::parse_module_raw;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
@@ -24,7 +24,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
     let mut stdlib_code = StdlibCode::default();
 
     for (module_name, source) in STDLIB_FILES {
-        let parsed = match parse_module(source) {
+        let parsed = match parse_module_raw(source, Some(&format!("stdlib:{module_name}"))) {
             Ok(parsed) => {
                 if !parsed.has_valid_syntax() {
                     // TODO(diag_4a slice 2): classify Ruff parse failures
@@ -43,13 +43,18 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 }
                 parsed
             }
-            Err(e) => {
+            Err(errors) => {
                 // TODO(diag_4a slice 2): classify Ruff parse failures into
                 // the precise active parse-code buckets.
-                return Err(vec![crate::diagnostics::diagnostic_with_code(
-                    format!("[stdlib:{module_name}] failed to parse: {e}"),
-                    DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
-                )]);
+                return Err(errors
+                    .into_iter()
+                    .map(|error| {
+                        crate::diagnostics::diagnostic_with_code(
+                            format!("[stdlib:{module_name}] {}", error.message),
+                            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                        )
+                    })
+                    .collect());
             }
         };
 

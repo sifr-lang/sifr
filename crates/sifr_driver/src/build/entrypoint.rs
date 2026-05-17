@@ -6,9 +6,7 @@ use super::project_codegen::{
 };
 use super::ArtifactCacheReport;
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
-use crate::frontend::{
-    parse_source, FrontendCompiled, FrontendDiagnosticStyle, FrontendSourceContext,
-};
+use crate::frontend::{parse_source, FrontendCompiled};
 use crate::project::{
     collect_project_hir_source_modules, compile_single_frontend_module_with_source,
     emit_project_frontend_diagnostics, parse_import_closure_source_modules,
@@ -18,6 +16,7 @@ use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use crate::workspace::find_workspace_root;
 use sifr_codegen::generate_rust_with_stdlib;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
 use sifr_hir::LoweringResult;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};

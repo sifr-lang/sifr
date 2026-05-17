@@ -53,6 +53,8 @@ def git_ls_files(*patterns: str) -> list[pathlib.Path]:
 def main() -> int:
     errors: list[str] = []
     for path in git_ls_files("crates/**/*.rs"):
+        if not path.exists():
+            continue
         rel = path.relative_to(ROOT)
         text = path.read_text(encoding="utf-8", errors="ignore")
         for line_number, line in enumerate(text.splitlines(), 1):

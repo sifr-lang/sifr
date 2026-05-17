@@ -133,6 +133,8 @@ def main() -> int:
 
     uses_by_constant = {name: [] for name in active_constants}
     for path in non_test_compiler_sources():
+        if not path.exists():
+            continue
         rel = path.relative_to(ROOT)
         text = strip_cfg_test_blocks(path.read_text(encoding="utf-8", errors="ignore"))
         for name in re.findall(r"DiagnosticCode::([A-Z0-9_]+)", text):
