@@ -233,8 +233,8 @@ All work stays sequential. Do not begin the next PR until the current PR is merg
 4. [x] Extension repo PR (`milestone_36_7`): editor feature wiring for LSP diagnostics, completion, hover, navigation, symbols, semantic tokens, inlay hints, folding, highlights, code actions, formatting, and rename. Merged PR: <https://github.com/sifr-lang/sifr-vscode/pull/1>.
 5. [x] Extension repo PR (`milestone_36_7`): generated Rust preview and explain diagnostic commands. Merged PR: <https://github.com/sifr-lang/sifr-vscode/pull/1>.
 6. [x] Extension repo PR (`milestone_36_7`): VS Code Test Explorer integration. Merged PR: <https://github.com/sifr-lang/sifr-vscode/pull/1>.
-7. [ ] Main repo PR (`milestone_36_7` -> `milestone_36_8` handoff): `verification/tooling/check_vscode_extension_contract.py`, `verification/tooling/check_vscode_extension.py`, documentation, and validation evidence.
-8. [ ] Phase 36 closeout PR (`milestone_36_8`): package evidence, validation evidence, publication checklist, and reviewer approval.
+7. [x] Main repo PR (`milestone_36_7` -> `milestone_36_8` handoff): `verification/tooling/check_vscode_extension_contract.py`, `verification/tooling/check_vscode_extension.py`, documentation, and validation evidence. Merged PR: <https://github.com/sifr-lang/sifr/pull/2135>.
+8. [x] Phase 36 closeout PR (`milestone_36_8`): package evidence, validation evidence, publication checklist, and reviewer approval. Merged PR: <https://github.com/sifr-lang/sifr/pull/2136>.
 
 PR-to-milestone mapping:
 

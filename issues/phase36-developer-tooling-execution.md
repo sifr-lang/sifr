@@ -1,6 +1,6 @@
 # Phase 36 Developer Tooling Execution Checklist
 
-Status: in_progress
+Status: completed
 Source phase: `internal_docs/phases/36_developer_tooling_and_ecosystem_hooks.md`
 
 This issue tracks the sequential implementation loop for Phase 36. Each milestone requires implementation, local validation, Claude Opus review, PR review, merge, and tracker updates before the next milestone starts.
@@ -14,7 +14,7 @@ This issue tracks the sequential implementation loop for Phase 36. Each mileston
 - [x] `milestone_36_5`: Production Native LSP Server
 - [x] `milestone_36_6`: Multi-Editor Syntax And Integration Assets
 - [x] `milestone_36_7`: VS Code Extension
-- [ ] `milestone_36_8`: Production Verification And Performance Closeout
+- [x] `milestone_36_8`: Production Verification And Performance Closeout
 
 ## Active Milestone: milestone_36_1
 
@@ -310,8 +310,8 @@ Scope:
 - [x] Run Claude Opus review rounds until satisfied.
 - [x] Run `scripts/run_all_tests.sh --profile quick`.
 - [x] Run `scripts/run_all_tests.sh --profile pr`.
-- [ ] Open PR.
-- [ ] Merge PR.
+- [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2136>
+- [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2136>
 
 ## m36.8 Targeted Validation Evidence
 
@@ -330,3 +330,14 @@ Scope:
 - `scripts/run_all_tests.sh --profile quick` -> PASS. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=1201.85s`; `max_rss=521.5MiB`; `e2e cache_hits=12/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
 - `scripts/run_all_tests.sh --profile pr` -> PASS on final rerun. Report: `target/validation_lane_reports/pr.latest.json`; `wall_time=2645.85s`; `max_rss=521.4MiB`; `e2e cache_hits=0/19`; `report_signature=6cd36071cf629b47`; `hardening variants=28 failures=0`; advisories: warm wall-time budget exceeded and high group skew.
 - Earlier `pr` attempts failed only in the performance budget batch with marginal median timing noise on `check-single-file-001-arithmetic` and `phase27-non-regression-002-json-diagnostic-schema`; both cases passed isolated reruns, no budgets or waivers were changed, and the final full `pr` lane passed.
+
+## m36.8 PR
+
+- PR: <https://github.com/sifr-lang/sifr/pull/2136>
+- Merge commit: `bb92e3f7577251f737bcb3a706ce45874daf6050`
+
+## Phase 36 Closure
+
+- Phase 36 completed on 2026-05-17 after m36.8 merged.
+- Phase 35 is already completed and audited in `issues/phase35-performance-benchmarking-execution.md`.
+- Remaining explicitly deferred scope: package-registry intelligence in Phase 37 and marketplace publication governance in Phase 39.
