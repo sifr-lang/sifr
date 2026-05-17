@@ -7,6 +7,7 @@ status: phase36-contract-locked
 - m36.1 locked the analysis, formatter, lint, LSP, editor, and VS Code contracts.
 - m36.2 added `sifr_format` and `sifr_lint` as concrete workspace crates.
 - m36.3 adds `sifr_analysis` as the concrete editor-query crate.
+- m36.4 fills the first complete editor query layer through `sifr_analysis`.
 
 ## Ownership
 
@@ -43,6 +44,15 @@ m36.3 implementation:
 - `AnalysisSnapshot` captures graph/source revisions and rejects stale queries after document invalidation.
 - The current-workspace `SymbolIndex` is built from `sifr_frontend::ProjectAnalysisView` and `ModuleGraphView`; symbol ids include graph/source revision, module, file, kind, name, and ordinal.
 - All Phase 36 editor query methods compile through `sifr_analysis`. m36.3 implements session/query plumbing, diagnostics, workspace diagnostics, document/workspace symbols, formatter handoff, lint handoff, and completion ranking infrastructure; the full feature logic for hover, references, rename edits, semantic tokens, code actions, generated Rust preview, explain diagnostic enrichment, and test metadata lands in m36.4.
+
+m36.4 implementation:
+
+- Editor token facts are derived through `FrontendContext::parse_module`, not a raw parser path.
+- Hover, definition/declaration/type-definition, references, prepare-rename, rename, document highlights, folding ranges, selection ranges, semantic tokens, and inlay hints are token-backed and snapshot-gated.
+- Diagnostics combine canonical frontend hard diagnostics with `sifr_lint` policy diagnostics.
+- Code actions offer explicit Sifr policy suppression edits for lint diagnostics.
+- Generated Rust preview calls the canonical `sifr_driver::compile_with_metadata` handoff and returns structured unavailability when compilation fails.
+- Parity coverage lives in `verification/tooling/parity_manifest.json`, `verification/tooling/editor_query_snapshots/`, and `verification/tooling/completion_quality/`.
 
 ## Required Frontend Exports
 

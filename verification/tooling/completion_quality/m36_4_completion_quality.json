@@ -1,0 +1,24 @@
+{
+  "fixture": "completion_ranking_prefix_quality",
+  "cases": [
+    {
+      "query": "map",
+      "expected_top_label": "map",
+      "candidate_labels": [
+        "remap",
+        "mapper",
+        "map",
+        "zip"
+      ]
+    },
+    {
+      "query": "hel",
+      "expected_top_label": "helper",
+      "candidate_labels": [
+        "shell",
+        "helper"
+      ]
+    }
+  ],
+  "minimum_pass_rate": 1.0
+}

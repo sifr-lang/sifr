@@ -137,6 +137,8 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/run_tooling_parity.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/run_tooling_parity.py" --self-test
 
 echo "Running Performance Budget Checks"
 python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only

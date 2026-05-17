@@ -6,13 +6,15 @@ status: in_progress
 
 - `milestone_36_1` is merged in PR #2129 at `82eaf50fea0ebbf7dba7a46749ee549fa11f4d73`.
 - `milestone_36_2` is merged in PR #2130 at `cb08508f8db60109740fed15df5f3ccbd19c3482`.
-- `milestone_36_3` is active in branch `phase36-m36-3-analysis-host-symbol-index`.
+- `milestone_36_3` is merged in PR #2131 at `5b2315e69aaead9269dd41a092e35b37c0968504`.
+- `milestone_36_4` is active in branch `phase36-m36-4-editor-query-layer`.
 - Final crate/module names are locked as `sifr_analysis`, `sifr_format`, `sifr_lint`, and `sifr_lsp`.
 - VS Code extension boundary is locked to a separate `sifr-lang/sifr-vscode` repository, validated from `SIFR_VSCODE_REPO` or sibling `../sifr-vscode`.
 - m36.1 contract artifacts live in `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, `internal_docs/tooling_verification.md`, `verification/tooling/lsp_protocol_matrix.json`, and `verification/tooling/vscode_extension_contract.json`.
 - Developer tooling contract checks are wired into `scripts/run_all_tests.sh`.
 - m36.2 added `sifr_format`, `sifr_lint`, `sifr fmt [--check]`, `sifr lint`, generated `FMT`/`LINT` diagnostic docs, and formatter/rule-suppression contract checks.
 - m36.3 adds `sifr_analysis`, `AnalysisHost`, analysis snapshots, workspace symbol indexing, editor query API plumbing, completion ranking/evaluation infrastructure, and analysis split-brain/snapshot guardrails.
+- m36.4 adds token-backed editor query behavior, generated-Rust preview handoff, code actions, parity snapshots, completion-quality fixtures, and the tooling parity runner.
 
 ## Objective
 Deliver the complete production-grade Sifr developer tooling stack for the current workspace/project model: editor-oriented analysis queries, diagnostics policy infrastructure, formatter and policy-rule surfaces, a native Rust LSP server launched through `sifr lsp --stdio`, a packageable VS Code extension, multi-editor syntax/integration assets, and parity gates proving tooling and CLI share one compiler brain.

@@ -45,11 +45,19 @@ python3 verification/tooling/check_analysis_split_brain.py
 python3 verification/tooling/check_analysis_split_brain.py --self-test
 ```
 
-The m36.1, m36.2, and m36.3 checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling Checks".
+## m36.4 Checks
+
+Required m36.4 commands:
+
+```bash
+python3 verification/tooling/run_tooling_parity.py
+python3 verification/tooling/run_tooling_parity.py --self-test
+```
+
+The m36.1, m36.2, m36.3, and m36.4 checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling Checks".
 
 ## Required Later Checks
 
-- `run_tooling_parity.py`
 - `lsp_protocol_smoke.py`
 - `lsp_protocol_stress.py`
 - `check_editor_assets.py`

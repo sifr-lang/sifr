@@ -6,6 +6,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 mod completion;
+mod editor;
 mod host;
 mod queries;
 mod snapshot;
