@@ -2,6 +2,11 @@
 
 status: phase36-contract-locked
 
+## Implementation Status
+
+- m36.1 locked the analysis, formatter, lint, LSP, editor, and VS Code contracts.
+- m36.2 added `sifr_format` and `sifr_lint` as concrete workspace crates.
+
 ## Ownership
 
 Phase 36 locks the editor analysis boundary to these Sifr-owned crates:
@@ -81,6 +86,24 @@ Blanket `sifr: ignore`, unknown rule ids, and unused suppressions produce determ
 `sifr_format` formats source text through `sifr_syntax` only. It must preserve comments, meaningful blank lines, string contents, source spans needed by diagnostics, and Sifr parameter-convention syntax. Formatting must be deterministic, idempotent, parser-round-tripped, and equivalent between `sifr fmt`, `sifr fmt --check`, analysis formatting queries, and LSP formatting edits.
 
 `sifr_lint` evaluates policy diagnostics without changing compiler hard diagnostics. It owns severity resolution, suppression handling, and discovery exclusions.
+
+m36.2 formatter foundation:
+
+- parses through `sifr_syntax`
+- preserves string token contents while trimming trailing horizontal whitespace outside strings
+- normalizes line endings to LF
+- ensures final newline
+- parser-round-trips formatted output
+- exposes document and range-edit APIs for later `sifr_analysis`/LSP handoff
+
+m36.2 lint foundation:
+
+- defines Sifr-owned policy metadata
+- implements `# sifr: ignore[rule-id]`
+- rejects blanket suppressions
+- reports unknown and unused suppressions
+- implements the first suppressible policy rule, `trailing-whitespace`
+- supports diagnostics modes and include/exclude discovery options without applying excludes to explicit file targets
 
 ## Generated Rust And Test Metadata
 

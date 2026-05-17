@@ -108,6 +108,13 @@ impl DiagnosticCode {
     pub const FLOW_INVALID_ITERATION: Self = Self::new("SIFR-FLOW-0008", Severity::Error);
     pub const FLOW_UNREACHABLE_STATEMENT: Self = Self::new("SIFR-FLOW-0901", Severity::Warning);
 
+    pub const FMT_FORMATTING_DRIFT: Self = Self::new("SIFR-FMT-0001", Severity::Error);
+
+    pub const LINT_UNKNOWN_SUPPRESSION: Self = Self::new("SIFR-LINT-0001", Severity::Warning);
+    pub const LINT_UNUSED_SUPPRESSION: Self = Self::new("SIFR-LINT-0002", Severity::Warning);
+    pub const LINT_BLANKET_SUPPRESSION: Self = Self::new("SIFR-LINT-0003", Severity::Warning);
+    pub const LINT_TRAILING_WHITESPACE: Self = Self::new("SIFR-LINT-0004", Severity::Warning);
+
     pub const MATCH_NON_EXHAUSTIVE: Self = Self::new("SIFR-MATCH-0001", Severity::Error);
     pub const MATCH_GUARD_NOT_BOOL: Self = Self::new("SIFR-MATCH-0002", Severity::Error);
     pub const MATCH_INVALID_CLASS_PATTERN_FIELD: Self =
@@ -321,6 +328,16 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-FLOW-0000",
     },
     DiagnosticFamily {
+        name: "FMT",
+        summary: "Source formatting diagnostics.",
+        reserved_base: "SIFR-FMT-0000",
+    },
+    DiagnosticFamily {
+        name: "LINT",
+        summary: "Suppressible policy-rule diagnostics.",
+        reserved_base: "SIFR-LINT-0000",
+    },
+    DiagnosticFamily {
         name: "MATCH",
         summary: "Pattern matching and exhaustiveness diagnostics.",
         reserved_base: "SIFR-MATCH-0000",
@@ -440,6 +457,8 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-CALL-0000", "CALL"),
     reserved_family_base("SIFR-OWN-0000", "OWN"),
     reserved_family_base("SIFR-FLOW-0000", "FLOW"),
+    reserved_family_base("SIFR-FMT-0000", "FMT"),
+    reserved_family_base("SIFR-LINT-0000", "LINT"),
     reserved_family_base("SIFR-MATCH-0000", "MATCH"),
     reserved_family_base("SIFR-PROTO-0000", "PROTO"),
     reserved_family_base("SIFR-CLASS-0000", "CLASS"),
@@ -1748,6 +1767,61 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         [arg!("omitted_count"), arg!("omitted_kind"), arg!("cap_kind")],
         ["cap_kind"]
     ),
+    active_entry!(
+        "SIFR-FMT-0001",
+        "FMT",
+        "Source formatting drift detected by sifr fmt --check.",
+        Severity::Error,
+        "crates/sifr_format/src/lib.rs::check_reports_formatting_drift",
+        "source is not formatted with sifr fmt",
+        "sifr_format",
+        [arg!("path")],
+        ["path"]
+    ),
+    active_entry!(
+        "SIFR-LINT-0001",
+        "LINT",
+        "Suppression references an unknown policy rule id.",
+        Severity::Warning,
+        "crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported",
+        "unknown Sifr policy rule id '{rule}'",
+        "sifr_lint::suppressions",
+        [arg!("rule")],
+        ["rule"]
+    ),
+    active_entry!(
+        "SIFR-LINT-0002",
+        "LINT",
+        "Suppression did not suppress any diagnostic.",
+        Severity::Warning,
+        "crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported",
+        "unused Sifr suppression for policy rule '{rule}'",
+        "sifr_lint::suppressions",
+        [arg!("rule")],
+        ["rule"]
+    ),
+    active_entry!(
+        "SIFR-LINT-0003",
+        "LINT",
+        "Suppression must list explicit Sifr policy rule ids.",
+        Severity::Warning,
+        "crates/sifr_lint/src/lib.rs::blanket_suppression_is_reported",
+        "sifr suppression must list explicit policy rule ids",
+        "sifr_lint::suppressions",
+        [arg!("rule")],
+        ["rule"]
+    ),
+    active_entry!(
+        "SIFR-LINT-0004",
+        "LINT",
+        "Line ends with trailing horizontal whitespace.",
+        Severity::Warning,
+        "crates/sifr_lint/src/lib.rs::suppression_only_suppresses_matching_policy_rule",
+        "line has trailing whitespace",
+        "sifr_lint::rules::trailing_whitespace",
+        [arg!("rule")],
+        ["rule"]
+    ),
 ];
 
 pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
@@ -1829,6 +1903,11 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET,
     DiagnosticCode::FLOW_INVALID_ITERATION,
     DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
+    DiagnosticCode::FMT_FORMATTING_DRIFT,
+    DiagnosticCode::LINT_UNKNOWN_SUPPRESSION,
+    DiagnosticCode::LINT_UNUSED_SUPPRESSION,
+    DiagnosticCode::LINT_BLANKET_SUPPRESSION,
+    DiagnosticCode::LINT_TRAILING_WHITESPACE,
     DiagnosticCode::MATCH_NON_EXHAUSTIVE,
     DiagnosticCode::MATCH_GUARD_NOT_BOOL,
     DiagnosticCode::MATCH_INVALID_CLASS_PATTERN_FIELD,

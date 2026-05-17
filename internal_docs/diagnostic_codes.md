@@ -27,6 +27,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `CALL` | `SIFR-CALL-0000` | Function, method, constructor, and overload call diagnostics. |
 | `OWN` | `SIFR-OWN-0000` | Ownership, borrow, move, and lifetime diagnostics. |
 | `FLOW` | `SIFR-FLOW-0000` | Control-flow, reachability, and narrowing diagnostics. |
+| `FMT` | `SIFR-FMT-0000` | Source formatting diagnostics. |
+| `LINT` | `SIFR-LINT-0000` | Suppressible policy-rule diagnostics. |
 | `MATCH` | `SIFR-MATCH-0000` | Pattern matching and exhaustiveness diagnostics. |
 | `PROTO` | `SIFR-PROTO-0000` | Protocol and structural conformance diagnostics. |
 | `CLASS` | `SIFR-CLASS-0000` | Class declaration, constructor, field, and method diagnostics. |
@@ -56,6 +58,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-CALL-0000` | `CALL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-OWN-0000` | `OWN` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-FLOW-0000` | `FLOW` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-FMT-0000` | `FMT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-LINT-0000` | `LINT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-MATCH-0000` | `MATCH` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PROTO-0000` | `PROTO` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-CLASS-0000` | `CLASS` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -181,3 +185,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-BUILD-0006` | `BUILD` | Active | Error | `docs/errors/SIFR-BUILD-0006.md` | `crates/sifr_driver/src/tests/project_build_check.rs` | `sifr_driver::build::workspace` | `expected build artifact {path} was not produced` | `path (message+json)` | `path` | n/a | false |
 | `SIFR-INTERNAL-0001` | `INTERNAL` | Active | Error | `docs/errors/SIFR-INTERNAL-0001.md` | `crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001` | `sifr_driver::diagnostics` | `internal compiler error` | n/a | n/a | n/a | false |
 | `SIFR-INTERNAL-0002` | `INTERNAL` | Active | Note | `docs/errors/SIFR-INTERNAL-0002.md` | `crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics` | `sifr_driver::diagnostics` | `{omitted_count} additional {omitted_kind} omitted by recovery cap ({cap_kind})` | `omitted_count (message+json)`, `omitted_kind (message+json)`, `cap_kind (message+json)` | `cap_kind` | n/a | false |
+| `SIFR-FMT-0001` | `FMT` | Active | Error | `docs/errors/SIFR-FMT-0001.md` | `crates/sifr_format/src/lib.rs::check_reports_formatting_drift` | `sifr_format` | `source is not formatted with sifr fmt` | `path (message+json)` | `path` | n/a | false |
+| `SIFR-LINT-0001` | `LINT` | Active | Warning | `docs/errors/SIFR-LINT-0001.md` | `crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported` | `sifr_lint::suppressions` | `unknown Sifr policy rule id '{rule}'` | `rule (message+json)` | `rule` | n/a | false |
+| `SIFR-LINT-0002` | `LINT` | Active | Warning | `docs/errors/SIFR-LINT-0002.md` | `crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported` | `sifr_lint::suppressions` | `unused Sifr suppression for policy rule '{rule}'` | `rule (message+json)` | `rule` | n/a | false |
+| `SIFR-LINT-0003` | `LINT` | Active | Warning | `docs/errors/SIFR-LINT-0003.md` | `crates/sifr_lint/src/lib.rs::blanket_suppression_is_reported` | `sifr_lint::suppressions` | `sifr suppression must list explicit policy rule ids` | `rule (message+json)` | `rule` | n/a | false |
+| `SIFR-LINT-0004` | `LINT` | Active | Warning | `docs/errors/SIFR-LINT-0004.md` | `crates/sifr_lint/src/lib.rs::suppression_only_suppresses_matching_policy_rule` | `sifr_lint::rules::trailing_whitespace` | `line has trailing whitespace` | `rule (message+json)` | `rule` | n/a | false |
