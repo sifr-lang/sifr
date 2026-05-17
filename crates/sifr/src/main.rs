@@ -5,6 +5,8 @@
 //!   sifr run <file.sifr>      Compile and run
 //!   sifr check <file.sifr>    Type-check only
 //!   sifr emit <file.sifr>     Show generated Rust code
+//!   sifr fmt [--check] <path> Format Sifr source files
+//!   sifr lint <path>          Run suppressible policy diagnostics
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{
@@ -58,6 +60,19 @@ enum Commands {
     Check {
         /// Input .sifr file
         file: PathBuf,
+    },
+    /// Format Sifr source files
+    Fmt {
+        /// Check formatting without writing changes
+        #[arg(long)]
+        check: bool,
+        /// Input .sifr file or directory
+        path: PathBuf,
+    },
+    /// Run suppressible policy diagnostics
+    Lint {
+        /// Input .sifr file or directory
+        path: PathBuf,
     },
     /// Show the generated Rust source code
     Emit {
@@ -123,6 +138,8 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Build { file, output } => cmd_build(&file, &output, diagnostic_format),
         Commands::Run { file } => cmd_run(&file, diagnostic_format),
         Commands::Check { file } => cmd_check(&file, diagnostic_format),
+        Commands::Fmt { check, path } => cmd_fmt(&path, check, diagnostic_format),
+        Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
         Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
     }
@@ -549,6 +566,69 @@ fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     }
 }
 
+fn cmd_fmt(path: &Path, check: bool, diagnostic_format: DiagnosticFormat) -> i32 {
+    let result = match run_with_panic_boundary(
+        "internal compiler panic during fmt command execution",
+        || fmt_entrypoint(path, check),
+    ) {
+        Ok(result) => result,
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
+    };
+
+    match result {
+        Ok(changed) => {
+            if check {
+                if changed.is_empty() {
+                    emit_success_message(diagnostic_format, "format check passed");
+                    EXIT_SUCCESS
+                } else {
+                    render_diagnostics(&changed, diagnostic_format)
+                }
+            } else {
+                emit_success_message(diagnostic_format, "formatted Sifr source files");
+                EXIT_SUCCESS
+            }
+        }
+        Err(errors) => render_diagnostics(&errors, diagnostic_format),
+    }
+}
+
+fn cmd_lint(path: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+    let result = match run_with_panic_boundary(
+        "internal compiler panic during lint command execution",
+        || lint_entrypoint(path),
+    ) {
+        Ok(result) => result,
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
+    };
+
+    match result {
+        Ok(diagnostics) if diagnostics.is_empty() => {
+            emit_success_message(diagnostic_format, "no lint diagnostics found");
+            EXIT_SUCCESS
+        }
+        Ok(diagnostics) => render_diagnostics(&diagnostics, diagnostic_format),
+        Err(errors) => render_diagnostics(&errors, diagnostic_format),
+    }
+}
+
+fn emit_success_message(diagnostic_format: DiagnosticFormat, message: &str) {
+    match diagnostic_format {
+        DiagnosticFormat::Human => {
+            let _ = writeln!(io::stderr(), "{message}");
+        }
+        DiagnosticFormat::Json => {
+            let _ = writeln!(io::stdout(), "[]");
+        }
+        DiagnosticFormat::Compact => {
+            let _ = writeln!(
+                io::stderr(),
+                "summary: 0 error(s), 0 warning(s), 0 note(s), 0 help item(s)"
+            );
+        }
+    }
+}
+
 fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let run_result = match run_with_panic_boundary(
         "internal compiler panic during test command execution",
@@ -629,6 +709,30 @@ fn emit_entrypoint(file: &Path) -> CompileResult {
             compile(&source)
         }
     }
+}
+
+fn fmt_entrypoint(
+    path: &Path,
+    check: bool,
+) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
+    let files = sifr_format::collect_sifr_files(path)?;
+    let mut diagnostics = Vec::new();
+    for file in files {
+        if check {
+            diagnostics.extend(sifr_format::check_path(&file)?);
+        } else {
+            let _formatted = sifr_format::format_path(&file, false)?;
+        }
+    }
+    Ok(diagnostics)
+}
+
+fn lint_entrypoint(path: &Path) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
+    let options = sifr_lint::LintOptions {
+        explicit_target: path.is_file(),
+        ..sifr_lint::LintOptions::default()
+    };
+    sifr_lint::lint_path(path, &options).map(|result| result.diagnostics)
 }
 
 #[cfg(test)]

@@ -23,7 +23,18 @@ python3 verification/tooling/check_vscode_extension_contract.py
 python3 verification/tooling/check_vscode_extension_contract.py --self-test
 ```
 
-These checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling Checks".
+## m36.2 Checks
+
+Required m36.2 commands:
+
+```bash
+python3 verification/tooling/check_formatter_contract.py
+python3 verification/tooling/check_formatter_contract.py --self-test
+python3 verification/tooling/check_rule_suppression_contract.py
+python3 verification/tooling/check_rule_suppression_contract.py --self-test
+```
+
+The m36.1 and m36.2 checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling Checks".
 
 ## Required Later Checks
 
@@ -31,8 +42,6 @@ These checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling 
 - `lsp_protocol_smoke.py`
 - `lsp_protocol_stress.py`
 - `check_analysis_snapshot_coherence.py`
-- `check_formatter_contract.py`
-- `check_rule_suppression_contract.py`
 - `check_editor_assets.py`
 - `check_vscode_extension.py`
 - completion quality fixtures and thresholds

@@ -144,6 +144,8 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
         (DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE, "build error"),
         (DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE, "build error"),
         (DiagnosticCode::BUILD_ARTIFACT_MISSING, "build error"),
+        (DiagnosticCode::FMT_FORMATTING_DRIFT, "format error"),
+        (DiagnosticCode::LINT_TRAILING_WHITESPACE, "lint warning"),
         (DiagnosticCode::TYPE_MISMATCH, "type error"),
     ];
 

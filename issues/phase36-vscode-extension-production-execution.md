@@ -225,7 +225,7 @@ Extension repository validation must include:
 
 All work stays sequential. Do not begin the next PR until the current PR is merged and the checklist is updated.
 
-1. [ ] Main repo PR (`milestone_36_1`): lock extension repo boundary, extension contract JSON, validation command, and this issue checklist. Active PR: <https://github.com/sifr-lang/sifr/pull/2129>; mark complete after merge.
+1. [x] Main repo PR (`milestone_36_1`): lock extension repo boundary, extension contract JSON, validation command, and this issue checklist. Merged PR: <https://github.com/sifr-lang/sifr/pull/2129>.
 2. [ ] Extension repo PR (`milestone_36_7`): scaffold package, CI, language contribution, and grammar wiring.
 3. [ ] Extension repo PR (`milestone_36_7`): LSP launcher, settings, binary discovery, restart/log commands, and smoke tests.
 4. [ ] Extension repo PR (`milestone_36_7`): editor feature wiring for LSP diagnostics, completion, hover, navigation, symbols, semantic tokens, inlay hints, folding, highlights, code actions, formatting, and rename.

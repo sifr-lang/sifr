@@ -276,6 +276,10 @@ pub fn diagnostic_label_for_code_str(code: &str) -> &'static str {
         "parse error"
     } else if code.starts_with("SIFR-CODEGEN-") {
         "codegen error"
+    } else if code.starts_with("SIFR-FMT-") {
+        "format error"
+    } else if code.starts_with("SIFR-LINT-") {
+        "lint warning"
     } else if code.starts_with("SIFR-BUILD-") || code.starts_with("SIFR-WORKSPACE-") {
         "build error"
     } else {

@@ -129,6 +129,10 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py" --self-test
 
 echo "Running Performance Budget Checks"
 python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only

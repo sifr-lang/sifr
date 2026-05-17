@@ -7,7 +7,7 @@ This issue tracks the sequential implementation loop for Phase 36. Each mileston
 
 ## Milestones
 
-- [ ] `milestone_36_1`: Production Tooling Contract Lock
+- [x] `milestone_36_1`: Production Tooling Contract Lock
 - [ ] `milestone_36_2`: Diagnostics, Rules, Suppressions, Exclusions, And Formatting Foundation
 - [ ] `milestone_36_3`: AnalysisHost, Symbol Index, And Session Model
 - [ ] `milestone_36_4`: Full Editor Query Layer
@@ -32,7 +32,7 @@ Scope:
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2129>
-- [ ] Merge PR.
+- [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2129>
 
 ## m36.1 Validation Evidence
 
@@ -55,3 +55,44 @@ Note: the first quick-lane attempt failed in the performance smoke step with `bu
 ## m36.1 PR
 
 - PR: <https://github.com/sifr-lang/sifr/pull/2129>
+- Merge commit: `82eaf50fea0ebbf7dba7a46749ee549fa11f4d73`
+
+## Active Milestone: milestone_36_2
+
+Branch: `phase36-m36-2-format-lint-foundation`
+
+Scope:
+
+- [x] Add concrete `sifr_format` and `sifr_lint` workspace crates.
+- [x] Add `sifr fmt [--check] <path-or-project>` CLI.
+- [x] Add `sifr lint <path-or-project>` CLI.
+- [x] Add Sifr-owned `FMT` and `LINT` diagnostic families and generated docs.
+- [x] Implement conservative syntax-validated formatter foundation over `sifr_syntax`.
+- [x] Implement policy metadata, explicit suppressions, unknown suppression, unused suppression, and blanket suppression diagnostics.
+- [x] Add `check_formatter_contract.py` and `check_rule_suppression_contract.py` with negative self-tests.
+- [x] Wire m36.2 checks into `scripts/run_all_tests.sh`.
+- [x] Run local validation.
+- [x] Run Claude Opus review rounds until satisfied.
+- [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2130>
+- [ ] Merge PR.
+
+## m36.2 Validation Evidence
+
+- `cargo fmt --check && git diff --check` -> PASS.
+- `cargo check -p sifr_format -p sifr_lint -p sifr_driver -p sifr` -> PASS.
+- `cargo clippy -p sifr_format -p sifr_lint -p sifr_driver -p sifr -- -D warnings` -> PASS.
+- `cargo test -p sifr_format -p sifr_lint` -> PASS.
+- `cargo test -p sifr_driver test_diagnostic_labels_are_derived_from_diagnostic_codes` -> PASS.
+- `python3 verification/tooling/check_formatter_contract.py && python3 verification/tooling/check_formatter_contract.py --self-test` -> PASS.
+- `python3 verification/tooling/check_rule_suppression_contract.py && python3 verification/tooling/check_rule_suppression_contract.py --self-test` -> PASS.
+- `python3 scripts/check_diagnostic_code_coverage.py && python3 scripts/check_diagnostic_docs_sync.py && python3 scripts/check_diagnostic_schema_sync.py` -> PASS.
+- Full developer tooling guardrail block, including m36.1 and m36.2 checks plus negative self-tests -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=944.96s`; `max_rss=756.4MiB`; `e2e cache_hits=12/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
+
+## m36.2 Review Evidence
+
+- `reviews/phase36-m36-2-review-pass-1.md` -> SATISFIED with no blocking findings. Reviewer explicitly approved proceeding to PR.
+
+## m36.2 PR
+
+- PR: <https://github.com/sifr-lang/sifr/pull/2130>

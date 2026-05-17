@@ -4,11 +4,13 @@ status: in_progress
 
 ## Execution Status
 
-- `milestone_36_1` is active in branch `phase36-m36-1-tooling-contract-lock`.
+- `milestone_36_1` is merged in PR #2129 at `82eaf50fea0ebbf7dba7a46749ee549fa11f4d73`.
+- `milestone_36_2` is active in branch `phase36-m36-2-format-lint-foundation`.
 - Final crate/module names are locked as `sifr_analysis`, `sifr_format`, `sifr_lint`, and `sifr_lsp`.
 - VS Code extension boundary is locked to a separate `sifr-lang/sifr-vscode` repository, validated from `SIFR_VSCODE_REPO` or sibling `../sifr-vscode`.
 - m36.1 contract artifacts live in `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, `internal_docs/tooling_verification.md`, `verification/tooling/lsp_protocol_matrix.json`, and `verification/tooling/vscode_extension_contract.json`.
 - Developer tooling contract checks are wired into `scripts/run_all_tests.sh`.
+- m36.2 added `sifr_format`, `sifr_lint`, `sifr fmt [--check]`, `sifr lint`, generated `FMT`/`LINT` diagnostic docs, and formatter/rule-suppression contract checks.
 
 ## Objective
 Deliver the complete production-grade Sifr developer tooling stack for the current workspace/project model: editor-oriented analysis queries, diagnostics policy infrastructure, formatter and policy-rule surfaces, a native Rust LSP server launched through `sifr lsp --stdio`, a packageable VS Code extension, multi-editor syntax/integration assets, and parity gates proving tooling and CLI share one compiler brain.

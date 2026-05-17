@@ -20,6 +20,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `CALL` | `SIFR-CALL-0000` | Function, method, constructor, and overload call diagnostics. |
 | `OWN` | `SIFR-OWN-0000` | Ownership, borrow, move, and lifetime diagnostics. |
 | `FLOW` | `SIFR-FLOW-0000` | Control-flow, reachability, and narrowing diagnostics. |
+| `FMT` | `SIFR-FMT-0000` | Source formatting diagnostics. |
+| `LINT` | `SIFR-LINT-0000` | Suppressible policy-rule diagnostics. |
 | `MATCH` | `SIFR-MATCH-0000` | Pattern matching and exhaustiveness diagnostics. |
 | `PROTO` | `SIFR-PROTO-0000` | Protocol and structural conformance diagnostics. |
 | `CLASS` | `SIFR-CLASS-0000` | Class declaration, constructor, field, and method diagnostics. |
@@ -150,6 +152,11 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-BUILD-0006`](SIFR-BUILD-0006.md) | Error | Expected build artifact was not produced. |
 | [`SIFR-INTERNAL-0001`](SIFR-INTERNAL-0001.md) | Error | Unclassified compiler panic after a panic boundary. |
 | [`SIFR-INTERNAL-0002`](SIFR-INTERNAL-0002.md) | Note | Structured recovery-cap omission summary. |
+| [`SIFR-FMT-0001`](SIFR-FMT-0001.md) | Error | Source formatting drift detected by sifr fmt --check. |
+| [`SIFR-LINT-0001`](SIFR-LINT-0001.md) | Warning | Suppression references an unknown policy rule id. |
+| [`SIFR-LINT-0002`](SIFR-LINT-0002.md) | Warning | Suppression did not suppress any diagnostic. |
+| [`SIFR-LINT-0003`](SIFR-LINT-0003.md) | Warning | Suppression must list explicit Sifr policy rule ids. |
+| [`SIFR-LINT-0004`](SIFR-LINT-0004.md) | Warning | Line ends with trailing horizontal whitespace. |
 
 ## Reserved Codes
 
@@ -170,6 +177,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-CALL-0000` | `CALL` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-OWN-0000` | `OWN` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-FLOW-0000` | `FLOW` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-FMT-0000` | `FMT` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-LINT-0000` | `LINT` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-MATCH-0000` | `MATCH` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-PROTO-0000` | `PROTO` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-CLASS-0000` | `CLASS` | Reserved family base; not emitted as a diagnostic. |
