@@ -8,6 +8,7 @@
     "name": "sifr-vscode",
     "full_name": "sifr-lang/sifr-vscode",
     "location_env": "SIFR_VSCODE_REPO",
+    "submodule_checkout": "editor_integrations/vscode",
     "sibling_checkout": "../sifr-vscode",
     "boundary": "separate-repository"
   },

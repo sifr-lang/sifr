@@ -12,7 +12,7 @@ sifr-lang/sifr-vscode
 
 The main `sifr-lang/sifr` repository owns compiler, CLI, LSP, formatter, linter, syntax assets, editor contracts, and cross-repository validation. The extension repository owns Node/TypeScript packaging, extension tests, `.vsix` packaging, marketplace metadata, and release artifacts.
 
-The repository is expected at `SIFR_VSCODE_REPO` or as a sibling checkout `../sifr-vscode`. m36.1 locks the contract. m36.7 makes the extension repository mandatory for package validation.
+The repository is expected at `editor_integrations/vscode`, `SIFR_VSCODE_REPO`, or as a sibling checkout `../sifr-vscode`. m36.1 locks the contract. m36.7 makes the extension repository mandatory for package validation.
 
 m36.7 created `sifr-lang/sifr-vscode` and added the initial production extension
 scaffold: TypeScript sources, package manifest, language configuration, TextMate

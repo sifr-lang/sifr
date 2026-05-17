@@ -52,6 +52,9 @@ def extension_repo_path(contract: dict[str, Any]) -> Path | None:
     repo = contract["repository"]
     if env_value := os.environ.get(repo["location_env"]):
         return Path(env_value)
+    submodule = (REPO_ROOT / repo["submodule_checkout"]).resolve()
+    if submodule.exists():
+        return submodule
     sibling = (REPO_ROOT / repo["sibling_checkout"]).resolve()
     if sibling.exists():
         return sibling
@@ -110,7 +113,10 @@ def validate(require_commands: bool = True) -> list[str]:
     contract = read_json(CONTRACT_PATH)
     repo_path = extension_repo_path(contract)
     if repo_path is None:
-        return ["VS Code extension repo missing; set SIFR_VSCODE_REPO or checkout ../sifr-vscode"]
+        return [
+            "VS Code extension repo missing; run scripts/clone_subrepos.sh, set SIFR_VSCODE_REPO, "
+            "or checkout ../sifr-vscode"
+        ]
     package_path = repo_path / "package.json"
     if not package_path.exists():
         return [f"VS Code extension checkout has no package.json: {repo_path}"]
