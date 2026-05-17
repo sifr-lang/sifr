@@ -42,6 +42,31 @@ The package manager is a Sifr-owned semantic layer. Users interact with `sifr` c
 - Future `pyproject.toml` support may be accepted only as a compatibility manifest frontend that lowers into the same Sifr manifest structs used by native `sifr.toml`.
 - Python package consumption, Python wheels, and virtual-environment behavior are out of scope for Phase 37 unless they are purely CLI-installation documentation and do not affect Sifr packages.
 
+## Reuse Strategy
+
+Package management is not implemented from scratch when mature, well-scoped Rust components already solve a generic subproblem. Sifr must reuse those components at the library boundary where the abstraction matches Sifr's source-first model, and must avoid embedding package managers whose semantics are for another language.
+
+Required direct dependencies:
+- `pubgrub = { package = "astral-pubgrub", version = "0.3.3" }` is the dependency solver. Sifr implements its own package ids, version type wrapper, dependency provider, priority policy, and error lowering around PubGrub. The crate is available from crates.io; any future move to a git or vendored source must pin an immutable revision and record the reason in architecture docs.
+- `semver = { features = ["serde"] }` parses and orders package versions. Sifr wraps `semver::Version` and `semver::VersionReq` behind Sifr types so unsupported grammar, build metadata policy, pre-release policy, and published-package restrictions are enforced before solver input is built.
+- `toml_edit` mutates `sifr.toml` while preserving comments and stable formatting for `sifr add`, `remove`, `update`, `init`, and workspace catalog edits.
+- `petgraph` represents workspace graphs, resolved package graphs, dependency/dependent closure filters, cycle diagnostics, and package-boundary validation.
+- `globset`, `ignore`, and `walkdir` perform deterministic workspace member expansion, package include/exclude walking, archive input discovery, and changed-file-to-package mapping.
+- `gix` is the Git implementation for Git dependencies, locked revisions, registry index mirrors if needed, and changed-package selectors such as `[main...HEAD]`. Sifr must not mix `gix` and `git2` without a specific later design issue.
+- `reqwest` or the selected `gix` HTTP transport implements sparse registry HTTP with conditional requests, retries, TLS validation, and credential redaction. The concrete client must be selected before `milestone_37_6` starts.
+- `sha2` and `hex` implement package, manifest, source, lockfile, archive, and generated-backend checksums.
+- `tar` and `zstd` implement deterministic `tar.zst` source package archives.
+- Existing workspace dependencies such as `serde`, `toml`, `url`, `tempfile`, `thiserror`, `anyhow`, and `tokio` remain the base for serialization, URL validation, atomic writes, diagnostics, and async fetch/concurrency.
+
+Reference implementations, not direct semantic dependencies:
+- uv's `uv-resolver` is a high-quality reference for PubGrub integration, version maps, lockfile preferences, upgrade sets, yanked-version behavior, dependency-provider priorities, universal-resolution forks, and no-solution reporting. It is not reused directly because it is Python-specific: PEP 440/508, wheels, sdists, extras, groups, markers, interpreter constraints, and Python environment tags do not define Sifr packages.
+- uv's `uv-workspace`, `uv-cache`, `uv-client`, and `uv-git` are references for workspace discovery errors, cache layout discipline, HTTP behavior, and Git edge cases. Sifr implements its own workspace/cache/source model because package roots, exports, lockfiles, and compiler integration are Sifr-specific.
+- Cargo's internal resolver, registry traits, lockfile behavior, publish/yank rules, and resolver tests are references for semver compatibility, registry/provider boundaries, conflict cases, and native dependency integration. Sifr does not call Cargo's resolver for Sifr source dependencies because Cargo package ids, feature unification, multiple-version behavior, and crate metadata are Rust-specific.
+- Cargo's `crates-io` and `cargo-platform` crates are not Sifr package-manager dependencies in Phase 37. Sifr owns its sparse registry client. Target predicates use Sifr-owned syntax and lower to Rust targets during generated Cargo materialization.
+- Turborepo's package graph, filters, changed-package selection, graph utilities, boundary concepts, and hashing/cache discipline are monorepo design references. Sifr reuses generic crates such as `petgraph`, `globset`, and `gix`, not Turborepo's JS-package-specific crates.
+
+The implementation must include a short dependency audit before `milestone_37_2`: licenses, maintenance status, public API stability, feature flags, transitive dependency risk, and whether each dependency is used in CLI, compiler, or registry paths.
+
 ## Manifest Model
 
 `sifr.toml` remains the canonical manifest. Unknown tables may remain forward-compatible only when they cannot affect package resolution; resolution-related unknown keys must be rejected with package diagnostics once Phase 37 schema validation is active.
@@ -112,7 +137,7 @@ Required semantics:
 - `[exports].modules` declares public import roots supplied by the package. A package may export multiple roots only when every root is intentional and non-overlapping.
 - `[backend.cargo.dependencies]` is only for backend Rust/native dependencies. It is distinct from Sifr source dependencies.
 - Feature activation uses additive union semantics. A feature cannot disable another feature; mutually exclusive backend choices such as `rustls` vs `native-tls` must be declared as conflicts and produce a resolution error if both are selected.
-- Target predicates use Sifr-owned target expressions that map cleanly to Rust target triples during backend materialization.
+- Target predicates use a Sifr-owned parser for a Cargo-compatible `cfg(...)` subset: `unix`, `windows`, `target_os`, `target_arch`, `target_env`, `target_vendor`, `target_family`, `target_pointer_width`, `all(...)`, `any(...)`, and `not(...)`. Unsupported keys or malformed expressions are package diagnostics. The parsed predicate lowers to Rust target triples during backend materialization, but Sifr does not depend on Cargo's internal platform parser in Phase 37.
 
 Version requirement grammar:
 - Bare versions use Cargo-style caret compatibility: `"1.2.3"` means `>=1.2.3,<2.0.0`; `"0.2.3"` means `>=0.2.3,<0.3.0`; `"0.0.3"` means `>=0.0.3,<0.0.4`.
@@ -124,6 +149,110 @@ Version requirement grammar:
 - Pre-release versions are ignored unless explicitly requested by a requirement containing the same pre-release base version.
 - Build metadata after `+` is ignored for resolution and is rejected in dependency requirements for published packages.
 - Lockfiles store the original requirement string and the concrete resolved version.
+
+## Resolver Architecture
+
+Version resolution is an explicit part of the package manager model. Sifr does not hand this problem to Cargo or uv; it reuses PubGrub directly with Sifr-owned package metadata.
+
+Resolution pipeline:
+
+```text
+ManifestGraph
+  -> FeaturePlan
+  -> SolverInput
+  -> PubGrubDependencyProvider
+  -> ResolvedPackageGraph
+  -> LockPlan
+  -> SourceCachePlan
+  -> PackageSourceMap
+  -> ModuleResolver
+  -> CargoBackendPlan
+```
+
+Core types:
+
+```rust
+struct SolverInput {
+    roots: Vec<RootRequirement>,
+    workspace_members: BTreeMap<PackageName, WorkspaceMember>,
+    registries: BTreeMap<RegistryName, RegistryConfig>,
+    feature_plan: FeaturePlan,
+    target: TargetSelection,
+    preferences: ResolutionPreferences,
+    mode: ResolutionMode,
+}
+
+struct FeaturePlan {
+    package_features: BTreeMap<PackageName, BTreeSet<FeatureName>>,
+    conflicts: Vec<FeatureConflict>,
+}
+
+enum ResolutionMode {
+    Online,
+    Offline { metadata_cache_only: bool },
+    Locked { lockfile: SifrLock },
+    Frozen { lockfile: SifrLock },
+}
+
+struct ResolutionPreferences {
+    locked_versions: BTreeMap<PackageIdentity, Version>,
+    upgrade: UpgradePolicy,
+}
+
+enum UpgradePolicy {
+    PreserveLocked,
+    UpdateDirect(BTreeSet<DependencyAlias>),
+    UpdatePackageAndAffected { package: DependencyAlias, recursive: bool },
+    UpdateWorkspace,
+}
+
+struct ResolvedPackageGraph {
+    packages: BTreeMap<PackageId, ResolvedPackage>,
+    dependency_edges: Vec<ResolvedDependencyEdge>,
+    activated_features: BTreeMap<PackageId, BTreeSet<FeatureName>>,
+    target: TargetSelection,
+    backend_cargo: CargoBackendPlan,
+}
+```
+
+PubGrub provider requirements:
+- Package identities include source kind, registry name, package name, and workspace/path/git/url identity where applicable. Two packages with the same display name but different source identities are distinct solver packages until export-root validation rejects conflicting public imports.
+- Available versions come from workspace members, path manifests, locked Git/URL metadata, cached sparse-index records, or online sparse-index records depending on `ResolutionMode`.
+- Candidate ordering is deterministic: prefer locked versions that still satisfy all constraints unless the package is in the upgrade set; otherwise prefer the newest non-yanked compatible version; ties break by package id string and source priority.
+- Locked versions are preferences, not extra manifest constraints. If a locked version no longer satisfies the active manifest graph, normal resolution selects a compatible replacement unless `--locked` or `--frozen` is active.
+- Yanked versions are excluded from new resolution. Existing lockfiles may continue using yanked versions only when the lockfile checksum and package source checksum still match. If a requirement can be satisfied only by yanked versions during new resolution, resolution fails with `SIFR-PACKAGE-0104` and reports the closest non-yanked incompatible versions if known.
+- No-solution errors must be lowered into a structured conflict path before rendering.
+
+Feature resolution:
+- Sifr uses additive Cargo-like feature union.
+- Phase 37 uses pre-expanded feature edges, not PubGrub virtual feature packages. The manifest graph is first expanded into a `FeaturePlan`; unknown features, cyclic feature aliases, and declared feature conflicts fail before PubGrub runs.
+- Feature-expanded optional dependencies become ordinary solver requirements with origin metadata pointing back to the feature that activated them.
+- Mutually exclusive features are checked as a Sifr diagnostic, not by relying on PubGrub to discover the conflict indirectly.
+
+Target-specific resolution:
+- Normal Phase 37 commands solve for one active target. The active target is the explicit CLI target when present, otherwise the configured default target, otherwise the host target.
+- Target predicates are evaluated before solver input is built. Dependencies whose target predicate is false for the active target are not part of the solve.
+- The lockfile records the target selection and any target predicates that affected the graph.
+- Universal multi-target locks are not a separate semantic path. If added later, they must run the same solver once per declared target environment and merge compatible results using uv-style forked-resolution ideas without changing package import semantics.
+
+Workspace member resolution:
+- Workspace members are source packages with path identities and fixed local manifests.
+- A member participates in the solve only when selected as a root or when another selected package declares it through `{ workspace = true }`, `{ path = "..." }`, or an equivalent explicit dependency.
+- Workspace catalogs contribute requirements and defaults only when a member opts into them. They are never implicit imports and never implicit package roots.
+- Workspace member cycles are rejected before PubGrub when they are structural package cycles, and solver conflict paths report workspace edges using member manifest paths.
+
+Resolution modes:
+- Online mode may refresh registry metadata, resolve missing versions, fetch source archives, and update `sifr.lock`.
+- Offline mode may solve using cached index metadata and cached Git/URL/path metadata only. If required metadata or source archives are missing, it fails with `SIFR-PACKAGE-0203`.
+- Locked mode does not perform a fresh solve that changes the graph. It validates that the existing `sifr.lock` exactly satisfies the active manifest graph, selected features, target predicates, backend Cargo requirements, and package checksums. Any required change fails with `SIFR-PACKAGE-0201` or `SIFR-PACKAGE-0202`.
+- Frozen mode is locked mode plus offline cache enforcement.
+
+Upgrade policy:
+- `sifr update` updates all direct dependencies in the selected package or workspace to the newest compatible non-yanked versions, then resolves affected transitive dependencies as needed.
+- `sifr update name` updates the named direct dependency and transitive dependencies whose locked versions are no longer preferred or compatible after that change.
+- `sifr update name --recursive` additionally allows packages depending on `name` to move when needed to maintain a coherent graph.
+- `sifr update --workspace` applies the same policy across selected workspace members while respecting workspace catalogs.
+- `sifr add`, `remove`, feature changes, target changes, and workspace catalog changes create a new `FeaturePlan` and `SolverInput`; lockfile preferences still minimize unrelated churn.
 
 ## Lockfile Model
 
@@ -157,6 +286,16 @@ source = "path+../local_utils"
 checksum = "sha256:..."
 source-roots = ["src"]
 exports = ["local_utils"]
+
+[[package]]
+id = "git+https://github.com/sifr-lang/math.git?rev=abc123#math@0.4.0"
+name = "math"
+version = "0.4.0"
+source = "git+https://github.com/sifr-lang/math.git"
+rev = "abc123"
+checksum = "sha256:..."
+source-roots = ["src"]
+exports = ["math"]
 
 [[backend.cargo-package]]
 name = "tokio"
@@ -223,6 +362,24 @@ enum ModuleOrigin {
 }
 ```
 
+The resolved graph must also produce the compiler-facing package source map:
+
+```rust
+struct PackageSourceMap {
+    providers: BTreeMap<ImportRoot, PackageSourceProvider>,
+    package_roots: BTreeMap<PackageId, Vec<PackageSourceRoot>>,
+    dependency_scopes: BTreeMap<PackageId, BTreeSet<PackageId>>,
+}
+
+struct PackageSourceProvider {
+    package_id: PackageId,
+    origin: ModuleOrigin,
+    public_exports: BTreeSet<ImportRoot>,
+}
+```
+
+`providers` is used for fast import-root lookup and ambiguity diagnostics. `dependency_scopes` records which direct dependencies are importable from each package; transitive dependencies remain available only while compiling their own modules or validating explicit re-exports.
+
 Resolution order:
 1. Embedded `sifr.*` / `_sifr.*` stdlib and intrinsic modules.
 2. The current package's own source roots.
@@ -247,6 +404,15 @@ Required workspace behavior:
 - Packages may not import files outside their package root except through declared dependencies and public exports.
 - Dependencies belong where used. Root manifests may define shared constraints/catalogs and repo-level tools, but application/library dependencies belong in the member that imports them.
 - Workspace package boundaries are validated in `sifr check`, `sifr build`, `sifr test`, and editor analysis.
+
+Selector semantics are adapted from Turborepo but implemented over Sifr's package graph:
+- `pkg` selects one package by name or alias.
+- `{path/glob}` selects packages whose root directories match the glob.
+- `pkg...` selects `pkg` plus dependency closure.
+- `...pkg` selects `pkg` plus dependent closure.
+- `...^pkg` selects dependents of `pkg` but not `pkg`.
+- `[base...head]` asks `gix` for changed files and maps them to owning package roots. Global files such as the root lockfile, root manifest catalogs, compiler config, registry config, or trust config select every affected package, not an arbitrary single owner.
+- Include filters are unioned, exclude filters subtract, and an empty result is a package diagnostic rather than a silent no-op unless a future command explicitly documents empty selection as success.
 
 Package-aware tooling must update Phase 36 analysis surfaces: workspace diagnostics, completion, auto-import, rename, references, document/workspace symbols, generated Rust preview, and test discovery all need package graph awareness without a separate resolver.
 
@@ -291,6 +457,16 @@ Default ergonomics:
 - Mutating commands preserve TOML formatting as much as practical and produce deterministic table ordering.
 - All commands preserve the existing exit-code contract: success `0`, compilation/semantic/package diagnostics `1`, CLI usage/config errors `2`, and internal/toolchain failures `3`.
 
+Manifest mutation:
+- `toml_edit` is required for mutating `sifr.toml`; commands preserve comments and user grouping where possible while normalizing only the tables they edit.
+- Writes are atomic: write to a same-directory temporary file, fsync where supported, then rename. A failed write must leave the original manifest intact.
+- `sifr add/remove/update --dry-run` must compute and report the TOML edit plan without touching the manifest or lockfile.
+
+Dry-run JSON:
+- `--dry-run=json` emits stable JSON containing selected packages, selected targets, manifest edits, lockfile edits, package graph edges, activated features, package cache actions, registry/Git fetch actions, generated Cargo changes, diagnostics, and command execution plan.
+- Package diagnostics in dry-run JSON use the same canonical diagnostic schema as compiler diagnostics, including `SIFR-PACKAGE-*` code, severity, origin, conflict path, and remediation.
+- JSON fields are additive only after Phase 37; removing or renaming fields requires a later schema-version bump.
+
 ## Registry, Publishing, And Trust
 
 Registry protocol:
@@ -307,6 +483,12 @@ Sparse index contract:
 - `PUT /api/v1/packages/new` publishes one deterministic archive plus metadata using a bearer token from `sifr login`.
 - `PATCH /api/v1/packages/{name}/{version}/yank` marks a version as yanked without changing the archive or checksum.
 - Existing lockfiles may continue to use yanked versions if the checksum matches; new resolution ignores yanked versions unless the user explicitly requests a yanked version and accepts the diagnostic prompt through a future governance-approved flag.
+
+Namespace and ownership:
+- Registry namespaces such as `namespace/name` are owned registry resources.
+- Publishing under a namespace requires authenticated ownership or delegated package publish rights from the registry.
+- Namespace creation, transfer, and owner management must be explicit registry API operations; package publish must not implicitly grant namespace ownership.
+- Duplicate immutable versions, unauthorized namespaces, and ambiguous owner state fail before archive upload.
 
 Package archive structure:
 - Archives are deterministic `tar.zst` files with sorted entries, normalized permissions, normalized timestamps, and no absolute paths.
@@ -330,6 +512,7 @@ Trust model:
 - A trusted direct dependency does not automatically trust an untrusted transitive native dependency; the diagnostic must report the full dependency path and the exact trust entry required.
 - Cargo build scripts and `links` crates require explicit trust and appear in lockfile metadata.
 - Credential storage must use platform credential stores or Sifr config with redaction; credentials never enter manifests, lockfiles, diagnostics, logs, or generated Cargo files.
+- `sifr login` stores registry tokens outside manifests and lockfiles. Registry requests attach bearer tokens only for endpoints that require authentication; token expiry or revocation fails with a registry diagnostic that redacts the token and registry secret material.
 - Package names, export roots, registry names, URLs, Git refs, archive entries, and cache paths are validated before filesystem writes.
 
 ## Package Diagnostics
@@ -362,6 +545,27 @@ Phase 37 reserves the `SIFR-PACKAGE-*` namespace. Implementations may add more c
 
 Every package diagnostic must include structured origin data where applicable: manifest path and key, package id, source kind, dependency path, import site, selected target, registry name, and remediation suggestion.
 
+Version conflict diagnostics must include a structured conflict path:
+
+```rust
+struct ConflictPath {
+    root: PackageId,
+    steps: Vec<ConflictStep>,
+    unsatisfied: UnsatisfiedRequirement,
+}
+
+struct ConflictStep {
+    package: PackageId,
+    required_by: Option<PackageId>,
+    requirement: String,
+    source: DependencySource,
+    feature: Option<FeatureName>,
+    target: Option<TargetSelection>,
+}
+```
+
+Human, compact, and JSON renderers all consume this same structure. Human output may summarize the path, but JSON output must preserve the full path.
+
 ## Artifact Cache And Generated Cargo Integration
 
 The artifact cache key must include:
@@ -379,12 +583,24 @@ Generated Cargo projects:
 - Must preserve source-to-generated mapping for diagnostics and generated Rust preview.
 - Must not expose package cache paths as normal user source roots.
 - Must fail closed when generated Cargo resolution changes under `--locked` or `--frozen`.
+- Are regenerated from `CargoBackendPlan`, not handwritten or mutated in place.
+- Record stdlib/codegen backend dependencies in the backend lock section because compiler/runtime changes can alter native dependency resolution.
+- Verify generated `Cargo.lock` by comparing package names, versions, sources, checksums, and activated features against the backend section of `sifr.lock`; a digest-only mismatch is not enough for user diagnostics.
+- Live under the generated artifact cache root, separate from the package source cache. The existing content-addressed system-temp cache discipline for `sifr run` / `sifr test` remains valid unless a later architecture update moves generated artifacts into a configured Sifr cache directory.
+
+`CargoBackendPlan` is derived from the resolved package graph by collecting backend Cargo requirements from embedded stdlib/codegen metadata, selected Sifr packages, and active package features. It is sorted deterministically, trust-checked, written into `sifr.lock`, materialized as generated `Cargo.toml`, and then verified against generated `Cargo.lock`.
 
 Cache invalidation and recovery:
 - Corrupt package-cache entries are deleted only after checksum verification fails and the diagnostic is emitted; `sifr sync` may refetch them when network access is allowed.
 - Artifact-cache entries are disposable and may be evicted by size, age, or schema version without affecting reproducibility.
 - Package-cache entries are content-addressed and are not evicted automatically while referenced by any lockfile known to the workspace unless a future cache-prune command explicitly does so.
 - Cache summaries in `--dry-run=json` must expose cache hit/miss/corruption reasons without leaking credentials or absolute registry tokens.
+
+Concurrency:
+- Manifest and lockfile mutations take an exclusive workspace lock file under the workspace root before reading and writing package state.
+- Package cache writes are staged in unique temporary directories and made visible only by atomic rename after checksum verification.
+- Concurrent readers may use existing verified cache entries, but they must not observe partially extracted archives, partially written lockfiles, or generated Cargo directories in progress.
+- IDE/editor package graph refreshes share the same read-only resolver/cache APIs and must back off when a mutating CLI command owns the workspace lock.
 
 ## Milestones
 
@@ -393,14 +609,17 @@ Cache invalidation and recovery:
   - Extend manifest parsing with package metadata, dependency specs, source types, features, target dependencies, workspace inheritance, workspace members/default-members, exports, backend Cargo dependencies, and trust metadata.
   - Add deterministic schema diagnostics for invalid tables/keys/values.
   - Add workspace member discovery and package selection planning.
+  - Add the Phase 37 dependency audit for `pubgrub`, `semver`, `toml_edit`, `petgraph`, `globset`, `ignore`, `gix`, HTTP, checksum, archive, and async dependencies.
 - Definition of done:
   - Manifest and workspace graphs parse deterministically for root, virtual, and member workspaces.
   - Invalid dependency specs, invalid export roots, invalid workspace globs, package cycles, and invalid backend/native trust config produce stable package diagnostics.
   - Existing non-package workspace behavior remains compatible where manifests do not use Phase 37 package tables.
+  - Dependency audit records license, maintenance status, public API stability, feature flags, transitive dependency risk, runtime path exposure, selected version, and fallback decision if a dependency fails the audit.
 
 ### milestone_37_2: Resolver, Lockfile, And Source Cache
 - Scope:
-  - Implement Sifr source dependency solving, feature resolution, target predicate selection, `sifr.lock`, staleness detection, content checksums, and a content-addressed package cache.
+  - Implement Sifr source dependency solving through `astral-pubgrub`, including `SolverInput`, `FeaturePlan`, `ResolutionMode`, `ResolutionPreferences`, `ResolvedPackageGraph`, deterministic candidate ordering, lockfile preferences, and structured conflict paths.
+  - Implement pre-expanded feature resolution, target predicate selection, `sifr.lock`, staleness detection, content checksums, and a content-addressed package cache.
   - Support registry, Git, URL, and path source records at the model level.
   - Implement `sifr sync`, `sifr fetch`, `--locked`, `--offline`, and `--frozen`.
 - Definition of done:
@@ -411,6 +630,7 @@ Cache invalidation and recovery:
 ### milestone_37_3: Package-Aware Import Resolution
 - Scope:
   - Replace deferred package-directory behavior with `__init__.sifr`, explicit re-exports, public/private package APIs, and package-aware `ModuleOrigin`.
+  - Build and consume `PackageSourceMap` from the resolved package graph.
   - Enforce direct-dependency imports and transitive dependency boundaries.
   - Integrate package source modules into import-closure parsing and project lowering.
 - Definition of done:
@@ -432,6 +652,7 @@ Cache invalidation and recovery:
 ### milestone_37_5: Workspace CLI, Filters, And Tooling Integration
 - Scope:
   - Implement `sifr init`, `add`, `remove`, `update`, `tree`, `outdated`, `vendor`, package-aware `check/build/run/test`, workspace selectors, filters, dry-run/json summaries, and TOML mutation.
+  - Implement Turborepo-inspired package filters over Sifr's `petgraph` package graph and `gix` changed-file detection.
   - Update Phase 36 analysis surfaces to use the package graph.
 - Definition of done:
   - Monorepo workflows support root/virtual workspaces, member package selection, dependency/dependent filtering, changed-package selection, and package boundary diagnostics.
