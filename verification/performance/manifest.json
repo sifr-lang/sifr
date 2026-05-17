@@ -10,6 +10,7 @@
     "build-project": 5,
     "incremental-local-loop": 5,
     "interactive-tooling-foundation": 5,
+    "lsp-query": 1,
     "phase27-non-regression": 1
   },
   "cases": [
@@ -58,6 +59,8 @@
     {"id": "interactive-tooling-foundation-003-unchanged-file-update", "group": "interactive-tooling-foundation", "kind": "frontend-query", "scenario": "interactive.unchanged_file_update", "source_path": "verification/performance/query_projects/interactive/main.sifr", "warmups": 3, "measured": 20, "timeout_ms": 30000, "budget_id": "perf.interactive.unchanged_file_update", "evidence_category": "editor-document-sync"},
     {"id": "interactive-tooling-foundation-004-changed-file-invalidation", "group": "interactive-tooling-foundation", "kind": "frontend-query", "scenario": "interactive.changed_file_invalidation", "source_path": "verification/performance/query_projects/interactive/main.sifr", "warmups": 3, "measured": 20, "timeout_ms": 30000, "budget_id": "perf.interactive.changed_file_invalidation", "evidence_category": "editor-document-sync"},
     {"id": "interactive-tooling-foundation-005-source-map-lookup", "group": "interactive-tooling-foundation", "kind": "frontend-query", "scenario": "interactive.source_map_lookup", "source_path": "verification/performance/query_projects/interactive/main.sifr", "warmups": 3, "measured": 20, "timeout_ms": 30000, "budget_id": "perf.interactive.source_map_lookup", "evidence_category": "editor-source-map"},
+
+    {"id": "lsp-query-001-request-families", "group": "lsp-query", "kind": "lsp-query", "scenario": "lsp.request_families", "source_path": "verification/performance/query_projects/lsp/main.sifr", "warmups": 1, "measured": 5, "timeout_ms": 60000, "budget_id": "perf.lsp.request_families", "evidence_category": "lsp-query"},
 
     {"id": "phase27-non-regression-001-human-success-exit", "group": "phase27-non-regression", "kind": "command", "mode": "check", "source_path": "crates/sifr/tests/e2e/pass/assert_basic.sifr", "warmups": 1, "measured": 5, "timeout_ms": 60000, "budget_id": "perf.phase27.human_success_exit", "evidence_category": "exit-code", "expected_exit_codes": [0]},
     {"id": "phase27-non-regression-002-json-diagnostic-schema", "group": "phase27-non-regression", "kind": "command", "mode": "check", "source_path": "crates/sifr/tests/e2e/fail/type_mismatch.sifr", "global_args": ["--diagnostic-format", "json"], "warmups": 1, "measured": 5, "timeout_ms": 60000, "budget_id": "perf.phase27.json_diagnostic_schema", "evidence_category": "diagnostics-json", "expected_exit_codes": [1]},

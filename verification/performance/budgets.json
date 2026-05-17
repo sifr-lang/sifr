@@ -808,6 +808,28 @@
     },
     {
       "baseline": {
+        "coefficient_variation": 0.052139,
+        "median_ms": 1.342,
+        "p95_ms": 1.477,
+        "peak_rss_bytes": 20398080
+      },
+      "benchmark_id": "lsp-query-001-request-families",
+      "budget_id": "perf.lsp.request_families",
+      "cache": {
+        "max_misses": 6
+      },
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Derived from Phase 36 m36.5 checked-in LSP request-family baseline.",
+      "thresholds": {
+        "median_ms": 5.0,
+        "p95_ms": 10.0,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
         "coefficient_variation": 0.005931,
         "median_ms": 1227.674,
         "p95_ms": 1238.76,

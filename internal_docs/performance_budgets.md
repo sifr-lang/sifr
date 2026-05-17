@@ -67,6 +67,9 @@ Frontend-query and local edit-loop benchmarks use stricter latency thresholds:
 - p95 latency: `max(baseline_p95 * 1.10, baseline_p95 + 5ms)`
 - peak RSS uses the same 10% / 32MiB rule as command benchmarks.
 - cases with baseline cache hits must keep at least the baseline hit count.
+- m36.5 adds `lsp-query-001-request-families` with budget id
+  `perf.lsp.request_families`; it is executed by `lsp_query_bench.py` through
+  `sifr lsp --stdio` and is validated by the same manifest/budget gate.
 
 Timeouts are hard failures. Missing results, unknown ids, malformed metric payloads, and cache-miss regressions are hard failures.
 

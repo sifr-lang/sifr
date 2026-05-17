@@ -25,7 +25,7 @@ DEFAULT_MANIFEST = PERF_ROOT / "manifest.json"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "target" / "performance"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
-COMMAND_KINDS = {"command", "frontend-query"}
+COMMAND_KINDS = {"command", "frontend-query", "lsp-query"}
 COMMAND_MODES = {"check", "build"}
 FRONTEND_BENCH_BINARY = REPO_ROOT / "target" / "debug" / "frontend_query_bench"
 _FRONTEND_BENCH_READY = False
@@ -216,6 +216,9 @@ def validate_case(raw: dict[str, Any]) -> None:
     if raw["kind"] == "frontend-query":
         if not isinstance(raw.get("scenario"), str) or not raw["scenario"]:
             raise BenchmarkError(f"frontend query benchmark {raw['id']} must define scenario")
+    if raw["kind"] == "lsp-query":
+        if not isinstance(raw.get("scenario"), str) or not raw["scenario"]:
+            raise BenchmarkError(f"LSP query benchmark {raw['id']} must define scenario")
     path = REPO_ROOT / raw["source_path"]
     if not path.exists():
         raise BenchmarkError(f"benchmark case {raw['id']} input path does not exist: {raw['source_path']}")
@@ -265,6 +268,8 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
     measured = 1 if sample_scale == "smoke" else case.measured
     if case.kind == "frontend-query":
         return run_frontend_query_case(case, measured)
+    if case.kind == "lsp-query":
+        return run_lsp_query_case(case, measured)
 
     samples = []
     peak_rss_values = []
@@ -332,6 +337,47 @@ def run_frontend_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any
         "evidence_category": case.raw["evidence_category"],
         "sample_count": len(samples),
         "samples_ms": [float(sample) for sample in samples],
+        "metrics": stats | {"peak_rss_bytes": result["peak_rss_bytes"]},
+        "cache": {
+            "hits": int(payload.get("cache_hits", 0)),
+            "misses": int(payload.get("cache_misses", 0)),
+        },
+        "diagnostics_count": int(payload.get("diagnostics_count", 0)),
+        "timed_out": bool(payload.get("timed_out", False)),
+    }
+
+
+def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
+    warmups = case.warmups if measured == case.measured else 1
+    command = [
+        "python3",
+        str(PERF_ROOT / "lsp_query_bench.py"),
+        str(case.raw["scenario"]),
+        str(REPO_ROOT / case.raw["source_path"]),
+        str(warmups + measured),
+    ]
+    result = run_subprocess(command, case.timeout_ms)
+    if result["timed_out"]:
+        raise BenchmarkError(f"LSP query benchmark {case.id} timed out after {case.timeout_ms}ms")
+    if result["exit_code"] != 0:
+        raise BenchmarkError(f"LSP query benchmark {case.id} failed: {result['stderr_tail']}")
+    try:
+        payload = json.loads(result["stdout"])
+    except json.JSONDecodeError as error:
+        raise BenchmarkError(f"LSP query benchmark {case.id} emitted invalid JSON: {error}") from error
+    samples = payload.get("samples_ms")
+    if not isinstance(samples, list) or not all(isinstance(sample, int | float) for sample in samples):
+        raise BenchmarkError(f"LSP query benchmark {case.id} did not emit numeric samples_ms")
+    samples = [float(sample) for sample in samples[warmups:]]
+    stats = sample_stats(samples)
+    return {
+        "id": case.id,
+        "group": case.group,
+        "kind": case.kind,
+        "budget_id": case.raw["budget_id"],
+        "evidence_category": case.raw["evidence_category"],
+        "sample_count": len(samples),
+        "samples_ms": samples,
         "metrics": stats | {"peak_rss_bytes": result["peak_rss_bytes"]},
         "cache": {
             "hits": int(payload.get("cache_hits", 0)),

@@ -1,6 +1,6 @@
 # Sifr Tooling Verification
 
-status: phase36-contract-locked
+status: phase36-m36.5-implemented
 
 ## Verification Directory
 
@@ -56,10 +56,27 @@ python3 verification/tooling/run_tooling_parity.py --self-test
 
 The m36.1, m36.2, m36.3, and m36.4 checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling Checks".
 
+## m36.5 Checks
+
+Required m36.5 commands:
+
+```bash
+python3 verification/tooling/lsp_protocol_smoke.py
+python3 verification/tooling/lsp_protocol_smoke.py --self-test
+python3 verification/tooling/lsp_protocol_stress.py
+python3 verification/tooling/lsp_protocol_stress.py --self-test
+python3 verification/tooling/check_lsp_split_brain.py
+python3 verification/tooling/check_lsp_split_brain.py --self-test
+python3 verification/tooling/check_tooling_dependency_boundaries.py
+python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test
+```
+
+`scripts/run_all_tests.sh` now runs the protocol smoke/stress checks under
+"Developer Tooling Checks". The Phase 35 performance gate also includes
+`lsp-query-001-request-families` and budget id `perf.lsp.request_families`.
+
 ## Required Later Checks
 
-- `lsp_protocol_smoke.py`
-- `lsp_protocol_stress.py`
 - `check_editor_assets.py`
 - `check_vscode_extension.py`
 - completion quality fixtures and thresholds
