@@ -21,6 +21,8 @@ REQUIRED_COMMANDS = {
     "sifr.locateBinary",
     "sifr.runCheck",
     "sifr.runTests",
+    "sifr.runLint",
+    "sifr.checkFormat",
     "sifr.formatDocument",
     "sifr.showGeneratedRust",
     "sifr.explainDiagnostic",

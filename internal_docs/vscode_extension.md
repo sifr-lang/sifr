@@ -1,6 +1,6 @@
 # Sifr VS Code Extension Contract
 
-status: phase36-contract-locked
+status: phase36-m36.7-implemented
 
 ## Repository Boundary
 
@@ -13,6 +13,11 @@ sifr-lang/sifr-vscode
 The main `sifr-lang/sifr` repository owns compiler, CLI, LSP, formatter, linter, syntax assets, editor contracts, and cross-repository validation. The extension repository owns Node/TypeScript packaging, extension tests, `.vsix` packaging, marketplace metadata, and release artifacts.
 
 The repository is expected at `SIFR_VSCODE_REPO` or as a sibling checkout `../sifr-vscode`. m36.1 locks the contract. m36.7 makes the extension repository mandatory for package validation.
+
+m36.7 created `sifr-lang/sifr-vscode` and added the initial production extension
+scaffold: TypeScript sources, package manifest, language configuration, TextMate
+grammar, LSP launcher, settings, commands, test controller, local tests, CI, and
+`.vsix` packaging.
 
 ## Manifest Contract
 
@@ -70,6 +75,8 @@ The extension must not implement:
 - `sifr.locateBinary`
 - `sifr.runCheck`
 - `sifr.runTests`
+- `sifr.runLint`
+- `sifr.checkFormat`
 - `sifr.formatDocument`
 - `sifr.showGeneratedRust`
 - `sifr.explainDiagnostic`
@@ -84,4 +91,7 @@ Before m36.7 closes, the extension must document whether its version is coupled 
 
 `verification/tooling/check_vscode_extension_contract.py` validates the main-repo contract and, once extension validation is active, checks the extension repository manifest, commands, settings, launch command, package scripts, and forbidden semantic behavior.
 
-`verification/tooling/check_vscode_extension.py` is reserved for m36.7 build/test/package validation against a real extension checkout.
+`verification/tooling/check_vscode_extension.py` runs m36.7 build/test/package
+validation against the real extension checkout: `npm ci` when dependencies are
+missing, `npm run lint`, `npm run typecheck`, `npm test`,
+`npm run test:extension`, and `npm run package`.

@@ -12,7 +12,7 @@ This issue tracks the sequential implementation loop for Phase 36. Each mileston
 - [x] `milestone_36_3`: AnalysisHost, Symbol Index, And Session Model
 - [x] `milestone_36_4`: Full Editor Query Layer
 - [x] `milestone_36_5`: Production Native LSP Server
-- [ ] `milestone_36_6`: Multi-Editor Syntax And Integration Assets
+- [x] `milestone_36_6`: Multi-Editor Syntax And Integration Assets
 - [ ] `milestone_36_7`: VS Code Extension
 - [ ] `milestone_36_8`: Production Verification And Performance Closeout
 
@@ -237,8 +237,8 @@ Scope:
 - [x] Add `check_editor_assets.py`.
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
-- [ ] Open PR.
-- [ ] Merge PR.
+- [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2134>
+- [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2134>
 
 ## m36.6 Validation Evidence
 
@@ -256,3 +256,37 @@ Scope:
 
 - `reviews/phase36-m36-6-review-pass-1.md` -> SATISFIED. Reviewer confirmed all editor targets launch `sifr lsp --stdio`, parser-token syntax drift validation covers the fixtures, TOML/JSON assets parse, no fallback/semantic markers are present, and validation is wired into `scripts/run_all_tests.sh`.
 - `reviews/phase36-m36-6-review-pass-2.md` -> SATISFIED. Reviewer confirmed the post-review LSP request-queue rename from `cancel` to `remove_pending` preserves behavior and satisfies `check_diagnostic_cancel_usage.py`.
+
+## m36.6 PR
+
+- PR: <https://github.com/sifr-lang/sifr/pull/2134>
+- Merge commit: `ac42f73464903b75b6ab3639d5ff766f31c44341`
+
+## Active Milestone: milestone_36_7
+
+Branch: `phase36-m36-7-vscode-extension`
+
+Scope:
+
+- [x] Implement the VS Code extension in the locked `sifr-lang/sifr-vscode` repository boundary.
+- [x] Add language id, file extension, grammar, language configuration, LSP launcher, settings, commands, trace/logging, binary discovery, generated Rust preview, explain diagnostic, check/test commands, VS Code Test Explorer integration, format command, restart server, and server log access.
+- [x] Add `.vsix` packaging, extension integration tests, and `vscode_extension_contract.json` validation.
+- [x] Ensure extension tests can launch the locally built `sifr lsp --stdio`.
+- [x] Run local validation.
+- [x] Run Claude Opus review rounds until satisfied.
+- [ ] Open PR.
+- [ ] Merge PR.
+
+## m36.7 Validation Evidence
+
+- In `../sifr-vscode`: `npm install` -> PASS, generated `package-lock.json`; npm reported 0 vulnerabilities.
+- In `../sifr-vscode`: `npm run lint && npm run typecheck && npm test && npm run test:extension && npm run package` -> PASS after fixing the pure-config unit-test import and package output directory. Produced `dist/sifr-vscode-0.0.0.vsix`.
+- Extension repo PR: <https://github.com/sifr-lang/sifr-vscode/pull/1>; merge commit: `eea6255bb4080e74ebd0b541923ea33315f4e279`.
+- `python3 -m py_compile verification/tooling/check_vscode_extension.py verification/tooling/check_vscode_extension_contract.py` -> PASS.
+- `python3 verification/tooling/check_vscode_extension_contract.py --require-extension-repo && python3 verification/tooling/check_vscode_extension_contract.py --self-test` -> PASS.
+- `python3 verification/tooling/check_vscode_extension.py && python3 verification/tooling/check_vscode_extension.py --self-test` -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=1459.55s`; `max_rss=562.1MiB`; `e2e cache_hits=12/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
+
+## m36.7 Review Evidence
+
+- `reviews/phase36-m36-7-review-pass-1.md` -> SATISFIED. Reviewer confirmed the extension identity, native LSP launcher, command/settings coverage, forbidden-behavior guardrails, Test Explorer delegation, syntax/language assets, package scripts, CI, cross-repo validation wiring, docs, and versioning notes are acceptable for PR after final quick validation.

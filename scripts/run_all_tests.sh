@@ -129,6 +129,8 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py"

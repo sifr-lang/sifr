@@ -1,6 +1,6 @@
 # Sifr Tooling Verification
 
-status: phase36-m36.6-implemented
+status: phase36-m36.7-implemented
 
 ## Verification Directory
 
@@ -92,9 +92,27 @@ covered by the `sifr_syntax` token fixtures.
 The m36.6 checks are wired into `scripts/run_all_tests.sh` under "Developer
 Tooling Checks".
 
+## m36.7 Checks
+
+Required m36.7 commands:
+
+```bash
+python3 verification/tooling/check_vscode_extension_contract.py --require-extension-repo
+python3 verification/tooling/check_vscode_extension_contract.py --self-test
+python3 verification/tooling/check_vscode_extension.py
+python3 verification/tooling/check_vscode_extension.py --self-test
+```
+
+`check_vscode_extension.py` locates `SIFR_VSCODE_REPO` or sibling
+`../sifr-vscode`, validates required package metadata and syntax assets, runs
+the extension repo's lint, typecheck, unit test, extension smoke test, and
+package scripts, and checks that `dist/sifr-vscode-0.0.0.vsix` is produced.
+
+The m36.7 package check is wired into `scripts/run_all_tests.sh` under
+"Developer Tooling Checks".
+
 ## Required Later Checks
 
-- `check_vscode_extension.py`
 - completion quality fixtures and thresholds
 
 Each script must pass on positive fixtures and fail on seeded negative fixtures.

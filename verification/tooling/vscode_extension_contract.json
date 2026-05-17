@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "phase": "36",
-  "milestone": "36.1",
-  "validation_stage": "contract-lock",
+  "milestone": "36.7",
+  "validation_stage": "extension-active",
   "repository": {
     "owner": "sifr-lang",
     "name": "sifr-vscode",
@@ -41,6 +41,8 @@
     {"command": "sifr.locateBinary", "title": "Sifr: Locate Sifr Binary", "backend": "extension-ui"},
     {"command": "sifr.runCheck", "title": "Sifr: Run Check", "backend": "cli:sifr check"},
     {"command": "sifr.runTests", "title": "Sifr: Run Tests", "backend": "cli:sifr test"},
+    {"command": "sifr.runLint", "title": "Sifr: Run Lint", "backend": "cli:sifr lint"},
+    {"command": "sifr.checkFormat", "title": "Sifr: Check Format", "backend": "cli:sifr fmt --check"},
     {"command": "sifr.formatDocument", "title": "Sifr: Format Document", "backend": "lsp-or-cli:sifr fmt"},
     {"command": "sifr.showGeneratedRust", "title": "Sifr: Show Generated Rust", "backend": "lsp:sifr.showGeneratedRust"},
     {"command": "sifr.explainDiagnostic", "title": "Sifr: Explain Diagnostic", "backend": "lsp:sifr.explainDiagnostic"}
