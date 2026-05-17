@@ -1,0 +1,8 @@
+name = "Sifr"
+grammar = "sifr"
+path_suffixes = ["sifr"]
+line_comments = ["#"]
+tab_size = 4
+hard_tabs = false
+language_servers = ["sifr"]
+scope = "source.sifr"

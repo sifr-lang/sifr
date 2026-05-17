@@ -1,0 +1,11 @@
+[[language]]
+name = "sifr"
+scope = "source.sifr"
+file-types = ["sifr"]
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }
+language-servers = ["sifr-lsp"]
+
+[language-server.sifr-lsp]
+command = "sifr"
+args = ["lsp", "--stdio"]

@@ -1,6 +1,6 @@
 # Sifr Tooling Verification
 
-status: phase36-m36.5-implemented
+status: phase36-m36.6-implemented
 
 ## Verification Directory
 
@@ -75,9 +75,25 @@ python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test
 "Developer Tooling Checks". The Phase 35 performance gate also includes
 `lsp-query-001-request-families` and budget id `perf.lsp.request_families`.
 
+## m36.6 Checks
+
+Required m36.6 commands:
+
+```bash
+python3 verification/tooling/check_editor_assets.py
+python3 verification/tooling/check_editor_assets.py --self-test
+```
+
+`check_editor_assets.py` verifies the checked-in Neovim, Zed, Helix, and Emacs
+assets register Sifr files, launch `sifr lsp --stdio`, avoid Python/Ruff
+fallbacks and semantics-bearing code, and keep the TextMate grammar scope map
+covered by the `sifr_syntax` token fixtures.
+
+The m36.6 checks are wired into `scripts/run_all_tests.sh` under "Developer
+Tooling Checks".
+
 ## Required Later Checks
 
-- `check_editor_assets.py`
 - `check_vscode_extension.py`
 - completion quality fixtures and thresholds
 

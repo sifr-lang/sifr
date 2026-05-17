@@ -1,0 +1,40 @@
+{
+  "ignored_token_kinds": [
+    "Colon",
+    "Comma",
+    "Dedent",
+    "Dot",
+    "EndOfFile",
+    "Indent",
+    "Lpar",
+    "Lsqb",
+    "Newline",
+    "NonLogicalNewline",
+    "Rpar",
+    "Rsqb"
+  ],
+  "token_scopes": {
+    "Async": "keyword.control.sifr",
+    "Await": "keyword.control.sifr",
+    "Case": "keyword.control.sifr",
+    "Class": "storage.type.class.sifr",
+    "Def": "storage.type.function.sifr",
+    "Elif": "keyword.control.sifr",
+    "Else": "keyword.control.sifr",
+    "Equal": "keyword.operator.assignment.sifr",
+    "EqEqual": "keyword.operator.comparison.sifr",
+    "For": "keyword.control.sifr",
+    "From": "keyword.control.import.sifr",
+    "If": "keyword.control.sifr",
+    "Import": "keyword.control.import.sifr",
+    "In": "keyword.operator.word.sifr",
+    "Int": "constant.numeric.integer.sifr",
+    "Less": "keyword.operator.comparison.sifr",
+    "Match": "keyword.control.sifr",
+    "Name": "variable.other.sifr",
+    "Plus": "keyword.operator.arithmetic.sifr",
+    "Return": "keyword.control.sifr",
+    "Rarrow": "punctuation.separator.return-type.sifr",
+    "String": "string.quoted.double.sifr"
+  }
+}

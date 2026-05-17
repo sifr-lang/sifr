@@ -143,6 +143,8 @@ python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_editor_assets.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_editor_assets.py" --self-test
 
 echo "Running Performance Budget Checks"
 python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only

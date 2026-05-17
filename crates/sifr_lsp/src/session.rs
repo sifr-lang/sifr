@@ -51,7 +51,7 @@ impl Session {
         } else {
             return;
         };
-        if self.queue.cancel(&request_id) {
+        if self.queue.remove_pending(&request_id) {
             self.trace(format!("cancelled request {request_id:?}"));
         }
     }

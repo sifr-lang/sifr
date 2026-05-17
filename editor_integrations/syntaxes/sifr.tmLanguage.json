@@ -1,0 +1,162 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Sifr",
+  "scopeName": "source.sifr",
+  "fileTypes": [
+    "sifr"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#declarations"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#identifiers"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.sifr",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.sifr",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sifr",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.sifr",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sifr",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.integer.sifr",
+          "match": "\\b(?:0[xX][0-9A-Fa-f_]+|0[oO][0-7_]+|0[bB][01_]+|[0-9][0-9_]*)\\b"
+        }
+      ]
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "name": "meta.function.sifr",
+          "match": "\\b(def)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.function.sifr"
+            },
+            "2": {
+              "name": "entity.name.function.sifr"
+            }
+          }
+        },
+        {
+          "name": "meta.class.sifr",
+          "match": "\\b(class)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.class.sifr"
+            },
+            "2": {
+              "name": "entity.name.type.class.sifr"
+            }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.import.sifr",
+          "match": "\\b(?:from|import)\\b"
+        },
+        {
+          "name": "keyword.control.sifr",
+          "match": "\\b(?:async|await|if|elif|else|for|while|match|case|return|break|continue|pass|raise|try|except|finally|with|as)\\b"
+        },
+        {
+          "name": "keyword.operator.word.sifr",
+          "match": "\\b(?:and|or|not|in|is)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "support.type.sifr",
+          "match": "\\b(?:int|str|bool|float|bytes|list|dict|set|tuple|Option|Result|Error|None|Self)\\b"
+        },
+        {
+          "name": "variable.language.self.sifr",
+          "match": "\\bself\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.return-type.sifr",
+          "match": "->"
+        },
+        {
+          "name": "keyword.operator.comparison.sifr",
+          "match": "==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.assignment.sifr",
+          "match": "\\+=|-=|\\*=|/=|//=|%=|="
+        },
+        {
+          "name": "keyword.operator.arithmetic.sifr",
+          "match": "\\+|-|\\*\\*|\\*|//|/|%"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.sifr",
+          "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+        }
+      ]
+    }
+  }
+}

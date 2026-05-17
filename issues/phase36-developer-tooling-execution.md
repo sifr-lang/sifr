@@ -11,7 +11,7 @@ This issue tracks the sequential implementation loop for Phase 36. Each mileston
 - [x] `milestone_36_2`: Diagnostics, Rules, Suppressions, Exclusions, And Formatting Foundation
 - [x] `milestone_36_3`: AnalysisHost, Symbol Index, And Session Model
 - [x] `milestone_36_4`: Full Editor Query Layer
-- [ ] `milestone_36_5`: Production Native LSP Server
+- [x] `milestone_36_5`: Production Native LSP Server
 - [ ] `milestone_36_6`: Multi-Editor Syntax And Integration Assets
 - [ ] `milestone_36_7`: VS Code Extension
 - [ ] `milestone_36_8`: Production Verification And Performance Closeout
@@ -196,8 +196,8 @@ Scope:
 - [x] Add Phase 35 `lsp-query-001-request-families` benchmark, baseline, and budget evidence.
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
-- [ ] Open PR.
-- [ ] Merge PR.
+- [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2133>
+- [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2133>
 
 ## m36.5 Validation Evidence
 
@@ -219,3 +219,40 @@ Scope:
 
 - `reviews/phase36-m36-5-review-pass-1.md` -> CHANGES_REQUESTED. Reviewer requested explicit shutdown/exit exit-code behavior, explicit protocol stress-test `exit` notification, non-stub `completionItem/resolve`, request scheduler lane evidence, and diagnostic clearing on `didClose`.
 - `reviews/phase36-m36-5-review-pass-2.md` -> SATISFIED. Reviewer confirmed the blocking findings were resolved and approved proceeding to PR.
+
+## m36.5 PR
+
+- PR: <https://github.com/sifr-lang/sifr/pull/2133>
+- Merge commit: `a4a1297b1432598c98827ad98ba68293f33211c1`
+
+## Active Milestone: milestone_36_6
+
+Branch: `phase36-m36-6-editor-assets`
+
+Scope:
+
+- [x] Deliver checked-in or contribution-ready Neovim, Zed, Helix, and Emacs configs using `sifr lsp --stdio`.
+- [x] Deliver TextMate and/or Tree-sitter assets required by VS Code and non-VS Code editor targets.
+- [x] Add syntax asset drift checks against `sifr_syntax` tokenization fixtures.
+- [x] Add `check_editor_assets.py`.
+- [x] Run local validation.
+- [x] Run Claude Opus review rounds until satisfied.
+- [ ] Open PR.
+- [ ] Merge PR.
+
+## m36.6 Validation Evidence
+
+- `cargo fmt --check && git diff --check` -> PASS.
+- `python3 -m py_compile verification/tooling/check_editor_assets.py` -> PASS.
+- `python3 -m json.tool editor_integrations/syntaxes/sifr.tmLanguage.json >/dev/null && python3 -m json.tool editor_integrations/syntaxes/sifr-token-scope-map.json >/dev/null` -> PASS.
+- `python3 verification/tooling/check_editor_assets.py && python3 verification/tooling/check_editor_assets.py --self-test` -> PASS.
+- `python3 verification/tooling/check_tooling_dependency_boundaries.py && python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test` -> PASS.
+- `python3 verification/tooling/check_tooling_contract_lock.py && python3 verification/tooling/check_tooling_contract_lock.py --self-test` -> PASS.
+- `python3 scripts/check_diagnostic_cancel_usage.py && cargo check -p sifr_lsp && cargo clippy -p sifr_lsp -- -D warnings` -> PASS after renaming the LSP request-queue cancellation operation to avoid the diagnostics-only `.cancel(...)` guardrail.
+- `scripts/run_all_tests.sh --profile quick` -> first attempt failed in `check_diagnostic_cancel_usage.py` on `crates/sifr_lsp/src/request_queue.rs` and `crates/sifr_lsp/src/session.rs`; fixed by renaming the queue operation.
+- `scripts/run_all_tests.sh --profile quick` -> PASS on rerun. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=2305.22s`; `max_rss=595.5MiB`; `e2e cache_hits=0/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
+
+## m36.6 Review Evidence
+
+- `reviews/phase36-m36-6-review-pass-1.md` -> SATISFIED. Reviewer confirmed all editor targets launch `sifr lsp --stdio`, parser-token syntax drift validation covers the fixtures, TOML/JSON assets parse, no fallback/semantic markers are present, and validation is wired into `scripts/run_all_tests.sh`.
+- `reviews/phase36-m36-6-review-pass-2.md` -> SATISFIED. Reviewer confirmed the post-review LSP request-queue rename from `cancel` to `remove_pending` preserves behavior and satisfies `check_diagnostic_cancel_usage.py`.
