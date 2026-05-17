@@ -118,7 +118,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 for target in "${TARGETS[@]}"; do
   if [[ "${CARGO_BUILD}" -eq 1 ]]; then
-    cargo build --release -p sifr --target "${target}"
+    SIFR_RELEASE_VERSION="${VERSION}" cargo build --release -p sifr --target "${target}"
     binary_path="target/${target}/release/sifr"
   else
     binary_path="${BINARY}"

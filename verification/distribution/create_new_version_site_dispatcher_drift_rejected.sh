@@ -12,7 +12,11 @@ trap cleanup EXIT HUP INT TERM
 
 site_repo="${tmp_dir}/site"
 make_site_repo_fixture "${site_repo}"
-sed -i.bak 's/BETA_VERSION="0.1.0-beta.1"/BETA_VERSION="0.1.0-alpha.1"/' \
+current_beta="$(
+  sed -n 's/^BETA_VERSION="\([^"]*\)"$/\1/p' \
+    "${site_repo}/apps/sifr-site/public/install/beta" | head -n 1
+)"
+sed -i.bak "s/BETA_VERSION=\"${current_beta}\"/BETA_VERSION=\"0.1.0-alpha.1\"/" \
   "${site_repo}/apps/sifr-site/public/install/beta"
 
 require_failure_contains \
