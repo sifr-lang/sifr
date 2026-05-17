@@ -20,7 +20,7 @@ impl RequestQueue {
         self.pending.remove(&request_key(id));
     }
 
-    pub(crate) fn cancel(&mut self, id: &RequestId) -> bool {
+    pub(crate) fn remove_pending(&mut self, id: &RequestId) -> bool {
         self.pending.remove(&request_key(id))
     }
 

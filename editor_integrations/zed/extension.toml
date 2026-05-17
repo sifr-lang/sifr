@@ -1,0 +1,13 @@
+id = "sifr"
+name = "Sifr"
+version = "0.0.0"
+schema_version = 1
+authors = ["Sifr contributors"]
+description = "Sifr language support using the native Sifr LSP server."
+repository = "https://github.com/sifr-lang/sifr"
+
+[language_servers.sifr]
+name = "Sifr LSP"
+language = "Sifr"
+command = "sifr"
+args = ["lsp", "--stdio"]
