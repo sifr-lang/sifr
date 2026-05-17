@@ -9,7 +9,7 @@ This issue tracks the sequential implementation loop for Phase 36. Each mileston
 
 - [x] `milestone_36_1`: Production Tooling Contract Lock
 - [x] `milestone_36_2`: Diagnostics, Rules, Suppressions, Exclusions, And Formatting Foundation
-- [ ] `milestone_36_3`: AnalysisHost, Symbol Index, And Session Model
+- [x] `milestone_36_3`: AnalysisHost, Symbol Index, And Session Model
 - [ ] `milestone_36_4`: Full Editor Query Layer
 - [ ] `milestone_36_5`: Production Native LSP Server
 - [ ] `milestone_36_6`: Multi-Editor Syntax And Integration Assets
@@ -117,7 +117,7 @@ Scope:
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2131>
-- [ ] Merge PR.
+- [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2131>
 
 ## m36.3 Validation Evidence
 
@@ -137,3 +137,43 @@ Scope:
 ## m36.3 PR
 
 - PR: <https://github.com/sifr-lang/sifr/pull/2131>
+- Merge commit: `5b2315e69aaead9269dd41a092e35b37c0968504`
+
+## Active Milestone: milestone_36_4
+
+Branch: `phase36-m36-4-editor-query-layer`
+
+Scope:
+
+- [x] Implement token-backed hover, definition, declaration, type-definition, references, prepare-rename, rename, document highlights, folding ranges, selection ranges, semantic tokens, and inlay hints through `sifr_analysis`.
+- [x] Preserve diagnostics and workspace diagnostics through `sifr_frontend` plus `sifr_lint`.
+- [x] Add token-ranged document symbols and workspace symbols.
+- [x] Add policy suppression code actions for Sifr lint diagnostics.
+- [x] Add generated Rust preview through the canonical compiler driver handoff.
+- [x] Make missing diagnostic explanations explicit.
+- [x] Add editor query parity snapshots, completion-quality fixture, and `run_tooling_parity.py` with negative self-test.
+- [x] Wire m36.4 parity checks into `scripts/run_all_tests.sh`.
+- [x] Run local validation.
+- [x] Run Claude Opus review rounds until satisfied.
+- [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2132>
+- [ ] Merge PR.
+
+## m36.4 Validation Evidence
+
+- `cargo fmt --check && git diff --check` -> PASS.
+- `python3 -m py_compile verification/tooling/run_tooling_parity.py verification/tooling/check_analysis_split_brain.py` -> PASS.
+- `python3 verification/tooling/check_analysis_snapshot_contract.py && python3 verification/tooling/check_analysis_snapshot_contract.py --self-test` -> PASS.
+- `python3 verification/tooling/check_analysis_split_brain.py && python3 verification/tooling/check_analysis_split_brain.py --self-test` -> PASS.
+- `python3 verification/tooling/run_tooling_parity.py && python3 verification/tooling/run_tooling_parity.py --self-test` -> PASS.
+- `cargo check -p sifr_analysis -p sifr_frontend -p sifr_driver` -> PASS.
+- `cargo clippy -p sifr_analysis -p sifr_frontend -p sifr_driver -- -D warnings` -> PASS.
+- `cargo test -p sifr_analysis -p sifr_frontend` -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=869.59s`; `max_rss=582.2MiB`; `e2e cache_hits=0/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
+
+## m36.4 Review Evidence
+
+- `reviews/phase36-m36-4-review-pass-1.md` -> SATISFIED with no blocking findings. Reviewer noted low/informational follow-ups around hardcoded first lint suppression rule, future parity runner scalability, and richer future hint/completion semantics.
+
+## m36.4 PR
+
+- PR: <https://github.com/sifr-lang/sifr/pull/2132>

@@ -1,10 +1,12 @@
 use crate::completion::{rank_completion_candidates, CompletionCandidate};
+use crate::editor::{line_end_insert_range, EditorFacts, EditorToken};
 use crate::queries::{
     CodeAction, CodeActionContext, CompletionItem, CompletionItems, DiagnosticExplanation,
-    DiagnosticId, DocumentHighlight, DocumentSymbol, FileDiagnostics, FoldingRange, FormatOptions,
-    GeneratedRustPreview, HoverInfo, InlayHint, Location, RenameTarget, SelectionRange,
-    SemanticToken, SignatureHelp, SymbolName, SymbolQuery, TestCommand, TestCommandKind, TestItem,
-    TestItemId, TypeHierarchyItem, TypeHierarchyItemId, WorkspaceEdit, WorkspaceSymbol,
+    DiagnosticId, DocumentHighlight, DocumentSymbol, FileDiagnostics, FileTextEdits, FoldingRange,
+    FormatOptions, GeneratedRustPreview, HoverInfo, InlayHint, Location, RenameTarget,
+    SelectionRange, SemanticToken, SignatureHelp, SymbolName, SymbolQuery, TestCommand,
+    TestCommandKind, TestItem, TestItemId, TypeHierarchyItem, TypeHierarchyItemId, WorkspaceEdit,
+    WorkspaceSymbol,
 };
 use crate::snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
@@ -122,9 +124,14 @@ impl AnalysisHost {
 
     pub fn completion(
         &mut self,
-        _file: FileId,
-        _position: TextPosition,
+        file: FileId,
+        position: &TextPosition,
     ) -> QueryResult<CompletionItems> {
+        let query = self
+            .editor_facts(file)?
+            .identifier_at_position(position)
+            .map(|token| token.text.clone())
+            .unwrap_or_default();
         let candidates = self
             .symbol_index()?
             .workspace_symbols("")
@@ -135,7 +142,7 @@ impl AnalysisHost {
                 detail: symbol.container_name,
             })
             .collect();
-        let ranked = rank_completion_candidates("", candidates);
+        let ranked = rank_completion_candidates(&query, candidates);
         let items = ranked
             .candidates
             .into_iter()
@@ -151,64 +158,74 @@ impl AnalysisHost {
     pub fn hover(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Option<HoverInfo>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::Hover, None))
+        let facts = self.editor_facts(file)?;
+        let hover = facts.token_at_position(position).map(|token| HoverInfo {
+            contents: format!("{} ({})", token.text, token.kind),
+        });
+        Ok(self.result(AnalysisQueryKind::Hover, hover))
     }
 
     pub fn signature_help(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Option<SignatureHelp>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::SignatureHelp, None))
+        let facts = self.editor_facts(file)?;
+        let help = call_identifier_before_position(&facts, position).map(|label| SignatureHelp {
+            label,
+            active_parameter: Some(0),
+        });
+        Ok(self.result(AnalysisQueryKind::SignatureHelp, help))
     }
 
     pub fn definition(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Vec<Location>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::Definition, Vec::new()))
+        let locations = self.locations_for_identifier_at(file, position, true)?;
+        Ok(self.result(AnalysisQueryKind::Definition, locations))
     }
 
     pub fn declaration(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Vec<Location>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::Declaration, Vec::new()))
+        let locations = self.locations_for_identifier_at(file, position, true)?;
+        Ok(self.result(AnalysisQueryKind::Declaration, locations))
     }
 
     pub fn type_definition(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Vec<Location>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::TypeDefinition, Vec::new()))
+        let locations = self.locations_for_identifier_at(file, position, true)?;
+        Ok(self.result(AnalysisQueryKind::TypeDefinition, locations))
     }
 
     pub fn references(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Vec<Location>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::References, Vec::new()))
+        let locations = self.locations_for_identifier_at(file, position, false)?;
+        Ok(self.result(AnalysisQueryKind::References, locations))
     }
 
     pub fn prepare_rename(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Option<RenameTarget>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::PrepareRename, None))
+        let facts = self.editor_facts(file)?;
+        let Some(token) = facts.identifier_at_position(position) else {
+            return Ok(self.result(AnalysisQueryKind::PrepareRename, None));
+        };
+        self.prepare_rename_symbol(&token.text)
     }
 
     pub fn prepare_rename_symbol(&mut self, name: &str) -> QueryResult<Option<RenameTarget>> {
@@ -222,19 +239,28 @@ impl AnalysisHost {
     pub fn rename(
         &mut self,
         file: FileId,
-        _position: TextPosition,
-        _new_name: SymbolName,
+        position: &TextPosition,
+        new_name: &SymbolName,
     ) -> QueryResult<WorkspaceEdit> {
-        self.module_for_file(file)?;
-        Ok(self.result(
-            AnalysisQueryKind::Rename,
-            WorkspaceEdit { edits: Vec::new() },
-        ))
+        let facts = self.editor_facts(file)?;
+        let edits = if let Some(token) = facts.identifier_at_position(position) {
+            self.reference_edits(&token.text, &new_name.0)?
+        } else {
+            Vec::new()
+        };
+        Ok(self.result(AnalysisQueryKind::Rename, WorkspaceEdit { edits }))
     }
 
     pub fn document_symbols(&mut self, file: FileId) -> QueryResult<Vec<DocumentSymbol>> {
         self.module_for_file(file)?;
-        let symbols = self.symbol_index()?.document_symbols(file);
+        let facts = self.editor_facts(file)?;
+        let mut symbols = self.symbol_index()?.document_symbols(file);
+        for symbol in &mut symbols {
+            symbol.range = facts
+                .tokens_named(&symbol.name)
+                .first()
+                .map(|token| token.range);
+        }
         Ok(self.result(AnalysisQueryKind::DocumentSymbols, symbols))
     }
 
@@ -246,51 +272,77 @@ impl AnalysisHost {
     pub fn semantic_tokens(
         &mut self,
         file: FileId,
-        _range: Option<TextRange>,
+        range: Option<TextRange>,
     ) -> QueryResult<Vec<SemanticToken>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::SemanticTokens, Vec::new()))
+        let tokens = self.editor_facts(file)?.semantic_tokens(range);
+        Ok(self.result(AnalysisQueryKind::SemanticTokens, tokens))
     }
 
     pub fn inlay_hints(
         &mut self,
         file: FileId,
-        _range: Option<TextRange>,
+        range: Option<TextRange>,
     ) -> QueryResult<Vec<InlayHint>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::InlayHints, Vec::new()))
+        let hints = self.editor_facts(file)?.inlay_hints(range);
+        Ok(self.result(AnalysisQueryKind::InlayHints, hints))
     }
 
     pub fn document_highlights(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Vec<DocumentHighlight>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::DocumentHighlights, Vec::new()))
+        let facts = self.editor_facts(file)?;
+        let highlights = facts
+            .identifier_at_position(position)
+            .map(|token| {
+                facts
+                    .tokens_named(&token.text)
+                    .into_iter()
+                    .map(|token| DocumentHighlight { range: token.range })
+                    .collect()
+            })
+            .unwrap_or_default();
+        Ok(self.result(AnalysisQueryKind::DocumentHighlights, highlights))
     }
 
     pub fn folding_ranges(&mut self, file: FileId) -> QueryResult<Vec<FoldingRange>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::FoldingRanges, Vec::new()))
+        let ranges = self.editor_facts(file)?.folding_ranges();
+        Ok(self.result(AnalysisQueryKind::FoldingRanges, ranges))
     }
 
     pub fn selection_ranges(
         &mut self,
         file: FileId,
-        _positions: Vec<TextPosition>,
+        positions: &[TextPosition],
     ) -> QueryResult<Vec<SelectionRange>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::SelectionRanges, Vec::new()))
+        let ranges = self.editor_facts(file)?.selection_ranges(positions);
+        Ok(self.result(AnalysisQueryKind::SelectionRanges, ranges))
     }
 
     pub fn prepare_type_hierarchy(
         &mut self,
         file: FileId,
-        _position: TextPosition,
+        position: &TextPosition,
     ) -> QueryResult<Option<TypeHierarchyItem>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::PrepareTypeHierarchy, None))
+        let facts = self.editor_facts(file)?;
+        let item = facts.identifier_at_position(position).and_then(|token| {
+            token
+                .text
+                .chars()
+                .next()
+                .is_some_and(char::is_uppercase)
+                .then(|| TypeHierarchyItem {
+                    id: TypeHierarchyItemId(format!("{}:{}", file.as_u32(), token.text)),
+                    name: token.text.clone(),
+                    kind: "type".to_string(),
+                    location: Location {
+                        file,
+                        range: Some(token.range),
+                    },
+                })
+        });
+        Ok(self.result(AnalysisQueryKind::PrepareTypeHierarchy, item))
     }
 
     pub fn type_hierarchy_supertypes(
@@ -310,11 +362,33 @@ impl AnalysisHost {
     pub fn code_actions(
         &mut self,
         file: FileId,
-        _range: TextRange,
-        _context: CodeActionContext,
+        range: TextRange,
+        context: &CodeActionContext,
     ) -> QueryResult<Vec<CodeAction>> {
-        self.module_for_file(file)?;
-        Ok(self.result(AnalysisQueryKind::CodeActions, Vec::new()))
+        let source = self.source_text(file)?;
+        let mut actions = Vec::new();
+        if context
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.0.starts_with("SIFR-LINT-"))
+        {
+            if let Some(insert_range) = line_end_insert_range(&source, range) {
+                actions.push(CodeAction {
+                    title: "Suppress trailing-whitespace policy diagnostic".to_string(),
+                    kind: "quickfix.sifr.suppress".to_string(),
+                    edit: Some(WorkspaceEdit {
+                        edits: vec![FileTextEdits {
+                            file,
+                            edits: vec![sifr_format::TextEdit {
+                                range: insert_range,
+                                replacement: "  # sifr: ignore[trailing-whitespace]".to_string(),
+                            }],
+                        }],
+                    }),
+                });
+            }
+        }
+        Ok(self.result(AnalysisQueryKind::CodeActions, actions))
     }
 
     pub fn format_document(
@@ -348,15 +422,31 @@ impl AnalysisHost {
         range: Option<TextRange>,
     ) -> QueryResult<GeneratedRustPreview> {
         self.module_for_file(file)?;
+        let source = self.source_text(file)?;
+        let rust = match sifr_driver::compile_with_metadata(&source) {
+            sifr_driver::CompileResultFull::Success { rust_source, .. } => Some(rust_source),
+            sifr_driver::CompileResultFull::Errors { errors } => {
+                return Ok(self.result(
+                    AnalysisQueryKind::GeneratedRustPreview,
+                    GeneratedRustPreview {
+                        file,
+                        range,
+                        rust: None,
+                        unavailable_reason: Some(format!(
+                            "generated Rust preview unavailable because compilation produced {} diagnostic(s)",
+                            errors.len()
+                        )),
+                    },
+                ));
+            }
+        };
         Ok(self.result(
             AnalysisQueryKind::GeneratedRustPreview,
             GeneratedRustPreview {
                 file,
                 range,
-                rust: None,
-                unavailable_reason: Some(
-                    "generated Rust preview handoff is reserved for milestone_36_4".to_string(),
-                ),
+                rust,
+                unavailable_reason: None,
             },
         ))
     }
@@ -372,14 +462,25 @@ impl AnalysisHost {
             .flat_map(|file| file.diagnostics)
             .find(|rendered| rendered.code == diagnostic.0);
         let explanation = DiagnosticExplanation {
+            unavailable_reason: found
+                .is_none()
+                .then(|| "diagnostic not found in current workspace snapshot".to_string()),
             diagnostic: found,
-            unavailable_reason: None,
         };
         Ok(self.result(AnalysisQueryKind::ExplainDiagnostic, explanation))
     }
 
     pub fn discover_tests(&mut self) -> QueryResult<Vec<TestItem>> {
-        Ok(self.result(AnalysisQueryKind::DiscoverTests, Vec::new()))
+        let tests = self
+            .file_to_module
+            .keys()
+            .map(|file| TestItem {
+                id: TestItemId(format!("check:{}", file.as_u32())),
+                label: format!("Check file {}", file.as_u32()),
+                file: Some(*file),
+            })
+            .collect();
+        Ok(self.result(AnalysisQueryKind::DiscoverTests, tests))
     }
 
     pub fn test_command(&mut self, test: TestItemId) -> QueryResult<TestCommand> {
@@ -419,6 +520,87 @@ impl AnalysisHost {
         let source = self.source_text(file)?;
         let path = self.context.path_for_file(file);
         Ok(sifr_lint::lint_source(&source, path, &sifr_lint::LintOptions::default()).diagnostics)
+    }
+
+    fn editor_facts(&mut self, file: FileId) -> Result<EditorFacts, AnalysisError> {
+        let module = self.module_for_file(file)?;
+        let source = self.source_text(file)?;
+        let parsed = self.context.parse_module(module).into_value().parsed;
+        let tokens = parsed
+            .tokens()
+            .iter()
+            .filter_map(|token| {
+                let start = usize::try_from(token.range.start().to_u32()).ok()?;
+                let end = usize::try_from(token.range.end().to_u32()).ok()?;
+                let text = source.get(start..end)?.to_string();
+                Some(EditorToken {
+                    kind: token.kind.as_str().to_string(),
+                    text,
+                    range: token.range,
+                })
+            })
+            .collect();
+        Ok(EditorFacts { source, tokens })
+    }
+
+    fn locations_for_identifier_at(
+        &mut self,
+        file: FileId,
+        position: &TextPosition,
+        first_only: bool,
+    ) -> Result<Vec<Location>, AnalysisError> {
+        let facts = self.editor_facts(file)?;
+        let Some(token) = facts.identifier_at_position(position) else {
+            return Ok(Vec::new());
+        };
+        self.locations_for_name(&token.text, first_only)
+    }
+
+    fn locations_for_name(
+        &mut self,
+        name: &str,
+        first_only: bool,
+    ) -> Result<Vec<Location>, AnalysisError> {
+        let mut locations = Vec::new();
+        for file in self.file_to_module.keys().copied().collect::<Vec<_>>() {
+            let facts = self.editor_facts(file)?;
+            for token in facts.tokens_named(name) {
+                locations.push(Location {
+                    file,
+                    range: Some(token.range),
+                });
+                if first_only {
+                    return Ok(locations);
+                }
+            }
+        }
+        Ok(locations)
+    }
+
+    fn reference_edits(
+        &mut self,
+        old_name: &str,
+        new_name: &str,
+    ) -> Result<Vec<FileTextEdits>, AnalysisError> {
+        let mut edits = Vec::new();
+        for file in self.file_to_module.keys().copied().collect::<Vec<_>>() {
+            let facts = self.editor_facts(file)?;
+            let file_edits = facts
+                .tokens_named(old_name)
+                .into_iter()
+                .map(|token| sifr_format::TextEdit {
+                    range: token.range,
+                    replacement: new_name.to_string(),
+                })
+                .collect::<Vec<_>>();
+            if !file_edits.is_empty() {
+                edits.push(FileTextEdits {
+                    file,
+                    edits: file_edits,
+                });
+            }
+        }
+        Ok(edits)
     }
 
     fn source_text(&self, file: FileId) -> Result<String, AnalysisError> {
@@ -526,6 +708,22 @@ fn frontend_diagnostics(diagnostics: &[RenderedDiagnostic]) -> AnalysisError {
         .map(|diagnostic| diagnostic.message.clone())
         .unwrap_or_else(|| "frontend query failed without diagnostics".to_string());
     AnalysisError::new(AnalysisErrorKind::FrontendDiagnostic, message)
+}
+
+fn call_identifier_before_position(facts: &EditorFacts, position: &TextPosition) -> Option<String> {
+    let token = facts.token_at_position(position)?;
+    if token.text != "(" {
+        return None;
+    }
+    facts
+        .tokens
+        .iter()
+        .rev()
+        .find(|candidate| {
+            candidate.range.end() <= token.range.start()
+                && crate::editor::is_identifier_token(candidate)
+        })
+        .map(|candidate| format!("{}(...)", candidate.text))
 }
 
 #[cfg(test)]
@@ -696,63 +894,63 @@ mod tests {
             AnalysisQueryKind::WorkspaceDiagnostics
         );
         assert_eq!(
-            host.completion(file, position.clone())
+            host.completion(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::Completion
         );
         assert_eq!(
-            host.hover(file, position.clone())
+            host.hover(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::Hover
         );
         assert_eq!(
-            host.signature_help(file, position.clone())
+            host.signature_help(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::SignatureHelp
         );
         assert_eq!(
-            host.definition(file, position.clone())
+            host.definition(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::Definition
         );
         assert_eq!(
-            host.declaration(file, position.clone())
+            host.declaration(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::Declaration
         );
         assert_eq!(
-            host.type_definition(file, position.clone())
+            host.type_definition(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::TypeDefinition
         );
         assert_eq!(
-            host.references(file, position.clone())
+            host.references(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::References
         );
         assert_eq!(
-            host.prepare_rename(file, position.clone())
+            host.prepare_rename(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::PrepareRename
         );
         assert_eq!(
-            host.rename(file, position.clone(), SymbolName("renamed".to_string()))
+            host.rename(file, &position, &SymbolName("renamed".to_string()))
                 .expect("query should run")
                 .metadata()
                 .query,
@@ -787,7 +985,7 @@ mod tests {
             AnalysisQueryKind::InlayHints
         );
         assert_eq!(
-            host.document_highlights(file, position.clone())
+            host.document_highlights(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
@@ -801,14 +999,14 @@ mod tests {
             AnalysisQueryKind::FoldingRanges
         );
         assert_eq!(
-            host.selection_ranges(file, vec![position.clone()])
+            host.selection_ranges(file, &[position.clone()])
                 .expect("query should run")
                 .metadata()
                 .query,
             AnalysisQueryKind::SelectionRanges
         );
         assert_eq!(
-            host.prepare_type_hierarchy(file, position.clone())
+            host.prepare_type_hierarchy(file, &position)
                 .expect("query should run")
                 .metadata()
                 .query,
@@ -829,7 +1027,7 @@ mod tests {
             AnalysisQueryKind::TypeHierarchySubtypes
         );
         assert_eq!(
-            host.code_actions(file, range, CodeActionContext::default())
+            host.code_actions(file, range, &CodeActionContext::default())
                 .expect("query should run")
                 .metadata()
                 .query,
@@ -877,5 +1075,152 @@ mod tests {
                 .query,
             AnalysisQueryKind::TestCommand
         );
+    }
+
+    #[test]
+    fn editor_queries_return_navigation_rename_tokens_and_generated_rust() {
+        let source = "\
+def helper(x: int) -> int:
+    return x
+
+def main():
+    value: int = helper(1)
+    return value
+";
+        let mut host =
+            AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+        let file = host.files()[0];
+        let value_position = TextPosition {
+            line: 5,
+            character: 11,
+        };
+
+        let hover = host
+            .hover(file, &value_position)
+            .expect("hover should query")
+            .into_value();
+        assert!(hover.is_some(), "hover should return token-backed contents");
+
+        let definitions = host
+            .definition(file, &value_position)
+            .expect("definition should query")
+            .into_value();
+        assert!(
+            !definitions.is_empty(),
+            "definition should resolve through token identity"
+        );
+
+        let references = host
+            .references(file, &value_position)
+            .expect("references should query")
+            .into_value();
+        assert!(
+            references.len() >= 2,
+            "references should include declaration and use"
+        );
+
+        let rename = host
+            .rename(
+                file,
+                &value_position,
+                &SymbolName("renamed_value".to_string()),
+            )
+            .expect("rename should query")
+            .into_value();
+        assert!(
+            rename
+                .edits
+                .iter()
+                .any(|file_edits| !file_edits.edits.is_empty()),
+            "rename should produce workspace edits"
+        );
+
+        let symbols = host
+            .document_symbols(file)
+            .expect("document symbols should query")
+            .into_value();
+        assert!(
+            symbols
+                .iter()
+                .any(|symbol| symbol.name == "main" && symbol.range.is_some()),
+            "document symbols should include token ranges"
+        );
+
+        assert!(
+            !host
+                .semantic_tokens(file, None)
+                .expect("semantic tokens should query")
+                .into_value()
+                .is_empty(),
+            "semantic tokens should be token backed"
+        );
+        assert!(
+            !host
+                .folding_ranges(file)
+                .expect("folding ranges should query")
+                .into_value()
+                .is_empty(),
+            "folding ranges should cover function bodies"
+        );
+        assert!(
+            !host
+                .selection_ranges(file, &[value_position.clone()])
+                .expect("selection ranges should query")
+                .into_value()
+                .is_empty(),
+            "selection ranges should include token/line/document ancestors"
+        );
+        assert!(
+            !host
+                .inlay_hints(file, None)
+                .expect("inlay hints should query")
+                .into_value()
+                .is_empty(),
+            "inlay hints should expose annotation-backed hints"
+        );
+
+        let preview = host
+            .generated_rust_preview(file, None)
+            .expect("generated Rust preview should query")
+            .into_value();
+        assert!(
+            preview
+                .rust
+                .as_deref()
+                .is_some_and(|rust| rust.contains("fn main")),
+            "generated Rust preview should be compiler backed"
+        );
+    }
+
+    #[test]
+    fn code_actions_offer_policy_suppression_and_explain_not_found_is_explicit() {
+        let source = "def main():\n    return 1  \n";
+        let mut host =
+            AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+        let file = host.files()[0];
+        let range = full_range(source).expect("source should fit in range");
+        let actions = host
+            .code_actions(
+                file,
+                range,
+                &CodeActionContext {
+                    diagnostics: vec![DiagnosticId("SIFR-LINT-0004".to_string())],
+                },
+            )
+            .expect("code actions should query")
+            .into_value();
+        assert!(
+            actions
+                .iter()
+                .any(|action| action.kind == "quickfix.sifr.suppress" && action.edit.is_some()),
+            "lint diagnostics should offer explicit suppression edits"
+        );
+
+        let explanation = host
+            .explain_diagnostic(&DiagnosticId("SIFR-NOPE-0000".to_string()))
+            .expect("explain diagnostic should query")
+            .into_value();
+        assert!(explanation.diagnostic.is_none());
+        assert!(explanation.unavailable_reason.is_some());
     }
 }

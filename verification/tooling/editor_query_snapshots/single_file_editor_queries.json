@@ -1,0 +1,38 @@
+{
+  "fixture": "single_file_editor_queries",
+  "source": "def helper(x: int) -> int:\n    return x\n\ndef main():\n    value: int = helper(1)\n    return value\n",
+  "expected": {
+    "hover": {
+      "token": "value"
+    },
+    "definition": {
+      "minimum_locations": 1
+    },
+    "references": {
+      "minimum_locations": 2
+    },
+    "rename": {
+      "minimum_file_edits": 1,
+      "replacement": "renamed_value"
+    },
+    "document_symbols": [
+      "helper",
+      "main"
+    ],
+    "semantic_tokens": {
+      "minimum_tokens": 1
+    },
+    "inlay_hints": {
+      "minimum_hints": 1
+    },
+    "folding_ranges": {
+      "minimum_ranges": 1
+    },
+    "selection_ranges": {
+      "minimum_ranges": 1
+    },
+    "generated_rust_preview": {
+      "contains": "fn main"
+    }
+  }
+}

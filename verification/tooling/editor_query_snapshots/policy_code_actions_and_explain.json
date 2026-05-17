@@ -1,0 +1,15 @@
+{
+  "fixture": "policy_code_actions_and_explain",
+  "source": "def main():\n    return 1  \n",
+  "expected": {
+    "code_actions": [
+      {
+        "kind": "quickfix.sifr.suppress",
+        "replacement_contains": "sifr: ignore[trailing-whitespace]"
+      }
+    ],
+    "explain_diagnostic": {
+      "missing_diagnostic_has_unavailable_reason": true
+    }
+  }
+}
