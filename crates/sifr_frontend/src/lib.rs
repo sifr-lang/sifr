@@ -44,8 +44,22 @@ impl ModuleId {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GraphRevision(u64);
 
+impl GraphRevision {
+    #[must_use]
+    pub fn as_u64(self) -> u64 {
+        self.0
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SourceRevision(u64);
+
+impl SourceRevision {
+    #[must_use]
+    pub fn as_u64(self) -> u64 {
+        self.0
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourceHash(String);
@@ -83,13 +97,18 @@ impl SourceText {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourceUri(String);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DocumentVersion(i64);
 
 impl DocumentVersion {
     #[must_use]
     pub fn new(version: i64) -> Self {
         Self(version)
+    }
+
+    #[must_use]
+    pub fn as_i64(self) -> i64 {
+        self.0
     }
 }
 
@@ -605,6 +624,35 @@ impl FrontendContext {
                 .collect(),
             revision: self.source_revision,
         }
+    }
+
+    #[must_use]
+    pub fn module_for_file(&self, file: FileId) -> Option<ModuleId> {
+        self.modules
+            .iter()
+            .find(|module| module.file == file)
+            .map(|module| module.id)
+    }
+
+    #[must_use]
+    pub fn source_text_for_file(&self, file: FileId) -> Option<&str> {
+        let module = self.module_for_file(file)?;
+        let index = self.module_by_id.get(&module).copied()?;
+        Some(self.modules[index].source.as_str())
+    }
+
+    #[must_use]
+    pub fn path_for_file(&self, file: FileId) -> Option<&Path> {
+        let module = self.module_for_file(file)?;
+        let index = self.module_by_id.get(&module).copied()?;
+        Some(self.modules[index].path.as_path())
+    }
+
+    #[must_use]
+    pub fn document_version_for_file(&self, file: FileId) -> Option<DocumentVersion> {
+        let module = self.module_for_file(file)?;
+        let index = self.module_by_id.get(&module).copied()?;
+        self.modules[index].document_version
     }
 
     pub fn parse_module(&mut self, module: ModuleId) -> QueryResult<ParsedModuleView> {

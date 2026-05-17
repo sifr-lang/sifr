@@ -1,0 +1,18 @@
+[package]
+name = "sifr_analysis"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+ruff_text_size = { workspace = true }
+sifr_diagnostics = { workspace = true }
+sifr_format = { workspace = true }
+sifr_frontend = { workspace = true }
+sifr_lint = { workspace = true }
+sifr_syntax = { workspace = true }
+
+[lints]
+workspace = true

@@ -34,14 +34,24 @@ python3 verification/tooling/check_rule_suppression_contract.py
 python3 verification/tooling/check_rule_suppression_contract.py --self-test
 ```
 
-The m36.1 and m36.2 checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling Checks".
+## m36.3 Checks
+
+Required m36.3 commands:
+
+```bash
+python3 verification/tooling/check_analysis_snapshot_contract.py
+python3 verification/tooling/check_analysis_snapshot_contract.py --self-test
+python3 verification/tooling/check_analysis_split_brain.py
+python3 verification/tooling/check_analysis_split_brain.py --self-test
+```
+
+The m36.1, m36.2, and m36.3 checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling Checks".
 
 ## Required Later Checks
 
 - `run_tooling_parity.py`
 - `lsp_protocol_smoke.py`
 - `lsp_protocol_stress.py`
-- `check_analysis_snapshot_coherence.py`
 - `check_editor_assets.py`
 - `check_vscode_extension.py`
 - completion quality fixtures and thresholds

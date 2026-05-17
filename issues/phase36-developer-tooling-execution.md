@@ -8,7 +8,7 @@ This issue tracks the sequential implementation loop for Phase 36. Each mileston
 ## Milestones
 
 - [x] `milestone_36_1`: Production Tooling Contract Lock
-- [ ] `milestone_36_2`: Diagnostics, Rules, Suppressions, Exclusions, And Formatting Foundation
+- [x] `milestone_36_2`: Diagnostics, Rules, Suppressions, Exclusions, And Formatting Foundation
 - [ ] `milestone_36_3`: AnalysisHost, Symbol Index, And Session Model
 - [ ] `milestone_36_4`: Full Editor Query Layer
 - [ ] `milestone_36_5`: Production Native LSP Server
@@ -74,7 +74,7 @@ Scope:
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2130>
-- [ ] Merge PR.
+- [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2130>
 
 ## m36.2 Validation Evidence
 
@@ -96,3 +96,44 @@ Scope:
 ## m36.2 PR
 
 - PR: <https://github.com/sifr-lang/sifr/pull/2130>
+- Merge commit: `cb08508f8db60109740fed15df5f3ccbd19c3482`
+
+## Active Milestone: milestone_36_3
+
+Branch: `phase36-m36-3-analysis-host-symbol-index`
+
+Scope:
+
+- [x] Add concrete `sifr_analysis` workspace crate.
+- [x] Implement `AnalysisHost` over `sifr_frontend` for project/single-file sessions.
+- [x] Add coherent source snapshots, document versions, invalidation reports, and stale-result rejection.
+- [x] Add current-workspace symbol index and stable symbol identity for the active analysis revision.
+- [x] Expose every Phase 36 editor query method through `sifr_analysis`, with deeper feature logic reserved for m36.4 where required.
+- [x] Add formatter and lint handoffs through `sifr_format` and `sifr_lint`.
+- [x] Add completion ranking/evaluation foundation.
+- [x] Add positive/negative tests for load/update/query plumbing, stale versions, stale snapshots, project symbols, and query metadata.
+- [x] Add `check_analysis_snapshot_contract.py` and `check_analysis_split_brain.py` with negative self-tests.
+- [x] Wire m36.3 checks into `scripts/run_all_tests.sh`.
+- [x] Run local validation.
+- [x] Run Claude Opus review rounds until satisfied.
+- [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2131>
+- [ ] Merge PR.
+
+## m36.3 Validation Evidence
+
+- `cargo fmt --check && git diff --check` -> PASS.
+- `python3 -m py_compile verification/tooling/check_analysis_snapshot_contract.py verification/tooling/check_analysis_split_brain.py` -> PASS.
+- `python3 verification/tooling/check_analysis_snapshot_contract.py && python3 verification/tooling/check_analysis_snapshot_contract.py --self-test` -> PASS.
+- `python3 verification/tooling/check_analysis_split_brain.py && python3 verification/tooling/check_analysis_split_brain.py --self-test` -> PASS.
+- `cargo check -p sifr_frontend -p sifr_analysis` -> PASS.
+- `cargo clippy -p sifr_frontend -p sifr_analysis -- -D warnings` -> PASS.
+- `cargo test -p sifr_frontend -p sifr_analysis` -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=1121.72s`; `max_rss=723.5MiB`; `e2e cache_hits=12/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
+
+## m36.3 Review Evidence
+
+- `reviews/phase36-m36-3-review-pass-1.md` -> SATISFIED with no blocking findings. 10 findings: 2 informational (symbol identity embedding, no frozen index needed), 3 low (explain_diagnostic reason ambiguity, explain_diagnostic re-diagnosis, index_for_module panic), 5 informational (format whitelist, generated_rust_preview sentinel, test coverage, verification scripts, error flattening). Reviewer explicitly approved proceeding to PR.
+
+## m36.3 PR
+
+- PR: <https://github.com/sifr-lang/sifr/pull/2131>

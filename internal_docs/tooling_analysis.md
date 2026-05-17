@@ -6,6 +6,7 @@ status: phase36-contract-locked
 
 - m36.1 locked the analysis, formatter, lint, LSP, editor, and VS Code contracts.
 - m36.2 added `sifr_format` and `sifr_lint` as concrete workspace crates.
+- m36.3 adds `sifr_analysis` as the concrete editor-query crate.
 
 ## Ownership
 
@@ -34,6 +35,14 @@ Phase 36 locks the editor analysis boundary to these Sifr-owned crates:
 The public query surface is the Phase 36 editor query contract: diagnostics, workspace diagnostics, completion, hover, signature help, definition, declaration, type definition, references, prepare rename, rename, document symbols, workspace symbols, semantic tokens, inlay hints, document highlights, folding ranges, selection ranges, type hierarchy, code actions, formatting, generated Rust preview, explain diagnostic, test discovery, and test command metadata.
 
 Every query result must carry enough revision metadata to prove it was produced from the snapshot captured for that request.
+
+m36.3 implementation:
+
+- `AnalysisHost::open_single_file` and `AnalysisHost::open_project` wrap `sifr_frontend::FrontendContext`.
+- `AnalysisHost::update_document` enforces monotonic document versions before updating the canonical frontend context.
+- `AnalysisSnapshot` captures graph/source revisions and rejects stale queries after document invalidation.
+- The current-workspace `SymbolIndex` is built from `sifr_frontend::ProjectAnalysisView` and `ModuleGraphView`; symbol ids include graph/source revision, module, file, kind, name, and ordinal.
+- All Phase 36 editor query methods compile through `sifr_analysis`. m36.3 implements session/query plumbing, diagnostics, workspace diagnostics, document/workspace symbols, formatter handoff, lint handoff, and completion ranking infrastructure; the full feature logic for hover, references, rename edits, semantic tokens, code actions, generated Rust preview, explain diagnostic enrichment, and test metadata lands in m36.4.
 
 ## Required Frontend Exports
 
