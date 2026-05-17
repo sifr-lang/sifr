@@ -1,6 +1,6 @@
 # Phase 35: Performance Benchmarking, Shared Analysis Query Architecture, and Budgets
 
-status: in_progress
+status: completed
 
 ## Objective
 Establish compiler-focused performance budgets for `check`, `build`, and local edit loops, and create the canonical reusable frontend analysis/query architecture consumed by the CLI and future tooling.
