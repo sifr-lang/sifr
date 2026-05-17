@@ -1,6 +1,6 @@
 # Phase 35 Performance Benchmarking And Budgets Execution
 
-status: in_progress
+status: completed
 
 ## Milestone Checklist
 
@@ -69,6 +69,8 @@ status: in_progress
 - `reviews/phase35-m35-4b-review-pass-1.md` -> SATISFIED for m35.4b.
 - `reviews/phase35-m35-4b-review-pass-2.md` -> SATISFIED for post-review AST-only parser and benchmark RSS measurement deltas.
 - `scripts/run_all_tests.sh --profile pr` -> PASS for m35.4b (`wall_time=2662.52s`); warm wall-time and group-skew advisories recorded in `target/validation_lane_reports/pr.latest.json`, report signature `6cd36071cf629b47`.
+- m35.4b merged in PR [#2127](https://github.com/sifr-lang/sifr/pull/2127) at `40ecd64ab7c80df01e60c7e79c9b847cad02c489`.
+- `reviews/phase35-full-closure-review-pass-1.md` -> SATISFIED for full Phase 35 closure; no blockers.
 
 ## Open Migration Targets
 
