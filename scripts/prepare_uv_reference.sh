@@ -13,9 +13,10 @@ usage() {
   cat <<'EOF'
 Usage: scripts/prepare_uv_reference.sh [--status]
 
-Clone or update the external uv reference checkout used for Phase 37 planning.
-The uv source is intentionally ignored by git; this script pins the checkout so
-agents and reviewers can inspect the exact upstream code without vendoring it.
+Clone or update the optional external uv reference checkout used for Phase 37
+audits and adapter planning. Production uv crate pins belong in Cargo.toml and
+Cargo.lock; this ignored checkout exists only so agents and reviewers can inspect
+the exact upstream source without vendoring it.
 
 Environment overrides:
   UV_REMOTE     uv git remote URL
