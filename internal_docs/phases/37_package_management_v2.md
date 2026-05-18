@@ -363,7 +363,7 @@ Requirements:
 
 Direct uv crate reuse remains preferred per adapter when a crate exposes a sufficiently narrow and stable API. Each direct-use decision must be documented in `DEPENDENCY_AUDIT.md` with pinned uv version, public API risk, Python-semantic leakage risk, and fallback plan to the CLI adapter.
 
-### uv Crate Pinning And Optional Reference Checkout
+### uv Crate Pinning
 
 Cargo is the canonical pinning mechanism for any uv crate used by Sifr production code.
 
@@ -377,31 +377,7 @@ or a reviewed crates.io version if the crate is published and usable as a downst
 
 The repository `Cargo.lock` is then the authoritative record of the exact uv crate revisions used by production code. `DEPENDENCY_AUDIT.md` must record the uv crate, chosen source, pinned revision/version, enabled features, direct-use justification, public API risk, Python-semantic leakage risk, and fallback plan to the CLI adapter.
 
-An optional uv source checkout may exist only for audits, adapter planning, and review by agents. The checkout is not vendored and uv source is not committed to the Sifr repository.
-
-Initial pinned reference:
-
-```text
-path: third_party/uv
-remote: https://github.com/astral-sh/uv.git
-revision: d19f1cd498202e04da70224573bbd5b79b94a726
-describe: 0.11.14-27-gd19f1cd49
-```
-
-The checkout is materialized with:
-
-```bash
-scripts/prepare_uv_reference.sh --status
-```
-
-Rules:
-
-- `third_party/uv/` is ignored by git.
-- `scripts/prepare_uv_reference.sh` prepares only the optional local reference tree.
-- Any uv revision used by production code must be pinned through `Cargo.toml` and `Cargo.lock`; the optional reference checkout should match that revision when audits need source inspection.
-- Any uv revision change must update the relevant `Cargo.toml`, `Cargo.lock`, this section if the reference revision changes, `scripts/prepare_uv_reference.sh` if its default changes, and `crates/sifr_package/DEPENDENCY_AUDIT.md`.
-- uv source may be read for implementation planning and adapter audits, but production code must depend on uv through the documented adapter strategy rather than by importing from `third_party/uv` paths.
-- CI and agents may run the script when they need to inspect uv internals; normal Sifr builds must not require the checkout unless a Phase 37 validation lane explicitly opts into uv-reference audits.
+No repo-maintained script is required to clone uv source. When agents or reviewers need to inspect uv internals, they should use the Cargo-pinned source selected by `Cargo.lock` or create a local ignored checkout under `third_party/uv/` at the same revision. Production code must not import from `third_party/uv` paths, and normal Sifr builds must not require that checkout.
 
 ## Cargo Integration Strategy
 
