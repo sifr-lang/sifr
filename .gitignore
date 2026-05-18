@@ -49,3 +49,6 @@ demos/**/*.exe
 
 # External sub-repositories restored by scripts/clone_subrepos.sh
 /audits/leetcode/
+
+# External reference repositories restored by setup scripts; source is not committed.
+/third_party/uv/

@@ -363,6 +363,33 @@ Requirements:
 
 Direct uv crate reuse remains preferred per adapter when a crate exposes a sufficiently narrow and stable API. Each direct-use decision must be documented in `DEPENDENCY_AUDIT.md` with pinned uv version, public API risk, Python-semantic leakage risk, and fallback plan to the CLI adapter.
 
+### Pinned uv Reference Checkout
+
+Phase 37 uses a pinned uv source checkout for audits, adapter planning, and review by agents. The checkout is not vendored and uv source is not committed to the Sifr repository.
+
+Initial pinned reference:
+
+```text
+path: third_party/uv
+remote: https://github.com/astral-sh/uv.git
+revision: d19f1cd498202e04da70224573bbd5b79b94a726
+describe: 0.11.14-27-gd19f1cd49
+```
+
+The checkout is materialized with:
+
+```bash
+scripts/prepare_uv_reference.sh --status
+```
+
+Rules:
+
+- `third_party/uv/` is ignored by git.
+- `scripts/prepare_uv_reference.sh` pins the checkout and is the only supported way to prepare the local uv reference tree.
+- Any uv revision change must update this section, `scripts/prepare_uv_reference.sh`, and `crates/sifr_package/DEPENDENCY_AUDIT.md`.
+- uv source may be read for implementation planning and adapter audits, but production code must depend on uv through the documented adapter strategy rather than by importing from `third_party/uv` paths.
+- CI and agents may run the script when they need to inspect uv internals; normal Sifr builds must not require the checkout unless a Phase 37 validation lane explicitly opts into uv-reference audits.
+
 ## Cargo Integration Strategy
 
 Sifr does not wrap Cargo dependency resolution with a Sifr resolver.
