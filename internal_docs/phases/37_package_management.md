@@ -60,7 +60,7 @@ Required direct dependencies:
 
 Reference implementations, not direct semantic dependencies:
 - uv's `uv-resolver` is a high-quality reference for PubGrub integration, version maps, lockfile preferences, upgrade sets, yanked-version behavior, dependency-provider priorities, universal-resolution forks, and no-solution reporting. It is not reused directly because it is Python-specific: PEP 440/508, wheels, sdists, extras, groups, markers, interpreter constraints, and Python environment tags do not define Sifr packages.
-- uv's `uv-workspace`, `uv-cache`, `uv-client`, and `uv-git` are references for workspace discovery errors, cache layout discipline, HTTP behavior, and Git edge cases. Sifr implements its own workspace/cache/source model because package roots, exports, lockfiles, and compiler integration are Sifr-specific.
+- uv's `uv-workspace`, `uv-cache`, `uv-client`, `uv-installer`, `uv-auth`, and `uv-git` are references for workspace discovery errors, cache layout discipline, HTTP behavior, download coalescing, credential redaction, and Git edge cases. Sifr implements its own workspace/cache/source model because package roots, exports, lockfiles, and compiler integration are Sifr-specific.
 - Cargo's internal resolver, registry traits, lockfile behavior, publish/yank rules, and resolver tests are references for semver compatibility, registry/provider boundaries, conflict cases, and native dependency integration. Sifr does not call Cargo's resolver for Sifr source dependencies because Cargo package ids, feature unification, multiple-version behavior, and crate metadata are Rust-specific.
 - Cargo's `crates-io` and `cargo-platform` crates are not Sifr package-manager dependencies in Phase 37. Sifr owns its sparse registry client. Target predicates use Sifr-owned syntax and lower to Rust targets during generated Cargo materialization.
 - Turborepo's package graph, filters, changed-package selection, graph utilities, boundary concepts, and hashing/cache discipline are monorepo design references. Sifr reuses generic crates such as `petgraph`, `globset`, and `gix`, not Turborepo's JS-package-specific crates.
@@ -80,6 +80,7 @@ Upstream test material to reuse by porting:
 - uv `workspace.rs`, `workspace_list.rs`, and `init.rs`: root and virtual workspaces, from-member discovery, excluded/non-included/hidden/gitignored members, empty and malformed members, workspace path dependencies, workspace lock idempotence from subdirectories, member names shadowing dependencies, path hopping, Git workspaces, complex relative paths, unmanaged members, and deterministic workspace-list output.
 - uv `tree.rs`: normal and inverted trees, platform dependencies, repeated dependencies and repeated versions, dev and optional dependencies, cycles without infinite loops, workspace circular dependencies, frozen tree reads, and outdated reporting.
 - uv `cache.rs`, `cache_clean.rs`, and `cache_prune.rs`: cache init failures, permission errors, stale directories, stale symlinks, stale revisions, package/index-specific clean behavior, verbatim path handling, and corruption recovery.
+- uv `uv-client`, `uv-cache`, `uv-types::InFlight`, `uv-installer::preparer`, `uv-distribution` streaming download paths, and `uv-auth`: conditional HTTP requests, request coalescing, bounded download concurrency, atomic cache population, cache freshness states, stale/corrupt cache recovery, retry/backoff classification, progress accounting, offline behavior, keyring URL normalization, and credential redaction.
 - uv `publish.rs` and `auth.rs`: missing/invalid/mixed credentials, token handling, trusted publishing permission failures, redirects, dubious filenames, dry-run reporting all publish errors, keyring/text/native auth behavior, prefix matching, host fallback, malformed helper responses, invalid URIs, and credential redaction.
 
 Do not reuse directly:
@@ -93,6 +94,7 @@ Sifr-owned correctness harnesses:
 - Add a package-manager model test harness under the Phase 37 implementation crate, with Sifr-owned helpers such as `pkg`, `dep`, `feature`, `target_dep`, `workspace_member`, `registry_source`, `git_source`, `path_source`, and expected resolved graph snapshots.
 - Add a fake sparse registry server that can serve versions, yanks, auth failures, malformed records, checksum mismatches, conditional request responses, redirects, and offline/cache-only metadata.
 - Add temporary Git repository helpers using the selected `gix` stack for tags, branches, locked revisions, branch movement, subdirectories, workspaces inside Git dependencies, and changed-package selectors.
+- Add downloader/cache fixtures with a fake registry server for `ETag`, `Last-Modified`, `Cache-Control`, `304 Not Modified`, redirect, `401` / `403` / `404` auth paths, transient `408` / `429` / `5xx` failures, truncated streams, corrupt archives, concurrent duplicate downloads, offline cache hits/misses, frozen writes, and redacted diagnostic snapshots.
 - Use `insta` snapshots with deterministic filters for temp paths, registry URLs, commit ids, checksums, elapsed time, and target triples.
 
 Sifr SAT/metamorphic oracle:
@@ -154,7 +156,8 @@ Mandatory property tests:
 - Solver results satisfy all active direct and transitive requirements.
 - PubGrub success implies SAT oracle success; SAT oracle unsat implies PubGrub unsat for the supported Sifr model subset.
 - Locked versions are preserved unless manifest, feature, target, source metadata, or update policy requires movement.
-- `--locked` and `--frozen` never write manifests, lockfiles, caches, or generated Cargo state.
+- `--locked` never writes manifests or lockfiles and never selects packages outside the existing lockfile. It may populate the package cache only for immutable source archives already selected by `sifr.lock`, unless combined with `--offline` or `--frozen`.
+- `--frozen` is `--locked` plus offline enforcement: it never performs network calls and never writes manifests, lockfiles, package caches, or generated Cargo state.
 - Offline mode performs no network calls and fails on missing metadata or source archive cache entries.
 - Removing inactive package versions does not make a previously satisfiable graph unsatisfiable.
 - Removing dependency edges cannot make a satisfiable graph unsatisfiable.
@@ -792,6 +795,81 @@ Trust model:
 - `sifr login` stores registry tokens outside manifests and lockfiles. Registry requests attach bearer tokens only for endpoints that require authentication; token expiry or revocation fails with a registry diagnostic that redacts the token and registry secret material.
 - Package names, export roots, registry names, URLs, Git refs, archive entries, and cache paths are validated before filesystem writes.
 
+## Downloader And Source Cache Architecture
+
+Sifr needs a uv-style downloader and cache discipline, but it must be Sifr-owned code. The reusable part of uv is the architecture: bounded asynchronous downloads, in-flight request coalescing, private HTTP cache semantics, atomic cache writes, hash verification while streaming, retry/backoff classification, offline/stale behavior, and redacted authentication flows. The non-reusable parts are Python package semantics: wheels, sdists, PyPI Simple API details, PEP 440/508 metadata, Python tags, virtual environments, wheel build/install preparation, and uv's exact cache bucket taxonomy.
+
+Implementation ownership:
+- `sources::downloader` owns the package download plan executor, bounded concurrency, request coalescing, retry policy, progress events, and download-state diagnostics.
+- `sources::registry::http_adapter` is the only module that owns HTTP request construction, TLS policy, redirect policy, conditional request headers, registry auth attachment, and response classification.
+- `sources::cache` owns source-cache paths, bucket schema versions, freshness state, shared/exclusive cache locks, temporary directories, archive extraction, checksum verification, and atomic visibility.
+- `sources::git` uses the same cache-state and in-flight coalescing contracts as HTTP sources, but Git refs are locked by commit id and do not use HTTP cache validators.
+- Compiler, HIR, codegen, and generated Cargo code never read from a partially populated cache path. They receive only immutable `PackageSourceMap` entries created after verification.
+
+Downloader inputs and outputs are structured, serializable, and independent of the CLI renderer:
+
+```rust
+struct DownloadRequest {
+    source_id: SourceId,
+    cache_key: CacheKey,
+    url: Option<RedactedUrl>,
+    git_ref: Option<LockedGitRef>,
+    expected_checksum: SourceChecksum,
+    expected_manifest: PackageManifestDigest,
+    mode: ResolutionMode,
+    auth_scope: AuthScope,
+}
+
+enum DownloadState {
+    CacheHit,
+    MetadataRevalidated,
+    Downloaded,
+    CorruptCacheEntry,
+    OfflineMissing,
+}
+
+struct VerifiedPackageSource {
+    package_id: PackageId,
+    source_id: SourceId,
+    cache_path: PathBuf,
+    checksum: SourceChecksum,
+    manifest_digest: PackageManifestDigest,
+    source_roots: Vec<SourceRoot>,
+    exports: Vec<ExportRoot>,
+}
+```
+
+Concurrency and coalescing:
+- All registry, URL, and Git downloads go through a per-invocation `DownloadCoordinator`.
+- The coordinator is created per top-level command invocation such as `sync`, `fetch`, `check`, `build`, `run`, or `test`. It does not persist across separate CLI processes; all download tasks inside one invocation share the same in-flight map.
+- The coordinator uses a nonzero global download semaphore. uv defaults to 50 concurrent downloads; Sifr may start with that value or a lower audited default, but the value must be user-configurable and visible in settings/debug output.
+- Requests are coalesced by immutable source identity: registry package id plus checksum, URL plus checksum, or Git URL plus locked commit and subdirectory. Concurrent callers for the same source wait on the same in-flight result and then revalidate the returned checksum and manifest digest before using it.
+- If coalesced callers disagree on `expected_checksum`, the coordinator may share the physical transfer only when source identity and auth scope match, but each caller validates independently. A mismatch against one request's expected checksum fails that request with `SIFR-PACKAGE-0502`; a response that matches none of the expected checksums is never cached.
+- Coalescing never crosses authentication scopes or registry identities. Two equal URLs from different named registries remain separate unless registry configuration explicitly declares them equivalent.
+
+HTTP caching and offline behavior:
+- Sparse index metadata uses private-client HTTP caching with `Cache-Control`, `ETag`, `Last-Modified`, `If-None-Match`, `If-Modified-Since`, `Vary`, and `304 Not Modified` handling. This is handled by `sources::registry::http_adapter` through cache-read and cache-write callbacks into `sources::cache`. It mirrors uv-client's cached-client shape, but Sifr stores Sifr-owned cache policy records.
+- Metadata cache keys include cache schema version, registry name, normalized registry URL, normalized request path/query, supported content negotiation headers, and the `Vary` header field names/values required to prove a future request is equivalent. Source archive cache keys are derived from the verified content checksum and package source identity. Auth-scope identifiers separate entries, but bearer tokens, passwords, cookies, and raw authorization headers never enter cache keys.
+- Index responses with no `Vary` header or with `Vary: Accept-Encoding` are cacheable. `Vary: *`, `Vary: Authorization`, `Vary: Cookie`, or other unsupported `Vary` fields make the response non-cacheable and produce a registry protocol diagnostic if caching was required for offline/locked behavior.
+- Immutable source archives are addressed by checksum. Once an archive is verified and content-addressed, normal builds do not revalidate the archive body; registry metadata revalidation decides whether a new version/checksum exists.
+- `--offline` never opens network connections. Fresh and stale verified metadata may be read when policy allows stale reads; missing or unusable package sources fail with `SIFR-PACKAGE-0203`.
+- `--locked` must not resolve beyond `sifr.lock` or update the lockfile. It may fetch and verify missing source archives already selected by the lockfile, and those package-cache writes are the only allowed cache mutation. `--frozen` is locked plus offline enforcement: it must not fetch, mutate caches, refresh metadata, or write generated Cargo state.
+- Dry-run JSON reports whether each source is `cache-hit`, `metadata-revalidated`, `planned-download`, `offline-missing`, or `corrupt-cache-entry` without exposing credentials or machine-local secret paths.
+
+Atomic source-cache population:
+- Downloads stream into a unique temporary location under the cache root while computing the declared checksum. A response without the expected checksum from lockfile/index metadata is never made visible.
+- Archives are extracted only after path traversal, absolute path, unsupported symlink, deterministic metadata, and required-entry checks pass.
+- The extracted source tree is validated against `sifr.toml`: package name/version, `source.roots`, exports, compiler compatibility, backend metadata, and manifest digest must match the index/lockfile record.
+- The verified tree is made visible by atomic rename or an equivalent platform-specific persist operation. Existing verified entries are reused; partial downloads, failed extractions, and corrupt entries remain unreachable from compiler/editor paths and are cleaned up as described in [Artifact Cache And Generated Cargo Integration](#artifact-cache-and-generated-cargo-integration).
+- Directory-valued cache entries use an archive or indirection bucket so replacement/removal can be atomic on all supported platforms. The exact layout is Sifr-owned, but the invariant matches uv-cache: readers never observe an in-place mutation of a cache directory.
+
+Retry, progress, and credentials:
+- Retry policy covers transient `408`, `429`, and `5xx` statuses plus nested stream errors such as connection reset, broken pipe, timeout, invalid data, unexpected EOF, and HTTP/2 transport errors. Retries use bounded exponential backoff with full jitter, honor `Retry-After` on `429` when present, and include the final retry count in diagnostics. Exact initial delay, maximum delay, and total retry budget are set by the dependency audit before implementation begins.
+- Non-retryable protocol errors, checksum mismatches, archive violations, and authentication failures fail immediately with package diagnostics.
+- Progress is driven from structured downloader events containing `source_id`, `bytes_received`, and optional `total_bytes` from `Content-Length`. CLI progress rendering is interactive presentation only; plan/dry-run output is authoritative and deterministic regardless of progress display.
+- Registry credentials are stripped from URLs before storage or logging. Diagnostics, traces, cache keys, lockfiles, generated Cargo files, and review snapshots must use redacted URL and credential display types.
+- Auth lookup may use a per-invocation memory cache, named registry credentials, platform keyring, or Sifr config, but attaching credentials should be lazy: unauthenticated requests are attempted when policy allows, and credentials are retried only on auth-related responses.
+
 ## Package Diagnostics
 
 Phase 37 reserves the `SIFR-PACKAGE-*` namespace. Implementations may add more codes, but the following codes and meanings are mandatory and stable:
@@ -901,13 +979,15 @@ Concurrency:
 - Scope:
   - Implement Sifr source dependency solving through `astral-pubgrub`, including `SolverInput`, `FeaturePlan`, `ResolutionMode`, `ResolutionPreferences`, `ResolvedPackageGraph`, deterministic candidate ordering, lockfile preferences, and structured conflict paths.
   - Implement pre-expanded feature resolution, target predicate selection, `sifr.lock`, staleness detection, content checksums, and a content-addressed package cache.
+  - Implement `sources::downloader`, `sources::registry::http_adapter`, and `sources::cache` with bounded concurrency, in-flight coalescing, conditional HTTP metadata, atomic verified source-cache population, retry/backoff policy, offline/frozen enforcement, and credential redaction.
   - Implement the Sifr SAT/metamorphic oracle and port the Cargo resolver matrix categories that apply to Sifr's source package model.
-  - Implement package-manager adapter contract tests for `semver`, PubGrub, checksum, lockfile IO, and source-cache boundaries.
+  - Implement package-manager adapter contract tests for `semver`, PubGrub, checksum, lockfile IO, HTTP adapter behavior, downloader coalescing, retry policy, and source-cache boundaries.
   - Support registry, Git, URL, and path source records at the model level.
   - Implement `sifr sync`, `sifr fetch`, `--locked`, `--offline`, and `--frozen`.
 - Definition of done:
   - Builds are reproducible from `sifr.toml`, `sifr.lock`, and the package cache.
   - Lockfile drift, checksum mismatch, missing cache entries, yanked packages, unsupported protocols, and version conflicts fail with deterministic diagnostics.
+  - Concurrent duplicate downloads coalesce, corrupt cache entries are purged only after verification failure is reported, and offline/frozen modes never perform disallowed network or cache writes.
   - Lockfile output is stable across repeated runs.
 
 ### milestone_37_3: Package-Aware Import Resolution
