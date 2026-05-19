@@ -15,6 +15,7 @@ pub struct DirectDependencyScope {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ScopedImport {
     pub import_root: ImportRoot,
+    pub target_export_root: ImportRoot,
     pub package_id: SifrPackageId,
     pub cargo_package_id: CargoPackageId,
     pub dependency_name: String,
@@ -78,6 +79,7 @@ pub(crate) fn derive_direct_dependency_scopes(
                         &mut scope,
                         ScopedImport {
                             import_root: export.clone(),
+                            target_export_root: export.clone(),
                             package_id: target.package_id.clone(),
                             cargo_package_id: target.cargo_package_id.clone(),
                             dependency_name: dependency.dependency_name.clone(),
@@ -87,6 +89,9 @@ pub(crate) fn derive_direct_dependency_scopes(
                     );
                 }
             } else {
+                let Some(target_export_root) = target.manifest.exports.first().cloned() else {
+                    continue;
+                };
                 for (alias, alias_import) in aliases {
                     let Some(import_root) = parse_alias_import_root(
                         package,
@@ -101,6 +106,7 @@ pub(crate) fn derive_direct_dependency_scopes(
                         &mut scope,
                         ScopedImport {
                             import_root,
+                            target_export_root: target_export_root.clone(),
                             package_id: target.package_id.clone(),
                             cargo_package_id: target.cargo_package_id.clone(),
                             dependency_name: dependency.dependency_name.clone(),

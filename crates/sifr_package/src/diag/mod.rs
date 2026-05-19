@@ -207,4 +207,51 @@ impl PackageDiagnostic {
             ),
         }
     }
+
+    #[must_use]
+    pub fn undeclared_direct_import(
+        cargo_package_id: &CargoPackageId,
+        package_id: &SifrPackageId,
+        import_path: impl Into<String>,
+    ) -> Self {
+        let import_path = import_path.into();
+        Self {
+            code: DiagnosticCode::PACKAGE_UNDECLARED_DIRECT_IMPORT,
+            message: format!(
+                "package '{}' imports '{import_path}', which is not in its own sources or direct dependency scope",
+                package_id.0
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::PackageGraph {
+                cargo_package_id: cargo_package_id.clone(),
+            }),
+            help: Some(
+                "add a direct Cargo dependency, import through an exported alias, or move the import inside the dependency package"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn private_module_access(
+        cargo_package_id: &CargoPackageId,
+        package_id: &SifrPackageId,
+        import_path: impl Into<String>,
+        target_package_id: &SifrPackageId,
+    ) -> Self {
+        let import_path = import_path.into();
+        Self {
+            code: DiagnosticCode::PACKAGE_PRIVATE_MODULE_ACCESS,
+            message: format!(
+                "package '{}' imports private module '{import_path}' from '{}'",
+                package_id.0, target_package_id.0
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::PackageGraph {
+                cargo_package_id: cargo_package_id.clone(),
+            }),
+            help: Some(
+                "import only modules exported by the dependency package, or add an explicit public re-export"
+                    .to_string(),
+            ),
+        }
+    }
 }

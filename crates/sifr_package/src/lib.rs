@@ -18,6 +18,10 @@ pub use crate::graph::derive::{
 pub use crate::graph::digest::{digest_graph_inputs, GraphDigest};
 pub use crate::graph::scopes::{DirectDependencyScope, ScopedImport, ScopedImportSource};
 pub use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch};
+pub use crate::imports::source_map::{
+    DottedModulePath, PackageImportOrigin, PackageImportResolution, PackageModuleKey,
+    PackageModuleSource, PackageSourceMap,
+};
 pub use crate::manifest::metadata::{CargoSifrAliasMetadata, CargoSifrMetadata};
 pub use crate::manifest::sifr::{
     CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
@@ -27,6 +31,8 @@ pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 
 #[cfg(test)]
 mod milestone_37_2_tests;
+#[cfg(test)]
+mod milestone_37_3_tests;
 
 #[cfg(test)]
 mod tests {
