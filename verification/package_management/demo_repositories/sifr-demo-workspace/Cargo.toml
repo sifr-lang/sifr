@@ -1,0 +1,10 @@
+[workspace]
+members = ["packages/*"]
+default-members = ["packages/app", "packages/core"]
+exclude = ["packages/experimental-*"]
+resolver = "3"
+
+[workspace.dependencies]
+sifr-demo-core = { path = "packages/core" }
+sifr-demo-utils = { path = "packages/utils" }
+serde = "1"

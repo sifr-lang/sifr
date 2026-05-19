@@ -1,0 +1,16 @@
+[package]
+name = "sifr-demo-test-support"
+version = "0.1.0"
+edition = "2024"
+include = [
+  "Cargo.toml",
+  "Cargo.lock",
+  "sifr.toml",
+  "sifr/**/*.sifr",
+  "src/lib.rs",
+  "README.md",
+  "LICENSE"
+]
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

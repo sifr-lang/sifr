@@ -1,0 +1,15 @@
+[package]
+name = "demo_http"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+roots = ["sifr"]
+
+[exports]
+modules = ["demo_http"]
+
+[trust]
+native = ["reqwest"]
+build-scripts = []
+proc-macros = []

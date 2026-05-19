@@ -65,10 +65,63 @@ fn closeout_docs_lock_cargo_backed_boundary_and_future_uv_interop() {
     assert!(traceability.contains("phase37_e2e_fixture_matrix.json"));
 }
 
+#[test]
+fn phase37_demo_repository_templates_cover_required_org_repos() {
+    let manifest = demo_repository_manifest();
+    let repositories = manifest["repositories"]
+        .as_array()
+        .expect("demo manifest must contain repositories");
+    let repo_ids = repositories
+        .iter()
+        .map(|repo| {
+            repo["id"]
+                .as_str()
+                .expect("demo repository id must be a string")
+                .to_string()
+        })
+        .collect::<BTreeSet<_>>();
+
+    for required in [
+        "sifr-demo-json",
+        "sifr-demo-http",
+        "sifr-demo-test-support",
+        "sifr-demo-app",
+        "sifr-demo-workspace",
+    ] {
+        assert!(repo_ids.contains(required), "missing demo repo {required}");
+    }
+
+    let template_root = repo_root().join(
+        manifest["template_root"]
+            .as_str()
+            .expect("demo manifest must contain template_root"),
+    );
+    for repo in repositories {
+        let root = template_root.join(repo["root"].as_str().expect("repo root"));
+        for rel_path in repo["required_paths"]
+            .as_array()
+            .expect("repo must contain required_paths")
+        {
+            let rel_path = rel_path.as_str().expect("required path must be a string");
+            assert!(
+                root.join(rel_path).exists(),
+                "demo repository {:?} is missing {rel_path}",
+                repo["id"]
+            );
+        }
+    }
+}
+
 fn fixture_matrix() -> Value {
     let path = repo_root().join("verification/package_management/phase37_e2e_fixture_matrix.json");
     let source = std::fs::read_to_string(path).expect("read fixture matrix");
     serde_json::from_str(&source).expect("parse fixture matrix")
+}
+
+fn demo_repository_manifest() -> Value {
+    let path = repo_root().join("verification/package_management/phase37_demo_repositories.json");
+    let source = std::fs::read_to_string(path).expect("read demo repository manifest");
+    serde_json::from_str(&source).expect("parse demo repository manifest")
 }
 
 fn repo_root() -> PathBuf {

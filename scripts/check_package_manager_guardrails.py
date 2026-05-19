@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import tomllib
 from pathlib import Path
 from typing import Any, List
 
@@ -23,6 +24,7 @@ REQUIRED_FILES = [
     "crates/sifr_package/src/source/layout.rs",
     "crates/sifr_package/src/ops/plan.rs",
     "verification/package_management/phase37_e2e_fixture_matrix.json",
+    "verification/package_management/phase37_demo_repositories.json",
 ]
 
 CARGO_COMMAND_TERMS = [
@@ -49,6 +51,29 @@ REQUIRED_FIXTURE_CATEGORIES = {
     "multiple_version_graph",
     "alias_imports",
     "publishing",
+}
+
+REQUIRED_DEMO_REPOS = {
+    "sifr-demo-json",
+    "sifr-demo-http",
+    "sifr-demo-test-support",
+    "sifr-demo-app",
+    "sifr-demo-workspace",
+}
+
+REQUIRED_DEMO_VALIDATIONS = {
+    "git_dependency_fetch",
+    "lockfile_pins_git_revisions",
+    "locked_build_after_fetch",
+    "offline_requires_fetch",
+    "archive_missing_sifr_source_rejection",
+    "pure_marker_rejects_rust_implementation",
+    "rust_backed_trust_requires_reqwest",
+    "multiple_version_alias_identity",
+    "workspace_filter_dependency_closure",
+    "workspace_default_members_and_exclude",
+    "workspace_dependencies_inheritance",
+    "changed_file_filters",
 }
 
 
@@ -81,6 +106,18 @@ def load_json(path: Path, failures: List[str]) -> dict[str, Any]:
         return {}
     if not isinstance(loaded, dict):
         failures.append(f"{path} must contain a JSON object")
+        return {}
+    return loaded
+
+
+def load_toml(path: Path, failures: List[str]) -> dict[str, Any]:
+    try:
+        loaded = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as error:
+        failures.append(f"{path} is not valid TOML: {error}")
+        return {}
+    if not isinstance(loaded, dict):
+        failures.append(f"{path} must contain a TOML table")
         return {}
     return loaded
 
@@ -120,6 +157,176 @@ def check_fixture_matrix(root: Path, failures: List[str]) -> None:
         failures.append(
             "package-management fixture matrix is missing required categories: "
             + ", ".join(missing)
+        )
+
+
+def check_demo_repositories(root: Path, failures: List[str]) -> None:
+    manifest_path = root / "verification/package_management/phase37_demo_repositories.json"
+    if not manifest_path.exists():
+        return
+
+    manifest = load_json(manifest_path, failures)
+    template_root_value = manifest.get("template_root")
+    if not isinstance(template_root_value, str) or not template_root_value:
+        failures.append("Phase 37 demo manifest is missing template_root")
+        return
+    template_root = root / template_root_value
+    if not template_root.exists():
+        failures.append(f"Phase 37 demo template root does not exist: {template_root_value}")
+        return
+
+    validations = manifest.get("required_validations")
+    if not isinstance(validations, list):
+        failures.append("Phase 37 demo manifest required_validations must be a list")
+    else:
+        missing_validations = REQUIRED_DEMO_VALIDATIONS - set(validations)
+        if missing_validations:
+            failures.append(
+                "Phase 37 demo manifest is missing validations: "
+                + ", ".join(sorted(missing_validations))
+            )
+
+    repositories = manifest.get("repositories", [])
+    if not isinstance(repositories, list):
+        failures.append("Phase 37 demo manifest repositories must be a list")
+        return
+
+    seen_ids = set()
+    for repo in repositories:
+        if not isinstance(repo, dict):
+            failures.append("Phase 37 demo repository entries must be JSON objects")
+            continue
+        repo_id = repo.get("id")
+        repo_root = repo.get("root")
+        required_paths = repo.get("required_paths")
+        repo_validations = repo.get("validations")
+        if not isinstance(repo_id, str) or not repo_id:
+            failures.append("Phase 37 demo repository entry is missing id")
+            continue
+        seen_ids.add(repo_id)
+        if not isinstance(repo_root, str) or not repo_root:
+            failures.append(f"Phase 37 demo repository `{repo_id}` is missing root")
+            continue
+        repo_path = template_root / repo_root
+        if not repo_path.exists():
+            failures.append(f"Phase 37 demo repository `{repo_id}` root is missing")
+            continue
+        if not isinstance(required_paths, list):
+            failures.append(f"Phase 37 demo repository `{repo_id}` required_paths must be a list")
+            continue
+        for rel_path in required_paths:
+            if not isinstance(rel_path, str) or not rel_path:
+                failures.append(f"Phase 37 demo repository `{repo_id}` has invalid required path")
+                continue
+            if not (repo_path / rel_path).exists():
+                failures.append(
+                    f"Phase 37 demo repository `{repo_id}` is missing required path {rel_path}"
+                )
+        if not isinstance(repo_validations, list) or not repo_validations:
+            failures.append(f"Phase 37 demo repository `{repo_id}` has no validations")
+
+        check_demo_repository_shape(repo_id, repo_path, failures)
+
+    missing_repos = REQUIRED_DEMO_REPOS - seen_ids
+    if missing_repos:
+        failures.append(
+            "Phase 37 demo manifest is missing repositories: "
+            + ", ".join(sorted(missing_repos))
+        )
+
+
+def check_demo_repository_shape(repo_id: str, repo_path: Path, failures: List[str]) -> None:
+    cargo_toml = load_toml(repo_path / "Cargo.toml", failures)
+    sifr_toml_path = repo_path / "sifr.toml"
+
+    if repo_id != "sifr-demo-workspace":
+        manifest = (
+            cargo_toml.get("package", {})
+            .get("metadata", {})
+            .get("sifr", {})
+            .get("manifest")
+        )
+        if manifest != "sifr.toml":
+            failures.append(f"Phase 37 demo repository `{repo_id}` must link sifr.toml")
+        if not sifr_toml_path.exists():
+            failures.append(f"Phase 37 demo repository `{repo_id}` is missing sifr.toml")
+
+    if repo_id == "sifr-demo-json":
+        check_pure_marker(repo_id, repo_path / "src/lib.rs", failures)
+        text = (repo_path / "Cargo.toml").read_text(encoding="utf-8")
+        if "sifr/**/*.sifr" not in text:
+            failures.append("sifr-demo-json must include Sifr sources for archive validation")
+    elif repo_id == "sifr-demo-http":
+        check_rust_backed_http_template(repo_path, failures)
+    elif repo_id == "sifr-demo-app":
+        check_consumer_app_template(repo_path, failures)
+    elif repo_id == "sifr-demo-workspace":
+        check_workspace_template(repo_path, failures)
+    elif repo_id == "sifr-demo-test-support":
+        check_pure_marker(repo_id, repo_path / "src/lib.rs", failures)
+
+
+def check_pure_marker(repo_id: str, marker_path: Path, failures: List[str]) -> None:
+    marker = marker_path.read_text(encoding="utf-8")
+    if "Pure Sifr package marker" not in marker:
+        failures.append(f"Phase 37 demo repository `{repo_id}` is missing the pure marker")
+    for forbidden in ["pub fn", "pub mod", "use ", "macro_rules!"]:
+        if forbidden in marker:
+            failures.append(f"Phase 37 demo repository `{repo_id}` marker contains Rust code")
+
+
+def check_rust_backed_http_template(repo_path: Path, failures: List[str]) -> None:
+    cargo_toml = (repo_path / "Cargo.toml").read_text(encoding="utf-8")
+    sifr_toml = (repo_path / "sifr.toml").read_text(encoding="utf-8")
+    rust_source = (repo_path / "src/lib.rs").read_text(encoding="utf-8")
+    if "sifr-demo-json" not in cargo_toml or "tag = \"v0.1.0\"" not in cargo_toml:
+        failures.append("sifr-demo-http must depend on tagged sifr-demo-json")
+    if "reqwest" not in cargo_toml or "reqwest" not in sifr_toml:
+        failures.append("sifr-demo-http must trust and depend on reqwest")
+    if "reqwest::" not in rust_source:
+        failures.append("sifr-demo-http Rust shim must exercise reqwest")
+
+
+def check_consumer_app_template(repo_path: Path, failures: List[str]) -> None:
+    cargo_toml = (repo_path / "Cargo.toml").read_text(encoding="utf-8")
+    lockfile = (repo_path / "Cargo.lock").read_text(encoding="utf-8")
+    migrate = (repo_path / "sifr/app/migrate.sifr").read_text(encoding="utf-8")
+    for required in [
+        "sifr-demo-json",
+        "sifr-demo-http",
+        "sifr-demo-test-support",
+        "demo_json_v1",
+        "demo_json_v2",
+        "tag = \"v0.1.0\"",
+        "tag = \"v0.2.0\"",
+    ]:
+        if required not in cargo_toml:
+            failures.append(f"sifr-demo-app Cargo.toml is missing `{required}`")
+    if "git+https://github.com/sifr-lang/sifr-demo-json?tag=v0.2.0" not in lockfile:
+        failures.append("sifr-demo-app lockfile must pin the v0.2.0 alias")
+    if "demo_json_v1" not in migrate or "demo_json_v2" not in migrate:
+        failures.append("sifr-demo-app migrate.sifr must import both alias roots")
+
+
+def check_workspace_template(repo_path: Path, failures: List[str]) -> None:
+    workspace = load_toml(repo_path / "Cargo.toml", failures).get("workspace", {})
+    if workspace.get("default-members") != ["packages/app", "packages/core"]:
+        failures.append("sifr-demo-workspace must set default-members")
+    if workspace.get("exclude") != ["packages/experimental-*"]:
+        failures.append("sifr-demo-workspace must set exclude")
+    dependencies = load_toml(repo_path / "Cargo.toml", failures).get("workspace", {}).get(
+        "dependencies", {}
+    )
+    if "sifr-demo-core" not in dependencies or "sifr-demo-utils" not in dependencies:
+        failures.append("sifr-demo-workspace must define workspace Sifr dependencies")
+    app_toml = (repo_path / "packages/app/Cargo.toml").read_text(encoding="utf-8")
+    if "workspace = true" not in app_toml or "backend-utils" not in app_toml:
+        failures.append("sifr-demo-workspace app must inherit workspace deps and reach backend")
+    for member in ["core", "utils", "app"]:
+        check_pure_marker(
+            f"sifr-demo-workspace/packages/{member}",
+            repo_path / f"packages/{member}/src/lib.rs",
+            failures,
         )
 
 
@@ -180,6 +387,7 @@ def main() -> int:
             failures.append("metadata normalization digest support is missing")
 
     check_fixture_matrix(root, failures)
+    check_demo_repositories(root, failures)
 
     if failures:
         print("Package-manager guardrails: FAIL")

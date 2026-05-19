@@ -1,0 +1,7 @@
+from demo_json.parse import parse_json
+from demo_http.client import get
+
+def main() -> Result[int, Error]:
+    response = get("https://example.com/config.json")?
+    config = parse_json(response.body)?
+    return Ok(config["status_code"].as_int()?)
