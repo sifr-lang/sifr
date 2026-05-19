@@ -10,6 +10,7 @@ members = [
     "crates/sifr_lint",
     "crates/sifr_analysis",
     "crates/sifr_lsp",
+    "crates/sifr_package",
     "crates/sifr_codegen",
     "crates/sifr_driver",
     "crates/sifr",
@@ -50,6 +51,7 @@ sifr_format = { path = "crates/sifr_format" }
 sifr_lint = { path = "crates/sifr_lint" }
 sifr_analysis = { path = "crates/sifr_analysis" }
 sifr_lsp = { path = "crates/sifr_lsp" }
+sifr_package = { path = "crates/sifr_package" }
 sifr_codegen = { path = "crates/sifr_codegen" }
 sifr_driver = { path = "crates/sifr_driver" }
 
