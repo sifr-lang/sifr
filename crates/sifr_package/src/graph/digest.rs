@@ -40,6 +40,7 @@ fn fnv1a64(bytes: &[u8]) -> u64 {
 #[derive(Serialize)]
 struct CanonicalMetadata<'a> {
     packages: Vec<CanonicalPackage<'a>>,
+    resolve_edges: Vec<CanonicalResolveEdge<'a>>,
     workspace_members: Vec<&'a str>,
     target_directory: String,
     workspace_root: String,
@@ -55,6 +56,13 @@ struct CanonicalPackage<'a> {
     dependency_names: Vec<&'a str>,
     feature_names: Vec<&'a str>,
     has_sifr_metadata: bool,
+}
+
+#[derive(Serialize)]
+struct CanonicalResolveEdge<'a> {
+    from: &'a str,
+    dependency_name: &'a str,
+    to: &'a str,
 }
 
 impl<'a> From<&'a NormalizedCargoMetadata> for CanonicalMetadata<'a> {
@@ -78,6 +86,15 @@ impl<'a> From<&'a NormalizedCargoMetadata> for CanonicalMetadata<'a> {
                     has_sifr_metadata: package.sifr_metadata.is_some(),
                 })
                 .collect(),
+            resolve_edges: metadata
+                .resolve_edges
+                .iter()
+                .map(|edge| CanonicalResolveEdge {
+                    from: &edge.from.0,
+                    dependency_name: &edge.dependency_name,
+                    to: &edge.to.0,
+                })
+                .collect(),
             workspace_members: metadata
                 .workspace_members
                 .iter()
@@ -93,6 +110,7 @@ impl<'a> From<&'a NormalizedCargoMetadata> for CanonicalMetadata<'a> {
 struct CanonicalGraph<'a> {
     packages: Vec<CanonicalGraphPackage<'a>>,
     edges: Vec<(&'a str, Vec<&'a str>)>,
+    scopes: Vec<CanonicalScope<'a>>,
 }
 
 #[derive(Serialize)]
@@ -101,6 +119,12 @@ struct CanonicalGraphPackage<'a> {
     cargo_package_id: &'a str,
     sifr_name: &'a str,
     exports: Vec<&'a str>,
+}
+
+#[derive(Serialize)]
+struct CanonicalScope<'a> {
+    package_id: &'a str,
+    imports: Vec<(&'a str, &'a str)>,
 }
 
 impl<'a> From<&'a SifrPackageGraph> for CanonicalGraph<'a> {
@@ -129,6 +153,18 @@ impl<'a> From<&'a SifrPackageGraph> for CanonicalGraph<'a> {
                         from.0.as_str(),
                         to.iter().map(|package_id| package_id.0.as_str()).collect(),
                     )
+                })
+                .collect(),
+            scopes: graph
+                .direct_dependency_scopes
+                .iter()
+                .map(|(package_id, scope)| CanonicalScope {
+                    package_id: &package_id.0,
+                    imports: scope
+                        .imports
+                        .iter()
+                        .map(|(root, import)| (root.0.as_str(), import.package_id.0.as_str()))
+                        .collect(),
                 })
                 .collect(),
         }

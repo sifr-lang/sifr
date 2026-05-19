@@ -162,6 +162,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0002`](SIFR-PACKAGE-0002.md) | Error | Missing or invalid sifr.toml package manifest. |
 | [`SIFR-PACKAGE-0003`](SIFR-PACKAGE-0003.md) | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |
 | [`SIFR-PACKAGE-0103`](SIFR-PACKAGE-0103.md) | Error | Cargo metadata parsing or normalization failed. |
+| [`SIFR-PACKAGE-0201`](SIFR-PACKAGE-0201.md) | Error | Direct package import root resolves to multiple package instances. |
+| [`SIFR-PACKAGE-0204`](SIFR-PACKAGE-0204.md) | Error | Type identity crosses resolved package instances. |
 | [`SIFR-PACKAGE-0501`](SIFR-PACKAGE-0501.md) | Error | Pure Sifr Rust marker contains implementation. |
 
 ## Reserved Codes

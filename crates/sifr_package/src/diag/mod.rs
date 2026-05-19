@@ -1,4 +1,6 @@
 use crate::cargo::metadata::CargoPackageId;
+use crate::graph::derive::SifrPackageId;
+use crate::manifest::sifr::ImportRoot;
 use sifr_diagnostics::DiagnosticCode;
 use std::path::PathBuf;
 
@@ -28,6 +30,9 @@ pub enum PackageDiagnosticOrigin {
     RustMarker {
         cargo_package_id: CargoPackageId,
         path: PathBuf,
+    },
+    PackageGraph {
+        cargo_package_id: CargoPackageId,
     },
 }
 
@@ -152,6 +157,54 @@ impl PackageDiagnostic {
                 path: marker_path,
             }),
             help: Some("pure Sifr packages must keep Rust marker targets comment-only; declare Rust-backed Sifr when Rust implementation is intentional".to_string()),
+        }
+    }
+
+    #[must_use]
+    pub fn ambiguous_import_root(
+        cargo_package_id: &CargoPackageId,
+        package_id: &SifrPackageId,
+        import_root: &ImportRoot,
+        candidates: &[String],
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_AMBIGUOUS_IMPORT_ROOT,
+            message: format!(
+                "ambiguous package import root '{}' in '{}': {}",
+                import_root.0,
+                package_id.0,
+                candidates.join(", ")
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::PackageGraph {
+                cargo_package_id: cargo_package_id.clone(),
+            }),
+            help: Some(
+                "add [package.metadata.sifr.aliases] entries for direct dependencies that export the same import root"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn type_identity_mismatch(
+        cargo_package_id: &CargoPackageId,
+        expected: impl Into<String>,
+        actual: impl Into<String>,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_TYPE_IDENTITY_MISMATCH,
+            message: format!(
+                "package type identity mismatch: expected {}, got {}",
+                expected.into(),
+                actual.into()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::PackageGraph {
+                cargo_package_id: cargo_package_id.clone(),
+            }),
+            help: Some(
+                "types from different resolved package instances are distinct even when their module and type names match"
+                    .to_string(),
+            ),
         }
     }
 }

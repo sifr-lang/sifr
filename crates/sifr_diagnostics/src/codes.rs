@@ -1945,6 +1945,36 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["reason"]
     ),
     active_entry!(
+        "SIFR-PACKAGE-0201",
+        "PACKAGE",
+        "Direct package import root resolves to multiple package instances.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_2_tests.rs::duplicate_direct_import_root_in_one_scope_reports_0201",
+        "ambiguous package import root '{import_root}'",
+        "sifr_package::graph::scopes",
+        [
+            arg!("import_root"),
+            json_arg!("cargo_package_id"),
+            json_arg!("candidates")
+        ],
+        ["cargo_package_id", "import_root", "candidates"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0204",
+        "PACKAGE",
+        "Type identity crosses resolved package instances.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_2_tests.rs::type_identity_mismatch_reports_0204_for_distinct_package_instances",
+        "package type identity mismatch: expected {expected}, got {actual}",
+        "sifr_package::graph::type_identity",
+        [
+            arg!("expected"),
+            arg!("actual"),
+            json_arg!("cargo_package_id")
+        ],
+        ["cargo_package_id", "expected", "actual"]
+    ),
+    active_entry!(
         "SIFR-PACKAGE-0501",
         "PACKAGE",
         "Pure Sifr Rust marker contains implementation.",
@@ -2076,6 +2106,8 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST,
     DiagnosticCode::PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA,
     DiagnosticCode::PACKAGE_METADATA_PARSE,
+    DiagnosticCode::PACKAGE_AMBIGUOUS_IMPORT_ROOT,
+    DiagnosticCode::PACKAGE_TYPE_IDENTITY_MISMATCH,
     DiagnosticCode::PACKAGE_NON_TRIVIAL_PURE_MARKER,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,

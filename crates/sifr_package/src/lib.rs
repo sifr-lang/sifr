@@ -7,7 +7,7 @@ pub mod ops;
 pub mod source;
 
 pub use crate::cargo::metadata::{
-    CargoDependency, CargoMetadata, CargoPackage, CargoPackageId, CargoTarget,
+    CargoDependency, CargoMetadata, CargoPackage, CargoPackageId, CargoResolveEdge, CargoTarget,
     NormalizedCargoMetadata,
 };
 pub use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
@@ -16,12 +16,17 @@ pub use crate::graph::derive::{
     SifrPackageId, SifrPackageMetadata,
 };
 pub use crate::graph::digest::{digest_graph_inputs, GraphDigest};
+pub use crate::graph::scopes::{DirectDependencyScope, ScopedImport, ScopedImportSource};
+pub use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch};
 pub use crate::manifest::metadata::{CargoSifrAliasMetadata, CargoSifrMetadata};
 pub use crate::manifest::sifr::{
     CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
     TrustPolicy,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
+
+#[cfg(test)]
+mod milestone_37_2_tests;
 
 #[cfg(test)]
 mod tests {
