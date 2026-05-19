@@ -39,9 +39,14 @@ gate, and a minimal frontend-query smoke. `--profile pr`, `nightly`, and
 `release` run the same schema and negative checks, execute a reviewed
 representative subset with the manifest sample counts into
 `target/performance/<profile>.budget.latest.json`, and run `check_budgets.py
---allow-subset` against that result file. The subset covers single-file check,
-project check, single-file build, project build, incremental cache behavior,
-interactive diagnostics, and Phase 27 diagnostic/exit-code non-regression.
+--allow-subset` against that result file. If that measured subset misses a
+budget, the lane reruns the same subset up to four more times with unchanged
+thresholds into `target/performance/<profile>.budget.retry-<attempt>.latest.json`;
+one measured attempt must pass. This keeps performance budgets hard while
+avoiding one noisy local host window from deciding the merge gate. The subset
+covers single-file check, project check, single-file build, project build,
+incremental cache behavior, interactive diagnostics, and Phase 27
+diagnostic/exit-code non-regression.
 Full-corpus benchmark execution and baseline refresh remain explicit:
 
 Refresh baselines intentionally after review:

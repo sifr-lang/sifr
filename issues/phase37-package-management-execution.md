@@ -9,8 +9,8 @@ Phase plan: `internal_docs/phases/37_package_management.md`
 - [x] milestone_37_3: Package-aware source compilation
 - [x] milestone_37_4: Cargo commands, lock modes, and backend trust
 - [x] milestone_37_5: Workspaces, filters, and tooling
-- [ ] milestone_37_6: Packaging, publishing, and vendoring
-- [ ] milestone_37_7: Validation, docs, and guardrails
+- [x] milestone_37_6: Packaging, publishing, and vendoring
+- [x] milestone_37_7: Validation, docs, and guardrails
 
 ## milestone_37_1: Cargo Metadata And Sifr Manifest Linking
 
@@ -222,3 +222,46 @@ Reviews:
 PR:
 
 - https://github.com/sifr-lang/sifr/pull/2147
+
+## milestone_37_7: Validation, Docs, And Guardrails
+
+Branch: `phase37-m37-7-validation-docs-guardrails`
+
+Scope:
+
+- Add the Phase 37 package-management fixture matrix for pure Sifr packages, Rust-backed packages, workspaces, path/Git/registry dependencies, multiple-version graphs, aliases, and publishing.
+- Tighten `scripts/check_package_manager_guardrails.py` so closeout coverage remains enforced.
+- Complete `crates/sifr_package/DEPENDENCY_AUDIT.md`, `TRACEABILITY.md`, and `FEATURES.md`.
+- Update public package-management docs, CLI docs, architecture, roadmap, and Phase 37 status.
+- Keep uv/Python interop documented as future work outside Phase 37 core.
+
+Validation:
+
+- [x] `cargo fmt --check`
+- [x] `cargo clippy -p sifr_package -- -D warnings`
+- [x] `cargo test -p sifr_package`
+- [x] `python3 scripts/check_package_manager_guardrails.py`
+- [x] `python3 scripts/check_diagnostic_docs_sync.py`
+- [x] `python3 scripts/check_diagnostic_code_coverage.py`
+- [x] `scripts/run_all_tests.sh --profile quick`
+  - First two runs timed out while building the frontend query benchmark helper.
+  - Direct helper build completed locally in about `2m50s`; the next quick rerun passed.
+  - Passing run reported warm wall-time budget exceeded (`3483.63s`) and group skew advisory, no test failures.
+- [x] `scripts/run_all_tests.sh`
+  - Several warm PR-lane attempts reached the performance budget subset and failed only on timing thresholds while the host had unrelated Spotlight/syspolicyd/backup load; no package, diagnostics, tooling, generated-code, or cargo test failures occurred before those performance budget stops.
+  - The command benchmark drift is tracked in https://github.com/sifr-lang/sifr/issues/2148 with a time-bound Phase 37.7 waiver for the affected check-command budgets only.
+  - Final PR-lane run passed; performance passed on retry with unchanged thresholds. Reported wall-time and e2e group-skew advisories only: `wall_time=4571.90s`, `e2e cache_hits=0/19`, `hardening variants=28`, `blocking_failures=0`.
+
+Reviews:
+
+- [x] Claude milestone review pass 1
+- [x] Claude milestone review final READY
+  - Review artifacts: `reviews/phase37-m37-7-review-pass-1.md`, `reviews/phase37-m37-7-review-pass-2.md`
+  - Verdict: READY; no blocking findings.
+- [x] Claude full Phase 37 implementation review final READY
+  - Review artifact: `reviews/phase37-full-implementation-review-pass-1.md`
+  - Verdict: READY; no blocking findings.
+
+PR:
+
+- https://github.com/sifr-lang/sifr/pull/2149

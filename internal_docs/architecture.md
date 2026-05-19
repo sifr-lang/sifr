@@ -610,12 +610,15 @@ This contract is split across three milestones: milestone_imports (multi-file co
 - **Run/build equivalence:** `run` and `build` use the same resolver and produce equivalent mode selection and error-class outcomes for identical inputs.
 - **Contract synchronization:** resolver behavior, regression tests, and CLI semantics documentation must remain aligned.
 
-**Contract (milestone_package_mgmt -- package management):**
+**Contract (milestone_package_mgmt -- package management, Phase 37):**
 
-- `**sifr.toml`:** project manifest with `[dependencies]` section specifying version ranges (semver)
-- `**sifr.lock`:** lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Committed to version control.
-- **Version solver:** PubGrub-based solver (same algorithm as Cargo and uv). Resolves dependency graph with conflict detection.
-- **Registry:** `sifr.sh` package registry (milestone_ecosystem). Before milestone_ecosystem, dependencies are git-only or path-only.
+- **Cargo-backed package substrate:** `Cargo.toml` and `Cargo.lock` own external dependency resolution, lockfile behavior, registries, Git/path sources, workspaces, publishing, vendoring, and backend Rust/native dependencies.
+- **Sifr compiler metadata:** `sifr.toml` owns Sifr package name, edition, compiler requirement, source roots, exports, privacy, aliases, and native trust policy. It does not own external dependency resolution or registry credentials.
+- **Package graph:** `crates/sifr_package` consumes `cargo metadata --format-version 1`, normalizes Cargo packages and resolved dependency edges, and derives `SifrPackageGraph` plus `PackageSourceMap` for the normal frontend/HIR/codegen pipeline.
+- **Package identity:** package instance identity includes Cargo package id, version, and source identity. Multiple Cargo-selected versions are allowed when each package's direct dependency scope remains unambiguous.
+- **Distribution:** a Sifr package is a valid Cargo package carrying `.sifr` source and `[package.metadata.sifr] manifest = "sifr.toml"`. Pure Sifr packages include only the canonical Rust marker target; Rust-backed packages must declare and pass backend trust validation.
+- **No Sifr-native lockfile in Phase 37:** there is no committed `sifr.lock`; reproducibility is derived from `Cargo.toml`, `Cargo.lock`, `sifr.toml`, selected Sifr source, compiler/toolchain inputs, and package feature/selector inputs.
+- **Python interop deferred:** `pyproject.toml`, `uv.lock`, uv, and Python package distribution are future interop surfaces. They must lower into the same Cargo-backed package graph and import semantics instead of forking package resolution.
 
 ### 5. CI Quality Gates
 

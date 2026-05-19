@@ -1,6 +1,6 @@
 # Phase 37: Cargo-Backed Sifr Package Coordination
 
-> Status: proposed v3 planning contract. This version makes Cargo the primary package substrate for Sifr packages and defers uv/Python packaging to a later interop layer. It supersedes the v1 Sifr-native registry/lockfile model and the v2 uv/PyPI-first model if accepted.
+> Status: completed on 2026-05-19. The accepted v3 contract makes Cargo the primary package substrate for Sifr packages and defers uv/Python packaging to a later interop layer. It supersedes the v1 Sifr-native registry/lockfile model and the v2 uv/PyPI-first model.
 
 ## Objective
 
