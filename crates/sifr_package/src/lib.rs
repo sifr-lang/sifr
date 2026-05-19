@@ -6,16 +6,23 @@ pub mod manifest;
 pub mod ops;
 pub mod source;
 
+pub use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection, CargoPackageMutation};
+pub use crate::cargo::errors::{map_cargo_failure, CargoAction};
+pub use crate::cargo::lock_modes::{validate_offline_source_availability, CargoLockMode};
 pub use crate::cargo::metadata::{
     CargoDependency, CargoMetadata, CargoPackage, CargoPackageId, CargoResolveEdge, CargoTarget,
     NormalizedCargoMetadata,
 };
+pub use crate::cargo::trust::{validate_backend_trust, BackendTrustSummary};
 pub use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
 pub use crate::graph::derive::{
     derive_package_graph, BackendCrateMetadata, PackageClassification, SifrPackageGraph,
     SifrPackageId, SifrPackageMetadata,
 };
-pub use crate::graph::digest::{digest_graph_inputs, GraphDigest};
+pub use crate::graph::digest::{
+    digest_graph_inputs, digest_package_build_cache_inputs, digest_package_graph,
+    digest_package_source_map, GraphDigest, PackageBuildCacheInputs,
+};
 pub use crate::graph::scopes::{DirectDependencyScope, ScopedImport, ScopedImportSource};
 pub use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch};
 pub use crate::imports::source_map::{
@@ -33,6 +40,8 @@ pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 mod milestone_37_2_tests;
 #[cfg(test)]
 mod milestone_37_3_tests;
+#[cfg(test)]
+mod milestone_37_4_tests;
 
 #[cfg(test)]
 mod tests {

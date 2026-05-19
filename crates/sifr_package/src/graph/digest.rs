@@ -1,6 +1,8 @@
 use crate::cargo::metadata::NormalizedCargoMetadata;
 use crate::graph::derive::SifrPackageGraph;
+use crate::imports::source_map::PackageSourceMap;
 use serde::Serialize;
+use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct GraphDigest {
@@ -17,6 +19,33 @@ pub fn digest_graph_inputs(metadata: &NormalizedCargoMetadata) -> GraphDigest {
 #[must_use]
 pub fn digest_package_graph(graph: &SifrPackageGraph) -> GraphDigest {
     let canonical = CanonicalGraph::from(graph);
+    digest_serializable(&canonical)
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct PackageBuildCacheInputs {
+    pub cargo_lock_digest: Option<String>,
+    pub cargo_metadata_digest: Option<String>,
+    pub package_graph_digest: Option<String>,
+    pub package_source_map_digest: Option<String>,
+    pub sifr_metadata_digests: BTreeMap<String, String>,
+    pub sifr_source_digests: BTreeMap<String, String>,
+    pub compiler_version: String,
+    pub target: Option<String>,
+    pub profile: String,
+    pub features: Vec<String>,
+    pub selectors: Vec<String>,
+}
+
+#[must_use]
+pub fn digest_package_build_cache_inputs(inputs: &PackageBuildCacheInputs) -> GraphDigest {
+    let canonical = CanonicalPackageBuildCacheInputs::from(inputs);
+    digest_serializable(&canonical)
+}
+
+#[must_use]
+pub fn digest_package_source_map(source_map: &PackageSourceMap) -> GraphDigest {
+    let canonical = CanonicalSourceMap::from(source_map);
     digest_serializable(&canonical)
 }
 
@@ -111,6 +140,107 @@ struct CanonicalGraph<'a> {
     packages: Vec<CanonicalGraphPackage<'a>>,
     edges: Vec<(&'a str, Vec<&'a str>)>,
     scopes: Vec<CanonicalScope<'a>>,
+}
+
+#[derive(Serialize)]
+struct CanonicalSourceMap<'a> {
+    roots: Vec<CanonicalSourceRoot<'a>>,
+    modules: Vec<CanonicalSourceModule<'a>>,
+}
+
+#[derive(Serialize)]
+struct CanonicalSourceRoot<'a> {
+    package_id: &'a str,
+    import_root: &'a str,
+    path: String,
+}
+
+#[derive(Serialize)]
+struct CanonicalSourceModule<'a> {
+    package_id: &'a str,
+    module_path: &'a str,
+    file_path: String,
+    source_root: String,
+}
+
+impl<'a> From<&'a PackageSourceMap> for CanonicalSourceMap<'a> {
+    fn from(source_map: &'a PackageSourceMap) -> Self {
+        Self {
+            roots: source_map
+                .roots
+                .iter()
+                .map(|((package_id, import_root), path)| CanonicalSourceRoot {
+                    package_id: &package_id.0,
+                    import_root: &import_root.0,
+                    path: path.display().to_string(),
+                })
+                .collect(),
+            modules: source_map
+                .modules
+                .values()
+                .map(|module| CanonicalSourceModule {
+                    package_id: &module.package_id.0,
+                    module_path: &module.module_path.0,
+                    file_path: module.file_path.display().to_string(),
+                    source_root: module.source_root.display().to_string(),
+                })
+                .collect(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct CanonicalPackageBuildCacheInputs<'a> {
+    cargo_lock_digest: Option<&'a str>,
+    cargo_metadata_digest: Option<&'a str>,
+    package_graph_digest: Option<&'a str>,
+    package_source_map_digest: Option<&'a str>,
+    sifr_metadata_digests: Vec<(&'a str, &'a str)>,
+    sifr_source_digests: Vec<(&'a str, &'a str)>,
+    compiler_version: &'a str,
+    target: Option<&'a str>,
+    profile: &'a str,
+    features: Vec<&'a str>,
+    selectors: Vec<&'a str>,
+}
+
+impl<'a> From<&'a PackageBuildCacheInputs> for CanonicalPackageBuildCacheInputs<'a> {
+    fn from(inputs: &'a PackageBuildCacheInputs) -> Self {
+        let mut features = inputs
+            .features
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>();
+        features.sort_unstable();
+        let mut selectors = inputs
+            .selectors
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>();
+        selectors.sort_unstable();
+
+        Self {
+            cargo_lock_digest: inputs.cargo_lock_digest.as_deref(),
+            cargo_metadata_digest: inputs.cargo_metadata_digest.as_deref(),
+            package_graph_digest: inputs.package_graph_digest.as_deref(),
+            package_source_map_digest: inputs.package_source_map_digest.as_deref(),
+            sifr_metadata_digests: inputs
+                .sifr_metadata_digests
+                .iter()
+                .map(|(path, digest)| (path.as_str(), digest.as_str()))
+                .collect(),
+            sifr_source_digests: inputs
+                .sifr_source_digests
+                .iter()
+                .map(|(path, digest)| (path.as_str(), digest.as_str()))
+                .collect(),
+            compiler_version: &inputs.compiler_version,
+            target: inputs.target.as_deref(),
+            profile: &inputs.profile,
+            features,
+            selectors,
+        }
+    }
 }
 
 #[derive(Serialize)]
