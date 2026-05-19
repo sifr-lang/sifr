@@ -51,6 +51,8 @@ Notes:
 | `sifr emit <file>` | emit generated Rust for file | emit generated Rust for file |
 | `sifr test <dir>` | discover tests and resolve imports against stdlib + local modules in `<dir>` | same |
 
+Package-management commands use Cargo-backed package coordination as documented in [`package_management.md`](./package_management.md). Cargo owns external dependency resolution, lockfiles, registry/Git/path sources, publishing, and vendoring; Sifr validates package metadata, source roots, exports, trust policy, archive contents, and diagnostics before delegating Cargo-owned behavior.
+
 ## Edge Cases
 
 - A neighboring invalid `scratch.sifr` file must not break `run/build` when `main.sifr` has no local imports.

@@ -21,6 +21,10 @@ DEFAULT_WAIVERS = PERF_ROOT / "waivers.json"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
 ALLOWED_WAIVER_OVERRIDE_KEYS = {"median_ms", "p95_ms", "peak_rss_bytes", "cache_hits"}
+EMPTY_WAIVERS = {
+    "version": 1,
+    "waivers": [],
+}
 
 
 class BudgetError(Exception):
@@ -346,7 +350,7 @@ def assert_budget_fails(seed: str, expected: str) -> None:
         check_budgets(
             load_json(DEFAULT_MANIFEST),
             load_json(DEFAULT_BUDGETS),
-            load_json(DEFAULT_WAIVERS),
+            EMPTY_WAIVERS,
             load_json(NEGATIVE_ROOT / seed),
         )
     except BudgetError as error:

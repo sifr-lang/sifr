@@ -1,12 +1,42 @@
 # sifr_package Dependency Audit
 
-## Cargo CLI metadata JSON
+Phase 37 keeps Cargo as the package substrate without linking to Cargo internals. The `sifr_package` crate consumes stable command output and builds Sifr-owned data structures for the compiler.
+
+## Cargo CLI Metadata JSON
 
 - Surface: `cargo metadata --format-version 1`.
+- Local toolchain audited for Phase 37 closeout: `cargo 1.94.0`, `rustc 1.94.0`.
 - Used by: `crates/sifr_package::cargo::metadata`.
-- Reason: Phase 37 consumes Cargo's stable JSON command output without linking to Cargo internals.
-- Stability risk: Cargo may add fields, and package/dependency ordering is not a semantic contract.
-- Mitigation: Sifr deserializes only consumed fields, preserves unknown JSON outside the public facade, sorts selected records before graph derivation, and computes graph digests from the normalized representation.
-- Fallback: if a future Cargo CLI changes required fields incompatibly, `SIFR-PACKAGE-0103` reports a metadata normalization error with the Cargo action and required field.
+- Fields consumed: `packages[].id`, `name`, `version`, `source`, `manifest_path`, `dependencies`, `targets`, `features`, `metadata.sifr`, `resolve.nodes[].deps[]`, `workspace_members`, `target_directory`, and `workspace_root`.
+- Reason: Cargo owns package resolution, source identity, workspace membership, dependency rename identity, selected package roots, and resolved dependency edges. Sifr needs those facts but not Cargo's internal resolver APIs.
+- Stability risk: Cargo may add fields, and JSON ordering is not a semantic contract.
+- Mitigation: Sifr deserializes only consumed fields, accepts unknown JSON, normalizes packages/dependencies/targets/resolve edges/workspace members, and computes graph digests from normalized Sifr-owned structures.
+- Fallback: incompatible metadata or missing required fields map to `SIFR-PACKAGE-0103` instead of falling back to ad hoc manifest parsing.
 
-No `cargo_metadata` crate is linked in milestone 37.1. If it is introduced later, this file must record the exact crate version, Cargo CLI version range, consumed fields, ordering risks, and fallback behavior.
+## Cargo Command Plans
+
+Sifr models Cargo command invocations as `CargoCommandPlan` values before any driver shell-out. The audited command surfaces are:
+
+| Cargo surface | Phase 37 use | Risk control |
+| --- | --- | --- |
+| `cargo metadata --format-version 1` | graph discovery and package roots | normalized JSON facade, no Cargo internal crate types |
+| `cargo fetch` | source materialization before offline/frozen validation | lock-mode arguments are explicit |
+| `cargo build` | generated Rust build delegation | lock mode, target, and feature args are modeled |
+| `cargo package` | package archive production after Sifr validation | archive validation is Sifr-owned before delegation |
+| `cargo publish --dry-run` / `cargo publish` | publish preflight and upload delegation | credentials are never included in Sifr package metadata; Cargo failures are redacted |
+| `cargo vendor` | vendored source generation | output path is passed through Cargo, not interpreted as a registry cache |
+| `cargo add`, `cargo remove`, `cargo update` | manifest mutations and updates where supported | mutation commands are blocked under frozen/offline lock modes |
+
+## Cargo Integration Crates
+
+No `cargo_metadata` crate and no `cargo` internal crates are linked in Phase 37. If a future milestone introduces one, this file must record:
+
+- exact crate version pinned in `Cargo.lock`;
+- Cargo CLI version range and `--format-version` validated against it;
+- fields consumed by Sifr;
+- ordering and compatibility risks;
+- fallback behavior when the crate API or Cargo JSON changes.
+
+## Cargo Source Cache Boundary
+
+Sifr does not parse Cargo registry, Git checkout, or source-cache internals. Source ids are opaque Cargo identifiers. Package roots are trusted only after Cargo exposes them through metadata/fetch, then Sifr validates `sifr.toml`, source roots, exports, markers, trust policy, archive contents, and import boundaries itself.
