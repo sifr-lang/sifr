@@ -1,5 +1,0 @@
-version = 4
-
-[[package]]
-name = "sifr-demo-test-support"
-version = "0.1.0"

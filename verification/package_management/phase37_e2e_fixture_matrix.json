@@ -1,6 +1,6 @@
 {
   "phase": "37",
-  "description": "Phase 37 Cargo-backed package-management end-to-end fixture matrix. These fixtures exercise Sifr package behavior through Cargo-shaped metadata, package roots, source maps, command plans, diagnostics, archive plans, and checked-in demo repository templates without contacting live registries or Git remotes.",
+  "description": "Phase 37 Cargo-backed package-management end-to-end fixture matrix. These fixtures exercise Sifr package behavior through Cargo-shaped metadata, package roots, source maps, command plans, diagnostics, archive plans, and checked-out demo repository submodules.",
   "required_categories": [
     "pure_sifr_cargo_package",
     "rust_backed_sifr_package",

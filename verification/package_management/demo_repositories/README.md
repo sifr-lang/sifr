@@ -1,13 +1,13 @@
-# Phase 37 Demo Repository Templates
+# Phase 37 Demo Repositories
 
-These directories are the source templates for the Phase 37 organization demo
+These directories are git submodule checkouts for the Phase 37 organization demo
 repositories listed in `internal_docs/phases/37_package_management.md`.
 
 They are intentionally kept under `verification/package_management` rather than
-`demos/`: each template is a multi-file Cargo/Sifr package repository fixture,
-not a single runnable Sifr language demo. Publishing these templates to
-`sifr-lang/sifr-demo-*` repositories should preserve the directory contents and
-tag the package revisions named in the manifests.
+`demos/`: each subrepo is a multi-file Cargo/Sifr package repository fixture,
+not a single runnable Sifr language demo.
 
 The guardrail script validates the required package shapes through
 `verification/package_management/phase37_demo_repositories.json`.
+Run `scripts/clone_subrepos.sh` after a fresh checkout to initialize these
+subrepos together with the rest of the Sifr submodules.

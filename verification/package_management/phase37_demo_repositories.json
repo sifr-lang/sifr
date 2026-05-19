@@ -1,7 +1,8 @@
 {
   "phase": "37",
-  "description": "Concrete source templates for the Phase 37 organization demo repositories. These templates are ready to publish to sifr-lang/sifr-demo-* repositories and are guarded locally so the demo surface does not regress.",
-  "template_root": "verification/package_management/demo_repositories",
+  "description": "Concrete Phase 37 organization demo repositories checked out as git submodules. These subrepos are guarded locally so the demo surface does not regress.",
+  "checkout_model": "git_submodule",
+  "repository_root": "verification/package_management/demo_repositories",
   "required_validations": [
     "git_dependency_fetch",
     "lockfile_pins_git_revisions",

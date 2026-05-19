@@ -1,4 +1,0 @@
-def assert_status(actual: int, expected: int) -> Result[None, Error]:
-    if actual != expected:
-        return Err(Error(message = "unexpected status"))
-    return Ok(None)
