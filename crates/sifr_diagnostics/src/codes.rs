@@ -1960,6 +1960,37 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["cargo_package_id", "import_root", "candidates"]
     ),
     active_entry!(
+        "SIFR-PACKAGE-0202",
+        "PACKAGE",
+        "Package imports a module outside its direct dependency scope.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_3_tests.rs::transitive_dependency_import_reports_0202",
+        "undeclared direct package import '{import_path}'",
+        "sifr_package::imports::source_map",
+        [
+            arg!("import_path"),
+            json_arg!("cargo_package_id"),
+            json_arg!("package_id")
+        ],
+        ["cargo_package_id", "package_id", "import_path"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0203",
+        "PACKAGE",
+        "Package imports a private module from another package.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_3_tests.rs::private_dependency_module_reports_0203",
+        "private package module access '{import_path}'",
+        "sifr_package::imports::source_map",
+        [
+            arg!("import_path"),
+            json_arg!("cargo_package_id"),
+            json_arg!("package_id"),
+            json_arg!("target_package_id")
+        ],
+        ["cargo_package_id", "package_id", "target_package_id", "import_path"]
+    ),
+    active_entry!(
         "SIFR-PACKAGE-0204",
         "PACKAGE",
         "Type identity crosses resolved package instances.",
@@ -2107,6 +2138,8 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA,
     DiagnosticCode::PACKAGE_METADATA_PARSE,
     DiagnosticCode::PACKAGE_AMBIGUOUS_IMPORT_ROOT,
+    DiagnosticCode::PACKAGE_UNDECLARED_DIRECT_IMPORT,
+    DiagnosticCode::PACKAGE_PRIVATE_MODULE_ACCESS,
     DiagnosticCode::PACKAGE_TYPE_IDENTITY_MISMATCH,
     DiagnosticCode::PACKAGE_NON_TRIVIAL_PURE_MARKER,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,

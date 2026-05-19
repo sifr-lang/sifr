@@ -5,7 +5,7 @@ Phase plan: `internal_docs/phases/37_package_management.md`
 ## Status
 
 - [x] milestone_37_1: Cargo metadata and Sifr manifest linking
-- [ ] milestone_37_2: Package graph, scoped imports, and multiple versions
+- [x] milestone_37_2: Package graph, scoped imports, and multiple versions
 - [ ] milestone_37_3: Package-aware source compilation
 - [ ] milestone_37_4: Cargo commands, lock modes, and backend trust
 - [ ] milestone_37_5: Workspaces, filters, and tooling
@@ -86,3 +86,37 @@ Reviews:
 PR:
 
 - https://github.com/sifr-lang/sifr/pull/2143
+
+## milestone_37_3: Package-Aware Source Compilation
+
+Branch: `phase37-m37-3-package-source-map`
+
+Scope:
+
+- Build `PackageSourceMap` from `SifrPackageGraph` package source roots.
+- Discover `.sifr` modules, including package directory `__init__.sifr` paths.
+- Resolve package-aware imports against own package sources first, then direct dependency scopes.
+- Remap alias import roots to dependency export roots.
+- Reject transitive or undeclared package imports with `SIFR-PACKAGE-0202`.
+- Reject dependency private module access with `SIFR-PACKAGE-0203`.
+- Expose source-map models for later CLI/LSP integration.
+
+Validation:
+
+- [x] `cargo fmt --check`
+- [x] `cargo clippy -p sifr_package -- -D warnings`
+- [x] `cargo test -p sifr_package`
+- [x] `python3 scripts/check_package_manager_guardrails.py`
+- [x] `python3 scripts/check_diagnostic_docs_sync.py`
+- [x] `python3 scripts/check_diagnostic_code_coverage.py`
+- [x] `scripts/run_all_tests.sh --profile quick`
+  - Passed; warm wall-time budget exceeded on a cold-ish rebuild (`2493.27s`), no test failures.
+
+Reviews:
+
+- [x] Claude milestone review pass 1: `reviews/phase37-m37-3-review-pass-1.md`
+- [x] Claude milestone review final READY
+
+PR:
+
+- Pending
