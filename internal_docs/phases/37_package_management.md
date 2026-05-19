@@ -46,7 +46,7 @@ Cargo manifest:
 [package]
 name = "sifr-http"
 version = "1.2.0"
-edition = "2021"
+edition = "2024"
 include = ["Cargo.toml", "sifr.toml", "sifr/**/*.sifr", "src/lib.rs", "README.md", "LICENSE"]
 
 [package.metadata.sifr]
@@ -223,6 +223,8 @@ Pin `cargo_metadata` to an exact version through `Cargo.lock`. Do not update it 
 - fallback command behavior if the crate API changes.
 
 `cargo metadata` output must be normalized before graph derivation. Sifr sorts packages by Cargo package id string, dependency edges by `(from, dependency-name, to)`, features by name, workspace members by package id, and all derived Sifr maps/sets by stable owned identifiers. Graph digests are computed from this canonical representation, not raw JSON order.
+
+Cargo metadata source IDs are opaque Cargo identifiers. Sifr may store and compare them for identity, diagnostics, and cache keys, but must not parse their internal string format or infer registry semantics from the prefix beyond Cargo-documented source kind behavior.
 
 Generated Rust namespace rule:
 
@@ -469,11 +471,12 @@ Subdirectory invocation:
 - Running the same command from a workspace root without explicit selectors follows Cargo's default package selection. For a package root this is the root package; for a virtual workspace this is Cargo `default-members` when configured, otherwise Cargo's default workspace selection.
 - Running with `--workspace` selects the workspace member set, then applies Sifr metadata filtering and any Sifr selectors.
 - All subdirectory invocations use the shared workspace `Cargo.lock`; `--locked`, `--offline`, and `--frozen` are enforced at the workspace root.
-- `sifr fetch` from a member subdirectory fetches the selected package graph using the shared workspace lock. `sifr fetch --workspace` fetches all selected workspace members.
+- `sifr fetch` from a member subdirectory invokes Cargo fetch using the shared workspace root/lock, then validates source availability for the selected Sifr package graph. Cargo may materialize more sources than the Sifr selection because fetch is a Cargo manifest/workspace operation.
+- `sifr fetch --workspace` validates source availability for all selected Sifr workspace members after Cargo fetch completes.
 
 Fetch lifecycle:
 
-- `sifr fetch` explicitly runs Cargo fetch for the active workspace/package selection and then validates selected Sifr package metadata from available source.
+- `sifr fetch` explicitly runs Cargo fetch for the discovered Cargo manifest/workspace and then validates selected Sifr package metadata from available source. It must not attempt to reimplement Cargo's fetch selection rules.
 - `sifr check`, `build`, `run`, and `test` may lazily invoke Cargo fetch when a selected source package is unavailable and the mode is not `--offline` or `--frozen`.
 - `--offline` fails immediately with `SIFR-PACKAGE-0104` if any selected Sifr source package is unavailable in Cargo's cache.
 - `--frozen` never performs network access or manifest/lock mutation.
@@ -541,12 +544,13 @@ Cargo workspace selection:
 - Sifr consumes the flattened workspace member list from `cargo metadata`; it does not expand Cargo `members` globs itself.
 - Cargo `exclude` rules are honored because excluded packages do not appear as selected workspace members in Cargo metadata.
 - Commands run from a workspace root without `--workspace`, `-p`, or `--filter` follow Cargo's default package selection, including `default-members`.
-- Commands with `--workspace` select all Cargo workspace members, then filter to Sifr-capable members unless `--all` explicitly asks to display backend Rust crates.
+- Commands with `--workspace` select all Cargo workspace members, then filter to Sifr-capable members for build/check/test commands. `sifr tree --all` is a display-only mode that includes backend Rust crates from Cargo metadata.
 - There is no separate Sifr exclude mechanism in Phase 37. Users use Cargo workspace membership plus Sifr `--filter` selectors.
 
 `[workspace.dependencies]`:
 
 - Cargo `[workspace.dependencies]` provides shared dependency declarations for members that opt into them through Cargo's `workspace = true` dependency syntax.
+- Workspace dependencies cannot be declared as `optional`, and features declared in `[workspace.dependencies]` are additive with member-level dependency features.
 - Sifr does not treat workspace dependencies as globally importable by every member. A workspace dependency becomes part of package `P`'s Sifr import scope only when Cargo metadata reports it as a resolved dependency edge from `P`.
 - A member's explicit dependency declaration and Cargo's feature unification rules remain Cargo-owned. Sifr consumes the resolved dependency edge and package id from Cargo metadata.
 - Workspace-inherited Sifr packages participate in scoped imports exactly like normal direct dependencies once Cargo reports them as direct dependencies of the member.
@@ -650,7 +654,7 @@ Pure package manifest:
 [package]
 name = "sifr-demo-json"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 include = ["Cargo.toml", "sifr.toml", "sifr/**/*.sifr", "src/lib.rs", "README.md", "LICENSE"]
 
 [package.metadata.sifr]
@@ -678,7 +682,7 @@ Rust-backed package manifest:
 [package]
 name = "sifr-demo-http"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 include = ["Cargo.toml", "sifr.toml", "sifr/**/*.sifr", "src/**/*.rs", "README.md", "LICENSE"]
 
 [package.metadata.sifr]
@@ -715,7 +719,7 @@ Consumer demo:
 [package]
 name = "sifr-demo-app"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [package.metadata.sifr]
 manifest = "sifr.toml"
@@ -857,7 +861,7 @@ Workspace root:
 members = ["packages/*"]
 default-members = ["packages/app", "packages/core"]
 exclude = ["packages/experimental-*"]
-resolver = "2"
+resolver = "3"
 
 [workspace.dependencies]
 sifr-demo-core = { path = "packages/core" }
