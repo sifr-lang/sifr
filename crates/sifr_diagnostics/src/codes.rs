@@ -162,6 +162,53 @@ impl DiagnosticCode {
         Self::new("SIFR-WORKSPACE-0103", Severity::Error);
     pub const WORKSPACE_IMPORT_CYCLE: Self = Self::new("SIFR-WORKSPACE-0104", Severity::Error);
 
+    pub const PACKAGE_MISSING_OR_INVALID_CARGO_METADATA: Self =
+        Self::new("SIFR-PACKAGE-0001", Severity::Error);
+    pub const PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST: Self =
+        Self::new("SIFR-PACKAGE-0002", Severity::Error);
+    pub const PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA: Self =
+        Self::new("SIFR-PACKAGE-0003", Severity::Error);
+    pub const PACKAGE_CARGO_COMMAND_FAILED: Self = Self::new("SIFR-PACKAGE-0101", Severity::Error);
+    pub const PACKAGE_SELECTED_RUST_ONLY: Self = Self::new("SIFR-PACKAGE-0102", Severity::Error);
+    pub const PACKAGE_METADATA_PARSE: Self = Self::new("SIFR-PACKAGE-0103", Severity::Error);
+    pub const PACKAGE_SOURCE_UNAVAILABLE_OFFLINE: Self =
+        Self::new("SIFR-PACKAGE-0104", Severity::Error);
+    pub const PACKAGE_CREDENTIALS_UNAVAILABLE: Self =
+        Self::new("SIFR-PACKAGE-0105", Severity::Error);
+    pub const PACKAGE_RUST_ONLY_DEPENDS_ON_SIFR: Self =
+        Self::new("SIFR-PACKAGE-0106", Severity::Error);
+    pub const PACKAGE_AMBIGUOUS_IMPORT_ROOT: Self = Self::new("SIFR-PACKAGE-0201", Severity::Error);
+    pub const PACKAGE_UNDECLARED_DIRECT_IMPORT: Self =
+        Self::new("SIFR-PACKAGE-0202", Severity::Error);
+    pub const PACKAGE_PRIVATE_MODULE_ACCESS: Self = Self::new("SIFR-PACKAGE-0203", Severity::Error);
+    pub const PACKAGE_TYPE_IDENTITY_MISMATCH: Self =
+        Self::new("SIFR-PACKAGE-0204", Severity::Error);
+    pub const PACKAGE_CIRCULAR_PATH_DEPENDENCY: Self =
+        Self::new("SIFR-PACKAGE-0205", Severity::Error);
+    pub const PACKAGE_BACKEND_TRUST_VIOLATION: Self =
+        Self::new("SIFR-PACKAGE-0301", Severity::Error);
+    pub const PACKAGE_FEATURE_CARGO_PACKAGE_UNAVAILABLE: Self =
+        Self::new("SIFR-PACKAGE-0303", Severity::Error);
+    pub const PACKAGE_FEATURE_CARGO_FEATURE_UNAVAILABLE: Self =
+        Self::new("SIFR-PACKAGE-0304", Severity::Error);
+    pub const PACKAGE_TRUST_NON_DIRECT_DEPENDENCY: Self =
+        Self::new("SIFR-PACKAGE-0305", Severity::Error);
+    pub const PACKAGE_ARCHIVE_MISSING_SIFR_SOURCE: Self =
+        Self::new("SIFR-PACKAGE-0401", Severity::Error);
+    pub const PACKAGE_PUBLISH_VALIDATION_FAILED: Self =
+        Self::new("SIFR-PACKAGE-0402", Severity::Error);
+    pub const PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE: Self =
+        Self::new("SIFR-PACKAGE-0403", Severity::Error);
+    pub const PACKAGE_NON_TRIVIAL_PURE_MARKER: Self =
+        Self::new("SIFR-PACKAGE-0501", Severity::Error);
+    pub const PACKAGE_SELECTOR_AMBIGUOUS: Self = Self::new("SIFR-PACKAGE-0601", Severity::Error);
+    pub const PACKAGE_DUPLICATE_WORKSPACE_IMPORT_ROOT: Self =
+        Self::new("SIFR-PACKAGE-0602", Severity::Error);
+    pub const PACKAGE_CHANGED_FILE_MAPPING_FAILED: Self =
+        Self::new("SIFR-PACKAGE-0603", Severity::Error);
+    pub const PACKAGE_OUTDATED_QUERY_UNSUPPORTED: Self =
+        Self::new("SIFR-PACKAGE-0604", Severity::Error);
+
     pub const BUILD_MATERIALIZATION_FAILURE: Self = Self::new("SIFR-BUILD-0002", Severity::Error);
     pub const BUILD_TEMP_WORKSPACE_FAILURE: Self = Self::new("SIFR-BUILD-0003", Severity::Error);
     pub const BUILD_CARGO_MANIFEST_FAILURE: Self = Self::new("SIFR-BUILD-0004", Severity::Error);
@@ -368,6 +415,11 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-WORKSPACE-0000",
     },
     DiagnosticFamily {
+        name: "PACKAGE",
+        summary: "Cargo-backed Sifr package coordination diagnostics.",
+        reserved_base: "SIFR-PACKAGE-0000",
+    },
+    DiagnosticFamily {
         name: "CODEGEN",
         summary: "Rust lowering and backend code-generation diagnostics.",
         reserved_base: "SIFR-CODEGEN-0000",
@@ -465,6 +517,32 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-RESULT-0000", "RESULT"),
     reserved_family_base("SIFR-STDLIB-0000", "STDLIB"),
     reserved_family_base("SIFR-WORKSPACE-0000", "WORKSPACE"),
+    reserved_family_base("SIFR-PACKAGE-0000", "PACKAGE"),
+    reserved_code(
+        "SIFR-PACKAGE-0302",
+        "PACKAGE",
+        "Reserved for future backend trust diagnostics.",
+    ),
+    reserved_code(
+        "SIFR-PACKAGE-0306",
+        "PACKAGE",
+        "Reserved for future backend trust and feature diagnostics.",
+    ),
+    reserved_code(
+        "SIFR-PACKAGE-0307",
+        "PACKAGE",
+        "Reserved for future backend trust and feature diagnostics.",
+    ),
+    reserved_code(
+        "SIFR-PACKAGE-0308",
+        "PACKAGE",
+        "Reserved for future backend trust and feature diagnostics.",
+    ),
+    reserved_code(
+        "SIFR-PACKAGE-0309",
+        "PACKAGE",
+        "Reserved for future backend trust and feature diagnostics.",
+    ),
     reserved_family_base("SIFR-CODEGEN-0000", "CODEGEN"),
     reserved_family_base("SIFR-BUILD-0000", "BUILD"),
     reserved_family_base("SIFR-INTERNAL-0000", "INTERNAL"),
@@ -1822,6 +1900,61 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         [arg!("rule")],
         ["rule"]
     ),
+    active_entry!(
+        "SIFR-PACKAGE-0001",
+        "PACKAGE",
+        "Missing or invalid Cargo Sifr discovery metadata.",
+        Severity::Error,
+        "crates/sifr_package/src/manifest/metadata.rs::tests",
+        "invalid [package.metadata.sifr]: {reason}",
+        "sifr_package::manifest::metadata",
+        [arg!("reason"), json_arg!("cargo_package_id")],
+        ["cargo_package_id", "reason"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0002",
+        "PACKAGE",
+        "Missing or invalid sifr.toml package manifest.",
+        Severity::Error,
+        "crates/sifr_package/src/manifest/sifr.rs::tests",
+        "invalid sifr.toml: {reason}",
+        "sifr_package::manifest::sifr",
+        [arg!("reason"), json_arg!("cargo_package_id"), json_arg!("manifest_path")],
+        ["cargo_package_id", "manifest_path", "reason"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0003",
+        "PACKAGE",
+        "Unsupported Sifr compiler metadata appears in Cargo metadata.",
+        Severity::Error,
+        "crates/sifr_package/src/manifest/metadata.rs::tests",
+        "unsupported Sifr compiler metadata in Cargo metadata: {key}",
+        "sifr_package::manifest::metadata",
+        [arg!("key"), json_arg!("cargo_package_id")],
+        ["cargo_package_id", "key"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0103",
+        "PACKAGE",
+        "Cargo metadata parsing or normalization failed.",
+        Severity::Error,
+        "crates/sifr_package/src/cargo/metadata.rs::tests",
+        "could not parse cargo metadata: {reason}",
+        "sifr_package::cargo::metadata",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0501",
+        "PACKAGE",
+        "Pure Sifr Rust marker contains implementation.",
+        Severity::Error,
+        "crates/sifr_package/src/source/layout.rs::tests",
+        "pure Sifr package marker contains Rust implementation: {reason}",
+        "sifr_package::source::layout",
+        [arg!("reason"), json_arg!("cargo_package_id"), json_arg!("marker_path")],
+        ["cargo_package_id", "marker_path", "reason"]
+    ),
 ];
 
 pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
@@ -1939,6 +2072,11 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
     DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
     DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
+    DiagnosticCode::PACKAGE_MISSING_OR_INVALID_CARGO_METADATA,
+    DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST,
+    DiagnosticCode::PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA,
+    DiagnosticCode::PACKAGE_METADATA_PARSE,
+    DiagnosticCode::PACKAGE_NON_TRIVIAL_PURE_MARKER,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,

@@ -35,6 +35,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `RESULT` | `SIFR-RESULT-0000` | Result, Option, and checked error-flow diagnostics. |
 | `STDLIB` | `SIFR-STDLIB-0000` | Standard-library surface and intrinsic contract diagnostics. |
 | `WORKSPACE` | `SIFR-WORKSPACE-0000` | Workspace, package, manifest, and project discovery diagnostics. |
+| `PACKAGE` | `SIFR-PACKAGE-0000` | Cargo-backed Sifr package coordination diagnostics. |
 | `CODEGEN` | `SIFR-CODEGEN-0000` | Rust lowering and backend code-generation diagnostics. |
 | `BUILD` | `SIFR-BUILD-0000` | Build orchestration, rustc, linker, and artifact diagnostics. |
 | `INTERNAL` | `SIFR-INTERNAL-0000` | Compiler invariant and internal failure diagnostics. |
@@ -66,6 +67,12 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-RESULT-0000` | `RESULT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-STDLIB-0000` | `STDLIB` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-WORKSPACE-0000` | `WORKSPACE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PACKAGE-0000` | `PACKAGE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PACKAGE-0302` | `PACKAGE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PACKAGE-0306` | `PACKAGE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PACKAGE-0307` | `PACKAGE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PACKAGE-0308` | `PACKAGE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PACKAGE-0309` | `PACKAGE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-CODEGEN-0000` | `CODEGEN` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-BUILD-0000` | `BUILD` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INTERNAL-0000` | `INTERNAL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -190,3 +197,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-LINT-0002` | `LINT` | Active | Warning | `docs/errors/SIFR-LINT-0002.md` | `crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported` | `sifr_lint::suppressions` | `unused Sifr suppression for policy rule '{rule}'` | `rule (message+json)` | `rule` | n/a | false |
 | `SIFR-LINT-0003` | `LINT` | Active | Warning | `docs/errors/SIFR-LINT-0003.md` | `crates/sifr_lint/src/lib.rs::blanket_suppression_is_reported` | `sifr_lint::suppressions` | `sifr suppression must list explicit policy rule ids` | `rule (message+json)` | `rule` | n/a | false |
 | `SIFR-LINT-0004` | `LINT` | Active | Warning | `docs/errors/SIFR-LINT-0004.md` | `crates/sifr_lint/src/lib.rs::suppression_only_suppresses_matching_policy_rule` | `sifr_lint::rules::trailing_whitespace` | `line has trailing whitespace` | `rule (message+json)` | `rule` | n/a | false |
+| `SIFR-PACKAGE-0001` | `PACKAGE` | Active | Error | `docs/errors/SIFR-PACKAGE-0001.md` | `crates/sifr_package/src/manifest/metadata.rs::tests` | `sifr_package::manifest::metadata` | `invalid [package.metadata.sifr]: {reason}` | `reason (message+json)`, `cargo_package_id (json-only)` | `cargo_package_id`, `reason` | n/a | false |
+| `SIFR-PACKAGE-0002` | `PACKAGE` | Active | Error | `docs/errors/SIFR-PACKAGE-0002.md` | `crates/sifr_package/src/manifest/sifr.rs::tests` | `sifr_package::manifest::sifr` | `invalid sifr.toml: {reason}` | `reason (message+json)`, `cargo_package_id (json-only)`, `manifest_path (json-only)` | `cargo_package_id`, `manifest_path`, `reason` | n/a | false |
+| `SIFR-PACKAGE-0003` | `PACKAGE` | Active | Error | `docs/errors/SIFR-PACKAGE-0003.md` | `crates/sifr_package/src/manifest/metadata.rs::tests` | `sifr_package::manifest::metadata` | `unsupported Sifr compiler metadata in Cargo metadata: {key}` | `key (message+json)`, `cargo_package_id (json-only)` | `cargo_package_id`, `key` | n/a | false |
+| `SIFR-PACKAGE-0103` | `PACKAGE` | Active | Error | `docs/errors/SIFR-PACKAGE-0103.md` | `crates/sifr_package/src/cargo/metadata.rs::tests` | `sifr_package::cargo::metadata` | `could not parse cargo metadata: {reason}` | `reason (message+json)` | `reason` | n/a | false |
+| `SIFR-PACKAGE-0501` | `PACKAGE` | Active | Error | `docs/errors/SIFR-PACKAGE-0501.md` | `crates/sifr_package/src/source/layout.rs::tests` | `sifr_package::source::layout` | `pure Sifr package marker contains Rust implementation: {reason}` | `reason (message+json)`, `cargo_package_id (json-only)`, `marker_path (json-only)` | `cargo_package_id`, `marker_path`, `reason` | n/a | false |

@@ -28,6 +28,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `RESULT` | `SIFR-RESULT-0000` | Result, Option, and checked error-flow diagnostics. |
 | `STDLIB` | `SIFR-STDLIB-0000` | Standard-library surface and intrinsic contract diagnostics. |
 | `WORKSPACE` | `SIFR-WORKSPACE-0000` | Workspace, package, manifest, and project discovery diagnostics. |
+| `PACKAGE` | `SIFR-PACKAGE-0000` | Cargo-backed Sifr package coordination diagnostics. |
 | `CODEGEN` | `SIFR-CODEGEN-0000` | Rust lowering and backend code-generation diagnostics. |
 | `BUILD` | `SIFR-BUILD-0000` | Build orchestration, rustc, linker, and artifact diagnostics. |
 | `INTERNAL` | `SIFR-INTERNAL-0000` | Compiler invariant and internal failure diagnostics. |
@@ -157,6 +158,11 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-LINT-0002`](SIFR-LINT-0002.md) | Warning | Suppression did not suppress any diagnostic. |
 | [`SIFR-LINT-0003`](SIFR-LINT-0003.md) | Warning | Suppression must list explicit Sifr policy rule ids. |
 | [`SIFR-LINT-0004`](SIFR-LINT-0004.md) | Warning | Line ends with trailing horizontal whitespace. |
+| [`SIFR-PACKAGE-0001`](SIFR-PACKAGE-0001.md) | Error | Missing or invalid Cargo Sifr discovery metadata. |
+| [`SIFR-PACKAGE-0002`](SIFR-PACKAGE-0002.md) | Error | Missing or invalid sifr.toml package manifest. |
+| [`SIFR-PACKAGE-0003`](SIFR-PACKAGE-0003.md) | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |
+| [`SIFR-PACKAGE-0103`](SIFR-PACKAGE-0103.md) | Error | Cargo metadata parsing or normalization failed. |
+| [`SIFR-PACKAGE-0501`](SIFR-PACKAGE-0501.md) | Error | Pure Sifr Rust marker contains implementation. |
 
 ## Reserved Codes
 
@@ -185,6 +191,12 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-RESULT-0000` | `RESULT` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-STDLIB-0000` | `STDLIB` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-WORKSPACE-0000` | `WORKSPACE` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PACKAGE-0000` | `PACKAGE` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PACKAGE-0302` | `PACKAGE` | Reserved for future backend trust diagnostics. |
+| `SIFR-PACKAGE-0306` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
+| `SIFR-PACKAGE-0307` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
+| `SIFR-PACKAGE-0308` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
+| `SIFR-PACKAGE-0309` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
 | `SIFR-CODEGEN-0000` | `CODEGEN` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-BUILD-0000` | `BUILD` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INTERNAL-0000` | `INTERNAL` | Reserved family base; not emitted as a diagnostic. |
