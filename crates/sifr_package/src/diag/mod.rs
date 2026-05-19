@@ -1,3 +1,5 @@
+mod package;
+
 use crate::cargo::metadata::CargoPackageId;
 use crate::cargo::{errors::CargoAction, lock_modes::CargoLockMode};
 use crate::graph::derive::SifrPackageId;

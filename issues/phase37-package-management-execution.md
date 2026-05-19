@@ -7,7 +7,7 @@ Phase plan: `internal_docs/phases/37_package_management.md`
 - [x] milestone_37_1: Cargo metadata and Sifr manifest linking
 - [x] milestone_37_2: Package graph, scoped imports, and multiple versions
 - [x] milestone_37_3: Package-aware source compilation
-- [ ] milestone_37_4: Cargo commands, lock modes, and backend trust
+- [x] milestone_37_4: Cargo commands, lock modes, and backend trust
 - [ ] milestone_37_5: Workspaces, filters, and tooling
 - [ ] milestone_37_6: Packaging, publishing, and vendoring
 - [ ] milestone_37_7: Validation, docs, and guardrails
@@ -149,6 +149,40 @@ Validation:
 Reviews:
 
 - [x] Claude milestone review pass 1: `reviews/phase37-m37-4-review-pass-1.md`
+- [x] Claude milestone review final READY
+
+PR:
+
+- https://github.com/sifr-lang/sifr/pull/2145
+
+## milestone_37_5: Workspaces, Filters, And Tooling
+
+Branch: `phase37-m37-5-workspace-filters-tooling`
+
+Scope:
+
+- Select Sifr-capable Cargo workspace members from normalized Cargo metadata.
+- Reject explicit Rust-only package selection with `SIFR-PACKAGE-0102`.
+- Reject Rust-only workspace members that directly depend on Sifr packages with `SIFR-PACKAGE-0106`.
+- Detect duplicate workspace import roots with `SIFR-PACKAGE-0602`.
+- Add Turborepo-style package filters for package, dependency closure, dependent closure, dependents-only, and negation.
+- Map changed paths to owning Sifr packages and report unmappable paths with `SIFR-PACKAGE-0603`.
+- Add read-only outdated query source classification and unsupported-source diagnostics with `SIFR-PACKAGE-0604`.
+
+Validation:
+
+- [x] `cargo fmt --check`
+- [x] `cargo clippy -p sifr_package -- -D warnings`
+- [x] `cargo test -p sifr_package`
+- [x] `python3 scripts/check_package_manager_guardrails.py`
+- [x] `python3 scripts/check_diagnostic_docs_sync.py`
+- [x] `python3 scripts/check_diagnostic_code_coverage.py`
+- [x] `scripts/run_all_tests.sh --profile quick`
+  - Passed; warm wall-time budget exceeded (`2658.70s`) and group skew advisory reported, no test failures.
+
+Reviews:
+
+- [x] Claude milestone review pass 1: `reviews/phase37-m37-5-review-pass-1.md`
 - [x] Claude milestone review final READY
 
 PR:

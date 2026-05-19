@@ -163,8 +163,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0003`](SIFR-PACKAGE-0003.md) | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |
 | [`SIFR-PACKAGE-0103`](SIFR-PACKAGE-0103.md) | Error | Cargo metadata parsing or normalization failed. |
 | [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.md) | Error | Cargo command invocation failed. |
+| [`SIFR-PACKAGE-0102`](SIFR-PACKAGE-0102.md) | Error | A selected Cargo package is Rust-only. |
 | [`SIFR-PACKAGE-0104`](SIFR-PACKAGE-0104.md) | Error | Package source is unavailable in offline or frozen mode. |
 | [`SIFR-PACKAGE-0105`](SIFR-PACKAGE-0105.md) | Error | Private Cargo source credentials are unavailable. |
+| [`SIFR-PACKAGE-0106`](SIFR-PACKAGE-0106.md) | Error | Rust-only package depends directly on a Sifr source package. |
 | [`SIFR-PACKAGE-0201`](SIFR-PACKAGE-0201.md) | Error | Direct package import root resolves to multiple package instances. |
 | [`SIFR-PACKAGE-0202`](SIFR-PACKAGE-0202.md) | Error | Package imports a module outside its direct dependency scope. |
 | [`SIFR-PACKAGE-0203`](SIFR-PACKAGE-0203.md) | Error | Package imports a private module from another package. |
@@ -172,6 +174,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0301`](SIFR-PACKAGE-0301.md) | Error | Backend Rust crate is not allowed by the Sifr trust policy. |
 | [`SIFR-PACKAGE-0305`](SIFR-PACKAGE-0305.md) | Error | Trust policy names a backend crate that is not a direct dependency. |
 | [`SIFR-PACKAGE-0501`](SIFR-PACKAGE-0501.md) | Error | Pure Sifr Rust marker contains implementation. |
+| [`SIFR-PACKAGE-0601`](SIFR-PACKAGE-0601.md) | Error | Package selector is ambiguous or invalid. |
+| [`SIFR-PACKAGE-0602`](SIFR-PACKAGE-0602.md) | Error | Workspace selection contains duplicate import roots. |
+| [`SIFR-PACKAGE-0603`](SIFR-PACKAGE-0603.md) | Error | Changed file could not be mapped to a package. |
+| [`SIFR-PACKAGE-0604`](SIFR-PACKAGE-0604.md) | Error | Outdated query cannot inspect this Cargo source. |
 
 ## Reserved Codes
 

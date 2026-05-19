@@ -15,6 +15,9 @@ pub use crate::cargo::metadata::{
 };
 pub use crate::cargo::trust::{validate_backend_trust, BackendTrustSummary};
 pub use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
+pub use crate::graph::changed::{
+    select_changed_packages, ChangedPackageSelection, ChangedPathSelection,
+};
 pub use crate::graph::derive::{
     derive_package_graph, BackendCrateMetadata, PackageClassification, SifrPackageGraph,
     SifrPackageId, SifrPackageMetadata,
@@ -23,8 +26,15 @@ pub use crate::graph::digest::{
     digest_graph_inputs, digest_package_build_cache_inputs, digest_package_graph,
     digest_package_source_map, GraphDigest, PackageBuildCacheInputs,
 };
+pub use crate::graph::filters::{
+    apply_package_filters, parse_package_filter, PackageFilter, PackageFilterTerm,
+};
 pub use crate::graph::scopes::{DirectDependencyScope, ScopedImport, ScopedImportSource};
 pub use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch};
+pub use crate::graph::workspace::{
+    explicit_package_selection, select_sifr_workspace_members, selected_workspace_members,
+    WorkspacePackageSelection,
+};
 pub use crate::imports::source_map::{
     DottedModulePath, PackageImportOrigin, PackageImportResolution, PackageModuleKey,
     PackageModuleSource, PackageSourceMap,
@@ -34,6 +44,7 @@ pub use crate::manifest::sifr::{
     CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
     TrustPolicy,
 };
+pub use crate::ops::read::{outdated_query_report, OutdatedPackageReport, OutdatedPackageSource};
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 
 #[cfg(test)]
@@ -42,6 +53,8 @@ mod milestone_37_2_tests;
 mod milestone_37_3_tests;
 #[cfg(test)]
 mod milestone_37_4_tests;
+#[cfg(test)]
+mod milestone_37_5_tests;
 
 #[cfg(test)]
 mod tests {
