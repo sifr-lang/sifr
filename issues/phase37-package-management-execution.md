@@ -8,7 +8,7 @@ Phase plan: `internal_docs/phases/37_package_management.md`
 - [x] milestone_37_2: Package graph, scoped imports, and multiple versions
 - [x] milestone_37_3: Package-aware source compilation
 - [x] milestone_37_4: Cargo commands, lock modes, and backend trust
-- [ ] milestone_37_5: Workspaces, filters, and tooling
+- [x] milestone_37_5: Workspaces, filters, and tooling
 - [ ] milestone_37_6: Packaging, publishing, and vendoring
 - [ ] milestone_37_7: Validation, docs, and guardrails
 
@@ -183,6 +183,40 @@ Validation:
 Reviews:
 
 - [x] Claude milestone review pass 1: `reviews/phase37-m37-5-review-pass-1.md`
+- [x] Claude milestone review final READY
+
+PR:
+
+- https://github.com/sifr-lang/sifr/pull/2146
+
+## milestone_37_6: Packaging, Publishing, And Vendoring
+
+Branch: `phase37-m37-6-package-publish-vendor`
+
+Scope:
+
+- Validate package archive entries for required Sifr metadata and `.sifr` source files.
+- Reject archive traversal paths before publish/package delegation.
+- Plan `sifr package --dry-run` as Cargo package plus Cargo publish dry-run after Sifr validation.
+- Delegate publish and vendor behavior through Cargo-compatible command plans.
+- Keep publish/package diagnostics credential-redaction ready.
+
+Validation:
+
+- [x] `cargo fmt --check`
+- [x] `cargo clippy -p sifr_package -- -D warnings`
+- [x] `cargo test -p sifr_package`
+- [x] `python3 scripts/check_package_manager_guardrails.py`
+- [x] `python3 scripts/check_diagnostic_docs_sync.py`
+- [x] `python3 scripts/check_diagnostic_code_coverage.py`
+- [x] `scripts/run_all_tests.sh --profile quick`
+  - First run timed out while building the frontend query benchmark helper.
+  - Warm rerun passed; warm wall-time budget exceeded (`3118.71s`) and group skew advisory reported, no test failures.
+  - Final post-review rerun passed; warm wall-time budget exceeded (`4013.09s`) and group skew advisory reported, `e2e cache_hits=12/12`, no test failures.
+
+Reviews:
+
+- [x] Claude milestone review pass 1: `reviews/phase37-m37-6-review-pass-1.md`
 - [x] Claude milestone review final READY
 
 PR:

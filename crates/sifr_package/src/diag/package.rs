@@ -1,5 +1,6 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
+use crate::graph::derive::SifrPackageId;
 use crate::manifest::sifr::ImportRoot;
 use sifr_diagnostics::DiagnosticCode;
 use std::path::Path;
@@ -96,6 +97,60 @@ impl PackageDiagnostic {
             }),
             help: Some(
                 "Cargo source metadata is not available for this package source".to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn archive_missing_sifr_source(
+        cargo_package_id: &CargoPackageId,
+        package_id: &SifrPackageId,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_ARCHIVE_MISSING_SIFR_SOURCE,
+            message: format!(
+                "package '{}' archive contains no .sifr source files",
+                package_id.0
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(cargo_package_id.clone()),
+            }),
+            help: Some(
+                "include sifr.toml and the configured Sifr source roots in Cargo package metadata"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn publish_validation_failed(
+        cargo_package_id: &CargoPackageId,
+        reason: impl Into<String>,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_PUBLISH_VALIDATION_FAILED,
+            message: format!("package publish validation failed: {}", reason.into()),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(cargo_package_id.clone()),
+            }),
+            help: Some("fix package metadata before publishing or packaging".to_string()),
+        }
+    }
+
+    #[must_use]
+    pub fn include_exclude_omits_source(cargo_package_id: &CargoPackageId, path: &Path) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE,
+            message: format!(
+                "Cargo package include/exclude rules omit required Sifr file '{}'",
+                path.display()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(cargo_package_id.clone()),
+            }),
+            help: Some(
+                "update Cargo.toml include/exclude so sifr.toml and .sifr sources are packaged"
+                    .to_string(),
             ),
         }
     }

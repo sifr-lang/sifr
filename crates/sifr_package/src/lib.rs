@@ -13,6 +13,10 @@ pub use crate::cargo::metadata::{
     CargoDependency, CargoMetadata, CargoPackage, CargoPackageId, CargoResolveEdge, CargoTarget,
     NormalizedCargoMetadata,
 };
+pub use crate::cargo::package::{
+    package_dry_run_plan, required_archive_entries, validate_package_archive, CargoPackageRole,
+    PackageArchiveEntry, PackageArchiveValidation, PackageDryRunPlan,
+};
 pub use crate::cargo::trust::{validate_backend_trust, BackendTrustSummary};
 pub use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
 pub use crate::graph::changed::{
@@ -44,6 +48,7 @@ pub use crate::manifest::sifr::{
     CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
     TrustPolicy,
 };
+pub use crate::ops::publish::{publish_plan, vendor_plan, PublishPlan, VendorPlan};
 pub use crate::ops::read::{outdated_query_report, OutdatedPackageReport, OutdatedPackageSource};
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 
@@ -55,6 +60,8 @@ mod milestone_37_3_tests;
 mod milestone_37_4_tests;
 #[cfg(test)]
 mod milestone_37_5_tests;
+#[cfg(test)]
+mod milestone_37_6_tests;
 
 #[cfg(test)]
 mod tests {
