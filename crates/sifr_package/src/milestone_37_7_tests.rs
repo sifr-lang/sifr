@@ -66,7 +66,7 @@ fn closeout_docs_lock_cargo_backed_boundary_and_future_uv_interop() {
 }
 
 #[test]
-fn phase37_demo_repository_templates_cover_required_org_repos() {
+fn phase37_demo_subrepos_cover_required_org_repos() {
     let manifest = demo_repository_manifest();
     let repositories = manifest["repositories"]
         .as_array()
@@ -91,13 +91,14 @@ fn phase37_demo_repository_templates_cover_required_org_repos() {
         assert!(repo_ids.contains(required), "missing demo repo {required}");
     }
 
-    let template_root = repo_root().join(
-        manifest["template_root"]
+    assert_eq!(manifest["checkout_model"], "git_submodule");
+    let repository_root = repo_root().join(
+        manifest["repository_root"]
             .as_str()
-            .expect("demo manifest must contain template_root"),
+            .expect("demo manifest must contain repository_root"),
     );
     for repo in repositories {
-        let root = template_root.join(repo["root"].as_str().expect("repo root"));
+        let root = repository_root.join(repo["root"].as_str().expect("repo root"));
         for rel_path in repo["required_paths"]
             .as_array()
             .expect("repo must contain required_paths")

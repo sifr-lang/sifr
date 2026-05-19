@@ -628,12 +628,11 @@ Compiler version compatibility is validated after Cargo resolution. Every select
 
 Phase 37 should include concrete demos backed by Git repositories in the `sifr-lang` GitHub organization. The current public org repositories are the compiler/tooling repos (`sifr`, `sifr-website`, `leetcode`, `ruff`, `sifr-vscode`, and `editor-integrations`), so the package demos below require creating small package repositories under the same org rather than pretending those existing tooling repos are Sifr packages.
 
-Closeout note: the publishable source templates for these repositories are now
-checked in under `verification/package_management/demo_repositories/` and
-indexed by `verification/package_management/phase37_demo_repositories.json`.
-The local guardrail validates the required files, trust declarations, Git tag
-references, alias coverage, lockfile shape, and workspace shape before the
-templates are copied to the separate `sifr-lang/sifr-demo-*` repositories.
+Closeout note: these repositories now exist under `sifr-lang/` and are checked
+out through git submodules under
+`verification/package_management/demo_repositories/`. The local guardrail
+validates the submodule declarations, required files, trust declarations, Git tag
+references, alias coverage, lockfile shape, and workspace shape.
 
 Required demo package repos:
 

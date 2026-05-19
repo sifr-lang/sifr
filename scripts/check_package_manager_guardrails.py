@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import configparser
 import json
 import tomllib
 from pathlib import Path
@@ -122,6 +123,30 @@ def load_toml(path: Path, failures: List[str]) -> dict[str, Any]:
     return loaded
 
 
+def load_gitmodules(root: Path, failures: List[str]) -> dict[str, dict[str, str]]:
+    gitmodules_path = root / ".gitmodules"
+    if not gitmodules_path.exists():
+        failures.append("missing .gitmodules for Phase 37 demo subrepos")
+        return {}
+    parser = configparser.ConfigParser()
+    try:
+        parser.read(gitmodules_path, encoding="utf-8")
+    except configparser.Error as error:
+        failures.append(f".gitmodules is not valid config: {error}")
+        return {}
+
+    submodules: dict[str, dict[str, str]] = {}
+    for section in parser.sections():
+        if not section.startswith("submodule "):
+            continue
+        path = parser.get(section, "path", fallback="")
+        url = parser.get(section, "url", fallback="")
+        branch = parser.get(section, "branch", fallback="")
+        if path:
+            submodules[path] = {"url": url, "branch": branch}
+    return submodules
+
+
 def check_fixture_matrix(root: Path, failures: List[str]) -> None:
     matrix_path = root / "verification/package_management/phase37_e2e_fixture_matrix.json"
     if not matrix_path.exists():
@@ -166,14 +191,17 @@ def check_demo_repositories(root: Path, failures: List[str]) -> None:
         return
 
     manifest = load_json(manifest_path, failures)
-    template_root_value = manifest.get("template_root")
-    if not isinstance(template_root_value, str) or not template_root_value:
-        failures.append("Phase 37 demo manifest is missing template_root")
+    if manifest.get("checkout_model") != "git_submodule":
+        failures.append("Phase 37 demo manifest checkout_model must be git_submodule")
+    repository_root_value = manifest.get("repository_root")
+    if not isinstance(repository_root_value, str) or not repository_root_value:
+        failures.append("Phase 37 demo manifest is missing repository_root")
         return
-    template_root = root / template_root_value
-    if not template_root.exists():
-        failures.append(f"Phase 37 demo template root does not exist: {template_root_value}")
+    repository_root = root / repository_root_value
+    if not repository_root.exists():
+        failures.append(f"Phase 37 demo repository root does not exist: {repository_root_value}")
         return
+    submodules = load_gitmodules(root, failures)
 
     validations = manifest.get("required_validations")
     if not isinstance(validations, list):
@@ -207,10 +235,12 @@ def check_demo_repositories(root: Path, failures: List[str]) -> None:
         if not isinstance(repo_root, str) or not repo_root:
             failures.append(f"Phase 37 demo repository `{repo_id}` is missing root")
             continue
-        repo_path = template_root / repo_root
+        repo_path = repository_root / repo_root
         if not repo_path.exists():
             failures.append(f"Phase 37 demo repository `{repo_id}` root is missing")
             continue
+        repo_rel_path = f"{repository_root_value}/{repo_root}"
+        check_demo_submodule(repo_id, repo_rel_path, repo.get("url"), submodules, failures)
         if not isinstance(required_paths, list):
             failures.append(f"Phase 37 demo repository `{repo_id}` required_paths must be a list")
             continue
@@ -233,6 +263,29 @@ def check_demo_repositories(root: Path, failures: List[str]) -> None:
             "Phase 37 demo manifest is missing repositories: "
             + ", ".join(sorted(missing_repos))
         )
+
+
+def check_demo_submodule(
+    repo_id: str,
+    repo_rel_path: str,
+    repo_url: object,
+    submodules: dict[str, dict[str, str]],
+    failures: List[str],
+) -> None:
+    entry = submodules.get(repo_rel_path)
+    if entry is None:
+        failures.append(f"Phase 37 demo repository `{repo_id}` is missing from .gitmodules")
+        return
+    if not isinstance(repo_url, str) or not repo_url:
+        failures.append(f"Phase 37 demo repository `{repo_id}` is missing url")
+        return
+    expected_urls = {repo_url, f"{repo_url}.git"}
+    if entry.get("url") not in expected_urls:
+        failures.append(
+            f"Phase 37 demo repository `{repo_id}` has unexpected submodule URL {entry.get('url')}"
+        )
+    if entry.get("branch") != "main":
+        failures.append(f"Phase 37 demo repository `{repo_id}` submodule must track main")
 
 
 def check_demo_repository_shape(repo_id: str, repo_path: Path, failures: List[str]) -> None:

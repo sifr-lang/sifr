@@ -1,4 +1,0 @@
-def normalize_status(status: int) -> int:
-    if status < 100:
-        return 500
-    return status

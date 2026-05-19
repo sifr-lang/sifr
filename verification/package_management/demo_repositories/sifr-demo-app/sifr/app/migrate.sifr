@@ -1,6 +1,0 @@
-import demo_json_v1
-import demo_json_v2
-
-def migrate(raw: str) -> Result[demo_json_v2.DemoJsonValue, Error]:
-    old = demo_json_v1.parse_json(raw)?
-    return demo_json_v2.from_legacy(old)?

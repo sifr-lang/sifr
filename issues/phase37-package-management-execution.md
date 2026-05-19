@@ -12,6 +12,42 @@ Phase plan: `internal_docs/phases/37_package_management.md`
 - [x] milestone_37_6: Packaging, publishing, and vendoring
 - [x] milestone_37_7: Validation, docs, and guardrails
 - [x] milestone_37_7 follow-up: Organization demo repository templates
+- [x] milestone_37_7 follow-up 2: Organization demo repository subrepos
+
+## milestone_37_7 follow-up 2: Organization Demo Repository Subrepos
+
+Branch: `phase37-demo-subrepos`
+
+Scope:
+
+- Create and populate the real `sifr-lang/sifr-demo-*` repositories.
+- Convert `verification/package_management/demo_repositories/sifr-demo-*` from checked-in files to git submodules.
+- Keep the local guardrail validating `.gitmodules`, checked-out required files, trust declarations, Git tag references, lockfile shape, alias coverage, and workspace shape.
+- Validate the subrepos directly with Cargo metadata/check commands before merging the main-repo submodule conversion.
+
+Validation:
+
+- [x] `cargo check` in `sifr-demo-http`
+- [x] `cargo check` in `sifr-demo-app`
+- [x] `cargo check --workspace` in `sifr-demo-workspace`
+- [x] `cargo metadata --locked --format-version 1` in `sifr-demo-json`
+- [x] `cargo metadata --locked --format-version 1` in `sifr-demo-http`
+- [x] `cargo metadata --locked --format-version 1` in `sifr-demo-test-support`
+- [x] `cargo metadata --locked --format-version 1` in `sifr-demo-app`
+- [x] `cargo metadata --locked --format-version 1` in `sifr-demo-workspace`
+- [x] `python3 scripts/check_package_manager_guardrails.py`
+- [x] `cargo fmt --check`
+- [x] `cargo test -p sifr_package phase37_demo_subrepos_cover_required_org_repos`
+- [x] `cargo test -p sifr_package`
+- [x] `scripts/run_all_tests.sh --profile quick`
+  - Final post-fix run passed with advisories only: warm wall-time budget exceeded (`2098.66s`) and e2e group skew high (`9.5x`); e2e `67/67`, `cache_hits=12/12`, no failures.
+- [x] Claude follow-up review final READY
+  - Review artifacts: `reviews/phase37-demo-subrepos-review-pass-1.md`, `reviews/phase37-demo-subrepos-review-pass-2.md`, `reviews/phase37-demo-subrepos-review-pass-3.md`
+  - Verdict: READY; no blockers.
+
+PR:
+
+- https://github.com/sifr-lang/sifr/pull/2151
 
 ## milestone_37_7 follow-up: Organization Demo Repository Templates
 
