@@ -1,0 +1,20 @@
+[package]
+name = "sifr-demo-app"
+version = "0.1.0"
+edition = "2024"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[package.metadata.sifr.aliases]
+demo_json_v1 = { dependency = "demo_json_v1", import = "demo_json_v1" }
+demo_json_v2 = { dependency = "demo_json_v2", import = "demo_json_v2" }
+
+[dependencies]
+sifr-demo-json = { git = "https://github.com/sifr-lang/sifr-demo-json", tag = "v0.1.0" }
+sifr-demo-http = { git = "https://github.com/sifr-lang/sifr-demo-http", tag = "v0.1.0" }
+demo_json_v1 = { package = "sifr-demo-json", git = "https://github.com/sifr-lang/sifr-demo-json", tag = "v0.1.0" }
+demo_json_v2 = { package = "sifr-demo-json", git = "https://github.com/sifr-lang/sifr-demo-json", tag = "v0.2.0" }
+
+[dev-dependencies]
+sifr-demo-test-support = { git = "https://github.com/sifr-lang/sifr-demo-test-support", tag = "v0.1.0" }

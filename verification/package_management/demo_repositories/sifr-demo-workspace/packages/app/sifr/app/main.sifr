@@ -1,0 +1,8 @@
+from demo_core import normalize_status
+from demo_utils import is_success
+
+def main() -> Result[int, Error]:
+    status = normalize_status(200)
+    if not is_success(status):
+        return Err(Error(message = "status failed"))
+    return Ok(status)

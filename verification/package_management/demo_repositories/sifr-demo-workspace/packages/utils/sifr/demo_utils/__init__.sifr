@@ -1,0 +1,4 @@
+from demo_core import normalize_status
+
+def is_success(status: int) -> bool:
+    return normalize_status(status) == 200

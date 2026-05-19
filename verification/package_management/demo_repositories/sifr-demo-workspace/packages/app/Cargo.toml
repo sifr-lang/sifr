@@ -1,0 +1,12 @@
+[package]
+name = "sifr-demo-app"
+version = "0.1.0"
+edition = "2024"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[dependencies]
+sifr-demo-core = { workspace = true }
+sifr-demo-utils = { workspace = true }
+backend-utils = { path = "../backend-utils" }

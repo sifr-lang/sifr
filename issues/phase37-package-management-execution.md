@@ -11,6 +11,39 @@ Phase plan: `internal_docs/phases/37_package_management.md`
 - [x] milestone_37_5: Workspaces, filters, and tooling
 - [x] milestone_37_6: Packaging, publishing, and vendoring
 - [x] milestone_37_7: Validation, docs, and guardrails
+- [x] milestone_37_7 follow-up: Organization demo repository templates
+
+## milestone_37_7 follow-up: Organization Demo Repository Templates
+
+Branch: `phase37-demo-repository-templates`
+
+Scope:
+
+- Add checked-in publishable source templates for the Phase 37 organization demo repositories:
+  - `sifr-demo-json`
+  - `sifr-demo-http`
+  - `sifr-demo-test-support`
+  - `sifr-demo-app`
+  - `sifr-demo-workspace`
+- Add `verification/package_management/phase37_demo_repositories.json` as the manifest for required files, tags, validations, and repository identities.
+- Extend `scripts/check_package_manager_guardrails.py` so the demo repository templates stay present and preserve pure marker, Rust-backed trust, alias, lockfile, and workspace coverage.
+- Add closeout test coverage for the demo repository manifest.
+- Update Phase 37 and traceability docs with the local template source of truth.
+
+Validation:
+
+- [x] `python3 scripts/check_package_manager_guardrails.py`
+- [x] `cargo fmt --check`
+- [x] `cargo test -p sifr_package`
+- [x] `scripts/run_all_tests.sh --profile quick`
+  - Passed with advisories only: warm wall-time budget exceeded (`1870.35s`) and e2e group skew high (`9.5x`); no failures.
+- [x] Claude follow-up review final READY
+  - Review artifacts: `reviews/phase37-demo-repositories-review-pass-1.md`, `reviews/phase37-demo-repositories-review-pass-2.md`
+  - Verdict: READY; no blockers.
+
+PR:
+
+- https://github.com/sifr-lang/sifr/pull/2150
 
 ## milestone_37_1: Cargo Metadata And Sifr Manifest Linking
 

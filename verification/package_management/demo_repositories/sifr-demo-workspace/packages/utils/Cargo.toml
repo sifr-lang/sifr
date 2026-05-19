@@ -1,0 +1,10 @@
+[package]
+name = "sifr-demo-utils"
+version = "0.1.0"
+edition = "2024"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[dependencies]
+sifr-demo-core = { workspace = true }

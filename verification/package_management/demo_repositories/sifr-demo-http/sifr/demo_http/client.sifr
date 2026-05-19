@@ -1,0 +1,10 @@
+class DemoHttpError(Error):
+    message: str
+
+class DemoHttpResponse:
+    body: str
+
+def get(url: str) -> Result[DemoHttpResponse, DemoHttpError]:
+    if url == "":
+        return Err(DemoHttpError(message = "empty url"))
+    return Ok(DemoHttpResponse(body = "{\"status_code\":200}"))
