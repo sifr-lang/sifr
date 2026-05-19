@@ -46,7 +46,7 @@ Cargo manifest:
 [package]
 name = "sifr-http"
 version = "1.2.0"
-edition = "2024"
+edition = "2021"
 include = ["Cargo.toml", "sifr.toml", "sifr/**/*.sifr", "src/lib.rs", "README.md", "LICENSE"]
 
 [package.metadata.sifr]
@@ -54,7 +54,7 @@ manifest = "sifr.toml"
 
 [dependencies]
 sifr-json = "1.4"
-reqwest = { version = "0.12", features = ["json", "rustls-tls"], optional = true }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 ```
 
 Sifr metadata:
@@ -74,7 +74,7 @@ modules = ["http"]
 
 [features]
 default = ["tls"]
-tls = { cargo-package = "sifr-http", cargo-feature = "tls" }
+tls = { cargo-package = "reqwest", cargo-feature = "rustls-tls" }
 json = { cargo-package = "reqwest", cargo-feature = "json" }
 
 [trust]
@@ -181,6 +181,10 @@ Sifr does not mirror Cargo's package graph into another lockfile.
 
 It does not own external version resolution, source fetching, registry credentials, Cargo dependency features, or Cargo publish metadata.
 
+Phase 37 extends the `sifr.toml` schema described in `internal_docs/sifr_workspace_design.md`. All Phase 37 fields are additive. Unknown top-level tables and unknown nested keys continue to be accepted and ignored according to that design's forward-compatibility rule.
+
+Sifr edition is orthogonal to Cargo edition. `Cargo.toml` `edition` controls Rust crate parsing and Cargo/rustc behavior. `sifr.toml` `[package].edition` controls Sifr language compatibility only. Phase 37 validates that a selected package declares a syntactically supported Sifr edition, but it does not enforce cross-package edition equality. Detailed Sifr edition compatibility, migration, and deprecation policy belongs in a future edition policy document.
+
 ### `pyproject.toml` / `uv.lock`
 
 Out of scope for Phase 37 core package management.
@@ -272,16 +276,19 @@ Example:
 # sifr.toml
 [features]
 default = ["tls"]
-tls = { cargo-package = "sifr-http", cargo-feature = "tls" }
+tls = { cargo-package = "reqwest", cargo-feature = "rustls-tls" }
 json = { cargo-package = "reqwest", cargo-feature = "json" }
 ```
 
 Rules:
 
 - `sifr build --features tls,json` activates the Sifr features, then maps them to Cargo features before invoking Cargo metadata/build commands.
-- `sifr add <pkg> --features f1,f2` delegates the Cargo feature mutation where practical and validates that any Sifr-facing feature mapping exists.
+- `sifr add <pkg> --features f1,f2` always delegates package name and version mutation to Cargo. Feature flags are delegated to Cargo only when the named feature exists in the selected Cargo package feature set. Features without a Cargo equivalent are written to `sifr.toml` `[features]` only.
 - Optional Cargo dependencies that affect Sifr imports or generated Rust must be reachable through explicit Sifr feature mappings.
 - Backend-only optional Cargo features may remain Cargo-only, but they must be recorded in `FEATURES.md` if they can affect generated Rust or trust behavior.
+- If a Sifr feature mapping names a `cargo-package` that does not appear in the resolved Cargo dependency graph, `SIFR-PACKAGE-0303` is reported.
+- If a Sifr feature mapping names a `cargo-feature` that does not exist in that package's feature set, `SIFR-PACKAGE-0304` is reported.
+- A Sifr feature may be source-only and map to zero Cargo features; source-only features still participate in graph digests and diagnostics.
 - Feature resolution is included in graph digests and diagnostics.
 
 ## Multiple Versions And Scoped Imports
@@ -678,6 +685,35 @@ def main() -> Result[int, Error]:
     return Ok(config["status_code"].as_int()?)
 ```
 
+The package repos should include enough source to make these imports self-verifying. At minimum:
+
+```sifr
+# https://github.com/sifr-lang/sifr-demo-json/blob/main/sifr/demo_json/parse.sifr
+class DemoJsonError(Error):
+    message: str
+
+class DemoJsonValue:
+    def as_int(self) -> Result[int, DemoJsonError]:
+        ...
+
+def parse_json(text: str) -> Result[dict[str, DemoJsonValue], DemoJsonError]:
+    ...
+```
+
+```sifr
+# https://github.com/sifr-lang/sifr-demo-http/blob/main/sifr/demo_http/client.sifr
+class DemoHttpError(Error):
+    message: str
+
+class DemoHttpResponse:
+    body: str
+
+def get(url: str) -> Result[DemoHttpResponse, DemoHttpError]:
+    ...
+```
+
+`sifr-demo-http` must also include a minimal Rust shim under `src/lib.rs` or another included Rust source file that uses `reqwest` so the trust policy is exercised by the demo rather than merely declared.
+
 Multiple-version alias demo:
 
 ```toml
@@ -723,7 +759,7 @@ sifr remove <package> [--dev] [--package member]
 sifr update [package]
 sifr fetch [--locked|--offline]
 sifr vendor <dir>
-sifr tree [--workspace|-p package] [--sifr-only|--all]
+sifr tree [--workspace|-p package] [--sifr-only|--all] [--depth N]
 sifr package [--dry-run]
 sifr publish [--dry-run]
 sifr check [file.sifr] [--locked|--frozen|--offline]
@@ -734,11 +770,13 @@ sifr test [--workspace|-p package|--filter selector] [--locked|--frozen|--offlin
 
 Behavior:
 
-- `sifr add demo_http` maps Sifr package name `demo_http` to Cargo package `sifr-demo-http` through configured naming policy or registry search, then delegates mutation to Cargo where practical.
+- `sifr add demo_http` maps Sifr package name `demo_http` to Cargo package `sifr-demo-http` through configured naming policy or registry search, then delegates package name/version mutation to Cargo.
 - `sifr add sifr-demo-http` may be accepted directly as a Cargo package name.
+- `sifr add <package> --features f1,f2` validates requested features against the selected Cargo package feature set before mutating manifests. Cargo-backed features are passed to `cargo add`; source-only Sifr features are written only to `sifr.toml` `[features]`.
 - `sifr update` delegates package updates to Cargo and follows Cargo's selected-package/update semantics; Sifr does not invent a separate recursive update mode.
 - `sifr fetch` delegates source fetching to Cargo.
 - `sifr vendor` delegates vendoring to Cargo and validates Sifr metadata after vendoring.
+- `sifr tree` displays the package dependency tree. `--sifr-only` shows only Sifr source packages. `--all` includes backend Rust crates from Cargo metadata. `--workspace` shows the Cargo workspace graph filtered by Sifr metadata. `--depth N` limits display depth. Cycles are marked instead of recursing indefinitely.
 - `sifr package --dry-run` runs Cargo package validation plus Sifr package validation.
 - `sifr publish` runs Cargo dry-run packaging, Sifr package validation, then delegates upload to Cargo after validation succeeds.
 - Cargo authentication prompts, token lookup, alternate registries, and registry config are Cargo-owned. Sifr only redacts and classifies errors.
@@ -806,6 +844,8 @@ Sifr must classify backend Rust crates and gate native behavior:
 
 Trust policy lives in `sifr.toml`. Empty trust arrays mean no native capability is trusted by default. Packages with native/backend behavior must explicitly declare trust.
 
+Trust is validated only against direct Cargo dependencies declared in the package's `Cargo.toml`. Transitive trust is not inherited; each Sifr package declares trust for its own direct backend dependencies. If a package declares trust for a crate that is not a direct dependency, `SIFR-PACKAGE-0305` is reported. If a reachable backend crate has native behavior but is not declared in `[trust]`, `SIFR-PACKAGE-0301` applies.
+
 Sifr diagnostics should map backend trust failures to the Sifr package that introduced the backend dependency where Cargo metadata can determine that path.
 
 ## Diagnostics
@@ -821,6 +861,7 @@ Diagnostic examples:
 | `SIFR-PACKAGE-0003` | unsupported or misplaced Sifr compiler metadata in Cargo metadata |
 | `SIFR-PACKAGE-0101` | Cargo metadata/lock/source command failed |
 | `SIFR-PACKAGE-0102` | selected Cargo package expected to be Sifr-capable but has no Sifr metadata |
+| `SIFR-PACKAGE-0103` | Cargo metadata parsing or normalization error |
 | `SIFR-PACKAGE-0104` | package source unavailable in offline/frozen mode |
 | `SIFR-PACKAGE-0105` | Cargo registry credentials unavailable |
 | `SIFR-PACKAGE-0201` | ambiguous import root in one package dependency scope |
@@ -828,12 +869,15 @@ Diagnostic examples:
 | `SIFR-PACKAGE-0203` | private package module access |
 | `SIFR-PACKAGE-0204` | type identity mismatch between two package instances |
 | `SIFR-PACKAGE-0301` | backend native trust violation |
+| `SIFR-PACKAGE-0303` | Sifr feature mapping references unavailable Cargo package |
+| `SIFR-PACKAGE-0304` | Sifr feature mapping references unavailable Cargo feature |
+| `SIFR-PACKAGE-0305` | trust policy references a non-direct Cargo dependency |
 | `SIFR-PACKAGE-0401` | Cargo package archive missing required Sifr source or metadata |
 | `SIFR-PACKAGE-0402` | publish validation failed |
 | `SIFR-PACKAGE-0403` | Cargo include/exclude rules omit required Sifr source |
 | `SIFR-PACKAGE-0501` | pure Sifr Rust marker contains implementation |
 
-`SIFR-PACKAGE-0302` through `SIFR-PACKAGE-0309` are reserved for future backend trust diagnostics.
+`SIFR-PACKAGE-0302` and `SIFR-PACKAGE-0306` through `SIFR-PACKAGE-0309` are reserved for future backend trust and feature diagnostics.
 
 Every diagnostic must include structured origin data where applicable:
 
@@ -868,6 +912,8 @@ crates/sifr_package/src/
   test_support/
   test_assets/
 ```
+
+`ops::plan::OperationPlan` is the gate for every mutating CLI command. It records the requested operation, selected package/workspace scope, lock/network mode, manifest mutations, Cargo commands to invoke, and validated package graph digest. It prevents mutation under `--frozen`, refuses lockfile or manifest writes under `--locked` where Cargo would reject them, and gives diagnostics a single place to explain what would change before `sifr add`, `remove`, `update`, `package`, or `publish` proceeds.
 
 Boundary rules:
 
@@ -914,6 +960,13 @@ Cargo categories to port/adapt:
 - vendor/fetch tests: source availability, offline cache, registry replacement;
 - workspace tests: default members, virtual workspaces, package selection;
 - build script/proc macro/links tests for trust-gating behavior.
+
+`TRACEABILITY.md` must classify every reused Cargo behavior category as one of:
+
+- `ported`: Cargo test logic reimplemented against Sifr public behavior;
+- `adapted`: Cargo test shape reused with Sifr-specific assertions;
+- `skipped`: not applicable to the Sifr model, with reason;
+- `deferred`: intentionally moved to a later phase, with owner.
 
 Sifr-specific tests:
 
@@ -1033,12 +1086,14 @@ Scope:
 - Implement changed-package selection.
 - Update Phase 36 analysis surfaces for package graph awareness.
 - Implement `sifr tree`, `outdated`, workspace `check/build/test`.
+- Define `sifr outdated` as a read-only Cargo-coordinated query: report selected Sifr source packages whose locked Cargo package version is older than the newest compatible version available from the same Cargo source. Do not mutate `Cargo.lock`; use Cargo registry/source metadata where available and report unsupported sources as explicit unknowns.
 
 Definition of done:
 
 - Cargo workspace packages with Sifr metadata work from subdirectories.
 - filters select package, dependency closure, dependent closure, and changed packages deterministically.
 - tooling queries use the same derived graph as CLI builds.
+- `sifr outdated` reports current locked version, newest compatible version, source, and unknown status without changing manifests or lockfiles.
 
 ### milestone_37_6: Packaging, Publishing, And Vendoring
 
