@@ -1,0 +1,102 @@
+use crate::cargo::metadata::CargoPackageId;
+use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
+use crate::manifest::sifr::ImportRoot;
+use sifr_diagnostics::DiagnosticCode;
+use std::path::Path;
+
+impl PackageDiagnostic {
+    #[must_use]
+    pub fn selected_rust_only(cargo_package_id: &CargoPackageId, package_name: &str) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_SELECTED_RUST_ONLY,
+            message: format!(
+                "Cargo package '{package_name}' is Rust-only and cannot be selected as a Sifr source package"
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(cargo_package_id.clone()),
+            }),
+            help: Some("select a package with [package.metadata.sifr], or build Rust-only crates through Cargo".to_string()),
+        }
+    }
+
+    #[must_use]
+    pub fn rust_only_depends_on_sifr(from: &CargoPackageId, to: &CargoPackageId) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_RUST_ONLY_DEPENDS_ON_SIFR,
+            message: format!(
+                "Rust-only Cargo package '{}' depends on Sifr package '{}'",
+                from.0, to.0
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(from.clone()),
+            }),
+            help: Some("convert the Rust package into a Rust-backed Sifr package or hide the Sifr dependency behind a supported Cargo feature boundary".to_string()),
+        }
+    }
+
+    #[must_use]
+    pub fn selector_ambiguous(selector: &str, candidates: &[String]) -> Self {
+        let suffix = if candidates.is_empty() {
+            "no matching package".to_string()
+        } else {
+            format!("candidates: {}", candidates.join(", "))
+        };
+        Self {
+            code: DiagnosticCode::PACKAGE_SELECTOR_AMBIGUOUS,
+            message: format!("package selector '{selector}' is ambiguous or invalid: {suffix}"),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some(
+                "use an exact Cargo package name, Sifr package name, or package id".to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn duplicate_workspace_import_root(import_root: &ImportRoot, packages: &[String]) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_IMPORT_ROOT,
+            message: format!(
+                "workspace packages export duplicate import root '{}': {}",
+                import_root.0,
+                packages.join(", ")
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some(
+                "select a narrower package set or add aliases before building the workspace"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn changed_file_mapping_failed(path: &Path) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_CHANGED_FILE_MAPPING_FAILED,
+            message: format!("changed path '{}' does not map to one Sifr package", path.display()),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some("include a workspace manifest/lockfile change or restrict the changed-file filter to package roots".to_string()),
+        }
+    }
+
+    #[must_use]
+    pub fn outdated_query_unsupported(cargo_package_id: &CargoPackageId, source: &str) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_OUTDATED_QUERY_UNSUPPORTED,
+            message: format!(
+                "cannot determine newest compatible package version from source '{source}'"
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(cargo_package_id.clone()),
+            }),
+            help: Some(
+                "Cargo source metadata is not available for this package source".to_string(),
+            ),
+        }
+    }
+}

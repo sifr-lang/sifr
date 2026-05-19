@@ -1956,6 +1956,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["action", "reason"]
     ),
     active_entry!(
+        "SIFR-PACKAGE-0102",
+        "PACKAGE",
+        "A selected Cargo package is Rust-only.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_5_tests.rs::explicit_rust_only_selection_reports_0102",
+        "selected Rust-only package '{package_name}'",
+        "sifr_package::graph::workspace",
+        [arg!("package_name"), json_arg!("cargo_package_id")],
+        ["cargo_package_id", "package_name"]
+    ),
+    active_entry!(
         "SIFR-PACKAGE-0104",
         "PACKAGE",
         "Package source is unavailable in offline or frozen mode.",
@@ -1980,6 +1991,20 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_package::cargo::errors",
         [arg!("action"), arg!("reason")],
         ["action", "reason"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0106",
+        "PACKAGE",
+        "Rust-only package depends directly on a Sifr source package.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_5_tests.rs::rust_only_member_depending_on_sifr_reports_0106",
+        "Rust-only package depends on Sifr package",
+        "sifr_package::graph::workspace",
+        [
+            json_arg!("from_cargo_package_id"),
+            json_arg!("to_cargo_package_id")
+        ],
+        ["from_cargo_package_id", "to_cargo_package_id"]
     ),
     active_entry!(
         "SIFR-PACKAGE-0201",
@@ -2082,6 +2107,50 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "sifr_package::source::layout",
         [arg!("reason"), json_arg!("cargo_package_id"), json_arg!("marker_path")],
         ["cargo_package_id", "marker_path", "reason"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0601",
+        "PACKAGE",
+        "Package selector is ambiguous or invalid.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_5_tests.rs::ambiguous_filter_reports_0601",
+        "package selector '{selector}' is ambiguous or invalid",
+        "sifr_package::graph::filters",
+        [arg!("selector"), json_arg!("candidates")],
+        ["selector", "candidates"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0602",
+        "PACKAGE",
+        "Workspace selection contains duplicate import roots.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_import_roots_report_0602",
+        "duplicate workspace import root '{import_root}'",
+        "sifr_package::graph::workspace",
+        [arg!("import_root"), json_arg!("packages")],
+        ["import_root", "packages"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0603",
+        "PACKAGE",
+        "Changed file could not be mapped to a package.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_5_tests.rs::changed_file_mapping_reports_0603",
+        "changed path '{path}' does not map to one Sifr package",
+        "sifr_package::graph::changed",
+        [arg!("path")],
+        ["path"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0604",
+        "PACKAGE",
+        "Outdated query cannot inspect this Cargo source.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_5_tests.rs::outdated_unknown_source_reports_0604",
+        "outdated query unsupported for source '{source}'",
+        "sifr_package::ops::read",
+        [arg!("source"), json_arg!("cargo_package_id")],
+        ["cargo_package_id", "source"]
     ),
 ];
 
@@ -2204,9 +2273,11 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST,
     DiagnosticCode::PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA,
     DiagnosticCode::PACKAGE_CARGO_COMMAND_FAILED,
+    DiagnosticCode::PACKAGE_SELECTED_RUST_ONLY,
     DiagnosticCode::PACKAGE_METADATA_PARSE,
     DiagnosticCode::PACKAGE_SOURCE_UNAVAILABLE_OFFLINE,
     DiagnosticCode::PACKAGE_CREDENTIALS_UNAVAILABLE,
+    DiagnosticCode::PACKAGE_RUST_ONLY_DEPENDS_ON_SIFR,
     DiagnosticCode::PACKAGE_AMBIGUOUS_IMPORT_ROOT,
     DiagnosticCode::PACKAGE_UNDECLARED_DIRECT_IMPORT,
     DiagnosticCode::PACKAGE_PRIVATE_MODULE_ACCESS,
@@ -2214,6 +2285,10 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_BACKEND_TRUST_VIOLATION,
     DiagnosticCode::PACKAGE_TRUST_NON_DIRECT_DEPENDENCY,
     DiagnosticCode::PACKAGE_NON_TRIVIAL_PURE_MARKER,
+    DiagnosticCode::PACKAGE_SELECTOR_AMBIGUOUS,
+    DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_IMPORT_ROOT,
+    DiagnosticCode::PACKAGE_CHANGED_FILE_MAPPING_FAILED,
+    DiagnosticCode::PACKAGE_OUTDATED_QUERY_UNSUPPORTED,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
