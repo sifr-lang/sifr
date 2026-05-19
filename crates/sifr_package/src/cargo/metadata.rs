@@ -19,6 +19,13 @@ pub struct CargoDependency {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CargoResolveEdge {
+    pub from: CargoPackageId,
+    pub dependency_name: String,
+    pub to: CargoPackageId,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CargoTarget {
     pub name: String,
     pub kind: BTreeSet<String>,
@@ -42,6 +49,7 @@ pub struct CargoPackage {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CargoMetadata {
     pub packages: Vec<CargoPackage>,
+    pub resolve_edges: Vec<CargoResolveEdge>,
     pub workspace_members: BTreeSet<CargoPackageId>,
     pub target_directory: PathBuf,
     pub workspace_root: PathBuf,
@@ -50,6 +58,7 @@ pub struct CargoMetadata {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NormalizedCargoMetadata {
     pub packages: BTreeMap<CargoPackageId, CargoPackage>,
+    pub resolve_edges: Vec<CargoResolveEdge>,
     pub workspace_members: BTreeSet<CargoPackageId>,
     pub target_directory: PathBuf,
     pub workspace_root: PathBuf,
@@ -84,9 +93,18 @@ impl CargoMetadata {
                 (package.id.clone(), package)
             })
             .collect();
+        let mut resolve_edges = self.resolve_edges;
+        resolve_edges.sort_by(|left, right| {
+            (&left.from, &left.dependency_name, &left.to).cmp(&(
+                &right.from,
+                &right.dependency_name,
+                &right.to,
+            ))
+        });
 
         NormalizedCargoMetadata {
             packages,
+            resolve_edges,
             workspace_members: self.workspace_members,
             target_directory: self.target_directory,
             workspace_root: self.workspace_root,
@@ -104,6 +122,7 @@ pub fn parse_metadata_json(source: &str) -> Result<CargoMetadata, PackageDiagnos
 #[derive(Debug, Deserialize)]
 struct RawCargoMetadata {
     packages: Vec<RawCargoPackage>,
+    resolve: Option<RawCargoResolve>,
     workspace_members: Vec<String>,
     target_directory: PathBuf,
     workspace_root: PathBuf,
@@ -134,6 +153,24 @@ struct RawCargoDependency {
 }
 
 #[derive(Debug, Deserialize)]
+struct RawCargoResolve {
+    nodes: Vec<RawCargoResolveNode>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawCargoResolveNode {
+    id: String,
+    #[serde(default)]
+    deps: Vec<RawCargoResolveDep>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawCargoResolveDep {
+    name: String,
+    pkg: String,
+}
+
+#[derive(Debug, Deserialize)]
 struct RawCargoTarget {
     name: String,
     kind: Vec<String>,
@@ -150,6 +187,25 @@ impl TryFrom<RawCargoMetadata> for CargoMetadata {
             .into_iter()
             .map(CargoPackage::try_from)
             .collect::<Result<Vec<_>, _>>()?;
+        let resolve_edges = raw
+            .resolve
+            .map(|resolve| {
+                resolve
+                    .nodes
+                    .into_iter()
+                    .flat_map(|node| {
+                        let from = CargoPackageId(node.id);
+                        node.deps
+                            .into_iter()
+                            .map(move |dependency| CargoResolveEdge {
+                                from: from.clone(),
+                                dependency_name: dependency.name,
+                                to: CargoPackageId(dependency.pkg),
+                            })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
         let workspace_members = raw
             .workspace_members
             .into_iter()
@@ -158,6 +214,7 @@ impl TryFrom<RawCargoMetadata> for CargoMetadata {
 
         Ok(Self {
             packages,
+            resolve_edges,
             workspace_members,
             target_directory: raw.target_directory,
             workspace_root: raw.workspace_root,

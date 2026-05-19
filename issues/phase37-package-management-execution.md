@@ -4,7 +4,7 @@ Phase plan: `internal_docs/phases/37_package_management.md`
 
 ## Status
 
-- [ ] milestone_37_1: Cargo metadata and Sifr manifest linking
+- [x] milestone_37_1: Cargo metadata and Sifr manifest linking
 - [ ] milestone_37_2: Package graph, scoped imports, and multiple versions
 - [ ] milestone_37_3: Package-aware source compilation
 - [ ] milestone_37_4: Cargo commands, lock modes, and backend trust
@@ -51,3 +51,38 @@ Reviews:
 PR:
 
 - https://github.com/sifr-lang/sifr/pull/2142
+
+## milestone_37_2: Package Graph, Scoped Imports, And Multiple Versions
+
+Branch: `phase37-m37-2-scoped-imports`
+
+Scope:
+
+- Parse Cargo `resolve.nodes[].deps[]` edges and keep dependency rename identity.
+- Derive Sifr package edges from exact resolved Cargo package ids instead of package-name guesses.
+- Build per-package direct dependency import scopes.
+- Allow the same export root to resolve to different package instances in different scopes.
+- Reject duplicate import roots inside one package scope with `SIFR-PACKAGE-0201`.
+- Support `[package.metadata.sifr.aliases]` for same-scope multiple-version imports.
+- Add package-instance type identity model and `SIFR-PACKAGE-0204` diagnostics.
+- Include resolve edges and import scopes in deterministic graph digests.
+
+Validation:
+
+- [x] `cargo fmt --check`
+- [x] `cargo clippy -p sifr_package -- -D warnings`
+- [x] `cargo test -p sifr_package`
+- [x] `python3 scripts/check_package_manager_guardrails.py`
+- [x] `python3 scripts/check_diagnostic_docs_sync.py`
+- [x] `python3 scripts/check_diagnostic_code_coverage.py`
+- [x] `scripts/run_all_tests.sh --profile quick`
+  - Passed; warm wall-time budget exceeded on a cold-ish rebuild (`2445.68s`), no test failures.
+
+Reviews:
+
+- [x] Claude milestone review pass 1: `reviews/phase37-m37-2-review-pass-1.md`
+- [x] Claude milestone review final READY
+
+PR:
+
+- https://github.com/sifr-lang/sifr/pull/2143

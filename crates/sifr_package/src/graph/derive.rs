@@ -1,7 +1,8 @@
 use crate::cargo::metadata::{
-    CargoDependency, CargoMetadata, CargoPackage, CargoPackageId, NormalizedCargoMetadata,
+    CargoMetadata, CargoPackage, CargoPackageId, NormalizedCargoMetadata,
 };
 use crate::diag::PackageDiagnostic;
+use crate::graph::scopes::{derive_direct_dependency_scopes, DirectDependencyScope};
 use crate::manifest::metadata::CargoSifrAliasMetadata;
 use crate::manifest::sifr::{ImportRoot, SifrManifest, SifrPackageName};
 use crate::manifest::validate::{validate_exports_match_sources, validate_source_roots_exist};
@@ -16,6 +17,7 @@ pub struct SifrPackageId(pub String);
 pub struct SifrPackageGraph {
     pub packages: BTreeMap<SifrPackageId, SifrPackageMetadata>,
     pub cargo_edges: BTreeMap<SifrPackageId, BTreeSet<SifrPackageId>>,
+    pub direct_dependency_scopes: BTreeMap<SifrPackageId, DirectDependencyScope>,
     pub backend_crates: BTreeMap<SifrPackageId, Vec<BackendCrateMetadata>>,
     pub classifications: BTreeMap<CargoPackageId, PackageClassification>,
 }
@@ -47,6 +49,13 @@ pub enum PackageClassification {
     SifrSource(SifrPackageId),
     RustBackedSifr(SifrPackageId),
     BackendRust,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct DirectCargoDependency {
+    pub from: CargoPackageId,
+    pub dependency_name: String,
+    pub to: CargoPackageId,
 }
 
 pub fn derive_package_graph(
@@ -89,12 +98,31 @@ pub fn derive_package_graph_from_normalized(
         return Err(diagnostics);
     }
 
-    let cargo_edges = derive_sifr_edges(&metadata.packages, &classifications);
-    let backend_crates = derive_backend_crates(&metadata.packages, &packages, &classifications);
+    let direct_dependencies = direct_cargo_dependencies(metadata);
+    let cargo_edges = derive_sifr_edges(&direct_dependencies, &classifications);
+    let mut diagnostics = Vec::new();
+    let direct_dependency_scopes =
+        match derive_direct_dependency_scopes(&direct_dependencies, &packages, &classifications) {
+            Ok(scopes) => scopes,
+            Err(errors) => {
+                diagnostics.extend(errors);
+                BTreeMap::new()
+            }
+        };
+    if !diagnostics.is_empty() {
+        return Err(diagnostics);
+    }
+    let backend_crates = derive_backend_crates(
+        &metadata.packages,
+        &direct_dependencies,
+        &packages,
+        &classifications,
+    );
 
     Ok(SifrPackageGraph {
         packages,
         cargo_edges,
+        direct_dependency_scopes,
         backend_crates,
         classifications,
     })
@@ -174,34 +202,82 @@ fn validate_pure_markers(
     Ok(())
 }
 
-fn derive_sifr_edges(
+pub(crate) fn direct_cargo_dependencies(
+    metadata: &NormalizedCargoMetadata,
+) -> Vec<DirectCargoDependency> {
+    let mut direct_dependencies = if metadata.resolve_edges.is_empty() {
+        fallback_direct_cargo_dependencies(&metadata.packages)
+    } else {
+        metadata
+            .resolve_edges
+            .iter()
+            .filter(|edge| {
+                metadata.packages.contains_key(&edge.from)
+                    && metadata.packages.contains_key(&edge.to)
+            })
+            .map(|edge| DirectCargoDependency {
+                from: edge.from.clone(),
+                dependency_name: edge.dependency_name.clone(),
+                to: edge.to.clone(),
+            })
+            .collect()
+    };
+
+    direct_dependencies.sort_by(|left, right| {
+        (&left.from, &left.dependency_name, &left.to).cmp(&(
+            &right.from,
+            &right.dependency_name,
+            &right.to,
+        ))
+    });
+    direct_dependencies
+}
+
+fn fallback_direct_cargo_dependencies(
     cargo_packages: &BTreeMap<CargoPackageId, CargoPackage>,
-    classifications: &BTreeMap<CargoPackageId, PackageClassification>,
-) -> BTreeMap<SifrPackageId, BTreeSet<SifrPackageId>> {
+) -> Vec<DirectCargoDependency> {
     let by_name = package_ids_by_name(cargo_packages);
-    let mut edges = BTreeMap::new();
+    let mut direct_dependencies = Vec::new();
 
     for package in cargo_packages.values() {
-        let Some(from) = classification_package_id(classifications.get(&package.id)) else {
+        direct_dependencies.extend(package.dependencies.iter().filter_map(|dependency| {
+            let package_name = dependency.package.as_ref().unwrap_or(&dependency.name);
+            by_name.get(package_name).and_then(|ids| {
+                ids.first().copied().map(|to| DirectCargoDependency {
+                    from: package.id.clone(),
+                    dependency_name: dependency.name.clone(),
+                    to: to.clone(),
+                })
+            })
+        }));
+    }
+    direct_dependencies
+}
+
+fn derive_sifr_edges(
+    direct_dependencies: &[DirectCargoDependency],
+    classifications: &BTreeMap<CargoPackageId, PackageClassification>,
+) -> BTreeMap<SifrPackageId, BTreeSet<SifrPackageId>> {
+    let mut edges = BTreeMap::new();
+
+    for dependency in direct_dependencies {
+        let Some(from) = classification_package_id(classifications.get(&dependency.from)) else {
             continue;
         };
-        let targets = package
-            .dependencies
-            .iter()
-            .filter_map(|dependency| resolve_dependency_package_id(dependency, &by_name))
-            .filter_map(|id| classification_package_id(classifications.get(id)))
-            .collect::<BTreeSet<_>>();
-        edges.insert(from, targets);
+        let Some(to) = classification_package_id(classifications.get(&dependency.to)) else {
+            continue;
+        };
+        edges.entry(from).or_insert_with(BTreeSet::new).insert(to);
     }
     edges
 }
 
 fn derive_backend_crates(
     cargo_packages: &BTreeMap<CargoPackageId, CargoPackage>,
+    direct_dependencies: &[DirectCargoDependency],
     packages: &BTreeMap<SifrPackageId, SifrPackageMetadata>,
     classifications: &BTreeMap<CargoPackageId, PackageClassification>,
 ) -> BTreeMap<SifrPackageId, Vec<BackendCrateMetadata>> {
-    let by_name = package_ids_by_name(cargo_packages);
     let by_cargo_id = packages
         .values()
         .map(|package| (&package.cargo_package_id, &package.package_id))
@@ -212,10 +288,10 @@ fn derive_backend_crates(
         let Some(sifr_package_id) = by_cargo_id.get(&cargo_package.id).copied() else {
             continue;
         };
-        let mut backend_crates = cargo_package
-            .dependencies
+        let mut backend_crates = direct_dependencies
             .iter()
-            .filter_map(|dependency| resolve_dependency_package_id(dependency, &by_name))
+            .filter(|dependency| dependency.from == cargo_package.id)
+            .map(|dependency| &dependency.to)
             .filter(|cargo_id| {
                 matches!(
                     classifications.get(*cargo_id),
@@ -250,16 +326,6 @@ fn package_ids_by_name(
             .push(&package.id);
     }
     by_name
-}
-
-fn resolve_dependency_package_id<'a>(
-    dependency: &CargoDependency,
-    by_name: &'a BTreeMap<String, Vec<&'a CargoPackageId>>,
-) -> Option<&'a CargoPackageId> {
-    let package_name = dependency.package.as_ref().unwrap_or(&dependency.name);
-    by_name
-        .get(package_name)
-        .and_then(|ids| ids.first().copied())
 }
 
 fn classification_package_id(
