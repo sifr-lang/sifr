@@ -462,6 +462,15 @@ For package-aware `sifr check`, `build`, `run`, `test`, `tree`, and editor analy
 11. Invoke the normal Sifr frontend/HIR/codegen pipeline.
 12. Materialize generated Rust and invoke Cargo as needed.
 
+Subdirectory invocation:
+
+- Sifr always discovers the nearest Cargo workspace root for package graph derivation, lock/network mode enforcement, and shared `Cargo.lock` lookup.
+- Running `sifr build`, `check`, `run`, or `test` from a member subdirectory without `--workspace`, `-p`, or `--filter` selects only that member when Cargo identifies the current directory as a workspace member.
+- Running the same command from a workspace root without explicit selectors follows Cargo's default package selection. For a package root this is the root package; for a virtual workspace this is Cargo `default-members` when configured, otherwise Cargo's default workspace selection.
+- Running with `--workspace` selects the workspace member set, then applies Sifr metadata filtering and any Sifr selectors.
+- All subdirectory invocations use the shared workspace `Cargo.lock`; `--locked`, `--offline`, and `--frozen` are enforced at the workspace root.
+- `sifr fetch` from a member subdirectory fetches the selected package graph using the shared workspace lock. `sifr fetch --workspace` fetches all selected workspace members.
+
 Fetch lifecycle:
 
 - `sifr fetch` explicitly runs Cargo fetch for the active workspace/package selection and then validates selected Sifr package metadata from available source.
@@ -520,6 +529,53 @@ Sifr adds compiler-aware package filtering over the Cargo workspace graph:
 - `sifr tree --sifr-only` displays only selected Sifr source packages.
 - `sifr tree --all` may include backend Rust crates from Cargo metadata.
 
+Virtual workspaces:
+
+- A Cargo workspace root with `[workspace]` and no `[package]` is a virtual workspace. It has no Sifr package identity of its own.
+- Sifr must not require `[package.metadata.sifr]` or `sifr.toml` at a virtual workspace root.
+- `--workspace` from a virtual workspace selects every workspace member that exposes `[package.metadata.sifr]`, after Cargo applies workspace membership and `exclude` rules.
+- A workspace member without `[package.metadata.sifr]` is classified as Rust-only unless the user explicitly selects it as a Sifr package, in which case `SIFR-PACKAGE-0102` is reported.
+
+Cargo workspace selection:
+
+- Sifr consumes the flattened workspace member list from `cargo metadata`; it does not expand Cargo `members` globs itself.
+- Cargo `exclude` rules are honored because excluded packages do not appear as selected workspace members in Cargo metadata.
+- Commands run from a workspace root without `--workspace`, `-p`, or `--filter` follow Cargo's default package selection, including `default-members`.
+- Commands with `--workspace` select all Cargo workspace members, then filter to Sifr-capable members unless `--all` explicitly asks to display backend Rust crates.
+- There is no separate Sifr exclude mechanism in Phase 37. Users use Cargo workspace membership plus Sifr `--filter` selectors.
+
+`[workspace.dependencies]`:
+
+- Cargo `[workspace.dependencies]` provides shared dependency declarations for members that opt into them through Cargo's `workspace = true` dependency syntax.
+- Sifr does not treat workspace dependencies as globally importable by every member. A workspace dependency becomes part of package `P`'s Sifr import scope only when Cargo metadata reports it as a resolved dependency edge from `P`.
+- A member's explicit dependency declaration and Cargo's feature unification rules remain Cargo-owned. Sifr consumes the resolved dependency edge and package id from Cargo metadata.
+- Workspace-inherited Sifr packages participate in scoped imports exactly like normal direct dependencies once Cargo reports them as direct dependencies of the member.
+
+Path dependencies between workspace members:
+
+- When package `A` has a path dependency on package `B` and both expose Sifr metadata, `B` is a direct Sifr dependency in `A`'s package scope.
+- Path dependency workspace members use the same package identity, aliasing, type identity, and generated namespace rules as registry and Git packages.
+- `sifr build --workspace` validates and schedules selected Sifr workspace members in Cargo topological order. Independent packages may be checked in parallel after graph validation.
+- Path dependency cycles reported by Cargo are surfaced as Cargo-backed package diagnostics. If Sifr detects a cycle in the Sifr package graph before Cargo reports it, `SIFR-PACKAGE-0205` reports the full dependency path.
+- A path dependency on a workspace member without Sifr metadata is a Rust backend dependency. It is an error only if Sifr source attempts to import it as a Sifr package or the user explicitly selected it as Sifr-capable.
+
+Mixed Sifr/Rust workspaces:
+
+- A Cargo workspace may contain Sifr packages, Rust-only packages, and Rust-backed Sifr packages.
+- `sifr build --workspace` and `sifr test --workspace` select Sifr-capable members. Rust-only members are built by Cargo only when reachable as backend dependencies of selected Sifr packages or generated Rust.
+- Rust-only members not reachable from any selected Sifr package are ignored by Sifr in Phase 37.
+- A Rust-only workspace member depending on a Sifr package is not a supported Phase 37 integration pattern. `SIFR-PACKAGE-0106` reports this and suggests converting the Rust member into a Rust-backed Sifr package or making the dependency an implementation detail behind Cargo features.
+- Trust validation only considers backend crates reachable from selected Sifr packages. Workspace Rust-only members outside that reachability closure do not affect Sifr trust diagnostics.
+
+Sifr workspace manifest vs Cargo workspace:
+
+- Phase 37 delegates package workspace membership to Cargo.
+- Per-package `sifr.toml` remains the only Sifr compiler metadata file for package management.
+- A root `sifr.toml` has package-management meaning only when the Cargo root is also a Cargo package and `[package.metadata.sifr].manifest` points to it.
+- A virtual Cargo workspace root does not need and must not imply a root Sifr package manifest.
+- The `[workspace]` table described in `internal_docs/sifr_workspace_design.md` is a source-resolution/workspace-configuration concept from earlier phases, not a package dependency resolver. Phase 37 keeps that compatibility behavior but does not use it to select packages or resolve external dependencies.
+- Workspace-wide Sifr policies such as shared trust, edition migration, or monorepo diagnostic policy are deferred to a future workspace-policy phase.
+
 Selectors adapted from Turborepo:
 
 - `pkg` selects one Sifr/Cargo package by name or configured alias.
@@ -529,7 +585,24 @@ Selectors adapted from Turborepo:
 - `...^pkg` selects dependents only.
 - `[base...head]` selects packages owning changed files using Git ranges.
 
-Changed-file detection may use `git` CLI or a Git library behind an adapter. Sifr owns the mapping from changed files to Sifr package roots.
+Additional selector flags:
+
+- `--no-default-features` deactivates default Sifr and Cargo feature activation for selected packages.
+- `--all-features` activates all Sifr and Cargo features for selected packages.
+- Repeated `--filter` flags are ORed.
+- Comma-separated selectors inside one `--filter` are ANDed.
+- `--filter '!pkg'` removes `pkg` from the current selection set.
+
+Changed-file detection may use `git` CLI or a Git library behind an adapter. Sifr owns the mapping from changed files to Sifr package roots. Files outside selected package roots are ignored unless the changed path is a workspace manifest, lockfile, package manifest, or shared config file that can affect the whole selected graph; unmappable changed files that were explicitly selected produce `SIFR-PACKAGE-0603`.
+
+LSP and editor integration:
+
+- The Sifr language server uses the same workspace discovery as the CLI: nearest Cargo workspace root plus `cargo metadata`.
+- Multi-root editor sessions treat each Cargo workspace root as an independent Sifr workspace.
+- LSP package graph discovery is read-only and uses frozen-equivalent behavior: no lock mutation, no network access, no manifest writes.
+- If the workspace lockfile or source cache is stale, the LSP reports package diagnostics and asks the user to run the relevant CLI command rather than mutating state.
+- The LSP uses the same `PackageSourceMap` as CLI builds for hover, completion, goto-definition, rename, and diagnostics.
+- Package graph recomputation is incremental by package root. Changes to workspace manifests, `Cargo.lock`, or shared config invalidate the whole selected graph.
 
 ## Package Name Resolution And Discovery
 
@@ -748,6 +821,64 @@ The demo suite must validate:
 - aliasing two Git-tagged versions of `sifr-demo-json` produces distinct package-instance type identities.
 - `sifr test --workspace --filter ...sifr-demo-http` selects the demo package plus its dependency closure.
 
+Additional monorepo demo repo required:
+
+- `https://github.com/sifr-lang/sifr-demo-workspace`: Cargo workspace demonstrating real monorepo behavior.
+
+Required shape:
+
+```text
+sifr-demo-workspace/
+  Cargo.toml                  # virtual workspace root
+  Cargo.lock                  # shared workspace lock
+  packages/
+    core/
+      Cargo.toml
+      sifr.toml
+      sifr/demo_core/__init__.sifr
+    utils/
+      Cargo.toml
+      sifr.toml
+      sifr/demo_utils/__init__.sifr
+    app/
+      Cargo.toml
+      sifr.toml
+      sifr/app/__init__.sifr
+      sifr/app/main.sifr
+    backend-utils/            # Rust-only member
+      Cargo.toml
+      src/lib.rs
+```
+
+Workspace root:
+
+```toml
+[workspace]
+members = ["packages/*"]
+default-members = ["packages/app", "packages/core"]
+exclude = ["packages/experimental-*"]
+resolver = "2"
+
+[workspace.dependencies]
+sifr-demo-core = { path = "packages/core" }
+sifr-demo-utils = { path = "packages/utils" }
+serde = "1"
+```
+
+The demo must validate:
+
+- virtual workspace root has no Sifr package identity;
+- `sifr build` from `packages/app` builds only `app` using the root `Cargo.lock`;
+- `sifr build --workspace` from `packages/app` builds all selected Sifr workspace members;
+- default package selection from the workspace root follows Cargo `default-members`;
+- `exclude`d members are not selected;
+- `[workspace.dependencies]` inherited through `workspace = true` appears as a direct scoped dependency in Cargo metadata;
+- path dependencies compile in topological order;
+- path dependency cycles produce `SIFR-PACKAGE-0205`;
+- Rust-only `backend-utils` is ignored unless reachable as a backend dependency of a selected Sifr package;
+- changed-file filters map files under each member to the correct package and treat root `Cargo.toml` / `Cargo.lock` as whole-graph invalidations;
+- multi-root editor sessions can open this workspace beside another Cargo workspace without graph leakage.
+
 ## CLI Contract
 
 Sifr remains the user-facing compiler UX. Package-management commands are Cargo-coordinating commands, not independent resolver commands.
@@ -762,10 +893,10 @@ sifr vendor <dir>
 sifr tree [--workspace|-p package] [--sifr-only|--all] [--depth N]
 sifr package [--dry-run]
 sifr publish [--dry-run]
-sifr check [file.sifr] [--locked|--frozen|--offline]
-sifr build [file.sifr] [--locked|--frozen|--offline]
-sifr run [file.sifr] [--locked|--frozen|--offline]
-sifr test [--workspace|-p package|--filter selector] [--locked|--frozen|--offline]
+sifr check [file.sifr] [--locked|--frozen|--offline] [--features f1,f2|--all-features|--no-default-features]
+sifr build [file.sifr] [--locked|--frozen|--offline] [--features f1,f2|--all-features|--no-default-features]
+sifr run [file.sifr] [--locked|--frozen|--offline] [--features f1,f2|--all-features|--no-default-features]
+sifr test [--workspace|-p package|--filter selector] [--locked|--frozen|--offline] [--features f1,f2|--all-features|--no-default-features]
 ```
 
 Behavior:
@@ -864,10 +995,12 @@ Diagnostic examples:
 | `SIFR-PACKAGE-0103` | Cargo metadata parsing or normalization error |
 | `SIFR-PACKAGE-0104` | package source unavailable in offline/frozen mode |
 | `SIFR-PACKAGE-0105` | Cargo registry credentials unavailable |
+| `SIFR-PACKAGE-0106` | Rust-only workspace member depends on a Sifr package in an unsupported Phase 37 pattern |
 | `SIFR-PACKAGE-0201` | ambiguous import root in one package dependency scope |
 | `SIFR-PACKAGE-0202` | undeclared direct dependency import |
 | `SIFR-PACKAGE-0203` | private package module access |
 | `SIFR-PACKAGE-0204` | type identity mismatch between two package instances |
+| `SIFR-PACKAGE-0205` | circular path dependency between workspace Sifr packages |
 | `SIFR-PACKAGE-0301` | backend native trust violation |
 | `SIFR-PACKAGE-0303` | Sifr feature mapping references unavailable Cargo package |
 | `SIFR-PACKAGE-0304` | Sifr feature mapping references unavailable Cargo feature |
@@ -876,6 +1009,10 @@ Diagnostic examples:
 | `SIFR-PACKAGE-0402` | publish validation failed |
 | `SIFR-PACKAGE-0403` | Cargo include/exclude rules omit required Sifr source |
 | `SIFR-PACKAGE-0501` | pure Sifr Rust marker contains implementation |
+| `SIFR-PACKAGE-0601` | package selector matches multiple packages without disambiguation |
+| `SIFR-PACKAGE-0602` | duplicate Sifr package import root across workspace members sharing one dependency scope |
+| `SIFR-PACKAGE-0603` | changed-file mapping failed for an explicitly selected path |
+| `SIFR-PACKAGE-0604` | outdated query unsupported for package source |
 
 `SIFR-PACKAGE-0302` and `SIFR-PACKAGE-0306` through `SIFR-PACKAGE-0309` are reserved for future backend trust and feature diagnostics.
 
@@ -914,6 +1051,8 @@ crates/sifr_package/src/
 ```
 
 `ops::plan::OperationPlan` is the gate for every mutating CLI command. It records the requested operation, selected package/workspace scope, lock/network mode, manifest mutations, Cargo commands to invoke, and validated package graph digest. It prevents mutation under `--frozen`, refuses lockfile or manifest writes under `--locked` where Cargo would reject them, and gives diagnostics a single place to explain what would change before `sifr add`, `remove`, `update`, `package`, or `publish` proceeds.
+
+`graph::workspace` owns Cargo workspace interpretation: virtual workspace detection, member/default/exclude selection, subdirectory-to-member mapping, workspace dependency edge normalization, path dependency ordering, and changed-file-to-package mapping. `graph::derive` consumes that normalized workspace view and builds the package graph; it must not re-interpret Cargo workspace manifests directly.
 
 Boundary rules:
 
@@ -991,6 +1130,18 @@ Sifr-specific tests:
 - backend trust failures.
 - `sifr build --frozen` with valid `Cargo.lock`.
 - `sifr build --locked` with stale `Cargo.lock`.
+- virtual Cargo workspace with no root Sifr package.
+- workspace root default selection honors Cargo `default-members`.
+- `--workspace` selection honors Cargo workspace `exclude`.
+- workspace member imports a Sifr dependency inherited through `[workspace.dependencies]` and `workspace = true`.
+- workspace member redeclares a workspace dependency with a different semver requirement and Cargo's resolved member edge wins.
+- workspace member depends on another Sifr member through a path dependency.
+- path dependency cycle between Sifr members reports `SIFR-PACKAGE-0205`.
+- mixed Sifr/Rust workspace ignores Rust-only members outside the selected Sifr reachability closure.
+- Rust-only workspace member depending on a Sifr package reports `SIFR-PACKAGE-0106`.
+- subdirectory invocation uses the shared workspace `Cargo.lock`.
+- changed-file selector maps member files, root manifests, lockfiles, and unknown selected paths deterministically.
+- LSP monorepo discovery uses frozen-equivalent graph derivation and does not mutate lockfiles or manifests.
 
 Property tests:
 
@@ -1086,14 +1237,21 @@ Scope:
 - Implement changed-package selection.
 - Update Phase 36 analysis surfaces for package graph awareness.
 - Implement `sifr tree`, `outdated`, workspace `check/build/test`.
-- Define `sifr outdated` as a read-only Cargo-coordinated query: report selected Sifr source packages whose locked Cargo package version is older than the newest compatible version available from the same Cargo source. Do not mutate `Cargo.lock`; use Cargo registry/source metadata where available and report unsupported sources as explicit unknowns.
+- Define `sifr outdated` as a read-only Cargo-coordinated query: report selected Sifr source packages whose locked Cargo package version is older than the newest compatible version available from the same Cargo source. Do not mutate `Cargo.lock`. For registry dependencies, use Cargo registry index metadata. For Git dependencies, report the locked tag/branch/revision and whether the remote ref advanced when that can be checked without violating lock/network mode. For path dependencies, report the local version as pinned. For alternate or private sources without usable index metadata, report `SIFR-PACKAGE-0604` as an explicit unknown.
+- Implement virtual workspace, `default-members`, `exclude`, `[workspace.dependencies]`, path dependency, mixed Sifr/Rust workspace, subdirectory invocation, and LSP monorepo semantics from this phase.
 
 Definition of done:
 
-- Cargo workspace packages with Sifr metadata work from subdirectories.
-- filters select package, dependency closure, dependent closure, and changed packages deterministically.
+- `sifr build --workspace` from a workspace subdirectory builds the selected workspace using the shared root `Cargo.lock`; `sifr build` from a subdirectory builds only that member using the shared root `Cargo.lock`.
+- `--workspace` selection honors Cargo workspace membership and `exclude`; root default selection honors Cargo `default-members`.
+- virtual workspaces require no root Sifr package and select Sifr-capable members correctly.
+- path dependency workspace members are compiled in Cargo topological order and cycles are diagnosed.
+- `[workspace.dependencies]` inherited through Cargo metadata are importable by the inheriting member.
+- mixed Sifr/Rust workspace members are handled correctly; Rust-only members outside the Sifr reachability closure are not compiled by Sifr.
+- filters select package, dependency closure, dependent closure, negation, feature mode, and changed packages deterministically.
 - tooling queries use the same derived graph as CLI builds.
 - `sifr outdated` reports current locked version, newest compatible version, source, and unknown status without changing manifests or lockfiles.
+- LSP workspace discovery handles member subdirectories and multi-root editor sessions without network or lockfile mutation.
 
 ### milestone_37_6: Packaging, Publishing, And Vendoring
 
