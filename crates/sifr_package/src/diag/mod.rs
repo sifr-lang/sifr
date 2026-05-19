@@ -1,8 +1,9 @@
 use crate::cargo::metadata::CargoPackageId;
+use crate::cargo::{errors::CargoAction, lock_modes::CargoLockMode};
 use crate::graph::derive::SifrPackageId;
 use crate::manifest::sifr::ImportRoot;
 use sifr_diagnostics::DiagnosticCode;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PackageDiagnostic {
@@ -34,6 +35,9 @@ pub enum PackageDiagnosticOrigin {
     PackageGraph {
         cargo_package_id: CargoPackageId,
     },
+    CargoCommand {
+        action: String,
+    },
 }
 
 impl PackageDiagnostic {
@@ -47,6 +51,62 @@ impl PackageDiagnostic {
             }),
             help: Some(
                 "inspect Cargo's selected package graph with the Phase 37 metadata adapter"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn cargo_command_failed(action: CargoAction, reason: impl Into<String>) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_CARGO_COMMAND_FAILED,
+            message: format!("cargo {} failed: {}", action.as_str(), reason.into()),
+            origin: Box::new(PackageDiagnosticOrigin::CargoCommand {
+                action: action.as_str().to_string(),
+            }),
+            help: Some("rerun the printed Cargo command for the full backend error".to_string()),
+        }
+    }
+
+    #[must_use]
+    pub fn source_unavailable_offline(
+        cargo_package_id: &CargoPackageId,
+        package_path: &Path,
+        lock_mode: CargoLockMode,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_SOURCE_UNAVAILABLE_OFFLINE,
+            message: format!(
+                "package source '{}' is unavailable in {:?} mode",
+                package_path.display(),
+                lock_mode
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(cargo_package_id.clone()),
+            }),
+            help: Some(
+                "run `sifr fetch` without --offline/--frozen before building offline".to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn credentials_unavailable(
+        action: CargoAction,
+        redacted_reason: impl Into<String>,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_CREDENTIALS_UNAVAILABLE,
+            message: format!(
+                "cargo {} could not access a private source: {}",
+                action.as_str(),
+                redacted_reason.into()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoCommand {
+                action: action.as_str().to_string(),
+            }),
+            help: Some(
+                "authenticate with Cargo login or CARGO_REGISTRIES_* configuration, then retry"
                     .to_string(),
             ),
         }
@@ -250,6 +310,49 @@ impl PackageDiagnostic {
             }),
             help: Some(
                 "import only modules exported by the dependency package, or add an explicit public re-export"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn backend_trust_violation(
+        cargo_package_id: &CargoPackageId,
+        package_id: &SifrPackageId,
+        backend_name: impl Into<String>,
+    ) -> Self {
+        let backend_name = backend_name.into();
+        Self {
+            code: DiagnosticCode::PACKAGE_BACKEND_TRUST_VIOLATION,
+            message: format!(
+                "package '{}' depends on untrusted backend crate '{backend_name}'",
+                package_id.0
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::PackageGraph {
+                cargo_package_id: cargo_package_id.clone(),
+            }),
+            help: Some("list intentional backend crates in sifr.toml [trust].native".to_string()),
+        }
+    }
+
+    #[must_use]
+    pub fn trust_non_direct_dependency(
+        cargo_package_id: &CargoPackageId,
+        package_id: &SifrPackageId,
+        backend_name: impl Into<String>,
+    ) -> Self {
+        let backend_name = backend_name.into();
+        Self {
+            code: DiagnosticCode::PACKAGE_TRUST_NON_DIRECT_DEPENDENCY,
+            message: format!(
+                "package '{}' trusts backend crate '{backend_name}', but it is not a direct backend dependency",
+                package_id.0
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::PackageGraph {
+                cargo_package_id: cargo_package_id.clone(),
+            }),
+            help: Some(
+                "remove unused trust entries or add the backend crate as a direct Cargo dependency"
                     .to_string(),
             ),
         }

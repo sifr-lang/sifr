@@ -1945,6 +1945,43 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["reason"]
     ),
     active_entry!(
+        "SIFR-PACKAGE-0101",
+        "PACKAGE",
+        "Cargo command invocation failed.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_4_tests.rs::cargo_failure_mapping_redacts_private_credentials",
+        "cargo {action} failed",
+        "sifr_package::cargo::errors",
+        [arg!("action"), arg!("reason")],
+        ["action", "reason"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0104",
+        "PACKAGE",
+        "Package source is unavailable in offline or frozen mode.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_4_tests.rs::offline_mode_reports_missing_sifr_source_package",
+        "package source unavailable in {lock_mode} mode",
+        "sifr_package::cargo::lock_modes",
+        [
+            arg!("lock_mode"),
+            json_arg!("cargo_package_id"),
+            json_arg!("package_path")
+        ],
+        ["cargo_package_id", "package_path", "lock_mode"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0105",
+        "PACKAGE",
+        "Private Cargo source credentials are unavailable.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_4_tests.rs::cargo_failure_mapping_redacts_private_credentials",
+        "cargo {action} credentials unavailable",
+        "sifr_package::cargo::errors",
+        [arg!("action"), arg!("reason")],
+        ["action", "reason"]
+    ),
+    active_entry!(
         "SIFR-PACKAGE-0201",
         "PACKAGE",
         "Direct package import root resolves to multiple package instances.",
@@ -2004,6 +2041,36 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
             json_arg!("cargo_package_id")
         ],
         ["cargo_package_id", "expected", "actual"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0301",
+        "PACKAGE",
+        "Backend Rust crate is not allowed by the Sifr trust policy.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_reports_untrusted_direct_backend_crate",
+        "untrusted backend crate '{backend_name}'",
+        "sifr_package::cargo::trust",
+        [
+            arg!("backend_name"),
+            json_arg!("cargo_package_id"),
+            json_arg!("package_id")
+        ],
+        ["cargo_package_id", "package_id", "backend_name"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0305",
+        "PACKAGE",
+        "Trust policy names a backend crate that is not a direct dependency.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_rejects_stale_non_direct_trust_entry",
+        "trusted backend crate '{backend_name}' is not direct",
+        "sifr_package::cargo::trust",
+        [
+            arg!("backend_name"),
+            json_arg!("cargo_package_id"),
+            json_arg!("package_id")
+        ],
+        ["cargo_package_id", "package_id", "backend_name"]
     ),
     active_entry!(
         "SIFR-PACKAGE-0501",
@@ -2136,11 +2203,16 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_MISSING_OR_INVALID_CARGO_METADATA,
     DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST,
     DiagnosticCode::PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA,
+    DiagnosticCode::PACKAGE_CARGO_COMMAND_FAILED,
     DiagnosticCode::PACKAGE_METADATA_PARSE,
+    DiagnosticCode::PACKAGE_SOURCE_UNAVAILABLE_OFFLINE,
+    DiagnosticCode::PACKAGE_CREDENTIALS_UNAVAILABLE,
     DiagnosticCode::PACKAGE_AMBIGUOUS_IMPORT_ROOT,
     DiagnosticCode::PACKAGE_UNDECLARED_DIRECT_IMPORT,
     DiagnosticCode::PACKAGE_PRIVATE_MODULE_ACCESS,
     DiagnosticCode::PACKAGE_TYPE_IDENTITY_MISMATCH,
+    DiagnosticCode::PACKAGE_BACKEND_TRUST_VIOLATION,
+    DiagnosticCode::PACKAGE_TRUST_NON_DIRECT_DEPENDENCY,
     DiagnosticCode::PACKAGE_NON_TRIVIAL_PURE_MARKER,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,

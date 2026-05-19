@@ -1,23 +1,164 @@
-use std::path::PathBuf;
+use crate::cargo::errors::CargoAction;
+use crate::cargo::lock_modes::CargoLockMode;
+use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CargoCommandPlan {
+    pub action: CargoAction,
     pub program: String,
     pub args: Vec<String>,
     pub current_dir: PathBuf,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CargoFeatureSelection {
+    pub features: Vec<String>,
+    pub all_features: bool,
+    pub no_default_features: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CargoPackageMutation {
+    pub package_spec: String,
+    pub rename: Option<String>,
+    pub features: Vec<String>,
+}
+
 impl CargoCommandPlan {
     #[must_use]
-    pub fn metadata(current_dir: PathBuf) -> Self {
+    pub fn metadata(current_dir: PathBuf, lock_mode: CargoLockMode) -> Self {
+        Self::new(
+            CargoAction::Metadata,
+            current_dir,
+            lock_mode,
+            vec!["metadata", "--format-version", "1"],
+        )
+    }
+
+    #[must_use]
+    pub fn fetch(current_dir: PathBuf, lock_mode: CargoLockMode) -> Self {
+        Self::new(CargoAction::Fetch, current_dir, lock_mode, vec!["fetch"])
+    }
+
+    #[must_use]
+    pub fn build(
+        current_dir: PathBuf,
+        lock_mode: CargoLockMode,
+        features: &CargoFeatureSelection,
+        target: Option<&str>,
+    ) -> Self {
+        let mut plan = Self::new(CargoAction::Build, current_dir, lock_mode, vec!["build"]);
+        plan.push_feature_args(features);
+        if let Some(target) = target {
+            plan.args
+                .extend(["--target".to_string(), target.to_string()]);
+        }
+        plan
+    }
+
+    #[must_use]
+    pub fn package(current_dir: PathBuf, lock_mode: CargoLockMode) -> Self {
+        Self::new(
+            CargoAction::Package,
+            current_dir,
+            lock_mode,
+            vec!["package"],
+        )
+    }
+
+    #[must_use]
+    pub fn publish(current_dir: PathBuf, lock_mode: CargoLockMode, dry_run: bool) -> Self {
+        let mut plan = Self::new(
+            CargoAction::Publish,
+            current_dir,
+            lock_mode,
+            vec!["publish"],
+        );
+        if dry_run {
+            plan.args.push("--dry-run".to_string());
+        }
+        plan
+    }
+
+    #[must_use]
+    pub fn vendor(current_dir: PathBuf, lock_mode: CargoLockMode, output_dir: &Path) -> Self {
+        let mut plan = Self::new(CargoAction::Vendor, current_dir, lock_mode, vec!["vendor"]);
+        plan.args.push(output_dir.display().to_string());
+        plan
+    }
+
+    #[must_use]
+    pub fn add(current_dir: PathBuf, mutation: &CargoPackageMutation) -> Self {
+        let mut plan = Self::without_lock(CargoAction::Add, current_dir, vec!["add"]);
+        plan.args.push(mutation.package_spec.clone());
+        if let Some(rename) = &mutation.rename {
+            plan.args.extend(["--rename".to_string(), rename.clone()]);
+        }
+        if !mutation.features.is_empty() {
+            plan.args.extend([
+                "--features".to_string(),
+                stable_csv(mutation.features.iter().map(String::as_str)),
+            ]);
+        }
+        plan
+    }
+
+    #[must_use]
+    pub fn remove(current_dir: PathBuf, dependency_name: &str) -> Self {
+        let mut plan = Self::without_lock(CargoAction::Remove, current_dir, vec!["remove"]);
+        plan.args.push(dependency_name.to_string());
+        plan
+    }
+
+    #[must_use]
+    pub fn update(current_dir: PathBuf, lock_mode: CargoLockMode, package: Option<&str>) -> Self {
+        let mut plan = Self::new(CargoAction::Update, current_dir, lock_mode, vec!["update"]);
+        if let Some(package) = package {
+            plan.args.extend(["-p".to_string(), package.to_string()]);
+        }
+        plan
+    }
+
+    fn new(
+        action: CargoAction,
+        current_dir: PathBuf,
+        lock_mode: CargoLockMode,
+        args: Vec<&str>,
+    ) -> Self {
+        let mut plan = Self::without_lock(action, current_dir, args);
+        if let Some(arg) = lock_mode.cargo_arg() {
+            plan.args.push(arg.to_string());
+        }
+        plan
+    }
+
+    fn without_lock(action: CargoAction, current_dir: PathBuf, args: Vec<&str>) -> Self {
         Self {
+            action,
             program: "cargo".to_string(),
-            args: vec![
-                "metadata".to_string(),
-                "--format-version".to_string(),
-                "1".to_string(),
-            ],
+            args: args.into_iter().map(str::to_string).collect(),
             current_dir,
         }
     }
+
+    fn push_feature_args(&mut self, features: &CargoFeatureSelection) {
+        if features.all_features {
+            self.args.push("--all-features".to_string());
+        }
+        if features.no_default_features {
+            self.args.push("--no-default-features".to_string());
+        }
+        if !features.features.is_empty() {
+            self.args.extend([
+                "--features".to_string(),
+                stable_csv(features.features.iter().map(String::as_str)),
+            ]);
+        }
+    }
+}
+
+fn stable_csv<'a>(values: impl Iterator<Item = &'a str>) -> String {
+    let mut values = values.collect::<Vec<_>>();
+    values.sort_unstable();
+    values.join(",")
 }

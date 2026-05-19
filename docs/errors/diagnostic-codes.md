@@ -162,10 +162,15 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0002`](SIFR-PACKAGE-0002.md) | Error | Missing or invalid sifr.toml package manifest. |
 | [`SIFR-PACKAGE-0003`](SIFR-PACKAGE-0003.md) | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |
 | [`SIFR-PACKAGE-0103`](SIFR-PACKAGE-0103.md) | Error | Cargo metadata parsing or normalization failed. |
+| [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.md) | Error | Cargo command invocation failed. |
+| [`SIFR-PACKAGE-0104`](SIFR-PACKAGE-0104.md) | Error | Package source is unavailable in offline or frozen mode. |
+| [`SIFR-PACKAGE-0105`](SIFR-PACKAGE-0105.md) | Error | Private Cargo source credentials are unavailable. |
 | [`SIFR-PACKAGE-0201`](SIFR-PACKAGE-0201.md) | Error | Direct package import root resolves to multiple package instances. |
 | [`SIFR-PACKAGE-0202`](SIFR-PACKAGE-0202.md) | Error | Package imports a module outside its direct dependency scope. |
 | [`SIFR-PACKAGE-0203`](SIFR-PACKAGE-0203.md) | Error | Package imports a private module from another package. |
 | [`SIFR-PACKAGE-0204`](SIFR-PACKAGE-0204.md) | Error | Type identity crosses resolved package instances. |
+| [`SIFR-PACKAGE-0301`](SIFR-PACKAGE-0301.md) | Error | Backend Rust crate is not allowed by the Sifr trust policy. |
+| [`SIFR-PACKAGE-0305`](SIFR-PACKAGE-0305.md) | Error | Trust policy names a backend crate that is not a direct dependency. |
 | [`SIFR-PACKAGE-0501`](SIFR-PACKAGE-0501.md) | Error | Pure Sifr Rust marker contains implementation. |
 
 ## Reserved Codes
