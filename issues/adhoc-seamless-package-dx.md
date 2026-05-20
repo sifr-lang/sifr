@@ -55,6 +55,8 @@ When online, `sifr run` may fetch missing dependencies and create or update the 
 
 Phase 37 remains the substrate. This adhoc phase changes the user-facing model and wires the substrate into the compiler/CLI.
 
+Assumption: Sifr has no external stable package ecosystem yet. Phase 37 package layouts, manifest exports, and Cargo alias metadata are treated as internal implementation/demo artifacts rather than compatibility commitments. If an external package appears before this phase lands, the internal fixture migration command can be used as the recovery path, but the production design should still converge on the canonical model below.
+
 Changed behavior:
 
 - `sifr init`: creates the canonical `src/` layout instead of the Phase 37 demo `sifr/<package>/` layout.
@@ -173,18 +175,13 @@ Defaults:
 - `sifr run` defaults to `src/main.sifr` when no `[[bin]]` target is configured.
 - Apps may also include `src/__init__.sifr` if they are importable by other packages.
 
-Compatibility:
+Canonical package model:
 
-- Existing Phase 37 `source.roots = ["sifr"]` layouts remain supported through explicit configuration.
 - New package creation commands must generate the `src/` layout.
-- Manifest-level `[exports] modules = [...]` becomes legacy compatibility, not the recommended public API model.
-
-Conflict resolution:
-
-- New packages created by `sifr init` must not generate `[exports].modules`.
-- If `__init__.sifr` exists at the package source root, the package's public API is derived from `__init__.sifr`.
-- `[exports].modules` is accepted for backward compatibility only when source-root `__init__.sifr` is absent.
-- If both source-root `__init__.sifr` and `[exports].modules` are present and they expose different public roots, Sifr reports `SIFR-PACKAGE-0701` and requires the maintainer to remove one model or make them agree.
+- Public package API is derived from `__init__.sifr`.
+- Manifest-level `[exports] modules = [...]` is not part of the production package model.
+- Phase 37 demo layouts and manifest exports are treated as internal implementation fixtures only until this adhoc phase replaces them; there is no external backward-compatibility contract to preserve.
+- If a production package uses `[exports].modules` after this phase, Sifr reports `SIFR-PACKAGE-0701` and directs the maintainer to move the public API to `src/__init__.sifr`.
 
 Initialization semantics:
 
@@ -194,7 +191,6 @@ sifr init --lib demo_json
   creates sifr.toml with [source].root = "src" or omits it to use the default
   creates src/__init__.sifr
   creates src/lib.rs with the canonical pure marker
-  does not create [exports].modules
 
 sifr init --bin demo_app
   creates Cargo.toml with Cargo package name sifr-demo-app
@@ -404,13 +400,11 @@ Field meanings:
 - `git`, `tag`, `rev`, `branch`, `path`, `version`, `registry`, `features`, `default-features`: projected to Cargo-compatible dependency fields;
 - `workspace = true`: allowed only inside Cargo workspaces and projected to Cargo workspace dependency inheritance.
 
-Backward compatibility:
+Dependency command behavior:
 
-- If `sifr.toml` has no `[dependencies]` and Cargo metadata contains `[package.metadata.sifr.aliases]`, Sifr parses the Cargo metadata aliases using the Phase 37 model.
-- If both Sifr dependencies and Cargo metadata aliases are present for the same package, Sifr reports `SIFR-PACKAGE-0708` unless the projected alias mapping is identical.
-- `sifr add --alias name` writes the table key `name` and sets `import = "name"` when the alias differs from the dependency's resolved Sifr package name.
-- For new-layout packages, `sifr add`, `sifr remove`, and `sifr update` write only `sifr.toml` dependency tables first, then regenerate Sifr-owned Cargo dependency sections.
-- For legacy Phase 37 packages, these commands preserve the legacy model unless the user explicitly runs dependency migration. They may update `Cargo.toml` dependencies and `[package.metadata.sifr.aliases]` using the Phase 37 projection rules.
+- `sifr add --alias name` writes the table key `name` in `sifr.toml [dependencies]` and sets `import = "name"` when the alias differs from the dependency's resolved Sifr package name.
+- `sifr add`, `sifr remove`, and `sifr update` write only `sifr.toml` dependency tables first, then regenerate Sifr-owned Cargo dependency sections.
+- Existing Phase 37 alias metadata in `Cargo.toml [package.metadata.sifr.aliases]` is internal transitional data only. This adhoc phase may delete or rewrite it when regenerating package projections; it does not need a user-facing compatibility mode.
 - Direct `cargo add` on Sifr-owned dependency sections is not bidirectionally synced. It creates projection drift; `sifr fix --check` reports it and `sifr fix` may either remove the Cargo-only dependency from Sifr-owned sections or ask the user to import it into `sifr.toml`.
 - User-owned Cargo dependencies for Rust backend implementation are allowed only in user-owned Cargo sections and must be validated against trust policy when reachable from a Rust-backed Sifr package.
 - A manual Cargo dependency that makes Sifr package imports available without a matching `sifr.toml` dependency is not considered a public Sifr dependency and must not be used for Sifr import resolution.
@@ -832,14 +826,14 @@ Diagnostics must include:
 
 The `SIFR-PACKAGE-07xx` diagnostic range is reserved for this adhoc package DX phase:
 
-- `0701`: conflicting `__init__.sifr` and legacy `[exports].modules` public API models.
+- `0701`: manifest-level `[exports].modules` used in a production package instead of `__init__.sifr`.
 - `0702`: Cargo projection dependency or alias drift.
 - `0703`: missing or incorrect `[package.metadata.sifr]`.
 - `0704`: Cargo include/exclude omits required Sifr package files.
 - `0705`: invalid source root.
 - `0706`: ignored `sifr.toml` at virtual workspace root.
 - `0707`: layout migration validation failed.
-- `0708`: conflicting Sifr dependency aliases and legacy Cargo metadata aliases.
+- `0708`: Cargo dependency or alias metadata conflicts with the canonical `sifr.toml [dependencies]` projection.
 - `0709`: pure marker missing but user-owned Rust target prevents regeneration.
 
 Future diagnostic allocation:
@@ -848,9 +842,9 @@ Future diagnostic allocation:
 - Retired diagnostics remain documented as superseded pages and must not be emitted by active code.
 - Cargo stderr shape changes must not drive new Sifr diagnostic codes unless the failure is redefined as a Sifr-owned preflight or policy check.
 
-## Migration Plan
+## Internal Fixture Migration Plan
 
-Existing Phase 37 demo layout:
+Existing Phase 37 demo/fixture layout:
 
 ```text
 sifr/demo_json/__init__.sifr
@@ -864,7 +858,7 @@ src/__init__.sifr
 src/parse.sifr
 ```
 
-Migration command:
+Internal migration command:
 
 ```bash
 sifr package migrate-layout --from sifr-rooted --to src-init
@@ -879,7 +873,7 @@ Migration rules:
 - Regenerate or verify `src/lib.rs` pure marker for pure packages.
 - Rewrite local imports as needed.
 - Preserve public API names.
-- Keep `source.roots = ["sifr"]` supported for existing packages until a later deprecation phase.
+- No external package compatibility mode is required; this migration exists to convert in-repo fixtures and demo repositories to the canonical model.
 - Update demo repositories only after the package-aware compiler supports the new layout.
 
 Migration validation:
@@ -900,26 +894,18 @@ Rollback:
 - The rollback descriptor is preferred over a tar archive to avoid archive traversal risks and to make conflict detection machine-checkable.
 - Failed validation leaves the original tree in place unless `--apply-partial` is explicitly passed; `--apply-partial` is intended only for manual repair.
 
-Compatibility matrix:
+Production schema:
 
-| Package shape | Public API source | Dependency source | Command behavior |
-| --- | --- | --- | --- |
-| Legacy Phase 37: `source.roots = ["sifr"]` plus `[exports].modules` | `[exports].modules` | Cargo dependencies plus `[package.metadata.sifr.aliases]` | Supported; no automatic migration |
-| Migrating package: explicit `source.root = "src"` plus `__init__.sifr` and optional legacy fields | `__init__.sifr`; conflicting legacy exports report `0701` | New `sifr.toml [dependencies]`; conflicting legacy aliases report `0708` | Migration/fix commands may update Sifr-owned projection |
-| New package: default `src` plus `__init__.sifr` | `__init__.sifr` only | `sifr.toml [dependencies]` | `sifr init/add/remove/update` own the projection |
-
-Schema consolidation:
-
-- `source.roots` remains a legacy plural form for Phase 37 compatibility.
 - New packages use `[source].root` singular, defaulting to `src`.
-- `[exports].modules` remains legacy and must not be generated by `sifr init`.
-- A later cleanup phase may deprecate legacy fields after migration tooling and demo repos are updated.
+- `source.roots` and `[exports].modules` are not production package schema after this phase.
+- Internal Phase 37 fixtures may continue to exercise the old parser/model until their tests are replaced or migrated, but no user-facing command should generate the old schema.
+- After milestone 7, guardrails should fail newly added package-management fixtures that use `sifr/<package>/` layout or manifest `[exports].modules` unless the test is explicitly marked as a parser/backfill regression.
 
 Demo and fixture strategy:
 
 - Milestone-level tests use in-tree fixtures under `verification/package_management/src_layout_fixtures/` so implementation can advance before public demo repositories are migrated.
-- Published `sifr-demo-*` repositories stay on the Phase 37 layout until package-aware compiler integration supports the new layout end to end.
-- Milestone 7 migrates the demo repositories and records command transcripts for clone, fetch, run, offline check, workspace selection, and publish dry-run.
+- Published `sifr-demo-*` repositories stay on the current internal-demo layout only until package-aware compiler integration supports the new layout end to end.
+- Milestone 7 migrates the demo repositories to the canonical production layout and records command transcripts for clone, fetch, run, offline check, workspace selection, and publish dry-run.
 
 ## Milestones
 
@@ -930,7 +916,7 @@ Scope:
 - Finalize the `src/` layout, `src/__init__.sifr` public API rule, namespaced `__init__.sifr` rule, and `src/main.sifr` run target.
 - Add parser/source-map tests for public root imports, public namespace imports, private implementation rejection, and local private imports.
 - Implement `parse_init_sifr_reexports` and namespace API graph derivation in `PackageSourceMap`.
-- Add compatibility and conflict tests for legacy `[exports].modules`.
+- Add rejection tests for production packages that still use manifest `[exports].modules`.
 - Document the layout in `docs/package_management.md`.
 
 Validation:
@@ -1051,7 +1037,7 @@ Scope:
 - Update `sifr-demo-*` repositories to canonical `src/` layout.
 - Add end-to-end demo docs showing first clone, fetch, run, offline check, workspace selection, and publish dry-run.
 - Extend guardrails to enforce source layout, projection boundaries, and demo commands.
-- Extend `scripts/check_package_manager_guardrails.py` to accept legacy `sifr/` fixtures during migration and require `src/` layout for newly generated demos after closeout.
+- Extend `scripts/check_package_manager_guardrails.py` to allow old Phase 37 layouts only in explicitly named internal regression fixtures during migration and require `src/` layout for all production demos after closeout.
 - Add guardrails that forbid active Cargo stderr taxonomy diagnostics, require projection idempotency tests, validate Sifr-owned Cargo section markers, and ensure pure-marker modifications are caught before Cargo execution.
 - Document Cargo compatibility assumptions: Sifr relies on stable `cargo metadata --format-version 1` fields and stable Cargo CLI subcommand behavior; if Cargo changes those surfaces, Sifr updates the adapter boundary rather than leaking Cargo internals to users.
 - Run full local validation.
