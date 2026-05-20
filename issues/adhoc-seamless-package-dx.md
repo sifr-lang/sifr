@@ -613,6 +613,8 @@ Sifr must avoid inheriting Cargo's complete error taxonomy. The maintainable rul
 - The wrapper points users to the underlying Cargo failure text instead of attempting to duplicate Cargo's own explanations.
 - Sifr may add targeted help only when the recovery is clearly Sifr-owned, such as "run `sifr fetch --locked` before retrying with `--offline`".
 - Sifr must not add a new Sifr diagnostic code for every Cargo resolver, registry, Git, credential, feature, or publish error.
+- Credential-related Cargo failures, including `401`, `403`, auth-helper failures, `cargo login` failures, missing registry tokens, and Git credential failures, are still wrapped in `SIFR-PACKAGE-0101`.
+- Existing or older credential-specific Cargo-failure codes such as `SIFR-PACKAGE-0105` must be retired, documented as superseded, or mapped to `SIFR-PACKAGE-0101` during this phase. They must not remain as active classification targets for Cargo stderr variants.
 
 Specific Sifr package diagnostics are reserved for failures Sifr can define and validate independently of Cargo internals:
 
@@ -625,6 +627,65 @@ Specific Sifr package diagnostics are reserved for failures Sifr can define and 
 - archive preflight omissions;
 - Sifr workspace/package selection errors;
 - known offline source absence before invoking Cargo.
+
+Rationale:
+
+- Cargo owns the resolver, registry, Git, credential, feature, and publish error taxonomy.
+- Sifr owns redaction, stable command context, package context, and routing users toward the underlying Cargo failure.
+- Adding Sifr codes for every recognizable Cargo stderr shape would create a permanent compatibility burden and would go stale as Cargo evolves.
+
+`SIFR-PACKAGE-0101` machine-readable fields:
+
+```text
+code: "SIFR-PACKAGE-0101"
+action: metadata | fetch | build | check | test | package | publish | vendor | add | remove | update
+current_dir: absolute path where Cargo was invoked
+args_redacted: redacted Cargo argument vector
+exit_status: process exit code when available
+lock_mode: unlocked | locked | offline | frozen
+network_mode: online | offline
+package: selected Sifr package name when available
+package_instance: resolved Sifr package instance id when available
+dependency_alias: importing dependency alias when available
+source_kind: path | git | registry | unknown
+stderr_redacted: bounded redacted stderr excerpt
+stdout_redacted: bounded redacted stdout excerpt, included only when relevant
+help: Sifr-owned recovery hint when one is safe and specific
+```
+
+`source_kind = "unknown"` is used when Sifr cannot determine source kind before invoking Cargo, or when a Cargo failure occurs before usable metadata is available. Human-readable output should omit source-kind-specific advice in that case and rely on the underlying Cargo excerpt plus generic recovery guidance.
+
+Human-readable output:
+
+- Shows the Sifr wrapper heading and stable context.
+- Shows the redacted Cargo excerpt under an "Underlying Cargo failure" label.
+- Makes clear that `SIFR-PACKAGE-0101` is a wrapper, not an attempt to reinterpret Cargo's full error taxonomy.
+
+`sifr --explain SIFR-PACKAGE-0101`:
+
+- Explains that the code wraps a Cargo command failure.
+- Documents where to find the underlying Cargo excerpt in human and JSON output.
+- Documents redaction behavior.
+- Gives generic next steps: rerun with the displayed Sifr command, inspect the Cargo excerpt, authenticate with Cargo for credential errors, or run `sifr fetch --locked` before offline commands when the help text says so.
+- Does not list every possible Cargo failure mode.
+
+Credential and sensitive data redaction:
+
+- Redaction applies to command arguments, stderr, stdout when captured, environment-derived credential snippets, and generated diagnostics.
+- Credential patterns are matched case-insensitively and include `token=`, `bearer`, `gh_`, `gho_`, `ghp_`, `ghs_`, `ghr_`, `cargo:token`, `secret=`, `password=`, `api_key=`, and `x-token:`.
+- URL redaction preserves useful error signal. Public registry URLs such as `https://crates.io/api/v1/crates` remain visible.
+- If a URL contains recognized credential material, userinfo and host are redacted while scheme and path are preserved. Example: `https://user:token@private.example.com/pkg` becomes `https://[redacted host]/pkg`.
+- File paths, line numbers, package names, registry names without embedded credentials, and Cargo package ids remain visible unless they match credential patterns.
+- Stderr is captured by default. Stdout is captured only when stderr is empty or when the Cargo operation is known to emit relevant failure text there.
+- Captured excerpts are bounded by line count and byte count to keep diagnostics stable.
+- Redaction tests must include both overbroad and underinclusive cases: public URLs must not be removed, and common token/secret/password forms must be removed.
+
+Credential-specific code retirement process:
+
+- `docs/errors/SIFR-PACKAGE-0105.md`, if present, must be rewritten as a superseded-code page that points to `SIFR-PACKAGE-0101`.
+- Diagnostic docs sync must allow superseded pages but forbid active code references to retired Cargo-taxonomy variants.
+- Existing tests expecting credential-specific Cargo-failure codes must be migrated to assert `SIFR-PACKAGE-0101` plus redacted credential help.
+- Guardrails must reject new active diagnostic constants that classify Cargo stderr variants instead of Sifr-owned policy failures.
 
 Required diagnostic behavior:
 
@@ -758,7 +819,9 @@ Scope:
 - Add `PackageSession`.
 - Wire `sifr fetch`, `sifr tree`, and package-aware `sifr check` through the session.
 - Implement lock/network mode behavior for `--locked`, `--offline`, and `--frozen`.
-- Translate Cargo fetch/metadata failures into Sifr diagnostics.
+- Implement the `SIFR-PACKAGE-0101` Cargo wrapper schema, including action, current directory, redacted args, exit status, lock/network mode, package context, bounded redacted Cargo excerpts, and JSON output fields.
+- Retire or supersede credential-specific Cargo-failure codes such as `SIFR-PACKAGE-0105` so credential failures route through `SIFR-PACKAGE-0101`.
+- Add redaction tests that prove public URLs and useful Cargo context survive while tokens, passwords, URL credentials, and private hostnames with embedded credentials are removed.
 
 Validation:
 
