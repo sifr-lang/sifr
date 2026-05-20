@@ -78,7 +78,7 @@ Unchanged substrate behavior:
 - The package API is declared in source through `__init__.sifr`, not through a manifest export list.
 - Default package layout should feel simple: `.sifr` files live under `src/` beside the Rust marker or backend file.
 - Online local development should be convenient; CI and offline workflows must be reproducible and explicit.
-- Sifr diagnostics must wrap Cargo failures with stable Sifr package diagnostic codes and actionable help.
+- Sifr must not mirror Cargo's full failure taxonomy. Cargo process failures use one stable Sifr wrapper diagnostic that preserves the underlying Cargo error, while Sifr-owned package policy failures get specific Sifr codes.
 
 ## Target Package Layout
 
@@ -509,6 +509,7 @@ Planning rules:
 - `--offline` rejects plans whose selected package sources are absent locally and reports `SIFR-PACKAGE-0104`.
 - Projection drift is checked before Cargo command execution.
 - Multi-package operations compute package topological order from `SifrPackageGraph`; Cargo may build in its own internal order, but Sifr diagnostics and cache keys use the stable topological order.
+- Cargo command stderr/stdout is captured as structured cause data and attached to wrapper diagnostics after credential redaction.
 
 Responsibilities:
 
@@ -519,7 +520,7 @@ Responsibilities:
 - Derive `SifrPackageGraph`.
 - Build the `PackageSourceMap` using `__init__.sifr` namespace rules.
 - Validate compiler compatibility, privacy, trust policy, lock modes, and package selection.
-- Translate Cargo failures into Sifr diagnostics.
+- Wrap Cargo process failures in the stable Cargo-failure diagnostic without reclassifying every Cargo error.
 - Provide a stable input digest for incremental/cache behavior.
 
 ## Compiler Integration
@@ -602,10 +603,33 @@ sifr publish
 
 ## Diagnostics
 
+### Cargo Failure Boundary
+
+Sifr must avoid inheriting Cargo's complete error taxonomy. The maintainable rule is:
+
+- Sifr-specific policy and compiler failures receive specific Sifr diagnostics.
+- Cargo process failures receive a single stable wrapper diagnostic, `SIFR-PACKAGE-0101`.
+- The wrapper includes the Cargo subcommand, current directory, redacted arguments, exit status, lock/network mode, and a redacted excerpt of Cargo stderr/stdout.
+- The wrapper points users to the underlying Cargo failure text instead of attempting to duplicate Cargo's own explanations.
+- Sifr may add targeted help only when the recovery is clearly Sifr-owned, such as "run `sifr fetch --locked` before retrying with `--offline`".
+- Sifr must not add a new Sifr diagnostic code for every Cargo resolver, registry, Git, credential, feature, or publish error.
+
+Specific Sifr package diagnostics are reserved for failures Sifr can define and validate independently of Cargo internals:
+
+- invalid `sifr.toml`;
+- projection drift;
+- package source layout/privacy violations;
+- Sifr import ambiguity/transitive/private access;
+- Sifr compiler compatibility;
+- Sifr trust policy violations;
+- archive preflight omissions;
+- Sifr workspace/package selection errors;
+- known offline source absence before invoking Cargo.
+
 Required diagnostic behavior:
 
 - Missing offline package source: `SIFR-PACKAGE-0104`, with help to run `sifr fetch --locked`.
-- Cargo command failure: `SIFR-PACKAGE-0101`, with redacted command summary.
+- Cargo command failure: `SIFR-PACKAGE-0101`, with redacted command summary and underlying Cargo failure excerpt.
 - Ambiguous import root: existing package import ambiguity code or a new stable code if needed.
 - Private cross-package module access: `SIFR-PACKAGE-0203`.
 - Transitive dependency import: `SIFR-PACKAGE-0202`.
