@@ -22,7 +22,7 @@ The developer experience is still not seamless:
 - `sifr run`, `sifr check`, and `sifr test` are not package-aware end to end.
 - The current demo package layout (`sifr/<package>/*.sifr`) is more verbose than necessary and does not feel like a natural source layout.
 - Public package APIs are described through manifest exports today, but Rust-like long-term maintainability is better achieved by declaring API shape in source, and Python-like Sifr ergonomics are better achieved with `__init__.sifr`.
-- The current plan exposes Cargo-shaped target configuration (`[[bin]]`) in the Sifr manifest even though normal users should get layout-based runnable targets and simple named workflow aliases.
+- The current plan exposes Cargo-shaped target configuration (`[[bin]]`) in the Sifr manifest even though normal users should get layout-based runnable targets.
 - Development/test-only dependencies need a Sifr-native grouping model rather than ad hoc Cargo table leakage.
 - Single-file Sifr usage must stay easy: `sifr run main.sifr` and `sifr run any-other-name.sifr` should work without `sifr.toml`.
 - Multiple versions, aliases, workspaces, lock modes, publishing, and Rust-backed packages need one coherent Sifr UX that does not inherit Cargo's complexity.
@@ -53,7 +53,7 @@ When online, `sifr run` may fetch missing dependencies and create or update the 
 - Do not require users to edit Cargo source IDs, Cargo metadata aliases, or registry cache paths.
 - Do not support Python package tools (`pyproject.toml`, `uv.lock`, wheels) in this phase. Future Python/uv interop must lower into the same package session model.
 - Do not make every `.sifr` file in a dependency public by default.
-- Do not add npm-compatible arbitrary shell scripts in this phase. Sifr may support named workflow aliases, but they must expand to Sifr command plans or structured executable argv, not unparsed shell strings.
+- Do not add scripts or workflow aliases in v1. Shell aliases, `just`, Make, or project-specific tooling can cover local workflows until real Sifr usage proves the needed shape.
 - Do not make `[[bin]]` a required or normal Sifr manifest concept. Cargo may still receive generated target configuration in the projection when needed.
 
 ## Changes From Phase 37
@@ -68,7 +68,7 @@ Changed behavior:
 - `sifr add`: updates Sifr-facing dependency declarations first, then projects to Cargo dependencies and Cargo dependency renames.
 - `sifr remove`: removes the Sifr-facing dependency declaration and its projected Cargo dependency.
 - `sifr update`: updates through the Sifr-facing dependency identity, then delegates lockfile mutation to Cargo.
-- `sifr run`: can select an implicit `src/main.sifr` target, discover `src/bin/*.sifr` targets, run explicit `.sifr` files with or without `sifr.toml`, run constrained named workflow aliases, and fetch missing dependencies in unconstrained online local development.
+- `sifr run`: can select an implicit `src/main.sifr` target, discover flat `src/bin/*.sifr` targets, run explicit `.sifr` files with or without `sifr.toml`, and fetch missing dependencies in unconstrained online local development.
 - package public API: new packages derive public APIs from `__init__.sifr` namespaces instead of manifest `[exports].modules`.
 
 Unchanged substrate behavior:
@@ -86,7 +86,6 @@ Unchanged substrate behavior:
 - Default package layout should feel simple: `.sifr` files live under `src/` beside the Rust marker or backend file.
 - Online local development should be convenient; CI and offline workflows must be reproducible and explicit.
 - Normal runnable targets should be discovered from source layout. Manifest entries should be needed only for nonstandard behavior.
-- Named scripts/tasks should be ergonomic like npm scripts but maintainable like compiler command plans: no implicit shell parsing in v1.
 - Manifest-less single-file execution remains a first-class learning and scripting path.
 - Sifr must not mirror Cargo's full failure taxonomy. Cargo process failures use one stable Sifr wrapper diagnostic that preserves the underlying Cargo error, while Sifr-owned package policy failures get specific Sifr codes.
 
@@ -157,9 +156,6 @@ Minimal library:
 name = "demo_json"
 edition = "2026"
 sifr-version = ">=0.3,<0.4"
-
-[source]
-root = "src"
 ```
 
 Minimal app:
@@ -169,11 +165,6 @@ Minimal app:
 name = "demo_app"
 edition = "2026"
 sifr-version = ">=0.3,<0.4"
-default-run = "demo-app"
-
-[scripts]
-dev = { command = "run", args = [] }
-check-all = { command = "check", args = ["--workspace"] }
 ```
 
 Defaults:
@@ -181,10 +172,8 @@ Defaults:
 - `[source].root` defaults to `src`.
 - A library package exposes `src/__init__.sifr` when present.
 - `src/main.sifr` is the default app target when present.
-- `src/bin/<name>.sifr` defines an additional named app target `<name>`.
-- `[package].default-run`, when present, names the app target selected by `sifr run` when multiple targets exist.
+- `src/bin/<name>.sifr` defines an additional named app target `<name>`. Nested `src/bin/**` target names are deferred to v2.
 - Apps may also include `src/__init__.sifr` if they are importable by other packages.
-- `[scripts]` entries are named workflow aliases for Sifr command plans. They are not distributable binaries.
 
 Canonical package model:
 
@@ -194,7 +183,7 @@ Canonical package model:
 - Sifr manifest `[[bin]]` target tables are not part of the production package model. Sifr discovers app targets from `src/main.sifr` and `src/bin/*.sifr`; if Cargo needs target tables, Sifr generates them in the Cargo projection.
 - Phase 37 demo layouts and manifest exports are treated as internal implementation fixtures only until this adhoc phase replaces them; there is no external backward-compatibility contract to preserve.
 - If a production package uses `[exports].modules` after this phase, Sifr reports `SIFR-PACKAGE-0701` and directs the maintainer to move the public API to `src/__init__.sifr`.
-- If a production package uses Sifr manifest `[[bin]]` tables after this phase, Sifr reports `SIFR-PACKAGE-0711` and directs the maintainer to use `src/main.sifr`, `src/bin/*.sifr`, `[package].default-run`, or `[scripts]`.
+- If a production package uses Sifr manifest `[[bin]]` tables after this phase, Sifr reports `SIFR-PACKAGE-0711` and directs the maintainer to use `src/main.sifr`, `src/bin/*.sifr`, or an explicit `sifr run --bin <name>`.
 
 Initialization semantics:
 
@@ -225,38 +214,18 @@ App target discovery:
 ```text
 src/main.sifr        -> app target named from [package].name or the package directory
 src/bin/admin.sifr   -> app target named "admin"
-src/bin/tools/migrate.sifr -> app target named "tools/migrate"
 ```
 
 `sifr run` resolution order in a package context:
 
 1. If the first positional argument ends in `.sifr`, or contains a path separator and resolves to a `.sifr` file, compile and run that explicit file as an ephemeral package-local target.
 2. If `--bin <name>` is provided, use the matching discovered app target.
-3. If the first positional argument has no `.sifr` extension and matches a `[scripts]` entry, expand that script into a Sifr command plan.
-4. If `[package].default-run` is set, use the matching discovered app target.
-5. If `src/main.sifr` exists and there is no ambiguity, use it as the default app target.
-6. If exactly one discovered app target exists, use that target.
-7. Otherwise report `SIFR-PACKAGE-0605` for missing or ambiguous runnable target.
+3. If the first positional argument has no `.sifr` extension and matches a discovered app target, use that target.
+4. If no target argument is provided and `src/main.sifr` exists, use it as the default app target.
+5. If no target argument is provided and exactly one discovered app target exists, use that target.
+6. Otherwise report `SIFR-PACKAGE-0605` for missing, unknown, or ambiguous runnable target.
 
 `sifr run` with arguments after `--` passes those arguments to the selected app target or explicit `.sifr` file. Arguments after `--` are not parsed as Sifr CLI flags.
-
-Script aliases:
-
-```toml
-[scripts]
-dev = { command = "run", args = [] }
-test-offline = { command = "test", args = ["--locked", "--offline"] }
-check-workspace = { command = "check", args = ["--workspace"] }
-```
-
-Script rules:
-
-- `command` must name a Sifr command implemented by this phase (`run`, `check`, `build`, `test`, `fetch`, `tree`, `package`, `publish`, `vendor`, or `fix`) or a future command explicitly allowed by the script schema.
-- `args` is an argv array, not a shell string.
-- Scripts may not invoke arbitrary shell syntax, environment assignment, pipes, redirection, command substitution, or platform-specific shell builtins in v1.
-- Script expansion must be visible in verbose output and in JSON diagnostics.
-- Script names share a namespace with discovered app target names. If a script and app target have the same name, Sifr reports an ambiguity diagnostic and requires `sifr run --bin <name>` for the app target or `sifr run --script <name>` for the script.
-- `sifr run --script <name>` always selects a script. `sifr run --bin <name>` always selects an app target.
 
 Manifest-less single-file execution:
 
@@ -453,33 +422,17 @@ Dependency groups:
 - `[dependencies]` is the runtime dependency set and is included by `sifr run`, `sifr check`, `sifr build`, `sifr test`, `sifr package`, and `sifr publish`.
 - `[test-dependencies]` is the test-only dependency group and is included by `sifr test` by default.
 - `[dev-dependencies]` is the local development group and is included by `sifr test` by default, but not by `sifr run`, `sifr build`, `sifr package`, or `sifr publish` unless explicitly requested.
-- Custom groups use `[dependency-groups.<name>.dependencies]` and the same dependency entry schema as `[dependencies]`.
-- `[dependency-groups.<name>] include = ["other-group"]` may include another group, matching uv's group composition idea while keeping Sifr's TOML schema map-shaped and alias-friendly.
 - The lockfile plan should resolve all declared dependency groups together when the lockfile is created or updated, so switching groups does not produce command-specific lock drift.
 - Build/package/publish plans compile only the dependency groups selected for the command.
-- All groups must be mutually compatible in one lockfile unless a future conflict declaration is added; this phase should reject incompatible group resolution rather than support group-specific lockfiles.
-
-Example custom groups:
-
-```toml
-[dependency-groups.lint.dependencies]
-demo_lints = { package = "sifr-demo-lints", path = "../demo-lints" }
-
-[dependency-groups.docs]
-include = ["dev"]
-
-[dependency-groups.docs.dependencies]
-demo_docs = { package = "sifr-demo-docs", version = "0.1" }
-```
+- Custom dependency groups and group composition are deferred to v2.
 
 Dependency command behavior:
 
 - `sifr add --alias name` writes the table key `name` in `sifr.toml [dependencies]` and sets `import = "name"` when the alias differs from the dependency's resolved Sifr package name.
 - `sifr add --test <package>` writes `[test-dependencies]`.
 - `sifr add --dev <package>` writes `[dev-dependencies]`.
-- `sifr add --group <name> <package>` writes `[dependency-groups.<name>.dependencies]`.
-- `sifr remove --test`, `sifr remove --dev`, and `sifr remove --group <name>` remove from those groups; without a group flag, `sifr remove` removes from `[dependencies]` only and reports a diagnostic if the alias exists only in another group.
-- Package commands accept `--group <name>`, `--only-group <name>`, `--no-group <name>`, `--all-groups`, and `--no-default-groups` where group selection is meaningful.
+- `sifr remove --test` and `sifr remove --dev` remove from those groups; without a group flag, `sifr remove` removes from `[dependencies]` only and reports a diagnostic if the alias exists only in another group.
+- Package commands accept `--group test`, `--group dev`, and `--no-default-groups` where group selection is meaningful. `--only-group`, `--no-group`, and `--all-groups` are deferred to v2.
 - Default selected groups:
   - `sifr run`, `sifr check`, and `sifr build`: runtime dependencies only;
   - `sifr test`: runtime, `test`, and `dev`;
@@ -495,8 +448,7 @@ Cargo projection for groups:
 
 - Runtime `[dependencies]` project to Cargo `[dependencies]`.
 - `[test-dependencies]` and `[dev-dependencies]` project to Cargo `[dev-dependencies]` when Cargo needs those packages for generated tests or local development builds.
-- Custom groups remain Sifr metadata in `sifr.toml` in v1 unless a command selects them; selected groups are projected into the generated Cargo operation plan without becoming user-owned Cargo manifest tables.
-- Sifr must not promise exact Cargo table parity for custom groups. Cargo remains the resolver, but Sifr owns group semantics.
+- Cargo cannot distinguish Sifr test-only and dev-only dependencies in its manifest schema. `sifr.toml` remains the source of truth for that distinction.
 
 Alias conflicts:
 
@@ -578,7 +530,6 @@ Manifest discovery hook:
 - The pointer exists so `cargo metadata --format-version 1` can tell Sifr which Cargo packages are Sifr-capable without Sifr scanning every Cargo package root.
 - The pointer is not the source of truth for package semantics and is not a trust anchor. `sifr.toml` contents remain authoritative after discovery.
 - A local workspace/package root may be discovered by finding `sifr.toml` directly before invoking Cargo, but dependency packages discovered through Cargo metadata must carry the pointer to be treated as Sifr packages.
-- If a future Cargo release stops surfacing `package.metadata` through stable metadata output, Sifr's Cargo adapter may fall back to scanning selected Cargo package roots for `sifr.toml` as a discovery-only compatibility path. That fallback must stay inside the adapter boundary and must not change `sifr.toml` semantics.
 - Missing, unreadable, or unparsable manifests referenced by `[package.metadata.sifr].manifest` report `SIFR-PACKAGE-0703`.
 - If the pointer is absent from a package that otherwise looks like a Sifr package, Sifr treats that as projection drift for Sifr-owned packages, not as a Cargo failure.
 
@@ -613,10 +564,10 @@ Recovery:
 Package-aware core commands:
 
 ```bash
-sifr run [target-or-script] [--bin name|--script name] [--locked|--offline|--frozen] [--features f1,f2|--all-features|--no-default-features] [--] [app-args...]
-sifr check [path-or-package] [--workspace] [-p|--package package] [--filter selector] [--locked|--offline|--frozen] [--message-format human|json]
-sifr build [path-or-package] [--workspace] [-p|--package package] [--filter selector] [--locked|--offline|--frozen] [--message-format human|json]
-sifr test [path-or-package] [--workspace] [-p|--package package] [--filter selector] [--locked|--offline|--frozen] [--group name|--only-group name|--no-group name|--all-groups|--no-default-groups] [--message-format human|json]
+sifr run [target-or-path] [--bin name] [--locked|--offline|--frozen] [--features f1,f2|--all-features|--no-default-features] [--] [app-args...]
+sifr check [path-or-package] [--workspace] [-p|--package package] [--filter selector] [--locked|--offline|--frozen]
+sifr build [path-or-package] [--workspace] [-p|--package package] [--filter selector] [--locked|--offline|--frozen]
+sifr test [path-or-package] [--workspace] [-p|--package package] [--filter selector] [--locked|--offline|--frozen] [--group test|--group dev|--no-default-groups]
 ```
 
 Dependency and package operations:
@@ -624,10 +575,10 @@ Dependency and package operations:
 ```bash
 sifr init [--lib|--bin] [name]
 sifr fetch [--locked|--offline|--frozen]
-sifr add <package> [--git url] [--tag tag] [--path path] [--dev|--test|--group name] [--alias name] [--features f1,f2]
-sifr remove <package-or-alias> [--dev|--test|--group name]
+sifr add <package> [--git url] [--tag tag] [--path path] [--dev|--test] [--alias name] [--features f1,f2]
+sifr remove <package-or-alias> [--dev|--test]
 sifr update [package-or-alias]
-sifr tree [--workspace|-p|--package package] [--sifr-only|--all] [--depth N] [--group name|--only-group name|--no-group name|--all-groups|--no-default-groups]
+sifr tree [--workspace|-p|--package package] [--sifr-only|--all] [--depth N] [--group test|--group dev|--no-default-groups]
 sifr vendor <dir> [--locked]
 sifr package [--dry-run]
 sifr publish [--dry-run]
@@ -638,20 +589,11 @@ Command semantics:
 
 - `sifr run` without lock/network flags may fetch dependencies and update `Cargo.lock`, matching Rust's local development convenience.
 - `sifr run path/to/file.sifr` works without `sifr.toml` in manifest-less mode and works inside a package when the file is under the selected source root.
-- `sifr run <script-name>` selects a `[scripts]` entry only when the name is unambiguous. `--script` and `--bin` are explicit disambiguators.
 - Arguments after `--` are passed to the selected app target or explicit `.sifr` file and must not be consumed by the Sifr CLI.
 - `sifr fetch --locked` fetches exactly the locked graph and fails if the lockfile needs an update.
 - `sifr check --locked --offline` never touches the network and fails if any selected dependency source is absent locally.
 - `-p` and `--package` are aliases for package selection, matching Cargo naming.
-- `--message-format json` emits versioned machine-readable diagnostics and command summaries. This phase must define the schema version before exposing the flag as stable.
-- `sifr --explain <diagnostic-code>` documents package diagnostics and recovery commands.
-
-`sifr --explain` behavior:
-
-- accepts any stable Sifr diagnostic code;
-- prints the diagnostic meaning, common causes, and links to docs;
-- includes package-manager-specific recovery commands only for `SIFR-PACKAGE-*` codes;
-- never performs package operations.
+- `--group test` and `--group dev` include those groups alongside command defaults. `--no-default-groups` removes command-specific default groups such as `test` and `dev` from `sifr test`.
 
 ## Package Session
 
@@ -889,13 +831,13 @@ Human-readable output:
 - Shows the redacted Cargo excerpt under an "Underlying Cargo failure" label.
 - Makes clear that `SIFR-PACKAGE-0101` is a wrapper, not an attempt to reinterpret Cargo's full error taxonomy.
 
-`sifr --explain SIFR-PACKAGE-0101`:
+Diagnostic docs for `SIFR-PACKAGE-0101`:
 
-- Explains that the code wraps a Cargo command failure.
-- Documents where to find the underlying Cargo excerpt in human and JSON output.
-- Documents redaction behavior.
-- Gives generic next steps: rerun with the displayed Sifr command, inspect the Cargo excerpt, authenticate with Cargo for credential errors, or run `sifr fetch --locked` before offline commands when the help text says so.
-- Does not list every possible Cargo failure mode.
+- Explain that the code wraps a Cargo command failure.
+- Document where to find the underlying Cargo excerpt in human output.
+- Document redaction behavior.
+- Give generic next steps: rerun with the displayed Sifr command, inspect the Cargo excerpt, authenticate with Cargo for credential errors, or run `sifr fetch --locked` before offline commands when the help text says so.
+- Do not list every possible Cargo failure mode.
 
 Credential and sensitive data redaction:
 
@@ -946,8 +888,6 @@ The `SIFR-PACKAGE-07xx` diagnostic range is reserved for this adhoc package DX p
 - `0704`: Cargo include/exclude omits required Sifr package files.
 - `0705`: invalid source root.
 - `0706`: ignored `sifr.toml` at virtual workspace root.
-- `0707`: layout migration validation failed.
-- `0708`: Cargo dependency or alias metadata conflicts with the canonical `sifr.toml [dependencies]` projection.
 - `0709`: pure marker missing but user-owned Rust target prevents regeneration.
 - `0710`: explicit `.sifr` file target is outside the selected package source root.
 - `0711`: production `sifr.toml` uses Sifr manifest `[[bin]]` tables instead of layout-discovered app targets.
@@ -974,11 +914,10 @@ src/__init__.sifr
 src/parse.sifr
 ```
 
-Internal migration command:
+V1 migration approach:
 
-```bash
-sifr package migrate-layout --from sifr-rooted --to src-init
-```
+- Layout migration is documented as a manual procedure or simple in-repo script for fixtures and demo repositories.
+- A dedicated `sifr package migrate-layout` command, migration rollback descriptors, and partial-apply behavior are deferred to v2.
 
 Migration rules:
 
@@ -996,26 +935,16 @@ Migration validation:
 
 1. Before migration, snapshot the public API from `__init__.sifr` or legacy `[exports].modules`.
 2. After migration, derive the public API from the new `src/__init__.sifr` namespace graph.
-3. Diff the public API snapshots and report `SIFR-PACKAGE-0707` if names are lost or added without an explicit flag.
+3. Diff the public API snapshots and fail the migration script or manual checklist if names are lost or added without an explicit note.
 4. Compile/package-check all local imports in the package to catch broken relative paths.
 5. Run archive preflight to confirm required Sifr files are included.
 6. Do not modify `Cargo.lock` package source revisions during layout migration.
-
-Rollback:
-
-- Before rewriting files, `sifr package migrate-layout` writes `.sifr/migrations/<timestamp>.json` with source/destination paths, SHA-256 checksums, file modes where supported, and the command options used.
-- File contents changed by migration are copied to `.sifr/migrations/<timestamp>/files/` using checksum-addressed names.
-- `sifr package migrate-layout --rollback <migration-id>` restores only files whose current checksum still matches the post-migration checksum recorded by the descriptor.
-- If files changed after migration, rollback reports conflicts and leaves them untouched unless `--force` is supplied.
-- The rollback descriptor is preferred over a tar archive to avoid archive traversal risks and to make conflict detection machine-checkable.
-- Failed validation leaves the original tree in place unless `--apply-partial` is explicitly passed; `--apply-partial` is intended only for manual repair.
 
 Production schema:
 
 - New packages use `[source].root` singular, defaulting to `src`.
 - `source.roots` and `[exports].modules` are not production package schema after this phase.
 - Sifr manifest `[[bin]]` tables are not production package schema after this phase; app targets are discovered from `src/main.sifr` and `src/bin/*.sifr`.
-- Named workflow aliases use `[scripts]` with structured Sifr command plans.
 - Internal Phase 37 fixtures may continue to exercise the old parser/model until their tests are replaced or migrated, but no user-facing command should generate the old schema.
 - After milestone 7, guardrails should fail newly added package-management fixtures that use `sifr/<package>/` layout, manifest `[exports].modules`, or Sifr manifest `[[bin]]` tables unless the test is explicitly marked as a parser/backfill regression.
 
@@ -1032,7 +961,7 @@ Demo and fixture strategy:
 Scope:
 
 - Finalize the `src/` layout, `src/__init__.sifr` public API rule, namespaced `__init__.sifr` rule, and `src/main.sifr` run target.
-- Finalize layout-discovered app targets (`src/main.sifr`, `src/bin/*.sifr`), `[package].default-run`, and the absence of Sifr manifest `[[bin]]` in production schema.
+- Finalize layout-discovered app targets (`src/main.sifr`, flat `src/bin/*.sifr`) and the absence of Sifr manifest `[[bin]]` in production schema.
 - Finalize manifest-less explicit file semantics for `sifr run/check/emit path/to/file.sifr`.
 - Add parser/source-map tests for public root imports, public namespace imports, private implementation rejection, and local private imports.
 - Implement `parse_init_sifr_reexports` and namespace API graph derivation in `PackageSourceMap`.
@@ -1082,9 +1011,8 @@ Scope:
 - Wire `sifr fetch`, `sifr tree`, and package-aware `sifr check` through the session.
 - Implement lock/network mode behavior for `--locked`, `--offline`, and `--frozen`.
 - Wire manifest-less explicit-file runs through a small non-package operation plan so `sifr run main.sifr` remains available without `sifr.toml`.
-- Implement `[scripts]` expansion for structured Sifr command plans, including ambiguity checks with app target names.
-- Implement dependency group selection for `runtime`, `test`, `dev`, and custom groups.
-- Implement `-p|--package`, `--message-format human|json`, and `--` app-argument passing.
+- Implement dependency group selection for `runtime`, `test`, and `dev`.
+- Implement `-p|--package`, `--group test`, `--group dev`, `--no-default-groups`, and `--` app-argument passing.
 - Implement the `SIFR-PACKAGE-0101` Cargo wrapper schema, including action, current directory, redacted args, exit status, lock/network mode, package context, bounded redacted Cargo excerpts, and JSON output fields.
 - Retire or supersede credential-specific Cargo-failure codes such as `SIFR-PACKAGE-0105` so credential failures route through `SIFR-PACKAGE-0101`.
 - Add redaction tests that prove public URLs and useful Cargo context survive while tokens, passwords, URL credentials, and private hostnames with embedded credentials are removed.
@@ -1093,7 +1021,7 @@ Validation:
 
 - `cargo test -p sifr_package package_session`
 - `cargo test -p sifr -- package_cli`
-- Targeted CLI tests for `sifr run main.sifr` without `sifr.toml`, `sifr run <script>`, `sifr run --bin <name> -- args`, dependency group defaults, and `--message-format json`.
+- Targeted CLI tests for `sifr run main.sifr` without `sifr.toml`, `sifr run --bin <name> -- args`, and dependency group defaults.
 - Demo command: `sifr fetch --locked` in `sifr-demo-app`.
 - Targeted regression tests for `SIFR-PACKAGE-0101` wrapper fields, redaction, retired credential-code mapping, stdout/stderr capture bounds, and `sifr fix --check` no-write behavior.
 
@@ -1146,7 +1074,7 @@ Scope:
 
 - Wire `sifr package`, `sifr publish`, and `sifr vendor`.
 - Validate archive contents for the new `src/` layout.
-- Validate that public API and selected app targets do not depend on excluded `test`, `dev`, or custom dependency groups.
+- Validate that public API and selected app targets do not depend on excluded `test` or `dev` dependencies.
 - Keep Cargo upload/authentication delegated.
 - Add release dry-run checks for pure, Rust-backed, app, and workspace packages.
 
@@ -1164,14 +1092,13 @@ Acceptance:
 
 Scope:
 
-- Add layout migration command or documented manual migration.
+- Add documented manual migration or a simple in-repo fixture migration script.
 - Update `sifr-demo-*` repositories to canonical `src/` layout.
-- Add end-to-end demo docs showing first clone, fetch, run, explicit file run, script run, offline check, workspace selection, dependency group behavior, and publish dry-run.
+- Add end-to-end demo docs showing first clone, fetch, run, explicit file run, offline check, workspace selection, dependency group behavior, and publish dry-run.
 - Extend guardrails to enforce source layout, projection boundaries, and demo commands.
 - Extend `scripts/check_package_manager_guardrails.py` to allow old Phase 37 layouts only in explicitly named internal regression fixtures during migration and require `src/` layout, no manifest exports, and no Sifr manifest `[[bin]]` tables for all production demos after closeout.
 - Add guardrails that forbid active Cargo stderr taxonomy diagnostics, require projection idempotency tests, validate Sifr-owned Cargo section markers, and ensure pure-marker modifications are caught before Cargo execution.
 - Document Cargo compatibility assumptions: Sifr relies on stable `cargo metadata --format-version 1` fields and stable Cargo CLI subcommand behavior; if Cargo changes those surfaces, Sifr updates the adapter boundary rather than leaking Cargo internals to users.
-- Document and test the discovery-only fallback for Cargo metadata surfaces that stop exposing `package.metadata.sifr`.
 - Run full local validation.
 
 Validation:
@@ -1187,7 +1114,7 @@ Acceptance:
 ## Implementation Order
 
 1. Source layout and `__init__.sifr` source-map rules.
-2. Layout-discovered app targets, manifest-less explicit-file mode, and constrained script aliases.
+2. Layout-discovered app targets and manifest-less explicit-file mode.
 3. Managed Cargo projection and drift diagnostics.
 4. Dependency groups and group-aware package session planning.
 5. Package session and `sifr fetch`/`sifr tree`/package-aware `sifr check`.
@@ -1197,6 +1124,18 @@ Acceptance:
 9. Publish/vendor/migration/docs/demo closeout.
 
 This order keeps the compiler integration dependent on a stable package source map, and keeps publishing dependent on the final canonical layout.
+
+## Deferred To V2
+
+- `[scripts]` named workflow aliases.
+- Custom dependency groups (`[dependency-groups.<name>]`) and group composition.
+- `[package].default-run`.
+- `--message-format json` and a stable machine-readable command-output schema.
+- `sifr --explain <diagnostic-code>`.
+- `sifr package migrate-layout` with rollback and partial-apply support.
+- Nested `src/bin/<dir>/<name>.sifr` target names.
+- Additional group-selection flags such as `--only-group`, `--no-group`, and `--all-groups`.
+- Cargo metadata fallback scanning if stable `cargo metadata` output stops surfacing `package.metadata`.
 
 ## Review Requirements
 
