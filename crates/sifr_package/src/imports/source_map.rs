@@ -1,5 +1,6 @@
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId, SifrPackageMetadata};
+use crate::imports::namespace_api::{parse_init_sifr_reexports, NamespaceApi};
 use crate::manifest::sifr::ImportRoot;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -8,9 +9,10 @@ use std::path::{Path, PathBuf};
 pub struct PackageSourceMap {
     pub roots: BTreeMap<(SifrPackageId, ImportRoot), PathBuf>,
     pub modules: BTreeMap<PackageModuleKey, PackageModuleSource>,
+    pub public_apis: BTreeMap<PackageModuleKey, NamespaceApi>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DottedModulePath(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -81,6 +83,20 @@ impl PackageSourceMap {
                         error,
                     )),
                 }
+                match discover_namespace_apis(package, &source_root) {
+                    Ok(apis) => {
+                        for api in apis {
+                            source_map.public_apis.insert(
+                                PackageModuleKey {
+                                    package_id: package.package_id.clone(),
+                                    module_path: api.namespace.clone(),
+                                },
+                                api,
+                            );
+                        }
+                    }
+                    Err(errors) => diagnostics.extend(errors),
+                }
             }
         }
 
@@ -136,7 +152,7 @@ impl PackageSourceMap {
             ));
         };
 
-        if is_private_dependency_module(graph, module, &target_path) {
+        if is_private_dependency_module(self, graph, module, &target_path) {
             return Err(PackageDiagnostic::private_module_access(
                 &importer.cargo_package_id,
                 importing_package_id,
@@ -224,7 +240,7 @@ fn discover_modules_recursive(
         if path.extension().and_then(|value| value.to_str()) != Some("sifr") {
             continue;
         }
-        let Some(module_path) = module_path_from_file(source_root, &path) else {
+        let Some(module_path) = module_path_from_file(package, source_root, &path) else {
             continue;
         };
         modules.push(PackageModuleSource {
@@ -238,7 +254,51 @@ fn discover_modules_recursive(
     Ok(())
 }
 
-fn module_path_from_file(source_root: &Path, file_path: &Path) -> Option<DottedModulePath> {
+fn discover_namespace_apis(
+    package: &SifrPackageMetadata,
+    source_root: &Path,
+) -> Result<Vec<NamespaceApi>, Vec<PackageDiagnostic>> {
+    let modules = discover_package_modules(package, source_root).map_err(|error| {
+        vec![PackageDiagnostic::invalid_sifr_manifest(
+            &package.cargo_package_id,
+            package.sifr_manifest.clone(),
+            if package.manifest.production_schema {
+                "source.root"
+            } else {
+                "source.roots"
+            },
+            error,
+        )]
+    })?;
+    let mut apis = Vec::new();
+    let mut diagnostics = Vec::new();
+    for module in modules {
+        if module.file_path.file_name().and_then(|name| name.to_str()) != Some("__init__.sifr") {
+            continue;
+        }
+        match parse_init_sifr_reexports(
+            &package.cargo_package_id,
+            &package.sifr_manifest,
+            module.module_path,
+            &module.file_path,
+            source_root,
+        ) {
+            Ok(api) => apis.push(api),
+            Err(errors) => diagnostics.extend(errors),
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(apis)
+    } else {
+        Err(diagnostics)
+    }
+}
+
+fn module_path_from_file(
+    package: &SifrPackageMetadata,
+    source_root: &Path,
+    file_path: &Path,
+) -> Option<DottedModulePath> {
     let relative = file_path.strip_prefix(source_root).ok()?;
     let mut parts = relative
         .components()
@@ -250,7 +310,13 @@ fn module_path_from_file(source_root: &Path, file_path: &Path) -> Option<DottedM
     } else if let Some(stripped) = last.strip_suffix(".sifr") {
         *last = stripped.to_string();
     }
-    if parts.is_empty() || !parts.iter().all(|part| valid_identifier(part)) {
+    if !parts.iter().all(|part| valid_identifier(part)) {
+        return None;
+    }
+    if package.manifest.production_schema {
+        parts.insert(0, package.sifr_name.0.clone());
+    }
+    if parts.is_empty() {
         return None;
     }
     Some(DottedModulePath(parts.join(".")))
@@ -300,6 +366,7 @@ fn remap_import_path(
 }
 
 fn is_private_dependency_module(
+    source_map: &PackageSourceMap,
     graph: &SifrPackageGraph,
     module: &PackageModuleSource,
     module_path: &DottedModulePath,
@@ -307,12 +374,19 @@ fn is_private_dependency_module(
     let Some(package) = graph.packages.get(&module.package_id) else {
         return false;
     };
-    if package
-        .manifest
-        .exports
-        .contains(&ImportRoot(module_path.0.clone()))
+    if !package.manifest.production_schema
+        && package.manifest.exports.iter().any(|export| {
+            import_root_matches(export, module_path)
+                && !module_path.0.split('.').any(|part| part.starts_with('_'))
+        })
     {
         return false;
     }
-    module_path.0.split('.').any(|part| part.starts_with('_'))
+    if source_map.public_apis.contains_key(&PackageModuleKey {
+        package_id: module.package_id.clone(),
+        module_path: module_path.clone(),
+    }) {
+        return false;
+    }
+    true
 }

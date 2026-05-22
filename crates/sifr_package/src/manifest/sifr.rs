@@ -1,5 +1,8 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
+use crate::manifest::production::{
+    parse_source_config, reject_production_manifest_bins, reject_production_manifest_exports,
+};
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
@@ -34,6 +37,7 @@ pub struct SifrManifest {
     pub exports: Vec<ImportRoot>,
     pub source_features: BTreeMap<String, String>,
     pub trust: TrustPolicy,
+    pub production_schema: bool,
 }
 
 impl SifrManifest {
@@ -87,11 +91,15 @@ impl SifrManifest {
         .map(CompilerRequirement)?;
         validate_compiler_requirement(cargo_package_id, manifest_path, &compiler_requirement)?;
 
-        let source_roots = table(&value, "source")
-            .and_then(|source| source.get("roots"))
-            .map(|roots| parse_source_roots(cargo_package_id, manifest_path, roots))
-            .transpose()?
-            .unwrap_or_else(|| vec![PackageSourceRoot(PathBuf::from("sifr"))]);
+        let source_table = table(&value, "source");
+        let source_roots = parse_source_config(cargo_package_id, manifest_path, source_table)?;
+        let production_schema = source_table
+            .map(|source| !source.contains_key("roots"))
+            .unwrap_or(true);
+        if production_schema {
+            reject_production_manifest_exports(cargo_package_id, manifest_path, &value)?;
+            reject_production_manifest_bins(cargo_package_id, manifest_path, &value)?;
+        }
 
         let exports = table(&value, "exports")
             .and_then(|exports| exports.get("modules"))
@@ -120,6 +128,7 @@ impl SifrManifest {
             exports,
             source_features,
             trust,
+            production_schema,
         })
     }
 
@@ -157,7 +166,7 @@ fn required_string(
         })
 }
 
-fn parse_source_roots(
+pub(super) fn parse_source_roots(
     cargo_package_id: &CargoPackageId,
     manifest_path: &Path,
     value: &toml::Value,
@@ -286,7 +295,7 @@ fn optional_string_list(
         .collect()
 }
 
-fn validate_relative_path(
+pub(super) fn validate_relative_path(
     cargo_package_id: &CargoPackageId,
     manifest_path: &Path,
     key: &'static str,

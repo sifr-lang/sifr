@@ -15,7 +15,11 @@ pub fn validate_source_roots_exist(
             return Err(PackageDiagnostic::invalid_sifr_manifest(
                 cargo_package_id,
                 manifest_path.to_path_buf(),
-                "source.roots",
+                if manifest.production_schema {
+                    "source.root"
+                } else {
+                    "source.roots"
+                },
                 format!("`{}` is not a directory", source_root.0.display()),
             ));
         }
@@ -29,6 +33,9 @@ pub fn validate_exports_match_sources(
     package_root: &Path,
     manifest: &SifrManifest,
 ) -> Result<(), PackageDiagnostic> {
+    if manifest.production_schema {
+        return Ok(());
+    }
     for export in &manifest.exports {
         let export_path = export.0.replace('.', "/");
         let found = manifest.source_roots.iter().any(|source_root| {

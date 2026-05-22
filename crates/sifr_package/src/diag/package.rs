@@ -7,6 +7,74 @@ use std::path::Path;
 
 impl PackageDiagnostic {
     #[must_use]
+    pub fn manifest_exports_not_production(
+        cargo_package_id: &CargoPackageId,
+        manifest_path: &Path,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION,
+            message: format!(
+                "production sifr.toml at '{}' uses [exports].modules",
+                manifest_path.display()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::SifrManifest {
+                cargo_package_id: cargo_package_id.clone(),
+                path: manifest_path.to_path_buf(),
+                key: Some("exports.modules".to_string()),
+            }),
+            help: Some(
+                "declare public package APIs in src/__init__.sifr instead of [exports].modules"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn manifest_bins_not_production(
+        cargo_package_id: &CargoPackageId,
+        manifest_path: &Path,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION,
+            message: format!(
+                "production sifr.toml at '{}' uses [[bin]] target tables",
+                manifest_path.display()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::SifrManifest {
+                cargo_package_id: cargo_package_id.clone(),
+                path: manifest_path.to_path_buf(),
+                key: Some("bin".to_string()),
+            }),
+            help: Some(
+                "use src/main.sifr, src/bin/*.sifr, [package].default-run, [scripts], or sifr run --bin <name>"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn duplicate_public_api_symbol(
+        cargo_package_id: &CargoPackageId,
+        manifest_path: &Path,
+        symbol: impl Into<String>,
+    ) -> Self {
+        let symbol = symbol.into();
+        Self {
+            code: DiagnosticCode::PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL,
+            message: format!(
+                "public API symbol '{symbol}' is exported more than once by '{}'",
+                manifest_path.display()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::SifrManifest {
+                cargo_package_id: cargo_package_id.clone(),
+                path: manifest_path.to_path_buf(),
+                key: Some("__init__.sifr".to_string()),
+            }),
+            help: Some("make each public name in __init__.sifr resolve to one origin".to_string()),
+        }
+    }
+
+    #[must_use]
     pub fn selected_rust_only(cargo_package_id: &CargoPackageId, package_name: &str) -> Self {
         Self {
             code: DiagnosticCode::PACKAGE_SELECTED_RUST_ONLY,

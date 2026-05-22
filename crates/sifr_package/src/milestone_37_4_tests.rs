@@ -218,6 +218,7 @@ fn package_graph(
             exports: vec![ImportRoot("app".to_string())],
             source_features: BTreeMap::new(),
             trust,
+            production_schema: false,
         },
         aliases: BTreeMap::new(),
     };
