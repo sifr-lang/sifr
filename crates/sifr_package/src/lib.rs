@@ -4,6 +4,7 @@ pub mod graph;
 pub mod imports;
 pub mod manifest;
 pub mod ops;
+pub mod projection;
 pub mod source;
 
 pub use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection, CargoPackageMutation};
@@ -50,6 +51,10 @@ pub use crate::manifest::sifr::{
 };
 pub use crate::ops::publish::{publish_plan, vendor_plan, PublishPlan, VendorPlan};
 pub use crate::ops::read::{outdated_query_report, OutdatedPackageReport, OutdatedPackageSource};
+pub use crate::projection::{
+    check_projection, init_package, repair_projection, InitPackageKind, InitPackageOptions,
+    ProjectionCheck, ProjectionRepair,
+};
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 
 #[cfg(test)]
@@ -66,6 +71,8 @@ mod milestone_37_6_tests;
 mod milestone_37_7_tests;
 #[cfg(test)]
 mod milestone_adhoc_pkg_1_tests;
+#[cfg(test)]
+mod milestone_adhoc_pkg_2_tests;
 
 #[cfg(test)]
 mod tests {

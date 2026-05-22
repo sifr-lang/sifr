@@ -59,6 +59,30 @@ enum Commands {
         /// Input .sifr file
         file: PathBuf,
     },
+    /// Create a new Sifr package
+    Init {
+        /// Target directory
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Create a library package
+        #[arg(long, conflicts_with = "bin")]
+        lib: bool,
+        /// Create an app package
+        #[arg(long)]
+        bin: bool,
+        /// Sifr package name
+        #[arg(long)]
+        name: Option<String>,
+        /// Create missing Sifr-owned files without overwriting existing files
+        #[arg(long)]
+        force: bool,
+    },
+    /// Repair Sifr-managed Cargo projection drift
+    Repair {
+        /// Check projection drift without writing
+        #[arg(long)]
+        check: bool,
+    },
     /// Type-check a .sifr file without compiling
     Check {
         /// Input .sifr file
@@ -146,6 +170,14 @@ fn run_cli(cli: Cli) -> i32 {
     match cli.command {
         Commands::Build { file, output } => cmd_build(&file, &output, diagnostic_format),
         Commands::Run { file } => cmd_run(&file, diagnostic_format),
+        Commands::Init {
+            path,
+            lib,
+            bin,
+            name,
+            force,
+        } => cmd_init(&path, lib, bin, name.as_deref(), force, diagnostic_format),
+        Commands::Repair { check } => cmd_repair(check, diagnostic_format),
         Commands::Check { file } => cmd_check(&file, diagnostic_format),
         Commands::Fmt { check, path } => cmd_fmt(&path, check, diagnostic_format),
         Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
@@ -153,6 +185,71 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
         Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
     }
+}
+
+fn cmd_init(
+    path: &Path,
+    lib: bool,
+    bin: bool,
+    name: Option<&str>,
+    force: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let kind = if lib && !bin {
+        sifr_package::InitPackageKind::Lib
+    } else {
+        sifr_package::InitPackageKind::Bin
+    };
+    let sifr_name = name
+        .map(str::to_string)
+        .or_else(|| {
+            path.file_name()
+                .map(|name| name.to_string_lossy().to_string())
+        })
+        .unwrap_or_else(|| "app".to_string());
+    let options = sifr_package::InitPackageOptions {
+        target_dir: path.to_path_buf(),
+        sifr_name,
+        kind,
+        force,
+    };
+    match sifr_package::init_package(&options) {
+        Ok(_) => EXIT_SUCCESS,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            EXIT_USAGE_OR_CONFIG
+        }
+    }
+}
+
+fn cmd_repair(check: bool, diagnostic_format: DiagnosticFormat) -> i32 {
+    let root = match std::env::current_dir() {
+        Ok(root) => root,
+        Err(error) => {
+            let diagnostic = diagnostic_with_code(
+                format!("could not read current directory: {error}"),
+                DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT,
+            );
+            render_diagnostics(&[diagnostic], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    let repair = sifr_package::repair_projection(&root, check);
+    if repair.diagnostics.is_empty() {
+        EXIT_SUCCESS
+    } else {
+        let diagnostics = repair
+            .diagnostics
+            .into_iter()
+            .map(package_diagnostic)
+            .collect::<Vec<_>>();
+        render_diagnostics(&diagnostics, diagnostic_format);
+        EXIT_USER_DIAGNOSTIC
+    }
+}
+
+fn package_diagnostic(diagnostic: sifr_package::PackageDiagnostic) -> RenderedDiagnostic {
+    diagnostic_with_code(diagnostic.message, diagnostic.code)
 }
 
 fn cmd_lsp(stdio: bool) -> i32 {
@@ -997,6 +1094,58 @@ mod tests {
             .expect_err("package manifest should prevent manifest-less fallback");
 
         assert!(errors[0].message.contains("could not parse sifr.toml"));
+    }
+
+    #[test]
+    fn test_package_cli_init_lib_creates_projection() {
+        let dir = mktemp_dir("package_cli_init_lib");
+        let package = dir.join("demo_json");
+
+        let exit = cmd_init(
+            &package,
+            true,
+            false,
+            Some("demo_json"),
+            false,
+            DiagnosticFormat::Compact,
+        );
+
+        assert_eq!(exit, EXIT_SUCCESS);
+        assert!(package.join("sifr.toml").is_file());
+        assert!(package.join("Cargo.toml").is_file());
+        assert!(package.join("src/__init__.sifr").is_file());
+        assert!(package.join("src/lib.rs").is_file());
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_package_cli_repair_check_reports_projection_drift() {
+        let dir = mktemp_dir("package_cli_repair_check");
+        let package = dir.join("demo_json");
+        assert_eq!(
+            cmd_init(
+                &package,
+                true,
+                false,
+                Some("demo_json"),
+                false,
+                DiagnosticFormat::Compact,
+            ),
+            EXIT_SUCCESS
+        );
+        std::fs::write(
+            package.join("Cargo.toml"),
+            "[package]\nname = \"sifr-demo-json\"\n",
+        )
+        .expect("break projection");
+        let cwd = std::env::current_dir().expect("cwd exists");
+        std::env::set_current_dir(&package).expect("chdir to package");
+
+        let exit = cmd_repair(true, DiagnosticFormat::Compact);
+
+        std::env::set_current_dir(cwd).expect("restore cwd");
+        assert_eq!(exit, EXIT_USER_DIAGNOSTIC);
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

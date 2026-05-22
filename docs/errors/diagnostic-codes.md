@@ -182,6 +182,9 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0603`](SIFR-PACKAGE-0603.md) | Error | Changed file could not be mapped to a package. |
 | [`SIFR-PACKAGE-0604`](SIFR-PACKAGE-0604.md) | Error | Outdated query cannot inspect this Cargo source. |
 | [`SIFR-PACKAGE-0701`](SIFR-PACKAGE-0701.md) | Error | Production sifr.toml uses manifest-level exports. |
+| [`SIFR-PACKAGE-0703`](SIFR-PACKAGE-0703.md) | Error | Sifr-managed Cargo projection manifest pointer drift. |
+| [`SIFR-PACKAGE-0704`](SIFR-PACKAGE-0704.md) | Error | Sifr-managed Cargo projection include rules omit required package files. |
+| [`SIFR-PACKAGE-0709`](SIFR-PACKAGE-0709.md) | Error | Pure package marker is missing from Sifr-managed projection. |
 | [`SIFR-PACKAGE-0711`](SIFR-PACKAGE-0711.md) | Error | Production sifr.toml uses manifest binary target tables. |
 | [`SIFR-PACKAGE-0713`](SIFR-PACKAGE-0713.md) | Error | Public API symbol is exported more than once. |
 

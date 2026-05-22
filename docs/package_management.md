@@ -85,6 +85,28 @@ Pure Sifr packages include a minimal Rust library target because Cargo requires 
 
 Sifr rejects non-trivial Rust marker contents for packages that do not declare Rust-backed behavior.
 
+## Initialization And Repair
+
+`sifr init --lib demo_json --name demo_json` creates a canonical library package:
+
+```text
+demo_json/
+  Cargo.toml
+  sifr.toml
+  src/
+    __init__.sifr
+    lib.rs
+```
+
+`sifr init --bin demo_app --name demo_app` creates `src/main.sifr` instead of `src/__init__.sifr`. Generated Cargo package names use `sifr-<kebab-case-name>` and include the discovery pointer:
+
+```toml
+[package.metadata.sifr]
+manifest = "sifr.toml"
+```
+
+Generated Cargo projection files include Sifr-owned marker comments and deterministic include metadata for `sifr.toml`, `src/**/*.sifr`, and `src/lib.rs`. `sifr repair --check` reports projection drift without writing. `sifr repair` may regenerate Sifr-owned Cargo projection metadata and the pure marker when it is missing.
+
 ## Publishing And Vendoring
 
 `sifr package --dry-run` validates Sifr metadata and package archive contents before delegating to Cargo package/publish command plans. Validation rejects missing `sifr.toml`, missing `.sifr` source files, Cargo include/exclude omissions, archive traversal paths, invalid exports, and backend trust violations.
