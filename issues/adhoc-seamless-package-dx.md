@@ -42,7 +42,7 @@ Review:
 
 ### milestone_adhoc_pkg_2: Sifr-managed Cargo projection
 
-Status: implemented and reviewer-approved. PR: pending.
+Status: implemented and reviewer-approved. PR: https://github.com/sifr-lang/sifr/pull/2154
 
 Delivered:
 
