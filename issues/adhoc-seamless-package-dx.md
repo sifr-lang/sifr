@@ -16,7 +16,7 @@ Related phase: `internal_docs/phases/37_package_management.md`
 
 ### milestone_adhoc_pkg_1: Package UX contract and source layout
 
-Status: implemented and reviewer-approved. PR: pending.
+Status: implemented and reviewer-approved. PR: https://github.com/sifr-lang/sifr/pull/2153
 
 Delivered:
 
