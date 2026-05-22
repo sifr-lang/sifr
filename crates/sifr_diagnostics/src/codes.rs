@@ -208,6 +208,12 @@ impl DiagnosticCode {
         Self::new("SIFR-PACKAGE-0603", Severity::Error);
     pub const PACKAGE_OUTDATED_QUERY_UNSUPPORTED: Self =
         Self::new("SIFR-PACKAGE-0604", Severity::Error);
+    pub const PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION: Self =
+        Self::new("SIFR-PACKAGE-0701", Severity::Error);
+    pub const PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION: Self =
+        Self::new("SIFR-PACKAGE-0711", Severity::Error);
+    pub const PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL: Self =
+        Self::new("SIFR-PACKAGE-0713", Severity::Error);
 
     pub const BUILD_MATERIALIZATION_FAILURE: Self = Self::new("SIFR-BUILD-0002", Severity::Error);
     pub const BUILD_TEMP_WORKSPACE_FAILURE: Self = Self::new("SIFR-BUILD-0003", Severity::Error);
@@ -2185,6 +2191,43 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         [arg!("source"), json_arg!("cargo_package_id")],
         ["cargo_package_id", "source"]
     ),
+    active_entry!(
+        "SIFR-PACKAGE-0701",
+        "PACKAGE",
+        "Production sifr.toml uses manifest-level exports.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::production_manifest_exports_report_0701",
+        "production sifr.toml uses [exports].modules",
+        "sifr_package::manifest::sifr",
+        [json_arg!("cargo_package_id"), json_arg!("manifest_path")],
+        ["cargo_package_id", "manifest_path"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0711",
+        "PACKAGE",
+        "Production sifr.toml uses manifest binary target tables.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::production_manifest_bin_tables_report_0711",
+        "production sifr.toml uses [[bin]]",
+        "sifr_package::manifest::sifr",
+        [json_arg!("cargo_package_id"), json_arg!("manifest_path")],
+        ["cargo_package_id", "manifest_path"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0713",
+        "PACKAGE",
+        "Public API symbol is exported more than once.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::duplicate_init_public_symbol_reports_0713",
+        "duplicate public API symbol '{symbol}'",
+        "sifr_package::imports::namespace_api",
+        [
+            arg!("symbol"),
+            json_arg!("cargo_package_id"),
+            json_arg!("manifest_path")
+        ],
+        ["cargo_package_id", "manifest_path", "symbol"]
+    ),
 ];
 
 pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
@@ -2325,6 +2368,9 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_IMPORT_ROOT,
     DiagnosticCode::PACKAGE_CHANGED_FILE_MAPPING_FAILED,
     DiagnosticCode::PACKAGE_OUTDATED_QUERY_UNSUPPORTED,
+    DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION,
+    DiagnosticCode::PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION,
+    DiagnosticCode::PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,

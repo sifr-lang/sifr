@@ -181,6 +181,9 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0602`](SIFR-PACKAGE-0602.md) | Error | Workspace selection contains duplicate import roots. |
 | [`SIFR-PACKAGE-0603`](SIFR-PACKAGE-0603.md) | Error | Changed file could not be mapped to a package. |
 | [`SIFR-PACKAGE-0604`](SIFR-PACKAGE-0604.md) | Error | Outdated query cannot inspect this Cargo source. |
+| [`SIFR-PACKAGE-0701`](SIFR-PACKAGE-0701.md) | Error | Production sifr.toml uses manifest-level exports. |
+| [`SIFR-PACKAGE-0711`](SIFR-PACKAGE-0711.md) | Error | Production sifr.toml uses manifest binary target tables. |
+| [`SIFR-PACKAGE-0713`](SIFR-PACKAGE-0713.md) | Error | Public API symbol is exported more than once. |
 
 ## Reserved Codes
 

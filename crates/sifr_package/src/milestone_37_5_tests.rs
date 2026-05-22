@@ -289,6 +289,7 @@ fn package(
             exports: vec![ImportRoot(export.to_string())],
             source_features: BTreeMap::new(),
             trust: TrustPolicy::default(),
+            production_schema: false,
         },
         aliases: BTreeMap::new(),
     }

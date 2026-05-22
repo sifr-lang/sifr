@@ -921,6 +921,23 @@ mod tests {
     }
 
     #[test]
+    fn test_manifest_less_run_explicit_non_main_file_stays_single_file() {
+        let project = TestProject::new("manifest_less_non_main");
+        let app = project.write(
+            "app.sifr",
+            "def main():\n    pass\n",
+            "app file should be written",
+        );
+        project.write(
+            "main.sifr",
+            "from helper import value\n\ndef main():\n    print(value())\n",
+            "project-like sibling should be written",
+        );
+
+        assert_eq!(resolved_mode(&app), CompilationMode::SingleFile);
+    }
+
+    #[test]
     fn test_resolve_compilation_mode_project_for_non_main_entry_in_workspace() {
         let project = TestProject::new("workspace_non_main");
         project.write(
@@ -958,6 +975,26 @@ mod tests {
 
         let errors = resolve_compilation_mode(&app)
             .expect_err("malformed manifest should prevent single-file fallback");
+
+        assert!(errors[0].message.contains("could not parse sifr.toml"));
+    }
+
+    #[test]
+    fn test_manifest_less_mode_does_not_ignore_malformed_package_manifest() {
+        let project = TestProject::new("manifest_less_malformed_manifest");
+        project.write(
+            "sifr.toml",
+            "[source\nroots = [\".\"]\n",
+            "manifest should be written",
+        );
+        let app = project.write(
+            "app.sifr",
+            "def main():\n    pass\n",
+            "app should be written",
+        );
+
+        let errors = resolve_compilation_mode(&app)
+            .expect_err("package manifest should prevent manifest-less fallback");
 
         assert!(errors[0].message.contains("could not parse sifr.toml"));
     }

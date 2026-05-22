@@ -64,6 +64,8 @@ mod milestone_37_5_tests;
 mod milestone_37_6_tests;
 #[cfg(test)]
 mod milestone_37_7_tests;
+#[cfg(test)]
+mod milestone_adhoc_pkg_1_tests;
 
 #[cfg(test)]
 mod tests {

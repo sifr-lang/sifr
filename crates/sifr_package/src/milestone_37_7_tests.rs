@@ -51,7 +51,7 @@ fn closeout_docs_lock_cargo_backed_boundary_and_future_uv_interop() {
     let root = repo_root();
     let package_docs =
         std::fs::read_to_string(root.join("docs/package_management.md")).expect("read docs");
-    assert!(package_docs.contains("Cargo the package substrate"));
+    assert!(package_docs.contains("Cargo is the package substrate"));
     assert!(package_docs.contains("uv/Python package coordination are future interop work"));
 
     let audit = std::fs::read_to_string(root.join("crates/sifr_package/DEPENDENCY_AUDIT.md"))

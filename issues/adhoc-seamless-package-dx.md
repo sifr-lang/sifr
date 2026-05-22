@@ -4,13 +4,41 @@ Related phase: `internal_docs/phases/37_package_management.md`
 
 ## Status
 
-- [ ] milestone_adhoc_pkg_1: Package UX contract and source layout
+- [x] milestone_adhoc_pkg_1: Package UX contract and source layout
 - [ ] milestone_adhoc_pkg_2: Sifr-managed Cargo projection
 - [ ] milestone_adhoc_pkg_3: Package session and CLI command integration
 - [ ] milestone_adhoc_pkg_4: Package-aware compiler imports
 - [ ] milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
 - [ ] milestone_adhoc_pkg_6: Packaging, publishing, vendoring, and release checks
 - [ ] milestone_adhoc_pkg_7: Migration, docs, demos, and long-term guardrails
+
+## Milestone Progress
+
+### milestone_adhoc_pkg_1: Package UX contract and source layout
+
+Status: implemented and reviewer-approved. PR: pending.
+
+Delivered:
+
+- Production package manifests now default `[source].root` to `src`, keep legacy `[source].roots` for Phase 37 fixtures, and reject production `[exports].modules` (`SIFR-PACKAGE-0701`) plus production Sifr `[[bin]]` tables (`SIFR-PACKAGE-0711`).
+- `PackageSourceMap` derives public namespace APIs from `__init__.sifr`, prefixes production `src/` modules with the Sifr package name, and rejects cross-package imports into private implementation files while preserving legacy export-prefix fixture behavior.
+- `parse_init_sifr_reexports` covers explicit relative re-exports, top-level public definitions, public child namespaces, duplicate public API symbol diagnostics (`SIFR-PACKAGE-0713`), and rejection of wildcard/dynamic/assignment exports.
+- Manifest-less explicit-file behavior has named tests under the `manifest_less` filter, and `docs/package_management.md` documents the canonical `src/` layout and manifest-less split.
+
+Validation:
+
+- `cargo test -p sifr_package` -> PASS, 46 tests.
+- `cargo test -p sifr_package source_layout` -> PASS, 1 test.
+- `cargo test -p sifr -- manifest_less` -> PASS, 2 tests.
+- `python3 scripts/check_package_manager_guardrails.py` -> PASS.
+- `python3 scripts/check_diagnostic_docs_sync.py` -> PASS.
+- `python3 scripts/check_diagnostic_code_coverage.py` -> PASS.
+- `cargo fmt --check` -> PASS.
+
+Review:
+
+- `reviews/adhoc-package-dx-m1-review-pass-1.md` -> CHANGES_REQUESTED for a stale Phase 37 docs assertion.
+- `reviews/adhoc-package-dx-m1-review-pass-2.md` -> READY after updating the assertion and rerunning `cargo test -p sifr_package`.
 
 ## Problem
 

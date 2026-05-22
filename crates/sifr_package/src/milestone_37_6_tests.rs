@@ -143,6 +143,7 @@ fn package(trust: TrustPolicy) -> SifrPackageMetadata {
             exports: vec![ImportRoot("app".to_string())],
             source_features: BTreeMap::new(),
             trust,
+            production_schema: false,
         },
         aliases: BTreeMap::new(),
     }
@@ -165,6 +166,7 @@ fn source_map(package: &SifrPackageMetadata) -> PackageSourceMap {
             },
             module,
         )]),
+        public_apis: BTreeMap::new(),
     }
 }
 
