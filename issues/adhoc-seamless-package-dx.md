@@ -444,8 +444,8 @@ Multiple-version aliases:
 
 ```toml
 [dependencies]
-demo_json_stable = { package = "sifr-demo-json", import = "demo_json_stable", git = "https://github.com/sifr-lang/sifr-demo-json", tag = "v0.1.0" }
-demo_json_next = { package = "sifr-demo-json", import = "demo_json_next", git = "https://github.com/sifr-lang/sifr-demo-json", tag = "v0.2.0" }
+demo_json_v1 = { package = "sifr-demo-json", import = "demo_json_v1", git = "https://github.com/sifr-lang/sifr-demo-json", tag = "v0.1.0" }
+demo_json_v2 = { package = "sifr-demo-json", import = "demo_json_v2", git = "https://github.com/sifr-lang/sifr-demo-json", tag = "v0.2.0" }
 ```
 
 Field meanings:
@@ -492,9 +492,9 @@ Alias conflicts:
 Imports:
 
 ```sifr
-from demo_json_stable import parse_json
-from demo_json_next import parse_json
-from demo_json_next.codecs import decode_json
+from demo_json_v1 import parse_json
+from demo_json_v2 import parse_json
+from demo_json_v2.codecs import decode_json
 ```
 
 Invariant:
@@ -755,8 +755,8 @@ Codegen namespace rules:
 - Every resolved package instance gets a generated Rust namespace that includes a stable package-instance hash.
 - The hash is derived from the normalized Cargo package id, Cargo version, Cargo source, and Sifr package name.
 - Example generated modules:
-  - `demo_json_stable` imports lower to `sifr_gen_demo_json_stable_7f3a2c10`.
-  - `demo_json_next` imports lower to `sifr_gen_demo_json_next_b81d044e`.
+  - `demo_json_v1` imports lower to `sifr_gen_demo_json_7f3a2c10`.
+  - `demo_json_v2` imports lower to `sifr_gen_demo_json_b81d044e`.
 - HIR type identity includes the Sifr package instance id, not only the textual Sifr package name.
 - Values from different package instances are not assignable unless an explicit conversion API is called.
 - Cross-instance type mismatches report `SIFR-PACKAGE-0204` at compile time.
@@ -1130,7 +1130,7 @@ Validation:
 
 Acceptance:
 
-- `sifr-demo-app` can import `demo_json_stable`, `demo_json_next`, and `demo_http` through Sifr package APIs without direct Cargo commands.
+- `sifr-demo-app` can import `demo_json_v1`, `demo_json_v2`, and `demo_http` through Sifr package APIs without direct Cargo commands.
 
 ### milestone_adhoc_pkg_5: Workspaces, Aliases, And Multiple Versions
 
@@ -1147,7 +1147,7 @@ Scope:
 Validation:
 
 - E2E workspace fixtures using `sifr-demo-workspace`.
-- Multiple-version alias tests for `demo_json_stable` and `demo_json_next`.
+- Multiple-version alias tests for `demo_json_v1` and `demo_json_v2`.
 
 Acceptance:
 
