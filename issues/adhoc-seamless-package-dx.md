@@ -51,7 +51,7 @@ When online, `sifr run` may fetch missing dependencies and create or update the 
 - Do not create an independent Sifr registry, resolver, source cache, or archive format in this phase.
 - Do not expose raw Cargo internals as the Sifr user model.
 - Do not require users to edit Cargo source IDs, Cargo metadata aliases, or registry cache paths.
-- Do not support Python package tools (`pyproject.toml`, `uv.lock`, wheels) in this phase. Python/uv interop, if added, must lower into the same package session model.
+- Do not support Python package tools (`pyproject.toml`, `uv.lock`, wheels) in this phase. Future Python/uv interop, if added, must lower into the same package session model.
 - Do not make every `.sifr` file in a dependency public by default.
 - Do not add npm-compatible arbitrary shell scripts in this phase. Sifr supports named workflow scripts, but scripts expand to Sifr command plans, not unparsed shell strings or arbitrary external commands.
 - Do not make `[[bin]]` a required or normal Sifr manifest concept. Cargo may still receive generated target configuration in the projection when needed.
