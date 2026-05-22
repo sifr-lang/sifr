@@ -5,7 +5,7 @@ Related phase: `internal_docs/phases/37_package_management.md`
 ## Status
 
 - [x] milestone_adhoc_pkg_1: Package UX contract and source layout
-- [ ] milestone_adhoc_pkg_2: Sifr-managed Cargo projection
+- [x] milestone_adhoc_pkg_2: Sifr-managed Cargo projection
 - [ ] milestone_adhoc_pkg_3: Package session and CLI command integration
 - [ ] milestone_adhoc_pkg_4: Package-aware compiler imports
 - [ ] milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
@@ -39,6 +39,31 @@ Review:
 
 - `reviews/adhoc-package-dx-m1-review-pass-1.md` -> CHANGES_REQUESTED for a stale Phase 37 docs assertion.
 - `reviews/adhoc-package-dx-m1-review-pass-2.md` -> READY after updating the assertion and rerunning `cargo test -p sifr_package`.
+
+### milestone_adhoc_pkg_2: Sifr-managed Cargo projection
+
+Status: implemented and reviewer-approved. PR: https://github.com/sifr-lang/sifr/pull/2154
+
+Delivered:
+
+- Added a Sifr-managed Cargo projection module with deterministic `Cargo.toml` rendering, `# sifr-managed` markers, `[package.metadata.sifr] manifest = "sifr.toml"`, canonical include metadata, and pure-marker generation.
+- Implemented `sifr init --lib`, `sifr init --bin`, `--name`, and `--force` for canonical `src/` packages without manifest `[[bin]]` tables.
+- Implemented `sifr repair --check` and `sifr repair` projection paths for manifest-pointer drift (`SIFR-PACKAGE-0703`), include drift (`SIFR-PACKAGE-0704`), and missing pure marker regeneration (`SIFR-PACKAGE-0709`).
+- Documented initialization and projection repair behavior in `docs/package_management.md`.
+
+Validation:
+
+- `cargo test -p sifr_package` -> PASS, 51 tests.
+- `cargo test -p sifr_package cargo_projection` -> PASS, 5 tests.
+- `cargo test -p sifr package_cli` -> PASS, 2 tests.
+- `python3 scripts/check_package_manager_guardrails.py` -> PASS.
+- `python3 scripts/check_diagnostic_docs_sync.py` -> PASS.
+- `python3 scripts/check_diagnostic_code_coverage.py` -> PASS.
+- `cargo fmt --check` -> PASS.
+
+Review:
+
+- `reviews/adhoc-package-dx-m2-review-pass-1.md` -> READY with no blocking findings.
 
 ## Problem
 

@@ -75,6 +75,73 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
+    pub fn projection_manifest_pointer_drift(
+        cargo_package_id: &CargoPackageId,
+        path: impl Into<std::path::PathBuf>,
+        reason: impl Into<String>,
+    ) -> Self {
+        let path = path.into();
+        Self {
+            code: DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT,
+            message: format!(
+                "Cargo projection manifest pointer drift at '{}': {}",
+                path.display(),
+                reason.into()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoManifest {
+                cargo_package_id: cargo_package_id.clone(),
+                path,
+                key: Some("package.metadata.sifr.manifest".to_string()),
+            }),
+            help: Some(
+                "run `sifr repair` to regenerate Sifr-owned Cargo projection metadata".to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn projection_include_drift(
+        cargo_package_id: &CargoPackageId,
+        path: impl Into<std::path::PathBuf>,
+        required: impl Into<String>,
+    ) -> Self {
+        let required = required.into();
+        Self {
+            code: DiagnosticCode::PACKAGE_PROJECTION_INCLUDE_DRIFT,
+            message: format!("Cargo projection include rules omit required entry '{required}'"),
+            origin: Box::new(PackageDiagnosticOrigin::CargoManifest {
+                cargo_package_id: cargo_package_id.clone(),
+                path: path.into(),
+                key: Some("package.include".to_string()),
+            }),
+            help: Some("run `sifr repair` to regenerate Sifr-owned include metadata".to_string()),
+        }
+    }
+
+    #[must_use]
+    pub fn projection_pure_marker_missing(
+        cargo_package_id: &CargoPackageId,
+        marker_path: impl Into<std::path::PathBuf>,
+    ) -> Self {
+        let marker_path = marker_path.into();
+        Self {
+            code: DiagnosticCode::PACKAGE_PROJECTION_PURE_MARKER_MISSING,
+            message: format!(
+                "pure Sifr package marker '{}' is missing",
+                marker_path.display()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::RustMarker {
+                cargo_package_id: cargo_package_id.clone(),
+                path: marker_path,
+            }),
+            help: Some(
+                "run `sifr repair` to regenerate the pure marker, or configure Rust-backed trust policy"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
     pub fn selected_rust_only(cargo_package_id: &CargoPackageId, package_name: &str) -> Self {
         Self {
             code: DiagnosticCode::PACKAGE_SELECTED_RUST_ONLY,

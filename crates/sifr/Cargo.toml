@@ -17,6 +17,7 @@ sifr_driver = { workspace = true }
 sifr_format = { workspace = true }
 sifr_lint = { workspace = true }
 sifr_lsp = { workspace = true }
+sifr_package = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_syntax = { workspace = true }
 clap = { version = "4.6.1", features = ["derive"] }

@@ -210,6 +210,12 @@ impl DiagnosticCode {
         Self::new("SIFR-PACKAGE-0604", Severity::Error);
     pub const PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION: Self =
         Self::new("SIFR-PACKAGE-0701", Severity::Error);
+    pub const PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT: Self =
+        Self::new("SIFR-PACKAGE-0703", Severity::Error);
+    pub const PACKAGE_PROJECTION_INCLUDE_DRIFT: Self =
+        Self::new("SIFR-PACKAGE-0704", Severity::Error);
+    pub const PACKAGE_PROJECTION_PURE_MARKER_MISSING: Self =
+        Self::new("SIFR-PACKAGE-0709", Severity::Error);
     pub const PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION: Self =
         Self::new("SIFR-PACKAGE-0711", Severity::Error);
     pub const PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL: Self =
@@ -2203,6 +2209,47 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["cargo_package_id", "manifest_path"]
     ),
     active_entry!(
+        "SIFR-PACKAGE-0703",
+        "PACKAGE",
+        "Sifr-managed Cargo projection manifest pointer drift.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_check_reports_missing_manifest_pointer_0703",
+        "Cargo projection manifest pointer drift",
+        "sifr_package::projection",
+        [
+            json_arg!("cargo_package_id"),
+            json_arg!("path"),
+            arg!("reason")
+        ],
+        ["cargo_package_id", "path", "reason"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0704",
+        "PACKAGE",
+        "Sifr-managed Cargo projection include rules omit required package files.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_check_reports_missing_required_include_0704",
+        "Cargo projection include rules omit required entry '{required}'",
+        "sifr_package::projection",
+        [
+            json_arg!("cargo_package_id"),
+            json_arg!("path"),
+            arg!("required")
+        ],
+        ["cargo_package_id", "path", "required"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0709",
+        "PACKAGE",
+        "Pure package marker is missing from Sifr-managed projection.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_regenerates_missing_pure_marker",
+        "pure Sifr package marker is missing",
+        "sifr_package::projection",
+        [json_arg!("cargo_package_id"), json_arg!("marker_path")],
+        ["cargo_package_id", "marker_path"]
+    ),
+    active_entry!(
         "SIFR-PACKAGE-0711",
         "PACKAGE",
         "Production sifr.toml uses manifest binary target tables.",
@@ -2369,6 +2416,9 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_CHANGED_FILE_MAPPING_FAILED,
     DiagnosticCode::PACKAGE_OUTDATED_QUERY_UNSUPPORTED,
     DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION,
+    DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT,
+    DiagnosticCode::PACKAGE_PROJECTION_INCLUDE_DRIFT,
+    DiagnosticCode::PACKAGE_PROJECTION_PURE_MARKER_MISSING,
     DiagnosticCode::PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION,
     DiagnosticCode::PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
