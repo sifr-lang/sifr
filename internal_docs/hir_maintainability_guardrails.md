@@ -2,7 +2,7 @@
 
 This document defines anti-regrowth guardrails for the Phase 20 HIR decomposition work.
 
-## File Boundaries And Line Budgets
+## File Boundaries
 
 The canonical lowering and intrinsic-registry layout is:
 
@@ -29,6 +29,7 @@ Monolithic files are explicitly banned:
 Guardrail enforcement command:
 
 - `python3 scripts/check_hir_maintainability_guardrails.py`
+- `python3 scripts/check_file_size_guardrails.py`
 
 `run_all_tests.sh` runs this check before unit/e2e validation.
 The CI workflow `.github/workflows/local-first-validation.yml` runs `run_all_tests.sh`, so the guardrail is enforced in CI as well.
@@ -39,6 +40,6 @@ Use this checklist for every PR that changes lowering or intrinsic registry logi
 
 - [ ] Lowering logic is placed in the correct file (imports/diagnostics/classes/typing_and_functions/statements/expressions).
 - [ ] Shared lowering helper extraction was considered before adding duplicate logic.
-- [ ] File-size guardrails stay within limits.
+- [ ] Unified file-size guardrail passes locally (`python3 scripts/check_file_size_guardrails.py`).
 - [ ] New lowering behavior includes at least one positive-path and one negative-path validation update.
 - [ ] Guardrail script still passes locally (`python3 scripts/check_hir_maintainability_guardrails.py`).

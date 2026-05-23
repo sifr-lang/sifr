@@ -93,6 +93,9 @@ echo "  policy=thermal:${THERMAL_POLICY} memory:${MEMORY_POLICY}"
 echo "Running HIR maintainability guardrails"
 python3 "${SCRIPT_DIR}/check_hir_maintainability_guardrails.py"
 
+echo "Running file-size guardrails"
+python3 "${SCRIPT_DIR}/check_file_size_guardrails.py"
+
 echo "Running sifr_driver maintainability guardrails"
 python3 "${SCRIPT_DIR}/check_sifr_driver_maintainability_guardrails.py"
 

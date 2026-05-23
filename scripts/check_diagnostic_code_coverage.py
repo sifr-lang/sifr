@@ -12,6 +12,11 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CODES_RS = ROOT / "crates" / "sifr_diagnostics" / "src" / "codes.rs"
 CODE_RE = r"SIFR-[A-Z]+-\d{4}"
+INCLUDE_RE = re.compile(r'^\s*include!\("([^"]+)"\);\s*$', re.MULTILINE)
+LOCAL_MOD_RE = re.compile(
+    r"^\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z0-9_]+);\s*$",
+    re.MULTILINE,
+)
 
 
 def git_ls_files(*patterns: str) -> list[pathlib.Path]:
@@ -58,6 +63,44 @@ def strip_cfg_test_blocks(text: str) -> str:
     return "\n".join(kept)
 
 
+def local_module_path(parent: pathlib.Path, module_name: str) -> pathlib.Path | None:
+    direct = parent / f"{module_name}.rs"
+    if direct.exists():
+        return direct
+    nested = parent / module_name / "mod.rs"
+    if nested.exists():
+        return nested
+    return None
+
+
+def read_rust_with_local_sources(path: pathlib.Path, seen: set[pathlib.Path] | None = None) -> str:
+    if seen is None:
+        seen = set()
+    resolved = path.resolve()
+    if resolved in seen:
+        return ""
+    seen.add(resolved)
+
+    text = path.read_text(encoding="utf-8")
+
+    def expand(match: re.Match[str]) -> str:
+        include_path = path.parent / match.group(1)
+        if not include_path.exists():
+            return match.group(0)
+        return read_rust_with_local_sources(include_path, seen)
+
+    def expand_mod(match: re.Match[str]) -> str:
+        module_name = match.group(1)
+        module_path = local_module_path(path.parent, module_name)
+        if module_path is None and path.name != "mod.rs":
+            module_path = local_module_path(path.parent / path.stem, module_name)
+        if module_path is None:
+            return match.group(0)
+        return read_rust_with_local_sources(module_path, seen)
+
+    return LOCAL_MOD_RE.sub(expand_mod, INCLUDE_RE.sub(expand, text))
+
+
 def non_test_compiler_sources() -> list[pathlib.Path]:
     sources = []
     for path in git_ls_files("crates/**/*.rs"):
@@ -73,7 +116,7 @@ def non_test_compiler_sources() -> list[pathlib.Path]:
 
 
 def parse_registry() -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
-    text = CODES_RS.read_text(encoding="utf-8")
+    text = read_rust_with_local_sources(CODES_RS)
     constants = dict(
         re.findall(
             rf"pub const ([A-Z0-9_]+): Self\s*=\s*(?:\n\s*)?Self::new\(\"({CODE_RE})\"",
@@ -136,7 +179,7 @@ def main() -> int:
         if not path.exists():
             continue
         rel = path.relative_to(ROOT)
-        text = strip_cfg_test_blocks(path.read_text(encoding="utf-8", errors="ignore"))
+        text = strip_cfg_test_blocks(read_rust_with_local_sources(path))
         for name in re.findall(r"DiagnosticCode::([A-Z0-9_]+)", text):
             if name not in all_constants:
                 errors.append(f"{rel}: references unknown DiagnosticCode::{name}")

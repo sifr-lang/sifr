@@ -29,7 +29,7 @@ FORBIDDEN_PATTERNS = (
 
 def is_approved(path: Path) -> bool:
     rel = path.relative_to(REPO_ROOT)
-    if "tests" in rel.parts or rel.name.endswith("_tests.rs"):
+    if "tests" in rel.parts or rel.name.endswith("_tests.rs") or "_tests_" in rel.name:
         return True
     return any(rel.is_relative_to(prefix) for prefix in APPROVED_PREFIXES)
 
