@@ -11,8 +11,8 @@ pub use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection, CargoP
 pub use crate::cargo::errors::{map_cargo_failure, CargoAction};
 pub use crate::cargo::lock_modes::{validate_offline_source_availability, CargoLockMode};
 pub use crate::cargo::metadata::{
-    CargoDependency, CargoMetadata, CargoPackage, CargoPackageId, CargoResolveEdge, CargoTarget,
-    NormalizedCargoMetadata,
+    parse_metadata_json, CargoDependency, CargoMetadata, CargoPackage, CargoPackageId,
+    CargoResolveEdge, CargoTarget, NormalizedCargoMetadata,
 };
 pub use crate::cargo::package::{
     package_dry_run_plan, required_archive_entries, validate_package_archive, CargoPackageRole,

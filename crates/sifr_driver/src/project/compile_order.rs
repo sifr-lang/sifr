@@ -9,6 +9,7 @@ struct ModuleDependencyGraph {
 }
 
 fn collect_local_module_dependencies(
+    current_module: &str,
     stmts: &[Stmt],
     local_modules: &BTreeSet<String>,
 ) -> BTreeSet<String> {
@@ -31,11 +32,34 @@ fn collect_local_module_dependencies(
         {
             continue;
         }
-        if local_modules.contains(&module_name) {
-            deps.insert(module_name);
+        for dependency in
+            dependency_candidates(current_module, module_name.as_str(), import_from.level)
+        {
+            if local_modules.contains(&dependency) {
+                deps.insert(dependency);
+                break;
+            }
         }
     }
     deps
+}
+
+fn dependency_candidates(current_module: &str, module_name: &str, level: u32) -> Vec<String> {
+    if level != 1 {
+        return vec![module_name.to_string()];
+    }
+    let mut candidates = Vec::new();
+    if current_module != "main" && !current_module.is_empty() {
+        candidates.push(format!("{current_module}.{module_name}"));
+    }
+    if let Some((parent, _)) = current_module.rsplit_once('.') {
+        if !parent.is_empty() {
+            candidates.push(format!("{parent}.{module_name}"));
+        }
+    }
+    candidates.push(module_name.to_string());
+    candidates.dedup();
+    candidates
 }
 
 fn build_module_dependency_graph(
@@ -46,7 +70,7 @@ fn build_module_dependency_graph(
     for module_name in &local_modules {
         let module_deps = parsed_modules
             .get(module_name)
-            .map(|stmts| collect_local_module_dependencies(stmts, &local_modules))
+            .map(|stmts| collect_local_module_dependencies(module_name, stmts, &local_modules))
             .unwrap_or_default();
         dependencies.insert(module_name.clone(), module_deps);
     }

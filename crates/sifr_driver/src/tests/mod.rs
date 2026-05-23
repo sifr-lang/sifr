@@ -1,5 +1,6 @@
 mod diagnostics;
 mod discovery_and_workspace;
+mod package_project_build_check;
 mod panic_boundary;
 mod project_build_check;
 mod project_graph;

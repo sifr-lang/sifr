@@ -11,7 +11,7 @@ use sifr_diagnostics::{
     SourceMap, SourceSpan,
 };
 use sifr_hir::{
-    lower_module_with_externals, ExternalDefs, HirDiagnostic, HirModule, LoweringResult,
+    lower_module_with_externals_and_name, ExternalDefs, HirDiagnostic, HirModule, LoweringResult,
     LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 use sifr_python_ast::Stmt;
@@ -383,7 +383,7 @@ pub fn compile_module_hir_with_source(
     diagnostic_style: FrontendDiagnosticStyle,
     source_context: Option<FrontendSourceContext<'_>>,
 ) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
-    match lower_module_with_externals(stmts, external_defs) {
+    match lower_module_with_externals_and_name(module_name, stmts, external_defs) {
         Ok(result) => Ok(result),
         Err(errors) => Err(errors
             .into_iter()
@@ -1294,6 +1294,78 @@ pub fn collect_module_exports(
             const_exports.insert(name.clone(), ty.clone());
             if let Some(value) = lowering_result.constant_integer_values.get(name) {
                 const_integer_value_exports.insert(name.clone(), value.clone());
+            }
+        }
+    }
+
+    for import in &module.imports {
+        for name in &import.names {
+            let local_name = import
+                .aliases
+                .iter()
+                .find(|(original, _)| original == name)
+                .map_or_else(|| name.clone(), |(_, alias)| alias.clone());
+            if local_name.starts_with('_') {
+                continue;
+            }
+            if let Some(module_fns) = external_defs.functions.get(&import.module) {
+                if let Some(function_type) = module_fns.get(name) {
+                    fn_exports.insert(local_name.clone(), function_type.clone());
+                    if let Some(defaults) = external_defs
+                        .function_defaults
+                        .get(&import.module)
+                        .and_then(|module_defaults| module_defaults.get(name))
+                    {
+                        default_exports.insert(local_name.clone(), defaults.clone());
+                    }
+                    if let Some(vararg_index) = external_defs
+                        .function_varargs
+                        .get(&import.module)
+                        .and_then(|module_varargs| module_varargs.get(name))
+                    {
+                        vararg_exports.insert(local_name.clone(), *vararg_index);
+                    }
+                    if let Some(type_vars) = external_defs
+                        .generic_functions
+                        .get(&import.module)
+                        .and_then(|module_generics| module_generics.get(name))
+                        .cloned()
+                    {
+                        // Generic function metadata is keyed by the local export name.
+                        // It is consumed by later modules through ExternalDefs.
+                        external_defs
+                            .generic_functions
+                            .entry(module_name.to_string())
+                            .or_default()
+                            .insert(local_name.clone(), type_vars);
+                    }
+                    continue;
+                }
+            }
+            if let Some(module_classes) = external_defs.classes.get(&import.module) {
+                if let Some(class_type) = module_classes.get(name) {
+                    class_exports.insert(local_name.clone(), class_type.clone());
+                    if let Some(type_params) = external_defs
+                        .class_type_params
+                        .get(&import.module)
+                        .and_then(|module_params| module_params.get(name))
+                    {
+                        class_type_param_exports.insert(local_name.clone(), type_params.clone());
+                    }
+                    continue;
+                }
+            }
+            if let Some(module_consts) = external_defs.constants.get(&import.module) {
+                if let Some(const_type) = module_consts.get(name) {
+                    const_exports.insert(local_name.clone(), const_type.clone());
+                    if let Some(value) = external_defs
+                        .constant_integer_values
+                        .get(&import.module)
+                        .and_then(|module_values| module_values.get(name))
+                    {
+                        const_integer_value_exports.insert(local_name, value.clone());
+                    }
+                }
             }
         }
     }

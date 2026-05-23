@@ -1,0 +1,401 @@
+use super::project_build_check::mktemp_dir;
+use crate::{build_cached_package_project, check_package_project, PackageEntrypoint};
+use sifr_diagnostics::DiagnosticCode;
+use std::path::{Path, PathBuf};
+
+#[derive(Clone)]
+struct TestPackage {
+    root: PathBuf,
+    cargo_name: String,
+    version: String,
+    sifr_name: String,
+    aliases: Vec<TestAlias>,
+}
+
+#[derive(Clone)]
+struct TestEdge {
+    from: String,
+    dependency_name: String,
+    to: String,
+}
+
+#[derive(Clone)]
+struct TestAlias {
+    alias: String,
+    dependency: String,
+    import: String,
+}
+
+fn production_package(
+    workspace: &Path,
+    dir_name: &str,
+    cargo_name: &str,
+    sifr_name: &str,
+) -> TestPackage {
+    let root = workspace.join(dir_name);
+    std::fs::create_dir_all(root.join("src")).expect("package src dir should be created");
+    std::fs::write(root.join("src/lib.rs"), "").expect("pure marker should be written");
+    std::fs::write(
+        root.join("Cargo.toml"),
+        format!(
+            "[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
+        ),
+    )
+    .expect("cargo manifest should be written");
+    std::fs::write(
+        root.join("sifr.toml"),
+        format!(
+            "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
+        ),
+    )
+    .expect("sifr manifest should be written");
+    TestPackage {
+        root,
+        cargo_name: cargo_name.to_string(),
+        version: "0.1.0".to_string(),
+        sifr_name: sifr_name.to_string(),
+        aliases: Vec::new(),
+    }
+}
+
+fn write_package_source(package: &TestPackage, relative: &str, source: &str) {
+    let path = package.root.join("src").join(relative);
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).expect("source parent should be created");
+    }
+    std::fs::write(path, source).expect("package source should be written");
+}
+
+fn package_edge(from: &TestPackage, dependency_name: &str, to: &TestPackage) -> TestEdge {
+    TestEdge {
+        from: from.cargo_name.clone(),
+        dependency_name: dependency_name.to_string(),
+        to: to.cargo_name.clone(),
+    }
+}
+
+fn cargo_package_id(package: &TestPackage) -> String {
+    format!(
+        "path+file://{}#{}@{}",
+        package.root.display(),
+        package.cargo_name,
+        package.version
+    )
+}
+
+fn package_graph(
+    workspace: &Path,
+    packages: &[&TestPackage],
+    edges: &[TestEdge],
+) -> sifr_package::SifrPackageGraph {
+    let package_json = packages
+        .iter()
+        .map(|package| {
+            let dependencies = edges
+                .iter()
+                .filter(|edge| edge.from == package.cargo_name)
+                .map(|edge| {
+                    let target = packages
+                        .iter()
+                        .find(|candidate| candidate.cargo_name == edge.to)
+                        .expect("edge target should exist");
+                    serde_json::json!({
+                        "name": edge.dependency_name,
+                        "package": target.cargo_name,
+                        "req": "*",
+                        "kind": null,
+                        "target": null,
+                        "uses_workspace": false
+                    })
+                })
+                .collect::<Vec<_>>();
+            let aliases = package
+                .aliases
+                .iter()
+                .map(|alias| {
+                    (
+                        alias.alias.clone(),
+                        serde_json::json!({
+                            "dependency": alias.dependency,
+                            "import": alias.import
+                        }),
+                    )
+                })
+                .collect::<serde_json::Map<_, _>>();
+            serde_json::json!({
+                "id": cargo_package_id(package),
+                "name": package.cargo_name,
+                "version": package.version,
+                "source": null,
+                "manifest_path": package.root.join("Cargo.toml").display().to_string(),
+                "dependencies": dependencies,
+                "targets": [{
+                    "name": package.cargo_name,
+                    "kind": ["lib"],
+                    "crate_types": ["lib"],
+                    "src_path": package.root.join("src/lib.rs").display().to_string()
+                }],
+                "features": {},
+                "metadata": { "sifr": { "manifest": "sifr.toml", "aliases": aliases } }
+            })
+        })
+        .collect::<Vec<_>>();
+    let resolve_nodes = packages
+        .iter()
+        .map(|package| {
+            let deps = edges
+                .iter()
+                .filter(|edge| edge.from == package.cargo_name)
+                .map(|edge| {
+                    let target = packages
+                        .iter()
+                        .find(|candidate| candidate.cargo_name == edge.to)
+                        .expect("edge target should exist");
+                    serde_json::json!({
+                        "name": edge.dependency_name,
+                        "pkg": cargo_package_id(target)
+                    })
+                })
+                .collect::<Vec<_>>();
+            serde_json::json!({
+                "id": cargo_package_id(package),
+                "deps": deps
+            })
+        })
+        .collect::<Vec<_>>();
+    let metadata = serde_json::json!({
+        "packages": package_json,
+        "resolve": { "nodes": resolve_nodes },
+        "workspace_members": packages.iter().map(|package| cargo_package_id(package)).collect::<Vec<_>>(),
+        "target_directory": workspace.join("target").display().to_string(),
+        "workspace_root": workspace.display().to_string()
+    });
+    let metadata = sifr_package::parse_metadata_json(&metadata.to_string())
+        .expect("metadata json should parse");
+    sifr_package::derive_package_graph(metadata).expect("package graph should derive")
+}
+
+fn package_entrypoint(
+    graph: &sifr_package::SifrPackageGraph,
+    source_map: &sifr_package::PackageSourceMap,
+    package: &TestPackage,
+    main_file: PathBuf,
+) -> PackageEntrypoint {
+    let package_id = graph
+        .packages
+        .values()
+        .find(|metadata| metadata.sifr_name.0 == package.sifr_name)
+        .expect("package should be in graph")
+        .package_id
+        .clone();
+    PackageEntrypoint {
+        main_file,
+        package_id,
+        graph: graph.clone(),
+        source_map: source_map.clone(),
+    }
+}
+
+#[test]
+fn test_check_package_project_resolves_public_namespace_reexports() {
+    let dir = mktemp_dir("package_public_reexports");
+    let mut app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    app.aliases.push(TestAlias {
+        alias: "demo_json_v1".to_string(),
+        dependency: "demo_json_v1".to_string(),
+        import: "demo_json_v1".to_string(),
+    });
+    let json = production_package(&dir, "json", "sifr-demo-json", "demo_json");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from demo_json_v1 import decode_json, parse_json\n\n\
+def main():\n    assert parse_json() == 1\n    assert decode_json() == 2\n",
+    );
+    write_package_source(
+        &json,
+        "__init__.sifr",
+        "from .parse import parse_json\nfrom .codecs import decode_json\n",
+    );
+    write_package_source(
+        &json,
+        "parse.sifr",
+        "def parse_json() -> int:\n    return 1\n",
+    );
+    write_package_source(
+        &json,
+        "codecs/__init__.sifr",
+        "from .json import decode_json\n",
+    );
+    write_package_source(
+        &json,
+        "codecs/json.sifr",
+        "def decode_json() -> int:\n    return 2\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &json],
+        &[package_edge(&app, "demo_json_v1", &json)],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors.is_empty(),
+        "package public namespace imports should succeed: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_build_cached_package_project_materializes_namespace_roots() {
+    let dir = mktemp_dir("package_namespace_build");
+    let mut app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    app.aliases.push(TestAlias {
+        alias: "demo_json_v1".to_string(),
+        dependency: "demo_json_v1".to_string(),
+        import: "demo_json_v1".to_string(),
+    });
+    let json = production_package(&dir, "json", "sifr-demo-json", "demo_json");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from demo_json_v1 import parse_json\n\n\
+def main():\n    print(parse_json())\n",
+    );
+    write_package_source(&json, "__init__.sifr", "from .parse import parse_json\n");
+    write_package_source(
+        &json,
+        "parse.sifr",
+        "def parse_json() -> int:\n    return 7\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &json],
+        &[package_edge(&app, "demo_json_v1", &json)],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let artifact = build_cached_package_project(&entrypoint)
+        .expect("package namespace root project should build");
+    let output = std::process::Command::new(artifact.binary_path())
+        .output()
+        .expect("package binary should run");
+
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "7");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_package_project_rejects_private_dependency_module() {
+    let dir = mktemp_dir("package_private_rejection");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    let json = production_package(&dir, "json", "sifr-demo-json", "demo_json");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from demo_json.parse import parse_json\n\n\
+def main():\n    assert parse_json() == 1\n",
+    );
+    write_package_source(&json, "__init__.sifr", "from .parse import parse_json\n");
+    write_package_source(
+        &json,
+        "parse.sifr",
+        "def parse_json() -> int:\n    return 1\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &json],
+        &[package_edge(&app, "demo_json", &json)],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == DiagnosticCode::PACKAGE_PRIVATE_MODULE_ACCESS.code()),
+        "private dependency module should be rejected: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_package_project_rejects_transitive_dependency_import() {
+    let dir = mktemp_dir("package_transitive_rejection");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    let mid = production_package(&dir, "mid", "sifr-demo-mid", "demo_mid");
+    let json = production_package(&dir, "json", "sifr-demo-json", "demo_json");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from demo_json import parse_json\n\n\
+def main():\n    assert parse_json() == 1\n",
+    );
+    write_package_source(&mid, "__init__.sifr", "from demo_json import parse_json\n");
+    write_package_source(&json, "__init__.sifr", "from .parse import parse_json\n");
+    write_package_source(
+        &json,
+        "parse.sifr",
+        "def parse_json() -> int:\n    return 1\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &mid, &json],
+        &[
+            package_edge(&app, "demo_mid", &mid),
+            package_edge(&mid, "demo_json", &json),
+        ],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == DiagnosticCode::PACKAGE_UNDECLARED_DIRECT_IMPORT.code()),
+        "transitive dependency import should be rejected: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_package_project_reports_internal_reexport_cycles() {
+    let dir = mktemp_dir("package_reexport_cycle");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    let cycle = production_package(&dir, "cycle", "sifr-demo-cycle", "demo_cycle");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from demo_cycle import value\n\n\
+def main():\n    assert value() == 1\n",
+    );
+    write_package_source(&cycle, "__init__.sifr", "from .a import value\n");
+    write_package_source(&cycle, "a.sifr", "from .b import value\n");
+    write_package_source(&cycle, "b.sifr", "from .a import value\n");
+    let graph = package_graph(
+        &dir,
+        &[&app, &cycle],
+        &[package_edge(&app, "demo_cycle", &cycle)],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == DiagnosticCode::WORKSPACE_IMPORT_CYCLE.code()),
+        "package re-export cycle should be reported: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}

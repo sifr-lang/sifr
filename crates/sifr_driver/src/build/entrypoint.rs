@@ -10,7 +10,8 @@ use crate::frontend::{parse_source, FrontendCompiled};
 use crate::project::{
     collect_project_hir_source_modules, compile_single_frontend_module_with_source,
     emit_project_frontend_diagnostics, parse_import_closure_source_modules,
-    DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering,
+    parse_package_import_closure_source_modules, DiscoveryDiagnosticStyle, ModuleResolver,
+    ProjectLowering,
 };
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use crate::workspace::find_workspace_root;
@@ -18,6 +19,7 @@ use sifr_codegen::generate_rust_with_stdlib;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
 use sifr_hir::LoweringResult;
+use sifr_package::{PackageSourceMap, SifrPackageGraph, SifrPackageId};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -35,6 +37,17 @@ pub(crate) enum RootedEntrypoint<'a> {
     Project {
         main_file: &'a Path,
     },
+    PackageProject {
+        entrypoint: &'a PackageEntrypoint,
+    },
+}
+
+#[derive(Clone, Debug)]
+pub struct PackageEntrypoint {
+    pub main_file: PathBuf,
+    pub package_id: SifrPackageId,
+    pub graph: SifrPackageGraph,
+    pub source_map: PackageSourceMap,
 }
 
 pub struct CachedBinaryArtifact {
@@ -104,6 +117,12 @@ pub(crate) fn resolve_project_entrypoint_plan(
     RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project { main_file })
 }
 
+pub(crate) fn resolve_package_project_entrypoint_plan(
+    entrypoint: &PackageEntrypoint,
+) -> Result<RootedEntrypointPlan, Vec<RenderedDiagnostic>> {
+    RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::PackageProject { entrypoint })
+}
+
 pub(crate) fn emit_project_entrypoint(main_file: &Path) -> CompileResult {
     let plan = match resolve_project_entrypoint_plan(main_file) {
         Ok(plan) => plan,
@@ -134,6 +153,16 @@ pub(crate) fn build_cached_project_binary(
     build_cached_rooted_entrypoint_binary(
         &RootedEntrypoint::Project { main_file },
         main_file.parent().unwrap_or(Path::new(".")),
+        "run",
+    )
+}
+
+pub(crate) fn build_cached_package_project_binary(
+    entrypoint: &PackageEntrypoint,
+) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
+    build_cached_rooted_entrypoint_binary(
+        &RootedEntrypoint::PackageProject { entrypoint },
+        entrypoint.main_file.parent().unwrap_or(Path::new(".")),
         "run",
     )
 }
@@ -219,6 +248,24 @@ impl RootedEntrypointPlan {
                 )?;
                 if main_module_name != "main" {
                     if let Some(entry_module) = parsed_modules.remove(&main_module_name) {
+                        parsed_modules.insert("main".to_string(), entry_module);
+                    }
+                }
+                let project_lowering =
+                    collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())?;
+                (RootedEntrypointShape::Project, project_lowering)
+            }
+            RootedEntrypoint::PackageProject { entrypoint } => {
+                let (entry_module_name, mut parsed_modules) =
+                    parse_package_import_closure_source_modules(
+                        &entrypoint.graph,
+                        &entrypoint.source_map,
+                        &entrypoint.package_id,
+                        &entrypoint.main_file,
+                        DiscoveryDiagnosticStyle::ModuleName,
+                    )?;
+                if entry_module_name != "main" {
+                    if let Some(entry_module) = parsed_modules.remove(&entry_module_name) {
                         parsed_modules.insert("main".to_string(), entry_module);
                     }
                 }

@@ -6,8 +6,8 @@ Related phase: `internal_docs/phases/37_package_management.md`
 
 - [x] milestone_adhoc_pkg_1: Package UX contract and source layout
 - [x] milestone_adhoc_pkg_2: Sifr-managed Cargo projection
-- [ ] milestone_adhoc_pkg_3: Package session and CLI command integration
-- [ ] milestone_adhoc_pkg_4: Package-aware compiler imports
+- [x] milestone_adhoc_pkg_3: Package session and CLI command integration
+- [x] milestone_adhoc_pkg_4: Package-aware compiler imports
 - [ ] milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
 - [ ] milestone_adhoc_pkg_6: Packaging, publishing, vendoring, and release checks
 - [ ] milestone_adhoc_pkg_7: Migration, docs, demos, and long-term guardrails
@@ -112,6 +112,39 @@ Review:
 - `reviews/adhoc-package-dx-m3-review-pass-1.md` -> CHANGES_REQUESTED for a stale app-args finding, plus an alignment-matrix clarity note.
 - `reviews/adhoc-package-dx-m3-review-pass-2.md` -> READY after confirming app args are forwarded and tightening the matrix to list feature flags as deferred.
 - `reviews/adhoc-package-dx-m3-review-pass-3.md` -> READY after the root manifest and multi-root explicit-file validation fixes.
+
+### milestone_adhoc_pkg_4: Package-aware compiler imports
+
+Status: implemented and reviewer-approved. PR: https://github.com/sifr-lang/sifr/pull/2156
+
+Delivered:
+
+- Added package-aware driver entrypoints for `check_package_project` and `build_cached_package_project`, backed by `PackageSourceMap` import-closure discovery.
+- Wired package compile module names through HIR/frontend lowering so package aliases, public namespace roots, and level-1 relative re-exports resolve through `ExternalDefs`.
+- Propagated public re-export metadata for functions, classes, constants, defaults, varargs, generics, type params, and integer constant values.
+- Fixed generated Rust materialization for namespace modules that have both root code and child modules, and publicized non-main module re-exports.
+- Integrated package-aware explicit-file `sifr check` and `sifr run`, with fallback to legacy project mode when a root `sifr.toml` is not represented as a Sifr package in Cargo metadata.
+- Updated demo package fixtures so `sifr-demo-app` imports `demo_json_v1`, `demo_json_v2`, and `demo_http` through Sifr package APIs in locked offline mode.
+
+Validation:
+
+- `scripts/run_all_tests.sh --profile quick` -> PASS (wall-time/skew advisories only).
+- `cargo fmt --check` -> PASS.
+- `CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=1 cargo clippy -p sifr_codegen -p sifr_driver -p sifr -- -D warnings` -> PASS.
+- `cargo test -p sifr_driver package_project -- --test-threads=1` -> PASS, 5 tests.
+- `cargo test -p sifr_codegen publicizes_non_main_reexports -- --test-threads=1` -> PASS.
+- `cargo test -p sifr package_cli_check_explicit_file` -> PASS, 2 tests.
+- `cargo test -p sifr --test validation_contracts test_validation_contract_matrix -- --ignored --exact` -> PASS.
+- `python3 scripts/check_package_manager_guardrails.py` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_sifr_driver_maintainability_guardrails.py` -> PASS.
+- Demo smoke in `sifr-demo-app`: `sifr check --locked --offline sifr/app/main.sifr` -> PASS.
+- Demo smoke in `sifr-demo-app`: `sifr run --locked --offline` -> PASS.
+
+Review:
+
+- `reviews/adhoc-package-dx-m4-review-pass-1.md` -> READY with no blocking findings.
+- `reviews/adhoc-package-dx-m4-review-pass-2.md` -> READY after validation fallback, guardrail, and fixture-shape fixes.
 
 ## Problem
 

@@ -4,7 +4,7 @@ use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache}
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_diagnostics::DiagnosticCode;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -84,8 +84,9 @@ fn materialize_binary_project_at_path(
         "main.rs",
     )?;
 
-    let support_module_names: Vec<String> =
-        generated_project.support_modules.keys().cloned().collect();
+    let mut support_modules = generated_project.support_modules;
+    let support_module_names: Vec<String> = support_modules.keys().cloned().collect();
+    let mut namespace_contents: BTreeMap<PathBuf, String> = BTreeMap::new();
     for namespace_file in namespace_module_files(&support_module_names) {
         let mut contents = String::new();
         for module_name in &namespace_file.declarations {
@@ -93,19 +94,31 @@ fn materialize_binary_project_at_path(
             contents.push_str(module_name);
             contents.push_str(";\n");
         }
-        write_project_file(
-            &src_dir.join(&namespace_file.path),
-            contents,
-            &namespace_file.path.display().to_string(),
-        )?;
+        namespace_contents.insert(namespace_file.path, contents);
     }
 
-    for (module_name, code) in generated_project.support_modules {
+    for (module_name, code) in std::mem::take(&mut support_modules) {
+        let namespace_path = namespace_module_file_path(&module_name);
+        if let Some(contents) = namespace_contents.get_mut(&namespace_path) {
+            if !contents.is_empty() && !contents.ends_with('\n') {
+                contents.push('\n');
+            }
+            contents.push_str(&code);
+            continue;
+        }
         let file_name = rust_module_file_path(&module_name);
         write_project_file(
             &src_dir.join(&file_name),
             code,
             &file_name.display().to_string(),
+        )?;
+    }
+
+    for (namespace_path, contents) in namespace_contents {
+        write_project_file(
+            &src_dir.join(&namespace_path),
+            contents,
+            &namespace_path.display().to_string(),
         )?;
     }
 
@@ -126,6 +139,15 @@ fn materialize_binary_project_at_path(
         ))]);
     }
     Ok(())
+}
+
+fn namespace_module_file_path(module_name: &str) -> PathBuf {
+    let mut path = PathBuf::new();
+    for component in module_name.split('.') {
+        path.push(component);
+    }
+    path.push("mod.rs");
+    path
 }
 
 fn write_project_file(

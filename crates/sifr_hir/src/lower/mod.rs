@@ -60,6 +60,7 @@ mod guarded_index;
 mod if_branch_bindings;
 mod if_expression;
 mod import_diagnostics;
+mod import_resolution;
 mod imported_defaults;
 mod imports;
 mod integer_const_facts;
@@ -120,6 +121,7 @@ mod type_var_collection;
 mod typevar_annotations;
 mod typevar_shape_compat;
 mod typing_and_functions;
+mod warning_helpers;
 mod workload_annotations;
 use async_effects::AsyncSuspensionSummary;
 use asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
@@ -213,6 +215,7 @@ pub(super) struct LowerCtx {
     borrowed_params: std::collections::HashSet<String>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
     class_declared_type_params: HashMap<String, Vec<String>>,
+    current_module_name: Option<String>,
     externals: ExternalDefs,
     asyncio_compat_imports: HashMap<String, String>,
     synthetic_imports: Vec<HirImport>,
@@ -270,6 +273,7 @@ impl LowerCtx {
             allow_intrinsic_imports: false,
             borrowed_params: std::collections::HashSet::new(),
             class_declared_type_params: HashMap::new(),
+            current_module_name: None,
             externals: ExternalDefs::default(),
             asyncio_compat_imports: HashMap::new(),
             synthetic_imports: Vec::new(),
@@ -295,25 +299,6 @@ impl LowerCtx {
         self.allow_intrinsic_imports
     }
 
-    fn warn_arithmetic_overflow_risk(&mut self, operation: &'static str, range: TextRange) {
-        self.warnings
-            .push(LoweringWarningDiagnostic::ArithmeticOverflowRisk {
-                operation: operation.to_string(),
-                primary_range: Some(range),
-            });
-    }
-    fn warn_unreachable_statement(&mut self, range: TextRange) {
-        self.warnings
-            .push(LoweringWarningDiagnostic::UnreachableStatement {
-                primary_range: Some(range),
-            });
-    }
-    fn warn_bigint_transition_alias(&mut self, range: TextRange) {
-        self.warnings
-            .push(LoweringWarningDiagnostic::BigIntTransitionAlias {
-                primary_range: Some(range),
-            });
-    }
     fn error_with_code_at(
         &mut self,
         code: DiagnosticCode,
@@ -543,6 +528,15 @@ pub fn lower_module_with_externals(
     let ctx = LowerCtx::new();
     lower_module_impl(stmts, externals, ctx)
 }
+
+pub fn lower_module_with_externals_and_name(
+    module_name: &str,
+    stmts: &[Stmt],
+    externals: &ExternalDefs,
+) -> Result<LoweringResult, Vec<HirDiagnostic>> {
+    let ctx = LowerCtx::new().with_current_module(module_name);
+    lower_module_impl(stmts, externals, ctx)
+}
 /// Internal implementation of module lowering.
 fn lower_module_impl(
     stmts: &[Stmt],
@@ -741,7 +735,8 @@ fn lower_module_impl(
                 );
                 continue;
             };
-            let module_name = module.to_string();
+            let module_name =
+                ctx.effective_import_module_name(module.as_ref(), import_from.level, externals);
             let is_absolute_import = import_from.level == 0;
             let names: Vec<String> = import_from
                 .names
@@ -995,9 +990,8 @@ fn lower_module_impl(
             }
 
             // Check if the local module exists in externals before resolving
-            let has_local_module = externals.functions.contains_key(&module_name)
-                || externals.classes.contains_key(&module_name)
-                || externals.constants.contains_key(&module_name);
+            let has_local_module =
+                import_resolution::external_module_exists(externals, &module_name);
             if !has_local_module {
                 import_diagnostics::unknown_import_target(&mut ctx, &module_name, import_range);
                 continue;

@@ -14,9 +14,10 @@ use sifr_diagnostics::{
     ChildSeverity, DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
 };
 use sifr_driver::{
-    apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
-    build_project, check_project, check_single_file, compile, diagnostic_label_for_code_str,
-    emit_project, find_workspace_root, run_tests, CachedBinaryArtifact, CompileResult,
+    apply_diagnostic_recovery_limits, build, build_cached_package_project, build_cached_project,
+    build_cached_single_file, build_project, check_package_project, check_project,
+    check_single_file, compile, diagnostic_label_for_code_str, emit_project, find_workspace_root,
+    run_tests, CachedBinaryArtifact, CompileResult, PackageEntrypoint,
 };
 use sifr_python_ast::Stmt;
 use sifr_syntax::parse_module_suite;
@@ -199,6 +200,12 @@ const EXIT_USER_DIAGNOSTIC: i32 = 1;
 const EXIT_USAGE_OR_CONFIG: i32 = 2;
 const EXIT_INTERNAL_COMPILER_FAILURE: i32 = 3;
 const MAX_COMPACT_REPRESENTATIVE_LOCATIONS: usize = 5;
+
+struct PackageCompilerContext {
+    graph: sifr_package::SifrPackageGraph,
+    source_map: sifr_package::PackageSourceMap,
+    package_id: sifr_package::SifrPackageId,
+}
 
 fn diagnostic_with_code(message: impl Into<String>, code: DiagnosticCode) -> RenderedDiagnostic {
     let message = message.into();
@@ -865,6 +872,9 @@ fn cmd_run(
         | sifr_package::ResolvedRunTarget::App { path, .. },
     ) = plan.run_target
     {
+        if !session.manifest_less_mode {
+            return cmd_run_package_file(&path, &session, lock_mode, app_args, diagnostic_format);
+        }
         return cmd_run_file(&path, app_args, diagnostic_format);
     }
     if let Some(cargo) = plan.cargo {
@@ -940,6 +950,58 @@ fn cmd_run_file(file: &Path, app_args: &[String], diagnostic_format: DiagnosticF
             EXIT_SUCCESS
         }
         Err(errors) => render_diagnostics(&errors, diagnostic_format),
+    }
+}
+
+fn cmd_run_package_file(
+    file: &Path,
+    session: &sifr_package::PackageSession,
+    lock_mode: sifr_package::CargoLockMode,
+    app_args: &[String],
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let context = match package_compiler_context(session, lock_mode, diagnostic_format) {
+        Ok(Some(context)) => context,
+        Ok(None) => return cmd_run_file(file, app_args, diagnostic_format),
+        Err(exit_code) => return exit_code,
+    };
+    let entrypoint = PackageEntrypoint {
+        main_file: file.to_path_buf(),
+        package_id: context.package_id,
+        graph: context.graph,
+        source_map: context.source_map,
+    };
+    let result = match run_with_panic_boundary(
+        "internal compiler panic during package run command compilation",
+        || build_cached_package_project(&entrypoint),
+    ) {
+        Ok(result) => result,
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
+    };
+
+    match result {
+        Ok(artifact) => run_binary_artifact(&artifact, app_args),
+        Err(errors) => render_diagnostics(&errors, diagnostic_format),
+    }
+}
+
+fn run_binary_artifact(artifact: &CachedBinaryArtifact, app_args: &[String]) -> i32 {
+    let _ = writeln!(io::stderr(), "{}", artifact.cache_status_line());
+    let output = std::process::Command::new(artifact.binary_path())
+        .args(app_args)
+        .output()
+        .unwrap_or_else(|e| {
+            let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
+            process::exit(EXIT_USAGE_OR_CONFIG);
+        });
+
+    std::io::stdout().write_all(&output.stdout).ok();
+    std::io::stderr().write_all(&output.stderr).ok();
+
+    if output.status.success() {
+        EXIT_SUCCESS
+    } else {
+        EXIT_USER_DIAGNOSTIC
     }
 }
 
@@ -1118,6 +1180,9 @@ fn cmd_check(
         return execute_cargo_plan(&cargo, lock_mode, diagnostic_format);
     }
     if let Some(sifr_package::ResolvedRunTarget::File(path)) = plan.run_target {
+        if !session.manifest_less_mode {
+            return cmd_check_package_file(&path, &session, lock_mode, diagnostic_format);
+        }
         return cmd_check_file(&path, diagnostic_format);
     }
     EXIT_SUCCESS
@@ -1151,6 +1216,131 @@ fn cmd_check_file(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     } else {
         render_diagnostics(&errors, diagnostic_format)
     }
+}
+
+fn cmd_check_package_file(
+    file: &Path,
+    session: &sifr_package::PackageSession,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let context = match package_compiler_context(session, lock_mode, diagnostic_format) {
+        Ok(Some(context)) => context,
+        Ok(None) => return cmd_check_file(file, diagnostic_format),
+        Err(exit_code) => return exit_code,
+    };
+    let entrypoint = PackageEntrypoint {
+        main_file: file.to_path_buf(),
+        package_id: context.package_id,
+        graph: context.graph,
+        source_map: context.source_map,
+    };
+    let errors = match run_with_panic_boundary(
+        "internal compiler panic during package check command execution",
+        || check_package_project(&entrypoint),
+    ) {
+        Ok(errors) => errors,
+        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
+    };
+
+    if errors.is_empty() {
+        emit_success_message(diagnostic_format, "no errors found");
+        EXIT_SUCCESS
+    } else {
+        render_diagnostics(&errors, diagnostic_format)
+    }
+}
+
+fn package_compiler_context(
+    session: &sifr_package::PackageSession,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<Option<PackageCompilerContext>, i32> {
+    let metadata_plan =
+        sifr_package::CargoCommandPlan::metadata(session.workspace_root.clone(), lock_mode);
+    let output = match std::process::Command::new(&metadata_plan.program)
+        .args(&metadata_plan.args)
+        .current_dir(&metadata_plan.current_dir)
+        .output()
+    {
+        Ok(output) => output,
+        Err(error) => {
+            let diagnostic =
+                cargo_failure_diagnostic(&metadata_plan, lock_mode, None, &error.to_string());
+            render_diagnostics(&[diagnostic], diagnostic_format);
+            return Err(EXIT_USAGE_OR_CONFIG);
+        }
+    };
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let excerpt = if stderr.trim().is_empty() {
+            stdout.as_ref()
+        } else {
+            stderr.as_ref()
+        };
+        let diagnostic = cargo_failure_diagnostic(
+            &metadata_plan,
+            lock_mode,
+            output.status.code(),
+            &bounded_excerpt(excerpt),
+        );
+        render_diagnostics(&[diagnostic], diagnostic_format);
+        return Err(EXIT_USER_DIAGNOSTIC);
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let metadata = match sifr_package::parse_metadata_json(&stdout) {
+        Ok(metadata) => metadata,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return Err(EXIT_USAGE_OR_CONFIG);
+        }
+    };
+    let graph = match sifr_package::derive_package_graph(metadata) {
+        Ok(graph) => graph,
+        Err(errors) => {
+            let diagnostics = errors
+                .into_iter()
+                .map(package_diagnostic)
+                .collect::<Vec<_>>();
+            render_diagnostics(&diagnostics, diagnostic_format);
+            return Err(EXIT_USER_DIAGNOSTIC);
+        }
+    };
+    let source_map = match sifr_package::PackageSourceMap::build(&graph) {
+        Ok(source_map) => source_map,
+        Err(errors) => {
+            let diagnostics = errors
+                .into_iter()
+                .map(package_diagnostic)
+                .collect::<Vec<_>>();
+            render_diagnostics(&diagnostics, diagnostic_format);
+            return Err(EXIT_USER_DIAGNOSTIC);
+        }
+    };
+    let Some(manifest_path) = session.manifest_path.as_ref() else {
+        return Ok(None);
+    };
+    let Some(package_id) = graph
+        .packages
+        .values()
+        .find(|package| paths_equal(&package.sifr_manifest, manifest_path))
+        .map(|package| package.package_id.clone())
+    else {
+        return Ok(None);
+    };
+    Ok(Some(PackageCompilerContext {
+        graph,
+        source_map,
+        package_id,
+    }))
+}
+
+fn paths_equal(left: &Path, right: &Path) -> bool {
+    let left = left.canonicalize().unwrap_or_else(|_| left.to_path_buf());
+    let right = right.canonicalize().unwrap_or_else(|_| right.to_path_buf());
+    left == right
 }
 
 fn cmd_fmt(path: &Path, check: bool, diagnostic_format: DiagnosticFormat) -> i32 {
@@ -1325,6 +1515,33 @@ fn lint_entrypoint(path: &Path) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedD
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Mutex, MutexGuard, OnceLock};
+
+    static CWD_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    struct CurrentDirGuard {
+        previous: PathBuf,
+        _lock: MutexGuard<'static, ()>,
+    }
+
+    impl Drop for CurrentDirGuard {
+        fn drop(&mut self) {
+            std::env::set_current_dir(&self.previous).expect("restore cwd");
+        }
+    }
+
+    fn enter_test_cwd(path: &Path) -> CurrentDirGuard {
+        let lock = CWD_TEST_LOCK
+            .get_or_init(|| Mutex::new(()))
+            .lock()
+            .expect("cwd test lock should not be poisoned");
+        let previous = std::env::current_dir().expect("cwd exists");
+        std::env::set_current_dir(path).expect("chdir to test cwd");
+        CurrentDirGuard {
+            previous,
+            _lock: lock,
+        }
+    }
 
     fn mktemp_dir(name: &str) -> PathBuf {
         let unique = format!(
@@ -1428,6 +1645,30 @@ mod tests {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.dir);
         }
+    }
+
+    fn write_real_sifr_package(
+        root: &Path,
+        cargo_name: &str,
+        sifr_name: &str,
+        cargo_dependencies: &str,
+    ) {
+        std::fs::create_dir_all(root.join("src")).expect("package src dir should exist");
+        std::fs::write(root.join("src/lib.rs"), "").expect("pure marker should be written");
+        std::fs::write(
+            root.join("Cargo.toml"),
+            format!(
+                "[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n{cargo_dependencies}\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
+            ),
+        )
+        .expect("cargo manifest should be written");
+        std::fs::write(
+            root.join("sifr.toml"),
+            format!(
+                "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
+            ),
+        )
+        .expect("sifr manifest should be written");
     }
 
     #[test]
@@ -1596,12 +1837,10 @@ mod tests {
             "[package]\nname = \"sifr-demo-json\"\n",
         )
         .expect("break projection");
-        let cwd = std::env::current_dir().expect("cwd exists");
-        std::env::set_current_dir(&package).expect("chdir to package");
-
-        let exit = cmd_repair(true, DiagnosticFormat::Compact);
-
-        std::env::set_current_dir(cwd).expect("restore cwd");
+        let exit = {
+            let _cwd = enter_test_cwd(&package);
+            cmd_repair(true, DiagnosticFormat::Compact)
+        };
         assert_eq!(exit, EXIT_USER_DIAGNOSTIC);
         let _ = std::fs::remove_dir_all(dir);
     }
@@ -1632,6 +1871,104 @@ mod tests {
             panic!("expected run command");
         };
         assert_eq!(bin.as_deref(), Some("admin"));
+    }
+
+    #[test]
+    fn test_package_cli_check_explicit_file_uses_package_imports() {
+        let dir = mktemp_dir("package_cli_check_package_imports");
+        let app_root = dir.join("app");
+        let json_root = dir.join("json");
+        write_real_sifr_package(
+            &app_root,
+            "sifr-demo-app",
+            "demo_app",
+            "demo_json = { path = \"../json\", package = \"sifr-demo-json\" }\n",
+        );
+        let cargo_toml = app_root.join("Cargo.toml");
+        let cargo_source =
+            std::fs::read_to_string(&cargo_toml).expect("app cargo manifest should be readable");
+        std::fs::write(
+            &cargo_toml,
+            cargo_source.replace(
+                "[dependencies]",
+                "[package.metadata.sifr.aliases]\ndemo_json_v1 = { dependency = \"demo_json\", import = \"demo_json_v1\" }\n\n[dependencies]",
+            ),
+        )
+        .expect("app cargo manifest should be updated with alias");
+        write_real_sifr_package(&json_root, "sifr-demo-json", "demo_json", "");
+        std::fs::write(
+            app_root.join("src/main.sifr"),
+            "from demo_json_v1 import parse_json\n\n\
+def main():\n    assert parse_json() == 1\n",
+        )
+        .expect("app source should be written");
+        std::fs::write(
+            json_root.join("src/__init__.sifr"),
+            "from .parse import parse_json\n",
+        )
+        .expect("json namespace should be written");
+        std::fs::write(
+            json_root.join("src/parse.sifr"),
+            "def parse_json() -> int:\n    return 1\n",
+        )
+        .expect("json implementation should be written");
+        let exit = {
+            let _cwd = enter_test_cwd(&app_root);
+            cmd_check(
+                Some(Path::new("src/main.sifr")),
+                None,
+                sifr_package::CargoLockMode::Normal,
+                DiagnosticFormat::Compact,
+            )
+        };
+        assert_eq!(exit, EXIT_SUCCESS);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_package_cli_check_explicit_file_falls_back_for_legacy_workspace_manifest() {
+        let project = TestProject::new("package_cli_check_legacy_workspace_manifest");
+        project.write(
+            "Cargo.toml",
+            "[workspace]\nmembers = [\"rust_member\"]\nresolver = \"2\"\n",
+            "workspace manifest should be written",
+        );
+        project.write(
+            "rust_member/Cargo.toml",
+            "[package]\nname = \"rust-member\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+            "rust member manifest should be written",
+        );
+        project.write(
+            "rust_member/src/lib.rs",
+            "pub fn value() -> i32 { 1 }\n",
+            "rust member source should be written",
+        );
+        project.write(
+            "sifr.toml",
+            "[package]\nname = \"legacy-workspace\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroots = [\".\"]\n",
+            "legacy workspace manifest should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def value() -> int:\n    return 1\n",
+            "helper source should be written",
+        );
+        project.write(
+            "main.sifr",
+            "from helper import value\n\n\
+def main():\n    assert value() == 1\n",
+            "main source should be written",
+        );
+        let exit = {
+            let _cwd = enter_test_cwd(&project.dir);
+            cmd_check(
+                Some(Path::new("main.sifr")),
+                None,
+                sifr_package::CargoLockMode::Normal,
+                DiagnosticFormat::Compact,
+            )
+        };
+        assert_eq!(exit, EXIT_SUCCESS);
     }
 
     #[test]

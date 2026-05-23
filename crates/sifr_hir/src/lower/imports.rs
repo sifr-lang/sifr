@@ -60,7 +60,8 @@ pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ct
             let Some(ref module) = import_from.module else {
                 continue;
             };
-            let module_name = module.to_string();
+            let module_name =
+                ctx.effective_import_module_name(module.as_ref(), import_from.level, externals);
             let is_absolute_import = import_from.level == 0;
             if is_absolute_import && (module_name == "typing" || module_name == "enum") {
                 continue;

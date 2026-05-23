@@ -8,8 +8,9 @@ pub(crate) use assembly::{assemble_project_main_rs, ordered_non_main_module_name
 #[cfg(test)]
 pub(crate) use discovery::parse_import_closure_modules;
 pub(crate) use discovery::{
-    discover_test_root_modules, parse_import_closure_source_modules, DiscoveryDiagnosticStyle,
-    ModuleResolver, ParsedProjectModule,
+    discover_test_root_modules, parse_import_closure_source_modules,
+    parse_package_import_closure_source_modules, DiscoveryDiagnosticStyle, ModuleResolver,
+    ParsedProjectModule,
 };
 #[cfg(test)]
 pub(crate) use frontend::{collect_project_hir_modules, compile_frontend_modules};

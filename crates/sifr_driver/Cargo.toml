@@ -14,6 +14,7 @@ sifr_hir = { workspace = true }
 sifr_frontend = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_codegen = { workspace = true }
+sifr_package = { workspace = true }
 sifr_type_system = { workspace = true }
 ruff_text_size = { workspace = true }
 serde = { workspace = true }

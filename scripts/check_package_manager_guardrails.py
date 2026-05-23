@@ -333,8 +333,8 @@ def check_rust_backed_http_template(repo_path: Path, failures: List[str]) -> Non
     cargo_toml = (repo_path / "Cargo.toml").read_text(encoding="utf-8")
     sifr_toml = (repo_path / "sifr.toml").read_text(encoding="utf-8")
     rust_source = (repo_path / "src/lib.rs").read_text(encoding="utf-8")
-    if "sifr-demo-json" not in cargo_toml or "tag = \"v0.1.0\"" not in cargo_toml:
-        failures.append("sifr-demo-http must depend on tagged sifr-demo-json")
+    if "sifr-demo-json" not in cargo_toml or "path = \"../sifr-demo-json\"" not in cargo_toml:
+        failures.append("sifr-demo-http must depend on local sifr-demo-json")
     if "reqwest" not in cargo_toml or "reqwest" not in sifr_toml:
         failures.append("sifr-demo-http must trust and depend on reqwest")
     if "reqwest::" not in rust_source:
@@ -351,13 +351,15 @@ def check_consumer_app_template(repo_path: Path, failures: List[str]) -> None:
         "sifr-demo-test-support",
         "demo_json_v1",
         "demo_json_v2",
-        "tag = \"v0.1.0\"",
-        "tag = \"v0.2.0\"",
+        "path = \"../sifr-demo-json\"",
+        "path = \"../sifr-demo-json-v2\"",
     ]:
         if required not in cargo_toml:
             failures.append(f"sifr-demo-app Cargo.toml is missing `{required}`")
-    if "git+https://github.com/sifr-lang/sifr-demo-json?tag=v0.2.0" not in lockfile:
-        failures.append("sifr-demo-app lockfile must pin the v0.2.0 alias")
+    if 'name = "sifr-demo-json"\nversion = "0.1.0"' not in lockfile:
+        failures.append("sifr-demo-app lockfile must include the v0.1.0 alias")
+    if 'name = "sifr-demo-json"\nversion = "0.2.0"' not in lockfile:
+        failures.append("sifr-demo-app lockfile must include the v0.2.0 alias")
     if "demo_json_v1" not in migrate or "demo_json_v2" not in migrate:
         failures.append("sifr-demo-app migrate.sifr must import both alias roots")
 

@@ -1,0 +1,14 @@
+class DemoJsonError(Error):
+    message: str
+
+class DemoJsonValue:
+    value: int
+
+    def as_int(self) -> int:
+        return self.value
+
+def parse_json(text: str) -> dict[str, DemoJsonValue]:
+    return {"status_code": DemoJsonValue(value = 201)}
+
+def from_legacy(value: DemoJsonValue) -> DemoJsonValue:
+    return DemoJsonValue(value = value.value)

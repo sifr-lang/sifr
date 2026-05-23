@@ -1,0 +1,9 @@
+[package]
+name = "sifr-demo-json"
+version = "0.2.0"
+edition = "2024"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[workspace]
