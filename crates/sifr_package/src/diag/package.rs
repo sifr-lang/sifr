@@ -359,6 +359,21 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
+    pub fn archive_traversal(cargo_package_id: &CargoPackageId, path: &Path) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_ARCHIVE_TRAVERSAL,
+            message: format!(
+                "Cargo package archive entry escapes the package root: '{}'",
+                path.display()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(cargo_package_id.clone()),
+            }),
+            help: Some("remove path traversal entries before packaging or publishing".to_string()),
+        }
+    }
+
+    #[must_use]
     pub fn include_exclude_omits_source(cargo_package_id: &CargoPackageId, path: &Path) -> Self {
         Self {
             code: DiagnosticCode::PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE,

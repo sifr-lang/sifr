@@ -43,12 +43,9 @@ pub fn validate_package_archive(
 
     for entry in entries {
         if !is_safe_archive_path(&entry.relative_path) {
-            diagnostics.push(PackageDiagnostic::publish_validation_failed(
+            diagnostics.push(PackageDiagnostic::archive_traversal(
                 &package.cargo_package_id,
-                format!(
-                    "archive entry '{}' escapes the package root",
-                    entry.relative_path.display()
-                ),
+                &entry.relative_path,
             ));
             continue;
         }

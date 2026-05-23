@@ -159,6 +159,99 @@ enum Commands {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
     },
+    /// Assemble and verify a Cargo package archive for a Sifr package
+    Package {
+        /// Package all Sifr-capable workspace members through Cargo-compatible selection
+        #[arg(long)]
+        workspace: bool,
+        /// Select one package by Cargo package spec or unambiguous package name
+        #[arg(short = 'p', long = "package")]
+        packages: Vec<String>,
+        /// Exclude one package from workspace selection
+        #[arg(long)]
+        exclude: Vec<String>,
+        /// Print packaged files without creating an archive
+        #[arg(long)]
+        list: bool,
+        /// Skip Cargo's package verification build
+        #[arg(long)]
+        no_verify: bool,
+        /// Skip Cargo package metadata warning checks
+        #[arg(long)]
+        no_metadata: bool,
+        /// Allow dirty working tree contents
+        #[arg(long)]
+        allow_dirty: bool,
+        /// Exclude Cargo.lock from the package archive
+        #[arg(long)]
+        exclude_lockfile: bool,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Publish a Sifr package through Cargo
+    Publish {
+        /// Validate publish without uploading
+        #[arg(long)]
+        dry_run: bool,
+        /// Publish all Sifr-capable workspace members through Cargo-compatible selection
+        #[arg(long)]
+        workspace: bool,
+        /// Select one package by Cargo package spec or unambiguous package name
+        #[arg(short = 'p', long = "package")]
+        packages: Vec<String>,
+        /// Exclude one package from workspace selection
+        #[arg(long)]
+        exclude: Vec<String>,
+        /// Skip Cargo's publish verification build
+        #[arg(long)]
+        no_verify: bool,
+        /// Allow dirty working tree contents
+        #[arg(long)]
+        allow_dirty: bool,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Vendor dependency sources through Cargo
+    Vendor {
+        /// Output directory for vendored sources
+        #[arg(default_value = "vendor")]
+        path: PathBuf,
+        /// Additional manifest to sync during vendoring
+        #[arg(long)]
+        sync: Vec<PathBuf>,
+        /// Keep stale vendored sources
+        #[arg(long)]
+        no_delete: bool,
+        /// Respect existing Cargo source configuration
+        #[arg(long)]
+        respect_source_config: bool,
+        /// Use versioned vendor directory names
+        #[arg(long)]
+        versioned_dirs: bool,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
     /// Format Sifr source files
     Fmt {
         /// Check formatting without writing changes
@@ -214,6 +307,12 @@ struct PackageCompilerContext {
     graph: sifr_package::SifrPackageGraph,
     source_map: sifr_package::PackageSourceMap,
     package_id: sifr_package::SifrPackageId,
+}
+
+struct PackageGraphContext {
+    metadata: sifr_package::NormalizedCargoMetadata,
+    graph: sifr_package::SifrPackageGraph,
+    source_map: sifr_package::PackageSourceMap,
 }
 
 fn diagnostic_with_code(message: impl Into<String>, code: DiagnosticCode) -> RenderedDiagnostic {
@@ -322,6 +421,89 @@ fn run_cli(cli: Cli) -> i32 {
             &args,
             diagnostic_format,
         ),
+        Commands::Package {
+            workspace,
+            packages,
+            exclude,
+            list,
+            no_verify,
+            no_metadata,
+            allow_dirty,
+            exclude_lockfile,
+            locked,
+            offline,
+            frozen,
+        } => {
+            let selection = sifr_package::CargoPackageSelection {
+                workspace,
+                packages,
+                excludes: exclude,
+            };
+            let options = sifr_package::CargoPackageArchiveOptions {
+                list,
+                no_verify,
+                no_metadata,
+                allow_dirty,
+                exclude_lockfile,
+            };
+            cmd_package(
+                &selection,
+                &options,
+                lock_mode_from_flags(locked, offline, frozen),
+                diagnostic_format,
+            )
+        }
+        Commands::Publish {
+            dry_run,
+            workspace,
+            packages,
+            exclude,
+            no_verify,
+            allow_dirty,
+            locked,
+            offline,
+            frozen,
+        } => {
+            let selection = sifr_package::CargoPackageSelection {
+                workspace,
+                packages,
+                excludes: exclude,
+            };
+            let options = sifr_package::CargoPublishOptions {
+                dry_run,
+                no_verify,
+                allow_dirty,
+            };
+            cmd_publish(
+                &selection,
+                &options,
+                lock_mode_from_flags(locked, offline, frozen),
+                diagnostic_format,
+            )
+        }
+        Commands::Vendor {
+            path,
+            sync,
+            no_delete,
+            respect_source_config,
+            versioned_dirs,
+            locked,
+            offline,
+            frozen,
+        } => {
+            let options = sifr_package::CargoVendorOptions {
+                sync,
+                no_delete,
+                respect_source_config,
+                versioned_dirs,
+            };
+            cmd_vendor(
+                &path,
+                &options,
+                lock_mode_from_flags(locked, offline, frozen),
+                diagnostic_format,
+            )
+        }
         Commands::Fmt { check, path } => cmd_fmt(&path, check, diagnostic_format),
         Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
         Commands::Lsp { stdio } => cmd_lsp(stdio),
@@ -930,6 +1112,31 @@ fn cmd_script(origin: &sifr_package::ScriptOrigin, diagnostic_format: Diagnostic
             &origin.args,
             diagnostic_format,
         ),
+        "package" => cmd_package(
+            &sifr_package::CargoPackageSelection::default(),
+            &sifr_package::CargoPackageArchiveOptions::default(),
+            sifr_package::CargoLockMode::Normal,
+            diagnostic_format,
+        ),
+        "publish" => cmd_publish(
+            &sifr_package::CargoPackageSelection::default(),
+            &sifr_package::CargoPublishOptions {
+                dry_run: origin.args.iter().any(|arg| arg == "--dry-run"),
+                ..sifr_package::CargoPublishOptions::default()
+            },
+            sifr_package::CargoLockMode::Normal,
+            diagnostic_format,
+        ),
+        "vendor" => cmd_vendor(
+            origin
+                .args
+                .first()
+                .map(Path::new)
+                .unwrap_or_else(|| Path::new("vendor")),
+            &sifr_package::CargoVendorOptions::default(),
+            sifr_package::CargoLockMode::Normal,
+            diagnostic_format,
+        ),
         _ => {
             let diagnostic = diagnostic_with_code(
                 format!("unsupported package script command '{}'", origin.command),
@@ -1058,6 +1265,84 @@ fn cmd_tree(
     execute_cargo_plan(&cargo, lock_mode, diagnostic_format)
 }
 
+fn cmd_package(
+    selection: &sifr_package::CargoPackageSelection,
+    options: &sifr_package::CargoPackageArchiveOptions,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let session = match package_session_for_cwd(lock_mode) {
+        Ok(session) => session,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    if let Err(exit_code) =
+        run_package_release_preflight(&session, selection, lock_mode, diagnostic_format)
+    {
+        return exit_code;
+    }
+    let plan = session.plan_package(
+        &sifr_package::CargoFeatureSelection::default(),
+        selection,
+        options,
+    );
+    let Some(cargo) = plan.cargo else {
+        return EXIT_SUCCESS;
+    };
+    execute_cargo_plan(&cargo, lock_mode, diagnostic_format)
+}
+
+fn cmd_publish(
+    selection: &sifr_package::CargoPackageSelection,
+    options: &sifr_package::CargoPublishOptions,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let session = match package_session_for_cwd(lock_mode) {
+        Ok(session) => session,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    if let Err(exit_code) =
+        run_package_release_preflight(&session, selection, lock_mode, diagnostic_format)
+    {
+        return exit_code;
+    }
+    let plan = session.plan_publish(
+        &sifr_package::CargoFeatureSelection::default(),
+        selection,
+        options,
+    );
+    let Some(cargo) = plan.cargo else {
+        return EXIT_SUCCESS;
+    };
+    execute_cargo_plan(&cargo, lock_mode, diagnostic_format)
+}
+
+fn cmd_vendor(
+    output_dir: &Path,
+    options: &sifr_package::CargoVendorOptions,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let session = match package_session_for_cwd(lock_mode) {
+        Ok(session) => session,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    let plan = session.plan_vendor(output_dir, options);
+    let Some(cargo) = plan.cargo else {
+        return EXIT_SUCCESS;
+    };
+    execute_cargo_plan(&cargo, lock_mode, diagnostic_format)
+}
+
 fn package_session_for_cwd(
     lock_mode: sifr_package::CargoLockMode,
 ) -> Result<sifr_package::PackageSession, sifr_package::PackageDiagnostic> {
@@ -1071,6 +1356,170 @@ fn package_session_for_cwd(
         current_dir,
         lock_mode,
     })
+}
+
+fn run_package_release_preflight(
+    session: &sifr_package::PackageSession,
+    selection: &sifr_package::CargoPackageSelection,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<(), i32> {
+    let Some(context) = load_package_graph_context(session, lock_mode, diagnostic_format)? else {
+        return Ok(());
+    };
+    let package_ids = selected_release_package_ids(&context, session, selection)
+        .map_err(|diagnostics| render_package_diagnostics(diagnostics, diagnostic_format))?;
+    if let Err(diagnostics) = sifr_package::validate_backend_trust(&context.graph) {
+        return Err(render_package_diagnostics(diagnostics, diagnostic_format));
+    }
+    let mut diagnostics = Vec::new();
+    for package_id in package_ids {
+        let Some(package) = context.graph.packages.get(&package_id) else {
+            continue;
+        };
+        let entries = cargo_package_list_entries(
+            session,
+            lock_mode,
+            &package.cargo_package_name,
+            diagnostic_format,
+        )?;
+        if let Err(errors) =
+            sifr_package::validate_package_archive(package, &context.source_map, &entries)
+        {
+            diagnostics.extend(errors);
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(render_package_diagnostics(diagnostics, diagnostic_format))
+    }
+}
+
+fn selected_release_package_ids(
+    context: &PackageGraphContext,
+    session: &sifr_package::PackageSession,
+    selection: &sifr_package::CargoPackageSelection,
+) -> Result<BTreeSet<sifr_package::SifrPackageId>, Vec<sifr_package::PackageDiagnostic>> {
+    let mut selected = BTreeSet::new();
+    if selection.workspace {
+        selected.extend(
+            sifr_package::select_sifr_workspace_members(&context.metadata, &context.graph)?
+                .selected_sifr_packages,
+        );
+    }
+    if !selection.packages.is_empty() {
+        selected.extend(
+            sifr_package::explicit_package_selection(
+                &context.metadata,
+                &context.graph,
+                &selection.packages,
+            )?
+            .selected_sifr_packages,
+        );
+    }
+    if !selection.workspace && selection.packages.is_empty() {
+        selected.extend(current_session_package_id(session, &context.graph));
+    }
+    for excluded in &selection.excludes {
+        selected.retain(|package_id| {
+            context
+                .graph
+                .packages
+                .get(package_id)
+                .is_none_or(|package| {
+                    package.cargo_package_name != *excluded
+                        && package.package_id.0 != *excluded
+                        && package.sifr_name.0 != *excluded
+                })
+        });
+    }
+    Ok(selected)
+}
+
+fn current_session_package_id(
+    session: &sifr_package::PackageSession,
+    graph: &sifr_package::SifrPackageGraph,
+) -> Option<sifr_package::SifrPackageId> {
+    let manifest_path = session.manifest_path.as_ref()?;
+    graph
+        .packages
+        .values()
+        .find(|package| paths_equal(&package.sifr_manifest, manifest_path))
+        .map(|package| package.package_id.clone())
+}
+
+fn cargo_package_list_entries(
+    session: &sifr_package::PackageSession,
+    lock_mode: sifr_package::CargoLockMode,
+    cargo_package_name: &str,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<Vec<sifr_package::PackageArchiveEntry>, i32> {
+    let selection = sifr_package::CargoPackageSelection {
+        workspace: false,
+        packages: vec![cargo_package_name.to_string()],
+        excludes: Vec::new(),
+    };
+    let options = sifr_package::CargoPackageArchiveOptions {
+        list: true,
+        ..sifr_package::CargoPackageArchiveOptions::default()
+    };
+    let plan = sifr_package::CargoCommandPlan::package_with_options(
+        session.workspace_root.clone(),
+        lock_mode,
+        &sifr_package::CargoFeatureSelection::default(),
+        &selection,
+        &options,
+    );
+    let output = match std::process::Command::new(&plan.program)
+        .args(&plan.args)
+        .current_dir(&plan.current_dir)
+        .output()
+    {
+        Ok(output) => output,
+        Err(error) => {
+            let diagnostic = cargo_failure_diagnostic(&plan, lock_mode, None, &error.to_string());
+            render_diagnostics(&[diagnostic], diagnostic_format);
+            return Err(EXIT_USAGE_OR_CONFIG);
+        }
+    };
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let excerpt = if stderr.trim().is_empty() {
+            stdout.as_ref()
+        } else {
+            stderr.as_ref()
+        };
+        let diagnostic = cargo_failure_diagnostic(
+            &plan,
+            lock_mode,
+            output.status.code(),
+            &bounded_excerpt(excerpt),
+        );
+        render_diagnostics(&[diagnostic], diagnostic_format);
+        return Err(EXIT_USER_DIAGNOSTIC);
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    Ok(stdout
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(|line| sifr_package::PackageArchiveEntry {
+            relative_path: PathBuf::from(line),
+        })
+        .collect())
+}
+
+fn render_package_diagnostics(
+    diagnostics: Vec<sifr_package::PackageDiagnostic>,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let diagnostics = diagnostics
+        .into_iter()
+        .map(package_diagnostic)
+        .collect::<Vec<_>>();
+    render_diagnostics(&diagnostics, diagnostic_format)
 }
 
 fn execute_cargo_plan(
@@ -1282,6 +1731,27 @@ fn package_compiler_context(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> Result<Option<PackageCompilerContext>, i32> {
+    let Some(context) = load_package_graph_context(session, lock_mode, diagnostic_format)? else {
+        return Ok(None);
+    };
+    let Some(package_id) = current_session_package_id(session, &context.graph) else {
+        return Ok(None);
+    };
+    Ok(Some(PackageCompilerContext {
+        graph: context.graph,
+        source_map: context.source_map,
+        package_id,
+    }))
+}
+
+fn load_package_graph_context(
+    session: &sifr_package::PackageSession,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<Option<PackageGraphContext>, i32> {
+    if session.manifest_less_mode {
+        return Ok(None);
+    }
     let metadata_plan =
         sifr_package::CargoCommandPlan::metadata(session.workspace_root.clone(), lock_mode);
     let output = match std::process::Command::new(&metadata_plan.program)
@@ -1323,6 +1793,7 @@ fn package_compiler_context(
             return Err(EXIT_USAGE_OR_CONFIG);
         }
     };
+    let normalized = metadata.clone().normalize();
     let graph = match sifr_package::derive_package_graph(metadata) {
         Ok(graph) => graph,
         Err(errors) => {
@@ -1345,21 +1816,10 @@ fn package_compiler_context(
             return Err(EXIT_USER_DIAGNOSTIC);
         }
     };
-    let Some(manifest_path) = session.manifest_path.as_ref() else {
-        return Ok(None);
-    };
-    let Some(package_id) = graph
-        .packages
-        .values()
-        .find(|package| paths_equal(&package.sifr_manifest, manifest_path))
-        .map(|package| package.package_id.clone())
-    else {
-        return Ok(None);
-    };
-    Ok(Some(PackageCompilerContext {
+    Ok(Some(PackageGraphContext {
+        metadata: normalized,
         graph,
         source_map,
-        package_id,
     }))
 }
 
@@ -2038,6 +2498,106 @@ def main():\n    assert value() == 1\n",
         };
         assert!(offline);
         assert_eq!(args, ["--depth", "1"]);
+
+        let cli = Cli::try_parse_from([
+            "sifr",
+            "package",
+            "--workspace",
+            "-p",
+            "demo-app",
+            "--exclude",
+            "demo-tools",
+            "--list",
+            "--no-verify",
+            "--no-metadata",
+            "--allow-dirty",
+            "--exclude-lockfile",
+            "--frozen",
+        ])
+        .expect("package cli parses");
+        let Some(Commands::Package {
+            workspace,
+            packages,
+            exclude,
+            list,
+            no_verify,
+            no_metadata,
+            allow_dirty,
+            exclude_lockfile,
+            frozen,
+            ..
+        }) = cli.command
+        else {
+            panic!("expected package command");
+        };
+        assert!(workspace);
+        assert_eq!(packages, ["demo-app"]);
+        assert_eq!(exclude, ["demo-tools"]);
+        assert!(list);
+        assert!(no_verify);
+        assert!(no_metadata);
+        assert!(allow_dirty);
+        assert!(exclude_lockfile);
+        assert!(frozen);
+
+        let cli = Cli::try_parse_from([
+            "sifr",
+            "publish",
+            "--dry-run",
+            "-p",
+            "demo-app",
+            "--no-verify",
+            "--allow-dirty",
+            "--locked",
+        ])
+        .expect("publish cli parses");
+        let Some(Commands::Publish {
+            dry_run,
+            packages,
+            no_verify,
+            allow_dirty,
+            locked,
+            ..
+        }) = cli.command
+        else {
+            panic!("expected publish command");
+        };
+        assert!(dry_run);
+        assert_eq!(packages, ["demo-app"]);
+        assert!(no_verify);
+        assert!(allow_dirty);
+        assert!(locked);
+
+        let cli = Cli::try_parse_from([
+            "sifr",
+            "vendor",
+            "third_party/vendor",
+            "--sync",
+            "member/Cargo.toml",
+            "--no-delete",
+            "--respect-source-config",
+            "--versioned-dirs",
+            "--offline",
+        ])
+        .expect("vendor cli parses");
+        let Some(Commands::Vendor {
+            path,
+            sync,
+            no_delete,
+            respect_source_config,
+            versioned_dirs,
+            offline,
+            ..
+        }) = cli.command
+        else {
+            panic!("expected vendor command");
+        };
+        assert_eq!(path, PathBuf::from("third_party/vendor"));
+        assert_eq!(sync, [PathBuf::from("member/Cargo.toml")]);
+        assert!(no_delete);
+        assert!(respect_source_config);
+        assert!(versioned_dirs);
+        assert!(offline);
     }
 
     #[test]

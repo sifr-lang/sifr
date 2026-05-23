@@ -9,7 +9,7 @@ Related phase: `internal_docs/phases/37_package_management.md`
 - [x] milestone_adhoc_pkg_3: Package session and CLI command integration
 - [x] milestone_adhoc_pkg_4: Package-aware compiler imports
 - [x] milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
-- [ ] milestone_adhoc_pkg_6: Packaging, publishing, vendoring, and release checks
+- [x] milestone_adhoc_pkg_6: Packaging, publishing, vendoring, and release checks
 - [ ] milestone_adhoc_pkg_7: Migration, docs, demos, and long-term guardrails
 
 ## Milestone Progress
@@ -181,6 +181,40 @@ Review:
 
 - `reviews/adhoc-package-dx-m5-review-pass-1.md` -> READY with no blocking findings.
 - `reviews/adhoc-package-dx-m5-review-pass-2.md` -> READY with no blocking findings.
+
+### milestone_adhoc_pkg_6: Packaging, publishing, vendoring, and release checks
+
+Status: implemented and reviewer-approved. PR: https://github.com/sifr-lang/sifr/pull/2158
+
+Delivered:
+
+- Added `sifr package`, `sifr publish`, and `sifr vendor` CLI commands backed by `PackageSession` plans.
+- Added Cargo option rendering for package archive, publish, and vendor commands, including package selection and core release flags.
+- Added release preflight before `sifr package` and `sifr publish`: Cargo metadata graph derivation, backend trust validation, Cargo `package --list` archive listing, and Sifr source-map archive validation.
+- Added dedicated archive traversal diagnostic `SIFR-PACKAGE-0404` while keeping generic publish/archive validation on `SIFR-PACKAGE-0402`.
+- Updated package archive validation tests to cover production `src/` required entries and app target source files.
+- Added release command/session planning tests and CLI parsing coverage for package, publish, and vendor surfaces.
+
+Validation:
+
+- `cargo test -p sifr_package package_publish_vendor -- --test-threads=1` -> PASS, 2 tests.
+- `cargo test -p sifr_package archive_ -- --test-threads=1` -> PASS, 3 tests.
+- `cargo test -p sifr_package milestone_37_6_tests -- --test-threads=1` -> PASS, 9 tests.
+- `cargo test -p sifr_package -- --test-threads=1` -> PASS, 65 tests.
+- `cargo test -p sifr package_cli_parses_check_message_format_and_tree_args -- --test-threads=1` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_package_manager_guardrails.py` -> PASS.
+- `python3 scripts/check_diagnostic_docs_sync.py` -> PASS.
+- `python3 scripts/check_diagnostic_code_coverage.py` -> PASS.
+- `CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=1 cargo clippy -p sifr_package -p sifr -- -D warnings` -> PASS.
+- Demo smoke in `sifr-demo-json`: `target/debug/sifr package --list --allow-dirty` -> PASS.
+- Demo smoke in `sifr-demo-json`: `target/debug/sifr publish --dry-run --allow-dirty --no-verify` -> PASS.
+- Demo smoke in `sifr-demo-app`: `target/debug/sifr vendor /tmp/sifr_m6_vendor_smoke --versioned-dirs` -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS (wall-time/skew advisories only).
+
+Review:
+
+- `reviews/adhoc-package-dx-m6-review-pass-1.md` -> READY with no blocking findings.
 
 ## Problem
 

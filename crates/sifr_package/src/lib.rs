@@ -8,7 +8,8 @@ pub mod projection;
 pub mod source;
 
 pub use crate::cargo::commands::{
-    CargoCommandPlan, CargoFeatureSelection, CargoPackageMutation, CargoPackageSelection,
+    CargoCommandPlan, CargoFeatureSelection, CargoPackageArchiveOptions, CargoPackageMutation,
+    CargoPackageSelection, CargoPublishOptions, CargoVendorOptions,
 };
 pub use crate::cargo::errors::{map_cargo_failure, CargoAction};
 pub use crate::cargo::lock_modes::{validate_offline_source_availability, CargoLockMode};
@@ -52,7 +53,10 @@ pub use crate::manifest::sifr::{
     CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
     TrustPolicy,
 };
-pub use crate::ops::publish::{publish_plan, vendor_plan, PublishPlan, VendorPlan};
+pub use crate::ops::publish::{
+    package_plan, publish_plan, publish_plan_with_options, vendor_plan, vendor_plan_with_options,
+    PublishPlan, VendorPlan,
+};
 pub use crate::ops::read::{outdated_query_report, OutdatedPackageReport, OutdatedPackageSource};
 pub use crate::ops::session::{
     PackageCommandPlan, PackageRunRequest, PackageSession, PackageSessionOptions,
