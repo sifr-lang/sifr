@@ -2,6 +2,7 @@
 name = "sifr-workspace"
 version = "0.0.0"
 edition = "2026"
+sifr-version = ">=0.3,<0.4"
 
 [source]
 roots = ["audits/leetcode/src", "."]

@@ -162,10 +162,9 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0002`](SIFR-PACKAGE-0002.md) | Error | Missing or invalid sifr.toml package manifest. |
 | [`SIFR-PACKAGE-0003`](SIFR-PACKAGE-0003.md) | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |
 | [`SIFR-PACKAGE-0103`](SIFR-PACKAGE-0103.md) | Error | Cargo metadata parsing or normalization failed. |
-| [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.md) | Error | Cargo command invocation failed. |
+| [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.md) | Error | Cargo command invocation failed; Sifr reports the redacted Cargo excerpt and safe Sifr-owned recovery context. |
 | [`SIFR-PACKAGE-0102`](SIFR-PACKAGE-0102.md) | Error | A selected Cargo package is Rust-only. |
 | [`SIFR-PACKAGE-0104`](SIFR-PACKAGE-0104.md) | Error | Package source is unavailable in offline or frozen mode. |
-| [`SIFR-PACKAGE-0105`](SIFR-PACKAGE-0105.md) | Error | Private Cargo source credentials are unavailable. |
 | [`SIFR-PACKAGE-0106`](SIFR-PACKAGE-0106.md) | Error | Rust-only package depends directly on a Sifr source package. |
 | [`SIFR-PACKAGE-0201`](SIFR-PACKAGE-0201.md) | Error | Direct package import root resolves to multiple package instances. |
 | [`SIFR-PACKAGE-0202`](SIFR-PACKAGE-0202.md) | Error | Package imports a module outside its direct dependency scope. |
@@ -181,12 +180,16 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0602`](SIFR-PACKAGE-0602.md) | Error | Workspace selection contains duplicate import roots. |
 | [`SIFR-PACKAGE-0603`](SIFR-PACKAGE-0603.md) | Error | Changed file could not be mapped to a package. |
 | [`SIFR-PACKAGE-0604`](SIFR-PACKAGE-0604.md) | Error | Outdated query cannot inspect this Cargo source. |
+| [`SIFR-PACKAGE-0605`](SIFR-PACKAGE-0605.md) | Error | Runnable package target or script selection is missing or ambiguous. |
+| [`SIFR-PACKAGE-0606`](SIFR-PACKAGE-0606.md) | Error | Discovered app target name is invalid. |
 | [`SIFR-PACKAGE-0701`](SIFR-PACKAGE-0701.md) | Error | Production sifr.toml uses manifest-level exports. |
 | [`SIFR-PACKAGE-0703`](SIFR-PACKAGE-0703.md) | Error | Sifr-managed Cargo projection manifest pointer drift. |
 | [`SIFR-PACKAGE-0704`](SIFR-PACKAGE-0704.md) | Error | Sifr-managed Cargo projection include rules omit required package files. |
 | [`SIFR-PACKAGE-0709`](SIFR-PACKAGE-0709.md) | Error | Pure package marker is missing from Sifr-managed projection. |
+| [`SIFR-PACKAGE-0710`](SIFR-PACKAGE-0710.md) | Error | Explicit Sifr file target is outside the package source root. |
 | [`SIFR-PACKAGE-0711`](SIFR-PACKAGE-0711.md) | Error | Production sifr.toml uses manifest binary target tables. |
 | [`SIFR-PACKAGE-0713`](SIFR-PACKAGE-0713.md) | Error | Public API symbol is exported more than once. |
+| [`SIFR-PACKAGE-0714`](SIFR-PACKAGE-0714.md) | Error | Package script expansion attempted to invoke another script. |
 
 ## Reserved Codes
 
@@ -216,6 +219,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-STDLIB-0000` | `STDLIB` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-WORKSPACE-0000` | `WORKSPACE` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-PACKAGE-0000` | `PACKAGE` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PACKAGE-0105` | `PACKAGE` | Retired: Cargo credential failures are wrapped by SIFR-PACKAGE-0101. |
 | `SIFR-PACKAGE-0302` | `PACKAGE` | Reserved for future backend trust diagnostics. |
 | `SIFR-PACKAGE-0306` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
 | `SIFR-PACKAGE-0307` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |

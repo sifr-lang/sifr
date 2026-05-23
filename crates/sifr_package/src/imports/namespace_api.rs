@@ -25,7 +25,7 @@ pub enum PublicSymbolOrigin {
 pub fn parse_init_sifr_reexports(
     cargo_package_id: &CargoPackageId,
     sifr_manifest: &Path,
-    namespace_path: DottedModulePath,
+    namespace_path: &DottedModulePath,
     init_path: &Path,
     package_source_root: &Path,
 ) -> Result<NamespaceApi, Vec<PackageDiagnostic>> {
@@ -66,7 +66,7 @@ pub fn parse_init_sifr_reexports(
             if let Err(diagnostic) = parse_relative_from(
                 cargo_package_id,
                 sifr_manifest,
-                &namespace_path,
+                namespace_path,
                 package_source_root,
                 &mut api,
                 rest,

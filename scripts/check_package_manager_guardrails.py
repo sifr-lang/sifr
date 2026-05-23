@@ -26,6 +26,7 @@ REQUIRED_FILES = [
     "crates/sifr_package/src/ops/plan.rs",
     "verification/package_management/phase37_e2e_fixture_matrix.json",
     "verification/package_management/phase37_demo_repositories.json",
+    "verification/package_management/cargo_cli_alignment_matrix.json",
 ]
 
 CARGO_COMMAND_TERMS = [

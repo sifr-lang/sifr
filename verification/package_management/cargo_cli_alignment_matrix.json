@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "checked_with": {
+    "command": "cargo <subcommand> --help",
+    "date": "2026-05-22",
+    "source": "local stable Cargo help output"
+  },
+  "policy": {
+    "cargo_flag_names_preserved": true,
+    "sifr_only_flags": [
+      "run --script",
+      "run explicit .sifr path",
+      "repair --check",
+      "--explain"
+    ],
+    "unstable_flags": "Cargo -Z and other nightly-only flags are not exposed in the stable Sifr package surface."
+  },
+  "commands": [
+    {
+      "name": "run",
+      "status": "partial_m3",
+      "delegates_to": "cargo run for package app targets; Sifr-owned explicit .sifr and script pre-resolution stay outside Cargo.",
+      "aligned_flags": ["--bin", "--locked", "--offline", "--frozen", "--"],
+      "intentional_exclusions": ["Feature selection and Cargo common display/config flags pending full delegated-command passthrough."]
+    },
+    {
+      "name": "check",
+      "status": "partial_m3",
+      "delegates_to": "cargo check when no explicit .sifr file is selected.",
+      "aligned_flags": ["--message-format", "--locked", "--offline", "--frozen"],
+      "intentional_exclusions": ["Workspace/package/target/feature selector passthrough is represented in the session model and completed in later workspace milestones."]
+    },
+    {
+      "name": "build",
+      "status": "planned",
+      "delegates_to": "cargo build for package build plans after package-aware compiler integration.",
+      "aligned_flags": ["--features", "--all-features", "--no-default-features", "--target", "--locked", "--offline", "--frozen"],
+      "intentional_exclusions": ["Existing explicit-file build surface is preserved until package build integration lands."]
+    },
+    {
+      "name": "test",
+      "status": "planned",
+      "delegates_to": "cargo test for package test plans after package-aware compiler integration.",
+      "aligned_flags": ["--features", "--all-features", "--no-default-features", "--locked", "--offline", "--frozen", "--"],
+      "intentional_exclusions": ["Existing directory test runner remains active while package test lowering is staged."]
+    },
+    {
+      "name": "init",
+      "status": "implemented_m2",
+      "delegates_to": "Sifr-owned scaffolding, not Cargo templates.",
+      "aligned_flags": ["--bin", "--lib", "--name"],
+      "intentional_exclusions": ["Cargo template flags are excluded because Sifr owns package layout generation."]
+    },
+    {
+      "name": "fetch",
+      "status": "implemented_m3",
+      "delegates_to": "cargo fetch",
+      "aligned_flags": ["--locked", "--offline", "--frozen"],
+      "intentional_exclusions": ["--target and --manifest-path passthrough are deferred until workspace/package selection is complete."]
+    },
+    {
+      "name": "add",
+      "status": "substrate",
+      "delegates_to": "cargo add command plan through Sifr-facing dependency mutation.",
+      "aligned_flags": ["--rename", "--features"],
+      "intentional_exclusions": ["Full dependency mutation CLI lands after session command integration."]
+    },
+    {
+      "name": "remove",
+      "status": "substrate",
+      "delegates_to": "cargo remove command plan through Sifr-facing dependency mutation.",
+      "aligned_flags": [],
+      "intentional_exclusions": ["Full dependency mutation CLI lands after session command integration."]
+    },
+    {
+      "name": "update",
+      "status": "substrate",
+      "delegates_to": "cargo update command plan through Sifr-facing dependency mutation.",
+      "aligned_flags": ["-p"],
+      "intentional_exclusions": ["Full update CLI lands after session command integration."]
+    },
+    {
+      "name": "tree",
+      "status": "implemented_m3",
+      "delegates_to": "cargo tree",
+      "aligned_flags": ["--locked", "--offline", "--frozen"],
+      "intentional_exclusions": ["Tree-specific flags are forwarded as Cargo-compatible trailing args in M3."]
+    },
+    {
+      "name": "vendor",
+      "status": "substrate",
+      "delegates_to": "cargo vendor command plan.",
+      "aligned_flags": ["--locked", "--offline", "--frozen"],
+      "intentional_exclusions": ["Public CLI lands in the packaging/publishing milestone."]
+    },
+    {
+      "name": "package",
+      "status": "substrate",
+      "delegates_to": "cargo package after Sifr archive preflight.",
+      "aligned_flags": ["--locked", "--offline", "--frozen"],
+      "intentional_exclusions": ["Public CLI lands in the packaging/publishing milestone; no Sifr --dry-run alias is introduced."]
+    },
+    {
+      "name": "publish",
+      "status": "substrate",
+      "delegates_to": "cargo publish after Sifr publish preflight.",
+      "aligned_flags": ["--dry-run", "--locked", "--offline", "--frozen"],
+      "intentional_exclusions": ["Public CLI lands in the packaging/publishing milestone."]
+    }
+  ]
+}

@@ -7,5 +7,8 @@ pub fn manifest_mutation_operation(operation: PackageOperation) -> OperationPlan
         lock_mode: Default::default(),
         mutates_manifests: true,
         mutates_lockfile: true,
+        requires_network: false,
+        writes_projection: true,
+        manifest_less_mode: false,
     }
 }

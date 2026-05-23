@@ -64,6 +64,24 @@ sifr emit path/to/file.sifr
 
 When no `sifr.toml` exists in the current directory or a parent directory, these commands run in manifest-less mode with the file's parent directory as the source root and no package dependency graph. Inside a package, an explicit `.sifr` file must live under the selected package source root.
 
+## Package Sessions And Commands
+
+Package-aware commands first create a `PackageSession`. The session records the workspace root, selected `sifr.toml`, source root, lock mode, manifest-less state, selected runnable target, and any script expansion before a Cargo-backed command is invoked.
+
+`sifr fetch --locked` and `sifr tree --locked` delegate to Cargo through Sifr command plans and preserve Cargo lock/network flags. `sifr check` without an explicit `.sifr` file delegates to the package check plan; `sifr check path/to/file.sifr` stays in explicit-file mode and is rejected inside a package when the file is outside the source root.
+
+`sifr run` resolves package targets in this order: explicit `.sifr` files, `--bin <name>`, `--script <name>`, positional app target or script name, `[package].default-run`, then `src/main.sifr` or a single discovered `src/bin/*.sifr` target. If an app target and script share a name, Sifr reports `SIFR-PACKAGE-0605` and requires `--bin` or `--script`.
+
+`[scripts]` entries are structured Sifr command plans:
+
+```toml
+[scripts]
+dev = { command = "run", args = [] }
+check-all = { command = "check", args = ["--workspace"] }
+```
+
+Scripts do not execute shell strings or external programs. A script may not call another script; nested script expansion reports `SIFR-PACKAGE-0714`.
+
 ## Cargo Metadata Hook
 
 Every Sifr package exposes a manifest pointer through Cargo metadata:
@@ -120,6 +138,12 @@ Sifr delegates lock and network semantics to Cargo:
 - `--locked` asks Cargo to reject lockfile updates.
 - `--offline` asks Cargo to avoid network access and requires selected package sources to be locally available.
 - `--frozen` combines locked and offline semantics.
+
+## Cargo Failure Diagnostics
+
+Sifr wraps Cargo process failures in `SIFR-PACKAGE-0101`. The wrapper carries the Cargo action, working directory, redacted argument vector, lock/network mode, exit status when available, and a bounded redacted Cargo output excerpt. Credential-looking Cargo failures, including private registry and Git credential failures, use the same wrapper rather than a separate Sifr credential taxonomy.
+
+`SIFR-PACKAGE-0105` is retired. `sifr --explain SIFR-PACKAGE-0105` points users to `SIFR-PACKAGE-0101`, and `sifr --explain SIFR-PACKAGE-0101` prints diagnostic help without performing package operations.
 
 ## Python Interop
 

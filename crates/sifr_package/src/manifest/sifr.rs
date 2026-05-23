@@ -1,5 +1,8 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
+use crate::manifest::package_sections::{
+    parse_dependencies, parse_scripts, SifrDependency, SifrScript,
+};
 use crate::manifest::production::{
     parse_source_config, reject_production_manifest_bins, reject_production_manifest_exports,
 };
@@ -33,9 +36,13 @@ pub struct SifrManifest {
     pub package_name: SifrPackageName,
     pub edition: SifrEdition,
     pub compiler_requirement: CompilerRequirement,
+    pub default_run: Option<String>,
     pub source_roots: Vec<PackageSourceRoot>,
     pub exports: Vec<ImportRoot>,
     pub source_features: BTreeMap<String, String>,
+    pub scripts: BTreeMap<String, SifrScript>,
+    pub dependencies: BTreeMap<String, SifrDependency>,
+    pub dev_dependencies: BTreeMap<String, SifrDependency>,
     pub trust: TrustPolicy,
     pub production_schema: bool,
 }
@@ -90,6 +97,10 @@ impl SifrManifest {
         )
         .map(CompilerRequirement)?;
         validate_compiler_requirement(cargo_package_id, manifest_path, &compiler_requirement)?;
+        let default_run = package
+            .get("default-run")
+            .and_then(toml::Value::as_str)
+            .map(str::to_string);
 
         let source_table = table(&value, "source");
         let source_roots = parse_source_config(cargo_package_id, manifest_path, source_table)?;
@@ -115,6 +126,18 @@ impl SifrManifest {
                     .collect()
             })
             .unwrap_or_default();
+        let scripts = table(&value, "scripts")
+            .map(|scripts| parse_scripts(cargo_package_id, manifest_path, scripts))
+            .transpose()?
+            .unwrap_or_default();
+        let dependencies = table(&value, "dependencies")
+            .map(|dependencies| parse_dependencies(cargo_package_id, manifest_path, dependencies))
+            .transpose()?
+            .unwrap_or_default();
+        let dev_dependencies = table(&value, "dev-dependencies")
+            .map(|dependencies| parse_dependencies(cargo_package_id, manifest_path, dependencies))
+            .transpose()?
+            .unwrap_or_default();
         let trust = table(&value, "trust")
             .map(|trust| parse_trust(cargo_package_id, manifest_path, trust))
             .transpose()?
@@ -124,9 +147,13 @@ impl SifrManifest {
             package_name,
             edition,
             compiler_requirement,
+            default_run,
             source_roots,
             exports,
             source_features,
+            scripts,
+            dependencies,
+            dev_dependencies,
             trust,
             production_schema,
         })

@@ -101,11 +101,12 @@ fn cargo_failure_mapping_redacts_private_credentials() {
 
     assert_eq!(
         diagnostic.code,
-        DiagnosticCode::PACKAGE_CREDENTIALS_UNAVAILABLE
+        DiagnosticCode::PACKAGE_CARGO_COMMAND_FAILED
     );
     assert!(diagnostic.message.contains("[redacted]"));
     assert!(!diagnostic.message.contains("secret"));
     assert!(!diagnostic.message.contains("abcd"));
+    assert!(diagnostic.message.contains("403 forbidden"));
 
     let generic = map_cargo_failure(CargoAction::Metadata, "manifest parse failed");
     assert_eq!(generic.code, DiagnosticCode::PACKAGE_CARGO_COMMAND_FAILED);
@@ -214,9 +215,13 @@ fn package_graph(
             package_name: SifrPackageName("app".to_string()),
             edition: SifrEdition("2026".to_string()),
             compiler_requirement: CompilerRequirement(">=0.3,<0.4".to_string()),
+            default_run: None,
             source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
             exports: vec![ImportRoot("app".to_string())],
             source_features: BTreeMap::new(),
+            scripts: BTreeMap::new(),
+            dependencies: BTreeMap::new(),
+            dev_dependencies: BTreeMap::new(),
             trust,
             production_schema: false,
         },

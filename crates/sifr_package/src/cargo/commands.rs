@@ -41,6 +41,58 @@ impl CargoCommandPlan {
     }
 
     #[must_use]
+    pub fn check(
+        current_dir: PathBuf,
+        lock_mode: CargoLockMode,
+        features: &CargoFeatureSelection,
+        target: Option<&str>,
+    ) -> Self {
+        let mut plan = Self::new(CargoAction::Check, current_dir, lock_mode, vec!["check"]);
+        plan.push_feature_args(features);
+        if let Some(target) = target {
+            plan.args
+                .extend(["--target".to_string(), target.to_string()]);
+        }
+        plan
+    }
+
+    #[must_use]
+    pub fn run(
+        current_dir: PathBuf,
+        lock_mode: CargoLockMode,
+        features: &CargoFeatureSelection,
+        bin: Option<&str>,
+        app_args: &[String],
+    ) -> Self {
+        let mut plan = Self::new(CargoAction::Run, current_dir, lock_mode, vec!["run"]);
+        plan.push_feature_args(features);
+        if let Some(bin) = bin {
+            plan.args.extend(["--bin".to_string(), bin.to_string()]);
+        }
+        if !app_args.is_empty() {
+            plan.args.push("--".to_string());
+            plan.args.extend(app_args.iter().cloned());
+        }
+        plan
+    }
+
+    #[must_use]
+    pub fn test(
+        current_dir: PathBuf,
+        lock_mode: CargoLockMode,
+        features: &CargoFeatureSelection,
+        test_args: &[String],
+    ) -> Self {
+        let mut plan = Self::new(CargoAction::Test, current_dir, lock_mode, vec!["test"]);
+        plan.push_feature_args(features);
+        if !test_args.is_empty() {
+            plan.args.push("--".to_string());
+            plan.args.extend(test_args.iter().cloned());
+        }
+        plan
+    }
+
+    #[must_use]
     pub fn build(
         current_dir: PathBuf,
         lock_mode: CargoLockMode,
@@ -53,6 +105,13 @@ impl CargoCommandPlan {
             plan.args
                 .extend(["--target".to_string(), target.to_string()]);
         }
+        plan
+    }
+
+    #[must_use]
+    pub fn tree(current_dir: PathBuf, lock_mode: CargoLockMode, forwarded: &[String]) -> Self {
+        let mut plan = Self::new(CargoAction::Tree, current_dir, lock_mode, vec!["tree"]);
+        plan.args.extend(forwarded.iter().cloned());
         plan
     }
 
@@ -154,6 +213,10 @@ impl CargoCommandPlan {
                 stable_csv(features.features.iter().map(String::as_str)),
             ]);
         }
+    }
+
+    pub fn extend_forwarded_args(&mut self, args: &[String]) {
+        self.args.extend(args.iter().cloned());
     }
 }
 
