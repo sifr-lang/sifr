@@ -1200,6 +1200,46 @@ fn test_generate_rust_multi_exports_non_main_items() {
 }
 
 #[test]
+fn test_generate_rust_multi_publicizes_non_main_reexports() {
+    let root_module = HirModule {
+        functions: vec![],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "root.leaf".to_string(),
+            names: vec!["leaf_value".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+    let leaf_module = HirModule {
+        functions: vec![HirFunction {
+            name: "leaf_value".to_string(),
+            params: vec![],
+            return_type: Type::Int,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(7)),
+            }],
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let files = generate_rust_multi(&[("root", &root_module), ("root.leaf", &leaf_module)]);
+    let root_rs = files.get("root").expect("root module should be generated");
+
+    assert!(root_rs.contains("pub use crate::root::leaf::leaf_value;"));
+}
+
+#[test]
 fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
     let main_module = HirModule {
         functions: vec![HirFunction {

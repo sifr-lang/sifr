@@ -1,8 +1,7 @@
 use crate::{build_cached_project, build_project, check_project, emit_project, CompileResult};
 use sifr_diagnostics::DiagnosticCode;
-use std::path::PathBuf;
 
-fn mktemp_dir(name: &str) -> PathBuf {
+pub(super) fn mktemp_dir(name: &str) -> std::path::PathBuf {
     let unique = format!(
         "sifr_project_build_{name}_{}_{}",
         std::process::id(),

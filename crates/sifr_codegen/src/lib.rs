@@ -1627,13 +1627,12 @@ pub fn generate_rust_multi_with_metadata(
         let module_public = *module_name != "main";
         let codegen_result = generate_rust_with_stdlib(module, &project_codegen_code);
         let local_imports = render_local_module_imports(module);
-        let mut rust_source = if module_public {
-            publicize_generated_module_source(&codegen_result.rust_source)
-        } else {
-            codegen_result.rust_source
-        };
+        let mut rust_source = codegen_result.rust_source;
         if !local_imports.trim().is_empty() {
             rust_source = format!("{}\n\n{}", local_imports.trim_end(), rust_source);
+        }
+        if module_public {
+            rust_source = publicize_generated_module_source(&rust_source);
         }
 
         files.insert((*module_name).to_string(), rust_source);

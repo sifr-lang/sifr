@@ -183,6 +183,24 @@ impl PackageSourceMap {
             module_path: module_path.clone(),
         })
     }
+
+    pub fn module_for_file(
+        &self,
+        package_id: &SifrPackageId,
+        file_path: &Path,
+    ) -> Option<&PackageModuleSource> {
+        let normalized_file = file_path
+            .canonicalize()
+            .unwrap_or_else(|_| file_path.to_path_buf());
+        self.modules.values().find(|module| {
+            &module.package_id == package_id
+                && module
+                    .file_path
+                    .canonicalize()
+                    .unwrap_or_else(|_| module.file_path.clone())
+                    == normalized_file
+        })
+    }
 }
 
 fn package_source_roots(package: &SifrPackageMetadata) -> Vec<PathBuf> {
