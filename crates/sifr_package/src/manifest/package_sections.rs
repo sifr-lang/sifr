@@ -57,7 +57,14 @@ pub fn parse_dependencies(
                 SifrDependency::Table(
                     table
                         .iter()
-                        .map(|(key, value)| (key.clone(), value.to_string()))
+                        .map(|(key, value)| {
+                            (
+                                key.clone(),
+                                value
+                                    .as_str()
+                                    .map_or_else(|| value.to_string(), str::to_string),
+                            )
+                        })
                         .collect(),
                 )
             } else {

@@ -55,6 +55,7 @@ pub enum PackageClassification {
 pub(crate) struct DirectCargoDependency {
     pub from: CargoPackageId,
     pub dependency_name: String,
+    pub dependency_kind: Option<String>,
     pub to: CargoPackageId,
 }
 
@@ -218,19 +219,45 @@ pub(crate) fn direct_cargo_dependencies(
             .map(|edge| DirectCargoDependency {
                 from: edge.from.clone(),
                 dependency_name: edge.dependency_name.clone(),
+                dependency_kind: dependency_kind_for_edge(metadata, edge),
                 to: edge.to.clone(),
             })
             .collect()
     };
 
     direct_dependencies.sort_by(|left, right| {
-        (&left.from, &left.dependency_name, &left.to).cmp(&(
-            &right.from,
-            &right.dependency_name,
-            &right.to,
-        ))
+        (
+            &left.from,
+            &left.dependency_name,
+            left.dependency_kind.as_deref().unwrap_or_default(),
+            &left.to,
+        )
+            .cmp(&(
+                &right.from,
+                &right.dependency_name,
+                right.dependency_kind.as_deref().unwrap_or_default(),
+                &right.to,
+            ))
     });
     direct_dependencies
+}
+
+fn dependency_kind_for_edge(
+    metadata: &NormalizedCargoMetadata,
+    edge: &crate::cargo::metadata::CargoResolveEdge,
+) -> Option<String> {
+    let from = metadata.packages.get(&edge.from)?;
+    let to = metadata.packages.get(&edge.to)?;
+    from.dependencies
+        .iter()
+        .find(|dependency| {
+            dependency.name == edge.dependency_name
+                && dependency
+                    .package
+                    .as_deref()
+                    .is_none_or(|package| package == to.name)
+        })
+        .and_then(|dependency| dependency.kind.clone())
 }
 
 fn fallback_direct_cargo_dependencies(
@@ -246,6 +273,7 @@ fn fallback_direct_cargo_dependencies(
                 ids.first().copied().map(|to| DirectCargoDependency {
                     from: package.id.clone(),
                     dependency_name: dependency.name.clone(),
+                    dependency_kind: dependency.kind.clone(),
                     to: to.clone(),
                 })
             })

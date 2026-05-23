@@ -1,4 +1,4 @@
-use crate::cargo::commands::CargoFeatureSelection;
+use crate::cargo::commands::{CargoFeatureSelection, CargoPackageSelection};
 use crate::cargo::errors::{map_cargo_failure, redact_cargo_stderr, CargoAction};
 use crate::cargo::lock_modes::CargoLockMode;
 use crate::ops::plan::PackageOperation;
@@ -29,10 +29,45 @@ fn package_session_plans_fetch_tree_and_package_check() {
     );
 
     let check = session
-        .plan_check(None, &CargoFeatureSelection::default())
+        .plan_check(
+            None,
+            &CargoFeatureSelection::default(),
+            &CargoPackageSelection::default(),
+        )
         .expect("check plan");
     assert_eq!(check.operation.operation, PackageOperation::Check);
     assert_eq!(check.cargo.expect("check plan").args, ["check", "--locked"]);
+}
+
+#[test]
+fn package_session_plans_check_workspace_package_selection() {
+    let temp = TestPackage::new("session_check_selection");
+    temp.write_package_manifest(
+        "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
+    );
+    let session = session(temp.path(), CargoLockMode::Locked);
+    let selection = CargoPackageSelection {
+        workspace: true,
+        packages: vec!["demo-app".to_string()],
+        excludes: vec!["demo-tools".to_string()],
+    };
+
+    let check = session
+        .plan_check(None, &CargoFeatureSelection::default(), &selection)
+        .expect("check plan");
+
+    assert_eq!(
+        check.cargo.expect("check plan").args,
+        [
+            "check",
+            "--locked",
+            "--workspace",
+            "-p",
+            "demo-app",
+            "--exclude",
+            "demo-tools"
+        ]
+    );
 }
 
 #[test]
@@ -121,6 +156,7 @@ fn package_session_rejects_explicit_file_outside_source_root() {
         .plan_check(
             Some(&temp.path().join("tools/task.sifr")),
             &CargoFeatureSelection::default(),
+            &CargoPackageSelection::default(),
         )
         .expect_err("outside source root should fail");
 
@@ -143,6 +179,7 @@ fn package_session_accepts_explicit_file_under_any_legacy_source_root() {
         .plan_check(
             Some(&temp.path().join("demos/app.sifr")),
             &CargoFeatureSelection::default(),
+            &CargoPackageSelection::default(),
         )
         .expect("file under second source root should be accepted");
 

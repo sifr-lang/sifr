@@ -182,6 +182,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0604`](SIFR-PACKAGE-0604.md) | Error | Outdated query cannot inspect this Cargo source. |
 | [`SIFR-PACKAGE-0605`](SIFR-PACKAGE-0605.md) | Error | Runnable package target or script selection is missing or ambiguous. |
 | [`SIFR-PACKAGE-0606`](SIFR-PACKAGE-0606.md) | Error | Discovered app target name is invalid. |
+| [`SIFR-PACKAGE-0607`](SIFR-PACKAGE-0607.md) | Error | Selected workspace members use the same Sifr package name. |
 | [`SIFR-PACKAGE-0701`](SIFR-PACKAGE-0701.md) | Error | Production sifr.toml uses manifest-level exports. |
 | [`SIFR-PACKAGE-0703`](SIFR-PACKAGE-0703.md) | Error | Sifr-managed Cargo projection manifest pointer drift. |
 | [`SIFR-PACKAGE-0704`](SIFR-PACKAGE-0704.md) | Error | Sifr-managed Cargo projection include rules omit required package files. |

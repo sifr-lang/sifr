@@ -16,7 +16,7 @@ struct TestPackage {
 struct TestEdge {
     from: String,
     dependency_name: String,
-    to: String,
+    to_package_id: String,
 }
 
 #[derive(Clone)]
@@ -32,13 +32,23 @@ fn production_package(
     cargo_name: &str,
     sifr_name: &str,
 ) -> TestPackage {
+    production_package_version(workspace, dir_name, cargo_name, "0.1.0", sifr_name)
+}
+
+fn production_package_version(
+    workspace: &Path,
+    dir_name: &str,
+    cargo_name: &str,
+    version: &str,
+    sifr_name: &str,
+) -> TestPackage {
     let root = workspace.join(dir_name);
     std::fs::create_dir_all(root.join("src")).expect("package src dir should be created");
     std::fs::write(root.join("src/lib.rs"), "").expect("pure marker should be written");
     std::fs::write(
         root.join("Cargo.toml"),
         format!(
-            "[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
+            "[package]\nname = \"{cargo_name}\"\nversion = \"{version}\"\nedition = \"2021\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
         ),
     )
     .expect("cargo manifest should be written");
@@ -52,10 +62,19 @@ fn production_package(
     TestPackage {
         root,
         cargo_name: cargo_name.to_string(),
-        version: "0.1.0".to_string(),
+        version: version.to_string(),
         sifr_name: sifr_name.to_string(),
         aliases: Vec::new(),
     }
+}
+
+fn write_manifest_dependency_alias(package: &TestPackage, dependency_name: &str, import: &str) {
+    let manifest = package.root.join("sifr.toml");
+    let mut source = std::fs::read_to_string(&manifest).expect("manifest should be readable");
+    source.push_str(&format!(
+        "\n[dependencies]\n{dependency_name} = {{ package = \"{dependency_name}\", path = \"../{dependency_name}\", import = \"{import}\" }}\n"
+    ));
+    std::fs::write(manifest, source).expect("manifest should be updated");
 }
 
 fn write_package_source(package: &TestPackage, relative: &str, source: &str) {
@@ -70,7 +89,7 @@ fn package_edge(from: &TestPackage, dependency_name: &str, to: &TestPackage) -> 
     TestEdge {
         from: from.cargo_name.clone(),
         dependency_name: dependency_name.to_string(),
-        to: to.cargo_name.clone(),
+        to_package_id: cargo_package_id(to),
     }
 }
 
@@ -97,7 +116,7 @@ fn package_graph(
                 .map(|edge| {
                     let target = packages
                         .iter()
-                        .find(|candidate| candidate.cargo_name == edge.to)
+                        .find(|candidate| cargo_package_id(candidate) == edge.to_package_id)
                         .expect("edge target should exist");
                     serde_json::json!({
                         "name": edge.dependency_name,
@@ -149,7 +168,7 @@ fn package_graph(
                 .map(|edge| {
                     let target = packages
                         .iter()
-                        .find(|candidate| candidate.cargo_name == edge.to)
+                        .find(|candidate| cargo_package_id(candidate) == edge.to_package_id)
                         .expect("edge target should exist");
                     serde_json::json!({
                         "name": edge.dependency_name,
@@ -287,6 +306,109 @@ def main():\n    print(parse_json())\n",
 
     assert!(output.status.success());
     assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "7");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_package_project_uses_sifr_manifest_dependency_aliases() {
+    let dir = mktemp_dir("package_sifr_manifest_alias");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    write_manifest_dependency_alias(&app, "demo_json_v1", "demo_json_v1");
+    let json = production_package(&dir, "json", "sifr-demo-json", "demo_json");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from demo_json_v1 import parse_json\n\n\
+def main():\n    assert parse_json() == 1\n",
+    );
+    write_package_source(&json, "__init__.sifr", "from .parse import parse_json\n");
+    write_package_source(
+        &json,
+        "parse.sifr",
+        "def parse_json() -> int:\n    return 1\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &json],
+        &[package_edge(&app, "demo_json_v1", &json)],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors.is_empty(),
+        "Sifr manifest dependency aliases should resolve: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_package_project_namespaces_transitive_package_versions() {
+    let dir = mktemp_dir("package_transitive_version_namespace");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    let image = production_package(&dir, "image", "sifr-demo-image", "demo_image");
+    let physics = production_package(&dir, "physics", "sifr-demo-physics", "demo_physics");
+    let math_v1 =
+        production_package_version(&dir, "math-v1", "sifr-demo-math", "1.0.0", "demo_math");
+    let math_v2 =
+        production_package_version(&dir, "math-v2", "sifr-demo-math", "2.0.0", "demo_math");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from demo_image import image_value\nfrom demo_physics import physics_value\n\n\
+def main():\n    assert image_value() == 1\n    assert physics_value() == 2\n",
+    );
+    write_package_source(&image, "__init__.sifr", "from .api import image_value\n");
+    write_package_source(
+        &image,
+        "api.sifr",
+        "from demo_math import math_value\n\n\
+def image_value() -> int:\n    return math_value()\n",
+    );
+    write_package_source(
+        &physics,
+        "__init__.sifr",
+        "from .api import physics_value\n",
+    );
+    write_package_source(
+        &physics,
+        "api.sifr",
+        "from demo_math import math_value\n\n\
+def physics_value() -> int:\n    return math_value()\n",
+    );
+    write_package_source(&math_v1, "__init__.sifr", "from .value import math_value\n");
+    write_package_source(
+        &math_v1,
+        "value.sifr",
+        "def math_value() -> int:\n    return 1\n",
+    );
+    write_package_source(&math_v2, "__init__.sifr", "from .value import math_value\n");
+    write_package_source(
+        &math_v2,
+        "value.sifr",
+        "def math_value() -> int:\n    return 2\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &image, &physics, &math_v1, &math_v2],
+        &[
+            package_edge(&app, "demo_image", &image),
+            package_edge(&app, "demo_physics", &physics),
+            package_edge(&image, "demo_math", &math_v1),
+            package_edge(&physics, "demo_math", &math_v2),
+        ],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors.is_empty(),
+        "transitive package versions should compile in distinct namespaces: {errors:?}"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 

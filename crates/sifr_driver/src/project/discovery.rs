@@ -1,10 +1,11 @@
 use crate::diagnostics::RenderedDiagnostic;
 use crate::workspace::WorkspaceRoot;
+use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_package::{
     DottedModulePath, PackageImportOrigin, PackageSourceMap, SifrPackageGraph, SifrPackageId,
 };
-use sifr_python_ast::Stmt;
+use sifr_python_ast::{Identifier, Stmt};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -465,7 +466,7 @@ pub(crate) fn parse_package_import_closure_source_modules(
     };
     let entry_module_name = entry_module.module_path.0.clone();
     let mut parsed_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
-    let mut parsed_names: BTreeSet<(SifrPackageId, DottedModulePath)> = BTreeSet::new();
+    let mut parsed_names: BTreeSet<PackageDiscoveryItem> = BTreeSet::new();
     let mut pending = BTreeSet::from([PackageDiscoveryItem {
         package_id: entry_package_id.clone(),
         source_module_path: DottedModulePath(entry_module_name.clone()),
@@ -473,7 +474,7 @@ pub(crate) fn parse_package_import_closure_source_modules(
     }]);
 
     while let Some(item) = pending.pop_first() {
-        if !parsed_names.insert((item.package_id.clone(), item.source_module_path.clone())) {
+        if !parsed_names.insert(item.clone()) {
             continue;
         }
         let resolved = source_map
@@ -494,7 +495,7 @@ pub(crate) fn parse_package_import_closure_source_modules(
             &resolved.resolved_module.file_path,
             diagnostic_style,
         );
-        let suite = sifr_frontend::parse_source(&source, Some(&label))?;
+        let mut suite = sifr_frontend::parse_source(&source, Some(&label))?;
         let is_namespace_module = resolved
             .resolved_module
             .file_path
@@ -504,26 +505,31 @@ pub(crate) fn parse_package_import_closure_source_modules(
         for dependency in
             package_import_dependencies(&item.source_module_path.0, is_namespace_module, &suite)
         {
-            if parsed_names.contains(&(
-                resolved.resolved_module.package_id.clone(),
-                dependency.clone(),
-            )) {
-                continue;
-            }
             let dependency_resolution = source_map
                 .resolve_import(graph, &resolved.resolved_module.package_id, &dependency)
                 .map_err(|error| vec![package_import_diagnostic(error)])?;
             let compile_module_name = compile_module_name_for_dependency(
+                entry_package_id,
                 &item,
                 &dependency_resolution.origin,
                 &dependency_resolution.import_path,
                 &dependency_resolution.resolved_module.module_path,
             );
-            pending.insert(PackageDiscoveryItem {
+            rewrite_import_from_dependency(
+                &mut suite,
+                &item.source_module_path.0,
+                is_namespace_module,
+                &dependency,
+                &compile_module_name,
+            );
+            let dependency_item = PackageDiscoveryItem {
                 package_id: dependency_resolution.resolved_module.package_id,
                 source_module_path: dependency_resolution.resolved_module.module_path,
                 compile_module_name,
-            });
+            };
+            if !parsed_names.contains(&dependency_item) {
+                pending.insert(dependency_item);
+            }
         }
         parsed_modules.insert(
             item.compile_module_name,
@@ -546,19 +552,59 @@ struct PackageDiscoveryItem {
 }
 
 fn compile_module_name_for_dependency(
+    entry_package_id: &SifrPackageId,
     current: &PackageDiscoveryItem,
     origin: &PackageImportOrigin,
     import_path: &DottedModulePath,
     resolved_module_path: &DottedModulePath,
 ) -> String {
     match origin {
-        PackageImportOrigin::DirectDependency { .. } => import_path.0.clone(),
+        PackageImportOrigin::DirectDependency {
+            dependency_package_id,
+            ..
+        } => {
+            if &current.package_id == entry_package_id {
+                import_path.0.clone()
+            } else {
+                scoped_dependency_compile_name(
+                    &current.compile_module_name,
+                    dependency_package_id,
+                    &import_path.0,
+                )
+            }
+        }
         PackageImportOrigin::OwnPackage => remap_own_package_compile_name(
             &current.source_module_path.0,
             &current.compile_module_name,
             &resolved_module_path.0,
         ),
     }
+}
+
+fn scoped_dependency_compile_name(
+    current_compile_module: &str,
+    dependency_package_id: &SifrPackageId,
+    import_path: &str,
+) -> String {
+    let current_root = current_compile_module
+        .split('.')
+        .next()
+        .filter(|root| !root.is_empty())
+        .unwrap_or("pkg");
+    format!(
+        "{current_root}.__pkg_{}.{}",
+        package_instance_hash(dependency_package_id),
+        import_path
+    )
+}
+
+fn package_instance_hash(package_id: &SifrPackageId) -> String {
+    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+    for byte in package_id.0.bytes() {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    format!("{hash:016x}")
 }
 
 fn remap_own_package_compile_name(
@@ -619,6 +665,50 @@ fn package_import_dependencies(
         deps.insert(DottedModulePath(resolved));
     }
     deps
+}
+
+fn rewrite_import_from_dependency(
+    stmts: &mut [Stmt],
+    current_module: &str,
+    is_namespace_module: bool,
+    dependency: &DottedModulePath,
+    compile_module_name: &str,
+) {
+    for stmt in stmts {
+        let Stmt::ImportFrom(import_from) = stmt else {
+            continue;
+        };
+        if import_from.level > 1 {
+            continue;
+        }
+        let Some(module) = &import_from.module else {
+            continue;
+        };
+        let module_name = module.to_string();
+        if module_name == "typing"
+            || module_name == "enum"
+            || module_name.starts_with("sifr.")
+            || module_name.starts_with("_sifr.")
+        {
+            continue;
+        }
+        let resolved = if import_from.level == 1 {
+            package_relative_import_module(current_module, is_namespace_module, &module_name)
+        } else {
+            module_name
+        };
+        if resolved != dependency.0 {
+            continue;
+        }
+        import_from.module = Some(Identifier::new(
+            compile_module_name.to_string(),
+            import_from
+                .module
+                .as_ref()
+                .map_or(TextRange::default(), |module| module.range),
+        ));
+        import_from.level = 0;
+    }
 }
 
 fn package_relative_import_module(

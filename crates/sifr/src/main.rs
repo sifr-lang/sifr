@@ -122,6 +122,15 @@ enum Commands {
     Check {
         /// Input .sifr file, or omit for package check
         path: Option<PathBuf>,
+        /// Check all Sifr-capable workspace members through Cargo-compatible selection
+        #[arg(long)]
+        workspace: bool,
+        /// Select one package by Cargo package spec or unambiguous package name
+        #[arg(short = 'p', long = "package")]
+        packages: Vec<String>,
+        /// Exclude one package from workspace selection
+        #[arg(long)]
+        exclude: Vec<String>,
         /// Cargo-compatible package message format for package checks
         #[arg(long)]
         message_format: Option<String>,
@@ -282,16 +291,27 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Repair { check } => cmd_repair(check, diagnostic_format),
         Commands::Check {
             path,
+            workspace,
+            packages,
+            exclude,
             message_format,
             locked,
             offline,
             frozen,
-        } => cmd_check(
-            path.as_deref(),
-            message_format.as_deref(),
-            lock_mode_from_flags(locked, offline, frozen),
-            diagnostic_format,
-        ),
+        } => {
+            let selection = sifr_package::CargoPackageSelection {
+                workspace,
+                packages,
+                excludes: exclude,
+            };
+            cmd_check(
+                path.as_deref(),
+                message_format.as_deref(),
+                &selection,
+                lock_mode_from_flags(locked, offline, frozen),
+                diagnostic_format,
+            )
+        }
         Commands::Tree {
             locked,
             offline,
@@ -900,6 +920,7 @@ fn cmd_script(origin: &sifr_package::ScriptOrigin, diagnostic_format: Diagnostic
                 .filter(|arg| !arg.starts_with('-'))
                 .map(Path::new),
             None,
+            &sifr_package::CargoPackageSelection::default(),
             sifr_package::CargoLockMode::Normal,
             diagnostic_format,
         ),
@@ -1156,6 +1177,7 @@ fn bounded_excerpt(text: &str) -> String {
 fn cmd_check(
     file: Option<&Path>,
     message_format: Option<&str>,
+    selection: &sifr_package::CargoPackageSelection,
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
@@ -1166,7 +1188,11 @@ fn cmd_check(
             return EXIT_USAGE_OR_CONFIG;
         }
     };
-    let mut plan = match session.plan_check(file, &sifr_package::CargoFeatureSelection::default()) {
+    let mut plan = match session.plan_check(
+        file,
+        &sifr_package::CargoFeatureSelection::default(),
+        selection,
+    ) {
         Ok(plan) => plan,
         Err(error) => {
             render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
@@ -1917,6 +1943,7 @@ def main():\n    assert parse_json() == 1\n",
             cmd_check(
                 Some(Path::new("src/main.sifr")),
                 None,
+                &sifr_package::CargoPackageSelection::default(),
                 sifr_package::CargoLockMode::Normal,
                 DiagnosticFormat::Compact,
             )
@@ -1964,6 +1991,7 @@ def main():\n    assert value() == 1\n",
             cmd_check(
                 Some(Path::new("main.sifr")),
                 None,
+                &sifr_package::CargoPackageSelection::default(),
                 sifr_package::CargoLockMode::Normal,
                 DiagnosticFormat::Compact,
             )
@@ -1973,11 +2001,25 @@ def main():\n    assert value() == 1\n",
 
     #[test]
     fn test_package_cli_parses_check_message_format_and_tree_args() {
-        let cli = Cli::try_parse_from(["sifr", "check", "--locked", "--message-format", "json"])
-            .expect("check cli parses");
+        let cli = Cli::try_parse_from([
+            "sifr",
+            "check",
+            "--locked",
+            "--workspace",
+            "-p",
+            "demo-app",
+            "--exclude",
+            "demo-tools",
+            "--message-format",
+            "json",
+        ])
+        .expect("check cli parses");
         let Some(Commands::Check {
             message_format,
             locked,
+            workspace,
+            packages,
+            exclude,
             ..
         }) = cli.command
         else {
@@ -1985,6 +2027,9 @@ def main():\n    assert value() == 1\n",
         };
         assert_eq!(message_format.as_deref(), Some("json"));
         assert!(locked);
+        assert!(workspace);
+        assert_eq!(packages, ["demo-app"]);
+        assert_eq!(exclude, ["demo-tools"]);
 
         let cli = Cli::try_parse_from(["sifr", "tree", "--offline", "--depth", "1"])
             .expect("tree cli parses");
