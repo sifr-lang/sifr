@@ -209,6 +209,24 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
+    pub fn duplicate_workspace_sifr_name(package: &str, members: &[String]) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_SIFR_NAME,
+            message: format!(
+                "workspace packages use duplicate Sifr package name '{package}': {}",
+                members.join(", ")
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some(
+                "rename one Sifr package or select a narrower package set with -p/--package"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
     pub fn changed_file_mapping_failed(path: &Path) -> Self {
         Self {
             code: DiagnosticCode::PACKAGE_CHANGED_FILE_MAPPING_FAILED,

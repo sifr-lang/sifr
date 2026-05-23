@@ -7,7 +7,9 @@ pub mod ops;
 pub mod projection;
 pub mod source;
 
-pub use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection, CargoPackageMutation};
+pub use crate::cargo::commands::{
+    CargoCommandPlan, CargoFeatureSelection, CargoPackageMutation, CargoPackageSelection,
+};
 pub use crate::cargo::errors::{map_cargo_failure, CargoAction};
 pub use crate::cargo::lock_modes::{validate_offline_source_availability, CargoLockMode};
 pub use crate::cargo::metadata::{

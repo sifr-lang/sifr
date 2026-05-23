@@ -142,6 +142,41 @@ fn workspace_duplicate_import_roots_report_0602() {
 }
 
 #[test]
+fn workspace_duplicate_sifr_names_report_0607() {
+    let (mut graph, mut metadata) = graph_and_metadata_without_rust_violation();
+    let duplicate = package(
+        "duplicate-name",
+        "sifr-duplicate-name",
+        "lib",
+        "/ws/duplicate-name",
+        "duplicate_lib",
+        None,
+    );
+    graph.classifications.insert(
+        duplicate.cargo_package_id.clone(),
+        PackageClassification::SifrSource(duplicate.package_id.clone()),
+    );
+    graph
+        .packages
+        .insert(duplicate.package_id.clone(), duplicate.clone());
+    metadata
+        .workspace_members
+        .insert(duplicate.cargo_package_id.clone());
+    metadata.packages.insert(
+        duplicate.cargo_package_id.clone(),
+        cargo_package(&duplicate),
+    );
+
+    let diagnostics =
+        select_sifr_workspace_members(&metadata, &graph).expect_err("duplicate names fail");
+
+    assert_eq!(
+        diagnostics[0].code,
+        DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_SIFR_NAME
+    );
+}
+
+#[test]
 fn outdated_unknown_source_reports_0604() {
     let mut graph = graph_and_metadata().0;
     let package = graph

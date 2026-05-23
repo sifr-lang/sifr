@@ -1,4 +1,4 @@
-use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection};
+use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection, CargoPackageSelection};
 use crate::cargo::lock_modes::CargoLockMode;
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
@@ -125,6 +125,7 @@ impl PackageSession {
         &self,
         explicit_file: Option<&Path>,
         features: &CargoFeatureSelection,
+        selection: &CargoPackageSelection,
     ) -> Result<PackageCommandPlan, PackageDiagnostic> {
         if let Some(file) = explicit_file {
             self.validate_explicit_file(file)?;
@@ -141,6 +142,7 @@ impl PackageSession {
                 self.workspace_root.clone(),
                 self.lock_mode,
                 features,
+                selection,
                 None,
             )),
             run_target: None,

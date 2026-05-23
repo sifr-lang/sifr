@@ -209,6 +209,8 @@ impl DiagnosticCode {
     pub const PACKAGE_RUN_TARGET_AMBIGUOUS: Self = Self::new("SIFR-PACKAGE-0605", Severity::Error);
     pub const PACKAGE_INVALID_APP_TARGET_NAME: Self =
         Self::new("SIFR-PACKAGE-0606", Severity::Error);
+    pub const PACKAGE_DUPLICATE_WORKSPACE_SIFR_NAME: Self =
+        Self::new("SIFR-PACKAGE-0607", Severity::Error);
     pub const PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION: Self =
         Self::new("SIFR-PACKAGE-0701", Severity::Error);
     pub const PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT: Self =
@@ -2218,6 +2220,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["target"]
     ),
     active_entry!(
+        "SIFR-PACKAGE-0607",
+        "PACKAGE",
+        "Selected workspace members use the same Sifr package name.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_sifr_names_report_0607",
+        "duplicate Sifr package name in workspace: {package}",
+        "sifr_package::graph::workspace",
+        [arg!("package"), json_arg!("members")],
+        ["package", "members"]
+    ),
+    active_entry!(
         "SIFR-PACKAGE-0701",
         "PACKAGE",
         "Production sifr.toml uses manifest-level exports.",
@@ -2458,6 +2471,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_OUTDATED_QUERY_UNSUPPORTED,
     DiagnosticCode::PACKAGE_RUN_TARGET_AMBIGUOUS,
     DiagnosticCode::PACKAGE_INVALID_APP_TARGET_NAME,
+    DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_SIFR_NAME,
     DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION,
     DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT,
     DiagnosticCode::PACKAGE_PROJECTION_INCLUDE_DRIFT,

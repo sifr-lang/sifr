@@ -40,6 +40,10 @@ pub fn select_sifr_workspace_members(
     }
 
     diagnostics.extend(rust_only_sifr_dependency_diagnostics(metadata, graph));
+    diagnostics.extend(duplicate_workspace_sifr_names(
+        graph,
+        &selection.selected_sifr_packages,
+    ));
     diagnostics.extend(duplicate_workspace_import_roots(
         graph,
         &selection.selected_sifr_packages,
@@ -85,6 +89,10 @@ pub fn explicit_package_selection(
     }
 
     diagnostics.extend(duplicate_workspace_import_roots(
+        graph,
+        &selection.selected_sifr_packages,
+    ));
+    diagnostics.extend(duplicate_workspace_sifr_names(
         graph,
         &selection.selected_sifr_packages,
     ));
@@ -141,6 +149,34 @@ fn duplicate_workspace_import_roots(
                 .map(|package_id| package_id.0.clone())
                 .collect::<Vec<_>>();
             PackageDiagnostic::duplicate_workspace_import_root(&root, &package_names)
+        })
+        .collect()
+}
+
+fn duplicate_workspace_sifr_names(
+    graph: &SifrPackageGraph,
+    selected: &BTreeSet<SifrPackageId>,
+) -> Vec<PackageDiagnostic> {
+    let mut by_name: BTreeMap<String, Vec<&SifrPackageId>> = BTreeMap::new();
+    for package_id in selected {
+        let Some(package) = graph.packages.get(package_id) else {
+            continue;
+        };
+        by_name
+            .entry(package.sifr_name.0.clone())
+            .or_default()
+            .push(package_id);
+    }
+
+    by_name
+        .into_iter()
+        .filter(|(_, packages)| packages.len() > 1)
+        .map(|(name, packages)| {
+            let members = packages
+                .into_iter()
+                .map(|package_id| package_id.0.clone())
+                .collect::<Vec<_>>();
+            PackageDiagnostic::duplicate_workspace_sifr_name(&name, &members)
         })
         .collect()
 }

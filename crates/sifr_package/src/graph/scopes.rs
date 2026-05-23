@@ -4,6 +4,7 @@ use crate::graph::derive::{
     DirectCargoDependency, PackageClassification, SifrPackageGraph, SifrPackageId,
     SifrPackageMetadata,
 };
+use crate::manifest::package_sections::SifrDependency;
 use crate::manifest::sifr::ImportRoot;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -67,7 +68,11 @@ pub(crate) fn derive_direct_dependency_scopes(
             .unwrap_or_default();
         validate_alias_dependencies(package, direct, classifications, &mut diagnostics);
 
-        for dependency in direct {
+        for dependency in direct
+            .iter()
+            .copied()
+            .filter(|dependency| dependency.dependency_kind.is_none())
+        {
             let Some(target) = packages_by_cargo_id.get(&dependency.to).copied() else {
                 continue;
             };
@@ -92,11 +97,11 @@ pub(crate) fn derive_direct_dependency_scopes(
                 let Some(target_export_root) = target.manifest.exports.first().cloned() else {
                     continue;
                 };
-                for (alias, alias_import) in aliases {
+                for alias in aliases {
                     let Some(import_root) = parse_alias_import_root(
                         package,
-                        alias,
-                        &alias_import.import,
+                        &alias.alias,
+                        &alias.import,
                         &mut diagnostics,
                     ) else {
                         continue;
@@ -111,7 +116,7 @@ pub(crate) fn derive_direct_dependency_scopes(
                             cargo_package_id: target.cargo_package_id.clone(),
                             dependency_name: dependency.dependency_name.clone(),
                             source: ScopedImportSource::Alias {
-                                alias: alias.clone(),
+                                alias: alias.alias.clone(),
                             },
                         },
                         &mut diagnostics,
@@ -175,18 +180,51 @@ fn validate_alias_dependencies(
     }
 }
 
-fn aliases_for_dependency<'a>(
-    package: &'a SifrPackageMetadata,
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct DependencyAlias {
+    alias: String,
+    import: String,
+}
+
+fn aliases_for_dependency(
+    package: &SifrPackageMetadata,
     dependency_name: &str,
-) -> Vec<(
-    &'a String,
-    &'a crate::manifest::metadata::CargoSifrAliasMetadata,
-)> {
-    package
+) -> Vec<DependencyAlias> {
+    let mut aliases = package
         .aliases
         .iter()
         .filter(|(_, alias)| alias.dependency == dependency_name)
-        .collect()
+        .map(|(alias, metadata)| DependencyAlias {
+            alias: alias.clone(),
+            import: metadata.import.clone(),
+        })
+        .collect::<Vec<_>>();
+
+    if let Some(import) = package
+        .manifest
+        .dependencies
+        .get(dependency_name)
+        .and_then(dependency_import_root)
+    {
+        aliases.push(DependencyAlias {
+            alias: dependency_name.to_string(),
+            import,
+        });
+    }
+
+    aliases.sort_by(|left, right| (&left.alias, &left.import).cmp(&(&right.alias, &right.import)));
+    aliases.dedup();
+    aliases
+}
+
+fn dependency_import_root(dependency: &SifrDependency) -> Option<String> {
+    let SifrDependency::Table(table) = dependency else {
+        return None;
+    };
+    table
+        .get("import")
+        .filter(|value| !value.is_empty())
+        .cloned()
 }
 
 fn parse_alias_import_root(

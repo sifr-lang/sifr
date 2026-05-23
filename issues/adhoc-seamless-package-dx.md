@@ -8,7 +8,7 @@ Related phase: `internal_docs/phases/37_package_management.md`
 - [x] milestone_adhoc_pkg_2: Sifr-managed Cargo projection
 - [x] milestone_adhoc_pkg_3: Package session and CLI command integration
 - [x] milestone_adhoc_pkg_4: Package-aware compiler imports
-- [ ] milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
+- [x] milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
 - [ ] milestone_adhoc_pkg_6: Packaging, publishing, vendoring, and release checks
 - [ ] milestone_adhoc_pkg_7: Migration, docs, demos, and long-term guardrails
 
@@ -145,6 +145,42 @@ Review:
 
 - `reviews/adhoc-package-dx-m4-review-pass-1.md` -> READY with no blocking findings.
 - `reviews/adhoc-package-dx-m4-review-pass-2.md` -> READY after validation fallback, guardrail, and fixture-shape fixes.
+
+### milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
+
+Status: implemented and reviewer-approved. PR: https://github.com/sifr-lang/sifr/pull/2157
+
+Delivered:
+
+- Added `CargoPackageSelection` and wired `sifr check --workspace`, `-p/--package`, and `--exclude` through package-session Cargo check planning.
+- Derived direct dependency import scopes from Sifr manifest `[dependencies]` aliases (`import = "..."`) in addition to Cargo metadata aliases, while excluding dev/build-only dependency scopes from normal imports.
+- Added transitive package-instance namespace hashing in package import discovery so the same Sifr package name at multiple resolved versions keeps distinct compile/type identity.
+- Rewrote package `from ... import ...` AST module names to their resolved compile namespace during package import-closure discovery.
+- Added duplicate selected workspace Sifr package name diagnostic `SIFR-PACKAGE-0607` with docs and coverage.
+- Added package project, package-session, workspace diagnostic, alias, and CLI tests for workspaces, aliases, and multiple resolved package versions.
+
+Validation:
+
+- `cargo test -p sifr_driver package_project -- --test-threads=1` -> PASS, 7 tests.
+- `cargo test -p sifr_package workspace -- --test-threads=1` -> PASS, 3 tests.
+- `cargo test -p sifr_package direct_dependency_aliases_allow_same_export_root_in_one_scope -- --test-threads=1` -> PASS.
+- `cargo test -p sifr package_cli_parses_check_message_format_and_tree_args -- --test-threads=1` -> PASS.
+- `cargo test -p sifr_package -- --test-threads=1` -> PASS, 62 tests.
+- `python3 scripts/check_diagnostic_docs_sync.py` -> PASS.
+- `python3 scripts/check_diagnostic_code_coverage.py` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=1 cargo clippy -p sifr_package -p sifr_driver -p sifr -- -D warnings` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_sifr_driver_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_package_manager_guardrails.py` -> PASS.
+- `CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=1 cargo build -q -p sifr_frontend --bin frontend_query_bench` -> PASS after the first quick run hit the benchmark helper cold-build timeout.
+- `python3 verification/performance/run_benchmarks.py --sample-scale smoke --case incremental-local-loop-001-unchanged-file-update --case interactive-tooling-foundation-002-warm-diagnostics-query` -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS on rerun (wall-time/skew advisories only after cold rebuild).
+
+Review:
+
+- `reviews/adhoc-package-dx-m5-review-pass-1.md` -> READY with no blocking findings.
+- `reviews/adhoc-package-dx-m5-review-pass-2.md` -> READY with no blocking findings.
 
 ## Problem
 

@@ -17,6 +17,13 @@ pub struct CargoFeatureSelection {
     pub no_default_features: bool,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CargoPackageSelection {
+    pub workspace: bool,
+    pub packages: Vec<String>,
+    pub excludes: Vec<String>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CargoPackageMutation {
     pub package_spec: String,
@@ -45,9 +52,11 @@ impl CargoCommandPlan {
         current_dir: PathBuf,
         lock_mode: CargoLockMode,
         features: &CargoFeatureSelection,
+        selection: &CargoPackageSelection,
         target: Option<&str>,
     ) -> Self {
         let mut plan = Self::new(CargoAction::Check, current_dir, lock_mode, vec!["check"]);
+        plan.push_package_selection_args(selection);
         plan.push_feature_args(features);
         if let Some(target) = target {
             plan.args
@@ -212,6 +221,18 @@ impl CargoCommandPlan {
                 "--features".to_string(),
                 stable_csv(features.features.iter().map(String::as_str)),
             ]);
+        }
+    }
+
+    fn push_package_selection_args(&mut self, selection: &CargoPackageSelection) {
+        if selection.workspace {
+            self.args.push("--workspace".to_string());
+        }
+        for package in &selection.packages {
+            self.args.extend(["-p".to_string(), package.clone()]);
+        }
+        for exclude in &selection.excludes {
+            self.args.extend(["--exclude".to_string(), exclude.clone()]);
         }
     }
 
