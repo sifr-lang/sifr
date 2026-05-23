@@ -254,6 +254,12 @@ Review:
 
 - `reviews/adhoc-package-dx-m7-review-pass-1.md` -> READY with no blocking findings.
 
+## Final Phase Review
+
+Status: reviewer-approved after all M1-M7 PRs were merged.
+
+- `reviews/adhoc-package-dx-final-review-pass-1.md` -> READY with no blocking findings.
+
 ## Problem
 
 Phase 37 established the Cargo-backed package-management substrate: Cargo metadata parsing, Sifr package graph derivation, package source maps, lock modes, trust policy, workspace selection, publish/archive plans, guardrails, and concrete demo repositories.
