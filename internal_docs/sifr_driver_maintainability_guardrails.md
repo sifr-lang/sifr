@@ -2,7 +2,7 @@
 
 This document defines the anti-regrowth guardrails for the Phase 31 `sifr_driver` decomposition work.
 
-## File Boundaries And Line Budgets
+## File Boundaries
 
 The canonical driver layout is rooted under `crates/sifr_driver/src/`:
 
@@ -15,13 +15,6 @@ The canonical driver layout is rooted under `crates/sifr_driver/src/`:
 - `test_runner/`
 - `tests/`
 
-Hard limits enforced by the guardrail script:
-
-- `crates/sifr_driver/src/lib.rs` must stay at or below 250 lines
-- any `mod.rs` under `crates/sifr_driver/src/` must stay at or below 250 lines
-- any non-test implementation file under `crates/sifr_driver/src/` must stay at or below 900 lines
-- any file under `crates/sifr_driver/src/tests/` must stay at or below 700 lines
-
 Monolithic files are explicitly banned:
 
 - `crates/sifr_driver/src/stdlib.rs`
@@ -33,7 +26,7 @@ Monolithic files are explicitly banned:
 Guardrail enforcement commands:
 
 - `python3 scripts/check_sifr_driver_maintainability_guardrails.py`
-- `SIFR_DRIVER_GUARDRAIL_EXPECT_FAILURE=1 python3 scripts/check_sifr_driver_maintainability_guardrails.py`
+- `python3 scripts/check_file_size_guardrails.py`
 
 `run_all_tests.sh` runs this check before the broader validation suite.
 
@@ -55,5 +48,5 @@ Use these placement rules when changing the driver:
 - [ ] `crates/sifr_driver/src/lib.rs` stays crate wiring plus re-exports only.
 - [ ] Test coverage lives in focused `crates/sifr_driver/src/tests/` modules or beside the extracted concern.
 - [ ] Shared helpers were extracted only when they represent a real boundary, not a dumping ground.
-- [ ] File-size guardrails stay within limits.
+- [ ] Unified file-size guardrail passes locally (`python3 scripts/check_file_size_guardrails.py`).
 - [ ] Guardrail script still passes locally (`python3 scripts/check_sifr_driver_maintainability_guardrails.py`).

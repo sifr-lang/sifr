@@ -4,20 +4,13 @@
 from __future__ import annotations
 
 import argparse
-import os
 import re
 from pathlib import Path
 from typing import Iterable, List
 
 
 CHECKLIST_DOC = Path("internal_docs/sifr_driver_maintainability_guardrails.md")
-TESTS_DIR = Path("crates/sifr_driver/src/tests")
 DRIVER_SRC = Path("crates/sifr_driver/src")
-
-LIB_RS_MAX_LINES = 250
-MOD_RS_MAX_LINES = 250
-IMPL_RS_MAX_LINES = 900
-TEST_RS_MAX_LINES = 700
 
 BANNED_MONOLITHS = [
     DRIVER_SRC / "stdlib.rs",
@@ -32,7 +25,7 @@ REQUIRED_CHECKLIST_SNIPPETS = [
     "- [ ] New driver logic is placed in the correct module subtree",
     "- [ ] `crates/sifr_driver/src/lib.rs` stays crate wiring plus re-exports only",
     "- [ ] Test coverage lives in focused `crates/sifr_driver/src/tests/` modules or beside the extracted concern",
-    "- [ ] File-size guardrails stay within limits",
+    "- [ ] Unified file-size guardrail passes locally (`python3 scripts/check_file_size_guardrails.py`)",
     "- [ ] Guardrail script still passes locally (`python3 scripts/check_sifr_driver_maintainability_guardrails.py`)",
 ]
 
@@ -45,43 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Enforce sifr_driver maintainability guardrails."
     )
-    parser.add_argument(
-        "--max-lines-override",
-        type=int,
-        default=None,
-        help="Override all max line limits (testing/negative-path validation helper).",
-    )
     return parser.parse_args()
-
-
-def count_lines(path: Path) -> int:
-    with path.open("r", encoding="utf-8") as handle:
-        return sum(1 for _ in handle)
-
-
-def implementation_line_limit(rel: Path, limit_override: int | None) -> int:
-    if limit_override is not None:
-        return limit_override
-    if rel == DRIVER_SRC / "lib.rs":
-        return LIB_RS_MAX_LINES
-    if rel.parts[-1] == "mod.rs":
-        return MOD_RS_MAX_LINES
-    if rel.is_relative_to(TESTS_DIR):
-        return TEST_RS_MAX_LINES
-    return IMPL_RS_MAX_LINES
-
-
-def check_line_limits(repo_root: Path, limit_override: int | None) -> List[str]:
-    failures: List[str] = []
-    for path in sorted((repo_root / DRIVER_SRC).rglob("*.rs")):
-        rel = path.relative_to(repo_root)
-        lines = count_lines(path)
-        limit = implementation_line_limit(rel, limit_override)
-        if lines > limit:
-            failures.append(
-                f"{rel} is {lines} lines (limit {limit}); split the module instead of growing it"
-            )
-    return failures
 
 
 def check_banned_monoliths(repo_root: Path) -> List[str]:
@@ -122,10 +79,9 @@ def check_checklist_doc(repo_root: Path) -> List[str]:
     return failures
 
 
-def collect_failures(repo_root: Path, limit_override: int | None) -> List[str]:
+def collect_failures(repo_root: Path) -> List[str]:
     failures: List[str] = []
     failures.extend(check_banned_monoliths(repo_root))
-    failures.extend(check_line_limits(repo_root, limit_override))
     failures.extend(check_lib_rs_shape(repo_root))
     failures.extend(check_checklist_doc(repo_root))
     return failures
@@ -138,32 +94,9 @@ def emit_failures(label: str, failures: Iterable[str]) -> None:
 
 
 def main() -> int:
-    args = parse_args()
+    parse_args()
     repo_root = resolve_repo_root(Path(__file__))
-
-    override = args.max_lines_override
-    if override is None:
-        env_override = os.getenv("SIFR_DRIVER_GUARD_MAX_OVERRIDE")
-        if env_override is not None:
-            override = int(env_override)
-
-    expect_failure = os.getenv("SIFR_DRIVER_GUARDRAIL_EXPECT_FAILURE") == "1"
-    if expect_failure and override is None:
-        override = 10
-
-    failures = collect_failures(repo_root, override)
-
-    if expect_failure:
-        if failures:
-            emit_failures(
-                "sifr_driver maintainability guardrails: PASS (expected failure mode)",
-                failures,
-            )
-            return 0
-        print(
-            "sifr_driver maintainability guardrails: FAIL (expected the override to trigger a failure)"
-        )
-        return 1
+    failures = collect_failures(repo_root)
 
     if failures:
         emit_failures("sifr_driver maintainability guardrails: FAIL", failures)

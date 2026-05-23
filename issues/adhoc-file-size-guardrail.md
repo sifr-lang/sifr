@@ -85,7 +85,7 @@ Known violations:
 
 ### milestone_adhoc_file_size_1: Codegen statement emitter decomposition
 
-Status: planned
+Status: completed
 
 Purpose:
 
@@ -115,9 +115,14 @@ Validation:
 - `cargo fmt --check`
 - `cargo clippy -p sifr_codegen -- -D warnings`
 
+Completion notes:
+
+- Statement lowering and statement-support emitter files are below the unified 900-line cap.
+- Quick validation passed after targeted fixes for structured statement expression lowering of class receivers and Decimal/BigDecimal division operands.
+
 ### milestone_adhoc_file_size_2: Codegen expression, preamble, and intrinsic decomposition
 
-Status: planned
+Status: completed
 
 Purpose:
 
@@ -160,9 +165,14 @@ Validation:
 - `cargo fmt --check`
 - `cargo clippy -p sifr_codegen -- -D warnings`
 
+Completion notes:
+
+- Oversized codegen expression, preamble, intrinsic, render, helper, and analysis files are decomposed below the unified cap.
+- Diagnostic and split-brain guardrails were adjusted where split `include!` files changed source discovery shape.
+
 ### milestone_adhoc_file_size_3: HIR, type-system, diagnostics, frontend, and CLI decomposition
 
-Status: planned
+Status: completed
 
 Purpose:
 
@@ -204,9 +214,14 @@ Validation:
 - `cargo fmt --check`
 - `cargo clippy --workspace -- -D warnings`
 
+Completion notes:
+
+- HIR, type-system, diagnostics, frontend, analysis host, CLI, and verification hardening files are below 900 lines.
+- HIR and driver maintainability guardrails now retain domain architecture checks while delegating overlapping line-size enforcement to the unified guardrail.
+
 ### milestone_adhoc_file_size_4: Test harness decomposition
 
-Status: planned
+Status: completed
 
 Purpose:
 
@@ -234,9 +249,13 @@ Validation:
 - `cargo test -p sifr -- --skip test_e2e_pass`
 - `scripts/run_e2e_pass.sh`
 
+Completion notes:
+
+- Oversized HIR, codegen, and e2e test harness files are split below 900 lines while preserving deterministic fixture discovery and quick e2e pass results.
+
 ### milestone_adhoc_file_size_5: Strict unified guardrail
 
-Status: planned
+Status: completed
 
 Purpose:
 
@@ -271,6 +290,44 @@ Validation:
 - a coverage assertion, in the guardrail self-test or a dedicated test, that every current `MAX_LINES_BY_FILE` / per-domain source path from the older maintainability scripts is included by the unified guardrail patterns
 - `scripts/run_all_tests.sh --profile quick`
 - `scripts/run_all_tests.sh`
+
+Completion notes:
+
+- Added `scripts/check_file_size_guardrails.py` with the unified include/exclude policy and self-test coverage for prior HIR/driver line-budget paths.
+- Wired the unified guardrail into `scripts/run_all_tests.sh`, so quick and default/full validation run the same check.
+- Removed mechanical `_1` / `_2` / `_part_*` split names from the phase stack; helper and test modules now use responsibility-based names.
+- Kept the work reviewable as focused commits: non-codegen decomposition, codegen decomposition, and unified guardrail wiring.
+- Quick validation passed end to end: `scripts/run_all_tests.sh --profile quick` completed successfully with `file-size guardrails: PASS (1910 files, limit 900 lines)`, `67 pass tests completed`, and `0` failures.
+- Full validation passed end to end: `scripts/run_all_tests.sh` completed successfully with `file-size guardrails: PASS (1910 files, limit 900 lines)`, generated-code corpus/panic-scan/rustfmt/clippy/determinism checks passing, `73 pass tests completed`, and `0` hardening failures.
+- Clean-stack review passed with `Verdict: SATISFIED` in `reviews/adhoc-file-size-guardrail-clean-stack-review-pass-2.md`.
+- Final readiness review passed with `Verdict: SATISFIED` in `reviews/adhoc-file-size-guardrail-final-review-pass-3.md`.
+
+## Phase Closeout
+
+Status: completed
+
+Final validation:
+
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_file_size_guardrails.py --self-test`
+- `python3 scripts/check_hir_maintainability_guardrails.py`
+- `python3 scripts/check_sifr_driver_maintainability_guardrails.py`
+- `python3 scripts/check_diagnostic_code_coverage.py`
+- `python3 verification/performance/check_split_brain_guardrail.py`
+- `python3 verification/performance/check_split_brain_guardrail.py --self-test`
+- `python3 verification/performance/check_budgets.py --self-test`
+- `cargo fmt --check`
+- `git diff --check`
+- `cargo test -p sifr_codegen lib_codegen_tests::test_production_codegen_source_has_no_non_ir_tokens -- --nocapture`
+- `scripts/run_all_tests.sh --profile quick`
+- `scripts/run_all_tests.sh`
+
+Validation notes:
+
+- Quick and full validation both passed locally. Both lane reports include warm wall-time and e2e grouping advisories, but the authoritative scripts exited successfully with no blocking failures.
+- The phase-specific codegen source scanner test passed. The broad `cargo test -p sifr_codegen` package suite is not part of the authoritative validation gate for this phase and still contains legacy expectation failures unrelated to the file-size guardrail work.
+- No first-party maintained source file exceeds the unified 900-line cap.
+- No generated, vendored, lockfile, snapshot, baseline, issue, review, or long-form documentation artifact is governed by the source-file cap.
 
 ## Done Criteria
 

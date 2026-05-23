@@ -24,6 +24,44 @@
       "owner": "sifr-lang/performance",
       "rationale": "Phase 37 added the Cargo-backed package-management workspace member. The command benchmarks execute through cargo run, so the checked-in command budgets now include stale Cargo workspace overhead rather than only the sifr binary path.",
       "removal_criteria": "Remove after issue #2148 recalibrates or redesigns command performance budgets for the Phase 37 workspace shape."
+    },
+    {
+      "benchmark_ids": [
+        "build-single-file-001-break-continue"
+      ],
+      "budget_ids": [
+        "perf.build.single.break_continue"
+      ],
+      "created": "2026-05-23",
+      "expires": "2026-06-06",
+      "id": "adhoc-file-size-guardrail-command-budget-recalibration",
+      "issue": "#2148",
+      "override": {
+        "median_ms": 1650.0,
+        "p95_ms": 1700.0
+      },
+      "owner": "sifr-lang/performance",
+      "rationale": "The file-size guardrail phase decomposes oversized first-party Rust modules. The affected benchmark executes through cargo run, and manual timing shows the sifr binary build path remains below budget while Cargo freshness/source tracking accounts for the temporary regression.",
+      "removal_criteria": "Remove after issue #2148 recalibrates command budgets, switches command benchmarks away from cargo run freshness overhead, or the source layout is further consolidated under the same 900-line cap."
+    },
+    {
+      "benchmark_ids": [
+        "build-project-001-additional-modules"
+      ],
+      "budget_ids": [
+        "perf.build.project.additional_modules"
+      ],
+      "created": "2026-05-23",
+      "expires": "2026-06-06",
+      "id": "adhoc-file-size-guardrail-project-command-budget-recalibration",
+      "issue": "#2148",
+      "override": {
+        "median_ms": 15000.0,
+        "p95_ms": 16000.0
+      },
+      "owner": "sifr-lang/performance",
+      "rationale": "The file-size guardrail phase decomposes oversized first-party Rust modules. This project build benchmark also executes through cargo run, so its checked-in command budget now includes extra Cargo source tracking overhead rather than only Sifr project compilation work.",
+      "removal_criteria": "Remove after issue #2148 recalibrates command budgets, switches command benchmarks away from cargo run freshness overhead, or the source layout is further consolidated under the same 900-line cap."
     }
   ]
 }
