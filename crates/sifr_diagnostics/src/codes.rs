@@ -197,6 +197,7 @@ impl DiagnosticCode {
         Self::new("SIFR-PACKAGE-0402", Severity::Error);
     pub const PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE: Self =
         Self::new("SIFR-PACKAGE-0403", Severity::Error);
+    pub const PACKAGE_ARCHIVE_TRAVERSAL: Self = Self::new("SIFR-PACKAGE-0404", Severity::Error);
     pub const PACKAGE_NON_TRIVIAL_PURE_MARKER: Self =
         Self::new("SIFR-PACKAGE-0501", Severity::Error);
     pub const PACKAGE_SELECTOR_AMBIGUOUS: Self = Self::new("SIFR-PACKAGE-0601", Severity::Error);
@@ -2125,7 +2126,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         "PACKAGE",
         "Package publish or archive validation failed.",
         Severity::Error,
-        "crates/sifr_package/src/milestone_37_6_tests.rs::archive_traversal_reports_0402",
+        "crates/sifr_package/src/milestone_37_6_tests.rs::publish_validation_failed_reports_0402",
         "package publish validation failed: {reason}",
         "sifr_package::cargo::package",
         [arg!("reason"), json_arg!("cargo_package_id")],
@@ -2138,6 +2139,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         Severity::Error,
         "crates/sifr_package/src/milestone_37_6_tests.rs::archive_missing_required_entry_reports_0403",
         "Cargo package include/exclude rules omit required Sifr file '{path}'",
+        "sifr_package::cargo::package",
+        [arg!("path"), json_arg!("cargo_package_id")],
+        ["cargo_package_id", "path"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0404",
+        "PACKAGE",
+        "Cargo package archive contains an unsafe path.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_37_6_tests.rs::archive_traversal_reports_0404",
+        "Cargo package archive entry escapes the package root: {path}",
         "sifr_package::cargo::package",
         [arg!("path"), json_arg!("cargo_package_id")],
         ["cargo_package_id", "path"]
@@ -2464,6 +2476,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_ARCHIVE_MISSING_SIFR_SOURCE,
     DiagnosticCode::PACKAGE_PUBLISH_VALIDATION_FAILED,
     DiagnosticCode::PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE,
+    DiagnosticCode::PACKAGE_ARCHIVE_TRAVERSAL,
     DiagnosticCode::PACKAGE_NON_TRIVIAL_PURE_MARKER,
     DiagnosticCode::PACKAGE_SELECTOR_AMBIGUOUS,
     DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_IMPORT_ROOT,

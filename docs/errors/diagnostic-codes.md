@@ -175,6 +175,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0401`](SIFR-PACKAGE-0401.md) | Error | Cargo package archive is missing required Sifr source. |
 | [`SIFR-PACKAGE-0402`](SIFR-PACKAGE-0402.md) | Error | Package publish or archive validation failed. |
 | [`SIFR-PACKAGE-0403`](SIFR-PACKAGE-0403.md) | Error | Cargo include/exclude rules omit required Sifr files. |
+| [`SIFR-PACKAGE-0404`](SIFR-PACKAGE-0404.md) | Error | Cargo package archive contains an unsafe path. |
 | [`SIFR-PACKAGE-0501`](SIFR-PACKAGE-0501.md) | Error | Pure Sifr Rust marker contains implementation. |
 | [`SIFR-PACKAGE-0601`](SIFR-PACKAGE-0601.md) | Error | Package selector is ambiguous or invalid. |
 | [`SIFR-PACKAGE-0602`](SIFR-PACKAGE-0602.md) | Error | Workspace selection contains duplicate import roots. |

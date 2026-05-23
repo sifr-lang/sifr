@@ -1,4 +1,7 @@
-use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection, CargoPackageSelection};
+use crate::cargo::commands::{
+    CargoCommandPlan, CargoFeatureSelection, CargoPackageArchiveOptions, CargoPackageSelection,
+    CargoPublishOptions, CargoVendorOptions,
+};
 use crate::cargo::lock_modes::CargoLockMode;
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
@@ -148,6 +151,64 @@ impl PackageSession {
             run_target: None,
             script_origin: None,
         })
+    }
+
+    pub fn plan_package(
+        &self,
+        features: &CargoFeatureSelection,
+        selection: &CargoPackageSelection,
+        options: &CargoPackageArchiveOptions,
+    ) -> PackageCommandPlan {
+        PackageCommandPlan {
+            operation: OperationPlan::read_only(PackageOperation::Package, self.lock_mode),
+            cargo: Some(CargoCommandPlan::package_with_options(
+                self.workspace_root.clone(),
+                self.lock_mode,
+                features,
+                selection,
+                options,
+            )),
+            run_target: None,
+            script_origin: None,
+        }
+    }
+
+    pub fn plan_publish(
+        &self,
+        features: &CargoFeatureSelection,
+        selection: &CargoPackageSelection,
+        options: &CargoPublishOptions,
+    ) -> PackageCommandPlan {
+        PackageCommandPlan {
+            operation: OperationPlan::read_only(PackageOperation::Publish, self.lock_mode),
+            cargo: Some(CargoCommandPlan::publish_with_options(
+                self.workspace_root.clone(),
+                self.lock_mode,
+                features,
+                selection,
+                options,
+            )),
+            run_target: None,
+            script_origin: None,
+        }
+    }
+
+    pub fn plan_vendor(
+        &self,
+        output_dir: &Path,
+        options: &CargoVendorOptions,
+    ) -> PackageCommandPlan {
+        PackageCommandPlan {
+            operation: OperationPlan::read_only(PackageOperation::Vendor, self.lock_mode),
+            cargo: Some(CargoCommandPlan::vendor_with_options(
+                self.workspace_root.clone(),
+                self.lock_mode,
+                output_dir,
+                options,
+            )),
+            run_target: None,
+            script_origin: None,
+        }
     }
 
     pub fn plan_run(

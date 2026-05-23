@@ -24,6 +24,30 @@ pub struct CargoPackageSelection {
     pub excludes: Vec<String>,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CargoPackageArchiveOptions {
+    pub list: bool,
+    pub no_verify: bool,
+    pub no_metadata: bool,
+    pub allow_dirty: bool,
+    pub exclude_lockfile: bool,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CargoPublishOptions {
+    pub dry_run: bool,
+    pub no_verify: bool,
+    pub allow_dirty: bool,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CargoVendorOptions {
+    pub sync: Vec<PathBuf>,
+    pub no_delete: bool,
+    pub respect_source_config: bool,
+    pub versioned_dirs: bool,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CargoPackageMutation {
     pub package_spec: String,
@@ -126,24 +150,87 @@ impl CargoCommandPlan {
 
     #[must_use]
     pub fn package(current_dir: PathBuf, lock_mode: CargoLockMode) -> Self {
-        Self::new(
-            CargoAction::Package,
+        Self::package_with_options(
             current_dir,
             lock_mode,
-            vec!["package"],
+            &CargoFeatureSelection::default(),
+            &CargoPackageSelection::default(),
+            &CargoPackageArchiveOptions::default(),
         )
     }
 
     #[must_use]
+    pub fn package_with_options(
+        current_dir: PathBuf,
+        lock_mode: CargoLockMode,
+        features: &CargoFeatureSelection,
+        selection: &CargoPackageSelection,
+        options: &CargoPackageArchiveOptions,
+    ) -> Self {
+        let mut plan = Self::new(
+            CargoAction::Package,
+            current_dir,
+            lock_mode,
+            vec!["package"],
+        );
+        plan.push_package_selection_args(selection);
+        plan.push_feature_args(features);
+        if options.list {
+            plan.args.push("--list".to_string());
+        }
+        if options.no_verify {
+            plan.args.push("--no-verify".to_string());
+        }
+        if options.no_metadata {
+            plan.args.push("--no-metadata".to_string());
+        }
+        if options.allow_dirty {
+            plan.args.push("--allow-dirty".to_string());
+        }
+        if options.exclude_lockfile {
+            plan.args.push("--exclude-lockfile".to_string());
+        }
+        plan
+    }
+
+    #[must_use]
     pub fn publish(current_dir: PathBuf, lock_mode: CargoLockMode, dry_run: bool) -> Self {
+        Self::publish_with_options(
+            current_dir,
+            lock_mode,
+            &CargoFeatureSelection::default(),
+            &CargoPackageSelection::default(),
+            &CargoPublishOptions {
+                dry_run,
+                ..CargoPublishOptions::default()
+            },
+        )
+    }
+
+    #[must_use]
+    pub fn publish_with_options(
+        current_dir: PathBuf,
+        lock_mode: CargoLockMode,
+        features: &CargoFeatureSelection,
+        selection: &CargoPackageSelection,
+        options: &CargoPublishOptions,
+    ) -> Self {
         let mut plan = Self::new(
             CargoAction::Publish,
             current_dir,
             lock_mode,
             vec!["publish"],
         );
-        if dry_run {
+        plan.push_package_selection_args(selection);
+        plan.push_feature_args(features);
+        if options.dry_run {
             plan.args.push("--dry-run".to_string());
+        }
+        if options.no_verify {
+            plan.args.push("--no-verify".to_string());
+        }
+        if options.allow_dirty {
+            plan.args.push("--allow-dirty".to_string());
         }
         plan
     }
@@ -151,6 +238,20 @@ impl CargoCommandPlan {
     #[must_use]
     pub fn vendor(current_dir: PathBuf, lock_mode: CargoLockMode, output_dir: &Path) -> Self {
         let mut plan = Self::new(CargoAction::Vendor, current_dir, lock_mode, vec!["vendor"]);
+        plan.push_vendor_options(&CargoVendorOptions::default());
+        plan.args.push(output_dir.display().to_string());
+        plan
+    }
+
+    #[must_use]
+    pub fn vendor_with_options(
+        current_dir: PathBuf,
+        lock_mode: CargoLockMode,
+        output_dir: &Path,
+        options: &CargoVendorOptions,
+    ) -> Self {
+        let mut plan = Self::new(CargoAction::Vendor, current_dir, lock_mode, vec!["vendor"]);
+        plan.push_vendor_options(options);
         plan.args.push(output_dir.display().to_string());
         plan
     }
@@ -233,6 +334,22 @@ impl CargoCommandPlan {
         }
         for exclude in &selection.excludes {
             self.args.extend(["--exclude".to_string(), exclude.clone()]);
+        }
+    }
+
+    fn push_vendor_options(&mut self, options: &CargoVendorOptions) {
+        for manifest in &options.sync {
+            self.args
+                .extend(["--sync".to_string(), manifest.display().to_string()]);
+        }
+        if options.no_delete {
+            self.args.push("--no-delete".to_string());
+        }
+        if options.respect_source_config {
+            self.args.push("--respect-source-config".to_string());
+        }
+        if options.versioned_dirs {
+            self.args.push("--versioned-dirs".to_string());
         }
     }
 
