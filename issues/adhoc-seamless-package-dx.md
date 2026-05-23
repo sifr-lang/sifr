@@ -65,6 +65,54 @@ Review:
 
 - `reviews/adhoc-package-dx-m2-review-pass-1.md` -> READY with no blocking findings.
 
+### milestone_adhoc_pkg_3: Package session and CLI command integration
+
+Status: implemented and reviewer-approved. PR: pending.
+
+Delivered:
+
+- Added `PackageSession` planning for manifest-less explicit files, package source-root validation, `fetch`, `tree`, package check, layout-discovered app targets, default run target selection, and structured script expansion.
+- Added production parsing for `[scripts]`, `[dependencies]`, and `[dev-dependencies]` in `sifr.toml`.
+- Wired CLI surfaces for `sifr fetch`, `sifr tree`, package-aware `sifr check`, `sifr run --bin`, `sifr run --script`, lock/network flags, app args after `--`, and `sifr --explain <diagnostic-code>`.
+- Extended Cargo command plans with `check`, `run`, `test`, and `tree`.
+- Retired active `SIFR-PACKAGE-0105`; credential-related Cargo failures now map to redacted `SIFR-PACKAGE-0101`.
+- Added M3 diagnostics for ambiguous run targets (`0605`), invalid app target names (`0606`), explicit files outside the source root (`0710`), and nested script expansion (`0714`).
+- Added `verification/package_management/cargo_cli_alignment_matrix.json` and guardrail coverage for the checked-in alignment matrix.
+- Updated the repository root `sifr.toml` to the current manifest contract and fixed package-session explicit-file validation across legacy multi-root manifests.
+
+Validation:
+
+- `cargo test -p sifr_package` -> PASS, 60 tests.
+- `cargo test -p sifr_package package_session -- --test-threads=1` -> PASS, 7 tests.
+- `cargo test -p sifr_package cargo_failure_redaction` -> PASS, 1 test.
+- `cargo test -p sifr_package manifest_parses_scripts` -> PASS, 1 test.
+- `cargo test -p sifr --bin sifr package_cli -- --test-threads=1` -> PASS, 5 tests.
+- `cargo build -p sifr` -> PASS.
+- `cargo clippy -p sifr_package -- -D warnings` -> PASS.
+- `cargo clippy -p sifr -- -D warnings` -> PASS.
+- `cargo run -q -p sifr -- check demos/mode_consistency/main.sifr` -> PASS.
+- `cargo test -p sifr --test validation_contracts test_validation_contract_matrix -- --ignored --exact` -> PASS.
+- `python3 verification/tooling/check_formatter_contract.py` -> PASS.
+- `python3 scripts/check_package_manager_guardrails.py` -> PASS.
+- `python3 scripts/check_diagnostic_docs_sync.py` -> PASS.
+- `python3 scripts/check_diagnostic_code_coverage.py` -> PASS.
+- `cargo run -q -p sifr_diagnostics --bin gen-error-docs -- --check` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS (exit 0; wall-time/skew advisory from cold rebuild after clearing generated Cargo artifacts).
+- Manual CLI smoke: generated app `sifr run --script dev -- --smoke` -> PASS.
+- Manual CLI smoke: generated app `sifr fetch && sifr tree --depth 1` -> PASS.
+- Manual CLI smoke: generated app `sifr check --message-format json` -> PASS.
+
+Known local validation note:
+
+- `cargo test -p sifr package_cli -- --test-threads=1` also starts integration test binaries after the bin unit tests; the bin-scoped command above is the targeted package CLI signal for this milestone.
+
+Review:
+
+- `reviews/adhoc-package-dx-m3-review-pass-1.md` -> CHANGES_REQUESTED for a stale app-args finding, plus an alignment-matrix clarity note.
+- `reviews/adhoc-package-dx-m3-review-pass-2.md` -> READY after confirming app args are forwarded and tightening the matrix to list feature flags as deferred.
+- `reviews/adhoc-package-dx-m3-review-pass-3.md` -> READY after the root manifest and multi-root explicit-file validation fixes.
+
 ## Problem
 
 Phase 37 established the Cargo-backed package-management substrate: Cargo metadata parsing, Sifr package graph derivation, package source maps, lock modes, trust policy, workspace selection, publish/archive plans, guardrails, and concrete demo repositories.

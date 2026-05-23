@@ -279,7 +279,7 @@ fn discover_namespace_apis(
         match parse_init_sifr_reexports(
             &package.cargo_package_id,
             &package.sifr_manifest,
-            module.module_path,
+            &module.module_path,
             &module.file_path,
             source_root,
         ) {

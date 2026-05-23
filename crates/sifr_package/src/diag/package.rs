@@ -237,6 +237,74 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
+    pub fn run_target_ambiguous(selector: &str, candidates: &[String]) -> Self {
+        let details = if candidates.is_empty() {
+            "no runnable package target matched".to_string()
+        } else {
+            format!("candidates: {}", candidates.join(", "))
+        };
+        Self {
+            code: DiagnosticCode::PACKAGE_RUN_TARGET_AMBIGUOUS,
+            message: format!("ambiguous package run target '{selector}': {details}"),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some(
+                "use `--bin <name>` for app targets or `--script <name>` for scripts".to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn invalid_app_target_name(target: &str) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_INVALID_APP_TARGET_NAME,
+            message: format!("invalid package app target name '{target}'"),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some(
+                "use alphanumeric characters, `_`, `-`, and `/` between nested target segments"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn explicit_file_outside_source_root(file: &Path, source_root: &Path) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_EXPLICIT_FILE_OUTSIDE_SOURCE_ROOT,
+            message: format!(
+                "explicit file '{}' is outside package source root '{}'",
+                file.display(),
+                source_root.display()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some(
+                "run the file from outside the package, or move it under the package source root"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn script_recursion(script: &str) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_SCRIPT_RECURSION,
+            message: format!("package script recursion is not allowed for '{script}'"),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some(
+                "scripts expand to one Sifr command plan and may not call other scripts"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
     pub fn archive_missing_sifr_source(
         cargo_package_id: &CargoPackageId,
         package_id: &SifrPackageId,

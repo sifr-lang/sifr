@@ -40,8 +40,12 @@ struct Cli {
     #[arg(long, value_enum, default_value_t = DiagnosticFormat::Human)]
     diagnostic_format: DiagnosticFormat,
 
+    /// Explain a Sifr diagnostic code without running a package operation
+    #[arg(long)]
+    explain: Option<String>,
+
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -56,8 +60,38 @@ enum Commands {
     },
     /// Compile and run a .sifr file
     Run {
-        /// Input .sifr file
-        file: PathBuf,
+        /// Input .sifr file, app target, or script name
+        target: Option<String>,
+        /// Select a layout-discovered app target
+        #[arg(long)]
+        bin: Option<String>,
+        /// Select a named package script
+        #[arg(long)]
+        script: Option<String>,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+        /// Arguments passed to the selected app after --
+        #[arg(last = true)]
+        args: Vec<String>,
+    },
+    /// Fetch package dependencies
+    Fetch {
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
     },
     /// Create a new Sifr package
     Init {
@@ -85,8 +119,35 @@ enum Commands {
     },
     /// Type-check a .sifr file without compiling
     Check {
-        /// Input .sifr file
-        file: PathBuf,
+        /// Input .sifr file, or omit for package check
+        path: Option<PathBuf>,
+        /// Cargo-compatible package message format for package checks
+        #[arg(long)]
+        message_format: Option<String>,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Show the package dependency tree
+    Tree {
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+        /// Cargo-compatible tree options
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
     },
     /// Format Sifr source files
     Fmt {
@@ -167,9 +228,43 @@ fn main() {
 
 fn run_cli(cli: Cli) -> i32 {
     let diagnostic_format = cli.diagnostic_format;
-    match cli.command {
+    if let Some(code) = cli.explain {
+        return cmd_explain(&code, diagnostic_format);
+    }
+    let Some(command) = cli.command else {
+        let diagnostic = diagnostic_with_code(
+            "no command provided",
+            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+        );
+        render_diagnostics(&[diagnostic], diagnostic_format);
+        return EXIT_USAGE_OR_CONFIG;
+    };
+    match command {
         Commands::Build { file, output } => cmd_build(&file, &output, diagnostic_format),
-        Commands::Run { file } => cmd_run(&file, diagnostic_format),
+        Commands::Run {
+            target,
+            bin,
+            script,
+            locked,
+            offline,
+            frozen,
+            args,
+        } => cmd_run(
+            target.as_deref(),
+            bin.as_deref(),
+            script.as_deref(),
+            &args,
+            lock_mode_from_flags(locked, offline, frozen),
+            diagnostic_format,
+        ),
+        Commands::Fetch {
+            locked,
+            offline,
+            frozen,
+        } => cmd_fetch(
+            lock_mode_from_flags(locked, offline, frozen),
+            diagnostic_format,
+        ),
         Commands::Init {
             path,
             lib,
@@ -178,7 +273,28 @@ fn run_cli(cli: Cli) -> i32 {
             force,
         } => cmd_init(&path, lib, bin, name.as_deref(), force, diagnostic_format),
         Commands::Repair { check } => cmd_repair(check, diagnostic_format),
-        Commands::Check { file } => cmd_check(&file, diagnostic_format),
+        Commands::Check {
+            path,
+            message_format,
+            locked,
+            offline,
+            frozen,
+        } => cmd_check(
+            path.as_deref(),
+            message_format.as_deref(),
+            lock_mode_from_flags(locked, offline, frozen),
+            diagnostic_format,
+        ),
+        Commands::Tree {
+            locked,
+            offline,
+            frozen,
+            args,
+        } => cmd_tree(
+            lock_mode_from_flags(locked, offline, frozen),
+            &args,
+            diagnostic_format,
+        ),
         Commands::Fmt { check, path } => cmd_fmt(&path, check, diagnostic_format),
         Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
         Commands::Lsp { stdio } => cmd_lsp(stdio),
@@ -250,6 +366,70 @@ fn cmd_repair(check: bool, diagnostic_format: DiagnosticFormat) -> i32 {
 
 fn package_diagnostic(diagnostic: sifr_package::PackageDiagnostic) -> RenderedDiagnostic {
     diagnostic_with_code(diagnostic.message, diagnostic.code)
+}
+
+fn lock_mode_from_flags(locked: bool, offline: bool, frozen: bool) -> sifr_package::CargoLockMode {
+    if frozen {
+        sifr_package::CargoLockMode::Frozen
+    } else if offline {
+        sifr_package::CargoLockMode::Offline
+    } else if locked {
+        sifr_package::CargoLockMode::Locked
+    } else {
+        sifr_package::CargoLockMode::Normal
+    }
+}
+
+fn cmd_explain(code: &str, diagnostic_format: DiagnosticFormat) -> i32 {
+    let explanation = diagnostic_explanation(code);
+    if let Some(text) = explanation {
+        match diagnostic_format {
+            DiagnosticFormat::Human | DiagnosticFormat::Compact => {
+                let _ = writeln!(io::stdout(), "{text}");
+            }
+            DiagnosticFormat::Json => {
+                let value = serde_json::json!({ "code": code, "explanation": text });
+                let _ = writeln!(
+                    io::stdout(),
+                    "{}",
+                    serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string())
+                );
+            }
+        }
+        EXIT_SUCCESS
+    } else {
+        let diagnostic = diagnostic_with_code(
+            format!("unknown diagnostic code '{code}'"),
+            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+        );
+        render_diagnostics(&[diagnostic], diagnostic_format);
+        EXIT_USAGE_OR_CONFIG
+    }
+}
+
+fn diagnostic_explanation(code: &str) -> Option<String> {
+    if code == "SIFR-PACKAGE-0105" {
+        return Some(
+            "SIFR-PACKAGE-0105 is retired. Cargo credential failures are reported as SIFR-PACKAGE-0101 so Sifr preserves Cargo's underlying error text with credential redaction."
+                .to_string(),
+        );
+    }
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()?
+        .parent()?
+        .to_path_buf();
+    let path = repo_root.join("docs/errors").join(format!("{code}.md"));
+    let text = std::fs::read_to_string(path).ok()?;
+    let mut lines = text
+        .lines()
+        .filter(|line| !line.starts_with("<!--") && !line.starts_with('|'));
+    let title = lines.find(|line| line.starts_with("# "))?;
+    let summary = lines.find(|line| !line.trim().is_empty()).unwrap_or("");
+    Some(format!(
+        "{}\n\n{}\n\nDocs: https://sifr.sh/docs/errors/{code}",
+        title.trim_start_matches("# "),
+        summary,
+    ))
 }
 
 fn cmd_lsp(stdio: bool) -> i32 {
@@ -633,7 +813,104 @@ fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) ->
     }
 }
 
-fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+fn cmd_run(
+    target: Option<&str>,
+    bin: Option<&str>,
+    script: Option<&str>,
+    app_args: &[String],
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let current_dir = match std::env::current_dir() {
+        Ok(current_dir) => current_dir,
+        Err(error) => {
+            let diagnostic = diagnostic_with_code(
+                format!("could not read current directory: {error}"),
+                DiagnosticCode::PACKAGE_CARGO_COMMAND_FAILED,
+            );
+            render_diagnostics(&[diagnostic], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    let session =
+        match sifr_package::PackageSession::discover(sifr_package::PackageSessionOptions {
+            current_dir,
+            lock_mode,
+        }) {
+            Ok(session) => session,
+            Err(error) => {
+                render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+                return EXIT_USAGE_OR_CONFIG;
+            }
+        };
+    let plan = session.plan_run(&sifr_package::PackageRunRequest {
+        target_or_path: target.map(str::to_string),
+        bin: bin.map(str::to_string),
+        script: script.map(str::to_string),
+        app_args: app_args.to_vec(),
+        script_depth: 0,
+    });
+    let plan = match plan {
+        Ok(plan) => plan,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USER_DIAGNOSTIC;
+        }
+    };
+    if let Some(origin) = plan.script_origin {
+        return cmd_script(&origin, diagnostic_format);
+    }
+    if let Some(
+        sifr_package::ResolvedRunTarget::File(path)
+        | sifr_package::ResolvedRunTarget::App { path, .. },
+    ) = plan.run_target
+    {
+        return cmd_run_file(&path, app_args, diagnostic_format);
+    }
+    if let Some(cargo) = plan.cargo {
+        return execute_cargo_plan(&cargo, lock_mode, diagnostic_format);
+    }
+    EXIT_SUCCESS
+}
+
+fn cmd_script(origin: &sifr_package::ScriptOrigin, diagnostic_format: DiagnosticFormat) -> i32 {
+    match origin.command.as_str() {
+        "run" => cmd_run(
+            origin.args.first().map(String::as_str),
+            None,
+            None,
+            &[],
+            sifr_package::CargoLockMode::Normal,
+            diagnostic_format,
+        ),
+        "check" => cmd_check(
+            origin
+                .args
+                .first()
+                .filter(|arg| !arg.starts_with('-'))
+                .map(Path::new),
+            None,
+            sifr_package::CargoLockMode::Normal,
+            diagnostic_format,
+        ),
+        "fetch" => cmd_fetch(sifr_package::CargoLockMode::Normal, diagnostic_format),
+        "tree" => cmd_tree(
+            sifr_package::CargoLockMode::Normal,
+            &origin.args,
+            diagnostic_format,
+        ),
+        _ => {
+            let diagnostic = diagnostic_with_code(
+                format!("unsupported package script command '{}'", origin.command),
+                DiagnosticCode::PACKAGE_SCRIPT_RECURSION,
+            );
+            render_diagnostics(&[diagnostic], diagnostic_format);
+            EXIT_USAGE_OR_CONFIG
+        }
+    }
+}
+
+fn cmd_run_file(file: &Path, app_args: &[String], diagnostic_format: DiagnosticFormat) -> i32 {
     let result = match run_with_panic_boundary(
         "internal compiler panic during run command compilation",
         || build_run_artifact(file),
@@ -646,6 +923,7 @@ fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
         Ok(artifact) => {
             let _ = writeln!(io::stderr(), "{}", artifact.cache_status_line());
             let output = std::process::Command::new(artifact.binary_path())
+                .args(app_args)
                 .output()
                 .unwrap_or_else(|e| {
                     let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
@@ -665,7 +943,187 @@ fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     }
 }
 
-fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+fn cmd_fetch(lock_mode: sifr_package::CargoLockMode, diagnostic_format: DiagnosticFormat) -> i32 {
+    let session = match package_session_for_cwd(lock_mode) {
+        Ok(session) => session,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    let Some(cargo) = session.plan_fetch().cargo else {
+        return EXIT_SUCCESS;
+    };
+    execute_cargo_plan(&cargo, lock_mode, diagnostic_format)
+}
+
+fn cmd_tree(
+    lock_mode: sifr_package::CargoLockMode,
+    args: &[String],
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let session = match package_session_for_cwd(lock_mode) {
+        Ok(session) => session,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    let Some(cargo) = session.plan_tree(args).cargo else {
+        return EXIT_SUCCESS;
+    };
+    execute_cargo_plan(&cargo, lock_mode, diagnostic_format)
+}
+
+fn package_session_for_cwd(
+    lock_mode: sifr_package::CargoLockMode,
+) -> Result<sifr_package::PackageSession, sifr_package::PackageDiagnostic> {
+    let current_dir = std::env::current_dir().map_err(|error| {
+        sifr_package::PackageDiagnostic::cargo_command_failed(
+            sifr_package::CargoAction::Metadata,
+            format!("could not read current directory: {error}"),
+        )
+    })?;
+    sifr_package::PackageSession::discover(sifr_package::PackageSessionOptions {
+        current_dir,
+        lock_mode,
+    })
+}
+
+fn execute_cargo_plan(
+    plan: &sifr_package::CargoCommandPlan,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let output = match std::process::Command::new(&plan.program)
+        .args(&plan.args)
+        .current_dir(&plan.current_dir)
+        .output()
+    {
+        Ok(output) => output,
+        Err(error) => {
+            let diagnostic = cargo_failure_diagnostic(plan, lock_mode, None, &error.to_string());
+            render_diagnostics(&[diagnostic], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    if output.status.success() {
+        let _ = io::stdout().write_all(&output.stdout);
+        let _ = io::stderr().write_all(&output.stderr);
+        return EXIT_SUCCESS;
+    }
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let excerpt = if stderr.trim().is_empty() {
+        stdout.as_ref()
+    } else {
+        stderr.as_ref()
+    };
+    let diagnostic = cargo_failure_diagnostic(
+        plan,
+        lock_mode,
+        output.status.code(),
+        &bounded_excerpt(excerpt),
+    );
+    render_diagnostics(&[diagnostic], diagnostic_format);
+    EXIT_USER_DIAGNOSTIC
+}
+
+fn cargo_failure_diagnostic(
+    plan: &sifr_package::CargoCommandPlan,
+    lock_mode: sifr_package::CargoLockMode,
+    exit_status: Option<i32>,
+    excerpt: &str,
+) -> RenderedDiagnostic {
+    let stderr_redacted = sifr_package::cargo::errors::redact_cargo_stderr(excerpt);
+    let package = sifr_package::map_cargo_failure(plan.action, &stderr_redacted);
+    let mut diagnostic = package_diagnostic(package);
+    diagnostic.args.insert(
+        "action".to_string(),
+        DiagnosticArg::String(plan.action.as_str().to_string()),
+    );
+    diagnostic.args.insert(
+        "current_dir".to_string(),
+        DiagnosticArg::String(plan.current_dir.display().to_string()),
+    );
+    diagnostic.args.insert(
+        "args_redacted".to_string(),
+        DiagnosticArg::String(redacted_args(&plan.args).join(" ")),
+    );
+    diagnostic.args.insert(
+        "lock_mode".to_string(),
+        DiagnosticArg::String(format!("{lock_mode:?}").to_ascii_lowercase()),
+    );
+    diagnostic.args.insert(
+        "network_mode".to_string(),
+        DiagnosticArg::String(if lock_mode.is_network_disallowed() {
+            "offline".to_string()
+        } else {
+            "online".to_string()
+        }),
+    );
+    diagnostic.args.insert(
+        "stderr_redacted".to_string(),
+        DiagnosticArg::String(stderr_redacted),
+    );
+    if let Some(status) = exit_status {
+        diagnostic.args.insert(
+            "exit_status".to_string(),
+            DiagnosticArg::String(status.to_string()),
+        );
+    }
+    diagnostic
+}
+
+fn redacted_args(args: &[String]) -> Vec<String> {
+    args.iter()
+        .map(|arg| sifr_package::cargo::errors::redact_cargo_stderr(arg))
+        .collect()
+}
+
+fn bounded_excerpt(text: &str) -> String {
+    const MAX_LINES: usize = 12;
+    const MAX_BYTES: usize = 4096;
+    let mut excerpt = text.lines().take(MAX_LINES).collect::<Vec<_>>().join("\n");
+    if excerpt.len() > MAX_BYTES {
+        excerpt.truncate(MAX_BYTES);
+    }
+    excerpt
+}
+
+fn cmd_check(
+    file: Option<&Path>,
+    message_format: Option<&str>,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let session = match package_session_for_cwd(lock_mode) {
+        Ok(session) => session,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    let mut plan = match session.plan_check(file, &sifr_package::CargoFeatureSelection::default()) {
+        Ok(plan) => plan,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USER_DIAGNOSTIC;
+        }
+    };
+    if let Some(mut cargo) = plan.cargo.take() {
+        if let Some(format) = message_format {
+            cargo.extend_forwarded_args(&["--message-format".to_string(), format.to_string()]);
+        }
+        return execute_cargo_plan(&cargo, lock_mode, diagnostic_format);
+    }
+    if let Some(sifr_package::ResolvedRunTarget::File(path)) = plan.run_target {
+        return cmd_check_file(&path, diagnostic_format);
+    }
+    EXIT_SUCCESS
+}
+
+fn cmd_check_file(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let errors = match run_with_panic_boundary(
         "internal compiler panic during check command execution",
         || check_entrypoint(file),
@@ -1146,6 +1604,66 @@ mod tests {
         std::env::set_current_dir(cwd).expect("restore cwd");
         assert_eq!(exit, EXIT_USER_DIAGNOSTIC);
         let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_package_cli_parses_run_script_bin_and_app_args() {
+        let cli = Cli::try_parse_from([
+            "sifr", "run", "--script", "dev", "--locked", "--", "--port", "8080",
+        ])
+        .expect("run script cli parses");
+
+        let Some(Commands::Run {
+            script,
+            locked,
+            args,
+            ..
+        }) = cli.command
+        else {
+            panic!("expected run command");
+        };
+        assert_eq!(script.as_deref(), Some("dev"));
+        assert!(locked);
+        assert_eq!(args, ["--port", "8080"]);
+
+        let cli =
+            Cli::try_parse_from(["sifr", "run", "--bin", "admin"]).expect("run bin cli parses");
+        let Some(Commands::Run { bin, .. }) = cli.command else {
+            panic!("expected run command");
+        };
+        assert_eq!(bin.as_deref(), Some("admin"));
+    }
+
+    #[test]
+    fn test_package_cli_parses_check_message_format_and_tree_args() {
+        let cli = Cli::try_parse_from(["sifr", "check", "--locked", "--message-format", "json"])
+            .expect("check cli parses");
+        let Some(Commands::Check {
+            message_format,
+            locked,
+            ..
+        }) = cli.command
+        else {
+            panic!("expected check command");
+        };
+        assert_eq!(message_format.as_deref(), Some("json"));
+        assert!(locked);
+
+        let cli = Cli::try_parse_from(["sifr", "tree", "--offline", "--depth", "1"])
+            .expect("tree cli parses");
+        let Some(Commands::Tree { offline, args, .. }) = cli.command else {
+            panic!("expected tree command");
+        };
+        assert!(offline);
+        assert_eq!(args, ["--depth", "1"]);
+    }
+
+    #[test]
+    fn test_package_cli_explain_retired_credential_code() {
+        let text =
+            diagnostic_explanation("SIFR-PACKAGE-0105").expect("retired code explanation exists");
+        assert!(text.contains("retired"));
+        assert!(text.contains("SIFR-PACKAGE-0101"));
     }
 
     #[test]

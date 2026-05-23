@@ -199,7 +199,7 @@ Scope:
 - Add Cargo command plans for metadata, fetch, build, package, publish, vendor, add, remove, and update.
 - Model locked/offline/frozen command arguments and mutation restrictions.
 - Validate offline/frozen Sifr package source availability with `SIFR-PACKAGE-0104`.
-- Map Cargo command and private-source credential failures to `SIFR-PACKAGE-0101` and `SIFR-PACKAGE-0105`.
+- Map Cargo command and private-source credential failures to redacted `SIFR-PACKAGE-0101`.
 - Validate direct backend Rust crate trust policy with `SIFR-PACKAGE-0301` and stale trust entries with `SIFR-PACKAGE-0305`.
 - Extend package build cache inputs with Cargo lock, metadata, graph, source-map, Sifr metadata/source, compiler, target, profile, feature, and selector digests.
 

@@ -45,12 +45,17 @@ pub use crate::imports::source_map::{
     PackageModuleSource, PackageSourceMap,
 };
 pub use crate::manifest::metadata::{CargoSifrAliasMetadata, CargoSifrMetadata};
+pub use crate::manifest::package_sections::{SifrDependency, SifrScript};
 pub use crate::manifest::sifr::{
     CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
     TrustPolicy,
 };
 pub use crate::ops::publish::{publish_plan, vendor_plan, PublishPlan, VendorPlan};
 pub use crate::ops::read::{outdated_query_report, OutdatedPackageReport, OutdatedPackageSource};
+pub use crate::ops::session::{
+    PackageCommandPlan, PackageRunRequest, PackageSession, PackageSessionOptions,
+    ResolvedRunTarget, ScriptOrigin,
+};
 pub use crate::projection::{
     check_projection, init_package, repair_projection, InitPackageKind, InitPackageOptions,
     ProjectionCheck, ProjectionRepair,
@@ -73,6 +78,8 @@ mod milestone_37_7_tests;
 mod milestone_adhoc_pkg_1_tests;
 #[cfg(test)]
 mod milestone_adhoc_pkg_2_tests;
+#[cfg(test)]
+mod milestone_adhoc_pkg_3_tests;
 
 #[cfg(test)]
 mod tests {

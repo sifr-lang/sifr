@@ -93,28 +93,6 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
-    pub fn credentials_unavailable(
-        action: CargoAction,
-        redacted_reason: impl Into<String>,
-    ) -> Self {
-        Self {
-            code: DiagnosticCode::PACKAGE_CREDENTIALS_UNAVAILABLE,
-            message: format!(
-                "cargo {} could not access a private source: {}",
-                action.as_str(),
-                redacted_reason.into()
-            ),
-            origin: Box::new(PackageDiagnosticOrigin::CargoCommand {
-                action: action.as_str().to_string(),
-            }),
-            help: Some(
-                "authenticate with Cargo login or CARGO_REGISTRIES_* configuration, then retry"
-                    .to_string(),
-            ),
-        }
-    }
-
-    #[must_use]
     pub fn invalid_cargo_sifr_metadata(
         cargo_package_id: &CargoPackageId,
         cargo_package_name: &str,

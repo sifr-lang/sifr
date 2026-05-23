@@ -173,8 +173,6 @@ impl DiagnosticCode {
     pub const PACKAGE_METADATA_PARSE: Self = Self::new("SIFR-PACKAGE-0103", Severity::Error);
     pub const PACKAGE_SOURCE_UNAVAILABLE_OFFLINE: Self =
         Self::new("SIFR-PACKAGE-0104", Severity::Error);
-    pub const PACKAGE_CREDENTIALS_UNAVAILABLE: Self =
-        Self::new("SIFR-PACKAGE-0105", Severity::Error);
     pub const PACKAGE_RUST_ONLY_DEPENDS_ON_SIFR: Self =
         Self::new("SIFR-PACKAGE-0106", Severity::Error);
     pub const PACKAGE_AMBIGUOUS_IMPORT_ROOT: Self = Self::new("SIFR-PACKAGE-0201", Severity::Error);
@@ -208,6 +206,9 @@ impl DiagnosticCode {
         Self::new("SIFR-PACKAGE-0603", Severity::Error);
     pub const PACKAGE_OUTDATED_QUERY_UNSUPPORTED: Self =
         Self::new("SIFR-PACKAGE-0604", Severity::Error);
+    pub const PACKAGE_RUN_TARGET_AMBIGUOUS: Self = Self::new("SIFR-PACKAGE-0605", Severity::Error);
+    pub const PACKAGE_INVALID_APP_TARGET_NAME: Self =
+        Self::new("SIFR-PACKAGE-0606", Severity::Error);
     pub const PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION: Self =
         Self::new("SIFR-PACKAGE-0701", Severity::Error);
     pub const PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT: Self =
@@ -216,10 +217,13 @@ impl DiagnosticCode {
         Self::new("SIFR-PACKAGE-0704", Severity::Error);
     pub const PACKAGE_PROJECTION_PURE_MARKER_MISSING: Self =
         Self::new("SIFR-PACKAGE-0709", Severity::Error);
+    pub const PACKAGE_EXPLICIT_FILE_OUTSIDE_SOURCE_ROOT: Self =
+        Self::new("SIFR-PACKAGE-0710", Severity::Error);
     pub const PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION: Self =
         Self::new("SIFR-PACKAGE-0711", Severity::Error);
     pub const PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL: Self =
         Self::new("SIFR-PACKAGE-0713", Severity::Error);
+    pub const PACKAGE_SCRIPT_RECURSION: Self = Self::new("SIFR-PACKAGE-0714", Severity::Error);
 
     pub const BUILD_MATERIALIZATION_FAILURE: Self = Self::new("SIFR-BUILD-0002", Severity::Error);
     pub const BUILD_TEMP_WORKSPACE_FAILURE: Self = Self::new("SIFR-BUILD-0003", Severity::Error);
@@ -530,6 +534,11 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-STDLIB-0000", "STDLIB"),
     reserved_family_base("SIFR-WORKSPACE-0000", "WORKSPACE"),
     reserved_family_base("SIFR-PACKAGE-0000", "PACKAGE"),
+    reserved_code(
+        "SIFR-PACKAGE-0105",
+        "PACKAGE",
+        "Retired: Cargo credential failures are wrapped by SIFR-PACKAGE-0101.",
+    ),
     reserved_code(
         "SIFR-PACKAGE-0302",
         "PACKAGE",
@@ -1959,7 +1968,7 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     active_entry!(
         "SIFR-PACKAGE-0101",
         "PACKAGE",
-        "Cargo command invocation failed.",
+        "Cargo command invocation failed; Sifr reports the redacted Cargo excerpt and safe Sifr-owned recovery context.",
         Severity::Error,
         "crates/sifr_package/src/milestone_37_4_tests.rs::cargo_failure_mapping_redacts_private_credentials",
         "cargo {action} failed",
@@ -1992,17 +2001,6 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
             json_arg!("package_path")
         ],
         ["cargo_package_id", "package_path", "lock_mode"]
-    ),
-    active_entry!(
-        "SIFR-PACKAGE-0105",
-        "PACKAGE",
-        "Private Cargo source credentials are unavailable.",
-        Severity::Error,
-        "crates/sifr_package/src/milestone_37_4_tests.rs::cargo_failure_mapping_redacts_private_credentials",
-        "cargo {action} credentials unavailable",
-        "sifr_package::cargo::errors",
-        [arg!("action"), arg!("reason")],
-        ["action", "reason"]
     ),
     active_entry!(
         "SIFR-PACKAGE-0106",
@@ -2198,6 +2196,28 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["cargo_package_id", "source"]
     ),
     active_entry!(
+        "SIFR-PACKAGE-0605",
+        "PACKAGE",
+        "Runnable package target or script selection is missing or ambiguous.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_reports_script_target_ambiguity",
+        "ambiguous package run target: {selector}",
+        "sifr_package::ops::session",
+        [arg!("selector"), json_arg!("candidates")],
+        ["selector", "candidates"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0606",
+        "PACKAGE",
+        "Discovered app target name is invalid.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_invalid_nested_target_name",
+        "invalid package app target name: {target}",
+        "sifr_package::ops::session",
+        [arg!("target")],
+        ["target"]
+    ),
+    active_entry!(
         "SIFR-PACKAGE-0701",
         "PACKAGE",
         "Production sifr.toml uses manifest-level exports.",
@@ -2250,6 +2270,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
         ["cargo_package_id", "marker_path"]
     ),
     active_entry!(
+        "SIFR-PACKAGE-0710",
+        "PACKAGE",
+        "Explicit Sifr file target is outside the package source root.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_explicit_file_outside_source_root",
+        "explicit file is outside package source root",
+        "sifr_package::ops::session",
+        [arg!("file"), arg!("source_root")],
+        ["file", "source_root"]
+    ),
+    active_entry!(
         "SIFR-PACKAGE-0711",
         "PACKAGE",
         "Production sifr.toml uses manifest binary target tables.",
@@ -2274,6 +2305,17 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
             json_arg!("manifest_path")
         ],
         ["cargo_package_id", "manifest_path", "symbol"]
+    ),
+    active_entry!(
+        "SIFR-PACKAGE-0714",
+        "PACKAGE",
+        "Package script expansion attempted to invoke another script.",
+        Severity::Error,
+        "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_nested_script_expansion",
+        "package script recursion is not allowed: {script}",
+        "sifr_package::ops::session",
+        [arg!("script")],
+        ["script"]
     ),
 ];
 
@@ -2399,7 +2441,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_SELECTED_RUST_ONLY,
     DiagnosticCode::PACKAGE_METADATA_PARSE,
     DiagnosticCode::PACKAGE_SOURCE_UNAVAILABLE_OFFLINE,
-    DiagnosticCode::PACKAGE_CREDENTIALS_UNAVAILABLE,
     DiagnosticCode::PACKAGE_RUST_ONLY_DEPENDS_ON_SIFR,
     DiagnosticCode::PACKAGE_AMBIGUOUS_IMPORT_ROOT,
     DiagnosticCode::PACKAGE_UNDECLARED_DIRECT_IMPORT,
@@ -2415,12 +2456,16 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_IMPORT_ROOT,
     DiagnosticCode::PACKAGE_CHANGED_FILE_MAPPING_FAILED,
     DiagnosticCode::PACKAGE_OUTDATED_QUERY_UNSUPPORTED,
+    DiagnosticCode::PACKAGE_RUN_TARGET_AMBIGUOUS,
+    DiagnosticCode::PACKAGE_INVALID_APP_TARGET_NAME,
     DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION,
     DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT,
     DiagnosticCode::PACKAGE_PROJECTION_INCLUDE_DRIFT,
     DiagnosticCode::PACKAGE_PROJECTION_PURE_MARKER_MISSING,
+    DiagnosticCode::PACKAGE_EXPLICIT_FILE_OUTSIDE_SOURCE_ROOT,
     DiagnosticCode::PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION,
     DiagnosticCode::PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL,
+    DiagnosticCode::PACKAGE_SCRIPT_RECURSION,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
     DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
     DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,

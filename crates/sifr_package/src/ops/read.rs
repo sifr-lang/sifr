@@ -10,6 +10,9 @@ pub const fn read_graph_operation(lock_mode: CargoLockMode) -> OperationPlan {
         lock_mode,
         mutates_manifests: false,
         mutates_lockfile: false,
+        requires_network: false,
+        writes_projection: false,
+        manifest_less_mode: false,
     }
 }
 

@@ -480,7 +480,7 @@ Fetch lifecycle:
 - `sifr check`, `build`, `run`, and `test` may lazily invoke Cargo fetch when a selected source package is unavailable and the mode is not `--offline` or `--frozen`.
 - `--offline` fails immediately with `SIFR-PACKAGE-0104` if any selected Sifr source package is unavailable in Cargo's cache.
 - `--frozen` never performs network access or manifest/lock mutation.
-- Private registry credential acquisition is delegated to Cargo; Sifr maps missing credential failures to `SIFR-PACKAGE-0105` with remediation that points to Cargo login or `CARGO_REGISTRIES_*` configuration.
+- Private registry credential acquisition is delegated to Cargo; Sifr wraps credential-related Cargo failures in `SIFR-PACKAGE-0101` with redacted Cargo context.
 
 ## Import And Source Semantics
 
@@ -1004,7 +1004,7 @@ Diagnostic examples:
 | `SIFR-PACKAGE-0102` | selected Cargo package expected to be Sifr-capable but has no Sifr metadata |
 | `SIFR-PACKAGE-0103` | Cargo metadata parsing or normalization error |
 | `SIFR-PACKAGE-0104` | package source unavailable in offline/frozen mode |
-| `SIFR-PACKAGE-0105` | Cargo registry credentials unavailable |
+| `SIFR-PACKAGE-0105` | retired; Cargo credential failures use `SIFR-PACKAGE-0101` |
 | `SIFR-PACKAGE-0106` | Rust-only workspace member depends on a Sifr package in an unsupported Phase 37 pattern |
 | `SIFR-PACKAGE-0201` | ambiguous import root in one package dependency scope |
 | `SIFR-PACKAGE-0202` | undeclared direct dependency import |
@@ -1234,7 +1234,7 @@ Definition of done:
 
 - `sifr build --locked`, `--offline`, and `--frozen` honor Cargo semantics.
 - unavailable package sources in offline/frozen mode produce `SIFR-PACKAGE-0104`.
-- missing private registry credentials produce redacted `SIFR-PACKAGE-0105`.
+- missing private registry credentials produce redacted `SIFR-PACKAGE-0101`.
 - backend trust failures are deterministic.
 - generated Rust builds are reproducible from Cargo/Sifr inputs.
 
