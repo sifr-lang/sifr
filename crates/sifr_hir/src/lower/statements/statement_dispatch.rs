@@ -1,0 +1,763 @@
+use super::assignment_widening::reconcile_optional_reassignment;
+use super::async_for::lower_async_for;
+use super::async_generator_advances::{
+    finish_async_generator_advance_for_expr, record_async_generator_advance_binding,
+};
+use super::async_with::lower_async_with;
+use super::aug_assign_lowering::lower_aug_assign as lower_aug_assign_impl;
+use super::binding_mutability::ensure_mutable_parameter_binding;
+use super::builtin_calls::callable_builtin_element_type;
+use super::container_literal_specialization::{
+    apply_container_specialization_patches, type_contains_unknown_or_any,
+    validate_subscript_assignment_target,
+};
+use super::control_flow_conditions::validate_control_flow_condition;
+use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
+use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
+use super::fixed_width_class_payload::class_specialization_payload_conflicts;
+use super::fixed_width_fitting::{validate_fixed_width_initializer, FixedWidthInitializerFit};
+use super::flow_helpers::then_body_always_exits;
+use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
+use super::function_flow::infer_function_return_type;
+use super::if_branch_bindings::{
+    predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,
+};
+use super::integer_const_facts::{
+    record_const_integer_binding, restore_const_integer_state_after_branches,
+};
+use super::integer_nonzero_guards::{
+    detect_false_nonzero_integer_guards, detect_true_nonzero_integer_guards,
+};
+use super::len_aliases::record_len_alias_fact;
+use super::match_diagnostics;
+use super::match_lowering::lower_match;
+use super::name_diagnostics;
+use super::narrowing::{apply_narrowing, detect_narrowing_condition};
+use super::nonlocal_support::{
+    collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
+};
+use super::numeric_sentinels::{
+    apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
+    numeric_sentinel_kind,
+};
+use super::ownership_diagnostics;
+use super::protocol_diagnostics;
+use super::return_lowering::lower_return;
+use super::sequence_guard_detection::{
+    detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
+    detect_while_sequence_guards,
+};
+use super::sequence_guard_updates::{
+    maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards,
+};
+use super::sequence_pointers::record_sequence_pointer_fact;
+use super::sequence_shapes::sequence_shape_fact;
+use super::statement_diagnostics;
+use super::task_scope_calls::task_group_spawn_owner;
+use super::typing_and_functions::{
+    ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
+    resolve_annotation_expr,
+};
+use super::LowerCtx;
+use crate::hir_nodes::{
+    HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt,
+    MethodKind,
+};
+use ruff_text_size::{Ranged, TextRange};
+use sifr_diagnostics::DiagnosticCode;
+use sifr_python_ast::{
+    ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign, StmtAugAssign,
+    StmtFor, StmtIf, StmtWhile,
+};
+use sifr_type_system::{make_union, FunctionType, NarrowingCondition, Type};
+
+fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
+    match expr {
+        Expr::List(list) if list.elts.is_empty() => Some("list"),
+        Expr::Dict(dict) if dict.items.is_empty() => Some("dict"),
+        Expr::Set(set) if set.elts.is_empty() => Some("set"),
+        Expr::Call(call)
+            if call.arguments.args.is_empty() && call.arguments.keywords.is_empty() =>
+        {
+            let Expr::Name(name) = call.func.as_ref() else {
+                return None;
+            };
+            (name.id.as_str() == "set").then_some("set")
+        }
+        Expr::Call(call)
+            if call.arguments.args.is_empty() && call.arguments.keywords.is_empty() =>
+        {
+            let Expr::Attribute(attr) = call.func.as_ref() else {
+                return None;
+            };
+            match (attr.value.as_ref(), attr.attr.as_str()) {
+                (Expr::Name(module), "deque") if module.id.as_str() == "collections" => {
+                    Some("deque")
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+fn hint_matches_empty_collection_shape(value_expr: &Expr, hint: &Type) -> bool {
+    let Some(kind) = empty_collection_literal_kind(value_expr) else {
+        return false;
+    };
+    match (kind, hint.resolve_alias()) {
+        ("list", Type::List(_)) => true,
+        ("dict", Type::Dict(_, _)) => true,
+        ("set", Type::Set(_)) => true,
+        ("deque", Type::Class { name, .. }) => name == "deque",
+        _ => false,
+    }
+}
+
+fn should_adopt_inferred_binding_hint(
+    value_expr: &Expr,
+    value_ty: &Type,
+    hint: &Type,
+    allow_empty_collection_hint: bool,
+) -> bool {
+    if !type_contains_unknown_or_any(value_ty) {
+        return false;
+    }
+    if empty_collection_literal_kind(value_expr).is_some() {
+        return allow_empty_collection_hint
+            && !type_contains_unknown_or_any(hint)
+            && hint_matches_empty_collection_shape(value_expr, hint);
+    }
+    if value_ty.is_assignable_to(hint) {
+        return true;
+    }
+    if type_contains_unknown_or_any(hint) {
+        return false;
+    }
+    hint_matches_empty_collection_shape(value_expr, hint)
+}
+
+pub(super) fn lower_stmts(
+    stmts: &[Stmt],
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Vec<HirStmt> {
+    let nested_inference =
+        super::nested_function_inference::infer_nested_function_types(stmts, ctx);
+    let can_adopt_empty_collection_hints = !nested_inference.function_types.is_empty();
+    ctx.inferred_binding_hints
+        .push(nested_inference.binding_hints.clone());
+    ctx.push_empty_collection_hint_adoption(can_adopt_empty_collection_hints);
+    predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
+
+    let mut result = Vec::new();
+    for stmt in stmts {
+        if crate::cfg::flow_facts(&result).always_exits() {
+            ctx.warn_unreachable_statement(stmt.range());
+            continue;
+        }
+        // Handle chained assignment (x = y = z = 0) by expanding into multiple statements
+        if let Stmt::Assign(assign) = stmt {
+            if assign.targets.len() > 1 {
+                let expanded = lower_chained_assign(assign, ctx);
+                result.extend(expanded);
+                continue;
+            }
+        }
+        if let Stmt::Try(try_stmt) = stmt {
+            if !try_stmt.finalbody.is_empty() {
+                let has_handlers = !try_stmt.handlers.is_empty();
+                let mut body = if has_handlers {
+                    lower_stmt(stmt, func_type, ctx).into_iter().collect()
+                } else {
+                    lower_stmts(&try_stmt.body, func_type, ctx)
+                };
+                if !has_handlers && !try_stmt.orelse.is_empty() {
+                    let orelse = lower_stmts(&try_stmt.orelse, func_type, ctx);
+                    body.extend(orelse);
+                }
+                let finalbody = lower_stmts(&try_stmt.finalbody, func_type, ctx);
+                result.push(HirStmt::TryFinally { body, finalbody });
+                apply_numeric_sentinel_patches(
+                    &mut result,
+                    &mut ctx.pending_numeric_sentinel_patches,
+                );
+                apply_container_specialization_patches(
+                    &mut result,
+                    &mut ctx.pending_container_specialization_patches,
+                );
+                continue;
+            }
+        }
+        if let Some(hir_stmt) = lower_stmt(stmt, func_type, ctx) {
+            result.push(hir_stmt);
+        }
+        apply_numeric_sentinel_patches(&mut result, &mut ctx.pending_numeric_sentinel_patches);
+        apply_container_specialization_patches(
+            &mut result,
+            &mut ctx.pending_container_specialization_patches,
+        );
+    }
+    let _ = ctx.inferred_binding_hints.pop();
+    ctx.pop_empty_collection_hint_adoption();
+    result
+}
+fn predeclare_nested_function_symbols(
+    stmts: &[Stmt],
+    inferred_types: &std::collections::HashMap<String, FunctionType>,
+    ctx: &mut LowerCtx,
+) {
+    for stmt in stmts {
+        if let Stmt::FunctionDef(func) = stmt {
+            if let Some(function_type) = inferred_types.get(func.name.as_str()).cloned() {
+                register_local_function_signature(func, function_type, ctx);
+            } else {
+                register_local_function_symbol(func, ctx);
+            }
+        }
+    }
+}
+
+pub(super) fn lower_stmt(
+    stmt: &Stmt,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
+    match stmt {
+        Stmt::AnnAssign(ann) => lower_ann_assign(ann, ctx),
+        Stmt::Assign(assign) => lower_assign(assign, ctx),
+        Stmt::AugAssign(aug) => lower_aug_assign(aug, ctx),
+        Stmt::Return(ret) => Some(lower_return(ret, func_type, ctx)),
+        Stmt::Expr(expr_stmt) => {
+            // Check if this is a yield expression used as a statement
+            if let Expr::Yield(yield_expr) = expr_stmt.value.as_ref() {
+                if let Some(ref val) = yield_expr.value {
+                    let value = lower_expr(val, ctx)?;
+                    return Some(HirStmt::Yield { value });
+                }
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "yield without a value",
+                    yield_expr.range(),
+                );
+                return None;
+            }
+            let expr = lower_expr(&expr_stmt.value, ctx)?;
+            // #[must_use] enforcement: Result values must not be silently discarded
+            let expr_ty = expr.ty();
+            if matches!(expr_ty, Type::Result(_, _)) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::RESULT_UNUSED_VALUE,
+                    format!(
+                        "unused Result value of type '{}' must be used. Use 'let _ = expr' to explicitly discard",
+                        expr_ty.display_name()
+                    ),
+                    expr_stmt.value.range(),
+                );
+            }
+            finish_async_generator_advance_for_expr(ctx, &expr);
+            Some(HirStmt::Expr { expr })
+        }
+        Stmt::If(if_stmt) => lower_if(if_stmt, func_type, ctx),
+        Stmt::While(while_stmt) => lower_while(while_stmt, func_type, ctx),
+        Stmt::For(for_stmt) => {
+            if for_stmt.is_async {
+                lower_async_for(for_stmt, func_type, ctx)
+            } else {
+                lower_for(for_stmt, func_type, ctx)
+            }
+        }
+        Stmt::Break(break_stmt) => {
+            if !ctx.in_loop() {
+                super::flow_diagnostics::break_outside_loop(ctx, break_stmt.range());
+                return None;
+            }
+            Some(HirStmt::Break)
+        }
+        Stmt::Continue(continue_stmt) => {
+            if !ctx.in_loop() {
+                super::flow_diagnostics::continue_outside_loop(ctx, continue_stmt.range());
+                return None;
+            }
+            Some(HirStmt::Continue)
+        }
+        Stmt::Pass(_) => Some(HirStmt::Pass),
+        Stmt::Delete(del_stmt) => {
+            if del_stmt.targets.len() != 1 {
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "del with multiple targets",
+                    del_stmt.range(),
+                );
+                return None;
+            }
+            if let Expr::Subscript(sub) = &del_stmt.targets[0] {
+                let object = lower_expr(&sub.value, ctx)?;
+                let index = lower_expr(&sub.slice, ctx)?;
+                Some(HirStmt::Delete { object, index })
+            } else {
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "del is only supported for collection items (del d[key], del a[i])",
+                    del_stmt.targets[0].range(),
+                );
+                None
+            }
+        }
+        Stmt::Assert(assert_stmt) => {
+            let test = lower_expr(&assert_stmt.test, ctx)?;
+            let msg = if let Some(ref msg_expr) = assert_stmt.msg {
+                Some(lower_expr(msg_expr, ctx)?)
+            } else {
+                None
+            };
+            Some(HirStmt::Assert { test, msg })
+        }
+        Stmt::Raise(raise_stmt) => {
+            if let Some(ref exc) = raise_stmt.exc {
+                // Check if the raise expression is a string literal — disallow raise "message"
+                if matches!(exc.as_ref(), Expr::StringLiteral(_) | Expr::FString(_)) {
+                    super::result_diagnostics::invalid_raise_string(ctx, exc.range());
+                    return None;
+                }
+                let value = lower_expr(exc, ctx)?;
+                // Verify the raised value is an error type
+                let raised_ty = value.ty();
+                if !is_valid_error_type(raised_ty, ctx) {
+                    let ty_name = format_type_name(raised_ty);
+                    super::result_diagnostics::invalid_raise_non_error(
+                        ctx,
+                        ty_name.as_str(),
+                        exc.range(),
+                    );
+                    return None;
+                }
+                Some(HirStmt::Raise { value })
+            } else {
+                super::result_diagnostics::invalid_bare_raise(ctx, raise_stmt.range());
+                None
+            }
+        }
+        Stmt::With(with_stmt) => {
+            if with_stmt.is_async {
+                return lower_async_with(with_stmt, func_type, ctx);
+            }
+            if with_stmt.items.is_empty() {
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "with statement must have at least one item",
+                    with_stmt.range(),
+                );
+                return None;
+            }
+            let (items, body) = ctx.with_pushed_scope(|ctx| {
+                let mut items = Vec::new();
+                for item in &with_stmt.items {
+                    let value = lower_expr(&item.context_expr, ctx)?;
+                    let var_name = if let Some(ref vars) = item.optional_vars {
+                        if let Expr::Name(n) = vars.as_ref() {
+                            n.id.to_string()
+                        } else {
+                            statement_diagnostics::unsupported_form(
+                                ctx,
+                                "with target must be a simple name",
+                                vars.range(),
+                            );
+                            return None;
+                        }
+                    } else {
+                        format!("_with_val_{}", items.len())
+                    };
+                    let val_ty = value.ty().clone();
+                    let context_range = item.context_expr.range();
+                    // Check if the type implements the ContextManager protocol (__enter__/__exit__)
+                    let has_context_manager = if let Type::Class { name, methods, .. } = &val_ty {
+                        let has_enter = methods
+                            .iter()
+                            .any(|(method_name, _)| method_name == "__enter__");
+                        let has_exit = methods
+                            .iter()
+                            .any(|(method_name, _)| method_name == "__exit__");
+                        if has_enter && has_exit {
+                            true
+                        } else if has_enter || has_exit {
+                            protocol_diagnostics::context_manager_incomplete(
+                                ctx,
+                                name,
+                                context_range,
+                            );
+                            false
+                        } else {
+                            protocol_diagnostics::context_manager_missing(ctx, name, context_range);
+                            false
+                        }
+                    } else {
+                        // Non-class types don't have methods — can't be context managers
+                        let type_name = val_ty.display_name();
+                        protocol_diagnostics::context_manager_missing(
+                            ctx,
+                            &type_name,
+                            context_range,
+                        );
+                        false
+                    };
+                    // If the type has __enter__, the variable is bound to __enter__()'s return type
+                    // We resolve the actual class type from ctx.class_types to get full fields/methods
+                    let bound_ty = if has_context_manager {
+                        if let Type::Class { methods, .. } = &val_ty {
+                            let ret_ty = methods
+                                .iter()
+                                .find(|(name, _)| name == "__enter__")
+                                .map(|(_, ft)| (*ft.return_type).clone())
+                                .unwrap_or(val_ty.clone());
+                            // If the return type is a class, look up the fully-defined version
+                            if let Type::Class { name: ret_name, .. } = &ret_ty {
+                                ctx.class_types.get(ret_name).cloned().unwrap_or(ret_ty)
+                            } else {
+                                ret_ty
+                            }
+                        } else {
+                            val_ty.clone()
+                        }
+                    } else {
+                        val_ty.clone()
+                    };
+                    ctx.scope.define(var_name.clone(), bound_ty);
+                    items.push((var_name, value, has_context_manager));
+                }
+                let body = lower_stmts(&with_stmt.body, func_type, ctx);
+                Some((items, body))
+            })?;
+            Some(HirStmt::With { items, body })
+        }
+        Stmt::Try(try_stmt) => {
+            let prev_in_try = ctx.in_try_block;
+            let prev_try_errors = std::mem::take(&mut ctx.try_block_error_types);
+            ctx.in_try_block = true;
+            let body = lower_stmts(&try_stmt.body, func_type, ctx);
+            ctx.in_try_block = prev_in_try;
+            let mut try_error_types =
+                std::mem::replace(&mut ctx.try_block_error_types, prev_try_errors);
+
+            // Also collect error types from raise statements in the body
+            collect_raise_error_types(&body, &mut try_error_types);
+
+            let mut handlers = Vec::new();
+            let mut has_catch_all = false;
+            let mut covered_types = std::collections::HashSet::new();
+
+            for handler in &try_stmt.handlers {
+                let ExceptHandler::ExceptHandler(h) = handler;
+                let (error_type, error_type_range, invalid_error_type_form) =
+                    if let Some(ref type_expr) = h.type_ {
+                        if let Expr::Name(n) = type_expr.as_ref() {
+                            (Some(n.id.to_string()), Some(n.range()), false)
+                        } else {
+                            (None, Some(type_expr.range()), true)
+                        }
+                    } else {
+                        (None, None, false)
+                    };
+                let name = h.name.as_ref().map(std::string::ToString::to_string);
+
+                // Check if this is a catch-all (except Error) or a specific handler
+                if invalid_error_type_form {
+                    super::result_diagnostics::invalid_except_type(
+                        ctx,
+                        "except type must be a simple error class name",
+                        error_type_range.unwrap_or_else(|| h.range()),
+                    );
+                } else if let Some(ref et) = error_type {
+                    if et == "Error" {
+                        has_catch_all = true;
+                    } else {
+                        // Validate the except type is a known error class
+                        if !ctx.error_types.contains(et) {
+                            super::result_diagnostics::unknown_except_type(
+                                ctx,
+                                et,
+                                error_type_range.unwrap_or_else(|| h.range()),
+                            );
+                        }
+                        covered_types.insert(et.clone());
+                    }
+                } else {
+                    // Bare except (no type) — acts as catch-all
+                    has_catch_all = true;
+                }
+
+                // Define the error variable in scope if named
+                ctx.scope.push();
+                if let Some(ref var_name) = name {
+                    let error_var_ty = if let Some(ref et) = error_type {
+                        if et == "Error" {
+                            // catch-all: bind as the base Error type
+                            ctx.class_types
+                                .get("Error")
+                                .cloned()
+                                .unwrap_or_else(|| Type::Class {
+                                    name: "Error".to_string(),
+                                    fields: vec![("message".to_string(), Type::Str)],
+                                    methods: vec![],
+                                    parent_class: None,
+                                })
+                        } else if let Some(class_ty) = ctx.class_types.get(et) {
+                            class_ty.clone()
+                        } else {
+                            // Unknown error type — already reported above
+                            Type::Class {
+                                name: et.clone(),
+                                fields: vec![("message".to_string(), Type::Str)],
+                                methods: vec![],
+                                parent_class: None,
+                            }
+                        }
+                    } else {
+                        // Bare except — error variable is base Error type
+                        ctx.class_types
+                            .get("Error")
+                            .cloned()
+                            .unwrap_or_else(|| Type::Class {
+                                name: "Error".to_string(),
+                                fields: vec![("message".to_string(), Type::Str)],
+                                methods: vec![],
+                                parent_class: None,
+                            })
+                    };
+                    ctx.scope.define(var_name.clone(), error_var_ty);
+                }
+                let handler_body = lower_stmts(&h.body, func_type, ctx);
+                ctx.scope.pop();
+
+                // Resolve the error type for codegen
+                let error_resolved_type = error_type
+                    .as_ref()
+                    .and_then(|et| ctx.class_types.get(et).cloned());
+                handlers.push(HirExceptHandler {
+                    error_type,
+                    error_resolved_type,
+                    name,
+                    body: handler_body,
+                });
+            }
+
+            // Exhaustiveness checking: if no catch-all, all error types must be covered
+            // A parent type covers all its children (e.g., except IOError covers FileNotFoundError)
+            // Subclasses partially cover their parent (e.g., except FileNotFoundError covers IOError::FileNotFound)
+            if !has_catch_all && !try_error_types.is_empty() {
+                // Expand covered_types: if a parent is covered, all its children are covered
+                let mut expanded_covered = covered_types.clone();
+                for covered in &covered_types {
+                    if let Some(children) = ctx.error_hierarchy.get(covered) {
+                        for child in children {
+                            expanded_covered.insert(child.clone());
+                        }
+                    }
+                }
+                // Check if subclasses fully cover their parent
+                // If all children of a parent are covered, the parent is covered
+                for (parent, children) in &ctx.error_hierarchy {
+                    if try_error_types.contains(parent) && !expanded_covered.contains(parent) {
+                        let all_children_covered =
+                            children.iter().all(|c| expanded_covered.contains(c));
+                        if all_children_covered {
+                            expanded_covered.insert(parent.clone());
+                        }
+                    }
+                }
+                let uncovered: Vec<String> = try_error_types
+                    .iter()
+                    .filter(|et| !expanded_covered.contains(*et))
+                    .cloned()
+                    .collect();
+                if !uncovered.is_empty() {
+                    let mut sorted = uncovered;
+                    sorted.sort();
+                    super::result_diagnostics::uncovered_try_errors(
+                        ctx,
+                        &sorted.join(", "),
+                        try_stmt.range(),
+                    );
+                }
+            }
+
+            let body_error_types: Vec<String> = try_error_types.into_iter().collect();
+            Some(HirStmt::TryExcept {
+                body,
+                handlers,
+                body_error_types,
+            })
+        }
+        Stmt::Nonlocal(nonlocal) => {
+            lower_nonlocal(nonlocal, ctx);
+            None
+        }
+        Stmt::FunctionDef(func) => {
+            // Nested function definition (def inside def)
+            // Extract the function type (params + return type)
+            let ft = ctx
+                .functions
+                .get(func.name.as_str())
+                .cloned()
+                .unwrap_or_else(|| register_local_function_symbol(func, ctx));
+
+            // Lower the nested function body
+            let declared_nonlocals = collect_declared_nonlocals(&func.body);
+            ctx.enter_function_scope(declared_nonlocals.clone());
+
+            // Define parameters in scope
+            let mut params = Vec::new();
+            for (i, param_def) in func.parameters.args.iter().enumerate() {
+                let name = param_def.parameter.name.to_string();
+                let ty = ft
+                    .params
+                    .get(i)
+                    .map(|(_, t, _)| t.clone())
+                    .unwrap_or(Type::Any);
+                let convention = ft
+                    .params
+                    .get(i)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| {
+                        ast_convention_to_param(param_def.parameter.convention, &ty)
+                    });
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+                let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+                params.push(HirParam {
+                    name,
+                    ty,
+                    default,
+                    keyword_only: false,
+                    convention,
+                });
+            }
+
+            // Vararg parameter (*args)
+            if let Some(ref vararg) = func.parameters.vararg {
+                let name = vararg.name.to_string();
+                let regular_count = func.parameters.args.len();
+                let ty = ft
+                    .params
+                    .get(regular_count)
+                    .map(|(_, t, _)| t.clone())
+                    .unwrap_or(Type::Any);
+                let convention = ft
+                    .params
+                    .get(regular_count)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| ast_convention_to_param(vararg.convention, &ty));
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+                params.push(HirParam {
+                    name,
+                    ty,
+                    default: None,
+                    keyword_only: false,
+                    convention,
+                });
+            }
+
+            // Keyword-only args
+            let regular_count =
+                func.parameters.args.len() + usize::from(func.parameters.vararg.is_some());
+            for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
+                let name = param_def.parameter.name.to_string();
+                let ty = ft
+                    .params
+                    .get(regular_count + i)
+                    .map(|(_, t, _)| t.clone())
+                    .unwrap_or(Type::Any);
+                let convention = ft
+                    .params
+                    .get(regular_count + i)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| {
+                        ast_convention_to_param(param_def.parameter.convention, &ty)
+                    });
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+                let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+                params.push(HirParam {
+                    name,
+                    ty,
+                    default,
+                    keyword_only: true,
+                    convention,
+                });
+            }
+
+            let body = lower_stmts(&func.body, &ft, ctx);
+            ctx.exit_function_scope();
+
+            if !declared_nonlocals.is_empty() && hir_body_calls_function(&body, func.name.as_str())
+            {
+                super::flow_diagnostics::recursive_nonlocal_nested_function(
+                    ctx,
+                    &func.name,
+                    func.name.range(),
+                );
+            }
+
+            let return_annotation_range = func
+                .returns
+                .as_ref()
+                .map_or_else(|| func.name.range(), |returns| returns.range());
+            let inferred_return_type = infer_function_return_type(
+                func.name.as_ref(),
+                func.is_async,
+                ft.return_type.as_ref(),
+                func.returns.is_some(),
+                &body,
+                |message| {
+                    ctx.error_with_code_at(
+                        DiagnosticCode::TYPE_MISMATCH,
+                        message,
+                        return_annotation_range,
+                    );
+                },
+            );
+
+            // Collect user-defined decorators
+            let decorators: Vec<String> = func
+                .decorator_list
+                .iter()
+                .filter_map(|d| {
+                    if let Expr::Name(n) = &d.expression {
+                        let name = n.id.to_string();
+                        if name != "classmethod" && name != "staticmethod" {
+                            Some(name)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            Some(HirStmt::NestedFunction {
+                func: HirFunction {
+                    name: func.name.to_string(),
+                    params,
+                    return_type: inferred_return_type,
+                    body,
+                    is_async: false,
+                    method_kind: MethodKind::Regular,
+                    decorators,
+                    type_params: Vec::new(),
+                },
+            })
+        }
+        Stmt::Match(match_stmt) => lower_match(match_stmt, func_type, ctx),
+        _ => {
+            statement_diagnostics::unsupported_form(
+                ctx,
+                "unsupported statement type",
+                stmt.range(),
+            );
+            None
+        }
+    }
+}
+

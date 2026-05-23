@@ -1,0 +1,792 @@
+pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
+    if assign.targets.len() != 1 {
+        statement_diagnostics::invalid_assignment_target(
+            ctx,
+            "multiple assignment targets are not supported",
+            assign.range(),
+        );
+        return None;
+    }
+
+    // Handle tuple unpacking: a, b = expr or a, *b = expr
+    if let Expr::Tuple(tuple) = &assign.targets[0] {
+        // Check if any element is a Starred expression (star unpacking)
+        let has_star = tuple.elts.iter().any(|e| matches!(e, Expr::Starred(_)));
+        if has_star {
+            return lower_star_unpack_assign(tuple, &assign.value, ctx);
+        }
+        return lower_tuple_unpack_assign(tuple, &assign.value, ctx);
+    }
+
+    // Handle attribute assignment: self.field = value or obj.field = value
+    if let Expr::Attribute(attr) = &assign.targets[0] {
+        if let Expr::Attribute(inner_attr) = attr.value.as_ref() {
+            let obj_name = if let Expr::Name(n) = inner_attr.value.as_ref() {
+                n.id.to_string()
+            } else {
+                statement_diagnostics::invalid_assignment_target(
+                    ctx,
+                    "attribute assignment target must be a simple name",
+                    inner_attr.value.range(),
+                );
+                return None;
+            };
+            let obj_range = inner_attr.value.range();
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
+                return None;
+            }
+            let field_name = inner_attr.attr.to_string();
+            let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
+            let nested_field_name = attr.attr.to_string();
+            let nested_field_ty = resolve_field_type_from_type(&field_ty, &nested_field_name)
+                .unwrap_or(Type::Unknown);
+            let value = lower_expr(&assign.value, ctx)?;
+            return Some(HirStmt::NestedFieldAssign {
+                object: obj_name,
+                field: field_name,
+                field_ty,
+                nested_field: nested_field_name,
+                nested_field_ty,
+                value,
+            });
+        }
+        let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
+            n.id.to_string()
+        } else {
+            statement_diagnostics::invalid_assignment_target(
+                ctx,
+                "attribute assignment target must be a simple name",
+                attr.value.range(),
+            );
+            return None;
+        };
+        let obj_range = attr.value.range();
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
+            return None;
+        }
+        let field_name = attr.attr.to_string();
+        let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
+        let value = lower_expr(&assign.value, ctx)?;
+        return Some(HirStmt::FieldAssign {
+            object: obj_name,
+            field: field_name,
+            field_ty,
+            value,
+        });
+    }
+
+    // Handle subscript assignment: list[i] = val or dict[key] = val
+    if let Expr::Subscript(sub) = &assign.targets[0] {
+        // Handle nested subscript: matrix[i][j] = val
+        if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
+            let obj_name = if let Expr::Name(n) = inner_sub.value.as_ref() {
+                n.id.to_string()
+            } else {
+                statement_diagnostics::invalid_assignment_target(
+                    ctx,
+                    "nested subscript assignment target must be a simple name",
+                    inner_sub.value.range(),
+                );
+                return None;
+            };
+            let obj_range = inner_sub.value.range();
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
+                return None;
+            }
+            let obj_ty = ctx
+                .scope
+                .lookup(&obj_name)
+                .map(|info| info.effective_type().clone())
+                .unwrap_or(Type::Unknown);
+            if matches!(obj_ty.resolve_alias(), Type::Bytes) {
+                super::ownership_diagnostics::immutable_bytes_subscript_assignment(
+                    ctx,
+                    inner_sub.range(),
+                );
+                return None;
+            }
+            let outer_index = lower_expr(&inner_sub.slice, ctx)?;
+            let inner_index = lower_expr(&sub.slice, ctx)?;
+            let value = lower_expr(&assign.value, ctx)?;
+            return Some(HirStmt::NestedSubscriptAssign {
+                object: obj_name,
+                outer_index,
+                inner_index,
+                value,
+                object_ty: obj_ty,
+            });
+        }
+        // Handle attribute subscript assignment: self.field[key] = val
+        if let Expr::Attribute(attr) = sub.value.as_ref() {
+            let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
+                n.id.to_string()
+            } else {
+                statement_diagnostics::invalid_assignment_target(
+                    ctx,
+                    "subscript assignment target must be a simple name",
+                    attr.value.range(),
+                );
+                return None;
+            };
+            let obj_range = attr.value.range();
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
+                return None;
+            }
+            let field_name = attr.attr.to_string();
+            let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
+            if matches!(field_ty.resolve_alias(), Type::Bytes) {
+                super::ownership_diagnostics::immutable_bytes_subscript_assignment(
+                    ctx,
+                    sub.range(),
+                );
+                return None;
+            }
+            let index = lower_expr(&sub.slice, ctx)?;
+            let value = lower_expr(&assign.value, ctx)?;
+            return Some(HirStmt::AttributeSubscriptAssign {
+                object: obj_name,
+                field: field_name,
+                index,
+                value,
+                field_ty,
+            });
+        }
+        let obj_name = if let Expr::Name(n) = sub.value.as_ref() {
+            n.id.to_string()
+        } else {
+            statement_diagnostics::invalid_assignment_target(
+                ctx,
+                "subscript assignment target must be a simple name",
+                sub.value.range(),
+            );
+            return None;
+        };
+        let obj_range = sub.value.range();
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
+            return None;
+        }
+        let obj_ty = ctx
+            .scope
+            .lookup(&obj_name)
+            .map(|info| info.effective_type().clone())
+            .unwrap_or(Type::Unknown);
+        if matches!(obj_ty.resolve_alias(), Type::Bytes) {
+            super::ownership_diagnostics::immutable_bytes_subscript_assignment(ctx, sub.range());
+            return None;
+        }
+        let index = lower_expr(&sub.slice, ctx)?;
+        let value = lower_expr(&assign.value, ctx)?;
+        let object_ty = validate_subscript_assignment_target(
+            ctx,
+            &obj_name,
+            &obj_ty,
+            index.ty(),
+            value.ty(),
+            sub.range(),
+        );
+        maybe_record_dict_assignment_guard(ctx, &object_ty, &obj_name, &sub.slice);
+        return Some(HirStmt::SubscriptAssign {
+            object: obj_name,
+            index,
+            value,
+            object_ty,
+        });
+    }
+
+    let (name, name_range) = if let Expr::Name(n) = &assign.targets[0] {
+        (n.id.to_string(), n.range())
+    } else {
+        statement_diagnostics::invalid_assignment_target(
+            ctx,
+            "assignment target must be a simple name",
+            assign.targets[0].range(),
+        );
+        return None;
+    };
+
+    // Handle `_ = expr` as explicit discard (suppresses #[must_use] warnings)
+    if name == "_" {
+        let value = lower_expr(&assign.value, ctx)?;
+        let value_ty = value.ty().clone();
+        finish_async_generator_advance_for_expr(ctx, &value);
+        return Some(HirStmt::Let {
+            name: "_".to_string(),
+            ty: value_ty,
+            value,
+            is_mutable: false,
+        });
+    }
+
+    let should_treat_as_existing_binding = if ctx.current_function_frame_start().is_some() {
+        should_rebind_simple_name(ctx, &name)
+    } else {
+        ctx.scope.lookup(&name).is_some()
+    };
+    let error_count_before_initializer = ctx.error_count();
+    let Some(value) = lower_expr(&assign.value, ctx) else {
+        if !should_treat_as_existing_binding {
+            let error_taint = failed_initializer_taint(
+                ctx,
+                &name,
+                assign.value.range(),
+                error_count_before_initializer,
+            )?;
+            let fallback_ty = ctx
+                .inferred_binding_hint(&name)
+                .cloned()
+                .unwrap_or(Type::Unknown);
+            seed_binding_after_failed_initializer(ctx, &name, fallback_ty, false, error_taint);
+        }
+        return None;
+    };
+    let value_ty = value.ty().clone();
+
+    // Track move: if RHS is a variable name with Move ownership, mark it as moved
+    if let HirExpr::Name {
+        name: ref src_name,
+        ref ty,
+    } = value
+    {
+        if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+            ctx.scope.mark_moved(src_name);
+        }
+    }
+
+    // Check if variable already exists
+    if should_treat_as_existing_binding {
+        let Some(info) = ctx.scope.lookup(&name) else {
+            name_diagnostics::undefined_variable(ctx, &name, name_range);
+            return None;
+        };
+        if info.is_parameter_binding() && !info.is_mutable_binding() {
+            super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name, name_range);
+            return None;
+        }
+        // Reassignment: check type compatibility
+        let info_ty = info.ty.clone();
+        let can_widen = info.is_inferred_local_binding();
+        if !reconcile_optional_reassignment(ctx, &name, &info_ty, &value_ty, can_widen) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
+                    value_ty.display_name(),
+                    name,
+                    info_ty.display_name()
+                ),
+                assign.value.range(),
+            );
+        }
+        // Reset moved state on reassignment
+        ctx.scope.reset_moved(&name);
+        ctx.task_handle_group_owners.remove(&name);
+        record_async_generator_advance_binding(ctx, &name, &value);
+        invalidate_rebound_binding_facts(ctx, &name);
+        if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
+            && value.ty().is_assignable_to(&info_ty)
+        {
+            record_const_integer_binding(ctx, &name, &value);
+        }
+        if ctx.numeric_sentinel_fact(&name).is_some() {
+            if let Some(domain) = numeric_domain_for_type(&value_ty) {
+                ctx.resolve_numeric_sentinel_domain(&name, domain);
+            }
+        }
+        ctx.clear_sequence_shape_fact(&name);
+        record_len_alias_fact(ctx, &name, &assign.value);
+        record_sequence_pointer_fact(ctx, &name, &assign.value);
+        ctx.empty_dict_specializations.remove(&name);
+        ctx.pending_container_specialization_patches.remove(&name);
+        Some(HirStmt::Assign { name, value })
+    } else {
+        // New variable (type inferred)
+        let binding_ty = ctx
+            .inferred_binding_hint(&name)
+            .filter(|hint| {
+                should_adopt_inferred_binding_hint(
+                    &assign.value,
+                    &value_ty,
+                    hint,
+                    ctx.can_adopt_empty_collection_hints(),
+                )
+            })
+            .cloned()
+            .unwrap_or_else(|| value_ty.clone());
+        ctx.scope.define(name.clone(), binding_ty.clone());
+        if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
+            && value.ty().is_assignable_to(&binding_ty)
+        {
+            record_const_integer_binding(ctx, &name, &value);
+        }
+        record_async_generator_advance_binding(ctx, &name, &value);
+        if let Some(group_name) = task_group_spawn_owner(&value) {
+            ctx.task_handle_group_owners
+                .insert(name.clone(), group_name);
+        }
+        if let Some(kind) = numeric_sentinel_kind(&assign.value) {
+            ctx.record_numeric_sentinel_initializer(name.clone(), kind);
+        } else {
+            ctx.clear_numeric_sentinel_var(&name);
+        }
+        if let Some(fact) = sequence_shape_fact(&name, &assign.value) {
+            ctx.record_sequence_shape_fact(fact);
+        } else {
+            ctx.clear_sequence_shape_fact(&name);
+        }
+        record_len_alias_fact(ctx, &name, &assign.value);
+        ctx.empty_dict_specializations.remove(&name);
+        ctx.pending_container_specialization_patches.remove(&name);
+        record_sequence_pointer_fact(ctx, &name, &assign.value);
+        Some(HirStmt::Let {
+            name,
+            ty: binding_ty,
+            value,
+            is_mutable: true,
+        })
+    }
+}
+
+pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
+    lower_aug_assign_impl(aug, ctx)
+}
+
+pub(super) fn lower_if(
+    if_stmt: &StmtIf,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
+    let narrowing_cond = detect_narrowing_condition(&if_stmt.test, ctx);
+
+    let condition = lower_expr(&if_stmt.test, ctx)?;
+    validate_control_flow_condition(&condition, "if", if_stmt.test.range(), ctx);
+    predeclare_exhaustive_if_assigned_names(if_stmt, ctx);
+
+    let saved_state = ctx.scope.save_narrowing_state();
+    let saved_moved = ctx.scope.save_moved_state();
+    let saved_const_integer_state = ctx.scope.save_const_integer_state();
+    let saved_sequence_guards = ctx.save_sequence_guards();
+    let saved_nonzero_integer_bindings = ctx.save_proven_nonzero_integer_bindings();
+
+    if let Some(ref cond) = narrowing_cond {
+        apply_narrowing(ctx, cond, true);
+    }
+    for guard in detect_true_sequence_guards(&if_stmt.test, ctx) {
+        ctx.add_sequence_guard(guard);
+    }
+    for name in detect_true_nonzero_integer_guards(&if_stmt.test, ctx) {
+        ctx.add_proven_nonzero_integer_binding(name);
+    }
+
+    ctx.scope.push();
+    let then_body = lower_stmts(&if_stmt.body, func_type, ctx);
+    ctx.scope.pop();
+
+    let then_moved = ctx.scope.save_moved_state();
+    let then_const_integer_state = ctx.scope.save_const_integer_state();
+    let then_sequence_guards = ctx.save_sequence_guards();
+
+    ctx.scope.restore_narrowing_state(&saved_state);
+    ctx.scope.restore_moved_state(&saved_moved);
+    ctx.scope
+        .restore_const_integer_state(&saved_const_integer_state);
+    ctx.restore_sequence_guards(&saved_sequence_guards);
+    ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
+
+    let mut all_conditions: Vec<NarrowingCondition> = Vec::new();
+    if let Some(ref cond) = narrowing_cond {
+        all_conditions.push(cond.clone());
+    }
+
+    let mut branch_moved_states: Vec<_> = vec![then_moved];
+    let mut branch_const_integer_states =
+        vec![(then_const_integer_state, then_body_always_exits(&then_body))];
+    let mut branch_sequence_states = vec![then_sequence_guards];
+    let mut post_if_false_nonzero_guards = Vec::new();
+    let mut all_previous_branches_exit = then_body_always_exits(&then_body);
+    if all_previous_branches_exit {
+        post_if_false_nonzero_guards
+            .extend(detect_false_nonzero_integer_guards(&if_stmt.test, ctx));
+    }
+
+    let mut elif_clauses = Vec::new();
+    for clause in &if_stmt.elif_else_clauses {
+        if let Some(test) = &clause.test {
+            ctx.scope.restore_narrowing_state(&saved_state);
+            ctx.scope.restore_moved_state(&saved_moved);
+            ctx.scope
+                .restore_const_integer_state(&saved_const_integer_state);
+            ctx.restore_sequence_guards(&saved_sequence_guards);
+            ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
+            for prev_cond in &all_conditions {
+                apply_narrowing(ctx, prev_cond, false);
+            }
+
+            let elif_narrowing = detect_narrowing_condition(test, ctx);
+            let cond = lower_expr(test, ctx)?;
+            validate_control_flow_condition(&cond, "elif", test.range(), ctx);
+
+            let elif_saved = ctx.scope.save_narrowing_state();
+            if let Some(ref elif_cond) = elif_narrowing {
+                apply_narrowing(ctx, elif_cond, true);
+            }
+            for guard in detect_true_sequence_guards(test, ctx) {
+                ctx.add_sequence_guard(guard);
+            }
+            for name in detect_true_nonzero_integer_guards(test, ctx) {
+                ctx.add_proven_nonzero_integer_binding(name);
+            }
+
+            ctx.scope.push();
+            let body = lower_stmts(&clause.body, func_type, ctx);
+            ctx.scope.pop();
+            let elif_body_exits = then_body_always_exits(&body);
+            if all_previous_branches_exit && elif_body_exits {
+                post_if_false_nonzero_guards.extend(detect_false_nonzero_integer_guards(test, ctx));
+            }
+            all_previous_branches_exit &= elif_body_exits;
+            elif_clauses.push((cond, body));
+
+            branch_moved_states.push(ctx.scope.save_moved_state());
+            branch_const_integer_states
+                .push((ctx.scope.save_const_integer_state(), elif_body_exits));
+            branch_sequence_states.push(ctx.save_sequence_guards());
+
+            ctx.scope.restore_narrowing_state(&elif_saved);
+            ctx.scope.restore_moved_state(&saved_moved);
+            ctx.scope
+                .restore_const_integer_state(&saved_const_integer_state);
+            ctx.restore_sequence_guards(&saved_sequence_guards);
+            ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
+
+            if let Some(elif_cond) = elif_narrowing {
+                all_conditions.push(elif_cond);
+            }
+        }
+    }
+
+    let else_body = if_stmt
+        .elif_else_clauses
+        .iter()
+        .find(|c| c.test.is_none())
+        .map(|clause| {
+            ctx.scope.restore_narrowing_state(&saved_state);
+            ctx.scope.restore_moved_state(&saved_moved);
+            ctx.scope
+                .restore_const_integer_state(&saved_const_integer_state);
+            ctx.restore_sequence_guards(&saved_sequence_guards);
+            ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
+            for prev_cond in &all_conditions {
+                apply_narrowing(ctx, prev_cond, false);
+            }
+            ctx.scope.push();
+            let body = lower_stmts(&clause.body, func_type, ctx);
+            ctx.scope.pop();
+            branch_moved_states.push(ctx.scope.save_moved_state());
+            branch_const_integer_states.push((
+                ctx.scope.save_const_integer_state(),
+                then_body_always_exits(&body),
+            ));
+            branch_sequence_states.push(ctx.save_sequence_guards());
+            body
+        });
+
+    ctx.scope.restore_narrowing_state(&saved_state);
+    ctx.scope.restore_moved_state(&saved_moved);
+    restore_const_integer_state_after_branches(
+        ctx,
+        &saved_const_integer_state,
+        &branch_const_integer_states,
+    );
+    ctx.restore_sequence_guards(&saved_sequence_guards);
+    ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
+
+    for branch_state in &branch_moved_states {
+        for (name, was_moved) in branch_state {
+            if *was_moved {
+                ctx.scope.mark_moved(name);
+            }
+        }
+    }
+
+    seed_exhaustive_if_bindings(ctx, &then_body, &elif_clauses, else_body.as_ref());
+    merge_exhaustive_branch_sequence_guards(ctx, else_body.is_some(), &branch_sequence_states);
+
+    // Early-return narrowing: if the then-body always exits (return/break/continue/raise),
+    // apply the inverse narrowing after the if block.
+    // e.g., `if x is None: return` -> after the if, x is not None
+    if let Some(ref cond) = narrowing_cond {
+        if then_body_always_exits(&then_body) && elif_clauses.is_empty() && else_body.is_none() {
+            apply_narrowing(ctx, cond, false);
+        }
+    }
+    if then_body_always_exits(&then_body) && elif_clauses.is_empty() && else_body.is_none() {
+        for guard in detect_false_exit_sequence_guards(&if_stmt.test, ctx) {
+            ctx.add_sequence_guard(guard);
+        }
+    }
+    for name in post_if_false_nonzero_guards {
+        ctx.add_proven_nonzero_integer_binding(name);
+    }
+    ctx.clear_sequence_pointers();
+    Some(HirStmt::If {
+        condition,
+        then_body,
+        elif_clauses,
+        else_body,
+    })
+}
+
+pub(super) fn lower_while(
+    while_stmt: &StmtWhile,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
+    let narrowing_cond = detect_narrowing_condition(&while_stmt.test, ctx);
+    let condition = lower_expr(&while_stmt.test, ctx)?;
+    validate_control_flow_condition(&condition, "while", while_stmt.test.range(), ctx);
+    let saved_narrowing_state = ctx.scope.save_narrowing_state();
+    let saved_const_integer_state = ctx.scope.save_const_integer_state();
+    let saved_sequence_guards = ctx.save_sequence_guards();
+    let saved_nonzero_integer_bindings = ctx.save_proven_nonzero_integer_bindings();
+    if let Some(ref cond) = narrowing_cond {
+        apply_narrowing(ctx, cond, true);
+    }
+    for guard in detect_while_sequence_guards(while_stmt, ctx) {
+        ctx.add_sequence_guard(guard);
+    }
+    for name in detect_true_nonzero_integer_guards(&while_stmt.test, ctx) {
+        ctx.add_proven_nonzero_integer_binding(name);
+    }
+
+    // Snapshot moved state before loop to detect moves inside the body
+    let moved_before_loop = ctx.scope.save_moved_state();
+
+    ctx.scope.push();
+    ctx.loop_depth += 1;
+    let body = lower_stmts(&while_stmt.body, func_type, ctx);
+    ctx.loop_depth -= 1;
+    ctx.scope.pop();
+    let body_const_integer_state = ctx.scope.save_const_integer_state();
+    ctx.scope.restore_narrowing_state(&saved_narrowing_state);
+    restore_const_integer_state_after_branches(
+        ctx,
+        &saved_const_integer_state,
+        &[(body_const_integer_state, false)],
+    );
+    ctx.restore_sequence_guards(&saved_sequence_guards);
+    ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
+
+    // Check for outer-scope variables moved inside the loop body
+    let newly_moved = ctx.scope.moved_since(&moved_before_loop);
+    for var_name in &newly_moved {
+        ownership_diagnostics::moved_across_loop(ctx, var_name, while_stmt.range());
+    }
+
+    let else_body = if while_stmt.orelse.is_empty() {
+        None
+    } else {
+        ctx.scope.push();
+        let else_stmts = lower_stmts(&while_stmt.orelse, func_type, ctx);
+        ctx.scope.pop();
+        Some(else_stmts)
+    };
+
+    ctx.clear_sequence_pointers();
+
+    Some(HirStmt::While {
+        condition,
+        body,
+        else_body,
+    })
+}
+
+pub(super) fn lower_for(
+    for_stmt: &StmtFor,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
+    // Lower the iterable expression and normalize protocol usage through `iter(...)`.
+    let iterable_expr = lower_expr(&for_stmt.iter, ctx)?;
+    let iter_source_name = match &iterable_expr {
+        HirExpr::Name { name, .. } => Some(name.clone()),
+        _ => None,
+    };
+    let iter_source_ty = iterable_expr.ty().clone();
+    if matches!(iter_source_ty.resolve_alias(), Type::Any | Type::Unknown) {
+        statement_diagnostics::invalid_iteration(
+            ctx,
+            &format!(
+                "for-loop iterable must have a statically-known element type, got '{}'",
+                iter_source_ty.display_name()
+            ),
+            for_stmt.iter.range(),
+        );
+        return None;
+    }
+    let Some(elem_ty) = callable_builtin_element_type(&iter_source_ty) else {
+        if matches!(iter_source_ty.resolve_alias(), Type::Tuple(_)) {
+            statement_diagnostics::invalid_iteration(
+                ctx,
+                "for-loop tuple iteration requires one statically provable element type",
+                for_stmt.iter.range(),
+            );
+            return None;
+        }
+        statement_diagnostics::invalid_iteration(
+            ctx,
+            &format!(
+                "cannot iterate over type '{}'",
+                iter_source_ty.display_name()
+            ),
+            for_stmt.iter.range(),
+        );
+        return None;
+    };
+    let iter_expr = HirExpr::IteratorCall {
+        op: HirIteratorOp::Iter,
+        args: vec![iterable_expr],
+        ty: Type::Iterator(Box::new(elem_ty.clone())),
+    };
+    let consumes_task_handle_collection = iter_source_name.is_some()
+        && matches!(iter_source_ty.resolve_alias(), Type::List(_))
+        && matches!(elem_ty.resolve_alias(), Type::Task(_, _));
+
+    // Extract the target variable name(s)
+    let (target_name, target_tuple_range): (String, Option<TextRange>) =
+        match for_stmt.target.as_ref() {
+            Expr::Name(n) => (n.id.to_string(), None),
+            Expr::Tuple(tup) => {
+                // Tuple unpacking: for i, v in enumerate(lst)
+                let names: Vec<String> = tup
+                    .elts
+                    .iter()
+                    .filter_map(|e| {
+                        if let Expr::Name(n) = e {
+                            Some(n.id.to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                if names.len() != tup.elts.len() {
+                    statement_diagnostics::invalid_iteration(
+                        ctx,
+                        "for loop tuple target must contain only simple names",
+                        tup.range(),
+                    );
+                    return None;
+                }
+                (names.join(","), Some(tup.range()))
+            }
+            _ => {
+                statement_diagnostics::invalid_iteration(
+                    ctx,
+                    "for loop target must be a simple name or tuple",
+                    for_stmt.target.range(),
+                );
+                return None;
+            }
+        };
+
+    if consumes_task_handle_collection {
+        if let Some(source_name) = iter_source_name.as_deref() {
+            ctx.scope.mark_moved(source_name);
+        }
+    }
+
+    // Snapshot moved state before loop to detect moves inside the body
+    let moved_before_loop = ctx.scope.save_moved_state();
+    let saved_const_integer_state = ctx.scope.save_const_integer_state();
+
+    // Create a new scope for the loop body, define the loop variable(s)
+    ctx.scope.push();
+    let saved_sequence_guards = ctx.save_sequence_guards();
+    if target_name.contains(',') {
+        // Tuple unpacking: define each variable with its type from the tuple
+        let names: Vec<&str> = target_name.split(',').collect();
+        if let Type::Tuple(elem_types) = &elem_ty {
+            if elem_types.len() != names.len() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                    format!(
+                        "for loop tuple target expects {} element(s), iterable yields {}",
+                        names.len(),
+                        elem_types.len()
+                    ),
+                    target_tuple_range.unwrap_or_else(|| for_stmt.target.range()),
+                );
+                ctx.scope.pop();
+                return None;
+            }
+            for (i, name) in names.iter().enumerate() {
+                let ty = elem_types[i].clone();
+                ctx.scope.define((*name).to_string(), ty);
+            }
+        } else {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+                format!(
+                    "for loop tuple target expects iterable elements of tuple type, got '{}'",
+                    elem_ty.display_name()
+                ),
+                target_tuple_range.unwrap_or_else(|| for_stmt.target.range()),
+            );
+            ctx.scope.pop();
+            return None;
+        }
+    } else {
+        ctx.scope.define(target_name.clone(), elem_ty.clone());
+    }
+    for guard in detect_range_sequence_guards(for_stmt, &target_name, ctx) {
+        ctx.add_sequence_guard(guard);
+    }
+    ctx.loop_depth += 1;
+    let body = lower_stmts(&for_stmt.body, func_type, ctx);
+    ctx.loop_depth -= 1;
+    ctx.scope.pop();
+    let body_const_integer_state = ctx.scope.save_const_integer_state();
+    restore_const_integer_state_after_branches(
+        ctx,
+        &saved_const_integer_state,
+        &[(body_const_integer_state, false)],
+    );
+    ctx.restore_sequence_guards(&saved_sequence_guards);
+    super::append_growth_shapes::record_append_growth_sequence_shape_fact(
+        for_stmt,
+        &target_name,
+        ctx,
+    );
+    if let Some(source_name) = iter_source_name.as_deref() {
+        if is_collection_backed_iter_source(&iter_source_ty)
+            && loop_body_mutates_iter_source(&body, source_name)
+        {
+            statement_diagnostics::mutation_during_iteration(ctx, source_name, for_stmt.range());
+            return None;
+        }
+    }
+
+    // Check for outer-scope variables moved inside the loop body
+    let newly_moved = ctx.scope.moved_since(&moved_before_loop);
+    for var_name in &newly_moved {
+        ownership_diagnostics::moved_across_loop(ctx, var_name, for_stmt.range());
+    }
+
+    let else_body = if for_stmt.orelse.is_empty() {
+        None
+    } else {
+        ctx.scope.push();
+        let else_stmts = lower_stmts(&for_stmt.orelse, func_type, ctx);
+        ctx.scope.pop();
+        Some(else_stmts)
+    };
+
+    ctx.clear_sequence_pointers();
+
+    Some(HirStmt::For {
+        target: target_name,
+        target_ty: elem_ty,
+        iter: iter_expr,
+        body,
+        else_body,
+    })
+}

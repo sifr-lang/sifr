@@ -1,0 +1,267 @@
+def run_self_tests() -> int:
+    repo_root = Path("/tmp/sifr-verification-hardening-self-test").resolve()
+    validate_unique_baseline_artifact_paths(
+        suite_name="self-test",
+        repo_root=repo_root,
+        cases=[
+            {
+                "id": "a",
+                "entry": "fixtures/a/main.sifr",
+                "command": "check",
+                "diagnostic_formats": ["human", "json"],
+            },
+            {
+                "id": "b",
+                "entry": "fixtures/b/main.sifr",
+                "command": "check",
+                "diagnostic_formats": ["human", "json"],
+            },
+        ],
+    )
+    assert_self_test_failure(
+        "normalized duplicate baseline artifact paths",
+        "fixtures/a/baselines/check-json.stdout.txt",
+        lambda: validate_unique_baseline_artifact_paths(
+            suite_name="self-test",
+            repo_root=repo_root,
+            cases=[
+                {
+                    "id": "canonical",
+                    "entry": "fixtures/a/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json"],
+                },
+                {
+                    "id": "prefixed",
+                    "entry": "./fixtures/a/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json"],
+                },
+            ],
+        ),
+    )
+    assert_self_test_failure(
+        "duplicate diagnostic formats",
+        "lists diagnostic_format 'json' more than once",
+        lambda: validate_unique_baseline_artifact_paths(
+            suite_name="self-test",
+            repo_root=repo_root,
+            cases=[
+                {
+                    "id": "duplicate-format",
+                    "entry": "fixtures/c/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json", "json"],
+                }
+            ],
+        ),
+    )
+    assert_self_test_failure(
+        "absolute baseline entry",
+        "entry must be repo-relative",
+        lambda: validate_unique_baseline_artifact_paths(
+            suite_name="self-test",
+            repo_root=repo_root,
+            cases=[
+                {
+                    "id": "absolute",
+                    "entry": "/tmp/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json"],
+                }
+            ],
+        ),
+    )
+    assert_self_test_failure(
+        "repo-relative baseline entry escape",
+        "entry must stay under repo root",
+        lambda: validate_unique_baseline_artifact_paths(
+            suite_name="self-test",
+            repo_root=repo_root,
+            cases=[
+                {
+                    "id": "escape",
+                    "entry": "../escape/main.sifr",
+                    "command": "check",
+                    "diagnostic_formats": ["json"],
+                }
+            ],
+        ),
+    )
+    print("verification hardening self-tests ok")
+    return 0
+
+
+def latest_project_revision(repo_root: Path, project_root: str) -> str | None:
+    try:
+        proc = subprocess.run(
+            ["git", "log", "-n", "1", "--format=%H", "--", project_root],
+            cwd=repo_root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return None
+    if proc.returncode != 0:
+        return None
+    revision = proc.stdout.strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        return None
+    return revision
+
+
+def baseline_case_result(
+    *,
+    suite_name: str,
+    case: dict[str, Any],
+    args: argparse.Namespace,
+    repo_root: Path,
+    actual_root: Path,
+) -> tuple[dict[str, Any], bool, int]:
+    case_id, entry_path, command_name, formats = baseline_case_metadata(
+        suite_name=suite_name,
+        case=case,
+        repo_root=repo_root,
+    )
+    expected_exit = case.get("expect_exit_code")
+
+    if not isinstance(expected_exit, int):
+        raise SystemExit(f"suite '{suite_name}' case '{case_id}' missing integer 'expect_exit_code'")
+    if not entry_path.is_file():
+        raise SystemExit(f"suite '{suite_name}' case '{case_id}' entry does not exist: {entry_path}")
+
+    case_failed = False
+    failed_variants = 0
+    case_result = {
+        "id": case_id,
+        "entry": str(entry_path.relative_to(repo_root)),
+        "command": command_name,
+        "variants": [],
+    }
+
+    for diagnostic_format in formats:
+        label = baseline_variant_label(command_name, diagnostic_format)
+        exit_code, stdout, stderr, elapsed_ms, argv = run_variant(
+            repo_root=repo_root,
+            command_name=command_name,
+            entry=entry_path,
+            diagnostic_format=diagnostic_format,
+        )
+        stdout_norm = canonicalize_output(
+            repo_root=repo_root,
+            text=stdout,
+            diagnostic_format=diagnostic_format,
+            stream="stdout",
+        )
+        stderr_norm = canonicalize_output(
+            repo_root=repo_root,
+            text=stderr,
+            diagnostic_format=diagnostic_format,
+            stream="stderr",
+        )
+
+        stdout_file, stderr_file, exit_file = baseline_artifact_paths(entry_path, label)
+
+        mismatches: list[str] = []
+
+        if args.bless:
+            write_text(stdout_file, stdout_norm)
+            write_text(stderr_file, stderr_norm)
+            write_text(exit_file, f"{exit_code}\n")
+        else:
+            missing_files = [path for path in (stdout_file, stderr_file, exit_file) if not path.is_file()]
+            if missing_files:
+                mismatches.append(
+                    "missing-baseline:"
+                    + ",".join(str(path.relative_to(repo_root)) for path in missing_files)
+                )
+            else:
+                expected_stdout = load_text(stdout_file)
+                expected_stderr = load_text(stderr_file)
+                expected_exit_raw = load_text(exit_file).strip()
+                if stdout_norm != expected_stdout:
+                    mismatches.append("stdout")
+                if stderr_norm != expected_stderr:
+                    mismatches.append("stderr")
+                if str(exit_code) != expected_exit_raw:
+                    mismatches.append("exit-code")
+
+        if exit_code != expected_exit:
+            mismatches.append("unexpected-exit")
+
+        status = "pass" if not mismatches else "fail"
+        if mismatches:
+            case_failed = True
+            failed_variants += 1
+
+            actual_case_dir = actual_root / suite_name / case_id
+            write_text(actual_case_dir / f"{label}.stdout.txt", stdout_norm)
+            write_text(actual_case_dir / f"{label}.stderr.txt", stderr_norm)
+            write_text(actual_case_dir / f"{label}.exit-code.txt", f"{exit_code}\n")
+
+        case_result["variants"].append(
+            {
+                "label": label,
+                "diagnostic_format": diagnostic_format,
+                "argv": argv,
+                "status": status,
+                "mismatches": mismatches,
+                "expected_exit_code": expected_exit,
+                "actual_exit_code": exit_code,
+                "duration_ms": round(elapsed_ms, 3),
+                "baseline_stdout": str(stdout_file.relative_to(repo_root)),
+                "baseline_stderr": str(stderr_file.relative_to(repo_root)),
+                "baseline_exit_code": str(exit_file.relative_to(repo_root)),
+            }
+        )
+
+    return case_result, case_failed, failed_variants
+
+
+def run_baseline_suite(
+    *,
+    suite: dict[str, Any],
+    args: argparse.Namespace,
+    repo_root: Path,
+    actual_root: Path,
+) -> dict[str, Any]:
+    suite_name = suite["name"]
+    cases = suite.get("cases", [])
+    if not isinstance(cases, list) or not cases:
+        raise SystemExit(f"suite '{suite_name}' has no cases")
+    validate_unique_baseline_artifact_paths(
+        suite_name=suite_name,
+        cases=cases,
+        repo_root=repo_root,
+    )
+    print(f"  suite={suite_name} owner={suite.get('owner', 'unknown')} cases={len(cases)}")
+
+    result = {
+        "name": suite_name,
+        "owner": suite.get("owner", "unknown"),
+        "blocking": bool(suite.get("blocking", False)),
+        "runner": "baseline",
+        "cases": [],
+        "failed_cases": 0,
+        "total_variants": 0,
+        "total_failures": 0,
+    }
+
+    for case in cases:
+        case_result, case_failed, failed_variants = baseline_case_result(
+            suite_name=suite_name,
+            case=case,
+            args=args,
+            repo_root=repo_root,
+            actual_root=actual_root,
+        )
+        result["cases"].append(case_result)
+        result["total_variants"] += len(case_result["variants"])
+        result["total_failures"] += failed_variants
+        if case_failed:
+            result["failed_cases"] += 1
+
+    return result
+
+
