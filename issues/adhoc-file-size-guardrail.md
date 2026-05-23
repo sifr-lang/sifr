@@ -306,6 +306,12 @@ Completion notes:
 
 Status: completed
 
+Merged PRs:
+
+- https://github.com/sifr-lang/sifr/pull/2161 - non-codegen decomposition
+- https://github.com/sifr-lang/sifr/pull/2162 - codegen decomposition
+- https://github.com/sifr-lang/sifr/pull/2163 - unified guardrail and closeout
+
 Final validation:
 
 - `python3 scripts/check_file_size_guardrails.py`
