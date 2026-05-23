@@ -10,7 +10,7 @@ Related phase: `internal_docs/phases/37_package_management.md`
 - [x] milestone_adhoc_pkg_4: Package-aware compiler imports
 - [x] milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
 - [x] milestone_adhoc_pkg_6: Packaging, publishing, vendoring, and release checks
-- [ ] milestone_adhoc_pkg_7: Migration, docs, demos, and long-term guardrails
+- [x] milestone_adhoc_pkg_7: Migration, docs, demos, and long-term guardrails
 
 ## Milestone Progress
 
@@ -215,6 +215,44 @@ Validation:
 Review:
 
 - `reviews/adhoc-package-dx-m6-review-pass-1.md` -> READY with no blocking findings.
+
+### milestone_adhoc_pkg_7: Migration, docs, demos, and long-term guardrails
+
+Status: implemented and reviewer-approved. PR: https://github.com/sifr-lang/sifr/pull/2159
+
+Delivered:
+
+- Migrated the package-management demo repositories to canonical production `src/` source layout, removed production `[exports]` and legacy `[source].roots` usage, and updated Cargo include metadata plus `# sifr-managed` projection markers.
+- Merged demo repository PRs:
+  - https://github.com/sifr-lang/sifr-demo-json/pull/2
+  - https://github.com/sifr-lang/sifr-demo-http/pull/2
+  - https://github.com/sifr-lang/sifr-demo-test-support/pull/2
+  - https://github.com/sifr-lang/sifr-demo-app/pull/2
+  - https://github.com/sifr-lang/sifr-demo-workspace/pull/2
+- Updated `docs/package_management.md` with clone/fetch/run, explicit-file run, structured script, offline check, workspace selection, dev-dependency tree, package/publish dry-run, vendor, and manual layout migration workflows.
+- Extended package-manager guardrails to enforce production demo `src/` layout, no `[exports]`, no Sifr `[[bin]]`, no legacy `[source].roots`, command-plan scripts, Cargo include/projection markers, workspace member shapes, and canonical demo repository metadata.
+- Updated Phase 37 demo repository path metadata from legacy `sifr/...` entries to canonical `src/...` entries.
+- Fixed release preflight so `sifr package --allow-dirty` and `sifr publish --allow-dirty` also pass `--allow-dirty` to the internal `cargo package --list` archive-validation probe.
+- Fixed package-session discovery so running from a nested Cargo workspace without a root `sifr.toml` stops at that workspace instead of escaping to an outer Sifr manifest.
+
+Validation:
+
+- `python3 scripts/check_package_manager_guardrails.py` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_package -- --test-threads=1` -> PASS, 66 tests.
+- Demo smoke in `sifr-demo-app`: `target/debug/sifr run --locked` -> PASS.
+- Demo smoke in `sifr-demo-app`: `target/debug/sifr run src/main.sifr --locked` -> PASS.
+- Demo smoke in `sifr-demo-app`: `target/debug/sifr run --script check-offline` -> PASS.
+- Demo smoke in `sifr-demo-app`: `target/debug/sifr check src/migrate.sifr --locked` -> PASS.
+- Demo smoke in `sifr-demo-app`: `target/debug/sifr tree --locked --edges dev` -> PASS.
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr check --workspace --exclude sifr-demo-app --locked` -> PASS.
+- Demo smoke in `sifr-demo-json`: `target/debug/sifr package --list --allow-dirty` -> PASS.
+- Demo smoke in `sifr-demo-json`: `target/debug/sifr publish --dry-run --allow-dirty --no-verify` -> PASS.
+- `scripts/run_all_tests.sh --profile quick` -> PASS (wall-time/skew advisories only).
+
+Review:
+
+- `reviews/adhoc-package-dx-m7-review-pass-1.md` -> READY with no blocking findings.
 
 ## Problem
 

@@ -127,9 +127,66 @@ Generated Cargo projection files include Sifr-owned marker comments and determin
 
 ## Publishing And Vendoring
 
-`sifr package --dry-run` validates Sifr metadata and package archive contents before delegating to Cargo package/publish command plans. Validation rejects missing `sifr.toml`, missing `.sifr` source files, Cargo include/exclude omissions, archive traversal paths, invalid exports, and backend trust violations.
+`sifr package` validates Sifr metadata and package archive contents before delegating to Cargo archive assembly. `sifr publish --dry-run` runs the same Sifr preflight before delegating to Cargo's publish dry-run path. Validation rejects missing `sifr.toml`, missing `.sifr` source files, Cargo include/exclude omissions, archive traversal paths, invalid exports, and backend trust violations.
 
 Publishing and vendoring reuse Cargo-compatible behavior. Credentials remain Cargo-owned and must never appear in Sifr diagnostics, generated files, package metadata, or logs.
+
+## Demo Workflow
+
+The checked-in `verification/package_management/demo_repositories/sifr-demo-*` subrepositories use the production `src/` layout and the same commands expected for public demos.
+
+First clone and fetch:
+
+```bash
+scripts/clone_subrepos.sh
+cd verification/package_management/demo_repositories/sifr-demo-app
+sifr fetch --locked
+```
+
+Run the default app, an explicit file, and a structured script:
+
+```bash
+sifr run --locked
+sifr run src/main.sifr --locked
+sifr run --script dev --locked
+```
+
+Offline and workspace checks:
+
+```bash
+sifr check --locked --offline
+cd ../sifr-demo-workspace
+sifr check --workspace --locked
+sifr check --workspace --exclude sifr-demo-app --locked
+```
+
+Development-only dependencies stay in `[dev-dependencies]`; normal `sifr run`, `sifr check`, `sifr package`, and `sifr publish` only expose runtime `[dependencies]` as import roots.
+Use Cargo-compatible tree arguments when you want to inspect them explicitly:
+
+```bash
+sifr tree --locked --edges dev
+```
+
+Release dry-run and vendoring:
+
+```bash
+cd ../sifr-demo-json
+sifr package --allow-dirty
+sifr publish --dry-run --allow-dirty --no-verify
+cd ../sifr-demo-app
+sifr vendor vendor --versioned-dirs
+```
+
+## Layout Migration
+
+Internal legacy fixtures using `sifr/<package>/` are migrated manually:
+
+1. Move `sifr/<package>/__init__.sifr` to `src/__init__.sifr`.
+2. Move sibling `.sifr` implementation files to `src/`.
+3. Remove `[source].roots` and `[exports].modules` from `sifr.toml` unless the fixture is explicitly a legacy parser/backfill regression.
+4. Rewrite `Cargo.toml` include patterns from `sifr/**/*.sifr` to `src/**/*.sifr`.
+5. Preserve `# sifr-managed` markers around Sifr-owned Cargo metadata.
+6. Run `sifr check`, `sifr package --list`, and the package-manager guardrail after the move.
 
 ## Lock Modes
 

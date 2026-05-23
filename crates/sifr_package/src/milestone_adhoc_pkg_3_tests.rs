@@ -71,6 +71,52 @@ fn package_session_plans_check_workspace_package_selection() {
 }
 
 #[test]
+fn package_session_stops_at_nested_cargo_workspace_without_root_sifr_manifest() {
+    let temp = TestPackage::new("session_nested_cargo_workspace");
+    temp.write_package_manifest(
+        "[package]\nname = \"outer_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n",
+    );
+    temp.write(
+        "nested/Cargo.toml",
+        "[workspace]\nmembers = [\"packages/*\"]\nresolver = \"3\"\n",
+    );
+    temp.write(
+        "nested/packages/app/Cargo.toml",
+        "[package]\nname = \"sifr-demo-app\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    );
+    temp.write(
+        "nested/packages/app/sifr.toml",
+        "[package]\nname = \"workspace_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n",
+    );
+    let workspace_root = temp.path().join("nested");
+
+    let session = session(&workspace_root, CargoLockMode::Locked);
+
+    assert!(session.manifest_less_mode);
+    assert_eq!(session.workspace_root, workspace_root);
+    let selection = CargoPackageSelection {
+        workspace: true,
+        excludes: vec!["sifr-demo-app".to_string()],
+        ..CargoPackageSelection::default()
+    };
+    let check = session
+        .plan_check(None, &CargoFeatureSelection::default(), &selection)
+        .expect("workspace check plan");
+    let cargo = check.cargo.expect("cargo plan");
+    assert_eq!(cargo.current_dir, temp.path().join("nested"));
+    assert_eq!(
+        cargo.args,
+        [
+            "check",
+            "--locked",
+            "--workspace",
+            "--exclude",
+            "sifr-demo-app"
+        ]
+    );
+}
+
+#[test]
 fn package_session_resolves_default_script_and_explicit_bin() {
     let temp = TestPackage::new("session_run");
     temp.write_package_manifest(

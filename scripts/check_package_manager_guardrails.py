@@ -304,12 +304,16 @@ def check_demo_repository_shape(repo_id: str, repo_path: Path, failures: List[st
             failures.append(f"Phase 37 demo repository `{repo_id}` must link sifr.toml")
         if not sifr_toml_path.exists():
             failures.append(f"Phase 37 demo repository `{repo_id}` is missing sifr.toml")
+        else:
+            check_production_sifr_manifest(repo_id, sifr_toml_path, failures)
+        check_cargo_projection_markers(repo_id, repo_path / "Cargo.toml", failures)
+        check_src_layout(repo_id, repo_path, failures)
 
     if repo_id == "sifr-demo-json":
         check_pure_marker(repo_id, repo_path / "src/lib.rs", failures)
         text = (repo_path / "Cargo.toml").read_text(encoding="utf-8")
-        if "sifr/**/*.sifr" not in text:
-            failures.append("sifr-demo-json must include Sifr sources for archive validation")
+        if "src/**/*.sifr" not in text:
+            failures.append("sifr-demo-json must include src Sifr sources for archive validation")
     elif repo_id == "sifr-demo-http":
         check_rust_backed_http_template(repo_path, failures)
     elif repo_id == "sifr-demo-app":
@@ -318,6 +322,39 @@ def check_demo_repository_shape(repo_id: str, repo_path: Path, failures: List[st
         check_workspace_template(repo_path, failures)
     elif repo_id == "sifr-demo-test-support":
         check_pure_marker(repo_id, repo_path / "src/lib.rs", failures)
+
+
+def check_production_sifr_manifest(repo_id: str, manifest_path: Path, failures: List[str]) -> None:
+    manifest = load_toml(manifest_path, failures)
+    if "exports" in manifest:
+        failures.append(f"{repo_id} must not use production-forbidden [exports]")
+    if "bin" in manifest:
+        failures.append(f"{repo_id} must not use Sifr manifest [[bin]] tables")
+    source = manifest.get("source", {})
+    if isinstance(source, dict) and "roots" in source:
+        failures.append(f"{repo_id} must use canonical [source].root/default src layout")
+    scripts = manifest.get("scripts", {})
+    if scripts and not isinstance(scripts, dict):
+        failures.append(f"{repo_id} [scripts] must be a table of command plans")
+    if isinstance(scripts, dict):
+        for name, script in scripts.items():
+            if not isinstance(script, dict) or not isinstance(script.get("command"), str):
+                failures.append(f"{repo_id} script `{name}` must be a structured command plan")
+
+
+def check_cargo_projection_markers(repo_id: str, cargo_toml_path: Path, failures: List[str]) -> None:
+    text = cargo_toml_path.read_text(encoding="utf-8")
+    if "[package.metadata.sifr]" in text and "# sifr-managed" not in text:
+        failures.append(f"{repo_id} Cargo projection metadata must use # sifr-managed markers")
+    if "sifr/**/*.sifr" in text:
+        failures.append(f"{repo_id} Cargo projection must not include legacy sifr/**/*.sifr")
+
+
+def check_src_layout(repo_id: str, repo_path: Path, failures: List[str]) -> None:
+    if (repo_path / "sifr").exists():
+        failures.append(f"{repo_id} must not keep legacy sifr/ package sources")
+    if not (repo_path / "src").exists():
+        failures.append(f"{repo_id} must use canonical src/ package sources")
 
 
 def check_pure_marker(repo_id: str, marker_path: Path, failures: List[str]) -> None:
@@ -343,8 +380,9 @@ def check_rust_backed_http_template(repo_path: Path, failures: List[str]) -> Non
 
 def check_consumer_app_template(repo_path: Path, failures: List[str]) -> None:
     cargo_toml = (repo_path / "Cargo.toml").read_text(encoding="utf-8")
+    sifr_toml = load_toml(repo_path / "sifr.toml", failures)
     lockfile = (repo_path / "Cargo.lock").read_text(encoding="utf-8")
-    migrate = (repo_path / "sifr/app/migrate.sifr").read_text(encoding="utf-8")
+    migrate = (repo_path / "src/migrate.sifr").read_text(encoding="utf-8")
     for required in [
         "sifr-demo-json",
         "sifr-demo-http",
@@ -362,6 +400,13 @@ def check_consumer_app_template(repo_path: Path, failures: List[str]) -> None:
         failures.append("sifr-demo-app lockfile must include the v0.2.0 alias")
     if "demo_json_v1" not in migrate or "demo_json_v2" not in migrate:
         failures.append("sifr-demo-app migrate.sifr must import both alias roots")
+    dependencies = sifr_toml.get("dependencies", {})
+    if "demo_json_v1" not in dependencies or "demo_json_v2" not in dependencies:
+        failures.append("sifr-demo-app sifr.toml must declare both Sifr-facing aliases")
+    scripts = sifr_toml.get("scripts", {})
+    for script in ["dev", "check-offline", "publish-dry-run"]:
+        if script not in scripts:
+            failures.append(f"sifr-demo-app missing script command plan `{script}`")
 
 
 def check_workspace_template(repo_path: Path, failures: List[str]) -> None:
@@ -379,6 +424,18 @@ def check_workspace_template(repo_path: Path, failures: List[str]) -> None:
     if "workspace = true" not in app_toml or "backend-utils" not in app_toml:
         failures.append("sifr-demo-workspace app must inherit workspace deps and reach backend")
     for member in ["core", "utils", "app"]:
+        member_root = repo_path / f"packages/{member}"
+        check_production_sifr_manifest(
+            f"sifr-demo-workspace/packages/{member}",
+            member_root / "sifr.toml",
+            failures,
+        )
+        check_cargo_projection_markers(
+            f"sifr-demo-workspace/packages/{member}",
+            member_root / "Cargo.toml",
+            failures,
+        )
+        check_src_layout(f"sifr-demo-workspace/packages/{member}", member_root, failures)
         check_pure_marker(
             f"sifr-demo-workspace/packages/{member}",
             repo_path / f"packages/{member}/src/lib.rs",
