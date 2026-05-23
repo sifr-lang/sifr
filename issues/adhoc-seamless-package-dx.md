@@ -67,7 +67,7 @@ Review:
 
 ### milestone_adhoc_pkg_3: Package session and CLI command integration
 
-Status: implemented and reviewer-approved. PR: pending.
+Status: implemented and reviewer-approved. PR: https://github.com/sifr-lang/sifr/pull/2155
 
 Delivered:
 
