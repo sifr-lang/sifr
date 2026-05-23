@@ -214,7 +214,7 @@ fn internal_reference() -> String {
     out.push_str("\n## Registry\n\n");
     out.push_str("| ID | Family | State | Severity | Docs path | Fixture | Owner | Template | Declared args | Dedupe args | Tool actions | Fix all |\n");
     out.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
-    for entry in DIAGNOSTIC_REGISTRY {
+    for entry in DIAGNOSTIC_REGISTRY.iter() {
         out.push_str(&format!(
             "| `{}` | `{}` | {} | {} | `{}` | {} | {} | {} | {} | {} | {} | {} |\n",
             entry.id,

@@ -22,7 +22,7 @@ mod tests {
         let families_by_name = families_by_name();
         let mut ids = BTreeSet::new();
 
-        for entry in DIAGNOSTIC_REGISTRY {
+        for entry in DIAGNOSTIC_REGISTRY.iter() {
             assert!(ids.insert(entry.id), "duplicate diagnostic id {}", entry.id);
             assert_canonical_code(entry.id);
             assert_eq!(entry.family, parse_family(entry.id));

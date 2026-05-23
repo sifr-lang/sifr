@@ -1,3 +1,24 @@
+from __future__ import annotations
+
+import json
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+from .core import canonicalize_profile, parse_args, should_run_suite
+from .fixedbugs_and_crashes import collect_fixedbug_ids, run_crashes_suite, run_fixedbugs_suite
+from .oss_and_determinism import (
+    deterministic_suite_shard,
+    failed_case_ids,
+    load_quarantine_metadata,
+    run_determinism_scale_suite,
+    run_oss_suite,
+)
+from .property_and_fuzz import run_fuzz_smoke_suite, run_property_suite
+from .self_tests_and_baselines import run_baseline_suite, run_self_tests
+
+
 def main() -> int:
     args = parse_args()
     args.profile = canonicalize_profile(args.profile)
@@ -8,7 +29,7 @@ def main() -> int:
     if args.rerun_failures < 0:
         raise SystemExit("--rerun-failures must be >= 0")
 
-    repo_root = Path(__file__).resolve().parent.parent
+    repo_root = Path(__file__).resolve().parents[2]
     if args.self_test:
         return run_self_tests()
 
