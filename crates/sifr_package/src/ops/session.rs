@@ -3,11 +3,11 @@ use crate::cargo::commands::{
     CargoPublishOptions, CargoVendorOptions,
 };
 use crate::cargo::lock_modes::CargoLockMode;
-use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::package_sections::SifrScript;
 use crate::manifest::sifr::SifrManifest;
 use crate::ops::plan::{OperationPlan, PackageOperation};
+use crate::ops::session_discovery::{find_manifest, session_cargo_id};
 use crate::ops::session_targets::{discover_app_targets, AppTarget};
 use std::path::{Path, PathBuf};
 
@@ -398,23 +398,4 @@ fn path_is_under(path: &Path, root: &Path) -> bool {
     let path = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     path.starts_with(root)
-}
-
-fn find_manifest(start: &Path) -> Option<PathBuf> {
-    let mut current = if start.is_file() {
-        start.parent()?
-    } else {
-        start
-    };
-    loop {
-        let candidate = current.join("sifr.toml");
-        if candidate.is_file() {
-            return Some(candidate);
-        }
-        current = current.parent()?;
-    }
-}
-
-fn session_cargo_id(root: &Path) -> CargoPackageId {
-    CargoPackageId(format!("path+file://{}#session", root.display()))
 }

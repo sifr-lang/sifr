@@ -1278,9 +1278,13 @@ fn cmd_package(
             return EXIT_USAGE_OR_CONFIG;
         }
     };
-    if let Err(exit_code) =
-        run_package_release_preflight(&session, selection, lock_mode, diagnostic_format)
-    {
+    if let Err(exit_code) = run_package_release_preflight(
+        &session,
+        selection,
+        options.allow_dirty,
+        lock_mode,
+        diagnostic_format,
+    ) {
         return exit_code;
     }
     let plan = session.plan_package(
@@ -1307,9 +1311,13 @@ fn cmd_publish(
             return EXIT_USAGE_OR_CONFIG;
         }
     };
-    if let Err(exit_code) =
-        run_package_release_preflight(&session, selection, lock_mode, diagnostic_format)
-    {
+    if let Err(exit_code) = run_package_release_preflight(
+        &session,
+        selection,
+        options.allow_dirty,
+        lock_mode,
+        diagnostic_format,
+    ) {
         return exit_code;
     }
     let plan = session.plan_publish(
@@ -1361,6 +1369,7 @@ fn package_session_for_cwd(
 fn run_package_release_preflight(
     session: &sifr_package::PackageSession,
     selection: &sifr_package::CargoPackageSelection,
+    allow_dirty: bool,
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> Result<(), i32> {
@@ -1381,6 +1390,7 @@ fn run_package_release_preflight(
             session,
             lock_mode,
             &package.cargo_package_name,
+            allow_dirty,
             diagnostic_format,
         )?;
         if let Err(errors) =
@@ -1453,6 +1463,7 @@ fn cargo_package_list_entries(
     session: &sifr_package::PackageSession,
     lock_mode: sifr_package::CargoLockMode,
     cargo_package_name: &str,
+    allow_dirty: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> Result<Vec<sifr_package::PackageArchiveEntry>, i32> {
     let selection = sifr_package::CargoPackageSelection {
@@ -1462,6 +1473,7 @@ fn cargo_package_list_entries(
     };
     let options = sifr_package::CargoPackageArchiveOptions {
         list: true,
+        allow_dirty,
         ..sifr_package::CargoPackageArchiveOptions::default()
     };
     let plan = sifr_package::CargoCommandPlan::package_with_options(
