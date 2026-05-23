@@ -312,6 +312,10 @@ Merged PRs:
 - https://github.com/sifr-lang/sifr/pull/2162 - codegen decomposition
 - https://github.com/sifr-lang/sifr/pull/2163 - unified guardrail and closeout
 
+Post-closeout cleanup PRs:
+
+- https://github.com/sifr-lang/sifr/pull/2165 - cleanup of refactor smells from the file-size phase
+
 Final validation:
 
 - `python3 scripts/check_file_size_guardrails.py`
@@ -334,6 +338,9 @@ Validation notes:
 - The phase-specific codegen source scanner test passed. The broad `cargo test -p sifr_codegen` package suite is not part of the authoritative validation gate for this phase and still contains legacy expectation failures unrelated to the file-size guardrail work.
 - No first-party maintained source file exceeds the unified 900-line cap.
 - No generated, vendored, lockfile, snapshot, baseline, issue, review, or long-form documentation artifact is governed by the source-file cap.
+- Post-closeout smell cleanup removed the remaining `#[rustfmt::skip]` refactor artifacts, replaced the verification hardening `exec` loader with package imports, and added a regression guardrail for Rust `rustfmt::skip` attributes.
+- Post-closeout cleanup validation passed with `cargo fmt --check`, `cargo test -p sifr_diagnostics`, `python3 scripts/check_file_size_guardrails.py`, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
+- Post-closeout reviewer passes both returned `Verdict: SATISFIED` in `reviews/clean-refactor-smells-review-1.md` and `reviews/clean-refactor-smells-review-2.md`.
 
 ## Done Criteria
 
