@@ -1,0 +1,750 @@
+fn sync_channel_runtime_needed(rust_code: &str) -> bool {
+    rust_code.contains("struct Channel<")
+        || rust_code.contains("struct ChannelSender<")
+        || rust_code.contains("struct ChannelReceiver<")
+        || rust_code.contains("fn channel<")
+        || rust_code.contains("fn bounded_channel<")
+}
+
+fn replace_sync_channel_runtime_items(rust_code: &str) -> String {
+    let strip_names = HashSet::from([
+        "Channel",
+        "ChannelSender",
+        "ChannelReceiver",
+        "channel",
+        "bounded_channel",
+    ]);
+    let mut replaced = strip_rust_items_by_name(rust_code, &strip_names);
+    if !replaced.trim().is_empty() {
+        replaced.push('\n');
+    }
+    replaced.push_str(sync_channel_runtime_rust_code());
+    replaced
+}
+
+fn sync_channel_runtime_rust_code() -> &'static str {
+    r#"
+#[derive(Debug)]
+struct __SifrChannelState<T> {
+    buffer: std::collections::VecDeque<T>,
+    closed: bool,
+    capacity: i64,
+    sender_count: i64,
+    receiver_alive: bool,
+}
+
+enum __SifrChannelPushState {
+    Sent,
+    Closed,
+    Full,
+}
+
+enum __SifrChannelPopState<T> {
+    Item(T),
+    Empty,
+    Closed,
+}
+
+#[derive(Debug)]
+struct Channel<T: Clone> {
+    _state: std::sync::Arc<std::sync::Mutex<__SifrChannelState<T>>>,
+}
+
+impl<T: Clone> Clone for Channel<T> {
+    fn clone(&self) -> Self {
+        return Self {
+            _state: std::sync::Arc::clone(&self._state),
+        };
+    }
+}
+
+impl<T: Clone> Channel<T> {
+    fn new(buffer: Vec<T>, capacity: i64) -> Self {
+        return Self {
+            _state: std::sync::Arc::new(std::sync::Mutex::new(__SifrChannelState {
+                buffer: buffer.into_iter().collect(),
+                closed: false,
+                capacity,
+                sender_count: 0,
+                receiver_alive: true,
+            })),
+        };
+    }
+
+    fn with_state<R>(&self, f: impl FnOnce(&mut __SifrChannelState<T>) -> R) -> R {
+        match self._state.lock() {
+            Ok(mut state) => f(&mut state),
+            Err(poisoned) => {
+                let mut state = poisoned.into_inner();
+                f(&mut state)
+            }
+        }
+    }
+
+    fn is_closed(&self) -> bool {
+        return self.with_state(|state| state.closed || !state.receiver_alive);
+    }
+
+    fn close(&mut self) {
+        self.with_state(|state| {
+            state.closed = true;
+        });
+    }
+
+    fn clone(&self) -> Channel<T> {
+        return Clone::clone(self);
+    }
+
+    fn register_sender(&self) {
+        self.with_state(|state| {
+            state.sender_count += 1;
+        });
+    }
+
+    fn release_sender(&self) {
+        self.with_state(|state| {
+            if state.sender_count > 0 {
+                state.sender_count -= 1;
+            }
+            if state.sender_count == 0 {
+                state.closed = true;
+            }
+        });
+    }
+
+    fn release_receiver(&self) {
+        self.with_state(|state| {
+            state.receiver_alive = false;
+            state.closed = true;
+        });
+    }
+
+    fn try_push_ref(&self, value: &T) -> __SifrChannelPushState {
+        self.with_state(|state| {
+            if state.closed || !state.receiver_alive {
+                return __SifrChannelPushState::Closed;
+            }
+            if state.capacity >= 0 && (state.buffer.len() as i64) >= state.capacity {
+                return __SifrChannelPushState::Full;
+            }
+            state.buffer.push_back(value.clone());
+            __SifrChannelPushState::Sent
+        })
+    }
+
+    fn push(&mut self, value: &T) -> Result<(), ClosedError> {
+        self.with_state(|state| {
+            if state.closed || !state.receiver_alive {
+                return Err(ClosedError::new());
+            }
+            state.buffer.push_back(value.clone());
+            Ok(())
+        })
+    }
+
+    fn try_pop(&self) -> __SifrChannelPopState<T> {
+        self.with_state(|state| {
+            if let Some(value) = state.buffer.pop_front() {
+                return __SifrChannelPopState::Item(value);
+            }
+            if state.closed || state.sender_count == 0 {
+                return __SifrChannelPopState::Closed;
+            }
+            __SifrChannelPopState::Empty
+        })
+    }
+
+    fn pop(&mut self) -> Result<T, ClosedError> {
+        match self.try_pop() {
+            __SifrChannelPopState::Item(value) => Ok(value),
+            __SifrChannelPopState::Empty | __SifrChannelPopState::Closed => Err(ClosedError::new()),
+        }
+    }
+}
+
+impl<T: Clone> std::fmt::Display for Channel<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{}", "Channel".to_string());
+    }
+}
+
+#[derive(Debug)]
+struct ChannelSender<T: Clone> {
+    _channel: Channel<T>,
+}
+
+impl<T: Clone> ChannelSender<T> {
+    fn new(channel: Channel<T>) -> Self {
+        channel.register_sender();
+        return Self { _channel: channel };
+    }
+
+    async fn send(&mut self, value: &T) -> Result<(), ClosedError> {
+        loop {
+            match self._channel.try_push_ref(value) {
+                __SifrChannelPushState::Sent => return Ok(()),
+                __SifrChannelPushState::Closed => return Err(ClosedError::new()),
+                __SifrChannelPushState::Full => tokio::task::yield_now().await,
+            }
+        }
+    }
+
+    fn close(&mut self) {
+        self._channel.close();
+    }
+
+    fn clone(&self) -> ChannelSender<T> {
+        return ChannelSender::new(self._channel.clone());
+    }
+}
+
+impl<T: Clone> Clone for ChannelSender<T> {
+    fn clone(&self) -> Self {
+        return ChannelSender::new(self._channel.clone());
+    }
+}
+
+impl<T: Clone> Drop for ChannelSender<T> {
+    fn drop(&mut self) {
+        self._channel.release_sender();
+    }
+}
+
+impl<T: Clone> std::fmt::Display for ChannelSender<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{}", "ChannelSender".to_string());
+    }
+}
+
+#[derive(Debug)]
+struct ChannelReceiver<T: Clone> {
+    _channel: Channel<T>,
+}
+
+impl<T: Clone> ChannelReceiver<T> {
+    fn new(channel: Channel<T>) -> Self {
+        return Self { _channel: channel };
+    }
+
+    async fn receive(&mut self) -> Result<T, ClosedError> {
+        loop {
+            match self._channel.try_pop() {
+                __SifrChannelPopState::Item(value) => return Ok(value),
+                __SifrChannelPopState::Closed => return Err(ClosedError::new()),
+                __SifrChannelPopState::Empty => tokio::task::yield_now().await,
+            }
+        }
+    }
+
+    async fn anext(&mut self) -> Option<T> {
+        match self.receive().await {
+            Ok(value) => Some(value),
+            Err(_) => None,
+        }
+    }
+}
+
+impl<T: Clone> Drop for ChannelReceiver<T> {
+    fn drop(&mut self) {
+        self._channel.release_receiver();
+    }
+}
+
+impl<T: Clone> std::fmt::Display for ChannelReceiver<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{}", "ChannelReceiver".to_string());
+    }
+}
+
+fn channel<T: Clone + 'static>() -> (ChannelSender<T>, ChannelReceiver<T>) {
+    let shared_channel = Channel::new(vec![], -(1 as i64));
+    return (
+        ChannelSender::new(shared_channel.clone()),
+        ChannelReceiver::new(shared_channel),
+    );
+}
+
+fn bounded_channel<T: Clone + 'static>(capacity: i64) -> (ChannelSender<T>, ChannelReceiver<T>) {
+    let shared_channel = Channel::new(vec![], capacity);
+    return (
+        ChannelSender::new(shared_channel.clone()),
+        ChannelReceiver::new(shared_channel),
+    );
+}
+"#
+}
+
+fn annotate_async_main_entrypoint(items: &mut Vec<RustItem>) -> bool {
+    for index in 0..items.len() {
+        if let RustItem::Fn {
+            name,
+            is_async: true,
+            ..
+        } = &items[index]
+        {
+            if name == "main" {
+                let already_annotated = index > 0
+                    && matches!(
+                        &items[index - 1],
+                        RustItem::Attr(attr) if attr.contains("tokio::main")
+                    );
+                if !already_annotated {
+                    items.insert(
+                        index,
+                        RustItem::Attr("#[tokio::main(flavor = \"current_thread\")]".to_string()),
+                    );
+                }
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn module_uses_task_sleep(module: &HirModule) -> bool {
+    fn expr_is_task_sleep(expr: &HirExpr) -> bool {
+        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_sleep")
+    }
+
+    for (_, _, value) in &module.constants {
+        let mut on_expr = |expr: &HirExpr| {
+            if expr_is_task_sleep(expr) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        if matches!(
+            traversal::walk_expr_until(value, &mut on_expr),
+            TraversalControl::Stop
+        ) {
+            return true;
+        }
+    }
+
+    for func in &module.functions {
+        let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+        let mut on_expr = |expr: &HirExpr| {
+            if expr_is_task_sleep(expr) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        if matches!(
+            traversal::walk_stmts_until(
+                &func.body,
+                TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                &mut on_stmt,
+                &mut on_expr
+            ),
+            TraversalControl::Stop
+        ) {
+            return true;
+        }
+    }
+
+    for class in &module.classes {
+        for method in &class.methods {
+            let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+            let mut on_expr = |expr: &HirExpr| {
+                if expr_is_task_sleep(expr) {
+                    TraversalControl::Stop
+                } else {
+                    TraversalControl::Continue
+                }
+            };
+            if matches!(
+                traversal::walk_stmts_until(
+                    &method.body,
+                    TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                    &mut on_stmt,
+                    &mut on_expr
+                ),
+                TraversalControl::Stop
+            ) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool {
+    if predicate(ty) {
+        return true;
+    }
+
+    match ty {
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Newtype { inner, .. }
+        | Type::Failure(inner)
+        | Type::TimeoutResult(inner)
+        | Type::Awaitable(inner) => type_contains_by(inner, predicate),
+        Type::Dict(key, value)
+        | Type::Result(key, value)
+        | Type::Coroutine(key, value)
+        | Type::Task(key, value)
+        | Type::TaskResult(key, value)
+        | Type::Select2(key, value)
+        | Type::BlockingTask(key, value)
+        | Type::AsyncIterator(key, value)
+        | Type::AsyncGenerator(key, value) => {
+            type_contains_by(key, predicate) || type_contains_by(value, predicate)
+        }
+        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+            items.iter().any(|item| type_contains_by(item, predicate))
+        }
+        Type::Alias {
+            type_args, body, ..
+        } => {
+            type_args.iter().any(|arg| type_contains_by(arg, predicate))
+                || type_contains_by(body, predicate)
+        }
+        Type::Function(sig) | Type::AsyncFunction(sig) => {
+            sig.params
+                .iter()
+                .any(|(_, param_ty, _)| type_contains_by(param_ty, predicate))
+                || type_contains_by(&sig.return_type, predicate)
+        }
+        Type::Callable(params, _, ret) => {
+            params
+                .iter()
+                .any(|param| type_contains_by(param, predicate))
+                || type_contains_by(ret, predicate)
+        }
+        Type::Class {
+            fields, methods, ..
+        } => {
+            fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_by(field_ty, predicate))
+                || methods.iter().any(|(_, method_sig)| {
+                    method_sig
+                        .params
+                        .iter()
+                        .any(|(_, param_ty, _)| type_contains_by(param_ty, predicate))
+                        || type_contains_by(&method_sig.return_type, predicate)
+                })
+        }
+        _ => false,
+    }
+}
+
+fn type_contains_failure(ty: &Type) -> bool {
+    type_contains_by(ty, |candidate| matches!(candidate, Type::Failure(_)))
+}
+
+fn type_contains_timeout_result(ty: &Type) -> bool {
+    type_contains_by(ty, |candidate| matches!(candidate, Type::TimeoutResult(_)))
+}
+
+fn type_contains_async_generator(ty: &Type) -> bool {
+    type_contains_by(ty, |candidate| {
+        matches!(candidate, Type::AsyncGenerator(_, _))
+    })
+}
+
+fn type_contains_cancellation_error(ty: &Type) -> bool {
+    type_contains_by(
+        ty,
+        |candidate| matches!(candidate, Type::Class { name, .. } if name == "CancellationError"),
+    )
+}
+
+fn type_contains_async_exit_cause(ty: &Type) -> bool {
+    type_contains_by(
+        ty,
+        |candidate| matches!(candidate, Type::Class { name, .. } if name == "AsyncExitCause"),
+    )
+}
+
+fn module_uses_failure_type(module: &HirModule) -> bool {
+    module.functions.iter().any(function_uses_failure_type)
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_failure(field_ty))
+                || class.methods.iter().any(function_uses_failure_type)
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_failure(ty))
+}
+
+fn module_uses_cancellation_error_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(function_uses_cancellation_error_type)
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_cancellation_error(field_ty))
+                || class
+                    .methods
+                    .iter()
+                    .any(function_uses_cancellation_error_type)
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_cancellation_error(ty))
+}
+
+fn module_uses_async_exit_cause_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(function_uses_async_exit_cause_type)
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_async_exit_cause(field_ty))
+                || class
+                    .methods
+                    .iter()
+                    .any(function_uses_async_exit_cause_type)
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_async_exit_cause(ty))
+}
+
+fn module_uses_timeout_result_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(function_uses_timeout_result_type)
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_timeout_result(field_ty))
+                || class.methods.iter().any(function_uses_timeout_result_type)
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_timeout_result(ty))
+}
+
+fn module_uses_async_generator_type(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .any(function_uses_async_generator_type)
+        || module.classes.iter().any(|class| {
+            class
+                .fields
+                .iter()
+                .any(|(_, field_ty)| type_contains_async_generator(field_ty))
+                || class.methods.iter().any(function_uses_async_generator_type)
+        })
+        || module
+            .constants
+            .iter()
+            .any(|(_, ty, _)| type_contains_async_generator(ty))
+}
+
+fn function_uses_cancellation_error_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_cancellation_error(&param.ty))
+        || type_contains_cancellation_error(&func.return_type)
+}
+
+fn function_uses_async_exit_cause_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_async_exit_cause(&param.ty))
+        || type_contains_async_exit_cause(&func.return_type)
+}
+
+fn function_uses_failure_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_failure(&param.ty))
+        || type_contains_failure(&func.return_type)
+}
+
+fn function_uses_timeout_result_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_timeout_result(&param.ty))
+        || type_contains_timeout_result(&func.return_type)
+}
+
+fn function_uses_async_generator_type(func: &HirFunction) -> bool {
+    func.params
+        .iter()
+        .any(|param| type_contains_async_generator(&param.ty))
+        || type_contains_async_generator(&func.return_type)
+}
+
+fn body_contains_await(body: &[HirStmt]) -> bool {
+    let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+    let mut on_expr = |expr: &HirExpr| {
+        if matches!(expr, HirExpr::Await { .. }) {
+            TraversalControl::Stop
+        } else {
+            TraversalControl::Continue
+        }
+    };
+    matches!(
+        traversal::walk_stmts_until(
+            body,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr
+        ),
+        TraversalControl::Stop
+    )
+}
+
+fn module_uses_task_scope(module: &HirModule) -> bool {
+    fn stmt_uses_task_scope_runtime(stmt: &HirStmt) -> bool {
+        matches!(
+            stmt,
+            HirStmt::AsyncWith {
+                kind: sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup,
+                ..
+            }
+        )
+    }
+    fn expr_uses_task_scope_runtime(expr: &HirExpr) -> bool {
+        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_gather" || func == "__sifr_task_race" || func == "__sifr_task_select" || func == "__sifr_spawn_blocking_infallible" || func == "__sifr_spawn_blocking_result")
+    }
+
+    for func in &module.functions {
+        let mut on_stmt = |stmt: &HirStmt| {
+            if stmt_uses_task_scope_runtime(stmt) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        let mut on_expr = |expr: &HirExpr| {
+            if expr_uses_task_scope_runtime(expr) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        if matches!(
+            traversal::walk_stmts_until(
+                &func.body,
+                TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                &mut on_stmt,
+                &mut on_expr
+            ),
+            TraversalControl::Stop
+        ) {
+            return true;
+        }
+    }
+
+    for class in &module.classes {
+        for method in &class.methods {
+            let mut on_stmt = |stmt: &HirStmt| {
+                if stmt_uses_task_scope_runtime(stmt) {
+                    TraversalControl::Stop
+                } else {
+                    TraversalControl::Continue
+                }
+            };
+            let mut on_expr = |expr: &HirExpr| {
+                if expr_uses_task_scope_runtime(expr) {
+                    TraversalControl::Stop
+                } else {
+                    TraversalControl::Continue
+                }
+            };
+            if matches!(
+                traversal::walk_stmts_until(
+                    &method.body,
+                    TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                    &mut on_stmt,
+                    &mut on_expr
+                ),
+                TraversalControl::Stop
+            ) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+fn public_visibility() -> syn::Visibility {
+    syn::Visibility::Public(syn::token::Pub::default())
+}
+
+fn publicize_impl_items(items: &mut [syn::ImplItem]) {
+    for item in items {
+        if let syn::ImplItem::Fn(function) = item {
+            function.vis = public_visibility();
+        }
+    }
+}
+
+fn publicize_struct_fields(fields: &mut syn::Fields) {
+    match fields {
+        syn::Fields::Named(fields) => {
+            for field in &mut fields.named {
+                field.vis = public_visibility();
+            }
+        }
+        syn::Fields::Unnamed(fields) => {
+            for field in &mut fields.unnamed {
+                field.vis = public_visibility();
+            }
+        }
+        syn::Fields::Unit => {}
+    }
+}
+
+fn publicize_generated_module_source(source: &str) -> String {
+    let mut file = syn::parse_file(source).unwrap_or_else(|error| {
+        panic!("failed to parse generated module for publicization: {error}")
+    });
+    for item in &mut file.items {
+        match item {
+            syn::Item::Const(item) => item.vis = public_visibility(),
+            syn::Item::Enum(item) => item.vis = public_visibility(),
+            syn::Item::Fn(item) => item.vis = public_visibility(),
+            syn::Item::Impl(item) => {
+                if item.trait_.is_none() {
+                    publicize_impl_items(&mut item.items);
+                }
+            }
+            syn::Item::Static(item) => item.vis = public_visibility(),
+            syn::Item::Struct(item) => {
+                item.vis = public_visibility();
+                publicize_struct_fields(&mut item.fields);
+            }
+            syn::Item::Trait(item) => item.vis = public_visibility(),
+            syn::Item::Type(item) => item.vis = public_visibility(),
+            syn::Item::Union(item) => {
+                item.vis = public_visibility();
+                for field in &mut item.fields.named {
+                    field.vis = public_visibility();
+                }
+            }
+            syn::Item::Use(item) => item.vis = public_visibility(),
+            _ => {}
+        }
+    }
+    prettyplease::unparse(&file)
+}
+

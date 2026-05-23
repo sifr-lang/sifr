@@ -1,0 +1,868 @@
+pub(crate) fn build_list_subscript_assign_stmt(
+    receiver: RustExpr,
+    lowered_index: RustExpr,
+    lowered_value: RustExpr,
+) -> RustStmt {
+    build_list_get_mut_block_stmt(
+        receiver,
+        lowered_index,
+        RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: lowered_value,
+        },
+    )
+}
+
+fn build_list_get_mut_block_stmt(
+    receiver: RustExpr,
+    lowered_index: RustExpr,
+    then_body_stmt: RustStmt,
+) -> RustStmt {
+    RustStmt::Block(vec![
+        RustStmt::Let {
+            mutable: false,
+            name: "__idx_raw".to_string(),
+            ty: None,
+            value: lowered_index,
+        },
+        RustStmt::Let {
+            mutable: false,
+            name: "__idx_norm".to_string(),
+            ty: None,
+            value: build_normalized_list_index_i64_expr(receiver.clone(), "__idx_raw"),
+        },
+        RustStmt::If {
+            cond: RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                op: ">=".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+            },
+            then_body: vec![RustStmt::IfLet {
+                pattern: "Some(__elem)".to_string(),
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(receiver),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                },
+                then_body: vec![then_body_stmt],
+                else_body: None,
+            }],
+            else_body: None,
+        },
+    ])
+}
+
+pub(crate) fn build_normalized_list_index_i64_expr(
+    receiver: RustExpr,
+    raw_index_name: &str,
+) -> RustExpr {
+    let raw_ident = || RustExpr::Ident(raw_index_name.to_string());
+    RustExpr::If {
+        cond: Box::new(RustExpr::BinOp {
+            left: Box::new(raw_ident()),
+            op: "<".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        }),
+        then_expr: Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::Cast {
+                expr: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(receiver),
+                    method: "len".to_string(),
+                    args: vec![],
+                }),
+                ty: RustType::I64,
+            }),
+            op: "+".to_string(),
+            right: Box::new(raw_ident()),
+        }),
+        else_expr: Some(Box::new(raw_ident())),
+    }
+}
+
+pub(crate) fn build_dict_subscript_assign_stmt(
+    receiver: RustExpr,
+    lowered_index: RustExpr,
+    lowered_value: RustExpr,
+) -> RustStmt {
+    RustStmt::Expr(RustExpr::MethodCall {
+        receiver: Box::new(receiver),
+        method: "insert".to_string(),
+        args: vec![lowered_index, lowered_value],
+    })
+}
+
+fn try_lower_simple_subscript_assign_stmt(
+    object: &str,
+    index: &HirExpr,
+    value: &HirExpr,
+    object_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    let lowered_index =
+        maybe_clone_subscript_assignment_name(index, try_lower_leaf_or_name_expr(index)?);
+    let lowered_value =
+        maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?);
+    match resolve_alias_type(object_ty) {
+        Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
+            RustExpr::Ident(object.to_string()),
+            lowered_index,
+            lowered_value,
+        )]),
+        Type::Dict(_, _) => Some(vec![build_dict_subscript_assign_stmt(
+            RustExpr::Ident(object.to_string()),
+            lowered_index,
+            lowered_value,
+        )]),
+        _ => None,
+    }
+}
+
+fn maybe_clone_subscript_assignment_name(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
+    if matches!(expr, HirExpr::Name { .. }) && !crate::helpers::is_copy_type_for_codegen(expr.ty())
+    {
+        RustExpr::Clone(Box::new(lowered))
+    } else {
+        lowered
+    }
+}
+
+fn try_lower_simple_delete_stmt(object: &HirExpr, index: &HirExpr) -> Option<Vec<RustStmt>> {
+    let receiver = try_lower_name_ident_expr(object)?;
+    let lowered_index = try_lower_leaf_or_name_expr(index)?;
+    match resolve_alias_type(object.ty()) {
+        Type::List(_) => Some(vec![RustStmt::Block(vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__idx_raw".to_string(),
+                ty: None,
+                value: lowered_index,
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__idx_norm".to_string(),
+                ty: None,
+                value: build_normalized_list_index_i64_expr(receiver.clone(), "__idx_raw"),
+            },
+            RustStmt::If {
+                cond: RustExpr::BinOp {
+                    left: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                        op: ">=".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                    }),
+                    op: "&&".to_string(),
+                    right: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Cast {
+                            expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                            ty: RustType::Named("usize".to_string()),
+                        }),
+                        op: "<".to_string(),
+                        right: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(receiver.clone()),
+                            method: "len".to_string(),
+                            args: vec![],
+                        }),
+                    }),
+                },
+                then_body: vec![RustStmt::Let {
+                    mutable: false,
+                    name: "_".to_string(),
+                    ty: None,
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(receiver),
+                        method: "remove".to_string(),
+                        args: vec![RustExpr::Cast {
+                            expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                            ty: RustType::Named("usize".to_string()),
+                        }],
+                    },
+                }],
+                else_body: None,
+            },
+        ])]),
+        Type::Dict(_, _) => Some(vec![RustStmt::Let {
+            mutable: false,
+            name: "_".to_string(),
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(receiver),
+                method: "remove".to_string(),
+                args: vec![build_dict_delete_key_arg(index)?],
+            },
+        }]),
+        _ => None,
+    }
+}
+
+fn build_dict_delete_key_arg(index: &HirExpr) -> Option<RustExpr> {
+    if matches!(index, HirExpr::Name { .. }) {
+        // Preserve name-key borrowing behavior.
+        return None;
+    }
+    let lowered_index = try_lower_leaf_expr(index)?;
+    Some(RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(lowered_index),
+    })
+}
+
+fn try_lower_simple_nested_subscript_assign_stmt(
+    object: &str,
+    outer_index: &HirExpr,
+    inner_index: &HirExpr,
+    value: &HirExpr,
+    object_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    let lowered_outer_index = try_lower_leaf_or_name_expr(outer_index)?;
+    let lowered_inner_index = try_lower_leaf_or_name_expr(inner_index)?;
+    let outer_index_is_option = is_option_like_type(outer_index.ty());
+    let inner_index_is_option = is_option_like_type(inner_index.ty());
+    let target_elem_is_option = matches!(
+        resolve_alias_type(object_ty),
+        Type::List(inner)
+            if matches!(resolve_alias_type(inner), Type::List(elem) if is_option_like_type(elem))
+    );
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let assign_elem_stmt = if is_option_like_type(value.ty()) && !target_elem_is_option {
+        RustStmt::IfLet {
+            pattern: "Some(__nested_assign_value)".to_string(),
+            expr: lowered_value,
+            then_body: vec![RustStmt::Assign {
+                target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                value: RustExpr::Ident("__nested_assign_value".to_string()),
+            }],
+            else_body: None,
+        }
+    } else {
+        RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: lowered_value,
+        }
+    };
+
+    let mut inner_then_body = vec![RustStmt::Let {
+        mutable: false,
+        name: "__ii_norm".to_string(),
+        ty: None,
+        value: build_normalized_list_index_i64_expr(
+            RustExpr::Ident("__row".to_string()),
+            "__ii_raw",
+        ),
+    }];
+    inner_then_body.push(RustStmt::If {
+        cond: RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+            op: ">=".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        },
+        then_body: vec![RustStmt::IfLet {
+            pattern: "Some(__elem)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                    ty: RustType::Named("usize".to_string()),
+                }],
+            },
+            then_body: vec![assign_elem_stmt],
+            else_body: None,
+        }],
+        else_body: None,
+    });
+    let inner_body = if inner_index_is_option {
+        vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__ii_raw_opt".to_string(),
+                ty: None,
+                value: lowered_inner_index,
+            },
+            RustStmt::IfLet {
+                pattern: "Some(__ii_raw)".to_string(),
+                expr: RustExpr::Ident("__ii_raw_opt".to_string()),
+                then_body: inner_then_body,
+                else_body: None,
+            },
+        ]
+    } else {
+        let mut inner_body = vec![RustStmt::Let {
+            mutable: false,
+            name: "__ii_raw".to_string(),
+            ty: None,
+            value: lowered_inner_index,
+        }];
+        inner_body.extend(inner_then_body);
+        inner_body
+    };
+
+    let mut outer_then_body = vec![RustStmt::Let {
+        mutable: false,
+        name: "__oi_norm".to_string(),
+        ty: None,
+        value: build_normalized_list_index_i64_expr(
+            RustExpr::Ident(object.to_string()),
+            "__oi_raw",
+        ),
+    }];
+    outer_then_body.push(RustStmt::If {
+        cond: RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+            op: ">=".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        },
+        then_body: vec![RustStmt::IfLet {
+            pattern: "Some(__row)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                    ty: RustType::Named("usize".to_string()),
+                }],
+            },
+            then_body: inner_body,
+            else_body: None,
+        }],
+        else_body: None,
+    });
+
+    let outer_body = if outer_index_is_option {
+        vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__oi_raw_opt".to_string(),
+                ty: None,
+                value: lowered_outer_index,
+            },
+            RustStmt::IfLet {
+                pattern: "Some(__oi_raw)".to_string(),
+                expr: RustExpr::Ident("__oi_raw_opt".to_string()),
+                then_body: outer_then_body,
+                else_body: None,
+            },
+        ]
+    } else {
+        let mut outer_body = vec![RustStmt::Let {
+            mutable: false,
+            name: "__oi_raw".to_string(),
+            ty: None,
+            value: lowered_outer_index,
+        }];
+        outer_body.extend(outer_then_body);
+        outer_body
+    };
+
+    Some(vec![RustStmt::Block(outer_body)])
+}
+
+fn try_lower_simple_attribute_subscript_assign_stmt(
+    object: &str,
+    field: &str,
+    index: &HirExpr,
+    value: &HirExpr,
+    field_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+
+    match resolve_alias_type(field_ty) {
+        Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
+            RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(object.to_string())),
+                field: field.to_string(),
+            },
+            try_lower_leaf_or_name_expr(index)?,
+            lowered_value,
+        )]),
+        Type::Dict(_, _) => Some(vec![build_dict_subscript_assign_stmt(
+            RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(object.to_string())),
+                field: field.to_string(),
+            },
+            try_lower_attribute_dict_insert_key_expr(index, field_ty)?,
+            lowered_value,
+        )]),
+        _ => None,
+    }
+}
+
+fn try_lower_simple_attribute_nested_subscript_assign_stmt(
+    object: &str,
+    field: &str,
+    outer_index: &HirExpr,
+    inner_index: &HirExpr,
+    value: &HirExpr,
+    field_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    let lowered_outer_index = try_lower_leaf_or_name_expr(outer_index)?;
+    let lowered_inner_index = try_lower_leaf_or_name_expr(inner_index)?;
+    let outer_index_is_option = is_option_like_type(outer_index.ty());
+    let inner_index_is_option = is_option_like_type(inner_index.ty());
+    let target_elem_is_option = matches!(
+        resolve_alias_type(field_ty),
+        Type::List(inner)
+            if matches!(resolve_alias_type(inner), Type::List(elem) if is_option_like_type(elem))
+    );
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let assign_elem_stmt = if is_option_like_type(value.ty()) && !target_elem_is_option {
+        RustStmt::IfLet {
+            pattern: "Some(__nested_assign_value)".to_string(),
+            expr: lowered_value,
+            then_body: vec![RustStmt::Assign {
+                target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                value: RustExpr::Ident("__nested_assign_value".to_string()),
+            }],
+            else_body: None,
+        }
+    } else {
+        RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: lowered_value,
+        }
+    };
+    let receiver = || RustExpr::Field {
+        expr: Box::new(RustExpr::Ident(object.to_string())),
+        field: field.to_string(),
+    };
+
+    let mut inner_then_body = vec![RustStmt::Let {
+        mutable: false,
+        name: "__ii_norm".to_string(),
+        ty: None,
+        value: build_normalized_list_index_i64_expr(
+            RustExpr::Ident("__row".to_string()),
+            "__ii_raw",
+        ),
+    }];
+    inner_then_body.push(RustStmt::If {
+        cond: RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+            op: ">=".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        },
+        then_body: vec![RustStmt::IfLet {
+            pattern: "Some(__elem)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                    ty: RustType::Named("usize".to_string()),
+                }],
+            },
+            then_body: vec![assign_elem_stmt],
+            else_body: None,
+        }],
+        else_body: None,
+    });
+    let inner_body = if inner_index_is_option {
+        vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__ii_raw_opt".to_string(),
+                ty: None,
+                value: lowered_inner_index,
+            },
+            RustStmt::IfLet {
+                pattern: "Some(__ii_raw)".to_string(),
+                expr: RustExpr::Ident("__ii_raw_opt".to_string()),
+                then_body: inner_then_body,
+                else_body: None,
+            },
+        ]
+    } else {
+        let mut inner_body = vec![RustStmt::Let {
+            mutable: false,
+            name: "__ii_raw".to_string(),
+            ty: None,
+            value: lowered_inner_index,
+        }];
+        inner_body.extend(inner_then_body);
+        inner_body
+    };
+
+    let mut outer_then_body = vec![RustStmt::Let {
+        mutable: false,
+        name: "__oi_norm".to_string(),
+        ty: None,
+        value: build_normalized_list_index_i64_expr(receiver(), "__oi_raw"),
+    }];
+    outer_then_body.push(RustStmt::If {
+        cond: RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+            op: ">=".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        },
+        then_body: vec![RustStmt::IfLet {
+            pattern: "Some(__row)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(receiver()),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                    ty: RustType::Named("usize".to_string()),
+                }],
+            },
+            then_body: inner_body,
+            else_body: None,
+        }],
+        else_body: None,
+    });
+
+    let outer_body = if outer_index_is_option {
+        vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__oi_raw_opt".to_string(),
+                ty: None,
+                value: lowered_outer_index,
+            },
+            RustStmt::IfLet {
+                pattern: "Some(__oi_raw)".to_string(),
+                expr: RustExpr::Ident("__oi_raw_opt".to_string()),
+                then_body: outer_then_body,
+                else_body: None,
+            },
+        ]
+    } else {
+        let mut outer_body = vec![RustStmt::Let {
+            mutable: false,
+            name: "__oi_raw".to_string(),
+            ty: None,
+            value: lowered_outer_index,
+        }];
+        outer_body.extend(outer_then_body);
+        outer_body
+    };
+
+    Some(vec![RustStmt::Block(outer_body)])
+}
+
+fn try_lower_simple_subscript_augassign_stmt(
+    object: &str,
+    index: &HirExpr,
+    op: &str,
+    value: &HirExpr,
+    object_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    if !is_supported_subscript_augassign_op(op) {
+        return None;
+    }
+    let lowered_index = try_lower_leaf_or_name_expr(index)?;
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+
+    if op == "+="
+        && matches!(
+            resolve_alias_type(object_ty),
+            Type::List(element_ty)
+                if matches!(resolve_alias_type(element_ty.as_ref()), Type::Str | Type::LiteralStr(_))
+        )
+    {
+        let push_arg = if matches!(value, HirExpr::StringLiteral(_)) {
+            lowered_value
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered_value))),
+                method: "as_str".to_string(),
+                args: vec![],
+            }
+        };
+        return Some(vec![build_list_get_mut_block_stmt(
+            RustExpr::Ident(object.to_string()),
+            lowered_index,
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__elem".to_string())),
+                method: "push_str".to_string(),
+                args: vec![push_arg],
+            }),
+        )]);
+    }
+
+    let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
+
+    if matches!(
+        object_ty,
+        Type::Alias { name: alias_name, .. } if alias_name == "__compat_defaultdict_int"
+    ) {
+        return Some(vec![RustStmt::Block(vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__elem".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(object.to_string())),
+                        method: "entry".to_string(),
+                        args: vec![if matches!(
+                            &lowered_index,
+                            RustExpr::Literal(RustLiteral::Str(_))
+                        ) {
+                            lowered_index
+                        } else {
+                            RustExpr::Clone(Box::new(lowered_index))
+                        }],
+                    }),
+                    method: "or_insert".to_string(),
+                    args: vec![RustExpr::Literal(RustLiteral::Int(0))],
+                },
+            },
+            lowered_body_stmt,
+        ])]);
+    }
+
+    match resolve_alias_type(object_ty) {
+        Type::List(_) => Some(vec![build_list_get_mut_block_stmt(
+            RustExpr::Ident(object.to_string()),
+            lowered_index,
+            lowered_body_stmt,
+        )]),
+        Type::Dict(_, _) => Some(vec![RustStmt::IfLet {
+            pattern: "Some(__elem)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "get_mut".to_string(),
+                args: vec![build_dict_get_mut_key_arg(lowered_index)],
+            },
+            then_body: vec![lowered_body_stmt],
+            else_body: None,
+        }]),
+        _ => None,
+    }
+}
+
+fn build_dict_get_mut_key_arg(lowered_index: RustExpr) -> RustExpr {
+    if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
+        lowered_index
+    } else {
+        RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(lowered_index),
+        }
+    }
+}
+
+fn is_supported_subscript_augassign_op(op: &str) -> bool {
+    matches!(
+        op,
+        "+=" | "-=" | "*=" | "/=" | "%=" | "//=" | "**=" | "&=" | "|=" | "^=" | "<<=" | ">>="
+    )
+}
+
+fn build_subscript_augassign_elem_stmt(op: &str, lowered_value: RustExpr) -> RustStmt {
+    if op == "**=" {
+        return RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__elem".to_string())),
+                method: "pow".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(lowered_value),
+                    ty: RustType::Named("u32".to_string()),
+                }],
+            },
+        };
+    }
+    if op == "//=" {
+        return RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: RustExpr::BinOp {
+                left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                    "__elem".to_string(),
+                )))),
+                op: "/".to_string(),
+                right: Box::new(lowered_value),
+            },
+        };
+    }
+    RustStmt::AugAssign {
+        target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+        op: op.strip_suffix('=').unwrap_or(op).to_string(),
+        value: lowered_value,
+    }
+}
+
+fn try_lower_simple_return_stmt(
+    value: &HirExpr,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    if ctx.in_display_impl {
+        return None;
+    }
+    if ctx.in_class_scope && matches!(value, HirExpr::Name { name, .. } if name == "self") {
+        return Some(vec![RustStmt::Return(Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("self".to_string())),
+            method: "clone".to_string(),
+            args: vec![],
+        }))]);
+    }
+    let option_return = ctx.return_type.is_some_and(is_option_like_type);
+    if matches!(value.ty(), Type::TypeVar(_)) {
+        return None;
+    }
+    if ctx.return_type.is_some_and(|ty| {
+        matches!(
+            resolve_alias_type(ty),
+            Type::Iterable(_) | Type::Iterator(_)
+        )
+    }) {
+        return None;
+    }
+
+    if option_return {
+        if is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
+            return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(
+                value,
+            )?))]);
+        }
+        if matches!(value, HirExpr::NoneLiteral) {
+            return Some(vec![RustStmt::Return(Some(RustExpr::Literal(
+                RustLiteral::None,
+            )))]);
+        }
+        if is_none_type(value.ty()) {
+            if matches!(value, HirExpr::Name { .. }) {
+                return Some(vec![RustStmt::Return(Some(RustExpr::Literal(
+                    RustLiteral::None,
+                )))]);
+            }
+            return None;
+        }
+        let lowered = try_lower_leaf_or_name_expr(value)?;
+        return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered],
+        }))]);
+    }
+
+    if matches!(value, HirExpr::NoneLiteral)
+        || is_none_type(value.ty())
+        || is_okwrap_none_expr(value)
+    {
+        if let Some(return_ty) = ctx.return_type {
+            match resolve_alias_type(return_ty) {
+                Type::Result(ok_ty, _) if is_none_type(ok_ty.as_ref()) => {
+                    return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                        args: vec![RustExpr::Literal(RustLiteral::Unit)],
+                    }))]);
+                }
+                Type::None => return Some(vec![RustStmt::Return(None)]),
+                _ => {}
+            }
+        }
+    }
+
+    if let Some(return_ty) = ctx.return_type {
+        if let Type::Union(members) = resolve_alias_type(return_ty) {
+            if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
+                return None;
+            }
+            let lowered = try_lower_leaf_or_name_expr(value)?;
+            let variant = crate::helpers::find_union_variant(members, value.ty())?;
+            let enum_name = return_ty.union_enum_name();
+            return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![enum_name, variant])),
+                args: vec![lowered],
+            }))]);
+        }
+    }
+    Some(vec![RustStmt::Return(Some(try_lower_leaf_or_name_expr(
+        value,
+    )?))])
+}
+
+fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = crate::fixed_width_literal_expr_for_target(ty, value) {
+        return Some(lowered);
+    }
+    if is_option_like_type(ty) && matches!(value, HirExpr::NoneLiteral) {
+        return Some(RustExpr::Literal(RustLiteral::None));
+    }
+    if is_option_like_type(ty) && is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
+        return try_lower_name_ident_expr(value);
+    }
+    if is_option_like_type(ty) && !is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![try_lower_leaf_or_name_expr(value)?],
+        });
+    }
+    if is_option_like_type(ty) && is_none_type(value.ty()) {
+        if matches!(value, HirExpr::Name { .. }) {
+            return Some(RustExpr::Literal(RustLiteral::None));
+        }
+        return None;
+    }
+    if is_none_type(ty) && matches!(value, HirExpr::NoneLiteral) {
+        return Some(RustExpr::Literal(RustLiteral::Unit));
+    }
+    if matches!(
+        crate::resolve_alias_type_for_plain_call(ty),
+        Type::Task(_, _)
+    ) {
+        return try_lower_leaf_expr(value);
+    }
+    if !is_alias_equivalent_type(ty, value.ty()) {
+        return None;
+    }
+    try_lower_leaf_or_name_expr(value)
+}
+
+fn try_lower_simple_assign_value(
+    value: &HirExpr,
+    borrowed_params: &HashSet<String>,
+) -> Option<RustExpr> {
+    // Preserve TypeVar assignment behavior for borrowed params by appending `.clone()`.
+    if matches!(value.ty(), Type::TypeVar(_))
+        && matches!(value, HirExpr::Name { name, .. } if borrowed_params.contains(name))
+    {
+        return None;
+    }
+    try_lower_leaf_or_name_expr(value)
+}
+
+fn try_lower_simple_field_assign_stmt(
+    _object: &str,
+    _field: &str,
+    _value: &HirExpr,
+) -> Option<Vec<RustStmt>> {
+    // Keep field assignments on the structured path so class/recursive storage
+    // adaptations (boxing and option handling) are consistently applied.
+    None
+}
+
+fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
+    let is_numeric_op = matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=");
+    let is_int_only_op = matches!(op, "&=" | "|=" | "^=" | "<<=" | ">>=");
+    let supports_op = match resolve_alias_type(value.ty()) {
+        Type::Int | Type::LiteralInt(_) => is_numeric_op || is_int_only_op,
+        Type::Float => is_numeric_op,
+        _ => false,
+    };
+    if !supports_op {
+        return None;
+    }
+    try_lower_leaf_or_name_expr(value)
+}
+
+fn try_lower_simple_augassign_stmt(
+    target: RustExpr,
+    op: &str,
+    value: &HirExpr,
+) -> Option<Vec<RustStmt>> {
+    Some(vec![RustStmt::AugAssign {
+        target,
+        op: normalize_augassign_op(op),
+        value: try_lower_simple_aug_assign_value(op, value)?,
+    }])
+}
+
+fn normalize_augassign_op(op: &str) -> String {
+    if op == "//=" {
+        "/".to_string()
+    } else {
+        op.strip_suffix('=').unwrap_or(op).to_string()
+    }
+}
