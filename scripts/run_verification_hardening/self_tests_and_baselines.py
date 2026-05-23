@@ -1,3 +1,23 @@
+from __future__ import annotations
+
+import argparse
+import re
+import subprocess
+from pathlib import Path
+from typing import Any
+
+from .core import (
+    assert_self_test_failure,
+    baseline_artifact_paths,
+    baseline_case_metadata,
+    baseline_variant_label,
+    canonicalize_output,
+    load_text,
+    run_variant,
+    validate_unique_baseline_artifact_paths,
+    write_text,
+)
+
 def run_self_tests() -> int:
     repo_root = Path("/tmp/sifr-verification-hardening-self-test").resolve()
     validate_unique_baseline_artifact_paths(

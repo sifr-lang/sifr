@@ -51,6 +51,12 @@ class Violation:
     limit: int
 
 
+@dataclass(frozen=True)
+class RustfmtSkipViolation:
+    rel_path: Path
+    line: int
+
+
 def resolve_repo_root(script_path: Path) -> Path:
     return script_path.resolve().parent.parent
 
@@ -145,6 +151,20 @@ def collect_violations(repo_root: Path) -> list[Violation]:
     return violations
 
 
+def collect_rustfmt_skip_violations(repo_root: Path) -> list[RustfmtSkipViolation]:
+    violations: list[RustfmtSkipViolation] = []
+    for source_file in iter_source_files(repo_root):
+        if source_file.category != "rust":
+            continue
+        path = repo_root / source_file.rel_path
+        for line_number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
+            if "rustfmt::skip" in line:
+                violations.append(RustfmtSkipViolation(source_file.rel_path, line_number))
+    return violations
+
+
 def format_violation(violation: Violation) -> str:
     return (
         f"{violation.rel_path}: {violation.lines} lines "
@@ -162,6 +182,13 @@ def assert_no_violations(repo_root: Path) -> None:
     if violations:
         formatted = "\n".join(format_violation(violation) for violation in violations)
         raise AssertionError(f"expected no violations, got:\n{formatted}")
+    rustfmt_skip_violations = collect_rustfmt_skip_violations(repo_root)
+    if rustfmt_skip_violations:
+        formatted = "\n".join(
+            f"{violation.rel_path}:{violation.line}"
+            for violation in rustfmt_skip_violations
+        )
+        raise AssertionError(f"expected no rustfmt skip violations, got:\n{formatted}")
 
 
 def assert_violation(repo_root: Path, expected_rel: str, expected_category: str) -> None:
@@ -226,6 +253,17 @@ def run_self_test() -> None:
             write_lines(repo_root / rel, MAX_SOURCE_LINES + 1)
         assert_no_violations(repo_root)
 
+    with tempfile.TemporaryDirectory(prefix="sifr-file-size-guardrail-") as temp_dir:
+        repo_root = Path(temp_dir)
+        skip_path = repo_root / "crates/example/src/lib.rs"
+        skip_path.parent.mkdir(parents=True, exist_ok=True)
+        skip_path.write_text("#[rustfmt::skip]\nfn compact() {}\n", encoding="utf-8")
+        rustfmt_skip_violations = collect_rustfmt_skip_violations(repo_root)
+        if len(rustfmt_skip_violations) != 1:
+            raise AssertionError(
+                f"expected one rustfmt skip violation, got {len(rustfmt_skip_violations)}"
+            )
+
 
 def main() -> int:
     args = parse_args()
@@ -236,10 +274,13 @@ def main() -> int:
 
     repo_root = resolve_repo_root(Path(__file__))
     violations = collect_violations(repo_root)
-    if violations:
+    rustfmt_skip_violations = collect_rustfmt_skip_violations(repo_root)
+    if violations or rustfmt_skip_violations:
         print("file-size guardrails: FAIL")
         for violation in violations:
             print(f"- {format_violation(violation)}")
+        for violation in rustfmt_skip_violations:
+            print(f"- {violation.rel_path}:{violation.line}: rustfmt::skip is not allowed")
         return 1
 
     scanned = sum(1 for _ in iter_source_files(repo_root))
