@@ -194,9 +194,14 @@ impl RustEmitter {
         }
         match self.lower_stmt_expr_for_ir(expr) {
             Ok(Some(lowered)) => self.rewrite_stdlib_constant_idents_in_expr(lowered),
-            Ok(None) => panic!(
-                "structured expression lowering missing for class method IR emission ({context}): {expr:?}"
-            ),
+            Ok(None) => {
+                if let Some(lowered) = self.try_lower_registry_expr_strict(expr) {
+                    return self.rewrite_stdlib_constant_idents_in_expr(lowered);
+                }
+                panic!(
+                    "structured expression lowering missing for class method IR emission ({context}): {expr:?}"
+                )
+            }
             Err(err) => {
                 self.lowering_stats.expr_lowering_errors += 1;
                 panic!(

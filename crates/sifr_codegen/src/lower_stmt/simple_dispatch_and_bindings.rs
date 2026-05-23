@@ -1,0 +1,746 @@
+pub(crate) fn try_lower_simple_stmt_with_ctx(
+    stmt: &HirStmt,
+    in_loop_with_else: bool,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    try_lower_simple_stmt_with_ctx_and_bindings(
+        stmt,
+        in_loop_with_else,
+        mutated_vars,
+        borrowed_params,
+        &HashMap::new(),
+        ctx,
+    )
+}
+
+pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
+    stmt: &HirStmt,
+    in_loop_with_else: bool,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+    local_binding_types: &HashMap<String, Type>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    let bindings = SimpleStmtBindings {
+        mutated_vars,
+        borrowed_params,
+        local_binding_types,
+    };
+    match stmt {
+        HirStmt::Expr { expr } => {
+            try_lower_expr_stmt_with_bindings(expr, bindings.local_binding_types)
+        }
+        HirStmt::Let {
+            name, ty, value, ..
+        } => {
+            let effective_ty = bindings.local_binding_types.get(name).unwrap_or(ty);
+            if matches!(resolve_alias_type(effective_ty), Type::Iterable(_)) {
+                return None;
+            }
+            let lowered_value = try_lower_simple_let_value(effective_ty, value)?;
+            Some(vec![RustStmt::Let {
+                mutable: bindings.mutated_vars.contains(name)
+                    || should_force_mutable_binding(effective_ty),
+                name: name.clone(),
+                ty: if name == "_" || should_omit_local_type_annotation(effective_ty, value) {
+                    None
+                } else if let Some(ty) = exact_int_floor_result_local_rust_type(effective_ty, value)
+                {
+                    Some(ty)
+                } else {
+                    Some(crate::sifr_type_to_rust_type(effective_ty))
+                },
+                value: lowered_value,
+            }])
+        }
+        HirStmt::Assign { name, value }
+            if try_lower_simple_assign_value(value, bindings.borrowed_params).is_some() =>
+        {
+            let lowered_value = try_lower_simple_assign_value(value, bindings.borrowed_params)?;
+            let lowered_value = coerce_simple_assign_value_for_target_type(
+                bindings.local_binding_types.get(name),
+                value,
+                lowered_value,
+            );
+            Some(vec![RustStmt::Assign {
+                target: crate::RustExpr::Ident(name.clone()),
+                value: lowered_value,
+            }])
+        }
+        HirStmt::AugAssign { name, op, value } => {
+            try_lower_simple_augassign_stmt(crate::RustExpr::Ident(name.clone()), op, value)
+        }
+        HirStmt::AttributeAugAssign {
+            object,
+            field,
+            op,
+            value,
+        } => try_lower_simple_augassign_stmt(
+            RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(object.clone())),
+                field: field.clone(),
+            },
+            op,
+            value,
+        ),
+        HirStmt::FieldAssign {
+            object,
+            field,
+            value,
+            ..
+        } => try_lower_simple_field_assign_stmt(object, field, value),
+        HirStmt::NestedFieldAssign { .. } => None,
+        HirStmt::Return { value: None } => {
+            if ctx.in_display_impl {
+                return None;
+            }
+            if ctx.return_type.is_some_and(is_option_like_type) {
+                Some(vec![RustStmt::Return(Some(RustExpr::Literal(
+                    RustLiteral::None,
+                )))])
+            } else {
+                Some(vec![RustStmt::Return(None)])
+            }
+        }
+        HirStmt::Return { value: Some(value) } => try_lower_simple_return_stmt(value, ctx),
+        HirStmt::Assert { test, msg } => {
+            let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
+                Some(if is_option_like_type(msg_expr.ty()) {
+                    RustExpr::MethodCall {
+                        receiver: Box::new(try_lower_name_ident_expr(msg_expr)?),
+                        method: "map_or".to_string(),
+                        args: vec![
+                            RustExpr::Literal(RustLiteral::Str("None".to_string())),
+                            RustExpr::Closure {
+                                params: vec![RustParam::Named {
+                                    name: "_v".to_string(),
+                                    ty: RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(RustExpr::FormatMacro {
+                                    name: "format".to_string(),
+                                    format_str: "{}".to_string(),
+                                    args: vec![RustExpr::Ident("_v".to_string())],
+                                }),
+                                is_move: false,
+                            },
+                        ],
+                    }
+                } else {
+                    try_lower_leaf_or_name_expr(msg_expr)?
+                })
+            } else {
+                None
+            };
+            Some(vec![RustStmt::Assert {
+                cond: try_lower_simple_condition_test_expr(test, bindings.borrowed_params)?,
+                msg: lowered_msg,
+            }])
+        }
+        HirStmt::Raise { value } => Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+            args: vec![try_lower_leaf_or_name_expr(value)?],
+        }))]),
+        HirStmt::If {
+            condition,
+            then_body,
+            elif_clauses,
+            else_body: maybe_else_body,
+        } => try_lower_simple_if_stmt(
+            condition,
+            then_body,
+            elif_clauses,
+            maybe_else_body.as_deref(),
+            in_loop_with_else,
+            bindings,
+            ctx,
+        ),
+        HirStmt::While {
+            condition,
+            body,
+            else_body,
+        } => try_lower_simple_while_stmt(
+            condition,
+            body,
+            else_body.as_deref(),
+            in_loop_with_else,
+            bindings,
+            ctx,
+        ),
+        HirStmt::For {
+            target,
+            target_ty,
+            iter,
+            body,
+            else_body,
+            ..
+        } => try_lower_simple_for_stmt(
+            SimpleForStmtParts {
+                target,
+                target_ty,
+                iter,
+                body,
+                else_body: else_body.as_deref(),
+                in_loop_with_else,
+            },
+            bindings,
+            ctx,
+        ),
+        HirStmt::TupleUnpack { targets, value } => {
+            try_lower_simple_tuple_unpack_stmt(targets, value, bindings.mutated_vars)
+        }
+        HirStmt::StarUnpack {
+            before,
+            star,
+            after,
+            value,
+        } => try_lower_simple_star_unpack_stmt(before, star, after, value),
+        HirStmt::AttributeSubscriptAssign {
+            object,
+            field,
+            index,
+            value,
+            field_ty,
+        } => {
+            try_lower_simple_attribute_subscript_assign_stmt(object, field, index, value, field_ty)
+        }
+        HirStmt::SubscriptAssign {
+            object,
+            index,
+            value,
+            object_ty,
+        } => try_lower_simple_subscript_assign_stmt(object, index, value, object_ty),
+        HirStmt::NestedSubscriptAssign {
+            object,
+            outer_index,
+            inner_index,
+            value,
+            object_ty,
+        } => try_lower_simple_nested_subscript_assign_stmt(
+            object,
+            outer_index,
+            inner_index,
+            value,
+            object_ty,
+        ),
+        HirStmt::AttributeNestedSubscriptAssign {
+            object,
+            field,
+            outer_index,
+            inner_index,
+            value,
+            field_ty,
+        } => try_lower_simple_attribute_nested_subscript_assign_stmt(
+            object,
+            field,
+            outer_index,
+            inner_index,
+            value,
+            field_ty,
+        ),
+        HirStmt::SubscriptAugAssign {
+            object,
+            index,
+            op,
+            value,
+            object_ty,
+        } => try_lower_simple_subscript_augassign_stmt(object, index, op, value, object_ty),
+        HirStmt::Delete { object, index } => try_lower_simple_delete_stmt(object, index),
+        HirStmt::Yield { value } => try_lower_simple_yield_stmt(value, ctx),
+        HirStmt::With { items, body } => {
+            try_lower_simple_with_stmt(items, body, in_loop_with_else, bindings, ctx)
+        }
+        HirStmt::AsyncWith { kind, target, body } => try_lower_simple_async_with_stmt(
+            kind,
+            target.as_deref(),
+            body,
+            in_loop_with_else,
+            bindings,
+            ctx,
+        ),
+        HirStmt::Match {
+            subject,
+            subject_ty,
+            arms,
+        } => {
+            try_lower_simple_match_stmt(subject, subject_ty, arms, in_loop_with_else, bindings, ctx)
+        }
+        HirStmt::NestedFunction { func } => {
+            try_lower_simple_nested_function_stmt(func, in_loop_with_else, bindings)
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            try_lower_simple_try_except_stmt(body, handlers, in_loop_with_else, bindings, ctx)
+        }
+        HirStmt::TryFinally { .. } => None,
+        HirStmt::Pass => Some(vec![]),
+        HirStmt::Continue => Some(vec![RustStmt::Continue]),
+        HirStmt::Break => {
+            if in_loop_with_else {
+                Some(vec![
+                    RustStmt::Assign {
+                        target: crate::RustExpr::Ident("_broke".to_string()),
+                        value: crate::RustExpr::Literal(crate::RustLiteral::Bool(true)),
+                    },
+                    RustStmt::Break,
+                ])
+            } else {
+                Some(vec![RustStmt::Break])
+            }
+        }
+        _ => None,
+    }
+}
+
+fn coerce_simple_assign_value_for_target_type(
+    target_ty: Option<&Type>,
+    value: &HirExpr,
+    lowered_value: RustExpr,
+) -> RustExpr {
+    let Some(target_ty) = target_ty else {
+        return lowered_value;
+    };
+    if !crate::helpers::is_option_type(target_ty) {
+        return lowered_value;
+    }
+    if matches!(value, HirExpr::NoneLiteral) || matches!(value.ty(), Type::None) {
+        return RustExpr::Literal(RustLiteral::None);
+    }
+    if crate::helpers::is_option_type(value.ty()) {
+        return lowered_value;
+    }
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+        args: vec![lowered_value],
+    }
+}
+
+fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
+    match (ty, value) {
+        (resolved_ty, HirExpr::Call { func, args, .. })
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(resolved_ty),
+                Type::Set(_)
+            ) && func == "set"
+                && args.is_empty() =>
+        {
+            true
+        }
+        (
+            Type::Alias {
+                name: alias_name,
+                body,
+                ..
+            },
+            HirExpr::Call { func, args, .. },
+        ) if func == alias_name
+            && args.is_empty()
+            && alias_name.starts_with("__compat_defaultdict_") =>
+        {
+            let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
+                return false;
+            };
+            matches!(key_ty.as_ref(), Type::Any | Type::Unknown)
+                || matches!(value_ty.as_ref(), Type::List(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
+                || matches!(value_ty.as_ref(), Type::Set(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
+        }
+        _ => false,
+    }
+}
+
+fn exact_int_floor_result_local_rust_type(ty: &Type, value: &HirExpr) -> Option<RustType> {
+    if matches!(
+        crate::resolve_alias_type_for_plain_call(ty),
+        Type::Int | Type::LiteralInt(_)
+    ) && matches!(
+        value,
+        HirExpr::QuestionMark { expr, .. } if is_exact_int_floor_result_expr(expr)
+    ) {
+        return Some(RustType::Named("SifrInt".to_string()));
+    }
+
+    if is_result_int_division_error_type(ty) && is_exact_int_floor_result_expr(value) {
+        let Type::Result(_, err_ty) = ty else {
+            return None;
+        };
+        return Some(RustType::Result(
+            Box::new(RustType::Named("SifrInt".to_string())),
+            Box::new(crate::sifr_type_to_rust_type(err_ty)),
+        ));
+    }
+
+    None
+}
+
+fn is_exact_int_floor_result_expr(value: &HirExpr) -> bool {
+    matches!(
+        value,
+        HirExpr::BinOp { op, ty, .. }
+            if matches!(op.as_str(), "//" | "%") && is_result_int_division_error_type(ty)
+    )
+}
+
+fn is_result_int_division_error_type(ty: &Type) -> bool {
+    let Type::Result(ok_ty, err_ty) = crate::resolve_alias_type_for_plain_call(ty) else {
+        return false;
+    };
+    matches!(
+        crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
+        Type::Int | Type::LiteralInt(_)
+    ) && matches!(
+        crate::resolve_alias_type_for_plain_call(err_ty.as_ref()),
+        Type::Class { name, .. } if name == "DivisionError"
+    )
+}
+
+fn should_force_mutable_binding(ty: &Type) -> bool {
+    fn class_has_next_protocol(ty: &Type) -> bool {
+        let Type::Class { methods, .. } = ty.resolve_alias() else {
+            return false;
+        };
+        methods.iter().any(|(name, ft)| {
+            name == "__next__"
+                && ft.params.is_empty()
+                && matches!(ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                    let has_none = members
+                        .iter()
+                        .any(|member| matches!(member.resolve_alias(), Type::None));
+                    let non_none = members
+                        .iter()
+                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                        .count();
+                    has_none && non_none == 1
+                })
+        })
+    }
+
+    matches!(
+        ty,
+        Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
+    ) || matches!(ty.resolve_alias(), Type::Iterator(_))
+        || class_has_next_protocol(ty)
+}
+
+fn try_lower_simple_nested_function_stmt(
+    func: &HirFunction,
+    in_loop_with_else: bool,
+    outer_bindings: SimpleStmtBindings<'_>,
+) -> Option<Vec<RustStmt>> {
+    if func.method_kind != MethodKind::Regular
+        || !func.decorators.is_empty()
+        || !func.type_params.is_empty()
+    {
+        return None;
+    }
+    if func
+        .params
+        .iter()
+        .any(|param| param.default.is_some() || param.keyword_only)
+    {
+        return None;
+    }
+
+    let nested_mutated_vars = collect_mutated_vars(&func.body, None);
+    let nested_borrowed_params: HashSet<String> = HashSet::new();
+    let is_recursive = body_calls_function(&func.body, &func.name);
+    let param_names: HashSet<String> = func.params.iter().map(|param| param.name.clone()).collect();
+    let referenced_with_types = collect_referenced_vars_with_types(&func.body);
+    let locally_defined = collect_locally_defined_vars(&func.body);
+    let captures: Vec<(String, Type)> = referenced_with_types
+        .into_iter()
+        .filter(|(name, _)| !param_names.contains(name) && !locally_defined.contains(name))
+        .collect();
+    let allowed_calls = if is_recursive {
+        vec![func.name.clone()]
+    } else {
+        vec![]
+    };
+    let nested_local_binding_types: HashMap<String, Type> = func
+        .params
+        .iter()
+        .map(|param| (param.name.clone(), param.ty.clone()))
+        .chain(captures.iter().cloned())
+        .collect();
+    let mut lowered_body = crate::with_allowed_plain_calls(&allowed_calls, || {
+        let mut lowered = Vec::new();
+        for stmt in &func.body {
+            lowered.extend(try_lower_simple_stmt_with_ctx_and_bindings(
+                stmt,
+                in_loop_with_else,
+                &nested_mutated_vars,
+                &nested_borrowed_params,
+                &nested_local_binding_types,
+                SimpleStmtLoweringCtx {
+                    return_type: Some(&func.return_type),
+                    in_display_impl: false,
+                    in_class_scope: false,
+                    in_generator_closure: false,
+                },
+            )?);
+        }
+        Some(lowered)
+    })?;
+    if is_recursive {
+        let capture_names = captures
+            .iter()
+            .map(|(name, _)| name.clone())
+            .collect::<Vec<_>>();
+        if !capture_names.is_empty() {
+            append_recursive_capture_args_to_stmts(&mut lowered_body, &func.name, &capture_names);
+        }
+        let fn_params = func
+            .params
+            .iter()
+            .map(|param| RustParam::Named {
+                name: param.name.clone(),
+                ty: crate::sifr_type_to_rust_type(&param.ty),
+            })
+            .chain(captures.iter().map(|(name, ty)| RustParam::Named {
+                name: name.clone(),
+                ty: crate::sifr_type_to_rust_type(ty),
+            }))
+            .collect::<Vec<_>>();
+        let ret = if matches!(func.return_type, Type::None) {
+            None
+        } else {
+            Some(crate::sifr_type_to_rust_type(&func.return_type))
+        };
+        return Some(vec![RustStmt::LocalFn {
+            name: func.name.clone(),
+            params: fn_params,
+            ret,
+            body: lowered_body,
+        }]);
+    }
+
+    let lowered_params = func
+        .params
+        .iter()
+        .map(|param| RustParam::Named {
+            name: param.name.clone(),
+            ty: RustType::Named("_".to_string()),
+        })
+        .collect::<Vec<_>>();
+    let mutates_captures = nested_mutated_vars
+        .iter()
+        .any(|name| !param_names.contains(name) && !locally_defined.contains(name));
+    let nested_binding_mutable =
+        outer_bindings.mutated_vars.contains(&func.name) || mutates_captures;
+
+    Some(vec![RustStmt::Let {
+        mutable: nested_binding_mutable,
+        name: func.name.clone(),
+        ty: None,
+        value: RustExpr::ClosureBlock {
+            params: lowered_params,
+            body: lowered_body,
+            is_move: false,
+            is_async: false,
+        },
+    }])
+}
+
+fn append_recursive_capture_args_to_stmts(
+    stmts: &mut [RustStmt],
+    fn_name: &str,
+    capture_names: &[String],
+) {
+    for stmt in stmts {
+        match stmt {
+            RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
+                append_recursive_capture_args_to_expr(value, fn_name, capture_names);
+            }
+            RustStmt::LetElse {
+                value, else_body, ..
+            } => {
+                append_recursive_capture_args_to_expr(value, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(else_body, fn_name, capture_names);
+            }
+            RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
+                append_recursive_capture_args_to_expr(target, fn_name, capture_names);
+                append_recursive_capture_args_to_expr(value, fn_name, capture_names);
+            }
+            RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => {
+                append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            }
+            RustStmt::Assert { cond, msg } => {
+                append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
+                if let Some(msg) = msg {
+                    append_recursive_capture_args_to_expr(msg, fn_name, capture_names);
+                }
+            }
+            RustStmt::If {
+                cond,
+                then_body,
+                else_body,
+            } => {
+                append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(then_body, fn_name, capture_names);
+                if let Some(else_body) = else_body {
+                    append_recursive_capture_args_to_stmts(else_body, fn_name, capture_names);
+                }
+            }
+            RustStmt::IfLet {
+                expr,
+                then_body,
+                else_body,
+                ..
+            } => {
+                append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(then_body, fn_name, capture_names);
+                if let Some(else_body) = else_body {
+                    append_recursive_capture_args_to_stmts(else_body, fn_name, capture_names);
+                }
+            }
+            RustStmt::Match { expr, arms } => {
+                append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+                for arm in arms {
+                    if let Some(guard) = &mut arm.guard {
+                        append_recursive_capture_args_to_expr(guard, fn_name, capture_names);
+                    }
+                    append_recursive_capture_args_to_stmts(&mut arm.body, fn_name, capture_names);
+                }
+            }
+            RustStmt::For { iter, body, .. } => {
+                append_recursive_capture_args_to_expr(iter, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::With { items, body } => {
+                for item in items {
+                    append_recursive_capture_args_to_expr(&mut item.value, fn_name, capture_names);
+                }
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::While { cond, body } => {
+                append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::Loop { body } | RustStmt::Block(body) => {
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::LocalFn { body, .. } => {
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => {}
+        }
+    }
+}
+
+fn append_recursive_capture_args_to_expr(
+    expr: &mut RustExpr,
+    fn_name: &str,
+    capture_names: &[String],
+) {
+    match expr {
+        RustExpr::FnCall { func, args } => {
+            append_recursive_capture_args_to_expr(func, fn_name, capture_names);
+            for arg in args.iter_mut() {
+                append_recursive_capture_args_to_expr(arg, fn_name, capture_names);
+            }
+            if matches!(func.as_ref(), RustExpr::Ident(name) if name == fn_name) {
+                for capture_name in capture_names {
+                    args.push(RustExpr::Ident(capture_name.clone()));
+                }
+            }
+        }
+        RustExpr::MethodCall { receiver, args, .. } => {
+            append_recursive_capture_args_to_expr(receiver, fn_name, capture_names);
+            for arg in args {
+                append_recursive_capture_args_to_expr(arg, fn_name, capture_names);
+            }
+        }
+        RustExpr::Field { expr, .. } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+        }
+        RustExpr::Index { expr, index } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(index, fn_name, capture_names);
+        }
+        RustExpr::Slice { expr, start, stop } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            if let Some(start) = start {
+                append_recursive_capture_args_to_expr(start, fn_name, capture_names);
+            }
+            if let Some(stop) = stop {
+                append_recursive_capture_args_to_expr(stop, fn_name, capture_names);
+            }
+        }
+        RustExpr::BinOp { left, right, .. } => {
+            append_recursive_capture_args_to_expr(left, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(right, fn_name, capture_names);
+        }
+        RustExpr::UnaryOp { operand, .. }
+        | RustExpr::Deref(operand)
+        | RustExpr::Clone(operand)
+        | RustExpr::Try(operand)
+        | RustExpr::Await(operand)
+        | RustExpr::Paren(operand) => {
+            append_recursive_capture_args_to_expr(operand, fn_name, capture_names);
+        }
+        RustExpr::Cast { expr, .. } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+        }
+        RustExpr::Ref { expr, .. } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+        }
+        RustExpr::Block { stmts, expr } => {
+            append_recursive_capture_args_to_stmts(stmts, fn_name, capture_names);
+            if let Some(expr) = expr {
+                append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            }
+        }
+        RustExpr::If {
+            cond,
+            then_expr,
+            else_expr,
+        } => {
+            append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(then_expr, fn_name, capture_names);
+            if let Some(else_expr) = else_expr {
+                append_recursive_capture_args_to_expr(else_expr, fn_name, capture_names);
+            }
+        }
+        RustExpr::Match { expr, arms } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            for arm in arms {
+                if let Some(guard) = &mut arm.guard {
+                    append_recursive_capture_args_to_expr(guard, fn_name, capture_names);
+                }
+                append_recursive_capture_args_to_stmts(&mut arm.body, fn_name, capture_names);
+            }
+        }
+        RustExpr::Closure { body, .. } => {
+            append_recursive_capture_args_to_expr(body, fn_name, capture_names);
+        }
+        RustExpr::ClosureBlock { body, .. } => {
+            append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+        }
+        RustExpr::StructInit { fields, .. } => {
+            for (_, field_value) in fields {
+                append_recursive_capture_args_to_expr(field_value, fn_name, capture_names);
+            }
+        }
+        RustExpr::Tuple(items)
+        | RustExpr::Array(items)
+        | RustExpr::Vec(items)
+        | RustExpr::MacroCall { args: items, .. } => {
+            for item in items {
+                append_recursive_capture_args_to_expr(item, fn_name, capture_names);
+            }
+        }
+        RustExpr::TimeoutAwait { duration, future } => {
+            append_recursive_capture_args_to_expr(duration, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(future, fn_name, capture_names);
+        }
+        RustExpr::FormatMacro { args, .. } => {
+            for arg in args {
+                append_recursive_capture_args_to_expr(arg, fn_name, capture_names);
+            }
+        }
+        RustExpr::Range { start, end } => {
+            append_recursive_capture_args_to_expr(start, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(end, fn_name, capture_names);
+        }
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => {}
+    }
+}
