@@ -262,7 +262,6 @@ fi
 echo "Running e2e pass suite"
 E2E_ARGS=(
   --profile "${E2E_PROFILE}"
-  --mode "${E2E_MODE}"
   --sifr-jobs "${E2E_SIFR_JOBS}"
   --rust-jobs "${E2E_RUST_JOBS}"
   --run-jobs "${E2E_RUN_JOBS}"

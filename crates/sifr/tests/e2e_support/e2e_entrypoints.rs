@@ -2,59 +2,18 @@ use super::*;
 #[test]
 pub(crate) fn test_e2e_pass() {
     let config = runner_config().expect("runner config");
-    match config.mode {
-        RunnerMode::Legacy => {
-            let report = run_legacy_pass_suite();
-            assert_report("legacy", &report);
-            eprintln!(
-                "[sifr-e2e] report_signature={}",
-                report_signature("legacy", &report)
-            );
-            eprintln!(
-                "  {} pass tests completed ({} passed, {} failed)",
-                report.cases.len(),
-                report.passed_count(),
-                report.failed_count()
-            );
-        }
-        RunnerMode::New => {
-            let report = run_new_pass_suite(&config);
-            assert_report("new", &report);
-            eprintln!(
-                "[sifr-e2e] report_signature={}",
-                report_signature("new", &report)
-            );
-            eprintln!(
-                "  {} pass tests completed ({} passed, {} failed)",
-                report.cases.len(),
-                report.passed_count(),
-                report.failed_count()
-            );
-        }
-        RunnerMode::Compare => {
-            let legacy = run_legacy_pass_suite();
-            let fresh = run_new_pass_suite(&config);
-            compare_pass_reports(&legacy, &fresh).expect("new runner mismatch");
-            assert_report("legacy", &legacy);
-            assert_report("new", &fresh);
-            eprintln!(
-                "[sifr-e2e] report_signature_legacy={}",
-                report_signature("legacy", &legacy)
-            );
-            eprintln!(
-                "[sifr-e2e] report_signature_new={}",
-                report_signature("new", &fresh)
-            );
-            eprintln!(
-                "  compare mode pass tests completed ({} pass in legacy/new)\n    legacy: {} pass, {} fail\n    new: {} pass, {} fail",
-                legacy.cases.len(),
-                legacy.passed_count(),
-                legacy.failed_count(),
-                fresh.passed_count(),
-                fresh.failed_count()
-            );
-        }
-    }
+    let report = run_pass_suite(&config);
+    assert_report("pass", &report);
+    eprintln!(
+        "[sifr-e2e] report_signature={}",
+        report_signature("pass", &report)
+    );
+    eprintln!(
+        "  {} pass tests completed ({} passed, {} failed)",
+        report.cases.len(),
+        report.passed_count(),
+        report.failed_count()
+    );
 }
 
 #[test]
@@ -379,7 +338,7 @@ pub(crate) fn test_e2e_fail() {
 }
 
 #[test]
-pub(crate) fn test_decimal_fail_fixtures_do_not_emit_legacy_pseudo_codes() {
+pub(crate) fn test_decimal_fail_fixtures_do_not_emit_retired_pseudo_codes() {
     let fail_dir = Path::new("tests/e2e/fail");
     if !fail_dir.exists() {
         return;
@@ -397,7 +356,7 @@ pub(crate) fn test_decimal_fail_fixtures_do_not_emit_legacy_pseudo_codes() {
             errors.iter().all(
                 |failure| !failure.code.starts_with("E25") && !failure.message.contains("[E25")
             ),
-            "decimal fixture {} emitted a legacy pseudo-code:\n{}",
+            "decimal fixture {} emitted a retired pseudo-code:\n{}",
             path.display(),
             compile_failures_to_messages(&errors).join("\n")
         );
@@ -494,31 +453,6 @@ pub(crate) fn read_dir_file_paths_sorted(directory: &Path) -> Vec<PathBuf> {
 }
 
 #[test]
-pub(crate) fn test_runner_mode_resolution() {
-    assert!(matches!(
-        parse_runner_mode_from_env(Some("legacy"), None, None).unwrap(),
-        RunnerMode::Legacy
-    ));
-    assert!(matches!(
-        parse_runner_mode_from_env(Some("new"), None, None).unwrap(),
-        RunnerMode::New
-    ));
-    assert!(matches!(
-        parse_runner_mode_from_env(Some("compare"), None, None).unwrap(),
-        RunnerMode::Compare
-    ));
-    assert!(matches!(
-        parse_runner_mode_from_env(None, Some("1"), Some("0")).unwrap(),
-        RunnerMode::New
-    ));
-    assert!(matches!(
-        parse_runner_mode_from_env(None, Some("0"), Some("1")).unwrap(),
-        RunnerMode::Legacy
-    ));
-    assert!(parse_runner_mode_from_env(Some("legacy"), Some("1"), Some("1")).is_err());
-}
-
-#[test]
 pub(crate) fn test_cache_root_from_env_resolution() {
     assert_eq!(
         cache_root_from_env(None),
@@ -590,14 +524,14 @@ pub(crate) fn test_expected_error_contract_accepts_canonical_codes_and_columns()
 }
 
 #[test]
-pub(crate) fn test_expected_error_contract_rejects_messages_legacy_and_unknown_codes() {
+pub(crate) fn test_expected_error_contract_rejects_messages_retired_and_unknown_codes() {
     let message_error = parse_expected_error("SIFR-TYPE-0002: assignment to immutability")
         .expect_err("message substrings must be rejected");
     assert!(message_error.contains("message substrings are not accepted"));
 
-    let legacy_error =
-        parse_expected_error("[E2507]").expect_err("legacy pseudo-codes must be rejected");
-    assert!(legacy_error.contains("legacy pseudo-code"));
+    let retired_error =
+        parse_expected_error("[E2507]").expect_err("retired pseudo-codes must be rejected");
+    assert!(retired_error.contains("retired pseudo-code"));
 
     let unknown_error =
         parse_expected_error("SIFR-TYPE-9999").expect_err("unknown codes must be rejected");

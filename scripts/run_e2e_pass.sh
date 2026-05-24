@@ -3,7 +3,6 @@
 set -euo pipefail
 
 PROFILE="${SIFR_E2E_PROFILE:-pr}"
-MODE_OVERRIDE=""
 SIFR_JOBS_OVERRIDE=""
 RUST_JOBS_OVERRIDE=""
 RUN_JOBS_OVERRIDE=""
@@ -11,6 +10,7 @@ CARGO_BUILD_JOBS_OVERRIDE=""
 DISABLE_CACHE_OVERRIDE=""
 CACHE_DIR_OVERRIDE=""
 FIXTURE_MANIFEST_OVERRIDE=""
+FIXTURE_MANIFEST_DEFAULT=""
 
 usage() {
   cat <<'EOF'
@@ -28,7 +28,6 @@ Legacy aliases:
 
 Options:
   --profile <quick|pr|nightly|release|full|stress> Local execution profile (default: pr)
-  --mode <legacy|new|compare>  Runner mode (default: new)
   --sifr-jobs <n>              Parallel Sifr compile workers
   --rust-jobs <n>              Parallel group build workers
   --run-jobs <n>               Parallel group run workers
@@ -48,28 +47,28 @@ set_profile_defaults() {
   local profile="$1"
   case "${profile}" in
     quick)
-      MODE="new"
       SIFR_JOBS="2"
       RUST_JOBS="2"
       RUN_JOBS="2"
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
+      FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/quick_e2e_manifest.json"
       ;;
     pr)
-      MODE="new"
       SIFR_JOBS="4"
       RUST_JOBS="3"
       RUN_JOBS="3"
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
+      FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/pr_e2e_manifest.json"
       ;;
     nightly|release)
-      MODE="new"
       SIFR_JOBS="6"
       RUST_JOBS="4"
       RUN_JOBS="4"
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
+      FIXTURE_MANIFEST_DEFAULT=""
       ;;
     *)
       echo "unsupported profile: ${profile}" >&2
@@ -83,10 +82,6 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile)
       PROFILE="${2:-}"
-      shift 2
-      ;;
-    --mode)
-      MODE_OVERRIDE="${2:-}"
       shift 2
       ;;
     --sifr-jobs)
@@ -133,18 +128,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE="$(canonicalize_profile "${PROFILE}")"
 set_profile_defaults "${PROFILE}"
 
-MODE="${SIFR_E2E_RUNNER_MODE:-${MODE}}"
 SIFR_JOBS="${SIFR_E2E_SIFR_JOBS:-${SIFR_JOBS}}"
 RUST_JOBS="${SIFR_E2E_RUST_JOBS:-${RUST_JOBS}}"
 RUN_JOBS="${SIFR_E2E_RUN_JOBS:-${RUN_JOBS}}"
 CARGO_BUILD_JOBS="${SIFR_E2E_CARGO_BUILD_JOBS:-${CARGO_BUILD_JOBS}}"
 DISABLE_CACHE="${SIFR_E2E_DISABLE_CACHE:-${DISABLE_CACHE}}"
 CACHE_DIR="${SIFR_E2E_CACHE_DIR:-target/sifr_e2e_cache/${PROFILE}}"
-FIXTURE_MANIFEST="${SIFR_E2E_FIXTURE_MANIFEST:-}"
+FIXTURE_MANIFEST="${SIFR_E2E_FIXTURE_MANIFEST:-${FIXTURE_MANIFEST_DEFAULT}}"
 
-if [[ -n "${MODE_OVERRIDE}" ]]; then
-  MODE="${MODE_OVERRIDE}"
-fi
 if [[ -n "${SIFR_JOBS_OVERRIDE}" ]]; then
   SIFR_JOBS="${SIFR_JOBS_OVERRIDE}"
 fi
@@ -175,7 +166,6 @@ fi
 
 echo "Running e2e pass suite"
 echo "  profile=${PROFILE}"
-echo "  mode=${MODE}"
 echo "  sifr_jobs=${SIFR_JOBS}"
 echo "  rust_jobs=${RUST_JOBS}"
 echo "  run_jobs=${RUN_JOBS}"
@@ -187,7 +177,6 @@ if [[ -n "${FIXTURE_MANIFEST}" ]]; then
 fi
 
 SIFR_E2E_PROFILE="${PROFILE}" \
-SIFR_E2E_RUNNER_MODE="${MODE}" \
 SIFR_E2E_SIFR_JOBS="${SIFR_JOBS}" \
 SIFR_E2E_RUST_JOBS="${RUST_JOBS}" \
 SIFR_E2E_RUN_JOBS="${RUN_JOBS}" \

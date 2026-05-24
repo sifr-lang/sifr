@@ -454,62 +454,7 @@ where
     ordered
 }
 
-pub(crate) fn run_legacy_pass_suite() -> PassReport {
-    let fixtures = discover_fixtures(Path::new("tests/e2e/pass"));
-    assert!(!fixtures.is_empty(), "No pass tests found");
-
-    let mut cases = Vec::with_capacity(fixtures.len());
-    for fixture in fixtures {
-        let status = match compile_source_with_metadata(&fixture.source) {
-            Ok((rust_source, used_modules, required_crates)) => {
-                if !rust_source.contains("fn main(") {
-                    Err("generated Rust has no main function".to_string())
-                } else {
-                    let stdlib_modules = used_modules;
-                    let required_crates = required_crates;
-                    match build_and_run_with_deps(
-                        &rust_source,
-                        &fixture.name,
-                        &stdlib_modules,
-                        &required_crates,
-                    ) {
-                        Ok(stdout) => {
-                            if let Some(expected) = &fixture.expected_stdout {
-                                let expected = expected.trim_end();
-                                let actual = stdout.trim_end();
-                                if expected != actual {
-                                    Err(format!(
-                                        "FAIL [{}]: stdout mismatch\n  expected: {:?}\n  actual:   {:?}",
-                                        fixture.name, expected, actual
-                                    ))
-                                } else {
-                                    Ok(())
-                                }
-                            } else {
-                                Ok(())
-                            }
-                        }
-                        Err(err) => Err(format!("FAIL [{}]: {err}", fixture.name)),
-                    }
-                }
-            }
-            Err(errors) => Err(format!(
-                "FAIL [{}]: sifr compilation failed:\n  {}",
-                fixture.name,
-                errors.join("\n  ")
-            )),
-        };
-
-        cases.push(FixtureExecution {
-            name: fixture.name,
-            status,
-        });
-    }
-
-    PassReport { cases }
-}
-
-pub(crate) fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
+pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
     let fixtures = discover_fixtures(Path::new("tests/e2e/pass"));
     assert!(!fixtures.is_empty(), "No pass tests found");
 
@@ -666,42 +611,6 @@ pub(crate) fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
 
 pub(crate) fn config_cache_root() -> PathBuf {
     Path::new(E2E_CACHE_DIR).to_path_buf()
-}
-
-pub(crate) fn compare_pass_reports(legacy: &PassReport, fresh: &PassReport) -> Result<(), String> {
-    let mut legacy_by_name = BTreeMap::new();
-    let mut new_by_name = BTreeMap::new();
-    for exec in &legacy.cases {
-        legacy_by_name.insert(exec.name.clone(), exec.status.is_ok());
-    }
-    for exec in &fresh.cases {
-        new_by_name.insert(exec.name.clone(), exec.status.is_ok());
-    }
-
-    if legacy_by_name.len() != new_by_name.len() || legacy_by_name.keys().ne(new_by_name.keys()) {
-        return Err("runner comparison requires identical fixture set".to_string());
-    }
-
-    let mut diffs = Vec::new();
-    for (name, legacy_ok) in legacy_by_name {
-        if *new_by_name.get(&name).unwrap_or(&false) != legacy_ok {
-            diffs.push(format!(
-                "fixture {name}: legacy={}, new={}",
-                if legacy_ok { "pass" } else { "fail" },
-                if new_by_name[&name] { "pass" } else { "fail" }
-            ));
-        }
-    }
-
-    if diffs.is_empty() {
-        return Ok(());
-    }
-
-    Err(format!(
-        "Pass/fail outcome differs for {} fixture(s): {}",
-        diffs.len(),
-        diffs.join("\n")
-    ))
 }
 
 pub(crate) fn failure_group(reason: &str) -> &'static str {

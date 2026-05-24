@@ -6,29 +6,18 @@ pub(crate) const E2E_CACHE_DIR: &str = "target/sifr_e2e_cache";
 pub(crate) const E2E_CACHE_MANIFEST: &str = "manifest.json";
 pub(crate) const E2E_CACHE_SCHEMA_VERSION: u32 = 1;
 pub(crate) const E2E_CACHE_TTL_SECS: u64 = 2 * 60 * 60;
-pub(crate) const E2E_CACHE_ENV_ALLOWLIST: [&str; 9] = [
+pub(crate) const E2E_CACHE_ENV_ALLOWLIST: [&str; 6] = [
     "RUSTFLAGS",
     "CARGO_ENCODED_RUSTFLAGS",
     "RUSTC_WRAPPER",
     "SIFR_E2E_PROFILE",
-    "SIFR_E2E_RUNNER_MODE",
-    "SIFR_E2E_NEW_RUNNER",
-    "SIFR_E2E_LEGACY_RUNNER",
     "SIFR_E2E_CACHE_DIR",
     "SIFR_E2E_FIXTURE_MANIFEST",
 ];
 pub(crate) const E2E_FIXTURE_MANIFEST_ENV: &str = "SIFR_E2E_FIXTURE_MANIFEST";
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum RunnerMode {
-    Legacy,
-    New,
-    Compare,
-}
-
 #[derive(Clone, Debug)]
 pub(crate) struct RunnerConfig {
-    pub(crate) mode: RunnerMode,
     pub(crate) sifr_jobs: usize,
     pub(crate) rust_jobs: usize,
     pub(crate) run_jobs: usize,
@@ -241,49 +230,6 @@ pub(crate) fn parse_bool_env(raw: &str) -> Result<bool, String> {
     }
 }
 
-pub(crate) fn parse_runner_mode(raw: &str) -> Result<RunnerMode, String> {
-    match raw.trim().to_ascii_lowercase().as_str() {
-        "legacy" => Ok(RunnerMode::Legacy),
-        "new" => Ok(RunnerMode::New),
-        "compare" => Ok(RunnerMode::Compare),
-        _ => Err(format!(
-            "unsupported SIFR_E2E_RUNNER_MODE value '{raw}', expected legacy|new|compare"
-        )),
-    }
-}
-
-pub(crate) fn parse_runner_mode_from_env(
-    mode: Option<&str>,
-    new_runner: Option<&str>,
-    legacy_runner: Option<&str>,
-) -> Result<RunnerMode, String> {
-    let explicit = mode.map(parse_runner_mode).transpose()?;
-    let new_runner = parse_optional_bool_env_value(new_runner)?;
-    let legacy_runner = parse_optional_bool_env_value(legacy_runner)?;
-
-    if matches!(new_runner, Some(true)) && matches!(legacy_runner, Some(true)) {
-        return Err("conflicting SIFR_E2E_NEW_RUNNER and SIFR_E2E_LEGACY_RUNNER".to_string());
-    }
-
-    if let Some(value) = explicit {
-        return Ok(value);
-    }
-    if matches!(new_runner, Some(true)) {
-        return Ok(RunnerMode::New);
-    }
-    if matches!(legacy_runner, Some(true)) {
-        return Ok(RunnerMode::Legacy);
-    }
-    Ok(RunnerMode::Legacy)
-}
-
-pub(crate) fn parse_optional_bool_env_value(value: Option<&str>) -> Result<Option<bool>, String> {
-    match value {
-        Some(raw) => Ok(Some(parse_bool_env(raw)?)),
-        None => Ok(None),
-    }
-}
-
 pub(crate) fn parse_positive_usize(value: Option<&str>, default: usize) -> usize {
     match value.and_then(|raw| raw.parse::<usize>().ok()) {
         Some(value) if value > 0 => value,
@@ -299,12 +245,6 @@ pub(crate) fn cache_root_from_env(raw: Option<&str>) -> PathBuf {
 }
 
 pub(crate) fn runner_config() -> Result<RunnerConfig, String> {
-    let mode = parse_runner_mode_from_env(
-        env::var("SIFR_E2E_RUNNER_MODE").ok().as_deref(),
-        env::var("SIFR_E2E_NEW_RUNNER").ok().as_deref(),
-        env::var("SIFR_E2E_LEGACY_RUNNER").ok().as_deref(),
-    )?;
-
     let available_workers = std::thread::available_parallelism()
         .map(|v| v.get())
         .unwrap_or(1);
@@ -334,7 +274,6 @@ pub(crate) fn runner_config() -> Result<RunnerConfig, String> {
     let cache_root = cache_root_from_env(env::var("SIFR_E2E_CACHE_DIR").ok().as_deref());
 
     Ok(RunnerConfig {
-        mode,
         sifr_jobs,
         rust_jobs,
         run_jobs,
@@ -744,16 +683,16 @@ pub(crate) fn validate_expected_error_code(code: &str) -> Result<(), String> {
         return Err("expected a diagnostic code after expect-error".to_string());
     }
 
-    let bare_legacy_code = code
+    let bare_retired_code = code
         .strip_prefix('E')
         .is_some_and(|digits| !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit()));
-    let bracketed_legacy_code = code
+    let bracketed_retired_code = code
         .strip_prefix("[E")
         .and_then(|digits| digits.strip_suffix(']'))
         .is_some_and(|digits| !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit()));
-    if bare_legacy_code || bracketed_legacy_code {
+    if bare_retired_code || bracketed_retired_code {
         return Err(format!(
-            "legacy pseudo-code '{code}' is not accepted; use canonical SIFR-<FAMILY>-dddd"
+            "retired pseudo-code '{code}' is not accepted; use canonical SIFR-<FAMILY>-dddd"
         ));
     }
 

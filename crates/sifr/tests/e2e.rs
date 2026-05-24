@@ -1,13 +1,12 @@
 //! End-to-end tests for the Sifr compiler.
 //!
-//! Legacy contract
+//! Harness contract
 //! 1. Discovery is lexicographic by fixture path.
 //! 2. Expectation annotations preserve declaration order.
 //! 3. Failure aggregation reports all failures and passed/failed counts.
 //! 4. Pass/fail exit semantics panic on any failure in `test_e2e_pass`.
 //!
 //! Throughput runner contract
-//! - Contract is controlled via `SIFR_E2E_RUNNER_MODE` and legacy booleans.
 //! - `SIFR_E2E_SIFR_JOBS`: bounded parallel compile workers.
 //! - `SIFR_E2E_RUST_JOBS`: bounded parallel build workers.
 //! - `SIFR_E2E_RUN_JOBS`: bounded parallel run workers.

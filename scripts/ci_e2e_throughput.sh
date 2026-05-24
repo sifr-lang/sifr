@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-MODE="${SIFR_E2E_RUNNER_MODE:-new}"
 RUNS="${SIFR_E2E_BENCH_RUNS:-7}"
 P50_MAX="${SIFR_E2E_BENCH_P50_MS:-90000}"
 P95_MAX="${SIFR_E2E_BENCH_P95_MS:-110000}"
@@ -16,7 +15,7 @@ run_once() {
   local elapsed_ms
 
   start_ms="$(date +%s%3N)"
-  if ! SIFR_E2E_RUNNER_MODE="$MODE" cargo test -p sifr --test e2e test_e2e_pass -- --nocapture >"${TIMING_FILE}.${label}.log" 2>&1; then
+  if ! cargo test -p sifr --test e2e test_e2e_pass -- --nocapture >"${TIMING_FILE}.${label}.log" 2>&1; then
     echo "test_e2e_pass failed in sample ${label}" >&2
     cat "${TIMING_FILE}.${label}.log" >&2
     exit 1
@@ -27,7 +26,6 @@ run_once() {
 }
 
 echo "== e2e throughput benchmark =="
-echo "mode: ${MODE}"
 echo "samples: ${RUNS} (warm cache protocol; first warm run discarded)"
 mkdir -p "$(dirname "${TIMING_FILE}")"
 

@@ -344,6 +344,9 @@ Validation notes:
 - Final module-layout cleanup replaced the remaining first-party hand-written Rust `include!` / `#[path]` split shape with conventional Rust modules and responsibility-based file locations.
 - Final module-layout cleanup validation passed with `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `git diff --check`, focused first-party scans for `include!`, `#[path]`, `rustfmt::skip`, `allow(unused_imports)`, and numeric split filenames, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
 - Final module-layout Claude review returned `Satisfied` with no blocking findings in `reviews/include-module-refactor-review-round1.md`.
+- E2E runner cleanup removed the retired runner compatibility path from `crates/sifr/tests/e2e.rs` and its support modules, including compare-mode dispatch, legacy runner mode environment variables, and validation-lane mode metadata.
+- E2E runner cleanup validation passed with focused stale-runner scans, `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `git diff --check`, shell syntax checks, `python3 -m py_compile scripts/validation_lane.py`, `cargo test -p sifr --test e2e -- --skip test_e2e_pass`, `scripts/run_e2e_pass.sh --profile quick`, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
+- E2E runner cleanup Claude review reached `Verdict: Satisfied` in `reviews/e2e-runner-cleanup-review-round2.md`.
 
 ## Done Criteria
 
