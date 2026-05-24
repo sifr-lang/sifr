@@ -350,6 +350,9 @@ Validation notes:
 - Codegen refactor polish replaced the remaining broad root re-exports in the touched statement-lowering roots with explicit surfaces, split near-cap statement-support and lower-statement modules by responsibility, and kept test functions private while retaining explicit helper visibility only for sibling test modules.
 - Codegen refactor polish validation passed with `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, focused scans for `include!` and wildcard re-exports in the touched codegen roots/modules, and `scripts/run_all_tests.sh --profile quick`.
 - Codegen refactor polish Claude review returned `SATISFIED` in `reviews/codegen-refactor-polish-review-round1.md`.
+- Expr render cleanup removed stale `legacy_i64` terminology from the SifrInt promotion helpers and adjacent state comments, replacing it with current plain-`i64` storage naming.
+- Expr render cleanup validation passed with `cargo fmt --check`, `cargo check -p sifr_codegen`, focused legacy/backcompat scans, and `cargo test -p sifr_codegen expr_render_helpers::tests`.
+- Expr render cleanup Claude review returned `SATISFIED` in `reviews/expr-render-legacy-cleanup-review-round1.md`. The attempted quick validation progressed through the earlier guardrail and package lanes but was stopped after reproducing a pre-existing `cargo test -p sifr_lsp --doc` hang unrelated to this cleanup.
 
 ## Done Criteria
 

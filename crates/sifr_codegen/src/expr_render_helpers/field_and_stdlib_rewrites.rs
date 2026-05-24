@@ -1,7 +1,7 @@
 use super::{
-    is_legacy_i64_type, is_proven_nonzero_integer_expr, is_result_legacy_i64_type,
+    is_plain_i64_storage_type, is_proven_nonzero_integer_expr, is_result_plain_i64_storage_type,
     is_sifr_int_arithmetic_op, is_sifr_int_checked_floor_op, is_sifr_int_comparison_op,
-    is_sifr_int_operand_coercion_op, result_i64_type_to_sifr_int, rust_expr_identifier_path,
+    is_sifr_int_operand_coercion_op, promote_result_i64_ok_to_sifr_int, rust_expr_identifier_path,
 };
 use crate::helpers::needs_clone_for_type;
 use crate::RustEmitter;
@@ -546,27 +546,29 @@ impl RustEmitter {
                 let force_sifr_int = self.is_forced_sifr_int_local(&name);
                 let value_is_sifr_int = self.is_sifr_int_expr(&value);
                 let value_is_sifr_int_result = self.is_sifr_int_result_expr(&value);
-                let (ty, value) =
-                    if is_legacy_i64_type(ty.as_ref()) && (value_is_sifr_int || force_sifr_int) {
-                        let value = self.coerce_expr_to_sifr_int_value(value);
-                        self.sifr_int_local_bindings
-                            .borrow_mut()
-                            .insert(name.clone());
-                        (Some(crate::RustType::Named("SifrInt".to_string())), value)
-                    } else if is_result_legacy_i64_type(ty.as_ref()) && value_is_sifr_int_result {
-                        self.sifr_int_result_local_bindings
-                            .borrow_mut()
-                            .insert(name.clone());
-                        (ty.map(result_i64_type_to_sifr_int), value)
-                    } else {
-                        if !force_sifr_int {
-                            self.sifr_int_local_bindings.borrow_mut().remove(&name);
-                        }
-                        self.sifr_int_result_local_bindings
-                            .borrow_mut()
-                            .remove(&name);
-                        (ty, value)
-                    };
+                let (ty, value) = if is_plain_i64_storage_type(ty.as_ref())
+                    && (value_is_sifr_int || force_sifr_int)
+                {
+                    let value = self.coerce_expr_to_sifr_int_value(value);
+                    self.sifr_int_local_bindings
+                        .borrow_mut()
+                        .insert(name.clone());
+                    (Some(crate::RustType::Named("SifrInt".to_string())), value)
+                } else if is_result_plain_i64_storage_type(ty.as_ref()) && value_is_sifr_int_result
+                {
+                    self.sifr_int_result_local_bindings
+                        .borrow_mut()
+                        .insert(name.clone());
+                    (ty.map(promote_result_i64_ok_to_sifr_int), value)
+                } else {
+                    if !force_sifr_int {
+                        self.sifr_int_local_bindings.borrow_mut().remove(&name);
+                    }
+                    self.sifr_int_result_local_bindings
+                        .borrow_mut()
+                        .remove(&name);
+                    (ty, value)
+                };
                 crate::RustStmt::Let {
                     mutable,
                     name,
