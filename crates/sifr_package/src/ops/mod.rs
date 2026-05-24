@@ -6,3 +6,4 @@ pub mod resolve;
 pub mod session;
 mod session_discovery;
 mod session_targets;
+mod workspace_session;

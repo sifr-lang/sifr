@@ -158,6 +158,9 @@ sifr check --locked --offline
 cd ../sifr-demo-workspace
 sifr check --workspace --locked
 sifr check --workspace --exclude sifr-demo-app --locked
+sifr run -p sifr-demo-app --locked
+sifr run -p sifr-demo-app --bin status --locked
+sifr run -p sifr-demo-app --script status-smoke --locked
 ```
 
 Development-only dependencies stay in `[dev-dependencies]`; normal `sifr run`, `sifr check`, `sifr package`, and `sifr publish` only expose runtime `[dependencies]` as import roots.

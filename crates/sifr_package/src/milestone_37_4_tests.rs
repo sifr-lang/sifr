@@ -78,6 +78,7 @@ fn offline_mode_reports_missing_sifr_source_package() {
         )]),
         resolve_edges: Vec::new(),
         workspace_members: BTreeSet::new(),
+        workspace_default_members: BTreeSet::new(),
         target_directory: PathBuf::from("/ws/target"),
         workspace_root: PathBuf::from("/ws"),
     };

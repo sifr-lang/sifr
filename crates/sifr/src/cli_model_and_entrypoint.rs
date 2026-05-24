@@ -51,6 +51,9 @@ pub(crate) enum Commands {
     Run {
         /// Input .sifr file, app target, or script name
         target: Option<String>,
+        /// Select a workspace package by Cargo package name
+        #[arg(short = 'p', long = "package")]
+        packages: Vec<String>,
         /// Select a layout-discovered app target
         #[arg(long)]
         bin: Option<String>,
@@ -349,6 +352,7 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Build { file, output } => cmd_build(&file, &output, diagnostic_format),
         Commands::Run {
             target,
+            packages,
             bin,
             script,
             locked,
@@ -359,6 +363,7 @@ fn run_cli(cli: Cli) -> i32 {
             target.as_deref(),
             bin.as_deref(),
             script.as_deref(),
+            &packages,
             &args,
             lock_mode_from_flags(locked, offline, frozen),
             diagnostic_format,

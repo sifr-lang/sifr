@@ -117,6 +117,7 @@
         "packages/app/Cargo.toml",
         "packages/app/sifr.toml",
         "packages/app/src/__init__.sifr",
+        "packages/app/src/bin/status.sifr",
         "packages/app/src/main.sifr",
         "packages/app/src/lib.rs",
         "packages/backend-utils/Cargo.toml",

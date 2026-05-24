@@ -257,7 +257,7 @@ Review:
 
 ### milestone_adhoc_pkg_8: Cargo-compatible workspace run ergonomics
 
-Status: planned.
+Status: implemented locally; reviewer-approved; parent PR pending.
 
 Scope:
 
@@ -269,13 +269,21 @@ Scope:
 
 Validation:
 
-- `cargo test -p sifr_package package_session -- --test-threads=1`
-- `cargo test -p sifr --bin sifr package_cli -- --test-threads=1`
-- `python3 scripts/check_package_manager_guardrails.py`
-- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --locked`
-- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --bin <target> --locked` using a checked-in or temporary `src/bin/*.sifr` target.
-- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --script <script> --locked` once the demo member declares a structured run script.
-- `scripts/run_all_tests.sh --profile quick`
+- `cargo test -p sifr_package package_session -- --test-threads=1` -> PASS.
+- `cargo test -p sifr --bin sifr package_cli -- --test-threads=1` -> PASS.
+- `python3 scripts/check_package_manager_guardrails.py` -> PASS.
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --locked` -> PASS, prints `200`.
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --bin status --locked` -> PASS, prints `200`.
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --script status-smoke --locked` -> PASS, prints `200`.
+- `scripts/run_all_tests.sh --profile quick` -> PASS (warm wall-time/skew advisories only).
+
+Demo PR:
+
+- https://github.com/sifr-lang/sifr-demo-workspace/pull/3
+
+Review:
+
+- `reviews/adhoc-package-dx-m8-review-pass-1.md` -> READY with no blocking findings.
 
 Acceptance:
 

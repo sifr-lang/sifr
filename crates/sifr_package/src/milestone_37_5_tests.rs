@@ -293,6 +293,7 @@ fn graph_and_metadata_without_rust_violation() -> (SifrPackageGraph, NormalizedC
             shared.cargo_package_id.clone(),
             rust_id,
         ]),
+        workspace_default_members: BTreeSet::new(),
         target_directory: PathBuf::from("/ws/target"),
         workspace_root: PathBuf::from("/ws"),
     };
