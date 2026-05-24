@@ -1,382 +1,7 @@
 use super::*;
-#[test]
-pub(super) fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.TaskGroup() as group:\n        handle = group.spawn(worker())\n        result = await handle.join()\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("struct __SifrTaskScope"));
-    assert!(result
-        .rust_source
-        .contains("let mut group = __SifrTaskScope::new_task_group();"));
-    assert!(result.rust_source.contains("fail_fast"));
-    assert!(result
-        .rust_source
-        .contains("group.__sifr_spawn_infallible(worker());"));
-    assert!(result
-        .rust_source
-        .contains("if let Err(__sifr_scope_failure) = group.__sifr_join_all().await"));
-    assert!(result.required_crates.contains("tokio"));
-}
 
 #[test]
-pub(super) fn test_task_gather_lowers_to_private_gather_helper() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    return 2\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("async fn __sifr_task_gather"));
-    assert!(result.rust_source.contains("__sifr_task_gather(vec!["));
-    assert!(result.rust_source.contains("abort_handle.abort();"));
-    assert!(result.rust_source.contains("failure_results"));
-    assert!(result.rust_source.contains("push_secondary_message"));
-    assert!(result.rust_source.contains("ordered_values.push(value);"));
-    assert!(result
-        .rust_source
-        .contains("let result: __SifrTaskResult<Vec<i64>, std::convert::Infallible>"));
-    assert!(result.required_crates.contains("tokio"));
-}
-
-#[test]
-pub(super) fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result
-        .rust_source
-        .contains("tokio::sync::oneshot::Receiver<__SifrTaskResult<T, E>>"));
-    assert!(result
-        .rust_source
-        .contains("scope.__sifr_spawn_result(worker());"));
-    assert!(result.rust_source.contains("enum __SifrTaskResult<T, E>"));
-    assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
-    assert!(result
-        .rust_source
-        .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));
-    assert!(result
-        .rust_source
-        .contains("let result: __SifrTaskResult<i64, ValueError>"));
-    assert!(result.required_crates.contains("tokio"));
-}
-
-#[test]
-pub(super) fn test_task_gather_fallible_tasks_keeps_error_parameter_unwrapped() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(worker()), scope.spawn(worker())])\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("async fn __sifr_task_gather"));
-    assert!(result.rust_source.contains("__SifrTaskResult<Vec<T>, E>"));
-    assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
-    assert!(result
-        .rust_source
-        .contains("sibling task failed\".to_string()"));
-    assert!(result
-        .rust_source
-        .contains("sibling task was cancelled\".to_string()"));
-    assert!(result
-        .rust_source
-        .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));
-    assert!(result
-        .rust_source
-        .contains("let result: __SifrTaskResult<Vec<i64>, ValueError>"));
-}
-
-#[test]
-pub(super) fn test_task_race_lowers_to_private_race_helper() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    await task.sleep(1.0)\n    return 2\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("async fn __sifr_task_race"));
-    assert!(result.rust_source.contains("__sifr_task_race(vec!["));
-    assert!(result.rust_source.contains("let Some(mut first)"));
-    assert!(result
-        .rust_source
-        .contains("race loser task failed\".to_string()"));
-    assert!(result
-        .rust_source
-        .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
-    assert!(result.required_crates.contains("tokio"));
-}
-
-#[test]
-pub(super) fn test_task_race_fallible_tasks_keeps_error_parameter_unwrapped() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(worker()), scope.spawn(worker())])\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("async fn __sifr_task_race"));
-    assert!(result.rust_source.contains("__SifrTaskResult<T, E>"));
-    assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
-    assert!(result
-        .rust_source
-        .contains("race loser task was cancelled\".to_string()"));
-    assert!(result
-        .rust_source
-        .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));
-    assert!(result
-        .rust_source
-        .contains("let result: __SifrTaskResult<i64, ValueError>"));
-}
-
-#[test]
-pub(super) fn test_task_select_lowers_to_private_select_helper() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> str:\n    await task.sleep(1.0)\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first_handle, second_handle)\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("enum __SifrSelect2<A, B>"));
-    assert!(result.rust_source.contains("async fn __sifr_task_select"));
-    assert!(result
-        .rust_source
-        .contains("__sifr_task_select(first_handle, second_handle)"));
-    assert!(result
-        .rust_source
-        .contains("select loser task failed\".to_string()"));
-    assert!(result
-        .rust_source
-        .contains("select loser task was cancelled\".to_string()"));
-    assert!(result
-        .rust_source
-        .contains("second_observed.store(false, std::sync::atomic::Ordering::SeqCst)"));
-    assert!(result
-        .rust_source
-        .contains("first_observed.store(false, std::sync::atomic::Ordering::SeqCst)"));
-    assert!(result.rust_source.contains(
-        "let result: __SifrSelect2<__SifrTaskResult<i64, std::convert::Infallible>, __SifrTaskResult<String, std::convert::Infallible>>"
-    ));
-    assert!(result.required_crates.contains("tokio"));
-}
-
-#[test]
-pub(super) fn test_task_select_fallible_tasks_preserves_distinct_error_parameters() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def first() -> Result[int, ValueError]:\n    raise ValueError(\"first\")\n\nasync def second() -> Result[str, IOError]:\n    raise IOError(\"second\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first_handle, second_handle)\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("__SifrTaskResult<A, EA>"));
-    assert!(result.rust_source.contains("__SifrTaskResult<B, EB>"));
-    assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
-    assert!(result.rust_source.contains(
-        "let result: __SifrSelect2<__SifrTaskResult<i64, ValueError>, __SifrTaskResult<String, IOError>>"
-    ));
-}
-
-#[test]
-pub(super) fn test_task_handle_join_lowers_to_task_result_observation() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle.join()\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("enum __SifrTaskResult<T, E>"));
-    assert!(result.rust_source.contains("async fn join(self)"));
-    assert!(result
-        .rust_source
-        .contains("Cancelled(__SifrFailure<CancellationError>)"));
-    assert!(result.rust_source.contains("fn cancelled() -> Self"));
-    assert!(result.rust_source.contains("handle.join().await"));
-    assert!(result
-        .rust_source
-        .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
-}
-
-#[test]
-pub(super) fn test_await_task_handle_desugars_to_join_observation() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("handle.join().await"));
-    assert!(result
-        .rust_source
-        .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
-}
-
-#[test]
-pub(super) fn test_task_handle_cancel_borrows_handle_and_aborts_child() {
-    let source = concat!(
-        "async def worker() -> int:\n    await task.sleep(10.0)\n    return 41\n\n",
-        "async def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n",
-        "        handle = scope.spawn(worker())\n        handle.",
-        "cancel",
-        "()\n        result = await handle\n    return None\n",
-    );
-    let result = generate_rust_with_metadata(
-        &lower_module(parse_module(source).expect("parse failed").suite())
-            .expect("lowering failed")
-            .module,
-    );
-
-    assert!(result
-        .rust_source
-        .contains("abort_handle: tokio::task::AbortHandle"));
-    assert!(result
-        .rust_source
-        .contains(&format!("fn {}{}", "can", "cel(&self)")));
-    assert!(result
-        .rust_source
-        .contains(&format!("handle.{}{}", "can", "cel();")));
-    assert!(result.rust_source.contains("struct CancellationError"));
-    assert!(result.rust_source.contains("__SifrTaskResult::cancelled()"));
-    assert!(result.rust_source.contains("handle.join().await"));
-}
-
-#[test]
-pub(super) fn test_task_timeout_handle_lowers_to_private_timeout_result() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("enum __SifrTimeoutResult<E>"));
-    assert!(result.rust_source.contains("async fn __sifr_timeout"));
-    assert!(result.rust_source.contains("biased;"));
-    assert!(result.rust_source.contains("handle.__sifr_timeout"));
-    assert!(result
-        .rust_source
-        .contains("failure.map_primary(__SifrTimeoutResult::Inner)"));
-    assert!(result
-        .rust_source
-        .contains("__SifrFailure::new(__SifrTimeoutResult::Timeout)"));
-    assert!(result.rust_source.contains(
-        "let result: __SifrTaskResult<i64, __SifrTimeoutResult<std::convert::Infallible>>"
-    ));
-}
-
-#[test]
-pub(super) fn test_failure_cancellation_error_annotation_lowers_to_private_evidence_type() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "def observe(failure: Failure[CancellationError]) -> None:\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("struct __SifrFailure<E>"));
-    assert!(result.rust_source.contains("struct CancellationError"));
-    assert!(result
-        .rust_source
-        .contains("fn observe(failure: &__SifrFailure<CancellationError>)"));
-}
-
-#[test]
-pub(super) fn test_failure_annotation_lowers_to_private_failure_type() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module("def observe(failure: Failure[ValueError]) -> None:\n    return None\n")
-                .expect("parse failed")
-                .suite(),
-        )
-        .expect("lowering failed")
-        .module,
-    );
-
-    assert!(result.rust_source.contains("struct __SifrFailure<E>"));
-    assert!(result.rust_source.contains("primary: E"));
-    assert!(result
-        .rust_source
-        .contains("secondary: Vec<SecondaryError>"));
-    assert!(result
-        .rust_source
-        .contains("fn observe(failure: &__SifrFailure<ValueError>)"));
-}
-
-#[test]
-pub(super) fn test_task_timeout_context_manager_wraps_awaits() {
+fn test_task_timeout_context_manager_wraps_awaits() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -396,7 +21,7 @@ pub(super) fn test_task_timeout_context_manager_wraps_awaits() {
 }
 
 #[test]
-pub(super) fn test_try_except_with_async_body_lowers_to_async_try_closure() {
+fn test_try_except_with_async_body_lowers_to_async_try_closure() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -415,7 +40,7 @@ pub(super) fn test_try_except_with_async_body_lowers_to_async_try_closure() {
 }
 
 #[test]
-pub(super) fn test_try_finally_runs_cleanup_before_timeout_propagates() {
+fn test_try_finally_runs_cleanup_before_timeout_propagates() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -442,7 +67,7 @@ pub(super) fn test_try_finally_runs_cleanup_before_timeout_propagates() {
 }
 
 #[test]
-pub(super) fn test_try_finally_cleanup_try_except_lowers_question_mark_calls() {
+fn test_try_finally_cleanup_try_except_lowers_question_mark_calls() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -476,7 +101,7 @@ def main() -> Result[None, Error]:
 }
 
 #[test]
-pub(super) fn test_async_generated_errors_convert_to_error_return_type() {
+fn test_async_generated_errors_convert_to_error_return_type() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -504,7 +129,7 @@ pub(super) fn test_async_generated_errors_convert_to_error_return_type() {
 }
 
 #[test]
-pub(super) fn test_sync_main_does_not_require_tokio() {
+fn test_sync_main_does_not_require_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module("def main() -> None:\n    return None\n")
@@ -522,7 +147,7 @@ pub(super) fn test_sync_main_does_not_require_tokio() {
 }
 
 #[test]
-pub(super) fn test_generate_project_emits_tokio_dependency_when_required() {
+fn test_generate_project_emits_tokio_dependency_when_required() {
     let module = empty_module();
     let required_crates = HashSet::from(["tokio".to_string()]);
     let (cargo_toml, _main_rs) = generate_project_with_deps_and_crates(
@@ -538,7 +163,7 @@ pub(super) fn test_generate_project_emits_tokio_dependency_when_required() {
 }
 
 #[test]
-pub(super) fn test_module_constants_flow_through_assembled_body_items() {
+fn test_module_constants_flow_through_assembled_body_items() {
     let module_constants_src = include_str!("../module_constants.rs");
     let entrypoints_src = include_str!("../entrypoints.rs");
     let lib_src = include_str!("../lib.rs");
@@ -557,7 +182,7 @@ pub(super) fn test_module_constants_flow_through_assembled_body_items() {
 }
 
 #[test]
-pub(super) fn test_module_body_flows_through_assembled_body_items() {
+fn test_module_body_flows_through_assembled_body_items() {
     let module_body_src = include_str!("../module_body.rs");
     let lib_src = include_str!("../lib.rs");
 
@@ -570,7 +195,7 @@ pub(super) fn test_module_body_flows_through_assembled_body_items() {
 }
 
 #[test]
-pub(super) fn test_generator_init_emission_is_structured_only() {
+fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("../stmt_support_emitter.rs");
     assert!(stmt_support_src.contains("self.lower_stmt_expr_for_ir(value)"));
     assert!(stmt_support_src.contains("self.try_lower_structured_stmt(stmt)"));
@@ -585,7 +210,7 @@ pub(super) fn test_generator_init_emission_is_structured_only() {
 }
 
 #[test]
-pub(super) fn test_expr_side_effect_emitter_layer_is_removed() {
+fn test_expr_side_effect_emitter_layer_is_removed() {
     let expr_render_helpers_src = include_str!("../expr_render_helpers.rs");
     let output_helpers_src = include_str!("../output_helpers.rs");
     let intrinsic_emitters_src = include_str!("../intrinsic_method_emitters.rs");
@@ -599,7 +224,7 @@ pub(super) fn test_expr_side_effect_emitter_layer_is_removed() {
 }
 
 #[test]
-pub(super) fn test_production_codegen_source_has_no_non_ir_tokens() {
+fn test_production_codegen_source_has_no_non_ir_tokens() {
     let src_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
     let banned_tokens = [
         "RawCode",
@@ -656,7 +281,7 @@ pub(super) fn test_production_codegen_source_has_no_non_ir_tokens() {
 }
 
 #[test]
-pub(super) fn test_round_parenthesizes_cast_receiver() {
+fn test_round_parenthesizes_cast_receiver() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -701,7 +326,7 @@ pub(super) fn test_round_parenthesizes_cast_receiver() {
 }
 
 #[test]
-pub(super) fn test_float_min_max_parenthesize_cast_receivers() {
+fn test_float_min_max_parenthesize_cast_receivers() {
     let float_one = HirExpr::Call {
         func: "float".to_string(),
         args: vec![HirExpr::IntLiteral(1)],
@@ -770,7 +395,7 @@ pub(super) fn test_float_min_max_parenthesize_cast_receivers() {
 }
 
 #[test]
-pub(super) fn test_variadic_min_max_lower_to_nested_calls() {
+fn test_variadic_min_max_lower_to_nested_calls() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),

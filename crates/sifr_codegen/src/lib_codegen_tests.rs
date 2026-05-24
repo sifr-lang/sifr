@@ -17,6 +17,8 @@ pub(crate) use async_control_codegen_tests::{empty_module, generate_rust_from_so
 #[cfg(test)]
 mod async_runtime_codegen_tests;
 #[cfg(test)]
+mod async_task_runtime_codegen_tests;
+#[cfg(test)]
 mod classes_and_basics_codegen_tests;
 #[cfg(test)]
 mod collections_and_stdlib_codegen_tests;

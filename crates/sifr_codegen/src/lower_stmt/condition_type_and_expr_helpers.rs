@@ -1,0 +1,253 @@
+use super::{
+    try_lower_leaf_expr, HashSet, HirExpr, RustExpr, RustLiteral, RustParam, RustStmt, RustType,
+    Type,
+};
+pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
+    match ty {
+        Type::Alias { body, .. } => resolve_alias_type(body),
+        _ => ty,
+    }
+}
+
+pub(super) fn is_option_like_type(ty: &Type) -> bool {
+    if let Type::Union(members) = resolve_alias_type(ty) {
+        let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
+        let has_none = members.iter().any(|m| matches!(m, Type::None));
+        has_none && non_none == 1
+    } else {
+        false
+    }
+}
+
+pub(super) fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
+    if let HirExpr::Name { name, ty } = expr {
+        if is_option_like_type(ty) {
+            return Some(name.clone());
+        }
+    }
+    None
+}
+
+pub(super) fn lower_if_not_none_chain(
+    option_vars: &[String],
+    lowered_then_body: Vec<RustStmt>,
+    nested_else: Option<Vec<RustStmt>>,
+    mutated_vars: &HashSet<String>,
+) -> Option<RustStmt> {
+    let mut chain_then = lowered_then_body;
+    for option_var in option_vars.iter().rev() {
+        let pattern = if mutated_vars.contains(option_var) {
+            format!("Some(mut {option_var})")
+        } else {
+            format!("Some({option_var})")
+        };
+        chain_then = vec![RustStmt::IfLet {
+            pattern,
+            expr: RustExpr::Ident(option_var.clone()),
+            then_body: chain_then,
+            else_body: None,
+        }];
+    }
+
+    let mut chain_root = chain_then.into_iter().next()?;
+    if let RustStmt::IfLet { else_body, .. } = &mut chain_root {
+        *else_body = nested_else;
+    }
+    Some(chain_root)
+}
+
+pub(super) fn is_alias_equivalent_type(left: &Type, right: &Type) -> bool {
+    left == right || resolve_alias_type(left) == resolve_alias_type(right)
+}
+
+pub(super) fn is_none_type(ty: &Type) -> bool {
+    matches!(resolve_alias_type(ty), Type::None)
+}
+
+pub(super) fn is_okwrap_none_expr(expr: &HirExpr) -> bool {
+    matches!(
+        expr,
+        HirExpr::OkWrap { value, .. }
+            if matches!(value.as_ref(), HirExpr::NoneLiteral) || is_none_type(value.ty())
+    )
+}
+
+pub(super) fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let HirExpr::Name { name, .. } = expr {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
+}
+
+pub(super) fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(expr) {
+        return Some(lowered);
+    }
+    if let HirExpr::Lambda { params, body, .. } = expr {
+        let lowered_params = params
+            .iter()
+            .map(|param| RustParam::Named {
+                name: param.name.clone(),
+                ty: RustType::Named("_".to_string()),
+            })
+            .collect::<Vec<_>>();
+        return Some(RustExpr::Closure {
+            params: lowered_params,
+            body: Box::new(try_lower_leaf_or_name_expr(body)?),
+            is_move: false,
+        });
+    }
+    if let Some(lowered) = try_lower_stmt_index_expr(expr) {
+        return Some(lowered);
+    }
+    if let Some(lowered) = try_lower_stmt_string_concat_expr(expr) {
+        return Some(lowered);
+    }
+    try_lower_name_ident_expr(expr)
+}
+
+pub(super) fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
+    let HirExpr::Index { object, index, .. } = expr else {
+        return None;
+    };
+    if !is_option_like_type(expr.ty())
+        && matches!(resolve_alias_type(object.ty()), Type::List(_) | Type::Str)
+    {
+        return None;
+    }
+    match resolve_alias_type(object.ty()) {
+        Type::Dict(_, value_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
+            let lowered_key = if let HirExpr::StringLiteral(value) = index.as_ref() {
+                RustExpr::Ident(format!("{value:?}"))
+            } else {
+                RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                }
+            };
+            let lowered_get = RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![lowered_key],
+                }),
+                method: projection_method.to_string(),
+                args: vec![],
+            };
+            if is_option_like_type(value_ty.as_ref()) {
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_get),
+                    method: "and_then".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "__v".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Ident("__v".to_string())),
+                        is_move: false,
+                    }],
+                })
+            } else {
+                Some(lowered_get)
+            }
+        }
+        Type::List(element_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(element_ty.as_ref());
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                }),
+                method: projection_method.to_string(),
+                args: vec![],
+            })
+        }
+        _ => None,
+    }
+}
+
+pub(super) fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustExpr> {
+    let HirExpr::BinOp {
+        left,
+        op,
+        right,
+        ty,
+    } = expr
+    else {
+        return None;
+    };
+    if op != "+" || !matches!(resolve_alias_type(ty), Type::Str) {
+        return None;
+    }
+
+    let mut parts = Vec::new();
+    collect_stmt_string_concat_parts(left, &mut parts);
+    collect_stmt_string_concat_parts(right, &mut parts);
+
+    if parts
+        .iter()
+        .all(|part| matches!(part, HirExpr::StringLiteral(_)))
+    {
+        let mut combined = String::new();
+        for part in parts {
+            if let HirExpr::StringLiteral(value) = part {
+                combined.push_str(value);
+            }
+        }
+        return Some(RustExpr::Literal(RustLiteral::Str(combined)));
+    }
+
+    Some(RustExpr::FormatMacro {
+        name: "format".to_string(),
+        format_str: "{}".repeat(parts.len()),
+        args: parts
+            .iter()
+            .map(|part| try_lower_leaf_or_name_expr(part))
+            .collect::<Option<Vec<_>>>()?,
+    })
+}
+
+pub(super) fn collect_stmt_string_concat_parts<'a>(
+    expr: &'a HirExpr,
+    parts: &mut Vec<&'a HirExpr>,
+) {
+    if let HirExpr::BinOp {
+        left,
+        op,
+        right,
+        ty,
+    } = expr
+    {
+        if op == "+" && matches!(resolve_alias_type(ty), Type::Str) {
+            collect_stmt_string_concat_parts(left, parts);
+            collect_stmt_string_concat_parts(right, parts);
+            return;
+        }
+    }
+    parts.push(expr);
+}
+
+pub(super) fn try_lower_attribute_dict_insert_key_expr(
+    index: &HirExpr,
+    field_ty: &Type,
+) -> Option<RustExpr> {
+    let Type::Dict(key_ty, _) = resolve_alias_type(field_ty) else {
+        return None;
+    };
+
+    if matches!(resolve_alias_type(key_ty), Type::Str | Type::TypeVar(_))
+        && matches!(index, HirExpr::Name { .. })
+    {
+        // Preserve borrowed-name key cloning semantics.
+        return None;
+    }
+
+    try_lower_leaf_or_name_expr(index)
+}

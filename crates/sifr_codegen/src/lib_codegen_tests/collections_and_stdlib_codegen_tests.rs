@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_condition() {
+fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_condition() {
     let tuple_ty = Type::Tuple(vec![Type::Int, Type::Int]);
     let stmt = HirStmt::While {
         condition: HirExpr::BoolOp {
@@ -58,7 +58,7 @@ pub(super) fn test_structured_stmt_path_lowers_collection_truthiness_inside_bool
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_lowers_option_call_truthiness_to_bool_condition() {
+fn test_structured_stmt_path_lowers_option_call_truthiness_to_bool_condition() {
     let stmt = HirStmt::If {
         condition: HirExpr::MethodCall {
             object: Box::new(HirExpr::Name {
@@ -90,7 +90,7 @@ pub(super) fn test_structured_stmt_path_lowers_option_call_truthiness_to_bool_co
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_lowers_nested_string_augassign_to_push_str() {
+fn test_structured_stmt_path_lowers_nested_string_augassign_to_push_str() {
     let stmt = HirStmt::While {
         condition: HirExpr::BoolLiteral(true),
         body: vec![HirStmt::If {
@@ -125,7 +125,7 @@ pub(super) fn test_structured_stmt_path_lowers_nested_string_augassign_to_push_s
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_string_contains_avoids_double_borrow_pattern_arg() {
+fn test_structured_stmt_path_string_contains_avoids_double_borrow_pattern_arg() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "contains_self".to_string(),
@@ -178,7 +178,7 @@ pub(super) fn test_structured_stmt_path_string_contains_avoids_double_borrow_pat
 }
 
 #[test]
-pub(super) fn test_plain_call_canonicalizes_heapq_compat_symbol_name() {
+fn test_plain_call_canonicalizes_heapq_compat_symbol_name() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "touch".to_string(),
@@ -220,7 +220,7 @@ pub(super) fn test_plain_call_canonicalizes_heapq_compat_symbol_name() {
 }
 
 #[test]
-pub(super) fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
+fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "to_list".to_string(),
@@ -261,7 +261,7 @@ pub(super) fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_
 }
 
 #[test]
-pub(super) fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
+fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
     let generator = HirExpr::GeneratorExpr {
         expr: Box::new(HirExpr::Call {
             func: "str".to_string(),
@@ -313,7 +313,7 @@ pub(super) fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_ca
 }
 
 #[test]
-pub(super) fn test_list_repeat_lowers_without_vec_mul_shape() {
+fn test_list_repeat_lowers_without_vec_mul_shape() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "repeat_zero".to_string(),
@@ -357,7 +357,7 @@ pub(super) fn test_list_repeat_lowers_without_vec_mul_shape() {
 }
 
 #[test]
-pub(super) fn test_compare_lowers_int_float_mixed_operands_with_cast() {
+fn test_compare_lowers_int_float_mixed_operands_with_cast() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "cmp".to_string(),
@@ -409,7 +409,7 @@ pub(super) fn test_compare_lowers_int_float_mixed_operands_with_cast() {
 }
 
 #[test]
-pub(super) fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool() {
+fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool() {
     let optional_index = HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: "grid2".to_string(),
@@ -465,7 +465,7 @@ pub(super) fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool(
 }
 
 #[test]
-pub(super) fn test_string_slice_negative_stop_normalizes_against_length() {
+fn test_string_slice_negative_stop_normalizes_against_length() {
     let rust_code = generate_rust_from_source(
         "def repeatedSubstringPattern(s: str) -> bool:\n    return s in (s + s)[1:-1]\n",
     );
@@ -484,7 +484,7 @@ pub(super) fn test_string_slice_negative_stop_normalizes_against_length() {
 }
 
 #[test]
-pub(super) fn test_union_display_impl_uses_structured_ir() {
+fn test_union_display_impl_uses_structured_ir() {
     let union_src = include_str!("../union_type_helpers.rs");
     assert!(union_src.contains("RustType::Ref {"));
     assert!(union_src.contains("RustStmt::Match {"));
@@ -492,7 +492,7 @@ pub(super) fn test_union_display_impl_uses_structured_ir() {
 }
 
 #[test]
-pub(super) fn test_union_enum_definitions_emit_structured_items() {
+fn test_union_enum_definitions_emit_structured_items() {
     let union_src = include_str!("../union_type_helpers.rs");
     let lib_src = include_str!("../lib.rs");
 
@@ -502,7 +502,7 @@ pub(super) fn test_union_enum_definitions_emit_structured_items() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
+fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     let lib_src = include_str!("../lib.rs");
     let start = lib_src
         .find("pub fn generate_rust_with_stdlib")
@@ -520,7 +520,7 @@ pub(super) fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_multi_assembles_single_rust_file() {
+fn test_generate_rust_multi_assembles_single_rust_file() {
     let lib_src = include_str!("../lib.rs");
     let start = lib_src
         .find("pub fn generate_rust_multi")
@@ -540,7 +540,7 @@ pub(super) fn test_generate_rust_multi_assembles_single_rust_file() {
 }
 
 #[test]
-pub(super) fn test_generate_project_emits_sifr_runtime_path_dependency_when_required() {
+fn test_generate_project_emits_sifr_runtime_path_dependency_when_required() {
     let module = empty_module();
     let required_crates = HashSet::from(["sifr_runtime".to_string()]);
     let (cargo_toml, _main_rs) = generate_project_with_deps_and_crates(
@@ -554,7 +554,7 @@ pub(super) fn test_generate_project_emits_sifr_runtime_path_dependency_when_requ
 }
 
 #[test]
-pub(super) fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
+fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module("async def main() -> None:\n    return None\n")
@@ -573,7 +573,7 @@ pub(super) fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
 }
 
 #[test]
-pub(super) fn test_async_result_main_entrypoint_keeps_result_return() {
+fn test_async_result_main_entrypoint_keeps_result_return() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module("async def main() -> Result[None, ValueError]:\n    return None\n")
@@ -595,7 +595,7 @@ pub(super) fn test_async_result_main_entrypoint_keeps_result_return() {
 }
 
 #[test]
-pub(super) fn test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio() {
+fn test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module("async def main() -> None:\n    await task.sleep(0.0)\n    return None\n")
@@ -614,7 +614,7 @@ pub(super) fn test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio() {
 }
 
 #[test]
-pub(super) fn test_task_sleep_requires_tokio_without_async_main() {
+fn test_task_sleep_requires_tokio_without_async_main() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -634,7 +634,7 @@ pub(super) fn test_task_sleep_requires_tokio_without_async_main() {
 }
 
 #[test]
-pub(super) fn test_task_scope_context_materializes_runtime_container() {
+fn test_task_scope_context_materializes_runtime_container() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -659,7 +659,7 @@ pub(super) fn test_task_scope_context_materializes_runtime_container() {
 }
 
 #[test]
-pub(super) fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
+fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -686,7 +686,7 @@ pub(super) fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
 }
 
 #[test]
-pub(super) fn test_spawn_blocking_lowers_to_distinct_blocking_task_substrate() {
+fn test_spawn_blocking_lowers_to_distinct_blocking_task_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -715,7 +715,7 @@ pub(super) fn test_spawn_blocking_lowers_to_distinct_blocking_task_substrate() {
 }
 
 #[test]
-pub(super) fn test_thread_pool_executor_submit_reuses_blocking_task_substrate() {
+fn test_thread_pool_executor_submit_reuses_blocking_task_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -741,7 +741,7 @@ pub(super) fn test_thread_pool_executor_submit_reuses_blocking_task_substrate() 
 }
 
 #[test]
-pub(super) fn test_scope_spawn_lowers_owned_coroutine_arguments() {
+fn test_scope_spawn_lowers_owned_coroutine_arguments() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
@@ -760,7 +760,7 @@ pub(super) fn test_scope_spawn_lowers_owned_coroutine_arguments() {
 }
 
 #[test]
-pub(super) fn test_scope_spawn_lowers_owned_move_coroutine_arguments() {
+fn test_scope_spawn_lowers_owned_move_coroutine_arguments() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(

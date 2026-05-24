@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
+fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
     let list_ty = Type::List(Box::new(Type::Int));
     let module = HirModule {
         functions: vec![
@@ -68,7 +68,7 @@ pub(super) fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_m
 }
 
 #[test]
-pub(super) fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
+fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
     let module = HirModule {
         functions: vec![
             HirFunction {
@@ -139,7 +139,7 @@ pub(super) fn test_generate_rust_generator_try_except_materializes_without_shape
 }
 
 #[test]
-pub(super) fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
+fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
     let rust_code = generate_rust_from_source(
         "def gen() -> Iterator[int]:\n    i: int = 0\n    while i < 4:\n        if i < 3:\n            yield i\n            i = i + 1\n        else:\n            i = i + 1\n\ndef main():\n    g: Iterator[int] = gen()\n    print(next(g))\n",
     );
@@ -161,7 +161,7 @@ pub(super) fn test_generate_rust_generator_conditional_yield_preserves_else_bran
 }
 
 #[test]
-pub(super) fn test_generate_rust_generator_expression_without_filter_lowers_to_map_chain() {
+fn test_generate_rust_generator_expression_without_filter_lowers_to_map_chain() {
     let rust_code = generate_rust_from_source(
         "def main():\n    xs: list[int] = [1, 2, 3]\n    squares: Iterator[int] = (x * x for x in xs)\n    print(list(squares))\n",
     );
@@ -171,7 +171,7 @@ pub(super) fn test_generate_rust_generator_expression_without_filter_lowers_to_m
 }
 
 #[test]
-pub(super) fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
+fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
     let rust_code = generate_rust_from_source(
         "def main():\n    nums: list[int] = [1, 2, 3, 4]\n    evens: Iterator[int] = filter(lambda x: x % 2 == 0, nums)\n    print(list(evens))\n",
     );
@@ -182,7 +182,7 @@ pub(super) fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator(
 }
 
 #[test]
-pub(super) fn test_generate_rust_iterable_binding_from_iterator_materializes_once() {
+fn test_generate_rust_iterable_binding_from_iterator_materializes_once() {
     let rust_code = generate_rust_from_source(
         "def main():\n    base: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = it\n    print(list(xs))\n",
     );
@@ -191,7 +191,7 @@ pub(super) fn test_generate_rust_iterable_binding_from_iterator_materializes_onc
 }
 
 #[test]
-pub(super) fn test_generate_rust_iterable_return_from_iterator_materializes_for_signature() {
+fn test_generate_rust_iterable_return_from_iterator_materializes_for_signature() {
     let rust_code = generate_rust_from_source(
         "def adapt(own it: Iterator[int]) -> Iterable[int]:\n    return it\n\ndef main():\n    base: list[int] = [1, 2]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = adapt(it)\n    print(list(xs))\n",
     );
@@ -201,7 +201,7 @@ pub(super) fn test_generate_rust_iterable_return_from_iterator_materializes_for_
 }
 
 #[test]
-pub(super) fn test_generate_rust_iterator_return_consumes_local_list_binding() {
+fn test_generate_rust_iterator_return_consumes_local_list_binding() {
     let rust_code = generate_rust_from_source(
         "def build() -> Iterator[int]:\n    result: list[int] = [1, 2, 3]\n    return iter(result)\n\ndef main():\n    print(list(build()))\n",
     );
@@ -211,7 +211,7 @@ pub(super) fn test_generate_rust_iterator_return_consumes_local_list_binding() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_iterator_return_consumes_owned_param_binding() {
+fn test_generate_rust_iterator_return_consumes_owned_param_binding() {
     let rust_code = generate_rust_from_source(
         "def adapt(own items: list[int]) -> Iterator[int]:\n    return iter(items)\n\ndef main():\n    print(list(adapt([1, 2, 3])))\n",
     );
@@ -221,7 +221,7 @@ pub(super) fn test_generate_rust_iterator_return_consumes_owned_param_binding() 
 }
 
 #[test]
-pub(super) fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
+fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
     let rust_code = generate_rust_from_source(
         "def main():\n    f = open(\"/tmp/sifr_codegen_open.txt\", \"w\")\n",
     );
@@ -234,7 +234,7 @@ pub(super) fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_generator_clones_borrowed_params_into_owned_locals_before_calls() {
+fn test_generate_rust_generator_clones_borrowed_params_into_owned_locals_before_calls() {
     let rust_code = generate_rust_from_source(
         "def glob(directory: str, pattern: str) -> list[str]:\n    return []\n\ndef iglob(directory: str, pattern: str) -> Iterator[str]:\n    matches: list[str] = glob(directory, pattern)\n    i: int = 0\n    while i < len(matches):\n        yield matches[i]\n        i = i + 1\n",
     );
@@ -245,7 +245,7 @@ pub(super) fn test_generate_rust_generator_clones_borrowed_params_into_owned_loc
 }
 
 #[test]
-pub(super) fn test_generate_rust_recursive_constructor_argument_wraps_optional_box_field() {
+fn test_generate_rust_recursive_constructor_argument_wraps_optional_box_field() {
     let rust_code = generate_rust_from_source(
         "class Entry:\n    value: int\n    next: Entry | None\n\n    def __init__(self, value: int = 0, next: Entry | None = None):\n        self.value = value\n        self.next = next\n\ndef main():\n    long = Entry(4, Entry(5, Entry(6)))\n    print(long.value)\n",
     );
@@ -256,7 +256,7 @@ pub(super) fn test_generate_rust_recursive_constructor_argument_wraps_optional_b
 }
 
 #[test]
-pub(super) fn test_generate_rust_defaultdict_int_augassign_uses_entry_default() {
+fn test_generate_rust_defaultdict_int_augassign_uses_entry_default() {
     let rust_code = generate_rust_from_source(
         "def main():\n    counts = defaultdict(int)\n    counts[\"steps\"] += 1\n    counts[\"steps\"] += 2\n    assert counts[\"steps\"] == 3\n",
     );
@@ -267,7 +267,7 @@ pub(super) fn test_generate_rust_defaultdict_int_augassign_uses_entry_default() 
 }
 
 #[test]
-pub(super) fn test_generate_rust_tuple_field_assignment_emits_mutable_self_receiver() {
+fn test_generate_rust_tuple_field_assignment_emits_mutable_self_receiver() {
     let rust_code = generate_rust_from_source(
         "class RunningBounds:\n    left: int\n    right: int\n\n    def __init__(self, left: int, right: int):\n        self.left = left\n        self.right = right\n\n    def rotate(self, next_value: int) -> None:\n        self.left, self.right = self.right, next_value\n",
     );
@@ -276,7 +276,7 @@ pub(super) fn test_generate_rust_tuple_field_assignment_emits_mutable_self_recei
 }
 
 #[test]
-pub(super) fn test_generate_rust_test_uses_explicit_test_mode_context() {
+fn test_generate_rust_test_uses_explicit_test_mode_context() {
     let module = HirModule {
         functions: vec![
             HirFunction {
@@ -325,7 +325,7 @@ pub(super) fn test_generate_rust_test_uses_explicit_test_mode_context() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_test_collects_imports_from_emitted_code() {
+fn test_generate_rust_test_collects_imports_from_emitted_code() {
     let module = HirModule {
         functions: vec![
             HirFunction {
@@ -394,7 +394,7 @@ pub(super) fn test_generate_rust_test_collects_imports_from_emitted_code() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_test_emits_local_module_import_uses() {
+fn test_generate_rust_test_emits_local_module_import_uses() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "test_import".to_string(),
@@ -433,7 +433,7 @@ pub(super) fn test_generate_rust_test_emits_local_module_import_uses() {
 }
 
 #[test]
-pub(super) fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
+fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
     let items_ty = Type::List(Box::new(Type::Int));
     let table_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
     let label_ty = Type::Str;
@@ -590,7 +590,7 @@ pub(super) fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
 }
 
 #[test]
-pub(super) fn test_codegen_structured_lowering_applies_to_simple_stmt() {
+fn test_codegen_structured_lowering_applies_to_simple_stmt() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -621,7 +621,7 @@ pub(super) fn test_codegen_structured_lowering_applies_to_simple_stmt() {
 }
 
 #[test]
-pub(super) fn test_structured_aug_assign_uses_string_and_list_methods() {
+fn test_structured_aug_assign_uses_string_and_list_methods() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -679,7 +679,7 @@ pub(super) fn test_structured_aug_assign_uses_string_and_list_methods() {
 }
 
 #[test]
-pub(super) fn test_stmt_path_handles_nested_function() {
+fn test_stmt_path_handles_nested_function() {
     let nested = HirFunction {
         name: "inner".to_string(),
         params: vec![],
@@ -727,7 +727,7 @@ pub(super) fn test_stmt_path_handles_nested_function() {
 }
 
 #[test]
-pub(super) fn test_stmt_path_handles_recursive_nested_function_with_structured_captures() {
+fn test_stmt_path_handles_recursive_nested_function_with_structured_captures() {
     let generated = generate_rust_from_source(
         r#"
 def main():
@@ -762,7 +762,7 @@ def main():
 }
 
 #[test]
-pub(super) fn test_expr_path_handles_call_expression() {
+fn test_expr_path_handles_call_expression() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),

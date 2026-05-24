@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn lowers_simple_assert_with_not_option_truthiness_name_test() {
+fn lowers_simple_assert_with_not_option_truthiness_name_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::UnaryOp {
             op: "not".to_string(),
@@ -36,7 +36,7 @@ pub(super) fn lowers_simple_assert_with_not_option_truthiness_name_test() {
 }
 
 #[test]
-pub(super) fn lowers_simple_assert_with_option_truthiness_name_test() {
+fn lowers_simple_assert_with_option_truthiness_name_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Name {
             name: "maybe_x".to_string(),
@@ -68,7 +68,7 @@ pub(super) fn lowers_simple_assert_with_option_truthiness_name_test() {
 }
 
 #[test]
-pub(super) fn lowers_simple_assert_with_option_is_none_compare_test() {
+fn lowers_simple_assert_with_option_is_none_compare_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
@@ -102,7 +102,7 @@ pub(super) fn lowers_simple_assert_with_option_is_none_compare_test() {
 }
 
 #[test]
-pub(super) fn lowers_simple_assert_with_option_is_not_none_compare_test() {
+fn lowers_simple_assert_with_option_is_not_none_compare_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
@@ -136,7 +136,7 @@ pub(super) fn lowers_simple_assert_with_option_is_not_none_compare_test() {
 }
 
 #[test]
-pub(super) fn does_not_lower_assert_with_non_leaf_not_bool_test() {
+fn does_not_lower_assert_with_non_leaf_not_bool_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::UnaryOp {
             op: "not".to_string(),
@@ -154,7 +154,7 @@ pub(super) fn does_not_lower_assert_with_non_leaf_not_bool_test() {
 }
 
 #[test]
-pub(super) fn does_not_lower_assert_with_non_leaf_not_option_truthiness_test() {
+fn does_not_lower_assert_with_non_leaf_not_option_truthiness_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::UnaryOp {
             op: "not".to_string(),
@@ -172,7 +172,7 @@ pub(super) fn does_not_lower_assert_with_non_leaf_not_option_truthiness_test() {
 }
 
 #[test]
-pub(super) fn does_not_lower_assert_with_non_leaf_option_is_none_compare_test() {
+fn does_not_lower_assert_with_non_leaf_option_is_none_compare_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Compare {
             left: Box::new(HirExpr::Call {
@@ -191,7 +191,7 @@ pub(super) fn does_not_lower_assert_with_non_leaf_option_is_none_compare_test() 
 }
 
 #[test]
-pub(super) fn does_not_lower_assert_with_non_leaf_option_truthiness_test() {
+fn does_not_lower_assert_with_non_leaf_option_truthiness_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Call {
             func: "maybe_x".to_string(),
@@ -205,7 +205,7 @@ pub(super) fn does_not_lower_assert_with_non_leaf_option_truthiness_test() {
 }
 
 #[test]
-pub(super) fn lowers_simple_assert_with_option_name_msg() {
+fn lowers_simple_assert_with_option_name_msg() {
     let stmt = HirStmt::Assert {
         test: HirExpr::BoolLiteral(true),
         msg: Some(HirExpr::Name {
@@ -227,7 +227,7 @@ pub(super) fn lowers_simple_assert_with_option_name_msg() {
 }
 
 #[test]
-pub(super) fn lowers_simple_assert_with_alias_option_name_msg() {
+fn lowers_simple_assert_with_alias_option_name_msg() {
     let stmt = HirStmt::Assert {
         test: HirExpr::BoolLiteral(true),
         msg: Some(HirExpr::Name {
@@ -249,7 +249,7 @@ pub(super) fn lowers_simple_assert_with_alias_option_name_msg() {
 }
 
 #[test]
-pub(super) fn does_not_lower_assert_with_non_leaf_option_msg() {
+fn does_not_lower_assert_with_non_leaf_option_msg() {
     let stmt = HirStmt::Assert {
         test: HirExpr::BoolLiteral(true),
         msg: Some(HirExpr::Call {
@@ -263,7 +263,7 @@ pub(super) fn does_not_lower_assert_with_non_leaf_option_msg() {
 }
 
 #[test]
-pub(super) fn lowers_simple_if_without_elif() {
+fn lowers_simple_if_without_elif() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::BoolLiteral(true),
         then_body: vec![HirStmt::Expr {
@@ -282,7 +282,7 @@ pub(super) fn lowers_simple_if_without_elif() {
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_name_condition() {
+fn lowers_simple_if_with_name_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Name {
             name: "ok".to_string(),
@@ -306,7 +306,7 @@ pub(super) fn lowers_simple_if_with_name_condition() {
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_not_bool_name_condition() {
+fn lowers_simple_if_with_not_bool_name_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::UnaryOp {
             op: "not".to_string(),
@@ -337,7 +337,7 @@ pub(super) fn lowers_simple_if_with_not_bool_name_condition() {
 }
 
 #[test]
-pub(super) fn does_not_lower_if_with_non_leaf_not_bool_condition() {
+fn does_not_lower_if_with_non_leaf_not_bool_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::UnaryOp {
             op: "not".to_string(),
@@ -357,7 +357,7 @@ pub(super) fn does_not_lower_if_with_non_leaf_not_bool_condition() {
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_not_option_truthiness_name_condition() {
+fn lowers_simple_if_with_not_option_truthiness_name_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::UnaryOp {
             op: "not".to_string(),
@@ -394,7 +394,7 @@ pub(super) fn lowers_simple_if_with_not_option_truthiness_name_condition() {
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_option_is_none_compare_condition() {
+fn lowers_simple_if_with_option_is_none_compare_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
@@ -429,7 +429,7 @@ pub(super) fn lowers_simple_if_with_option_is_none_compare_condition() {
 }
 
 #[test]
-pub(super) fn lowers_option_is_none_if_with_exiting_body_to_let_else_without_unwrap() {
+fn lowers_option_is_none_if_with_exiting_body_to_let_else_without_unwrap() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
@@ -477,7 +477,7 @@ pub(super) fn lowers_option_is_none_if_with_exiting_body_to_let_else_without_unw
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_option_is_not_none_compare_condition() {
+fn lowers_simple_if_with_option_is_not_none_compare_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
@@ -507,7 +507,7 @@ pub(super) fn lowers_simple_if_with_option_is_not_none_compare_condition() {
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_option_and_not_none_chain_condition() {
+fn lowers_simple_if_with_option_and_not_none_chain_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::BoolOp {
             op: "and".to_string(),
@@ -552,7 +552,7 @@ pub(super) fn lowers_simple_if_with_option_and_not_none_chain_condition() {
 }
 
 #[test]
-pub(super) fn does_not_lower_if_with_non_leaf_option_is_none_compare_condition() {
+fn does_not_lower_if_with_non_leaf_option_is_none_compare_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Call {
@@ -573,7 +573,7 @@ pub(super) fn does_not_lower_if_with_non_leaf_option_is_none_compare_condition()
 }
 
 #[test]
-pub(super) fn does_not_lower_if_with_non_leaf_not_option_truthiness_condition() {
+fn does_not_lower_if_with_non_leaf_not_option_truthiness_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::UnaryOp {
             op: "not".to_string(),
@@ -593,7 +593,7 @@ pub(super) fn does_not_lower_if_with_non_leaf_not_option_truthiness_condition() 
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_option_truthiness_name_condition() {
+fn lowers_simple_if_with_option_truthiness_name_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Name {
             name: "maybe_x".to_string(),
@@ -619,7 +619,7 @@ pub(super) fn lowers_simple_if_with_option_truthiness_name_condition() {
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_alias_option_truthiness_name_condition() {
+fn lowers_simple_if_with_alias_option_truthiness_name_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Name {
             name: "maybe_x".to_string(),
@@ -645,7 +645,7 @@ pub(super) fn lowers_simple_if_with_alias_option_truthiness_name_condition() {
 }
 
 #[test]
-pub(super) fn lowers_if_option_truthiness_with_elif() {
+fn lowers_if_option_truthiness_with_elif() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Name {
             name: "maybe_x".to_string(),
@@ -672,7 +672,7 @@ pub(super) fn lowers_if_option_truthiness_with_elif() {
 }
 
 #[test]
-pub(super) fn lowers_if_with_option_truthiness_elif_clause() {
+fn lowers_if_with_option_truthiness_elif_clause() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::BoolLiteral(false),
         then_body: vec![HirStmt::Pass],
@@ -710,7 +710,7 @@ pub(super) fn lowers_if_with_option_truthiness_elif_clause() {
 }
 
 #[test]
-pub(super) fn lowers_simple_if_with_elif() {
+fn lowers_simple_if_with_elif() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::BoolLiteral(true),
         then_body: vec![HirStmt::Expr {
@@ -743,7 +743,7 @@ pub(super) fn lowers_simple_if_with_elif() {
 }
 
 #[test]
-pub(super) fn does_not_lower_if_with_non_leaf_elif_condition() {
+fn does_not_lower_if_with_non_leaf_elif_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::BoolLiteral(true),
         then_body: vec![HirStmt::Pass],

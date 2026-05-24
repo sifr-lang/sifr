@@ -347,6 +347,9 @@ Validation notes:
 - E2E runner cleanup removed the retired runner compatibility path from `crates/sifr/tests/e2e.rs` and its support modules, including compare-mode dispatch, legacy runner mode environment variables, and validation-lane mode metadata.
 - E2E runner cleanup validation passed with focused stale-runner scans, `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `git diff --check`, shell syntax checks, `python3 -m py_compile scripts/validation_lane.py`, `cargo test -p sifr --test e2e -- --skip test_e2e_pass`, `scripts/run_e2e_pass.sh --profile quick`, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
 - E2E runner cleanup Claude review reached `Verdict: Satisfied` in `reviews/e2e-runner-cleanup-review-round2.md`.
+- Codegen refactor polish replaced the remaining broad root re-exports in the touched statement-lowering roots with explicit surfaces, split near-cap statement-support and lower-statement modules by responsibility, and kept test functions private while retaining explicit helper visibility only for sibling test modules.
+- Codegen refactor polish validation passed with `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, focused scans for `include!` and wildcard re-exports in the touched codegen roots/modules, and `scripts/run_all_tests.sh --profile quick`.
+- Codegen refactor polish Claude review returned `SATISFIED` in `reviews/codegen-refactor-polish-review-round1.md`.
 
 ## Done Criteria
 

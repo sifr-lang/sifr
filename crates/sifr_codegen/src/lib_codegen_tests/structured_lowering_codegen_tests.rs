@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn test_structured_expr_path_handles_intrinsic_call_expression() {
+fn test_structured_expr_path_handles_intrinsic_call_expression() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -42,7 +42,7 @@ pub(super) fn test_structured_expr_path_handles_intrinsic_call_expression() {
 }
 
 #[test]
-pub(super) fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
+fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
     let list_ty = Type::List(Box::new(Type::Int));
     let module = HirModule {
         functions: vec![HirFunction {
@@ -91,7 +91,7 @@ pub(super) fn test_structured_expr_path_handles_nested_intrinsic_call_argument()
 }
 
 #[test]
-pub(super) fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
+fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -137,7 +137,7 @@ pub(super) fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_
 }
 
 #[test]
-pub(super) fn test_structured_expr_path_handles_plain_signature_call_expression() {
+fn test_structured_expr_path_handles_plain_signature_call_expression() {
     let module = HirModule {
         functions: vec![
             HirFunction {
@@ -189,7 +189,7 @@ pub(super) fn test_structured_expr_path_handles_plain_signature_call_expression(
 }
 
 #[test]
-pub(super) fn test_structured_expr_path_handles_registry_method_call_expression() {
+fn test_structured_expr_path_handles_registry_method_call_expression() {
     let list_ty = Type::List(Box::new(Type::Int));
     let module = HirModule {
         functions: vec![HirFunction {
@@ -239,7 +239,7 @@ pub(super) fn test_structured_expr_path_handles_registry_method_call_expression(
 }
 
 #[test]
-pub(super) fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
+fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
     let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
     let module = HirModule {
         functions: vec![HirFunction {
@@ -297,7 +297,7 @@ pub(super) fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend(
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
+fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -344,7 +344,7 @@ pub(super) fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_handles_copy_typed_let_expr() {
+fn test_structured_stmt_path_handles_copy_typed_let_expr() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -387,7 +387,7 @@ pub(super) fn test_structured_stmt_path_handles_copy_typed_let_expr() {
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_handles_copy_typed_return_expr() {
+fn test_structured_stmt_path_handles_copy_typed_return_expr() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "value".to_string(),
@@ -427,7 +427,7 @@ pub(super) fn test_structured_stmt_path_handles_copy_typed_return_expr() {
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_wraps_non_optional_string_index_into_option_local() {
+fn test_structured_stmt_path_wraps_non_optional_string_index_into_option_local() {
     let stmt = HirStmt::Let {
         name: "part".to_string(),
         ty: Type::Union(vec![Type::Str, Type::None]),
@@ -469,7 +469,7 @@ pub(super) fn test_structured_stmt_path_wraps_non_optional_string_index_into_opt
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
+fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "char_at".to_string(),
@@ -528,7 +528,7 @@ pub(super) fn test_structured_stmt_path_handles_non_optional_string_index_return
 }
 
 #[test]
-pub(super) fn test_emit_expr_prefers_structured_name_path() {
+fn test_emit_expr_prefers_structured_name_path() {
     let mut emitter = RustEmitter::new();
     emitter.intrinsic_functions.insert("clock".to_string());
     let expr = HirExpr::Name {
@@ -544,7 +544,7 @@ pub(super) fn test_emit_expr_prefers_structured_name_path() {
 }
 
 #[test]
-pub(super) fn test_emit_expr_borrowed_compare_is_structured() {
+fn test_emit_expr_borrowed_compare_is_structured() {
     let mut emitter = RustEmitter::new();
     emitter.borrowed_params.insert("lhs".to_string());
     let expr = HirExpr::Compare {
@@ -567,7 +567,7 @@ pub(super) fn test_emit_expr_borrowed_compare_is_structured() {
 }
 
 #[test]
-pub(super) fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
+fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     let lib_src = include_str!("../lib.rs");
 
     assert!(!lib_src.contains("mod stmt_emitter;"));
@@ -601,7 +601,7 @@ pub(super) fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs()
 }
 
 #[test]
-pub(super) fn test_production_lowering_contract_uses_result_helpers_only() {
+fn test_production_lowering_contract_uses_result_helpers_only() {
     let lib_src = include_str!("../lib.rs");
     let lower_expr_src = include_str!("../lower_expr.rs");
     let module_constants_src = include_str!("../module_constants.rs");
@@ -618,7 +618,7 @@ pub(super) fn test_production_lowering_contract_uses_result_helpers_only() {
 }
 
 #[test]
-pub(super) fn test_capture_structured_stmts_collects_ir_without_output_writes() {
+fn test_capture_structured_stmts_collects_ir_without_output_writes() {
     let mut emitter = RustEmitter::new();
     let stmt = HirStmt::Let {
         name: "x".to_string(),
@@ -641,7 +641,7 @@ pub(super) fn test_capture_structured_stmts_collects_ir_without_output_writes() 
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if() {
+fn test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if() {
     let stmt = HirStmt::For {
         target: "i".to_string(),
         target_ty: Type::Int,
@@ -681,7 +681,7 @@ pub(super) fn test_structured_stmt_path_handles_nested_subscript_augassign_insid
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
+fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
     let stmt = HirStmt::For {
         target: "ch".to_string(),
         target_ty: Type::Str,
@@ -724,7 +724,7 @@ pub(super) fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_handles_chained_compare_condition_inside_loop_if() {
+fn test_structured_stmt_path_handles_chained_compare_condition_inside_loop_if() {
     let stmt = HirStmt::While {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {

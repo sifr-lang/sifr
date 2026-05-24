@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn lowers_simple_list_subscript_augassign_floor_div_equal_stmt() {
+fn lowers_simple_list_subscript_augassign_floor_div_equal_stmt() {
     let stmt = HirStmt::SubscriptAugAssign {
         object: "items".to_string(),
         index: HirExpr::IntLiteral(0),
@@ -38,7 +38,7 @@ pub(super) fn lowers_simple_list_subscript_augassign_floor_div_equal_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
+fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
     let stmt = HirStmt::SubscriptAugAssign {
         object: "items".to_string(),
         index: HirExpr::IntLiteral(0),
@@ -82,7 +82,7 @@ pub(super) fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_alias_list_subscript_augassign_stmt() {
+fn lowers_simple_alias_list_subscript_augassign_stmt() {
     let stmt = HirStmt::SubscriptAugAssign {
         object: "items".to_string(),
         index: HirExpr::IntLiteral(0),
@@ -96,7 +96,7 @@ pub(super) fn lowers_simple_alias_list_subscript_augassign_stmt() {
 }
 
 #[test]
-pub(super) fn does_not_lower_subscript_augassign_with_non_leaf_value() {
+fn does_not_lower_subscript_augassign_with_non_leaf_value() {
     let stmt = HirStmt::SubscriptAugAssign {
         object: "items".to_string(),
         index: HirExpr::IntLiteral(0),

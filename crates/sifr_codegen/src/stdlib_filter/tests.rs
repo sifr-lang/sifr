@@ -1,4 +1,5 @@
 use super::*;
+use std::collections::HashSet;
 
 #[test]
 fn filter_keeps_transitive_dependencies_in_item_order() {

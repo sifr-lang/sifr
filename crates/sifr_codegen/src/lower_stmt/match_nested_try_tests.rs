@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn lowers_simple_match_with_literal_and_wildcard_patterns() {
+fn lowers_simple_match_with_literal_and_wildcard_patterns() {
     let stmt = HirStmt::Match {
         subject: HirExpr::Name {
             name: "n".to_string(),
@@ -32,7 +32,7 @@ pub(super) fn lowers_simple_match_with_literal_and_wildcard_patterns() {
 }
 
 #[test]
-pub(super) fn lowers_match_with_class_patterns_and_captures() {
+fn lowers_match_with_class_patterns_and_captures() {
     let point_ty = Type::Class {
         name: "Point".to_string(),
         fields: vec![("x".to_string(), Type::Int), ("y".to_string(), Type::Int)],
@@ -104,7 +104,7 @@ pub(super) fn lowers_match_with_class_patterns_and_captures() {
 }
 
 #[test]
-pub(super) fn lowers_match_with_string_literal_patterns() {
+fn lowers_match_with_string_literal_patterns() {
     let stmt = HirStmt::Match {
         subject: HirExpr::Name {
             name: "method".to_string(),
@@ -155,7 +155,7 @@ pub(super) fn lowers_match_with_string_literal_patterns() {
 }
 
 #[test]
-pub(super) fn lowers_simple_nested_function_to_closure_block() {
+fn lowers_simple_nested_function_to_closure_block() {
     let stmt = HirStmt::NestedFunction {
         func: HirFunction {
             name: "inner".to_string(),
@@ -184,7 +184,7 @@ pub(super) fn lowers_simple_nested_function_to_closure_block() {
 }
 
 #[test]
-pub(super) fn lowers_recursive_nested_function_without_captures_to_local_fn() {
+fn lowers_recursive_nested_function_without_captures_to_local_fn() {
     let stmt = HirStmt::NestedFunction {
         func: HirFunction {
             name: "inner".to_string(),
@@ -212,7 +212,7 @@ pub(super) fn lowers_recursive_nested_function_without_captures_to_local_fn() {
 }
 
 #[test]
-pub(super) fn lowers_mutating_capture_nested_function_to_mutable_closure_binding() {
+fn lowers_mutating_capture_nested_function_to_mutable_closure_binding() {
     let stmt = HirStmt::NestedFunction {
         func: HirFunction {
             name: "inner".to_string(),
@@ -245,7 +245,7 @@ pub(super) fn lowers_mutating_capture_nested_function_to_mutable_closure_binding
 }
 
 #[test]
-pub(super) fn lowers_simple_try_except_catch_all_with_result_flow() {
+fn lowers_simple_try_except_catch_all_with_result_flow() {
     let stmt = HirStmt::TryExcept {
         body: vec![HirStmt::Expr {
             expr: HirExpr::QuestionMark {
@@ -286,7 +286,7 @@ pub(super) fn lowers_simple_try_except_catch_all_with_result_flow() {
 }
 
 #[test]
-pub(super) fn does_not_lower_try_except_with_typed_handler() {
+fn does_not_lower_try_except_with_typed_handler() {
     let stmt = HirStmt::TryExcept {
         body: vec![HirStmt::Expr {
             expr: HirExpr::QuestionMark {
@@ -314,7 +314,7 @@ pub(super) fn does_not_lower_try_except_with_typed_handler() {
 }
 
 #[test]
-pub(super) fn does_not_lower_try_except_without_result_flow() {
+fn does_not_lower_try_except_without_result_flow() {
     let stmt = HirStmt::TryExcept {
         body: vec![HirStmt::Pass],
         handlers: vec![HirExceptHandler {
