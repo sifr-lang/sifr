@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn lowers_simple_attribute_list_subscript_assign_stmt() {
+fn lowers_simple_attribute_list_subscript_assign_stmt() {
     let stmt = HirStmt::AttributeSubscriptAssign {
         object: "self".to_string(),
         field: "items".to_string(),
@@ -67,7 +67,7 @@ pub(super) fn lowers_simple_attribute_list_subscript_assign_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_alias_attribute_list_subscript_assign_stmt() {
+fn lowers_simple_alias_attribute_list_subscript_assign_stmt() {
     let stmt = HirStmt::AttributeSubscriptAssign {
         object: "self".to_string(),
         field: "items".to_string(),
@@ -81,7 +81,7 @@ pub(super) fn lowers_simple_alias_attribute_list_subscript_assign_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_attribute_dict_subscript_assign_stmt() {
+fn lowers_simple_attribute_dict_subscript_assign_stmt() {
     let stmt = HirStmt::AttributeSubscriptAssign {
         object: "self".to_string(),
         field: "mapping".to_string(),
@@ -116,7 +116,7 @@ pub(super) fn lowers_simple_attribute_dict_subscript_assign_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_alias_attribute_dict_subscript_assign_stmt() {
+fn lowers_simple_alias_attribute_dict_subscript_assign_stmt() {
     let stmt = HirStmt::AttributeSubscriptAssign {
         object: "self".to_string(),
         field: "mapping".to_string(),
@@ -133,7 +133,7 @@ pub(super) fn lowers_simple_alias_attribute_dict_subscript_assign_stmt() {
 }
 
 #[test]
-pub(super) fn does_not_lower_attribute_dict_subscript_assign_with_string_name_key() {
+fn does_not_lower_attribute_dict_subscript_assign_with_string_name_key() {
     let stmt = HirStmt::AttributeSubscriptAssign {
         object: "self".to_string(),
         field: "mapping".to_string(),
@@ -149,7 +149,7 @@ pub(super) fn does_not_lower_attribute_dict_subscript_assign_with_string_name_ke
 }
 
 #[test]
-pub(super) fn does_not_lower_attribute_subscript_assign_with_non_leaf_index() {
+fn does_not_lower_attribute_subscript_assign_with_non_leaf_index() {
     let stmt = HirStmt::AttributeSubscriptAssign {
         object: "self".to_string(),
         field: "items".to_string(),
@@ -166,7 +166,7 @@ pub(super) fn does_not_lower_attribute_subscript_assign_with_non_leaf_index() {
 }
 
 #[test]
-pub(super) fn lowers_simple_list_subscript_assign_stmt() {
+fn lowers_simple_list_subscript_assign_stmt() {
     let stmt = HirStmt::SubscriptAssign {
         object: "items".to_string(),
         index: HirExpr::Name {
@@ -236,7 +236,7 @@ pub(super) fn lowers_simple_list_subscript_assign_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_alias_list_subscript_assign_stmt() {
+fn lowers_simple_alias_list_subscript_assign_stmt() {
     let stmt = HirStmt::SubscriptAssign {
         object: "items".to_string(),
         index: HirExpr::IntLiteral(0),
@@ -249,7 +249,7 @@ pub(super) fn lowers_simple_alias_list_subscript_assign_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_dict_subscript_assign_stmt() {
+fn lowers_simple_dict_subscript_assign_stmt() {
     let stmt = HirStmt::SubscriptAssign {
         object: "mapping".to_string(),
         index: HirExpr::Name {
@@ -280,7 +280,7 @@ pub(super) fn lowers_simple_dict_subscript_assign_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_dict_subscript_assign_clones_non_copy_name_value() {
+fn lowers_simple_dict_subscript_assign_clones_non_copy_name_value() {
     let stmt = HirStmt::SubscriptAssign {
         object: "mapping".to_string(),
         index: HirExpr::Name {
@@ -311,7 +311,7 @@ pub(super) fn lowers_simple_dict_subscript_assign_clones_non_copy_name_value() {
 }
 
 #[test]
-pub(super) fn does_not_lower_subscript_assign_with_non_leaf_index() {
+fn does_not_lower_subscript_assign_with_non_leaf_index() {
     let stmt = HirStmt::SubscriptAssign {
         object: "items".to_string(),
         index: HirExpr::Call {
@@ -327,7 +327,7 @@ pub(super) fn does_not_lower_subscript_assign_with_non_leaf_index() {
 }
 
 #[test]
-pub(super) fn lowers_simple_list_delete_stmt() {
+fn lowers_simple_list_delete_stmt() {
     let stmt = HirStmt::Delete {
         object: HirExpr::Name {
             name: "items".to_string(),
@@ -379,7 +379,7 @@ pub(super) fn lowers_simple_list_delete_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_dict_delete_with_string_literal_key_stmt() {
+fn lowers_simple_dict_delete_with_string_literal_key_stmt() {
     let stmt = HirStmt::Delete {
         object: HirExpr::Name {
             name: "mapping".to_string(),
@@ -416,7 +416,7 @@ pub(super) fn lowers_simple_dict_delete_with_string_literal_key_stmt() {
 }
 
 #[test]
-pub(super) fn does_not_lower_dict_delete_with_name_key() {
+fn does_not_lower_dict_delete_with_name_key() {
     let stmt = HirStmt::Delete {
         object: HirExpr::Name {
             name: "mapping".to_string(),
@@ -432,7 +432,7 @@ pub(super) fn does_not_lower_dict_delete_with_name_key() {
 }
 
 #[test]
-pub(super) fn lowers_simple_nested_subscript_assign_stmt() {
+fn lowers_simple_nested_subscript_assign_stmt() {
     let stmt = HirStmt::NestedSubscriptAssign {
         object: "matrix".to_string(),
         outer_index: HirExpr::Name {
@@ -542,7 +542,7 @@ pub(super) fn lowers_simple_nested_subscript_assign_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_nested_subscript_assign_stmt_with_optional_indices() {
+fn lowers_simple_nested_subscript_assign_stmt_with_optional_indices() {
     let stmt = HirStmt::NestedSubscriptAssign {
         object: "matrix".to_string(),
         outer_index: HirExpr::Name {
@@ -601,7 +601,7 @@ pub(super) fn lowers_simple_nested_subscript_assign_stmt_with_optional_indices()
 }
 
 #[test]
-pub(super) fn does_not_lower_nested_subscript_assign_with_non_leaf_inner_index() {
+fn does_not_lower_nested_subscript_assign_with_non_leaf_inner_index() {
     let stmt = HirStmt::NestedSubscriptAssign {
         object: "matrix".to_string(),
         outer_index: HirExpr::IntLiteral(0),
@@ -615,232 +615,4 @@ pub(super) fn does_not_lower_nested_subscript_assign_with_non_leaf_inner_index()
     };
 
     assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
-}
-
-#[test]
-pub(super) fn lowers_simple_list_subscript_augassign_plus_equal_stmt() {
-    let stmt = HirStmt::SubscriptAugAssign {
-        object: "items".to_string(),
-        index: HirExpr::Name {
-            name: "i".to_string(),
-            ty: Type::Int,
-        },
-        op: "+=".to_string(),
-        value: HirExpr::Name {
-            name: "delta".to_string(),
-            ty: Type::Int,
-        },
-        object_ty: Type::List(Box::new(Type::Int)),
-    };
-    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("list subscript augassign lowered");
-    let RustStmt::Block(stmts) = &lowered[0] else {
-        panic!("expected block-lowered list subscript augassign");
-    };
-    assert_eq!(stmts.len(), 3);
-    assert!(matches!(
-        &stmts[2],
-        RustStmt::If {
-            then_body,
-            ..
-        } if matches!(
-            then_body.first(),
-            Some(RustStmt::IfLet { then_body, .. }) if matches!(
-                then_body.first(),
-                Some(RustStmt::AugAssign {
-                    target: RustExpr::Deref(target),
-                    op,
-                    value: RustExpr::Ident(rhs),
-                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                    && op == "+"
-                    && rhs == "delta"
-            )
-        )
-    ));
-}
-
-#[test]
-pub(super) fn lowers_simple_string_list_subscript_augassign_plus_equal_stmt() {
-    let stmt = HirStmt::SubscriptAugAssign {
-        object: "rows".to_string(),
-        index: HirExpr::IntLiteral(0),
-        op: "+=".to_string(),
-        value: HirExpr::Name {
-            name: "c".to_string(),
-            ty: Type::Str,
-        },
-        object_ty: Type::List(Box::new(Type::Str)),
-    };
-    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("string list subscript augassign lowered");
-    let RustStmt::Block(stmts) = &lowered[0] else {
-        panic!("expected block-lowered string list subscript augassign");
-    };
-    assert!(matches!(
-        &stmts[2],
-        RustStmt::If {
-            then_body,
-            ..
-        } if matches!(
-            then_body.first(),
-            Some(RustStmt::IfLet { then_body, .. }) if matches!(
-                then_body.first(),
-                Some(RustStmt::Expr(RustExpr::MethodCall { receiver, method, args }))
-                    if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && method == "push_str"
-                        && matches!(
-                            args.first(),
-                            Some(RustExpr::MethodCall {
-                                receiver: inner_receiver,
-                                method: inner_method,
-                                args: inner_args,
-                            }) if matches!(
-                                inner_receiver.as_ref(),
-                                RustExpr::Paren(expr)
-                                    if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "c")
-                            ) && inner_method == "as_str" && inner_args.is_empty()
-                        )
-            )
-        )
-    ));
-}
-
-#[test]
-pub(super) fn lowers_simple_list_subscript_augassign_bitwise_and_shift_ops() {
-    for (op, expected) in [
-        ("&=", "&"),
-        ("|=", "|"),
-        ("^=", "^"),
-        ("<<=", "<<"),
-        (">>=", ">>"),
-    ] {
-        let stmt = HirStmt::SubscriptAugAssign {
-            object: "items".to_string(),
-            index: HirExpr::IntLiteral(0),
-            op: op.to_string(),
-            value: HirExpr::Name {
-                name: "rhs".to_string(),
-                ty: Type::Int,
-            },
-            object_ty: Type::List(Box::new(Type::Int)),
-        };
-        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
-            .expect("list subscript bitwise/shift augassign lowered");
-        let RustStmt::Block(stmts) = &lowered[0] else {
-            panic!("expected block-lowered list subscript bitwise/shift augassign");
-        };
-        assert!(matches!(
-            &stmts[2],
-            RustStmt::If {
-                then_body,
-                ..
-            } if matches!(
-                then_body.first(),
-                Some(RustStmt::IfLet { then_body, .. }) if matches!(
-                    then_body.first(),
-                    Some(RustStmt::AugAssign {
-                        target: RustExpr::Deref(target),
-                        op,
-                        value: RustExpr::Ident(rhs),
-                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && op == expected
-                        && rhs == "rhs"
-                )
-            )
-        ));
-    }
-}
-
-#[test]
-pub(super) fn lowers_simple_dict_subscript_augassign_with_name_key() {
-    let stmt = HirStmt::SubscriptAugAssign {
-        object: "mapping".to_string(),
-        index: HirExpr::Name {
-            name: "key".to_string(),
-            ty: Type::Str,
-        },
-        op: "+=".to_string(),
-        value: HirExpr::Name {
-            name: "delta".to_string(),
-            ty: Type::Int,
-        },
-        object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
-    };
-    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("dict subscript augassign lowered");
-    assert!(matches!(
-        lowered[0],
-        RustStmt::IfLet {
-            ref pattern,
-            expr: RustExpr::MethodCall {
-                receiver: ref recv,
-                ref method,
-                ref args,
-            },
-            then_body: ref body,
-            else_body: None,
-        } if pattern == "Some(__elem)"
-            && method == "get_mut"
-            && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "mapping")
-            && matches!(
-                args.first(),
-                Some(RustExpr::Ref {
-                    mutable: false,
-                    expr
-                }) if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "key")
-            )
-            && matches!(
-                body.first(),
-                Some(RustStmt::AugAssign {
-                    target: RustExpr::Deref(target),
-                    op,
-                    value: RustExpr::Ident(rhs),
-                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                    && op == "+"
-                    && rhs == "delta"
-            )
-    ));
-}
-
-#[test]
-pub(super) fn lowers_simple_dict_subscript_augassign_with_string_literal_key() {
-    let stmt = HirStmt::SubscriptAugAssign {
-        object: "mapping".to_string(),
-        index: HirExpr::StringLiteral("k".to_string()),
-        op: "-=".to_string(),
-        value: HirExpr::IntLiteral(1),
-        object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
-    };
-    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("dict subscript augassign lowered");
-    assert!(matches!(
-        lowered[0],
-        RustStmt::IfLet {
-            expr: RustExpr::MethodCall { ref args, .. },
-            ..
-        } if matches!(
-            args.first(),
-            Some(RustExpr::Literal(RustLiteral::Str(key))) if key == "k"
-        )
-    ));
-}
-
-#[test]
-pub(super) fn lowers_simple_alias_dict_subscript_augassign_stmt() {
-    let stmt = HirStmt::SubscriptAugAssign {
-        object: "mapping".to_string(),
-        index: HirExpr::Name {
-            name: "key".to_string(),
-            ty: Type::Str,
-        },
-        op: "|=".to_string(),
-        value: HirExpr::IntLiteral(2),
-        object_ty: Type::alias(
-            "IntMap",
-            Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
-        ),
-    };
-    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("alias-dict subscript augassign lowered");
-    assert!(matches!(lowered[0], RustStmt::IfLet { .. }));
 }

@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn lowers_simple_attribute_augassign_floor_div_equal_alias_numeric_name() {
+fn lowers_simple_attribute_augassign_floor_div_equal_alias_numeric_name() {
     let stmt = HirStmt::AttributeAugAssign {
         object: "self".to_string(),
         field: "count".to_string(),
@@ -28,7 +28,7 @@ pub(super) fn lowers_simple_attribute_augassign_floor_div_equal_alias_numeric_na
 }
 
 #[test]
-pub(super) fn does_not_lower_attribute_augassign_plus_equal_string_name() {
+fn does_not_lower_attribute_augassign_plus_equal_string_name() {
     let stmt = HirStmt::AttributeAugAssign {
         object: "self".to_string(),
         field: "label".to_string(),
@@ -43,7 +43,7 @@ pub(super) fn does_not_lower_attribute_augassign_plus_equal_string_name() {
 }
 
 #[test]
-pub(super) fn does_not_lower_attribute_augassign_power_equal() {
+fn does_not_lower_attribute_augassign_power_equal() {
     let stmt = HirStmt::AttributeAugAssign {
         object: "self".to_string(),
         field: "count".to_string(),
@@ -55,7 +55,7 @@ pub(super) fn does_not_lower_attribute_augassign_power_equal() {
 }
 
 #[test]
-pub(super) fn lowers_simple_attribute_augassign_bitwise_and_shift_ops() {
+fn lowers_simple_attribute_augassign_bitwise_and_shift_ops() {
     for (op, expected) in [
         ("&=", "&"),
         ("|=", "|"),

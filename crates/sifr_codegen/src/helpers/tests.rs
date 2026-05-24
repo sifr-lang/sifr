@@ -1,5 +1,7 @@
 use super::*;
-use sifr_hir::{HirExceptHandler, HirFunction, HirModule, HirParam, MethodKind};
+use sifr_hir::{HirExceptHandler, HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
+use sifr_type_system::{OwnershipKind, ParamConvention, Type};
+use std::collections::HashMap;
 
 fn mk_function(name: &str, body: Vec<HirStmt>) -> HirFunction {
     HirFunction {

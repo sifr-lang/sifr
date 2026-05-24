@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-pub(super) fn test_mut_on_mutating_method_call() {
+fn test_mut_on_mutating_method_call() {
     // Variable with .push() call should have `mut`
     let module = HirModule {
         functions: vec![HirFunction {
@@ -49,7 +49,7 @@ pub(super) fn test_mut_on_mutating_method_call() {
 }
 
 #[test]
-pub(super) fn test_mut_on_local_nested_function_mutborrow_call_argument() {
+fn test_mut_on_local_nested_function_mutborrow_call_argument() {
     let rust_code = generate_rust_from_source(
         "def main():\n\
     vals: list[str] = [\"x\"]\n\
@@ -66,7 +66,7 @@ pub(super) fn test_mut_on_local_nested_function_mutborrow_call_argument() {
 }
 
 #[test]
-pub(super) fn test_fieldless_class_gets_default_constructor() {
+fn test_fieldless_class_gets_default_constructor() {
     let rust_code = generate_rust_from_source(
         "class Codec:\n\
     pass\n\
@@ -81,7 +81,7 @@ def main():\n\
 }
 
 #[test]
-pub(super) fn test_non_option_local_widened_to_option_when_reassigned_none() {
+fn test_non_option_local_widened_to_option_when_reassigned_none() {
     let rust_code = generate_rust_from_source(
         "class TreeNode:\n\
     val: int\n\
@@ -99,7 +99,7 @@ def main():\n\
 }
 
 #[test]
-pub(super) fn test_guarded_non_option_compare_does_not_emit_some_wrapping() {
+fn test_guarded_non_option_compare_does_not_emit_some_wrapping() {
     let rust_code = generate_rust_from_source(
         "def parseIntToken(token: str) -> int:\n\
     first = token[0]\n\
@@ -113,7 +113,7 @@ pub(super) fn test_guarded_non_option_compare_does_not_emit_some_wrapping() {
 }
 
 #[test]
-pub(super) fn test_empty_print() {
+fn test_empty_print() {
     // print() should emit println!() not println!("{}", "")
     let module = HirModule {
         functions: vec![HirFunction {
@@ -151,7 +151,7 @@ pub(super) fn test_empty_print() {
 }
 
 #[test]
-pub(super) fn test_empty_string_print_emits_empty_println_macro() {
+fn test_empty_string_print_emits_empty_println_macro() {
     let rust_code = generate_rust_from_source("def main():\n    print(\"\")\n");
 
     assert!(
@@ -164,7 +164,7 @@ pub(super) fn test_empty_string_print_emits_empty_println_macro() {
     );
 }
 
-pub(super) fn render_strict_lowered_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> String {
+fn render_strict_lowered_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> String {
     let Some(lowered_expr) = emitter.try_lower_registry_expr_strict(expr) else {
         panic!("strict IR rendering path missing for expression: {expr:?}");
     };
@@ -172,7 +172,7 @@ pub(super) fn render_strict_lowered_expr(emitter: &mut RustEmitter, expr: &HirEx
 }
 
 #[test]
-pub(super) fn test_expr_to_string_leaf_rendering() {
+fn test_expr_to_string_leaf_rendering() {
     let mut emitter = RustEmitter::new();
     let int_code = render_strict_lowered_expr(&mut emitter, &HirExpr::IntLiteral(7));
     assert_eq!(int_code, "7 as i64");
@@ -187,7 +187,7 @@ pub(super) fn test_expr_to_string_leaf_rendering() {
 }
 
 #[test]
-pub(super) fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
+fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
     let mut emitter = RustEmitter::new();
     emitter.intrinsic_functions.insert("pi".to_string());
     let expr = HirExpr::BinOp {
@@ -206,7 +206,7 @@ pub(super) fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
 }
 
 #[test]
-pub(super) fn test_render_expr_lowering_rewrites_module_constant_ident() {
+fn test_render_expr_lowering_rewrites_module_constant_ident() {
     let mut emitter = RustEmitter::new();
     emitter
         .module_constants
@@ -226,7 +226,7 @@ pub(super) fn test_render_expr_lowering_rewrites_module_constant_ident() {
 }
 
 #[test]
-pub(super) fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
+fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
     let mut emitter = RustEmitter::new();
     emitter.module_constants.insert(
         "greeting".to_string(),
@@ -242,7 +242,7 @@ pub(super) fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_rewrites_module_constant_name() {
+fn test_structured_stmt_path_rewrites_module_constant_name() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -276,7 +276,7 @@ pub(super) fn test_structured_stmt_path_rewrites_module_constant_name() {
 }
 
 #[test]
-pub(super) fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
+fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -316,7 +316,7 @@ pub(super) fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
 }
 
 #[test]
-pub(super) fn test_match_int_literal_pattern_avoids_cast_expression() {
+fn test_match_int_literal_pattern_avoids_cast_expression() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -381,7 +381,7 @@ pub(super) fn test_match_int_literal_pattern_avoids_cast_expression() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_multi_exports_non_main_items() {
+fn test_generate_rust_multi_exports_non_main_items() {
     let main_module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -449,7 +449,7 @@ pub(super) fn test_generate_rust_multi_exports_non_main_items() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_multi_publicizes_non_main_reexports() {
+fn test_generate_rust_multi_publicizes_non_main_reexports() {
     let root_module = HirModule {
         functions: vec![],
         classes: vec![],
@@ -489,7 +489,7 @@ pub(super) fn test_generate_rust_multi_publicizes_non_main_reexports() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
+fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
     let main_module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -557,7 +557,7 @@ pub(super) fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_module
 }
 
 #[test]
-pub(super) fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closure() {
+fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closure() {
     let main_module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -634,7 +634,7 @@ pub(super) fn test_generate_rust_multi_with_metadata_aggregates_reachable_depend
 }
 
 #[test]
-pub(super) fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
+fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
     let main_module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -717,7 +717,7 @@ pub(super) fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibi
 }
 
 #[test]
-pub(super) fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
+fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
     let int_list_ty = Type::List(Box::new(Type::Int));
     let module = HirModule {
         functions: vec![HirFunction {

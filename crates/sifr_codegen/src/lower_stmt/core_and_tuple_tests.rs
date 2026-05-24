@@ -1,14 +1,14 @@
 use super::*;
 
 #[test]
-pub(super) fn lowers_leaf_expression_statement() {
+fn lowers_leaf_expression_statement() {
     let stmts = try_lower_expr_stmt(&HirExpr::IntLiteral(1)).expect("leaf stmt lowered");
     assert_eq!(stmts.len(), 1);
     assert!(matches!(stmts[0], RustStmt::Expr(_)));
 }
 
 #[test]
-pub(super) fn scope_result_reports_invalid_scope_context() {
+fn scope_result_reports_invalid_scope_context() {
     let stmt = HirStmt::Pass;
     let scope_ctx = ScopeContext {
         in_display_impl: true,
@@ -30,7 +30,7 @@ pub(super) fn scope_result_reports_invalid_scope_context() {
 }
 
 #[test]
-pub(super) fn scope_result_propagates_stmt_expr_shape_errors() {
+fn scope_result_propagates_stmt_expr_shape_errors() {
     let stmt = HirStmt::Let {
         name: "ok".to_string(),
         ty: Type::Bool,
@@ -55,7 +55,7 @@ pub(super) fn scope_result_propagates_stmt_expr_shape_errors() {
 }
 
 #[test]
-pub(super) fn lowers_pass_and_continue_and_break() {
+fn lowers_pass_and_continue_and_break() {
     let pass = try_lower_simple_stmt(&HirStmt::Pass, false, &HashSet::new(), &HashSet::new())
         .expect("pass lowered");
     assert!(pass.is_empty());
@@ -72,7 +72,7 @@ pub(super) fn lowers_pass_and_continue_and_break() {
 }
 
 #[test]
-pub(super) fn lowers_simple_let_and_assign() {
+fn lowers_simple_let_and_assign() {
     let let_stmt = HirStmt::Let {
         name: "x".to_string(),
         ty: Type::Int,
@@ -98,7 +98,7 @@ pub(super) fn lowers_simple_let_and_assign() {
 }
 
 #[test]
-pub(super) fn simple_let_declines_non_optional_list_index_to_allow_structured_lowering() {
+fn simple_let_declines_non_optional_list_index_to_allow_structured_lowering() {
     let let_stmt = HirStmt::Let {
         name: "first".to_string(),
         ty: Type::Int,
@@ -122,7 +122,7 @@ pub(super) fn simple_let_declines_non_optional_list_index_to_allow_structured_lo
 }
 
 #[test]
-pub(super) fn simple_return_declines_non_optional_string_index_to_allow_structured_lowering() {
+fn simple_return_declines_non_optional_string_index_to_allow_structured_lowering() {
     let return_stmt = HirStmt::Return {
         value: Some(HirExpr::Index {
             object: Box::new(HirExpr::Name {
@@ -155,7 +155,7 @@ pub(super) fn simple_return_declines_non_optional_string_index_to_allow_structur
 }
 
 #[test]
-pub(super) fn simple_compare_condition_wraps_proven_list_index_without_double_option() {
+fn simple_compare_condition_wraps_proven_list_index_without_double_option() {
     let expr = HirExpr::Compare {
         left: Box::new(HirExpr::Index {
             object: Box::new(HirExpr::Name {
@@ -205,7 +205,7 @@ pub(super) fn simple_compare_condition_wraps_proven_list_index_without_double_op
 }
 
 #[test]
-pub(super) fn lowers_simple_field_assign_for_non_self_target() {
+fn lowers_simple_field_assign_for_non_self_target() {
     let stmt = HirStmt::FieldAssign {
         object: "node".to_string(),
         field: "value".to_string(),
@@ -230,7 +230,7 @@ pub(super) fn lowers_simple_field_assign_for_non_self_target() {
 }
 
 #[test]
-pub(super) fn does_not_lower_field_assign_on_self_target() {
+fn does_not_lower_field_assign_on_self_target() {
     let stmt = HirStmt::FieldAssign {
         object: "self".to_string(),
         field: "value".to_string(),
@@ -242,7 +242,7 @@ pub(super) fn does_not_lower_field_assign_on_self_target() {
 }
 
 #[test]
-pub(super) fn does_not_lower_field_assign_with_non_leaf_value() {
+fn does_not_lower_field_assign_with_non_leaf_value() {
     let stmt = HirStmt::FieldAssign {
         object: "node".to_string(),
         field: "value".to_string(),
@@ -258,7 +258,7 @@ pub(super) fn does_not_lower_field_assign_with_non_leaf_value() {
 }
 
 #[test]
-pub(super) fn lowers_simple_tuple_unpack_stmt() {
+fn lowers_simple_tuple_unpack_stmt() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
             sifr_hir::HirTupleTarget {
@@ -290,7 +290,7 @@ pub(super) fn lowers_simple_tuple_unpack_stmt() {
 }
 
 #[test]
-pub(super) fn lowers_simple_tuple_unpack_stmt_with_mutated_bindings() {
+fn lowers_simple_tuple_unpack_stmt_with_mutated_bindings() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
             sifr_hir::HirTupleTarget {
@@ -323,7 +323,7 @@ pub(super) fn lowers_simple_tuple_unpack_stmt_with_mutated_bindings() {
 }
 
 #[test]
-pub(super) fn does_not_lower_tuple_unpack_with_non_leaf_value() {
+fn does_not_lower_tuple_unpack_with_non_leaf_value() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
             sifr_hir::HirTupleTarget {
@@ -350,7 +350,7 @@ pub(super) fn does_not_lower_tuple_unpack_with_non_leaf_value() {
 }
 
 #[test]
-pub(super) fn lowers_tuple_unpack_with_rebind_targets_to_temp_and_assigns() {
+fn lowers_tuple_unpack_with_rebind_targets_to_temp_and_assigns() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
             sifr_hir::HirTupleTarget {
@@ -397,7 +397,7 @@ pub(super) fn lowers_tuple_unpack_with_rebind_targets_to_temp_and_assigns() {
 }
 
 #[test]
-pub(super) fn lowers_tuple_unpack_with_field_targets_to_temp_and_field_assigns() {
+fn lowers_tuple_unpack_with_field_targets_to_temp_and_field_assigns() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
             sifr_hir::HirTupleTarget {

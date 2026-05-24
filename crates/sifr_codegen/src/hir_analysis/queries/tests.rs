@@ -1,6 +1,8 @@
 use super::*;
-use sifr_hir::{HirFunction, HirParam, MethodKind};
-use sifr_type_system::ParamConvention;
+use crate::ModuleFuncSignatures;
+use sifr_hir::{HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt, MethodKind};
+use sifr_type_system::{ParamConvention, Type};
+use std::collections::HashMap;
 
 #[test]
 fn collect_mutated_vars_marks_mutborrow_call_argument() {

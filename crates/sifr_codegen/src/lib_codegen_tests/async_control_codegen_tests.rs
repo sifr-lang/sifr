@@ -12,7 +12,7 @@ pub(crate) fn generate_rust_from_source(source: &str) -> String {
 }
 
 #[test]
-pub(super) fn test_async_generator_codegen_uses_lazy_materialization() {
+fn test_async_generator_codegen_uses_lazy_materialization() {
     let rust_code = generate_rust_from_source(
         "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n",
     );
@@ -34,7 +34,7 @@ pub(crate) fn empty_module() -> HirModule {
 }
 
 #[test]
-pub(super) fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
+fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
     let loop_else_recursion = generate_rust_from_source(
         "def main():\n\
     def recurse(n: int) -> int:\n\
@@ -82,7 +82,7 @@ pub(super) fn test_generate_rust_preserves_loop_else_recursion_and_try_except_re
 }
 
 #[test]
-pub(super) fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
+fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
     let always_exit_try = generate_rust_from_source(
         "def classify(flag: bool) -> int:\n\
     try:\n\
@@ -110,7 +110,7 @@ pub(super) fn test_generate_rust_elides_unreachable_returns_after_always_exit_pa
 }
 
 #[test]
-pub(super) fn test_class_method_mutable_self_propagates_through_delegation() {
+fn test_class_method_mutable_self_propagates_through_delegation() {
     let rust_code = generate_rust_from_source(
         "class ConfigParser:\n    text: str\n\n    def __init__(self):\n        self.text = \"\"\n\n    def read_string(self, text: str) -> None:\n        self.text = text\n\n    def read(self, text: str) -> None:\n        self.read_string(text)\n",
     );
@@ -121,7 +121,7 @@ pub(super) fn test_class_method_mutable_self_propagates_through_delegation() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_guarded_list_pop_unwraps_compiler_verified_nonempty() {
+fn test_generate_rust_guarded_list_pop_unwraps_compiler_verified_nonempty() {
     let rust_code = generate_rust_from_source(
         "def main():\n    values: list[int] = [1, 2]\n    while values:\n        _: int = values.pop()\n",
     );
@@ -131,7 +131,7 @@ pub(super) fn test_generate_rust_guarded_list_pop_unwraps_compiler_verified_none
 }
 
 #[test]
-pub(super) fn test_generate_rust_guarded_list_pop_zero_unwraps_compiler_verified_nonempty() {
+fn test_generate_rust_guarded_list_pop_zero_unwraps_compiler_verified_nonempty() {
     let rust_code = generate_rust_from_source(
         "def main():\n    values: list[int] = [1, 2]\n    while values:\n        _: int = values.pop(0)\n",
     );
@@ -140,7 +140,7 @@ pub(super) fn test_generate_rust_guarded_list_pop_zero_unwraps_compiler_verified
 }
 
 #[test]
-pub(super) fn test_simple_function_codegen() {
+fn test_simple_function_codegen() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -172,7 +172,7 @@ pub(super) fn test_simple_function_codegen() {
 }
 
 #[test]
-pub(super) fn test_arithmetic_codegen() {
+fn test_arithmetic_codegen() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "add".to_string(),
@@ -227,7 +227,7 @@ pub(super) fn test_arithmetic_codegen() {
 // --- Codegen Quality Tests ---
 
 #[test]
-pub(super) fn test_no_unnecessary_mut() {
+fn test_no_unnecessary_mut() {
     // Variable that is never reassigned should NOT have `mut`
     let module = HirModule {
         functions: vec![HirFunction {
@@ -276,7 +276,7 @@ pub(super) fn test_no_unnecessary_mut() {
 }
 
 #[test]
-pub(super) fn test_mut_on_reassigned_variable() {
+fn test_mut_on_reassigned_variable() {
     // Variable that IS reassigned should have `mut`
     let module = HirModule {
         functions: vec![HirFunction {
@@ -315,8 +315,7 @@ pub(super) fn test_mut_on_reassigned_variable() {
 }
 
 #[test]
-pub(super) fn test_generate_rust_recursive_tree_traversal_uses_option_let_else_and_cloned_box_reads(
-) {
+fn test_generate_rust_recursive_tree_traversal_uses_option_let_else_and_cloned_box_reads() {
     let rust_code = generate_rust_from_source(
         "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef tree_sum(node: TreeNode | None) -> int:\n    if not node:\n        return 0\n    left: TreeNode | None = node.left\n    right: TreeNode | None = node.right\n    return node.val + tree_sum(left) + tree_sum(right)\n\ndef same_shape_and_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return -1\n    return p.val + q.val + same_shape_and_sum(p.left, q.left) + same_shape_and_sum(p.right, q.right)\n",
     );
@@ -328,7 +327,7 @@ pub(super) fn test_generate_rust_recursive_tree_traversal_uses_option_let_else_a
 }
 
 #[test]
-pub(super) fn test_generate_rust_mutually_recursive_classes_box_same_scc_fields() {
+fn test_generate_rust_mutually_recursive_classes_box_same_scc_fields() {
     let rust_code = generate_rust_from_source(
         "class Expr:\n    value: int\n    term: Term | None\n\n    def __init__(self, value: int, term: Term | None):\n        self.value = value\n        self.term = term\n\nclass Term:\n    factor: int\n    expr: Expr | None\n\n    def __init__(self, factor: int, expr: Expr | None):\n        self.factor = factor\n        self.expr = expr\n",
     );
@@ -340,7 +339,7 @@ pub(super) fn test_generate_rust_mutually_recursive_classes_box_same_scc_fields(
 }
 
 #[test]
-pub(super) fn test_generate_rust_recursive_generic_node_preserves_instantiated_type_arguments() {
+fn test_generate_rust_recursive_generic_node_preserves_instantiated_type_arguments() {
     let rust_code = generate_rust_from_source(
         "class Node[T]:\n    value: T\n    next: Node[T] | None\n\n    def __init__(self, value: T, next: Node[T] | None):\n        self.value = value\n        self.next = next\n\ndef total(node: Node[int] | None) -> int:\n    if not node:\n        return 0\n    rest: Node[int] | None = node.next\n    return node.value + total(rest)\n",
     );
@@ -352,7 +351,7 @@ pub(super) fn test_generate_rust_recursive_generic_node_preserves_instantiated_t
 }
 
 #[test]
-pub(super) fn test_generate_rust_own_mut_param_emits_mut_binding_without_shadow() {
+fn test_generate_rust_own_mut_param_emits_mut_binding_without_shadow() {
     let rust_code = generate_rust_from_source(
         "def replace_elements(own mut arr: list[int]) -> list[int]:\n    arr[0] = 8\n    return arr\n\ndef touch(mut arr: list[int]) -> int:\n    arr[0] = 7\n    return len(arr)\n",
     );
@@ -366,7 +365,7 @@ pub(super) fn test_generate_rust_own_mut_param_emits_mut_binding_without_shadow(
 }
 
 #[test]
-pub(super) fn test_println_fstring_inlined() {
+fn test_println_fstring_inlined() {
     // print(f"hello {name}") should emit println!("hello {}", name) not println!("{}", format!(...))
     let module = HirModule {
         functions: vec![HirFunction {
@@ -422,7 +421,7 @@ pub(super) fn test_println_fstring_inlined() {
 }
 
 #[test]
-pub(super) fn test_no_tostring_in_println() {
+fn test_no_tostring_in_println() {
     // print("hello") should emit println!("{}", "hello") not println!("{}", "hello".to_string())
     let module = HirModule {
         functions: vec![HirFunction {
@@ -460,7 +459,7 @@ pub(super) fn test_no_tostring_in_println() {
 }
 
 #[test]
-pub(super) fn test_structured_codegen_lowers_comprehension_local_initializers() {
+fn test_structured_codegen_lowers_comprehension_local_initializers() {
     let items_name = HirExpr::Name {
         name: "items".to_string(),
         ty: Type::List(Box::new(Type::Int)),
@@ -539,7 +538,7 @@ pub(super) fn test_structured_codegen_lowers_comprehension_local_initializers() 
 }
 
 #[test]
-pub(super) fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
+fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -593,7 +592,7 @@ pub(super) fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_s
 }
 
 #[test]
-pub(super) fn test_hashmap_short_name() {
+fn test_hashmap_short_name() {
     // Dict literal should use HashMap::from not std::collections::HashMap::from
     let module = HirModule {
         functions: vec![HirFunction {
@@ -642,7 +641,7 @@ pub(super) fn test_hashmap_short_name() {
 }
 
 #[test]
-pub(super) fn test_dict_get_string_literal_key() {
+fn test_dict_get_string_literal_key() {
     // d["key"] should emit d.get("key") not d.get(&"key".to_string())
     let module = HirModule {
         functions: vec![HirFunction {
@@ -698,7 +697,7 @@ pub(super) fn test_dict_get_string_literal_key() {
 }
 
 #[test]
-pub(super) fn test_string_concat_flattened() {
+fn test_string_concat_flattened() {
     // "a" + "b" + "c" should emit format!("{}{}{}", ...) not nested format!
     let module = HirModule {
         functions: vec![HirFunction {
