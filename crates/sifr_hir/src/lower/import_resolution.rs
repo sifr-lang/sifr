@@ -1,12 +1,12 @@
 use super::{ExternalDefs, LowerCtx};
 
 impl LowerCtx {
-    pub(super) fn with_current_module(mut self, module_name: &str) -> Self {
+    pub(in crate::lower) fn with_current_module(mut self, module_name: &str) -> Self {
         self.current_module_name = Some(module_name.to_string());
         self
     }
 
-    pub(super) fn effective_import_module_name(
+    pub(in crate::lower) fn effective_import_module_name(
         &self,
         raw_module_name: &str,
         level: u32,
@@ -27,7 +27,10 @@ impl LowerCtx {
     }
 }
 
-pub(super) fn external_module_exists(externals: &ExternalDefs, module_name: &str) -> bool {
+pub(in crate::lower) fn external_module_exists(
+    externals: &ExternalDefs,
+    module_name: &str,
+) -> bool {
     externals.functions.contains_key(module_name)
         || externals.classes.contains_key(module_name)
         || externals.constants.contains_key(module_name)

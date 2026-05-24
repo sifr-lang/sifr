@@ -1,3 +1,12 @@
+use super::narrowing_helpers::{
+    is_narrowable_pop_call_for_codegen, supports_nonempty_pop_narrowing_type_for_codegen,
+};
+use super::{
+    methods, registry_box_iterator_expr, registry_defaultdict_alias_parts,
+    registry_defaultdict_default_expr, registry_defaultdict_key_arg, registry_expr_is_vec_like,
+    registry_iterable_to_owned_iter_expr, registry_iterable_to_set_expr, HirExpr, RustEmitter,
+    RustExpr, Type,
+};
 impl RustEmitter {
     pub(crate) fn effective_method_object_ty(&self, object: &HirExpr) -> Type {
         if let HirExpr::Name { name, ty } = object {
@@ -172,7 +181,7 @@ impl RustEmitter {
         Some(lowered_expr)
     }
 
-    fn unwrap_compiler_verified_nonempty_pop_result(
+    pub(crate) fn unwrap_compiler_verified_nonempty_pop_result(
         object_ty: &Type,
         method: &str,
         args: &[HirExpr],
@@ -205,7 +214,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_registry_set_method_call_expr(
+    pub(crate) fn try_lower_registry_set_method_call_expr(
         &mut self,
         object_expr: &crate::RustExpr,
         method: &str,
@@ -375,7 +384,7 @@ impl RustEmitter {
         None
     }
 
-    fn try_lower_defaultdict_index_method_call_expr(
+    pub(crate) fn try_lower_defaultdict_index_method_call_expr(
         &mut self,
         object: &HirExpr,
         method: &str,
@@ -447,5 +456,4 @@ impl RustEmitter {
             }
         }
     }
-
 }

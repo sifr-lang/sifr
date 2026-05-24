@@ -6,14 +6,14 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;
 use sifr_type_system::Type;
 
-pub(super) fn is_task_handle_type(ty: &Type) -> bool {
+pub(in crate::lower) fn is_task_handle_type(ty: &Type) -> bool {
     matches!(
         ty.resolve_alias(),
         Type::Task(_, _) | Type::BlockingTask(_, _)
     )
 }
 
-pub(super) fn lower_task_handle_method_call(
+pub(in crate::lower) fn lower_task_handle_method_call(
     object: HirExpr,
     method_name: &str,
     call: &ExprCall,

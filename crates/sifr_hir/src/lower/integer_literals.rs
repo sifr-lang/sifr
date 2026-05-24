@@ -1,7 +1,7 @@
 use num_bigint::BigUint;
 use sifr_python_ast::Int;
 
-pub(super) fn canonical_large_int_literal_text(value: &Int) -> String {
+pub(in crate::lower) fn canonical_large_int_literal_text(value: &Int) -> String {
     let text = value.to_string();
     parse_unsigned_integer_literal_text(&text).map_or(text, |integer| integer.to_str_radix(10))
 }

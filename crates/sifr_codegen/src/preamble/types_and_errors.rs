@@ -1,4 +1,4 @@
-use crate::{RustExpr, RustItem, RustMatchArm, RustParam, RustStmt, RustType, Type, Visibility};
+use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType, Type, Visibility};
 
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty {
@@ -78,7 +78,7 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     }
 }
 
-fn task_error_type_to_rust_type(ty: &Type) -> RustType {
+pub(crate) fn task_error_type_to_rust_type(ty: &Type) -> RustType {
     if matches!(ty.resolve_alias(), Type::Never) {
         RustType::Named("std::convert::Infallible".to_string())
     } else {
@@ -622,4 +622,3 @@ pub fn build_async_exit_cause_type_items() -> Vec<RustItem> {
         ],
     }]
 }
-

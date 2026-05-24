@@ -1,3 +1,9 @@
+use super::{
+    is_alias_equivalent_type, is_none_type, is_okwrap_none_expr, is_option_like_type,
+    resolve_alias_type, try_lower_attribute_dict_insert_key_expr, try_lower_leaf_expr,
+    try_lower_leaf_or_name_expr, try_lower_name_ident_expr, HashSet, HirExpr, RustExpr,
+    RustLiteral, RustStmt, RustType, SimpleStmtLoweringCtx, Type,
+};
 pub(crate) fn build_list_subscript_assign_stmt(
     receiver: RustExpr,
     lowered_index: RustExpr,
@@ -13,7 +19,7 @@ pub(crate) fn build_list_subscript_assign_stmt(
     )
 }
 
-fn build_list_get_mut_block_stmt(
+pub(super) fn build_list_get_mut_block_stmt(
     receiver: RustExpr,
     lowered_index: RustExpr,
     then_body_stmt: RustStmt,
@@ -94,7 +100,7 @@ pub(crate) fn build_dict_subscript_assign_stmt(
     })
 }
 
-fn try_lower_simple_subscript_assign_stmt(
+pub(super) fn try_lower_simple_subscript_assign_stmt(
     object: &str,
     index: &HirExpr,
     value: &HirExpr,
@@ -119,7 +125,7 @@ fn try_lower_simple_subscript_assign_stmt(
     }
 }
 
-fn maybe_clone_subscript_assignment_name(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
+pub(super) fn maybe_clone_subscript_assignment_name(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
     if matches!(expr, HirExpr::Name { .. }) && !crate::helpers::is_copy_type_for_codegen(expr.ty())
     {
         RustExpr::Clone(Box::new(lowered))
@@ -128,7 +134,10 @@ fn maybe_clone_subscript_assignment_name(expr: &HirExpr, lowered: RustExpr) -> R
     }
 }
 
-fn try_lower_simple_delete_stmt(object: &HirExpr, index: &HirExpr) -> Option<Vec<RustStmt>> {
+pub(super) fn try_lower_simple_delete_stmt(
+    object: &HirExpr,
+    index: &HirExpr,
+) -> Option<Vec<RustStmt>> {
     let receiver = try_lower_name_ident_expr(object)?;
     let lowered_index = try_lower_leaf_or_name_expr(index)?;
     match resolve_alias_type(object.ty()) {
@@ -196,7 +205,7 @@ fn try_lower_simple_delete_stmt(object: &HirExpr, index: &HirExpr) -> Option<Vec
     }
 }
 
-fn build_dict_delete_key_arg(index: &HirExpr) -> Option<RustExpr> {
+pub(super) fn build_dict_delete_key_arg(index: &HirExpr) -> Option<RustExpr> {
     if matches!(index, HirExpr::Name { .. }) {
         // Preserve name-key borrowing behavior.
         return None;
@@ -208,7 +217,7 @@ fn build_dict_delete_key_arg(index: &HirExpr) -> Option<RustExpr> {
     })
 }
 
-fn try_lower_simple_nested_subscript_assign_stmt(
+pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
     object: &str,
     outer_index: &HirExpr,
     inner_index: &HirExpr,
@@ -358,7 +367,7 @@ fn try_lower_simple_nested_subscript_assign_stmt(
     Some(vec![RustStmt::Block(outer_body)])
 }
 
-fn try_lower_simple_attribute_subscript_assign_stmt(
+pub(super) fn try_lower_simple_attribute_subscript_assign_stmt(
     object: &str,
     field: &str,
     index: &HirExpr,
@@ -388,7 +397,7 @@ fn try_lower_simple_attribute_subscript_assign_stmt(
     }
 }
 
-fn try_lower_simple_attribute_nested_subscript_assign_stmt(
+pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
     object: &str,
     field: &str,
     outer_index: &HirExpr,
@@ -540,7 +549,7 @@ fn try_lower_simple_attribute_nested_subscript_assign_stmt(
     Some(vec![RustStmt::Block(outer_body)])
 }
 
-fn try_lower_simple_subscript_augassign_stmt(
+pub(super) fn try_lower_simple_subscript_augassign_stmt(
     object: &str,
     index: &HirExpr,
     op: &str,
@@ -632,7 +641,7 @@ fn try_lower_simple_subscript_augassign_stmt(
     }
 }
 
-fn build_dict_get_mut_key_arg(lowered_index: RustExpr) -> RustExpr {
+pub(super) fn build_dict_get_mut_key_arg(lowered_index: RustExpr) -> RustExpr {
     if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
         lowered_index
     } else {
@@ -643,14 +652,14 @@ fn build_dict_get_mut_key_arg(lowered_index: RustExpr) -> RustExpr {
     }
 }
 
-fn is_supported_subscript_augassign_op(op: &str) -> bool {
+pub(super) fn is_supported_subscript_augassign_op(op: &str) -> bool {
     matches!(
         op,
         "+=" | "-=" | "*=" | "/=" | "%=" | "//=" | "**=" | "&=" | "|=" | "^=" | "<<=" | ">>="
     )
 }
 
-fn build_subscript_augassign_elem_stmt(op: &str, lowered_value: RustExpr) -> RustStmt {
+pub(super) fn build_subscript_augassign_elem_stmt(op: &str, lowered_value: RustExpr) -> RustStmt {
     if op == "**=" {
         return RustStmt::Assign {
             target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
@@ -683,7 +692,7 @@ fn build_subscript_augassign_elem_stmt(op: &str, lowered_value: RustExpr) -> Rus
     }
 }
 
-fn try_lower_simple_return_stmt(
+pub(super) fn try_lower_simple_return_stmt(
     value: &HirExpr,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
@@ -773,7 +782,7 @@ fn try_lower_simple_return_stmt(
     )?))])
 }
 
-fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = crate::fixed_width_literal_expr_for_target(ty, value) {
         return Some(lowered);
     }
@@ -810,7 +819,7 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_or_name_expr(value)
 }
 
-fn try_lower_simple_assign_value(
+pub(super) fn try_lower_simple_assign_value(
     value: &HirExpr,
     borrowed_params: &HashSet<String>,
 ) -> Option<RustExpr> {
@@ -823,7 +832,7 @@ fn try_lower_simple_assign_value(
     try_lower_leaf_or_name_expr(value)
 }
 
-fn try_lower_simple_field_assign_stmt(
+pub(super) fn try_lower_simple_field_assign_stmt(
     _object: &str,
     _field: &str,
     _value: &HirExpr,
@@ -833,7 +842,7 @@ fn try_lower_simple_field_assign_stmt(
     None
 }
 
-fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
     let is_numeric_op = matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=");
     let is_int_only_op = matches!(op, "&=" | "|=" | "^=" | "<<=" | ">>=");
     let supports_op = match resolve_alias_type(value.ty()) {
@@ -847,7 +856,7 @@ fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustEx
     try_lower_leaf_or_name_expr(value)
 }
 
-fn try_lower_simple_augassign_stmt(
+pub(super) fn try_lower_simple_augassign_stmt(
     target: RustExpr,
     op: &str,
     value: &HirExpr,
@@ -859,7 +868,7 @@ fn try_lower_simple_augassign_stmt(
     }])
 }
 
-fn normalize_augassign_op(op: &str) -> String {
+pub(super) fn normalize_augassign_op(op: &str) -> String {
     if op == "//=" {
         "/".to_string()
     } else {

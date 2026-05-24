@@ -36,7 +36,7 @@ fn reject_unsupported_surface(ctx: &mut LowerCtx, message: String, range: TextRa
     ctx.error_with_code_at(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE, message, range);
 }
 
-pub(super) fn resolve_str_encode_method_type(
+pub(in crate::lower) fn resolve_str_encode_method_type(
     args: &[HirExpr],
     arg_ranges: &[TextRange],
     method_range: TextRange,
@@ -79,7 +79,7 @@ pub(super) fn resolve_str_encode_method_type(
     ))
 }
 
-pub(super) fn resolve_bytes_method_type(
+pub(in crate::lower) fn resolve_bytes_method_type(
     method: &str,
     args: &[HirExpr],
     arg_ranges: &[TextRange],

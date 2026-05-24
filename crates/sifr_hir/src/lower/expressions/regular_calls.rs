@@ -1,4 +1,17 @@
-fn lower_regular_call(func_name: String, call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+use super::{
+    call_argument_ranges_by_param, collect_type_vars, coroutine_result_type,
+    decode_typevar_constraint, expression_diagnostics, infer_type_var_bindings,
+    is_compatible_with_unresolved_typevars, lower_expr, lower_function_call_args, lower_name,
+    lower_signature_call_args, name_diagnostics, ownership_diagnostics, protocol_diagnostics,
+    refine_constructor_return_type_from_args, substitute_type_vars, tsc, type_param_argument_range,
+    type_satisfies_bound, type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap,
+    HirExpr, LowerCtx, OwnershipKind, ParamConvention, Ranged, Type,
+};
+pub(super) fn lower_regular_call(
+    func_name: String,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     // Check if this is a Callable-typed variable being called
     let callable_info = ctx.scope.lookup(&func_name).and_then(|info| {
         if let Type::Callable(ref param_types, ref conventions, ref ret_type) = info.ty {

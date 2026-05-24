@@ -3,7 +3,7 @@ use sifr_hir::{HirExpr, HirModule};
 use sifr_type_system::Type;
 
 impl RustEmitter {
-    pub(super) fn emit_module_constants(&mut self, module: &HirModule, module_public: bool) {
+    pub(crate) fn emit_module_constants(&mut self, module: &HirModule, module_public: bool) {
         for (name, ty, value) in &module.constants {
             if let Err(err) =
                 self.try_emit_lowered_module_constant_result(name, ty, value, module_public)
@@ -16,7 +16,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_emit_lowered_module_constant_result(
+    pub(crate) fn try_emit_lowered_module_constant_result(
         &mut self,
         name: &str,
         ty: &Type,

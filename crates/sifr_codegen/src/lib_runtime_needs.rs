@@ -1,4 +1,10 @@
-fn sync_channel_runtime_needed(rust_code: &str) -> bool {
+use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
+use crate::stdlib_filter::strip_rust_items_by_name;
+use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
+use std::collections::HashSet;
+
+use super::{RustItem, Type};
+pub(crate) fn sync_channel_runtime_needed(rust_code: &str) -> bool {
     rust_code.contains("struct Channel<")
         || rust_code.contains("struct ChannelSender<")
         || rust_code.contains("struct ChannelReceiver<")
@@ -6,7 +12,7 @@ fn sync_channel_runtime_needed(rust_code: &str) -> bool {
         || rust_code.contains("fn bounded_channel<")
 }
 
-fn replace_sync_channel_runtime_items(rust_code: &str) -> String {
+pub(crate) fn replace_sync_channel_runtime_items(rust_code: &str) -> String {
     let strip_names = HashSet::from([
         "Channel",
         "ChannelSender",
@@ -22,7 +28,7 @@ fn replace_sync_channel_runtime_items(rust_code: &str) -> String {
     replaced
 }
 
-fn sync_channel_runtime_rust_code() -> &'static str {
+pub(crate) fn sync_channel_runtime_rust_code() -> &'static str {
     r#"
 #[derive(Debug)]
 struct __SifrChannelState<T> {
@@ -256,7 +262,7 @@ impl<T: Clone> std::fmt::Display for ChannelReceiver<T> {
     }
 }
 
-fn channel<T: Clone + 'static>() -> (ChannelSender<T>, ChannelReceiver<T>) {
+pub(crate) fn channel<T: Clone + 'static>() -> (ChannelSender<T>, ChannelReceiver<T>) {
     let shared_channel = Channel::new(vec![], -(1 as i64));
     return (
         ChannelSender::new(shared_channel.clone()),
@@ -264,7 +270,7 @@ fn channel<T: Clone + 'static>() -> (ChannelSender<T>, ChannelReceiver<T>) {
     );
 }
 
-fn bounded_channel<T: Clone + 'static>(capacity: i64) -> (ChannelSender<T>, ChannelReceiver<T>) {
+pub(crate) fn bounded_channel<T: Clone + 'static>(capacity: i64) -> (ChannelSender<T>, ChannelReceiver<T>) {
     let shared_channel = Channel::new(vec![], capacity);
     return (
         ChannelSender::new(shared_channel.clone()),
@@ -274,7 +280,7 @@ fn bounded_channel<T: Clone + 'static>(capacity: i64) -> (ChannelSender<T>, Chan
 "#
 }
 
-fn annotate_async_main_entrypoint(items: &mut Vec<RustItem>) -> bool {
+pub(crate) fn annotate_async_main_entrypoint(items: &mut Vec<RustItem>) -> bool {
     for index in 0..items.len() {
         if let RustItem::Fn {
             name,
@@ -301,7 +307,7 @@ fn annotate_async_main_entrypoint(items: &mut Vec<RustItem>) -> bool {
     false
 }
 
-fn module_uses_task_sleep(module: &HirModule) -> bool {
+pub(crate) fn module_uses_task_sleep(module: &HirModule) -> bool {
     fn expr_is_task_sleep(expr: &HirExpr) -> bool {
         matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_sleep")
     }
@@ -371,7 +377,7 @@ fn module_uses_task_sleep(module: &HirModule) -> bool {
     false
 }
 
-fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool {
+pub(crate) fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool {
     if predicate(ty) {
         return true;
     }
@@ -435,35 +441,35 @@ fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool {
     }
 }
 
-fn type_contains_failure(ty: &Type) -> bool {
+pub(crate) fn type_contains_failure(ty: &Type) -> bool {
     type_contains_by(ty, |candidate| matches!(candidate, Type::Failure(_)))
 }
 
-fn type_contains_timeout_result(ty: &Type) -> bool {
+pub(crate) fn type_contains_timeout_result(ty: &Type) -> bool {
     type_contains_by(ty, |candidate| matches!(candidate, Type::TimeoutResult(_)))
 }
 
-fn type_contains_async_generator(ty: &Type) -> bool {
+pub(crate) fn type_contains_async_generator(ty: &Type) -> bool {
     type_contains_by(ty, |candidate| {
         matches!(candidate, Type::AsyncGenerator(_, _))
     })
 }
 
-fn type_contains_cancellation_error(ty: &Type) -> bool {
+pub(crate) fn type_contains_cancellation_error(ty: &Type) -> bool {
     type_contains_by(
         ty,
         |candidate| matches!(candidate, Type::Class { name, .. } if name == "CancellationError"),
     )
 }
 
-fn type_contains_async_exit_cause(ty: &Type) -> bool {
+pub(crate) fn type_contains_async_exit_cause(ty: &Type) -> bool {
     type_contains_by(
         ty,
         |candidate| matches!(candidate, Type::Class { name, .. } if name == "AsyncExitCause"),
     )
 }
 
-fn module_uses_failure_type(module: &HirModule) -> bool {
+pub(crate) fn module_uses_failure_type(module: &HirModule) -> bool {
     module.functions.iter().any(function_uses_failure_type)
         || module.classes.iter().any(|class| {
             class
@@ -478,7 +484,7 @@ fn module_uses_failure_type(module: &HirModule) -> bool {
             .any(|(_, ty, _)| type_contains_failure(ty))
 }
 
-fn module_uses_cancellation_error_type(module: &HirModule) -> bool {
+pub(crate) fn module_uses_cancellation_error_type(module: &HirModule) -> bool {
     module
         .functions
         .iter()
@@ -499,7 +505,7 @@ fn module_uses_cancellation_error_type(module: &HirModule) -> bool {
             .any(|(_, ty, _)| type_contains_cancellation_error(ty))
 }
 
-fn module_uses_async_exit_cause_type(module: &HirModule) -> bool {
+pub(crate) fn module_uses_async_exit_cause_type(module: &HirModule) -> bool {
     module
         .functions
         .iter()
@@ -520,7 +526,7 @@ fn module_uses_async_exit_cause_type(module: &HirModule) -> bool {
             .any(|(_, ty, _)| type_contains_async_exit_cause(ty))
 }
 
-fn module_uses_timeout_result_type(module: &HirModule) -> bool {
+pub(crate) fn module_uses_timeout_result_type(module: &HirModule) -> bool {
     module
         .functions
         .iter()
@@ -538,7 +544,7 @@ fn module_uses_timeout_result_type(module: &HirModule) -> bool {
             .any(|(_, ty, _)| type_contains_timeout_result(ty))
 }
 
-fn module_uses_async_generator_type(module: &HirModule) -> bool {
+pub(crate) fn module_uses_async_generator_type(module: &HirModule) -> bool {
     module
         .functions
         .iter()
@@ -556,42 +562,42 @@ fn module_uses_async_generator_type(module: &HirModule) -> bool {
             .any(|(_, ty, _)| type_contains_async_generator(ty))
 }
 
-fn function_uses_cancellation_error_type(func: &HirFunction) -> bool {
+pub(crate) fn function_uses_cancellation_error_type(func: &HirFunction) -> bool {
     func.params
         .iter()
         .any(|param| type_contains_cancellation_error(&param.ty))
         || type_contains_cancellation_error(&func.return_type)
 }
 
-fn function_uses_async_exit_cause_type(func: &HirFunction) -> bool {
+pub(crate) fn function_uses_async_exit_cause_type(func: &HirFunction) -> bool {
     func.params
         .iter()
         .any(|param| type_contains_async_exit_cause(&param.ty))
         || type_contains_async_exit_cause(&func.return_type)
 }
 
-fn function_uses_failure_type(func: &HirFunction) -> bool {
+pub(crate) fn function_uses_failure_type(func: &HirFunction) -> bool {
     func.params
         .iter()
         .any(|param| type_contains_failure(&param.ty))
         || type_contains_failure(&func.return_type)
 }
 
-fn function_uses_timeout_result_type(func: &HirFunction) -> bool {
+pub(crate) fn function_uses_timeout_result_type(func: &HirFunction) -> bool {
     func.params
         .iter()
         .any(|param| type_contains_timeout_result(&param.ty))
         || type_contains_timeout_result(&func.return_type)
 }
 
-fn function_uses_async_generator_type(func: &HirFunction) -> bool {
+pub(crate) fn function_uses_async_generator_type(func: &HirFunction) -> bool {
     func.params
         .iter()
         .any(|param| type_contains_async_generator(&param.ty))
         || type_contains_async_generator(&func.return_type)
 }
 
-fn body_contains_await(body: &[HirStmt]) -> bool {
+pub(crate) fn body_contains_await(body: &[HirStmt]) -> bool {
     let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
     let mut on_expr = |expr: &HirExpr| {
         if matches!(expr, HirExpr::Await { .. }) {
@@ -611,7 +617,7 @@ fn body_contains_await(body: &[HirStmt]) -> bool {
     )
 }
 
-fn module_uses_task_scope(module: &HirModule) -> bool {
+pub(crate) fn module_uses_task_scope(module: &HirModule) -> bool {
     fn stmt_uses_task_scope_runtime(stmt: &HirStmt) -> bool {
         matches!(
             stmt,
@@ -686,11 +692,11 @@ fn module_uses_task_scope(module: &HirModule) -> bool {
     false
 }
 
-fn public_visibility() -> syn::Visibility {
+pub(crate) fn public_visibility() -> syn::Visibility {
     syn::Visibility::Public(syn::token::Pub::default())
 }
 
-fn publicize_impl_items(items: &mut [syn::ImplItem]) {
+pub(crate) fn publicize_impl_items(items: &mut [syn::ImplItem]) {
     for item in items {
         if let syn::ImplItem::Fn(function) = item {
             function.vis = public_visibility();
@@ -698,7 +704,7 @@ fn publicize_impl_items(items: &mut [syn::ImplItem]) {
     }
 }
 
-fn publicize_struct_fields(fields: &mut syn::Fields) {
+pub(crate) fn publicize_struct_fields(fields: &mut syn::Fields) {
     match fields {
         syn::Fields::Named(fields) => {
             for field in &mut fields.named {
@@ -714,7 +720,7 @@ fn publicize_struct_fields(fields: &mut syn::Fields) {
     }
 }
 
-fn publicize_generated_module_source(source: &str) -> String {
+pub(crate) fn publicize_generated_module_source(source: &str) -> String {
     let mut file = syn::parse_file(source).unwrap_or_else(|error| {
         panic!("failed to parse generated module for publicization: {error}")
     });
@@ -747,4 +753,3 @@ fn publicize_generated_module_source(source: &str) -> String {
     }
     prettyplease::unparse(&file)
 }
-

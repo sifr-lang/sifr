@@ -1,31 +1,32 @@
+use super::str;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_python_ast::{Expr, ExprAttribute, ExprCall, Number};
-use sifr_type_system::{make_union, IterationCapability, Type};
+use sifr_python_ast::{Expr, ExprCall, Number};
+use sifr_type_system::{make_union, Type};
 
 use super::expressions::lower_expr;
-use super::{LowerCtx, RevealTypeDiagnostic};
+use super::LowerCtx;
 
-pub(super) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
-pub(super) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
-pub(super) const DEFAULTDICT_SET_ALIAS: &str = "__compat_defaultdict_set";
+pub(in crate::lower) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
+pub(in crate::lower) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
+pub(in crate::lower) const DEFAULTDICT_SET_ALIAS: &str = "__compat_defaultdict_set";
 
-fn first_keyword_range(call: &ExprCall) -> ruff_text_size::TextRange {
+pub(super) fn first_keyword_range(call: &ExprCall) -> ruff_text_size::TextRange {
     call.arguments
         .keywords
         .first()
         .map_or_else(|| call.func.range(), |keyword| keyword.range)
 }
 
-fn arity_range(call: &ExprCall) -> ruff_text_size::TextRange {
+pub(super) fn arity_range(call: &ExprCall) -> ruff_text_size::TextRange {
     call.arguments
         .args
         .last()
         .map_or_else(|| call.func.range(), Ranged::range)
 }
 
-fn reject_keywords(call: &ExprCall, callable_name: &str, ctx: &mut LowerCtx) {
+pub(super) fn reject_keywords(call: &ExprCall, callable_name: &str, ctx: &mut LowerCtx) {
     ctx.error_with_code_at(
         DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
         format!("{callable_name}() does not accept keyword arguments"),
@@ -33,11 +34,11 @@ fn reject_keywords(call: &ExprCall, callable_name: &str, ctx: &mut LowerCtx) {
     );
 }
 
-fn reject_unpacked_keyword(call: &ExprCall, callable_name: &str, ctx: &mut LowerCtx) {
+pub(super) fn reject_unpacked_keyword(call: &ExprCall, callable_name: &str, ctx: &mut LowerCtx) {
     reject_unpacked_keyword_at(callable_name, ctx, first_keyword_range(call));
 }
 
-fn reject_unpacked_keyword_at(
+pub(super) fn reject_unpacked_keyword_at(
     callable_name: &str,
     ctx: &mut LowerCtx,
     range: ruff_text_size::TextRange,
@@ -49,7 +50,7 @@ fn reject_unpacked_keyword_at(
     );
 }
 
-fn reject_wrong_positional_count(call: &ExprCall, message: String, ctx: &mut LowerCtx) {
+pub(super) fn reject_wrong_positional_count(call: &ExprCall, message: String, ctx: &mut LowerCtx) {
     ctx.error_with_code_at(
         DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
         message,
@@ -57,11 +58,15 @@ fn reject_wrong_positional_count(call: &ExprCall, message: String, ctx: &mut Low
     );
 }
 
-fn reject_type_mismatch(ctx: &mut LowerCtx, message: String, range: ruff_text_size::TextRange) {
+pub(super) fn reject_type_mismatch(
+    ctx: &mut LowerCtx,
+    message: String,
+    range: ruff_text_size::TextRange,
+) {
     ctx.error_with_code_at(DiagnosticCode::TYPE_MISMATCH, message, range);
 }
 
-fn reject_unsupported_surface(
+pub(super) fn reject_unsupported_surface(
     ctx: &mut LowerCtx,
     message: String,
     range: ruff_text_size::TextRange,
@@ -69,7 +74,10 @@ fn reject_unsupported_surface(
     ctx.error_with_code_at(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE, message, range);
 }
 
-pub(super) fn reject_zip_keywords_if_present(call: &ExprCall, ctx: &mut LowerCtx) -> bool {
+pub(in crate::lower) fn reject_zip_keywords_if_present(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> bool {
     let Some(keyword) = call.arguments.keywords.first() else {
         return false;
     };
@@ -96,7 +104,7 @@ pub(super) fn reject_zip_keywords_if_present(call: &ExprCall, ctx: &mut LowerCtx
     true
 }
 
-fn iterable_element_type_for_builtin(arg_ty: &Type) -> Option<Type> {
+pub(super) fn iterable_element_type_for_builtin(arg_ty: &Type) -> Option<Type> {
     arg_ty.iterable_element_type().or_else(|| {
         if matches!(arg_ty.resolve_alias(), Type::Any | Type::Unknown) {
             Some(Type::Any)
@@ -106,13 +114,13 @@ fn iterable_element_type_for_builtin(arg_ty: &Type) -> Option<Type> {
     })
 }
 
-fn list_constructor_output_type(arg_ty: &Type) -> Option<Type> {
+pub(super) fn list_constructor_output_type(arg_ty: &Type) -> Option<Type> {
     Some(Type::List(Box::new(iterable_element_type_for_builtin(
         arg_ty,
     )?)))
 }
 
-fn pair_tuple_types(ty: &Type) -> Option<(Type, Type)> {
+pub(super) fn pair_tuple_types(ty: &Type) -> Option<(Type, Type)> {
     let Type::Tuple(items) = ty.resolve_alias() else {
         return None;
     };
@@ -122,7 +130,7 @@ fn pair_tuple_types(ty: &Type) -> Option<(Type, Type)> {
     Some((items[0].clone(), items[1].clone()))
 }
 
-fn dict_constructor_output_type(arg_ty: &Type) -> Option<Type> {
+pub(super) fn dict_constructor_output_type(arg_ty: &Type) -> Option<Type> {
     match arg_ty.resolve_alias() {
         Type::Dict(key, value) => Some(Type::Dict(key.clone(), value.clone())),
         Type::List(elem) | Type::Set(elem) => {
@@ -182,7 +190,10 @@ fn lower_single_optional_iterable_arg(
     }
 }
 
-pub(super) fn lower_list_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_list_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     let arg = lower_single_optional_iterable_arg(call, "list", ctx)?;
     match arg {
         OptionalIterableArg::Missing => Some(HirExpr::ListLiteral {
@@ -200,7 +211,10 @@ pub(super) fn lower_list_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -
     }
 }
 
-pub(super) fn lower_tuple_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_tuple_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         reject_keywords(call, "tuple", ctx);
         return None;
@@ -275,7 +289,10 @@ pub(super) fn lower_tuple_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) 
     }
 }
 
-pub(super) fn lower_dict_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_dict_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if call.arguments.args.len() > 1 {
         reject_wrong_positional_count(
             call,
@@ -362,7 +379,7 @@ pub(super) fn lower_dict_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -
     }
 }
 
-pub(super) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         reject_keywords(call, "ord", ctx);
         return None;
@@ -424,7 +441,7 @@ pub(super) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
     })
 }
 
-pub(super) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         reject_keywords(call, "chr", ctx);
         return None;
@@ -509,7 +526,7 @@ pub(super) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
     })
 }
 
-fn defaultdict_alias_and_value_type(factory_name: &str) -> Option<(&'static str, Type)> {
+pub(super) fn defaultdict_alias_and_value_type(factory_name: &str) -> Option<(&'static str, Type)> {
     match factory_name {
         "int" => Some((DEFAULTDICT_INT_ALIAS, Type::Int)),
         "list" => Some((DEFAULTDICT_LIST_ALIAS, Type::List(Box::new(Type::Any)))),
@@ -518,7 +535,7 @@ fn defaultdict_alias_and_value_type(factory_name: &str) -> Option<(&'static str,
     }
 }
 
-pub(super) fn lower_defaultdict_constructor_call(
+pub(in crate::lower) fn lower_defaultdict_constructor_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
@@ -669,7 +686,10 @@ pub(super) fn lower_defaultdict_constructor_call(
     })
 }
 
-pub(super) fn lower_set_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_set_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     let arg = lower_single_optional_iterable_arg(call, "set", ctx)?;
 
     match arg {
@@ -699,7 +719,10 @@ pub(super) fn lower_set_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) ->
     }
 }
 
-pub(super) fn lower_bytes_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_bytes_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         reject_keywords(call, "bytes", ctx);
         return None;
@@ -740,7 +763,7 @@ pub(super) fn lower_bytes_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) 
     })
 }
 
-fn parse_error_type(ctx: &LowerCtx) -> Type {
+pub(super) fn parse_error_type(ctx: &LowerCtx) -> Type {
     ctx.class_types
         .get("ParseError")
         .cloned()
@@ -752,7 +775,7 @@ fn parse_error_type(ctx: &LowerCtx) -> Type {
         })
 }
 
-fn value_error_type(ctx: &LowerCtx) -> Type {
+pub(super) fn value_error_type(ctx: &LowerCtx) -> Type {
     ctx.class_types
         .get("ValueError")
         .cloned()
@@ -763,4 +786,3 @@ fn value_error_type(ctx: &LowerCtx) -> Type {
             parent_class: Some("Error".to_string()),
         })
 }
-

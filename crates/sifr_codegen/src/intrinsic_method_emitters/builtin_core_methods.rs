@@ -1,5 +1,13 @@
+use super::{
+    intrinsics, registry_box_iterator_expr, registry_call_callable_with_owned_args,
+    registry_callable_signature, registry_class_has_next, registry_class_method_signature,
+    registry_dict_source_to_map_expr, registry_iter_from_next_method_expr,
+    registry_iterable_to_owned_iter_expr, registry_iterable_to_vec_expr,
+    registry_iterable_to_vec_expr_with_hint, registry_nested_zip_field_expr,
+    registry_zip_iter_expr, HirExpr, RustEmitter, RustExpr, Type,
+};
 impl RustEmitter {
-    fn apply_intrinsic_registry_side_effects(
+    pub(crate) fn apply_intrinsic_registry_side_effects(
         &mut self,
         func: &str,
         lowered: &intrinsics::LoweredIntrinsic,
@@ -44,7 +52,6 @@ impl RustEmitter {
                 .insert((*required_crate).to_string());
         }
     }
-
 }
 
 impl RustEmitter {
@@ -54,19 +61,22 @@ impl RustEmitter {
         args: &[HirExpr],
         result_ty: Option<&Type>,
     ) -> Option<crate::RustExpr> {
-        if let Some(lowered) = self.try_lower_registry_collection_builtin_call_expr(func, args, result_ty) {
+        if let Some(lowered) =
+            self.try_lower_registry_collection_builtin_call_expr(func, args, result_ty)
+        {
             return Some(lowered);
         }
-        if let Some(lowered) = self.try_lower_registry_ordering_builtin_call_expr(func, args, result_ty) {
+        if let Some(lowered) =
+            self.try_lower_registry_ordering_builtin_call_expr(func, args, result_ty)
+        {
             return Some(lowered);
         }
         self.try_lower_registry_numeric_builtin_call_expr(func, args, result_ty)
     }
-
 }
 
 impl RustEmitter {
-    fn try_lower_registry_collection_builtin_call_expr(
+    pub(crate) fn try_lower_registry_collection_builtin_call_expr(
         &mut self,
         func: &str,
         args: &[HirExpr],
@@ -357,11 +367,10 @@ impl RustEmitter {
             _ => None,
         }
     }
-
 }
 
 impl RustEmitter {
-    fn try_lower_registry_ordering_builtin_call_expr(
+    pub(crate) fn try_lower_registry_ordering_builtin_call_expr(
         &mut self,
         func: &str,
         args: &[HirExpr],
@@ -713,5 +722,4 @@ impl RustEmitter {
             _ => None,
         }
     }
-
 }

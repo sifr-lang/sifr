@@ -11,13 +11,13 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprAttribute, ExprCall};
 use sifr_type_system::Type;
 
-pub(super) enum TaskCallLowering {
+pub(in crate::lower) enum TaskCallLowering {
     Lowered(HirExpr),
     Rejected,
     NoMatch,
 }
 
-pub(super) fn lower_asyncio_compat_call(
+pub(in crate::lower) fn lower_asyncio_compat_call(
     func_name: &str,
     call: &ExprCall,
     ctx: &mut LowerCtx,
@@ -109,7 +109,7 @@ fn lower_asyncio_create_task_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCa
         .map_or(TaskCallLowering::Rejected, TaskCallLowering::Lowered)
 }
 
-pub(super) fn lower_task_module_call(
+pub(in crate::lower) fn lower_task_module_call(
     attr: &ExprAttribute,
     call: &ExprCall,
     ctx: &mut LowerCtx,

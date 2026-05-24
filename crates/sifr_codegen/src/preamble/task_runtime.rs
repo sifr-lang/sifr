@@ -1,3 +1,4 @@
+use super::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
 pub fn build_task_scope_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {

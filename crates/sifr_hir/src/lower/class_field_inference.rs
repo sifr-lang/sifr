@@ -221,7 +221,7 @@ fn bind_simple_target_type(
     }
 }
 
-pub(super) fn collect_constructor_self_field_assignments(
+pub(in crate::lower) fn collect_constructor_self_field_assignments(
     stmts: &[Stmt],
     local_bindings: &mut HashMap<String, Type>,
     fields: &mut Vec<(String, Type)>,

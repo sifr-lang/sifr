@@ -3,7 +3,10 @@ use sifr_python_ast::{Expr, Stmt, StmtFunctionDef};
 
 use super::LowerCtx;
 
-pub(super) fn function_uses_asyncio_run_entrypoint(func: &StmtFunctionDef, ctx: &LowerCtx) -> bool {
+pub(in crate::lower) fn function_uses_asyncio_run_entrypoint(
+    func: &StmtFunctionDef,
+    ctx: &LowerCtx,
+) -> bool {
     !func.is_async
         && func.name.as_str() == "main"
         && first_asyncio_run_range_in_stmts(&func.body, ctx).is_some()

@@ -1,77 +1,35 @@
-use super::assignment_widening::reconcile_optional_reassignment;
 use super::async_for::lower_async_for;
-use super::async_generator_advances::{
-    finish_async_generator_advance_for_expr, record_async_generator_advance_binding,
-};
+use super::async_generator_advances::finish_async_generator_advance_for_expr;
 use super::async_with::lower_async_with;
-use super::aug_assign_lowering::lower_aug_assign as lower_aug_assign_impl;
-use super::binding_mutability::ensure_mutable_parameter_binding;
-use super::builtin_calls::callable_builtin_element_type;
 use super::container_literal_specialization::{
     apply_container_specialization_patches, type_contains_unknown_or_any,
-    validate_subscript_assignment_target,
 };
-use super::control_flow_conditions::validate_control_flow_condition;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
-use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
-use super::fixed_width_class_payload::class_specialization_payload_conflicts;
-use super::fixed_width_fitting::{validate_fixed_width_initializer, FixedWidthInitializerFit};
-use super::flow_helpers::then_body_always_exits;
-use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
+use super::expressions::lower_expr;
 use super::function_flow::infer_function_return_type;
-use super::if_branch_bindings::{
-    predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,
-};
-use super::integer_const_facts::{
-    record_const_integer_binding, restore_const_integer_state_after_branches,
-};
-use super::integer_nonzero_guards::{
-    detect_false_nonzero_integer_guards, detect_true_nonzero_integer_guards,
-};
-use super::len_aliases::record_len_alias_fact;
-use super::match_diagnostics;
 use super::match_lowering::lower_match;
-use super::name_diagnostics;
-use super::narrowing::{apply_narrowing, detect_narrowing_condition};
 use super::nonlocal_support::{
-    collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
+    collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal,
 };
-use super::numeric_sentinels::{
-    apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
-    numeric_sentinel_kind,
-};
-use super::ownership_diagnostics;
+use super::numeric_sentinels::apply_numeric_sentinel_patches;
 use super::protocol_diagnostics;
 use super::return_lowering::lower_return;
-use super::sequence_guard_detection::{
-    detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
-    detect_while_sequence_guards,
-};
-use super::sequence_guard_updates::{
-    maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards,
-};
-use super::sequence_pointers::record_sequence_pointer_fact;
-use super::sequence_shapes::sequence_shape_fact;
 use super::statement_diagnostics;
-use super::task_scope_calls::task_group_spawn_owner;
 use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
-    resolve_annotation_expr,
 };
 use super::LowerCtx;
-use crate::hir_nodes::{
-    HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt,
-    MethodKind,
+use super::{
+    lower_ann_assign, lower_assign, lower_aug_assign, lower_chained_assign, lower_for, lower_if,
+    lower_while, str,
 };
-use ruff_text_size::{Ranged, TextRange};
+use crate::hir_nodes::{HirExceptHandler, HirFunction, HirParam, HirStmt, MethodKind};
+use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_python_ast::{
-    ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign, StmtAugAssign,
-    StmtFor, StmtIf, StmtWhile,
-};
-use sifr_type_system::{make_union, FunctionType, NarrowingCondition, Type};
+use sifr_python_ast::{ExceptHandler, Expr, Stmt};
+use sifr_type_system::{FunctionType, Type};
 
-fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
+pub(super) fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
     match expr {
         Expr::List(list) if list.elts.is_empty() => Some("list"),
         Expr::Dict(dict) if dict.items.is_empty() => Some("dict"),
@@ -101,7 +59,7 @@ fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
     }
 }
 
-fn hint_matches_empty_collection_shape(value_expr: &Expr, hint: &Type) -> bool {
+pub(super) fn hint_matches_empty_collection_shape(value_expr: &Expr, hint: &Type) -> bool {
     let Some(kind) = empty_collection_literal_kind(value_expr) else {
         return false;
     };
@@ -114,7 +72,7 @@ fn hint_matches_empty_collection_shape(value_expr: &Expr, hint: &Type) -> bool {
     }
 }
 
-fn should_adopt_inferred_binding_hint(
+pub(super) fn should_adopt_inferred_binding_hint(
     value_expr: &Expr,
     value_ty: &Type,
     hint: &Type,
@@ -137,7 +95,7 @@ fn should_adopt_inferred_binding_hint(
     hint_matches_empty_collection_shape(value_expr, hint)
 }
 
-pub(super) fn lower_stmts(
+pub(in crate::lower) fn lower_stmts(
     stmts: &[Stmt],
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
@@ -202,7 +160,7 @@ pub(super) fn lower_stmts(
     ctx.pop_empty_collection_hint_adoption();
     result
 }
-fn predeclare_nested_function_symbols(
+pub(super) fn predeclare_nested_function_symbols(
     stmts: &[Stmt],
     inferred_types: &std::collections::HashMap<String, FunctionType>,
     ctx: &mut LowerCtx,
@@ -218,7 +176,7 @@ fn predeclare_nested_function_symbols(
     }
 }
 
-pub(super) fn lower_stmt(
+pub(in crate::lower) fn lower_stmt(
     stmt: &Stmt,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
@@ -760,4 +718,3 @@ pub(super) fn lower_stmt(
         }
     }
 }
-

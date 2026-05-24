@@ -1,3 +1,9 @@
+use super::{
+    resolve_alias_type, try_lower_leaf_expr, try_lower_leaf_expr_result,
+    try_lower_leaf_or_name_expr, try_lower_simple_stmt_with_ctx_and_bindings, CodegenError,
+    HashMap, HashSet, HirExpr, HirFStringPart, HirPattern, HirStmt, RustExpr, RustStmt,
+    ScopeContext, Type,
+};
 pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
     match stmt {
         HirStmt::Expr { expr } => crate::is_leaf_expr_candidate(expr),
@@ -44,7 +50,7 @@ pub fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {
     try_lower_leaf_expr(expr).map(|lowered_expr| vec![RustStmt::Expr(lowered_expr)])
 }
 
-fn try_lower_expr_stmt_with_bindings(
+pub(super) fn try_lower_expr_stmt_with_bindings(
     expr: &HirExpr,
     local_binding_types: &HashMap<String, Type>,
 ) -> Option<Vec<RustStmt>> {
@@ -78,7 +84,7 @@ fn try_lower_expr_stmt_with_bindings(
     try_lower_expr_stmt(expr)
 }
 
-fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
+pub(super) fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
     let HirExpr::Call { func, args, .. } = expr else {
         return None;
     };
@@ -115,10 +121,10 @@ pub struct SimpleStmtLoweringCtx<'a> {
 }
 
 #[derive(Clone, Copy)]
-struct SimpleStmtBindings<'a> {
-    mutated_vars: &'a HashSet<String>,
-    borrowed_params: &'a HashSet<String>,
-    local_binding_types: &'a HashMap<String, Type>,
+pub(super) struct SimpleStmtBindings<'a> {
+    pub(super) mutated_vars: &'a HashSet<String>,
+    pub(super) borrowed_params: &'a HashSet<String>,
+    pub(super) local_binding_types: &'a HashMap<String, Type>,
 }
 
 /// Lowers statement variants that are context-light and safe to convert
@@ -212,7 +218,7 @@ pub(crate) fn try_lower_simple_stmt_with_scope_result_and_bindings(
     ))
 }
 
-fn validate_scope_context(scope_ctx: &ScopeContext) -> Result<(), CodegenError> {
+pub(super) fn validate_scope_context(scope_ctx: &ScopeContext) -> Result<(), CodegenError> {
     if scope_ctx.in_display_impl && scope_ctx.in_generator_closure {
         return Err(CodegenError::new(
             "invalid lowering scope: display impl and generator closure cannot both be active",
@@ -221,7 +227,7 @@ fn validate_scope_context(scope_ctx: &ScopeContext) -> Result<(), CodegenError> 
     Ok(())
 }
 
-fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
+pub(super) fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
     match stmt {
         HirStmt::Let { value, .. }
         | HirStmt::Assign { value, .. }
@@ -374,14 +380,14 @@ fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
     }
 }
 
-fn validate_stmt_block_lowering_shape(stmts: &[HirStmt]) -> Result<(), CodegenError> {
+pub(super) fn validate_stmt_block_lowering_shape(stmts: &[HirStmt]) -> Result<(), CodegenError> {
     for stmt in stmts {
         validate_stmt_lowering_shape(stmt)?;
     }
     Ok(())
 }
 
-fn validate_pattern_lowering_shape(pattern: &HirPattern) -> Result<(), CodegenError> {
+pub(super) fn validate_pattern_lowering_shape(pattern: &HirPattern) -> Result<(), CodegenError> {
     match pattern {
         HirPattern::Literal { value } => validate_expr_lowering_shape(value),
         HirPattern::Or { patterns } => {
@@ -409,7 +415,7 @@ fn validate_pattern_lowering_shape(pattern: &HirPattern) -> Result<(), CodegenEr
     }
 }
 
-fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
+pub(super) fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
     let _ = try_lower_leaf_expr_result(expr)?;
     match expr {
         HirExpr::BinOp { left, right, .. } => {
@@ -589,4 +595,3 @@ fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
         | HirExpr::EnumVariant { .. } => Ok(()),
     }
 }
-

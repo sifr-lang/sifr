@@ -733,7 +733,7 @@ fn stmt_contains_scope_exit(stmt: &HirStmt, include_return: bool) -> bool {
     }
 }
 
-pub(super) fn lower_async_with(
+pub(in crate::lower) fn lower_async_with(
     with_stmt: &StmtWith,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,

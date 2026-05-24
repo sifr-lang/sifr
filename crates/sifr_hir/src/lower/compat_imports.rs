@@ -8,7 +8,7 @@ use super::imported_defaults::{
 };
 use super::{collect_type_vars, ExternalDefs, LowerCtx};
 
-pub(super) fn resolve_python_compat_call_alias(
+pub(in crate::lower) fn resolve_python_compat_call_alias(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<String> {
@@ -31,7 +31,7 @@ pub(super) fn resolve_python_compat_call_alias(
     ensure_synthetic_stdlib_import(ctx, &externals, module_name, attr.attr.as_str())
 }
 
-pub(super) fn resolve_bare_python_compat_call_alias(
+pub(in crate::lower) fn resolve_bare_python_compat_call_alias(
     func_name: &str,
     ctx: &mut LowerCtx,
 ) -> Option<String> {
@@ -51,7 +51,7 @@ pub(super) fn resolve_bare_python_compat_call_alias(
     ensure_synthetic_stdlib_import(ctx, &externals, module_name, member_name)
 }
 
-pub(super) fn ensure_synthetic_stdlib_import(
+pub(in crate::lower) fn ensure_synthetic_stdlib_import(
     ctx: &mut LowerCtx,
     externals: &ExternalDefs,
     module_name: &str,

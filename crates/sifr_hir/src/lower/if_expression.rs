@@ -6,7 +6,7 @@ use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::ExprIf;
 
-pub(super) fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let condition = lower_expr(&if_expr.test, ctx)?;
 
     let saved_moved = ctx.scope.save_moved_state();

@@ -1,4 +1,13 @@
-pub(super) fn lower_pattern(
+use super::{
+    class_specialization_payload_conflicts, domain_typed_sentinel_expr, lower_expr, make_union,
+    match_diagnostics, name_diagnostics, numeric_domain_for_type, numeric_sentinel_kind,
+    ownership_diagnostics, record_async_generator_advance_binding, record_const_integer_binding,
+    record_len_alias_fact, record_sequence_pointer_fact, resolve_annotation_expr,
+    sequence_shape_fact, statement_diagnostics, str, validate_fixed_width_initializer,
+    DiagnosticCode, Expr, FixedWidthInitializerFit, HirExpr, HirPattern, HirStmt, LowerCtx,
+    Pattern, Ranged, Singleton, StmtAnnAssign, StmtAssign, Type,
+};
+pub(in crate::lower) fn lower_pattern(
     pattern: &Pattern,
     subject_ty: &Type,
     ctx: &mut LowerCtx,
@@ -192,7 +201,7 @@ pub(super) fn lower_pattern(
     }
 }
 
-pub(super) fn pattern_narrowed_type(
+pub(in crate::lower) fn pattern_narrowed_type(
     pattern: &HirPattern,
     subject_ty: &Type,
     ctx: &LowerCtx,
@@ -211,7 +220,7 @@ pub(super) fn pattern_narrowed_type(
     }
 }
 
-pub(super) fn bind_pattern_vars(pattern: &HirPattern, ctx: &mut LowerCtx) {
+pub(in crate::lower) fn bind_pattern_vars(pattern: &HirPattern, ctx: &mut LowerCtx) {
     match pattern {
         HirPattern::Capture { name, ty } => {
             ctx.scope.define(name.clone(), ty.clone());
@@ -236,7 +245,7 @@ pub(super) fn bind_pattern_vars(pattern: &HirPattern, ctx: &mut LowerCtx) {
     }
 }
 
-fn seed_binding_after_failed_initializer(
+pub(super) fn seed_binding_after_failed_initializer(
     ctx: &mut LowerCtx,
     name: &str,
     ty: Type,
@@ -251,7 +260,7 @@ fn seed_binding_after_failed_initializer(
     ctx.clear_sequence_shape_fact(name);
 }
 
-fn failed_initializer_taint(
+pub(super) fn failed_initializer_taint(
     ctx: &mut LowerCtx,
     name: &str,
     range: ruff_text_size::TextRange,
@@ -270,14 +279,17 @@ fn failed_initializer_taint(
     taint
 }
 
-fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
+pub(super) fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
     ctx.scope.clear_narrowing(name);
     ctx.scope.clear_const_integer_value(name);
     ctx.clear_sequence_guards_for_binding(name);
     ctx.clear_proven_nonzero_integer_binding(name);
 }
 
-pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
+pub(in crate::lower) fn lower_ann_assign(
+    ann: &StmtAnnAssign,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     let name = if let Expr::Name(n) = ann.target.as_ref() {
         n.id.to_string()
     } else {
@@ -445,7 +457,10 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
 }
 /// Handle chained assignment: x = y = z = 0
 /// Expands into: z = 0; y = z; x = y (right-to-left, last target gets the value first)
-pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Vec<HirStmt> {
+pub(in crate::lower) fn lower_chained_assign(
+    assign: &StmtAssign,
+    ctx: &mut LowerCtx,
+) -> Vec<HirStmt> {
     let mut result = Vec::new();
     // Lower the value expression once
     let Some(value) = lower_expr(&assign.value, ctx) else {
@@ -525,7 +540,7 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
     result
 }
 
-fn resolve_field_type_from_type(object_ty: &Type, field_name: &str) -> Option<Type> {
+pub(super) fn resolve_field_type_from_type(object_ty: &Type, field_name: &str) -> Option<Type> {
     let resolved = object_ty.resolve_alias();
     if let Type::Class { fields, .. } = resolved {
         return fields
@@ -560,7 +575,7 @@ fn resolve_field_type_from_type(object_ty: &Type, field_name: &str) -> Option<Ty
     None
 }
 
-pub(super) fn resolve_object_field_type(
+pub(in crate::lower) fn resolve_object_field_type(
     ctx: &LowerCtx,
     object_name: &str,
     field_name: &str,
@@ -570,4 +585,3 @@ pub(super) fn resolve_object_field_type(
         .and_then(|info| resolve_field_type_from_type(info.effective_type(), field_name))
         .unwrap_or(Type::Unknown)
 }
-

@@ -2,7 +2,7 @@ use sifr_python_ast::{Expr, Stmt};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum AsyncSuspensionSummary {
+pub(in crate::lower) enum AsyncSuspensionSummary {
     NoSuspend,
     Suspends,
 }
@@ -17,7 +17,7 @@ impl AsyncSuspensionSummary {
     }
 }
 
-pub(super) fn collect_async_suspension_summaries(
+pub(in crate::lower) fn collect_async_suspension_summaries(
     stmts: &[Stmt],
 ) -> HashMap<String, AsyncSuspensionSummary> {
     let async_functions = collect_top_level_async_functions(stmts);

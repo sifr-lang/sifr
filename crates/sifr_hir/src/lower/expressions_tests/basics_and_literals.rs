@@ -1,114 +1,8 @@
-use super::{
-    expressions::{lower_named_expr, resolve_method_type},
-    simple_expr::lower_expr_simple,
-    LowerCtx,
-};
-use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
-use ruff_text_size::{TextRange, TextSize};
-use sifr_diagnostics::DiagnosticCode;
-use sifr_python_ast::{
-    AtomicNodeIndex, Expr, ExprNamed, ExprNoneLiteral, ExprNumberLiteral, Int, Number,
-};
-use sifr_python_parser::parse_module;
-use sifr_type_system::{FixedIntType, FunctionType, Type};
-
-fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
-    let parsed = parse_module(source).expect("parse failed");
-    lower_module(parsed.suite()).map(|r| r.module)
-}
-
-fn range_for(source: &str, needle: &str) -> TextRange {
-    let start = source.find(needle).expect("needle should exist") as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
-}
-
-fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
-    let after_start = source.find(after).expect("anchor should exist");
-    let relative_start = source[after_start..]
-        .find(needle)
-        .expect("needle should exist after anchor");
-    let start = (after_start + relative_start) as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
-}
-
-fn range_for_after_anchor(source: &str, after: &str, needle: &str) -> TextRange {
-    let search_start = source.find(after).expect("anchor should exist") + after.len();
-    let relative_start = source[search_start..]
-        .find(needle)
-        .expect("needle should exist after anchor");
-    let start = (search_start + relative_start) as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
-}
-
-fn function_let_value<'a>(module: &'a HirModule, name: &str) -> &'a HirExpr {
-    module
-        .functions
-        .iter()
-        .flat_map(|function| &function.body)
-        .find_map(|stmt| match stmt {
-            HirStmt::Let {
-                name: local_name,
-                value,
-                ..
-            } if local_name == name => Some(value),
-            _ => None,
-        })
-        .expect("expected local binding")
-}
-
-fn let_value_in_stmts<'a>(stmts: &'a [HirStmt], name: &str) -> Option<&'a HirExpr> {
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Let {
-                name: local_name,
-                value,
-                ..
-            } if local_name == name => return Some(value),
-            HirStmt::If {
-                then_body,
-                elif_clauses,
-                else_body,
-                ..
-            } => {
-                if let Some(value) = let_value_in_stmts(then_body, name) {
-                    return Some(value);
-                }
-                for (_, body) in elif_clauses {
-                    if let Some(value) = let_value_in_stmts(body, name) {
-                        return Some(value);
-                    }
-                }
-                if let Some(else_body) = else_body {
-                    if let Some(value) = let_value_in_stmts(else_body, name) {
-                        return Some(value);
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    None
-}
-
-fn function_nested_let_value<'a>(module: &'a HirModule, name: &str) -> &'a HirExpr {
-    module
-        .functions
-        .iter()
-        .find_map(|function| let_value_in_stmts(&function.body, name))
-        .expect("expected nested local binding")
-}
+use super::*;
+use crate::lower::simple_expr::lower_expr_simple;
 
 #[test]
-fn test_simple_function() {
+pub(super) fn test_simple_function() {
     let module = lower_source("def add(a: int, b: int) -> int:\n    return a + b\n").unwrap();
     assert_eq!(module.functions.len(), 1);
     assert_eq!(module.functions[0].name, "add");
@@ -116,7 +10,7 @@ fn test_simple_function() {
 }
 
 #[test]
-fn test_large_integer_literals_lower_losslessly_from_source() {
+pub(super) fn test_large_integer_literals_lower_losslessly_from_source() {
     let source = "\
 def main():
     decimal = 9223372036854775808
@@ -150,7 +44,7 @@ def main():
 }
 
 #[test]
-fn test_negative_large_integer_literal_lowers_as_unary_large_literal() {
+pub(super) fn test_negative_large_integer_literal_lowers_as_unary_large_literal() {
     let source = "def main():\n    value = -9_223_372_036_854_775_809\n";
     let module = lower_source(source).expect("negative large integer literal should lower");
 
@@ -168,7 +62,7 @@ fn test_negative_large_integer_literal_lowers_as_unary_large_literal() {
 }
 
 #[test]
-fn test_large_integer_default_arguments_lower_losslessly() {
+pub(super) fn test_large_integer_default_arguments_lower_losslessly() {
     let source = "\
 def identity(
     x: int = 9223372036854775808,
@@ -198,7 +92,7 @@ def identity(
 }
 
 #[test]
-fn test_large_integer_literal_over_budget_has_int_code() {
+pub(super) fn test_large_integer_literal_over_budget_has_int_code() {
     let literal = "1".repeat(4097);
     let source = format!("def main():\n    value = {literal}\n");
     let result = lower_source(&source);
@@ -214,7 +108,7 @@ fn test_large_integer_literal_over_budget_has_int_code() {
 }
 
 #[test]
-fn test_constructed_and_parsed_large_integer_literals_match_hir() {
+pub(super) fn test_constructed_and_parsed_large_integer_literals_match_hir() {
     let token = "0xFFFF_FFFF_FFFF_FFFF_FFFF";
     let constructed_int =
         Int::from_str_radix("FFFFFFFFFFFFFFFFFFFF", 16, token).expect("valid hex literal");
@@ -240,7 +134,7 @@ fn test_constructed_and_parsed_large_integer_literals_match_hir() {
 }
 
 #[test]
-fn test_type_mismatch_error() {
+pub(super) fn test_type_mismatch_error() {
     let source = "def main():\n    x: int = \"hello\"\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -251,7 +145,7 @@ fn test_type_mismatch_error() {
 }
 
 #[test]
-fn test_fixed_width_literal_assignment_fits() {
+pub(super) fn test_fixed_width_literal_assignment_fits() {
     let module = lower_source(
         "def main() -> uint8:\n    value: uint8 = 255\n    signed: int8 = -128\n    wide: uint64 = 18446744073709551615\n    return value\n",
     )
@@ -278,7 +172,7 @@ fn test_fixed_width_literal_assignment_fits() {
 }
 
 #[test]
-fn test_fixed_width_literal_assignment_out_of_range_has_int_code() {
+pub(super) fn test_fixed_width_literal_assignment_out_of_range_has_int_code() {
     let source = "def main():\n    too_wide: uint8 = 256\n    negative_unsigned: uint8 = -1\n    signed_high: int8 = 128\n    signed_low: int8 = -129\n";
     let errors = lower_source(source).expect_err("out-of-range fixed-width literals should fail");
 
@@ -306,7 +200,7 @@ fn test_fixed_width_literal_assignment_out_of_range_has_int_code() {
 }
 
 #[test]
-fn test_fixed_width_match_literal_out_of_range_has_int_code() {
+pub(super) fn test_fixed_width_match_literal_out_of_range_has_int_code() {
     let source = "def main():\n    value: uint8 = 1\n    match value:\n        case 256:\n            pass\n        case _:\n            pass\n";
     let errors =
         lower_source(source).expect_err("out-of-range fixed-width match literal should fail");
@@ -326,7 +220,7 @@ fn test_fixed_width_match_literal_out_of_range_has_int_code() {
 }
 
 #[test]
-fn test_fixed_width_match_literal_in_range_lowers() {
+pub(super) fn test_fixed_width_match_literal_in_range_lowers() {
     lower_source(
         "def main():\n    value: uint8 = 255\n    match value:\n        case 255:\n            pass\n        case _:\n            pass\n",
     )
@@ -334,7 +228,7 @@ fn test_fixed_width_match_literal_in_range_lowers() {
 }
 
 #[test]
-fn test_fixed_width_module_constant_out_of_range_has_int_code() {
+pub(super) fn test_fixed_width_module_constant_out_of_range_has_int_code() {
     let source = "LIMIT: uint8 = 255\nTOO_HIGH: uint8 = 256\n\ndef main():\n    print(\"ok\")\n";
     let errors =
         lower_source(source).expect_err("out-of-range fixed-width module constant should fail");
@@ -348,7 +242,7 @@ fn test_fixed_width_module_constant_out_of_range_has_int_code() {
 }
 
 #[test]
-fn test_fixed_width_const_expression_assignment_fits_and_folds() {
+pub(super) fn test_fixed_width_const_expression_assignment_fits_and_folds() {
     let module = lower_source(
         "def main() -> uint8:\n    value: uint8 = (1 + 2) * 40 + (20 >> 1)\n    shifted: uint8 = (1 << 6) + (9 // 2) + (9 % 2)\n    signed: int8 = -10 * 5\n    negated: int16 = -(100 + 27)\n    return value\n",
     )
@@ -381,7 +275,7 @@ fn test_fixed_width_const_expression_assignment_fits_and_folds() {
 }
 
 #[test]
-fn test_exact_int_division_by_unproven_divisor_requires_result_target() {
+pub(super) fn test_exact_int_division_by_unproven_divisor_requires_result_target() {
     let source = "\
 def main() -> None:
     divisor: int = 3
@@ -400,7 +294,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_division_by_unproven_divisor_lowers_as_result() {
+pub(super) fn test_exact_int_division_by_unproven_divisor_lowers_as_result() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -424,7 +318,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_true_division_has_int0006() {
+pub(super) fn test_exact_int_true_division_has_int0006() {
     let source = "\
 def main(numerator: int, denominator: int) -> None:
     value: float = numerator / denominator
@@ -440,7 +334,7 @@ def main(numerator: int, denominator: int) -> None:
 }
 
 #[test]
-fn test_proven_safe_exact_int_true_division_lowers_as_float() {
+pub(super) fn test_proven_safe_exact_int_true_division_lowers_as_float() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -461,7 +355,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_large_exact_int_true_division_still_requires_handling() {
+pub(super) fn test_large_exact_int_true_division_still_requires_handling() {
     let source = "\
 def main() -> None:
     numerator: int = 9007199254740993
@@ -477,7 +371,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_true_division_branch_reassignment_does_not_leak_const_proof() {
+pub(super) fn test_exact_int_true_division_branch_reassignment_does_not_leak_const_proof() {
     let source = "\
 def main(flag: bool) -> None:
     numerator: int = 10
@@ -495,7 +389,7 @@ def main(flag: bool) -> None:
 }
 
 #[test]
-fn test_exact_int_true_division_augassign_reassignment_does_not_leak_const_proof() {
+pub(super) fn test_exact_int_true_division_augassign_reassignment_does_not_leak_const_proof() {
     let source = "\
 def main(delta: int) -> None:
     numerator: int = 10
@@ -512,7 +406,7 @@ def main(delta: int) -> None:
 }
 
 #[test]
-fn test_exact_int_true_division_loop_reassignment_does_not_leak_const_proof() {
+pub(super) fn test_exact_int_true_division_loop_reassignment_does_not_leak_const_proof() {
     let source = "\
 def main(items: list[int]) -> None:
     numerator: int = 10
@@ -530,7 +424,7 @@ def main(items: list[int]) -> None:
 }
 
 #[test]
-fn test_exact_int_true_division_optional_narrowed_consts_lower_as_float() {
+pub(super) fn test_exact_int_true_division_optional_narrowed_consts_lower_as_float() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -553,7 +447,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_mod_augassign_by_unproven_divisor_has_int0005() {
+pub(super) fn test_exact_int_mod_augassign_by_unproven_divisor_has_int0005() {
     let source = "\
 def main() -> None:
     divisor: int = 3
@@ -570,7 +464,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_division_by_nonzero_literal_still_lowers_as_int() {
+pub(super) fn test_exact_int_division_by_nonzero_literal_still_lowers_as_int() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -591,7 +485,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_augassign_by_nonzero_literal_still_lowers() {
+pub(super) fn test_exact_int_augassign_by_nonzero_literal_still_lowers() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -622,7 +516,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_floor_division_requires_handling_even_with_literal_divisor() {
+pub(super) fn test_fixed_width_floor_division_requires_handling_even_with_literal_divisor() {
     let source = "\
 def main() -> None:
     left: uint8 = 10
@@ -639,7 +533,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_mod_augassign_requires_handling() {
+pub(super) fn test_fixed_width_mod_augassign_requires_handling() {
     let source = "\
 def main() -> None:
     value: uint8 = 10
@@ -655,7 +549,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_power_by_negative_literal_requires_handling() {
+pub(super) fn test_exact_int_power_by_negative_literal_requires_handling() {
     let source = "\
 def main() -> None:
     value: int = 2 ** -1
@@ -671,7 +565,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_power_by_unproven_exponent_requires_handling() {
+pub(super) fn test_exact_int_power_by_unproven_exponent_requires_handling() {
     let source = "\
 def main() -> None:
     exponent: int = 3
@@ -686,7 +580,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_power_requires_handling_even_with_literal_exponent() {
+pub(super) fn test_fixed_width_power_requires_handling_even_with_literal_exponent() {
     let source = "\
 def main() -> None:
     base: uint8 = 2
@@ -701,7 +595,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_power_augassign_requires_handling() {
+pub(super) fn test_fixed_width_power_augassign_requires_handling() {
     let source = "\
 def main() -> None:
     value: uint8 = 2
@@ -717,7 +611,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_power_by_nonnegative_literal_still_lowers() {
+pub(super) fn test_exact_int_power_by_nonnegative_literal_still_lowers() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -742,7 +636,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_bool_integer_equality_has_int0007() {
+pub(super) fn test_bool_integer_equality_has_int0007() {
     let source = "\
 def main() -> None:
     value: bool = True == 1
@@ -757,7 +651,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_bool_fixed_width_ordering_has_int0007() {
+pub(super) fn test_bool_fixed_width_ordering_has_int0007() {
     let source = "\
 def main() -> None:
     value: uint8 = 1
@@ -773,7 +667,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_unbounded_generic_addition_requires_addable_bound() {
+pub(super) fn test_unbounded_generic_addition_requires_addable_bound() {
     let source = "\
 def add_same[T](left: T, right: T) -> T:
     return left + right
@@ -789,7 +683,7 @@ def add_same[T](left: T, right: T) -> T:
 }
 
 #[test]
-fn test_addable_generic_addition_accepts_int() {
+pub(super) fn test_addable_generic_addition_accepts_int() {
     lower_source(
         "\
 def add_same[T: Addable](left: T, right: T) -> T:
@@ -801,4 +695,3 @@ def main() -> None:
     )
     .expect("Addable generic addition should accept exact int");
 }
-

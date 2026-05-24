@@ -1,5 +1,7 @@
+use super::*;
+use crate::lower::{expressions::lower_named_expr, LowerCtx};
 #[test]
-fn test_iter_rejects_heterogeneous_tuple_argument() {
+pub(super) fn test_iter_rejects_heterogeneous_tuple_argument() {
     let result = lower_source(
         "def main():\n    values: tuple[int, str] = (1, \"x\")\n    _it = iter(values)\n",
     );
@@ -12,7 +14,7 @@ fn test_iter_rejects_heterogeneous_tuple_argument() {
 }
 
 #[test]
-fn test_for_accepts_homogeneous_tuple_iterable() {
+pub(super) fn test_for_accepts_homogeneous_tuple_iterable() {
     let result = lower_source(
         "def main():\n    values: tuple[int, int, int] = (1, 2, 3)\n    total: int = 0\n    for value in values:\n        total = total + value\n",
     );
@@ -20,7 +22,7 @@ fn test_for_accepts_homogeneous_tuple_iterable() {
 }
 
 #[test]
-fn test_for_rejects_heterogeneous_tuple_iterable() {
+pub(super) fn test_for_rejects_heterogeneous_tuple_iterable() {
     let result =
         lower_source("def main():\n    values: tuple[int, str] = (1, \"x\")\n    for value in values:\n        print(value)\n");
     assert!(result.is_err());
@@ -32,7 +34,7 @@ fn test_for_rejects_heterogeneous_tuple_iterable() {
 }
 
 #[test]
-fn test_next_rejects_plain_iterable_argument() {
+pub(super) fn test_next_rejects_plain_iterable_argument() {
     let result = lower_source("def main():\n    values: list[int] = [1, 2, 3]\n    next(values)\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -42,7 +44,7 @@ fn test_next_rejects_plain_iterable_argument() {
 }
 
 #[test]
-fn test_user_defined_iterable_class_participates_in_builtin_iteration_surface() {
+pub(super) fn test_user_defined_iterable_class_participates_in_builtin_iteration_surface() {
     let result = lower_source(
         "class Boxed:\n    items: list[int]\n\n    def __init__(self, items: list[int]):\n        self.items = items\n\n    def __iter__(self) -> Iterator[int]:\n        return iter(self.items)\n\n    def __reversed__(self) -> Iterator[int]:\n        return reversed(self.items)\n\n\ndef main():\n    boxed: Boxed = Boxed([1, 2, 3])\n    vals: list[int] = list(boxed)\n    rev_vals: list[int] = list(reversed(boxed))\n    total: int = 0\n    for value in boxed:\n        total = total + value\n",
     );
@@ -50,7 +52,7 @@ fn test_user_defined_iterable_class_participates_in_builtin_iteration_surface() 
 }
 
 #[test]
-fn test_next_accepts_user_defined_iterator_class() {
+pub(super) fn test_next_accepts_user_defined_iterator_class() {
     let result = lower_source(
         "class CounterIter:\n    value: int\n\n    def __init__(self, start: int):\n        self.value = start\n\n    def __iter__(self) -> Iterator[int]:\n        return iter([self.value])\n\n    def __next__(self) -> int | None:\n        if self.value <= 0:\n            return None\n        out: int = self.value\n        self.value = self.value - 1\n        return out\n\n\ndef main():\n    it: CounterIter = CounterIter(2)\n    first: int | None = next(it)\n",
     );
@@ -58,7 +60,7 @@ fn test_next_accepts_user_defined_iterator_class() {
 }
 
 #[test]
-fn test_user_defined_iterable_protocol_rejects_invalid_iter_signature() {
+pub(super) fn test_user_defined_iterable_protocol_rejects_invalid_iter_signature() {
     let result = lower_source("class BadIter:\n    def __iter__(self) -> int:\n        return 1\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -70,7 +72,7 @@ fn test_user_defined_iterable_protocol_rejects_invalid_iter_signature() {
 }
 
 #[test]
-fn test_user_defined_iterable_protocol_rejects_invalid_next_signature() {
+pub(super) fn test_user_defined_iterable_protocol_rejects_invalid_next_signature() {
     let result = lower_source(
         "class BadNext:\n    def __iter__(self) -> Iterator[int]:\n        return iter([1])\n\n    def __next__(self) -> int:\n        return 1\n",
     );
@@ -84,7 +86,7 @@ fn test_user_defined_iterable_protocol_rejects_invalid_next_signature() {
 }
 
 #[test]
-fn test_for_rejects_mutation_of_collection_with_live_iterator() {
+pub(super) fn test_for_rejects_mutation_of_collection_with_live_iterator() {
     let result = lower_source(
         "def main():\n    values: list[int] = [1, 2, 3]\n    for value in values:\n        values.append(value)\n",
     );
@@ -97,7 +99,7 @@ fn test_for_rejects_mutation_of_collection_with_live_iterator() {
 }
 
 #[test]
-fn test_generator_function_infers_iterator_return_type() {
+pub(super) fn test_generator_function_infers_iterator_return_type() {
     let module = lower_source(
         "def count_up(n: int):\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n",
     )
@@ -109,7 +111,7 @@ fn test_generator_function_infers_iterator_return_type() {
 }
 
 #[test]
-fn test_generator_function_rejects_non_iterator_annotation() {
+pub(super) fn test_generator_function_rejects_non_iterator_annotation() {
     let source =
         "def count_up(n: int) -> list[int]:\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n";
     let result = lower_source(source);
@@ -123,7 +125,7 @@ fn test_generator_function_rejects_non_iterator_annotation() {
 }
 
 #[test]
-fn test_generator_expression_is_typed_as_iterator() {
+pub(super) fn test_generator_expression_is_typed_as_iterator() {
     let module = lower_source(
         "def main():\n    nums: list[int] = [1, 2, 3]\n    g: Iterator[int] = (x * x for x in nums)\n    _first: int | None = next(g)\n",
     )
@@ -144,7 +146,7 @@ fn test_generator_expression_is_typed_as_iterator() {
 }
 
 #[test]
-fn test_generator_accepts_nested_yield_shapes() {
+pub(super) fn test_generator_accepts_nested_yield_shapes() {
     let module = lower_source(
         "def nested(n: int):\n    i: int = 0\n    while i < n:\n        while i < n:\n            yield i\n            i = i + 1\n",
     )
@@ -156,7 +158,7 @@ fn test_generator_accepts_nested_yield_shapes() {
 }
 
 #[test]
-fn test_generator_accepts_trailing_statements_after_loop() {
+pub(super) fn test_generator_accepts_trailing_statements_after_loop() {
     let module = lower_source(
         "def trailing(n: int):\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n    i = i + 1\n",
     )
@@ -168,7 +170,7 @@ fn test_generator_accepts_trailing_statements_after_loop() {
 }
 
 #[test]
-fn test_reversed_enumerate_zip_are_typed_as_iterators() {
+pub(super) fn test_reversed_enumerate_zip_are_typed_as_iterators() {
     let module = lower_source(
         "def main():\n    nums: list[int] = [1, 2, 3]\n    labels: list[str] = [\"a\", \"b\", \"c\"]\n    rev: Iterator[int] = reversed(nums)\n    indexed: Iterator[tuple[int, int]] = enumerate(nums, start=1)\n    paired: Iterator[tuple[int, str]] = zip(nums, labels)\n    _rev_list: list[int] = list(rev)\n    _indexed_list: list[tuple[int, int]] = list(indexed)\n    _paired_list: list[tuple[int, str]] = list(paired)\n",
     )
@@ -205,7 +207,7 @@ fn test_reversed_enumerate_zip_are_typed_as_iterators() {
 }
 
 #[test]
-fn test_zip_keyword_diagnostics_are_stable() {
+pub(super) fn test_zip_keyword_diagnostics_are_stable() {
     let strict_result = lower_source(
         "def main():\n    nums: list[int] = [1, 2]\n    _paired = zip(nums, nums, strict=True)\n",
     );
@@ -235,7 +237,7 @@ fn test_zip_keyword_diagnostics_are_stable() {
 }
 
 #[test]
-fn test_zip_non_iterable_argument_has_type_code() {
+pub(super) fn test_zip_non_iterable_argument_has_type_code() {
     let source = "def main():\n    nums: list[int] = [1, 2]\n    _paired = zip(nums, 1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -249,7 +251,7 @@ fn test_zip_non_iterable_argument_has_type_code() {
 }
 
 #[test]
-fn test_any_all_wrong_arity_have_call_codes() {
+pub(super) fn test_any_all_wrong_arity_have_call_codes() {
     let any_source = "def main():\n    _value = any()\n";
     let any_result = lower_source(any_source);
     assert!(any_result.is_err());
@@ -274,7 +276,7 @@ fn test_any_all_wrong_arity_have_call_codes() {
 }
 
 #[test]
-fn test_range_and_enumerate_unexpected_keywords_have_call_code() {
+pub(super) fn test_range_and_enumerate_unexpected_keywords_have_call_code() {
     let range_source = "def main():\n    print(list(range(stop=3, bogus=1)))\n";
     let range_result = lower_source(range_source);
     assert!(range_result.is_err());
@@ -304,7 +306,7 @@ fn test_range_and_enumerate_unexpected_keywords_have_call_code() {
 }
 
 #[test]
-fn test_enumerate_duplicate_start_keyword_has_call_code() {
+pub(super) fn test_enumerate_duplicate_start_keyword_has_call_code() {
     let source = "\
 def main():
     nums: list[int] = [1, 2]
@@ -326,7 +328,7 @@ def main():
 }
 
 #[test]
-fn test_reversed_rejects_non_reversible_iterator_argument() {
+pub(super) fn test_reversed_rejects_non_reversible_iterator_argument() {
     let source =
         "def main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    _rev = reversed(it)\n";
     let result = lower_source(source);
@@ -340,7 +342,7 @@ fn test_reversed_rejects_non_reversible_iterator_argument() {
 }
 
 #[test]
-fn test_reversed_and_enumerate_argument_errors_have_codes() {
+pub(super) fn test_reversed_and_enumerate_argument_errors_have_codes() {
     let reversed_source = "def main():\n    _rev = reversed(1)\n";
     let reversed_result = lower_source(reversed_source);
     assert!(reversed_result.is_err());
@@ -365,7 +367,7 @@ fn test_reversed_and_enumerate_argument_errors_have_codes() {
 }
 
 #[test]
-fn test_enumerate_start_type_errors_have_codes() {
+pub(super) fn test_enumerate_start_type_errors_have_codes() {
     let positional_source =
         "def main():\n    nums: list[int] = [1, 2]\n    _items = enumerate(nums, \"bad\")\n";
     let positional_result = lower_source(positional_source);
@@ -400,7 +402,7 @@ fn test_enumerate_start_type_errors_have_codes() {
 }
 
 #[test]
-fn test_enumerate_arity_and_unpacked_keyword_errors_have_codes() {
+pub(super) fn test_enumerate_arity_and_unpacked_keyword_errors_have_codes() {
     let arity_source =
         "def main():\n    nums: list[int] = [1, 2]\n    _items = enumerate(nums, 1, 2)\n";
     let arity_result = lower_source(arity_source);
@@ -435,7 +437,7 @@ fn test_enumerate_arity_and_unpacked_keyword_errors_have_codes() {
 }
 
 #[test]
-fn test_reversible_annotation_accepts_list_and_rejects_set() {
+pub(super) fn test_reversible_annotation_accepts_list_and_rejects_set() {
     let ok = lower_source(
         "def consume(xs: Reversible[int]) -> int:\n    rev: Iterator[int] = reversed(xs)\n    first: int | None = next(rev)\n    if first is None:\n        return 0\n    return first\n\ndef main():\n    nums: list[int] = [1, 2, 3]\n    consume(nums)\n",
     );
@@ -452,7 +454,7 @@ fn test_reversible_annotation_accepts_list_and_rejects_set() {
 }
 
 #[test]
-fn test_comprehensions_accept_iterator_inputs() {
+pub(super) fn test_comprehensions_accept_iterator_inputs() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [1, 2, 3]\n    it_list: Iterator[int] = iter(nums)\n    list_comp: list[int] = [x for x in it_list]\n    it_set: Iterator[int] = iter(nums)\n    set_comp: set[int] = {x for x in it_set}\n    it_dict: Iterator[tuple[int, int]] = enumerate(nums)\n    dict_comp: dict[int, int] = {i: x for i, x in it_dict}\n",
     );
@@ -460,7 +462,7 @@ fn test_comprehensions_accept_iterator_inputs() {
 }
 
 #[test]
-fn test_list_comprehension_invalid_target_has_flow_code() {
+pub(super) fn test_list_comprehension_invalid_target_has_flow_code() {
     let source = "def main():\n    values: list[int] = [1]\n    out: list[int] = [x for values[0] in values]\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -473,7 +475,7 @@ fn test_list_comprehension_invalid_target_has_flow_code() {
 }
 
 #[test]
-fn test_list_comprehension_non_iterable_has_flow_code() {
+pub(super) fn test_list_comprehension_non_iterable_has_flow_code() {
     let source = "def main():\n    value: int = 1\n    out: list[int] = [x for x in value]\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -486,7 +488,7 @@ fn test_list_comprehension_non_iterable_has_flow_code() {
 }
 
 #[test]
-fn test_set_comprehension_invalid_target_has_flow_code() {
+pub(super) fn test_set_comprehension_invalid_target_has_flow_code() {
     let source = "def main():\n    values: list[int] = [1]\n    out: set[int] = {x for values[0] in values}\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -499,7 +501,7 @@ fn test_set_comprehension_invalid_target_has_flow_code() {
 }
 
 #[test]
-fn test_set_comprehension_non_iterable_has_flow_code() {
+pub(super) fn test_set_comprehension_non_iterable_has_flow_code() {
     let source = "def main():\n    value: int = 1\n    out: set[int] = {x for x in value}\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -512,7 +514,7 @@ fn test_set_comprehension_non_iterable_has_flow_code() {
 }
 
 #[test]
-fn test_dict_comprehension_invalid_tuple_target_has_flow_code() {
+pub(super) fn test_dict_comprehension_invalid_tuple_target_has_flow_code() {
     let source = "def main():\n    values: list[int] = [0]\n    pairs: list[tuple[int, int]] = [(1, 2)]\n    out: dict[int, int] = {left: right for (left, values[0]) in pairs}\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -525,7 +527,7 @@ fn test_dict_comprehension_invalid_tuple_target_has_flow_code() {
 }
 
 #[test]
-fn test_dict_comprehension_non_iterable_has_flow_code() {
+pub(super) fn test_dict_comprehension_non_iterable_has_flow_code() {
     let source =
         "def main():\n    value: int = 1\n    out: dict[int, int] = {x: x for x in value}\n";
     let result = lower_source(source);
@@ -539,7 +541,7 @@ fn test_dict_comprehension_non_iterable_has_flow_code() {
 }
 
 #[test]
-fn test_generator_expression_multi_generator_has_type_code() {
+pub(super) fn test_generator_expression_multi_generator_has_type_code() {
     let source = "def main():\n    xs: list[int] = [1]\n    ys: list[int] = [2]\n    out: Iterator[int] = (x for x in xs for y in ys)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -552,7 +554,7 @@ fn test_generator_expression_multi_generator_has_type_code() {
 }
 
 #[test]
-fn test_generator_expression_invalid_target_has_flow_code() {
+pub(super) fn test_generator_expression_invalid_target_has_flow_code() {
     let source = "def main():\n    values: list[int] = [1]\n    out: Iterator[int] = (x for values[0] in values)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -565,7 +567,7 @@ fn test_generator_expression_invalid_target_has_flow_code() {
 }
 
 #[test]
-fn test_generator_expression_non_iterable_has_flow_code() {
+pub(super) fn test_generator_expression_non_iterable_has_flow_code() {
     let source = "def main():\n    value: int = 1\n    out: Iterator[int] = (x for x in value)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -578,7 +580,7 @@ fn test_generator_expression_non_iterable_has_flow_code() {
 }
 
 #[test]
-fn test_walrus_invalid_target_has_flow_code() {
+pub(super) fn test_walrus_invalid_target_has_flow_code() {
     let target_range = TextRange::new(TextSize::new(10), TextSize::new(14));
     let value_range = TextRange::new(TextSize::new(18), TextSize::new(22));
     let named = ExprNamed {
@@ -606,7 +608,7 @@ fn test_walrus_invalid_target_has_flow_code() {
 }
 
 #[test]
-fn test_map_is_typed_as_iterator() {
+pub(super) fn test_map_is_typed_as_iterator() {
     let module = lower_source(
         "def add(x: int, y: int) -> int:\n    return x + y\n\ndef main():\n    left: list[int] = [1, 2]\n    right: list[int] = [3, 4]\n    mapped: Iterator[int] = map(add, left, right)\n    _vals: list[int] = list(mapped)\n",
     )
@@ -627,7 +629,7 @@ fn test_map_is_typed_as_iterator() {
 }
 
 #[test]
-fn test_map_rejects_plain_list_annotation_without_materialization() {
+pub(super) fn test_map_rejects_plain_list_annotation_without_materialization() {
     let result = lower_source(
         "def add(x: int, y: int) -> int:\n    return x + y\n\ndef main():\n    values: list[int] = map(add, [1, 2], [3, 4])\n",
     );
@@ -639,7 +641,7 @@ fn test_map_rejects_plain_list_annotation_without_materialization() {
 }
 
 #[test]
-fn test_map_rejects_keywords_with_stable_diagnostic() {
+pub(super) fn test_map_rejects_keywords_with_stable_diagnostic() {
     let source = "def add(x: int) -> int:\n    return x + 1\n\ndef main():\n    nums: list[int] = [1, 2]\n    _mapped = map(function=add, iterable=nums)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -652,7 +654,7 @@ fn test_map_rejects_keywords_with_stable_diagnostic() {
 }
 
 #[test]
-fn test_map_argument_errors_have_codes() {
+pub(super) fn test_map_argument_errors_have_codes() {
     let missing_source =
         "def inc(x: int) -> int:\n    return x + 1\n\ndef main():\n    _mapped = map(inc)\n";
     let missing_result = lower_source(missing_source);
@@ -689,7 +691,7 @@ fn test_map_argument_errors_have_codes() {
 }
 
 #[test]
-fn test_filter_is_typed_as_iterator() {
+pub(super) fn test_filter_is_typed_as_iterator() {
     let module = lower_source(
         "def pred(x: int) -> bool:\n    return x % 2 == 0\n\ndef main():\n    nums: list[int] = [1, 2, 3, 4]\n    filtered: Iterator[int] = filter(pred, nums)\n    _vals: list[int] = list(filtered)\n",
     )
@@ -710,7 +712,7 @@ fn test_filter_is_typed_as_iterator() {
 }
 
 #[test]
-fn test_filter_rejects_plain_list_annotation_without_materialization() {
+pub(super) fn test_filter_rejects_plain_list_annotation_without_materialization() {
     let result = lower_source(
         "def pred(x: int) -> bool:\n    return x % 2 == 0\n\ndef main():\n    values: list[int] = filter(pred, [1, 2, 3, 4])\n",
     );
@@ -722,7 +724,7 @@ fn test_filter_rejects_plain_list_annotation_without_materialization() {
 }
 
 #[test]
-fn test_filter_rejects_keywords_with_stable_diagnostic() {
+pub(super) fn test_filter_rejects_keywords_with_stable_diagnostic() {
     let source = "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    nums: list[int] = [1, 2]\n    _filtered = filter(function=pred, iterable=nums)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -736,7 +738,7 @@ fn test_filter_rejects_keywords_with_stable_diagnostic() {
 }
 
 #[test]
-fn test_filter_argument_errors_have_codes() {
+pub(super) fn test_filter_argument_errors_have_codes() {
     let arity_source = "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    _filtered = filter(pred)\n";
     let arity_result = lower_source(arity_source);
     assert!(arity_result.is_err());
@@ -785,7 +787,7 @@ fn test_filter_argument_errors_have_codes() {
 }
 
 #[test]
-fn test_sum_min_max_accept_iterator_inputs() {
+pub(super) fn test_sum_min_max_accept_iterator_inputs() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [3, 1, 2]\n    total: int = sum(iter(nums))\n    lo: int | None = min(iter(nums))\n    hi: int | None = max(iter(nums))\n",
     );
@@ -793,10 +795,9 @@ fn test_sum_min_max_accept_iterator_inputs() {
 }
 
 #[test]
-fn test_min_max_accept_variadic_scalar_inputs() {
+pub(super) fn test_min_max_accept_variadic_scalar_inputs() {
     let result = lower_source(
         "def main() -> int:\n    lo: int = min(3, 1, 2)\n    hi: int = max(1, 5, 2, 4)\n    return lo + hi\n",
     );
     assert!(result.is_ok(), "{result:?}");
 }
-

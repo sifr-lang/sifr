@@ -1,5 +1,14 @@
+use super::narrowing_helpers::canonicalize_compat_intrinsic_name;
+use super::{
+    intrinsics, methods, registry_defaultdict_alias_parts, registry_defaultdict_default_expr,
+    registry_defaultdict_key_arg, registry_iterator_op_func_name, registry_option_inner_type,
+    registry_uses_debug_display_format, HirExpr, HirFStringPart, RustEmitter, Type,
+};
 impl RustEmitter {
-    fn try_lower_registry_expr_recursive(&mut self, expr: &HirExpr) -> Option<crate::RustExpr> {
+    pub(crate) fn try_lower_registry_expr_recursive(
+        &mut self,
+        expr: &HirExpr,
+    ) -> Option<crate::RustExpr> {
         match expr {
             HirExpr::Name { name, .. } => Some(crate::RustExpr::Ident(name.clone())),
             HirExpr::FieldAccess { object, field, ty } => {
@@ -741,7 +750,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_registry_dict_literal_expr(
+    pub(crate) fn try_lower_registry_dict_literal_expr(
         &mut self,
         keys: &[HirExpr],
         values: &[HirExpr],
@@ -783,7 +792,7 @@ impl RustEmitter {
         })
     }
 
-    fn try_lower_registry_set_literal_expr(
+    pub(crate) fn try_lower_registry_set_literal_expr(
         &mut self,
         elements: &[HirExpr],
     ) -> Option<crate::RustExpr> {
@@ -857,5 +866,4 @@ impl RustEmitter {
         self.apply_intrinsic_registry_side_effects(intrinsic_func, &lowered);
         Some(lowered.expr)
     }
-
 }

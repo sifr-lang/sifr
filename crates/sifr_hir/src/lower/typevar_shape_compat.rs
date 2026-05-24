@@ -2,7 +2,10 @@ use sifr_type_system::Type;
 
 /// Shape compatibility used when generic inference leaves unresolved `TypeVar`s.
 /// `TypeVar`s are treated as wildcards, but container/class structure must still match.
-pub(super) fn is_compatible_with_unresolved_typevars(source: &Type, target: &Type) -> bool {
+pub(in crate::lower) fn is_compatible_with_unresolved_typevars(
+    source: &Type,
+    target: &Type,
+) -> bool {
     match target {
         Type::TypeVar(_) => true,
         Type::List(target_elem) => match source {

@@ -341,6 +341,12 @@ Validation notes:
 - Post-closeout smell cleanup removed the remaining `#[rustfmt::skip]` refactor artifacts, replaced the verification hardening `exec` loader with package imports, and added a regression guardrail for Rust `rustfmt::skip` attributes.
 - Post-closeout cleanup validation passed with `cargo fmt --check`, `cargo test -p sifr_diagnostics`, `python3 scripts/check_file_size_guardrails.py`, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
 - Post-closeout reviewer passes both returned `Verdict: SATISFIED` in `reviews/clean-refactor-smells-review-1.md` and `reviews/clean-refactor-smells-review-2.md`.
+- Final module-layout cleanup replaced the remaining first-party hand-written Rust `include!` / `#[path]` split shape with conventional Rust modules and responsibility-based file locations.
+- Final module-layout cleanup validation passed with `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `git diff --check`, focused first-party scans for `include!`, `#[path]`, `rustfmt::skip`, `allow(unused_imports)`, and numeric split filenames, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
+- Final module-layout Claude review returned `Satisfied` with no blocking findings in `reviews/include-module-refactor-review-round1.md`.
+- E2E runner cleanup removed the retired runner compatibility path from `crates/sifr/tests/e2e.rs` and its support modules, including compare-mode dispatch, legacy runner mode environment variables, and validation-lane mode metadata.
+- E2E runner cleanup validation passed with focused stale-runner scans, `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `git diff --check`, shell syntax checks, `python3 -m py_compile scripts/validation_lane.py`, `cargo test -p sifr --test e2e -- --skip test_e2e_pass`, `scripts/run_e2e_pass.sh --profile quick`, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
+- E2E runner cleanup Claude review reached `Verdict: Satisfied` in `reviews/e2e-runner-cleanup-review-round2.md`.
 
 ## Done Criteria
 

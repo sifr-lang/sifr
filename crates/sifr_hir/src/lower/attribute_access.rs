@@ -1,6 +1,6 @@
 use sifr_type_system::{make_union, Type};
 
-pub(super) fn optional_class_union_field_type(
+pub(in crate::lower) fn optional_class_union_field_type(
     resolved_object_ty: &Type,
     field_name: &str,
 ) -> Option<Type> {

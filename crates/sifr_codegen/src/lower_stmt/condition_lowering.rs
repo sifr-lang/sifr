@@ -1,4 +1,10 @@
-fn try_lower_simple_if_stmt(
+use super::{
+    codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var,
+    detect_is_not_none_var, detect_or_is_none_vars, try_lower_leaf_expr,
+    try_lower_simple_stmt_block, HashSet, HirExpr, HirStmt, RustExpr, RustLiteral, RustParam,
+    RustStmt, RustType, SimpleStmtBindings, SimpleStmtLoweringCtx, Type,
+};
+pub(super) fn try_lower_simple_if_stmt(
     condition: &HirExpr,
     then_body: &[HirStmt],
     elif_clauses: &[(HirExpr, Vec<HirStmt>)],
@@ -92,7 +98,7 @@ fn try_lower_simple_if_stmt(
     )?])
 }
 
-fn try_lower_simple_if_clause(
+pub(super) fn try_lower_simple_if_clause(
     condition: &HirExpr,
     then_body: &[HirStmt],
     nested_else: Option<Vec<RustStmt>>,
@@ -167,7 +173,7 @@ fn try_lower_simple_if_clause(
     })
 }
 
-fn try_lower_simple_condition_test_expr(
+pub(super) fn try_lower_simple_condition_test_expr(
     expr: &HirExpr,
     borrowed_params: &HashSet<String>,
 ) -> Option<RustExpr> {
@@ -196,7 +202,7 @@ fn try_lower_simple_condition_test_expr(
     })
 }
 
-fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
     fn zero_literal_for_type(ty: &Type) -> Option<RustExpr> {
         match resolve_alias_type(ty) {
             Type::Int | Type::LiteralInt(_) => Some(RustExpr::Cast {
@@ -281,7 +287,7 @@ fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Option<RustExp
     }
 }
 
-fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
     if try_lower_leaf_expr(expr).is_some() {
         return None;
     }
@@ -372,7 +378,7 @@ fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExp
     })
 }
 
-fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_or_name_expr(expr) {
         return Some(lowered);
     }
@@ -397,7 +403,7 @@ fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     }
 }
 
-fn try_lower_condition_index_operand_expr(
+pub(super) fn try_lower_condition_index_operand_expr(
     object: &HirExpr,
     index: &HirExpr,
     result_ty: &Type,
@@ -504,7 +510,7 @@ fn try_lower_condition_index_operand_expr(
     }
 }
 
-fn try_lower_borrowed_typevar_compare_condition(
+pub(super) fn try_lower_borrowed_typevar_compare_condition(
     expr: &HirExpr,
     borrowed_params: &HashSet<String>,
 ) -> Option<RustExpr> {
@@ -553,7 +559,7 @@ fn try_lower_borrowed_typevar_compare_condition(
     })
 }
 
-fn expr_uses_borrowed_name(expr: &HirExpr, borrowed_params: &HashSet<String>) -> bool {
+pub(super) fn expr_uses_borrowed_name(expr: &HirExpr, borrowed_params: &HashSet<String>) -> bool {
     match expr {
         HirExpr::Name { name, .. } => borrowed_params.contains(name),
         HirExpr::Compare {
@@ -576,14 +582,14 @@ fn expr_uses_borrowed_name(expr: &HirExpr, borrowed_params: &HashSet<String>) ->
     }
 }
 
-fn resolve_alias_type(ty: &Type) -> &Type {
+pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
         Type::Alias { body, .. } => resolve_alias_type(body),
         _ => ty,
     }
 }
 
-fn is_option_like_type(ty: &Type) -> bool {
+pub(super) fn is_option_like_type(ty: &Type) -> bool {
     if let Type::Union(members) = resolve_alias_type(ty) {
         let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
         let has_none = members.iter().any(|m| matches!(m, Type::None));
@@ -593,7 +599,7 @@ fn is_option_like_type(ty: &Type) -> bool {
     }
 }
 
-fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
+pub(super) fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
     if let HirExpr::Name { name, ty } = expr {
         if is_option_like_type(ty) {
             return Some(name.clone());
@@ -602,7 +608,7 @@ fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
     None
 }
 
-fn lower_if_not_none_chain(
+pub(super) fn lower_if_not_none_chain(
     option_vars: &[String],
     lowered_then_body: Vec<RustStmt>,
     nested_else: Option<Vec<RustStmt>>,
@@ -630,15 +636,15 @@ fn lower_if_not_none_chain(
     Some(chain_root)
 }
 
-fn is_alias_equivalent_type(left: &Type, right: &Type) -> bool {
+pub(super) fn is_alias_equivalent_type(left: &Type, right: &Type) -> bool {
     left == right || resolve_alias_type(left) == resolve_alias_type(right)
 }
 
-fn is_none_type(ty: &Type) -> bool {
+pub(super) fn is_none_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::None)
 }
 
-fn is_okwrap_none_expr(expr: &HirExpr) -> bool {
+pub(super) fn is_okwrap_none_expr(expr: &HirExpr) -> bool {
     matches!(
         expr,
         HirExpr::OkWrap { value, .. }
@@ -646,14 +652,14 @@ fn is_okwrap_none_expr(expr: &HirExpr) -> bool {
     )
 }
 
-fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, .. } = expr {
         return Some(RustExpr::Ident(name.clone()));
     }
     None
 }
 
-fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }
@@ -680,7 +686,7 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_name_ident_expr(expr)
 }
 
-fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
     let HirExpr::Index { object, index, .. } = expr else {
         return None;
     };
@@ -747,7 +753,7 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
     }
 }
 
-fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustExpr> {
     let HirExpr::BinOp {
         left,
         op,
@@ -788,7 +794,10 @@ fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustExpr> {
     })
 }
 
-fn collect_stmt_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
+pub(super) fn collect_stmt_string_concat_parts<'a>(
+    expr: &'a HirExpr,
+    parts: &mut Vec<&'a HirExpr>,
+) {
     if let HirExpr::BinOp {
         left,
         op,
@@ -805,7 +814,10 @@ fn collect_stmt_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a H
     parts.push(expr);
 }
 
-fn try_lower_attribute_dict_insert_key_expr(index: &HirExpr, field_ty: &Type) -> Option<RustExpr> {
+pub(super) fn try_lower_attribute_dict_insert_key_expr(
+    index: &HirExpr,
+    field_ty: &Type,
+) -> Option<RustExpr> {
     let Type::Dict(key_ty, _) = resolve_alias_type(field_ty) else {
         return None;
     };
@@ -819,4 +831,3 @@ fn try_lower_attribute_dict_insert_key_expr(index: &HirExpr, field_ty: &Type) ->
 
     try_lower_leaf_or_name_expr(index)
 }
-

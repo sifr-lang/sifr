@@ -1,6 +1,12 @@
 //! IR-backed helpers for generating codegen preamble items.
 
-include!("preamble/types_and_errors.rs");
-include!("preamble/task_runtime.rs");
-include!("preamble/io_logging_random.rs");
-include!("preamble/io_bytes_and_analysis_tests.rs");
+use crate::{RustExpr, RustItem, RustMatchArm, RustParam, RustStmt, RustType, Visibility};
+
+mod types_and_errors;
+pub use types_and_errors::*;
+mod task_runtime;
+pub use task_runtime::*;
+mod io_logging_random;
+pub use io_logging_random::*;
+mod io_bytes_methods;
+pub(crate) use io_bytes_methods::*;

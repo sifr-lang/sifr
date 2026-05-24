@@ -100,7 +100,11 @@ fn display_option_inner_type(expr: &HirExpr) -> Option<Type> {
 }
 
 impl RustEmitter {
-    fn lower_ref_expr_or_panic(&mut self, expr: &HirExpr, context: &str) -> crate::RustExpr {
+    pub(crate) fn lower_ref_expr_or_panic(
+        &mut self,
+        expr: &HirExpr,
+        context: &str,
+    ) -> crate::RustExpr {
         if let Some(lowered) = self.try_lower_registry_expr_strict(expr) {
             return lowered;
         }
@@ -124,7 +128,7 @@ impl RustEmitter {
     /// Emit an expression suitable for use inside format!/println! contexts.
     /// Wraps Option<T> expressions so they display as the inner value or "None".
     /// Omits `.to_string()` on string literals since format macros accept &str.
-    pub(super) fn lower_display_expr(&mut self, expr: &HirExpr) -> crate::RustExpr {
+    pub(crate) fn lower_display_expr(&mut self, expr: &HirExpr) -> crate::RustExpr {
         let inferred_option_inner = display_option_inner_type(expr);
         if let Some(inner) = inferred_option_inner {
             let lowered = self.lower_ref_expr_or_panic(expr, "display option expr");

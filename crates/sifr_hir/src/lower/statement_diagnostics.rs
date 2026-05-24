@@ -3,7 +3,7 @@ use sifr_diagnostics::DiagnosticCode;
 
 use super::LowerCtx;
 
-pub(super) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange) {
+pub(in crate::lower) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::FLOW_UNSUPPORTED_STATEMENT_FORM,
         format!("unsupported statement form: {form}"),
@@ -11,7 +11,11 @@ pub(super) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange)
     );
 }
 
-pub(super) fn invalid_assignment_target(ctx: &mut LowerCtx, target: &str, range: TextRange) {
+pub(in crate::lower) fn invalid_assignment_target(
+    ctx: &mut LowerCtx,
+    target: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET,
         format!("invalid assignment target: {target}"),
@@ -19,7 +23,7 @@ pub(super) fn invalid_assignment_target(ctx: &mut LowerCtx, target: &str, range:
     );
 }
 
-pub(super) fn invalid_iteration(ctx: &mut LowerCtx, reason: &str, range: TextRange) {
+pub(in crate::lower) fn invalid_iteration(ctx: &mut LowerCtx, reason: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::FLOW_INVALID_ITERATION,
         format!("invalid for-loop iteration: {reason}"),
@@ -27,7 +31,11 @@ pub(super) fn invalid_iteration(ctx: &mut LowerCtx, reason: &str, range: TextRan
     );
 }
 
-pub(super) fn mutation_during_iteration(ctx: &mut LowerCtx, source_name: &str, range: TextRange) {
+pub(in crate::lower) fn mutation_during_iteration(
+    ctx: &mut LowerCtx,
+    source_name: &str,
+    range: TextRange,
+) {
     invalid_iteration(
         ctx,
         &format!("cannot mutate '{source_name}' while iterating over it in a for loop"),

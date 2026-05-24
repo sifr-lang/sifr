@@ -1,5 +1,6 @@
+use super::{HirExpr, HirStmt, RustEmitter, RustStmt, Type};
 impl RustEmitter {
-    fn lower_subscript_augassign_stmt_for_ir(
+    pub(crate) fn lower_subscript_augassign_stmt_for_ir(
         &mut self,
         object: &str,
         index: &HirExpr,
@@ -162,7 +163,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_delete_stmt_for_ir(
+    pub(crate) fn lower_delete_stmt_for_ir(
         &mut self,
         object: &HirExpr,
         index: &HirExpr,
@@ -352,5 +353,4 @@ impl RustEmitter {
         self.emit_lowered_stmts(std::slice::from_ref(&lowered));
         Ok(true)
     }
-
 }

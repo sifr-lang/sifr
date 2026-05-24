@@ -1,5 +1,9 @@
+use super::{
+    registry_option_inner_type, registry_uses_debug_display_format, HirExpr, RustEmitter, RustExpr,
+    Type,
+};
 impl RustEmitter {
-    fn try_lower_registry_numeric_builtin_call_expr(
+    pub(crate) fn try_lower_registry_numeric_builtin_call_expr(
         &mut self,
         func: &str,
         args: &[HirExpr],
@@ -751,5 +755,4 @@ impl RustEmitter {
             _ => None,
         }
     }
-
 }

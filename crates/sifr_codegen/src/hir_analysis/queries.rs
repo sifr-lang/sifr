@@ -1,2 +1,4 @@
-include!("queries/queries_impl.rs");
-include!("queries/tests.rs");
+mod queries_impl;
+pub(crate) use queries_impl::*;
+#[cfg(test)]
+mod tests;

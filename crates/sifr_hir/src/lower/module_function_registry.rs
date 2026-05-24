@@ -4,13 +4,13 @@ use sifr_diagnostics::DiagnosticCode;
 use std::collections::HashSet;
 
 #[derive(Default)]
-pub(super) struct ModuleFunctionRegistry {
+pub(in crate::lower) struct ModuleFunctionRegistry {
     seen_module_decls: HashSet<String>,
     seen_lowered_defs: HashSet<String>,
 }
 
 impl ModuleFunctionRegistry {
-    pub(super) fn note_module_decl(
+    pub(in crate::lower) fn note_module_decl(
         &mut self,
         function_name: &str,
         name_range: TextRange,
@@ -27,7 +27,7 @@ impl ModuleFunctionRegistry {
         false
     }
 
-    pub(super) fn note_lowering(&mut self, function_name: &str) -> bool {
+    pub(in crate::lower) fn note_lowering(&mut self, function_name: &str) -> bool {
         self.seen_lowered_defs.insert(function_name.to_string())
     }
 }

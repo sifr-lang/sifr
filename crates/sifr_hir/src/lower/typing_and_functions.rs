@@ -1,2 +1,22 @@
-include!("typing_and_functions/signatures_and_effects.rs");
-include!("typing_and_functions/annotations_and_function_lowering.rs");
+use super::asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
+use super::diagnostics::{format_type_name, is_valid_error_type};
+use super::expressions::lower_expr;
+use super::function_flow::{collect_yield_types, infer_function_return_type};
+use super::nonlocal_support::collect_declared_nonlocals;
+use super::ownership_diagnostics;
+use super::statements::lower_stmts;
+use super::workload_annotations;
+use super::{async_effects, flow_diagnostics, simple_expr, str};
+use super::{substitute_type_vars, LowerCtx};
+use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
+use ruff_text_size::Ranged;
+use sifr_diagnostics::DiagnosticCode;
+use sifr_python_ast::{Expr, Number, Operator, StmtFunctionDef};
+use sifr_type_system::infer::resolve_type_annotation;
+use sifr_type_system::{make_union, FunctionType, OwnershipKind, ParamConvention, Type};
+use std::collections::HashMap;
+
+mod signatures_and_effects;
+pub(in crate::lower) use signatures_and_effects::*;
+mod annotations_and_function_lowering;
+pub(in crate::lower) use annotations_and_function_lowering::*;

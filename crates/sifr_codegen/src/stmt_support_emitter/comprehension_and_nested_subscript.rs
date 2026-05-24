@@ -1,5 +1,6 @@
+use super::{HirExpr, RustEmitter, RustExpr, RustStmt, Type};
 impl RustEmitter {
-    fn try_lower_comprehension_expr_for_ir(
+    pub(crate) fn try_lower_comprehension_expr_for_ir(
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
@@ -214,7 +215,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_generator_expr_for_ir(
+    pub(crate) fn try_lower_generator_expr_for_ir(
         &mut self,
         value_expr: &HirExpr,
         var: &str,
@@ -279,11 +280,10 @@ impl RustEmitter {
         }
         Ok(Some(generator_chain))
     }
-
 }
 
 impl RustEmitter {
-    fn lower_structured_nested_list_subscript_assign_stmt_for_ir(
+    pub(crate) fn lower_structured_nested_list_subscript_assign_stmt_for_ir(
         &mut self,
         object: &str,
         outer_index: &HirExpr,
@@ -485,7 +485,7 @@ impl RustEmitter {
         ])))
     }
 
-    fn lower_structured_attribute_nested_list_subscript_assign_stmt_for_ir(
+    pub(crate) fn lower_structured_attribute_nested_list_subscript_assign_stmt_for_ir(
         &mut self,
         object: &str,
         field: &str,
@@ -695,7 +695,7 @@ impl RustEmitter {
         ])))
     }
 
-    fn lower_subscript_assign_stmt_for_ir(
+    pub(crate) fn lower_subscript_assign_stmt_for_ir(
         &mut self,
         object: &str,
         index: &HirExpr,
@@ -779,7 +779,9 @@ impl RustEmitter {
         }
     }
 
-    fn build_dict_lookup_key_arg_for_ir(lowered_index: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn build_dict_lookup_key_arg_for_ir(
+        lowered_index: crate::RustExpr,
+    ) -> crate::RustExpr {
         if matches!(
             lowered_index,
             crate::RustExpr::Literal(crate::RustLiteral::Str(_))
@@ -793,7 +795,7 @@ impl RustEmitter {
         }
     }
 
-    fn build_subscript_augassign_elem_stmt_for_ir(
+    pub(crate) fn build_subscript_augassign_elem_stmt_for_ir(
         op: &str,
         lowered_value: crate::RustExpr,
     ) -> Option<crate::RustStmt> {
@@ -833,5 +835,4 @@ impl RustEmitter {
             value: lowered_value,
         })
     }
-
 }

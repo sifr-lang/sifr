@@ -1,5 +1,16 @@
+use super::{
+    async_effects, collect_class_type, collect_function_defaults, collect_type_alias_decls,
+    collect_type_vars, extract_function_type, function_body_contains_yield,
+    function_uses_asyncio_run_entrypoint, import_diagnostics, import_resolution, imported_defaults,
+    imports, integer_literal_diagnostics, lower_class, lower_function, module_constants_lowering,
+    module_function_registry, name_diagnostics, parse_typevar_bound_expr,
+    parse_typevar_declaration_specs, predeclare_type_aliases, register_builtins,
+    resolve_imports_early, resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs,
+    FunctionType, HirDiagnostic, HirImport, HirModule, LowerCtx, LoweringResult, Ranged, Stmt,
+    TextRange, Type,
+};
 /// Internal implementation of module lowering.
-fn lower_module_impl(
+pub(in crate::lower) fn lower_module_impl(
     stmts: &[Stmt],
     externals: &ExternalDefs,
     mut ctx: LowerCtx,

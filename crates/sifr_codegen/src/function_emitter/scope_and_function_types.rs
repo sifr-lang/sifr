@@ -1,5 +1,22 @@
+use super::{
+    collect_function_local_shadow_names, collect_function_sifr_int_forced_locals_with_extra,
+    collect_locally_defined_vars, collect_mutated_vars_with_sigs,
+    collect_nested_sifr_int_function_returns, collect_sifr_int_call_arg_function_params,
+    collect_sifr_int_captured_forced_locals, collect_sifr_int_captured_shadowed_module_bindings,
+    collect_sifr_int_forced_locals, collect_sifr_int_function_param_names,
+    collect_sifr_int_result_call_arg_function_params,
+    collect_sifr_int_result_call_arg_function_params_with_initial,
+    collect_sifr_int_result_call_arg_method_params, collect_sifr_int_result_function_param_names,
+    collect_sifr_int_result_method_param_names, function_returns_result_sifr_int,
+    hir_function_returns_sifr_int_with_extra_forced,
+    hir_function_returns_sifr_int_with_extra_forced_and_shadowed, is_result_int_type, make_union,
+    nested_function_mutates_capture, result_int_return_type_to_sifr_int, result_method_key,
+    traversal, HashMap, HashSet, HirExpr, HirFunction, HirModule, HirParam, HirStmt,
+    NestedFnCapture, OwnershipKind, ParamConvention, RustEmitter, RustExpr, RustParam, RustStmt,
+    RustType, RustTypeParam, TraversalConfig, Type,
+};
 impl RustEmitter {
-    fn effective_nested_param_convention(
+    pub(crate) fn effective_nested_param_convention(
         param: &HirParam,
         mutated_vars: &std::collections::HashSet<String>,
     ) -> ParamConvention {
@@ -20,7 +37,7 @@ impl RustEmitter {
         }
     }
 
-    fn register_function_scope_binding(
+    pub(crate) fn register_function_scope_binding(
         &mut self,
         name: &str,
         ty: &Type,
@@ -46,7 +63,7 @@ impl RustEmitter {
             .insert(name.to_string(), ty.clone());
     }
 
-    fn register_function_scope_params(&mut self, func_name: &str, params: &[HirParam]) {
+    pub(crate) fn register_function_scope_params(&mut self, func_name: &str, params: &[HirParam]) {
         for (param_idx, param) in params.iter().enumerate() {
             self.register_function_scope_binding(&param.name, &param.ty, param.convention);
             if self.function_param_lowers_to_sifr_int(func_name, param_idx) {
@@ -62,7 +79,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn register_local_body_binding_types(&mut self, body: &[HirStmt]) {
+    pub(crate) fn register_local_body_binding_types(&mut self, body: &[HirStmt]) {
         let mut bindings = HashMap::new();
         let mut widened_bindings = HashSet::new();
         let mut on_stmt = |stmt: &HirStmt| match stmt {
@@ -95,7 +112,7 @@ impl RustEmitter {
         self.register_sifr_int_forced_local_bindings(body);
     }
 
-    fn register_sifr_int_forced_local_bindings(&self, body: &[HirStmt]) {
+    pub(crate) fn register_sifr_int_forced_local_bindings(&self, body: &[HirStmt]) {
         let local_int_bindings = self
             .local_binding_types
             .iter()
@@ -121,7 +138,7 @@ impl RustEmitter {
         *self.sifr_int_forced_local_bindings.borrow_mut() = forced;
     }
 
-    pub(super) fn register_sifr_int_function_returns(&self, module: &HirModule) {
+    pub(crate) fn register_sifr_int_function_returns(&self, module: &HirModule) {
         let module_sifr_int_bindings = self.module_sifr_int_bindings();
         let mut function_returns = HashSet::new();
         let mut result_function_returns = HashSet::new();
@@ -339,7 +356,7 @@ impl RustEmitter {
         *self.sifr_int_result_method_params.borrow_mut() = result_method_params;
     }
 
-    fn module_sifr_int_bindings(&self) -> HashSet<String> {
+    pub(crate) fn module_sifr_int_bindings(&self) -> HashSet<String> {
         self.module_constants
             .iter()
             .filter(|(_, (ty, rust_name))| {
@@ -350,7 +367,7 @@ impl RustEmitter {
             .collect::<HashSet<_>>()
     }
 
-    fn function_sifr_int_returns_for_body(&self, body: &[HirStmt]) -> HashSet<String> {
+    pub(crate) fn function_sifr_int_returns_for_body(&self, body: &[HirStmt]) -> HashSet<String> {
         let module_sifr_int_bindings = self.module_sifr_int_bindings();
         let mut function_returns = self.sifr_int_function_returns.borrow().clone();
         let forced_locals = self.sifr_int_forced_local_bindings.borrow().clone();
@@ -370,7 +387,7 @@ impl RustEmitter {
         function_returns
     }
 
-    pub(super) fn recursive_capture_lowers_to_sifr_int(&self, capture: &NestedFnCapture) -> bool {
+    pub(crate) fn recursive_capture_lowers_to_sifr_int(&self, capture: &NestedFnCapture) -> bool {
         matches!(
             crate::resolve_alias_type_for_plain_call(&capture.ty),
             Type::Int
@@ -379,18 +396,17 @@ impl RustEmitter {
             || self.is_registered_sifr_int_local(&capture.name)
             || self.is_forced_sifr_int_local(&capture.name))
     }
-
 }
 
 impl RustEmitter {
-    fn lower_recursive_capture_param_type(&self, capture: &NestedFnCapture) -> RustType {
+    pub(crate) fn lower_recursive_capture_param_type(&self, capture: &NestedFnCapture) -> RustType {
         if self.recursive_capture_lowers_to_sifr_int(capture) {
             return RustType::Named("SifrInt".to_string());
         }
         self.lower_function_param_type(&capture.ty, capture.convention)
     }
 
-    pub(super) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
+    pub(crate) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
         let HirStmt::NestedFunction { func } = stmt else {
             return false;
         };
@@ -640,7 +656,7 @@ impl RustEmitter {
         true
     }
 
-    pub(super) fn lower_mutable_param_shadows(
+    pub(crate) fn lower_mutable_param_shadows(
         params: &[HirParam],
         reassigned_vars: &std::collections::HashSet<String>,
     ) -> Vec<(String, RustExpr)> {
@@ -666,7 +682,7 @@ impl RustEmitter {
             .collect()
     }
 
-    pub(super) fn apply_mutable_param_shadowing(
+    pub(crate) fn apply_mutable_param_shadowing(
         &mut self,
         mutable_param_shadows: &[(String, RustExpr)],
     ) {
@@ -676,7 +692,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn emit_mutable_param_shadow_stmts(
+    pub(crate) fn emit_mutable_param_shadow_stmts(
         mutable_param_shadows: &[(String, RustExpr)],
     ) -> Vec<RustStmt> {
         mutable_param_shadows
@@ -690,7 +706,7 @@ impl RustEmitter {
             .collect()
     }
 
-    fn returns_result_none(ty: &Type) -> bool {
+    pub(crate) fn returns_result_none(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Result(ok_ty, _) => matches!(
                 crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
@@ -700,7 +716,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_function_type_params(func: &HirFunction) -> Vec<RustTypeParam> {
+    pub(crate) fn lower_function_type_params(func: &HirFunction) -> Vec<RustTypeParam> {
         if func.type_params.is_empty() {
             return Vec::new();
         }
@@ -722,7 +738,11 @@ impl RustEmitter {
             .collect()
     }
 
-    fn lower_function_param_type(&self, ty: &Type, convention: ParamConvention) -> RustType {
+    pub(crate) fn lower_function_param_type(
+        &self,
+        ty: &Type,
+        convention: ParamConvention,
+    ) -> RustType {
         let base = self.rust_ir_type_with_generics(ty);
         if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
             RustType::Ref {
@@ -734,7 +754,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_module_function_param_type(
+    pub(crate) fn lower_module_function_param_type(
         &self,
         func_name: &str,
         param_idx: usize,
@@ -756,7 +776,7 @@ impl RustEmitter {
         self.lower_function_param_type(&param.ty, param.convention)
     }
 
-    fn lower_function_return_type(
+    pub(crate) fn lower_function_return_type(
         &self,
         func: &HirFunction,
         is_generator: bool,
@@ -781,8 +801,11 @@ impl RustEmitter {
         Some(self.rust_ir_type_with_generics(&func.return_type))
     }
 
-    fn lower_stmt_strict_for_function(&mut self, stmt: &HirStmt, _context: &str) -> Vec<RustStmt> {
+    pub(crate) fn lower_stmt_strict_for_function(
+        &mut self,
+        stmt: &HirStmt,
+        _context: &str,
+    ) -> Vec<RustStmt> {
         self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
     }
-
 }

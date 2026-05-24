@@ -7,13 +7,13 @@ use sifr_type_system::{FixedIntType, Type};
 
 const MAX_EXACT_SHIFT_OR_EXPONENT: u32 = 13_610;
 
-pub(super) enum FixedWidthInitializerFit {
+pub(in crate::lower) enum FixedWidthInitializerFit {
     NotConst,
     Fits(HirExpr),
     Rejected,
 }
 
-pub(super) fn validate_fixed_width_initializer(
+pub(in crate::lower) fn validate_fixed_width_initializer(
     ctx: &mut LowerCtx,
     target: &Type,
     value: &HirExpr,
@@ -46,7 +46,7 @@ pub(super) fn validate_fixed_width_initializer(
     FixedWidthInitializerFit::Rejected
 }
 
-pub(super) fn validate_annotated_constant_initializer(
+pub(in crate::lower) fn validate_annotated_constant_initializer(
     ctx: &mut LowerCtx,
     declared_type: &Type,
     value: &HirExpr,
@@ -75,7 +75,7 @@ pub(super) fn validate_annotated_constant_initializer(
     None
 }
 
-pub(super) fn remember_module_const_integer(
+pub(in crate::lower) fn remember_module_const_integer(
     ctx: &mut LowerCtx,
     name: &str,
     value: &HirExpr,

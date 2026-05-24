@@ -1,4 +1,9 @@
-fn try_lower_simple_try_except_stmt(
+use super::{
+    try_lower_leaf_or_name_expr, try_lower_simple_stmt_with_ctx, HashSet, HirExceptHandler,
+    HirExpr, HirStmt, RustExpr, RustLiteral, RustStmt, RustType, SimpleStmtBindings,
+    SimpleStmtLoweringCtx, Type,
+};
+pub(super) fn try_lower_simple_try_except_stmt(
     body: &[HirStmt],
     handlers: &[HirExceptHandler],
     in_loop_with_else: bool,
@@ -74,7 +79,7 @@ fn try_lower_simple_try_except_stmt(
     ])
 }
 
-fn is_simple_try_except_body_stmt(stmt: &HirStmt) -> bool {
+pub(super) fn is_simple_try_except_body_stmt(stmt: &HirStmt) -> bool {
     matches!(
         stmt,
         HirStmt::Expr { .. }
@@ -98,7 +103,7 @@ fn is_simple_try_except_body_stmt(stmt: &HirStmt) -> bool {
     )
 }
 
-fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
+pub(super) fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
     match stmt {
         HirStmt::Raise { .. } => true,
         HirStmt::Expr { expr } => expr_has_result_flow(expr),
@@ -140,7 +145,7 @@ fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
     }
 }
 
-fn expr_has_result_flow(expr: &HirExpr) -> bool {
+pub(super) fn expr_has_result_flow(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::QuestionMark { .. } | HirExpr::OkWrap { .. } | HirExpr::ErrWrap { .. } => true,
         HirExpr::Await { value, .. } => expr_has_result_flow(value),
@@ -249,7 +254,7 @@ fn expr_has_result_flow(expr: &HirExpr) -> bool {
     }
 }
 
-fn try_lower_simple_stmt_block(
+pub(super) fn try_lower_simple_stmt_block(
     stmts: &[HirStmt],
     in_loop_with_else: bool,
     mutated_vars: &HashSet<String>,
@@ -287,14 +292,14 @@ pub(crate) fn tuple_unpack_pattern(
     Some(format!("({})", names.join(", ")))
 }
 
-fn tuple_unpack_field_target_expr(object: &str, field: &str) -> RustExpr {
+pub(super) fn tuple_unpack_field_target_expr(object: &str, field: &str) -> RustExpr {
     RustExpr::Field {
         expr: Box::new(RustExpr::Ident(object.to_string())),
         field: field.to_string(),
     }
 }
 
-fn lower_tuple_target_assignments(
+pub(super) fn lower_tuple_target_assignments(
     targets: &[sifr_hir::HirTupleTarget],
     temp_names: &[String],
     mutated_vars: &HashSet<String>,
@@ -328,7 +333,7 @@ fn lower_tuple_target_assignments(
     lowered
 }
 
-fn try_lower_simple_tuple_unpack_stmt(
+pub(super) fn try_lower_simple_tuple_unpack_stmt(
     targets: &[sifr_hir::HirTupleTarget],
     value: &HirExpr,
     mutated_vars: &HashSet<String>,
@@ -381,7 +386,7 @@ pub(crate) fn lower_tuple_unpack_targets(
     lowered
 }
 
-fn try_lower_simple_star_unpack_stmt(
+pub(super) fn try_lower_simple_star_unpack_stmt(
     before: &[(String, Type)],
     star: &(String, Type),
     after: &[(String, Type)],

@@ -6,28 +6,34 @@ use sifr_type_system::Type;
 use super::LowerCtx;
 
 impl LowerCtx {
-    pub(super) fn add_proven_nonzero_integer_binding(&mut self, name: String) {
+    pub(in crate::lower) fn add_proven_nonzero_integer_binding(&mut self, name: String) {
         self.proven_nonzero_integer_bindings.insert(name);
     }
 
-    pub(super) fn clear_proven_nonzero_integer_binding(&mut self, name: &str) {
+    pub(in crate::lower) fn clear_proven_nonzero_integer_binding(&mut self, name: &str) {
         self.proven_nonzero_integer_bindings.remove(name);
     }
 
-    pub(super) fn is_proven_nonzero_integer_binding(&self, name: &str) -> bool {
+    pub(in crate::lower) fn is_proven_nonzero_integer_binding(&self, name: &str) -> bool {
         self.proven_nonzero_integer_bindings.contains(name)
     }
 
-    pub(super) fn save_proven_nonzero_integer_bindings(&self) -> HashSet<String> {
+    pub(in crate::lower) fn save_proven_nonzero_integer_bindings(&self) -> HashSet<String> {
         self.proven_nonzero_integer_bindings.clone()
     }
 
-    pub(super) fn restore_proven_nonzero_integer_bindings(&mut self, snapshot: &HashSet<String>) {
+    pub(in crate::lower) fn restore_proven_nonzero_integer_bindings(
+        &mut self,
+        snapshot: &HashSet<String>,
+    ) {
         self.proven_nonzero_integer_bindings.clone_from(snapshot);
     }
 }
 
-pub(super) fn detect_true_nonzero_integer_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<String> {
+pub(in crate::lower) fn detect_true_nonzero_integer_guards(
+    expr: &Expr,
+    ctx: &LowerCtx,
+) -> Vec<String> {
     match expr {
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             detect_compare_nonzero_guard(
@@ -52,7 +58,10 @@ pub(super) fn detect_true_nonzero_integer_guards(expr: &Expr, ctx: &LowerCtx) ->
     }
 }
 
-pub(super) fn detect_false_nonzero_integer_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<String> {
+pub(in crate::lower) fn detect_false_nonzero_integer_guards(
+    expr: &Expr,
+    ctx: &LowerCtx,
+) -> Vec<String> {
     match expr {
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             detect_compare_nonzero_guard(

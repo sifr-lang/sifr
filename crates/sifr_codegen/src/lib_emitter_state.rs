@@ -1,139 +1,147 @@
-struct RustEmitter {
-    collection_needs: CollectionNeeds,
-    runtime_needs: RuntimeNeeds,
+use super::{
+    body_contains_await, collect_locally_defined_vars, collect_mutated_vars_with_sigs,
+    collect_referenced_vars_with_types, default_param_convention, hir_analysis,
+    is_simple_stmt_candidate, module_uses_bigint, resolve_alias_type_for_plain_call,
+    try_lower_simple_stmt_with_scope_result_and_bindings, Cell, ClassScope, HashMap, HashSet,
+    HirExpr, HirFunction, HirModule, HirStmt, LoweringStats, NestedFnCapture, ParamConvention,
+    RefCell, RustExpr, RustItem, RustLiteral, RustStmt, ScopeContext, Type,
+};
+pub struct RustEmitter {
+    pub(crate) collection_needs: CollectionNeeds,
+    pub(crate) runtime_needs: RuntimeNeeds,
     /// Track union enum types that need to be defined (name -> member types)
-    union_enums: HashMap<String, Vec<Type>>,
+    pub(crate) union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated union enum items to prepend
-    enum_items: Vec<RustItem>,
+    pub(crate) enum_items: Vec<RustItem>,
     /// Accumulated non-enum body items to assemble before raw output rendering.
-    body_items: Vec<RustItem>,
+    pub(crate) body_items: Vec<RustItem>,
     /// The return type of the function currently being emitted
-    current_return_type: Option<Type>,
+    pub(crate) current_return_type: Option<Type>,
     /// Active `async with task.timeout(...)` duration expressions for await lowering.
-    active_timeout_durations: Vec<RustExpr>,
+    pub(crate) active_timeout_durations: Vec<RustExpr>,
     /// Set of variable names currently narrowed via `if let Some(...)` unwrap
-    option_unwrapped_vars: HashSet<String>,
+    pub(crate) option_unwrapped_vars: HashSet<String>,
     /// Function signatures: name -> (`param_types_with_conventions`, `return_type`)
-    func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
+    pub(crate) func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
     /// Stack tracking whether each active loop has an else clause.
     /// The last entry is the innermost active loop context.
-    loop_else_stack: Vec<bool>,
+    pub(crate) loop_else_stack: Vec<bool>,
     /// Set of variable names that are mutated in the current function body
-    mutated_vars: HashSet<String>,
+    pub(crate) mutated_vars: HashSet<String>,
     /// Set of class names that have Display impl (via __str__ or error type)
-    display_classes: HashSet<String>,
+    pub(crate) display_classes: HashSet<String>,
     /// Map from child class name -> (parent class name, set of parent field names)
-    parent_fields: HashMap<String, (String, HashSet<String>)>,
+    pub(crate) parent_fields: HashMap<String, (String, HashSet<String>)>,
     /// The class currently being emitted (for field access resolution)
-    current_class_name: Option<String>,
+    pub(crate) current_class_name: Option<String>,
     /// Set of stdlib/intrinsic modules used (for Cargo dependency injection)
     pub used_stdlib_modules: HashSet<String>,
     /// Set of intrinsic function names (for codegen dispatch)
-    intrinsic_functions: HashSet<String>,
+    pub(crate) intrinsic_functions: HashSet<String>,
     /// Crates requested by intrinsic registry lowering.
-    intrinsic_registry_crates: HashSet<String>,
+    pub(crate) intrinsic_registry_crates: HashSet<String>,
     /// Set of (`class_name`, `field_name`) pairs that are self-referential and need Box<T>
-    recursive_fields: HashSet<(String, String)>,
+    pub(crate) recursive_fields: HashSet<(String, String)>,
     /// Map of (`class_name`, `field_name`) -> concrete Rust type used for recursive field storage.
-    recursive_field_rust_types: HashMap<(String, String), String>,
+    pub(crate) recursive_field_rust_types: HashMap<(String, String), String>,
     /// Map from class name -> ordered list of field names (for constructor arg mapping)
-    class_field_order: HashMap<String, Vec<String>>,
+    pub(crate) class_field_order: HashMap<String, Vec<String>>,
     /// Map of (`class_name`, `field_name`) -> field type for method receiver recovery.
-    class_field_types: HashMap<(String, String), Type>,
+    pub(crate) class_field_types: HashMap<(String, String), Type>,
     /// Map from nested function name -> list of captured variable (name, type) pairs
     /// Used to pass extra args at call sites for recursive+capturing nested functions
-    nested_fn_captures: HashMap<String, Vec<NestedFnCapture>>,
+    pub(crate) nested_fn_captures: HashMap<String, Vec<NestedFnCapture>>,
     /// Map from module-level constant name -> (type, `rust_name`)
     /// For primitives: `rust_name` is the UPPERCASE const name
     /// For strings/complex: `rust_name` is __`const_name()` function call
-    module_constants: HashMap<String, (Type, String)>,
+    pub(crate) module_constants: HashMap<String, (Type, String)>,
     /// Set of class names that have generic type parameters
-    generic_classes: HashSet<String>,
+    pub(crate) generic_classes: HashSet<String>,
     /// Map of generic class name -> list of type parameter names (e.g., `Counter` -> `T`)
-    generic_class_params: HashMap<String, Vec<String>>,
+    pub(crate) generic_class_params: HashMap<String, Vec<String>>,
     /// Map of generic class name -> original HIR class template.
-    generic_class_templates: HashMap<String, sifr_hir::HirClass>,
+    pub(crate) generic_class_templates: HashMap<String, sifr_hir::HirClass>,
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
-    borrowed_params: HashSet<String>,
+    pub(crate) borrowed_params: HashSet<String>,
     /// Set of parameter names that are mutably borrowed (&mut T) in the current function.
     /// Used to avoid double-borrowing: when a &mut param is passed to another &mut param,
     /// we must NOT emit `&mut name` (it's already &mut T); just pass `name` directly.
-    mut_borrowed_params: HashSet<String>,
+    pub(crate) mut_borrowed_params: HashSet<String>,
     /// Map of `module_name` -> set of names that are intrinsic re-exports (from _sifr.*)
     /// Used to distinguish intrinsic function calls from pure Sifr function calls
-    stdlib_intrinsic_names: HashMap<String, HashSet<String>>,
+    pub(crate) stdlib_intrinsic_names: HashMap<String, HashSet<String>>,
     /// Set of function names that are generators (contain yield statements)
     /// Used to emit .`collect()` when assigning generator results to list[T]
-    generator_functions: HashSet<String>,
+    pub(crate) generator_functions: HashSet<String>,
     /// Map of `module_name` -> set of imported names (for filtering preamble to only used functions)
-    imported_stdlib_names: HashMap<String, HashSet<String>>,
+    pub(crate) imported_stdlib_names: HashMap<String, HashSet<String>>,
     /// Number of upcoming `self.field` reads that should suppress auto-clone.
     /// This avoids temporal coupling from a sticky bool flag.
-    pending_self_field_clone_suppression: usize,
+    pub(crate) pending_self_field_clone_suppression: usize,
     /// Whether we're inside a generator closure (yield -> return Some(val))
-    emission_ctx: EmissionContext,
+    pub(crate) emission_ctx: EmissionContext,
     /// Whether we're inside a `Display::fmt` implementation (for __str__ methods)
     /// Return statements in this context become write!(f, "{}", val) + return Ok(())
     /// Counter for generating unique try-block error enum names
-    try_enum_counter: usize,
+    pub(crate) try_enum_counter: usize,
     /// Depth of try-block closures that capture return statements.
-    try_closure_depth: usize,
+    pub(crate) try_closure_depth: usize,
     /// Per-try closure return wrapping mode (true => wrap return payload in Some(...)).
-    try_closure_option_wrap: Vec<bool>,
+    pub(crate) try_closure_option_wrap: Vec<bool>,
     /// Per-try closure target error type for `?` adaptation.
-    try_closure_error_type: Vec<String>,
+    pub(crate) try_closure_error_type: Vec<String>,
     /// Map from variable name -> Callable parameter (type, convention) list.
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
-    callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
+    pub(crate) callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
     /// Map from local binding name -> declared type for the active function-like scope.
     /// Used to preserve assignment coercions that depend on the target local type.
-    local_binding_types: HashMap<String, Type>,
+    pub(crate) local_binding_types: HashMap<String, Type>,
     /// Local names widened to `T | None` due `name = None` reassignment in current scope.
-    none_widened_local_bindings: HashSet<String>,
+    pub(crate) none_widened_local_bindings: HashSet<String>,
     /// Local names whose generated Rust binding has been promoted from legacy `i64` to `SifrInt`.
-    sifr_int_local_bindings: RefCell<HashSet<String>>,
+    pub(crate) sifr_int_local_bindings: RefCell<HashSet<String>>,
     /// Local names pre-promoted to `SifrInt` because a later assignment needs exact-int storage.
-    sifr_int_forced_local_bindings: RefCell<HashSet<String>>,
+    pub(crate) sifr_int_forced_local_bindings: RefCell<HashSet<String>>,
     /// Local names whose generated Rust `Result[int, E]` binding payload is `SifrInt`.
-    sifr_int_result_local_bindings: RefCell<HashSet<String>>,
+    pub(crate) sifr_int_result_local_bindings: RefCell<HashSet<String>>,
     /// Function names whose generated Rust return type has been promoted from legacy `i64` to `SifrInt`.
-    sifr_int_function_returns: RefCell<HashSet<String>>,
+    pub(crate) sifr_int_function_returns: RefCell<HashSet<String>>,
     /// Function names whose `Result[int, E]` generated Rust return payload is `SifrInt`.
-    sifr_int_result_function_returns: RefCell<HashSet<String>>,
+    pub(crate) sifr_int_result_function_returns: RefCell<HashSet<String>>,
     /// Class method keys whose `Result[int, E]` generated Rust return payload is `SifrInt`.
-    sifr_int_result_method_returns: RefCell<HashSet<String>>,
+    pub(crate) sifr_int_result_method_returns: RefCell<HashSet<String>>,
     /// Module-level function `int` parameters promoted from legacy `i64` to `SifrInt`.
-    sifr_int_function_params: RefCell<HashMap<String, HashSet<usize>>>,
+    pub(crate) sifr_int_function_params: RefCell<HashMap<String, HashSet<usize>>>,
     /// Module-level function `Result[int, E]` parameters promoted from legacy `i64` payloads to `SifrInt`.
-    sifr_int_result_function_params: RefCell<HashMap<String, HashSet<usize>>>,
+    pub(crate) sifr_int_result_function_params: RefCell<HashMap<String, HashSet<usize>>>,
     /// Class method `Result[int, E]` parameters promoted from legacy `i64` payloads to `SifrInt`.
-    sifr_int_result_method_params: RefCell<HashMap<String, HashSet<usize>>>,
+    pub(crate) sifr_int_result_method_params: RefCell<HashMap<String, HashSet<usize>>>,
     /// Whether the active function-like body returns `SifrInt` for source-level `int`.
-    current_sifr_int_return: Cell<bool>,
+    pub(crate) current_sifr_int_return: Cell<bool>,
     /// Whether the active function-like body returns `Result<SifrInt, E>` for source-level `Result[int, E]`.
-    current_sifr_int_result_return: Cell<bool>,
+    pub(crate) current_sifr_int_result_return: Cell<bool>,
     /// Stack used to capture structured statement emission as IR nodes.
-    stmt_capture_stack: Vec<Vec<RustStmt>>,
+    pub(crate) stmt_capture_stack: Vec<Vec<RustStmt>>,
     /// Recursion guard for non-structured emitter paths.
-    lowering_stats: LoweringStats,
+    pub(crate) lowering_stats: LoweringStats,
 }
 
 #[derive(Default)]
-struct CollectionNeeds {
-    needs_hashmap: bool,
-    needs_hashset: bool,
-    needs_vecdeque: bool,
+pub(crate) struct CollectionNeeds {
+    pub(crate) needs_hashmap: bool,
+    pub(crate) needs_hashset: bool,
+    pub(crate) needs_vecdeque: bool,
 }
 
 #[derive(Default)]
-struct RuntimeNeeds {
-    flags: HashSet<RuntimeNeed>,
+pub(crate) struct RuntimeNeeds {
+    pub(crate) flags: HashSet<RuntimeNeed>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum RuntimeNeed {
+pub(crate) enum RuntimeNeed {
     FileHandles,
     LoggingState,
     RandomModuleState,
@@ -141,39 +149,39 @@ enum RuntimeNeed {
 }
 
 impl RuntimeNeeds {
-    fn require(&mut self, need: RuntimeNeed) {
+    pub(crate) fn require(&mut self, need: RuntimeNeed) {
         self.flags.insert(need);
     }
 
-    fn contains(&self, need: RuntimeNeed) -> bool {
+    pub(crate) fn contains(&self, need: RuntimeNeed) -> bool {
         self.flags.contains(&need)
     }
 
-    fn file_handles(&self) -> bool {
+    pub(crate) fn file_handles(&self) -> bool {
         self.contains(RuntimeNeed::FileHandles)
     }
 
-    fn logging_state(&self) -> bool {
+    pub(crate) fn logging_state(&self) -> bool {
         self.contains(RuntimeNeed::LoggingState)
     }
 
-    fn random_module_state(&self) -> bool {
+    pub(crate) fn random_module_state(&self) -> bool {
         self.contains(RuntimeNeed::RandomModuleState)
     }
 
-    fn bigint(&self) -> bool {
+    pub(crate) fn bigint(&self) -> bool {
         self.contains(RuntimeNeed::BigInt)
     }
 }
 
 #[derive(Default)]
-struct EmissionContext {
-    in_generator_closure: bool,
-    in_display_impl: bool,
+pub(crate) struct EmissionContext {
+    pub(crate) in_generator_closure: bool,
+    pub(crate) in_display_impl: bool,
 }
 
 impl RustEmitter {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             collection_needs: CollectionNeeds::default(),
             runtime_needs: RuntimeNeeds::default(),
@@ -240,7 +248,10 @@ impl RustEmitter {
         self.stmt_capture_stack.pop().unwrap_or_default()
     }
 
-    fn collect_recursive_nested_fn_captures(&self, func: &HirFunction) -> Vec<NestedFnCapture> {
+    pub(crate) fn collect_recursive_nested_fn_captures(
+        &self,
+        func: &HirFunction,
+    ) -> Vec<NestedFnCapture> {
         if !crate::hir_analysis::queries::body_calls_function(&func.body, &func.name) {
             return Vec::new();
         }
@@ -276,7 +287,7 @@ impl RustEmitter {
         captures
     }
 
-    fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
+    pub(crate) fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
         // Pre-scan: detect bigint usage
         if module_uses_bigint(module) {
             self.runtime_needs.require(RuntimeNeed::BigInt);
@@ -711,7 +722,7 @@ impl RustEmitter {
         }
         Ok(false)
     }
-    fn emit_stmt(&mut self, stmt: &HirStmt) {
+    pub(crate) fn emit_stmt(&mut self, stmt: &HirStmt) {
         self.lowering_stats.stmt_total += 1;
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;

@@ -1,5 +1,6 @@
+use super::*;
 #[test]
-fn test_callable_variable_call_errors_have_codes() {
+pub(super) fn test_callable_variable_call_errors_have_codes() {
     let arity_source = "def apply(f: Callable[[int], int]) -> int:\n    return f()\n";
     let arity_result = lower_source(arity_source);
     assert!(arity_result.is_err());
@@ -22,7 +23,7 @@ fn test_callable_variable_call_errors_have_codes() {
 }
 
 #[test]
-fn test_iter_keyword_has_call_code() {
+pub(super) fn test_iter_keyword_has_call_code() {
     let source = "def main():\n    values: list[int] = [1, 2, 3]\n    _it = iter(source=values)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -35,7 +36,7 @@ fn test_iter_keyword_has_call_code() {
 }
 
 #[test]
-fn test_iter_wrong_arg_count_has_call_code() {
+pub(super) fn test_iter_wrong_arg_count_has_call_code() {
     let source = "def main():\n    values: list[int] = [1, 2, 3]\n    _it = iter(values, values)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -49,7 +50,7 @@ fn test_iter_wrong_arg_count_has_call_code() {
 }
 
 #[test]
-fn test_iter_non_iterable_has_type_code() {
+pub(super) fn test_iter_non_iterable_has_type_code() {
     let source = "def main():\n    _it = iter(1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -62,7 +63,7 @@ fn test_iter_non_iterable_has_type_code() {
 }
 
 #[test]
-fn test_next_non_iterator_has_type_code() {
+pub(super) fn test_next_non_iterator_has_type_code() {
     let source = "def main():\n    values: list[int] = [1, 2, 3]\n    next(values)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -75,7 +76,7 @@ fn test_next_non_iterator_has_type_code() {
 }
 
 #[test]
-fn test_pow_wrong_arg_count_has_call_code() {
+pub(super) fn test_pow_wrong_arg_count_has_call_code() {
     let source = "def main():\n    value: int = pow(2)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -88,7 +89,7 @@ fn test_pow_wrong_arg_count_has_call_code() {
 }
 
 #[test]
-fn test_scalar_builtin_wrong_arg_counts_have_call_code() {
+pub(super) fn test_scalar_builtin_wrong_arg_counts_have_call_code() {
     let cases = [
         ("abs", "abs()", "abs() takes exactly 1 argument, got 0"),
         ("hash", "hash()", "hash() takes exactly 1 argument, got 0"),
@@ -126,7 +127,7 @@ fn test_scalar_builtin_wrong_arg_counts_have_call_code() {
 }
 
 #[test]
-fn test_scalar_builtin_keywords_have_call_code() {
+pub(super) fn test_scalar_builtin_keywords_have_call_code() {
     let callables = [
         "abs", "hash", "round", "repr", "int", "bigint", "float", "bool",
     ];
@@ -153,7 +154,7 @@ fn test_scalar_builtin_keywords_have_call_code() {
 }
 
 #[test]
-fn test_scalar_builtin_type_mismatches_have_type_code() {
+pub(super) fn test_scalar_builtin_type_mismatches_have_type_code() {
     let cases = [
         (
             "abs",
@@ -197,7 +198,7 @@ fn test_scalar_builtin_type_mismatches_have_type_code() {
 }
 
 #[test]
-fn test_abs_fixed_width_builtin_widens_to_int() {
+pub(super) fn test_abs_fixed_width_builtin_widens_to_int() {
     let module =
         lower_source("def main():\n    value: int8 = -128\n    widened: int = abs(value)\n")
             .expect("fixed-width abs should widen to int");
@@ -213,7 +214,7 @@ fn test_abs_fixed_width_builtin_widens_to_int() {
 }
 
 #[test]
-fn test_hash_unhashable_argument_has_proto_code() {
+pub(super) fn test_hash_unhashable_argument_has_proto_code() {
     let result = lower_source(
         "class Measurement:\n    value: float\n\n    def __init__(self, value: float):\n        self.value = value\n\ndef main():\n    m: Measurement = Measurement(3.14)\n    print(hash(m))\n",
     );
@@ -226,7 +227,7 @@ fn test_hash_unhashable_argument_has_proto_code() {
 }
 
 #[test]
-fn test_function_wrong_arg_count_has_call_code() {
+pub(super) fn test_function_wrong_arg_count_has_call_code() {
     let source =
         "def takes_one(x: int) -> int:\n    return x\n\ndef main():\n    print(takes_one(1, 2))\n";
     let result = lower_source(source);
@@ -240,7 +241,7 @@ fn test_function_wrong_arg_count_has_call_code() {
 }
 
 #[test]
-fn test_missing_required_argument_has_call_code() {
+pub(super) fn test_missing_required_argument_has_call_code() {
     let source = "def display(name: str, *, verbose: bool) -> str:\n    if verbose:\n        return \"verbose\"\n    return \"quiet\"\n\ndef main():\n    print(display(\"Alice\"))\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -253,7 +254,7 @@ fn test_missing_required_argument_has_call_code() {
 }
 
 #[test]
-fn test_defaultdict_accepts_counter_initial_mapping() {
+pub(super) fn test_defaultdict_accepts_counter_initial_mapping() {
     let result = lower_source(
         "class Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",
     );
@@ -265,7 +266,7 @@ fn test_defaultdict_accepts_counter_initial_mapping() {
 }
 
 #[test]
-fn test_defaultdict_subscript_read_is_non_optional_value_type() {
+pub(super) fn test_defaultdict_subscript_read_is_non_optional_value_type() {
     let result = lower_source(
         "def main() -> int:\n    counts = defaultdict(int)\n    counts[1] += 1\n    value: int = counts[2]\n    return value\n",
     );
@@ -276,7 +277,7 @@ fn test_defaultdict_subscript_read_is_non_optional_value_type() {
 }
 
 #[test]
-fn test_defaultdict_membership_checks_lower() {
+pub(super) fn test_defaultdict_membership_checks_lower() {
     let result = lower_source(
         "def main() -> bool:\n    groups = defaultdict(list)\n    groups[\"a\"].append(1)\n    return \"a\" in groups and \"b\" not in groups\n",
     );
@@ -288,14 +289,14 @@ fn test_defaultdict_membership_checks_lower() {
 }
 
 #[test]
-fn test_range_membership_checks_lower() {
+pub(super) fn test_range_membership_checks_lower() {
     let result =
         lower_source("def main() -> bool:\n    return (2 in range(5)) and (9 not in range(5))\n");
     assert!(result.is_ok(), "{result:?}");
 }
 
 #[test]
-fn test_imported_counter_iterable_constructor_remains_unsupported() {
+pub(super) fn test_imported_counter_iterable_constructor_remains_unsupported() {
     let result = lower_source(
         "from sifr.collections import Counter\n\ndef main():\n    c: Counter[str] = Counter([\"a\", \"b\", \"a\"])\n",
     );
@@ -306,7 +307,7 @@ fn test_imported_counter_iterable_constructor_remains_unsupported() {
 }
 
 #[test]
-fn test_constructor_assigned_fields_infer_class_instance_types() {
+pub(super) fn test_constructor_assigned_fields_infer_class_instance_types() {
     let result = lower_source(
         "class Node:\n    def __init__(self):\n        self.marked = False\n\nclass Trie:\n    def __init__(self):\n        self.root = Node()\n\n    def is_marked(self) -> bool:\n        return self.root.marked\n\ndef main() -> bool:\n    trie = Trie()\n    return trie.is_marked()\n",
     );
@@ -317,7 +318,7 @@ fn test_constructor_assigned_fields_infer_class_instance_types() {
 }
 
 #[test]
-fn test_constructor_branch_assignments_register_all_fields() {
+pub(super) fn test_constructor_branch_assignments_register_all_fields() {
     let module = lower_source(
         "class Pair:\n    def __init__(self, flag: bool):\n        if flag:\n            self.left = 1\n        else:\n            self.right = 2\n",
     )
@@ -332,7 +333,7 @@ fn test_constructor_branch_assignments_register_all_fields() {
 }
 
 #[test]
-fn test_attribute_subscript_augassign_lowers_for_class_fields() {
+pub(super) fn test_attribute_subscript_augassign_lowers_for_class_fields() {
     let result = lower_source(
         "class Counter:\n    def __init__(self):\n        self.counts = {}\n\n    def bump(self, key: int) -> None:\n        if key not in self.counts:\n            self.counts[key] = 0\n        self.counts[key] += 1\n\ndef main() -> None:\n    c = Counter()\n    c.bump(1)\n",
     );
@@ -359,7 +360,7 @@ fn test_attribute_subscript_augassign_lowers_for_class_fields() {
 }
 
 #[test]
-fn test_nested_subscript_augassign_lowers_for_name_targets() {
+pub(super) fn test_nested_subscript_augassign_lowers_for_name_targets() {
     let result =
         lower_source("def bump(mut grid: list[list[int]]) -> None:\n    grid[0][0] += 1\n");
     assert!(
@@ -385,7 +386,7 @@ fn test_nested_subscript_augassign_lowers_for_name_targets() {
 }
 
 #[test]
-fn test_matrix_augassign_has_unsupported_operator_code() {
+pub(super) fn test_matrix_augassign_has_unsupported_operator_code() {
     let source = "def bad(mut value: int) -> None:\n    value @= 1\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected matrix augassign unsupported operator error");
@@ -402,7 +403,7 @@ fn test_matrix_augassign_has_unsupported_operator_code() {
 }
 
 #[test]
-fn test_matrix_binop_has_unsupported_operator_code() {
+pub(super) fn test_matrix_binop_has_unsupported_operator_code() {
     let source = "def main():\n    x: int = 1 @ 2\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected matrix binop unsupported operator error");
@@ -418,7 +419,7 @@ fn test_matrix_binop_has_unsupported_operator_code() {
 }
 
 #[test]
-fn test_unsupported_expression_form_has_type_code() {
+pub(super) fn test_unsupported_expression_form_has_type_code() {
     let source = "def main():\n    x = (yield 1)\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected unsupported expression form error");
@@ -433,7 +434,7 @@ fn test_unsupported_expression_form_has_type_code() {
 }
 
 #[test]
-fn test_in_operator_non_collection_has_unsupported_operator_code() {
+pub(super) fn test_in_operator_non_collection_has_unsupported_operator_code() {
     let source = "def main() -> bool:\n    return 1 in 2\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected unsupported in operator error");
@@ -449,7 +450,7 @@ fn test_in_operator_non_collection_has_unsupported_operator_code() {
 }
 
 #[test]
-fn test_dict_unpacking_has_type_code() {
+pub(super) fn test_dict_unpacking_has_type_code() {
     let source = "def main():\n    other: dict[str, int] = {}\n    merged = {\"a\": 1, **other}\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected dict unpacking error");
@@ -461,7 +462,7 @@ fn test_dict_unpacking_has_type_code() {
 }
 
 #[test]
-fn test_tuple_slice_errors_have_type_codes() {
+pub(super) fn test_tuple_slice_errors_have_type_codes() {
     let out_of_range_source =
         "def main():\n    pair: tuple[int, str] = (1, \"x\")\n    _bad = pair[0:3]\n";
     let out_of_range_result = lower_source(out_of_range_source);
@@ -486,7 +487,7 @@ fn test_tuple_slice_errors_have_type_codes() {
 }
 
 #[test]
-fn test_unsupported_slice_receiver_has_type_code() {
+pub(super) fn test_unsupported_slice_receiver_has_type_code() {
     let source = "def main():\n    value: int = 1\n    _bad = value[0:1]\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected unsupported slice receiver error");
@@ -498,7 +499,7 @@ fn test_unsupported_slice_receiver_has_type_code() {
 }
 
 #[test]
-fn test_augassign_complex_targets_have_type_codes() {
+pub(super) fn test_augassign_complex_targets_have_type_codes() {
     let cases = [
         (
             "attribute receiver",
@@ -548,7 +549,7 @@ fn test_augassign_complex_targets_have_type_codes() {
 }
 
 #[test]
-fn test_bytes_subscript_assignment_has_ownership_code() {
+pub(super) fn test_bytes_subscript_assignment_has_ownership_code() {
     let source = "def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] = 65\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected bytes subscript assignment error");
@@ -563,7 +564,7 @@ fn test_bytes_subscript_assignment_has_ownership_code() {
 }
 
 #[test]
-fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
+pub(super) fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
     let source = "def main() -> None:\n    payload: bytes = b\"abc\"\n    payload[0] += 1\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected bytes augmented subscript assignment error");
@@ -579,7 +580,7 @@ fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
 }
 
 #[test]
-fn test_bytes_index_and_iteration_expose_uint8() {
+pub(super) fn test_bytes_index_and_iteration_expose_uint8() {
     let source =
         "def main() -> None:\n    payload: bytes = b\"abc\"\n    first = payload[0]\n    for value in payload:\n        seen: uint8 = value\n";
     let module = lower_source(source).expect("bytes uint8 lowering should succeed");
@@ -612,7 +613,7 @@ fn test_bytes_index_and_iteration_expose_uint8() {
 }
 
 #[test]
-fn test_bytes_codec_type_errors_have_structured_codes() {
+pub(super) fn test_bytes_codec_type_errors_have_structured_codes() {
     let encode_source = "def main() -> None:\n    _bad: bytes = \"abc\".encode(1)\n";
     let encode_result = lower_source(encode_source);
     let encode_errors = encode_result.expect_err("expected str.encode codec type error");
@@ -639,7 +640,7 @@ fn test_bytes_codec_type_errors_have_structured_codes() {
 }
 
 #[test]
-fn test_decimal_method_surface_errors_have_structured_codes() {
+pub(super) fn test_decimal_method_surface_errors_have_structured_codes() {
     let arity_source =
         "def main() -> None:\n    d: decimal = Decimal(\"1.25\")\n    _bad: decimal = d.sqrt(1)\n";
     let arity_result = lower_source(arity_source);
@@ -665,7 +666,7 @@ fn test_decimal_method_surface_errors_have_structured_codes() {
 }
 
 #[test]
-fn test_list_subscript_augassign_type_error_keeps_code() {
+pub(super) fn test_list_subscript_augassign_type_error_keeps_code() {
     let source = "def bad(mut xs: list[int]) -> None:\n    xs[0] += \"x\"\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected list subscript augassign type error");
@@ -681,7 +682,7 @@ fn test_list_subscript_augassign_type_error_keeps_code() {
 }
 
 #[test]
-fn test_dict_subscript_augassign_type_error_keeps_code() {
+pub(super) fn test_dict_subscript_augassign_type_error_keeps_code() {
     let source =
         "def bad(mut data: dict[str, int]) -> None:\n    data[\"x\"] = 1\n    data[\"x\"] += \"x\"\n";
     let result = lower_source(source);
@@ -698,7 +699,7 @@ fn test_dict_subscript_augassign_type_error_keeps_code() {
 }
 
 #[test]
-fn test_list_subscript_assignment_index_error_has_type_code() {
+pub(super) fn test_list_subscript_assignment_index_error_has_type_code() {
     let source = "def bad(mut xs: list[int]) -> None:\n    xs[\"0\"] = 1\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected list subscript assignment index error");
@@ -714,7 +715,7 @@ fn test_list_subscript_assignment_index_error_has_type_code() {
 }
 
 #[test]
-fn test_list_subscript_assignment_value_error_has_type_code() {
+pub(super) fn test_list_subscript_assignment_value_error_has_type_code() {
     let source = "def bad(mut xs: list[int]) -> None:\n    xs[0] = \"x\"\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected list subscript assignment value error");
@@ -731,7 +732,7 @@ fn test_list_subscript_assignment_value_error_has_type_code() {
 }
 
 #[test]
-fn test_unsupported_subscript_assignment_has_type_code() {
+pub(super) fn test_unsupported_subscript_assignment_has_type_code() {
     let source = "def bad(mut value: int) -> None:\n    value[0] = 1\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected unsupported subscript assignment error");
@@ -747,7 +748,7 @@ fn test_unsupported_subscript_assignment_has_type_code() {
 }
 
 #[test]
-fn test_unsupported_subscript_augassign_has_type_code() {
+pub(super) fn test_unsupported_subscript_augassign_has_type_code() {
     let source = "def bad(mut value: int) -> None:\n    value[0] += 1\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected unsupported subscript augassign error");
@@ -764,7 +765,7 @@ fn test_unsupported_subscript_augassign_has_type_code() {
 }
 
 #[test]
-fn test_tuple_index_out_of_range_has_type_code() {
+pub(super) fn test_tuple_index_out_of_range_has_type_code() {
     let source = "def main():\n    pair: tuple[int, str] = (1, \"x\")\n    value: int = pair[2]\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected tuple index error");
@@ -780,7 +781,7 @@ fn test_tuple_index_out_of_range_has_type_code() {
 }
 
 #[test]
-fn test_invalid_subscript_receiver_has_type_code() {
+pub(super) fn test_invalid_subscript_receiver_has_type_code() {
     let source = "def main():\n    value: int = 1\n    bad: int = value[0]\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected invalid subscript receiver error");
@@ -794,7 +795,7 @@ fn test_invalid_subscript_receiver_has_type_code() {
 }
 
 #[test]
-fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
+pub(super) fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
     let result = lower_source(
         "class ListNode:\n    next: ListNode | None\n\n    def __init__(self):\n        self.next = None\n\nclass Wrapper:\n    head: ListNode\n\n    def __init__(self):\n        self.head = ListNode()\n        self.head.next = ListNode()\n",
     );
@@ -806,7 +807,7 @@ fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
 }
 
 #[test]
-fn test_nested_attribute_assignment_lowers_for_optional_field_base() {
+pub(super) fn test_nested_attribute_assignment_lowers_for_optional_field_base() {
     let result = lower_source(
         "class ListNode:\n    next: ListNode | None\n    prev: ListNode | None\n\n    def __init__(self):\n        self.next = None\n        self.prev = None\n\ndef relink(mut node: ListNode) -> None:\n    if node.prev is not None:\n        node.prev.next = node.next\n",
     );
@@ -816,4 +817,3 @@ fn test_nested_attribute_assignment_lowers_for_optional_field_base() {
         result.err()
     );
 }
-

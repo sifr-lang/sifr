@@ -1,26 +1,23 @@
-use crate::hir_nodes::{
-    HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
-    HirTupleTargetBinding, MethodKind,
-};
+use super::str;
+use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt, StmtClassDef};
-use sifr_type_system::{FunctionType, ParamConvention, Type};
+use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
 use super::async_await::coroutine_result_type;
 use super::class_field_inference::collect_constructor_self_field_assignments;
 use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
-    is_error_class, is_operator_dunder, is_protocol_class,
+    is_error_class, is_protocol_class,
 };
 use super::protocol_diagnostics;
 use super::simple_expr::lower_expr_simple;
-use super::statements::lower_stmts;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{parse_typevar_bound_expr, LowerCtx};
 
-fn class_method_signature<'a>(
+pub(super) fn class_method_signature<'a>(
     methods: &'a [(String, FunctionType)],
     method_name: &str,
 ) -> Option<&'a FunctionType> {
@@ -35,7 +32,10 @@ fn class_method_signature<'a>(
     )
 }
 
-fn method_signature_return_type(func: &sifr_python_ast::StmtFunctionDef, return_ty: Type) -> Type {
+pub(super) fn method_signature_return_type(
+    func: &sifr_python_ast::StmtFunctionDef,
+    return_ty: Type,
+) -> Type {
     if func.is_async {
         coroutine_result_type(&return_ty)
     } else {
@@ -43,7 +43,7 @@ fn method_signature_return_type(func: &sifr_python_ast::StmtFunctionDef, return_
     }
 }
 
-fn option_member_type(ty: &Type) -> Option<Type> {
+pub(super) fn option_member_type(ty: &Type) -> Option<Type> {
     let Type::Union(members) = ty.resolve_alias() else {
         return None;
     };
@@ -62,7 +62,7 @@ fn option_member_type(ty: &Type) -> Option<Type> {
     }
 }
 
-fn missing_method_param_annotation(
+pub(super) fn missing_method_param_annotation(
     ctx: &mut LowerCtx,
     class_name: &str,
     method_name: &str,
@@ -78,7 +78,12 @@ fn missing_method_param_annotation(
     );
 }
 
-fn invalid_class_base(ctx: &mut LowerCtx, class_name: &str, reason: &str, range: TextRange) {
+pub(super) fn invalid_class_base(
+    ctx: &mut LowerCtx,
+    class_name: &str,
+    reason: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::CLASS_INVALID_BASE,
         format!("invalid base class for '{class_name}': {reason}"),
@@ -86,7 +91,7 @@ fn invalid_class_base(ctx: &mut LowerCtx, class_name: &str, reason: &str, range:
     );
 }
 
-fn unsupported_class_declaration(
+pub(super) fn unsupported_class_declaration(
     ctx: &mut LowerCtx,
     class_name: &str,
     detail: &str,
@@ -99,7 +104,7 @@ fn unsupported_class_declaration(
     );
 }
 
-fn parent_class_range(class_def: &StmtClassDef, parent_name: &str) -> TextRange {
+pub(super) fn parent_class_range(class_def: &StmtClassDef, parent_name: &str) -> TextRange {
     class_def
         .bases()
         .iter()
@@ -110,7 +115,10 @@ fn parent_class_range(class_def: &StmtClassDef, parent_name: &str) -> TextRange 
         .unwrap_or_else(|| class_def.name.range())
 }
 
-fn class_next_element_type(class_name: &str, methods: &[(String, FunctionType)]) -> Option<Type> {
+pub(super) fn class_next_element_type(
+    class_name: &str,
+    methods: &[(String, FunctionType)],
+) -> Option<Type> {
     let next_ft = class_method_signature(methods, "__next__")?;
     if !next_ft.params.is_empty() {
         return None;
@@ -122,7 +130,10 @@ fn class_next_element_type(class_name: &str, methods: &[(String, FunctionType)])
     Some(elem)
 }
 
-fn class_iter_element_type(class_name: &str, methods: &[(String, FunctionType)]) -> Option<Type> {
+pub(super) fn class_iter_element_type(
+    class_name: &str,
+    methods: &[(String, FunctionType)],
+) -> Option<Type> {
     let iter_ft = class_method_signature(methods, "__iter__")?;
     if !iter_ft.params.is_empty() {
         return None;
@@ -136,7 +147,7 @@ fn class_iter_element_type(class_name: &str, methods: &[(String, FunctionType)])
     }
 }
 
-fn class_reversed_element_type(
+pub(super) fn class_reversed_element_type(
     class_name: &str,
     methods: &[(String, FunctionType)],
 ) -> Option<Type> {
@@ -153,7 +164,7 @@ fn class_reversed_element_type(
     }
 }
 
-fn validate_iteration_protocol_methods(
+pub(super) fn validate_iteration_protocol_methods(
     class_name: &str,
     methods: &[(String, FunctionType)],
     method_ranges: &HashMap<String, ruff_text_size::TextRange>,
@@ -251,7 +262,7 @@ fn validate_iteration_protocol_methods(
     }
 }
 
-pub(super) fn collect_class_type(
+pub(in crate::lower) fn collect_class_type(
     class_def: &StmtClassDef,
     ctx: &mut LowerCtx,
     validate_iteration_protocols: bool,
@@ -755,4 +766,3 @@ pub(super) fn collect_class_type(
 
     ctx.class_types.insert(class_name, class_ty);
 }
-

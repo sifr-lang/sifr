@@ -18,23 +18,43 @@ use sifr_hir::{
 use sifr_type_system::{FunctionType, Type};
 use std::collections::{HashMap, HashSet};
 
-include!("lower_stmt/candidate_and_validation.rs");
-include!("lower_stmt/simple_dispatch_and_bindings.rs");
-include!("lower_stmt/try_tuple_flow.rs");
-include!("lower_stmt/with_yield_and_match.rs");
-include!("lower_stmt/loop_lowering.rs");
-include!("lower_stmt/condition_lowering.rs");
-include!("lower_stmt/subscript_return_assignment.rs");
+mod candidate_and_validation;
+pub use candidate_and_validation::*;
+mod simple_dispatch_and_bindings;
+pub(crate) use simple_dispatch_and_bindings::*;
+mod try_tuple_flow;
+pub(crate) use try_tuple_flow::*;
+mod with_yield_and_match;
+use with_yield_and_match::{
+    try_lower_loop_else_stmts, try_lower_simple_async_with_stmt, try_lower_simple_match_stmt,
+    try_lower_simple_with_stmt, try_lower_simple_yield_stmt,
+};
+mod loop_lowering;
+use loop_lowering::{try_lower_simple_for_stmt, try_lower_simple_while_stmt, SimpleForStmtParts};
+mod condition_lowering;
+use condition_lowering::{
+    is_alias_equivalent_type, is_none_type, is_okwrap_none_expr, is_option_like_type,
+    resolve_alias_type, try_lower_attribute_dict_insert_key_expr, try_lower_leaf_or_name_expr,
+    try_lower_name_ident_expr, try_lower_simple_condition_test_expr, try_lower_simple_if_stmt,
+};
+mod subscript_return_assignment;
+pub(crate) use subscript_return_assignment::*;
 
 #[cfg(test)]
-mod tests {
-    include!("lower_stmt/core_and_tuple_tests.rs");
-    include!("lower_stmt/subscript_assignment_tests.rs");
-    include!("lower_stmt/subscript_augassign_tests.rs");
-    include!("lower_stmt/binding_and_augassign_tests.rs");
-    include!("lower_stmt/augassign_edge_tests.rs");
-    include!("lower_stmt/return_raise_assert_tests.rs");
-    include!("lower_stmt/return_assert_if_tests.rs");
-    include!("lower_stmt/loop_and_context_tests.rs");
-    include!("lower_stmt/match_nested_try_tests.rs");
-}
+mod augassign_edge_tests;
+#[cfg(test)]
+mod binding_and_augassign_tests;
+#[cfg(test)]
+mod core_and_tuple_tests;
+#[cfg(test)]
+mod loop_and_context_tests;
+#[cfg(test)]
+mod match_nested_try_tests;
+#[cfg(test)]
+mod return_assert_if_tests;
+#[cfg(test)]
+mod return_raise_assert_tests;
+#[cfg(test)]
+mod subscript_assignment_tests;
+#[cfg(test)]
+mod subscript_augassign_tests;

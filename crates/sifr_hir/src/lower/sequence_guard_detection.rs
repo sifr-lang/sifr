@@ -7,7 +7,7 @@ use sifr_python_ast::{
 };
 use sifr_type_system::Type;
 
-pub(super) fn detect_while_sequence_guards(
+pub(in crate::lower) fn detect_while_sequence_guards(
     while_stmt: &StmtWhile,
     ctx: &LowerCtx,
 ) -> Vec<SequenceGuard> {
@@ -16,7 +16,10 @@ pub(super) fn detect_while_sequence_guards(
     guards
 }
 
-pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<SequenceGuard> {
+pub(in crate::lower) fn detect_true_sequence_guards(
+    expr: &Expr,
+    ctx: &LowerCtx,
+) -> Vec<SequenceGuard> {
     match expr {
         Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::And) => boolop
             .values
@@ -115,7 +118,10 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
     }
 }
 
-pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<SequenceGuard> {
+pub(in crate::lower) fn detect_false_exit_sequence_guards(
+    expr: &Expr,
+    ctx: &LowerCtx,
+) -> Vec<SequenceGuard> {
     match expr {
         Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::Or) => boolop
             .values
@@ -294,7 +300,7 @@ fn dict_contains_guard(key_expr: &Expr, haystack_expr: &Expr) -> Vec<SequenceGua
     }]
 }
 
-pub(super) fn detect_range_sequence_guards(
+pub(in crate::lower) fn detect_range_sequence_guards(
     for_stmt: &StmtFor,
     target_name: &str,
     ctx: &LowerCtx,

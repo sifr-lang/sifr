@@ -1,5 +1,3 @@
-use crate::union::make_union;
-
 /// Represents a type in the Sifr language.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
@@ -387,4 +385,3 @@ pub enum OwnershipKind {
     /// Value is moved on assignment (str, compound types, classes)
     Move,
 }
-

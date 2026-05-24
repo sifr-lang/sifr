@@ -1,3 +1,4 @@
+use super::{queries, HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type};
 impl RustEmitter {
     pub(crate) fn try_lower_structured_return_stmt(
         &mut self,
@@ -390,7 +391,11 @@ impl RustEmitter {
         Ok(true)
     }
 
-    fn resolve_union_enum_name(&self, preferred: &str, needed_variants: &[String]) -> String {
+    pub(crate) fn resolve_union_enum_name(
+        &self,
+        preferred: &str,
+        needed_variants: &[String],
+    ) -> String {
         if self.union_enums.contains_key(preferred) {
             return preferred.to_string();
         }
@@ -405,5 +410,4 @@ impl RustEmitter {
         }
         preferred.to_string()
     }
-
 }

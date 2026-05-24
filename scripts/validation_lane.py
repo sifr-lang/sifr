@@ -132,7 +132,6 @@ def emit_shell(profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
         else "0",
         "E2E_PROFILE": profile,
         "E2E_FIXTURE_MANIFEST": fixture_manifest_abs,
-        "E2E_MODE": e2e.get("mode", "new"),
         "E2E_SIFR_JOBS": e2e.get("sifr_jobs", 1),
         "E2E_RUST_JOBS": e2e.get("rust_jobs", 1),
         "E2E_RUN_JOBS": e2e.get("run_jobs", 1),

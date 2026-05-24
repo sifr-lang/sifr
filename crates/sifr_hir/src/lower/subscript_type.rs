@@ -27,7 +27,7 @@ fn tuple_members_for_subscript(object_ty: &Type) -> Option<Vec<Type>> {
     }
 }
 
-pub(super) fn resolve_subscript_result_type(
+pub(in crate::lower) fn resolve_subscript_result_type(
     sub: &ExprSubscript,
     object_ty: &Type,
     index: &HirExpr,

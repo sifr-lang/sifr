@@ -1,3 +1,9 @@
+use super::{
+    registry_can_construct_error_from_message, registry_ensure_some_box_inner,
+    registry_is_box_new_ctor, registry_is_some_expr, registry_is_string_like_type,
+    registry_iterable_to_vec_expr, registry_option_inner_type, HirExpr, ParamConvention,
+    RustEmitter, RustExpr, Type,
+};
 impl RustEmitter {
     pub(crate) fn try_lower_registry_plain_call_with_signature(
         &mut self,
@@ -239,7 +245,7 @@ impl RustEmitter {
         candidate
     }
 
-    fn try_build_registry_callable_convention_alignment_expr(
+    pub(crate) fn try_build_registry_callable_convention_alignment_expr(
         &self,
         arg: &HirExpr,
         param_ty: &Type,
@@ -422,7 +428,7 @@ impl RustEmitter {
         Self::clone_moved_names_in_borrowed_aggregate_inner(arg, lowered, false)
     }
 
-    fn clone_moved_names_in_borrowed_aggregate_inner(
+    pub(crate) fn clone_moved_names_in_borrowed_aggregate_inner(
         arg: &HirExpr,
         lowered: crate::RustExpr,
         in_aggregate: bool,
@@ -463,7 +469,7 @@ impl RustEmitter {
         }
     }
 
-    fn arg_is_already_borrowed_for_registry_call(
+    pub(crate) fn arg_is_already_borrowed_for_registry_call(
         &self,
         arg: &HirExpr,
         lowered: &crate::RustExpr,
@@ -480,7 +486,7 @@ impl RustEmitter {
         false
     }
 
-    fn arg_is_already_mut_borrowed_for_registry_call(
+    pub(crate) fn arg_is_already_mut_borrowed_for_registry_call(
         &self,
         arg: &HirExpr,
         lowered: &crate::RustExpr,
@@ -497,7 +503,7 @@ impl RustEmitter {
         false
     }
 
-    fn try_lower_registry_compare_expr(
+    pub(crate) fn try_lower_registry_compare_expr(
         &mut self,
         left: &HirExpr,
         ops: &[String],
@@ -597,7 +603,7 @@ impl RustEmitter {
         chained
     }
 
-    fn registry_detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
+    pub(crate) fn registry_detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
         if let HirExpr::MethodCall {
             object,
             method,
@@ -633,7 +639,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_registry_guarded_option_compare_expr(
+    pub(crate) fn try_lower_registry_guarded_option_compare_expr(
         &mut self,
         expr: &HirExpr,
         guarded_name: &str,
@@ -700,7 +706,7 @@ impl RustEmitter {
         })
     }
 
-    fn try_eval_const_int_expr(expr: &HirExpr) -> Option<i64> {
+    pub(crate) fn try_eval_const_int_expr(expr: &HirExpr) -> Option<i64> {
         match expr {
             HirExpr::IntLiteral(value) => Some(*value),
             HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
@@ -721,14 +727,14 @@ impl RustEmitter {
         }
     }
 
-    fn usize_cast_literal(value: i64) -> crate::RustExpr {
+    pub(crate) fn usize_cast_literal(value: i64) -> crate::RustExpr {
         crate::RustExpr::Cast {
             expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(value))),
             ty: crate::RustType::Named("usize".to_string()),
         }
     }
 
-    fn try_lower_registry_string_slice_expr(
+    pub(crate) fn try_lower_registry_string_slice_expr(
         &mut self,
         object: &HirExpr,
         start: Option<&HirExpr>,

@@ -34,7 +34,10 @@ fn collect_top_level_assigned_names(stmts: &[Stmt]) -> std::collections::HashSet
     names
 }
 
-pub(super) fn predeclare_exhaustive_if_assigned_names(if_stmt: &StmtIf, ctx: &mut LowerCtx) {
+pub(in crate::lower) fn predeclare_exhaustive_if_assigned_names(
+    if_stmt: &StmtIf,
+    ctx: &mut LowerCtx,
+) {
     let else_clause = if_stmt
         .elif_else_clauses
         .iter()
@@ -97,7 +100,7 @@ fn merge_binding_types(types: impl Iterator<Item = Type>) -> Option<Type> {
     }
 }
 
-pub(super) fn seed_exhaustive_if_bindings(
+pub(in crate::lower) fn seed_exhaustive_if_bindings(
     ctx: &mut LowerCtx,
     then_body: &[HirStmt],
     elif_clauses: &[(HirExpr, Vec<HirStmt>)],

@@ -3,7 +3,7 @@ use crate::hir_nodes::HirExpr;
 use sifr_python_ast::{Expr, Number, Operator, UnaryOp};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) enum SequenceGuard {
+pub(in crate::lower) enum SequenceGuard {
     MinLength {
         sequence: String,
         min_len: usize,
@@ -24,7 +24,7 @@ pub(super) enum SequenceGuard {
 }
 
 impl LowerCtx {
-    pub(super) fn add_sequence_guard(&mut self, guard: SequenceGuard) {
+    pub(in crate::lower) fn add_sequence_guard(&mut self, guard: SequenceGuard) {
         match guard {
             SequenceGuard::MinLength { sequence, min_len } => {
                 for existing in &mut self.sequence_guards {
@@ -109,25 +109,25 @@ impl LowerCtx {
         }
     }
 
-    pub(super) fn save_sequence_guards(&self) -> Vec<SequenceGuard> {
+    pub(in crate::lower) fn save_sequence_guards(&self) -> Vec<SequenceGuard> {
         self.sequence_guards.clone()
     }
 
-    pub(super) fn restore_sequence_guards(&mut self, snapshot: &[SequenceGuard]) {
+    pub(in crate::lower) fn restore_sequence_guards(&mut self, snapshot: &[SequenceGuard]) {
         self.sequence_guards = snapshot.to_vec();
     }
 
-    pub(super) fn clear_sequence_guards_for_binding(&mut self, binding: &str) {
+    pub(in crate::lower) fn clear_sequence_guards_for_binding(&mut self, binding: &str) {
         self.sequence_guards
             .retain(|guard| !guard_depends_on_binding(guard, binding));
     }
 
-    pub(super) fn clear_sequence_guards_for_target(&mut self, target: &str) {
+    pub(in crate::lower) fn clear_sequence_guards_for_target(&mut self, target: &str) {
         self.sequence_guards
             .retain(|guard| !guard_depends_on_target(guard, target));
     }
 
-    pub(super) fn min_length_guard(&self, sequence: &str) -> usize {
+    pub(in crate::lower) fn min_length_guard(&self, sequence: &str) -> usize {
         self.sequence_guards
             .iter()
             .filter_map(|guard| match guard {
@@ -141,11 +141,11 @@ impl LowerCtx {
             .unwrap_or(0)
     }
 
-    pub(super) fn has_index_var_guard(&self, sequence: &str, index_var: &str) -> bool {
+    pub(in crate::lower) fn has_index_var_guard(&self, sequence: &str, index_var: &str) -> bool {
         self.has_index_var_offset_guard(sequence, index_var, 0)
     }
 
-    pub(super) fn has_index_var_offset_guard(
+    pub(in crate::lower) fn has_index_var_offset_guard(
         &self,
         sequence: &str,
         index_var: &str,
@@ -165,7 +165,7 @@ impl LowerCtx {
         })
     }
 
-    pub(super) fn has_dict_key_guard(&self, dict: &str, key_expr: &Expr) -> bool {
+    pub(in crate::lower) fn has_dict_key_guard(&self, dict: &str, key_expr: &Expr) -> bool {
         let Some(key_expr_debug) = key_guard_token(key_expr) else {
             return false;
         };
@@ -180,7 +180,7 @@ impl LowerCtx {
         })
     }
 
-    pub(super) fn has_subscript_guard(&self, sequence: &str, index_expr: &Expr) -> bool {
+    pub(in crate::lower) fn has_subscript_guard(&self, sequence: &str, index_expr: &Expr) -> bool {
         let Some(index_expr_debug) = key_guard_token(index_expr) else {
             return false;
         };
@@ -241,7 +241,7 @@ fn token_mentions_name(token: &str, binding: &str) -> bool {
     token == format!("name:{binding}") || token.contains(&format!("name:{binding}"))
 }
 
-pub(super) fn hir_sequence_guard_target_name(expr: &HirExpr) -> Option<String> {
+pub(in crate::lower) fn hir_sequence_guard_target_name(expr: &HirExpr) -> Option<String> {
     match expr {
         HirExpr::Name { name, .. } => Some(name.clone()),
         HirExpr::FieldAccess { object, field, .. } => {
@@ -252,7 +252,7 @@ pub(super) fn hir_sequence_guard_target_name(expr: &HirExpr) -> Option<String> {
     }
 }
 
-pub(super) fn key_guard_token(expr: &Expr) -> Option<String> {
+pub(in crate::lower) fn key_guard_token(expr: &Expr) -> Option<String> {
     match expr {
         Expr::Name(name) => Some(format!("name:{}", name.id)),
         Expr::BooleanLiteral(value) => Some(format!("bool:{}", value.value)),

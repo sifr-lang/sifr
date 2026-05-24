@@ -22,7 +22,7 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
         .map_or_else(|| call.func.range(), Ranged::range)
 }
 
-pub(super) fn lower_zip_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_zip_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if reject_zip_keywords_if_present(call, ctx) {
         return None;
     }
@@ -53,7 +53,7 @@ pub(super) fn lower_zip_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
     })
 }
 
-pub(super) fn lower_any_all_call(
+pub(in crate::lower) fn lower_any_all_call(
     call: &ExprCall,
     builtin_name: &str,
     ctx: &mut LowerCtx,
@@ -79,7 +79,7 @@ pub(super) fn lower_any_all_call(
     })
 }
 
-pub(super) fn lower_map_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_map_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         expression_diagnostics::call_unexpected_keyword(
             ctx,
@@ -148,7 +148,7 @@ pub(super) fn lower_map_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
     })
 }
 
-pub(super) fn lower_filter_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_filter_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         expression_diagnostics::call_unexpected_keyword(
             ctx,

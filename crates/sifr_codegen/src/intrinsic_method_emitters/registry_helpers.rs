@@ -1,8 +1,8 @@
-use crate::{intrinsics, methods, RustEmitter, RustExpr};
-use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp};
+use crate::{RustEmitter, RustExpr};
+use sifr_hir::{HirExpr, HirIteratorOp};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 
-fn registry_uses_debug_display_format(ty: &Type) -> bool {
+pub(super) fn registry_uses_debug_display_format(ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(ty) {
         Type::Int
         | Type::FixedInt(_)
@@ -52,7 +52,7 @@ fn registry_uses_debug_display_format(ty: &Type) -> bool {
     }
 }
 
-fn registry_option_inner_type(ty: &Type) -> Option<&Type> {
+pub(super) fn registry_option_inner_type(ty: &Type) -> Option<&Type> {
     let resolved = crate::resolve_alias_type_for_plain_call(ty);
     let Type::Union(members) = resolved else {
         return None;
@@ -63,14 +63,14 @@ fn registry_option_inner_type(ty: &Type) -> Option<&Type> {
     members.iter().find(|member| !matches!(member, Type::None))
 }
 
-fn registry_is_string_like_type(ty: &Type) -> bool {
+pub(super) fn registry_is_string_like_type(ty: &Type) -> bool {
     matches!(
         crate::resolve_alias_type_for_plain_call(ty),
         Type::Str | Type::LiteralStr(_)
     )
 }
 
-fn registry_defaultdict_alias_parts(ty: &Type) -> Option<(&str, &Type, &Type)> {
+pub(super) fn registry_defaultdict_alias_parts(ty: &Type) -> Option<(&str, &Type, &Type)> {
     let Type::Alias {
         name: alias_name,
         body,
@@ -88,7 +88,7 @@ fn registry_defaultdict_alias_parts(ty: &Type) -> Option<(&str, &Type, &Type)> {
     Some((alias_name.as_str(), key_ty.as_ref(), value_ty.as_ref()))
 }
 
-fn registry_defaultdict_default_expr(alias_name: &str) -> RustExpr {
+pub(super) fn registry_defaultdict_default_expr(alias_name: &str) -> RustExpr {
     match alias_name {
         "__compat_defaultdict_int" => RustExpr::Literal(crate::RustLiteral::Int(0)),
         "__compat_defaultdict_list" => RustExpr::FnCall {
@@ -106,7 +106,7 @@ fn registry_defaultdict_default_expr(alias_name: &str) -> RustExpr {
     }
 }
 
-fn registry_defaultdict_key_arg(
+pub(super) fn registry_defaultdict_key_arg(
     index: &HirExpr,
     lowered_index: RustExpr,
     key_ty: &Type,
@@ -119,7 +119,9 @@ fn registry_defaultdict_key_arg(
     }
 }
 
-fn registry_callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {
+pub(super) fn registry_callable_signature(
+    expr: &HirExpr,
+) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {
     match crate::resolve_alias_type_for_plain_call(expr.ty()) {
         Type::Function(ft) => Some((
             ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
@@ -136,7 +138,7 @@ fn registry_callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamCo
     }
 }
 
-fn registry_iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
+pub(super) fn registry_iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
     match op {
         HirIteratorOp::Iter => "iter",
         HirIteratorOp::Next => "next",
@@ -148,7 +150,7 @@ fn registry_iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
     }
 }
 
-fn registry_class_method_signature<'a>(
+pub(super) fn registry_class_method_signature<'a>(
     methods: &'a [(String, FunctionType)],
     method_name: &str,
 ) -> Option<&'a FunctionType> {
@@ -163,7 +165,7 @@ fn registry_class_method_signature<'a>(
     )
 }
 
-fn registry_class_has_next(methods: &[(String, FunctionType)]) -> bool {
+pub(super) fn registry_class_has_next(methods: &[(String, FunctionType)]) -> bool {
     registry_class_method_signature(methods, "__next__").is_some_and(|next_ft| {
         next_ft.params.is_empty()
             && matches!(next_ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
@@ -179,7 +181,7 @@ fn registry_class_has_next(methods: &[(String, FunctionType)]) -> bool {
     })
 }
 
-fn registry_iter_from_next_method_expr(source_expr: RustExpr) -> RustExpr {
+pub(super) fn registry_iter_from_next_method_expr(source_expr: RustExpr) -> RustExpr {
     let state_name = "__sifr_iter_state".to_string();
     RustExpr::Block {
         stmts: vec![crate::RustStmt::Let {
@@ -207,7 +209,10 @@ fn registry_iter_from_next_method_expr(source_expr: RustExpr) -> RustExpr {
     }
 }
 
-fn registry_tuple_homogeneous_iter_expr(lowered: RustExpr, tuple_len: usize) -> Option<RustExpr> {
+pub(super) fn registry_tuple_homogeneous_iter_expr(
+    lowered: RustExpr,
+    tuple_len: usize,
+) -> Option<RustExpr> {
     if tuple_len == 0 {
         return None;
     }
@@ -248,7 +253,7 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
     registry_iterable_to_owned_iter_expr_with_hint(emitter, expr, None)
 }
 
-fn registry_iterable_to_owned_iter_expr_with_hint(
+pub(super) fn registry_iterable_to_owned_iter_expr_with_hint(
     emitter: &mut RustEmitter,
     expr: &HirExpr,
     element_type_hint: Option<&Type>,
@@ -413,14 +418,14 @@ fn registry_iterable_to_owned_iter_expr_with_hint(
     }
 }
 
-fn registry_box_iterator_expr(iter_expr: RustExpr) -> RustExpr {
+pub(super) fn registry_box_iterator_expr(iter_expr: RustExpr) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
         args: vec![iter_expr],
     }
 }
 
-fn registry_expr_is_vec_like(expr: &RustExpr) -> bool {
+pub(super) fn registry_expr_is_vec_like(expr: &RustExpr) -> bool {
     match expr {
         RustExpr::Vec(_) => true,
         RustExpr::MethodCall { method, .. } => {
@@ -438,7 +443,7 @@ pub(crate) fn registry_iterable_to_vec_expr(
     registry_iterable_to_vec_expr_with_hint(emitter, expr, None)
 }
 
-fn registry_iterable_to_vec_expr_with_hint(
+pub(super) fn registry_iterable_to_vec_expr_with_hint(
     emitter: &mut RustEmitter,
     expr: &HirExpr,
     element_type_hint: Option<&Type>,
@@ -462,7 +467,10 @@ fn registry_iterable_to_vec_expr_with_hint(
     })
 }
 
-fn registry_iterable_to_set_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn registry_iterable_to_set_expr(
+    emitter: &mut RustEmitter,
+    expr: &HirExpr,
+) -> Option<RustExpr> {
     Some(RustExpr::MethodCall {
         receiver: Box::new(registry_iterable_to_owned_iter_expr(emitter, expr)?),
         method: "collect::<std::collections::HashSet<_>>".to_string(),
@@ -470,7 +478,10 @@ fn registry_iterable_to_set_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> O
     })
 }
 
-fn registry_dict_source_to_map_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn registry_dict_source_to_map_expr(
+    emitter: &mut RustEmitter,
+    expr: &HirExpr,
+) -> Option<RustExpr> {
     let lowered = emitter.try_lower_registry_expr_strict(expr)?;
     match crate::resolve_alias_type_for_plain_call(expr.ty()) {
         Type::Dict(_, _) => Some(RustExpr::MethodCall {
@@ -504,7 +515,7 @@ fn registry_dict_source_to_map_expr(emitter: &mut RustEmitter, expr: &HirExpr) -
     }
 }
 
-fn registry_call_callable_with_owned_args(
+pub(super) fn registry_call_callable_with_owned_args(
     emitter: &mut RustEmitter,
     callable: &HirExpr,
     arg_bindings: &[(String, Type)],
@@ -560,7 +571,11 @@ fn registry_call_callable_with_owned_args(
     })
 }
 
-fn registry_nested_zip_field_expr(base: RustExpr, total: usize, index: usize) -> RustExpr {
+pub(super) fn registry_nested_zip_field_expr(
+    base: RustExpr,
+    total: usize,
+    index: usize,
+) -> RustExpr {
     if total == 1 {
         return base;
     }
@@ -582,7 +597,10 @@ fn registry_nested_zip_field_expr(base: RustExpr, total: usize, index: usize) ->
     }
 }
 
-fn registry_zip_iter_expr(emitter: &mut RustEmitter, args: &[HirExpr]) -> Option<RustExpr> {
+pub(super) fn registry_zip_iter_expr(
+    emitter: &mut RustEmitter,
+    args: &[HirExpr],
+) -> Option<RustExpr> {
     let mut iter = args.iter();
     let mut acc = registry_iterable_to_owned_iter_expr(emitter, iter.next()?)?;
     for arg in iter {
@@ -596,7 +614,7 @@ fn registry_zip_iter_expr(emitter: &mut RustEmitter, args: &[HirExpr]) -> Option
     Some(acc)
 }
 
-fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
+pub(super) fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
     matches!(
         ty_name,
         "Error"
@@ -622,21 +640,21 @@ fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
     )
 }
 
-fn registry_is_some_ctor(expr: &RustExpr) -> bool {
+pub(super) fn registry_is_some_ctor(expr: &RustExpr) -> bool {
     matches!(expr, RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
         || matches!(expr, RustExpr::Ident(name) if name == "Some")
 }
 
-fn registry_is_box_new_ctor(expr: &RustExpr) -> bool {
+pub(super) fn registry_is_box_new_ctor(expr: &RustExpr) -> bool {
     matches!(expr, RustExpr::Path(path) if path.len() == 2 && path[0] == "Box" && path[1] == "new")
         || matches!(expr, RustExpr::Ident(name) if name == "Box::new")
 }
 
-fn registry_is_some_expr(expr: &RustExpr) -> bool {
+pub(super) fn registry_is_some_expr(expr: &RustExpr) -> bool {
     matches!(expr, RustExpr::FnCall { func, .. } if registry_is_some_ctor(func.as_ref()))
 }
 
-fn registry_ensure_some_box_inner(expr: RustExpr) -> RustExpr {
+pub(super) fn registry_ensure_some_box_inner(expr: RustExpr) -> RustExpr {
     match expr {
         RustExpr::FnCall { func, args }
             if registry_is_some_ctor(func.as_ref()) && args.len() == 1 =>
@@ -670,4 +688,3 @@ fn registry_ensure_some_box_inner(expr: RustExpr) -> RustExpr {
         },
     }
 }
-

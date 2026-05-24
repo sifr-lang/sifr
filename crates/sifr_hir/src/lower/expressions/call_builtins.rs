@@ -1,15 +1,28 @@
-enum CallLowering {
+use super::{
+    call_arity_range, callable_builtin_element_type, decimal_conversion_error_type,
+    expression_diagnostics, first_call_keyword_range, float_sentinel_expr,
+    float_sentinel_kind_from_call, is_hashable_type, lower_abs_call, lower_anext_call,
+    lower_bigdecimal_constructor_call, lower_bytes_constructor_call, lower_chr_call,
+    lower_decimal_constructor_call, lower_defaultdict_constructor_call,
+    lower_dict_constructor_call, lower_enumerate_call, lower_expr, lower_isinstance_call,
+    lower_len_call, lower_list_constructor_call, lower_ord_call, lower_range_call,
+    lower_reveal_type_call, lower_reversed_call, lower_set_constructor_call, lower_sorted_call,
+    lower_sum_call, lower_tuple_constructor_call, lower_zip_call,
+    normalize_min_max_numeric_sentinels, str, validate_variadic_min_max_operands, DiagnosticCode,
+    ExprCall, HirExpr, HirIteratorOp, LowerCtx, Ranged, Type,
+};
+pub(super) enum CallLowering {
     Lowered(HirExpr),
     NoMatch,
 }
 
 impl CallLowering {
-    fn from_option(expr: Option<HirExpr>) -> Option<Self> {
+    pub(super) fn from_option(expr: Option<HirExpr>) -> Option<Self> {
         expr.map(Self::Lowered)
     }
 }
 
-fn lower_unshadowed_builtin_call(
+pub(super) fn lower_unshadowed_builtin_call(
     func_name: &str,
     call: &ExprCall,
     ctx: &mut LowerCtx,

@@ -1,7 +1,7 @@
 use super::LowerCtx;
 
 impl LowerCtx {
-    pub(super) fn with_pushed_scope<T>(
+    pub(in crate::lower) fn with_pushed_scope<T>(
         &mut self,
         f: impl FnOnce(&mut Self) -> Option<T>,
     ) -> Option<T> {
@@ -11,7 +11,7 @@ impl LowerCtx {
         result
     }
 
-    pub(super) fn pop_scopes(&mut self, count: usize) {
+    pub(in crate::lower) fn pop_scopes(&mut self, count: usize) {
         for _ in 0..count {
             self.scope.pop();
         }

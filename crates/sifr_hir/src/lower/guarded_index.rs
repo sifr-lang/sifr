@@ -2,7 +2,7 @@ use super::LowerCtx;
 use sifr_python_ast::{Expr, ExprBinOp, ExprSubscript, Number, Operator};
 use sifr_type_system::{remove_none_from_union, Type};
 
-pub(super) fn guarded_sequence_index_result_type(
+pub(in crate::lower) fn guarded_sequence_index_result_type(
     sub: &ExprSubscript,
     object_ty: &Type,
     ctx: &LowerCtx,

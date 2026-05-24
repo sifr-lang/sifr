@@ -1,3 +1,7 @@
+use super::{
+    first_try_error_type_in_stmts, queries, select_try_error_type, HirExceptHandler, HirStmt,
+    RustEmitter, RustExpr, RustStmt, Type,
+};
 impl RustEmitter {
     pub(crate) fn try_lower_structured_while_stmt(
         &mut self,
@@ -168,7 +172,7 @@ impl RustEmitter {
         true
     }
 
-    fn try_lower_try_except_stmt_for_ir(
+    pub(crate) fn try_lower_try_except_stmt_for_ir(
         &mut self,
         body: &[HirStmt],
         handlers: &[HirExceptHandler],
@@ -315,7 +319,7 @@ impl RustEmitter {
         Ok(Some(lowered))
     }
 
-    fn current_result_error_type_name_for_ir(&self) -> String {
+    pub(crate) fn current_result_error_type_name_for_ir(&self) -> String {
         self.try_closure_error_type
             .last()
             .cloned()
@@ -328,7 +332,7 @@ impl RustEmitter {
             .unwrap_or_else(|| "Error".to_string())
     }
 
-    fn try_finally_error_type_name_for_ir(
+    pub(crate) fn try_finally_error_type_name_for_ir(
         &self,
         body: &[HirStmt],
         finalbody: &[HirStmt],
@@ -526,5 +530,4 @@ impl RustEmitter {
         }
         Ok(Some(lowered))
     }
-
 }

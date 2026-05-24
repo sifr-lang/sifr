@@ -5,7 +5,7 @@ use sifr_type_system::{FunctionType, Type};
 use super::imported_defaults::import_callable_vararg;
 use super::{import_diagnostics, name_diagnostics, ExternalDefs, LowerCtx};
 
-pub(super) fn report_missing_stdlib_member(
+pub(in crate::lower) fn report_missing_stdlib_member(
     ctx: &mut LowerCtx,
     module: &str,
     member: &str,
@@ -18,7 +18,11 @@ pub(super) fn report_missing_stdlib_member(
     }
 }
 
-pub(super) fn report_unknown_stdlib_module(ctx: &mut LowerCtx, module: &str, range: TextRange) {
+pub(in crate::lower) fn report_unknown_stdlib_module(
+    ctx: &mut LowerCtx,
+    module: &str,
+    range: TextRange,
+) {
     if let Some(reason) = deferred_module_reason(module) {
         import_diagnostics::deferred_compat_module(ctx, module, reason, range);
     } else {
@@ -51,7 +55,11 @@ fn deferred_member_reason(module: &str, member: &str) -> Option<&'static str> {
     }
 }
 
-pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut LowerCtx) {
+pub(in crate::lower) fn resolve_imports_early(
+    stmts: &[Stmt],
+    externals: &ExternalDefs,
+    ctx: &mut LowerCtx,
+) {
     for stmt in stmts {
         if let Stmt::ImportFrom(import_from) = stmt {
             if import_from.level > 1 {

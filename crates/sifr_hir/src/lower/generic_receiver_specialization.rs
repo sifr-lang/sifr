@@ -3,7 +3,7 @@ use crate::hir_nodes::HirExpr;
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
-pub(super) fn refine_generic_class_binding_expr(
+pub(in crate::lower) fn refine_generic_class_binding_expr(
     expr: HirExpr,
     method_name: &str,
     args: &[HirExpr],

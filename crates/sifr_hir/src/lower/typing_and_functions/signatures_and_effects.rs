@@ -1,28 +1,18 @@
-use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
+use super::{resolve_annotation_expr, str};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    AstParamConvention, AstParamMutability, AstParamOwnership, Expr, Number, Operator, Stmt,
-    StmtFunctionDef,
+    AstParamConvention, AstParamMutability, AstParamOwnership, Expr, Stmt, StmtFunctionDef,
 };
-use sifr_type_system::infer::resolve_type_annotation;
 use sifr_type_system::{
-    make_union, FunctionType, OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
+    FunctionType, OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
 };
-use std::collections::HashMap;
 
-use super::asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
-use super::diagnostics::{format_type_name, is_valid_error_type};
-use super::expressions::lower_expr;
-use super::function_flow::{collect_yield_types, infer_function_return_type};
-use super::nonlocal_support::collect_declared_nonlocals;
-use super::ownership_diagnostics;
 use super::simple_expr::lower_expr_simple;
-use super::statements::lower_stmts;
 use super::workload_annotations;
-use super::{substitute_type_vars, LowerCtx};
+use super::LowerCtx;
 
-pub(super) fn register_builtins(ctx: &mut LowerCtx) {
+pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     // print() accepts any single argument and returns None
     ctx.functions.insert(
         "print".to_string(),
@@ -289,7 +279,10 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
     );
 }
 
-pub(super) fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
+pub(in crate::lower) fn ast_convention_to_param(
+    conv: AstParamConvention,
+    ty: &Type,
+) -> ParamConvention {
     let ownership = match conv.ownership {
         AstParamOwnership::Own => ParamOwnership::Own,
         AstParamOwnership::Borrow => {
@@ -309,7 +302,7 @@ pub(super) fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> Pa
     ParamConvention::new(ownership, mutability)
 }
 
-pub(super) fn function_type_to_callable_type(ft: &FunctionType) -> Type {
+pub(in crate::lower) fn function_type_to_callable_type(ft: &FunctionType) -> Type {
     Type::Callable(
         ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
         ft.params
@@ -320,7 +313,7 @@ pub(super) fn function_type_to_callable_type(ft: &FunctionType) -> Type {
     )
 }
 
-fn collect_function_defaults(
+pub(super) fn collect_function_defaults(
     func: &StmtFunctionDef,
     ctx: &mut LowerCtx,
 ) -> Vec<(usize, crate::hir_nodes::HirExpr)> {
@@ -364,15 +357,15 @@ fn collect_function_defaults(
     defaults
 }
 
-fn first_await_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
+pub(super) fn first_await_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
     stmts.iter().find_map(first_await_range_in_stmt)
 }
 
-fn first_yield_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
+pub(super) fn first_yield_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
     stmts.iter().find_map(first_yield_range_in_stmt)
 }
 
-pub(super) fn function_body_contains_yield(stmts: &[Stmt]) -> bool {
+pub(in crate::lower) fn function_body_contains_yield(stmts: &[Stmt]) -> bool {
     let mut visitor = sifr_python_ast::helpers::ReturnStatementVisitor::default();
     for stmt in stmts {
         sifr_python_ast::visitor::Visitor::visit_stmt(&mut visitor, stmt);
@@ -380,7 +373,7 @@ pub(super) fn function_body_contains_yield(stmts: &[Stmt]) -> bool {
     visitor.is_generator
 }
 
-fn first_await_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
+pub(super) fn first_await_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
     match stmt {
         Stmt::Expr(expr_stmt) => first_await_range_in_expr(expr_stmt.value.as_ref()),
         Stmt::Return(ret) => ret
@@ -428,7 +421,7 @@ fn first_await_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
     }
 }
 
-fn first_yield_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
+pub(super) fn first_yield_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
     match stmt {
         Stmt::Expr(expr_stmt) => first_yield_range_in_expr(expr_stmt.value.as_ref()),
         Stmt::Return(ret) => ret
@@ -476,7 +469,7 @@ fn first_yield_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {
     }
 }
 
-fn first_await_range_in_expr(expr: &Expr) -> Option<TextRange> {
+pub(super) fn first_await_range_in_expr(expr: &Expr) -> Option<TextRange> {
     match expr {
         Expr::Await(await_expr) => Some(await_expr.range()),
         Expr::Call(call) => first_await_range_in_expr(call.func.as_ref()).or_else(|| {
@@ -520,7 +513,7 @@ fn first_await_range_in_expr(expr: &Expr) -> Option<TextRange> {
     }
 }
 
-fn first_yield_range_in_expr(expr: &Expr) -> Option<TextRange> {
+pub(super) fn first_yield_range_in_expr(expr: &Expr) -> Option<TextRange> {
     match expr {
         Expr::Yield(yield_expr) => Some(yield_expr.range()),
         Expr::YieldFrom(yield_from) => Some(yield_from.range()),
@@ -565,7 +558,7 @@ fn first_yield_range_in_expr(expr: &Expr) -> Option<TextRange> {
     }
 }
 
-pub(super) fn register_local_function_signature(
+pub(in crate::lower) fn register_local_function_signature(
     func: &StmtFunctionDef,
     ft: FunctionType,
     ctx: &mut LowerCtx,
@@ -594,7 +587,7 @@ pub(super) fn register_local_function_signature(
     ft
 }
 
-pub(super) fn register_local_function_symbol(
+pub(in crate::lower) fn register_local_function_symbol(
     func: &StmtFunctionDef,
     ctx: &mut LowerCtx,
 ) -> FunctionType {
@@ -607,7 +600,10 @@ pub(super) fn register_local_function_symbol(
     register_local_function_signature(func, extract_function_type(func, ctx), ctx)
 }
 
-pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> FunctionType {
+pub(in crate::lower) fn extract_function_type(
+    func: &StmtFunctionDef,
+    ctx: &mut LowerCtx,
+) -> FunctionType {
     let mut params: Vec<(String, Type, ParamConvention)> = Vec::new();
 
     for param in &func.parameters.args {
@@ -682,7 +678,7 @@ pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) 
     }
 }
 
-fn invalid_type_annotation(
+pub(super) fn invalid_type_annotation(
     ctx: &mut LowerCtx,
     message: impl Into<String>,
     range: ruff_text_size::TextRange,
@@ -694,7 +690,7 @@ fn invalid_type_annotation(
     );
 }
 
-fn unknown_type(ctx: &mut LowerCtx, name: &str, range: ruff_text_size::TextRange) {
+pub(super) fn unknown_type(ctx: &mut LowerCtx, name: &str, range: ruff_text_size::TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::NAME_UNKNOWN_TYPE,
         format!("unknown type: '{name}'"),
@@ -702,11 +698,14 @@ fn unknown_type(ctx: &mut LowerCtx, name: &str, range: ruff_text_size::TextRange
     );
 }
 
-fn reserved_integer_width_name(ctx: &mut LowerCtx, name: &str, range: ruff_text_size::TextRange) {
+pub(super) fn reserved_integer_width_name(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: ruff_text_size::TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::INT_RESERVED_WIDTH_NAME,
         format!("reserved integer width name '{name}' is not supported yet"),
         range,
     );
 }
-

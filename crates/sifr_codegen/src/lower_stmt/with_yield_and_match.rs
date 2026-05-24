@@ -1,4 +1,9 @@
-fn try_lower_loop_else_stmts(
+use super::{
+    resolve_alias_type, try_lower_leaf_or_name_expr, try_lower_simple_stmt_block, HashSet, HirExpr,
+    HirPattern, HirStmt, RustExpr, RustLiteral, RustMatchArm, RustStmt, SimpleStmtBindings,
+    SimpleStmtLoweringCtx, Type,
+};
+pub(super) fn try_lower_loop_else_stmts(
     loop_stmt: RustStmt,
     else_body: &[HirStmt],
     in_loop_with_else: bool,
@@ -32,7 +37,7 @@ fn try_lower_loop_else_stmts(
     ])
 }
 
-fn try_lower_simple_with_stmt(
+pub(super) fn try_lower_simple_with_stmt(
     items: &[(String, HirExpr, bool)],
     body: &[HirStmt],
     in_loop_with_else: bool,
@@ -64,7 +69,7 @@ fn try_lower_simple_with_stmt(
     Some(vec![RustStmt::Block(block)])
 }
 
-fn try_lower_simple_async_with_stmt(
+pub(super) fn try_lower_simple_async_with_stmt(
     kind: &sifr_hir::HirAsyncWithKind,
     target: Option<&str>,
     body: &[HirStmt],
@@ -132,7 +137,7 @@ fn try_lower_simple_async_with_stmt(
     Some(vec![RustStmt::Block(block)])
 }
 
-fn try_lower_simple_yield_stmt(
+pub(super) fn try_lower_simple_yield_stmt(
     value: &HirExpr,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
@@ -151,7 +156,7 @@ fn try_lower_simple_yield_stmt(
     })])
 }
 
-fn try_lower_simple_match_stmt(
+pub(super) fn try_lower_simple_match_stmt(
     subject: &HirExpr,
     subject_ty: &Type,
     arms: &[sifr_hir::HirMatchArm],
@@ -216,7 +221,7 @@ fn try_lower_simple_match_stmt(
     }])
 }
 
-fn try_lower_match_pattern_for_string_subject(
+pub(super) fn try_lower_match_pattern_for_string_subject(
     pattern: &HirPattern,
 ) -> Option<(String, Vec<String>, Option<RustExpr>)> {
     match pattern {
@@ -244,7 +249,7 @@ fn try_lower_match_pattern_for_string_subject(
     }
 }
 
-fn try_lower_string_literal_match_guard(pattern: &HirPattern) -> Option<RustExpr> {
+pub(super) fn try_lower_string_literal_match_guard(pattern: &HirPattern) -> Option<RustExpr> {
     match pattern {
         HirPattern::Literal {
             value: HirExpr::StringLiteral(expected),
@@ -276,7 +281,7 @@ fn try_lower_string_literal_match_guard(pattern: &HirPattern) -> Option<RustExpr
     }
 }
 
-fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, Vec<String>)> {
+pub(super) fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, Vec<String>)> {
     match pattern {
         HirPattern::Wildcard => Some(("_".to_string(), vec![])),
         HirPattern::Capture { name, .. } => Some((name.clone(), vec![name.clone()])),
@@ -325,7 +330,7 @@ fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, Vec<String>)
     }
 }
 
-fn try_lower_union_class_match_pattern(
+pub(super) fn try_lower_union_class_match_pattern(
     pattern: &HirPattern,
     subject_ty: &Type,
 ) -> Option<(String, Vec<String>)> {
@@ -374,7 +379,7 @@ fn try_lower_union_class_match_pattern(
     ))
 }
 
-fn is_copy_capture_type(ty: &Type) -> bool {
+pub(super) fn is_copy_capture_type(ty: &Type) -> bool {
     matches!(
         resolve_alias_type(ty),
         Type::Int
@@ -386,13 +391,13 @@ fn is_copy_capture_type(ty: &Type) -> bool {
     )
 }
 
-fn collect_copy_capture_names(pattern: &HirPattern) -> HashSet<String> {
+pub(super) fn collect_copy_capture_names(pattern: &HirPattern) -> HashSet<String> {
     let mut names = HashSet::new();
     collect_copy_capture_names_inner(pattern, &mut names);
     names
 }
 
-fn collect_copy_capture_names_inner(pattern: &HirPattern, out: &mut HashSet<String>) {
+pub(super) fn collect_copy_capture_names_inner(pattern: &HirPattern, out: &mut HashSet<String>) {
     match pattern {
         HirPattern::Capture { name, ty } if is_copy_capture_type(ty) => {
             out.insert(name.clone());
@@ -416,7 +421,7 @@ fn collect_copy_capture_names_inner(pattern: &HirPattern, out: &mut HashSet<Stri
     }
 }
 
-fn deref_guard_copy_captures(expr: RustExpr, captures: &HashSet<String>) -> RustExpr {
+pub(super) fn deref_guard_copy_captures(expr: RustExpr, captures: &HashSet<String>) -> RustExpr {
     match expr {
         RustExpr::Ident(name) if captures.contains(&name) => {
             RustExpr::Deref(Box::new(RustExpr::Ident(name)))
@@ -472,7 +477,7 @@ fn deref_guard_copy_captures(expr: RustExpr, captures: &HashSet<String>) -> Rust
     }
 }
 
-fn try_lower_match_literal_pattern(expr: &HirExpr) -> Option<String> {
+pub(super) fn try_lower_match_literal_pattern(expr: &HirExpr) -> Option<String> {
     match expr {
         HirExpr::IntLiteral(v) => Some(v.to_string()),
         HirExpr::FloatLiteral(v) => {
@@ -491,4 +496,3 @@ fn try_lower_match_literal_pattern(expr: &HirExpr) -> Option<String> {
         _ => None,
     }
 }
-

@@ -1,2 +1,4 @@
-include!("stdlib_filter/implementation.rs");
-include!("stdlib_filter/tests.rs");
+mod implementation;
+pub(crate) use implementation::*;
+#[cfg(test)]
+mod tests;

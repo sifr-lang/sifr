@@ -1,4 +1,5 @@
-fn io_error_kind_for_handler(error_type: &str) -> Option<&'static str> {
+use super::{HirExceptHandler, HirExpr, HirIteratorOp, HirStmt, RustExpr, RustStmt, Type};
+pub(crate) fn io_error_kind_for_handler(error_type: &str) -> Option<&'static str> {
     match error_type {
         "FileNotFoundError" => Some("FileNotFound"),
         "PermissionError" => Some("PermissionDenied"),
@@ -10,7 +11,7 @@ fn io_error_kind_for_handler(error_type: &str) -> Option<&'static str> {
     }
 }
 
-fn select_try_error_type(handlers: &[HirExceptHandler]) -> String {
+pub(crate) fn select_try_error_type(handlers: &[HirExceptHandler]) -> String {
     if handlers.iter().any(|handler| {
         let Some(error_type) = handler.error_type.as_deref() else {
             return false;
@@ -27,7 +28,7 @@ fn select_try_error_type(handlers: &[HirExceptHandler]) -> String {
         .unwrap_or_else(|| "Error".to_string())
 }
 
-fn first_try_error_type_in_stmts(stmts: &[HirStmt]) -> Option<String> {
+pub(crate) fn first_try_error_type_in_stmts(stmts: &[HirStmt]) -> Option<String> {
     for stmt in stmts {
         if let Some(error_type) = first_try_error_type_in_stmt(stmt) {
             return Some(error_type);
@@ -36,7 +37,7 @@ fn first_try_error_type_in_stmts(stmts: &[HirStmt]) -> Option<String> {
     None
 }
 
-fn first_try_error_type_in_stmt(stmt: &HirStmt) -> Option<String> {
+pub(crate) fn first_try_error_type_in_stmt(stmt: &HirStmt) -> Option<String> {
     match stmt {
         HirStmt::TryExcept {
             body,
@@ -82,7 +83,7 @@ fn first_try_error_type_in_stmt(stmt: &HirStmt) -> Option<String> {
     }
 }
 
-fn can_construct_error_from_message_for_ir(ty_name: &str) -> bool {
+pub(crate) fn can_construct_error_from_message_for_ir(ty_name: &str) -> bool {
     matches!(
         ty_name,
         "Error"
@@ -111,25 +112,25 @@ fn can_construct_error_from_message_for_ir(ty_name: &str) -> bool {
     )
 }
 
-enum HandlerMatchCondition {
+pub(crate) enum HandlerMatchCondition {
     Unsupported,
     Always,
     Expr(RustExpr),
 }
 
-fn canonical_constructor_class_name(class_name: &str) -> &str {
+pub(crate) fn canonical_constructor_class_name(class_name: &str) -> &str {
     class_name
         .strip_prefix("__compat_sifr_collections_")
         .unwrap_or(class_name)
 }
 
-fn canonical_plain_call_name_for_ir(func: &str) -> &str {
+pub(crate) fn canonical_plain_call_name_for_ir(func: &str) -> &str {
     func.strip_prefix("__compat_sifr_math_")
         .or_else(|| func.strip_prefix("__compat_sifr_heapq_"))
         .unwrap_or(func)
 }
 
-fn supports_nonempty_pop_narrowing_type_for_ir(object_ty: &Type) -> bool {
+pub(crate) fn supports_nonempty_pop_narrowing_type_for_ir(object_ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(object_ty) {
         Type::List(_) => true,
         Type::Class { name, .. } => is_deque_class_name_for_ir(name),
@@ -137,14 +138,14 @@ fn supports_nonempty_pop_narrowing_type_for_ir(object_ty: &Type) -> bool {
     }
 }
 
-fn is_deque_class_name_for_ir(name: &str) -> bool {
+pub(crate) fn is_deque_class_name_for_ir(name: &str) -> bool {
     name == "deque"
         || name
             .rsplit_once('.')
             .is_some_and(|(_, tail)| tail == "deque")
 }
 
-fn is_narrowable_pop_call_for_ir(method: &str, args: &[HirExpr]) -> bool {
+pub(crate) fn is_narrowable_pop_call_for_ir(method: &str, args: &[HirExpr]) -> bool {
     match method {
         "pop" => matches!(args, [] | [HirExpr::IntLiteral(0)]),
         "popleft" => args.is_empty(),
@@ -152,7 +153,7 @@ fn is_narrowable_pop_call_for_ir(method: &str, args: &[HirExpr]) -> bool {
     }
 }
 
-fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
+pub(crate) fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
     object_ty: &Type,
     method: &str,
     args: &[HirExpr],
@@ -185,7 +186,7 @@ fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
     }
 }
 
-fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
+pub(crate) fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
     match op {
         HirIteratorOp::Iter => "iter",
         HirIteratorOp::Next => "next",
@@ -197,7 +198,7 @@ fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
     }
 }
 
-fn call_expr_parts(expr: &HirExpr) -> Option<(&str, &[HirExpr])> {
+pub(crate) fn call_expr_parts(expr: &HirExpr) -> Option<(&str, &[HirExpr])> {
     match expr {
         HirExpr::Call { func, args, .. } => Some((func.as_str(), args.as_slice())),
         HirExpr::IteratorCall { op, args, .. } => {
@@ -207,7 +208,7 @@ fn call_expr_parts(expr: &HirExpr) -> Option<(&str, &[HirExpr])> {
     }
 }
 
-fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
+pub(crate) fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
     match (ty, value) {
         (resolved_ty, HirExpr::Call { func, args, .. })
             if matches!(
@@ -240,7 +241,7 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
     }
 }
 
-fn should_force_mutable_binding(ty: &Type) -> bool {
+pub(crate) fn should_force_mutable_binding(ty: &Type) -> bool {
     fn class_has_next_protocol(ty: &Type) -> bool {
         let Type::Class { methods, .. } = ty.resolve_alias() else {
             return false;
@@ -268,7 +269,7 @@ fn should_force_mutable_binding(ty: &Type) -> bool {
         || class_has_next_protocol(ty)
 }
 
-fn type_contains_any_or_unknown(ty: &Type) -> bool {
+pub(crate) fn type_contains_any_or_unknown(ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(ty) {
         Type::Any | Type::Unknown => true,
         Type::List(inner)
@@ -366,7 +367,9 @@ macro_rules! stmt_expr_await_and_registry {
             }
         }
         if let HirExpr::FieldAccess { object, field, ty } = $expr {
-            if let Some(lowered) = $emitter.try_lower_structured_field_access_expr(object, field, ty)? {
+            if let Some(lowered) =
+                $emitter.try_lower_structured_field_access_expr(object, field, ty)?
+            {
                 return Ok(Some(lowered));
             }
         }
@@ -656,14 +659,19 @@ macro_rules! stmt_expr_literals_and_calls {
             ty,
         } = $expr
         {
-            if let Some(lowered_generator) =
-                $emitter.try_lower_generator_expr_for_ir(value_expr, var, iter, filter.as_deref(), ty)?
-            {
+            if let Some(lowered_generator) = $emitter.try_lower_generator_expr_for_ir(
+                value_expr,
+                var,
+                iter,
+                filter.as_deref(),
+                ty,
+            )? {
                 return Ok(Some(lowered_generator));
             }
         }
         if let Some((func, args)) = call_expr_parts($expr) {
-            if let Some(lowered_intrinsic) = $emitter.try_lower_registry_intrinsic_call_expr(func, args)
+            if let Some(lowered_intrinsic) =
+                $emitter.try_lower_registry_intrinsic_call_expr(func, args)
             {
                 return Ok(Some(lowered_intrinsic));
             }

@@ -551,7 +551,7 @@ pub(crate) fn collect_let_declared_types(stmts: &[HirStmt]) -> Vec<Type> {
     declared
 }
 
-fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<String>) {
+pub(super) fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<String>) {
     match pattern {
         HirPattern::Capture { name, .. } => {
             defined.insert(name.clone());
@@ -572,4 +572,3 @@ fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<Str
         | HirPattern::Value { .. } => {}
     }
 }
-

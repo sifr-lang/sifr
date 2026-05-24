@@ -4,7 +4,10 @@ use sifr_hir::{HirExpr, HirModule};
 use std::collections::{HashMap, HashSet};
 
 impl RustEmitter {
-    fn recursive_target_rust_type_for_field(&self, ty: &sifr_type_system::Type) -> String {
+    pub(crate) fn recursive_target_rust_type_for_field(
+        &self,
+        ty: &sifr_type_system::Type,
+    ) -> String {
         match ty {
             sifr_type_system::Type::Alias { body, .. } => {
                 self.recursive_target_rust_type_for_field(body)
@@ -13,7 +16,7 @@ impl RustEmitter {
         }
     }
 
-    fn recursive_field_storage_rust_type(
+    pub(crate) fn recursive_field_storage_rust_type(
         &self,
         ty: &sifr_type_system::Type,
         same_scc_classes: &HashSet<String>,

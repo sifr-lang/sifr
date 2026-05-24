@@ -1,3 +1,4 @@
+use super::{HirExpr, RustEmitter, Type};
 impl RustEmitter {
     pub(crate) fn try_lower_structured_field_access_expr(
         &mut self,
@@ -576,5 +577,4 @@ impl RustEmitter {
         }
         lowered
     }
-
 }

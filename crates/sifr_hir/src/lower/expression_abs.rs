@@ -21,7 +21,7 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
         .map_or_else(|| call.func.range(), Ranged::range)
 }
 
-pub(super) fn lower_abs_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_abs_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         expression_diagnostics::call_unexpected_keyword(
             ctx,

@@ -3,7 +3,7 @@ use crate::hir_nodes::HirExpr;
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
-pub(super) fn refine_constructor_return_type_from_args(
+pub(in crate::lower) fn refine_constructor_return_type_from_args(
     ft: &FunctionType,
     args: &[HirExpr],
     return_ty: &Type,

@@ -1,4 +1,10 @@
-fn try_lower_simple_while_stmt(
+use super::{
+    resolve_alias_type, try_lower_leaf_or_name_expr, try_lower_loop_else_stmts,
+    try_lower_simple_condition_test_expr, try_lower_simple_stmt_block, FunctionType, HirExpr,
+    HirStmt, RustExpr, RustParam, RustStmt, RustType, SimpleStmtBindings, SimpleStmtLoweringCtx,
+    Type,
+};
+pub(super) fn try_lower_simple_while_stmt(
     condition: &HirExpr,
     body: &[HirStmt],
     else_body: Option<&[HirStmt]>,
@@ -40,16 +46,16 @@ fn try_lower_simple_while_stmt(
 }
 
 #[derive(Clone, Copy)]
-struct SimpleForStmtParts<'a> {
-    target: &'a str,
-    target_ty: &'a Type,
-    iter: &'a HirExpr,
-    body: &'a [HirStmt],
-    else_body: Option<&'a [HirStmt]>,
-    in_loop_with_else: bool,
+pub(super) struct SimpleForStmtParts<'a> {
+    pub(super) target: &'a str,
+    pub(super) target_ty: &'a Type,
+    pub(super) iter: &'a HirExpr,
+    pub(super) body: &'a [HirStmt],
+    pub(super) else_body: Option<&'a [HirStmt]>,
+    pub(super) in_loop_with_else: bool,
 }
 
-fn try_lower_simple_for_stmt(
+pub(super) fn try_lower_simple_for_stmt(
     parts: SimpleForStmtParts<'_>,
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
@@ -93,7 +99,7 @@ fn try_lower_simple_for_stmt(
     }])
 }
 
-fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<RustExpr> {
     fn is_collect_call_expr(expr: &RustExpr) -> bool {
         match expr {
             RustExpr::MethodCall { method, .. } => {
@@ -435,4 +441,3 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<Ru
         _ => fallback_iter_expr(),
     })
 }
-

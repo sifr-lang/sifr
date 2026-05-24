@@ -1,3 +1,9 @@
+use super::{
+    call_expr_parts, can_construct_error_from_message_for_ir, canonical_constructor_class_name,
+    canonical_plain_call_name_for_ir, is_result_int_division_error_type,
+    unwrap_compiler_verified_nonempty_pop_result_for_ir, HirExpr, HirFStringPart, RustEmitter,
+    Type,
+};
 macro_rules! stmt_expr_method_call {
     ($emitter:ident, $expr:ident) => {{
         if let HirExpr::MethodCall {

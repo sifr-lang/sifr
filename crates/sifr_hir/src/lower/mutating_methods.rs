@@ -3,7 +3,7 @@ use crate::hir_nodes::HirExpr;
 use ruff_text_size::TextRange;
 use sifr_type_system::Type;
 
-pub(super) fn reject_immutable_parameter_method_mutation(
+pub(in crate::lower) fn reject_immutable_parameter_method_mutation(
     ctx: &mut LowerCtx,
     object: &HirExpr,
     object_ty: &Type,
@@ -28,7 +28,7 @@ pub(super) fn reject_immutable_parameter_method_mutation(
     false
 }
 
-pub(super) fn is_collection_mutating_method(object_ty: &Type, method: &str) -> bool {
+pub(in crate::lower) fn is_collection_mutating_method(object_ty: &Type, method: &str) -> bool {
     if let Type::Alias { body, .. } = object_ty {
         return is_collection_mutating_method(body, method);
     }
@@ -63,7 +63,10 @@ pub(super) fn is_collection_mutating_method(object_ty: &Type, method: &str) -> b
     }
 }
 
-pub(super) fn method_invalidates_collection_flow_facts(object_ty: &Type, method: &str) -> bool {
+pub(in crate::lower) fn method_invalidates_collection_flow_facts(
+    object_ty: &Type,
+    method: &str,
+) -> bool {
     if let Type::Alias { body, .. } = object_ty {
         return method_invalidates_collection_flow_facts(body, method);
     }
@@ -84,7 +87,7 @@ pub(super) fn method_invalidates_collection_flow_facts(object_ty: &Type, method:
     }
 }
 
-pub(super) fn invalidate_collection_flow_facts_for_method(
+pub(in crate::lower) fn invalidate_collection_flow_facts_for_method(
     ctx: &mut LowerCtx,
     object: &HirExpr,
     object_ty: &Type,

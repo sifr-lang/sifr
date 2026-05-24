@@ -7,7 +7,7 @@ use std::fmt::Write as _;
 impl RustEmitter {
     /// Check if a generic class needs Hash + Eq bounds on its type parameters.
     /// This is true when a type parameter is used as a `HashMap` key (dict field with `TypeVar` key).
-    pub(super) fn class_needs_hash_eq(class: &HirClass) -> bool {
+    pub(crate) fn class_needs_hash_eq(class: &HirClass) -> bool {
         fn type_has_typevar_dict_key(ty: &Type) -> bool {
             match ty {
                 Type::Dict(key, _) => matches!(key.as_ref(), Type::TypeVar(_)),
@@ -24,7 +24,7 @@ impl RustEmitter {
 
     /// Check if a generic function needs Hash + Eq bounds (uses `TypeVar` as dict key
     /// or returns a generic class that needs Hash + Eq).
-    pub(super) fn func_needs_hash_eq(func: &HirFunction) -> bool {
+    pub(crate) fn func_needs_hash_eq(func: &HirFunction) -> bool {
         fn type_has_typevar_dict_key(ty: &Type) -> bool {
             match ty {
                 Type::Dict(key, _) => matches!(key.as_ref(), Type::TypeVar(_)),
@@ -47,7 +47,7 @@ impl RustEmitter {
         false
     }
 
-    pub(super) fn generic_bounds_for_class(class: &HirClass) -> String {
+    pub(crate) fn generic_bounds_for_class(class: &HirClass) -> String {
         if class.name == "deque" {
             return "Clone + PartialEq".to_string();
         }
@@ -60,7 +60,7 @@ impl RustEmitter {
 
     /// Convert a Type to its Rust representation, appending generic type params
     /// for classes that are known to be generic (e.g., Counter -> Counter<T>).
-    pub(super) fn rust_type_with_generics(&self, ty: &Type) -> String {
+    pub(crate) fn rust_type_with_generics(&self, ty: &Type) -> String {
         match ty {
             Type::Int | Type::LiteralInt(_) => "i64".to_string(),
             Type::Float => "f64".to_string(),
@@ -141,7 +141,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn rust_struct_field_type_with_generics(&self, ty: &Type) -> String {
+    pub(crate) fn rust_struct_field_type_with_generics(&self, ty: &Type) -> String {
         match ty {
             Type::Callable(params, conventions, ret) => {
                 let param_types = params
@@ -171,11 +171,11 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn rust_ir_type_with_generics(&self, ty: &Type) -> crate::RustType {
+    pub(crate) fn rust_ir_type_with_generics(&self, ty: &Type) -> crate::RustType {
         crate::RustType::Named(self.rust_type_with_generics(ty))
     }
 
-    fn rust_generator_error_type_with_generics(&self, ty: &Type) -> String {
+    pub(crate) fn rust_generator_error_type_with_generics(&self, ty: &Type) -> String {
         if matches!(ty.resolve_alias(), Type::Never) {
             "std::convert::Infallible".to_string()
         } else {
@@ -183,7 +183,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn type_contains_generic_class(&self, ty: &Type) -> bool {
+    pub(crate) fn type_contains_generic_class(&self, ty: &Type) -> bool {
         match ty {
             Type::Class { name, .. } => self.generic_classes.contains(name),
             Type::List(inner) | Type::Set(inner) | Type::Alias { body: inner, .. } => {
@@ -211,7 +211,7 @@ impl RustEmitter {
         }
     }
 
-    fn render_generic_class_type(&self, name: &str, ty: &Type) -> String {
+    pub(crate) fn render_generic_class_type(&self, name: &str, ty: &Type) -> String {
         if !self.generic_classes.contains(name) {
             return name.to_string();
         }
@@ -234,7 +234,7 @@ impl RustEmitter {
         name.to_string()
     }
 
-    fn infer_generic_class_type_args(&self, name: &str, ty: &Type) -> Option<Vec<Type>> {
+    pub(crate) fn infer_generic_class_type_args(&self, name: &str, ty: &Type) -> Option<Vec<Type>> {
         let template = self.generic_class_templates.get(name)?;
         let Type::Class {
             fields, methods, ..
@@ -263,7 +263,7 @@ impl RustEmitter {
             .collect()
     }
 
-    fn collect_typevar_bindings_from_class(
+    pub(crate) fn collect_typevar_bindings_from_class(
         &self,
         template: &HirClass,
         concrete_fields: &[(String, Type)],
@@ -301,7 +301,7 @@ impl RustEmitter {
         visiting.remove(&template.name);
     }
 
-    fn collect_typevar_bindings_from_function_type(
+    pub(crate) fn collect_typevar_bindings_from_function_type(
         &self,
         template: &HirFunction,
         concrete: &FunctionType,
@@ -324,7 +324,7 @@ impl RustEmitter {
         );
     }
 
-    fn collect_typevar_bindings(
+    pub(crate) fn collect_typevar_bindings(
         &self,
         template: &Type,
         concrete: &Type,
@@ -435,7 +435,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn extra_bounds_for_type_param(tp: &str, body: &[HirStmt]) -> String {
+    pub(crate) fn extra_bounds_for_type_param(tp: &str, body: &[HirStmt]) -> String {
         let requirements =
             crate::hir_analysis::queries::collect_typevar_operator_requirements(body, tp);
         let mut extra = String::new();

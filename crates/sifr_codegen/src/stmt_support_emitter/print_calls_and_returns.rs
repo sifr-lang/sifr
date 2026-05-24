@@ -1,3 +1,7 @@
+use super::{
+    call_expr_parts, canonical_plain_call_name_for_ir, is_result_int_division_error_type, HirExpr,
+    HirFStringPart, RustEmitter, Type,
+};
 impl RustEmitter {
     pub(crate) fn try_lower_stmt_expr_statement_only(
         &mut self,
@@ -102,7 +106,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_print_call_expr_for_ir(
+    pub(crate) fn lower_print_call_expr_for_ir(
         &mut self,
         args: &[HirExpr],
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
@@ -311,14 +315,14 @@ impl RustEmitter {
         }))
     }
 
-    fn object_name_expr_for_ir(object: &str) -> crate::RustExpr {
+    pub(crate) fn object_name_expr_for_ir(object: &str) -> crate::RustExpr {
         if object.contains("::") {
             return crate::RustExpr::Path(object.split("::").map(ToString::to_string).collect());
         }
         crate::RustExpr::Ident(object.to_string())
     }
 
-    fn is_some_call_expr_for_ir(expr: &crate::RustExpr) -> bool {
+    pub(crate) fn is_some_call_expr_for_ir(expr: &crate::RustExpr) -> bool {
         matches!(
             expr,
             crate::RustExpr::FnCall { func, .. }
@@ -327,7 +331,7 @@ impl RustEmitter {
         )
     }
 
-    fn is_box_new_call_expr_for_ir(expr: &crate::RustExpr) -> bool {
+    pub(crate) fn is_box_new_call_expr_for_ir(expr: &crate::RustExpr) -> bool {
         matches!(
             expr,
             crate::RustExpr::FnCall { func, .. }
@@ -336,7 +340,7 @@ impl RustEmitter {
         )
     }
 
-    fn ensure_some_box_inner_for_ir(expr: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn ensure_some_box_inner_for_ir(expr: crate::RustExpr) -> crate::RustExpr {
         match expr {
             crate::RustExpr::FnCall { func, args }
                 if matches!(func.as_ref(), crate::RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
@@ -377,7 +381,7 @@ impl RustEmitter {
         }
     }
 
-    fn ensure_option_box_inner_for_ir(expr: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn ensure_option_box_inner_for_ir(expr: crate::RustExpr) -> crate::RustExpr {
         if matches!(expr, crate::RustExpr::Literal(crate::RustLiteral::None)) {
             return expr;
         }
@@ -610,7 +614,10 @@ impl RustEmitter {
         ident
     }
 
-    fn borrowed_return_name_clone_expr_for_ir(&self, value: &HirExpr) -> Option<crate::RustExpr> {
+    pub(crate) fn borrowed_return_name_clone_expr_for_ir(
+        &self,
+        value: &HirExpr,
+    ) -> Option<crate::RustExpr> {
         let HirExpr::Name { name, .. } = value else {
             return None;
         };
@@ -622,7 +629,7 @@ impl RustEmitter {
         ))))
     }
 
-    fn lower_non_option_index_expr_for_ir(
+    pub(crate) fn lower_non_option_index_expr_for_ir(
         &mut self,
         object: &HirExpr,
         index: &HirExpr,
@@ -718,7 +725,7 @@ impl RustEmitter {
         Ok(Some(lowered))
     }
 
-    fn lower_return_value_expr_for_ir(
+    pub(crate) fn lower_return_value_expr_for_ir(
         &mut self,
         value: &HirExpr,
         return_ty: Option<&Type>,
@@ -804,7 +811,7 @@ impl RustEmitter {
         Ok(None)
     }
 
-    pub(super) fn lower_rendered_expr_for_ir(
+    pub(crate) fn lower_rendered_expr_for_ir(
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
@@ -835,5 +842,4 @@ impl RustEmitter {
         }
         Ok(None)
     }
-
 }

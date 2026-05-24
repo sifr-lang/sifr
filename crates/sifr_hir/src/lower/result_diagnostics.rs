@@ -2,7 +2,7 @@ use super::LowerCtx;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 
-pub(super) fn invalid_raise_string(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn invalid_raise_string(ctx: &mut LowerCtx, range: TextRange) {
     invalid_raise(
         ctx,
         "raise requires an Error class instance — `raise \"message\"` is not allowed, use e.g. `raise ValueError(\"message\")`".to_string(),
@@ -10,7 +10,11 @@ pub(super) fn invalid_raise_string(ctx: &mut LowerCtx, range: TextRange) {
     );
 }
 
-pub(super) fn invalid_raise_non_error(ctx: &mut LowerCtx, type_name: &str, range: TextRange) {
+pub(in crate::lower) fn invalid_raise_non_error(
+    ctx: &mut LowerCtx,
+    type_name: &str,
+    range: TextRange,
+) {
     invalid_raise(
         ctx,
         format!("raise requires an Error class instance — `{type_name}` is not an Error class"),
@@ -18,7 +22,7 @@ pub(super) fn invalid_raise_non_error(ctx: &mut LowerCtx, type_name: &str, range
     );
 }
 
-pub(super) fn invalid_bare_raise(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn invalid_bare_raise(ctx: &mut LowerCtx, range: TextRange) {
     invalid_raise(
         ctx,
         "bare 'raise' without an expression is not supported".to_string(),
@@ -30,7 +34,11 @@ fn invalid_raise(ctx: &mut LowerCtx, message: String, range: TextRange) {
     ctx.error_with_code_at(DiagnosticCode::RESULT_INVALID_RAISE, message, range);
 }
 
-pub(super) fn unknown_except_type(ctx: &mut LowerCtx, error_type: &str, range: TextRange) {
+pub(in crate::lower) fn unknown_except_type(
+    ctx: &mut LowerCtx,
+    error_type: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::RESULT_UNKNOWN_EXCEPT_TYPE,
         format!("unknown except error type '{error_type}'"),
@@ -38,7 +46,11 @@ pub(super) fn unknown_except_type(ctx: &mut LowerCtx, error_type: &str, range: T
     );
 }
 
-pub(super) fn uncovered_try_errors(ctx: &mut LowerCtx, uncovered: &str, range: TextRange) {
+pub(in crate::lower) fn uncovered_try_errors(
+    ctx: &mut LowerCtx,
+    uncovered: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::RESULT_UNCOVERED_TRY_ERRORS,
         format!("except arms do not cover all error types from try body: {uncovered}"),
@@ -46,7 +58,7 @@ pub(super) fn uncovered_try_errors(ctx: &mut LowerCtx, uncovered: &str, range: T
     );
 }
 
-pub(super) fn invalid_except_type(ctx: &mut LowerCtx, reason: &str, range: TextRange) {
+pub(in crate::lower) fn invalid_except_type(ctx: &mut LowerCtx, reason: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::RESULT_INVALID_EXCEPT_TYPE,
         format!("invalid except error type: {reason}"),

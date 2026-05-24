@@ -3,7 +3,7 @@ use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use sifr_type_system::Type;
 
-pub(super) fn refine_defaultdict_binding_expr(
+pub(in crate::lower) fn refine_defaultdict_binding_expr(
     expr: HirExpr,
     method_name: &str,
     args: &[HirExpr],

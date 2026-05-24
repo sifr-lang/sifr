@@ -2,7 +2,7 @@ use super::LowerCtx;
 use sifr_python_ast::{Expr, ExprBinOp, ExprCall, ExprList, ExprListComp, Operator};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) enum SequenceShapeFact {
+pub(in crate::lower) enum SequenceShapeFact {
     SizedByAnchor {
         sequence_var: String,
         anchor_sequence: String,
@@ -18,16 +18,16 @@ pub(super) enum SequenceShapeFact {
 }
 
 impl LowerCtx {
-    pub(super) fn clear_sequence_shape_fact(&mut self, name: &str) {
+    pub(in crate::lower) fn clear_sequence_shape_fact(&mut self, name: &str) {
         self.sequence_shapes.retain(|fact| fact.var_name() != name);
     }
 
-    pub(super) fn record_sequence_shape_fact(&mut self, fact: SequenceShapeFact) {
+    pub(in crate::lower) fn record_sequence_shape_fact(&mut self, fact: SequenceShapeFact) {
         self.clear_sequence_shape_fact(fact.var_name());
         self.sequence_shapes.push(fact);
     }
 
-    pub(super) fn sized_sequence_fact(&self, name: &str) -> Option<(String, usize)> {
+    pub(in crate::lower) fn sized_sequence_fact(&self, name: &str) -> Option<(String, usize)> {
         self.sequence_shapes.iter().find_map(|fact| match fact {
             SequenceShapeFact::SizedByAnchor {
                 sequence_var,
@@ -39,7 +39,7 @@ impl LowerCtx {
         })
     }
 
-    pub(super) fn matrix_sequence_fact(
+    pub(in crate::lower) fn matrix_sequence_fact(
         &self,
         name: &str,
     ) -> Option<(String, usize, String, usize)> {
@@ -71,7 +71,7 @@ impl SequenceShapeFact {
     }
 }
 
-pub(super) fn sequence_shape_fact(name: &str, expr: &Expr) -> Option<SequenceShapeFact> {
+pub(in crate::lower) fn sequence_shape_fact(name: &str, expr: &Expr) -> Option<SequenceShapeFact> {
     if let Some(matrix_fact) = matrix_list_comp_fact(name, expr) {
         return Some(matrix_fact);
     }

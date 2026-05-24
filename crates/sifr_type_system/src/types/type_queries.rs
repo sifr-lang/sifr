@@ -1,3 +1,4 @@
+use super::{FunctionType, OwnershipKind, Type};
 impl Type {
     #[must_use]
     pub fn reversible(element_type: Type) -> Self {
@@ -8,7 +9,7 @@ impl Type {
         }
     }
 
-    fn reversible_alias_element_type(ty: &Type) -> Option<Type> {
+    pub(super) fn reversible_alias_element_type(ty: &Type) -> Option<Type> {
         let Type::Alias {
             name,
             type_args,
@@ -29,7 +30,7 @@ impl Type {
         Some(*elem.clone())
     }
 
-    fn homogeneous_tuple_iter_element_type(elems: &[Type]) -> Option<Type> {
+    pub(super) fn homogeneous_tuple_iter_element_type(elems: &[Type]) -> Option<Type> {
         let first = elems.first()?.clone();
         if elems.iter().all(|elem| elem == &first) {
             Some(first)
@@ -72,7 +73,7 @@ impl Type {
         }
     }
 
-    fn class_next_element_type(
+    pub(super) fn class_next_element_type(
         class_name: &str,
         methods: &[(String, FunctionType)],
     ) -> Option<Type> {
@@ -87,7 +88,7 @@ impl Type {
         Some(elem)
     }
 
-    fn class_iter_element_type(
+    pub(super) fn class_iter_element_type(
         class_name: &str,
         methods: &[(String, FunctionType)],
     ) -> Option<Type> {
@@ -113,7 +114,7 @@ impl Type {
         }
     }
 
-    fn class_reversed_element_type(
+    pub(super) fn class_reversed_element_type(
         class_name: &str,
         methods: &[(String, FunctionType)],
     ) -> Option<Type> {
@@ -532,5 +533,4 @@ impl Type {
     pub fn union_variant_name(&self) -> String {
         Self::type_to_enum_variant_prefix(self)
     }
-
 }

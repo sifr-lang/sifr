@@ -3,7 +3,7 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;
 
-pub(super) fn container_literal_type_conflict(
+pub(in crate::lower) fn container_literal_type_conflict(
     ctx: &mut LowerCtx,
     element_kind: &str,
     expected: &Type,

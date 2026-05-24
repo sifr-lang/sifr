@@ -685,7 +685,7 @@ impl AnalysisHost {
     }
 }
 
-fn full_range(source: &str) -> Result<TextRange, AnalysisError> {
+pub(super) fn full_range(source: &str) -> Result<TextRange, AnalysisError> {
     let end = u32::try_from(source.len()).map_err(|_| {
         AnalysisError::new(
             AnalysisErrorKind::InvalidFormatRange,
@@ -695,14 +695,14 @@ fn full_range(source: &str) -> Result<TextRange, AnalysisError> {
     Ok(TextRange::new(TextSize::new(0), TextSize::new(end)))
 }
 
-fn unknown_file(file: FileId) -> AnalysisError {
+pub(super) fn unknown_file(file: FileId) -> AnalysisError {
     AnalysisError::new(
         AnalysisErrorKind::UnknownFile,
         format!("unknown file id {}", file.as_u32()),
     )
 }
 
-fn frontend_diagnostics(diagnostics: &[RenderedDiagnostic]) -> AnalysisError {
+pub(super) fn frontend_diagnostics(diagnostics: &[RenderedDiagnostic]) -> AnalysisError {
     let message = diagnostics
         .first()
         .map(|diagnostic| diagnostic.message.clone())
@@ -710,7 +710,10 @@ fn frontend_diagnostics(diagnostics: &[RenderedDiagnostic]) -> AnalysisError {
     AnalysisError::new(AnalysisErrorKind::FrontendDiagnostic, message)
 }
 
-fn call_identifier_before_position(facts: &EditorFacts, position: &TextPosition) -> Option<String> {
+pub(super) fn call_identifier_before_position(
+    facts: &EditorFacts,
+    position: &TextPosition,
+) -> Option<String> {
     let token = facts.token_at_position(position)?;
     if token.text != "(" {
         return None;
@@ -725,4 +728,3 @@ fn call_identifier_before_position(facts: &EditorFacts, position: &TextPosition)
         })
         .map(|candidate| format!("{}(...)", candidate.text))
 }
-

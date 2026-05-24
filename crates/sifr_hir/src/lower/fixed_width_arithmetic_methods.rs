@@ -5,7 +5,7 @@ use sifr_type_system::{FixedIntType, Type};
 
 use super::{expression_diagnostics, LowerCtx};
 
-pub(super) fn resolve_fixed_width_method_type(
+pub(in crate::lower) fn resolve_fixed_width_method_type(
     fixed: FixedIntType,
     method: &str,
     args: &[HirExpr],

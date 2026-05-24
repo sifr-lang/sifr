@@ -3,7 +3,7 @@ use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use sifr_type_system::Type;
 
-pub(super) fn refine_empty_set_binding_expr(
+pub(in crate::lower) fn refine_empty_set_binding_expr(
     expr: HirExpr,
     inferred_elem_ty: Type,
     ctx: &mut LowerCtx,
@@ -26,7 +26,7 @@ pub(super) fn refine_empty_set_binding_expr(
     }
 }
 
-pub(super) fn refine_empty_list_binding_expr(
+pub(in crate::lower) fn refine_empty_list_binding_expr(
     expr: HirExpr,
     method_name: &str,
     args: &[HirExpr],

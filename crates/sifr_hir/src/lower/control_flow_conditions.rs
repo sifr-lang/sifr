@@ -3,7 +3,7 @@ use crate::hir_nodes::HirExpr;
 use ruff_text_size::TextRange;
 use sifr_type_system::{union_contains_none, Type};
 
-pub(super) fn validate_control_flow_condition(
+pub(in crate::lower) fn validate_control_flow_condition(
     condition: &HirExpr,
     keyword: &str,
     primary_range: TextRange,

@@ -1,3 +1,21 @@
+use super::{
+    body_calls_function, collect_locally_defined_vars, collect_mutated_vars,
+    collect_referenced_vars_with_types, is_option_like_type, resolve_alias_type,
+    try_lower_expr_stmt_with_bindings, try_lower_leaf_or_name_expr, try_lower_name_ident_expr,
+    try_lower_simple_assign_value, try_lower_simple_async_with_stmt,
+    try_lower_simple_attribute_nested_subscript_assign_stmt,
+    try_lower_simple_attribute_subscript_assign_stmt, try_lower_simple_augassign_stmt,
+    try_lower_simple_condition_test_expr, try_lower_simple_delete_stmt,
+    try_lower_simple_field_assign_stmt, try_lower_simple_for_stmt, try_lower_simple_if_stmt,
+    try_lower_simple_let_value, try_lower_simple_match_stmt,
+    try_lower_simple_nested_subscript_assign_stmt, try_lower_simple_return_stmt,
+    try_lower_simple_star_unpack_stmt, try_lower_simple_subscript_assign_stmt,
+    try_lower_simple_subscript_augassign_stmt, try_lower_simple_try_except_stmt,
+    try_lower_simple_tuple_unpack_stmt, try_lower_simple_while_stmt, try_lower_simple_with_stmt,
+    try_lower_simple_yield_stmt, HashMap, HashSet, HirExpr, HirFunction, HirStmt, MethodKind,
+    RustExpr, RustLiteral, RustParam, RustStmt, RustType, SimpleForStmtParts, SimpleStmtBindings,
+    SimpleStmtLoweringCtx, Type,
+};
 pub(crate) fn try_lower_simple_stmt_with_ctx(
     stmt: &HirStmt,
     in_loop_with_else: bool,
@@ -292,7 +310,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
     }
 }
 
-fn coerce_simple_assign_value_for_target_type(
+pub(super) fn coerce_simple_assign_value_for_target_type(
     target_ty: Option<&Type>,
     value: &HirExpr,
     lowered_value: RustExpr,
@@ -315,7 +333,7 @@ fn coerce_simple_assign_value_for_target_type(
     }
 }
 
-fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
+pub(super) fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
     match (ty, value) {
         (resolved_ty, HirExpr::Call { func, args, .. })
             if matches!(
@@ -348,7 +366,10 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
     }
 }
 
-fn exact_int_floor_result_local_rust_type(ty: &Type, value: &HirExpr) -> Option<RustType> {
+pub(super) fn exact_int_floor_result_local_rust_type(
+    ty: &Type,
+    value: &HirExpr,
+) -> Option<RustType> {
     if matches!(
         crate::resolve_alias_type_for_plain_call(ty),
         Type::Int | Type::LiteralInt(_)
@@ -372,7 +393,7 @@ fn exact_int_floor_result_local_rust_type(ty: &Type, value: &HirExpr) -> Option<
     None
 }
 
-fn is_exact_int_floor_result_expr(value: &HirExpr) -> bool {
+pub(super) fn is_exact_int_floor_result_expr(value: &HirExpr) -> bool {
     matches!(
         value,
         HirExpr::BinOp { op, ty, .. }
@@ -380,7 +401,7 @@ fn is_exact_int_floor_result_expr(value: &HirExpr) -> bool {
     )
 }
 
-fn is_result_int_division_error_type(ty: &Type) -> bool {
+pub(super) fn is_result_int_division_error_type(ty: &Type) -> bool {
     let Type::Result(ok_ty, err_ty) = crate::resolve_alias_type_for_plain_call(ty) else {
         return false;
     };
@@ -393,7 +414,7 @@ fn is_result_int_division_error_type(ty: &Type) -> bool {
     )
 }
 
-fn should_force_mutable_binding(ty: &Type) -> bool {
+pub(super) fn should_force_mutable_binding(ty: &Type) -> bool {
     fn class_has_next_protocol(ty: &Type) -> bool {
         let Type::Class { methods, .. } = ty.resolve_alias() else {
             return false;
@@ -421,7 +442,7 @@ fn should_force_mutable_binding(ty: &Type) -> bool {
         || class_has_next_protocol(ty)
 }
 
-fn try_lower_simple_nested_function_stmt(
+pub(super) fn try_lower_simple_nested_function_stmt(
     func: &HirFunction,
     in_loop_with_else: bool,
     outer_bindings: SimpleStmtBindings<'_>,
@@ -540,7 +561,7 @@ fn try_lower_simple_nested_function_stmt(
     }])
 }
 
-fn append_recursive_capture_args_to_stmts(
+pub(super) fn append_recursive_capture_args_to_stmts(
     stmts: &mut [RustStmt],
     fn_name: &str,
     capture_names: &[String],
@@ -626,7 +647,7 @@ fn append_recursive_capture_args_to_stmts(
     }
 }
 
-fn append_recursive_capture_args_to_expr(
+pub(super) fn append_recursive_capture_args_to_expr(
     expr: &mut RustExpr,
     fn_name: &str,
     capture_names: &[String],

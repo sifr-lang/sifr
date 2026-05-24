@@ -1,7 +1,7 @@
 use sifr_type_system::Type;
 
 /// Collect all `TypeVar` names used in a type.
-pub(super) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
+pub(in crate::lower) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
     match ty {
         Type::TypeVar(name) => {
             if !vars.contains(name) {

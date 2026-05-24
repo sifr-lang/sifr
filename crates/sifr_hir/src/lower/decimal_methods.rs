@@ -88,7 +88,7 @@ fn validate_decimal_context_scale(
     Some(())
 }
 
-pub(super) fn decimal_conversion_error_type(ctx: &LowerCtx) -> Type {
+pub(in crate::lower) fn decimal_conversion_error_type(ctx: &LowerCtx) -> Type {
     ctx.class_types
         .get("DecimalConversionError")
         .cloned()
@@ -100,7 +100,7 @@ pub(super) fn decimal_conversion_error_type(ctx: &LowerCtx) -> Type {
         })
 }
 
-pub(super) fn validate_decimal_string_literal(
+pub(in crate::lower) fn validate_decimal_string_literal(
     value: &str,
     range: TextRange,
     ctx: &mut LowerCtx,
@@ -116,7 +116,7 @@ pub(super) fn validate_decimal_string_literal(
     Some(())
 }
 
-pub(super) fn validate_bigdecimal_string_literal(
+pub(in crate::lower) fn validate_bigdecimal_string_literal(
     value: &str,
     range: TextRange,
     ctx: &mut LowerCtx,
@@ -132,7 +132,7 @@ pub(super) fn validate_bigdecimal_string_literal(
     Some(())
 }
 
-pub(super) fn lower_decimal_constructor_call(
+pub(in crate::lower) fn lower_decimal_constructor_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
@@ -205,7 +205,7 @@ pub(super) fn lower_decimal_constructor_call(
     })
 }
 
-pub(super) fn lower_bigdecimal_constructor_call(
+pub(in crate::lower) fn lower_bigdecimal_constructor_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
@@ -273,7 +273,7 @@ pub(super) fn lower_bigdecimal_constructor_call(
     })
 }
 
-pub(super) fn validate_decimal_scale_argument(
+pub(in crate::lower) fn validate_decimal_scale_argument(
     receiver_name: &str,
     method: &str,
     args: &[HirExpr],
@@ -313,7 +313,7 @@ pub(super) fn validate_decimal_scale_argument(
     Some(())
 }
 
-pub(super) fn resolve_decimal_method_type(
+pub(in crate::lower) fn resolve_decimal_method_type(
     object_ty: &Type,
     method: &str,
     args: &[HirExpr],

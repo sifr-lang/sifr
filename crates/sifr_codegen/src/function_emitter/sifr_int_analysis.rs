@@ -1,4 +1,8 @@
-fn hir_function_returns_sifr_int(
+use super::{
+    collect_locally_defined_vars, collect_referenced_vars_with_types, traversal, HashMap, HashSet,
+    HirExpr, HirFunction, HirStmt, RustType, TraversalConfig, Type,
+};
+pub(super) fn hir_function_returns_sifr_int(
     func: &HirFunction,
     module_sifr_int_bindings: &HashSet<String>,
     function_sifr_int_returns: &HashSet<String>,
@@ -61,7 +65,7 @@ fn hir_function_returns_sifr_int(
     returns_sifr_int
 }
 
-fn function_returns_result_sifr_int(
+pub(super) fn function_returns_result_sifr_int(
     func: &HirFunction,
     result_function_returns: &HashSet<String>,
     result_method_returns: &HashSet<String>,
@@ -106,7 +110,7 @@ fn function_returns_result_sifr_int(
     returns_sifr_int_result
 }
 
-fn collect_nested_sifr_int_result_function_returns(
+pub(super) fn collect_nested_sifr_int_result_function_returns(
     body: &[HirStmt],
     inherited_result_function_returns: &HashSet<String>,
     result_method_returns: &HashSet<String>,
@@ -144,7 +148,7 @@ fn collect_nested_sifr_int_result_function_returns(
     nested_returns
 }
 
-fn collect_sifr_int_result_local_bindings(
+pub(super) fn collect_sifr_int_result_local_bindings(
     body: &[HirStmt],
     result_function_returns: &HashSet<String>,
 ) -> HashSet<String> {
@@ -156,7 +160,7 @@ fn collect_sifr_int_result_local_bindings(
     )
 }
 
-fn collect_sifr_int_result_local_bindings_with_initial(
+pub(super) fn collect_sifr_int_result_local_bindings_with_initial(
     body: &[HirStmt],
     result_function_returns: &HashSet<String>,
     result_method_returns: &HashSet<String>,
@@ -198,7 +202,7 @@ fn collect_sifr_int_result_local_bindings_with_initial(
     result_bindings
 }
 
-fn collect_sifr_int_result_function_param_names(
+pub(super) fn collect_sifr_int_result_function_param_names(
     func: &HirFunction,
     result_function_params: &HashMap<String, HashSet<usize>>,
 ) -> HashSet<String> {
@@ -213,7 +217,7 @@ fn collect_sifr_int_result_function_param_names(
         .collect()
 }
 
-fn collect_sifr_int_result_method_param_names(
+pub(super) fn collect_sifr_int_result_method_param_names(
     method: &HirFunction,
     method_key: &str,
     result_method_params: &HashMap<String, HashSet<usize>>,
@@ -230,7 +234,7 @@ fn collect_sifr_int_result_method_param_names(
         .collect()
 }
 
-fn hir_expr_returns_sifr_int_result(
+pub(super) fn hir_expr_returns_sifr_int_result(
     expr: &HirExpr,
     result_function_returns: &HashSet<String>,
     result_method_returns: &HashSet<String>,
@@ -275,14 +279,14 @@ pub(crate) fn result_method_key(class_name: &str, method_name: &str) -> String {
     format!("{class_name}::{method_name}")
 }
 
-fn hir_expr_class_name(expr: &HirExpr) -> Option<String> {
+pub(super) fn hir_expr_class_name(expr: &HirExpr) -> Option<String> {
     match crate::resolve_alias_type_for_plain_call(expr.ty()) {
         Type::Class { name, .. } => Some(name.clone()),
         _ => None,
     }
 }
 
-fn hir_function_returns_sifr_int_with_extra_forced(
+pub(super) fn hir_function_returns_sifr_int_with_extra_forced(
     func: &HirFunction,
     module_sifr_int_bindings: &HashSet<String>,
     function_sifr_int_returns: &HashSet<String>,
@@ -298,7 +302,7 @@ fn hir_function_returns_sifr_int_with_extra_forced(
     )
 }
 
-fn hir_function_returns_sifr_int_with_extra_forced_and_shadowed(
+pub(super) fn hir_function_returns_sifr_int_with_extra_forced_and_shadowed(
     func: &HirFunction,
     module_sifr_int_bindings: &HashSet<String>,
     function_sifr_int_returns: &HashSet<String>,
@@ -345,7 +349,7 @@ fn hir_function_returns_sifr_int_with_extra_forced_and_shadowed(
     returns_sifr_int
 }
 
-fn collect_function_sifr_int_forced_locals_with_extra(
+pub(super) fn collect_function_sifr_int_forced_locals_with_extra(
     func: &HirFunction,
     module_sifr_int_bindings: &HashSet<String>,
     function_sifr_int_returns: &HashSet<String>,
@@ -361,7 +365,7 @@ fn collect_function_sifr_int_forced_locals_with_extra(
     )
 }
 
-fn collect_function_sifr_int_forced_locals_with_extra_and_shadowed(
+pub(super) fn collect_function_sifr_int_forced_locals_with_extra_and_shadowed(
     func: &HirFunction,
     module_sifr_int_bindings: &HashSet<String>,
     function_sifr_int_returns: &HashSet<String>,
@@ -408,7 +412,7 @@ fn collect_function_sifr_int_forced_locals_with_extra_and_shadowed(
     forced
 }
 
-fn collect_sifr_int_function_param_names(
+pub(super) fn collect_sifr_int_function_param_names(
     func: &HirFunction,
     function_params: &HashMap<String, HashSet<usize>>,
 ) -> HashSet<String> {
@@ -423,13 +427,13 @@ fn collect_sifr_int_function_param_names(
         .collect()
 }
 
-fn collect_function_local_shadow_names(func: &HirFunction) -> HashSet<String> {
+pub(super) fn collect_function_local_shadow_names(func: &HirFunction) -> HashSet<String> {
     let mut shadowed = collect_locally_defined_vars(&func.body);
     shadowed.extend(func.params.iter().map(|param| param.name.clone()));
     shadowed
 }
 
-fn collect_sifr_int_call_arg_function_params(
+pub(super) fn collect_sifr_int_call_arg_function_params(
     body: &[HirStmt],
     module_function_params: &HashMap<String, Vec<Type>>,
     forced_locals: &HashSet<String>,
@@ -473,7 +477,7 @@ fn collect_sifr_int_call_arg_function_params(
     discovered
 }
 
-fn collect_sifr_int_result_call_arg_function_params(
+pub(super) fn collect_sifr_int_result_call_arg_function_params(
     caller: &HirFunction,
     module_function_params: &HashMap<String, Vec<Type>>,
     result_function_returns: &HashSet<String>,
@@ -491,7 +495,7 @@ fn collect_sifr_int_result_call_arg_function_params(
     )
 }
 
-fn collect_sifr_int_result_call_arg_function_params_with_initial(
+pub(super) fn collect_sifr_int_result_call_arg_function_params_with_initial(
     body: &[HirStmt],
     module_function_params: &HashMap<String, Vec<Type>>,
     result_function_returns: &HashSet<String>,
@@ -538,7 +542,7 @@ fn collect_sifr_int_result_call_arg_function_params_with_initial(
     discovered
 }
 
-fn collect_sifr_int_result_call_arg_method_params(
+pub(super) fn collect_sifr_int_result_call_arg_method_params(
     body: &[HirStmt],
     module_method_params: &HashMap<String, Vec<Type>>,
     result_function_returns: &HashSet<String>,
@@ -598,7 +602,7 @@ fn collect_sifr_int_result_call_arg_method_params(
     discovered
 }
 
-fn collect_nested_sifr_int_function_returns(
+pub(super) fn collect_nested_sifr_int_function_returns(
     body: &[HirStmt],
     module_sifr_int_bindings: &HashSet<String>,
     outer_function_returns: &HashSet<String>,
@@ -648,21 +652,21 @@ fn collect_nested_sifr_int_function_returns(
         .collect()
 }
 
-fn collect_sifr_int_captured_forced_locals(
+pub(super) fn collect_sifr_int_captured_forced_locals(
     func: &HirFunction,
     outer_forced_locals: &HashSet<String>,
 ) -> HashSet<String> {
     collect_captured_outer_names_transitively(func, outer_forced_locals)
 }
 
-fn collect_sifr_int_captured_shadowed_module_bindings(
+pub(super) fn collect_sifr_int_captured_shadowed_module_bindings(
     func: &HirFunction,
     outer_shadowed_module_bindings: &HashSet<String>,
 ) -> HashSet<String> {
     collect_captured_outer_names_transitively(func, outer_shadowed_module_bindings)
 }
 
-fn collect_captured_outer_names(
+pub(super) fn collect_captured_outer_names(
     func: &HirFunction,
     outer_names: &HashSet<String>,
 ) -> HashSet<String> {
@@ -686,7 +690,7 @@ fn collect_captured_outer_names(
         .collect()
 }
 
-fn nested_function_mutates_capture(
+pub(super) fn nested_function_mutates_capture(
     func: &HirFunction,
     nested_mutated_vars: &HashSet<String>,
 ) -> bool {
@@ -701,7 +705,7 @@ fn nested_function_mutates_capture(
         .any(|name| !param_names.contains(name) && !locally_defined.contains(name))
 }
 
-fn collect_captured_outer_names_transitively(
+pub(super) fn collect_captured_outer_names_transitively(
     func: &HirFunction,
     outer_names: &HashSet<String>,
 ) -> HashSet<String> {
@@ -739,7 +743,7 @@ fn collect_captured_outer_names_transitively(
     captured
 }
 
-fn collect_sifr_int_forced_locals(
+pub(super) fn collect_sifr_int_forced_locals(
     body: &[HirStmt],
     local_int_bindings: &HashSet<String>,
     shadowed_module_bindings: &HashSet<String>,
@@ -756,7 +760,7 @@ fn collect_sifr_int_forced_locals(
     )
 }
 
-fn collect_sifr_int_forced_locals_with_seed(
+pub(super) fn collect_sifr_int_forced_locals_with_seed(
     body: &[HirStmt],
     local_int_bindings: &HashSet<String>,
     shadowed_module_bindings: &HashSet<String>,
@@ -813,7 +817,7 @@ fn collect_sifr_int_forced_locals_with_seed(
     forced
 }
 
-fn hir_expr_needs_sifr_int_storage(
+pub(super) fn hir_expr_needs_sifr_int_storage(
     expr: &HirExpr,
     forced_locals: &HashSet<String>,
     shadowed_module_bindings: &HashSet<String>,
@@ -867,7 +871,6 @@ fn hir_expr_needs_sifr_int_storage(
     }
 }
 
-fn is_sifr_int_augassign_op(op: &str) -> bool {
+pub(super) fn is_sifr_int_augassign_op(op: &str) -> bool {
     matches!(op, "+=" | "-=" | "*=")
 }
-

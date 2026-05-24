@@ -5,7 +5,7 @@ use sifr_type_system::infer::resolve_type_annotation;
 use sifr_type_system::{narrow_type, NarrowingCondition};
 
 /// Detect a narrowing condition from an if-test expression.
-pub(super) fn detect_narrowing_condition(
+pub(in crate::lower) fn detect_narrowing_condition(
     expr: &Expr,
     ctx: &LowerCtx,
 ) -> Option<NarrowingCondition> {
@@ -116,7 +116,11 @@ pub(super) fn detect_narrowing_condition(
 }
 
 /// Apply narrowing to the scope based on a condition.
-pub(super) fn apply_narrowing(ctx: &mut LowerCtx, condition: &NarrowingCondition, is_true: bool) {
+pub(in crate::lower) fn apply_narrowing(
+    ctx: &mut LowerCtx,
+    condition: &NarrowingCondition,
+    is_true: bool,
+) {
     match condition {
         NarrowingCondition::And(conditions) => {
             if is_true {

@@ -7,7 +7,7 @@ use sifr_hir::{HirClass, HirFunction, HirModule};
 use sifr_type_system::Type;
 
 impl RustEmitter {
-    fn auto_display_format_spec_for_field(&self, field_ty: &Type) -> &'static str {
+    pub(crate) fn auto_display_format_spec_for_field(&self, field_ty: &Type) -> &'static str {
         match field_ty.resolve_alias() {
             Type::Int
             | Type::Float
@@ -23,7 +23,7 @@ impl RustEmitter {
         }
     }
 
-    fn class_visibility(module_public: bool) -> Visibility {
+    pub(crate) fn class_visibility(module_public: bool) -> Visibility {
         if module_public {
             Visibility::Pub
         } else {
@@ -31,14 +31,14 @@ impl RustEmitter {
         }
     }
 
-    fn class_impl_target(class: &HirClass) -> String {
+    pub(crate) fn class_impl_target(class: &HirClass) -> String {
         if class.type_params.is_empty() {
             return class.name.clone();
         }
         format!("{}<{}>", class.name, class.type_params.join(", "))
     }
 
-    fn class_impl_type_params(class: &HirClass) -> Vec<RustTypeParam> {
+    pub(crate) fn class_impl_type_params(class: &HirClass) -> Vec<RustTypeParam> {
         if class.type_params.is_empty() {
             return Vec::new();
         }
@@ -53,7 +53,7 @@ impl RustEmitter {
             .collect()
     }
 
-    fn class_struct_decl_name(class: &HirClass) -> String {
+    pub(crate) fn class_struct_decl_name(class: &HirClass) -> String {
         if class.type_params.is_empty() {
             return class.name.clone();
         }
@@ -67,7 +67,7 @@ impl RustEmitter {
         format!("{}<{params}>", class.name)
     }
 
-    fn class_struct_fields(
+    pub(crate) fn class_struct_fields(
         &mut self,
         class: &HirClass,
         module_public: bool,
@@ -115,7 +115,11 @@ impl RustEmitter {
         fields
     }
 
-    fn lower_default_constructor_item(&self, class: &HirClass, module_public: bool) -> RustItem {
+    pub(crate) fn lower_default_constructor_item(
+        &self,
+        class: &HirClass,
+        module_public: bool,
+    ) -> RustItem {
         let params = class
             .fields
             .iter()
@@ -158,7 +162,10 @@ impl RustEmitter {
         }
     }
 
-    fn lower_display_body_for_custom_str(&mut self, str_func: &HirFunction) -> Vec<RustStmt> {
+    pub(crate) fn lower_display_body_for_custom_str(
+        &mut self,
+        str_func: &HirFunction,
+    ) -> Vec<RustStmt> {
         let saved_display_ctx = self.emission_ctx.in_display_impl;
         let saved_return_type = self.current_return_type.clone();
         let saved_mutated = self.mutated_vars.clone();
@@ -197,7 +204,7 @@ impl RustEmitter {
         body
     }
 
-    fn build_display_impl_for_error(class: &HirClass) -> RustItem {
+    pub(crate) fn build_display_impl_for_error(class: &HirClass) -> RustItem {
         let display_expr = if class.fields.iter().any(|(name, _)| name == "message") {
             RustExpr::Field {
                 expr: Box::new(RustExpr::Ident("self".to_string())),
@@ -244,7 +251,7 @@ impl RustEmitter {
         }
     }
 
-    fn build_display_impl_for_auto_fields(&self, class: &HirClass) -> RustItem {
+    pub(crate) fn build_display_impl_for_auto_fields(&self, class: &HirClass) -> RustItem {
         let format_str = format!(
             "{}({})",
             class.name,
@@ -294,7 +301,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn emit_class(&mut self, class: &HirClass, module: &HirModule, module_public: bool) {
+    pub(crate) fn emit_class(&mut self, class: &HirClass, module: &HirModule, module_public: bool) {
         if class.is_protocol() {
             self.emit_protocol_trait(class, module_public);
             return;

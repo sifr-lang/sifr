@@ -1,7 +1,11 @@
+use super::{
+    analyze_assign, infer_expr_type, merge_env_types, refine_name_with_binary_context, str,
+    type_contains_unknown_or_any, unify_function_return, unify_name_binding, unify_types,
+};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_python_ast::{AstParamConvention, CmpOp, Expr, ExprCall, Operator, Stmt, StmtFunctionDef};
-use sifr_type_system::{type_check_binary_op, FunctionType, Type};
+use sifr_python_ast::{AstParamConvention, Expr, Stmt, StmtFunctionDef};
+use sifr_type_system::{FunctionType, Type};
 use std::collections::{HashMap, HashSet};
 
 use super::typing_and_functions::{ast_convention_to_param, resolve_annotation_expr};
@@ -9,32 +13,32 @@ use super::LowerCtx;
 
 const MAX_INFERENCE_PASSES: usize = 8;
 
-pub(super) struct NestedFunctionInference {
-    pub(super) function_types: HashMap<String, FunctionType>,
-    pub(super) binding_hints: HashMap<String, Type>,
+pub(in crate::lower) struct NestedFunctionInference {
+    pub(in crate::lower) function_types: HashMap<String, FunctionType>,
+    pub(in crate::lower) binding_hints: HashMap<String, Type>,
 }
 
 #[derive(Clone)]
-struct ParamState {
-    name: String,
-    name_range: TextRange,
-    ty: Type,
-    explicit: bool,
-    convention: sifr_python_ast::AstParamConvention,
-    mutated: bool,
+pub(super) struct ParamState {
+    pub(super) name: String,
+    pub(super) name_range: TextRange,
+    pub(super) ty: Type,
+    pub(super) explicit: bool,
+    pub(super) convention: sifr_python_ast::AstParamConvention,
+    pub(super) mutated: bool,
 }
 
 #[derive(Clone)]
-struct LocalFunctionState<'a> {
-    func: &'a StmtFunctionDef,
-    params: Vec<ParamState>,
-    return_type: Type,
-    explicit_return: bool,
-    inference_failed: bool,
+pub(super) struct LocalFunctionState<'a> {
+    pub(super) func: &'a StmtFunctionDef,
+    pub(super) params: Vec<ParamState>,
+    pub(super) return_type: Type,
+    pub(super) explicit_return: bool,
+    pub(super) inference_failed: bool,
 }
 
 impl LocalFunctionState<'_> {
-    fn function_type(&self) -> FunctionType {
+    pub(super) fn function_type(&self) -> FunctionType {
         FunctionType {
             params: self
                 .params
@@ -53,7 +57,7 @@ impl LocalFunctionState<'_> {
     }
 }
 
-fn inferred_param_convention(param: &ParamState) -> AstParamConvention {
+pub(super) fn inferred_param_convention(param: &ParamState) -> AstParamConvention {
     if !param.mutated || param.convention.is_mutable() {
         return param.convention;
     }
@@ -72,13 +76,13 @@ fn inferred_param_convention(param: &ParamState) -> AstParamConvention {
 }
 
 #[derive(Clone, Default)]
-struct FunctionEnv {
-    vars: HashMap<String, Type>,
-    call_return_origins: HashMap<String, String>,
+pub(super) struct FunctionEnv {
+    pub(super) vars: HashMap<String, Type>,
+    pub(super) call_return_origins: HashMap<String, String>,
 }
 
 impl FunctionEnv {
-    fn bind_var(&mut self, name: &str, ty: Type) {
+    pub(super) fn bind_var(&mut self, name: &str, ty: Type) {
         let ty = if let Some(existing) = self.vars.get(name) {
             if type_contains_unknown_or_any(&ty) {
                 unify_types(existing.clone(), ty)
@@ -92,7 +96,7 @@ impl FunctionEnv {
         self.call_return_origins.remove(name);
     }
 
-    fn bind_call_result(&mut self, name: String, ty: Type, callee: String) {
+    pub(super) fn bind_call_result(&mut self, name: String, ty: Type, callee: String) {
         let ty = if let Some(existing) = self.vars.get(&name) {
             if type_contains_unknown_or_any(&ty) {
                 unify_types(existing.clone(), ty)
@@ -107,7 +111,7 @@ impl FunctionEnv {
     }
 }
 
-pub(super) fn infer_nested_function_types(
+pub(in crate::lower) fn infer_nested_function_types(
     stmts: &[Stmt],
     ctx: &mut LowerCtx,
 ) -> NestedFunctionInference {
@@ -147,7 +151,7 @@ pub(super) fn infer_nested_function_types(
     }
 }
 
-fn collect_nested_function_states<'a>(
+pub(super) fn collect_nested_function_states<'a>(
     stmts: &'a [Stmt],
     ctx: &mut LowerCtx,
 ) -> HashMap<String, LocalFunctionState<'a>> {
@@ -204,7 +208,7 @@ fn collect_nested_function_states<'a>(
     states
 }
 
-fn collect_mutated_parameter_names(
+pub(super) fn collect_mutated_parameter_names(
     stmts: &[Stmt],
     param_names: &HashSet<String>,
 ) -> HashSet<String> {
@@ -215,7 +219,7 @@ fn collect_mutated_parameter_names(
     mutated
 }
 
-fn collect_mutated_parameter_names_in_stmt(
+pub(super) fn collect_mutated_parameter_names_in_stmt(
     stmt: &Stmt,
     param_names: &HashSet<String>,
     mutated: &mut HashSet<String>,
@@ -287,7 +291,7 @@ fn collect_mutated_parameter_names_in_stmt(
     }
 }
 
-fn collect_mutated_parameter_names_in_target(
+pub(super) fn collect_mutated_parameter_names_in_target(
     expr: &Expr,
     param_names: &HashSet<String>,
     mutated: &mut HashSet<String>,
@@ -322,7 +326,7 @@ fn collect_mutated_parameter_names_in_target(
     }
 }
 
-fn collect_mutated_parameter_names_in_expr(
+pub(super) fn collect_mutated_parameter_names_in_expr(
     expr: &Expr,
     param_names: &HashSet<String>,
     mutated: &mut HashSet<String>,
@@ -412,7 +416,7 @@ fn collect_mutated_parameter_names_in_expr(
     }
 }
 
-fn snapshot_signatures(
+pub(super) fn snapshot_signatures(
     states: &HashMap<String, LocalFunctionState<'_>>,
 ) -> Vec<(String, Vec<Type>, Type)> {
     let mut snapshot = states
@@ -429,7 +433,7 @@ fn snapshot_signatures(
     snapshot
 }
 
-fn finalize_nested_function_types(
+pub(super) fn finalize_nested_function_types(
     states: &mut HashMap<String, LocalFunctionState<'_>>,
     ctx: &mut LowerCtx,
 ) -> HashMap<String, FunctionType> {
@@ -473,7 +477,7 @@ fn finalize_nested_function_types(
     result
 }
 
-fn finalize_return_type(state: &LocalFunctionState<'_>) -> Type {
+pub(super) fn finalize_return_type(state: &LocalFunctionState<'_>) -> Type {
     if state.return_type.is_unknown() {
         if function_has_value_return(&state.func.body) {
             Type::Unknown
@@ -485,7 +489,7 @@ fn finalize_return_type(state: &LocalFunctionState<'_>) -> Type {
     }
 }
 
-fn function_has_value_return(stmts: &[Stmt]) -> bool {
+pub(super) fn function_has_value_return(stmts: &[Stmt]) -> bool {
     for stmt in stmts {
         match stmt {
             Stmt::Return(ret) => {
@@ -525,7 +529,7 @@ fn function_has_value_return(stmts: &[Stmt]) -> bool {
     false
 }
 
-fn analyze_block(
+pub(super) fn analyze_block(
     stmts: &[Stmt],
     env: &mut FunctionEnv,
     states: &mut HashMap<String, LocalFunctionState<'_>>,
@@ -537,7 +541,10 @@ fn analyze_block(
     }
 }
 
-fn collect_current_function_local_bindings(stmts: &[Stmt], bindings: &mut HashSet<String>) {
+pub(super) fn collect_current_function_local_bindings(
+    stmts: &[Stmt],
+    bindings: &mut HashSet<String>,
+) {
     for stmt in stmts {
         match stmt {
             Stmt::Assign(assign) => {
@@ -592,7 +599,7 @@ fn collect_current_function_local_bindings(stmts: &[Stmt], bindings: &mut HashSe
     }
 }
 
-fn collect_assignment_target_names(targets: &[Expr], bindings: &mut HashSet<String>) {
+pub(super) fn collect_assignment_target_names(targets: &[Expr], bindings: &mut HashSet<String>) {
     for target in targets {
         match target {
             Expr::Name(name) => {
@@ -606,7 +613,7 @@ fn collect_assignment_target_names(targets: &[Expr], bindings: &mut HashSet<Stri
     }
 }
 
-fn collect_nonlocal_names(stmts: &[Stmt], names: &mut HashSet<String>) {
+pub(super) fn collect_nonlocal_names(stmts: &[Stmt], names: &mut HashSet<String>) {
     for stmt in stmts {
         match stmt {
             Stmt::Nonlocal(nonlocal_stmt) => {
@@ -636,7 +643,7 @@ fn collect_nonlocal_names(stmts: &[Stmt], names: &mut HashSet<String>) {
     }
 }
 
-fn analyze_stmt(
+pub(super) fn analyze_stmt(
     stmt: &Stmt,
     env: &mut FunctionEnv,
     states: &mut HashMap<String, LocalFunctionState<'_>>,
@@ -822,4 +829,3 @@ fn analyze_stmt(
         _ => {}
     }
 }
-

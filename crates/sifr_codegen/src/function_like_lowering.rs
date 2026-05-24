@@ -6,7 +6,7 @@ use crate::{
 use sifr_hir::{HirFunction, HirStmt};
 
 impl RustEmitter {
-    pub(super) fn lower_function_like_body<F>(
+    pub(crate) fn lower_function_like_body<F>(
         &mut self,
         func: &HirFunction,
         missing_panic_message: &str,

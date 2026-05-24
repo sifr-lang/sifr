@@ -3,7 +3,7 @@ use sifr_diagnostics::DiagnosticCode;
 
 use super::LowerCtx;
 
-pub(super) fn break_outside_loop(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn break_outside_loop(ctx: &mut LowerCtx, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
         "'break' outside of loop".to_string(),
@@ -11,7 +11,7 @@ pub(super) fn break_outside_loop(ctx: &mut LowerCtx, range: TextRange) {
     );
 }
 
-pub(super) fn continue_outside_loop(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn continue_outside_loop(ctx: &mut LowerCtx, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
         "'continue' outside of loop".to_string(),
@@ -19,11 +19,11 @@ pub(super) fn continue_outside_loop(ctx: &mut LowerCtx, range: TextRange) {
     );
 }
 
-pub(super) fn invalid_nonlocal_at(ctx: &mut LowerCtx, message: String, range: TextRange) {
+pub(in crate::lower) fn invalid_nonlocal_at(ctx: &mut LowerCtx, message: String, range: TextRange) {
     ctx.error_with_code_at(DiagnosticCode::FLOW_INVALID_NONLOCAL, message, range);
 }
 
-pub(super) fn missing_return_value(
+pub(in crate::lower) fn missing_return_value(
     ctx: &mut LowerCtx,
     function_name: &str,
     return_type: &str,
@@ -38,7 +38,7 @@ pub(super) fn missing_return_value(
     );
 }
 
-pub(super) fn invalid_condition_type(
+pub(in crate::lower) fn invalid_condition_type(
     ctx: &mut LowerCtx,
     keyword: &str,
     actual: &str,
@@ -51,7 +51,7 @@ pub(super) fn invalid_condition_type(
     );
 }
 
-pub(super) fn nonlocal_requires_enclosing_binding(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn nonlocal_requires_enclosing_binding(ctx: &mut LowerCtx, range: TextRange) {
     invalid_nonlocal_at(
         ctx,
         "nonlocal declaration requires an enclosing function binding".to_string(),
@@ -59,7 +59,7 @@ pub(super) fn nonlocal_requires_enclosing_binding(ctx: &mut LowerCtx, range: Tex
     );
 }
 
-pub(super) fn nonlocal_conflicts_with_current_binding(
+pub(in crate::lower) fn nonlocal_conflicts_with_current_binding(
     ctx: &mut LowerCtx,
     name: &str,
     range: TextRange,
@@ -71,7 +71,11 @@ pub(super) fn nonlocal_conflicts_with_current_binding(
     );
 }
 
-pub(super) fn nonlocal_missing_enclosing_binding(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn nonlocal_missing_enclosing_binding(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: TextRange,
+) {
     invalid_nonlocal_at(
         ctx,
         format!("nonlocal name '{name}' does not resolve to an enclosing function binding"),
@@ -79,7 +83,7 @@ pub(super) fn nonlocal_missing_enclosing_binding(ctx: &mut LowerCtx, name: &str,
     );
 }
 
-pub(super) fn captured_augassign_requires_nonlocal(
+pub(in crate::lower) fn captured_augassign_requires_nonlocal(
     ctx: &mut LowerCtx,
     name: &str,
     range: TextRange,
@@ -93,7 +97,7 @@ pub(super) fn captured_augassign_requires_nonlocal(
     );
 }
 
-pub(super) fn tuple_unpack_nonlocal_rebind(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn tuple_unpack_nonlocal_rebind(ctx: &mut LowerCtx, range: TextRange) {
     invalid_nonlocal_at(
         ctx,
         "tuple unpacking cannot rebind captured state with `nonlocal` yet".to_string(),
@@ -101,7 +105,7 @@ pub(super) fn tuple_unpack_nonlocal_rebind(ctx: &mut LowerCtx, range: TextRange)
     );
 }
 
-pub(super) fn recursive_nonlocal_nested_function(
+pub(in crate::lower) fn recursive_nonlocal_nested_function(
     ctx: &mut LowerCtx,
     function_name: &str,
     range: TextRange,

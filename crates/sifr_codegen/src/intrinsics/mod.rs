@@ -1,9 +1,9 @@
 //! Intrinsic registry and dispatch for incremental IR rollout.
 
-include!("registry.rs");
+mod registry;
+pub(crate) use registry::*;
 
 #[cfg(test)]
-mod tests {
-    include!("registry_core_tests.rs");
-    include!("registry_extended_tests.rs");
-}
+mod registry_core_tests;
+#[cfg(test)]
+mod registry_extended_tests;

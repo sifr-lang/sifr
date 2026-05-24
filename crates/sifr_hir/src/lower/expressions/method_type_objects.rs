@@ -1,4 +1,10 @@
-fn resolve_str_method_type(
+use super::{
+    canonicalize_class_surface_type, expression_diagnostics, method_count_range,
+    reject_exact_method_arg_count, reject_method_arg_count, reject_no_method_args,
+    resolve_method_type, resolve_str_encode_method_type, str, DiagnosticCode, FunctionType,
+    HirExpr, LowerCtx, TextRange, Type,
+};
+pub(super) fn resolve_str_method_type(
     method: &str,
     args: &[HirExpr],
     arg_ranges: &[TextRange],
@@ -146,7 +152,7 @@ fn resolve_str_method_type(
     }
 }
 
-fn resolve_tuple_method_type(
+pub(super) fn resolve_tuple_method_type(
     method: &str,
     args: &[HirExpr],
     arg_ranges: &[TextRange],
@@ -203,24 +209,29 @@ fn resolve_tuple_method_type(
     }
 }
 
-fn resolve_class_method_type(
-    name: &str,
-    fields: &[(String, Type)],
-    methods: &[(String, FunctionType)],
+#[derive(Clone, Copy)]
+pub(super) struct ClassMethodSurface<'a> {
+    pub(super) name: &'a str,
+    pub(super) fields: &'a [(String, Type)],
+    pub(super) methods: &'a [(String, FunctionType)],
+}
+
+pub(super) fn resolve_class_method_type(
+    class: ClassMethodSurface<'_>,
     method: &str,
     args: &[HirExpr],
     arg_ranges: &[TextRange],
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
-    if let Some((_, ft)) = methods.iter().find(|(n, _)| n == method) {
+    if let Some((_, ft)) = class.methods.iter().find(|(n, _)| n == method) {
         // Check argument count
         if args.len() != ft.params.len() {
             reject_method_arg_count(
                 ctx,
                 format!(
                     "{}.{}() takes {} argument(s), got {}",
-                    name,
+                    class.name,
                     method,
                     ft.params.len(),
                     args.len()
@@ -238,7 +249,7 @@ fn resolve_class_method_type(
                         "argument {} ('{}') of {}.{}(): expected '{}', got '{}'",
                         i + 1,
                         param_name,
-                        name,
+                        class.name,
                         method,
                         param_ty.display_name(),
                         arg.ty().display_name()
@@ -248,7 +259,7 @@ fn resolve_class_method_type(
             }
         }
         Some(canonicalize_class_surface_type(&ft.return_type))
-    } else if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == method) {
+    } else if let Some((_, field_ty)) = class.fields.iter().find(|(n, _)| n == method) {
         // Check if the field is a Callable type — allow calling it like a method
         if let Type::Callable(param_types, _, ret_type) = field_ty {
             if args.len() != param_types.len() {
@@ -256,7 +267,7 @@ fn resolve_class_method_type(
                     ctx,
                     format!(
                         "{}.{}() (callable field) takes {} argument(s), got {}",
-                        name,
+                        class.name,
                         method,
                         param_types.len(),
                         args.len()
@@ -272,7 +283,7 @@ fn resolve_class_method_type(
                         format!(
                             "argument {} of {}.{}(): expected '{}', got '{}'",
                             i + 1,
-                            name,
+                            class.name,
                             method,
                             param_ty.display_name(),
                             arg.ty().display_name()
@@ -288,7 +299,7 @@ fn resolve_class_method_type(
                 format!(
                     "field '{}' of class '{}' is not callable (type: '{}')",
                     method,
-                    name,
+                    class.name,
                     field_ty.display_name()
                 ),
                 method_range,
@@ -298,14 +309,14 @@ fn resolve_class_method_type(
     } else {
         ctx.error_with_code_at(
             DiagnosticCode::CLASS_MISSING_MEMBER,
-            format!("class '{name}' has no method '{method}'"),
+            format!("class '{}' has no method '{method}'", class.name),
             method_range,
         );
         None
     }
 }
 
-fn resolve_protocol_method_type(
+pub(super) fn resolve_protocol_method_type(
     name: &str,
     methods: &[(String, FunctionType)],
     method: &str,
@@ -340,7 +351,7 @@ fn resolve_protocol_method_type(
     }
 }
 
-fn resolve_newtype_method_type(
+pub(super) fn resolve_newtype_method_type(
     name: &str,
     inner: &Type,
     method: &str,
@@ -362,7 +373,7 @@ fn resolve_newtype_method_type(
     }
 }
 
-fn resolve_enum_method_type(
+pub(super) fn resolve_enum_method_type(
     name: &str,
     method: &str,
     args: &[HirExpr],
@@ -401,7 +412,7 @@ fn resolve_enum_method_type(
     }
 }
 
-fn resolve_bigint_method_type(
+pub(super) fn resolve_bigint_method_type(
     method: &str,
     args: &[HirExpr],
     arg_ranges: &[TextRange],

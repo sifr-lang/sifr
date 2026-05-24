@@ -8,7 +8,7 @@ use ruff_text_size::Ranged;
 use sifr_python_ast::StmtMatch;
 use sifr_type_system::{FunctionType, Type};
 
-pub(super) fn lower_match(
+pub(in crate::lower) fn lower_match(
     match_stmt: &StmtMatch,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,

@@ -5,7 +5,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::{type_check_binary_op, Type};
 use std::collections::HashMap;
 
-pub(super) fn type_contains_unknown_or_any(ty: &Type) -> bool {
+pub(in crate::lower) fn type_contains_unknown_or_any(ty: &Type) -> bool {
     match ty {
         Type::Unknown | Type::Any => true,
         Type::List(elem) => type_contains_unknown_or_any(elem),
@@ -43,7 +43,7 @@ fn emit_empty_literal_type_conflict(
     );
 }
 
-pub(super) fn validate_subscript_assignment_target(
+pub(in crate::lower) fn validate_subscript_assignment_target(
     ctx: &mut LowerCtx,
     object_name: &str,
     object_ty: &Type,
@@ -148,17 +148,17 @@ pub(super) fn validate_subscript_assignment_target(
     }
 }
 
-pub(super) struct SubscriptAugAssignTarget<'a> {
-    pub(super) object_name: &'a str,
-    pub(super) object_ty: Type,
-    pub(super) index_ty: &'a Type,
-    pub(super) rhs_ty: &'a Type,
-    pub(super) op: &'a str,
-    pub(super) target_range: TextRange,
-    pub(super) rhs_range: TextRange,
+pub(in crate::lower) struct SubscriptAugAssignTarget<'a> {
+    pub(in crate::lower) object_name: &'a str,
+    pub(in crate::lower) object_ty: Type,
+    pub(in crate::lower) index_ty: &'a Type,
+    pub(in crate::lower) rhs_ty: &'a Type,
+    pub(in crate::lower) op: &'a str,
+    pub(in crate::lower) target_range: TextRange,
+    pub(in crate::lower) rhs_range: TextRange,
 }
 
-pub(super) fn validate_subscript_augassign_target(
+pub(in crate::lower) fn validate_subscript_augassign_target(
     ctx: &mut LowerCtx,
     target: SubscriptAugAssignTarget<'_>,
 ) -> Type {
@@ -244,7 +244,7 @@ pub(super) fn validate_subscript_augassign_target(
     }
 }
 
-pub(super) fn apply_container_specialization_patches(
+pub(in crate::lower) fn apply_container_specialization_patches(
     stmts: &mut [HirStmt],
     pending: &mut HashMap<String, Type>,
 ) {

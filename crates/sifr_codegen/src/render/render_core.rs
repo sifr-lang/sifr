@@ -1,13 +1,9 @@
-
-use crate::{
-    RustExpr, RustFile, RustItem, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType,
-    Visibility,
-};
-use std::fmt::Write as _;
+use super::*;
+use crate::{RustFile, RustItem, RustStmt};
 
 pub struct Renderer {
-    output: String,
-    indent: usize,
+    pub(crate) output: String,
+    pub(crate) indent: usize,
 }
 
 impl Renderer {
@@ -304,7 +300,6 @@ impl Renderer {
             RustItem::Attr(attr) => self.emit_line(attr),
         }
     }
-
 }
 
 impl Renderer {
@@ -312,14 +307,14 @@ impl Renderer {
         self.render_stmt_with_tail(stmt, false);
     }
 
-    fn render_body(&mut self, body: &[RustStmt]) {
+    pub(crate) fn render_body(&mut self, body: &[RustStmt]) {
         let last_idx = body.len().saturating_sub(1);
         for (idx, stmt) in body.iter().enumerate() {
             self.render_stmt_with_tail(stmt, idx == last_idx);
         }
     }
 
-    fn render_stmt_with_tail(&mut self, stmt: &RustStmt, tail: bool) {
+    pub(crate) fn render_stmt_with_tail(&mut self, stmt: &RustStmt, tail: bool) {
         match stmt {
             RustStmt::Let {
                 mutable,
@@ -581,5 +576,4 @@ impl Renderer {
             }
         }
     }
-
 }

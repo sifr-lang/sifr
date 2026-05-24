@@ -2,7 +2,7 @@ use super::expression_diagnostics;
 use super::LowerCtx;
 use ruff_text_size::TextRange;
 
-pub(super) fn method_count_range(
+pub(in crate::lower) fn method_count_range(
     actual: usize,
     max_allowed: usize,
     arg_ranges: &[TextRange],
@@ -15,11 +15,15 @@ pub(super) fn method_count_range(
     }
 }
 
-pub(super) fn reject_method_arg_count(ctx: &mut LowerCtx, message: String, range: TextRange) {
+pub(in crate::lower) fn reject_method_arg_count(
+    ctx: &mut LowerCtx,
+    message: String,
+    range: TextRange,
+) {
     expression_diagnostics::call_wrong_positional_count(ctx, message, range);
 }
 
-pub(super) fn reject_exact_method_arg_count(
+pub(in crate::lower) fn reject_exact_method_arg_count(
     ctx: &mut LowerCtx,
     method: &str,
     expected: usize,
@@ -35,7 +39,7 @@ pub(super) fn reject_exact_method_arg_count(
     );
 }
 
-pub(super) fn reject_max_method_arg_count(
+pub(in crate::lower) fn reject_max_method_arg_count(
     ctx: &mut LowerCtx,
     method: &str,
     max_allowed: usize,
@@ -51,7 +55,7 @@ pub(super) fn reject_max_method_arg_count(
     );
 }
 
-pub(super) fn reject_no_method_args(
+pub(in crate::lower) fn reject_no_method_args(
     ctx: &mut LowerCtx,
     method: &str,
     arg_ranges: &[TextRange],

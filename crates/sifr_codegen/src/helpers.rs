@@ -1,2 +1,6 @@
-include!("helpers/helpers_impl.rs");
-include!("helpers/tests.rs");
+use super::{IsNoneUnionMatch, IsinstanceUnionMatch, ModuleFuncSignatures};
+
+mod helpers_impl;
+pub(crate) use helpers_impl::*;
+#[cfg(test)]
+mod tests;

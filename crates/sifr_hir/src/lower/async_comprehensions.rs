@@ -6,7 +6,10 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprDictComp, ExprListComp, ExprSetComp};
 use sifr_type_system::Type;
 
-pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<Option<HirExpr>> {
+pub(in crate::lower) fn lower_list_comp(
+    comp: &ExprListComp,
+    ctx: &mut LowerCtx,
+) -> Option<Option<HirExpr>> {
     if !comp.generators.iter().any(|generator| generator.is_async) {
         return None;
     }
@@ -98,7 +101,10 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
     Some(result)
 }
 
-pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<Option<HirExpr>> {
+pub(in crate::lower) fn lower_set_comp(
+    comp: &ExprSetComp,
+    ctx: &mut LowerCtx,
+) -> Option<Option<HirExpr>> {
     if !comp.generators.iter().any(|generator| generator.is_async) {
         return None;
     }
@@ -126,7 +132,10 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<O
     Some(result)
 }
 
-pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<Option<HirExpr>> {
+pub(in crate::lower) fn lower_dict_comp(
+    comp: &ExprDictComp,
+    ctx: &mut LowerCtx,
+) -> Option<Option<HirExpr>> {
     if !comp.generators.iter().any(|generator| generator.is_async) {
         return None;
     }

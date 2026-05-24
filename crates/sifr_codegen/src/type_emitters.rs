@@ -7,7 +7,7 @@ use sifr_hir::{HirClass, HirFunction, MethodKind};
 use sifr_type_system::Type;
 
 impl RustEmitter {
-    pub(super) fn emit_protocol_trait(&mut self, class: &HirClass, _module_public: bool) {
+    pub(crate) fn emit_protocol_trait(&mut self, class: &HirClass, _module_public: bool) {
         // Protocol traits are part of the generated structural interface even
         // when only their impls are referenced directly in a binary crate.
         let visibility = Visibility::Pub;
@@ -42,7 +42,7 @@ impl RustEmitter {
         });
     }
 
-    pub(super) fn emit_enum_class(&mut self, class: &HirClass, module_public: bool) {
+    pub(crate) fn emit_enum_class(&mut self, class: &HirClass, module_public: bool) {
         let visibility = if module_public {
             Visibility::Pub
         } else {
@@ -153,7 +153,7 @@ impl RustEmitter {
         });
     }
 
-    pub(super) fn emit_newtype(&mut self, class: &HirClass, inner: &Type, module_public: bool) {
+    pub(crate) fn emit_newtype(&mut self, class: &HirClass, inner: &Type, module_public: bool) {
         let visibility = if module_public {
             Visibility::Pub
         } else {
@@ -272,7 +272,7 @@ impl RustEmitter {
         });
     }
 
-    fn lower_type_emitter_method_item(
+    pub(crate) fn lower_type_emitter_method_item(
         &mut self,
         method: &HirFunction,
         module_public: bool,
@@ -327,7 +327,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_type_emitter_method_body(&mut self, method: &HirFunction) -> Vec<RustStmt> {
+    pub(crate) fn lower_type_emitter_method_body(&mut self, method: &HirFunction) -> Vec<RustStmt> {
         self.lower_function_like_body(
             method,
             "structured method statement lowering missing for IR-first type emission",
