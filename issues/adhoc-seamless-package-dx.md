@@ -257,7 +257,7 @@ Review:
 
 ### milestone_adhoc_pkg_8: Cargo-compatible workspace run ergonomics
 
-Status: implemented locally; reviewer-approved; parent PR pending.
+Status: completed; merged.
 
 Scope:
 
@@ -281,6 +281,10 @@ Demo PR:
 
 - https://github.com/sifr-lang/sifr-demo-workspace/pull/3
 
+Implementation PR:
+
+- https://github.com/sifr-lang/sifr/pull/2170
+
 Review:
 
 - `reviews/adhoc-package-dx-m8-review-pass-1.md` -> READY with no blocking findings.
@@ -292,9 +296,10 @@ Acceptance:
 
 ## Final Phase Review
 
-Status: reviewer-approved after all M1-M7 PRs were merged; reopened for M8 run ergonomics.
+Status: reviewer-approved after all M1-M8 PRs were merged.
 
 - `reviews/adhoc-package-dx-final-review-pass-1.md` -> READY with no blocking findings.
+- `reviews/adhoc-package-dx-final-review-pass-4.md` -> READY with no blocking findings.
 
 ## Problem
 

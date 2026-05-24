@@ -249,7 +249,7 @@ fn cmd_run_with_session(
     ) = plan.run_target
     {
         if !session.manifest_less_mode {
-            return cmd_run_package_file(&path, &session, lock_mode, app_args, diagnostic_format);
+            return cmd_run_package_file(&path, session, lock_mode, app_args, diagnostic_format);
         }
         return cmd_run_file(&path, app_args, diagnostic_format);
     }
