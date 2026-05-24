@@ -100,23 +100,23 @@ pub struct RustEmitter {
     pub(crate) local_binding_types: HashMap<String, Type>,
     /// Local names widened to `T | None` due `name = None` reassignment in current scope.
     pub(crate) none_widened_local_bindings: HashSet<String>,
-    /// Local names whose generated Rust binding has been promoted from legacy `i64` to `SifrInt`.
+    /// Local names whose generated Rust binding has been promoted from plain `i64` storage to `SifrInt`.
     pub(crate) sifr_int_local_bindings: RefCell<HashSet<String>>,
     /// Local names pre-promoted to `SifrInt` because a later assignment needs exact-int storage.
     pub(crate) sifr_int_forced_local_bindings: RefCell<HashSet<String>>,
     /// Local names whose generated Rust `Result[int, E]` binding payload is `SifrInt`.
     pub(crate) sifr_int_result_local_bindings: RefCell<HashSet<String>>,
-    /// Function names whose generated Rust return type has been promoted from legacy `i64` to `SifrInt`.
+    /// Function names whose generated Rust return type has been promoted from plain `i64` storage to `SifrInt`.
     pub(crate) sifr_int_function_returns: RefCell<HashSet<String>>,
     /// Function names whose `Result[int, E]` generated Rust return payload is `SifrInt`.
     pub(crate) sifr_int_result_function_returns: RefCell<HashSet<String>>,
     /// Class method keys whose `Result[int, E]` generated Rust return payload is `SifrInt`.
     pub(crate) sifr_int_result_method_returns: RefCell<HashSet<String>>,
-    /// Module-level function `int` parameters promoted from legacy `i64` to `SifrInt`.
+    /// Module-level function `int` parameters promoted from plain `i64` storage to `SifrInt`.
     pub(crate) sifr_int_function_params: RefCell<HashMap<String, HashSet<usize>>>,
-    /// Module-level function `Result[int, E]` parameters promoted from legacy `i64` payloads to `SifrInt`.
+    /// Module-level function `Result[int, E]` parameters promoted from plain `i64` payloads to `SifrInt`.
     pub(crate) sifr_int_result_function_params: RefCell<HashMap<String, HashSet<usize>>>,
-    /// Class method `Result[int, E]` parameters promoted from legacy `i64` payloads to `SifrInt`.
+    /// Class method `Result[int, E]` parameters promoted from plain `i64` payloads to `SifrInt`.
     pub(crate) sifr_int_result_method_params: RefCell<HashMap<String, HashSet<usize>>>,
     /// Whether the active function-like body returns `SifrInt` for source-level `int`.
     pub(crate) current_sifr_int_return: Cell<bool>,

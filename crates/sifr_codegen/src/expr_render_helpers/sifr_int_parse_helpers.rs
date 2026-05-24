@@ -413,24 +413,24 @@ pub(super) fn is_sifr_int_operand_coercion_op(op: &str) -> bool {
     is_sifr_int_arithmetic_op(op) || is_sifr_int_comparison_op(op)
 }
 
-pub(super) fn is_legacy_i64_type(ty: Option<&crate::RustType>) -> bool {
+pub(super) fn is_plain_i64_storage_type(ty: Option<&crate::RustType>) -> bool {
     matches!(ty, Some(crate::RustType::I64))
         || matches!(ty, Some(crate::RustType::Named(name)) if name == "i64")
 }
 
-pub(super) fn is_result_legacy_i64_type(ty: Option<&crate::RustType>) -> bool {
-    matches!(ty, Some(crate::RustType::Result(ok, _)) if is_legacy_i64_rust_type(ok))
+pub(super) fn is_result_plain_i64_storage_type(ty: Option<&crate::RustType>) -> bool {
+    matches!(ty, Some(crate::RustType::Result(ok, _)) if is_plain_i64_rust_type(ok))
         || matches!(ty, Some(crate::RustType::Named(name)) if name.starts_with("Result<i64, "))
 }
 
-pub(super) fn is_legacy_i64_rust_type(ty: &crate::RustType) -> bool {
+pub(super) fn is_plain_i64_rust_type(ty: &crate::RustType) -> bool {
     matches!(ty, crate::RustType::I64)
         || matches!(ty, crate::RustType::Named(name) if name == "i64")
 }
 
-pub(super) fn result_i64_type_to_sifr_int(ty: crate::RustType) -> crate::RustType {
+pub(super) fn promote_result_i64_ok_to_sifr_int(ty: crate::RustType) -> crate::RustType {
     match ty {
-        crate::RustType::Result(ok, err) if is_legacy_i64_rust_type(&ok) => {
+        crate::RustType::Result(ok, err) if is_plain_i64_rust_type(&ok) => {
             crate::RustType::Result(Box::new(crate::RustType::Named("SifrInt".to_string())), err)
         }
         crate::RustType::Named(name) if name.starts_with("Result<i64, ") => {
