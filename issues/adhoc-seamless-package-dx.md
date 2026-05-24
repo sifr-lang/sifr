@@ -11,6 +11,7 @@ Related phase: `internal_docs/phases/37_package_management.md`
 - [x] milestone_adhoc_pkg_5: Workspaces, aliases, and multiple versions
 - [x] milestone_adhoc_pkg_6: Packaging, publishing, vendoring, and release checks
 - [x] milestone_adhoc_pkg_7: Migration, docs, demos, and long-term guardrails
+- [ ] milestone_adhoc_pkg_8: Cargo-compatible workspace run ergonomics
 
 ## Milestone Progress
 
@@ -254,9 +255,36 @@ Review:
 
 - `reviews/adhoc-package-dx-m7-review-pass-1.md` -> READY with no blocking findings.
 
+### milestone_adhoc_pkg_8: Cargo-compatible workspace run ergonomics
+
+Status: planned.
+
+Scope:
+
+- Add Cargo-compatible package selection to `sifr run`: `-p/--package <spec>`.
+- Make `sifr run -p <package>`, `sifr run -p <package> --bin <target>`, and `sifr run -p <package> --script <name>` work from a Cargo workspace root using the selected member's `sifr.toml`, source root, scripts, app targets, dependencies, and shared workspace `Cargo.lock`.
+- Align default workspace-root behavior with Cargo: honor `workspace.default-members` when it resolves to exactly one runnable Sifr app package, otherwise report a clear ambiguity diagnostic that suggests `sifr run -p <package>`.
+- Preserve existing package-local behavior from member directories and preserve manifest-less / explicit-file `sifr run path/to/file.sifr` behavior.
+- Keep this milestone Cargo-compatible only, limited to package selection with `-p/--package` composed with existing `run` flags: `--bin`, `--script`, `--locked`, `--offline`, `--frozen`, and app args after `--`.
+
+Validation:
+
+- `cargo test -p sifr_package package_session -- --test-threads=1`
+- `cargo test -p sifr --bin sifr package_cli -- --test-threads=1`
+- `python3 scripts/check_package_manager_guardrails.py`
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --locked`
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --bin <target> --locked` using a checked-in or temporary `src/bin/*.sifr` target.
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --script <script> --locked` once the demo member declares a structured run script.
+- `scripts/run_all_tests.sh --profile quick`
+
+Acceptance:
+
+- Developers can run a specific Sifr application from a workspace root without changing directories and without using Cargo directly.
+- The supported CLI shape matches Cargo package selection names and behavior; any richer monorepo filtering remains explicitly out of scope.
+
 ## Final Phase Review
 
-Status: reviewer-approved after all M1-M7 PRs were merged.
+Status: reviewer-approved after all M1-M7 PRs were merged; reopened for M8 run ergonomics.
 
 - `reviews/adhoc-package-dx-final-review-pass-1.md` -> READY with no blocking findings.
 
@@ -274,6 +302,7 @@ The developer experience is still not seamless:
 - Development/test-only dependencies should follow Cargo's manifest model instead of introducing uv-style dependency groups.
 - Single-file Sifr usage must stay easy: `sifr run main.sifr` and `sifr run any-other-name.sifr` should work without `sifr.toml`.
 - Multiple versions, aliases, workspaces, lock modes, publishing, and Rust-backed packages need one coherent Sifr UX that does not inherit Cargo's complexity.
+- Post-M7 gap: `sifr check`, `sifr package`, and `sifr publish` support Cargo-compatible `-p/--package` workspace selection, but `sifr run` does not yet let developers run a selected workspace member from the workspace root.
 
 ## Goal
 
@@ -1514,6 +1543,32 @@ Acceptance:
 
 - A user can clone `sifr-demo-app`, run Sifr commands only, and understand failures from Sifr diagnostics.
 
+### milestone_adhoc_pkg_8: Cargo-Compatible Workspace Run Ergonomics
+
+Scope:
+
+- Extend `sifr run` with Cargo-compatible `-p/--package <spec>` package selection.
+- Resolve the selected Cargo workspace member before app-target and script resolution so `--bin`, `--script`, `[package].default-run`, `src/main.sifr`, and `src/bin/*.sifr` are interpreted in the selected package context.
+- From a virtual workspace root, follow Cargo default-member selection for `sifr run` only when it resolves to one runnable Sifr app package; otherwise report an ambiguity diagnostic that points to `sifr run -p <package>`.
+- Reuse existing package-session validation for selected member manifests, package source roots, dependency scopes, lock/network flags, app args after `--`, and explicit-file source-root checks.
+- Update `docs/package_management.md`, the package-management demo transcript, and the Cargo CLI alignment matrix for the new `run -p` surface.
+- Keep the surface Cargo-compatible only, limited to package selection with `-p/--package` composed with existing `run` flags: `--bin`, `--script`, `--locked`, `--offline`, `--frozen`, and app args after `--`.
+
+Validation:
+
+- `cargo test -p sifr_package package_session -- --test-threads=1`
+- `cargo test -p sifr --bin sifr package_cli -- --test-threads=1`
+- `python3 scripts/check_package_manager_guardrails.py`
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --locked`
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --bin <target> --locked`
+- Demo smoke in `sifr-demo-workspace`: `target/debug/sifr run -p sifr-demo-app --script <script> --locked`
+- `scripts/run_all_tests.sh --profile quick`
+
+Acceptance:
+
+- From a Cargo workspace root, developers can run a specific Sifr app package with `sifr run -p <package>` and refine the selected app with existing Cargo-shaped target flags.
+- Existing member-directory, manifest-less, explicit-file, package-local script, package/archive/publish selection, and lock-mode behavior remains unchanged.
+
 ## Implementation Order
 
 1. Source layout and `__init__.sifr` source-map rules.
@@ -1525,6 +1580,7 @@ Acceptance:
 7. `sifr run` and `sifr test`.
 8. Workspace/alias/multiple-version hardening.
 9. Publish/vendor/migration/docs/demo closeout.
+10. Cargo-compatible workspace-root `sifr run -p` ergonomics.
 
 This order keeps the compiler integration dependent on a stable package source map, and keeps publishing dependent on the final canonical layout.
 
