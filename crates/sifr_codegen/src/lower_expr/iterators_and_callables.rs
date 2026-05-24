@@ -1,4 +1,9 @@
-fn try_lower_simple_divmod_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
+use super::{
+    is_option_like_simple, resolve_alias_type, try_lower_leaf_expr, try_lower_leaf_or_name_expr,
+    try_lower_task_duration_expr, HirExpr, ParamConvention, RustExpr, RustParam, RustStmt,
+    RustType, Type,
+};
+pub(super) fn try_lower_simple_divmod_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [left, right] = args else {
         return None;
     };
@@ -19,7 +24,7 @@ fn try_lower_simple_divmod_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     ]))
 }
 
-fn try_lower_simple_callable_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_callable_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Lambda { params, body, .. } = expr {
         let lowered_params = params
             .iter()
@@ -37,7 +42,7 @@ fn try_lower_simple_callable_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_or_name_expr(expr)
 }
 
-fn unwrap_simple_iter_source_expr(expr: &HirExpr) -> &HirExpr {
+pub(super) fn unwrap_simple_iter_source_expr(expr: &HirExpr) -> &HirExpr {
     match expr {
         HirExpr::IteratorCall {
             op: sifr_hir::HirIteratorOp::Iter,
@@ -49,7 +54,7 @@ fn unwrap_simple_iter_source_expr(expr: &HirExpr) -> &HirExpr {
     }
 }
 
-fn apply_simple_copy_clone_yield_mode(
+pub(super) fn apply_simple_copy_clone_yield_mode(
     iter_expr: RustExpr,
     yield_mode: crate::helpers::YieldMode,
 ) -> RustExpr {
@@ -68,7 +73,7 @@ fn apply_simple_copy_clone_yield_mode(
     }
 }
 
-fn try_lower_simple_iter_source_expr(iter_expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_iter_source_expr(iter_expr: &HirExpr) -> Option<RustExpr> {
     let source_expr = unwrap_simple_iter_source_expr(iter_expr);
     let lowered_source = try_lower_leaf_or_name_expr(source_expr)?;
     let source_ty = resolve_alias_type(source_expr.ty());
@@ -176,7 +181,7 @@ fn try_lower_simple_iter_source_expr(iter_expr: &HirExpr) -> Option<RustExpr> {
     }
 }
 
-fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [callable, iter] = args else {
         return None;
     };
@@ -193,7 +198,10 @@ fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     })
 }
 
-fn lower_simple_map_callable_expr(callable: &HirExpr, iter: &HirExpr) -> Option<RustExpr> {
+pub(super) fn lower_simple_map_callable_expr(
+    callable: &HirExpr,
+    iter: &HirExpr,
+) -> Option<RustExpr> {
     let lowered_callable = try_lower_simple_callable_expr(callable)?;
     let Some((param_types, conventions)) = simple_callable_param_info(callable) else {
         return Some(lowered_callable);
@@ -222,7 +230,9 @@ fn lower_simple_map_callable_expr(callable: &HirExpr, iter: &HirExpr) -> Option<
     })
 }
 
-fn simple_callable_param_info(callable: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>)> {
+pub(super) fn simple_callable_param_info(
+    callable: &HirExpr,
+) -> Option<(Vec<Type>, Vec<ParamConvention>)> {
     match resolve_alias_type(callable.ty()) {
         Type::Function(ft) | Type::AsyncFunction(ft) => Some((
             ft.params
@@ -241,7 +251,7 @@ fn simple_callable_param_info(callable: &HirExpr) -> Option<(Vec<Type>, Vec<Para
     }
 }
 
-fn adapt_simple_map_callable_arg(
+pub(super) fn adapt_simple_map_callable_arg(
     mut lowered_arg: RustExpr,
     arg_ty: &Type,
     param_ty: &Type,
@@ -283,7 +293,7 @@ fn adapt_simple_map_callable_arg(
     }
 }
 
-fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [callable, iter] = args else {
         return None;
     };
@@ -351,7 +361,7 @@ fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     })
 }
 
-fn try_lower_simple_method_call_expr(
+pub(super) fn try_lower_simple_method_call_expr(
     object: &HirExpr,
     method: &str,
     args: &[HirExpr],
@@ -433,7 +443,7 @@ fn try_lower_simple_method_call_expr(
     None
 }
 
-fn try_lower_dict_get_key_expr(index: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_dict_get_key_expr(index: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::StringLiteral(value) = index {
         return Some(RustExpr::Ident(format!("{value:?}")));
     }
@@ -443,13 +453,19 @@ fn try_lower_dict_get_key_expr(index: &HirExpr) -> Option<RustExpr> {
     })
 }
 
-fn try_lower_simple_constructor_call_expr(class_name: &str, args: &[HirExpr]) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_constructor_call_expr(
+    class_name: &str,
+    args: &[HirExpr],
+) -> Option<RustExpr> {
     let _ = class_name;
     let _ = args;
     None
 }
 
-fn try_lower_simple_defaultdict_index_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_defaultdict_index_expr(
+    object: &HirExpr,
+    index: &HirExpr,
+) -> Option<RustExpr> {
     let Type::Alias {
         name: alias_name,
         body,
@@ -505,4 +521,3 @@ fn try_lower_simple_defaultdict_index_expr(object: &HirExpr, index: &HirExpr) ->
         },
     })
 }
-

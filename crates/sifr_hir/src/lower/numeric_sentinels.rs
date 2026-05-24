@@ -5,29 +5,29 @@ use sifr_type_system::Type;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum NumericSentinelKind {
+pub(in crate::lower) enum NumericSentinelKind {
     PositiveInfinity,
     NegativeInfinity,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum NumericSentinelDomain {
+pub(in crate::lower) enum NumericSentinelDomain {
     Int,
     Float,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) struct NumericSentinelFact {
+pub(in crate::lower) struct NumericSentinelFact {
     kind: NumericSentinelKind,
     domain: Option<NumericSentinelDomain>,
 }
 
 impl LowerCtx {
-    pub(super) fn clear_numeric_sentinel_var(&mut self, name: &str) {
+    pub(in crate::lower) fn clear_numeric_sentinel_var(&mut self, name: &str) {
         self.numeric_sentinel_vars.remove(name);
     }
 
-    pub(super) fn record_numeric_sentinel_initializer(
+    pub(in crate::lower) fn record_numeric_sentinel_initializer(
         &mut self,
         name: String,
         kind: NumericSentinelKind,
@@ -36,16 +36,22 @@ impl LowerCtx {
             .insert(name, NumericSentinelFact { kind, domain: None });
     }
 
-    pub(super) fn numeric_sentinel_fact(&self, name: &str) -> Option<NumericSentinelFact> {
+    pub(in crate::lower) fn numeric_sentinel_fact(
+        &self,
+        name: &str,
+    ) -> Option<NumericSentinelFact> {
         self.numeric_sentinel_vars.get(name).copied()
     }
 
-    pub(super) fn numeric_sentinel_domain(&self, name: &str) -> Option<NumericSentinelDomain> {
+    pub(in crate::lower) fn numeric_sentinel_domain(
+        &self,
+        name: &str,
+    ) -> Option<NumericSentinelDomain> {
         self.numeric_sentinel_fact(name)
             .and_then(|fact| fact.domain)
     }
 
-    pub(super) fn resolve_numeric_sentinel_domain(
+    pub(in crate::lower) fn resolve_numeric_sentinel_domain(
         &mut self,
         name: &str,
         domain: NumericSentinelDomain,
@@ -70,19 +76,21 @@ impl LowerCtx {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) struct NumericSentinelPatch {
+pub(in crate::lower) struct NumericSentinelPatch {
     kind: NumericSentinelKind,
     domain: NumericSentinelDomain,
 }
 
-pub(super) fn numeric_sentinel_kind(expr: &Expr) -> Option<NumericSentinelKind> {
+pub(in crate::lower) fn numeric_sentinel_kind(expr: &Expr) -> Option<NumericSentinelKind> {
     let Expr::Call(call) = expr else {
         return None;
     };
     float_sentinel_kind_from_call(call)
 }
 
-pub(super) fn float_sentinel_kind_from_call(call: &ExprCall) -> Option<NumericSentinelKind> {
+pub(in crate::lower) fn float_sentinel_kind_from_call(
+    call: &ExprCall,
+) -> Option<NumericSentinelKind> {
     let sifr_python_ast::Expr::Name(func_name) = call.func.as_ref() else {
         return None;
     };
@@ -100,14 +108,14 @@ pub(super) fn float_sentinel_kind_from_call(call: &ExprCall) -> Option<NumericSe
     }
 }
 
-pub(super) fn float_sentinel_expr(kind: NumericSentinelKind) -> HirExpr {
+pub(in crate::lower) fn float_sentinel_expr(kind: NumericSentinelKind) -> HirExpr {
     HirExpr::FloatLiteral(match kind {
         NumericSentinelKind::PositiveInfinity => f64::INFINITY,
         NumericSentinelKind::NegativeInfinity => f64::NEG_INFINITY,
     })
 }
 
-pub(super) fn domain_typed_sentinel_expr(
+pub(in crate::lower) fn domain_typed_sentinel_expr(
     kind: NumericSentinelKind,
     domain: NumericSentinelDomain,
 ) -> HirExpr {
@@ -120,7 +128,7 @@ pub(super) fn domain_typed_sentinel_expr(
     }
 }
 
-pub(super) fn maybe_resolve_numeric_sentinel_name_from_type(
+pub(in crate::lower) fn maybe_resolve_numeric_sentinel_name_from_type(
     expr: &HirExpr,
     counterpart_ty: &Type,
     ctx: &mut LowerCtx,
@@ -136,7 +144,7 @@ pub(super) fn maybe_resolve_numeric_sentinel_name_from_type(
     None
 }
 
-pub(super) fn retag_numeric_sentinel_name_expr(expr: HirExpr, ctx: &LowerCtx) -> HirExpr {
+pub(in crate::lower) fn retag_numeric_sentinel_name_expr(expr: HirExpr, ctx: &LowerCtx) -> HirExpr {
     let HirExpr::Name { name, .. } = &expr else {
         return expr;
     };
@@ -149,7 +157,7 @@ pub(super) fn retag_numeric_sentinel_name_expr(expr: HirExpr, ctx: &LowerCtx) ->
     }
 }
 
-pub(super) fn lower_sentinel_expr_for_name_domain(
+pub(in crate::lower) fn lower_sentinel_expr_for_name_domain(
     expr: &Expr,
     other: &HirExpr,
     ctx: &LowerCtx,
@@ -162,7 +170,7 @@ pub(super) fn lower_sentinel_expr_for_name_domain(
     Some(domain_typed_sentinel_expr(kind, domain))
 }
 
-pub(super) fn normalize_min_max_numeric_sentinels(
+pub(in crate::lower) fn normalize_min_max_numeric_sentinels(
     left_src: &Expr,
     right_src: &Expr,
     mut left: HirExpr,
@@ -202,7 +210,7 @@ fn sentinel_aware_min_max_result_type(left_ty: &Type, right_ty: &Type) -> Type {
     }
 }
 
-pub(super) fn apply_numeric_sentinel_patches(
+pub(in crate::lower) fn apply_numeric_sentinel_patches(
     stmts: &mut [HirStmt],
     pending: &mut HashMap<String, NumericSentinelPatch>,
 ) {
@@ -303,14 +311,14 @@ fn patch_stmt_numeric_sentinels(
     }
 }
 
-pub(super) fn domain_type(domain: NumericSentinelDomain) -> Type {
+pub(in crate::lower) fn domain_type(domain: NumericSentinelDomain) -> Type {
     match domain {
         NumericSentinelDomain::Int => Type::Int,
         NumericSentinelDomain::Float => Type::Float,
     }
 }
 
-pub(super) fn numeric_domain_for_type(ty: &Type) -> Option<NumericSentinelDomain> {
+pub(in crate::lower) fn numeric_domain_for_type(ty: &Type) -> Option<NumericSentinelDomain> {
     match ty.resolve_alias() {
         Type::Int | Type::LiteralInt(_) => Some(NumericSentinelDomain::Int),
         Type::Float => Some(NumericSentinelDomain::Float),

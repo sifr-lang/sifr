@@ -7,7 +7,7 @@ use sifr_type_system::Type;
 use super::LowerCtx;
 
 #[allow(dead_code)]
-pub(super) fn is_error_class_with_ctx(
+pub(in crate::lower) fn is_error_class_with_ctx(
     class_def: &StmtClassDef,
     error_types: &std::collections::HashSet<String>,
 ) -> bool {
@@ -23,7 +23,7 @@ pub(super) fn is_error_class_with_ctx(
 }
 
 /// Check if a class definition has `(Error)` as its base class.
-pub(super) fn is_error_class(class_def: &StmtClassDef) -> bool {
+pub(in crate::lower) fn is_error_class(class_def: &StmtClassDef) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
             if n.id.as_str() == "Error" {
@@ -35,7 +35,7 @@ pub(super) fn is_error_class(class_def: &StmtClassDef) -> bool {
 }
 
 /// Check if a type is a valid error type (a class registered in `error_types`).
-pub(super) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
+pub(in crate::lower) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty {
         Type::Class { name, .. } => ctx.error_types.contains(name),
         Type::TimeoutResult(inner) => is_valid_error_type(inner, ctx),
@@ -44,7 +44,7 @@ pub(super) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
 }
 
 /// Format a type name for use in error messages.
-pub(super) fn format_type_name(ty: &Type) -> String {
+pub(in crate::lower) fn format_type_name(ty: &Type) -> String {
     match ty {
         Type::Int => "int".to_string(),
         Type::FixedInt(fixed) => fixed.source_name().to_string(),
@@ -61,7 +61,7 @@ pub(super) fn format_type_name(ty: &Type) -> String {
     }
 }
 
-pub(super) fn list_append_argument_type_mismatch(
+pub(in crate::lower) fn list_append_argument_type_mismatch(
     ctx: &mut LowerCtx,
     actual: &Type,
     expected: &Type,
@@ -79,7 +79,7 @@ pub(super) fn list_append_argument_type_mismatch(
 }
 
 /// Collect error types from raise statements in a list of HIR statements.
-pub(super) fn collect_raise_error_types(
+pub(in crate::lower) fn collect_raise_error_types(
     stmts: &[HirStmt],
     errors: &mut std::collections::HashSet<String>,
 ) {
@@ -115,7 +115,7 @@ pub(super) fn collect_raise_error_types(
 }
 
 /// Check if a class definition has `(Protocol)` as its base class.
-pub(super) fn is_protocol_class(class_def: &StmtClassDef) -> bool {
+pub(in crate::lower) fn is_protocol_class(class_def: &StmtClassDef) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
             if n.id.as_str() == "Protocol" {
@@ -128,7 +128,7 @@ pub(super) fn is_protocol_class(class_def: &StmtClassDef) -> bool {
 
 /// Check if a class definition is a newtype wrapper around a primitive.
 /// Returns the wrapped primitive type if so.
-pub(super) fn get_newtype_inner(class_def: &StmtClassDef) -> Option<Type> {
+pub(in crate::lower) fn get_newtype_inner(class_def: &StmtClassDef) -> Option<Type> {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
             match n.id.as_str() {
@@ -165,13 +165,13 @@ const OPERATOR_DUNDERS: &[&str] = &[
 ];
 
 /// Check if a method name is an operator dunder.
-pub(super) fn is_operator_dunder(name: &str) -> bool {
+pub(in crate::lower) fn is_operator_dunder(name: &str) -> bool {
     OPERATOR_DUNDERS.contains(&name)
 }
 
 /// Get the parent class name for single inheritance.
 /// Returns None for Error, Protocol, and primitive base classes.
-pub(super) fn get_parent_class(class_def: &StmtClassDef) -> Option<String> {
+pub(in crate::lower) fn get_parent_class(class_def: &StmtClassDef) -> Option<String> {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
             let name = n.id.as_str();
@@ -189,7 +189,7 @@ pub(super) fn get_parent_class(class_def: &StmtClassDef) -> Option<String> {
 }
 
 /// Check if a class is an enum (inherits from Enum)
-pub(super) fn is_enum_class(class_def: &StmtClassDef) -> bool {
+pub(in crate::lower) fn is_enum_class(class_def: &StmtClassDef) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
             if n.id.as_str() == "Enum" {
@@ -200,14 +200,14 @@ pub(super) fn is_enum_class(class_def: &StmtClassDef) -> bool {
     false
 }
 
-pub(super) struct EnumVariantInfo {
-    pub(super) name: String,
-    pub(super) value: Option<i64>,
-    pub(super) name_range: TextRange,
+pub(in crate::lower) struct EnumVariantInfo {
+    pub(in crate::lower) name: String,
+    pub(in crate::lower) value: Option<i64>,
+    pub(in crate::lower) name_range: TextRange,
 }
 
 /// Collect enum variants from a class body.
-pub(super) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<EnumVariantInfo> {
+pub(in crate::lower) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<EnumVariantInfo> {
     let mut variants = Vec::new();
     let mut auto_value = 1i64;
     for stmt in &class_def.body {
@@ -269,7 +269,7 @@ pub(super) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<EnumVariant
 }
 
 /// Check if a function definition has a specific decorator.
-pub(super) fn has_decorator(func: &StmtFunctionDef, decorator_name: &str) -> bool {
+pub(in crate::lower) fn has_decorator(func: &StmtFunctionDef, decorator_name: &str) -> bool {
     for decorator in &func.decorator_list {
         if let Expr::Name(n) = &decorator.expression {
             if n.id.as_str() == decorator_name {

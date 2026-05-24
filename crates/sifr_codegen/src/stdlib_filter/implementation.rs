@@ -207,7 +207,7 @@ fn deps_by_item_name(ir: &StdlibIrFile) -> HashMap<String, HashSet<String>> {
     deps
 }
 
-fn transitive_needed_items(
+pub(super) fn transitive_needed_items(
     imported_names: &HashSet<String>,
     deps: &HashMap<String, HashSet<String>>,
 ) -> HashSet<String> {
@@ -241,7 +241,7 @@ fn render_needed_ir_items(ir: &StdlibIrFile, needed: &HashSet<String>) -> String
     render_items(&kept_items)
 }
 
-fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
+pub(super) fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
     let mut shared_needs = SharedPreludeNeeds::default();
     for item in items {
         match item {
@@ -272,7 +272,7 @@ fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
     collector.shared_needs
 }
 
-fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
+pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
     SharedPreludeNeeds {
         collections: SharedPreludeCollectionNeeds {
             needs_hashmap: code.contains("HashMap"),
@@ -313,7 +313,7 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
     }
 }
 
-fn is_shared_prelude_item(item: &Item) -> bool {
+pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
     match item {
         Item::Use(item_use) => is_shared_prelude_use(item_use),
         Item::Enum(item_enum) => item_enum.ident == "SifrFileHandle",
@@ -327,14 +327,18 @@ fn is_shared_prelude_item(item: &Item) -> bool {
     }
 }
 
-fn is_shared_prelude_use(item_use: &ItemUse) -> bool {
+pub(super) fn is_shared_prelude_use(item_use: &ItemUse) -> bool {
     let mut imported_paths = Vec::new();
     collect_use_paths(&item_use.tree, &mut Vec::new(), &mut imported_paths);
 
     !imported_paths.is_empty() && imported_paths.iter().all(|path| is_shared_use_path(path))
 }
 
-fn collect_use_paths(tree: &UseTree, prefix: &mut Vec<String>, out: &mut Vec<Vec<String>>) {
+pub(super) fn collect_use_paths(
+    tree: &UseTree,
+    prefix: &mut Vec<String>,
+    out: &mut Vec<Vec<String>>,
+) {
     match tree {
         UseTree::Path(path) => {
             prefix.push(path.ident.to_string());
@@ -362,7 +366,7 @@ fn collect_use_paths(tree: &UseTree, prefix: &mut Vec<String>, out: &mut Vec<Vec
     }
 }
 
-fn is_shared_use_path(path: &[String]) -> bool {
+pub(super) fn is_shared_use_path(path: &[String]) -> bool {
     matches!(
         path,
         [std, collections, symbol]
@@ -383,7 +387,7 @@ fn is_shared_use_path(path: &[String]) -> bool {
     )
 }
 
-fn referenced_item_names_via_ast(
+pub(super) fn referenced_item_names_via_ast(
     item: &Item,
     item_names: &HashSet<String>,
     current_name: &str,
@@ -513,8 +517,11 @@ impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
     }
 }
 
-fn collect_macro_token_refs_rec<F>(tokens: &TokenStream, locals: &HashSet<String>, mut on_ident: F)
-where
+pub(super) fn collect_macro_token_refs_rec<F>(
+    tokens: &TokenStream,
+    locals: &HashSet<String>,
+    mut on_ident: F,
+) where
     F: FnMut(&str),
 {
     fn visit_tree<F>(tree: TokenTree, locals: &HashSet<String>, on_ident: &mut F)
@@ -542,7 +549,7 @@ where
     }
 }
 
-fn mark_collection_use_path(path: &[String], shared_needs: &mut SharedPreludeNeeds) {
+pub(super) fn mark_collection_use_path(path: &[String], shared_needs: &mut SharedPreludeNeeds) {
     match path {
         [std, collections, symbol] if std == "std" && collections == "collections" => {
             match symbol.as_str() {
@@ -556,7 +563,7 @@ fn mark_collection_use_path(path: &[String], shared_needs: &mut SharedPreludeNee
     }
 }
 
-fn parse_item_name(item: &Item) -> Option<String> {
+pub(super) fn parse_item_name(item: &Item) -> Option<String> {
     match item {
         Item::Fn(item_fn) => Some(item_fn.sig.ident.to_string()),
         Item::Const(item_const) => Some(item_const.ident.to_string()),
@@ -570,7 +577,7 @@ fn parse_item_name(item: &Item) -> Option<String> {
     }
 }
 
-fn impl_self_type_ident(ty: &Type) -> Option<String> {
+pub(super) fn impl_self_type_ident(ty: &Type) -> Option<String> {
     match ty {
         Type::Path(type_path) => type_path
             .path
@@ -584,14 +591,14 @@ fn impl_self_type_ident(ty: &Type) -> Option<String> {
     }
 }
 
-fn dedup_item_key(item: &Item) -> String {
+pub(super) fn dedup_item_key(item: &Item) -> String {
     match item {
         Item::Impl(item_impl) => dedup_impl_key(item_impl),
         _ => parse_item_name(item).unwrap_or_else(|| "__unnamed_item__".to_string()),
     }
 }
 
-fn dedup_impl_key(item_impl: &ItemImpl) -> String {
+pub(super) fn dedup_impl_key(item_impl: &ItemImpl) -> String {
     let self_ty = dedup_type_key(item_impl.self_ty.as_ref());
     if let Some((_, trait_path, _)) = &item_impl.trait_ {
         format!("impl {} for {}", dedup_path_key(trait_path), self_ty)
@@ -600,7 +607,7 @@ fn dedup_impl_key(item_impl: &ItemImpl) -> String {
     }
 }
 
-fn dedup_path_key(path: &syn::Path) -> String {
+pub(super) fn dedup_path_key(path: &syn::Path) -> String {
     path.segments
         .iter()
         .map(|segment| segment.ident.to_string())
@@ -608,7 +615,7 @@ fn dedup_path_key(path: &syn::Path) -> String {
         .join("::")
 }
 
-fn dedup_type_key(ty: &Type) -> String {
+pub(super) fn dedup_type_key(ty: &Type) -> String {
     match ty {
         Type::Path(type_path) => dedup_path_key(&type_path.path),
         Type::Reference(reference) => dedup_type_key(reference.elem.as_ref()),
@@ -629,7 +636,7 @@ fn dedup_type_key(ty: &Type) -> String {
     }
 }
 
-fn render_items(items: &[Item]) -> String {
+pub(super) fn render_items(items: &[Item]) -> String {
     if items.is_empty() {
         return String::new();
     }
@@ -640,4 +647,3 @@ fn render_items(items: &[Item]) -> String {
         items: items.to_vec(),
     })
 }
-

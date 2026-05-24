@@ -1,5 +1,6 @@
+use super::*;
 #[test]
-fn test_duplicate_optional_method_keyword_is_rejected() {
+pub(super) fn test_duplicate_optional_method_keyword_is_rejected() {
     let source = "def main():\n    data: dict[str, int] = {\"x\": 1}\n    value: int = data.get(\"x\", 1, default=2)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -13,7 +14,7 @@ fn test_duplicate_optional_method_keyword_is_rejected() {
 }
 
 #[test]
-fn test_user_defined_method_defaults_and_keywords_lower() {
+pub(super) fn test_user_defined_method_defaults_and_keywords_lower() {
     let result = lower_source(
         "class CounterBox:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\n    def bump(self, amount: int = 1) -> int:\n        return self.value + amount\n\ndef main():\n    box: CounterBox = CounterBox(4)\n    a: int = box.bump()\n    b: int = box.bump(amount=3)\n",
     );
@@ -21,7 +22,7 @@ fn test_user_defined_method_defaults_and_keywords_lower() {
 }
 
 #[test]
-fn test_break_outside_loop() {
+pub(super) fn test_break_outside_loop() {
     let source = "def main():\n    break\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -34,7 +35,7 @@ fn test_break_outside_loop() {
 }
 
 #[test]
-fn test_continue_outside_loop() {
+pub(super) fn test_continue_outside_loop() {
     let source = "def main():\n    continue\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -47,13 +48,13 @@ fn test_continue_outside_loop() {
 }
 
 #[test]
-fn test_break_inside_loop() {
+pub(super) fn test_break_inside_loop() {
     let module = lower_source("def main():\n    while True:\n        break\n").unwrap();
     assert_eq!(module.functions.len(), 1);
 }
 
 #[test]
-fn test_nested_loops() {
+pub(super) fn test_nested_loops() {
     let module = lower_source(
         "def main():\n    for i in range(3):\n        for j in range(2):\n            print(i)\n",
     )
@@ -62,7 +63,7 @@ fn test_nested_loops() {
 }
 
 #[test]
-fn test_fstring_basic() {
+pub(super) fn test_fstring_basic() {
     let module = lower_source(
         "def main():\n    name: str = \"Alice\"\n    msg: str = f\"Hello, {name}!\"\n    print(msg)\n",
     )
@@ -72,7 +73,7 @@ fn test_fstring_basic() {
 }
 
 #[test]
-fn test_fstring_with_expression() {
+pub(super) fn test_fstring_with_expression() {
     let module = lower_source(
         "def main():\n    a: int = 2\n    b: int = 3\n    print(f\"{a} + {b} = {a + b}\")\n",
     )
@@ -81,7 +82,7 @@ fn test_fstring_with_expression() {
 }
 
 #[test]
-fn test_tuple_unpack() {
+pub(super) fn test_tuple_unpack() {
     let module = lower_source(
         "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y = pair\n    print(x)\n",
     )
@@ -95,7 +96,7 @@ fn test_tuple_unpack() {
 }
 
 #[test]
-fn test_tuple_unpack_wrong_count() {
+pub(super) fn test_tuple_unpack_wrong_count() {
     let source = "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y, z = pair\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -108,7 +109,7 @@ fn test_tuple_unpack_wrong_count() {
 }
 
 #[test]
-fn test_tuple_unpack_non_tuple() {
+pub(super) fn test_tuple_unpack_non_tuple() {
     let source = "def main():\n    x: int = 42\n    a, b = x\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -121,7 +122,7 @@ fn test_tuple_unpack_non_tuple() {
 }
 
 #[test]
-fn test_tuple_unpack_invalid_target_has_unpack_code() {
+pub(super) fn test_tuple_unpack_invalid_target_has_unpack_code() {
     let source = "def main():\n    values: list[int] = [0]\n    values[0], y = (1, 2)\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected tuple unpack target error");
@@ -133,7 +134,7 @@ fn test_tuple_unpack_invalid_target_has_unpack_code() {
 }
 
 #[test]
-fn test_tuple_unpack_reassignment_type_mismatch_has_primary_range() {
+pub(super) fn test_tuple_unpack_reassignment_type_mismatch_has_primary_range() {
     let source =
         "def main():\n    left = 1\n    left, label = (\"not an int\", \"name\")\n    print(label)\n";
     let result = lower_source(source);
@@ -146,7 +147,7 @@ fn test_tuple_unpack_reassignment_type_mismatch_has_primary_range() {
 }
 
 #[test]
-fn test_star_unpack_multiple_starred_targets_have_unpack_code() {
+pub(super) fn test_star_unpack_multiple_starred_targets_have_unpack_code() {
     let source = "def main():\n    first, *rest, *tail = [1, 2, 3]\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected multiple starred target error");
@@ -158,7 +159,7 @@ fn test_star_unpack_multiple_starred_targets_have_unpack_code() {
 }
 
 #[test]
-fn test_star_unpack_invalid_starred_target_has_unpack_code() {
+pub(super) fn test_star_unpack_invalid_starred_target_has_unpack_code() {
     let source = "def main():\n    values: list[int] = [0]\n    first, *values[0] = [1, 2]\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected invalid starred target error");
@@ -170,7 +171,7 @@ fn test_star_unpack_invalid_starred_target_has_unpack_code() {
 }
 
 #[test]
-fn test_star_unpack_invalid_trailing_target_has_unpack_code() {
+pub(super) fn test_star_unpack_invalid_trailing_target_has_unpack_code() {
     let source = "def main():\n    values: list[int] = [0]\n    first, *rest, values[0] = [1, 2]\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected invalid star unpack trailing target error");
@@ -182,7 +183,7 @@ fn test_star_unpack_invalid_trailing_target_has_unpack_code() {
 }
 
 #[test]
-fn test_star_unpack_requires_list_has_primary_range() {
+pub(super) fn test_star_unpack_requires_list_has_primary_range() {
     let source = "def main():\n    first, *rest = (1, 2, 3)\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected star unpack list-shape error");
@@ -193,7 +194,7 @@ fn test_star_unpack_requires_list_has_primary_range() {
 }
 
 #[test]
-fn test_tuple_unpack_allows_attribute_targets() {
+pub(super) fn test_tuple_unpack_allows_attribute_targets() {
     let module = lower_source(
         "class Pair:\n    x: int\n    y: int\n    def __init__(self):\n        self.x = 1\n        self.y = 2\n    def swap(self):\n        self.x, self.y = self.y, self.x\n",
     )
@@ -230,7 +231,7 @@ fn test_tuple_unpack_allows_attribute_targets() {
 }
 
 #[test]
-fn test_for_tuple_target_requires_tuple_elements() {
+pub(super) fn test_for_tuple_target_requires_tuple_elements() {
     let source =
         "def main():\n    nums: list[int] = [1, 2, 3]\n    for a, b in nums:\n        print(a)\n";
     let result = lower_source(source);
@@ -245,7 +246,7 @@ fn test_for_tuple_target_requires_tuple_elements() {
 }
 
 #[test]
-fn test_for_tuple_target_arity_mismatch_has_primary_range() {
+pub(super) fn test_for_tuple_target_arity_mismatch_has_primary_range() {
     let source = "def main():\n    pairs: list[tuple[int, int, int]] = [(1, 2, 3)]\n    for a, b in pairs:\n        print(a)\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected for tuple target arity mismatch");
@@ -257,7 +258,7 @@ fn test_for_tuple_target_arity_mismatch_has_primary_range() {
 }
 
 #[test]
-fn test_generic_class_subscript_requires_declared_type_params() {
+pub(super) fn test_generic_class_subscript_requires_declared_type_params() {
     let source =
         "T = TypeVar(\"T\")\nclass LegacyBox:\n    value: T\ndef f(x: LegacyBox[int]) -> int:\n    return 1\n";
     let result = lower_source(source);
@@ -271,7 +272,7 @@ fn test_generic_class_subscript_requires_declared_type_params() {
 }
 
 #[test]
-fn test_generic_class_subscript_arity_mismatch_errors() {
+pub(super) fn test_generic_class_subscript_arity_mismatch_errors() {
     let source =
         "class Pair[T]:\n    left: T\n    right: T\ndef f(x: Pair[int, str]) -> int:\n    return 1\n";
     let result = lower_source(source);
@@ -285,7 +286,7 @@ fn test_generic_class_subscript_arity_mismatch_errors() {
 }
 
 #[test]
-fn test_invalid_dict_type_annotation_has_primary_range() {
+pub(super) fn test_invalid_dict_type_annotation_has_primary_range() {
     let source = "def consume(value: dict[int]) -> int:\n    return 0\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -298,7 +299,7 @@ fn test_invalid_dict_type_annotation_has_primary_range() {
 }
 
 #[test]
-fn test_callable_param_list_annotation_has_primary_range() {
+pub(super) fn test_callable_param_list_annotation_has_primary_range() {
     let source = "def consume(callback: Callable[int, str]) -> int:\n    return 0\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -311,7 +312,7 @@ fn test_callable_param_list_annotation_has_primary_range() {
 }
 
 #[test]
-fn test_missing_function_parameter_annotation_has_primary_range() {
+pub(super) fn test_missing_function_parameter_annotation_has_primary_range() {
     let source = "def identity(value) -> int:\n    return value\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -324,7 +325,7 @@ fn test_missing_function_parameter_annotation_has_primary_range() {
 }
 
 #[test]
-fn test_missing_class_method_parameter_annotation_has_primary_range() {
+pub(super) fn test_missing_class_method_parameter_annotation_has_primary_range() {
     let source = "class Tool:\n    def scale(self, value) -> int:\n        return value\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -337,7 +338,7 @@ fn test_missing_class_method_parameter_annotation_has_primary_range() {
 }
 
 #[test]
-fn test_unsupported_function_default_argument_has_primary_range() {
+pub(super) fn test_unsupported_function_default_argument_has_primary_range() {
     let source =
         "def seed() -> int:\n    return 7\n\ndef pick(x: int = seed()) -> int:\n    return x\n";
     let result = lower_source(source);
@@ -352,7 +353,7 @@ fn test_unsupported_function_default_argument_has_primary_range() {
 }
 
 #[test]
-fn test_unsupported_method_default_argument_has_primary_range() {
+pub(super) fn test_unsupported_method_default_argument_has_primary_range() {
     let source = "def seed() -> int:\n    return 7\n\nclass Tool:\n    def scale(self, value: int = seed()) -> int:\n        return value\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -366,7 +367,7 @@ fn test_unsupported_method_default_argument_has_primary_range() {
 }
 
 #[test]
-fn test_unknown_type_annotation_has_primary_range() {
+pub(super) fn test_unknown_type_annotation_has_primary_range() {
     let source = "def consume(value: MissingType) -> int:\n    return 0\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -379,7 +380,7 @@ fn test_unknown_type_annotation_has_primary_range() {
 }
 
 #[test]
-fn test_unknown_generic_type_annotation_has_primary_range() {
+pub(super) fn test_unknown_generic_type_annotation_has_primary_range() {
     let source = "def main():\n    x: UnknownType[int] = 42\n    print(x)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -392,7 +393,7 @@ fn test_unknown_generic_type_annotation_has_primary_range() {
 }
 
 #[test]
-fn test_typevar_constraints_violation_has_type_code() {
+pub(super) fn test_typevar_constraints_violation_has_type_code() {
     let result = lower_source(
         "from typing import TypeVar\n\nT = TypeVar(\"T\", int, str)\n\ndef echo(x: T) -> T:\n    return x\n\ndef main():\n    bad: float = echo(1.5)\n    print(bad)\n",
     );
@@ -406,7 +407,7 @@ fn test_typevar_constraints_violation_has_type_code() {
 }
 
 #[test]
-fn test_typevar_invalid_bound_shape_has_primary_range() {
+pub(super) fn test_typevar_invalid_bound_shape_has_primary_range() {
     let source = "from typing import TypeVar\n\nT = TypeVar(\"T\", bound=1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -419,7 +420,7 @@ fn test_typevar_invalid_bound_shape_has_primary_range() {
 }
 
 #[test]
-fn test_typevar_bound_constraints_conflict_has_primary_range() {
+pub(super) fn test_typevar_bound_constraints_conflict_has_primary_range() {
     let source = "from typing import TypeVar\n\nT = TypeVar(\"T\", int, bound=str)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -432,7 +433,7 @@ fn test_typevar_bound_constraints_conflict_has_primary_range() {
 }
 
 #[test]
-fn test_pep695_typevar_constraint_shape_has_primary_range() {
+pub(super) fn test_pep695_typevar_constraint_shape_has_primary_range() {
     let source = "def echo[T: (int, 1)](x: T) -> T:\n    return x\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -445,7 +446,7 @@ fn test_pep695_typevar_constraint_shape_has_primary_range() {
 }
 
 #[test]
-fn test_auto_init_inheritance_missing_super_has_class_code() {
+pub(super) fn test_auto_init_inheritance_missing_super_has_class_code() {
     let source = "class Animal:\n    name: str\n\n    def __init__(self, name: str):\n        self.name = name\n\nclass Dog(Animal):\n    breed: str\n\ndef main():\n    d: Dog = Dog(\"Rex\", \"Labrador\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -459,7 +460,7 @@ fn test_auto_init_inheritance_missing_super_has_class_code() {
 }
 
 #[test]
-fn test_auto_init_required_after_default_has_class_code() {
+pub(super) fn test_auto_init_required_after_default_has_class_code() {
     let source =
         "class BadConfig:\n    debug: bool = False\n    name: str\n\ndef main():\n    c: BadConfig = BadConfig(True, \"test\")\n";
     let result = lower_source(source);
@@ -474,7 +475,7 @@ fn test_auto_init_required_after_default_has_class_code() {
 }
 
 #[test]
-fn test_enum_duplicate_value_has_class_code() {
+pub(super) fn test_enum_duplicate_value_has_class_code() {
     let source = "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n    SUCCESS = 200\n    NOT_FOUND = 404\n\ndef main():\n    s: Status = Status.OK\n    print(s)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -487,7 +488,7 @@ fn test_enum_duplicate_value_has_class_code() {
 }
 
 #[test]
-fn test_missing_field_has_class_code() {
+pub(super) fn test_missing_field_has_class_code() {
     let source = "class Point:\n    x: float\n    y: float\n\n    def __init__(self, x: float, y: float):\n        self.x = x\n        self.y = y\n\ndef main():\n    p: Point = Point(1.0, 2.0)\n    print(p.z)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -500,7 +501,7 @@ fn test_missing_field_has_class_code() {
 }
 
 #[test]
-fn test_enum_missing_attribute_has_class_code() {
+pub(super) fn test_enum_missing_attribute_has_class_code() {
     let source = "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n\ndef main():\n    s: Status = Status.OK\n    print(s.missing)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -513,7 +514,7 @@ fn test_enum_missing_attribute_has_class_code() {
 }
 
 #[test]
-fn test_unsupported_attribute_expression_has_type_code() {
+pub(super) fn test_unsupported_attribute_expression_has_type_code() {
     let source = "def main():\n    value: int = 1\n    print(value.real)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -527,7 +528,7 @@ fn test_unsupported_attribute_expression_has_type_code() {
 }
 
 #[test]
-fn test_super_outside_parent_has_class_code() {
+pub(super) fn test_super_outside_parent_has_class_code() {
     let source = "def main():\n    super().missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -540,7 +541,7 @@ fn test_super_outside_parent_has_class_code() {
 }
 
 #[test]
-fn test_missing_class_static_method_has_class_code() {
+pub(super) fn test_missing_class_static_method_has_class_code() {
     let source = "class Box:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\ndef main():\n    Box.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -553,7 +554,7 @@ fn test_missing_class_static_method_has_class_code() {
 }
 
 #[test]
-fn test_unknown_parent_class_has_class_code() {
+pub(super) fn test_unknown_parent_class_has_class_code() {
     let source =
         "class Child(MissingParent):\n    value: int\n\ndef main():\n    c: Child = Child(1)\n";
     let result = lower_source(source);
@@ -567,7 +568,7 @@ fn test_unknown_parent_class_has_class_code() {
 }
 
 #[test]
-fn test_unsupported_class_field_default_has_class_code() {
+pub(super) fn test_unsupported_class_field_default_has_class_code() {
     let source = "class BadDefault:\n    value: int = 1 + 2\n\ndef main():\n    b: BadDefault = BadDefault(3)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -580,7 +581,7 @@ fn test_unsupported_class_field_default_has_class_code() {
 }
 
 #[test]
-fn test_match_tuple_pattern_requires_tuple_subject() {
+pub(super) fn test_match_tuple_pattern_requires_tuple_subject() {
     let result = lower_source(
         "def main():\n    x: int = 1\n    match x:\n        case (a, b):\n            print(a)\n",
     );
@@ -592,7 +593,7 @@ fn test_match_tuple_pattern_requires_tuple_subject() {
 }
 
 #[test]
-fn test_match_tuple_pattern_arity_mismatch_errors() {
+pub(super) fn test_match_tuple_pattern_arity_mismatch_errors() {
     let result = lower_source(
         "def main():\n    x: tuple[int, int] = (1, 2)\n    match x:\n        case (a, b, c):\n            print(a)\n",
     );
@@ -604,7 +605,7 @@ fn test_match_tuple_pattern_arity_mismatch_errors() {
 }
 
 #[test]
-fn test_protocol_bound_forwarding_accepts_conforming_typevar() {
+pub(super) fn test_protocol_bound_forwarding_accepts_conforming_typevar() {
     let result = lower_source(
         "class Runner(Protocol):\n    def run(self) -> int:\n        pass\n\nclass Job:\n    def run(self) -> int:\n        return 1\n\ndef use_runner[T: Runner](x: T) -> T:\n    return x\n\ndef relay_runner[U: Runner](x: U) -> U:\n    return use_runner(x)\n\ndef main():\n    j: Job = relay_runner(Job())\n    print(j.run())\n",
     );
@@ -612,7 +613,7 @@ fn test_protocol_bound_forwarding_accepts_conforming_typevar() {
 }
 
 #[test]
-fn test_protocol_bound_forwarding_rejects_unknown_bound() {
+pub(super) fn test_protocol_bound_forwarding_rejects_unknown_bound() {
     let result = lower_source(
         "def take_missing[T: MissingBound](x: T) -> T:\n    return x\n\ndef relay_missing[U: MissingBound](x: U) -> U:\n    return take_missing(x)\n\ndef main():\n    print(1)\n",
     );
@@ -624,7 +625,7 @@ fn test_protocol_bound_forwarding_rejects_unknown_bound() {
 }
 
 #[test]
-fn test_protocol_bound_forwarding_rejects_non_conforming_typevar() {
+pub(super) fn test_protocol_bound_forwarding_rejects_non_conforming_typevar() {
     let result = lower_source(
         "class Readable(Protocol):\n    def read(self) -> str:\n        pass\n\nclass Closable(Protocol):\n    def close(self) -> None:\n        pass\n\ndef take_readable[T: Readable](x: T) -> T:\n    return x\n\ndef relay_bad[U: Closable](x: U) -> U:\n    return take_readable(x)\n\ndef main():\n    print(1)\n",
     );
@@ -636,7 +637,7 @@ fn test_protocol_bound_forwarding_rejects_non_conforming_typevar() {
 }
 
 #[test]
-fn test_comparable_bound_accepts_homogeneous_tuples() {
+pub(super) fn test_comparable_bound_accepts_homogeneous_tuples() {
     let result = lower_source(
         "def choose[T: Comparable](x: T, y: T) -> T:\n    return x if x > y else y\n\ndef main():\n    left: tuple[int, int] = (1, 2)\n    right: tuple[int, int] = (2, 1)\n    out: tuple[int, int] = choose(left, right)\n    print(out)\n",
     );
@@ -644,7 +645,7 @@ fn test_comparable_bound_accepts_homogeneous_tuples() {
 }
 
 #[test]
-fn test_recursive_tree_attributes_narrow_after_truthiness_or_guard() {
+pub(super) fn test_recursive_tree_attributes_narrow_after_truthiness_or_guard() {
     let result = lower_source(
         "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef mirrored_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return 0\n    left: TreeNode | None = p.left\n    right: TreeNode | None = q.right\n    return p.val + q.val + mirrored_sum(left, q.left) + mirrored_sum(p.right, right)\n",
     );
@@ -655,7 +656,7 @@ fn test_recursive_tree_attributes_narrow_after_truthiness_or_guard() {
 }
 
 #[test]
-fn test_empty_dict_literal_specializes_from_first_subscript_write_and_get_default() {
+pub(super) fn test_empty_dict_literal_specializes_from_first_subscript_write_and_get_default() {
     let result = lower_source(
         "def main():\n    counts = {}\n    key: str = \"x\"\n    counts[key] = 1 + counts.get(key, 0)\n    value: int = counts.get(key, 0)\n    assert value == 1\n",
     );
@@ -666,7 +667,7 @@ fn test_empty_dict_literal_specializes_from_first_subscript_write_and_get_defaul
 }
 
 #[test]
-fn test_empty_dict_literal_conflicting_write_reports_deterministic_error() {
+pub(super) fn test_empty_dict_literal_conflicting_write_reports_deterministic_error() {
     let result =
         lower_source("def main():\n    data = {}\n    data[1] = 10\n    data[\"x\"] = 20\n");
     assert!(result.is_err());
@@ -677,7 +678,7 @@ fn test_empty_dict_literal_conflicting_write_reports_deterministic_error() {
 }
 
 #[test]
-fn test_empty_dict_specialization_with_split_zip_word_pattern_shape() {
+pub(super) fn test_empty_dict_specialization_with_split_zip_word_pattern_shape() {
     let result = lower_source(
         "def wordPattern(pattern: str, s: str) -> bool:\n    words = s.split(\" \")\n    if len(pattern) != len(words):\n        return False\n    charToWord = {}\n    wordToChar = {}\n    for c, w in zip(pattern, words):\n        if c in charToWord and charToWord[c] != w:\n            return False\n        if w in wordToChar and wordToChar[w] != c:\n            return False\n        charToWord[c] = w\n        wordToChar[w] = c\n    return True\n",
     );

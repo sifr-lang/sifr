@@ -26,7 +26,7 @@ impl RustEmitter {
         }
     }
 
-    fn replace_identifier(code: &str, ident: &str, replacement: &str) -> String {
+    pub(crate) fn replace_identifier(code: &str, ident: &str, replacement: &str) -> String {
         let mut result = String::new();
         let chars: Vec<char> = code.chars().collect();
         let ident_chars: Vec<char> = ident.chars().collect();

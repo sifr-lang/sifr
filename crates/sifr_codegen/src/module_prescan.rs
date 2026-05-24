@@ -3,14 +3,14 @@ use sifr_hir::HirModule;
 use std::collections::HashSet;
 
 impl RustEmitter {
-    pub(super) fn prescan_module_metadata(&mut self, module: &HirModule) {
+    pub(crate) fn prescan_module_metadata(&mut self, module: &HirModule) {
         self.collect_import_metadata(module);
         self.collect_display_class_metadata(module);
         self.collect_parent_field_metadata(module);
         self.collect_function_signature_metadata(module);
     }
 
-    fn collect_import_metadata(&mut self, module: &HirModule) {
+    pub(crate) fn collect_import_metadata(&mut self, module: &HirModule) {
         for import in &module.imports {
             if !import.module.starts_with("sifr.") && !import.module.starts_with("_sifr.") {
                 continue;
@@ -61,7 +61,7 @@ impl RustEmitter {
         }
     }
 
-    fn collect_display_class_metadata(&mut self, module: &HirModule) {
+    pub(crate) fn collect_display_class_metadata(&mut self, module: &HirModule) {
         for class in &module.classes {
             let has_auto_display = !class.fields.is_empty()
                 && !class.is_protocol()
@@ -87,7 +87,7 @@ impl RustEmitter {
         }
     }
 
-    fn collect_parent_field_metadata(&mut self, module: &HirModule) {
+    pub(crate) fn collect_parent_field_metadata(&mut self, module: &HirModule) {
         for class in &module.classes {
             if let Some(ref parent_name) = class.parent_class {
                 if let Some(parent_class) = module
@@ -109,7 +109,7 @@ impl RustEmitter {
         }
     }
 
-    fn collect_function_signature_metadata(&mut self, module: &HirModule) {
+    pub(crate) fn collect_function_signature_metadata(&mut self, module: &HirModule) {
         for func in &module.functions {
             let params = func
                 .params

@@ -8,7 +8,7 @@ use sifr_python_ast::{ExprAttribute, ExprCall};
 use sifr_type_system::Type;
 use std::collections::HashSet;
 
-pub(super) fn is_task_scope_type(ty: &Type) -> bool {
+pub(in crate::lower) fn is_task_scope_type(ty: &Type) -> bool {
     matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
 }
 
@@ -16,7 +16,7 @@ fn is_task_group_type(ty: &Type) -> bool {
     matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskGroup")
 }
 
-pub(super) fn lower_task_scope_spawn_call(
+pub(in crate::lower) fn lower_task_scope_spawn_call(
     object: HirExpr,
     _attr: &ExprAttribute,
     call: &ExprCall,
@@ -25,7 +25,7 @@ pub(super) fn lower_task_scope_spawn_call(
     lower_task_scope_spawn_from_object(object, call, ctx)
 }
 
-pub(super) fn lower_task_scope_spawn_from_object(
+pub(in crate::lower) fn lower_task_scope_spawn_from_object(
     object: HirExpr,
     call: &ExprCall,
     ctx: &mut LowerCtx,
@@ -158,7 +158,7 @@ fn non_send_task_boundary_argument_in_expr(expr: &HirExpr) -> Option<NonSendTask
     })
 }
 
-pub(super) fn validate_channel_send_element(
+pub(in crate::lower) fn validate_channel_send_element(
     object_ty: &Type,
     method_name: &str,
     args: &[HirExpr],
@@ -184,7 +184,7 @@ pub(super) fn validate_channel_send_element(
     );
 }
 
-pub(super) fn validate_shared_constructor(
+pub(in crate::lower) fn validate_shared_constructor(
     func_name: &str,
     args: &[HirExpr],
     arg_ranges: &[Option<TextRange>],
@@ -236,7 +236,7 @@ fn is_channel_sender_type(ty: &Type) -> bool {
     )
 }
 
-pub(super) fn non_send_reason(ty: &Type) -> Option<String> {
+pub(in crate::lower) fn non_send_reason(ty: &Type) -> Option<String> {
     non_send_reason_inner(ty.resolve_alias(), &mut HashSet::new())
 }
 
@@ -366,7 +366,7 @@ fn class_has_non_send_marker(name: &str, parent_chain: Option<&str>) -> bool {
         || parent_chain.is_some_and(|parents| parents.split('|').any(|parent| parent == "NonSend"))
 }
 
-pub(super) fn is_lock_guard_type(ty: &Type) -> bool {
+pub(in crate::lower) fn is_lock_guard_type(ty: &Type) -> bool {
     let Type::Class { name, .. } = ty.resolve_alias() else {
         return false;
     };
@@ -387,11 +387,11 @@ fn is_share_safe_sync_wrapper(name: &str) -> bool {
     )
 }
 
-pub(super) fn public_type_name(name: &str) -> &str {
+pub(in crate::lower) fn public_type_name(name: &str) -> &str {
     name.strip_prefix("__compat_sifr_sync_").unwrap_or(name)
 }
 
-pub(super) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {
+pub(in crate::lower) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {
     let HirExpr::MethodCall { object, method, .. } = expr else {
         return None;
     };
@@ -404,7 +404,7 @@ pub(super) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {
     is_task_group_type(ty).then(|| name.clone())
 }
 
-pub(super) fn mark_task_handle_observed(name: &str, ctx: &mut LowerCtx) {
+pub(in crate::lower) fn mark_task_handle_observed(name: &str, ctx: &mut LowerCtx) {
     if let Some(group_name) = ctx.task_handle_group_owners.get(name).cloned() {
         ctx.task_groups_not_proven_open.insert(group_name);
     }

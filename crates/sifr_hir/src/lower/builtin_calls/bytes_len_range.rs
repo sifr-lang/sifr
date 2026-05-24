@@ -1,4 +1,11 @@
-pub(super) fn lower_bytes_type_factory_call(
+use super::{
+    arity_range, dict_constructor_output_type, first_keyword_range,
+    iterable_element_type_for_builtin, list_constructor_output_type, lower_expr, parse_error_type,
+    reject_keywords, reject_type_mismatch, reject_unpacked_keyword_at,
+    reject_wrong_positional_count, str, value_error_type, DiagnosticCode, Expr, ExprAttribute,
+    ExprCall, HirExpr, IterationCapability, LowerCtx, Ranged, RevealTypeDiagnostic, Type,
+};
+pub(in crate::lower) fn lower_bytes_type_factory_call(
     attr: &ExprAttribute,
     call: &ExprCall,
     ctx: &mut LowerCtx,
@@ -84,7 +91,7 @@ pub(super) fn lower_bytes_type_factory_call(
     }
 }
 
-pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() != 1 {
         reject_wrong_positional_count(
             call,
@@ -146,7 +153,10 @@ pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
     }
 }
 
-pub(super) fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_isinstance_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if call.arguments.args.len() != 2 {
         reject_wrong_positional_count(
             call,
@@ -175,7 +185,10 @@ pub(super) fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Opti
     })
 }
 
-pub(super) fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_reveal_type_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if call.arguments.args.len() != 1 {
         reject_wrong_positional_count(
             call,
@@ -196,7 +209,7 @@ pub(super) fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Opt
     Some(arg)
 }
 
-pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() > 3 {
         reject_wrong_positional_count(
             call,
@@ -344,19 +357,19 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
     })
 }
 
-pub(super) fn callable_builtin_element_type(arg_ty: &Type) -> Option<Type> {
+pub(in crate::lower) fn callable_builtin_element_type(arg_ty: &Type) -> Option<Type> {
     iterable_element_type_for_builtin(arg_ty)
 }
 
-pub(super) fn callable_builtin_list_output_type(arg_ty: &Type) -> Option<Type> {
+pub(in crate::lower) fn callable_builtin_list_output_type(arg_ty: &Type) -> Option<Type> {
     list_constructor_output_type(arg_ty)
 }
 
-pub(super) fn callable_builtin_dict_output_type(arg_ty: &Type) -> Option<Type> {
+pub(in crate::lower) fn callable_builtin_dict_output_type(arg_ty: &Type) -> Option<Type> {
     dict_constructor_output_type(arg_ty)
 }
 
-pub(super) fn lower_builtin_reverseable_arg(
+pub(in crate::lower) fn lower_builtin_reverseable_arg(
     call: &ExprCall,
     builtin_name: &str,
     ctx: &mut LowerCtx,

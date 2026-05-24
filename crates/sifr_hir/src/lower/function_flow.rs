@@ -2,14 +2,14 @@ use crate::hir_nodes::HirStmt;
 use sifr_type_system::Type;
 
 /// Collect all return types from a list of HIR statements (recursively).
-pub(super) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
+pub(in crate::lower) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
     crate::cfg::flow_facts(stmts)
         .reachable_return_types()
         .to_vec()
 }
 
 /// Collect all yielded expression types from a list of HIR statements (recursively).
-pub(super) fn collect_yield_types(stmts: &[HirStmt]) -> Vec<Type> {
+pub(in crate::lower) fn collect_yield_types(stmts: &[HirStmt]) -> Vec<Type> {
     fn walk(stmts: &[HirStmt], out: &mut Vec<Type>) {
         for stmt in stmts {
             match stmt {
@@ -89,7 +89,7 @@ pub(super) fn collect_yield_types(stmts: &[HirStmt]) -> Vec<Type> {
     types
 }
 
-pub(super) fn collapse_types(types: Vec<Type>, empty_type: Type) -> Type {
+pub(in crate::lower) fn collapse_types(types: Vec<Type>, empty_type: Type) -> Type {
     if types.is_empty() {
         return empty_type;
     }
@@ -106,7 +106,7 @@ pub(super) fn collapse_types(types: Vec<Type>, empty_type: Type) -> Type {
     }
 }
 
-pub(super) fn infer_function_return_type(
+pub(in crate::lower) fn infer_function_return_type(
     function_name: &str,
     is_async: bool,
     declared_return_type: &Type,

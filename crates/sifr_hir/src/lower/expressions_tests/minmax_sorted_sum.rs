@@ -1,5 +1,7 @@
+use super::*;
+use crate::lower::{expressions::resolve_method_type, LowerCtx};
 #[test]
-fn test_min_max_missing_args_have_call_code() {
+pub(super) fn test_min_max_missing_args_have_call_code() {
     let cases = [
         ("min", "min() takes at least 1 argument"),
         ("max", "max() takes at least 1 argument"),
@@ -26,7 +28,7 @@ fn test_min_max_missing_args_have_call_code() {
 }
 
 #[test]
-fn test_min_max_keywords_have_call_code() {
+pub(super) fn test_min_max_keywords_have_call_code() {
     for callable in ["min", "max"] {
         let source = format!(
             "def main():\n    values: list[int] = [1, 2]\n    _value = {callable}(values=values)\n"
@@ -51,7 +53,7 @@ fn test_min_max_keywords_have_call_code() {
 }
 
 #[test]
-fn test_min_max_single_non_iterable_has_type_code() {
+pub(super) fn test_min_max_single_non_iterable_has_type_code() {
     let cases = [
         (
             "min",
@@ -88,7 +90,7 @@ fn test_min_max_single_non_iterable_has_type_code() {
 }
 
 #[test]
-fn test_max_two_arg_rejects_optional_operand() {
+pub(super) fn test_max_two_arg_rejects_optional_operand() {
     let source =
         "def pick(d: dict[str, int], k: str) -> int:\n    best = 0\n    best = max(best, d[k])\n    return best\n";
     let result = lower_source(source);
@@ -107,7 +109,7 @@ fn test_max_two_arg_rejects_optional_operand() {
 }
 
 #[test]
-fn test_min_max_incompatible_operands_have_type_codes() {
+pub(super) fn test_min_max_incompatible_operands_have_type_codes() {
     let source = "def main() -> None:\n    lo = min(1, \"x\")\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected min incompatible operand error");
@@ -124,7 +126,7 @@ fn test_min_max_incompatible_operands_have_type_codes() {
 }
 
 #[test]
-fn test_sorted_accepts_iterable_keyword_and_key_none() {
+pub(super) fn test_sorted_accepts_iterable_keyword_and_key_none() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(iterable=nums, key=None, reverse=True)\n    assert ordered == [3, 2, 1]\n",
     );
@@ -132,7 +134,7 @@ fn test_sorted_accepts_iterable_keyword_and_key_none() {
 }
 
 #[test]
-fn test_sum_keyword_and_type_errors_have_codes() {
+pub(super) fn test_sum_keyword_and_type_errors_have_codes() {
     let keyword_source =
         "def main():\n    nums: list[int] = [1, 2]\n    _total = sum(values=nums)\n";
     let keyword_result = lower_source(keyword_source);
@@ -162,7 +164,7 @@ fn test_sum_keyword_and_type_errors_have_codes() {
 }
 
 #[test]
-fn test_sum_fixed_width_iterable_widens_to_int() {
+pub(super) fn test_sum_fixed_width_iterable_widens_to_int() {
     let module = lower_source(
         "def main():\n    left: int32 = 2000000000\n    right: int32 = 2000000000\n    values: list[int32] = [left, right]\n    total: int = sum(values)\n",
     )
@@ -179,7 +181,7 @@ fn test_sum_fixed_width_iterable_widens_to_int() {
 }
 
 #[test]
-fn test_sorted_positional_and_duplicate_errors_have_codes() {
+pub(super) fn test_sorted_positional_and_duplicate_errors_have_codes() {
     let too_many_source =
         "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered = sorted(nums, nums)\n";
     let too_many_result = lower_source(too_many_source);
@@ -198,7 +200,7 @@ fn test_sorted_positional_and_duplicate_errors_have_codes() {
 }
 
 #[test]
-fn test_sorted_rejects_duplicate_iterable_argument() {
+pub(super) fn test_sorted_rejects_duplicate_iterable_argument() {
     let source =
         "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(nums, iterable=nums)\n";
     let result = lower_source(source);
@@ -217,7 +219,7 @@ fn test_sorted_rejects_duplicate_iterable_argument() {
 }
 
 #[test]
-fn test_sorted_type_and_key_errors_have_codes() {
+pub(super) fn test_sorted_type_and_key_errors_have_codes() {
     let iterable_source = "def main():\n    ordered = sorted(1)\n";
     let iterable_result = lower_source(iterable_source);
     assert!(iterable_result.is_err());
@@ -253,14 +255,14 @@ fn test_sorted_type_and_key_errors_have_codes() {
 }
 
 #[test]
-fn test_list_sort_accepts_reverse_keyword() {
+pub(super) fn test_list_sort_accepts_reverse_keyword() {
     let result =
         lower_source("def main():\n    nums: list[int] = [3, 1, 2]\n    nums.sort(reverse=True)\n");
     assert!(result.is_ok(), "{result:?}");
 }
 
 #[test]
-fn test_list_sort_rejects_non_bool_reverse_keyword() {
+pub(super) fn test_list_sort_rejects_non_bool_reverse_keyword() {
     let source = "def main():\n    nums: list[int] = [3, 1, 2]\n    nums.sort(reverse=1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -274,7 +276,7 @@ fn test_list_sort_rejects_non_bool_reverse_keyword() {
 }
 
 #[test]
-fn test_tuple_constructor_rejects_dynamic_list_shape() {
+pub(super) fn test_tuple_constructor_rejects_dynamic_list_shape() {
     let source = "def main():\n    nums: list[int] = [1, 2, 3]\n    t = tuple(nums)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -288,7 +290,7 @@ fn test_tuple_constructor_rejects_dynamic_list_shape() {
 }
 
 #[test]
-fn test_list_pop_index_and_tuple_index_optional_forms_lower() {
+pub(super) fn test_list_pop_index_and_tuple_index_optional_forms_lower() {
     let result = lower_source(
         "def main():\n    xs: list[int] = [1, 2, 3, 2]\n    popped: int | None = xs.pop(0)\n    idx: int | None = xs.index(2, start=0, stop=3)\n    pair: tuple[int, int, int] = (4, 5, 4)\n    tidx: int | None = pair.index(4, start=1)\n",
     );
@@ -296,7 +298,7 @@ fn test_list_pop_index_and_tuple_index_optional_forms_lower() {
 }
 
 #[test]
-fn test_index_stop_only_keyword_forms_lower() {
+pub(super) fn test_index_stop_only_keyword_forms_lower() {
     let result = lower_source(
         "def main():\n    xs: list[int] = [1, 2, 3, 2]\n    list_idx: int | None = xs.index(2, stop=3)\n    pair: tuple[int, int, int] = (4, 5, 4)\n    tuple_idx: int | None = pair.index(4, stop=2)\n",
     );
@@ -304,7 +306,7 @@ fn test_index_stop_only_keyword_forms_lower() {
 }
 
 #[test]
-fn test_index_optional_keyword_duplicate_forms_are_rejected() {
+pub(super) fn test_index_optional_keyword_duplicate_forms_are_rejected() {
     let list_result =
         lower_source("def main():\n    xs: list[int] = [1, 2, 3]\n    xs.index(2, 0, start=1)\n");
     assert!(list_result.is_err());
@@ -324,7 +326,7 @@ fn test_index_optional_keyword_duplicate_forms_are_rejected() {
 }
 
 #[test]
-fn test_dict_update_kwargs_and_pop_default_lower() {
+pub(super) fn test_dict_update_kwargs_and_pop_default_lower() {
     let result = lower_source(
         "def main():\n    data: dict[str, int] = {\"x\": 1}\n    data.update(a=2)\n    other: dict[str, int] = {\"b\": 3}\n    data.update(other, c=4)\n    fallback: int = data.pop(\"missing\", default=9)\n",
     );
@@ -332,7 +334,7 @@ fn test_dict_update_kwargs_and_pop_default_lower() {
 }
 
 #[test]
-fn test_string_split_and_replace_keyword_forms_lower() {
+pub(super) fn test_string_split_and_replace_keyword_forms_lower() {
     let result = lower_source(
         "def main():\n    parts: list[str] = \"a,b,c\".split(sep=\",\", maxsplit=1)\n    replaced: str = \"aaaa\".replace(\"a\", \"b\", count=2)\n",
     );
@@ -340,7 +342,7 @@ fn test_string_split_and_replace_keyword_forms_lower() {
 }
 
 #[test]
-fn test_unexpected_method_keyword_is_rejected() {
+pub(super) fn test_unexpected_method_keyword_is_rejected() {
     let source = "def main():\n    xs: list[int] = [1]\n    xs.append(value=2)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -353,7 +355,7 @@ fn test_unexpected_method_keyword_is_rejected() {
 }
 
 #[test]
-fn test_unpacked_method_keyword_has_call_code() {
+pub(super) fn test_unpacked_method_keyword_has_call_code() {
     let source = "def main():\n    xs: list[int] = [1]\n    xs.append(**{\"value\": 2})\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -366,7 +368,7 @@ fn test_unpacked_method_keyword_has_call_code() {
 }
 
 #[test]
-fn test_list_extend_non_iterable_has_protocol_code() {
+pub(super) fn test_list_extend_non_iterable_has_protocol_code() {
     let source = "def main():\n    xs: list[int] = []\n    xs.extend(1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -380,7 +382,7 @@ fn test_list_extend_non_iterable_has_protocol_code() {
 }
 
 #[test]
-fn test_list_method_wrong_positional_count_has_call_code() {
+pub(super) fn test_list_method_wrong_positional_count_has_call_code() {
     let source = "def main():\n    xs: list[int] = []\n    xs.append(1, 2)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -393,7 +395,7 @@ fn test_list_method_wrong_positional_count_has_call_code() {
 }
 
 #[test]
-fn test_list_method_type_mismatch_has_type_code() {
+pub(super) fn test_list_method_type_mismatch_has_type_code() {
     let source = "def main():\n    xs: list[int] = [1]\n    xs.pop(\"0\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -406,7 +408,7 @@ fn test_list_method_type_mismatch_has_type_code() {
 }
 
 #[test]
-fn test_list_missing_method_has_stdlib_code() {
+pub(super) fn test_list_missing_method_has_stdlib_code() {
     let source = "def main():\n    xs: list[int] = []\n    xs.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -419,7 +421,7 @@ fn test_list_missing_method_has_stdlib_code() {
 }
 
 #[test]
-fn test_dict_update_keyword_value_mismatch_has_type_code() {
+pub(super) fn test_dict_update_keyword_value_mismatch_has_type_code() {
     let source = "def main():\n    data: dict[str, int] = {}\n    data.update(bad=\"x\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -433,7 +435,7 @@ fn test_dict_update_keyword_value_mismatch_has_type_code() {
 }
 
 #[test]
-fn test_dict_method_wrong_positional_count_has_call_code() {
+pub(super) fn test_dict_method_wrong_positional_count_has_call_code() {
     let source = "def main():\n    data: dict[str, int] = {}\n    data.clear(1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -446,7 +448,7 @@ fn test_dict_method_wrong_positional_count_has_call_code() {
 }
 
 #[test]
-fn test_dict_method_type_mismatch_has_type_code() {
+pub(super) fn test_dict_method_type_mismatch_has_type_code() {
     let source = "def main():\n    data: dict[str, int] = {\"x\": 1}\n    data.get(1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -459,7 +461,7 @@ fn test_dict_method_type_mismatch_has_type_code() {
 }
 
 #[test]
-fn test_dict_get_default_keyword_type_mismatch_has_type_code_and_range() {
+pub(super) fn test_dict_get_default_keyword_type_mismatch_has_type_code_and_range() {
     let source =
         "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.get(0, default=\"bad\")\n";
     let result = lower_source(source);
@@ -474,7 +476,7 @@ fn test_dict_get_default_keyword_type_mismatch_has_type_code_and_range() {
 }
 
 #[test]
-fn test_dict_pop_default_keyword_type_mismatch_has_type_code_and_range() {
+pub(super) fn test_dict_pop_default_keyword_type_mismatch_has_type_code_and_range() {
     let source =
         "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.pop(0, default=\"bad\")\n";
     let result = lower_source(source);
@@ -489,7 +491,7 @@ fn test_dict_pop_default_keyword_type_mismatch_has_type_code_and_range() {
 }
 
 #[test]
-fn test_dict_setdefault_keyword_type_mismatch_has_type_code_and_range() {
+pub(super) fn test_dict_setdefault_keyword_type_mismatch_has_type_code_and_range() {
     let source = "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.setdefault(0, default=\"bad\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -503,7 +505,7 @@ fn test_dict_setdefault_keyword_type_mismatch_has_type_code_and_range() {
 }
 
 #[test]
-fn test_dict_missing_method_has_stdlib_code() {
+pub(super) fn test_dict_missing_method_has_stdlib_code() {
     let source = "def main():\n    data: dict[str, int] = {}\n    data.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -516,7 +518,7 @@ fn test_dict_missing_method_has_stdlib_code() {
 }
 
 #[test]
-fn test_set_method_wrong_positional_count_has_call_code() {
+pub(super) fn test_set_method_wrong_positional_count_has_call_code() {
     let source = "def main():\n    values: set[int] = {1}\n    values.add(1, 2)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -529,7 +531,7 @@ fn test_set_method_wrong_positional_count_has_call_code() {
 }
 
 #[test]
-fn test_set_missing_method_has_stdlib_code() {
+pub(super) fn test_set_missing_method_has_stdlib_code() {
     let source = "def main():\n    values: set[int] = {1}\n    values.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -542,7 +544,7 @@ fn test_set_missing_method_has_stdlib_code() {
 }
 
 #[test]
-fn test_str_method_wrong_positional_count_has_call_code() {
+pub(super) fn test_str_method_wrong_positional_count_has_call_code() {
     let source = "def main():\n    text: str = \"abc\"\n    text.find(\"a\", 1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -555,7 +557,7 @@ fn test_str_method_wrong_positional_count_has_call_code() {
 }
 
 #[test]
-fn test_str_method_type_mismatch_has_type_code() {
+pub(super) fn test_str_method_type_mismatch_has_type_code() {
     let source = "def main():\n    text: str = \"a,b\"\n    text.split(\",\", \"bad\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -568,7 +570,7 @@ fn test_str_method_type_mismatch_has_type_code() {
 }
 
 #[test]
-fn test_str_replace_keyword_count_type_mismatch_has_type_code() {
+pub(super) fn test_str_replace_keyword_count_type_mismatch_has_type_code() {
     let source =
         "def main():\n    text: str = \"aaaa\"\n    text.replace(\"a\", \"b\", count=\"bad\")\n";
     let result = lower_source(source);
@@ -582,7 +584,7 @@ fn test_str_replace_keyword_count_type_mismatch_has_type_code() {
 }
 
 #[test]
-fn test_str_missing_method_has_stdlib_code() {
+pub(super) fn test_str_missing_method_has_stdlib_code() {
     let source = "def main():\n    text: str = \"abc\"\n    text.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -595,7 +597,7 @@ fn test_str_missing_method_has_stdlib_code() {
 }
 
 #[test]
-fn test_tuple_method_wrong_positional_count_has_call_code() {
+pub(super) fn test_tuple_method_wrong_positional_count_has_call_code() {
     let source = "def main():\n    pair: tuple[int, int] = (1, 2)\n    pair.count(1, 2)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -608,7 +610,7 @@ fn test_tuple_method_wrong_positional_count_has_call_code() {
 }
 
 #[test]
-fn test_tuple_method_type_mismatch_has_type_code() {
+pub(super) fn test_tuple_method_type_mismatch_has_type_code() {
     let source =
         "def main():\n    pair: tuple[int, int, int] = (1, 2, 3)\n    pair.index(1, \"bad\")\n";
     let result = lower_source(source);
@@ -622,7 +624,7 @@ fn test_tuple_method_type_mismatch_has_type_code() {
 }
 
 #[test]
-fn test_tuple_missing_method_has_stdlib_code() {
+pub(super) fn test_tuple_missing_method_has_stdlib_code() {
     let source = "def main():\n    pair: tuple[int, int] = (1, 2)\n    pair.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -635,7 +637,7 @@ fn test_tuple_missing_method_has_stdlib_code() {
 }
 
 #[test]
-fn test_class_method_argument_type_has_type_code() {
+pub(super) fn test_class_method_argument_type_has_type_code() {
     let source = "class Box:\n    def take(self, value: int) -> None:\n        pass\n\ndef main():\n    box: Box = Box()\n    box.take(\"bad\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -648,7 +650,7 @@ fn test_class_method_argument_type_has_type_code() {
 }
 
 #[test]
-fn test_callable_field_wrong_arity_has_call_code() {
+pub(super) fn test_callable_field_wrong_arity_has_call_code() {
     let source = "class Runner:\n    callback: Callable[[int], int]\n\n    def __init__(self, callback: Callable[[int], int]):\n        self.callback = callback\n\ndef double(x: int) -> int:\n    return x * 2\n\ndef main():\n    runner: Runner = Runner(double)\n    runner.callback()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -661,7 +663,7 @@ fn test_callable_field_wrong_arity_has_call_code() {
 }
 
 #[test]
-fn test_class_field_not_callable_has_call_code() {
+pub(super) fn test_class_field_not_callable_has_call_code() {
     let source = "class Box:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\ndef main():\n    box: Box = Box(1)\n    box.value()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -674,7 +676,7 @@ fn test_class_field_not_callable_has_call_code() {
 }
 
 #[test]
-fn test_class_missing_method_has_class_code() {
+pub(super) fn test_class_missing_method_has_class_code() {
     let source = "class Box:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\ndef main():\n    box: Box = Box(1)\n    box.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -687,7 +689,7 @@ fn test_class_missing_method_has_class_code() {
 }
 
 #[test]
-fn test_protocol_method_wrong_arity_has_call_code() {
+pub(super) fn test_protocol_method_wrong_arity_has_call_code() {
     let protocol_ty = Type::Protocol {
         name: "Runner".to_string(),
         methods: vec![(
@@ -709,7 +711,7 @@ fn test_protocol_method_wrong_arity_has_call_code() {
 }
 
 #[test]
-fn test_protocol_missing_method_has_protocol_code() {
+pub(super) fn test_protocol_missing_method_has_protocol_code() {
     let protocol_ty = Type::Protocol {
         name: "Runner".to_string(),
         methods: vec![(
@@ -731,7 +733,7 @@ fn test_protocol_missing_method_has_protocol_code() {
 }
 
 #[test]
-fn test_newtype_value_wrong_arity_has_call_code() {
+pub(super) fn test_newtype_value_wrong_arity_has_call_code() {
     let source = "class Port(int):\n    pass\n\ndef main():\n    port: Port = Port(8080)\n    port.value(1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -744,7 +746,7 @@ fn test_newtype_value_wrong_arity_has_call_code() {
 }
 
 #[test]
-fn test_enum_value_wrong_arity_has_call_code() {
+pub(super) fn test_enum_value_wrong_arity_has_call_code() {
     let source = "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n\ndef main():\n    status: Status = Status.OK\n    status.value(1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -757,7 +759,7 @@ fn test_enum_value_wrong_arity_has_call_code() {
 }
 
 #[test]
-fn test_enum_missing_method_has_class_code() {
+pub(super) fn test_enum_missing_method_has_class_code() {
     let source = "from enum import Enum\n\nclass Status(Enum):\n    OK = 200\n\ndef main():\n    status: Status = Status.OK\n    status.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -770,7 +772,7 @@ fn test_enum_missing_method_has_class_code() {
 }
 
 #[test]
-fn test_bigint_clone_wrong_arity_has_call_code() {
+pub(super) fn test_bigint_clone_wrong_arity_has_call_code() {
     let source = "def main():\n    value: bigint = bigint(1)\n    value.clone(1)\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -783,7 +785,7 @@ fn test_bigint_clone_wrong_arity_has_call_code() {
 }
 
 #[test]
-fn test_bigint_missing_method_has_stdlib_code() {
+pub(super) fn test_bigint_missing_method_has_stdlib_code() {
     let source = "def main():\n    value: bigint = bigint(1)\n    value.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -796,7 +798,7 @@ fn test_bigint_missing_method_has_stdlib_code() {
 }
 
 #[test]
-fn test_generic_type_missing_method_has_stdlib_code() {
+pub(super) fn test_generic_type_missing_method_has_stdlib_code() {
     let source = "def use_value[T](value: T):\n    value.missing()\n";
     let result = lower_source(source);
     assert!(result.is_err());
@@ -807,4 +809,3 @@ fn test_generic_type_missing_method_has_stdlib_code() {
             && error.primary_range == Some(range_for_after(source, "value.", "missing"))
     }));
 }
-

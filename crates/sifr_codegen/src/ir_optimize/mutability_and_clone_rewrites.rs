@@ -1,3 +1,4 @@
+use super::{is_copy_type, not_expr};
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType};
 
 const MUTATING_METHODS: &[&str] = &[
@@ -66,7 +67,7 @@ pub(crate) fn remove_unneeded_mutability_in_items(items: &mut [RustItem]) -> usi
     removed
 }
 
-fn remove_unneeded_mutability_in_item(item: &mut RustItem) -> usize {
+pub(super) fn remove_unneeded_mutability_in_item(item: &mut RustItem) -> usize {
     match item {
         RustItem::Impl { items, .. } => items
             .iter_mut()
@@ -81,11 +82,11 @@ fn remove_unneeded_mutability_in_item(item: &mut RustItem) -> usize {
     }
 }
 
-fn remove_unneeded_mutability_in_block(body: &mut [RustStmt]) -> usize {
+pub(super) fn remove_unneeded_mutability_in_block(body: &mut [RustStmt]) -> usize {
     remove_unneeded_mutability_in_block_with_tail_expr(body, None)
 }
 
-fn remove_unneeded_mutability_in_block_with_tail_expr(
+pub(super) fn remove_unneeded_mutability_in_block_with_tail_expr(
     body: &mut [RustStmt],
     tail_expr: Option<&RustExpr>,
 ) -> usize {
@@ -128,7 +129,7 @@ fn remove_unneeded_mutability_in_block_with_tail_expr(
     removed
 }
 
-fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
+pub(super) fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
     match stmt {
         RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
             remove_expr_unneeded_mutability(value)
@@ -206,7 +207,7 @@ fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
     }
 }
 
-fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
+pub(super) fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
     match expr {
         RustExpr::Block { stmts, expr } => {
             let removed =
@@ -300,7 +301,7 @@ fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
     }
 }
 
-fn option_mut_pattern_name(pattern: &str) -> Option<String> {
+pub(super) fn option_mut_pattern_name(pattern: &str) -> Option<String> {
     let name = pattern.strip_prefix("Some(mut ")?.strip_suffix(')')?;
     if name
         .chars()
@@ -312,18 +313,18 @@ fn option_mut_pattern_name(pattern: &str) -> Option<String> {
     }
 }
 
-fn is_callable_binding_value(value: &RustExpr) -> bool {
+pub(super) fn is_callable_binding_value(value: &RustExpr) -> bool {
     matches!(
         value,
         RustExpr::Closure { .. } | RustExpr::ClosureBlock { .. }
     )
 }
 
-fn stmts_mutate_name(stmts: &[RustStmt], name: &str) -> bool {
+pub(super) fn stmts_mutate_name(stmts: &[RustStmt], name: &str) -> bool {
     stmts.iter().any(|stmt| stmt_mutates_name(stmt, name))
 }
 
-fn stmt_mutates_name(stmt: &RustStmt, name: &str) -> bool {
+pub(super) fn stmt_mutates_name(stmt: &RustStmt, name: &str) -> bool {
     match stmt {
         RustStmt::Assign { target, value } => {
             assignment_target_mutates_name(target, name) || expr_mutates_name(value, name)
@@ -393,7 +394,7 @@ fn stmt_mutates_name(stmt: &RustStmt, name: &str) -> bool {
     }
 }
 
-fn assignment_target_mutates_name(target: &RustExpr, name: &str) -> bool {
+pub(super) fn assignment_target_mutates_name(target: &RustExpr, name: &str) -> bool {
     match target {
         RustExpr::Ident(target_name) => target_name == name,
         RustExpr::Field { expr, .. } | RustExpr::Index { expr, .. } => {
@@ -403,7 +404,7 @@ fn assignment_target_mutates_name(target: &RustExpr, name: &str) -> bool {
     }
 }
 
-fn root_expr_is_name(expr: &RustExpr, name: &str) -> bool {
+pub(super) fn root_expr_is_name(expr: &RustExpr, name: &str) -> bool {
     match expr {
         RustExpr::Ident(target_name) => target_name == name,
         RustExpr::Path(parts) => parts.len() == 1 && parts[0] == name,
@@ -415,7 +416,7 @@ fn root_expr_is_name(expr: &RustExpr, name: &str) -> bool {
     }
 }
 
-fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
+pub(super) fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
     match expr {
         RustExpr::Ref {
             mutable: true,
@@ -508,7 +509,7 @@ fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
     }
 }
 
-fn optimize_item(item: &mut RustItem) -> usize {
+pub(super) fn optimize_item(item: &mut RustItem) -> usize {
     match item {
         RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => 0,
         RustItem::Struct { .. } | RustItem::TupleStruct { .. } => 0,
@@ -535,7 +536,7 @@ fn optimize_item(item: &mut RustItem) -> usize {
     }
 }
 
-fn optimize_block(body: &mut Vec<RustStmt>) -> usize {
+pub(super) fn optimize_block(body: &mut Vec<RustStmt>) -> usize {
     let mut removed = 0usize;
     for stmt in body.iter_mut() {
         removed += optimize_stmt(stmt);
@@ -545,7 +546,7 @@ fn optimize_block(body: &mut Vec<RustStmt>) -> usize {
     removed + (before - body.len())
 }
 
-fn is_self_assignment(stmt: &RustStmt) -> bool {
+pub(super) fn is_self_assignment(stmt: &RustStmt) -> bool {
     matches!(
         stmt,
         RustStmt::Assign {
@@ -555,7 +556,7 @@ fn is_self_assignment(stmt: &RustStmt) -> bool {
     )
 }
 
-fn optimize_stmt(stmt: &mut RustStmt) -> usize {
+pub(super) fn optimize_stmt(stmt: &mut RustStmt) -> usize {
     match stmt {
         RustStmt::Let { value, .. } => optimize_expr(value),
         RustStmt::LetPattern { value, .. } => optimize_expr(value),
@@ -647,7 +648,7 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
     }
 }
 
-fn optimize_expr(expr: &mut RustExpr) -> usize {
+pub(super) fn optimize_expr(expr: &mut RustExpr) -> usize {
     match expr {
         RustExpr::Clone(inner) => {
             let mut removed = optimize_expr(inner);
@@ -773,7 +774,7 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
     }
 }
 
-fn should_remove_clone(inner: &RustExpr) -> bool {
+pub(super) fn should_remove_clone(inner: &RustExpr) -> bool {
     match inner {
         RustExpr::Literal(_) => true,
         RustExpr::Ref { .. } => true,
@@ -782,7 +783,7 @@ fn should_remove_clone(inner: &RustExpr) -> bool {
     }
 }
 
-fn is_zero_usize_expr(expr: &RustExpr) -> bool {
+pub(super) fn is_zero_usize_expr(expr: &RustExpr) -> bool {
     match expr {
         RustExpr::Literal(RustLiteral::Int(0)) => true,
         RustExpr::Cast { expr, ty } => {
@@ -793,7 +794,7 @@ fn is_zero_usize_expr(expr: &RustExpr) -> bool {
     }
 }
 
-fn is_identity_closure(expr: &RustExpr) -> bool {
+pub(super) fn is_identity_closure(expr: &RustExpr) -> bool {
     let RustExpr::Closure { params, body, .. } = expr else {
         return false;
     };
@@ -809,7 +810,7 @@ fn is_identity_closure(expr: &RustExpr) -> bool {
     }
 }
 
-fn is_known_std_fallible_receiver(expr: &RustExpr) -> bool {
+pub(super) fn is_known_std_fallible_receiver(expr: &RustExpr) -> bool {
     matches!(
         expr,
         RustExpr::FnCall { func, .. }
@@ -824,7 +825,11 @@ fn is_known_std_fallible_receiver(expr: &RustExpr) -> bool {
     )
 }
 
-fn simplified_bool_comparison(left: &RustExpr, op: &str, right: &RustExpr) -> Option<RustExpr> {
+pub(super) fn simplified_bool_comparison(
+    left: &RustExpr,
+    op: &str,
+    right: &RustExpr,
+) -> Option<RustExpr> {
     if !matches!(op, "==" | "!=") {
         return None;
     }
@@ -844,4 +849,3 @@ fn simplified_bool_comparison(left: &RustExpr, op: &str, right: &RustExpr) -> Op
     }
     None
 }
-

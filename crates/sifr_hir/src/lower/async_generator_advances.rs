@@ -11,12 +11,12 @@ use sifr_type_system::Type;
 use std::collections::HashMap;
 
 #[derive(Default)]
-pub(super) struct AsyncGeneratorAdvanceTracker {
+pub(in crate::lower) struct AsyncGeneratorAdvanceTracker {
     pending_generators: HashMap<String, TextRange>,
     pending_bindings: HashMap<String, String>,
 }
 
-pub(super) fn lower_anext_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_anext_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         expression_diagnostics::call_unexpected_keyword(
             ctx,
@@ -63,7 +63,7 @@ pub(super) fn lower_anext_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
     })
 }
 
-pub(super) fn record_async_generator_advance_binding(
+pub(in crate::lower) fn record_async_generator_advance_binding(
     ctx: &mut LowerCtx,
     binding_name: &str,
     value: &HirExpr,
@@ -76,7 +76,10 @@ pub(super) fn record_async_generator_advance_binding(
     }
 }
 
-pub(super) fn finish_async_generator_advance_for_expr(ctx: &mut LowerCtx, value: &HirExpr) {
+pub(in crate::lower) fn finish_async_generator_advance_for_expr(
+    ctx: &mut LowerCtx,
+    value: &HirExpr,
+) {
     if let Some(generator_name) = async_generator_anext_source(value) {
         ctx.async_generator_advances
             .pending_generators

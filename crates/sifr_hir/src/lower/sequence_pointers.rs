@@ -2,7 +2,7 @@ use super::LowerCtx;
 use sifr_python_ast::{Expr, Number};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) enum SequencePointerFact {
+pub(in crate::lower) enum SequencePointerFact {
     ZeroBased {
         pointer_var: String,
     },
@@ -13,22 +13,22 @@ pub(super) enum SequencePointerFact {
 }
 
 impl LowerCtx {
-    pub(super) fn clear_sequence_pointer(&mut self, pointer_var: &str) {
+    pub(in crate::lower) fn clear_sequence_pointer(&mut self, pointer_var: &str) {
         self.sequence_pointers
             .retain(|fact| fact.pointer_var() != pointer_var);
     }
 
-    pub(super) fn clear_sequence_pointers(&mut self) {
+    pub(in crate::lower) fn clear_sequence_pointers(&mut self) {
         self.sequence_pointers.clear();
     }
 
-    pub(super) fn set_zero_based_pointer(&mut self, pointer_var: String) {
+    pub(in crate::lower) fn set_zero_based_pointer(&mut self, pointer_var: String) {
         self.clear_sequence_pointer(&pointer_var);
         self.sequence_pointers
             .push(SequencePointerFact::ZeroBased { pointer_var });
     }
 
-    pub(super) fn set_end_pointer(&mut self, pointer_var: String, sequence: String) {
+    pub(in crate::lower) fn set_end_pointer(&mut self, pointer_var: String, sequence: String) {
         self.clear_sequence_pointer(&pointer_var);
         self.sequence_pointers
             .push(SequencePointerFact::EndPointer {
@@ -37,7 +37,7 @@ impl LowerCtx {
             });
     }
 
-    pub(super) fn same_sequence_two_pointer_loop(
+    pub(in crate::lower) fn same_sequence_two_pointer_loop(
         &self,
         left_var: &str,
         right_var: &str,
@@ -49,7 +49,7 @@ impl LowerCtx {
         self.end_pointer_sequence(right_var)
     }
 
-    pub(super) fn is_zero_based_pointer(&self, pointer_var: &str) -> bool {
+    pub(in crate::lower) fn is_zero_based_pointer(&self, pointer_var: &str) -> bool {
         self.sequence_pointers.iter().any(|fact| {
             matches!(
                 fact,
@@ -58,7 +58,7 @@ impl LowerCtx {
         })
     }
 
-    pub(super) fn end_pointer_sequence(&self, pointer_var: &str) -> Option<String> {
+    pub(in crate::lower) fn end_pointer_sequence(&self, pointer_var: &str) -> Option<String> {
         self.sequence_pointers.iter().find_map(|fact| match fact {
             SequencePointerFact::EndPointer {
                 pointer_var: fact_var,
@@ -77,7 +77,7 @@ impl SequencePointerFact {
     }
 }
 
-pub(super) fn record_sequence_pointer_fact(ctx: &mut LowerCtx, name: &str, value: &Expr) {
+pub(in crate::lower) fn record_sequence_pointer_fact(ctx: &mut LowerCtx, name: &str, value: &Expr) {
     ctx.clear_sequence_pointer(name);
     if expr_is_zero(value) {
         ctx.set_zero_based_pointer(name.to_string());
@@ -88,7 +88,7 @@ pub(super) fn record_sequence_pointer_fact(ctx: &mut LowerCtx, name: &str, value
     }
 }
 
-pub(super) fn record_tuple_unpack_pointer_facts(
+pub(in crate::lower) fn record_tuple_unpack_pointer_facts(
     ctx: &mut LowerCtx,
     target_names: &[String],
     value: &Expr,

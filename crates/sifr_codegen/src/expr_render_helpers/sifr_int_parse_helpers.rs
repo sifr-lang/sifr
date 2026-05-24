@@ -1,5 +1,6 @@
+use super::{RustEmitter, Type};
 impl RustEmitter {
-    fn rewrite_special_ident(&self, name: String) -> crate::RustExpr {
+    pub(crate) fn rewrite_special_ident(&self, name: String) -> crate::RustExpr {
         if self.local_binding_types.contains_key(&name) {
             return crate::RustExpr::Ident(name);
         }
@@ -39,7 +40,7 @@ impl RustEmitter {
         crate::RustExpr::Ident(name)
     }
 
-    fn coerce_expr_to_sifr_int(&self, expr: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn coerce_expr_to_sifr_int(&self, expr: crate::RustExpr) -> crate::RustExpr {
         match expr {
             crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
                 crate::RustExpr::Ref {
@@ -69,7 +70,7 @@ impl RustEmitter {
         }
     }
 
-    fn sifr_int_known_nonzero_floor_expr(
+    pub(crate) fn sifr_int_known_nonzero_floor_expr(
         &self,
         op: &str,
         left: crate::RustExpr,
@@ -87,7 +88,10 @@ impl RustEmitter {
         }
     }
 
-    fn coerce_expr_to_sifr_int_method_receiver(&self, expr: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn coerce_expr_to_sifr_int_method_receiver(
+        &self,
+        expr: crate::RustExpr,
+    ) -> crate::RustExpr {
         match expr {
             crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
                 crate::RustExpr::Ident(name)
@@ -107,7 +111,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn coerce_expr_to_sifr_int_value(&self, expr: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn coerce_expr_to_sifr_int_value(&self, expr: crate::RustExpr) -> crate::RustExpr {
         match expr {
             crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
                 crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(name)))
@@ -134,7 +138,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn coerce_result_int_expr_to_sifr_int_value(
+    pub(crate) fn coerce_result_int_expr_to_sifr_int_value(
         &self,
         expr: crate::RustExpr,
     ) -> crate::RustExpr {
@@ -154,7 +158,10 @@ impl RustEmitter {
         }
     }
 
-    fn coerce_expr_to_sifr_int_comparison_operand(&self, expr: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn coerce_expr_to_sifr_int_comparison_operand(
+        &self,
+        expr: crate::RustExpr,
+    ) -> crate::RustExpr {
         let coerced = self.coerce_expr_to_sifr_int(expr);
         if matches!(coerced, crate::RustExpr::Ref { .. }) {
             return coerced;
@@ -165,15 +172,15 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn is_registered_sifr_int_local(&self, name: &str) -> bool {
+    pub(crate) fn is_registered_sifr_int_local(&self, name: &str) -> bool {
         self.sifr_int_local_bindings.borrow().contains(name)
     }
 
-    pub(super) fn is_forced_sifr_int_local(&self, name: &str) -> bool {
+    pub(crate) fn is_forced_sifr_int_local(&self, name: &str) -> bool {
         self.sifr_int_forced_local_bindings.borrow().contains(name)
     }
 
-    pub(super) fn is_sifr_int_expr(&self, expr: &crate::RustExpr) -> bool {
+    pub(crate) fn is_sifr_int_expr(&self, expr: &crate::RustExpr) -> bool {
         match expr {
             crate::RustExpr::FnCall { func, args } => {
                 (args.is_empty() && self.is_sifr_int_module_constant_func(func))
@@ -207,7 +214,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn is_sifr_int_result_expr(&self, expr: &crate::RustExpr) -> bool {
+    pub(crate) fn is_sifr_int_result_expr(&self, expr: &crate::RustExpr) -> bool {
         match expr {
             crate::RustExpr::Block {
                 expr: Some(inner), ..
@@ -227,7 +234,7 @@ impl RustEmitter {
         }
     }
 
-    fn is_sifr_int_checked_floor_option_expr(expr: &crate::RustExpr) -> bool {
+    pub(crate) fn is_sifr_int_checked_floor_option_expr(expr: &crate::RustExpr) -> bool {
         matches!(
             expr,
             crate::RustExpr::MethodCall {
@@ -237,7 +244,7 @@ impl RustEmitter {
         )
     }
 
-    fn is_sifr_int_module_constant_func(&self, func: &crate::RustExpr) -> bool {
+    pub(crate) fn is_sifr_int_module_constant_func(&self, func: &crate::RustExpr) -> bool {
         let Some(func_name) = rust_expr_identifier_path(func) else {
             return false;
         };
@@ -249,11 +256,14 @@ impl RustEmitter {
         })
     }
 
-    fn is_sifr_int_returning_function_call(&self, func: &crate::RustExpr) -> bool {
+    pub(crate) fn is_sifr_int_returning_function_call(&self, func: &crate::RustExpr) -> bool {
         rust_expr_identifier_path(func).is_some_and(|name| self.function_returns_sifr_int(&name))
     }
 
-    fn is_sifr_int_result_returning_function_call(&self, func: &crate::RustExpr) -> bool {
+    pub(crate) fn is_sifr_int_result_returning_function_call(
+        &self,
+        func: &crate::RustExpr,
+    ) -> bool {
         rust_expr_identifier_path(func).is_some_and(|name| {
             self.sifr_int_result_function_returns
                 .borrow()
@@ -261,7 +271,7 @@ impl RustEmitter {
         })
     }
 
-    fn is_sifr_int_result_returning_method_call(
+    pub(crate) fn is_sifr_int_result_returning_method_call(
         &self,
         receiver: &crate::RustExpr,
         method: &str,
@@ -274,7 +284,7 @@ impl RustEmitter {
             })
     }
 
-    fn rust_expr_class_name(&self, expr: &crate::RustExpr) -> Option<String> {
+    pub(crate) fn rust_expr_class_name(&self, expr: &crate::RustExpr) -> Option<String> {
         match expr {
             crate::RustExpr::Ident(name) if name == "self" => self.current_class_name.clone(),
             crate::RustExpr::Ident(name) => self.local_binding_types.get(name).and_then(|ty| {
@@ -303,25 +313,25 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn function_returns_sifr_int(&self, name: &str) -> bool {
+    pub(crate) fn function_returns_sifr_int(&self, name: &str) -> bool {
         self.sifr_int_function_returns.borrow().contains(name)
     }
 
-    pub(super) fn function_param_lowers_to_sifr_int(&self, name: &str, idx: usize) -> bool {
+    pub(crate) fn function_param_lowers_to_sifr_int(&self, name: &str, idx: usize) -> bool {
         self.sifr_int_function_params
             .borrow()
             .get(name)
             .is_some_and(|params| params.contains(&idx))
     }
 
-    pub(super) fn function_param_lowers_to_sifr_int_result(&self, name: &str, idx: usize) -> bool {
+    pub(crate) fn function_param_lowers_to_sifr_int_result(&self, name: &str, idx: usize) -> bool {
         self.sifr_int_result_function_params
             .borrow()
             .get(name)
             .is_some_and(|params| params.contains(&idx))
     }
 
-    pub(super) fn method_param_lowers_to_sifr_int_result(
+    pub(crate) fn method_param_lowers_to_sifr_int_result(
         &self,
         class_name: &str,
         method_name: &str,
@@ -336,12 +346,12 @@ impl RustEmitter {
             .is_some_and(|params| params.contains(&idx))
     }
 
-    fn is_registered_sifr_int_result_local(&self, name: &str) -> bool {
+    pub(crate) fn is_registered_sifr_int_result_local(&self, name: &str) -> bool {
         self.sifr_int_result_local_bindings.borrow().contains(name)
     }
 }
 
-fn parse_module_constant_expr(rust_name: &str) -> Option<crate::RustExpr> {
+pub(super) fn parse_module_constant_expr(rust_name: &str) -> Option<crate::RustExpr> {
     if let Some(func) = rust_name.strip_suffix("()") {
         let func_expr = parse_identifier_path_expr(func)?;
         return Some(crate::RustExpr::FnCall {
@@ -352,7 +362,7 @@ fn parse_module_constant_expr(rust_name: &str) -> Option<crate::RustExpr> {
     parse_identifier_path_expr(rust_name)
 }
 
-fn parse_identifier_path_expr(name: &str) -> Option<crate::RustExpr> {
+pub(super) fn parse_identifier_path_expr(name: &str) -> Option<crate::RustExpr> {
     let segments = name
         .split("::")
         .filter(|segment| !segment.is_empty())
@@ -368,7 +378,7 @@ fn parse_identifier_path_expr(name: &str) -> Option<crate::RustExpr> {
     ))
 }
 
-fn is_ident(name: &str) -> bool {
+pub(super) fn is_ident(name: &str) -> bool {
     let mut chars = name.chars();
     match chars.next() {
         Some(ch) if ch == '_' || ch.is_ascii_alphabetic() => {}
@@ -377,7 +387,7 @@ fn is_ident(name: &str) -> bool {
     chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
 }
 
-fn sifr_int_from_i64_expr(expr: crate::RustExpr) -> crate::RustExpr {
+pub(super) fn sifr_int_from_i64_expr(expr: crate::RustExpr) -> crate::RustExpr {
     crate::RustExpr::FnCall {
         func: Box::new(crate::RustExpr::Path(vec![
             "SifrInt".to_string(),
@@ -387,38 +397,38 @@ fn sifr_int_from_i64_expr(expr: crate::RustExpr) -> crate::RustExpr {
     }
 }
 
-fn is_sifr_int_arithmetic_op(op: &str) -> bool {
+pub(super) fn is_sifr_int_arithmetic_op(op: &str) -> bool {
     matches!(op, "+" | "-" | "*")
 }
 
-fn is_sifr_int_checked_floor_op(op: &str) -> bool {
+pub(super) fn is_sifr_int_checked_floor_op(op: &str) -> bool {
     matches!(op, "/" | "%")
 }
 
-fn is_sifr_int_comparison_op(op: &str) -> bool {
+pub(super) fn is_sifr_int_comparison_op(op: &str) -> bool {
     matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=")
 }
 
-fn is_sifr_int_operand_coercion_op(op: &str) -> bool {
+pub(super) fn is_sifr_int_operand_coercion_op(op: &str) -> bool {
     is_sifr_int_arithmetic_op(op) || is_sifr_int_comparison_op(op)
 }
 
-fn is_legacy_i64_type(ty: Option<&crate::RustType>) -> bool {
+pub(super) fn is_legacy_i64_type(ty: Option<&crate::RustType>) -> bool {
     matches!(ty, Some(crate::RustType::I64))
         || matches!(ty, Some(crate::RustType::Named(name)) if name == "i64")
 }
 
-fn is_result_legacy_i64_type(ty: Option<&crate::RustType>) -> bool {
+pub(super) fn is_result_legacy_i64_type(ty: Option<&crate::RustType>) -> bool {
     matches!(ty, Some(crate::RustType::Result(ok, _)) if is_legacy_i64_rust_type(ok))
         || matches!(ty, Some(crate::RustType::Named(name)) if name.starts_with("Result<i64, "))
 }
 
-fn is_legacy_i64_rust_type(ty: &crate::RustType) -> bool {
+pub(super) fn is_legacy_i64_rust_type(ty: &crate::RustType) -> bool {
     matches!(ty, crate::RustType::I64)
         || matches!(ty, crate::RustType::Named(name) if name == "i64")
 }
 
-fn result_i64_type_to_sifr_int(ty: crate::RustType) -> crate::RustType {
+pub(super) fn result_i64_type_to_sifr_int(ty: crate::RustType) -> crate::RustType {
     match ty {
         crate::RustType::Result(ok, err) if is_legacy_i64_rust_type(&ok) => {
             crate::RustType::Result(Box::new(crate::RustType::Named("SifrInt".to_string())), err)
@@ -430,7 +440,7 @@ fn result_i64_type_to_sifr_int(ty: crate::RustType) -> crate::RustType {
     }
 }
 
-fn is_proven_nonzero_integer_expr(expr: &crate::RustExpr) -> bool {
+pub(super) fn is_proven_nonzero_integer_expr(expr: &crate::RustExpr) -> bool {
     match expr {
         crate::RustExpr::Literal(crate::RustLiteral::Int(value)) => *value != 0,
         crate::RustExpr::Cast {
@@ -456,7 +466,7 @@ fn is_proven_nonzero_integer_expr(expr: &crate::RustExpr) -> bool {
     }
 }
 
-fn rust_expr_identifier_path(expr: &crate::RustExpr) -> Option<String> {
+pub(super) fn rust_expr_identifier_path(expr: &crate::RustExpr) -> Option<String> {
     match expr {
         crate::RustExpr::Ident(name) => Some(name.clone()),
         crate::RustExpr::Path(path) => Some(path.join("::")),
@@ -464,7 +474,7 @@ fn rust_expr_identifier_path(expr: &crate::RustExpr) -> Option<String> {
     }
 }
 
-fn string_path_matches(path: &[String], expected: &[&str]) -> bool {
+pub(super) fn string_path_matches(path: &[String], expected: &[&str]) -> bool {
     path.len() == expected.len()
         && path
             .iter()
@@ -472,7 +482,7 @@ fn string_path_matches(path: &[String], expected: &[&str]) -> bool {
             .all(|(segment, expected_segment)| segment == expected_segment)
 }
 
-fn is_ok_result_path(expr: &crate::RustExpr) -> bool {
+pub(super) fn is_ok_result_path(expr: &crate::RustExpr) -> bool {
     match expr {
         crate::RustExpr::Path(path) => string_path_matches(path, &["Ok"]),
         crate::RustExpr::Ident(name) => name == "Ok",

@@ -1,5 +1,9 @@
+use super::{
+    io_error_kind_for_handler, HandlerMatchCondition, HirExceptHandler, HirExpr, HirStmt,
+    RustEmitter, RustExpr, RustStmt, Type,
+};
 impl RustEmitter {
-    fn try_except_handler_condition_expr(
+    pub(crate) fn try_except_handler_condition_expr(
         handler: &HirExceptHandler,
         err_ident: &str,
         err_ty: &str,
@@ -38,7 +42,7 @@ impl RustEmitter {
         HandlerMatchCondition::Unsupported
     }
 
-    fn lower_try_except_handler_chain_for_ir(
+    pub(crate) fn lower_try_except_handler_chain_for_ir(
         &mut self,
         handlers: &[HirExceptHandler],
         err_ident: &str,
@@ -174,7 +178,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    fn lower_nested_field_assign_stmt_for_ir(
+    pub(crate) fn lower_nested_field_assign_stmt_for_ir(
         &mut self,
         object: &str,
         field: &str,
@@ -254,7 +258,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    fn optional_recursive_class_name(field_ty: &Type) -> Option<String> {
+    pub(crate) fn optional_recursive_class_name(field_ty: &Type) -> Option<String> {
         let Type::Union(members) = field_ty.resolve_alias() else {
             return None;
         };
@@ -274,7 +278,7 @@ impl RustEmitter {
         }
     }
 
-    fn optional_class_name(ty: &Type) -> Option<String> {
+    pub(crate) fn optional_class_name(ty: &Type) -> Option<String> {
         let Type::Union(members) = ty.resolve_alias() else {
             return None;
         };
@@ -297,7 +301,12 @@ impl RustEmitter {
         }
     }
 
-    fn recursive_field_needs_boxing(&self, object: &str, field: &str, field_ty: &Type) -> bool {
+    pub(crate) fn recursive_field_needs_boxing(
+        &self,
+        object: &str,
+        field: &str,
+        field_ty: &Type,
+    ) -> bool {
         if object == "self"
             && self.current_class_name.as_ref().is_some_and(|class_name| {
                 self.recursive_fields
@@ -314,7 +323,7 @@ impl RustEmitter {
         false
     }
 
-    fn adapt_field_assign_value_for_recursive_storage(
+    pub(crate) fn adapt_field_assign_value_for_recursive_storage(
         &self,
         object: &str,
         field: &str,
@@ -576,7 +585,7 @@ impl RustEmitter {
     }
 }
 
-fn is_result_int_division_error_type(ty: &Type) -> bool {
+pub(super) fn is_result_int_division_error_type(ty: &Type) -> bool {
     let Type::Result(ok_ty, err_ty) = ty else {
         return false;
     };
@@ -589,7 +598,7 @@ fn is_result_int_division_error_type(ty: &Type) -> bool {
     )
 }
 
-fn result_int_to_sifr_int_rust_type(ty: &Type) -> crate::RustType {
+pub(super) fn result_int_to_sifr_int_rust_type(ty: &Type) -> crate::RustType {
     let Type::Result(_, err_ty) = ty else {
         return crate::RustType::Named(ty.rust_type());
     };
@@ -599,14 +608,20 @@ fn result_int_to_sifr_int_rust_type(ty: &Type) -> crate::RustType {
     )
 }
 
-fn inject_async_with_return_cleanup(stmts: &[RustStmt], receiver: &RustExpr) -> Vec<RustStmt> {
+pub(super) fn inject_async_with_return_cleanup(
+    stmts: &[RustStmt],
+    receiver: &RustExpr,
+) -> Vec<RustStmt> {
     stmts
         .iter()
         .flat_map(|stmt| inject_async_with_return_cleanup_stmt(stmt, receiver))
         .collect()
 }
 
-fn inject_async_with_return_cleanup_stmt(stmt: &RustStmt, receiver: &RustExpr) -> Vec<RustStmt> {
+pub(super) fn inject_async_with_return_cleanup_stmt(
+    stmt: &RustStmt,
+    receiver: &RustExpr,
+) -> Vec<RustStmt> {
     match stmt {
         RustStmt::Return(Some(value)) => vec![RustStmt::Return(Some(RustExpr::Block {
             stmts: vec![
@@ -687,7 +702,7 @@ fn inject_async_with_return_cleanup_stmt(stmt: &RustStmt, receiver: &RustExpr) -
     }
 }
 
-fn async_with_exit_call(receiver: RustExpr, cause_variant: &str) -> RustExpr {
+pub(super) fn async_with_exit_call(receiver: RustExpr, cause_variant: &str) -> RustExpr {
     RustExpr::Try(Box::new(RustExpr::Await(Box::new(RustExpr::MethodCall {
         receiver: Box::new(receiver),
         method: "__aexit__".to_string(),
@@ -698,7 +713,7 @@ fn async_with_exit_call(receiver: RustExpr, cause_variant: &str) -> RustExpr {
     }))))
 }
 
-fn inject_async_for_early_exit_cleanup(
+pub(super) fn inject_async_for_early_exit_cleanup(
     stmts: &[RustStmt],
     receiver: &RustExpr,
     close_error_ty: &Type,
@@ -706,7 +721,7 @@ fn inject_async_for_early_exit_cleanup(
     inject_async_for_early_exit_cleanup_with_breaks(stmts, receiver, close_error_ty, true)
 }
 
-fn inject_async_for_early_exit_cleanup_with_breaks(
+pub(super) fn inject_async_for_early_exit_cleanup_with_breaks(
     stmts: &[RustStmt],
     receiver: &RustExpr,
     close_error_ty: &Type,
@@ -720,7 +735,7 @@ fn inject_async_for_early_exit_cleanup_with_breaks(
         .collect()
 }
 
-fn inject_async_for_early_exit_cleanup_stmt(
+pub(super) fn inject_async_for_early_exit_cleanup_stmt(
     stmt: &RustStmt,
     receiver: &RustExpr,
     close_error_ty: &Type,
@@ -858,7 +873,7 @@ fn inject_async_for_early_exit_cleanup_stmt(
     }
 }
 
-fn async_for_close_call(receiver: RustExpr, close_error_ty: &Type) -> RustExpr {
+pub(super) fn async_for_close_call(receiver: RustExpr, close_error_ty: &Type) -> RustExpr {
     let close_call = RustExpr::Await(Box::new(RustExpr::MethodCall {
         receiver: Box::new(receiver),
         method: "aclose".to_string(),

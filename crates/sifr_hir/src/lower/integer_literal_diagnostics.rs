@@ -6,9 +6,9 @@ use sifr_python_ast::{Expr, Number, Stmt};
 use super::integer_literals::canonical_large_int_literal_text;
 use super::LowerCtx;
 
-pub(super) const INTEGER_EVAL_DECIMAL_DIGIT_BUDGET: usize = 4096;
+pub(in crate::lower) const INTEGER_EVAL_DECIMAL_DIGIT_BUDGET: usize = 4096;
 
-pub(super) fn validate_module_integer_literals(stmts: &[Stmt], ctx: &mut LowerCtx) {
+pub(in crate::lower) fn validate_module_integer_literals(stmts: &[Stmt], ctx: &mut LowerCtx) {
     let mut visitor = IntegerLiteralBudgetVisitor { ctx };
     visitor::walk_body(&mut visitor, stmts);
 }

@@ -1,4 +1,14 @@
-pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
+use super::{
+    ast_convention_to_param, collect_declared_nonlocals, collect_yield_types,
+    first_await_range_in_stmts, first_yield_range_in_stmts, format_type_name,
+    function_body_contains_yield, function_uses_asyncio_run_entrypoint, infer_function_return_type,
+    invalid_type_annotation, is_valid_error_type, lower_expr, lower_stmts, make_union,
+    ownership_diagnostics, reserved_integer_width_name, resolve_type_annotation, str,
+    substitute_type_vars, unknown_type, workload_annotations, DiagnosticCode, Expr, FunctionType,
+    HashMap, HirFunction, HirParam, LowerCtx, MethodKind, Number, Operator, OwnershipKind,
+    ParamConvention, Ranged, StmtFunctionDef, Type,
+};
+pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
             // Check type variables first (e.g., T from TypeVar)
@@ -421,7 +431,10 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     }
 }
 
-pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunction> {
+pub(in crate::lower) fn lower_function(
+    func: &StmtFunctionDef,
+    ctx: &mut LowerCtx,
+) -> Option<HirFunction> {
     let ft = ctx.functions.get::<str>(func.name.as_ref())?.clone();
     let is_asyncio_run_entrypoint = function_uses_asyncio_run_entrypoint(func, ctx);
     let effective_is_async = func.is_async || is_asyncio_run_entrypoint;
@@ -674,7 +687,10 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
     })
 }
 
-fn requires_exhaustive_return_annotation(func: &StmtFunctionDef, return_type: &Type) -> bool {
+pub(super) fn requires_exhaustive_return_annotation(
+    func: &StmtFunctionDef,
+    return_type: &Type,
+) -> bool {
     if func.returns.is_none() {
         return false;
     }

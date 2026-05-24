@@ -1,4 +1,25 @@
-pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
+use super::{
+    apply_narrowing, callable_builtin_element_type, detect_false_exit_sequence_guards,
+    detect_false_nonzero_integer_guards, detect_narrowing_condition, detect_range_sequence_guards,
+    detect_true_nonzero_integer_guards, detect_true_sequence_guards, detect_while_sequence_guards,
+    ensure_mutable_parameter_binding, failed_initializer_taint,
+    finish_async_generator_advance_for_expr, invalidate_rebound_binding_facts,
+    is_collection_backed_iter_source, loop_body_mutates_iter_source, lower_aug_assign_impl,
+    lower_expr, lower_star_unpack_assign, lower_stmts, lower_tuple_unpack_assign,
+    maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards, name_diagnostics,
+    numeric_domain_for_type, numeric_sentinel_kind, ownership_diagnostics,
+    predeclare_exhaustive_if_assigned_names, reconcile_optional_reassignment,
+    record_async_generator_advance_binding, record_const_integer_binding, record_len_alias_fact,
+    record_sequence_pointer_fact, resolve_field_type_from_type, resolve_object_field_type,
+    restore_const_integer_state_after_branches, seed_binding_after_failed_initializer,
+    seed_exhaustive_if_bindings, sequence_shape_fact, should_adopt_inferred_binding_hint,
+    should_rebind_simple_name, statement_diagnostics, str, task_group_spawn_owner,
+    then_body_always_exits, validate_control_flow_condition, validate_subscript_assignment_target,
+    DiagnosticCode, Expr, FunctionType, HirExpr, HirIteratorOp, HirStmt, LowerCtx,
+    NarrowingCondition, Ranged, StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtWhile, TextRange,
+    Type,
+};
+pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
         statement_diagnostics::invalid_assignment_target(
             ctx,
@@ -346,11 +367,14 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     }
 }
 
-pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
+pub(in crate::lower) fn lower_aug_assign(
+    aug: &StmtAugAssign,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     lower_aug_assign_impl(aug, ctx)
 }
 
-pub(super) fn lower_if(
+pub(in crate::lower) fn lower_if(
     if_stmt: &StmtIf,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
@@ -536,7 +560,7 @@ pub(super) fn lower_if(
     })
 }
 
-pub(super) fn lower_while(
+pub(in crate::lower) fn lower_while(
     while_stmt: &StmtWhile,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
@@ -600,7 +624,7 @@ pub(super) fn lower_while(
     })
 }
 
-pub(super) fn lower_for(
+pub(in crate::lower) fn lower_for(
     for_stmt: &StmtFor,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,

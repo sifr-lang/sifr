@@ -2,7 +2,7 @@ use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use sifr_type_system::{make_union, Type};
 
-pub(super) fn refine_nonempty_method_return_type(
+pub(in crate::lower) fn refine_nonempty_method_return_type(
     object_ty: &Type,
     object: &HirExpr,
     method_name: &str,
@@ -14,7 +14,7 @@ pub(super) fn refine_nonempty_method_return_type(
         .unwrap_or_else(|| return_ty.clone())
 }
 
-pub(super) fn refine_nonempty_pop_return_type(
+pub(in crate::lower) fn refine_nonempty_pop_return_type(
     object_ty: &Type,
     object: &HirExpr,
     method_name: &str,

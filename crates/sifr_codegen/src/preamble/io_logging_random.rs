@@ -1,4 +1,8 @@
-
+use super::{
+    build_error_type_items, file_handle_read_bytes_method, file_handle_readlines_method,
+    file_handle_write_bytes_method, RustExpr, RustItem, RustMatchArm, RustParam, RustStmt,
+    RustType, Visibility,
+};
 pub fn build_io_error_items() -> Vec<RustItem> {
     let mut items = build_error_type_items(
         "IOError",
@@ -433,7 +437,7 @@ pub fn build_random_module_state_items() -> Vec<RustItem> {
     ]
 }
 
-fn file_handles_lock_expr() -> RustExpr {
+pub(crate) fn file_handles_lock_expr() -> RustExpr {
     RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("__SIFR_FILE_HANDLES".to_string())),
@@ -456,7 +460,7 @@ fn file_handles_lock_expr() -> RustExpr {
     }
 }
 
-fn file_handle_read_method() -> RustItem {
+pub(crate) fn file_handle_read_method() -> RustItem {
     RustItem::Fn {
         name: "read".to_string(),
         visibility: Visibility::Private,
@@ -566,7 +570,7 @@ fn file_handle_read_method() -> RustItem {
     }
 }
 
-fn file_handle_write_method() -> RustItem {
+pub(crate) fn file_handle_write_method() -> RustItem {
     RustItem::Fn {
         name: "write".to_string(),
         visibility: Visibility::Private,
@@ -674,7 +678,7 @@ fn file_handle_write_method() -> RustItem {
     }
 }
 
-fn file_handle_readline_method() -> RustItem {
+pub(crate) fn file_handle_readline_method() -> RustItem {
     RustItem::Fn {
         name: "readline".to_string(),
         visibility: Visibility::Private,
@@ -839,4 +843,3 @@ fn file_handle_readline_method() -> RustItem {
         is_async: false,
     }
 }
-

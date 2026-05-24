@@ -7,12 +7,12 @@ use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 #[derive(Clone)]
-pub(super) struct TypeAliasDecl {
-    pub(super) name: String,
-    pub(super) type_params: Vec<String>,
-    pub(super) value: Box<Expr>,
-    pub(super) value_range: TextRange,
-    pub(super) order: usize,
+pub(in crate::lower) struct TypeAliasDecl {
+    pub(in crate::lower) name: String,
+    pub(in crate::lower) type_params: Vec<String>,
+    pub(in crate::lower) value: Box<Expr>,
+    pub(in crate::lower) value_range: TextRange,
+    pub(in crate::lower) order: usize,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -21,7 +21,10 @@ struct DependencyEdge {
     crosses_boundary: bool,
 }
 
-pub(super) fn collect_type_alias_decls(stmts: &[Stmt], ctx: &mut LowerCtx) -> Vec<TypeAliasDecl> {
+pub(in crate::lower) fn collect_type_alias_decls(
+    stmts: &[Stmt],
+    ctx: &mut LowerCtx,
+) -> Vec<TypeAliasDecl> {
     let mut decls = Vec::new();
 
     for (order, stmt) in stmts.iter().enumerate() {
@@ -58,7 +61,7 @@ pub(super) fn collect_type_alias_decls(stmts: &[Stmt], ctx: &mut LowerCtx) -> Ve
     decls
 }
 
-pub(super) fn predeclare_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut LowerCtx) {
+pub(in crate::lower) fn predeclare_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut LowerCtx) {
     for decl in alias_decls {
         let alias_ty = alias_type_template(decl);
         if decl.type_params.is_empty() {
@@ -73,7 +76,7 @@ pub(super) fn predeclare_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut L
     }
 }
 
-pub(super) fn resolve_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut LowerCtx) {
+pub(in crate::lower) fn resolve_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut LowerCtx) {
     if alias_decls.is_empty() {
         return;
     }

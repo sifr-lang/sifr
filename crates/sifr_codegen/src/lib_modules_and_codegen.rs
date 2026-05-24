@@ -1,84 +1,37 @@
-mod rust_ir;
-pub use rust_ir::*;
-mod render;
-pub use render::*;
-mod preamble;
-pub use preamble::*;
-mod context;
-pub use context::*;
-mod lower_expr;
-pub use lower_expr::*;
-mod lower_stmt;
-pub use lower_stmt::*;
-mod error_refs;
-mod lower_item;
-pub use lower_item::*;
-mod class_emitter;
-mod class_method_emitter;
-mod entrypoints;
-mod expr_ref_emitter;
-mod expr_render_helpers;
-mod field_analysis_helpers;
-mod function_emitter;
-mod function_like_lowering;
-mod generic_bounds_helpers;
-mod helpers;
-mod hir_analysis;
-mod intrinsic_method_emitters;
-mod intrinsics;
-mod ir_imports;
-mod ir_optimize;
-mod ir_validate;
-mod lib_support;
-mod match_guard_helpers;
-mod method_call_emitter;
-mod methods;
-mod module_body;
-mod module_constants;
-mod module_prescan;
-mod operator_protocol_emitters;
-mod output_helpers;
-mod stdlib_filter;
-mod stmt_support_emitter;
-mod type_emitters;
-mod union_type_helpers;
-
-#[cfg(test)]
-mod lib_codegen_tests;
-
-use error_refs::collect_referenced_builtin_error_classes;
-use helpers::{
-    collect_locally_defined_vars, collect_mutated_vars_with_sigs,
-    collect_referenced_vars_with_types, default_param_convention, is_hashable_type_codegen,
-    module_uses_bigint,
+use super::{
+    annotate_async_main_entrypoint, build_async_exit_cause_type_items,
+    build_async_generator_type_items, build_cancellation_error_type_items,
+    build_error_into_error_impl, build_error_type_items, build_failure_type_items,
+    build_file_handle_infra_items, build_file_handle_struct_items, build_io_error_items,
+    build_logging_items, build_random_module_state_items, build_task_scope_items,
+    build_timeout_result_type_items, module_uses_async_exit_cause_type,
+    module_uses_async_generator_type, module_uses_cancellation_error_type,
+    module_uses_failure_type, module_uses_task_scope, module_uses_task_sleep,
+    module_uses_timeout_result_type, replace_sync_channel_runtime_items, sifr_type_to_rust_type,
+    sync_channel_runtime_needed, Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
 };
-use hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
-use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
-use ir_optimize::remove_trivial_clones_in_items;
-use ir_validate::validate_items;
-pub(crate) use lib_support::{
-    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
+use crate::error_refs::collect_referenced_builtin_error_classes;
+use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
+use crate::ir_optimize::remove_trivial_clones_in_items;
+use crate::ir_validate::validate_items;
+use crate::stdlib_filter::{
+    collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
 };
-use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
+use sifr_hir::HirModule;
 use sifr_type_system::{ParamConvention, Type};
-use std::cell::{Cell, RefCell};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::env;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
-use stdlib_filter::{
-    collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
-    strip_rust_items_by_name,
-};
 
-type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
-type ModuleFuncSignatures = HashMap<String, FuncSignature>;
+pub(crate) type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
+pub(crate) type ModuleFuncSignatures = HashMap<String, FuncSignature>;
 type StdlibFuncSignatures = HashMap<String, ModuleFuncSignatures>;
-type UnionVariantTypes = Vec<(String, Type)>;
-type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
-type IsNoneUnionMatch = (String, String, UnionVariantTypes);
+pub(crate) type UnionVariantTypes = Vec<(String, Type)>;
+pub(crate) type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
+pub(crate) type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
-pub use entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
+pub use crate::entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
 
 pub fn sifr_runtime_dependency_spec() -> String {
     let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
@@ -89,12 +42,12 @@ pub fn sifr_runtime_dependency_spec() -> String {
     format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
 }
 
-fn tokio_dependency_spec() -> String {
+pub(super) fn tokio_dependency_spec() -> String {
     "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"sync\", \"time\"] }"
         .to_string()
 }
 
-fn discover_sifr_runtime_path() -> Option<PathBuf> {
+pub(super) fn discover_sifr_runtime_path() -> Option<PathBuf> {
     env::var_os("SIFR_RUNTIME_PATH")
         .map(PathBuf::from)
         .filter(|path| path.join("Cargo.toml").is_file())
@@ -102,26 +55,26 @@ fn discover_sifr_runtime_path() -> Option<PathBuf> {
         .or_else(discover_sifr_runtime_path_from_current_exe)
 }
 
-fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
+pub(super) fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
     env::current_dir()
         .ok()
         .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
 }
 
-fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
+pub(super) fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
     env::current_exe()
         .ok()
         .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
 }
 
-fn discover_sifr_runtime_path_from_ancestors(start: &Path) -> Option<PathBuf> {
+pub(super) fn discover_sifr_runtime_path_from_ancestors(start: &Path) -> Option<PathBuf> {
     start.ancestors().find_map(|ancestor| {
         let candidate = ancestor.join("crates").join("sifr_runtime");
         candidate.join("Cargo.toml").is_file().then_some(candidate)
     })
 }
 
-fn compile_time_sifr_runtime_path() -> PathBuf {
+pub(super) fn compile_time_sifr_runtime_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")))
@@ -129,14 +82,14 @@ fn compile_time_sifr_runtime_path() -> PathBuf {
 }
 
 #[derive(Clone)]
-struct NestedFnCapture {
-    name: String,
-    ty: Type,
-    convention: ParamConvention,
+pub(crate) struct NestedFnCapture {
+    pub(crate) name: String,
+    pub(crate) ty: Type,
+    pub(crate) convention: ParamConvention,
 }
 
 /// Built-in error class names that the compiler provides.
-const BUILTIN_ERROR_CLASSES: &[&str] = &[
+pub(crate) const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "Error",
     "IOError",
     "ParseError",
@@ -245,7 +198,7 @@ pub struct StdlibCode {
     pub module_class_fields: HashMap<String, HashMap<String, Vec<(String, Type)>>>,
 }
 
-fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures {
+pub(super) fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures {
     let mut sig_map = HashMap::new();
     for func in &module.functions {
         let params = func
@@ -301,7 +254,7 @@ fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures {
     sig_map
 }
 
-fn module_class_fields(module: &HirModule) -> HashMap<String, Vec<(String, Type)>> {
+pub(super) fn module_class_fields(module: &HirModule) -> HashMap<String, Vec<(String, Type)>> {
     module
         .classes
         .iter()
@@ -817,4 +770,3 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         lowering_stats: emitter.lowering_stats,
     }
 }
-

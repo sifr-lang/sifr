@@ -1,4 +1,10 @@
-fn render_local_module_imports(module: &HirModule) -> String {
+use super::{
+    generate_rust, generate_rust_with_stdlib, module_class_fields, module_func_signatures,
+    publicize_generated_module_source, sifr_runtime_dependency_spec, tokio_dependency_spec,
+    BTreeSet, HashMap, HashSet, HirModule, MultiModuleCodegenResult, Renderer, RustFile, RustItem,
+    StdlibCode,
+};
+pub(super) fn render_local_module_imports(module: &HirModule) -> String {
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {
         if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
@@ -360,4 +366,3 @@ edition = "2021"
     let main_rs = generate_rust(module);
     (cargo_toml, main_rs)
 }
-

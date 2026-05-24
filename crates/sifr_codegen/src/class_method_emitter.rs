@@ -9,7 +9,10 @@ use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 
 impl RustEmitter {
-    fn class_method_requires_mutable_self(class: &HirClass, method: &HirFunction) -> bool {
+    pub(crate) fn class_method_requires_mutable_self(
+        class: &HirClass,
+        method: &HirFunction,
+    ) -> bool {
         if method.method_kind != MethodKind::Regular || method.name == "new" {
             return false;
         }
@@ -17,7 +20,7 @@ impl RustEmitter {
         Self::class_method_requires_mutable_self_recursive(class, &method.name, &mut visiting)
     }
 
-    fn class_method_requires_mutable_self_recursive(
+    pub(crate) fn class_method_requires_mutable_self_recursive(
         class: &HirClass,
         method_name: &str,
         visiting: &mut HashSet<String>,
@@ -54,7 +57,7 @@ impl RustEmitter {
         false
     }
 
-    fn collect_direct_self_method_calls(stmts: &[HirStmt]) -> HashSet<String> {
+    pub(crate) fn collect_direct_self_method_calls(stmts: &[HirStmt]) -> HashSet<String> {
         let mut calls = HashSet::new();
         let mut on_stmt = |_stmt: &HirStmt| {};
         let mut on_expr = |expr: &HirExpr| {
@@ -73,7 +76,7 @@ impl RustEmitter {
         calls
     }
 
-    fn is_some_call_expr(expr: &RustExpr) -> bool {
+    pub(crate) fn is_some_call_expr(expr: &RustExpr) -> bool {
         matches!(
             expr,
             RustExpr::FnCall { func, .. }
@@ -82,7 +85,7 @@ impl RustEmitter {
         )
     }
 
-    fn is_box_new_call_expr(expr: &RustExpr) -> bool {
+    pub(crate) fn is_box_new_call_expr(expr: &RustExpr) -> bool {
         matches!(
             expr,
             RustExpr::FnCall { func, .. }
@@ -91,7 +94,7 @@ impl RustEmitter {
         )
     }
 
-    fn ensure_some_box_inner(expr: RustExpr) -> RustExpr {
+    pub(crate) fn ensure_some_box_inner(expr: RustExpr) -> RustExpr {
         match expr {
             RustExpr::FnCall { func, args }
                 if matches!(func.as_ref(), RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
@@ -129,7 +132,7 @@ impl RustEmitter {
         }
     }
 
-    fn wrap_recursive_constructor_field_value(
+    pub(crate) fn wrap_recursive_constructor_field_value(
         &self,
         class: &HirClass,
         method: &HirFunction,
@@ -176,11 +179,15 @@ impl RustEmitter {
         }
     }
 
-    fn lower_class_stmt_strict(&mut self, stmt: &HirStmt, _context: &str) -> Vec<RustStmt> {
+    pub(crate) fn lower_class_stmt_strict(
+        &mut self,
+        stmt: &HirStmt,
+        _context: &str,
+    ) -> Vec<RustStmt> {
         self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
     }
 
-    fn lower_class_expr_strict(&mut self, expr: &HirExpr, context: &str) -> RustExpr {
+    pub(crate) fn lower_class_expr_strict(&mut self, expr: &HirExpr, context: &str) -> RustExpr {
         match self.try_lower_stmt_expr_statement_only(expr) {
             Ok(Some(lowered)) => return self.rewrite_stdlib_constant_idents_in_expr(lowered),
             Ok(None) => {}
@@ -212,7 +219,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_class_method_param_type(
+    pub(crate) fn lower_class_method_param_type(
         &self,
         class: &HirClass,
         method: &HirFunction,
@@ -264,7 +271,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_class_method_return_type(
+    pub(crate) fn lower_class_method_return_type(
         &self,
         method: &HirFunction,
         class: &HirClass,
@@ -295,7 +302,11 @@ impl RustEmitter {
         Some(self.rust_ir_type_with_generics(&method.return_type))
     }
 
-    fn lower_constructor_body(&mut self, method: &HirFunction, class: &HirClass) -> Vec<RustStmt> {
+    pub(crate) fn lower_constructor_body(
+        &mut self,
+        method: &HirFunction,
+        class: &HirClass,
+    ) -> Vec<RustStmt> {
         let has_super = method.body.iter().any(|stmt| {
             if let HirStmt::Expr { expr } = stmt {
                 matches!(expr, HirExpr::SuperCall { .. })
@@ -502,7 +513,7 @@ impl RustEmitter {
         body
     }
 
-    pub(super) fn lower_class_method_item(
+    pub(crate) fn lower_class_method_item(
         &mut self,
         method: &HirFunction,
         class: &HirClass,

@@ -36,7 +36,7 @@ pub(crate) struct LoweredIntrinsic {
     pub(crate) additional_required_crates: &'static [&'static str],
 }
 
-fn additional_required_crates(name: &str) -> &'static [&'static str] {
+pub(crate) fn additional_required_crates(name: &str) -> &'static [&'static str] {
     match name {
         // random_gauss uses rand_distr::Normal in addition to rand::rng.
         "random_gauss" => &["rand_distr"],
@@ -53,7 +53,7 @@ pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIn
     lower_intrinsic_rendered(name, args)
 }
 
-fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
+pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
     let (expr, required_crate) = match name {
         "sqrt" => (math::lower_sqrt(args), None),
         "floor" => (math::lower_floor(args), None),
@@ -341,4 +341,3 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         additional_required_crates: additional_required_crates(name),
     })
 }
-

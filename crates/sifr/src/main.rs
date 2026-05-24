@@ -8,14 +8,14 @@
 //!   sifr fmt [--check] <path> Format Sifr source files
 //!   sifr lint <path>          Run suppressible policy diagnostics
 //!   sifr lsp --stdio          Run the native Language Server Protocol server
-#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, dead_code))]
 
-include!("main/cli_model_and_entrypoint.rs");
-include!("main/diagnostic_rendering_and_run.rs");
-include!("main/check_and_package_commands.rs");
+mod cli_model_and_entrypoint;
+pub(crate) use cli_model_and_entrypoint::main;
+mod check_and_package_commands;
+mod diagnostic_rendering_and_run;
 
 #[cfg(test)]
-mod tests {
-    include!("main/mode_resolution_tests.rs");
-    include!("main/diagnostics_and_packages_tests.rs");
-}
+mod diagnostics_and_packages_tests;
+#[cfg(test)]
+mod mode_resolution_tests;

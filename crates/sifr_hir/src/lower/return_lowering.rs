@@ -10,7 +10,7 @@ use super::ownership_diagnostics;
 use super::task_scope_calls::is_lock_guard_type;
 use super::LowerCtx;
 
-pub(super) fn lower_return(
+pub(in crate::lower) fn lower_return(
     ret: &StmtReturn,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,

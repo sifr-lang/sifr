@@ -1,5 +1,6 @@
+use super::{HirExpr, HirIteratorOp, RustEmitter, RustStmt, Type};
 impl RustEmitter {
-    fn try_lower_for_iter_expr_for_ir(
+    pub(crate) fn try_lower_for_iter_expr_for_ir(
         &mut self,
         iter: &HirExpr,
         target_ty: &Type,
@@ -23,7 +24,9 @@ impl RustEmitter {
         self.lower_structural_iter_source_expr_for_ir(iter, Some(target_ty))
     }
 
-    fn lower_enumerate_iter_chain_for_ir(iter_source: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn lower_enumerate_iter_chain_for_ir(
+        iter_source: crate::RustExpr,
+    ) -> crate::RustExpr {
         crate::RustExpr::MethodCall {
             receiver: Box::new(crate::RustExpr::MethodCall {
                 receiver: Box::new(iter_source),
@@ -48,7 +51,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_enumerate_for_iter_expr_for_ir(
+    pub(crate) fn lower_enumerate_for_iter_expr_for_ir(
         &mut self,
         source: &HirExpr,
         element_type_hint: Option<&Type>,
@@ -61,7 +64,7 @@ impl RustEmitter {
         Ok(Some(Self::lower_enumerate_iter_chain_for_ir(iter_source)))
     }
 
-    fn lower_structural_iter_source_expr_for_ir(
+    pub(crate) fn lower_structural_iter_source_expr_for_ir(
         &mut self,
         source: &HirExpr,
         element_type_hint: Option<&Type>,
@@ -69,14 +72,14 @@ impl RustEmitter {
         self.lower_iter_source_expr_for_ir_with_mode(source, false, element_type_hint, None)
     }
 
-    fn lower_iter_source_expr_for_ir(
+    pub(crate) fn lower_iter_source_expr_for_ir(
         &mut self,
         source: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         self.lower_iter_source_expr_for_ir_with_mode(source, true, None, None)
     }
 
-    fn lower_escaping_iter_return_expr_for_ir(
+    pub(crate) fn lower_escaping_iter_return_expr_for_ir(
         &mut self,
         value: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
@@ -113,7 +116,7 @@ impl RustEmitter {
         )
     }
 
-    fn class_method_signature_for_iter_for_ir<'a>(
+    pub(crate) fn class_method_signature_for_iter_for_ir<'a>(
         methods: &'a [(String, sifr_type_system::FunctionType)],
         method_name: &str,
     ) -> Option<&'a sifr_type_system::FunctionType> {
@@ -128,7 +131,7 @@ impl RustEmitter {
         )
     }
 
-    fn class_has_next_for_iter_for_ir(
+    pub(crate) fn class_has_next_for_iter_for_ir(
         methods: &[(String, sifr_type_system::FunctionType)],
     ) -> bool {
         Self::class_method_signature_for_iter_for_ir(methods, "__next__").is_some_and(|next_ft| {
@@ -146,7 +149,7 @@ impl RustEmitter {
         })
     }
 
-    fn class_next_iter_expr_for_ir(source_expr: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn class_next_iter_expr_for_ir(source_expr: crate::RustExpr) -> crate::RustExpr {
         let state_name = "__sifr_for_iter_state".to_string();
         crate::RustExpr::FnCall {
             func: Box::new(crate::RustExpr::Path(vec![
@@ -174,7 +177,7 @@ impl RustEmitter {
         }
     }
 
-    fn apply_copy_clone_yield_mode_for_ir(
+    pub(crate) fn apply_copy_clone_yield_mode_for_ir(
         iter_expr: crate::RustExpr,
         yield_mode: crate::helpers::YieldMode,
     ) -> crate::RustExpr {
@@ -193,7 +196,7 @@ impl RustEmitter {
         }
     }
 
-    fn wrap_iterator_expr_for_mode_for_ir(
+    pub(crate) fn wrap_iterator_expr_for_mode_for_ir(
         iterator_expr: crate::RustExpr,
         prefer_boxed_iterator: bool,
     ) -> crate::RustExpr {
@@ -210,7 +213,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_homogeneous_tuple_iter_expr(
+    pub(crate) fn lower_homogeneous_tuple_iter_expr(
         lowered_source: crate::RustExpr,
         tuple_len: usize,
         source_access_mode: crate::helpers::SourceAccessMode,
@@ -258,7 +261,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_iter_source_expr_for_ir_with_mode(
+    pub(crate) fn lower_iter_source_expr_for_ir_with_mode(
         &mut self,
         source: &HirExpr,
         prefer_boxed_iterator: bool,
@@ -459,7 +462,7 @@ impl RustEmitter {
         )))
     }
 
-    fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {
+    pub(crate) fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {
         match expr {
             crate::RustExpr::MethodCall { method, .. } => {
                 method == "collect" || method.starts_with("collect::<")
@@ -469,7 +472,7 @@ impl RustEmitter {
         }
     }
 
-    fn normalize_for_loop_iter_expr(expr: crate::RustExpr) -> crate::RustExpr {
+    pub(crate) fn normalize_for_loop_iter_expr(expr: crate::RustExpr) -> crate::RustExpr {
         if let crate::RustExpr::MethodCall {
             receiver,
             method,
@@ -488,7 +491,7 @@ impl RustEmitter {
         expr
     }
 
-    fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
+    pub(crate) fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
         match expr {
             crate::RustExpr::MethodCall {
                 receiver, method, ..
@@ -520,11 +523,11 @@ impl RustEmitter {
         }
     }
 
-    fn rust_stmts_contain_await(stmts: &[RustStmt]) -> bool {
+    pub(crate) fn rust_stmts_contain_await(stmts: &[RustStmt]) -> bool {
         stmts.iter().any(Self::rust_stmt_contains_await)
     }
 
-    fn rust_stmt_contains_await(stmt: &RustStmt) -> bool {
+    pub(crate) fn rust_stmt_contains_await(stmt: &RustStmt) -> bool {
         match stmt {
             RustStmt::Let { value, .. }
             | RustStmt::LetPattern { value, .. }
@@ -586,14 +589,14 @@ impl RustEmitter {
         }
     }
 
-    fn rust_match_arm_contains_await(arm: &crate::RustMatchArm) -> bool {
+    pub(crate) fn rust_match_arm_contains_await(arm: &crate::RustMatchArm) -> bool {
         arm.guard
             .as_ref()
             .is_some_and(Self::rust_expr_contains_await)
             || Self::rust_stmts_contain_await(&arm.body)
     }
 
-    fn rust_expr_contains_await(expr: &crate::RustExpr) -> bool {
+    pub(crate) fn rust_expr_contains_await(expr: &crate::RustExpr) -> bool {
         match expr {
             crate::RustExpr::Await(_) | crate::RustExpr::TimeoutAwait { .. } => true,
             crate::RustExpr::Ident(value) => value.contains(".await"),
@@ -665,5 +668,4 @@ impl RustEmitter {
             }
         }
     }
-
 }

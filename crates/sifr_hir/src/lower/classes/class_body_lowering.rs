@@ -1,5 +1,15 @@
+use super::{
+    collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
+    is_operator_dunder, is_protocol_class, lower_stmts, missing_method_param_annotation,
+    resolve_annotation_expr, Expr, FunctionType, HirClass, HirClassKind, HirExpr, HirFunction,
+    HirParam, HirPattern, HirStmt, HirTupleTargetBinding, LowerCtx, MethodKind, ParamConvention,
+    Ranged, Stmt, StmtClassDef, Type,
+};
 /// Second pass: lower class method bodies into `HirClass`.
-pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass> {
+pub(in crate::lower) fn lower_class(
+    class_def: &StmtClassDef,
+    ctx: &mut LowerCtx,
+) -> Option<HirClass> {
     let class_name = class_def.name.to_string();
     let class_ty = ctx.class_types.get(&class_name)?.clone();
     let is_protocol = is_protocol_class(class_def);
@@ -427,7 +437,7 @@ pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Optio
 }
 
 /// Check if a type is hashable (can derive Hash + Eq).
-pub(super) fn is_hashable_type(ty: &Type) -> bool {
+pub(in crate::lower) fn is_hashable_type(ty: &Type) -> bool {
     match ty {
         Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt => true,
         Type::Float => false, // f64 doesn't implement Hash
@@ -439,7 +449,7 @@ pub(super) fn is_hashable_type(ty: &Type) -> bool {
 }
 
 /// Check if a method body contains any field assignments (self.field = ...).
-pub(super) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
+pub(in crate::lower) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
     fn stmt_contains_field_assign(stmt: &HirStmt) -> bool {
         match stmt {
             HirStmt::FieldAssign { .. } | HirStmt::NestedFieldAssign { .. } => true,
@@ -496,7 +506,7 @@ pub(super) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
     stmts.iter().any(stmt_contains_field_assign)
 }
 
-pub(super) fn collect_literal_coverage(
+pub(in crate::lower) fn collect_literal_coverage(
     pattern: &HirPattern,
     covered_literal_strs: &mut std::collections::HashSet<String>,
     covered_literal_ints: &mut std::collections::HashSet<i64>,

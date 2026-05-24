@@ -1,4 +1,9 @@
-fn try_lower_simple_index_expr(
+use super::{
+    try_lower_dict_get_key_expr, try_lower_leaf_expr, try_lower_leaf_or_name_expr,
+    try_lower_simple_defaultdict_index_expr, try_lower_simple_iter_source_expr, HirExpr,
+    HirFStringPart, HirParam, RustExpr, RustLiteral, RustParam, RustStmt, RustType, Type,
+};
+pub(super) fn try_lower_simple_index_expr(
     object: &HirExpr,
     index: &HirExpr,
     result_ty: &Type,
@@ -51,7 +56,7 @@ fn try_lower_simple_index_expr(
     }
 }
 
-fn try_lower_simple_slice_expr(
+pub(super) fn try_lower_simple_slice_expr(
     object: &HirExpr,
     start: Option<&HirExpr>,
     stop: Option<&HirExpr>,
@@ -71,7 +76,7 @@ fn try_lower_simple_slice_expr(
     })
 }
 
-fn try_lower_simple_dict_literal_expr(
+pub(super) fn try_lower_simple_dict_literal_expr(
     keys: &[HirExpr],
     values: &[HirExpr],
     _ty: &Type,
@@ -95,7 +100,10 @@ fn try_lower_simple_dict_literal_expr(
     })
 }
 
-fn try_lower_simple_set_literal_expr(elements: &[HirExpr], _ty: &Type) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_set_literal_expr(
+    elements: &[HirExpr],
+    _ty: &Type,
+) -> Option<RustExpr> {
     let mut lowered_elements = Vec::with_capacity(elements.len());
     for element in elements {
         lowered_elements.push(try_lower_leaf_or_name_expr(element)?);
@@ -110,7 +118,7 @@ fn try_lower_simple_set_literal_expr(elements: &[HirExpr], _ty: &Type) -> Option
     })
 }
 
-fn try_lower_simple_list_comp_expr(
+pub(super) fn try_lower_simple_list_comp_expr(
     expr: &HirExpr,
     generators: &[(String, HirExpr, Option<HirExpr>)],
     ty: &Type,
@@ -161,7 +169,7 @@ fn try_lower_simple_list_comp_expr(
     })
 }
 
-fn try_lower_simple_dict_comp_expr(
+pub(super) fn try_lower_simple_dict_comp_expr(
     key_expr: &HirExpr,
     val_expr: &HirExpr,
     generators: &[(String, HirExpr, Option<HirExpr>)],
@@ -224,7 +232,7 @@ fn try_lower_simple_dict_comp_expr(
     })
 }
 
-fn try_lower_simple_set_comp_expr(
+pub(super) fn try_lower_simple_set_comp_expr(
     expr: &HirExpr,
     generators: &[(String, HirExpr, Option<HirExpr>)],
     ty: &Type,
@@ -283,7 +291,7 @@ fn try_lower_simple_set_comp_expr(
     })
 }
 
-fn try_lower_simple_generator_expr(
+pub(super) fn try_lower_simple_generator_expr(
     expr: &HirExpr,
     var: &str,
     iter: &HirExpr,
@@ -313,7 +321,7 @@ fn try_lower_simple_generator_expr(
     })
 }
 
-fn is_reserved_builtin_call_func(func: &str) -> bool {
+pub(super) fn is_reserved_builtin_call_func(func: &str) -> bool {
     matches!(
         func,
         "print"
@@ -350,7 +358,7 @@ fn is_reserved_builtin_call_func(func: &str) -> bool {
     )
 }
 
-fn try_lower_simple_fstring_expr(parts: &[HirFStringPart]) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_fstring_expr(parts: &[HirFStringPart]) -> Option<RustExpr> {
     let mut format_str = String::new();
     let mut lowered_args = Vec::new();
 
@@ -382,7 +390,10 @@ fn try_lower_simple_fstring_expr(parts: &[HirFStringPart]) -> Option<RustExpr> {
     })
 }
 
-fn try_lower_simple_lambda_expr(params: &[HirParam], body: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_lambda_expr(
+    params: &[HirParam],
+    body: &HirExpr,
+) -> Option<RustExpr> {
     if params.iter().any(|param| param.ty != Type::Any) {
         return None;
     }
@@ -402,45 +413,45 @@ fn try_lower_simple_lambda_expr(params: &[HirParam], body: &HirExpr) -> Option<R
     })
 }
 
-fn is_numeric_simple(ty: &Type) -> bool {
+pub(super) fn is_numeric_simple(ty: &Type) -> bool {
     normalize_simple_numeric_scalar_type(ty).is_some()
 }
 
-fn is_int_like_simple(ty: &Type) -> bool {
+pub(super) fn is_int_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_numeric_scalar_type(ty), Some("int"))
 }
 
-fn is_fixed_width_int_like_simple(ty: &Type) -> bool {
+pub(super) fn is_fixed_width_int_like_simple(ty: &Type) -> bool {
     matches!(
         resolve_alias_type(ty),
         Type::FixedInt(fixed) if fixed.supports_current_scalar_promotion_to_int()
     )
 }
 
-fn is_float_like_simple(ty: &Type) -> bool {
+pub(super) fn is_float_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_numeric_scalar_type(ty), Some("float"))
 }
 
-fn is_bool_like_simple(ty: &Type) -> bool {
+pub(super) fn is_bool_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_compare_scalar_type(ty), Some("bool"))
 }
 
-fn is_string_like_simple(ty: &Type) -> bool {
+pub(super) fn is_string_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_compare_scalar_type(ty), Some("str"))
 }
 
-fn resolve_alias_type(ty: &Type) -> &Type {
+pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
         Type::Alias { body, .. } => resolve_alias_type(body),
         _ => ty,
     }
 }
 
-fn is_enum_like_simple(ty: &Type) -> bool {
+pub(super) fn is_enum_like_simple(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::Enum { .. })
 }
 
-fn is_option_like_simple(ty: &Type) -> bool {
+pub(super) fn is_option_like_simple(ty: &Type) -> bool {
     if let Type::Union(members) = resolve_alias_type(ty) {
         let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
         let has_none = members.iter().any(|m| matches!(m, Type::None));
@@ -450,7 +461,7 @@ fn is_option_like_simple(ty: &Type) -> bool {
     }
 }
 
-fn detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
+pub(super) fn detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
     if let HirExpr::MethodCall {
         object,
         method,
@@ -486,7 +497,7 @@ fn detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
     }
 }
 
-fn normalize_compare_op(op: &str) -> &str {
+pub(super) fn normalize_compare_op(op: &str) -> &str {
     match op {
         "is" => "==",
         "is not" => "!=",
@@ -494,14 +505,14 @@ fn normalize_compare_op(op: &str) -> &str {
     }
 }
 
-fn normalize_binop_op(op: &str) -> &str {
+pub(super) fn normalize_binop_op(op: &str) -> &str {
     match op {
         "//" => "/",
         _ => op,
     }
 }
 
-fn is_mixed_simple_float_binop(
+pub(super) fn is_mixed_simple_float_binop(
     op: &str,
     left_ty: &Type,
     right_ty: &Type,
@@ -517,7 +528,7 @@ fn is_mixed_simple_float_binop(
         || (is_float_like_simple(left_ty) && is_int_like_simple(right_ty))
 }
 
-fn is_mixed_simple_float_floor_division_binop(
+pub(super) fn is_mixed_simple_float_floor_division_binop(
     op: &str,
     left_ty: &Type,
     right_ty: &Type,
@@ -529,7 +540,7 @@ fn is_mixed_simple_float_floor_division_binop(
             || (is_float_like_simple(left_ty) && is_int_like_simple(right_ty)))
 }
 
-fn is_simple_int_true_division_binop(
+pub(super) fn is_simple_int_true_division_binop(
     op: &str,
     left_ty: &Type,
     right_ty: &Type,
@@ -541,7 +552,7 @@ fn is_simple_int_true_division_binop(
         && is_int_like_simple(right_ty)
 }
 
-fn is_promoted_fixed_width_integer_binop(
+pub(super) fn is_promoted_fixed_width_integer_binop(
     op: &str,
     left_ty: &Type,
     right_ty: &Type,
@@ -554,7 +565,7 @@ fn is_promoted_fixed_width_integer_binop(
         && (is_int_like_simple(right_ty) || is_fixed_width_int_like_simple(right_ty))
 }
 
-fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
+pub(super) fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
         return false;
     }
@@ -571,7 +582,12 @@ fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     left_norm.is_some() && left_norm == right_norm
 }
 
-fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
+pub(super) fn is_safe_simple_binop(
+    op: &str,
+    left_ty: &Type,
+    right_ty: &Type,
+    result_ty: &Type,
+) -> bool {
     if op == "//" {
         if is_mixed_simple_float_floor_division_binop(op, left_ty, right_ty, result_ty) {
             return true;
@@ -611,14 +627,14 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
         && is_numeric_simple(left_ty)
 }
 
-fn is_same_simple_numeric_kind(left: &Type, right: &Type) -> bool {
+pub(super) fn is_same_simple_numeric_kind(left: &Type, right: &Type) -> bool {
     let Some(left_kind) = normalize_simple_numeric_scalar_type(left) else {
         return false;
     };
     normalize_simple_numeric_scalar_type(right).is_some_and(|right_kind| right_kind == left_kind)
 }
 
-fn try_lower_option_none_compare_expr(
+pub(super) fn try_lower_option_none_compare_expr(
     left: &HirExpr,
     op: &str,
     right: &HirExpr,
@@ -648,7 +664,7 @@ fn try_lower_option_none_compare_expr(
     })
 }
 
-fn try_lower_none_identity_compare_expr(
+pub(super) fn try_lower_none_identity_compare_expr(
     left: &HirExpr,
     op: &str,
     right: &HirExpr,
@@ -684,7 +700,10 @@ fn try_lower_none_identity_compare_expr(
     None
 }
 
-fn try_lower_guarded_option_compare_expr(expr: &HirExpr, guarded_name: &str) -> Option<RustExpr> {
+pub(super) fn try_lower_guarded_option_compare_expr(
+    expr: &HirExpr,
+    guarded_name: &str,
+) -> Option<RustExpr> {
     let HirExpr::Compare {
         left,
         ops,
@@ -742,7 +761,7 @@ fn try_lower_guarded_option_compare_expr(expr: &HirExpr, guarded_name: &str) -> 
     })
 }
 
-fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, ty } = expr {
         if is_int_like_simple(ty) {
             return Some(RustExpr::Ident(name.clone()));
@@ -755,7 +774,7 @@ fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_expr(expr)
 }
 
-fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     let lowered = try_lower_simple_binop_operand_expr(expr)?;
     if is_int_like_simple(expr.ty()) {
         return Some(RustExpr::Cast {
@@ -766,7 +785,7 @@ fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     Some(lowered)
 }
 
-fn try_lower_promoted_integer_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_promoted_integer_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     let lowered = match expr {
         HirExpr::Name { name, ty }
             if is_int_like_simple(ty) || is_fixed_width_int_like_simple(ty) =>
@@ -784,7 +803,7 @@ fn try_lower_promoted_integer_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     Some(lowered)
 }
 
-fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, ty } = expr {
         if is_numeric_simple(ty) {
             return Some(RustExpr::Ident(name.clone()));
@@ -793,7 +812,7 @@ fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_expr(expr)
 }
 
-fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(super) fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, ty } = expr {
         if normalize_simple_compare_scalar_type(ty).is_some()
             || is_enum_like_simple(ty)
@@ -805,7 +824,7 @@ fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_expr(expr)
 }
 
-fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
+pub(super) fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
     match ty {
         Type::Alias { body, .. } => normalize_simple_compare_scalar_type(body),
         Type::Int | Type::LiteralInt(_) => Some("int"),
@@ -816,7 +835,7 @@ fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
     }
 }
 
-fn normalize_simple_numeric_scalar_type(ty: &Type) -> Option<&'static str> {
+pub(super) fn normalize_simple_numeric_scalar_type(ty: &Type) -> Option<&'static str> {
     match ty {
         Type::Alias { body, .. } => normalize_simple_numeric_scalar_type(body),
         Type::Int | Type::LiteralInt(_) => Some("int"),
@@ -824,4 +843,3 @@ fn normalize_simple_numeric_scalar_type(ty: &Type) -> Option<&'static str> {
         _ => None,
     }
 }
-

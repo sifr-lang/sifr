@@ -15,8 +15,4 @@
 //! - `SIFR_E2E_DISABLE_CACHE=1` disables cache reuse.
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
-include!("e2e/harness_model.rs");
-include!("e2e/fixture_compilation.rs");
-include!("e2e/batch_execution.rs");
-include!("e2e/e2e_entrypoints.rs");
-include!("e2e/harness_contract_tests.rs");
+mod e2e_support;

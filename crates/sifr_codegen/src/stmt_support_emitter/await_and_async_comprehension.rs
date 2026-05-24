@@ -1,5 +1,6 @@
+use super::{HirExpr, HirIteratorOp, RustEmitter, RustExpr, RustStmt, Type};
 impl RustEmitter {
-    fn lower_timeout_aware_await_future_for_ir(
+    pub(crate) fn lower_timeout_aware_await_future_for_ir(
         &mut self,
         value: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
@@ -42,7 +43,7 @@ impl RustEmitter {
         self.lower_stmt_expr_for_ir(value)
     }
 
-    pub(super) fn wrap_option_local_value_for_ir(
+    pub(crate) fn wrap_option_local_value_for_ir(
         target_ty: &Type,
         value: &HirExpr,
         value_ty: &Type,
@@ -63,7 +64,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn coerce_local_value_for_target_type_for_ir(
+    pub(crate) fn coerce_local_value_for_target_type_for_ir(
         &mut self,
         target_ty: &Type,
         value: &HirExpr,
@@ -128,7 +129,7 @@ impl RustEmitter {
         }
     }
 
-    fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
+    pub(crate) fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Int
             | Type::FixedInt(_)
@@ -178,7 +179,7 @@ impl RustEmitter {
         }
     }
 
-    fn option_inner_type_for_ir(ty: &Type) -> Option<&Type> {
+    pub(crate) fn option_inner_type_for_ir(ty: &Type) -> Option<&Type> {
         let resolved = crate::resolve_alias_type_for_plain_call(ty);
         let Type::Union(members) = resolved else {
             return None;
@@ -189,7 +190,7 @@ impl RustEmitter {
         members.iter().find(|member| !matches!(member, Type::None))
     }
 
-    fn collect_stmt_string_concat_parts_for_ir<'a>(
+    pub(crate) fn collect_stmt_string_concat_parts_for_ir<'a>(
         expr: &'a HirExpr,
         parts: &mut Vec<&'a HirExpr>,
     ) {
@@ -209,7 +210,7 @@ impl RustEmitter {
         parts.push(expr);
     }
 
-    fn try_lower_stmt_string_concat_expr_for_ir(
+    pub(crate) fn try_lower_stmt_string_concat_expr_for_ir(
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
@@ -259,21 +260,21 @@ impl RustEmitter {
         }))
     }
 
-    fn resolve_alias_type_for_loop_iter(ty: &Type) -> &Type {
+    pub(crate) fn resolve_alias_type_for_loop_iter(ty: &Type) -> &Type {
         match ty {
             Type::Alias { body, .. } => Self::resolve_alias_type_for_loop_iter(body),
             _ => ty,
         }
     }
 
-    fn int_i64_literal_expr(value: i64) -> RustExpr {
+    pub(crate) fn int_i64_literal_expr(value: i64) -> RustExpr {
         RustExpr::Cast {
             expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(value))),
             ty: crate::RustType::I64,
         }
     }
 
-    fn negative_range_step_magnitude(step_expr: &HirExpr) -> Option<i64> {
+    pub(crate) fn negative_range_step_magnitude(step_expr: &HirExpr) -> Option<i64> {
         match step_expr {
             HirExpr::IntLiteral(value) if *value < 0 => value.checked_abs(),
             HirExpr::UnaryOp { op, operand, .. } if op == "-" => match operand.as_ref() {
@@ -284,7 +285,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_range_iter_expr_for_ir(
+    pub(crate) fn try_lower_range_iter_expr_for_ir(
         &mut self,
         start: &HirExpr,
         end: &HirExpr,
@@ -332,7 +333,7 @@ impl RustEmitter {
         }))
     }
 
-    fn lower_comprehension_iter_for_ir(
+    pub(crate) fn lower_comprehension_iter_for_ir(
         &mut self,
         iter_expr: &HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
@@ -344,7 +345,7 @@ impl RustEmitter {
         self.lower_structural_iter_source_expr_for_ir(iter_expr, None)
     }
 
-    fn async_iterator_error_type_for_ir(iter_expr: &HirExpr) -> Option<Type> {
+    pub(crate) fn async_iterator_error_type_for_ir(iter_expr: &HirExpr) -> Option<Type> {
         match Self::resolve_alias_type_for_loop_iter(iter_expr.ty()) {
             Type::AsyncIterator(_, err_ty) | Type::AsyncGenerator(_, err_ty) => {
                 Some(err_ty.as_ref().clone())
@@ -353,7 +354,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_async_list_comp_for_ir(
+    pub(crate) fn try_lower_async_list_comp_for_ir(
         &mut self,
         value_expr: &HirExpr,
         generators: &[(String, HirExpr, Option<HirExpr>)],
@@ -453,7 +454,7 @@ impl RustEmitter {
         }))
     }
 
-    fn try_lower_async_set_comp_for_ir(
+    pub(crate) fn try_lower_async_set_comp_for_ir(
         &mut self,
         value_expr: &HirExpr,
         generators: &[(String, HirExpr, Option<HirExpr>)],
@@ -559,7 +560,7 @@ impl RustEmitter {
         }))
     }
 
-    fn try_lower_async_dict_comp_for_ir(
+    pub(crate) fn try_lower_async_dict_comp_for_ir(
         &mut self,
         key_expr: &HirExpr,
         val_expr: &HirExpr,
@@ -668,5 +669,4 @@ impl RustEmitter {
             expr: Some(Box::new(RustExpr::Ident(result_ident))),
         }))
     }
-
 }

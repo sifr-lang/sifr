@@ -4,7 +4,7 @@ use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ParameterWithDefault, StmtFunctionDef};
 
-pub(super) fn collect_function_defaults(
+pub(in crate::lower) fn collect_function_defaults(
     ctx: &mut LowerCtx,
     function_name: &str,
     func: &StmtFunctionDef,

@@ -1,4 +1,8 @@
-fn analyze_assign(
+use super::{
+    str, type_check_binary_op, CmpOp, Expr, ExprCall, FunctionEnv, HashMap, LocalFunctionState,
+    LowerCtx, Operator, Type,
+};
+pub(super) fn analyze_assign(
     targets: &[Expr],
     value: &Expr,
     env: &mut FunctionEnv,
@@ -58,7 +62,7 @@ fn analyze_assign(
     }
 }
 
-fn nested_call_target_name(
+pub(super) fn nested_call_target_name(
     expr: &Expr,
     states: &HashMap<String, LocalFunctionState<'_>>,
 ) -> Option<String> {
@@ -73,7 +77,7 @@ fn nested_call_target_name(
         .then(|| name.id.to_string())
 }
 
-fn merge_env_types(target: &mut FunctionEnv, source: &FunctionEnv) {
+pub(super) fn merge_env_types(target: &mut FunctionEnv, source: &FunctionEnv) {
     for (name, ty) in &source.vars {
         let merged = unify_types(
             target.vars.get(name).cloned().unwrap_or(Type::Unknown),
@@ -83,7 +87,7 @@ fn merge_env_types(target: &mut FunctionEnv, source: &FunctionEnv) {
     }
 }
 
-fn infer_expr_type(
+pub(super) fn infer_expr_type(
     expr: &Expr,
     env: &mut FunctionEnv,
     states: &mut HashMap<String, LocalFunctionState<'_>>,
@@ -182,7 +186,7 @@ fn infer_expr_type(
     }
 }
 
-fn infer_list_literal_type(
+pub(super) fn infer_list_literal_type(
     elements: &[Expr],
     env: &mut FunctionEnv,
     states: &mut HashMap<String, LocalFunctionState<'_>>,
@@ -199,7 +203,7 @@ fn infer_list_literal_type(
     Type::List(Box::new(elem_ty))
 }
 
-fn infer_dict_literal_type(
+pub(super) fn infer_dict_literal_type(
     dict: &sifr_python_ast::ExprDict,
     env: &mut FunctionEnv,
     states: &mut HashMap<String, LocalFunctionState<'_>>,
@@ -225,7 +229,7 @@ fn infer_dict_literal_type(
     Type::Dict(Box::new(key_ty), Box::new(value_ty))
 }
 
-fn infer_call_type(
+pub(super) fn infer_call_type(
     call: &ExprCall,
     env: &mut FunctionEnv,
     states: &mut HashMap<String, LocalFunctionState<'_>>,
@@ -393,7 +397,7 @@ fn infer_call_type(
     }
 }
 
-fn infer_attribute_call_type(
+pub(super) fn infer_attribute_call_type(
     object: &Expr,
     method: &str,
     args: &[Expr],
@@ -550,7 +554,7 @@ fn infer_attribute_call_type(
     }
 }
 
-fn infer_subscript_type(
+pub(super) fn infer_subscript_type(
     object: &Expr,
     index: &Expr,
     env: &mut FunctionEnv,
@@ -583,7 +587,7 @@ fn infer_subscript_type(
     }
 }
 
-fn infer_binop_type(
+pub(super) fn infer_binop_type(
     left: &Expr,
     right: &Expr,
     op: Operator,
@@ -636,7 +640,7 @@ fn infer_binop_type(
         .unwrap_or_else(|_| infer_numeric_result_type(&left_ty, &right_ty, op))
 }
 
-fn infer_numeric_result_type(left_ty: &Type, right_ty: &Type, op: Operator) -> Type {
+pub(super) fn infer_numeric_result_type(left_ty: &Type, right_ty: &Type, op: Operator) -> Type {
     match op {
         Operator::Div => Type::Float,
         Operator::Add | Operator::Sub | Operator::Mult | Operator::Pow => {
@@ -659,7 +663,7 @@ fn infer_numeric_result_type(left_ty: &Type, right_ty: &Type, op: Operator) -> T
     }
 }
 
-fn refine_name_with_binary_context(
+pub(super) fn refine_name_with_binary_context(
     name: &str,
     other_ty: &Type,
     op: Operator,
@@ -699,7 +703,7 @@ fn refine_name_with_binary_context(
     unify_name_binding(name, inferred, env, states, current_function);
 }
 
-fn refine_name_with_compare_context(
+pub(super) fn refine_name_with_compare_context(
     name: &str,
     current_ty: &Type,
     other_ty: &Type,
@@ -727,7 +731,7 @@ fn refine_name_with_compare_context(
     }
 }
 
-fn lookup_name_type(
+pub(super) fn lookup_name_type(
     name: &str,
     env: &FunctionEnv,
     states: &HashMap<String, LocalFunctionState<'_>>,
@@ -748,7 +752,7 @@ fn lookup_name_type(
     }
 }
 
-fn unify_name_binding(
+pub(super) fn unify_name_binding(
     name: &str,
     incoming: Type,
     env: &mut FunctionEnv,
@@ -777,7 +781,7 @@ fn unify_name_binding(
     }
 }
 
-fn unify_function_param(
+pub(super) fn unify_function_param(
     function_name: &str,
     param_name: &str,
     incoming: Type,
@@ -801,7 +805,7 @@ fn unify_function_param(
     }
 }
 
-fn unify_function_return(
+pub(super) fn unify_function_return(
     function_name: &str,
     incoming: Type,
     states: &mut HashMap<String, LocalFunctionState<'_>>,
@@ -817,7 +821,7 @@ fn unify_function_return(
     }
 }
 
-fn has_conflicting_inference(current: &Type, incoming: &Type) -> bool {
+pub(super) fn has_conflicting_inference(current: &Type, incoming: &Type) -> bool {
     match (current, incoming) {
         (Type::Unknown, _) | (_, Type::Unknown) => false,
         (Type::List(current_elem), Type::List(incoming_elem)) => {
@@ -831,7 +835,7 @@ fn has_conflicting_inference(current: &Type, incoming: &Type) -> bool {
     }
 }
 
-fn unify_types(current: Type, incoming: Type) -> Type {
+pub(super) fn unify_types(current: Type, incoming: Type) -> Type {
     let current = collapse_literal(current);
     let incoming = collapse_literal(incoming);
 
@@ -869,7 +873,7 @@ fn unify_types(current: Type, incoming: Type) -> Type {
     }
 }
 
-fn type_contains_unknown_or_any(ty: &Type) -> bool {
+pub(super) fn type_contains_unknown_or_any(ty: &Type) -> bool {
     match ty {
         Type::Unknown | Type::Any => true,
         Type::List(elem) => type_contains_unknown_or_any(elem),
@@ -881,7 +885,7 @@ fn type_contains_unknown_or_any(ty: &Type) -> bool {
     }
 }
 
-fn collapse_literal(ty: Type) -> Type {
+pub(super) fn collapse_literal(ty: Type) -> Type {
     match ty {
         Type::LiteralInt(_) => Type::Int,
         Type::LiteralStr(_) => Type::Str,

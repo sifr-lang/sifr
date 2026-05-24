@@ -1,6 +1,10 @@
+use super::{FixedIntType, IterationCapability, IterationMetadata, Type};
+use crate::types::display_impl::capitalize;
+use crate::union::make_union;
+
 impl Type {
     /// Helper: map a type to a `PascalCase` name for enum variant/name generation.
-    fn type_to_enum_variant_prefix(ty: &Type) -> String {
+    pub(super) fn type_to_enum_variant_prefix(ty: &Type) -> String {
         match ty {
             Type::Int => "Int".to_string(),
             Type::FixedInt(fixed) => fixed.variant_prefix().to_string(),

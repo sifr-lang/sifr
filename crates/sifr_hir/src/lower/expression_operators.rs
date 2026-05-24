@@ -28,7 +28,7 @@ fn op_to_dunder(op: &str) -> Option<&'static str> {
     }
 }
 
-pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let left = lower_expr(&binop.left, ctx)?;
     let right = lower_expr(&binop.right, ctx)?;
 
@@ -252,7 +252,7 @@ fn current_owner_has_typevar_bound(ctx: &LowerCtx, type_var: &str, bound: &str) 
         .is_some_and(|bounds| bounds.iter().any(|candidate| candidate == bound))
 }
 
-pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let operand = lower_expr(&unary.operand, ctx)?;
     if matches!(&operand, HirExpr::Name { name, .. } if ctx.is_poisoned_binding(name)) {
         return None;
@@ -278,7 +278,7 @@ pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<H
     }
 }
 
-pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut left = lower_expr(&cmp.left, ctx)?;
 
     if cmp.ops.len() == 1 {

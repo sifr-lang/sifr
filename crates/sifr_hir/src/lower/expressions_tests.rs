@@ -1,8 +1,21 @@
-include!("expressions_tests/basics_and_literals.rs");
-include!("expressions_tests/exact_int_and_fixed_width.rs");
-include!("expressions_tests/ownership_and_async.rs");
-include!("expressions_tests/callable_and_builtin_diagnostics.rs");
-include!("expressions_tests/collections_and_generics.rs");
-include!("expressions_tests/iteration_and_protocols.rs");
-include!("expressions_tests/minmax_sorted_sum.rs");
-include!("expressions_tests/control_flow_and_strings.rs");
+pub(crate) use crate::{HirExpr, HirStmt};
+pub(crate) use ruff_text_size::{TextRange, TextSize};
+pub(crate) use sifr_diagnostics::DiagnosticCode;
+pub(crate) use sifr_python_ast::{
+    AtomicNodeIndex, Expr, ExprNamed, ExprNoneLiteral, ExprNumberLiteral, Int, Number,
+};
+pub(crate) use sifr_type_system::{FixedIntType, FunctionType, Type};
+pub(crate) use support::{
+    function_let_value, function_nested_let_value, lower_source, range_for, range_for_after,
+    range_for_after_anchor,
+};
+
+mod basics_and_literals;
+mod callable_and_builtin_diagnostics;
+mod collections_and_generics;
+mod control_flow_and_strings;
+mod exact_int_and_fixed_width;
+mod iteration_and_protocols;
+mod minmax_sorted_sum;
+mod ownership_and_async;
+mod support;

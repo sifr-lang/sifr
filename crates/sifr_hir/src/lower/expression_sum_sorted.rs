@@ -23,7 +23,7 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
         .map_or_else(|| call.func.range(), Ranged::range)
 }
 
-pub(super) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         expression_diagnostics::call_unexpected_keyword(
             ctx,
@@ -65,7 +65,7 @@ pub(super) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
     })
 }
 
-pub(super) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() > 1 {
         expression_diagnostics::call_wrong_positional_count(
             ctx,

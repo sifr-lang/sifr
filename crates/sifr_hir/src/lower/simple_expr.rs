@@ -6,11 +6,11 @@ use super::integer_literals::canonical_large_int_literal_text;
 
 /// Lower a simple expression without requiring a full `LowerCtx`.
 /// Used for collecting default parameter values in the first pass.
-pub(super) fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
     lower_expr_simple_inner(expr, false)
 }
 
-pub(super) fn lower_integer_const_expr_simple(expr: &Expr) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_integer_const_expr_simple(expr: &Expr) -> Option<HirExpr> {
     lower_expr_simple_inner(expr, true)
 }
 
@@ -166,7 +166,7 @@ fn lower_expr_simple_inner(expr: &Expr, allow_integer_binop: bool) -> Option<Hir
     }
 }
 
-pub(super) fn negate_simple_expr(expr: HirExpr) -> Option<HirExpr> {
+pub(in crate::lower) fn negate_simple_expr(expr: HirExpr) -> Option<HirExpr> {
     match expr {
         HirExpr::IntLiteral(value) => Some(HirExpr::IntLiteral(-value)),
         HirExpr::LargeIntLiteral(value) => Some(HirExpr::UnaryOp {
@@ -179,7 +179,7 @@ pub(super) fn negate_simple_expr(expr: HirExpr) -> Option<HirExpr> {
     }
 }
 
-pub(super) fn integer_binop_source(op: Operator) -> Option<&'static str> {
+pub(in crate::lower) fn integer_binop_source(op: Operator) -> Option<&'static str> {
     match op {
         Operator::Add => Some("+"),
         Operator::Sub => Some("-"),

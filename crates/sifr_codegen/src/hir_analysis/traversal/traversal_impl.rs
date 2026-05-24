@@ -710,4 +710,3 @@ pub(crate) fn walk_stmts<FStmt, FExpr>(
     };
     let _ = walk_stmts_until(stmts, config, &mut on_stmt_continue, &mut on_expr_continue);
 }
-

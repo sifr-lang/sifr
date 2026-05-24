@@ -1,5 +1,10 @@
+use super::{
+    is_result_int_division_error_type, result_int_to_sifr_int_rust_type,
+    should_force_mutable_binding, should_omit_local_type_annotation, type_contains_any_or_unknown,
+    HirExpr, HirStmt, RustEmitter, RustStmt, Type,
+};
 impl RustEmitter {
-    fn try_lower_stmt_block_for_ir(
+    pub(crate) fn try_lower_stmt_block_for_ir(
         &mut self,
         stmts: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
@@ -796,5 +801,4 @@ impl RustEmitter {
         }
         Ok(Some(lowered_block))
     }
-
 }

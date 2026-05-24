@@ -1,7 +1,7 @@
 use super::LowerCtx;
 use ruff_text_size::TextRange;
 
-pub(super) fn ensure_mutable_parameter_binding(
+pub(in crate::lower) fn ensure_mutable_parameter_binding(
     ctx: &mut LowerCtx,
     name: &str,
     range: TextRange,

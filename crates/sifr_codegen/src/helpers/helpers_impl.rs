@@ -35,7 +35,7 @@ pub(crate) struct IteratorOwnershipPlan {
     pub element_ownership: Option<OwnershipKind>,
 }
 
-fn is_reusable_place_expr(expr: &HirExpr) -> bool {
+pub(crate) fn is_reusable_place_expr(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::Name { .. } => true,
         HirExpr::FieldAccess { object, .. } => is_reusable_place_expr(object),
@@ -65,7 +65,7 @@ pub(crate) fn classify_value_category(expr: &HirExpr) -> ValueCategory {
     }
 }
 
-fn iteration_element_ownership(source_ty: &Type) -> Option<OwnershipKind> {
+pub(crate) fn iteration_element_ownership(source_ty: &Type) -> Option<OwnershipKind> {
     /// Returns `true` for element types where ownership cannot be inferred
     /// soundly from iteration metadata.
     ///
@@ -94,7 +94,10 @@ fn iteration_element_ownership(source_ty: &Type) -> Option<OwnershipKind> {
         })
 }
 
-fn infer_source_access_mode(source_expr: &HirExpr, source_ty: &Type) -> SourceAccessMode {
+pub(crate) fn infer_source_access_mode(
+    source_expr: &HirExpr,
+    source_ty: &Type,
+) -> SourceAccessMode {
     let resolved = source_ty.resolve_alias();
     if matches!(resolved, Type::Iterator(_)) {
         return SourceAccessMode::Consume;
@@ -110,7 +113,7 @@ fn infer_source_access_mode(source_expr: &HirExpr, source_ty: &Type) -> SourceAc
     }
 }
 
-fn infer_yield_mode(
+pub(crate) fn infer_yield_mode(
     source_ty: &Type,
     source_access_mode: SourceAccessMode,
     element_ownership: Option<OwnershipKind>,
@@ -182,7 +185,7 @@ pub(crate) fn option_projection_method_for_owned_type(ty: &Type) -> &'static str
 
 /// Check if a type can be auto-formatted with `{}` (implements Display).
 /// Used to determine if auto-generated Display impl is safe for a class field.
-pub(super) fn is_auto_display_type(ty: &Type) -> bool {
+pub(crate) fn is_auto_display_type(ty: &Type) -> bool {
     match ty {
         Type::Int | Type::Float | Type::Bool | Type::Str | Type::None => true,
         Type::LiteralInt(_) | Type::LiteralBool(_) | Type::LiteralStr(_) => true,
@@ -196,7 +199,7 @@ pub(super) fn is_auto_display_type(ty: &Type) -> bool {
 /// Returns the default parameter convention for a type.
 /// Copy types (int, float, bool) are passed by value (Own).
 /// Move types (str, list, dict, class, etc.) are passed by reference (Borrow).
-pub(super) fn default_param_convention(ty: &Type) -> ParamConvention {
+pub(crate) fn default_param_convention(ty: &Type) -> ParamConvention {
     if ty.ownership() == sifr_type_system::OwnershipKind::Copy {
         ParamConvention::own()
     } else {
@@ -204,7 +207,7 @@ pub(super) fn default_param_convention(ty: &Type) -> ParamConvention {
     }
 }
 
-pub(super) fn is_option_type(ty: &Type) -> bool {
+pub(crate) fn is_option_type(ty: &Type) -> bool {
     let resolved = crate::resolve_alias_type_for_plain_call(ty);
     if let Type::Union(members) = resolved {
         let non_none: Vec<&Type> = members
@@ -219,7 +222,7 @@ pub(super) fn is_option_type(ty: &Type) -> bool {
 }
 
 /// Detect truthiness check on an Option variable: `if x:` where x has type T | None.
-pub(super) fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
+pub(crate) fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
     if let HirExpr::Name { name, ty } = expr {
         if is_option_type(ty) {
             return Some(name.clone());
@@ -229,7 +232,7 @@ pub(super) fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
 }
 
 /// Detect negated truthiness on an Option variable: `if not x:`.
-pub(super) fn detect_not_option_truthiness(expr: &HirExpr) -> Option<String> {
+pub(crate) fn detect_not_option_truthiness(expr: &HirExpr) -> Option<String> {
     if let HirExpr::UnaryOp { op, operand, .. } = expr {
         if op == "not" {
             return detect_option_truthiness(operand);
@@ -239,7 +242,7 @@ pub(super) fn detect_not_option_truthiness(expr: &HirExpr) -> Option<String> {
 }
 
 /// Detect `x is not None` pattern in a Compare expression. Returns the variable name.
-pub(super) fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
+pub(crate) fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
     if let HirExpr::Compare {
         left,
         ops,
@@ -263,7 +266,7 @@ pub(super) fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
 
 /// Detect compound `a is not None and b is not None` pattern.
 /// Returns list of variable names that are checked for not-None.
-pub(super) fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
+pub(crate) fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
     if let HirExpr::BoolOp { op, values, .. } = expr {
         if op == "and" {
             let mut vars = Vec::new();
@@ -281,7 +284,7 @@ pub(super) fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
 }
 
 /// Detect compound `not a or not b` where both names are Option values.
-pub(super) fn detect_or_not_option_truthiness_vars(expr: &HirExpr) -> Option<Vec<String>> {
+pub(crate) fn detect_or_not_option_truthiness_vars(expr: &HirExpr) -> Option<Vec<String>> {
     if let HirExpr::BoolOp { op, values, .. } = expr {
         if op == "or" {
             let vars: Vec<String> = values
@@ -297,7 +300,7 @@ pub(super) fn detect_or_not_option_truthiness_vars(expr: &HirExpr) -> Option<Vec
 }
 
 /// Detect compound `a is None or b is None` where both names are Option values.
-pub(super) fn detect_or_is_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
+pub(crate) fn detect_or_is_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
     if let HirExpr::BoolOp { op, values, .. } = expr {
         if op == "or" {
             let vars: Vec<String> = values.iter().filter_map(detect_is_none_var).collect();
@@ -311,7 +314,7 @@ pub(super) fn detect_or_is_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
 
 /// Detect `isinstance(x, type)` where x is a non-Option union type.
 /// Returns (`var_name`, `variant_name`, `enum_name`, `other_variants`: Vec<(`variant_name`, type)>).
-pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionMatch> {
+pub(crate) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionMatch> {
     if let HirExpr::Call { func, args, .. } = expr {
         if func == "isinstance" && args.len() == 2 {
             if let HirExpr::Name { name, ty } = &args[0] {
@@ -360,7 +363,7 @@ pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
 }
 
 /// Find the matching union variant name for an argument type.
-pub(super) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<String> {
+pub(crate) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<String> {
     for member in members {
         if arg_ty.is_assignable_to(member) {
             return Some(member.union_variant_name());
@@ -372,13 +375,13 @@ pub(super) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<Stri
 /// Detect `x is None` pattern in a Compare expression. Returns the variable name.
 /// Check if a block of HIR statements always exits (return, break, continue).
 /// Used for early-return narrowing in codegen.
-pub(super) fn codegen_body_always_exits(stmts: &[HirStmt]) -> bool {
+pub(crate) fn codegen_body_always_exits(stmts: &[HirStmt]) -> bool {
     queries::block_control_flow_effect(stmts).always_exits()
 }
 
 /// Detect `x is None` pattern. Returns the variable name.
 /// Only matches when the variable type is an Option (T | None with exactly 2 members).
-pub(super) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
+pub(crate) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
     if let HirExpr::Compare {
         left,
         ops,
@@ -402,7 +405,7 @@ pub(super) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
 
 /// Detect `x is None` pattern for 3+ member unions containing None.
 /// Returns (`var_name`, `enum_name`, `non_none_variants`).
-pub(super) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatch> {
+pub(crate) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatch> {
     if let HirExpr::Compare {
         left,
         ops,
@@ -434,7 +437,7 @@ pub(super) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatc
     None
 }
 
-pub(super) fn is_hashable_type_codegen(ty: &Type) -> bool {
+pub(crate) fn is_hashable_type_codegen(ty: &Type) -> bool {
     match ty {
         Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt | Type::Decimal => true,
         Type::Float => false,
@@ -443,7 +446,7 @@ pub(super) fn is_hashable_type_codegen(ty: &Type) -> bool {
 }
 
 /// Check if a module uses the `bigint` type anywhere.
-pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
+pub(crate) fn module_uses_bigint(module: &HirModule) -> bool {
     fn type_has_bigint(ty: &Type) -> bool {
         match ty {
             Type::BigInt => true,
@@ -535,7 +538,7 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
 
 /// Collect all parts of a chained string concatenation (`a + b + c`).
 /// Recursively flattens nested `BinOp::Add` on strings into a flat list of expressions.
-pub(super) fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
+pub(crate) fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
     if let HirExpr::BinOp {
         left,
         op,
@@ -553,7 +556,7 @@ pub(super) fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec
 }
 
 /// Check if a method body contains any field assignments or attribute augmented assignments (self.field = ... or self.field += ...).
-pub(super) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
+pub(crate) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
     let found = std::cell::Cell::new(false);
     let mut on_stmt = |stmt: &HirStmt| {
         if matches!(
@@ -591,7 +594,7 @@ pub(super) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
 }
 
 /// Check if an expression contains a mutating method call on a self field (e.g., self.items.append(...)).
-pub(super) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
+pub(crate) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
     let mut found = false;
     traversal::walk_expr(expr, &mut |candidate| {
         if !found && is_self_field_mutating_method_call(candidate) {
@@ -601,7 +604,7 @@ pub(super) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
     found
 }
 
-fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
+pub(crate) fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::MethodCall { object, method, .. } => {
             let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
@@ -618,7 +621,7 @@ fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
 }
 
 /// Check if a type contains a specific type variable name.
-pub(super) fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
+pub(crate) fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
     match ty {
         Type::TypeVar(name) => name == tv_name,
         Type::List(inner) => type_contains_typevar(inner, tv_name),
@@ -649,7 +652,7 @@ pub(super) fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
 }
 
 /// Check if a type references a specific class name (directly or via union/option).
-pub(super) fn type_references_class(ty: &Type, class_name: &str) -> bool {
+pub(crate) fn type_references_class(ty: &Type, class_name: &str) -> bool {
     match ty {
         Type::Class { name, .. } => name == class_name,
         Type::Union(members) => members.iter().any(|m| type_references_class(m, class_name)),
@@ -665,7 +668,7 @@ pub(super) fn type_references_class(ty: &Type, class_name: &str) -> bool {
     }
 }
 
-pub(super) fn type_references_any_class(
+pub(crate) fn type_references_any_class(
     ty: &Type,
     class_names: &std::collections::HashSet<String>,
 ) -> bool {
@@ -692,37 +695,37 @@ pub(super) fn type_references_any_class(
 }
 
 /// Check if a variable name is referenced anywhere in a list of statements.
-pub(super) fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
+pub(crate) fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
     queries::stmts_reference_var(stmts, var_name)
 }
 
 /// Check if an expression references a variable name.
-pub(super) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
+pub(crate) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
     queries::expr_references_var(expr, var_name)
 }
 
 /// Check if a function body contains any yield statements (making it a generator).
-pub(super) fn body_contains_return_stmt(stmts: &[HirStmt]) -> bool {
+pub(crate) fn body_contains_return_stmt(stmts: &[HirStmt]) -> bool {
     queries::body_contains_return(stmts)
 }
 
 /// Check if a try body contains a return statement with a non-unit value.
 /// Used to determine if the try closure needs to return T instead of ().
-pub(super) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
+pub(crate) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
     queries::try_body_has_value_return(stmts)
 }
 
-pub(super) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
+pub(crate) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
     queries::body_contains_yield(stmts)
 }
 
 /// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
-pub(super) fn needs_clone_for_type(ty: &Type) -> bool {
+pub(crate) fn needs_clone_for_type(ty: &Type) -> bool {
     ty.ownership() == sifr_type_system::OwnershipKind::Move
 }
 
 /// Mutating methods that require the receiver variable to be `mut`.
-pub(super) const MUTATING_METHODS: &[&str] = queries::MUTATING_METHODS;
+pub(crate) const MUTATING_METHODS: &[&str] = queries::MUTATING_METHODS;
 
 /// Collect the set of variable names that are mutated in a function body.
 /// A variable is mutated if it appears in:
@@ -730,42 +733,41 @@ pub(super) const MUTATING_METHODS: &[&str] = queries::MUTATING_METHODS;
 /// - `HirStmt::AugAssign` (augmented assignment like +=)
 /// - `HirStmt::Expr` containing a `MethodCall` on the variable with a mutating method
 /// - `HirStmt::Delete` on the variable
-pub(super) fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
+pub(crate) fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
     queries::collect_mutated_vars(stmts, None)
 }
 
-pub(super) fn collect_mutated_vars_with_sigs(
+pub(crate) fn collect_mutated_vars_with_sigs(
     stmts: &[HirStmt],
     func_signatures: &ModuleFuncSignatures,
 ) -> HashSet<String> {
     queries::collect_mutated_vars(stmts, Some(func_signatures))
 }
 
-pub(super) fn collect_reassigned_vars(stmts: &[HirStmt]) -> HashSet<String> {
+pub(crate) fn collect_reassigned_vars(stmts: &[HirStmt]) -> HashSet<String> {
     queries::collect_reassigned_vars(stmts)
 }
 
 /// Collect all variable names and their types referenced in a list of statements.
-pub(super) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(String, Type)> {
+pub(crate) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(String, Type)> {
     queries::collect_referenced_vars_with_types(stmts)
 }
 
-pub(super) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
+pub(crate) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
     queries::collect_typed_refs_in_expr(expr, refs);
 }
 
 /// Collect all variable names defined (let-bound) in a list of statements.
 /// Does NOT recurse into nested functions.
-pub(super) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String> {
+pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String> {
     queries::collect_locally_defined_vars(stmts)
 }
 
 /// Check if a function body contains calls to a specific function name.
-pub(super) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
+pub(crate) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
     queries::body_calls_function(stmts, func_name)
 }
 
-pub(super) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
+pub(crate) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
     queries::expr_calls_function(expr, func_name)
 }
-

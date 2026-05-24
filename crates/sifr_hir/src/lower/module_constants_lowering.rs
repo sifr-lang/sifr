@@ -10,7 +10,7 @@ use super::simple_expr::{
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{fixed_width_fitting, LowerCtx};
 
-pub(super) fn collect_module_constants(
+pub(in crate::lower) fn collect_module_constants(
     stmts: &[Stmt],
     ctx: &mut LowerCtx,
 ) -> Vec<(String, Type, HirExpr)> {

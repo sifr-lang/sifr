@@ -1,7 +1,7 @@
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
-pub(super) fn infer_type_var_bindings(
+pub(in crate::lower) fn infer_type_var_bindings(
     param_ty: &Type,
     arg_ty: &Type,
     bindings: &mut HashMap<String, Type>,

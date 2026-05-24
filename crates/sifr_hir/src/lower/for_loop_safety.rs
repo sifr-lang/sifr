@@ -3,7 +3,7 @@ use sifr_type_system::Type;
 
 use super::mutating_methods::is_collection_mutating_method;
 
-pub(super) fn is_collection_backed_iter_source(ty: &Type) -> bool {
+pub(in crate::lower) fn is_collection_backed_iter_source(ty: &Type) -> bool {
     matches!(
         ty.resolve_alias(),
         Type::List(_)
@@ -16,7 +16,10 @@ pub(super) fn is_collection_backed_iter_source(ty: &Type) -> bool {
     )
 }
 
-pub(super) fn loop_body_mutates_iter_source(stmts: &[HirStmt], source_name: &str) -> bool {
+pub(in crate::lower) fn loop_body_mutates_iter_source(
+    stmts: &[HirStmt],
+    source_name: &str,
+) -> bool {
     stmts
         .iter()
         .any(|stmt| stmt_mutates_iter_source(stmt, source_name))

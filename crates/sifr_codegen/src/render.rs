@@ -1,5 +1,13 @@
 //! Renderer for structured Rust IR nodes.
 
-include!("render/render_core.rs");
-include!("render/render_expr_and_blocks.rs");
-include!("render/render_tests.rs");
+use crate::{
+    RustExpr, RustFile, RustItem, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType,
+    Visibility,
+};
+use std::fmt::Write as _;
+
+mod render_core;
+pub use render_core::*;
+mod render_expr_and_blocks;
+mod render_helpers;
+pub use render_helpers::*;

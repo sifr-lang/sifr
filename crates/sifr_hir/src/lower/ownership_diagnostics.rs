@@ -2,7 +2,7 @@ use super::LowerCtx;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 
-pub(super) fn use_after_move(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn use_after_move(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_USE_AFTER_MOVE,
         format!("use of moved value: '{name}'"),
@@ -10,7 +10,7 @@ pub(super) fn use_after_move(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     );
 }
 
-pub(super) fn double_mutable_borrow(
+pub(in crate::lower) fn double_mutable_borrow(
     ctx: &mut LowerCtx,
     name: &str,
     func_name: &str,
@@ -25,7 +25,7 @@ pub(super) fn double_mutable_borrow(
     );
 }
 
-pub(super) fn mutable_borrow_after_immutable(
+pub(in crate::lower) fn mutable_borrow_after_immutable(
     ctx: &mut LowerCtx,
     name: &str,
     func_name: &str,
@@ -40,7 +40,7 @@ pub(super) fn mutable_borrow_after_immutable(
     );
 }
 
-pub(super) fn immutable_borrow_after_mutable(
+pub(in crate::lower) fn immutable_borrow_after_mutable(
     ctx: &mut LowerCtx,
     name: &str,
     func_name: &str,
@@ -55,7 +55,11 @@ pub(super) fn immutable_borrow_after_mutable(
     );
 }
 
-pub(super) fn borrowed_parameter_store_escape(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn borrowed_parameter_store_escape(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
         format!(
@@ -65,7 +69,11 @@ pub(super) fn borrowed_parameter_store_escape(ctx: &mut LowerCtx, name: &str, ra
     );
 }
 
-pub(super) fn borrowed_parameter_return_escape(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn borrowed_parameter_return_escape(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
         format!(
@@ -75,7 +83,7 @@ pub(super) fn borrowed_parameter_return_escape(ctx: &mut LowerCtx, name: &str, r
     );
 }
 
-pub(super) fn lock_guard_return_escape(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn lock_guard_return_escape(ctx: &mut LowerCtx, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
         "cannot return lock guard: lock guards cannot escape their local critical section"
@@ -84,7 +92,7 @@ pub(super) fn lock_guard_return_escape(ctx: &mut LowerCtx, range: TextRange) {
     );
 }
 
-pub(super) fn moved_across_loop(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn moved_across_loop(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_MOVED_ACROSS_LOOP,
         format!(
@@ -94,7 +102,11 @@ pub(super) fn moved_across_loop(ctx: &mut LowerCtx, name: &str, range: TextRange
     );
 }
 
-pub(super) fn immutable_parameter_mutation(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn immutable_parameter_mutation(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION,
         format!("cannot mutate through immutable parameter `{name}`: add `mut` to the parameter declaration"),
@@ -102,7 +114,11 @@ pub(super) fn immutable_parameter_mutation(ctx: &mut LowerCtx, name: &str, range
     );
 }
 
-pub(super) fn immutable_parameter_reassignment(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn immutable_parameter_reassignment(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT,
         format!(
@@ -112,7 +128,7 @@ pub(super) fn immutable_parameter_reassignment(ctx: &mut LowerCtx, name: &str, r
     );
 }
 
-pub(super) fn immutable_bytes_subscript_assignment(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn immutable_bytes_subscript_assignment(ctx: &mut LowerCtx, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_IMMUTABLE_BYTES_ASSIGNMENT,
         "bytes is immutable; subscript assignment is not supported".to_string(),
@@ -120,7 +136,10 @@ pub(super) fn immutable_bytes_subscript_assignment(ctx: &mut LowerCtx, range: Te
     );
 }
 
-pub(super) fn immutable_bytes_augmented_subscript_assignment(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn immutable_bytes_augmented_subscript_assignment(
+    ctx: &mut LowerCtx,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT,
         "bytes is immutable; augmented subscript assignment is not supported".to_string(),
@@ -128,7 +147,11 @@ pub(super) fn immutable_bytes_augmented_subscript_assignment(ctx: &mut LowerCtx,
     );
 }
 
-pub(super) fn mutable_borrow_across_await(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn mutable_borrow_across_await(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
         format!(
@@ -138,7 +161,11 @@ pub(super) fn mutable_borrow_across_await(ctx: &mut LowerCtx, name: &str, range:
     );
 }
 
-pub(super) fn mutable_borrow_across_yield(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn mutable_borrow_across_yield(
+    ctx: &mut LowerCtx,
+    name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
         format!(
@@ -148,7 +175,7 @@ pub(super) fn mutable_borrow_across_yield(ctx: &mut LowerCtx, name: &str, range:
     );
 }
 
-pub(super) fn lock_guard_across_await(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn lock_guard_across_await(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
         format!("lock guard `{name}` cannot cross await; release the guard before awaiting"),
@@ -156,7 +183,7 @@ pub(super) fn lock_guard_across_await(ctx: &mut LowerCtx, name: &str, range: Tex
     );
 }
 
-pub(super) fn non_send_task_capture(
+pub(in crate::lower) fn non_send_task_capture(
     ctx: &mut LowerCtx,
     value: &str,
     ty: &str,
@@ -172,7 +199,7 @@ pub(super) fn non_send_task_capture(
     );
 }
 
-pub(super) fn non_send_channel_element(
+pub(in crate::lower) fn non_send_channel_element(
     ctx: &mut LowerCtx,
     value: &str,
     ty: &str,
@@ -188,7 +215,7 @@ pub(super) fn non_send_channel_element(
     );
 }
 
-pub(super) fn non_share_safe_shared_value(
+pub(in crate::lower) fn non_share_safe_shared_value(
     ctx: &mut LowerCtx,
     value: &str,
     ty: &str,

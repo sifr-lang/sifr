@@ -1,3 +1,4 @@
+use super::*;
 impl Renderer {
     pub fn render_expr(&mut self, expr: &RustExpr) {
         self.append(&Self::render_expr_string(expr));
@@ -7,44 +8,44 @@ impl Renderer {
         self.append(&Self::render_type_string(ty));
     }
 
-    fn append(&mut self, s: &str) {
+    pub(crate) fn append(&mut self, s: &str) {
         let _ = write!(self.output, "{s}");
     }
 
-    fn emit_line(&mut self, s: &str) {
+    pub(crate) fn emit_line(&mut self, s: &str) {
         self.write_indent();
         self.append(s);
         let _ = self.output.write_char('\n');
     }
 
-    fn write_indent(&mut self) {
+    pub(crate) fn write_indent(&mut self) {
         for _ in 0..self.indent {
             let _ = write!(self.output, "    ");
         }
     }
 
-    fn indent(&mut self) {
+    pub(crate) fn indent(&mut self) {
         self.indent += 1;
     }
 
-    fn dedent(&mut self) {
+    pub(crate) fn dedent(&mut self) {
         self.indent = self.indent.saturating_sub(1);
     }
 
-    fn render_visibility(visibility: &Visibility) -> &'static str {
+    pub(crate) fn render_visibility(visibility: &Visibility) -> &'static str {
         match visibility {
             Visibility::Private => "",
             Visibility::Pub => "pub ",
         }
     }
 
-    fn render_derives(&mut self, derives: &[String]) {
+    pub(crate) fn render_derives(&mut self, derives: &[String]) {
         if !derives.is_empty() {
             self.emit_line(&format!("#[derive({})]", derives.join(", ")));
         }
     }
 
-    fn render_param_string(param: &RustParam) -> String {
+    pub(crate) fn render_param_string(param: &RustParam) -> String {
         match param {
             RustParam::SelfParam { mutable } => {
                 if *mutable {
@@ -71,7 +72,7 @@ impl Renderer {
         }
     }
 
-    fn render_type_string(ty: &RustType) -> String {
+    pub(crate) fn render_type_string(ty: &RustType) -> String {
         match ty {
             RustType::I64 => "i64".to_string(),
             RustType::F64 => "f64".to_string(),
@@ -136,7 +137,7 @@ impl Renderer {
         }
     }
 
-    fn render_expr_string(expr: &RustExpr) -> String {
+    pub(crate) fn render_expr_string(expr: &RustExpr) -> String {
         match expr {
             RustExpr::Literal(lit) => Self::render_literal(lit),
             RustExpr::Ident(name) => Self::render_identifier(name),
@@ -355,11 +356,10 @@ impl Renderer {
             ),
         }
     }
-
 }
 
 impl Renderer {
-    fn render_literal(lit: &RustLiteral) -> String {
+    pub(crate) fn render_literal(lit: &RustLiteral) -> String {
         match lit {
             RustLiteral::Int(v) => v.to_string(),
             RustLiteral::Float(v) => {
@@ -385,7 +385,7 @@ impl Renderer {
         }
     }
 
-    fn render_macro_arg(name: &str, idx: usize, arg: &RustExpr) -> String {
+    pub(crate) fn render_macro_arg(name: &str, idx: usize, arg: &RustExpr) -> String {
         // `write!` / `writeln!` require the format string as a literal token
         // (second argument after the destination writer), not a `String`.
         if matches!(name, "write" | "writeln") && idx == 1 {
@@ -406,7 +406,7 @@ impl Renderer {
         Self::render_expr_string(arg)
     }
 
-    fn wrap_expr(expr: &RustExpr) -> String {
+    pub(crate) fn wrap_expr(expr: &RustExpr) -> String {
         if Self::expr_requires_parens(expr) {
             format!("({})", Self::render_expr_string(expr))
         } else {
@@ -414,7 +414,7 @@ impl Renderer {
         }
     }
 
-    fn render_assign_op<'a>(
+    pub(crate) fn render_assign_op<'a>(
         target: &RustExpr,
         value: &'a RustExpr,
     ) -> Option<(&'a str, &'a RustExpr)> {
@@ -427,7 +427,7 @@ impl Renderer {
         Some((op.as_str(), right.as_ref()))
     }
 
-    fn render_comparison_operand(op: &str, expr: &RustExpr) -> String {
+    pub(crate) fn render_comparison_operand(op: &str, expr: &RustExpr) -> String {
         if matches!(op, "==" | "!=") {
             if let RustExpr::Literal(RustLiteral::Str(value)) = expr {
                 return format!("\"{}\"", value.escape_default());
@@ -436,7 +436,7 @@ impl Renderer {
         Self::wrap_expr(expr)
     }
 
-    fn render_struct_field_init(field: &str, value: &RustExpr) -> String {
+    pub(crate) fn render_struct_field_init(field: &str, value: &RustExpr) -> String {
         let rendered_field = Self::render_identifier(field);
         if let RustExpr::Ident(name) = value {
             if name == field {
@@ -446,14 +446,14 @@ impl Renderer {
         format!("{rendered_field}: {}", Self::render_expr_string(value))
     }
 
-    fn render_format_arg_string(expr: &RustExpr) -> String {
+    pub(crate) fn render_format_arg_string(expr: &RustExpr) -> String {
         if let RustExpr::Literal(RustLiteral::Str(value)) = expr {
             return format!("\"{}\"", value.escape_default());
         }
         Self::render_expr_string(expr)
     }
 
-    fn render_typed_numeric_literal(expr: &RustExpr, ty: &RustType) -> Option<String> {
+    pub(crate) fn render_typed_numeric_literal(expr: &RustExpr, ty: &RustType) -> Option<String> {
         let suffix = Self::numeric_literal_suffix(ty)?;
         match expr {
             RustExpr::Literal(RustLiteral::Int(value)) => Some(format!("{value}_{suffix}")),
@@ -469,7 +469,7 @@ impl Renderer {
         }
     }
 
-    fn numeric_literal_suffix(ty: &RustType) -> Option<&str> {
+    pub(crate) fn numeric_literal_suffix(ty: &RustType) -> Option<&str> {
         match ty {
             RustType::I64 => Some("i64"),
             RustType::F64 => Some("f64"),
@@ -497,7 +497,7 @@ impl Renderer {
         }
     }
 
-    fn expr_requires_parens(expr: &RustExpr) -> bool {
+    pub(crate) fn expr_requires_parens(expr: &RustExpr) -> bool {
         // Check if expr is one of the types that always needs parens
         if matches!(
             expr,
@@ -522,7 +522,7 @@ impl Renderer {
         false
     }
 
-    fn render_closure_param_string(param: &RustParam) -> String {
+    pub(crate) fn render_closure_param_string(param: &RustParam) -> String {
         match param {
             RustParam::SelfParam { .. } | RustParam::SelfValue => "self".to_string(),
             RustParam::Named { name, .. } | RustParam::NamedMut { name, .. } => {
@@ -531,7 +531,7 @@ impl Renderer {
         }
     }
 
-    fn render_pattern_string(pattern: &str) -> String {
+    pub(crate) fn render_pattern_string(pattern: &str) -> String {
         let mut out = String::new();
         let mut token = String::new();
         let flush_token = |out: &mut String, token: &mut String| {
@@ -558,7 +558,7 @@ impl Renderer {
         out
     }
 
-    fn render_identifier(name: &str) -> String {
+    pub(crate) fn render_identifier(name: &str) -> String {
         if name.starts_with("r#") || !Self::is_plain_ascii_identifier(name) {
             return name.to_string();
         }
@@ -569,7 +569,7 @@ impl Renderer {
         }
     }
 
-    fn is_plain_ascii_identifier(name: &str) -> bool {
+    pub(crate) fn is_plain_ascii_identifier(name: &str) -> bool {
         let mut chars = name.chars();
         let Some(first) = chars.next() else {
             return false;
@@ -580,7 +580,7 @@ impl Renderer {
         chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
     }
 
-    fn is_escape_required_keyword(name: &str) -> bool {
+    pub(crate) fn is_escape_required_keyword(name: &str) -> bool {
         matches!(
             name,
             "as" | "break"
@@ -633,7 +633,10 @@ impl Renderer {
         )
     }
 
-    fn render_block_expr(stmts: &[RustStmt], trailing_expr: Option<&RustExpr>) -> String {
+    pub(crate) fn render_block_expr(
+        stmts: &[RustStmt],
+        trailing_expr: Option<&RustExpr>,
+    ) -> String {
         let mut renderer = Renderer::new();
         renderer.append("{\n");
         renderer.indent();
@@ -650,7 +653,7 @@ impl Renderer {
         renderer.output
     }
 
-    fn render_match_arms(&mut self, arms: &[RustMatchArm]) {
+    pub(crate) fn render_match_arms(&mut self, arms: &[RustMatchArm]) {
         for arm in arms {
             let guard = arm
                 .guard

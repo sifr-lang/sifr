@@ -1,10 +1,15 @@
+use super::{
+    is_legacy_i64_type, is_proven_nonzero_integer_expr, is_result_legacy_i64_type,
+    is_sifr_int_arithmetic_op, is_sifr_int_checked_floor_op, is_sifr_int_comparison_op,
+    is_sifr_int_operand_coercion_op, result_i64_type_to_sifr_int, rust_expr_identifier_path,
+};
 use crate::helpers::needs_clone_for_type;
 use crate::RustEmitter;
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 
 impl RustEmitter {
-    pub(super) fn method_call_needs_field_clone_suppression(
+    pub(crate) fn method_call_needs_field_clone_suppression(
         &self,
         object: &HirExpr,
         method: &str,
@@ -42,7 +47,7 @@ impl RustEmitter {
             .is_some_and(|class_name| self.recursive_fields.contains(&(class_name, field.clone())))
     }
 
-    pub(super) fn lower_field_access_expr_with_lowered_object(
+    pub(crate) fn lower_field_access_expr_with_lowered_object(
         &mut self,
         object: &HirExpr,
         field: &str,
@@ -204,11 +209,10 @@ impl RustEmitter {
 
         lowered_field
     }
-
 }
 
 impl RustEmitter {
-    fn lower_proven_index_option_expr_for_ir(
+    pub(crate) fn lower_proven_index_option_expr_for_ir(
         option_expr: crate::RustExpr,
         binding_name: &str,
         message: &str,
@@ -228,7 +232,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn try_lower_registry_expr_result(
+    pub(crate) fn try_lower_registry_expr_result(
         &self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
@@ -236,7 +240,7 @@ impl RustEmitter {
             .map(|lowered| self.rewrite_stdlib_constant_idents_in_expr(lowered)))
     }
 
-    pub(super) fn rewrite_stdlib_constant_idents_in_expr(
+    pub(crate) fn rewrite_stdlib_constant_idents_in_expr(
         &self,
         expr: crate::RustExpr,
     ) -> crate::RustExpr {
@@ -524,11 +528,10 @@ impl RustEmitter {
             crate::RustExpr::Path(path) => crate::RustExpr::Path(path),
         }
     }
-
 }
 
 impl RustEmitter {
-    pub(super) fn rewrite_stdlib_constant_idents_in_stmt(
+    pub(crate) fn rewrite_stdlib_constant_idents_in_stmt(
         &self,
         stmt: crate::RustStmt,
     ) -> crate::RustStmt {
@@ -785,5 +788,4 @@ impl RustEmitter {
             crate::RustStmt::Break | crate::RustStmt::Continue => stmt,
         }
     }
-
 }

@@ -4,7 +4,10 @@ use crate::hir_nodes::{HirExpr, HirFStringPart};
 use sifr_python_ast::{ExprFString, InterpolatedStringElement};
 use sifr_type_system::Type;
 
-pub(super) fn lower_fstring_expr(fstring: &ExprFString, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_fstring_expr(
+    fstring: &ExprFString,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     let mut parts = Vec::new();
 
     for part in &fstring.value {

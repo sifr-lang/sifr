@@ -52,7 +52,7 @@ fn option_value_type(ty: &Type) -> Option<Type> {
     }
 }
 
-pub(super) fn async_iterator_parts(ty: &Type) -> Option<(Type, Type)> {
+pub(in crate::lower) fn async_iterator_parts(ty: &Type) -> Option<(Type, Type)> {
     match ty.resolve_alias() {
         Type::AsyncIterator(item_ty, err_ty) | Type::AsyncGenerator(item_ty, err_ty) => {
             Some((item_ty.as_ref().clone(), err_ty.as_ref().clone()))
@@ -86,7 +86,7 @@ fn async_closable_error_type(ty: &Type) -> Option<Type> {
     }
 }
 
-pub(super) fn return_type_accepts_error(return_type: &Type, error_ty: &Type) -> bool {
+pub(in crate::lower) fn return_type_accepts_error(return_type: &Type, error_ty: &Type) -> bool {
     if matches!(error_ty.resolve_alias(), Type::Never) {
         return true;
     }
@@ -170,7 +170,7 @@ fn simple_for_target_name(target: &Expr, ctx: &mut LowerCtx) -> Option<(String, 
     }
 }
 
-pub(super) fn lower_async_for(
+pub(in crate::lower) fn lower_async_for(
     for_stmt: &StmtFor,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,

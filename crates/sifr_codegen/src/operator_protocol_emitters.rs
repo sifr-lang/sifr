@@ -6,7 +6,7 @@ use sifr_hir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::Type;
 
 impl RustEmitter {
-    pub(super) fn emit_operator_impls(&mut self, class: &HirClass) {
+    pub(crate) fn emit_operator_impls(&mut self, class: &HirClass) {
         for (dunder, func) in &class.operator_impls {
             match dunder.as_str() {
                 "__add__" => self.emit_binop_trait_impl(class, func, "Add", "add"),
@@ -23,7 +23,7 @@ impl RustEmitter {
         }
     }
 
-    fn emit_binop_trait_impl(
+    pub(crate) fn emit_binop_trait_impl(
         &mut self,
         class: &HirClass,
         func: &HirFunction,
@@ -99,7 +99,7 @@ impl RustEmitter {
         });
     }
 
-    fn emit_unaryop_trait_impl(
+    pub(crate) fn emit_unaryop_trait_impl(
         &mut self,
         class: &HirClass,
         func: &HirFunction,
@@ -129,7 +129,7 @@ impl RustEmitter {
         });
     }
 
-    fn emit_eq_trait_impl(&mut self, class: &HirClass, func: &HirFunction) {
+    pub(crate) fn emit_eq_trait_impl(&mut self, class: &HirClass, func: &HirFunction) {
         let other_name = func
             .params
             .first()
@@ -161,7 +161,7 @@ impl RustEmitter {
         });
     }
 
-    fn emit_ord_trait_impl(&mut self, class: &HirClass, func: &HirFunction) {
+    pub(crate) fn emit_ord_trait_impl(&mut self, class: &HirClass, func: &HirFunction) {
         let other_name = func
             .params
             .first()
@@ -221,7 +221,7 @@ impl RustEmitter {
         });
     }
 
-    pub(super) fn emit_protocol_impls(&mut self, class: &HirClass, module: &HirModule) {
+    pub(crate) fn emit_protocol_impls(&mut self, class: &HirClass, module: &HirModule) {
         for proto_name in &class.implements_protocols {
             let proto_class = module
                 .classes
@@ -287,7 +287,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_operator_method_body(&mut self, func: &HirFunction) -> Vec<RustStmt> {
+    pub(crate) fn lower_operator_method_body(&mut self, func: &HirFunction) -> Vec<RustStmt> {
         self.lower_function_like_body(
             func,
             "structured operator method statement lowering missing for IR-first emission",
@@ -296,7 +296,7 @@ impl RustEmitter {
         )
     }
 
-    fn try_lower_operator_stmt_ir(&mut self, stmt: &HirStmt) -> Option<Vec<RustStmt>> {
+    pub(crate) fn try_lower_operator_stmt_ir(&mut self, stmt: &HirStmt) -> Option<Vec<RustStmt>> {
         match stmt {
             HirStmt::Let {
                 name, ty, value, ..
@@ -404,7 +404,10 @@ impl RustEmitter {
         }
     }
 
-    fn lower_operator_stmt_block_ir(&mut self, body: &[HirStmt]) -> Option<Vec<RustStmt>> {
+    pub(crate) fn lower_operator_stmt_block_ir(
+        &mut self,
+        body: &[HirStmt],
+    ) -> Option<Vec<RustStmt>> {
         let scope_ctx = ScopeContext {
             function_return_type: self.current_return_type.clone(),
             in_generator_closure: false,
@@ -436,7 +439,7 @@ impl RustEmitter {
         Some(lowered)
     }
 
-    fn lower_operator_if_clause_ir(
+    pub(crate) fn lower_operator_if_clause_ir(
         &mut self,
         condition: &HirExpr,
         then_body: &[HirStmt],
@@ -494,7 +497,7 @@ impl RustEmitter {
         })
     }
 
-    fn lower_operator_if_not_none_chain_ir(
+    pub(crate) fn lower_operator_if_not_none_chain_ir(
         option_vars: &[String],
         lowered_then_body: Vec<RustStmt>,
         nested_else: Option<Vec<RustStmt>>,
@@ -515,7 +518,7 @@ impl RustEmitter {
         Some(chain_root)
     }
 
-    fn lower_operator_for_iter_ir(&mut self, iter: &HirExpr) -> Option<RustExpr> {
+    pub(crate) fn lower_operator_for_iter_ir(&mut self, iter: &HirExpr) -> Option<RustExpr> {
         let lowered_iter = self.lower_operator_expr_ir(iter)?;
         Some(
             match Self::resolve_alias_type_for_operator_loop_iter(iter.ty()) {
@@ -562,7 +565,7 @@ impl RustEmitter {
         )
     }
 
-    fn detect_option_truthiness_alias_for_operator(expr: &HirExpr) -> Option<String> {
+    pub(crate) fn detect_option_truthiness_alias_for_operator(expr: &HirExpr) -> Option<String> {
         let HirExpr::Name { name, ty } = expr else {
             return None;
         };
@@ -572,7 +575,7 @@ impl RustEmitter {
         None
     }
 
-    fn is_option_like_for_operator(ty: &Type) -> bool {
+    pub(crate) fn is_option_like_for_operator(ty: &Type) -> bool {
         if let Type::Union(members) = Self::resolve_alias_type_for_operator_loop_iter(ty) {
             let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
             let has_none = members.iter().any(|m| matches!(m, Type::None));
@@ -581,14 +584,14 @@ impl RustEmitter {
         false
     }
 
-    fn resolve_alias_type_for_operator_loop_iter(ty: &Type) -> &Type {
+    pub(crate) fn resolve_alias_type_for_operator_loop_iter(ty: &Type) -> &Type {
         match ty {
             Type::Alias { body, .. } => Self::resolve_alias_type_for_operator_loop_iter(body),
             _ => ty,
         }
     }
 
-    fn lower_operator_expr_ir(&mut self, expr: &HirExpr) -> Option<RustExpr> {
+    pub(crate) fn lower_operator_expr_ir(&mut self, expr: &HirExpr) -> Option<RustExpr> {
         if let Some(lowered) = self.lower_stmt_expr_for_ir(expr).ok().flatten() {
             return Some(self.rewrite_stdlib_constant_idents_in_expr(lowered));
         }
@@ -686,7 +689,7 @@ impl RustEmitter {
         }
     }
 
-    fn map_operator_compare_op(op: &str) -> Option<&'static str> {
+    pub(crate) fn map_operator_compare_op(op: &str) -> Option<&'static str> {
         match op {
             "==" => Some("=="),
             "!=" => Some("!="),

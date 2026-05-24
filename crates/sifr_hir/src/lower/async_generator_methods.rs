@@ -5,7 +5,7 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;
 
-pub(super) fn resolve_async_generator_method_type(
+pub(in crate::lower) fn resolve_async_generator_method_type(
     object_ty: &Type,
     method: &str,
     args: &[HirExpr],

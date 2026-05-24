@@ -1,4 +1,10 @@
-fn resolve_list_method_type(
+use super::{
+    expression_diagnostics, list_append_argument_type_mismatch, method_count_range,
+    reject_exact_method_arg_count, reject_max_method_arg_count, reject_method_arg_count,
+    reject_no_method_args, str, validate_dict_update_arg, validate_list_extend_arg,
+    validate_set_iterable_arg, DiagnosticCode, HirExpr, LowerCtx, TextRange, Type,
+};
+pub(super) fn resolve_list_method_type(
     elem_ty: &Type,
     method: &str,
     args: &[HirExpr],
@@ -233,7 +239,7 @@ fn resolve_list_method_type(
     }
 }
 
-fn resolve_dict_method_type(
+pub(super) fn resolve_dict_method_type(
     key_ty: &Type,
     val_ty: &Type,
     method: &str,
@@ -466,7 +472,7 @@ fn resolve_dict_method_type(
     }
 }
 
-fn resolve_set_method_type(
+pub(super) fn resolve_set_method_type(
     elem_ty: &Type,
     method: &str,
     args: &[HirExpr],

@@ -5,7 +5,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Expr;
 use sifr_type_system::union_contains_none;
 
-pub(super) fn validate_two_arg_min_max_operands(
+pub(in crate::lower) fn validate_two_arg_min_max_operands(
     func_name: &str,
     left: &HirExpr,
     left_range: TextRange,
@@ -45,7 +45,7 @@ pub(super) fn validate_two_arg_min_max_operands(
     true
 }
 
-pub(super) fn validate_variadic_min_max_operands(
+pub(in crate::lower) fn validate_variadic_min_max_operands(
     func_name: &str,
     operands: &[HirExpr],
     operand_ranges: &[Expr],

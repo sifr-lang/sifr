@@ -95,7 +95,10 @@ fn class_payload_contains_fixed_width(fields: &[(String, Type)]) -> bool {
         .any(|(_, field_ty)| type_contains_fixed_width(field_ty))
 }
 
-pub(super) fn class_specialization_payload_conflicts(source: &Type, target: &Type) -> bool {
+pub(in crate::lower) fn class_specialization_payload_conflicts(
+    source: &Type,
+    target: &Type,
+) -> bool {
     let (
         Type::Class {
             name: source_name,

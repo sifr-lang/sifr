@@ -4,7 +4,7 @@ use crate::hir_nodes::HirExpr;
 
 use super::LowerCtx;
 
-pub(super) fn import_callable_defaults(
+pub(in crate::lower) fn import_callable_defaults(
     ctx: &mut LowerCtx,
     module_defaults: &HashMap<String, Vec<(usize, HirExpr)>>,
     external_name: &str,
@@ -16,7 +16,7 @@ pub(super) fn import_callable_defaults(
     }
 }
 
-pub(super) fn import_callable_vararg(
+pub(in crate::lower) fn import_callable_vararg(
     ctx: &mut LowerCtx,
     module_varargs: &HashMap<String, usize>,
     external_name: &str,
@@ -28,7 +28,7 @@ pub(super) fn import_callable_vararg(
     }
 }
 
-pub(super) fn import_class_method_defaults(
+pub(in crate::lower) fn import_class_method_defaults(
     ctx: &mut LowerCtx,
     module_defaults: &HashMap<String, Vec<(usize, HirExpr)>>,
     external_name: &str,
@@ -44,7 +44,7 @@ pub(super) fn import_class_method_defaults(
     }
 }
 
-pub(super) fn import_class_method_varargs(
+pub(in crate::lower) fn import_class_method_varargs(
     ctx: &mut LowerCtx,
     module_varargs: &HashMap<String, usize>,
     external_name: &str,

@@ -55,7 +55,7 @@ fn first_await_range_in_expr(expr: &Expr) -> Option<TextRange> {
     }
 }
 
-pub(super) fn reject_deferred_async_comprehension_shape(
+pub(in crate::lower) fn reject_deferred_async_comprehension_shape(
     ctx: &mut LowerCtx,
     comprehension_kind: &str,
     generators: &[Comprehension],
@@ -96,7 +96,7 @@ pub(super) fn reject_deferred_async_comprehension_shape(
     true
 }
 
-pub(super) fn reject_unsupported_basic_async_comprehension_shape(
+pub(in crate::lower) fn reject_unsupported_basic_async_comprehension_shape(
     ctx: &mut LowerCtx,
     generators: &[Comprehension],
     fallback_range: TextRange,
@@ -129,7 +129,7 @@ pub(super) fn reject_unsupported_basic_async_comprehension_shape(
     false
 }
 
-pub(super) fn reject_async_generator_expression(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn reject_async_generator_expression(ctx: &mut LowerCtx, range: TextRange) {
     reject_unsupported_expression_form(
         ctx,
         "async generator expressions are deferred in v1; use an async def with yield or an eager async comprehension",

@@ -15,7 +15,11 @@ fn const_integer_value_for_binding(value: &HirExpr) -> Option<BigInt> {
     }
 }
 
-pub(super) fn record_const_integer_binding(ctx: &mut LowerCtx, name: &str, value: &HirExpr) {
+pub(in crate::lower) fn record_const_integer_binding(
+    ctx: &mut LowerCtx,
+    name: &str,
+    value: &HirExpr,
+) {
     if let Some(const_value) = const_integer_value_for_binding(value) {
         ctx.scope.set_const_integer_value(name, const_value);
     } else {
@@ -32,7 +36,7 @@ fn snapshot_const_value<'a>(
         .find_map(|(snapshot_name, value)| (snapshot_name == name).then_some(value))
 }
 
-pub(super) fn restore_const_integer_state_after_branches(
+pub(in crate::lower) fn restore_const_integer_state_after_branches(
     ctx: &mut LowerCtx,
     saved: &ConstIntegerSnapshot,
     branch_states: &[(ConstIntegerSnapshot, bool)],

@@ -3,7 +3,7 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;
 use sifr_type_system::FunctionType;
 
-pub(super) fn call_argument_ranges_by_param(
+pub(in crate::lower) fn call_argument_ranges_by_param(
     call: &ExprCall,
     ft: &FunctionType,
 ) -> Vec<Option<TextRange>> {
@@ -30,7 +30,7 @@ pub(super) fn call_argument_ranges_by_param(
     ranges
 }
 
-pub(super) fn type_param_argument_range(
+pub(in crate::lower) fn type_param_argument_range(
     call: &ExprCall,
     ft: &FunctionType,
     type_param_name: &str,
@@ -46,14 +46,14 @@ pub(super) fn type_param_argument_range(
     None
 }
 
-pub(super) fn first_call_keyword_range(call: &ExprCall) -> TextRange {
+pub(in crate::lower) fn first_call_keyword_range(call: &ExprCall) -> TextRange {
     call.arguments
         .keywords
         .first()
         .map_or_else(|| call.range(), Ranged::range)
 }
 
-pub(super) fn call_arity_range(call: &ExprCall) -> TextRange {
+pub(in crate::lower) fn call_arity_range(call: &ExprCall) -> TextRange {
     if call.arguments.args.is_empty() {
         call.range()
     } else {

@@ -1,4 +1,21 @@
-pub(super) fn lower_method_call(
+use super::{
+    callable_builtin_element_type, canonicalize_class_surface_type,
+    invalidate_collection_flow_facts_for_method, is_task_handle_type, lower_expr,
+    lower_method_call_args, lower_signature_call_args, lower_task_handle_method_call,
+    refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
+    refine_generic_class_binding_expr, refine_nonempty_method_return_type,
+    reject_immutable_parameter_method_mutation, resolve_annotation_expr,
+    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_type,
+    resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
+    resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
+    resolve_protocol_method_type, resolve_set_method_type, resolve_str_method_type,
+    resolve_tuple_method_type, resolved_method_arg_ranges, str, tsc, ClassMethodSurface,
+    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprGenerator, ExprLambda,
+    ExprListComp, ExprNamed, ExprSetComp, FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx,
+    ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
+    DEFAULTDICT_SET_ALIAS,
+};
+pub(in crate::lower) fn lower_method_call(
     attr: &ExprAttribute,
     call: &ExprCall,
     ctx: &mut LowerCtx,
@@ -216,7 +233,7 @@ pub(super) fn lower_method_call(
 }
 
 /// Resolve the return type of a method call on a given type.
-pub(super) fn resolve_method_type(
+pub(in crate::lower) fn resolve_method_type(
     object_ty: &Type,
     method: &str,
     args: &[HirExpr],
@@ -271,9 +288,11 @@ pub(super) fn resolve_method_type(
             methods,
             ..
         } => resolve_class_method_type(
-            name,
-            fields,
-            methods,
+            ClassMethodSurface {
+                name,
+                fields,
+                methods,
+            },
             method,
             args,
             arg_ranges,
@@ -307,7 +326,7 @@ pub(super) fn resolve_method_type(
         }
     }
 }
-pub(super) fn lower_lambda_with_context(
+pub(in crate::lower) fn lower_lambda_with_context(
     expr: &Expr,
     context_types: &[Type],
     ctx: &mut LowerCtx,
@@ -359,7 +378,7 @@ pub(super) fn lower_lambda_with_context(
     }
 }
 
-pub(super) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let (params, body, body_ty) = ctx.with_pushed_scope(|ctx| {
         let mut params = Vec::new();
         if let Some(ref parameters) = lambda.parameters {
@@ -402,7 +421,11 @@ pub(super) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<Hi
     })
 }
 
-fn reject_invalid_expression_target(ctx: &mut LowerCtx, message: &str, range: TextRange) {
+pub(super) fn reject_invalid_expression_target(
+    ctx: &mut LowerCtx,
+    message: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::FLOW_INVALID_ASSIGNMENT_TARGET,
         message.to_string(),
@@ -410,7 +433,11 @@ fn reject_invalid_expression_target(ctx: &mut LowerCtx, message: &str, range: Te
     );
 }
 
-fn reject_invalid_expression_iteration(ctx: &mut LowerCtx, iter_ty: &Type, range: TextRange) {
+pub(super) fn reject_invalid_expression_iteration(
+    ctx: &mut LowerCtx,
+    iter_ty: &Type,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::FLOW_INVALID_ITERATION,
         format!("cannot iterate over type '{}'", iter_ty.display_name()),
@@ -418,7 +445,11 @@ fn reject_invalid_expression_iteration(ctx: &mut LowerCtx, iter_ty: &Type, range
     );
 }
 
-fn reject_unsupported_expression_form(ctx: &mut LowerCtx, message: &str, range: TextRange) {
+pub(super) fn reject_unsupported_expression_form(
+    ctx: &mut LowerCtx,
+    message: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
         message.to_string(),
@@ -426,7 +457,10 @@ fn reject_unsupported_expression_form(ctx: &mut LowerCtx, message: &str, range: 
     );
 }
 
-pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_list_comp(
+    comp: &ExprListComp,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if comp.generators.is_empty() {
         reject_unsupported_expression_form(
             ctx,
@@ -552,7 +586,7 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
     result
 }
 
-pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if super::async_comprehension_diagnostics::reject_deferred_async_comprehension_shape(
         ctx,
         "set",
@@ -606,7 +640,10 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<H
     result
 }
 
-pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_dict_comp(
+    comp: &ExprDictComp,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if super::async_comprehension_diagnostics::reject_deferred_async_comprehension_shape(
         ctx,
         "dict",
@@ -700,7 +737,10 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
     result
 }
 
-pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_generator_expr(
+    gen: &ExprGenerator,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if gen.generators.iter().any(|generator| generator.is_async) {
         super::async_comprehension_diagnostics::reject_async_generator_expression(ctx, gen.range());
         return None;
@@ -771,7 +811,7 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
     })
 }
 
-fn lower_iterator_protocol_entry(iter_source_expr: HirExpr, elem_ty: Type) -> HirExpr {
+pub(super) fn lower_iterator_protocol_entry(iter_source_expr: HirExpr, elem_ty: Type) -> HirExpr {
     HirExpr::IteratorCall {
         op: HirIteratorOp::Iter,
         args: vec![iter_source_expr],
@@ -779,7 +819,7 @@ fn lower_iterator_protocol_entry(iter_source_expr: HirExpr, elem_ty: Type) -> Hi
     }
 }
 
-pub(super) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let name = if let Expr::Name(n) = named.target.as_ref() {
         n.id.to_string()
     } else {

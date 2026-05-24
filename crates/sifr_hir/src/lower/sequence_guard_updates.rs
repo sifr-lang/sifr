@@ -3,7 +3,7 @@ use super::LowerCtx;
 use sifr_python_ast::Expr;
 use sifr_type_system::Type;
 
-pub(super) fn maybe_record_dict_assignment_guard(
+pub(in crate::lower) fn maybe_record_dict_assignment_guard(
     ctx: &mut LowerCtx,
     object_ty: &Type,
     object_name: &str,
@@ -21,7 +21,7 @@ pub(super) fn maybe_record_dict_assignment_guard(
     });
 }
 
-pub(super) fn merge_exhaustive_branch_sequence_guards(
+pub(in crate::lower) fn merge_exhaustive_branch_sequence_guards(
     ctx: &mut LowerCtx,
     has_else_branch: bool,
     branch_sequence_states: &[Vec<SequenceGuard>],

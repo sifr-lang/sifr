@@ -1,5 +1,6 @@
+use super::*;
 #[test]
-fn test_exact_int_division_after_zero_guard_early_exit_lowers() {
+pub(super) fn test_exact_int_division_after_zero_guard_early_exit_lowers() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -18,7 +19,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_modulo_inside_nonzero_while_guard_lowers() {
+pub(super) fn test_exact_int_modulo_inside_nonzero_while_guard_lowers() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -41,7 +42,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_division_after_elif_zero_guard_early_exit_lowers() {
+pub(super) fn test_exact_int_division_after_elif_zero_guard_early_exit_lowers() {
     let module = lower_source(
         "\
 def main(flag: bool) -> None:
@@ -62,7 +63,7 @@ def main(flag: bool) -> None:
 }
 
 #[test]
-fn test_exact_int_division_inside_nested_nonzero_guard_lowers() {
+pub(super) fn test_exact_int_division_inside_nested_nonzero_guard_lowers() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -89,7 +90,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_exact_int_nonzero_guard_is_cleared_after_reassignment() {
+pub(super) fn test_exact_int_nonzero_guard_is_cleared_after_reassignment() {
     let source = "\
 def main() -> None:
     divisor: int = 3
@@ -109,7 +110,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_const_expression_uses_module_integer_constants() {
+pub(super) fn test_fixed_width_const_expression_uses_module_integer_constants() {
     let module = lower_source(
         "BASE: int = 250 + 4\n\ndef main() -> uint8:\n    value: uint8 = BASE + 1\n    return value\n",
     )
@@ -124,7 +125,7 @@ fn test_fixed_width_const_expression_uses_module_integer_constants() {
 }
 
 #[test]
-fn test_fixed_width_const_expression_does_not_fold_shadowed_module_constant() {
+pub(super) fn test_fixed_width_const_expression_does_not_fold_shadowed_module_constant() {
     let source = "\
 BASE: int = 254
 
@@ -154,7 +155,7 @@ def main():
 }
 
 #[test]
-fn test_fixed_width_scalar_add_sub_mul_promote_to_int() {
+pub(super) fn test_fixed_width_scalar_add_sub_mul_promote_to_int() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -198,7 +199,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_add_apis_have_representation_preserving_types() {
+pub(super) fn test_fixed_width_add_apis_have_representation_preserving_types() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -232,7 +233,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_add_api_rejects_mixed_width_argument() {
+pub(super) fn test_fixed_width_add_api_rejects_mixed_width_argument() {
     let source = "\
 def main() -> None:
     left: int8 = 1
@@ -249,7 +250,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_sub_apis_have_representation_preserving_types() {
+pub(super) fn test_fixed_width_sub_apis_have_representation_preserving_types() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -283,7 +284,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_sub_api_rejects_mixed_width_argument() {
+pub(super) fn test_fixed_width_sub_api_rejects_mixed_width_argument() {
     let source = "\
 def main() -> None:
     left: uint8 = 1
@@ -300,7 +301,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_mul_apis_have_representation_preserving_types() {
+pub(super) fn test_fixed_width_mul_apis_have_representation_preserving_types() {
     let module = lower_source(
         "\
 def main() -> None:
@@ -334,7 +335,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_mul_api_rejects_mixed_width_argument() {
+pub(super) fn test_fixed_width_mul_api_rejects_mixed_width_argument() {
     let source = "\
 def main() -> None:
     left: uint8 = 2
@@ -351,7 +352,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_fixed_width_const_expression_out_of_range_has_int_code() {
+pub(super) fn test_fixed_width_const_expression_out_of_range_has_int_code() {
     let source = "def main():\n    too_wide: uint8 = 2 ** 8\n";
     let errors =
         lower_source(source).expect_err("out-of-range fixed-width const expression should fail");
@@ -371,7 +372,7 @@ fn test_fixed_width_const_expression_out_of_range_has_int_code() {
 }
 
 #[test]
-fn test_fixed_width_const_expression_budget_has_int_code() {
+pub(super) fn test_fixed_width_const_expression_budget_has_int_code() {
     let source = "def main():\n    too_large: uint8 = 10 ** 5000\n";
     let errors =
         lower_source(source).expect_err("over-budget fixed-width const expression should fail");
@@ -391,7 +392,7 @@ fn test_fixed_width_const_expression_budget_has_int_code() {
 }
 
 #[test]
-fn test_module_constant_export_uses_prior_const_name() {
+pub(super) fn test_module_constant_export_uses_prior_const_name() {
     let module = lower_source(
         "BASE: int = 250\nLIMIT: int = BASE + 4\n\ndef main() -> uint8:\n    value: uint8 = LIMIT + 1\n    return value\n",
     )
@@ -406,7 +407,7 @@ fn test_module_constant_export_uses_prior_const_name() {
 }
 
 #[test]
-fn test_module_constant_export_uses_unary_prior_const_name() {
+pub(super) fn test_module_constant_export_uses_unary_prior_const_name() {
     let module = lower_source(
         "BASE: int = 10\nNEGATIVE: int = -(BASE + 3)\n\ndef main() -> int8:\n    value: int8 = NEGATIVE\n    return value\n",
     )
@@ -421,7 +422,7 @@ fn test_module_constant_export_uses_unary_prior_const_name() {
 }
 
 #[test]
-fn test_module_constant_export_does_not_retype_fixed_width_name_as_int() {
+pub(super) fn test_module_constant_export_does_not_retype_fixed_width_name_as_int() {
     let module = lower_source(
         "BASE: uint8 = 250\nLIMIT: int = BASE + 4\n\ndef main():\n    print(\"ok\")\n",
     )
@@ -443,7 +444,7 @@ fn test_module_constant_export_does_not_retype_fixed_width_name_as_int() {
 }
 
 #[test]
-fn test_module_fixed_width_const_expression_budget_has_int_code_once() {
+pub(super) fn test_module_fixed_width_const_expression_budget_has_int_code_once() {
     let source = "LIMIT: uint8 = 10 ** 5000\n\ndef main():\n    print(\"ok\")\n";
     let errors = lower_source(source)
         .expect_err("module fixed-width over-budget const expression should fail");
@@ -474,7 +475,7 @@ fn test_module_fixed_width_const_expression_budget_has_int_code_once() {
 }
 
 #[test]
-fn test_module_int_over_budget_const_expr_stays_hir_diagnostic() {
+pub(super) fn test_module_int_over_budget_const_expr_stays_hir_diagnostic() {
     let source = "LIMIT: int = 10 ** 5000\n\ndef main():\n    print(\"ok\")\n";
     let errors = lower_source(source)
         .expect_err("module int over-budget const expression should fail in HIR");
@@ -500,7 +501,7 @@ fn test_module_int_over_budget_const_expr_stays_hir_diagnostic() {
 }
 
 #[test]
-fn test_module_int_const_expr_above_i64_folds_to_large_literal_for_codegen() {
+pub(super) fn test_module_int_const_expr_above_i64_folds_to_large_literal_for_codegen() {
     let module = lower_source("LIMIT: int = 10 ** 20\n\ndef main():\n    print(str(LIMIT))\n")
         .expect("in-budget oversized module int constant should lower");
 
@@ -517,7 +518,7 @@ fn test_module_int_const_expr_above_i64_folds_to_large_literal_for_codegen() {
 }
 
 #[test]
-fn test_fixed_width_over_budget_literal_diagnostic_is_not_duplicated() {
+pub(super) fn test_fixed_width_over_budget_literal_diagnostic_is_not_duplicated() {
     let literal = "1".repeat(4097);
     let source = format!("def main():\n    too_large: uint8 = {literal}\n");
     let errors =
@@ -545,7 +546,7 @@ fn test_fixed_width_over_budget_literal_diagnostic_is_not_duplicated() {
 }
 
 #[test]
-fn test_fixed_width_assignment_from_non_const_int_is_still_mismatch() {
+pub(super) fn test_fixed_width_assignment_from_non_const_int_is_still_mismatch() {
     let source = "def main():\n    source: int = 1\n    target: uint8 = source\n";
     let errors = lower_source(source).expect_err("non-const int narrowing should fail");
 
@@ -558,7 +559,7 @@ fn test_fixed_width_assignment_from_non_const_int_is_still_mismatch() {
 }
 
 #[test]
-fn test_fixed_width_assignment_from_non_const_binop_is_still_mismatch() {
+pub(super) fn test_fixed_width_assignment_from_non_const_binop_is_still_mismatch() {
     let source = "def main():\n    source: int = 1\n    target: uint8 = source + 1\n";
     let errors = lower_source(source).expect_err("non-const int binop narrowing should fail");
 
@@ -575,7 +576,7 @@ fn test_fixed_width_assignment_from_non_const_binop_is_still_mismatch() {
 }
 
 #[test]
-fn test_fixed_width_call_argument_literal_is_not_implicitly_narrowed() {
+pub(super) fn test_fixed_width_call_argument_literal_is_not_implicitly_narrowed() {
     let source = "def take(value: uint8) -> None:\n    pass\n\ndef main():\n    take(1)\n";
     let errors = lower_source(source).expect_err("call argument literal narrowing should fail");
 
@@ -589,7 +590,7 @@ fn test_fixed_width_call_argument_literal_is_not_implicitly_narrowed() {
 }
 
 #[test]
-fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_return() {
+pub(super) fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_return() {
     let source = "\
 def add(left: uint8, right: uint8) -> uint8:
     return left + right
@@ -606,7 +607,7 @@ def add(left: uint8, right: uint8) -> uint8:
 }
 
 #[test]
-fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_list_literal() {
+pub(super) fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_list_literal() {
     let source = "\
 def main() -> None:
     left: uint8 = 1
@@ -628,7 +629,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_dict_literal() {
+pub(super) fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_dict_literal() {
     let source = "\
 def main() -> None:
     left: uint8 = 1
@@ -650,7 +651,8 @@ def main() -> None:
 }
 
 #[test]
-fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_generic_specialization() {
+pub(super) fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_generic_specialization(
+) {
     let source = "\
 class Box[T]:
     value: T
@@ -682,7 +684,7 @@ def main() -> None:
 }
 
 #[test]
-fn test_reassignment_type_mismatch_has_primary_range() {
+pub(super) fn test_reassignment_type_mismatch_has_primary_range() {
     let source = "def main():\n    value = 1\n    value = \"not an int\"\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected reassignment type mismatch");
@@ -694,7 +696,7 @@ fn test_reassignment_type_mismatch_has_primary_range() {
 }
 
 #[test]
-fn test_return_type_mismatch_has_primary_range() {
+pub(super) fn test_return_type_mismatch_has_primary_range() {
     let source = "def main() -> int:\n    return \"no\"\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected return type mismatch");
@@ -706,7 +708,7 @@ fn test_return_type_mismatch_has_primary_range() {
 }
 
 #[test]
-fn test_function_argument_type_mismatch_has_primary_range() {
+pub(super) fn test_function_argument_type_mismatch_has_primary_range() {
     let source = "def takes_int(value: int) -> int:\n    return value\n\ndef main():\n    result: int = takes_int(\"bad\")\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected argument type mismatch");
@@ -718,7 +720,7 @@ fn test_function_argument_type_mismatch_has_primary_range() {
 }
 
 #[test]
-fn test_typevar_constraint_mismatch_has_primary_range() {
+pub(super) fn test_typevar_constraint_mismatch_has_primary_range() {
     let source = "from typing import TypeVar\n\nT = TypeVar(\"T\", int, str)\n\ndef echo(x: T) -> T:\n    return x\n\ndef main():\n    bad: float = echo(1.5)\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected TypeVar constraint mismatch");
@@ -728,7 +730,7 @@ fn test_typevar_constraint_mismatch_has_primary_range() {
 }
 
 #[test]
-fn test_if_expression_branch_mismatch_has_primary_range() {
+pub(super) fn test_if_expression_branch_mismatch_has_primary_range() {
     let source = "def main():\n    x: str | int = \"yes\" if True else 42\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected if-expression branch mismatch");
@@ -739,7 +741,7 @@ fn test_if_expression_branch_mismatch_has_primary_range() {
 }
 
 #[test]
-fn test_container_literal_type_conflict_has_primary_range() {
+pub(super) fn test_container_literal_type_conflict_has_primary_range() {
     let source = "def main():\n    values = [1, \"two\"]\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected container literal conflict");
@@ -750,7 +752,7 @@ fn test_container_literal_type_conflict_has_primary_range() {
 }
 
 #[test]
-fn test_undefined_variable() {
+pub(super) fn test_undefined_variable() {
     let result = lower_source("def main():\n    print(x)\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -760,7 +762,7 @@ fn test_undefined_variable() {
 }
 
 #[test]
-fn test_failed_assignment_rhs_still_seeds_followup_binding() {
+pub(super) fn test_failed_assignment_rhs_still_seeds_followup_binding() {
     let result =
         lower_source("def main(xs: list[int]) -> int:\n    s = xs[0] + xs[0]\n    return s\n");
     assert!(result.is_err());
@@ -784,7 +786,7 @@ fn test_failed_assignment_rhs_still_seeds_followup_binding() {
 }
 
 #[test]
-fn test_failed_annotated_assignment_rhs_still_seeds_followup_binding() {
+pub(super) fn test_failed_annotated_assignment_rhs_still_seeds_followup_binding() {
     let result =
         lower_source("def main(xs: list[int]) -> int:\n    s: int = xs[0] + xs[0]\n    return s\n");
     assert!(result.is_err());
@@ -806,4 +808,3 @@ fn test_failed_annotated_assignment_rhs_still_seeds_followup_binding() {
         "failed annotated initializer should not trigger a synthetic missing-return diagnostic: {errors:?}"
     );
 }
-

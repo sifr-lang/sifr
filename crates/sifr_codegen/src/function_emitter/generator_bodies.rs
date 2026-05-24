@@ -1,5 +1,10 @@
+use super::{
+    body_contains_yield, collect_mutated_vars_with_sigs, collect_reassigned_vars, HirFunction,
+    HirStmt, OwnershipKind, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt,
+    RustType, Type, Visibility,
+};
 impl RustEmitter {
-    fn lower_generator_function_body(
+    pub(crate) fn lower_generator_function_body(
         &mut self,
         func: &HirFunction,
         mutable_param_shadows: &[(String, RustExpr)],
@@ -138,7 +143,7 @@ impl RustEmitter {
         body
     }
 
-    fn lower_async_generator_function_body(
+    pub(crate) fn lower_async_generator_function_body(
         &mut self,
         func: &HirFunction,
         mutable_param_shadows: &[(String, RustExpr)],
@@ -223,7 +228,7 @@ impl RustEmitter {
         body
     }
 
-    pub(super) fn emit_function(
+    pub(crate) fn emit_function(
         &mut self,
         func: &HirFunction,
         module_public: bool,

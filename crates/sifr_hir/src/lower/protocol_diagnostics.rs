@@ -3,7 +3,7 @@ use sifr_diagnostics::DiagnosticCode;
 
 use super::LowerCtx;
 
-pub(super) fn bound_not_satisfied(
+pub(in crate::lower) fn bound_not_satisfied(
     ctx: &mut LowerCtx,
     actual: &str,
     protocol: &str,
@@ -19,7 +19,11 @@ pub(super) fn bound_not_satisfied(
     );
 }
 
-pub(super) fn context_manager_missing(ctx: &mut LowerCtx, type_name: &str, range: TextRange) {
+pub(in crate::lower) fn context_manager_missing(
+    ctx: &mut LowerCtx,
+    type_name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING,
         format!(
@@ -29,7 +33,11 @@ pub(super) fn context_manager_missing(ctx: &mut LowerCtx, type_name: &str, range
     );
 }
 
-pub(super) fn context_manager_incomplete(ctx: &mut LowerCtx, type_name: &str, range: TextRange) {
+pub(in crate::lower) fn context_manager_incomplete(
+    ctx: &mut LowerCtx,
+    type_name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING,
         format!(
@@ -39,7 +47,7 @@ pub(super) fn context_manager_incomplete(ctx: &mut LowerCtx, type_name: &str, ra
     );
 }
 
-pub(super) fn iterator_invalid_return_signature(
+pub(in crate::lower) fn iterator_invalid_return_signature(
     ctx: &mut LowerCtx,
     type_name: &str,
     expected: &str,
@@ -52,7 +60,7 @@ pub(super) fn iterator_invalid_return_signature(
     );
 }
 
-pub(super) fn iterator_invalid_parameter_signature(
+pub(in crate::lower) fn iterator_invalid_parameter_signature(
     ctx: &mut LowerCtx,
     type_name: &str,
     range: TextRange,
@@ -64,7 +72,7 @@ pub(super) fn iterator_invalid_parameter_signature(
     );
 }
 
-pub(super) fn iterator_element_mismatch(
+pub(in crate::lower) fn iterator_element_mismatch(
     ctx: &mut LowerCtx,
     class_name: &str,
     left_method: &str,

@@ -9,7 +9,7 @@ use ruff_text_size::Ranged;
 use sifr_python_ast::ExprAwait;
 use sifr_type_system::Type;
 
-pub(super) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !ctx.current_function_is_async {
         expression_diagnostics::type_mismatch(
             ctx,
@@ -86,7 +86,7 @@ fn await_result_type(ty: &Type) -> Option<Type> {
     }
 }
 
-pub(super) fn coroutine_result_type(surface_return_type: &Type) -> Type {
+pub(in crate::lower) fn coroutine_result_type(surface_return_type: &Type) -> Type {
     match surface_return_type.resolve_alias() {
         Type::Result(ok, err) => Type::Coroutine(ok.clone(), err.clone()),
         other => Type::Coroutine(Box::new(other.clone()), Box::new(Type::Never)),

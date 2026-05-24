@@ -9,7 +9,7 @@ use sifr_type_system::Type;
 impl RustEmitter {
     /// Collect all union types from the module that need enum definitions,
     /// and build a map of function signatures for call-site wrapping.
-    pub(super) fn collect_union_types(&mut self, module: &HirModule) {
+    pub(crate) fn collect_union_types(&mut self, module: &HirModule) {
         for func in &module.functions {
             // Record function signature with conventions
             let param_info: Vec<(Type, ParamConvention)> = func
@@ -92,7 +92,7 @@ impl RustEmitter {
         }
     }
 
-    fn register_union_type(&mut self, ty: &Type) {
+    pub(crate) fn register_union_type(&mut self, ty: &Type) {
         let resolved = crate::resolve_alias_type_for_plain_call(ty);
         if let Type::Union(members) = resolved {
             // Skip Option<T> pattern (T | None with exactly 2 members)
@@ -113,7 +113,7 @@ impl RustEmitter {
     }
 
     /// Generate Rust enum definitions for all collected union types.
-    pub(super) fn generate_enum_definitions(&mut self) {
+    pub(crate) fn generate_enum_definitions(&mut self) {
         // Sort enum names for deterministic output
         let mut enums: Vec<(String, Vec<Type>)> = self.union_enums.clone().into_iter().collect();
         enums.sort_by(|a, b| a.0.cmp(&b.0));

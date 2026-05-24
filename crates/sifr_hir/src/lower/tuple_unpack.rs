@@ -52,7 +52,7 @@ fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarge
     }
 }
 
-pub(super) fn lower_tuple_unpack_assign(
+pub(in crate::lower) fn lower_tuple_unpack_assign(
     tuple: &ExprTuple,
     value: &Expr,
     ctx: &mut LowerCtx,
@@ -166,7 +166,7 @@ pub(super) fn lower_tuple_unpack_assign(
     })
 }
 
-pub(super) fn lower_star_unpack_assign(
+pub(in crate::lower) fn lower_star_unpack_assign(
     tuple: &ExprTuple,
     value: &Expr,
     ctx: &mut LowerCtx,

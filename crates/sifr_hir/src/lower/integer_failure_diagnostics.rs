@@ -9,7 +9,7 @@ use super::LowerCtx;
 const EXACT_INT_DIVISION_REQUIRES_HANDLING: &str =
     "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe";
 
-pub(super) fn exact_int_division_requires_handling(
+pub(in crate::lower) fn exact_int_division_requires_handling(
     left: &HirExpr,
     op: &str,
     right: &HirExpr,
@@ -34,7 +34,7 @@ pub(super) fn exact_int_division_requires_handling(
     false
 }
 
-pub(super) fn exact_int_augassign_requires_handling(
+pub(in crate::lower) fn exact_int_augassign_requires_handling(
     target_ty: &Type,
     base_op: &str,
     value: &HirExpr,

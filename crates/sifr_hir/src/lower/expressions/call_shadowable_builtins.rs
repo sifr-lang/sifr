@@ -1,4 +1,8 @@
-fn lower_shadowable_builtin_call(
+use super::{
+    expression_diagnostics, lower_any_all_call, lower_expr, lower_filter_call, lower_map_call, str,
+    CallLowering, ExprCall, FunctionType, HirExpr, LowerCtx, Ranged, Type,
+};
+pub(super) fn lower_shadowable_builtin_call(
     func_name: &str,
     call: &ExprCall,
     ctx: &mut LowerCtx,

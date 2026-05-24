@@ -5,5 +5,7 @@
 //! deterministic invalidation reports.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-include!("lib/graph_cache_and_queries.rs");
-include!("lib/query_diagnostics.rs");
+mod graph_cache_and_queries;
+pub use graph_cache_and_queries::*;
+mod query_diagnostics;
+pub use query_diagnostics::*;

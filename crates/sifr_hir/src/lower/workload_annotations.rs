@@ -4,20 +4,20 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, StmtFunctionDef};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum WorkloadKind {
+pub(in crate::lower) enum WorkloadKind {
     BlockingIo,
     CpuHeavy,
 }
 
 impl WorkloadKind {
-    pub(super) fn label(self) -> &'static str {
+    pub(in crate::lower) fn label(self) -> &'static str {
         match self {
             Self::BlockingIo => "blocking_io",
             Self::CpuHeavy => "cpu_heavy",
         }
     }
 
-    pub(super) fn suggestion(self) -> &'static str {
+    pub(in crate::lower) fn suggestion(self) -> &'static str {
         match self {
             Self::BlockingIo => "use an async API or task.spawn_blocking",
             Self::CpuHeavy => "use task.spawn_blocking or ThreadPoolExecutor",
@@ -32,7 +32,7 @@ impl WorkloadKind {
     }
 }
 
-pub(super) fn annotation_with_range<'a>(
+pub(in crate::lower) fn annotation_with_range<'a>(
     decorators: impl Iterator<Item = &'a sifr_python_ast::Decorator>,
 ) -> Option<(WorkloadKind, TextRange)> {
     let mut workload = None;
@@ -50,13 +50,13 @@ pub(super) fn annotation_with_range<'a>(
     workload
 }
 
-pub(super) fn annotation_for_decorators<'a>(
+pub(in crate::lower) fn annotation_for_decorators<'a>(
     decorators: impl Iterator<Item = &'a sifr_python_ast::Decorator>,
 ) -> Option<WorkloadKind> {
     annotation_with_range(decorators).map(|(kind, _)| kind)
 }
 
-pub(super) fn reject_async_function_annotation(
+pub(in crate::lower) fn reject_async_function_annotation(
     ctx: &mut LowerCtx,
     func: &StmtFunctionDef,
     effective_is_async: bool,
@@ -76,7 +76,11 @@ pub(super) fn reject_async_function_annotation(
     }
 }
 
-pub(super) fn reject_async_direct_call(ctx: &mut LowerCtx, function: &str, range: TextRange) {
+pub(in crate::lower) fn reject_async_direct_call(
+    ctx: &mut LowerCtx,
+    function: &str,
+    range: TextRange,
+) {
     if !ctx.current_function_is_async {
         return;
     }
@@ -95,7 +99,7 @@ pub(super) fn reject_async_direct_call(ctx: &mut LowerCtx, function: &str, range
     );
 }
 
-pub(super) fn reject_unclassified_offload_target(
+pub(in crate::lower) fn reject_unclassified_offload_target(
     ctx: &mut LowerCtx,
     target: &Expr,
     api_name: &str,

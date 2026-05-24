@@ -7,7 +7,7 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;
 use sifr_type_system::Type;
 
-pub(super) fn lower_thread_pool_submit_call(
+pub(in crate::lower) fn lower_thread_pool_submit_call(
     object: &HirExpr,
     method_name: &str,
     call: &ExprCall,

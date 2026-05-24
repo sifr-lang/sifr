@@ -1,4 +1,3 @@
-
 use crate::{
     try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustItem, RustLiteral,
     RustMatchArm, RustStmt, RustType, Visibility,
@@ -6,14 +5,14 @@ use crate::{
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 
-fn resolve_alias_type(ty: &Type) -> &Type {
+pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
         Type::Alias { body, .. } => resolve_alias_type(body),
         _ => ty,
     }
 }
 
-fn is_simple_module_primitive_const_type(ty: &Type) -> bool {
+pub(super) fn is_simple_module_primitive_const_type(ty: &Type) -> bool {
     matches!(
         resolve_alias_type(ty),
         Type::Int
@@ -25,15 +24,15 @@ fn is_simple_module_primitive_const_type(ty: &Type) -> bool {
     )
 }
 
-fn is_simple_module_string_const_type(ty: &Type) -> bool {
+pub(super) fn is_simple_module_string_const_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::Str | Type::LiteralStr(_))
 }
 
-fn is_simple_module_none_const_type(ty: &Type) -> bool {
+pub(super) fn is_simple_module_none_const_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::None)
 }
 
-fn is_exact_module_int_type(ty: &Type) -> bool {
+pub(super) fn is_exact_module_int_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::Int)
 }
 
@@ -46,7 +45,7 @@ pub fn try_lower_simple_module_constant_item_result(
     try_lower_simple_module_constant_item_result_impl(name, ty, value)
 }
 
-fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
+pub(super) fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
     if name.trim().is_empty() {
         return Err(CodegenError::new(
             "invalid module constant shape: empty name",
@@ -71,7 +70,9 @@ fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
     Ok(())
 }
 
-fn try_lower_leaf_or_name_expr_result(value: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
+pub(super) fn try_lower_leaf_or_name_expr_result(
+    value: &HirExpr,
+) -> Result<Option<RustExpr>, CodegenError> {
     if let Some(lowered) = try_lower_leaf_expr_result(value)? {
         return Ok(Some(lowered));
     }
@@ -81,7 +82,7 @@ fn try_lower_leaf_or_name_expr_result(value: &HirExpr) -> Result<Option<RustExpr
     Ok(None)
 }
 
-fn try_lower_simple_module_constant_item_result_impl(
+pub(super) fn try_lower_simple_module_constant_item_result_impl(
     name: &str,
     ty: &Type,
     value: &HirExpr,
@@ -179,7 +180,7 @@ fn try_lower_simple_module_constant_item_result_impl(
     )))
 }
 
-fn large_module_int_literal_decimal(ty: &Type, value: &HirExpr) -> Option<String> {
+pub(super) fn large_module_int_literal_decimal(ty: &Type, value: &HirExpr) -> Option<String> {
     if !is_exact_module_int_type(ty) {
         return None;
     }
@@ -196,7 +197,7 @@ fn large_module_int_literal_decimal(ty: &Type, value: &HirExpr) -> Option<String
     }
 }
 
-fn sifr_int_parse_decimal_call(decimal_text: &str) -> RustExpr {
+pub(super) fn sifr_int_parse_decimal_call(decimal_text: &str) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
             "SifrInt".to_string(),
@@ -227,7 +228,10 @@ pub fn try_lower_simple_module_constant_item(
         .or_else(|| try_lower_simple_module_helper_const_item(name, ty, value))
 }
 
-fn lower_large_module_int_const_item(name: &str, decimal_text: &str) -> (RustItem, String) {
+pub(super) fn lower_large_module_int_const_item(
+    name: &str,
+    decimal_text: &str,
+) -> (RustItem, String) {
     let rust_name = format!("__const_{name}");
     (
         RustItem::Fn {
@@ -400,4 +404,3 @@ pub fn try_lower_simple_module_helper_const_item(
         format!("{rust_name}()"),
     ))
 }
-

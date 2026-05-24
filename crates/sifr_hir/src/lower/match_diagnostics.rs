@@ -1,9 +1,11 @@
+use super::str;
 use ruff_text_size::TextRange;
+
 use sifr_diagnostics::DiagnosticCode;
 
 use super::LowerCtx;
 
-pub(super) fn guard_not_bool(ctx: &mut LowerCtx, actual: &str, range: TextRange) {
+pub(in crate::lower) fn guard_not_bool(ctx: &mut LowerCtx, actual: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::MATCH_GUARD_NOT_BOOL,
         format!("match guard must be a bool expression, got '{actual}'"),
@@ -11,7 +13,7 @@ pub(super) fn guard_not_bool(ctx: &mut LowerCtx, actual: &str, range: TextRange)
     );
 }
 
-pub(super) fn non_exhaustive_union(
+pub(in crate::lower) fn non_exhaustive_union(
     ctx: &mut LowerCtx,
     subject_type: &str,
     uncovered: &str,
@@ -26,7 +28,7 @@ pub(super) fn non_exhaustive_union(
     );
 }
 
-pub(super) fn non_exhaustive_enum(
+pub(in crate::lower) fn non_exhaustive_enum(
     ctx: &mut LowerCtx,
     enum_name: &str,
     uncovered: &str,
@@ -41,7 +43,11 @@ pub(super) fn non_exhaustive_enum(
     );
 }
 
-pub(super) fn non_exhaustive_literal(ctx: &mut LowerCtx, subject_type: &str, range: TextRange) {
+pub(in crate::lower) fn non_exhaustive_literal(
+    ctx: &mut LowerCtx,
+    subject_type: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::MATCH_NON_EXHAUSTIVE,
         format!(
@@ -51,7 +57,7 @@ pub(super) fn non_exhaustive_literal(ctx: &mut LowerCtx, subject_type: &str, ran
     );
 }
 
-pub(super) fn invalid_class_pattern_field(
+pub(in crate::lower) fn invalid_class_pattern_field(
     ctx: &mut LowerCtx,
     class_name: &str,
     field_name: &str,
@@ -67,7 +73,7 @@ pub(super) fn invalid_class_pattern_field(
     );
 }
 
-pub(super) fn invalid_pattern_form(ctx: &mut LowerCtx, reason: &str, range: TextRange) {
+pub(in crate::lower) fn invalid_pattern_form(ctx: &mut LowerCtx, reason: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::MATCH_INVALID_PATTERN_FORM,
         format!("invalid match pattern: {reason}"),
@@ -76,5 +82,4 @@ pub(super) fn invalid_pattern_form(ctx: &mut LowerCtx, reason: &str, range: Text
 }
 
 #[cfg(test)]
-#[path = "match_diagnostics_tests.rs"]
 mod tests;

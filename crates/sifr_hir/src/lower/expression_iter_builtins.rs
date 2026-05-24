@@ -15,7 +15,10 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
         .map_or_else(|| call.func.range(), Ranged::range)
 }
 
-pub(super) fn lower_reversed_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_reversed_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     let (arg, elem_ty) = lower_builtin_reverseable_arg(call, "reversed", ctx)?;
     Some(HirExpr::IteratorCall {
         op: HirIteratorOp::Reversed,
@@ -24,7 +27,10 @@ pub(super) fn lower_reversed_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option
     })
 }
 
-pub(super) fn lower_enumerate_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(in crate::lower) fn lower_enumerate_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
         expression_diagnostics::call_wrong_positional_count(
             ctx,

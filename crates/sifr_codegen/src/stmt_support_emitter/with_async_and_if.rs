@@ -1,5 +1,9 @@
+use super::{
+    inject_async_for_early_exit_cleanup, inject_async_with_return_cleanup, queries, HirExpr,
+    HirStmt, RustEmitter, RustStmt, Type,
+};
 impl RustEmitter {
-    fn try_lower_with_stmt_for_ir(
+    pub(crate) fn try_lower_with_stmt_for_ir(
         &mut self,
         items: &[(String, HirExpr, bool)],
         body: &[HirStmt],
@@ -285,7 +289,7 @@ impl RustEmitter {
         ])))
     }
 
-    fn try_lower_borrowed_name_compare_condition_for_ir(
+    pub(crate) fn try_lower_borrowed_name_compare_condition_for_ir(
         &self,
         expr: &HirExpr,
     ) -> Option<crate::RustExpr> {
@@ -395,7 +399,7 @@ impl RustEmitter {
         })
     }
 
-    fn condition_uses_borrowed_name_for_ir(&self, expr: &HirExpr) -> bool {
+    pub(crate) fn condition_uses_borrowed_name_for_ir(&self, expr: &HirExpr) -> bool {
         match expr {
             HirExpr::Name { name, .. } => {
                 self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)
@@ -549,7 +553,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_if_stmt_for_ir(
+    pub(crate) fn try_lower_if_stmt_for_ir(
         &mut self,
         condition: &HirExpr,
         then_body: &[HirStmt],
@@ -639,7 +643,7 @@ impl RustEmitter {
         self.try_lower_if_clause_for_ir(condition, then_body, nested_else)
     }
 
-    fn try_lower_if_clause_for_ir(
+    pub(crate) fn try_lower_if_clause_for_ir(
         &mut self,
         condition: &HirExpr,
         then_body: &[HirStmt],
@@ -715,7 +719,10 @@ impl RustEmitter {
         }))
     }
 
-    fn detect_or_is_none_vars_with_bindings_for_ir(&self, expr: &HirExpr) -> Option<Vec<String>> {
+    pub(crate) fn detect_or_is_none_vars_with_bindings_for_ir(
+        &self,
+        expr: &HirExpr,
+    ) -> Option<Vec<String>> {
         let HirExpr::BoolOp { op, values, .. } = expr else {
             return crate::helpers::detect_or_is_none_vars(expr);
         };
@@ -760,7 +767,7 @@ impl RustEmitter {
     }
 
     /// Emit a generator initialization statement (always mutable for closure capture)
-    pub(super) fn emit_generator_init_stmt(&mut self, stmt: &HirStmt) {
+    pub(crate) fn emit_generator_init_stmt(&mut self, stmt: &HirStmt) {
         if let HirStmt::Let {
             name, ty, value, ..
         } = stmt
@@ -786,7 +793,7 @@ impl RustEmitter {
         };
     }
 
-    pub(super) fn emit_lowered_stmts(&mut self, lowered_stmts: &[RustStmt]) {
+    pub(crate) fn emit_lowered_stmts(&mut self, lowered_stmts: &[RustStmt]) {
         for lowered_stmt in lowered_stmts {
             match lowered_stmt {
                 RustStmt::Let {
@@ -820,8 +827,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn current_loop_has_else(&self) -> bool {
+    pub(crate) fn current_loop_has_else(&self) -> bool {
         self.loop_else_stack.last().copied().unwrap_or(false)
     }
-
 }

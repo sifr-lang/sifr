@@ -26,7 +26,7 @@ struct VarargCallArgs<'a> {
     missing_range: TextRange,
 }
 
-pub(super) fn lower_method_call_args(
+pub(in crate::lower) fn lower_method_call_args(
     object_ty: &Type,
     method: &str,
     call: &ExprCall,
@@ -50,7 +50,7 @@ pub(super) fn lower_method_call_args(
     Some(args)
 }
 
-pub(super) fn resolved_method_arg_ranges(
+pub(in crate::lower) fn resolved_method_arg_ranges(
     object_ty: &Type,
     method: &str,
     call: &ExprCall,
@@ -126,7 +126,7 @@ pub(super) fn resolved_method_arg_ranges(
     ranges
 }
 
-pub(super) fn lower_signature_call_args(
+pub(in crate::lower) fn lower_signature_call_args(
     call: &ExprCall,
     callable_name: &str,
     ft: &FunctionType,
@@ -136,7 +136,7 @@ pub(super) fn lower_signature_call_args(
     lower_function_call_args(call, callable_name, ft, defaults, None, ctx)
 }
 
-pub(super) fn lower_function_call_args(
+pub(in crate::lower) fn lower_function_call_args(
     call: &ExprCall,
     callable_name: &str,
     ft: &FunctionType,
@@ -613,7 +613,7 @@ fn normalize_string_method_args(
     }
 }
 
-pub(super) fn validate_list_extend_arg(
+pub(in crate::lower) fn validate_list_extend_arg(
     list_elem_ty: &Type,
     iterable_ty: &Type,
     range: TextRange,
@@ -645,7 +645,7 @@ pub(super) fn validate_list_extend_arg(
     true
 }
 
-pub(super) fn validate_dict_update_arg(
+pub(in crate::lower) fn validate_dict_update_arg(
     key_ty: &Type,
     value_ty: &Type,
     update_ty: &Type,
@@ -693,7 +693,7 @@ pub(super) fn validate_dict_update_arg(
     valid
 }
 
-pub(super) fn validate_set_iterable_arg(
+pub(in crate::lower) fn validate_set_iterable_arg(
     set_elem_ty: &Type,
     iterable_ty: &Type,
     method: &str,

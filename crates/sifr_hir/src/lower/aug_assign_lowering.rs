@@ -56,7 +56,10 @@ fn op_to_augassign_string(
     }
 }
 
-pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
+pub(in crate::lower) fn lower_aug_assign(
+    aug: &StmtAugAssign,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     // Handle augmented assignment on attributes: self.field += val
     if let Expr::Attribute(attr) = aug.target.as_ref() {
         let obj_name = if let Expr::Name(n) = attr.value.as_ref() {

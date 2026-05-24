@@ -1,2 +1,4 @@
-include!("host/implementation.rs");
-include!("host/tests.rs");
+mod implementation;
+pub use implementation::*;
+#[cfg(test)]
+mod tests;

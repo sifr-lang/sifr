@@ -1,0 +1,875 @@
+use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_lint, cmd_test};
+use super::diagnostic_rendering_and_run::{
+    cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run, cmd_tree, cmd_vendor,
+    render_diagnostics,
+};
+use clap::{Parser, Subcommand, ValueEnum};
+use sifr_diagnostics::{
+    DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
+};
+use sifr_driver::{diagnostic_label_for_code_str, find_workspace_root};
+use sifr_python_ast::Stmt;
+use sifr_syntax::parse_module_suite;
+use std::collections::BTreeMap;
+use std::io::{self, Write as _};
+use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::path::{Path, PathBuf};
+use std::process;
+
+const SIFR_BUILD_VERSION: &str = env!("SIFR_BUILD_VERSION");
+
+#[derive(Parser)]
+#[command(
+    name = "sifr",
+    version = SIFR_BUILD_VERSION,
+    about = "The Sifr programming language compiler"
+)]
+pub(crate) struct Cli {
+    /// Diagnostic output format
+    #[arg(long, value_enum, default_value_t = DiagnosticFormat::Human)]
+    pub(crate) diagnostic_format: DiagnosticFormat,
+
+    /// Explain a Sifr diagnostic code without running a package operation
+    #[arg(long)]
+    pub(crate) explain: Option<String>,
+
+    #[command(subcommand)]
+    pub(crate) command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+pub(crate) enum Commands {
+    /// Compile a .sifr file to a native binary
+    Build {
+        /// Input .sifr file
+        file: PathBuf,
+        /// Output directory (default: current directory)
+        #[arg(short, long, default_value = ".")]
+        output: PathBuf,
+    },
+    /// Compile and run a .sifr file
+    Run {
+        /// Input .sifr file, app target, or script name
+        target: Option<String>,
+        /// Select a layout-discovered app target
+        #[arg(long)]
+        bin: Option<String>,
+        /// Select a named package script
+        #[arg(long)]
+        script: Option<String>,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+        /// Arguments passed to the selected app after --
+        #[arg(last = true)]
+        args: Vec<String>,
+    },
+    /// Fetch package dependencies
+    Fetch {
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Create a new Sifr package
+    Init {
+        /// Target directory
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Create a library package
+        #[arg(long, conflicts_with = "bin")]
+        lib: bool,
+        /// Create an app package
+        #[arg(long)]
+        bin: bool,
+        /// Sifr package name
+        #[arg(long)]
+        name: Option<String>,
+        /// Create missing Sifr-owned files without overwriting existing files
+        #[arg(long)]
+        force: bool,
+    },
+    /// Repair Sifr-managed Cargo projection drift
+    Repair {
+        /// Check projection drift without writing
+        #[arg(long)]
+        check: bool,
+    },
+    /// Type-check a .sifr file without compiling
+    Check {
+        /// Input .sifr file, or omit for package check
+        path: Option<PathBuf>,
+        /// Check all Sifr-capable workspace members through Cargo-compatible selection
+        #[arg(long)]
+        workspace: bool,
+        /// Select one package by Cargo package spec or unambiguous package name
+        #[arg(short = 'p', long = "package")]
+        packages: Vec<String>,
+        /// Exclude one package from workspace selection
+        #[arg(long)]
+        exclude: Vec<String>,
+        /// Cargo-compatible package message format for package checks
+        #[arg(long)]
+        message_format: Option<String>,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Show the package dependency tree
+    Tree {
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+        /// Cargo-compatible tree options
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Assemble and verify a Cargo package archive for a Sifr package
+    Package {
+        /// Package all Sifr-capable workspace members through Cargo-compatible selection
+        #[arg(long)]
+        workspace: bool,
+        /// Select one package by Cargo package spec or unambiguous package name
+        #[arg(short = 'p', long = "package")]
+        packages: Vec<String>,
+        /// Exclude one package from workspace selection
+        #[arg(long)]
+        exclude: Vec<String>,
+        /// Print packaged files without creating an archive
+        #[arg(long)]
+        list: bool,
+        /// Skip Cargo's package verification build
+        #[arg(long)]
+        no_verify: bool,
+        /// Skip Cargo package metadata warning checks
+        #[arg(long)]
+        no_metadata: bool,
+        /// Allow dirty working tree contents
+        #[arg(long)]
+        allow_dirty: bool,
+        /// Exclude Cargo.lock from the package archive
+        #[arg(long)]
+        exclude_lockfile: bool,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Publish a Sifr package through Cargo
+    Publish {
+        /// Validate publish without uploading
+        #[arg(long)]
+        dry_run: bool,
+        /// Publish all Sifr-capable workspace members through Cargo-compatible selection
+        #[arg(long)]
+        workspace: bool,
+        /// Select one package by Cargo package spec or unambiguous package name
+        #[arg(short = 'p', long = "package")]
+        packages: Vec<String>,
+        /// Exclude one package from workspace selection
+        #[arg(long)]
+        exclude: Vec<String>,
+        /// Skip Cargo's publish verification build
+        #[arg(long)]
+        no_verify: bool,
+        /// Allow dirty working tree contents
+        #[arg(long)]
+        allow_dirty: bool,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Vendor dependency sources through Cargo
+    Vendor {
+        /// Output directory for vendored sources
+        #[arg(default_value = "vendor")]
+        path: PathBuf,
+        /// Additional manifest to sync during vendoring
+        #[arg(long)]
+        sync: Vec<PathBuf>,
+        /// Keep stale vendored sources
+        #[arg(long)]
+        no_delete: bool,
+        /// Respect existing Cargo source configuration
+        #[arg(long)]
+        respect_source_config: bool,
+        /// Use versioned vendor directory names
+        #[arg(long)]
+        versioned_dirs: bool,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
+    },
+    /// Format Sifr source files
+    Fmt {
+        /// Check formatting without writing changes
+        #[arg(long)]
+        check: bool,
+        /// Input .sifr file or directory
+        path: PathBuf,
+    },
+    /// Run suppressible policy diagnostics
+    Lint {
+        /// Input .sifr file or directory
+        path: PathBuf,
+    },
+    /// Run the native Sifr Language Server Protocol server
+    Lsp {
+        /// Use stdio transport
+        #[arg(long)]
+        stdio: bool,
+    },
+    /// Show the generated Rust source code
+    Emit {
+        /// Input .sifr file
+        file: PathBuf,
+    },
+    /// Run tests in a directory
+    Test {
+        /// Directory containing test files (default: current directory)
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+    },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
+pub(crate) enum DiagnosticFormat {
+    Human,
+    Json,
+    Compact,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum CompilationMode {
+    SingleFile,
+    Project,
+}
+
+pub(super) const EXIT_SUCCESS: i32 = 0;
+pub(super) const EXIT_USER_DIAGNOSTIC: i32 = 1;
+pub(super) const EXIT_USAGE_OR_CONFIG: i32 = 2;
+pub(super) const EXIT_INTERNAL_COMPILER_FAILURE: i32 = 3;
+pub(super) const MAX_COMPACT_REPRESENTATIVE_LOCATIONS: usize = 5;
+
+pub(super) struct PackageCompilerContext {
+    pub(super) graph: sifr_package::SifrPackageGraph,
+    pub(super) source_map: sifr_package::PackageSourceMap,
+    pub(super) package_id: sifr_package::SifrPackageId,
+}
+
+pub(super) struct PackageGraphContext {
+    pub(super) metadata: sifr_package::NormalizedCargoMetadata,
+    pub(super) graph: sifr_package::SifrPackageGraph,
+    pub(super) source_map: sifr_package::PackageSourceMap,
+}
+
+pub(super) fn diagnostic_with_code(
+    message: impl Into<String>,
+    code: DiagnosticCode,
+) -> RenderedDiagnostic {
+    let message = message.into();
+    let mut args = BTreeMap::new();
+    args.insert(
+        "message".to_string(),
+        DiagnosticArg::String(message.clone()),
+    );
+    RenderedDiagnostic {
+        code: code.code().to_string(),
+        severity: code.declared_severity(),
+        message,
+        message_template: "{message}".to_string(),
+        args,
+        url: code.docs_url(),
+        spans: Vec::new(),
+        children: Vec::new(),
+        help: None,
+        suggestions: Vec::new(),
+    }
+}
+
+pub(super) fn main() {
+    let cli = Cli::parse();
+    process::exit(run_cli(cli));
+}
+
+fn run_cli(cli: Cli) -> i32 {
+    let diagnostic_format = cli.diagnostic_format;
+    if let Some(code) = cli.explain {
+        return cmd_explain(&code, diagnostic_format);
+    }
+    let Some(command) = cli.command else {
+        let diagnostic = diagnostic_with_code(
+            "no command provided",
+            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+        );
+        render_diagnostics(&[diagnostic], diagnostic_format);
+        return EXIT_USAGE_OR_CONFIG;
+    };
+    match command {
+        Commands::Build { file, output } => cmd_build(&file, &output, diagnostic_format),
+        Commands::Run {
+            target,
+            bin,
+            script,
+            locked,
+            offline,
+            frozen,
+            args,
+        } => cmd_run(
+            target.as_deref(),
+            bin.as_deref(),
+            script.as_deref(),
+            &args,
+            lock_mode_from_flags(locked, offline, frozen),
+            diagnostic_format,
+        ),
+        Commands::Fetch {
+            locked,
+            offline,
+            frozen,
+        } => cmd_fetch(
+            lock_mode_from_flags(locked, offline, frozen),
+            diagnostic_format,
+        ),
+        Commands::Init {
+            path,
+            lib,
+            bin,
+            name,
+            force,
+        } => cmd_init(&path, lib, bin, name.as_deref(), force, diagnostic_format),
+        Commands::Repair { check } => cmd_repair(check, diagnostic_format),
+        Commands::Check {
+            path,
+            workspace,
+            packages,
+            exclude,
+            message_format,
+            locked,
+            offline,
+            frozen,
+        } => {
+            let selection = sifr_package::CargoPackageSelection {
+                workspace,
+                packages,
+                excludes: exclude,
+            };
+            cmd_check(
+                path.as_deref(),
+                message_format.as_deref(),
+                &selection,
+                lock_mode_from_flags(locked, offline, frozen),
+                diagnostic_format,
+            )
+        }
+        Commands::Tree {
+            locked,
+            offline,
+            frozen,
+            args,
+        } => cmd_tree(
+            lock_mode_from_flags(locked, offline, frozen),
+            &args,
+            diagnostic_format,
+        ),
+        Commands::Package {
+            workspace,
+            packages,
+            exclude,
+            list,
+            no_verify,
+            no_metadata,
+            allow_dirty,
+            exclude_lockfile,
+            locked,
+            offline,
+            frozen,
+        } => {
+            let selection = sifr_package::CargoPackageSelection {
+                workspace,
+                packages,
+                excludes: exclude,
+            };
+            let options = sifr_package::CargoPackageArchiveOptions {
+                list,
+                no_verify,
+                no_metadata,
+                allow_dirty,
+                exclude_lockfile,
+            };
+            cmd_package(
+                &selection,
+                &options,
+                lock_mode_from_flags(locked, offline, frozen),
+                diagnostic_format,
+            )
+        }
+        Commands::Publish {
+            dry_run,
+            workspace,
+            packages,
+            exclude,
+            no_verify,
+            allow_dirty,
+            locked,
+            offline,
+            frozen,
+        } => {
+            let selection = sifr_package::CargoPackageSelection {
+                workspace,
+                packages,
+                excludes: exclude,
+            };
+            let options = sifr_package::CargoPublishOptions {
+                dry_run,
+                no_verify,
+                allow_dirty,
+            };
+            cmd_publish(
+                &selection,
+                &options,
+                lock_mode_from_flags(locked, offline, frozen),
+                diagnostic_format,
+            )
+        }
+        Commands::Vendor {
+            path,
+            sync,
+            no_delete,
+            respect_source_config,
+            versioned_dirs,
+            locked,
+            offline,
+            frozen,
+        } => {
+            let options = sifr_package::CargoVendorOptions {
+                sync,
+                no_delete,
+                respect_source_config,
+                versioned_dirs,
+            };
+            cmd_vendor(
+                &path,
+                &options,
+                lock_mode_from_flags(locked, offline, frozen),
+                diagnostic_format,
+            )
+        }
+        Commands::Fmt { check, path } => cmd_fmt(&path, check, diagnostic_format),
+        Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
+        Commands::Lsp { stdio } => cmd_lsp(stdio),
+        Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
+        Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
+    }
+}
+
+pub(super) fn cmd_init(
+    path: &Path,
+    lib: bool,
+    bin: bool,
+    name: Option<&str>,
+    force: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let kind = if lib && !bin {
+        sifr_package::InitPackageKind::Lib
+    } else {
+        sifr_package::InitPackageKind::Bin
+    };
+    let sifr_name = name
+        .map(str::to_string)
+        .or_else(|| {
+            path.file_name()
+                .map(|name| name.to_string_lossy().to_string())
+        })
+        .unwrap_or_else(|| "app".to_string());
+    let options = sifr_package::InitPackageOptions {
+        target_dir: path.to_path_buf(),
+        sifr_name,
+        kind,
+        force,
+    };
+    match sifr_package::init_package(&options) {
+        Ok(_) => EXIT_SUCCESS,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            EXIT_USAGE_OR_CONFIG
+        }
+    }
+}
+
+pub(super) fn cmd_repair(check: bool, diagnostic_format: DiagnosticFormat) -> i32 {
+    let root = match std::env::current_dir() {
+        Ok(root) => root,
+        Err(error) => {
+            let diagnostic = diagnostic_with_code(
+                format!("could not read current directory: {error}"),
+                DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT,
+            );
+            render_diagnostics(&[diagnostic], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
+    let repair = sifr_package::repair_projection(&root, check);
+    if repair.diagnostics.is_empty() {
+        EXIT_SUCCESS
+    } else {
+        let diagnostics = repair
+            .diagnostics
+            .into_iter()
+            .map(package_diagnostic)
+            .collect::<Vec<_>>();
+        render_diagnostics(&diagnostics, diagnostic_format);
+        EXIT_USER_DIAGNOSTIC
+    }
+}
+
+pub(super) fn package_diagnostic(
+    diagnostic: sifr_package::PackageDiagnostic,
+) -> RenderedDiagnostic {
+    diagnostic_with_code(diagnostic.message, diagnostic.code)
+}
+
+pub(super) fn lock_mode_from_flags(
+    locked: bool,
+    offline: bool,
+    frozen: bool,
+) -> sifr_package::CargoLockMode {
+    if frozen {
+        sifr_package::CargoLockMode::Frozen
+    } else if offline {
+        sifr_package::CargoLockMode::Offline
+    } else if locked {
+        sifr_package::CargoLockMode::Locked
+    } else {
+        sifr_package::CargoLockMode::Normal
+    }
+}
+
+pub(super) fn cmd_explain(code: &str, diagnostic_format: DiagnosticFormat) -> i32 {
+    let explanation = diagnostic_explanation(code);
+    if let Some(text) = explanation {
+        match diagnostic_format {
+            DiagnosticFormat::Human | DiagnosticFormat::Compact => {
+                let _ = writeln!(io::stdout(), "{text}");
+            }
+            DiagnosticFormat::Json => {
+                let value = serde_json::json!({ "code": code, "explanation": text });
+                let _ = writeln!(
+                    io::stdout(),
+                    "{}",
+                    serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string())
+                );
+            }
+        }
+        EXIT_SUCCESS
+    } else {
+        let diagnostic = diagnostic_with_code(
+            format!("unknown diagnostic code '{code}'"),
+            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+        );
+        render_diagnostics(&[diagnostic], diagnostic_format);
+        EXIT_USAGE_OR_CONFIG
+    }
+}
+
+pub(super) fn diagnostic_explanation(code: &str) -> Option<String> {
+    if code == "SIFR-PACKAGE-0105" {
+        return Some(
+            "SIFR-PACKAGE-0105 is retired. Cargo credential failures are reported as SIFR-PACKAGE-0101 so Sifr preserves Cargo's underlying error text with credential redaction."
+                .to_string(),
+        );
+    }
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()?
+        .parent()?
+        .to_path_buf();
+    let path = repo_root.join("docs/errors").join(format!("{code}.md"));
+    let text = std::fs::read_to_string(path).ok()?;
+    let mut lines = text
+        .lines()
+        .filter(|line| !line.starts_with("<!--") && !line.starts_with('|'));
+    let title = lines.find(|line| line.starts_with("# "))?;
+    let summary = lines.find(|line| !line.trim().is_empty()).unwrap_or("");
+    Some(format!(
+        "{}\n\n{}\n\nDocs: https://sifr.sh/docs/errors/{code}",
+        title.trim_start_matches("# "),
+        summary,
+    ))
+}
+
+pub(super) fn cmd_lsp(stdio: bool) -> i32 {
+    if !stdio {
+        let diagnostic = diagnostic_with_code(
+            "sifr lsp requires --stdio in Phase 36",
+            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+        );
+        render_diagnostics(&[diagnostic], DiagnosticFormat::Human);
+        return EXIT_USAGE_OR_CONFIG;
+    }
+    match sifr_lsp::run_stdio() {
+        Ok(()) => EXIT_SUCCESS,
+        Err(error) => {
+            let diagnostic = diagnostic_with_code(
+                format!("language server failed: {error}"),
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            );
+            render_diagnostics(&[diagnostic], DiagnosticFormat::Human);
+            EXIT_INTERNAL_COMPILER_FAILURE
+        }
+    }
+}
+
+pub(super) fn resolve_compilation_mode(
+    file: &Path,
+) -> Result<CompilationMode, Vec<RenderedDiagnostic>> {
+    if find_workspace_root(file)?.is_some() {
+        return Ok(CompilationMode::Project);
+    }
+
+    let is_project_entry =
+        file.file_stem().is_some_and(|stem| stem == "main") && has_local_project_imports(file);
+
+    if is_project_entry {
+        Ok(CompilationMode::Project)
+    } else {
+        Ok(CompilationMode::SingleFile)
+    }
+}
+
+pub(super) fn has_local_project_imports(file: &Path) -> bool {
+    let Some(parent) = file.parent() else {
+        return false;
+    };
+    let Ok(source) = std::fs::read_to_string(file) else {
+        return false;
+    };
+    let suite = match parse_module_suite(&source, Some(&file.display().to_string())) {
+        Ok(suite) => suite,
+        _ => return false,
+    };
+
+    suite.iter().any(|stmt| {
+        let Stmt::ImportFrom(import_from) = stmt else {
+            return false;
+        };
+        if import_from.level > 1 {
+            return false;
+        }
+        let Some(module) = &import_from.module else {
+            return false;
+        };
+        let module_name = module.to_string();
+        if module_name == "typing"
+            || module_name == "enum"
+            || module_name.starts_with("sifr.")
+            || module_name.starts_with("_sifr.")
+        {
+            return false;
+        }
+        parent.join(format!("{module_name}.sifr")).is_file()
+    })
+}
+
+pub(super) fn read_source(file: &Path) -> String {
+    match std::fs::read_to_string(file) {
+        Ok(source) => source,
+        Err(e) => {
+            let _ = writeln!(
+                io::stderr(),
+                "error: could not read file '{}': {e}",
+                file.display()
+            );
+            process::exit(EXIT_USAGE_OR_CONFIG);
+        }
+    }
+}
+
+#[cfg(test)]
+pub(crate) struct InvocationWorkspace {
+    path: PathBuf,
+}
+
+#[cfg(test)]
+impl InvocationWorkspace {
+    pub(crate) fn create(prefix: &str) -> io::Result<Self> {
+        let base_nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let root = std::env::temp_dir();
+        for attempt in 0..8u8 {
+            let unique = if attempt == 0 {
+                format!("{}_{}_{}", prefix, process::id(), base_nanos)
+            } else {
+                format!("{}_{}_{}_{}", prefix, process::id(), base_nanos, attempt)
+            };
+            let path = root.join(unique);
+            match std::fs::create_dir(&path) {
+                Ok(()) => return Ok(Self { path }),
+                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => (),
+                Err(e) => return Err(e),
+            }
+        }
+        Err(io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            format!("failed to allocate unique workspace for prefix '{prefix}'"),
+        ))
+    }
+
+    pub(crate) fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+#[cfg(test)]
+impl Drop for InvocationWorkspace {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.path);
+    }
+}
+
+pub(super) fn severity_rank(severity: Severity) -> u8 {
+    match severity {
+        Severity::Error => 0,
+        Severity::Warning => 1,
+        Severity::Note => 2,
+    }
+}
+
+pub(super) fn severity_label(severity: Severity) -> &'static str {
+    match severity {
+        Severity::Error => "error",
+        Severity::Warning => "warning",
+        Severity::Note => "note",
+    }
+}
+
+pub(super) fn panic_payload_message(payload: &(dyn std::any::Any + Send)) -> String {
+    if let Some(msg) = payload.downcast_ref::<&str>() {
+        return (*msg).to_string();
+    }
+    if let Some(msg) = payload.downcast_ref::<String>() {
+        return msg.clone();
+    }
+    "non-string panic payload".to_string()
+}
+
+pub(super) fn run_with_panic_boundary<T>(
+    context: impl Into<String>,
+    f: impl FnOnce() -> T,
+) -> Result<T, Box<RenderedDiagnostic>> {
+    let context = context.into();
+    match catch_unwind(AssertUnwindSafe(f)) {
+        Ok(value) => Ok(value),
+        Err(payload) => Err(Box::new(diagnostic_with_code(
+            format!("{context}: {}", panic_payload_message(payload.as_ref())),
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ))),
+    }
+}
+
+pub(super) fn is_internal_diagnostic(error: &RenderedDiagnostic) -> bool {
+    error.code == DiagnosticCode::INTERNAL_COMPILER_PANIC.code()
+}
+
+pub(super) fn diagnostic_exit_code(errors: &[RenderedDiagnostic]) -> i32 {
+    if errors.iter().any(is_internal_diagnostic) {
+        EXIT_INTERNAL_COMPILER_FAILURE
+    } else if errors
+        .iter()
+        .any(|diagnostic| diagnostic.severity == Severity::Error)
+    {
+        EXIT_USER_DIAGNOSTIC
+    } else {
+        EXIT_SUCCESS
+    }
+}
+
+#[cfg(test)]
+pub(super) fn legacy_diagnostic_display(diagnostic: &RenderedDiagnostic) -> String {
+    format!("{}: {}", human_label(diagnostic), diagnostic.message)
+}
+
+pub(super) fn human_label(diagnostic: &RenderedDiagnostic) -> &'static str {
+    match diagnostic.severity {
+        Severity::Error if diagnostic.code.starts_with("SIFR-") => {
+            diagnostic_label_for_code_str(&diagnostic.code)
+        }
+        Severity::Error => "error",
+        Severity::Warning => "warning",
+        Severity::Note => "note",
+    }
+}
+
+pub(super) fn compact_severity_summary(diagnostics: &[RenderedDiagnostic]) -> String {
+    let mut error_count = 0usize;
+    let mut warning_count = 0usize;
+    let mut note_count = 0usize;
+    let mut help_count = 0usize;
+    for diagnostic in diagnostics {
+        match diagnostic.severity {
+            Severity::Error => error_count += 1,
+            Severity::Warning => warning_count += 1,
+            Severity::Note => note_count += 1,
+        }
+        if diagnostic.help.is_some() {
+            help_count += 1;
+        }
+    }
+    format!(
+        "summary: {error_count} error(s), {warning_count} warning(s), {note_count} note(s), {help_count} help item(s)"
+    )
+}
+
+pub(super) fn compact_location_label(span: &DiagnosticSpan) -> String {
+    match (&span.file, span.line, span.column) {
+        (Some(file), Some(line), Some(column)) => format!("{file}:{line}:{column}"),
+        (Some(file), Some(line), None) => format!("{file}:{line}"),
+        (Some(file), None, _) => file.clone(),
+        (None, Some(line), Some(column)) => format!("<unknown>:{line}:{column}"),
+        (None, Some(line), None) => format!("<unknown>:{line}"),
+        (None, None, Some(column)) => format!("<unknown>:0:{column}"),
+        (None, None, None) => "<unknown>".to_string(),
+    }
+}

@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use super::LowerCtx;
 
-pub(super) fn collect_declared_nonlocals(stmts: &[Stmt]) -> HashSet<String> {
+pub(in crate::lower) fn collect_declared_nonlocals(stmts: &[Stmt]) -> HashSet<String> {
     let mut names = HashSet::new();
     collect_declared_nonlocals_into(stmts, &mut names);
     names
@@ -56,7 +56,7 @@ fn collect_declared_nonlocals_into(stmts: &[Stmt], out: &mut HashSet<String>) {
     }
 }
 
-pub(super) fn lower_nonlocal(nonlocal: &StmtNonlocal, ctx: &mut LowerCtx) {
+pub(in crate::lower) fn lower_nonlocal(nonlocal: &StmtNonlocal, ctx: &mut LowerCtx) {
     if ctx.function_scopes.len() < 2 {
         super::flow_diagnostics::nonlocal_requires_enclosing_binding(ctx, nonlocal.range());
         return;
@@ -82,12 +82,12 @@ pub(super) fn lower_nonlocal(nonlocal: &StmtNonlocal, ctx: &mut LowerCtx) {
     }
 }
 
-pub(super) fn should_rebind_simple_name(ctx: &LowerCtx, name: &str) -> bool {
+pub(in crate::lower) fn should_rebind_simple_name(ctx: &LowerCtx, name: &str) -> bool {
     ctx.lookup_current_function_binding(name).is_some()
         || (ctx.is_declared_nonlocal(name) && ctx.lookup_outer_function_binding(name).is_some())
 }
 
-pub(super) fn hir_body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
+pub(in crate::lower) fn hir_body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
     stmts
         .iter()
         .any(|stmt| hir_stmt_calls_function(stmt, func_name))

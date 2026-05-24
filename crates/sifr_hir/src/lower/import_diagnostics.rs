@@ -3,7 +3,7 @@ use sifr_diagnostics::DiagnosticCode;
 
 use super::LowerCtx;
 
-pub(super) fn forbidden_intrinsic(ctx: &mut LowerCtx, module: &str, range: TextRange) {
+pub(in crate::lower) fn forbidden_intrinsic(ctx: &mut LowerCtx, module: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC,
         format!("cannot import from '{module}' — _sifr.* modules are internal compiler intrinsics"),
@@ -11,7 +11,7 @@ pub(super) fn forbidden_intrinsic(ctx: &mut LowerCtx, module: &str, range: TextR
     );
 }
 
-pub(super) fn unknown_import_target(ctx: &mut LowerCtx, module: &str, range: TextRange) {
+pub(in crate::lower) fn unknown_import_target(ctx: &mut LowerCtx, module: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
         format!("unknown import target: '{module}'"),
@@ -19,7 +19,7 @@ pub(super) fn unknown_import_target(ctx: &mut LowerCtx, module: &str, range: Tex
     );
 }
 
-pub(super) fn deferred_compat_module(
+pub(in crate::lower) fn deferred_compat_module(
     ctx: &mut LowerCtx,
     module: &str,
     reason: &str,
@@ -32,7 +32,7 @@ pub(super) fn deferred_compat_module(
     );
 }
 
-pub(super) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange) {
+pub(in crate::lower) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::IMPORT_UNSUPPORTED_FORM,
         format!("unsupported import form: {form}"),
@@ -40,7 +40,12 @@ pub(super) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange)
     );
 }
 
-pub(super) fn private_member(ctx: &mut LowerCtx, module: &str, name: &str, range: TextRange) {
+pub(in crate::lower) fn private_member(
+    ctx: &mut LowerCtx,
+    module: &str,
+    name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::IMPORT_PRIVATE_MEMBER,
         format!("cannot import private name '{name}' from module '{module}'"),

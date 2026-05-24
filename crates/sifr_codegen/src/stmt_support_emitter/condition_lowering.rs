@@ -1,5 +1,6 @@
+use super::{HirExpr, RustEmitter, Type};
 impl RustEmitter {
-    fn lower_condition_expr_for_ir(
+    pub(crate) fn lower_condition_expr_for_ir(
         &mut self,
         condition: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
@@ -125,7 +126,7 @@ impl RustEmitter {
         self.lower_rendered_expr_for_ir(condition)
     }
 
-    fn option_binding_value_expr_for_ir(&self, option_var: &str) -> crate::RustExpr {
+    pub(crate) fn option_binding_value_expr_for_ir(&self, option_var: &str) -> crate::RustExpr {
         let base = crate::RustExpr::Ident(option_var.to_string());
         if self.borrowed_params.contains(option_var)
             || self.mut_borrowed_params.contains(option_var)
@@ -140,7 +141,7 @@ impl RustEmitter {
         }
     }
 
-    fn option_binding_pattern_for_ir(&self, option_var: &str) -> String {
+    pub(crate) fn option_binding_pattern_for_ir(&self, option_var: &str) -> String {
         let is_borrowed_param = self.borrowed_params.contains(option_var)
             || self.mut_borrowed_params.contains(option_var);
         if is_borrowed_param {
@@ -150,7 +151,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_collection_truthiness_condition_for_ir(
+    pub(crate) fn try_lower_collection_truthiness_condition_for_ir(
         condition: &HirExpr,
     ) -> Option<crate::RustExpr> {
         fn is_collection_truthy_type(ty: &Type) -> bool {
@@ -190,7 +191,7 @@ impl RustEmitter {
         None
     }
 
-    fn try_lower_numeric_truthiness_condition_for_ir(
+    pub(crate) fn try_lower_numeric_truthiness_condition_for_ir(
         condition: &HirExpr,
     ) -> Option<crate::RustExpr> {
         match condition {
@@ -257,7 +258,9 @@ impl RustEmitter {
         }
     }
 
-    fn zero_literal_for_numeric_truthiness_type_for_ir(ty: &Type) -> Option<crate::RustExpr> {
+    pub(crate) fn zero_literal_for_numeric_truthiness_type_for_ir(
+        ty: &Type,
+    ) -> Option<crate::RustExpr> {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::Cast {
                 expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
@@ -280,5 +283,4 @@ impl RustEmitter {
             _ => None,
         }
     }
-
 }

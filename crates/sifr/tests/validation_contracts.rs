@@ -1,12 +1,11 @@
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
-#[path = "validation_contracts/mod.rs"]
-mod validation_contracts;
+mod validation_contract_support;
 
 #[test]
 #[ignore = "invoked explicitly by scripts/run_validation_contract_matrix.sh"]
 fn test_validation_contract_matrix() {
-    if let Err(error) = validation_contracts::run() {
+    if let Err(error) = validation_contract_support::run() {
         panic!("{error}");
     }
 }

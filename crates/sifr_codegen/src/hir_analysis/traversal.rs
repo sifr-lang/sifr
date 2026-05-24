@@ -1,2 +1,4 @@
-include!("traversal/traversal_impl.rs");
-include!("traversal/tests.rs");
+mod traversal_impl;
+pub(crate) use traversal_impl::*;
+#[cfg(test)]
+mod tests;

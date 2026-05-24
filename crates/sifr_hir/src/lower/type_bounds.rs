@@ -103,7 +103,7 @@ fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
 }
 
 /// Check if a type satisfies a named bound (hard requirement).
-pub(super) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bool {
+pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bool {
     if let Type::TypeVar(tv_name) = ty {
         return typevar_satisfies_spec(tv_name, bound, ctx);
     }
@@ -128,7 +128,11 @@ pub(super) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bo
 }
 
 /// Check if a type satisfies a `TypeVar` constraints entry (`TypeVar("T", A, B)` / `T: (A, B)`).
-pub(super) fn type_satisfies_constraint(ty: &Type, constraint_name: &str, ctx: &LowerCtx) -> bool {
+pub(in crate::lower) fn type_satisfies_constraint(
+    ty: &Type,
+    constraint_name: &str,
+    ctx: &LowerCtx,
+) -> bool {
     let encoded = encode_typevar_constraint(constraint_name);
     if let Type::TypeVar(tv_name) = ty {
         return typevar_satisfies_spec(tv_name, &encoded, ctx);

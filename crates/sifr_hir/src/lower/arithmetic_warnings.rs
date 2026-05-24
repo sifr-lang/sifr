@@ -2,7 +2,7 @@ use super::LowerCtx;
 use crate::HirExpr;
 use ruff_text_size::TextRange;
 
-pub(super) fn check_int_overflow_risk(
+pub(in crate::lower) fn check_int_overflow_risk(
     op: &str,
     left: &HirExpr,
     right: &HirExpr,
