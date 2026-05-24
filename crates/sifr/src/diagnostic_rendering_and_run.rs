@@ -8,6 +8,7 @@ use super::cli_model_and_entrypoint::{
     DiagnosticFormat, PackageGraphContext, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
     EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC, MAX_COMPACT_REPRESENTATIVE_LOCATIONS,
 };
+use super::workspace_run_selection::resolve_run_session;
 use sifr_diagnostics::{ChildSeverity, DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build_cached_package_project, CachedBinaryArtifact,
@@ -171,6 +172,7 @@ pub(super) fn cmd_run(
     target: Option<&str>,
     bin: Option<&str>,
     script: Option<&str>,
+    packages: &[String],
     app_args: &[String],
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
@@ -197,12 +199,39 @@ pub(super) fn cmd_run(
                 return EXIT_USAGE_OR_CONFIG;
             }
         };
+    let session = match resolve_run_session(session, target, packages, lock_mode, diagnostic_format)
+    {
+        Ok(session) => session,
+        Err(exit_code) => return exit_code,
+    };
+    cmd_run_with_session(
+        &session,
+        target,
+        bin,
+        script,
+        app_args,
+        lock_mode,
+        diagnostic_format,
+        0,
+    )
+}
+
+fn cmd_run_with_session(
+    session: &sifr_package::PackageSession,
+    target: Option<&str>,
+    bin: Option<&str>,
+    script: Option<&str>,
+    app_args: &[String],
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+    script_depth: u8,
+) -> i32 {
     let plan = session.plan_run(&sifr_package::PackageRunRequest {
         target_or_path: target.map(str::to_string),
         bin: bin.map(str::to_string),
         script: script.map(str::to_string),
         app_args: app_args.to_vec(),
-        script_depth: 0,
+        script_depth,
     });
     let plan = match plan {
         Ok(plan) => plan,
@@ -212,7 +241,7 @@ pub(super) fn cmd_run(
         }
     };
     if let Some(origin) = plan.script_origin {
-        return cmd_script(&origin, diagnostic_format);
+        return cmd_script(&origin, Some(session), lock_mode, diagnostic_format);
     }
     if let Some(
         sifr_package::ResolvedRunTarget::File(path)
@@ -232,17 +261,35 @@ pub(super) fn cmd_run(
 
 pub(super) fn cmd_script(
     origin: &sifr_package::ScriptOrigin,
+    run_session: Option<&sifr_package::PackageSession>,
+    lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
     match origin.command.as_str() {
-        "run" => cmd_run(
-            origin.args.first().map(String::as_str),
-            None,
-            None,
-            &[],
-            sifr_package::CargoLockMode::Normal,
-            diagnostic_format,
-        ),
+        "run" => {
+            if let Some(session) = run_session {
+                cmd_run_with_session(
+                    session,
+                    origin.args.first().map(String::as_str),
+                    None,
+                    None,
+                    &[],
+                    lock_mode,
+                    diagnostic_format,
+                    1,
+                )
+            } else {
+                cmd_run(
+                    origin.args.first().map(String::as_str),
+                    None,
+                    None,
+                    &[],
+                    &[],
+                    lock_mode,
+                    diagnostic_format,
+                )
+            }
+        }
         "check" => cmd_check(
             origin
                 .args
@@ -251,19 +298,15 @@ pub(super) fn cmd_script(
                 .map(Path::new),
             None,
             &sifr_package::CargoPackageSelection::default(),
-            sifr_package::CargoLockMode::Normal,
+            lock_mode,
             diagnostic_format,
         ),
-        "fetch" => cmd_fetch(sifr_package::CargoLockMode::Normal, diagnostic_format),
-        "tree" => cmd_tree(
-            sifr_package::CargoLockMode::Normal,
-            &origin.args,
-            diagnostic_format,
-        ),
+        "fetch" => cmd_fetch(lock_mode, diagnostic_format),
+        "tree" => cmd_tree(lock_mode, &origin.args, diagnostic_format),
         "package" => cmd_package(
             &sifr_package::CargoPackageSelection::default(),
             &sifr_package::CargoPackageArchiveOptions::default(),
-            sifr_package::CargoLockMode::Normal,
+            lock_mode,
             diagnostic_format,
         ),
         "publish" => cmd_publish(
@@ -272,7 +315,7 @@ pub(super) fn cmd_script(
                 dry_run: origin.args.iter().any(|arg| arg == "--dry-run"),
                 ..sifr_package::CargoPublishOptions::default()
             },
-            sifr_package::CargoLockMode::Normal,
+            lock_mode,
             diagnostic_format,
         ),
         "vendor" => cmd_vendor(
@@ -282,7 +325,7 @@ pub(super) fn cmd_script(
                 .map(Path::new)
                 .unwrap_or_else(|| Path::new("vendor")),
             &sifr_package::CargoVendorOptions::default(),
-            sifr_package::CargoLockMode::Normal,
+            lock_mode,
             diagnostic_format,
         ),
         _ => {

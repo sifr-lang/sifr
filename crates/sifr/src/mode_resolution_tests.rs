@@ -4,6 +4,7 @@ use crate::cli_model_and_entrypoint::{
     Cli, Commands, CompilationMode, DiagnosticFormat, InvocationWorkspace, EXIT_SUCCESS,
     EXIT_USER_DIAGNOSTIC,
 };
+use crate::diagnostic_rendering_and_run::cmd_run;
 use clap::Parser;
 use sifr_diagnostics::{DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity};
 use std::collections::BTreeMap;
@@ -346,11 +347,12 @@ pub(super) fn test_package_cli_repair_check_reports_projection_drift() {
 #[test]
 pub(super) fn test_package_cli_parses_run_script_bin_and_app_args() {
     let cli = Cli::try_parse_from([
-        "sifr", "run", "--script", "dev", "--locked", "--", "--port", "8080",
+        "sifr", "run", "-p", "demo-app", "--script", "dev", "--locked", "--", "--port", "8080",
     ])
     .expect("run script cli parses");
 
     let Some(Commands::Run {
+        packages,
         script,
         locked,
         args,
@@ -359,6 +361,7 @@ pub(super) fn test_package_cli_parses_run_script_bin_and_app_args() {
     else {
         panic!("expected run command");
     };
+    assert_eq!(packages, ["demo-app"]);
     assert_eq!(script.as_deref(), Some("dev"));
     assert!(locked);
     assert_eq!(args, ["--port", "8080"]);
@@ -368,6 +371,81 @@ pub(super) fn test_package_cli_parses_run_script_bin_and_app_args() {
         panic!("expected run command");
     };
     assert_eq!(bin.as_deref(), Some("admin"));
+}
+
+#[test]
+pub(super) fn test_package_cli_run_selects_workspace_package_from_root() {
+    let project = TestProject::new("package_cli_workspace_run_selection");
+    project.write(
+        "Cargo.toml",
+        "[workspace]\nmembers = [\"packages/app\"]\ndefault-members = [\"packages/app\"]\nresolver = \"2\"\n",
+        "workspace manifest should be written",
+    );
+    let app_root = project.dir.join("packages/app");
+    write_real_sifr_package(&app_root, "sifr-demo-app", "demo_app", "");
+    let sifr_manifest = app_root.join("sifr.toml");
+    let manifest_source =
+        std::fs::read_to_string(&sifr_manifest).expect("sifr manifest should be readable");
+    std::fs::write(
+        &sifr_manifest,
+        format!("{manifest_source}\n[scripts]\nadmin-script = {{ command = \"run\", args = [\"admin\"] }}\n"),
+    )
+    .expect("sifr manifest should include script");
+    std::fs::write(
+        app_root.join("src/main.sifr"),
+        "def main():\n    print(\"workspace default\")\n",
+    )
+    .expect("main app should be written");
+    std::fs::create_dir_all(app_root.join("src/bin")).expect("bin dir should exist");
+    std::fs::write(
+        app_root.join("src/bin/admin.sifr"),
+        "def main():\n    print(\"workspace admin\")\n",
+    )
+    .expect("bin app should be written");
+
+    let exit_codes = {
+        let _cwd = enter_test_cwd(&project.dir);
+        [
+            cmd_run(
+                None,
+                None,
+                None,
+                &["sifr-demo-app".to_string()],
+                &[],
+                sifr_package::CargoLockMode::Normal,
+                DiagnosticFormat::Compact,
+            ),
+            cmd_run(
+                None,
+                Some("admin"),
+                None,
+                &["sifr-demo-app".to_string()],
+                &[],
+                sifr_package::CargoLockMode::Normal,
+                DiagnosticFormat::Compact,
+            ),
+            cmd_run(
+                None,
+                None,
+                Some("admin-script"),
+                &["sifr-demo-app".to_string()],
+                &[],
+                sifr_package::CargoLockMode::Normal,
+                DiagnosticFormat::Compact,
+            ),
+            cmd_run(
+                None,
+                None,
+                None,
+                &[],
+                &[],
+                sifr_package::CargoLockMode::Normal,
+                DiagnosticFormat::Compact,
+            ),
+        ]
+    };
+
+    assert_eq!(exit_codes, [EXIT_SUCCESS; 4]);
 }
 
 #[test]

@@ -160,8 +160,17 @@ pub(super) fn load_package_graph_context(
     if session.manifest_less_mode {
         return Ok(None);
     }
+    load_package_graph_context_from_root(&session.workspace_root, lock_mode, diagnostic_format)
+        .map(Some)
+}
+
+pub(super) fn load_package_graph_context_from_root(
+    workspace_root: &Path,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<PackageGraphContext, i32> {
     let metadata_plan =
-        sifr_package::CargoCommandPlan::metadata(session.workspace_root.clone(), lock_mode);
+        sifr_package::CargoCommandPlan::metadata(workspace_root.to_path_buf(), lock_mode);
     let output = match std::process::Command::new(&metadata_plan.program)
         .args(&metadata_plan.args)
         .current_dir(&metadata_plan.current_dir)
@@ -224,11 +233,11 @@ pub(super) fn load_package_graph_context(
             return Err(EXIT_USER_DIAGNOSTIC);
         }
     };
-    Ok(Some(PackageGraphContext {
+    Ok(PackageGraphContext {
         metadata: normalized,
         graph,
         source_map,
-    }))
+    })
 }
 
 pub(super) fn paths_equal(left: &Path, right: &Path) -> bool {

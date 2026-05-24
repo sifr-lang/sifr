@@ -423,6 +423,12 @@ def check_workspace_template(repo_path: Path, failures: List[str]) -> None:
     app_toml = (repo_path / "packages/app/Cargo.toml").read_text(encoding="utf-8")
     if "workspace = true" not in app_toml or "backend-utils" not in app_toml:
         failures.append("sifr-demo-workspace app must inherit workspace deps and reach backend")
+    app_manifest = load_toml(repo_path / "packages/app/sifr.toml", failures)
+    scripts = app_manifest.get("scripts", {})
+    if "status-smoke" not in scripts:
+        failures.append("sifr-demo-workspace app must define status-smoke run script")
+    if not (repo_path / "packages/app/src/bin/status.sifr").exists():
+        failures.append("sifr-demo-workspace app must include src/bin/status.sifr")
     for member in ["core", "utils", "app"]:
         member_root = repo_path / f"packages/{member}"
         check_production_sifr_manifest(

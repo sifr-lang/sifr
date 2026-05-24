@@ -51,6 +51,7 @@ pub struct CargoMetadata {
     pub packages: Vec<CargoPackage>,
     pub resolve_edges: Vec<CargoResolveEdge>,
     pub workspace_members: BTreeSet<CargoPackageId>,
+    pub workspace_default_members: BTreeSet<CargoPackageId>,
     pub target_directory: PathBuf,
     pub workspace_root: PathBuf,
 }
@@ -60,6 +61,7 @@ pub struct NormalizedCargoMetadata {
     pub packages: BTreeMap<CargoPackageId, CargoPackage>,
     pub resolve_edges: Vec<CargoResolveEdge>,
     pub workspace_members: BTreeSet<CargoPackageId>,
+    pub workspace_default_members: BTreeSet<CargoPackageId>,
     pub target_directory: PathBuf,
     pub workspace_root: PathBuf,
 }
@@ -106,6 +108,7 @@ impl CargoMetadata {
             packages,
             resolve_edges,
             workspace_members: self.workspace_members,
+            workspace_default_members: self.workspace_default_members,
             target_directory: self.target_directory,
             workspace_root: self.workspace_root,
         }
@@ -124,6 +127,8 @@ struct RawCargoMetadata {
     packages: Vec<RawCargoPackage>,
     resolve: Option<RawCargoResolve>,
     workspace_members: Vec<String>,
+    #[serde(default)]
+    workspace_default_members: Vec<String>,
     target_directory: PathBuf,
     workspace_root: PathBuf,
 }
@@ -211,11 +216,17 @@ impl TryFrom<RawCargoMetadata> for CargoMetadata {
             .into_iter()
             .map(CargoPackageId)
             .collect();
+        let workspace_default_members = raw
+            .workspace_default_members
+            .into_iter()
+            .map(CargoPackageId)
+            .collect();
 
         Ok(Self {
             packages,
             resolve_edges,
             workspace_members,
+            workspace_default_members,
             target_directory: raw.target_directory,
             workspace_root: raw.workspace_root,
         })

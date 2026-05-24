@@ -274,6 +274,26 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
+    pub fn workspace_run_ambiguous(candidates: &[String]) -> Self {
+        let details = if candidates.is_empty() {
+            "no runnable Sifr app package matched workspace default members".to_string()
+        } else {
+            format!(
+                "workspace default members with runnable Sifr apps: {}",
+                candidates.join(", ")
+            )
+        };
+        Self {
+            code: DiagnosticCode::PACKAGE_RUN_TARGET_AMBIGUOUS,
+            message: format!("ambiguous workspace package run target: {details}"),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: None,
+            }),
+            help: Some("run from a package directory or use `sifr run -p <package>`".to_string()),
+        }
+    }
+
+    #[must_use]
     pub fn invalid_app_target_name(target: &str) -> Self {
         Self {
             code: DiagnosticCode::PACKAGE_INVALID_APP_TARGET_NAME,

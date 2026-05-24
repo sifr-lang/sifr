@@ -337,7 +337,7 @@ impl PackageSession {
         self.manifest.as_ref()?.scripts.get(name)
     }
 
-    fn find_app_target(&self, name: &str) -> Result<AppTarget, PackageDiagnostic> {
+    pub(super) fn find_app_target(&self, name: &str) -> Result<AppTarget, PackageDiagnostic> {
         self.lookup_app_target(name)?
             .ok_or_else(|| PackageDiagnostic::run_target_ambiguous(name, &[]))
     }
@@ -349,7 +349,7 @@ impl PackageSession {
             .find(|target| target.name == name))
     }
 
-    fn default_app_target(&self) -> Result<Option<AppTarget>, PackageDiagnostic> {
+    pub(super) fn default_app_target(&self) -> Result<Option<AppTarget>, PackageDiagnostic> {
         let targets = self.discover_app_targets()?;
         if let Some(main) = targets
             .iter()
