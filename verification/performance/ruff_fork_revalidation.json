@@ -1,6 +1,6 @@
 {
-  "ruff_fork_revision": "d2a5f1fb7fb3f8677607b52ef35d6fa6e3e3464f",
+  "ruff_fork_revision": "b251656613629e054308951a4df1928b3f749b1b",
   "validated_by": "verification/performance/check_ruff_fork_update_contract.py",
   "fixture_directory": "verification/performance/sifr_syntax_token_fixtures",
-  "rationale": "Initial Phase 35 syntax wrapper fixture validation for the checked-in Sifr Ruff fork pin."
+  "rationale": "Production formatter Milestone 1 revalidation for the merged Sifr Ruff formatter seed. Commit b251656613629e054308951a4df1928b3f749b1b changes Ruff formatter integration points only; representative Sifr token fixture expectations remain valid for the checked-in fork pin."
 }

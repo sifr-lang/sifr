@@ -1,14 +1,14 @@
 # Ad Hoc Phase Execution: Production-Grade Sifr Formatter
 
-Status: planning approved
+Status: implementation in progress
 
 Phase contract: `issues/ad-hoc-production-grade-sifr-formatter.md`
 
 ## Checklist
 
-- [ ] Phase plan reviewed and approved for implementation
+- [x] Phase plan reviewed and approved for implementation
 - [x] Ruff fork parameter-convention formatter PR merged and submodule pinned
-- [ ] Ruff-to-Sifr formatter capability matrix created
+- [x] Ruff-to-Sifr formatter capability matrix created
 - [ ] Ruff fork formatter Sifr AST support completed
 - [ ] Sifr formatter core switched to Ruff-backed in-process formatting
 - [ ] CLI and config parity completed
@@ -373,6 +373,9 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Claude Opus review pass 11 confirmed the fork-baseline contract is explicit and correctly treats `sifr-lang/ruff#1` as merged seed work, with one process blocker: the checked baseline checklist item must only remain checked once `.gitmodules` and the `third_party/ruff` submodule pointer are committed on this branch.
 - `2026-05-26`: Claude Opus review pass 12 confirmed the pass-11 submodule commit blocker was resolved and the fork-baseline contract is explicit, with one remaining process blocker: the local branch had not yet been pushed to origin after the amended commit.
 - `2026-05-26`: Claude Opus review pass 13 confirmed the branch is synchronized with origin, `third_party/ruff` is committed at `b251656613629e054308951a4df1928b3f749b1b`, `.gitmodules` tracks `sifr/0.15.12-maintenance`, the phase forbids feature-branch/local-only/wrapper-post-processing dependencies, and the phase is implementation-ready with no remaining blockers.
+- `2026-05-26`: Milestone 1 implementation review requested for checked formatter capability, CLI parity, AST coverage, and Ruff baseline manifests.
+- `2026-05-26`: Claude Opus Milestone 1 review pass 1 approved the manifests and baseline checks, with one blocking pre-existing validation issue: `verification/tooling/check_phase36_closeout.py` still referenced the pre-archive Phase 36 execution issue path.
+- `2026-05-26`: Claude Opus Milestone 1 review pass 2 confirmed the archive-path fix resolves the pass-1 blocker and explicitly approved Milestone 1 to close so Milestone 2 may begin.
 
 ## Validation Log
 
@@ -383,7 +386,15 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-25`: `scripts/run_all_tests.sh --profile quick` was run for this planning PR and reached the existing Phase 36 closeout guardrail before failing on `required closeout doc missing: issues/phase36-developer-tooling-execution.md`. That failure is outside this formatter-planning scope because Phase 36 is already complete and its execution issue has been archived on the current branch. No Phase 36 files or guardrails are changed by this phase PR.
 - `2026-05-25`: after adding the LSP-first editor formatter plan, `scripts/run_all_tests.sh --profile quick` was rerun. It passed HIR/file-size/driver/package-manager guardrails, diagnostic checks, Phase 35 split-brain checks, developer tooling checks, VS Code extension contract/package checks, formatter contract checks, rule/suppression checks, analysis snapshot/split-brain checks, tooling parity, completion quality self-test, LSP protocol smoke/stress checks, and editor asset checks, then reached the same existing Phase 36 closeout guardrail failure: `required closeout doc missing: issues/phase36-developer-tooling-execution.md`.
 - Validation evidence will be recorded per implementation milestone before merge.
+- `2026-05-26`: Milestone 1 added machine-readable manifests under `verification/tooling/formatter_manifests/` for the Ruff baseline, Ruff-to-Sifr formatter capability matrix, formatter CLI parity, and current Sifr AST formatter coverage inventory.
+- `2026-05-26`: Milestone 1 added `verification/tooling/check_formatter_phase_manifests.py` and wired it into `scripts/run_all_tests.sh` after the Phase 36 formatter contract check.
+- `2026-05-26`: Milestone 1 restored `third_party/ruff` to `b251656613629e054308951a4df1928b3f749b1b` and revalidated the Phase 35 syntax token fixture revision metadata because the seed commit changes Ruff formatter files, not parser tokenization.
+- `2026-05-26`: Milestone 1 targeted validation passed: `python3 verification/tooling/check_formatter_phase_manifests.py`, `python3 verification/tooling/check_formatter_phase_manifests.py --self-test`, `python3 verification/performance/check_ruff_fork_update_contract.py`, `cargo test -p sifr_syntax`, `python3 verification/tooling/check_formatter_contract.py`, `python3 verification/tooling/check_formatter_contract.py --self-test`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check`.
+- `2026-05-26`: `scripts/run_all_tests.sh --profile quick` passed the new formatter manifest gate and all developer tooling gates through editor assets, then stopped at the existing archived Phase 36 closeout guardrail: `required closeout doc missing: issues/phase36-developer-tooling-execution.md`. The lane report was written to `target/validation_lane_reports/quick.latest.json`.
+- `2026-05-26`: Milestone 1 fixed the Phase 36 closeout guardrail to reference `issues/archive/phase36-developer-tooling-execution.md`, matching the archived issue layout.
+- `2026-05-26`: `python3 verification/tooling/check_phase36_closeout.py`, `python3 verification/tooling/check_phase36_closeout.py --self-test`, and `git diff --check` passed after the archive-path fix.
+- `2026-05-26`: `scripts/run_all_tests.sh --profile quick` passed end to end after the archive-path fix. The lane report was written to `target/validation_lane_reports/quick.latest.json`; it recorded a warm wall-time advisory but exit status was 0.
 
 ## PR Log
 
-Implementation PR links will be recorded here as each milestone closes.
+- Milestone 1 `formatter_contract_manifests_and_ast_inventory`: <https://github.com/sifr-lang/sifr/pull/2175>
