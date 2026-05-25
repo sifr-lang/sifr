@@ -442,7 +442,15 @@ pub(super) fn cmd_fetch(
     let Some(cargo) = session.plan_fetch().cargo else {
         return EXIT_SUCCESS;
     };
-    execute_cargo_plan(&cargo, lock_mode, diagnostic_format)
+    let exit = execute_cargo_plan(&cargo, lock_mode, diagnostic_format);
+    if exit == EXIT_SUCCESS {
+        let _ = writeln!(io::stderr(), "{}", fetch_success_message());
+    }
+    exit
+}
+
+pub(super) const fn fetch_success_message() -> &'static str {
+    "fetched package dependencies successfully"
 }
 
 pub(super) fn cmd_tree(

@@ -4,7 +4,7 @@ use crate::cli_model_and_entrypoint::{
     Cli, Commands, CompilationMode, DiagnosticFormat, InvocationWorkspace, EXIT_SUCCESS,
     EXIT_USER_DIAGNOSTIC,
 };
-use crate::diagnostic_rendering_and_run::cmd_run;
+use crate::diagnostic_rendering_and_run::{cmd_run, fetch_success_message};
 use clap::Parser;
 use sifr_diagnostics::{DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity};
 use std::collections::BTreeMap;
@@ -446,6 +446,14 @@ pub(super) fn test_package_cli_run_selects_workspace_package_from_root() {
     };
 
     assert_eq!(exit_codes, [EXIT_SUCCESS; 4]);
+}
+
+#[test]
+pub(super) fn test_package_cli_fetch_success_message_is_user_visible() {
+    assert_eq!(
+        fetch_success_message(),
+        "fetched package dependencies successfully"
+    );
 }
 
 #[test]
