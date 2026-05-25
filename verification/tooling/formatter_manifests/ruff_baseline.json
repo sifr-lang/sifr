@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "submodule_path": "third_party/ruff",
+  "repository": "https://github.com/sifr-lang/ruff.git",
+  "required_branch": "sifr/0.15.12-maintenance",
+  "required_seed_pr": "sifr-lang/ruff#1",
+  "required_seed_commit": "b251656613629e054308951a4df1928b3f749b1b",
+  "required_seed_subject": "Format Sifr parameter conventions (#1)",
+  "required_seed_paths": [
+    "crates/ruff_python_formatter/src/lib.rs",
+    "crates/ruff_python_formatter/src/other/parameter.rs"
+  ],
+  "forbidden_dependency_modes": [
+    "ruff cli subprocess",
+    "deleted formatter feature branch",
+    "local-only formatter patch",
+    "sifr wrapper parameter post-processing"
+  ]
+}

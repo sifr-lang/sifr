@@ -139,6 +139,8 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_phase_manifests.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_phase_manifests.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py"

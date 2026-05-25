@@ -13,7 +13,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUN_ALL = REPO_ROOT / "scripts" / "run_all_tests.sh"
 PHASE_DOC = REPO_ROOT / "internal_docs" / "phases" / "36_developer_tooling_and_ecosystem_hooks.md"
-ISSUE_DOC = REPO_ROOT / "issues" / "phase36-developer-tooling-execution.md"
+ISSUE_DOC = REPO_ROOT / "issues" / "archive" / "phase36-developer-tooling-execution.md"
 TOOLING_VERIFICATION_DOC = REPO_ROOT / "internal_docs" / "tooling_verification.md"
 REUSE_DOC = REPO_ROOT / "internal_docs" / "tooling_reuse_strategy.md"
 TOOLING_ROOT = REPO_ROOT / "verification" / "tooling"
