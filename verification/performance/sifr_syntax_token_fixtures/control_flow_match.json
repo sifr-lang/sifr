@@ -1,7 +1,7 @@
 {
   "id": "control-flow-match",
   "source_path": "inline",
-  "ruff_fork_revision": "f9da46641894c8a2380b1e0f17bed68f09c46643",
+  "ruff_fork_revision": "8b95ca3d888910aa39632cd9873c05de5121ab67",
   "source": "def classify(value: int) -> str:\n    if value < 0:\n        return \"negative\"\n    elif value == 0:\n        return \"zero\"\n    else:\n        match value:\n            case 1:\n                return \"one\"\n            case _:\n                return \"many\"\n",
   "expected_token_kinds": [
     "Def",

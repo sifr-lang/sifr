@@ -1,0 +1,29 @@
+# Formatter showcase input.
+#
+# This file intentionally does not use the `.sifr` extension. During the
+# production formatter phase, copy it to a temporary `.sifr` file, run
+# `sifr fmt`, and record the before/after output in the milestone closeout.
+
+
+def normalize_scores(own mut scores: list[int], bonus: int) -> list[int]:
+    """
+    Keep this docstring as part of formatter validation.
+
+    ```sifr
+    def sample( mut own values:list[int])->list[int]:
+        values.append(1)
+        return values
+    ```
+    """
+    scores.append(bonus)
+    if len(scores) > 3:
+        scores[0] = scores[0] + bonus
+    else:
+        scores.append(0)
+    return scores
+
+
+def main() -> None:
+    values = [1, 2, 3]
+    updated = normalize_scores(values, 4)
+    print(updated)

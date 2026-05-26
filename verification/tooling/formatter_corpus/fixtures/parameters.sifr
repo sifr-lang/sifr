@@ -1,0 +1,9 @@
+def combine(
+    items: list[int],
+    mut borrowed: list[int],
+    own taken: list[int],
+    own mut transformed: list[int],
+) -> list[int]:
+    transformed.append(len(items))
+    borrowed.append(len(taken))
+    return transformed

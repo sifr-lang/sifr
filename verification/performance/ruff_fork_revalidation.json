@@ -1,6 +1,6 @@
 {
-  "ruff_fork_revision": "f9da46641894c8a2380b1e0f17bed68f09c46643",
+  "ruff_fork_revision": "8b95ca3d888910aa39632cd9873c05de5121ab67",
   "validated_by": "verification/performance/check_ruff_fork_update_contract.py",
   "fixture_directory": "verification/performance/sifr_syntax_token_fixtures",
-  "rationale": "Production formatter Milestone 2 revalidation for the merged Sifr Ruff formatter AST coverage update. Commit f9da46641894c8a2380b1e0f17bed68f09c46643 changes Ruff formatter integration points and fixtures only; representative Sifr token fixture expectations remain valid for the checked-in fork pin."
+  "rationale": "Production formatter Milestone 2 revalidation for the merged Sifr Ruff formatter AST coverage update. Commit 8b95ca3d888910aa39632cd9873c05de5121ab67 changes Ruff formatter integration points and fixtures only; representative Sifr token fixture expectations remain valid for the checked-in fork pin."
 }

@@ -1,7 +1,7 @@
 {
   "id": "async-and-error-handling",
   "source_path": "inline",
-  "ruff_fork_revision": "f9da46641894c8a2380b1e0f17bed68f09c46643",
+  "ruff_fork_revision": "8b95ca3d888910aa39632cd9873c05de5121ab67",
   "source": "async def fetch() -> Result[str, Error]:\n    result = await worker()\n    if result.is_err():\n        return Err(ValueError(\"failed\"))\n    return Ok(result.unwrap())\n",
   "expected_token_kinds": [
     "Async",

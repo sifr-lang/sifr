@@ -4,8 +4,9 @@
 use ruff_formatter::printer::LineEnding;
 use ruff_formatter::LineWidth;
 use ruff_python_formatter::{
-    format_sifr_module_source, format_sifr_range as ruff_format_sifr_range, FormatModuleError,
-    PreviewMode, PyFormatOptions,
+    format_sifr_module_source, format_sifr_range as ruff_format_sifr_range, DocstringCode,
+    DocstringCodeLineWidth as RuffDocstringCodeLineWidth, FormatModuleError, PreviewMode,
+    PyFormatOptions,
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
@@ -21,6 +22,8 @@ pub struct FormatOptions {
     pub final_newline: bool,
     pub line_length: u16,
     pub preview: bool,
+    pub docstring_code_format: bool,
+    pub docstring_code_line_length: DocstringCodeLineLength,
 }
 
 impl Default for FormatOptions {
@@ -29,8 +32,16 @@ impl Default for FormatOptions {
             final_newline: true,
             line_length: 88,
             preview: false,
+            docstring_code_format: false,
+            docstring_code_line_length: DocstringCodeLineLength::Dynamic,
         }
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DocstringCodeLineLength {
+    Dynamic,
+    Fixed(u16),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -237,10 +248,29 @@ fn ruff_options(
     } else {
         PreviewMode::Disabled
     };
+    let docstring_code = if options.docstring_code_format {
+        DocstringCode::Enabled
+    } else {
+        DocstringCode::Disabled
+    };
+    let docstring_code_line_width = match options.docstring_code_line_length {
+        DocstringCodeLineLength::Dynamic => RuffDocstringCodeLineWidth::Dynamic,
+        DocstringCodeLineLength::Fixed(width) => {
+            RuffDocstringCodeLineWidth::Fixed(LineWidth::try_from(width).map_err(|_| {
+                vec![unsupported_option_diagnostic(
+                    file,
+                    "docstring_code_line_length",
+                    "docstring code line length must be between 1 and 65535",
+                )]
+            })?)
+        }
+    };
     Ok(py_options
         .with_line_ending(LineEnding::LineFeed)
         .with_line_width(line_width)
-        .with_preview(preview))
+        .with_preview(preview)
+        .with_docstring_code(docstring_code)
+        .with_docstring_code_line_width(docstring_code_line_width))
 }
 
 fn validate_range(
@@ -567,5 +597,32 @@ mod tests {
             diagnostics[0].message,
             "unsupported formatter option: final_newline=false"
         );
+    }
+
+    #[test]
+    fn docstring_code_formatting_reuses_sifr_ruff_formatter() {
+        let source = r#"def documented(mut own values:list[int])->list[int]:
+    """
+    ```sifr
+    def sample( mut own items:list[int])->list[int]:
+        return [item for item in items if item>0]
+    ```
+    """
+    return values
+"#;
+        let formatted = format_source(
+            source,
+            None,
+            FormatOptions {
+                docstring_code_format: true,
+                ..FormatOptions::default()
+            },
+        )
+        .expect("source should format")
+        .formatted;
+        assert!(formatted.contains("def documented(own mut values: list[int]) -> list[int]:"));
+        assert!(formatted.contains("def sample(own mut items: list[int]) -> list[int]:"));
+        assert!(formatted.contains("item > 0"));
+        parse_module(&formatted, None).expect("formatted source should parse");
     }
 }

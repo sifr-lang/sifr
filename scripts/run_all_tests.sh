@@ -141,6 +141,8 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_phase_manifests.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_phase_manifests.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_ast_coverage.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_ast_coverage.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py"
@@ -174,6 +176,8 @@ run_performance_budget_subset() {
     --case check-project-004-project-graph \
     --case build-single-file-001-break-continue \
     --case build-project-001-additional-modules \
+    --case formatter-corpus-001-project-check \
+    --case formatter-large-file-001-check \
     --case incremental-local-loop-001-unchanged-file-update \
     --case interactive-tooling-foundation-002-warm-diagnostics-query \
     --case phase27-non-regression-002-json-diagnostic-schema \
@@ -185,6 +189,8 @@ run_performance_budget_subset() {
 if [[ "${PROFILE}" == "quick" ]]; then
   python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" \
     --sample-scale smoke \
+    --case formatter-corpus-001-project-check \
+    --case formatter-large-file-001-check \
     --case incremental-local-loop-001-unchanged-file-update \
     --case interactive-tooling-foundation-002-warm-diagnostics-query
 else
