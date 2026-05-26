@@ -131,6 +131,22 @@ m36.2 lint foundation:
 - implements the first suppressible policy rule, `trailing-whitespace`
 - supports diagnostics modes and include/exclude discovery options without applying excludes to explicit file targets
 
+Ad hoc production-grade linter phase:
+
+- phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
+- execution tracker: `issues/ad-hoc-production-grade-sifr-linter-execution.md`
+- Ruff rule-family/config audit manifest: `verification/tooling/linter_manifests/ruff_rule_config_audit.json`
+- lint CLI parity manifest: `verification/tooling/linter_manifests/lint_cli_parity.json`
+- rule metadata manifest: `verification/tooling/linter_manifests/lint_rule_metadata.json`
+- suppression-gate manifest: `verification/tooling/linter_manifests/suppression_gate.json`
+- enforcement: `python3 verification/tooling/check_linter_reuse_contract.py`
+
+The ad hoc phase keeps Ruff Python rule families, Ruff's Python rule registry,
+Ruff Server diagnostic behavior, and Python project/module semantics out of
+Sifr lint authority. Milestone 1 locks those decisions in machine-readable
+manifests before config, discovery, parser-aware suppressions, phase-gated
+orchestration, fix support, or editor actions are expanded.
+
 ## Generated Rust And Test Metadata
 
 Generated Rust preview uses compiler/codegen APIs and source maps. It must be cancellable, revision-checked, budgeted under `lsp-generated-rust-preview`, and must not return partial generated code after a document change invalidates the request.

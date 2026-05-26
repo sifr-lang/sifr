@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "authority": "sifr.toml",
+  "table": "lint",
+  "state": "placeholder-unimplemented",
+  "planned_tables": ["lint", "lint.rules", "lint.per-file-ignores"],
+  "notes": "Milestone 2 replaces this placeholder with the implemented Sifr-owned lint config schema."
+}

@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "gate_state": "physical_line_only",
+  "allowed_rule_families": ["physical-line"],
+  "parser_aware_api": "sifr_lint::suppression::ParserAwareSuppressions",
+  "updated_by_milestone": "m1"
+}

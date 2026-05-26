@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "rules": [
+    {
+      "id": "trailing-whitespace",
+      "summary": "Line ends with trailing horizontal whitespace.",
+      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0004",
+      "default_severity": "warn",
+      "status": "stable",
+      "category": "style-policy",
+      "source": "sifr_lint::rules::trailing_whitespace",
+      "fix_availability": "none",
+      "suppression_complexity": "physical-line"
+    },
+    {
+      "id": "unknown-suppression",
+      "summary": "Suppression references an unknown policy rule id.",
+      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0001",
+      "default_severity": "warn",
+      "status": "stable",
+      "category": "suppression-policy",
+      "source": "sifr_lint::suppressions",
+      "fix_availability": "none",
+      "suppression_complexity": "physical-line"
+    },
+    {
+      "id": "unused-suppression",
+      "summary": "Suppression did not suppress any diagnostic.",
+      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0002",
+      "default_severity": "warn",
+      "status": "stable",
+      "category": "suppression-policy",
+      "source": "sifr_lint::suppressions",
+      "fix_availability": "none",
+      "suppression_complexity": "physical-line"
+    },
+    {
+      "id": "blanket-suppression",
+      "summary": "Suppression must list explicit Sifr policy rule ids.",
+      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0003",
+      "default_severity": "warn",
+      "status": "stable",
+      "category": "suppression-policy",
+      "source": "sifr_lint::suppressions",
+      "fix_availability": "none",
+      "suppression_complexity": "physical-line"
+    }
+  ]
+}
