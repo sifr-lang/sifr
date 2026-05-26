@@ -3,6 +3,7 @@ use super::diagnostic_rendering_and_run::{
     cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run, cmd_tree, cmd_vendor,
     render_diagnostics,
 };
+use super::formatter_cli::FmtArgs;
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{
     DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
@@ -32,6 +33,14 @@ pub(crate) struct Cli {
     /// Explain a Sifr diagnostic code without running a package operation
     #[arg(long)]
     pub(crate) explain: Option<String>,
+
+    /// Formatter config file path or KEY=VALUE override
+    #[arg(long, global = true)]
+    pub(crate) config: Vec<String>,
+
+    /// Ignore formatter configuration files
+    #[arg(long, global = true)]
+    pub(crate) isolated: bool,
 
     #[command(subcommand)]
     pub(crate) command: Option<Commands>,
@@ -244,13 +253,7 @@ pub(crate) enum Commands {
         frozen: bool,
     },
     /// Format Sifr source files
-    Fmt {
-        /// Check formatting without writing changes
-        #[arg(long)]
-        check: bool,
-        /// Input .sifr file or directory
-        path: PathBuf,
-    },
+    Fmt(FmtArgs),
     /// Run suppressible policy diagnostics
     Lint {
         /// Input .sifr file or directory
@@ -500,7 +503,7 @@ fn run_cli(cli: Cli) -> i32 {
                 diagnostic_format,
             )
         }
-        Commands::Fmt { check, path } => cmd_fmt(&path, check, diagnostic_format),
+        Commands::Fmt(args) => cmd_fmt(&args, diagnostic_format),
         Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
         Commands::Lsp { stdio } => cmd_lsp(stdio),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
