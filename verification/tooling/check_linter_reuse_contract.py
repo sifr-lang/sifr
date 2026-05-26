@@ -57,6 +57,7 @@ SCAN_ROOTS = [
 ]
 IMPLEMENTED_LINT_OPTION_ALIASES = {
     "path": "FILES",
+    "paths": "FILES",
     "files": "FILES",
     "targets": "FILES",
     "config": "--config",
@@ -159,7 +160,13 @@ def validate_cli_manifest(manifest: dict[str, Any]) -> None:
     require(isinstance(surfaces, list) and surfaces, "CLI surfaces must be a non-empty array")
     names = [surface.get("ruff_surface") for surface in surfaces]
     require(len(names) == len(set(names)), "Ruff CLI surfaces must be unique")
-    by_spelling = {surface.get("sifr_spelling"): surface for surface in surfaces if surface.get("sifr_spelling")}
+    by_spelling: dict[str, dict[str, Any]] = {}
+    for surface in surfaces:
+        spelling = surface.get("sifr_spelling")
+        if not spelling:
+            continue
+        for expanded in expand_sifr_spellings(spelling):
+            by_spelling[expanded] = surface
     for surface in surfaces:
         disposition = surface.get("disposition")
         require(disposition in ALLOWED_DISPOSITIONS, f"invalid CLI disposition: {surface}")
@@ -198,17 +205,34 @@ def implemented_lint_options() -> set[str]:
     options: set[str] = {"--config", "--isolated"}
     start = cli_source.find("Lint {")
     end = cli_source.find("Lsp {", start)
-    require(start != -1 and end != -1, "could not locate Commands::Lint clap surface")
-    lint_block = cli_source[start:end]
-    for match in re.finditer(r"#\[arg\([^\]]*long(?:\s*=\s*\"([^\"]+)\")?", lint_block):
-        explicit = match.group(1)
-        if explicit:
-            options.add(f"--{explicit}")
-    for match in re.finditer(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\s*:", lint_block):
-        alias = IMPLEMENTED_LINT_OPTION_ALIASES.get(match.group(1))
+    if start != -1 and end != -1:
+        lint_block = cli_source[start:end]
+    else:
+        lint_block = (REPO_ROOT / "crates" / "sifr" / "src" / "lint_cli.rs").read_text(encoding="utf-8")
+    for match in re.finditer(
+        r"#\[arg\(([^\]]*)\)\]\s*pub\(crate\)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*:",
+        lint_block,
+        flags=re.MULTILINE,
+    ):
+        attr, field = match.groups()
+        if "long" in attr:
+            explicit = re.search(r'long\s*=\s*"([^"]+)"', attr)
+            options.add(f"--{explicit.group(1) if explicit else field.replace('_', '-')}")
+        alias = IMPLEMENTED_LINT_OPTION_ALIASES.get(field)
         if alias:
             options.add(alias)
     return options
+
+
+def expand_sifr_spellings(spelling: str) -> list[str]:
+    if "/" not in spelling:
+        return [spelling]
+    expanded: list[str] = []
+    for part in spelling.split("/"):
+        part = part.strip()
+        if part.startswith("--"):
+            expanded.append(part)
+    return expanded or [spelling]
 
 
 def validate_rule_metadata(manifest: dict[str, Any]) -> None:
@@ -233,7 +257,10 @@ def validate_rule_metadata(manifest: dict[str, Any]) -> None:
 def validate_config_schema_placeholder(manifest: dict[str, Any]) -> None:
     require(manifest.get("schema") == 1, "lint config schema placeholder schema must be 1")
     require(manifest.get("authority") == "sifr.toml", "lint config authority must be sifr.toml")
-    require(manifest.get("state") == "placeholder-unimplemented", "M1 config schema must remain a placeholder")
+    require(
+        manifest.get("state") in {"placeholder-unimplemented", "implemented-m2"},
+        "lint config schema state must be a known phase state",
+    )
 
 
 def validate_suppression_gate(manifest: dict[str, Any], rule_metadata: dict[str, Any]) -> None:

@@ -1,9 +1,10 @@
-use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_lint, cmd_test};
+use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_test};
 use super::diagnostic_rendering_and_run::{
     cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run, cmd_tree, cmd_vendor,
     render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
+use super::lint_cli::{cmd_lint, LintArgs};
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{
     DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
@@ -34,11 +35,11 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) explain: Option<String>,
 
-    /// Formatter config file path or KEY=VALUE override
+    /// Sifr config file path or KEY=VALUE override
     #[arg(long, global = true)]
     pub(crate) config: Vec<String>,
 
-    /// Ignore formatter configuration files
+    /// Ignore Sifr configuration files
     #[arg(long, global = true)]
     pub(crate) isolated: bool,
 
@@ -255,10 +256,7 @@ pub(crate) enum Commands {
     /// Format Sifr source files
     Fmt(FmtArgs),
     /// Run suppressible policy diagnostics
-    Lint {
-        /// Input .sifr file or directory
-        path: PathBuf,
-    },
+    Lint(LintArgs),
     /// Run the native Sifr Language Server Protocol server
     Lsp {
         /// Use stdio transport
@@ -506,7 +504,7 @@ fn run_cli(cli: Cli) -> i32 {
             )
         }
         Commands::Fmt(args) => cmd_fmt(&args, &config, isolated, diagnostic_format),
-        Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
+        Commands::Lint(args) => cmd_lint(&args, &config, isolated, diagnostic_format),
         Commands::Lsp { stdio } => cmd_lsp(stdio),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
         Commands::Test { dir } => cmd_test(&dir, diagnostic_format),

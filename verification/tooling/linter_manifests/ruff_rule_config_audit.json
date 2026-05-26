@@ -82,6 +82,7 @@
     {"key": "unsafe-fixes", "kind": "config", "disposition": "adapt", "rationale": "Unsafe fix policy concept is reusable.", "sifr_requirement_note": "Use disabled/hint/enabled; never hard diagnostics."},
     {"key": "per-file-ignores", "kind": "config", "disposition": "adapt", "rationale": "Per-file ignore model is language-neutral.", "sifr_requirement_note": "Use Sifr glob matching and rule IDs."},
     {"key": "extend-per-file-ignores", "kind": "config", "disposition": "adapt", "rationale": "Per-file ignore extension is language-neutral.", "sifr_requirement_note": "Use Sifr glob matching and rule IDs."},
+    {"key": "rules", "kind": "config", "disposition": "sifr-native", "rationale": "Per-rule severity override table is a Sifr-owned policy surface.", "sifr_requirement_note": "Only Sifr rule IDs are accepted."},
     {"key": "inline-noqa", "kind": "comment-directive", "disposition": "reject", "rationale": "Sifr suppression syntax is not noqa.", "sifr_requirement_note": "Use # sifr: ignore[rule-id]."},
     {"key": "preview", "kind": "config", "disposition": "adapt", "rationale": "Preview policy concept is reusable.", "sifr_requirement_note": "Use Sifr RuleStatus."},
     {"key": "explicit-preview-rules", "kind": "config", "disposition": "adapt", "rationale": "Explicit preview selection concept is reusable.", "sifr_requirement_note": "Use Sifr RuleStatus only."},
@@ -123,7 +124,11 @@
     {"key": "required-version", "kind": "config", "disposition": "future-phase", "rationale": "Toolchain version guard requires separate policy.", "sifr_requirement_note": "Do not expose now."},
     {"key": "watch", "kind": "cli", "disposition": "future-phase", "rationale": "LSP owns editor watch behavior in this phase.", "sifr_requirement_note": "Do not expose CLI watch now."}
   ],
-  "accepted_sifr_config_keys": [],
+  "accepted_sifr_config_keys": [
+    "extend", "preview", "select", "extend-select", "ignore", "include", "extend-include",
+    "exclude", "extend-exclude", "respect-gitignore", "force-exclude", "rules",
+    "per-file-ignores", "config", "isolated"
+  ],
   "rejected_ruff_config_keys": [
     "extend-ignore", "inline-noqa", "pyproject.toml", "ruff.toml", ".ruff.toml", "tool.ruff",
     "target-version", "per-file-target-version", "extension", "src", "namespace-packages",
