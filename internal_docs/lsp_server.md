@@ -80,6 +80,10 @@ Required Sifr LSP settings:
 - `sifr.lint.enable`: boolean
 
 Unknown initialization options and settings produce deterministic warnings and logs while continuing with defaults unless the workspace cannot be loaded safely.
+When `sifr.format.enable` is false during initialization, the server does not
+advertise document or range formatting capabilities. If the setting is disabled
+after initialization, formatting requests are rejected without bypassing
+`sifr_analysis` or invoking an editor-side formatter.
 
 ## Commands
 

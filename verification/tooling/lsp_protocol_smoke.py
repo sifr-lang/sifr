@@ -22,8 +22,13 @@ def main() -> int:
     return result
 """
 
+UNFORMATTED_SAMPLE = """\
+def main()->int:
+    value: int=1
+    return value
+"""
 
-def initialize(client: LspClient, root: Path) -> dict[str, Any]:
+def initialize(client: LspClient, root: Path, initialization_options: dict[str, Any] | None = None) -> dict[str, Any]:
     result = client.request(
         "initialize",
         {
@@ -37,6 +42,7 @@ def initialize(client: LspClient, root: Path) -> dict[str, Any]:
                 "workspace": {"configuration": True, "workspaceFolders": True},
             },
             "workspaceFolders": [{"uri": file_uri(root), "name": "sifr-lsp-smoke"}],
+            "initializationOptions": initialization_options or {},
         },
     )
     if not isinstance(result, dict):
@@ -44,18 +50,17 @@ def initialize(client: LspClient, root: Path) -> dict[str, Any]:
     capabilities = result.get("capabilities")
     if not isinstance(capabilities, dict):
         raise LspProtocolError("initialize response missing capabilities")
-    assert_has_keys(
-        capabilities,
-        {
-            "textDocumentSync",
-            "diagnosticProvider",
-            "completionProvider",
-            "hoverProvider",
-            "semanticTokensProvider",
-            "executeCommandProvider",
-        },
-        "initialize capabilities",
-    )
+    required_capabilities = {
+        "textDocumentSync",
+        "diagnosticProvider",
+        "completionProvider",
+        "hoverProvider",
+        "semanticTokensProvider",
+        "executeCommandProvider",
+    }
+    if not initialization_options or initialization_options.get("formatEnable", True):
+        required_capabilities.update({"documentFormattingProvider", "documentRangeFormattingProvider"})
+    assert_has_keys(capabilities, required_capabilities, "initialize capabilities")
     client.notify("initialized", {})
     return capabilities
 
@@ -135,19 +140,74 @@ def run_queries(client: LspClient, uri: str) -> None:
     client.request("workspace/executeCommand", {"command": "sifr.runTests", "arguments": []})
 
 
+def run_formatting_checks(client: LspClient, path: Path) -> None:
+    uri = file_uri(path)
+    open_document(client, path, UNFORMATTED_SAMPLE)
+    document = {"uri": uri}
+    edits = client.request(
+        "textDocument/formatting",
+        {
+            "textDocument": document,
+            "options": {"tabSize": 4, "insertFinalNewline": True},
+        },
+    )
+    if not isinstance(edits, list) or not edits:
+        raise LspProtocolError("document formatting did not return formatter edits")
+    replacement = edits[0].get("newText", "")
+    if "def main() -> int:" not in replacement or "value: int = 1" not in replacement:
+        raise LspProtocolError(f"document formatting did not match sifr fmt output: {edits}")
+
+    range_edits = client.request(
+        "textDocument/rangeFormatting",
+        {
+            "textDocument": document,
+            "range": {"start": {"line": 0, "character": 0}, "end": {"line": 3, "character": 0}},
+            "options": {"tabSize": 4, "lineLength": 88},
+        },
+    )
+    if not isinstance(range_edits, list) or not range_edits:
+        raise LspProtocolError("range formatting did not return formatter edits")
+
+
+def run_disabled_formatting_check(root: Path) -> None:
+    source = root / "disabled.sifr"
+    source.write_text(UNFORMATTED_SAMPLE, encoding="utf-8")
+    client = LspClient()
+    try:
+        capabilities = initialize(client, root, {"formatEnable": False})
+        if "documentFormattingProvider" in capabilities or "documentRangeFormattingProvider" in capabilities:
+            raise LspProtocolError("disabled formatting was still advertised")
+        open_document(client, source, UNFORMATTED_SAMPLE)
+        error = client.request_error(
+            "textDocument/formatting",
+            {"textDocument": {"uri": file_uri(source)}, "options": {"tabSize": 4}},
+        )
+        if error.get("code") != -32601:
+            raise LspProtocolError(f"disabled formatting returned unexpected error: {error}")
+        client.request("shutdown", {})
+        client.notify("exit", {})
+    finally:
+        client.close()
+
+
 def run_smoke() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-smoke-") as raw:
         root = Path(raw)
         source = root / "main.sifr"
+        formatting_source = root / "formatting.sifr"
         source.write_text(SAMPLE, encoding="utf-8")
+        formatting_source.write_text(UNFORMATTED_SAMPLE, encoding="utf-8")
         client = LspClient()
         try:
             initialize(client, root)
             open_document(client, source, SAMPLE)
             run_queries(client, file_uri(source))
+            run_formatting_checks(client, formatting_source)
             client.request("shutdown", {})
+            client.notify("exit", {})
         finally:
             client.close()
+        run_disabled_formatting_check(root)
 
 
 def run_self_test() -> None:

@@ -18,5 +18,6 @@ mod requests;
 mod scheduler;
 mod server;
 mod session;
+mod settings;
 
 pub use server::run_stdio;

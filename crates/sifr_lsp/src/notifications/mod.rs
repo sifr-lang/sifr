@@ -1,5 +1,4 @@
 use crate::diagnostics::DiagnosticsController;
-use crate::document_store::{DiagnosticsMode, TraceMode, WorkspaceSettings};
 use crate::errors::{optional_i32, required_string, LspError, LspResult};
 use crate::session::Session;
 use lsp_server::Connection;
@@ -47,36 +46,8 @@ fn cancel_request(session: &mut Session, params: &Value) -> LspResult<()> {
 
 fn workspace_did_change_configuration(session: &mut Session, params: Value) -> LspResult<()> {
     let root = params.get("settings").unwrap_or(&params);
-    let diagnostics = root
-        .pointer("/sifr/diagnostics/mode")
-        .or_else(|| root.pointer("/sifr.diagnostics.mode"))
-        .and_then(Value::as_str)
-        .map(parse_diagnostics_mode)
-        .transpose()?
-        .unwrap_or(session.store().settings().diagnostics_mode);
-    let trace_server = root
-        .pointer("/sifr/lsp/trace/server")
-        .or_else(|| root.pointer("/sifr.lsp.trace.server"))
-        .and_then(Value::as_str)
-        .map(parse_trace_mode)
-        .transpose()?
-        .unwrap_or(session.store().settings().trace_server);
-    let format_enable = root
-        .pointer("/sifr/format/enable")
-        .or_else(|| root.pointer("/sifr.format.enable"))
-        .and_then(Value::as_bool)
-        .unwrap_or(session.store().settings().format_enable);
-    let lint_enable = root
-        .pointer("/sifr/lint/enable")
-        .or_else(|| root.pointer("/sifr.lint.enable"))
-        .and_then(Value::as_bool)
-        .unwrap_or(session.store().settings().lint_enable);
-    session.store_mut().apply_settings(WorkspaceSettings {
-        diagnostics_mode: diagnostics,
-        trace_server,
-        format_enable,
-        lint_enable,
-    });
+    let settings = crate::settings::parse_workspace_settings(root, session.store().settings())?;
+    session.store_mut().apply_settings(settings);
     Ok(())
 }
 
@@ -174,26 +145,4 @@ fn text_document_did_close(
         ))
         .map_err(|error| LspError::internal(format!("failed to clear diagnostics: {error}")))?;
     Ok(())
-}
-
-fn parse_diagnostics_mode(value: &str) -> LspResult<DiagnosticsMode> {
-    match value {
-        "off" => Ok(DiagnosticsMode::Off),
-        "open-files" => Ok(DiagnosticsMode::OpenFiles),
-        "workspace" => Ok(DiagnosticsMode::Workspace),
-        _ => Err(LspError::invalid_params(format!(
-            "unknown sifr.diagnostics.mode value {value:?}"
-        ))),
-    }
-}
-
-fn parse_trace_mode(value: &str) -> LspResult<TraceMode> {
-    match value {
-        "off" => Ok(TraceMode::Off),
-        "messages" => Ok(TraceMode::Messages),
-        "verbose" => Ok(TraceMode::Verbose),
-        _ => Err(LspError::invalid_params(format!(
-            "unknown sifr.lsp.trace.server value {value:?}"
-        ))),
-    }
 }
