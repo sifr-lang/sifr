@@ -271,12 +271,13 @@ The audit manifest schema is:
 - `config_sources`: array of scanned Ruff docs/source paths.
 - `config_surfaces`: array of objects with `key`, `kind` (`config`, `cli`, `comment-directive`, or `plugin-block`), `disposition`, `rationale`, and `sifr_requirement_note`.
 - `accepted_sifr_config_keys`: array of config keys accepted by Sifr lint in the current implementation.
-- `rejected_ruff_config_keys`: array of Ruff/Python keys that must fail if accepted as Sifr lint configuration.
+- `rejected_ruff_config_keys`: array of Ruff/Python keys from this audit with `reject`, `formatter-owned`, or `future-phase` disposition that must fail if accepted as Sifr lint configuration.
 
 Manifest validation must prove:
 
 - every actual Ruff rule-family directory is represented exactly once;
 - every accepted Sifr lint config key appears in `accepted_sifr_config_keys` and has an `adapt` or `sifr-native` disposition;
+- every config surface with `reject`, `formatter-owned`, or `future-phase` disposition appears in `rejected_ruff_config_keys` until a reviewed phase update changes its disposition;
 - no rejected, formatter-owned, or future-phase rule family/config surface is exposed as an enabled Sifr lint feature;
 - the manifest fork pin and source paths match the checked Ruff fork.
 
@@ -563,9 +564,10 @@ Scope:
   - `gate_state`: `physical_line_only` or `parser_aware`
   - `allowed_rule_families`: array of `physical-line`, `single-node`, `statement-range`, `symbol-workspace`
   - `parser_aware_api`: Rust path that non-physical-line rule modules must depend on
-  - `updated_by_milestone`: milestone identifier that last changed the gate
+  - `updated_by_milestone`: string milestone identifier that last changed the gate, such as `"m1"` or `"m3"`
 - initialize the suppression-gate manifest with `gate_state = "physical_line_only"` and `allowed_rule_families = ["physical-line"]`
 - make `check_linter_reuse_contract.py` validate the suppression-gate manifest path, schema, and state
+- make `check_linter_reuse_contract.py` verify that any Sifr rule module whose `suppression_complexity` is not `physical-line` imports or depends on the manifest's `parser_aware_api` path, initially `sifr_lint::suppression::ParserAwareSuppressions`
 - update internal docs to link this phase and the reuse audit artifacts
 
 Validation:
@@ -592,6 +594,7 @@ Scope:
 - implement `[lint]`, `[lint.rules]`, and `[lint.per-file-ignores]` in `sifr.toml`
 - implement Ruff-inspired config layering, extends, overrides, unknown-key diagnostics, and cycle detection
 - implement the non-fix portions of `sifr lint [OPTIONS] [FILES]...`: default `.`, multi-targets, stdin, rule selection, per-file ignores, output-format/output-file, show-files/show-settings, discovery flags, preview flags, `--exit-zero`, global `--config`, and `--isolated`
+- split lint CLI argument modeling and execution into a dedicated `lint_cli.rs` module before expanding `cli_model_and_entrypoint.rs` or `check_and_package_commands.rs` beyond the hand-maintained file-size guardrail
 - replace naive path matching with robust glob/gitignore discovery
 - support include, exclude, extend-exclude, force-exclude, respect-gitignore, and explicit-target behavior
 - add negative fixtures for deep directory traversal, ignored directories, symlink loops or cycles where supported by the walker, and pathological file counts within the local validation budget
@@ -698,6 +701,7 @@ Scope:
 - M6b: implement source-map/workspace edit tracking
 - M6b: add deferred code-action resolution for expensive edits and multi-file/workspace edits
 - M6b: add version-aware edit conflict handling for LSP
+- M6b: add `verification/tooling/check_linter_diagnostic_class.py` with a self-test, or extend `check_lsp_split_brain.py`, so validation fails if LSP code-action handlers offer suppression or fix actions for `Hard` class diagnostics
 
 Validation:
 
@@ -706,6 +710,7 @@ Validation:
 - `cargo test -p sifr_lsp`
 - fix idempotence and conflict fixtures
 - LSP code-action smoke/stress coverage
+- linter diagnostic-class guardrail and self-test
 
 Review gate:
 

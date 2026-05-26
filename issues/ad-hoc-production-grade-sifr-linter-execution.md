@@ -38,6 +38,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 | W-8 | The parser-aware suppression gate is advisory until made mechanical. | Milestone 1 creates the gate manifest; Milestone 3 enables it; Milestone 5 cannot add non-physical-line rules unless the gate is closed. |
 | W-9 | Ruff has many existing Python rule families and config keys; leaving their disposition to implementation would invite accidental porting. | Planning locks a full Ruff rule-family/config audit; Milestone 1 encodes it in `ruff_rule_config_audit.json`; Milestone 5 may only add rules/config from approved rows. |
 | W-10 | `sifr lint` currently has a placeholder single-path CLI while Ruff's lint command has a production command surface. | Planning locks a Ruff-compatible `sifr lint [OPTIONS] [FILES]...` contract; Milestone 1 encodes it in `lint_cli_parity.json`; M2 and M6 implement the non-fix and fix portions. |
+| W-11 | Pre-implementation discovery found minor M1/M2/M6 encoding details that should not be left implicit. | The phase now specifies rejected config-key manifest population, suppression-gate milestone identifier format, parser-aware API import checks, a lint CLI module split before file-size guardrail drift, and diagnostic-class code-action guardrails. |
 
 ### Locked Reuse Decisions
 
@@ -72,6 +73,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-26`: Claude linter CLI review pass 1 found the CLI contract structurally sound and requested precision edits for hidden Ruff compatibility flags, `--extend-unfixable`, show-files/show-settings/statistics conflicts, manifest schema details, exit status fixtures, and suppression/statistics wording. The phase was updated with those decisions.
 - `2026-05-26`: Claude linter CLI review pass 2 confirmed all pass-1 precision edits applied, manifest schema and validation obligations complete, all behavioral areas specified, and the plan is implementation-ready with no remaining blockers.
 - `2026-05-26`: Claude linter CLI review pass 3 verified the final disposition spelling cleanup and confirmed the CLI plan is implementation-ready and elegant enough for implementation.
+- `2026-05-27`: Claude pre-implementation discovery review found no blockers and confirmed M1 can start. It requested precision edits for manifest key population, suppression-gate milestone format, parser-aware API import checks, lint CLI file-size planning, and diagnostic-class code-action guardrails; the phase was updated accordingly.
 
 ## Validation Log
 
