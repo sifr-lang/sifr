@@ -16,6 +16,8 @@ Document and range formatting are standard LSP requests served by `sifr lsp --st
 Manual formatting should use each editor's normal LSP format command, and
 format-on-save should be configured through that same LSP client. Editor assets
 must not call `sifr fmt` as their primary formatting provider.
+Direct `sifr fmt` usage is reserved for CLI, CI, hook, and manual-file workflows
+and is documented in [`../docs/formatter.md`](../docs/formatter.md).
 
 ## Syntax Asset Source Of Truth
 
@@ -71,6 +73,6 @@ Emacs:
 
 m36.6 adds checked-in editor assets and `verification/tooling/check_editor_assets.py`.
 The check is wired into `scripts/run_all_tests.sh` and has a negative self-test
-for bad LSP launch configuration and syntax scope drift. m36.1 locks the
-validation expectation and split-brain rule so later editor packages cannot add
-semantics-bearing code.
+for bad LSP launch configuration, direct formatter fallback wiring, and syntax
+scope drift. m36.1 locks the validation expectation and split-brain rule so
+later editor packages cannot add semantics-bearing code.

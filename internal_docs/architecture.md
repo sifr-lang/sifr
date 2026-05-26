@@ -221,7 +221,17 @@ flowchart LR
 
 ## Crate Structure (Rust Workspace)
 
-**Hybrid dependency approach:** Infrastructure crates, parser, and AST crates are referenced from the Ruff fork submodule, currently based on Ruff 0.15.12. Parser and AST crates include the Sifr-specific parameter convention extension and are imported through Cargo aliases as `sifr_python_ast` and `sifr_python_parser`. The root workspace pins Sifr's direct and generated-runtime support crates to the latest stable releases independently from the excluded Ruff fork, which keeps its own sub-workspace dependency pins. The effective Rust toolchain floor follows the Ruff submodule crates and is currently Rust 1.93.
+**Hybrid dependency approach:** Infrastructure crates, parser, AST crates, and
+the formatter are referenced from the Ruff fork submodule, currently based on
+Ruff 0.15.12. Parser and AST crates include Sifr-specific syntax extensions and
+are imported through Cargo aliases as `sifr_python_ast` and
+`sifr_python_parser`. The Ruff fork formatter is Sifr-aware for parameter
+conventions, Sifr type syntax, generics, match/case, ownership-aware
+collections, formatter pragmas, and Sifr-tagged docstring snippets. The root
+workspace pins Sifr's direct and generated-runtime support crates to the latest
+stable releases independently from the excluded Ruff fork, which keeps its own
+sub-workspace dependency pins. The effective Rust toolchain floor follows the
+Ruff submodule crates and is currently Rust 1.93.
 
 ```
 sifr/
@@ -233,19 +243,24 @@ sifr/
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
     sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)
-    sifr/                   (CLI binary: sifr build, sifr check, sifr run)
+    sifr_format/            (Sifr-facing Ruff-backed formatter API, config conversion, diagnostics, and text edits)
+    sifr_analysis/          (editor query host; routes formatting through sifr_format)
+    sifr_lsp/               (LSP protocol shell; serves document/range formatting over sifr_analysis)
+    sifr/                   (CLI binary: sifr build, sifr check, sifr run, sifr fmt)
 
   # Path dependencies from the Ruff fork submodule:
   #   ruff_text_size          -- text span/range utilities
   #   ruff_source_file        -- source file representation, line indexing
   #   ruff_python_trivia      -- whitespace/comment handling
   #   ruff_python_literal     -- literal parsing (string escapes, number formats)
+  #   ruff_python_formatter   -- Sifr-aware Ruff formatter rules and range formatting
 
   third_party/
     ruff/                    (sifr-lang/ruff submodule, branch sifr/0.15.12-maintenance)
       crates/
         ruff_python_ast/      (imported as Cargo dependency alias sifr_python_ast)
         ruff_python_parser/   (imported as Cargo dependency alias sifr_python_parser)
+        ruff_python_formatter/ (Sifr-aware formatter wrapper consumed by sifr_format)
 ```
 
 New crates added per milestone as needed:
@@ -254,8 +269,29 @@ New crates added per milestone as needed:
 - Ad-hoc semantic diagnostic taxonomy: `sifr_diagnostics` (shared diagnostic model and schema, introduced before migrating existing emission paths)
 - milestone_ffi: FFI codegen extensions in `sifr_codegen`
 - Phase 35 shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
-- milestone_dev_tooling: `sifr_lsp` (language server), `sifr_fmt` (formatter), `sifr_lint` (linter)
+- milestone_dev_tooling: `sifr_lsp` (language server), `sifr_format` (formatter), `sifr_lint` (linter)
 - milestone_ecosystem: `sifr_registry` (package registry client)
+
+## Formatter Architecture
+
+The production Sifr formatter is Ruff-backed and in-process. `.sifr` source
+flows through `sifr_syntax` into the Sifr Ruff fork parser, AST, comments,
+trivia, and formatter rules, then through the Sifr-owned `sifr_format` wrapper.
+`sifr_format` owns Sifr-facing options, config conversion, deterministic
+diagnostics, and text edits; it does not lower to HIR, type-check, or run
+ownership analysis.
+
+The single formatter core is shared by:
+
+- `sifr fmt` for CLI write, check, diff, stdin, range, path-selection, and cache behavior
+- `sifr_analysis` document and range formatting queries
+- `sifr_lsp` `textDocument/formatting` and `textDocument/rangeFormatting`
+- checked-in editor integrations through `sifr lsp --stdio`
+
+Formatter validation is part of local validation. `verification/tooling/check_formatter_ast_coverage.py`
+fails when a Sifr parser or AST extension lacks both Ruff fork formatter fixture
+coverage and Sifr wrapper corpus coverage. Formatter performance budgets cover a
+large-file check and a representative project check.
 
 ## Driver Build Model
 

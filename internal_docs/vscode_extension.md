@@ -40,6 +40,11 @@ Required default launch:
 ```
 
 The extension must support `sifr.lsp.path` to override the executable path and `sifr.lsp.trace.server` for protocol tracing.
+Formatting support is advertised by the Sifr LSP server when
+`sifr.format.enable` is true. The VS Code `sifr.formatDocument` command
+delegates to `editor.action.formatDocument`, which uses the native LSP document
+formatting provider. The extension must not implement formatter logic or use a
+direct `sifr fmt` fallback as its document-formatting provider.
 
 ## Allowed Responsibilities
 

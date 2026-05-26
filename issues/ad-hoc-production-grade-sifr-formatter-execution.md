@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution: Production-Grade Sifr Formatter
 
-Status: implementation in progress
+Status: completed
 
 Phase contract: `issues/ad-hoc-production-grade-sifr-formatter.md`
 
@@ -14,10 +14,10 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-formatter.md`
 - [x] CLI and config parity completed
 - [x] Analysis, LSP, and editor integration formatting parity completed
 - [x] Formatter corpus, guardrails, and performance checks completed
-- [ ] Formatter showcase demo copied to `.sifr`, formatted, and recorded
-- [ ] Internal and public docs updated
-- [ ] Full local validation recorded
-- [ ] Final production-readiness review approved
+- [x] Formatter showcase demo copied to `.sifr`, formatted, and recorded
+- [x] Internal and public docs updated
+- [x] Full local validation recorded
+- [x] Final production-readiness review approved
 
 ## Planning Lock Addendum
 
@@ -383,6 +383,8 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Claude Opus Milestone 4 wave 2 review approved config discovery, explicit `--config`, `--isolated`, excludes, gitignore, force-exclude behavior, and cache creation with no blockers; Milestone 4 is approved to merge so Milestone 5 may begin.
 - `2026-05-26`: Claude Opus Milestone 5 review approved the analysis, LSP, and editor formatting parity implementation with no blockers; Milestone 5 is approved to merge so Milestone 6 may begin after PR links are recorded.
 - `2026-05-26`: Claude Opus Milestone 6 review approved the formatter corpus, AST coverage guardrail, docstring snippet coverage, editor guardrail seeds, validation wiring, and formatter performance budgets with no blockers; Milestone 6 is approved to close after PR merge.
+- `2026-05-26`: Claude Opus Milestone 7 review approved the formatter public docs, internal architecture/tooling/LSP/editor docs, formatter showcase evidence, editor integration docs submodule updates, and execution tracker evidence with no blockers; Milestone 7 is approved to close.
+- `2026-05-26`: Claude Opus final production-readiness review approved the full formatter phase for final local validation and closure with no blockers. The review confirmed AC-1 through AC-15, all 40 locked capability matrix rows, the single formatter core invariant across CLI/analysis/LSP/editors, AST-extension coverage blocking, docs, PR links, submodule pointers, and showcase evidence.
 
 ## Validation Log
 
@@ -416,6 +418,32 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Milestone 6 targeted superproject validation passed: `cargo fmt -p sifr_format -p sifr --check`, `cargo clippy -p sifr_format -- -D warnings`, `cargo test -p sifr_format`, `cargo test -p sifr -- --skip test_e2e_pass`, `python3 verification/tooling/check_formatter_ast_coverage.py`, `CARGO_TARGET_DIR=target/codex-m6-ast-env python3 verification/tooling/check_formatter_ast_coverage.py`, `python3 verification/tooling/check_formatter_ast_coverage.py --self-test`, `python3 verification/tooling/check_formatter_phase_manifests.py`, `python3 verification/tooling/check_formatter_phase_manifests.py --self-test`, `python3 verification/tooling/check_editor_assets.py`, `python3 verification/tooling/check_editor_assets.py --self-test`, `python3 verification/performance/run_benchmarks.py --validate-only`, `python3 verification/performance/run_benchmarks.py --self-test`, `python3 verification/performance/check_budgets.py`, `python3 verification/performance/check_budgets.py --self-test`, formatter performance smoke and budget checks, `python3 scripts/check_file_size_guardrails.py`, `git diff --check --ignore-submodules=none`, and `git -C third_party/ruff diff --check`.
 - `2026-05-26`: Milestone 6 formatter performance baselines were captured in `target/performance/formatter-m6-baseline.json` and added to `verification/performance/baselines.json` and `verification/performance/budgets.json` for `perf.formatter.corpus.project_check` and `perf.formatter.large_file.check`.
 - `2026-05-26`: Milestone 6 quick validation passed from committed state with `scripts/run_all_tests.sh --profile quick`. The lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded `wall_time=1804.37s`, `cache_hits=12/12`, no swaps, and warm wall-time/group-skew advisories.
+- `2026-05-26`: Milestone 7 formatter showcase smoke passed by copying `demos/formatter_showcase/main.sifr.input` to `target/formatter_showcase_m7/main.sifr`, running `cargo run -q -p sifr -- fmt --no-cache target/formatter_showcase_m7/main.sifr`, and checking the formatted result with `cargo run -q -p sifr -- check target/formatter_showcase_m7/main.sifr`.
+- `2026-05-26`: Milestone 7 targeted docs/contract validation passed: `cargo fmt -p sifr --check`, `python3 verification/tooling/check_editor_assets.py`, `python3 verification/tooling/check_editor_assets.py --self-test`, `python3 verification/tooling/check_formatter_ast_coverage.py`, `python3 verification/tooling/check_formatter_ast_coverage.py --self-test`, `python3 verification/tooling/check_formatter_phase_manifests.py`, `python3 verification/tooling/check_formatter_phase_manifests.py --self-test`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check --ignore-submodules=none`.
+- `2026-05-26`: final quick validation passed from committed state with `scripts/run_all_tests.sh --profile quick`. The lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded `wall_time=1148.21s`, `max_rss=672.6MiB`, `swaps=0`, `cache_hits=12/12`, and warm wall-time/group-skew advisories.
+- `2026-05-26`: final full validation passed from committed state with `scripts/run_all_tests.sh`. The lane exited 0 and wrote `target/validation_lane_reports/pr.latest.json`; it recorded `wall_time=3138.75s`, `max_rss=525.2MiB`, `swaps=0`, `cache_hits=0/19`, hardening `variants=28` with `blocking_failures=0`, and warm wall-time/group-skew advisories.
+
+Formatter showcase before/after evidence:
+
+```diff
+--- demos/formatter_showcase/main.sifr.input
++++ target/formatter_showcase_m7/main.sifr
+@@
+-def normalize_scores( mut own scores:list[int],bonus:int)->list[int]:
++def normalize_scores(own mut scores: list[int], bonus: int) -> list[int]:
+@@
+-    if len(scores)>3:
+-        scores[0]=scores[0]+bonus
++    if len(scores) > 3:
++        scores[0] = scores[0] + bonus
+@@
+-def main()->None:
+-    values=[1,2,3]
+-    updated=normalize_scores(values,4)
++def main() -> None:
++    values = [1, 2, 3]
++    updated = normalize_scores(values, 4)
+```
 
 ## PR Log
 
@@ -425,4 +453,5 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - Milestone 4 wave 1 `formatter_cli_surface`: <https://github.com/sifr-lang/sifr/pull/2178>
 - Milestone 4 wave 2 `formatter_cli_config_selection_cache`: <https://github.com/sifr-lang/sifr/pull/2179>
 - Milestone 5 `formatter_lsp_editor_parity`: VS Code PR <https://github.com/sifr-lang/sifr-vscode/pull/2>; editor integrations PR <https://github.com/sifr-lang/editor-integrations/pull/1>; superproject PR <https://github.com/sifr-lang/sifr/pull/2180>
-- Milestone 6 `formatter_corpus_guardrails_and_performance`: Ruff fork PR <https://github.com/sifr-lang/ruff/pull/3>
+- Milestone 6 `formatter_corpus_guardrails_and_performance`: Ruff fork PR <https://github.com/sifr-lang/ruff/pull/3>; superproject PR <https://github.com/sifr-lang/sifr/pull/2181>
+- Milestone 7 `formatter_docs_closeout_and_release_readiness`: editor integrations docs PR <https://github.com/sifr-lang/editor-integrations/pull/2>; editor integrations guardrail wording fix PR <https://github.com/sifr-lang/editor-integrations/pull/3>; superproject closeout PR <https://github.com/sifr-lang/sifr/pull/2182>

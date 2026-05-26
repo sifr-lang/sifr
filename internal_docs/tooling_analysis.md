@@ -102,18 +102,25 @@ Blanket `sifr: ignore`, unknown rule ids, and unused suppressions produce determ
 
 ## Formatting And Linting
 
-`sifr_format` formats source text through `sifr_syntax` only. It must preserve comments, meaningful blank lines, string contents, source spans needed by diagnostics, and Sifr parameter-convention syntax. Formatting must be deterministic, idempotent, parser-round-tripped, and equivalent between `sifr fmt`, `sifr fmt --check`, analysis formatting queries, and LSP formatting edits.
+`sifr_format` formats source text through `sifr_syntax` and the Sifr Ruff fork
+formatter. It must preserve comments, meaningful blank lines, string contents,
+source spans needed by diagnostics, and Sifr parameter-convention syntax.
+Formatting must be deterministic, idempotent, parser-round-tripped, and
+equivalent between `sifr fmt`, `sifr fmt --check`, analysis formatting queries,
+and LSP formatting edits.
 
 `sifr_lint` evaluates policy diagnostics without changing compiler hard diagnostics. It owns severity resolution, suppression handling, and discovery exclusions.
 
-m36.2 formatter foundation:
+Production formatter path:
 
-- parses through `sifr_syntax`
-- preserves string token contents while trimming trailing horizontal whitespace outside strings
-- normalizes line endings to LF
-- ensures final newline
-- parser-round-trips formatted output
-- exposes document and range-edit APIs for later `sifr_analysis`/LSP handoff
+- parses through `sifr_syntax`, which wraps the Sifr Ruff fork parser/AST substrate
+- formats through Sifr-aware Ruff formatter rules, not a Sifr source post-processing pass
+- canonicalizes `mut own` parameters to `own mut` in the Ruff formatter rule
+- preserves comments, pragmas, string contents, and source-map ranges needed by diagnostics and editor edits
+- supports whole-file and range formatting through the same `sifr_format` API
+- supports `sifr.toml` `[format]` discovery, CLI overrides, `--isolated`, excludes, gitignore behavior, and formatter cache controls
+- optionally formats Sifr docstring snippets when `docstring-code-format` is enabled
+- rejects invalid source and invalid ranges through stable Sifr formatter diagnostics
 
 m36.2 lint foundation:
 
