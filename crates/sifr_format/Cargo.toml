@@ -7,9 +7,11 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+ruff_formatter = { workspace = true }
+ruff_python_formatter = { workspace = true }
+ruff_text_size = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_syntax = { workspace = true }
-ruff_text_size = { workspace = true }
 
 [lints]
 workspace = true

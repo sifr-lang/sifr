@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the Phase 36 formatter foundation contract."""
+"""Validate the Sifr formatter contract."""
 
 from __future__ import annotations
 
@@ -50,7 +50,10 @@ def run_self_test() -> None:
             ["cargo", "run", "-q", "-p", "sifr", "--", "fmt", "--check", str(source)],
             expect=1,
         )
-        if "SIFR-PARSE-" not in completed.stderr and "parse error" not in completed.stderr:
+        if (
+            "SIFR-FMT-0001" not in completed.stderr
+            and "formatter could not parse Sifr source" not in completed.stderr
+        ):
             raise SystemExit("formatter self-test failed: invalid syntax did not fail closed")
     print("formatter contract self-test: PASS")
 
