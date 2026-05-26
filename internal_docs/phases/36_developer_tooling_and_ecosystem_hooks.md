@@ -17,7 +17,7 @@ status: completed
 - VS Code extension boundary is locked to a separate `sifr-lang/sifr-vscode` repository, validated from the `editor_integrations/vscode` submodule, `SIFR_VSCODE_REPO`, or sibling `../sifr-vscode`.
 - m36.1 contract artifacts live in `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, `internal_docs/tooling_verification.md`, `verification/tooling/lsp_protocol_matrix.json`, and `verification/tooling/vscode_extension_contract.json`.
 - Developer tooling contract checks are wired into `scripts/run_all_tests.sh`.
-- m36.2 added `sifr_format`, `sifr_lint`, `sifr fmt [--check]`, `sifr lint`, generated `FMT`/`LINT` diagnostic docs, and formatter/rule-suppression contract checks.
+- m36.2 added `sifr_format`, `sifr_lint`, `sifr fmt [--check]`, `sifr lint`, generated `FMT`/`LINT` diagnostic docs, and formatter/rule-suppression contract checks. The follow-on production-grade formatter phase replaces the m36.2 whitespace foundation with the Ruff-backed `sifr fmt [OPTIONS] [FILES]...` surface while preserving the same CLI/analysis/LSP ownership boundary.
 - m36.3 adds `sifr_analysis`, `AnalysisHost`, analysis snapshots, workspace symbol indexing, editor query API plumbing, completion ranking/evaluation infrastructure, and analysis split-brain/snapshot guardrails.
 - m36.4 adds token-backed editor query behavior, generated-Rust preview handoff, code actions, parity snapshots, completion-quality fixtures, and the tooling parity runner.
 - m36.5 adds `sifr_lsp`, `sifr lsp --stdio`, LSP 3.17 stdio protocol handling, document sync, push/pull diagnostics, editor query request adapters, workspace commands, protocol smoke/stress tests, and an enforced Phase 35 `lsp-query` budget case.
@@ -147,7 +147,7 @@ Local Ruff/ty implementation audit inputs for this phase contract:
 
 ```bash
 sifr lsp --stdio
-sifr fmt [--check] <path-or-project>
+sifr fmt [OPTIONS] [FILES]...
 sifr lint <path-or-project>
 ```
 

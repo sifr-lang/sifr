@@ -190,6 +190,8 @@ For a deep dive into the compiler pipeline, type system, ownership model, and de
 
 For stable command-mode behavior and edge-case guarantees, see the [CLI Command Semantics Contract](docs/cli_command_semantics.md).
 
+For formatter command, configuration, and editor behavior, see the [Formatter Guide](docs/formatter.md).
+
 ### Interactive Compiler Pipeline
 
 Want to see how a Sifr program travels from source text to a native binary?

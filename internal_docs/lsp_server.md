@@ -85,6 +85,13 @@ advertise document or range formatting capabilities. If the setting is disabled
 after initialization, formatting requests are rejected without bypassing
 `sifr_analysis` or invoking an editor-side formatter.
 
+Document and range formatting load formatter options from the same `sifr.toml`
+`[format]` discovery path used by `sifr fmt`. LSP `FormattingOptions.lineLength`
+and `options.sifr.preview` may override the discovered line length and preview
+setting for a request. The LSP server remains a protocol adapter: formatter
+decisions live in `sifr_format`, and editor integrations must not provide a
+separate formatter implementation.
+
 ## Commands
 
 Required command identifiers:

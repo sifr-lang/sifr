@@ -53,6 +53,13 @@ Notes:
 
 Package-management commands use Cargo-backed package coordination as documented in [`package_management.md`](./package_management.md). Cargo owns external dependency resolution, lockfiles, registry/Git/path sources, publishing, and vendoring; Sifr validates package metadata, source roots, exports, trust policy, archive contents, and diagnostics before delegating Cargo-owned behavior.
 
+Formatter commands use the Ruff-backed Sifr formatter documented in
+[`formatter.md`](./formatter.md). `sifr fmt [OPTIONS] [FILES]...` defaults to
+the current directory, supports write, check, diff, stdin, explicit range,
+preview, config, path-selection, and cache controls, and formats only `.sifr`
+source. Editor formatting is served through `sifr lsp --stdio`, not through an
+editor-owned formatter implementation.
+
 ## Edge Cases
 
 - A neighboring invalid `scratch.sifr` file must not break `run/build` when `main.sifr` has no local imports.

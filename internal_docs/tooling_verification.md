@@ -140,6 +140,32 @@ regression.
 checks are present, wired into `scripts/run_all_tests.sh`, documented, backed by
 the LSP request-family budget, and free of active LSP performance waivers.
 
+## Formatter Hardening Checks
+
+The ad-hoc production-grade formatter phase extends the Phase 36 formatter
+foundation with Ruff-backed formatting, coverage manifests, a checked formatter
+corpus, and performance budgets.
+
+Required formatter closeout commands:
+
+```bash
+python3 verification/tooling/check_formatter_contract.py
+python3 verification/tooling/check_formatter_contract.py --self-test
+python3 verification/tooling/check_formatter_phase_manifests.py
+python3 verification/tooling/check_formatter_phase_manifests.py --self-test
+python3 verification/tooling/check_formatter_ast_coverage.py
+python3 verification/tooling/check_formatter_ast_coverage.py --self-test
+python3 verification/performance/run_benchmarks.py --validate-only
+python3 verification/performance/check_budgets.py
+```
+
+`check_formatter_ast_coverage.py` discovers Sifr-specific parser/AST extension
+markers in the Ruff fork, requires concrete Ruff formatter fixtures and Sifr
+wrapper corpus fixtures for each covered extension, runs corpus idempotence and
+config matrix checks, and fails unresolved `pending:*` coverage rows. The quick
+validation lane runs the formatter contract, formatter manifests, AST coverage
+guardrail, editor asset guardrail, and formatter performance budget subset.
+
 Each script must pass on positive fixtures and fail on seeded negative fixtures.
 
 ## Contract Lock
