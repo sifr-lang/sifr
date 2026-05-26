@@ -454,4 +454,4 @@ Formatter showcase before/after evidence:
 - Milestone 4 wave 2 `formatter_cli_config_selection_cache`: <https://github.com/sifr-lang/sifr/pull/2179>
 - Milestone 5 `formatter_lsp_editor_parity`: VS Code PR <https://github.com/sifr-lang/sifr-vscode/pull/2>; editor integrations PR <https://github.com/sifr-lang/editor-integrations/pull/1>; superproject PR <https://github.com/sifr-lang/sifr/pull/2180>
 - Milestone 6 `formatter_corpus_guardrails_and_performance`: Ruff fork PR <https://github.com/sifr-lang/ruff/pull/3>; superproject PR <https://github.com/sifr-lang/sifr/pull/2181>
-- Milestone 7 `formatter_docs_closeout_and_release_readiness`: editor integrations docs PR <https://github.com/sifr-lang/editor-integrations/pull/2>; editor integrations guardrail wording fix PR <https://github.com/sifr-lang/editor-integrations/pull/3>
+- Milestone 7 `formatter_docs_closeout_and_release_readiness`: editor integrations docs PR <https://github.com/sifr-lang/editor-integrations/pull/2>; editor integrations guardrail wording fix PR <https://github.com/sifr-lang/editor-integrations/pull/3>; superproject closeout PR <https://github.com/sifr-lang/sifr/pull/2182>
