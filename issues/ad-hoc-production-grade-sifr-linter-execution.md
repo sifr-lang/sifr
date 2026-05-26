@@ -9,6 +9,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 - [ ] Phase plan reviewed and approved for implementation
 - [ ] Ruff linter reuse manifest created
 - [ ] Ruff rule-family and config-surface audit manifest created
+- [ ] Linter CLI parity manifest created
 - [ ] Forbidden Ruff/Python lint dependency guardrail completed
 - [ ] Lint config and file discovery completed
 - [ ] Parser-aware suppression engine completed
@@ -36,6 +37,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 | W-7 | The Ruff/Python lint reuse contract is not machine-enforced yet. | Milestone 1 adds `verification/tooling/check_linter_reuse_contract.py` with positive and negative self-tests. |
 | W-8 | The parser-aware suppression gate is advisory until made mechanical. | Milestone 1 creates the gate manifest; Milestone 3 enables it; Milestone 5 cannot add non-physical-line rules unless the gate is closed. |
 | W-9 | Ruff has many existing Python rule families and config keys; leaving their disposition to implementation would invite accidental porting. | Planning locks a full Ruff rule-family/config audit; Milestone 1 encodes it in `ruff_rule_config_audit.json`; Milestone 5 may only add rules/config from approved rows. |
+| W-10 | `sifr lint` currently has a placeholder single-path CLI while Ruff's lint command has a production command surface. | Planning locks a Ruff-compatible `sifr lint [OPTIONS] [FILES]...` contract; Milestone 1 encodes it in `lint_cli_parity.json`; M2 and M6 implement the non-fix and fix portions. |
 
 ### Locked Reuse Decisions
 
@@ -52,6 +54,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 | Ruff LSP code actions | Adapt deferred resolution, workspace edit tracking, settings patterns |
 | Ruff Server diagnostics | Reference only; Sifr diagnostics remain canonical |
 | Ruff rule families/config keys | Locked by planning audit; no implementation-time reinterpretation without reviewed phase update |
+| Ruff `check` CLI | Adapt into `sifr lint`; `sifr check` remains hard compiler/type checking |
 
 ## Review Log
 
@@ -65,6 +68,10 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-26`: User review required Ruff rule/config decisions to be made during planning, not implementation. The phase was updated with a full Ruff rule-family audit, a config-surface audit, and a required `ruff_rule_config_audit.json` enforcement manifest.
 - `2026-05-26`: Claude phase review pass 4 found the new rule-family audit complete and implementation-ready, with precision edits requested for the audit manifest schema and Ruff's deprecated `extend-ignore` surface. Both edits were applied before final review.
 - `2026-05-26`: Claude phase review pass 5 verified the `extend-ignore` classification, audit manifest schema, rule/config audit completeness, and execution tracker update. The reviewer confirmed the phase is implementation-ready with no remaining blockers.
+- `2026-05-26`: User review required explicit linter CLI decisions. The phase was updated with a Ruff-compatible `sifr lint [OPTIONS] [FILES]...` CLI parity contract, an exit-status contract, output-format decisions, stdin/discovery/fix/suppression decisions, and a required `lint_cli_parity.json` enforcement manifest.
+- `2026-05-26`: Claude linter CLI review pass 1 found the CLI contract structurally sound and requested precision edits for hidden Ruff compatibility flags, `--extend-unfixable`, show-files/show-settings/statistics conflicts, manifest schema details, exit status fixtures, and suppression/statistics wording. The phase was updated with those decisions.
+- `2026-05-26`: Claude linter CLI review pass 2 confirmed all pass-1 precision edits applied, manifest schema and validation obligations complete, all behavioral areas specified, and the plan is implementation-ready with no remaining blockers.
+- `2026-05-26`: Claude linter CLI review pass 3 verified the final disposition spelling cleanup and confirmed the CLI plan is implementation-ready and elegant enough for implementation.
 
 ## Validation Log
 

@@ -280,6 +280,127 @@ Manifest validation must prove:
 - no rejected, formatter-owned, or future-phase rule family/config surface is exposed as an enabled Sifr lint feature;
 - the manifest fork pin and source paths match the checked Ruff fork.
 
+## Linter CLI Parity Contract
+
+Ruff's linter command is `ruff check`; Sifr's linter command is `sifr lint`. Sifr must not alias Ruff's lint behavior onto `sifr check`, because `sifr check` is already the hard compiler/type/ownership diagnostic command. The Sifr mapping is:
+
+```bash
+ruff check [OPTIONS] [FILES]...
+sifr lint [OPTIONS] [FILES]...
+```
+
+Required command behavior:
+
+- no positional files defaults to `.`;
+- multiple file and directory targets are accepted;
+- `-` and `--stdin-filename <path>` read from stdin and use the filename for config, per-file-ignore, discovery, and diagnostic path context;
+- CLI options override `sifr.toml` and inherited config;
+- global `--config <file-or-override>` and `--isolated` apply to lint as well as format after the lint config loader lands;
+- lint-local `--output-format` takes precedence over global `--diagnostic-format` for `sifr lint` only;
+- hard compiler diagnostics remain outside `sifr lint` rule selection, suppression, fix-all, and `--exit-zero` policy behavior;
+- all CLI fixes operate only on policy diagnostics.
+
+Exit status contract:
+
+| Exit code | Condition |
+| --- | --- |
+| `0` | no lint violations, or all violations were fixed and `--exit-non-zero-on-fix` is not set |
+| `1` | lint violations remain, `--diff` found fixable edits, or `--exit-non-zero-on-fix` observed applied fixes |
+| `2` | invalid CLI arguments, invalid lint config, invalid rule selectors, invalid output format, or file discovery/config errors |
+| `3` | internal compiler/linter failure caught by the panic boundary |
+
+The lint CLI parity manifest is locked. Milestone 1 must encode this table in `verification/tooling/linter_manifests/lint_cli_parity.json`. `check_linter_reuse_contract.py` or a dedicated `check_linter_cli_contract.py` must verify the manifest against the implemented `sifr lint` clap surface and must fail if a Ruff lint CLI surface is unclassified.
+
+The lint CLI parity manifest schema is:
+
+- `schema`: integer schema version.
+- `ruff_check_sources`: scanned Ruff docs/source paths used to build the matrix.
+- `sifr_cli_sources`: scanned Sifr CLI source paths.
+- `surfaces`: array of objects with `ruff_surface`, `sifr_spelling`, `disposition`, `implementation_milestone`, `rationale`, `conflicts_with`, `fixture`, and `notes`.
+- `output_formats`: array of objects with `name`, `disposition`, `schema_contract`, and `fixture`.
+- `exit_codes`: array of objects with `code`, `condition`, and `fixture`.
+- `rejected_surfaces`: array of Ruff surfaces that must fail if accepted by `sifr lint`.
+
+Manifest validation must prove:
+
+- every Ruff `check` option and hidden compatibility spelling scanned for this phase appears exactly once;
+- every implemented `sifr lint` option appears in the manifest with an `adapt` or `sifr-native` disposition;
+- every rejected or future-phase Ruff surface is absent from the implemented clap surface;
+- every required conflict pair is enforced by the CLI parser or by deterministic usage diagnostics;
+- every implemented output format and exit code has at least one fixture.
+
+| Ruff `check` CLI surface | Sifr spelling | Disposition | Required implementation milestone |
+| --- | --- | --- | --- |
+| `ruff check [FILES]...` | `sifr lint [FILES]...` | adapt | M2 |
+| no positional files defaults to `.` | same | adapt | M2 |
+| multiple files/directories | same | adapt | M2 |
+| `-` stdin target | `-` | adapt | M2 |
+| `--stdin-filename <path>` | same | adapt | M2 |
+| `--select <RULE>` | same | adapt | M2 |
+| `--extend-select <RULE>` | same | adapt | M2 |
+| `--ignore <RULE>` | same | adapt | M2 |
+| hidden/deprecated `--extend-ignore <RULE>` | none | reject | M1 manifest classification only |
+| `--per-file-ignores <mapping>` | same | adapt | M2 |
+| `--extend-per-file-ignores <mapping>` | same | adapt | M2 |
+| `--fixable <RULE>` | same | adapt | M6 |
+| `--extend-fixable <RULE>` | same | adapt | M6 |
+| `--unfixable <RULE>` | same | adapt | M6 |
+| `--extend-unfixable <RULE>` | same | adapt | M6 |
+| `--fix` | same | adapt | M6 |
+| hidden `--no-fix` | none | reject | M1 manifest classification only |
+| `--fix-only` | same | adapt | M6 |
+| `--diff` | same | adapt | M6 |
+| `--unsafe-fixes` | same | adapt | M6 |
+| hidden `--no-unsafe-fixes` | `--no-unsafe-fixes` | adapt | M6 |
+| `--show-fixes` | same | adapt | M6 |
+| hidden `--no-show-fixes` | none | reject | M1 manifest classification only |
+| `--exit-non-zero-on-fix` | same; conflicts with `--exit-zero` | adapt | M6 |
+| `--exit-zero` | same; conflicts with `--exit-non-zero-on-fix` | adapt | M2 |
+| `--output-format <format>` | same | adapt | M2 for `concise`, `full`, `json`; later rows require explicit schema tests |
+| `--output-file <path>` | same | adapt | M2 |
+| `--statistics` | same; conflicts with `--show-files`, `--show-settings`, `--diff`, and `--watch` | adapt | M5 |
+| `--show-files` | same; conflicts with `--show-settings` and `--statistics` | adapt | M2 |
+| `--show-settings` | same; conflicts with `--show-files` and `--statistics` | adapt | M2 |
+| `--preview` | same | adapt | M2 |
+| hidden Ruff `--no-preview` | `--no-preview` | adapt | M2 |
+| `--exclude <pattern>` | same | adapt | M2 |
+| `--extend-exclude <pattern>` | same | adapt | M2 |
+| `--respect-gitignore` / `--no-respect-gitignore` | same | adapt | M2 |
+| `--force-exclude` / `--no-force-exclude` | same | adapt | M2 |
+| `--no-cache` | same | future-phase | Requires Sifr lint cache contract before exposure |
+| `--cache-dir <path>` | same | future-phase | Requires Sifr lint cache contract before exposure |
+| `--watch` | none in this phase | future-phase | LSP owns editor watch behavior; CLI watch requires a later watcher/incremental phase |
+| `--ignore-noqa` | `--ignore-suppressions`; independent from `--ignore <RULE>` | adapt | M3 |
+| `--add-noqa` | none in this phase | future-phase | Bulk suppression insertion requires a migration policy and parser-aware suppression fix engine |
+| `--show-source` / `--no-show-source` | none | reject | Deprecated Ruff spelling; use `--output-format full` or `concise` |
+| `--target-version <py>` | none | reject | Python versioning does not apply |
+| `--extension <ext:language>` | none | reject | Sifr lint targets `.sifr`; notebook/Python source-kind mapping does not apply |
+| global `--config <file-or-override>` | same global Sifr flag | adapt | M2 |
+| global `--isolated` | same global Sifr flag | adapt | M2 |
+| Ruff log flags `--verbose`, `--quiet`, `--silent` | none in this phase | future-phase | Sifr needs one cross-command logging contract before adding these |
+
+Required output-format decisions:
+
+- `concise`: compact one-line policy diagnostics for terminal and CI logs.
+- `full`: human diagnostics with source excerpts when source ranges are available.
+- `json`: stable `RenderedDiagnostic` array matching Sifr's diagnostic schema.
+- `json-lines`, `junit`, `grouped`, `github`, `gitlab`, `pylint`, `rdjson`, `azure`, and `sarif` are future-phase unless this phase adds explicit schema fixtures and docs for each format before implementation.
+- `--statistics` prints a rule-count summary instead of regular diagnostics. If later combined output is desired, a reviewed update must define exactly how statistics interact with every output format.
+- `--show-settings` prints resolved lint config, rule selection, file discovery settings, per-file ignores, preview state, output settings, and CLI overrides for the target.
+
+Required CLI fixtures:
+
+- default `.` and multi-target discovery;
+- stdin with `-`, stdin with `--stdin-filename`, and stdin plus ignored positional file behavior;
+- selector precedence across config and CLI;
+- per-file ignore override behavior;
+- `--show-files` and `--show-settings`;
+- `--show-files`, `--show-settings`, and `--statistics` mutual-exclusion diagnostics;
+- output-format and output-file behavior;
+- exit-zero and exit-code matrix;
+- rejected Python/Ruff-only flags;
+- fix, diff, fix-only, unsafe-fix, show-fixes, and exit-non-zero-on-fix behavior once M6 enables fixes.
+
 ## Sifr Lint Architecture Requirements
 
 ### Rule ownership
@@ -308,6 +429,8 @@ Every policy rule must declare one suppression complexity:
 4. `symbol-workspace`: diagnostic is tied to a symbol, HIR item, import graph, or workspace result.
 
 Current line-based suppression is valid only for `physical-line` rules. Before any other category ships, `sifr_lint` must attach `# sifr: ignore[rule-id]` comments through `sifr_syntax` statement/range mapping.
+
+M2 may expose only the current physical-line suppression behavior. M3 changes multi-line suppression attachment from line-attached to parser-aware statement/range attachment; M2 implementation notes and docs must call out that transition until M3 lands.
 
 ### Config ownership
 
@@ -406,6 +529,7 @@ Fix-capable rules must not ship until the fix engine supports:
 | AC-13 | A mechanical gate prevents syntax, HIR, and workspace lint rules from shipping before parser-aware suppression support is enabled |
 | AC-14 | Unsafe fixes are never applied automatically unless the rule is policy-only, the fix is explicitly enabled, and the edit applicability permits it |
 | AC-15 | Every Ruff rule family and Ruff lint config surface scanned for this phase has a locked `sifr-native`, `adapt`, `formatter-owned`, `future-phase`, or `reject` decision before implementation starts |
+| AC-16 | `sifr lint` implements the locked Ruff-compatible CLI contract or has a reviewed manifest row for every unsupported Ruff `check` surface |
 
 ## Milestone Breakdown
 
@@ -419,6 +543,7 @@ Scope:
 
 - create a linter reuse manifest matching this document
 - create `verification/tooling/linter_manifests/ruff_rule_config_audit.json` matching the Ruff rule-family and config-surface audit in this document
+- create `verification/tooling/linter_manifests/lint_cli_parity.json` matching the linter CLI parity contract in this document
 - create a lint rule metadata manifest
 - create `verification/tooling/check_linter_reuse_contract.py`
 - make `check_linter_reuse_contract.py` verify:
@@ -428,6 +553,8 @@ Scope:
   - every directory under the pinned Ruff fork's `crates/ruff_linter/src/rules` appears in `ruff_rule_config_audit.json`
   - every Sifr-accepted lint config key is represented in the config-surface audit with an allowed disposition
   - no implementation code references a rejected, formatter-owned, or future-phase Ruff family/config key as an enabled lint feature
+  - every Ruff `check` CLI surface scanned for this phase appears in `lint_cli_parity.json`
+  - every implemented `sifr lint` option appears in `lint_cli_parity.json` with an allowed disposition and milestone
   - seeded negative fixtures fail the check
 - create a placeholder lint config schema manifest
 - create `verification/tooling/linter_manifests/suppression_gate.json`
@@ -445,6 +572,7 @@ Validation:
 
 - manifest self-tests
 - Ruff rule/config audit manifest self-test
+- lint CLI parity manifest self-test
 - forbidden dependency guardrail and self-test
 - `python3 verification/tooling/check_linter_reuse_contract.py`
 - `python3 verification/tooling/check_linter_reuse_contract.py --self-test`
@@ -463,6 +591,7 @@ Scope:
 
 - implement `[lint]`, `[lint.rules]`, and `[lint.per-file-ignores]` in `sifr.toml`
 - implement Ruff-inspired config layering, extends, overrides, unknown-key diagnostics, and cycle detection
+- implement the non-fix portions of `sifr lint [OPTIONS] [FILES]...`: default `.`, multi-targets, stdin, rule selection, per-file ignores, output-format/output-file, show-files/show-settings, discovery flags, preview flags, `--exit-zero`, global `--config`, and `--isolated`
 - replace naive path matching with robust glob/gitignore discovery
 - support include, exclude, extend-exclude, force-exclude, respect-gitignore, and explicit-target behavior
 - add negative fixtures for deep directory traversal, ignored directories, symlink loops or cycles where supported by the walker, and pathological file counts within the local validation budget
@@ -471,6 +600,7 @@ Validation:
 
 - `cargo test -p sifr_lint`
 - config precedence fixtures
+- lint CLI parity fixtures for all M2 rows in `lint_cli_parity.json`
 - file discovery fixtures and negative tests
 
 Review gate:
@@ -488,6 +618,7 @@ Scope:
 - support physical-line, single-node, statement-range, and symbol/workspace suppression complexity
 - keep blanket suppressions forbidden
 - keep blanket suppression reporting as a policy diagnostic; any future blanket suppression support requires a reviewed planning update and explicit feature/config gate
+- implement `--ignore-suppressions` as the Sifr equivalent of Ruff's `--ignore-noqa`; it disables only policy suppression comments for the current lint run and does not affect per-file ignores or hard diagnostics
 - report unknown and unused suppressions deterministically
 - add multi-line suppression fixtures for calls, functions, classes, match/case, ownership/type constructs, and HIR diagnostics
 - update `verification/tooling/linter_manifests/suppression_gate.json` to `gate_state = "parser_aware"` and `allowed_rule_families = ["physical-line", "single-node", "statement-range", "symbol-workspace"]`
@@ -537,6 +668,7 @@ Scope:
 - add representative HIR/frontend policy rules
 - add workspace/import policy rules only where Sifr workspace/import semantics are already specified
 - only add rules whose originating planning row is `sifr-native`; any rule inspired by a `future-phase`, `formatter-owned`, or `reject` Ruff family requires a reviewed planning update before implementation
+- implement `--statistics` over Sifr rule IDs, including deterministic ordering and output fixtures
 - classify every rule by category, suppression complexity, default severity, status, and fix availability
 - keep the static `RULES` slice until the shipped policy-rule count exceeds 50. At that point, implementation must add a reviewed planning update before introducing a `RuleSelector` specificity system or macro-generated registry.
 - keep hard correctness diagnostics out of `sifr_lint`
@@ -562,6 +694,7 @@ Scope:
 - M6a: implement Sifr-owned fix applicability and edit isolation using Ruff-inspired patterns
 - M6a: implement fix conflict resolution, deterministic fix ordering, and synchronous code actions for safe policy fixes and explicit suppressions
 - M6a: keep fix-all policy-only and safe-by-default
+- M6a: implement fix-related lint CLI rows from `lint_cli_parity.json`: `--fix`, `--fix-only`, `--diff`, `--fixable`, `--extend-fixable`, `--unfixable`, `--extend-unfixable`, `--unsafe-fixes`, `--no-unsafe-fixes`, `--show-fixes`, and `--exit-non-zero-on-fix`
 - M6b: implement source-map/workspace edit tracking
 - M6b: add deferred code-action resolution for expensive edits and multi-file/workspace edits
 - M6b: add version-aware edit conflict handling for LSP
