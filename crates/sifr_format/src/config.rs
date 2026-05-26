@@ -1,24 +1,22 @@
-use super::cli_model_and_entrypoint::diagnostic_with_code;
-use super::formatter_cli::FmtArgs;
-use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
-use std::collections::BTreeSet;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug)]
-pub(crate) struct EffectiveFmtConfig {
-    pub(crate) format_options: sifr_format::FormatOptions,
-    pub(crate) exclude: Vec<String>,
-    pub(crate) respect_gitignore: bool,
-    pub(crate) force_exclude: bool,
-    pub(crate) no_cache: bool,
-    pub(crate) cache_dir: PathBuf,
+pub struct EffectiveFormatConfig {
+    pub format_options: crate::FormatOptions,
+    pub exclude: Vec<String>,
+    pub respect_gitignore: bool,
+    pub force_exclude: bool,
+    pub no_cache: bool,
+    pub cache_dir: PathBuf,
 }
 
-impl Default for EffectiveFmtConfig {
+impl Default for EffectiveFormatConfig {
     fn default() -> Self {
         Self {
-            format_options: sifr_format::FormatOptions::default(),
+            format_options: crate::FormatOptions::default(),
             exclude: Vec::new(),
             respect_gitignore: true,
             force_exclude: false,
@@ -28,35 +26,61 @@ impl Default for EffectiveFmtConfig {
     }
 }
 
-pub(crate) fn effective_fmt_config(
-    args: &FmtArgs,
+#[derive(Clone, Debug, Default)]
+pub struct FormatConfigOverrides {
+    pub line_length: Option<u16>,
+    pub preview: Option<bool>,
+    pub exclude: Vec<String>,
+    pub respect_gitignore: Option<bool>,
+    pub force_exclude: Option<bool>,
+    pub no_cache: Option<bool>,
+    pub cache_dir: Option<PathBuf>,
+}
+
+pub fn effective_format_config(
+    start_dir: &Path,
     config_inputs: &[String],
     isolated: bool,
-) -> Result<EffectiveFmtConfig, Vec<RenderedDiagnostic>> {
-    let mut config = EffectiveFmtConfig::default();
+    overrides: &FormatConfigOverrides,
+) -> Result<EffectiveFormatConfig, Vec<RenderedDiagnostic>> {
+    let mut config = EffectiveFormatConfig::default();
     if !isolated {
-        if let Some(path) = discover_sifr_toml()? {
+        if let Some(path) = discover_sifr_toml(start_dir)? {
             apply_config_file(&mut config, &path, &mut BTreeSet::new())?;
         }
-        for input in config_inputs {
-            if let Some((key, value)) = input.split_once('=') {
-                apply_config_override(&mut config, key, value)?;
-            } else {
-                apply_config_file(&mut config, Path::new(input), &mut BTreeSet::new())?;
-            }
+    }
+    for input in config_inputs {
+        if let Some((key, value)) = input.split_once('=') {
+            apply_config_override(&mut config, key, value)?;
+        } else if !isolated {
+            apply_config_file(&mut config, Path::new(input), &mut BTreeSet::new())?;
         }
     }
-    apply_cli_overrides(&mut config, args);
+    apply_overrides(&mut config, overrides);
     Ok(config)
 }
 
-fn discover_sifr_toml() -> Result<Option<PathBuf>, Vec<RenderedDiagnostic>> {
-    let cwd = std::env::current_dir().map_err(|err| {
+pub fn effective_format_options_for_file(
+    path: &Path,
+) -> Result<crate::FormatOptions, Vec<RenderedDiagnostic>> {
+    let start_dir = path.parent().unwrap_or_else(|| Path::new("."));
+    effective_format_config(start_dir, &[], false, &FormatConfigOverrides::default())
+        .map(|config| config.format_options)
+}
+
+fn discover_sifr_toml(start_dir: &Path) -> Result<Option<PathBuf>, Vec<RenderedDiagnostic>> {
+    let base = if start_dir.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        start_dir
+    };
+    let canonical = base.canonicalize().map_err(|err| {
         vec![fmt_diagnostic(format!(
-            "could not read current directory: {err}"
+            "could not resolve formatter config start directory {}: {err}",
+            base.display()
         ))]
     })?;
-    for dir in cwd.ancestors() {
+    for dir in canonical.ancestors() {
         let candidate = dir.join("sifr.toml");
         if candidate.is_file() {
             return Ok(Some(candidate));
@@ -66,7 +90,7 @@ fn discover_sifr_toml() -> Result<Option<PathBuf>, Vec<RenderedDiagnostic>> {
 }
 
 fn apply_config_file(
-    config: &mut EffectiveFmtConfig,
+    config: &mut EffectiveFormatConfig,
     path: &Path,
     seen: &mut BTreeSet<PathBuf>,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
@@ -94,18 +118,39 @@ fn apply_config_file(
             canonical.display()
         ))]
     })?;
-    if let Some(extend) = value.get("extend").and_then(toml::Value::as_str) {
-        let parent = canonical.parent().unwrap_or_else(|| Path::new("."));
-        apply_config_file(config, &parent.join(extend), seen)?;
-    }
+    let parent = canonical.parent().unwrap_or_else(|| Path::new("."));
+    apply_extends(config, value.get("extend"), parent, seen)?;
     if let Some(format) = value.get("format") {
+        apply_extends(config, format.get("extend"), parent, seen)?;
         apply_format_table(config, format)?;
     }
     Ok(())
 }
 
+fn apply_extends(
+    config: &mut EffectiveFormatConfig,
+    value: Option<&toml::Value>,
+    parent: &Path,
+    seen: &mut BTreeSet<PathBuf>,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    let Some(value) = value else {
+        return Ok(());
+    };
+    if let Some(path) = value.as_str() {
+        return apply_config_file(config, &parent.join(path), seen);
+    }
+    let Some(paths) = value.as_array() else {
+        return Err(vec![fmt_diagnostic("extend must be a string or array")]);
+    };
+    for path in paths {
+        let path = as_string("extend", path)?;
+        apply_config_file(config, &parent.join(path), seen)?;
+    }
+    Ok(())
+}
+
 fn apply_format_table(
-    config: &mut EffectiveFmtConfig,
+    config: &mut EffectiveFormatConfig,
     value: &toml::Value,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let Some(table) = value.as_table() else {
@@ -115,6 +160,7 @@ fn apply_format_table(
     };
     for (key, value) in table {
         match key.as_str() {
+            "extend" => {}
             "line-length" | "line_length" => {
                 config.format_options.line_length = as_u16(key, value)?;
             }
@@ -129,6 +175,9 @@ fn apply_format_table(
             }
             "force-exclude" | "force_exclude" => {
                 config.force_exclude = as_bool(key, value)?;
+            }
+            "cache" => {
+                config.no_cache = !as_bool(key, value)?;
             }
             "no-cache" | "no_cache" => {
                 config.no_cache = as_bool(key, value)?;
@@ -152,7 +201,7 @@ fn apply_format_table(
 }
 
 fn apply_config_override(
-    config: &mut EffectiveFmtConfig,
+    config: &mut EffectiveFormatConfig,
     key: &str,
     raw_value: &str,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
@@ -164,35 +213,26 @@ fn apply_config_override(
     apply_format_table(config, &toml::Value::Table(table))
 }
 
-fn apply_cli_overrides(config: &mut EffectiveFmtConfig, args: &FmtArgs) {
-    if let Some(line_length) = args.line_length {
+fn apply_overrides(config: &mut EffectiveFormatConfig, overrides: &FormatConfigOverrides) {
+    if let Some(line_length) = overrides.line_length {
         config.format_options.line_length = line_length;
     }
-    if args.preview {
-        config.format_options.preview = true;
+    if let Some(preview) = overrides.preview {
+        config.format_options.preview = preview;
     }
-    if args.no_preview {
-        config.format_options.preview = false;
+    if !overrides.exclude.is_empty() {
+        config.exclude.extend(overrides.exclude.clone());
     }
-    if !args.exclude.is_empty() {
-        config.exclude.extend(args.exclude.clone());
+    if let Some(respect_gitignore) = overrides.respect_gitignore {
+        config.respect_gitignore = respect_gitignore;
     }
-    if args.respect_gitignore {
-        config.respect_gitignore = true;
+    if let Some(force_exclude) = overrides.force_exclude {
+        config.force_exclude = force_exclude;
     }
-    if args.no_respect_gitignore {
-        config.respect_gitignore = false;
+    if let Some(no_cache) = overrides.no_cache {
+        config.no_cache = no_cache;
     }
-    if args.force_exclude {
-        config.force_exclude = true;
-    }
-    if args.no_force_exclude {
-        config.force_exclude = false;
-    }
-    if args.no_cache {
-        config.no_cache = true;
-    }
-    if let Some(cache_dir) = &args.cache_dir {
+    if let Some(cache_dir) = &overrides.cache_dir {
         config.cache_dir = cache_dir.clone();
     }
 }
@@ -228,5 +268,23 @@ fn as_string_list(key: &str, value: &toml::Value) -> Result<Vec<String>, Vec<Ren
 }
 
 fn fmt_diagnostic(message: impl Into<String>) -> RenderedDiagnostic {
-    diagnostic_with_code(message, DiagnosticCode::FMT_FORMATTING_DRIFT)
+    let message = message.into();
+    let code = DiagnosticCode::FMT_FORMATTING_DRIFT;
+    let mut args = BTreeMap::new();
+    args.insert(
+        "message".to_string(),
+        DiagnosticArg::String(message.clone()),
+    );
+    RenderedDiagnostic {
+        code: code.code().to_string(),
+        severity: code.declared_severity(),
+        message,
+        message_template: "{message}".to_string(),
+        args,
+        url: code.docs_url(),
+        spans: Vec::new(),
+        children: Vec::new(),
+        help: None,
+        suggestions: Vec::new(),
+    }
 }

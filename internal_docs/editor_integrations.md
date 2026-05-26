@@ -12,6 +12,11 @@ sifr lsp --stdio
 
 Editor packages may provide filetype detection, syntax highlighting, commands that call Sifr CLI/LSP surfaces, and setup documentation. They must not implement Sifr parser, type checker, formatter, linter, diagnostics, codegen, symbol, reference, rename, or ownership semantics.
 
+Document and range formatting are standard LSP requests served by `sifr lsp --stdio`.
+Manual formatting should use each editor's normal LSP format command, and
+format-on-save should be configured through that same LSP client. Editor assets
+must not call `sifr fmt` as their primary formatting provider.
+
 ## Syntax Asset Source Of Truth
 
 Phase 36 uses parser-validated syntax assets. TextMate and/or Tree-sitter assets are accepted only when drift checks compare them with `sifr_syntax` tokenization fixtures. Basic highlighting must work before the LSP starts; semantic tokens come from `sifr lsp`.
@@ -27,6 +32,8 @@ Neovim:
 
 - filetype detection for `.sifr`
 - LSP configuration launching `sifr lsp --stdio`
+- manual formatting through `vim.lsp.buf.format`
+- format-on-save through the Neovim LSP client
 - syntax asset instructions
 - no fallback Python tooling
 - checked-in assets: `editor_integrations/neovim/ftdetect/sifr.lua` and `editor_integrations/neovim/lsp/sifr.lua`
@@ -35,6 +42,7 @@ Zed:
 
 - language extension metadata or contribution-ready config
 - LSP command `sifr lsp --stdio`
+- LSP-backed formatting and `format_on_save` setup
 - syntax strategy notes
 - no semantic implementation outside Sifr
 - checked-in assets: `editor_integrations/zed/extension.toml` and `editor_integrations/zed/languages/sifr/config.toml`
@@ -43,6 +51,8 @@ Helix:
 
 - `languages.toml` contribution-ready config
 - language server command `sifr lsp --stdio`
+- manual formatting through Helix's LSP format command
+- `auto-format = true` compatibility
 - syntax/highlighting instructions
 - no Python server fallback
 - checked-in asset: `editor_integrations/helix/languages.toml`
@@ -51,6 +61,8 @@ Emacs:
 
 - major-mode/filetype guidance
 - Eglot or lsp-mode command using `sifr lsp --stdio`
+- manual formatting through `eglot-format`
+- save hooks may call Eglot's LSP formatter
 - syntax asset guidance
 - no semantic implementation outside Sifr
 - checked-in asset: `editor_integrations/emacs/sifr-mode.el`

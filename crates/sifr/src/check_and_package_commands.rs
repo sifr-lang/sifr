@@ -8,7 +8,6 @@ use super::diagnostic_rendering_and_run::{
     package_session_for_cwd, render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
-use super::formatter_config::{effective_fmt_config, EffectiveFmtConfig};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
@@ -16,6 +15,7 @@ use sifr_driver::{
     check_project, check_single_file, compile, emit_project, run_tests, CachedBinaryArtifact,
     CompileResult, PackageEntrypoint,
 };
+use sifr_format::config::{effective_format_config, EffectiveFormatConfig, FormatConfigOverrides};
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
 use std::hash::{Hash as _, Hasher as _};
@@ -412,7 +412,13 @@ pub(super) fn fmt_entrypoint(
     config_inputs: &[String],
     isolated: bool,
 ) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
-    let config = effective_fmt_config(args, config_inputs, isolated)?;
+    let cwd = std::env::current_dir().map_err(|err| {
+        vec![formatter_cli_diagnostic(format!(
+            "could not read current directory: {err}"
+        ))]
+    })?;
+    let config =
+        effective_format_config(&cwd, config_inputs, isolated, &format_cli_overrides(args))?;
     let options = config.format_options;
     if args.stdin_filename.is_some() || (args.paths.is_empty() && !io::stdin().is_terminal()) {
         return fmt_stdin(args, options);
@@ -520,9 +526,31 @@ fn format_source_or_range(
     }
 }
 
+fn format_cli_overrides(args: &FmtArgs) -> FormatConfigOverrides {
+    FormatConfigOverrides {
+        line_length: args.line_length,
+        preview: flag_override(args.preview, args.no_preview),
+        exclude: args.exclude.clone(),
+        respect_gitignore: flag_override(args.respect_gitignore, args.no_respect_gitignore),
+        force_exclude: flag_override(args.force_exclude, args.no_force_exclude),
+        no_cache: args.no_cache.then_some(true),
+        cache_dir: args.cache_dir.clone(),
+    }
+}
+
+fn flag_override(enable: bool, disable: bool) -> Option<bool> {
+    if disable {
+        Some(false)
+    } else if enable {
+        Some(true)
+    } else {
+        None
+    }
+}
+
 fn select_formatter_files(
     target: &Path,
-    config: &EffectiveFmtConfig,
+    config: &EffectiveFormatConfig,
     explicit_target: bool,
 ) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
     let files = sifr_format::collect_sifr_files(target)?;
@@ -572,7 +600,7 @@ fn pattern_matches(path: &Path, patterns: &[String]) -> bool {
 fn try_formatter_cache_hit(
     path: &Path,
     options: sifr_format::FormatOptions,
-    config: &EffectiveFmtConfig,
+    config: &EffectiveFormatConfig,
 ) -> Result<bool, Vec<RenderedDiagnostic>> {
     if config.no_cache {
         return Ok(false);
@@ -590,7 +618,7 @@ fn try_formatter_cache_hit(
 fn write_formatter_cache_entry(
     path: &Path,
     options: sifr_format::FormatOptions,
-    config: &EffectiveFmtConfig,
+    config: &EffectiveFormatConfig,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     if config.no_cache {
         return Ok(());

@@ -12,7 +12,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-formatter.md`
 - [x] Ruff fork formatter Sifr AST support completed
 - [x] Sifr formatter core switched to Ruff-backed in-process formatting
 - [x] CLI and config parity completed
-- [ ] Analysis, LSP, and editor integration formatting parity completed
+- [x] Analysis, LSP, and editor integration formatting parity completed
 - [ ] Formatter corpus, guardrails, and performance checks completed
 - [ ] Formatter showcase demo copied to `.sifr`, formatted, and recorded
 - [ ] Internal and public docs updated
@@ -381,6 +381,7 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Claude Opus Milestone 3 review approved the Ruff-backed `sifr_format` core with no blockers and explicitly approved Milestone 3 to merge so Milestone 4 may begin.
 - `2026-05-26`: Claude Opus Milestone 4 wave 1 review approved the expanded formatter CLI surface and direct CLI behaviors with no blockers, leaving config discovery, excludes, gitignore, and cache behavior for wave 2.
 - `2026-05-26`: Claude Opus Milestone 4 wave 2 review approved config discovery, explicit `--config`, `--isolated`, excludes, gitignore, force-exclude behavior, and cache creation with no blockers; Milestone 4 is approved to merge so Milestone 5 may begin.
+- `2026-05-26`: Claude Opus Milestone 5 review approved the analysis, LSP, and editor formatting parity implementation with no blockers; Milestone 5 is approved to merge so Milestone 6 may begin after PR links are recorded.
 
 ## Validation Log
 
@@ -406,6 +407,8 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Milestone 3 quick validation passed with `scripts/run_all_tests.sh --profile quick`. The lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded a warm wall-time advisory and group-skew advisory after compiling the new Ruff-backed formatter dependency graph.
 - `2026-05-26`: Milestone 4 wave 1 targeted validation passed: formatter CLI smoke coverage for `--check`, `--diff`, `--stdin-filename`, stdin formatting, `--range`, `--line-length`, `--preview`, cache flag parsing, and multi-path/default directory behavior; `cargo fmt -p sifr -p sifr_format --check`; `cargo test -p sifr_format`; `cargo test -p sifr -- --skip test_e2e_pass`; `python3 verification/tooling/check_formatter_contract.py`; `python3 verification/tooling/check_formatter_contract.py --self-test`; `python3 scripts/check_file_size_guardrails.py`; and `git diff --check`.
 - `2026-05-26`: Milestone 4 wave 2 targeted validation passed: formatter CLI smoke coverage for discovered `sifr.toml` `[format]`, explicit `--config` override, `--isolated`, excludes, `.gitignore`, explicit target force-exclude behavior, and cache directory creation; `cargo fmt -p sifr -p sifr_format --check`; `cargo test -p sifr_format`; `cargo test -p sifr -- --skip test_e2e_pass`; `python3 verification/tooling/check_formatter_contract.py`; `python3 verification/tooling/check_formatter_contract.py --self-test`; `python3 scripts/check_file_size_guardrails.py`; and `git diff --check`.
+- `2026-05-26`: Milestone 5 targeted validation passed: `cargo fmt -p sifr -p sifr_format -p sifr_lsp -p sifr_analysis --check`; `cargo test -p sifr_lsp -p sifr_analysis -p sifr_format`; `cargo build -p sifr`; `python3 verification/tooling/lsp_protocol_smoke.py`; `python3 verification/tooling/lsp_protocol_stress.py`; `python3 verification/tooling/check_editor_assets.py`; `python3 verification/tooling/check_tooling_contract_lock.py`; self-tests for the LSP protocol, editor assets, and tooling contract checks; `cargo test -p sifr -- --skip test_e2e_pass`; `python3 scripts/check_file_size_guardrails.py`; and `git diff --check --ignore-submodules=none`.
+- `2026-05-26`: Milestone 5 quick validation passed with `scripts/run_all_tests.sh --profile quick`. The lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded warm wall-time and group-skew advisories.
 
 ## PR Log
 
@@ -414,3 +417,4 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - Milestone 3 `sifr_format_ruff_backed_core`: <https://github.com/sifr-lang/sifr/pull/2177>
 - Milestone 4 wave 1 `formatter_cli_surface`: <https://github.com/sifr-lang/sifr/pull/2178>
 - Milestone 4 wave 2 `formatter_cli_config_selection_cache`: <https://github.com/sifr-lang/sifr/pull/2179>
+- Milestone 5 `formatter_lsp_editor_parity`: VS Code PR <https://github.com/sifr-lang/sifr-vscode/pull/2>; editor integrations PR <https://github.com/sifr-lang/editor-integrations/pull/1>; superproject PR <https://github.com/sifr-lang/sifr/pull/2180>

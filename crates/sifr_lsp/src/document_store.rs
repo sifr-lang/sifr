@@ -206,6 +206,10 @@ impl DocumentState {
         &self.text
     }
 
+    pub(crate) fn path(&self) -> &std::path::Path {
+        &self.path
+    }
+
     pub(crate) fn file(&self) -> Option<FileId> {
         self.analysis.file
     }

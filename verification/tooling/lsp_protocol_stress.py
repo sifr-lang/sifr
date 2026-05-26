@@ -70,6 +70,35 @@ def run_stress() -> None:
             if error.get("code") != -32602:
                 raise LspProtocolError(f"invalid range returned unexpected error: {error}")
 
+            error = client.request_error(
+                "textDocument/rangeFormatting",
+                {
+                    "textDocument": {"uri": uri},
+                    "range": {
+                        "start": {"line": 999, "character": 0},
+                        "end": {"line": 999, "character": 1},
+                    },
+                    "options": {"tabSize": 4},
+                },
+            )
+            if error.get("code") != -32602:
+                raise LspProtocolError(f"invalid formatter range returned unexpected error: {error}")
+
+            client.notify("workspace/didChangeConfiguration", {"settings": {"sifr.format.enable": False}})
+            error = client.request_error(
+                "textDocument/formatting",
+                {"textDocument": {"uri": uri}, "options": {"tabSize": 4}},
+            )
+            if error.get("code") != -32601:
+                raise LspProtocolError(f"disabled formatter returned unexpected error: {error}")
+            client.notify("workspace/didChangeConfiguration", {"settings": {"sifr.format.enable": True}})
+            edits = client.request(
+                "textDocument/formatting",
+                {"textDocument": {"uri": uri}, "options": {"tabSize": 4}},
+            )
+            if not isinstance(edits, list):
+                raise LspProtocolError("re-enabled formatter did not return an edit list")
+
             client.notify("workspace/didChangeConfiguration", {"settings": {"sifr.diagnostics.mode": "off"}})
             client.notify("workspace/didChangeWatchedFiles", {"changes": [{"uri": uri, "type": 2}]})
             client.notify("textDocument/didSave", {"textDocument": {"uri": uri}, "text": UPDATED})

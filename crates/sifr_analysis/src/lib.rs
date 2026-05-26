@@ -36,3 +36,9 @@ pub use sifr_frontend::{
     SourcePath, SourceText,
 };
 pub use sifr_syntax::TextPosition;
+
+pub fn format_options_for_path(
+    path: &std::path::Path,
+) -> Result<FormatOptions, Vec<sifr_diagnostics::RenderedDiagnostic>> {
+    sifr_format::config::effective_format_options_for_file(path)
+}

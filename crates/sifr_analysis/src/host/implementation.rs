@@ -398,8 +398,16 @@ impl AnalysisHost {
     ) -> QueryResult<Vec<sifr_format::TextEdit>> {
         let source = self.source_text(file)?;
         let path = self.context.path_for_file(file);
-        let edits = sifr_format::format_range(&source, full_range(&source)?, path, options)
+        let result = sifr_format::format_source(&source, path, options)
             .map_err(|diagnostics| frontend_diagnostics(&diagnostics))?;
+        let edits = if result.formatted == source {
+            Vec::new()
+        } else {
+            vec![sifr_format::TextEdit {
+                range: full_range(&source)?,
+                replacement: result.formatted,
+            }]
+        };
         Ok(self.result(AnalysisQueryKind::FormatDocument, edits))
     }
 

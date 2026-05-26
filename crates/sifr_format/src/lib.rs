@@ -14,6 +14,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+pub mod config;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FormatOptions {
     pub final_newline: bool,

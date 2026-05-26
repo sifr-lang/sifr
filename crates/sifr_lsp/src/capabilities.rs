@@ -23,8 +23,8 @@ pub(crate) const SEMANTIC_TOKEN_TYPES: &[&str] = &[
 
 pub(crate) const SEMANTIC_TOKEN_MODIFIERS: &[&str] = &["declaration", "readonly"];
 
-pub(crate) fn server_capabilities() -> Value {
-    json!({
+pub(crate) fn server_capabilities(format_enable: bool) -> Value {
+    let mut capabilities = json!({
         "positionEncoding": PositionEncodingKind::UTF8,
         "textDocumentSync": {
             "openClose": true,
@@ -74,8 +74,6 @@ pub(crate) fn server_capabilities() -> Value {
                 "source.sifr.suppressPolicyRule"
             ]
         },
-        "documentFormattingProvider": true,
-        "documentRangeFormattingProvider": true,
         "executeCommandProvider": {
             "commands": [
                 "sifr.restartServer",
@@ -90,5 +88,10 @@ pub(crate) fn server_capabilities() -> Value {
             "workspaceFolders": { "supported": true, "changeNotifications": true },
             "fileOperations": {}
         }
-    })
+    });
+    if format_enable {
+        capabilities["documentFormattingProvider"] = json!(true);
+        capabilities["documentRangeFormattingProvider"] = json!(true);
+    }
+    capabilities
 }

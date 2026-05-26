@@ -26,8 +26,21 @@ impl LspServer {
     }
 
     fn run(mut self) -> ServerResult<()> {
+        let (initialize_id, initialize_params) = self.connection.initialize_start()?;
+        let settings = crate::settings::settings_from_initialize_params(
+            &initialize_params,
+            self.session.store().settings(),
+        )?;
+        self.session.store_mut().apply_settings(settings.clone());
+        let initialize_data = serde_json::json!({
+            "capabilities": capabilities::server_capabilities(settings.format_enable),
+            "serverInfo": {
+                "name": "sifr-lsp",
+                "version": env!("CARGO_PKG_VERSION")
+            }
+        });
         self.connection
-            .initialize(capabilities::server_capabilities())?;
+            .initialize_finish(initialize_id, initialize_data)?;
         while let Ok(message) = self.connection.receiver.recv() {
             match message {
                 Message::Request(request) => {
