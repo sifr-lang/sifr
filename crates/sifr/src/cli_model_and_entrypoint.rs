@@ -343,6 +343,8 @@ fn run_cli(cli: Cli) -> i32 {
     if let Some(code) = cli.explain {
         return cmd_explain(&code, diagnostic_format);
     }
+    let config = cli.config;
+    let isolated = cli.isolated;
     let Some(command) = cli.command else {
         let diagnostic = diagnostic_with_code(
             "no command provided",
@@ -503,7 +505,7 @@ fn run_cli(cli: Cli) -> i32 {
                 diagnostic_format,
             )
         }
-        Commands::Fmt(args) => cmd_fmt(&args, diagnostic_format),
+        Commands::Fmt(args) => cmd_fmt(&args, &config, isolated, diagnostic_format),
         Commands::Lint { path } => cmd_lint(&path, diagnostic_format),
         Commands::Lsp { stdio } => cmd_lsp(stdio),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),

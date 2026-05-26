@@ -23,6 +23,7 @@ sifr_python_ast = { workspace = true }
 sifr_syntax = { workspace = true }
 clap = { version = "4.6.1", features = ["derive"] }
 serde_json = { workspace = true }
+toml = { workspace = true }
 
 [dev-dependencies]
 serde = { workspace = true }
