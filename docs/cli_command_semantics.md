@@ -60,6 +60,20 @@ preview, config, path-selection, and cache controls, and formats only `.sifr`
 source. Editor formatting is served through `sifr lsp --stdio`, not through an
 editor-owned formatter implementation.
 
+Lint commands use the Sifr-owned policy-rule engine. `sifr lint [OPTIONS]
+[FILES]...` defaults to the current directory, accepts multiple files or
+directories, supports stdin with `-` and `--stdin-filename`, resolves `[lint]`,
+`[lint.rules]`, and `[lint.per-file-ignores]` from `sifr.toml`, and applies
+CLI/global config overrides after discovered config. The command supports
+Sifr rule selection through `--select`, `--extend-select`, and `--ignore`;
+path filtering through `--exclude`, `--extend-exclude`, gitignore controls, and
+force-exclude controls; and lint-local `--output-format concise|full|json`,
+`--output-file`, `--show-files`, `--show-settings`, and `--exit-zero`.
+
+`sifr lint` emits only suppressible policy diagnostics. It does not run,
+downgrade, suppress, or auto-fix hard compiler diagnostics from `sifr check`.
+Fix-related lint flags are reserved for the production fix-engine milestone.
+
 ## Edge Cases
 
 - A neighboring invalid `scratch.sifr` file must not break `run/build` when `main.sifr` has no local imports.

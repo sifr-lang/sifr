@@ -147,6 +147,15 @@ Sifr lint authority. Milestone 1 locks those decisions in machine-readable
 manifests before config, discovery, parser-aware suppressions, phase-gated
 orchestration, fix support, or editor actions are expanded.
 
+Milestone 2 implements the non-fix `sifr lint [OPTIONS] [FILES]...` surface
+through `crates/sifr/src/lint_cli.rs` and keeps command execution separate from
+package/build/check orchestration. `sifr_lint` now owns `[lint]`,
+`[lint.rules]`, and `[lint.per-file-ignores]` config loading from `sifr.toml`,
+path-relative `extend`, CLI overrides, selector validation, per-file ignores,
+glob-based include/exclude matching, and `ignore`-crate backed gitignore
+discovery. The suppression gate remains `physical_line_only`; non-line rules
+are still blocked until the parser-aware suppression milestone.
+
 ## Generated Rust And Test Metadata
 
 Generated Rust preview uses compiler/codegen APIs and source maps. It must be cancellable, revision-checked, budgeted under `lsp-generated-rust-preview`, and must not return partial generated code after a document change invalidates the request.

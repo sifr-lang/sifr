@@ -284,25 +284,6 @@ pub(super) fn cmd_fmt(
     }
 }
 
-pub(super) fn cmd_lint(path: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
-    let result = match run_with_panic_boundary(
-        "internal compiler panic during lint command execution",
-        || lint_entrypoint(path),
-    ) {
-        Ok(result) => result,
-        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
-    };
-
-    match result {
-        Ok(diagnostics) if diagnostics.is_empty() => {
-            emit_success_message(diagnostic_format, "no lint diagnostics found");
-            EXIT_SUCCESS
-        }
-        Ok(diagnostics) => render_diagnostics(&diagnostics, diagnostic_format),
-        Err(errors) => render_diagnostics(&errors, diagnostic_format),
-    }
-}
-
 pub(super) fn emit_success_message(diagnostic_format: DiagnosticFormat, message: &str) {
     match diagnostic_format {
         DiagnosticFormat::Human => {
@@ -702,14 +683,4 @@ fn formatting_drift_for_path(source: &str, path: &Path) -> RenderedDiagnostic {
 
 fn formatter_cli_diagnostic(message: impl Into<String>) -> RenderedDiagnostic {
     diagnostic_with_code(message, DiagnosticCode::FMT_FORMATTING_DRIFT)
-}
-
-pub(super) fn lint_entrypoint(
-    path: &Path,
-) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
-    let options = sifr_lint::LintOptions {
-        explicit_target: path.is_file(),
-        ..sifr_lint::LintOptions::default()
-    };
-    sifr_lint::lint_path(path, &options).map(|result| result.diagnostics)
 }

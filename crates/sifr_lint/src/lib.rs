@@ -1,16 +1,35 @@
-//! Sifr-owned policy-rule and suppression foundation.
+//! Sifr-owned policy-rule, configuration, discovery, and suppression foundation.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
+use globset::Glob;
+use sifr_diagnostics::{
+    DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
+};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+
+mod config;
+mod discovery;
+
+pub use config::effective_lint_config;
+pub use discovery::{collect_sifr_files, collect_sifr_files_for_targets};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RuleSeverity {
     Ignore,
     Warn,
     Error,
+}
+
+impl RuleSeverity {
+    fn diagnostic_severity(self) -> Severity {
+        match self {
+            Self::Ignore => Severity::Note,
+            Self::Warn => Severity::Warning,
+            Self::Error => Severity::Error,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -21,13 +40,32 @@ pub enum RuleStatus {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FixAvailability {
+    None,
+    Safe,
+    Unsafe,
+    Manual,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SuppressionComplexity {
+    PhysicalLine,
+    SingleNode,
+    StatementRange,
+    SymbolWorkspace,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RuleMetadata {
     pub id: &'static str,
     pub summary: &'static str,
     pub docs_url: &'static str,
     pub default_level: RuleSeverity,
     pub status: RuleStatus,
+    pub category: &'static str,
     pub source: &'static str,
+    pub fix_availability: FixAvailability,
+    pub suppression_complexity: SuppressionComplexity,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -38,12 +76,25 @@ pub enum DiagnosticMode {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PerFileIgnore {
+    pub pattern: String,
+    pub rules: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LintOptions {
     pub mode: DiagnosticMode,
     pub explicit_target: bool,
     pub include: Vec<String>,
     pub exclude: Vec<String>,
-    pub respect_ignore_files: bool,
+    pub respect_gitignore: bool,
+    pub force_exclude: bool,
+    pub preview: bool,
+    pub select: Vec<String>,
+    pub extend_select: Vec<String>,
+    pub ignore: Vec<String>,
+    pub rule_levels: BTreeMap<String, RuleSeverity>,
+    pub per_file_ignores: Vec<PerFileIgnore>,
 }
 
 impl Default for LintOptions {
@@ -51,11 +102,38 @@ impl Default for LintOptions {
         Self {
             mode: DiagnosticMode::Workspace,
             explicit_target: true,
-            include: Vec::new(),
+            include: vec!["*.sifr".to_string()],
             exclude: Vec::new(),
-            respect_ignore_files: true,
+            respect_gitignore: true,
+            force_exclude: false,
+            preview: false,
+            select: vec!["default".to_string()],
+            extend_select: Vec::new(),
+            ignore: Vec::new(),
+            rule_levels: BTreeMap::new(),
+            per_file_ignores: Vec::new(),
         }
     }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct LintConfigOverrides {
+    pub select: Option<Vec<String>>,
+    pub extend_select: Vec<String>,
+    pub ignore: Vec<String>,
+    pub per_file_ignores: Vec<PerFileIgnore>,
+    pub extend_per_file_ignores: Vec<PerFileIgnore>,
+    pub exclude: Vec<String>,
+    pub extend_exclude: Vec<String>,
+    pub respect_gitignore: Option<bool>,
+    pub force_exclude: Option<bool>,
+    pub preview: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct EffectiveLintConfig {
+    pub options: LintOptions,
+    pub config_path: Option<PathBuf>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -77,7 +155,10 @@ pub const RULES: &[RuleMetadata] = &[
         docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0004",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
+        category: "style-policy",
         source: "sifr_lint::rules::trailing_whitespace",
+        fix_availability: FixAvailability::None,
+        suppression_complexity: SuppressionComplexity::PhysicalLine,
     },
     RuleMetadata {
         id: "unknown-suppression",
@@ -85,7 +166,10 @@ pub const RULES: &[RuleMetadata] = &[
         docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0001",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
+        category: "suppression-policy",
         source: "sifr_lint::suppressions",
+        fix_availability: FixAvailability::None,
+        suppression_complexity: SuppressionComplexity::PhysicalLine,
     },
     RuleMetadata {
         id: "unused-suppression",
@@ -93,7 +177,10 @@ pub const RULES: &[RuleMetadata] = &[
         docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0002",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
+        category: "suppression-policy",
         source: "sifr_lint::suppressions",
+        fix_availability: FixAvailability::None,
+        suppression_complexity: SuppressionComplexity::PhysicalLine,
     },
     RuleMetadata {
         id: "blanket-suppression",
@@ -101,7 +188,10 @@ pub const RULES: &[RuleMetadata] = &[
         docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0003",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
+        category: "suppression-policy",
         source: "sifr_lint::suppressions",
+        fix_availability: FixAvailability::None,
+        suppression_complexity: SuppressionComplexity::PhysicalLine,
     },
 ];
 
@@ -116,23 +206,35 @@ pub fn lint_source(source: &str, file: Option<&Path>, options: &LintOptions) -> 
         };
     }
 
-    let mut suppressions = parse_suppressions(source, file);
+    let mut suppressions = parse_suppressions(source);
     let mut diagnostics = Vec::new();
-    diagnostics.extend(suppression_shape_diagnostics(&suppressions, file, source));
+    diagnostics.extend(suppression_shape_diagnostics(
+        &suppressions,
+        file,
+        source,
+        options,
+    ));
 
     for (line_index, line) in source.split_inclusive('\n').enumerate() {
-        if line_has_trailing_whitespace(line) {
-            let rule = "trailing-whitespace";
+        let rule = "trailing-whitespace";
+        if line_has_trailing_whitespace(line) && rule_enabled(rule, file, options) {
             if mark_suppressed(&mut suppressions, line_index, rule) {
                 continue;
             }
-            diagnostics.push(trailing_whitespace_diagnostic(
-                file, source, line_index, line,
+            diagnostics.push(with_rule_severity(
+                trailing_whitespace_diagnostic(file, source, line_index, line),
+                rule,
+                options,
             ));
         }
     }
 
-    diagnostics.extend(unused_suppression_diagnostics(&suppressions, file, source));
+    diagnostics.extend(unused_suppression_diagnostics(
+        &suppressions,
+        file,
+        source,
+        options,
+    ));
     diagnostics.sort_by_key(diagnostic_order_key);
     LintResult { diagnostics }
 }
@@ -141,7 +243,14 @@ pub fn lint_path(
     path: &Path,
     options: &LintOptions,
 ) -> Result<LintResult, Vec<RenderedDiagnostic>> {
-    let files = collect_sifr_files(path, options)?;
+    lint_paths(&[path.to_path_buf()], options)
+}
+
+pub fn lint_paths(
+    paths: &[PathBuf],
+    options: &LintOptions,
+) -> Result<LintResult, Vec<RenderedDiagnostic>> {
+    let files = collect_sifr_files_for_targets(paths, options)?;
     let mut diagnostics = Vec::new();
     for file in files {
         let source = fs::read_to_string(&file).map_err(|err| {
@@ -159,92 +268,56 @@ pub fn lint_path(
     Ok(LintResult { diagnostics })
 }
 
-pub fn collect_sifr_files(
-    path: &Path,
-    options: &LintOptions,
-) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
-    if path.is_file() {
-        return Ok(vec![path.to_path_buf()]);
-    }
-    if !path.is_dir() {
-        return Err(vec![diagnostic(
-            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
-            format!("lint target does not exist: {}", path.display()),
-            [("path", path.display().to_string())],
-            Vec::new(),
-            None,
-        )]);
-    }
-    let ignore_patterns = if options.respect_ignore_files {
-        read_ignore_patterns(path)
-    } else {
-        Vec::new()
+fn rule_enabled(rule_id: &str, file: Option<&Path>, options: &LintOptions) -> bool {
+    let Some(metadata) = rule_metadata(rule_id) else {
+        return false;
     };
-    let mut files = Vec::new();
-    collect_sifr_files_inner(path, path, options, &ignore_patterns, &mut files)?;
-    files.sort();
-    Ok(files)
-}
-
-fn collect_sifr_files_inner(
-    root: &Path,
-    path: &Path,
-    options: &LintOptions,
-    ignore_patterns: &[String],
-    files: &mut Vec<PathBuf>,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    for entry in fs::read_dir(path).map_err(|err| {
-        vec![diagnostic(
-            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
-            format!("could not read directory {}: {err}", path.display()),
-            [("path", path.display().to_string())],
-            Vec::new(),
-            None,
-        )]
-    })? {
-        let entry = entry.map_err(|err| {
-            vec![diagnostic(
-                DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
-                format!(
-                    "could not read directory entry under {}: {err}",
-                    path.display()
-                ),
-                [("path", path.display().to_string())],
-                Vec::new(),
-                None,
-            )]
-        })?;
-        let child = entry.path();
-        if should_exclude(root, &child, options, ignore_patterns) {
-            continue;
-        }
-        if child.is_dir() {
-            collect_sifr_files_inner(root, &child, options, ignore_patterns, files)?;
-        } else if is_sifr_file(&child) {
-            files.push(child);
-        }
-    }
-    Ok(())
-}
-
-fn should_exclude(
-    root: &Path,
-    path: &Path,
-    options: &LintOptions,
-    ignore_patterns: &[String],
-) -> bool {
-    if options.explicit_target && path.is_file() {
+    if per_file_ignored(rule_id, file, options) {
         return false;
     }
-    if is_default_excluded_dir(path) {
-        return true;
+    if options
+        .ignore
+        .iter()
+        .any(|selector| selector_matches(selector, metadata))
+    {
+        return false;
     }
-    let rel = path.strip_prefix(root).unwrap_or(path).to_string_lossy();
-    options.exclude.iter().any(|pattern| rel.contains(pattern))
-        || ignore_patterns.iter().any(|pattern| rel.contains(pattern))
+    let selected = options
+        .select
+        .iter()
+        .chain(options.extend_select.iter())
+        .any(|selector| selector_matches(selector, metadata));
+    let level = options
+        .rule_levels
+        .get(rule_id)
+        .copied()
+        .unwrap_or(metadata.default_level);
+    selected && level != RuleSeverity::Ignore
 }
 
-fn parse_suppressions(source: &str, file: Option<&Path>) -> Vec<Suppression> {
+fn selector_matches(selector: &str, rule: &RuleMetadata) -> bool {
+    match selector {
+        "all" => rule.status != RuleStatus::Deprecated,
+        "default" => {
+            rule.default_level != RuleSeverity::Ignore && rule.status == RuleStatus::Stable
+        }
+        _ => selector == rule.id || selector == rule.category,
+    }
+}
+
+fn per_file_ignored(rule_id: &str, file: Option<&Path>, options: &LintOptions) -> bool {
+    let Some(file) = file else {
+        return false;
+    };
+    options.per_file_ignores.iter().any(|ignore| {
+        ignore.rules.iter().any(|rule| rule == rule_id)
+            && Glob::new(&ignore.pattern)
+                .ok()
+                .is_some_and(|glob| glob.compile_matcher().is_match(file))
+    })
+}
+
+fn parse_suppressions(source: &str) -> Vec<Suppression> {
     let mut suppressions = Vec::new();
     for (line_index, line) in source.lines().enumerate() {
         let Some(comment_start) = line.find('#') else {
@@ -270,7 +343,6 @@ fn parse_suppressions(source: &str, file: Option<&Path>) -> Vec<Suppression> {
         } else {
             Vec::new()
         };
-        let _ = file;
         suppressions.push(Suppression {
             line: line_index,
             rules,
@@ -284,36 +356,61 @@ fn suppression_shape_diagnostics(
     suppressions: &[Suppression],
     file: Option<&Path>,
     source: &str,
+    options: &LintOptions,
 ) -> Vec<RenderedDiagnostic> {
     let mut diagnostics = Vec::new();
     for suppression in suppressions {
         if suppression.rules.is_empty() {
-            diagnostics.push(suppression_diagnostic(
-                DiagnosticCode::LINT_BLANKET_SUPPRESSION,
-                "sifr suppression must list explicit policy rule ids",
+            push_if_enabled(
+                &mut diagnostics,
+                suppression_diagnostic(
+                    DiagnosticCode::LINT_BLANKET_SUPPRESSION,
+                    "sifr suppression must list explicit policy rule ids",
+                    "blanket-suppression",
+                    suppression.line,
+                    file,
+                    source,
+                    Some("use `# sifr: ignore[rule-id]` with a Sifr policy rule id"),
+                ),
                 "blanket-suppression",
-                suppression.line,
                 file,
-                source,
-                Some("use `# sifr: ignore[rule-id]` with a Sifr policy rule id"),
-            ));
+                options,
+            );
             continue;
         }
         for rule in &suppression.rules {
             if rule_metadata(rule).is_none() {
-                diagnostics.push(suppression_diagnostic(
-                    DiagnosticCode::LINT_UNKNOWN_SUPPRESSION,
-                    format!("unknown Sifr policy rule id '{rule}'"),
-                    rule,
-                    suppression.line,
+                push_if_enabled(
+                    &mut diagnostics,
+                    suppression_diagnostic(
+                        DiagnosticCode::LINT_UNKNOWN_SUPPRESSION,
+                        format!("unknown Sifr policy rule id '{rule}'"),
+                        rule,
+                        suppression.line,
+                        file,
+                        source,
+                        Some("remove the suppression or use a known Sifr policy rule id"),
+                    ),
+                    "unknown-suppression",
                     file,
-                    source,
-                    Some("remove the suppression or use a known Sifr policy rule id"),
-                ));
+                    options,
+                );
             }
         }
     }
     diagnostics
+}
+
+fn push_if_enabled(
+    diagnostics: &mut Vec<RenderedDiagnostic>,
+    diagnostic: RenderedDiagnostic,
+    rule: &str,
+    file: Option<&Path>,
+    options: &LintOptions,
+) {
+    if rule_enabled(rule, file, options) {
+        diagnostics.push(with_rule_severity(diagnostic, rule, options));
+    }
 }
 
 fn mark_suppressed(suppressions: &mut [Suppression], line: usize, rule: &str) -> bool {
@@ -330,24 +427,42 @@ fn unused_suppression_diagnostics(
     suppressions: &[Suppression],
     file: Option<&Path>,
     source: &str,
+    options: &LintOptions,
 ) -> Vec<RenderedDiagnostic> {
     let mut diagnostics = Vec::new();
     for suppression in suppressions {
         for rule in &suppression.rules {
             if rule_metadata(rule).is_some() && !suppression.used_rules.contains(rule) {
-                diagnostics.push(suppression_diagnostic(
-                    DiagnosticCode::LINT_UNUSED_SUPPRESSION,
-                    format!("unused Sifr suppression for policy rule '{rule}'"),
-                    rule,
-                    suppression.line,
+                push_if_enabled(
+                    &mut diagnostics,
+                    suppression_diagnostic(
+                        DiagnosticCode::LINT_UNUSED_SUPPRESSION,
+                        format!("unused Sifr suppression for policy rule '{rule}'"),
+                        rule,
+                        suppression.line,
+                        file,
+                        source,
+                        Some("remove the unused suppression"),
+                    ),
+                    "unused-suppression",
                     file,
-                    source,
-                    Some("remove the unused suppression"),
-                ));
+                    options,
+                );
             }
         }
     }
     diagnostics
+}
+
+fn with_rule_severity(
+    mut diagnostic: RenderedDiagnostic,
+    rule: &str,
+    options: &LintOptions,
+) -> RenderedDiagnostic {
+    if let Some(level) = options.rule_levels.get(rule) {
+        diagnostic.severity = level.diagnostic_severity();
+    }
+    diagnostic
 }
 
 fn trailing_whitespace_diagnostic(
@@ -428,7 +543,17 @@ fn suppression_diagnostic(
     diagnostic
 }
 
-fn diagnostic(
+pub(crate) fn lint_config_diagnostic(message: impl Into<String>) -> RenderedDiagnostic {
+    diagnostic(
+        DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+        message.into(),
+        [],
+        Vec::new(),
+        None,
+    )
+}
+
+pub(crate) fn diagnostic(
     code: DiagnosticCode,
     message: impl Into<String>,
     args: impl IntoIterator<Item = (&'static str, String)>,
@@ -480,38 +605,10 @@ fn byte_offset_for_line(source: &str, line_index: usize) -> u32 {
     u32::try_from(offset).unwrap_or(u32::MAX)
 }
 
-fn read_ignore_patterns(root: &Path) -> Vec<String> {
-    [".gitignore", ".ignore"]
-        .iter()
-        .flat_map(|name| {
-            fs::read_to_string(root.join(name))
-                .unwrap_or_default()
-                .lines()
-                .map(str::to_string)
-                .collect::<Vec<_>>()
-        })
-        .map(|line| line.trim().to_string())
-        .filter(|line| !line.is_empty() && !line.starts_with('#'))
-        .collect()
-}
-
-fn is_sifr_file(path: &Path) -> bool {
-    path.extension()
-        .is_some_and(|extension| extension == "sifr")
-}
-
-fn is_default_excluded_dir(path: &Path) -> bool {
-    path.file_name().is_some_and(|name| {
-        matches!(
-            name.to_string_lossy().as_ref(),
-            ".git" | "target" | ".venv" | "venv" | "node_modules" | "sifr_output"
-        )
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn suppression_only_suppresses_matching_policy_rule() {
@@ -541,5 +638,69 @@ mod tests {
         let source = "def main(): # sifr: ignore\n    pass\n";
         let result = lint_source(source, None, &LintOptions::default());
         assert_eq!(result.diagnostics[0].code, "SIFR-LINT-0003");
+    }
+
+    #[test]
+    fn config_rule_ignore_disables_rule() {
+        let root = temp_dir("lint_config_rule_ignore");
+        fs::write(
+            root.join("sifr.toml"),
+            "[lint.rules]\ntrailing-whitespace = \"ignore\"\n",
+        )
+        .unwrap();
+        let config =
+            effective_lint_config(&root, &[], false, &LintConfigOverrides::default()).unwrap();
+        let result = lint_source("def main():  \n    pass\n", None, &config.options);
+        assert!(result.diagnostics.is_empty());
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn discovery_respects_gitignore_unless_disabled() {
+        let root = temp_dir("lint_discovery_gitignore");
+        fs::create_dir_all(root.join("ignored")).unwrap();
+        fs::write(root.join(".gitignore"), "ignored/\n").unwrap();
+        fs::write(root.join("main.sifr"), "def main():\n    pass\n").unwrap();
+        fs::write(
+            root.join("ignored").join("skip.sifr"),
+            "def skip():\n    pass\n",
+        )
+        .unwrap();
+        let files = collect_sifr_files(&root, &LintOptions::default()).unwrap();
+        assert_eq!(files.len(), 1);
+        let options = LintOptions {
+            respect_gitignore: false,
+            ..LintOptions::default()
+        };
+        let files = collect_sifr_files(&root, &options).unwrap();
+        assert_eq!(files.len(), 2);
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn per_file_ignore_filters_rule() {
+        let options = LintOptions {
+            per_file_ignores: vec![PerFileIgnore {
+                pattern: "*.sifr".to_string(),
+                rules: vec!["trailing-whitespace".to_string()],
+            }],
+            ..LintOptions::default()
+        };
+        let result = lint_source(
+            "def main():  \n    pass\n",
+            Some(Path::new("main.sifr")),
+            &options,
+        );
+        assert!(result.diagnostics.is_empty());
+    }
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("sifr_{name}_{nonce}"));
+        fs::create_dir_all(&path).unwrap();
+        path
     }
 }

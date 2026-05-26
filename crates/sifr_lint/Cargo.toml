@@ -7,7 +7,10 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+globset = { workspace = true }
+ignore = { workspace = true }
 sifr_diagnostics = { workspace = true }
+toml = { workspace = true }
 
 [lints]
 workspace = true

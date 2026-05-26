@@ -63,6 +63,8 @@ annotate-snippets = { version = "0.12.15", features = ["color"] }
 anyhow = { version = "1.0.102" }
 bitflags = { version = "2.11.1" }
 bstr = { version = "1.12.1" }
+globset = { version = "0.4.18" }
+ignore = { version = "0.4.25" }
 insta = { version = "1.47.2" }
 is-macro = { version = "0.3.7" }
 itertools = { version = "0.14.0" }
