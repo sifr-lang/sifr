@@ -2,9 +2,10 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 use ruff_formatter::printer::LineEnding;
+use ruff_formatter::LineWidth;
 use ruff_python_formatter::{
     format_sifr_module_source, format_sifr_range as ruff_format_sifr_range, FormatModuleError,
-    PyFormatOptions,
+    PreviewMode, PyFormatOptions,
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
@@ -16,12 +17,16 @@ use std::path::{Path, PathBuf};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FormatOptions {
     pub final_newline: bool,
+    pub line_length: u16,
+    pub preview: bool,
 }
 
 impl Default for FormatOptions {
     fn default() -> Self {
         Self {
             final_newline: true,
+            line_length: 88,
+            preview: false,
         }
     }
 }
@@ -117,15 +122,23 @@ pub fn format_range(
 }
 
 pub fn format_path(path: &Path, check: bool) -> Result<FormattedPath, Vec<RenderedDiagnostic>> {
+    format_path_with_options(path, check, FormatOptions::default())
+}
+
+pub fn format_path_with_options(
+    path: &Path,
+    check: bool,
+    options: FormatOptions,
+) -> Result<FormattedPath, Vec<RenderedDiagnostic>> {
     let source = read_source(path)?;
     if check {
-        let check = check_source(&source, Some(path), FormatOptions::default())?;
+        let check = check_source(&source, Some(path), options)?;
         return Ok(FormattedPath {
             path: path.to_path_buf(),
             changed: !check.diagnostics.is_empty(),
         });
     }
-    let result = format_source(&source, Some(path), FormatOptions::default())?;
+    let result = format_source(&source, Some(path), options)?;
     if result.changed {
         write_source(path, &result.formatted)?;
     }
@@ -136,8 +149,15 @@ pub fn format_path(path: &Path, check: bool) -> Result<FormattedPath, Vec<Render
 }
 
 pub fn check_path(path: &Path) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
+    check_path_with_options(path, FormatOptions::default())
+}
+
+pub fn check_path_with_options(
+    path: &Path,
+    options: FormatOptions,
+) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
     let source = read_source(path)?;
-    check_source(&source, Some(path), FormatOptions::default()).map(|check| check.diagnostics)
+    check_source(&source, Some(path), options).map(|check| check.diagnostics)
 }
 
 pub fn collect_sifr_files(path: &Path) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
@@ -202,8 +222,23 @@ fn ruff_options(
             "the Ruff-backed Sifr formatter currently requires a final newline",
         )]);
     }
-    let options = file.map_or_else(PyFormatOptions::default, PyFormatOptions::from_extension);
-    Ok(options.with_line_ending(LineEnding::LineFeed))
+    let py_options = file.map_or_else(PyFormatOptions::default, PyFormatOptions::from_extension);
+    let line_width = LineWidth::try_from(options.line_length).map_err(|_| {
+        vec![unsupported_option_diagnostic(
+            file,
+            "line_length",
+            "line length must be between 1 and 65535",
+        )]
+    })?;
+    let preview = if options.preview {
+        PreviewMode::Enabled
+    } else {
+        PreviewMode::Disabled
+    };
+    Ok(py_options
+        .with_line_ending(LineEnding::LineFeed)
+        .with_line_width(line_width)
+        .with_preview(preview))
 }
 
 fn validate_range(
@@ -521,6 +556,7 @@ mod tests {
             None,
             FormatOptions {
                 final_newline: false,
+                ..FormatOptions::default()
             },
         )
         .expect_err("unsupported option");

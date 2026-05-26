@@ -14,6 +14,7 @@ mod cli_model_and_entrypoint;
 pub(crate) use cli_model_and_entrypoint::main;
 mod check_and_package_commands;
 mod diagnostic_rendering_and_run;
+mod formatter_cli;
 mod workspace_run_selection;
 
 #[cfg(test)]

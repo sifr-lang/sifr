@@ -1,19 +1,22 @@
 use super::cli_model_and_entrypoint::{
-    package_diagnostic, read_source, resolve_compilation_mode, run_with_panic_boundary,
-    CompilationMode, DiagnosticFormat, PackageCompilerContext, PackageGraphContext, EXIT_SUCCESS,
-    EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    diagnostic_with_code, package_diagnostic, read_source, resolve_compilation_mode,
+    run_with_panic_boundary, CompilationMode, DiagnosticFormat, PackageCompilerContext,
+    PackageGraphContext, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
 };
 use super::diagnostic_rendering_and_run::{
     cargo_failure_diagnostic, current_session_package_id, execute_cargo_plan,
     package_session_for_cwd, render_diagnostics,
 };
-use sifr_diagnostics::RenderedDiagnostic;
+use super::formatter_cli::FmtArgs;
+use ruff_text_size::{TextRange, TextSize};
+use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
     build, build_cached_project, build_cached_single_file, build_project, check_package_project,
     check_project, check_single_file, compile, emit_project, run_tests, CachedBinaryArtifact,
     CompileResult, PackageEntrypoint,
 };
-use std::io::{self, Write as _};
+use std::fs;
+use std::io::{self, IsTerminal as _, Read as _, Write as _};
 use std::path::{Path, PathBuf};
 pub(super) fn redacted_args(args: &[String]) -> Vec<String> {
     args.iter()
@@ -246,10 +249,10 @@ pub(super) fn paths_equal(left: &Path, right: &Path) -> bool {
     left == right
 }
 
-pub(super) fn cmd_fmt(path: &Path, check: bool, diagnostic_format: DiagnosticFormat) -> i32 {
+pub(super) fn cmd_fmt(args: &FmtArgs, diagnostic_format: DiagnosticFormat) -> i32 {
     let result = match run_with_panic_boundary(
         "internal compiler panic during fmt command execution",
-        || fmt_entrypoint(path, check),
+        || fmt_entrypoint(args),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -257,13 +260,16 @@ pub(super) fn cmd_fmt(path: &Path, check: bool, diagnostic_format: DiagnosticFor
 
     match result {
         Ok(changed) => {
-            if check {
+            if args.check {
                 if changed.is_empty() {
                     emit_success_message(diagnostic_format, "format check passed");
                     EXIT_SUCCESS
                 } else {
                     render_diagnostics(&changed, diagnostic_format)
                 }
+            } else if changed.is_empty() {
+                emit_success_message(diagnostic_format, "Sifr source files already formatted");
+                EXIT_SUCCESS
             } else {
                 emit_success_message(diagnostic_format, "formatted Sifr source files");
                 EXIT_SUCCESS
@@ -397,19 +403,166 @@ pub(super) fn emit_entrypoint(file: &Path) -> CompileResult {
 }
 
 pub(super) fn fmt_entrypoint(
-    path: &Path,
-    check: bool,
+    args: &FmtArgs,
 ) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
-    let files = sifr_format::collect_sifr_files(path)?;
+    let options = format_options_from_args(args);
+    if args.stdin_filename.is_some() || (args.paths.is_empty() && !io::stdin().is_terminal()) {
+        return fmt_stdin(args, options);
+    }
+
+    let targets = if args.paths.is_empty() {
+        vec![PathBuf::from(".")]
+    } else {
+        args.paths.clone()
+    };
     let mut diagnostics = Vec::new();
-    for file in files {
-        if check {
-            diagnostics.extend(sifr_format::check_path(&file)?);
-        } else {
-            let _formatted = sifr_format::format_path(&file, false)?;
+    for target in targets {
+        let files = sifr_format::collect_sifr_files(&target)?;
+        for file in files {
+            if args.check {
+                diagnostics.extend(sifr_format::check_path_with_options(&file, options)?);
+            } else if args.diff {
+                let source = fs::read_to_string(&file).map_err(|err| {
+                    vec![formatter_cli_diagnostic(format!(
+                        "could not read file {}: {err}",
+                        file.display()
+                    ))]
+                })?;
+                let formatted = format_source_or_range(&source, &file, args, options)?;
+                if formatted != source {
+                    write_unified_diff(&file, &source, &formatted);
+                    diagnostics.push(formatting_drift_for_path(&source, &file));
+                }
+            } else if args.range.is_some() {
+                let source = fs::read_to_string(&file).map_err(|err| {
+                    vec![formatter_cli_diagnostic(format!(
+                        "could not read file {}: {err}",
+                        file.display()
+                    ))]
+                })?;
+                let formatted = format_source_or_range(&source, &file, args, options)?;
+                if formatted != source {
+                    fs::write(&file, formatted).map_err(|err| {
+                        vec![formatter_cli_diagnostic(format!(
+                            "could not write file {}: {err}",
+                            file.display()
+                        ))]
+                    })?;
+                }
+            } else {
+                let _formatted = sifr_format::format_path_with_options(&file, false, options)?;
+            }
         }
     }
     Ok(diagnostics)
+}
+
+fn fmt_stdin(
+    args: &FmtArgs,
+    options: sifr_format::FormatOptions,
+) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
+    let mut source = String::new();
+    io::stdin().read_to_string(&mut source).map_err(|err| {
+        vec![formatter_cli_diagnostic(format!(
+            "could not read formatter stdin: {err}"
+        ))]
+    })?;
+    let file = args
+        .stdin_filename
+        .as_deref()
+        .unwrap_or(Path::new("<stdin>"));
+    let formatted = format_source_or_range(&source, file, args, options)?;
+    if args.check {
+        if formatted == source {
+            return Ok(Vec::new());
+        }
+        return Ok(vec![formatting_drift_for_path(&source, file)]);
+    }
+    if args.diff {
+        write_unified_diff(file, &source, &formatted);
+    } else {
+        let _ = write!(io::stdout(), "{formatted}");
+    }
+    Ok(Vec::new())
+}
+
+fn format_options_from_args(args: &FmtArgs) -> sifr_format::FormatOptions {
+    sifr_format::FormatOptions {
+        line_length: args.line_length.unwrap_or(88),
+        preview: args.preview && !args.no_preview,
+        ..sifr_format::FormatOptions::default()
+    }
+}
+
+fn format_source_or_range(
+    source: &str,
+    file: &Path,
+    args: &FmtArgs,
+    options: sifr_format::FormatOptions,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    if let Some(range) = &args.range {
+        let range = parse_byte_range(range)?;
+        let edits = sifr_format::format_range(source, range, Some(file), options)?;
+        let mut formatted = source.to_string();
+        for edit in edits.into_iter().rev() {
+            let start = usize::from(edit.range.start());
+            let end = usize::from(edit.range.end());
+            formatted.replace_range(start..end, &edit.replacement);
+        }
+        Ok(formatted)
+    } else {
+        sifr_format::format_source(source, Some(file), options).map(|result| result.formatted)
+    }
+}
+
+fn parse_byte_range(raw: &str) -> Result<TextRange, Vec<RenderedDiagnostic>> {
+    let Some((start, end)) = raw.split_once(':') else {
+        return Err(vec![formatter_cli_diagnostic(
+            "formatter range must use START:END byte offsets",
+        )]);
+    };
+    let start = parse_text_size(start)?;
+    let end = parse_text_size(end)?;
+    if start > end {
+        return Err(vec![formatter_cli_diagnostic(
+            "formatter range start must be before range end",
+        )]);
+    }
+    Ok(TextRange::new(start, end))
+}
+
+fn parse_text_size(raw: &str) -> Result<TextSize, Vec<RenderedDiagnostic>> {
+    let value = raw.parse::<u32>().map_err(|_| {
+        vec![formatter_cli_diagnostic(
+            "formatter range offsets must be unsigned integers",
+        )]
+    })?;
+    Ok(TextSize::new(value))
+}
+
+fn write_unified_diff(path: &Path, before: &str, after: &str) {
+    let _ = writeln!(io::stdout(), "--- {}", path.display());
+    let _ = writeln!(io::stdout(), "+++ {}", path.display());
+    for line in before.lines() {
+        let _ = writeln!(io::stdout(), "-{line}");
+    }
+    for line in after.lines() {
+        let _ = writeln!(io::stdout(), "+{line}");
+    }
+}
+
+fn formatting_drift_for_path(source: &str, path: &Path) -> RenderedDiagnostic {
+    match sifr_format::check_source(source, Some(path), sifr_format::FormatOptions::default()) {
+        Ok(check) if !check.diagnostics.is_empty() => check.diagnostics[0].clone(),
+        _ => formatter_cli_diagnostic(format!(
+            "source is not formatted with sifr fmt: {}",
+            path.display()
+        )),
+    }
+}
+
+fn formatter_cli_diagnostic(message: impl Into<String>) -> RenderedDiagnostic {
+    diagnostic_with_code(message, DiagnosticCode::FMT_FORMATTING_DRIFT)
 }
 
 pub(super) fn lint_entrypoint(
