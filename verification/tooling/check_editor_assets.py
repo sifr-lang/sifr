@@ -41,6 +41,7 @@ FORBIDDEN_MARKERS = {
     "python-lsp-server": "editor assets must not fall back to Python tooling",
     "ruff-lsp": "editor assets must not fall back to Ruff tooling",
     "ruff server": "editor assets must not fall back to Ruff tooling",
+    "sifr fmt": "editor assets must not invoke the CLI formatter as the editor formatting provider",
     "sifr_python_parser": "editor assets must not call Sifr parser internals",
     "ruff_python_parser": "editor assets must not call parser internals",
     "type_check": "editor assets must not type-check",
@@ -220,6 +221,17 @@ def run_self_test() -> None:
         failures = validate(temp_root)
         if not any("unmapped token kinds" in failure and "String" in failure for failure in failures):
             raise SystemExit("editor assets self-test failed: missing syntax token scope passed")
+
+        shutil.rmtree(temp_root)
+        shutil.copytree(ASSET_ROOT, temp_root)
+        neovim_lsp = temp_root / "neovim" / "lsp" / "sifr.lua"
+        neovim_lsp.write_text(
+            neovim_lsp.read_text(encoding="utf-8") + "\n-- formatter fallback: sifr fmt\n",
+            encoding="utf-8",
+        )
+        failures = validate(temp_root)
+        if not any("sifr fmt" in failure for failure in failures):
+            raise SystemExit("editor assets self-test failed: direct sifr fmt formatter fallback passed")
 
     print("editor assets self-test: PASS")
 

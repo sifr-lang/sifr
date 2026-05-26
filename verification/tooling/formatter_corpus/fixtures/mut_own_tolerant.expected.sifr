@@ -1,0 +1,2 @@
+def consume(own mut items: list[int]) -> list[int]:
+    return [item for item in items if item > 0]

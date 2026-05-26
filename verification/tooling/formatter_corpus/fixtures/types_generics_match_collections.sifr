@@ -1,0 +1,17 @@
+class Box[T]:
+    value: T
+
+    def replace(own mut self, own value: T) -> Result[T, str]:
+        old: T = self.value
+        self.value = value
+        return Ok(old)
+
+
+def collect(values: dict[str, list[int]]) -> Result[list[int], str]:
+    match len(values):
+        case 0:
+            return Err("missing")
+        case _:
+            items: list[int] = values["items"]
+            filtered: list[int] = [item for item in items if item > 0]
+            return Ok(filtered)

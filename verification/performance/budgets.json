@@ -602,6 +602,46 @@
     },
     {
       "baseline": {
+        "coefficient_variation": 0.017141,
+        "median_ms": 1005.131,
+        "p95_ms": 1031.088,
+        "peak_rss_bytes": 9256960
+      },
+      "benchmark_id": "formatter-corpus-001-project-check",
+      "budget_id": "perf.formatter.corpus.project_check",
+      "cache": {},
+      "group": "formatter",
+      "policy": "formatter-command-default",
+      "rationale": "Derived from Milestone 6 formatter corpus and large-file benchmark samples with a conservative local CLI threshold.",
+      "thresholds": {
+        "median_ms": 2000.0,
+        "p95_ms": 3000.0,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.00601,
+        "median_ms": 1017.341,
+        "p95_ms": 1021.71,
+        "peak_rss_bytes": 9601024
+      },
+      "benchmark_id": "formatter-large-file-001-check",
+      "budget_id": "perf.formatter.large_file.check",
+      "cache": {},
+      "group": "formatter",
+      "policy": "formatter-command-default",
+      "rationale": "Derived from Milestone 6 formatter corpus and large-file benchmark samples with a conservative local CLI threshold.",
+      "thresholds": {
+        "median_ms": 2000.0,
+        "p95_ms": 3000.0,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
         "coefficient_variation": 0.02192,
         "median_ms": 0.113,
         "p95_ms": 0.117,

@@ -26,7 +26,7 @@ DEFAULT_OUTPUT_ROOT = REPO_ROOT / "target" / "performance"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
 COMMAND_KINDS = {"command", "frontend-query", "lsp-query"}
-COMMAND_MODES = {"check", "build"}
+COMMAND_MODES = {"check", "build", "fmt-check"}
 FRONTEND_BENCH_BINARY = REPO_ROOT / "target" / "debug" / "frontend_query_bench"
 _FRONTEND_BENCH_READY = False
 
@@ -206,7 +206,7 @@ def validate_case(raw: dict[str, Any]) -> None:
             raise BenchmarkError(f"benchmark case {raw['id']} field {field} must be a positive integer")
     if raw["kind"] == "command":
         if raw.get("mode") not in COMMAND_MODES:
-            raise BenchmarkError(f"command benchmark {raw['id']} must use mode check or build")
+            raise BenchmarkError(f"command benchmark {raw['id']} must use mode check, build, or fmt-check")
         exit_codes = raw.get("expected_exit_codes")
         if not isinstance(exit_codes, list) or not exit_codes or not all(isinstance(code, int) for code in exit_codes):
             raise BenchmarkError(f"command benchmark {raw['id']} must define integer expected_exit_codes")
@@ -409,6 +409,9 @@ def command_for_case(case: BenchmarkCase, output_dir: Path) -> list[str]:
     source = str(REPO_ROOT / case.raw["source_path"])
     command = ["cargo", "run", "-q", "-p", "sifr", "--"]
     command.extend(case.raw.get("global_args", []))
+    if case.raw["mode"] == "fmt-check":
+        command.extend(["fmt", "--check", "--no-cache", source])
+        return command
     command.extend([str(case.raw["mode"]), source])
     if case.raw["mode"] == "build":
         command.extend(["--output", str(output_dir)])

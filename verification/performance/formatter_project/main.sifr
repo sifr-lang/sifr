@@ -1,0 +1,7 @@
+from util import collect
+
+
+def main() -> None:
+    values: dict[str, list[int]] = {"items": [1, 2, 3]}
+    result: Result[list[int], str] = collect(values)
+    print(result)

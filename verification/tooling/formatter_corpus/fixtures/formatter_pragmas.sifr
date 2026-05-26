@@ -1,0 +1,14 @@
+def pragmas(mut values: list[int]) -> list[int]:
+    # fmt: off
+    raw=[ 3,2,1]
+    # fmt: on
+    cooked = [3, 2, 1]
+    # yapf: disable
+    disabled=[ 4,5,6]
+    # yapf: enable
+    skipped = [1, 2, 3]  # fmt: skip
+    expression_comment = [1, 2, 3]  # fmt: skip stays statement-scoped
+    values.append(len(cooked))
+    values.append(len(skipped))
+    values.append(len(expression_comment))
+    return values

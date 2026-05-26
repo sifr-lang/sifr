@@ -8,14 +8,77 @@
       "kind": "command",
       "budget_id": "perf.check.single.arithmetic",
       "sample_count": 5,
-      "samples_ms": [10.0, 10.1, 9.9, 10.0, 10.1],
+      "samples_ms": [
+        10.0,
+        10.1,
+        9.9,
+        10.0,
+        10.1
+      ],
       "metrics": {
         "median_ms": 10.0,
         "p95_ms": 10.1,
         "mad_ms": 0.1,
         "coefficient_variation": 0.005
       },
-      "cache": {"hits": 0, "misses": 0},
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "timed_out": false
+    },
+    {
+      "budget_id": "perf.formatter.corpus.project_check",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "evidence_category": "formatter-project",
+      "group": "formatter",
+      "id": "formatter-corpus-001-project-check",
+      "kind": "command",
+      "metrics": {
+        "coefficient_variation": 0.017141,
+        "mad_ms": 10.26,
+        "median_ms": 1005.131,
+        "p95_ms": 1031.088,
+        "peak_rss_bytes": 9256960
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        978.309249971062,
+        1003.5311669344082,
+        1005.1307500107214,
+        1031.0879170428962,
+        1015.3910000808537
+      ],
+      "timed_out": false
+    },
+    {
+      "budget_id": "perf.formatter.large_file.check",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "evidence_category": "formatter-large-file",
+      "group": "formatter",
+      "id": "formatter-large-file-001-check",
+      "kind": "command",
+      "metrics": {
+        "coefficient_variation": 0.00601,
+        "mad_ms": 4.369,
+        "median_ms": 1017.341,
+        "p95_ms": 1021.71,
+        "peak_rss_bytes": 9601024
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1017.3407499678433,
+        1021.7100420268252,
+        1020.9029999095947,
+        1005.5603340733796,
+        1011.4638750674203
+      ],
       "timed_out": false
     }
   ]

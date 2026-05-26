@@ -1,0 +1,15 @@
+def documented(mut own values:list[int])->list[int]:
+    """
+    Sifr snippets in docstrings format when enabled.
+
+    ```sifr
+    def sample( mut own items:list[int])->list[int]:
+        return [item for item in items if item>0]
+    ```
+
+    .. code-block:: sifr
+
+        def passthrough( own item:Result[int,str])->Result[int,str]:
+            return item
+    """
+    return values

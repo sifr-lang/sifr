@@ -13,7 +13,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-formatter.md`
 - [x] Sifr formatter core switched to Ruff-backed in-process formatting
 - [x] CLI and config parity completed
 - [x] Analysis, LSP, and editor integration formatting parity completed
-- [ ] Formatter corpus, guardrails, and performance checks completed
+- [x] Formatter corpus, guardrails, and performance checks completed
 - [ ] Formatter showcase demo copied to `.sifr`, formatted, and recorded
 - [ ] Internal and public docs updated
 - [ ] Full local validation recorded
@@ -382,6 +382,7 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Claude Opus Milestone 4 wave 1 review approved the expanded formatter CLI surface and direct CLI behaviors with no blockers, leaving config discovery, excludes, gitignore, and cache behavior for wave 2.
 - `2026-05-26`: Claude Opus Milestone 4 wave 2 review approved config discovery, explicit `--config`, `--isolated`, excludes, gitignore, force-exclude behavior, and cache creation with no blockers; Milestone 4 is approved to merge so Milestone 5 may begin.
 - `2026-05-26`: Claude Opus Milestone 5 review approved the analysis, LSP, and editor formatting parity implementation with no blockers; Milestone 5 is approved to merge so Milestone 6 may begin after PR links are recorded.
+- `2026-05-26`: Claude Opus Milestone 6 review approved the formatter corpus, AST coverage guardrail, docstring snippet coverage, editor guardrail seeds, validation wiring, and formatter performance budgets with no blockers; Milestone 6 is approved to close after PR merge.
 
 ## Validation Log
 
@@ -409,6 +410,12 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Milestone 4 wave 2 targeted validation passed: formatter CLI smoke coverage for discovered `sifr.toml` `[format]`, explicit `--config` override, `--isolated`, excludes, `.gitignore`, explicit target force-exclude behavior, and cache directory creation; `cargo fmt -p sifr -p sifr_format --check`; `cargo test -p sifr_format`; `cargo test -p sifr -- --skip test_e2e_pass`; `python3 verification/tooling/check_formatter_contract.py`; `python3 verification/tooling/check_formatter_contract.py --self-test`; `python3 scripts/check_file_size_guardrails.py`; and `git diff --check`.
 - `2026-05-26`: Milestone 5 targeted validation passed: `cargo fmt -p sifr -p sifr_format -p sifr_lsp -p sifr_analysis --check`; `cargo test -p sifr_lsp -p sifr_analysis -p sifr_format`; `cargo build -p sifr`; `python3 verification/tooling/lsp_protocol_smoke.py`; `python3 verification/tooling/lsp_protocol_stress.py`; `python3 verification/tooling/check_editor_assets.py`; `python3 verification/tooling/check_tooling_contract_lock.py`; self-tests for the LSP protocol, editor assets, and tooling contract checks; `cargo test -p sifr -- --skip test_e2e_pass`; `python3 scripts/check_file_size_guardrails.py`; and `git diff --check --ignore-submodules=none`.
 - `2026-05-26`: Milestone 5 quick validation passed with `scripts/run_all_tests.sh --profile quick`. The lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded warm wall-time and group-skew advisories.
+- `2026-05-26`: Milestone 6 Ruff fork validation passed from `third_party/ruff`: `cargo fmt -p ruff_python_formatter --check` and `cargo test -p ruff_python_formatter --test fixtures sifr_extensions --quiet`.
+- `2026-05-26`: Ruff fork PR <https://github.com/sifr-lang/ruff/pull/3> merged into `sifr/0.15.12-maintenance` as `8b95ca3d888910aa39632cd9873c05de5121ab67`, adding Sifr-tagged docstring code snippet formatting support and fixtures.
+- `2026-05-26`: Milestone 6 updated the Ruff fork revalidation metadata and representative syntax token fixtures to record `8b95ca3d888910aa39632cd9873c05de5121ab67`; `python3 verification/performance/check_ruff_fork_update_contract.py` passed.
+- `2026-05-26`: Milestone 6 targeted superproject validation passed: `cargo fmt -p sifr_format -p sifr --check`, `cargo clippy -p sifr_format -- -D warnings`, `cargo test -p sifr_format`, `cargo test -p sifr -- --skip test_e2e_pass`, `python3 verification/tooling/check_formatter_ast_coverage.py`, `CARGO_TARGET_DIR=target/codex-m6-ast-env python3 verification/tooling/check_formatter_ast_coverage.py`, `python3 verification/tooling/check_formatter_ast_coverage.py --self-test`, `python3 verification/tooling/check_formatter_phase_manifests.py`, `python3 verification/tooling/check_formatter_phase_manifests.py --self-test`, `python3 verification/tooling/check_editor_assets.py`, `python3 verification/tooling/check_editor_assets.py --self-test`, `python3 verification/performance/run_benchmarks.py --validate-only`, `python3 verification/performance/run_benchmarks.py --self-test`, `python3 verification/performance/check_budgets.py`, `python3 verification/performance/check_budgets.py --self-test`, formatter performance smoke and budget checks, `python3 scripts/check_file_size_guardrails.py`, `git diff --check --ignore-submodules=none`, and `git -C third_party/ruff diff --check`.
+- `2026-05-26`: Milestone 6 formatter performance baselines were captured in `target/performance/formatter-m6-baseline.json` and added to `verification/performance/baselines.json` and `verification/performance/budgets.json` for `perf.formatter.corpus.project_check` and `perf.formatter.large_file.check`.
+- `2026-05-26`: Milestone 6 quick validation passed from committed state with `scripts/run_all_tests.sh --profile quick`. The lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded `wall_time=1804.37s`, `cache_hits=12/12`, no swaps, and warm wall-time/group-skew advisories.
 
 ## PR Log
 
@@ -418,3 +425,4 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - Milestone 4 wave 1 `formatter_cli_surface`: <https://github.com/sifr-lang/sifr/pull/2178>
 - Milestone 4 wave 2 `formatter_cli_config_selection_cache`: <https://github.com/sifr-lang/sifr/pull/2179>
 - Milestone 5 `formatter_lsp_editor_parity`: VS Code PR <https://github.com/sifr-lang/sifr-vscode/pull/2>; editor integrations PR <https://github.com/sifr-lang/editor-integrations/pull/1>; superproject PR <https://github.com/sifr-lang/sifr/pull/2180>
+- Milestone 6 `formatter_corpus_guardrails_and_performance`: Ruff fork PR <https://github.com/sifr-lang/ruff/pull/3>

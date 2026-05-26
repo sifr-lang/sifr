@@ -1,7 +1,7 @@
 {
   "id": "collections-and-generics",
   "source_path": "inline",
-  "ruff_fork_revision": "f9da46641894c8a2380b1e0f17bed68f09c46643",
+  "ruff_fork_revision": "8b95ca3d888910aa39632cd9873c05de5121ab67",
   "source": "def total(values: list[int]) -> int:\n    acc: int = 0\n    for value in values:\n        acc = acc + value\n    return acc\n",
   "expected_token_kinds": [
     "Def",

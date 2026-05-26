@@ -167,6 +167,13 @@ fn apply_format_table(
             "preview" => {
                 config.format_options.preview = as_bool(key, value)?;
             }
+            "docstring-code-format" | "docstring_code_format" => {
+                config.format_options.docstring_code_format = as_bool(key, value)?;
+            }
+            "docstring-code-line-length" | "docstring_code_line_length" => {
+                config.format_options.docstring_code_line_length =
+                    as_docstring_code_line_length(key, value)?;
+            }
             "exclude" => {
                 config.exclude = as_string_list(key, value)?;
             }
@@ -233,7 +240,7 @@ fn apply_overrides(config: &mut EffectiveFormatConfig, overrides: &FormatConfigO
         config.no_cache = no_cache;
     }
     if let Some(cache_dir) = &overrides.cache_dir {
-        config.cache_dir = cache_dir.clone();
+        config.cache_dir.clone_from(cache_dir);
     }
 }
 
@@ -265,6 +272,21 @@ fn as_string_list(key: &str, value: &toml::Value) -> Result<Vec<String>, Vec<Ren
         .iter()
         .map(|value| as_string(key, value))
         .collect::<Result<Vec<_>, _>>()
+}
+
+fn as_docstring_code_line_length(
+    key: &str,
+    value: &toml::Value,
+) -> Result<crate::DocstringCodeLineLength, Vec<RenderedDiagnostic>> {
+    if let Some(raw) = value.as_str() {
+        if raw == "dynamic" {
+            return Ok(crate::DocstringCodeLineLength::Dynamic);
+        }
+        return Err(vec![fmt_diagnostic(format!(
+            "{key} must be an integer or \"dynamic\""
+        ))]);
+    }
+    as_u16(key, value).map(crate::DocstringCodeLineLength::Fixed)
 }
 
 fn fmt_diagnostic(message: impl Into<String>) -> RenderedDiagnostic {

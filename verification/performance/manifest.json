@@ -8,6 +8,7 @@
     "check-project": 5,
     "build-single-file": 10,
     "build-project": 5,
+    "formatter": 2,
     "incremental-local-loop": 5,
     "interactive-tooling-foundation": 5,
     "lsp-query": 1,
@@ -47,6 +48,9 @@
     {"id": "check-single-file-008-comp-set", "group": "check-single-file", "kind": "command", "mode": "check", "source_path": "crates/sifr/tests/e2e/pass/comp_set.sifr", "phase34_source_id": "e2e-012-comp-set", "warmups": 1, "measured": 5, "timeout_ms": 60000, "budget_id": "perf.check.single.comp_set", "evidence_category": "phase34-collections", "expected_exit_codes": [0]},
     {"id": "check-single-file-009-decimal-conversions", "group": "check-single-file", "kind": "command", "mode": "check", "source_path": "crates/sifr/tests/e2e/pass/decimal_conversions.sifr", "phase34_source_id": "e2e-024-decimal-conversions", "warmups": 1, "measured": 5, "timeout_ms": 60000, "budget_id": "perf.check.single.decimal_conversions", "evidence_category": "phase34-decimal-integer", "expected_exit_codes": [0]},
     {"id": "check-single-file-010-dict-get-option", "group": "check-single-file", "kind": "command", "mode": "check", "source_path": "crates/sifr/tests/e2e/pass/dict_get_option.sifr", "phase34_source_id": "e2e-025-dict-get-option", "warmups": 1, "measured": 5, "timeout_ms": 60000, "budget_id": "perf.check.single.dict_get_option", "evidence_category": "phase34-result-option", "expected_exit_codes": [0]},
+
+    {"id": "formatter-corpus-001-project-check", "group": "formatter", "kind": "command", "mode": "fmt-check", "source_path": "verification/performance/formatter_project", "warmups": 1, "measured": 5, "timeout_ms": 60000, "budget_id": "perf.formatter.corpus.project_check", "evidence_category": "formatter-project", "expected_exit_codes": [0]},
+    {"id": "formatter-large-file-001-check", "group": "formatter", "kind": "command", "mode": "fmt-check", "source_path": "verification/performance/formatter_large_file.sifr", "warmups": 1, "measured": 5, "timeout_ms": 60000, "budget_id": "perf.formatter.large_file.check", "evidence_category": "formatter-large-file", "expected_exit_codes": [0]},
 
     {"id": "incremental-local-loop-001-unchanged-file-update", "group": "incremental-local-loop", "kind": "frontend-query", "scenario": "incremental.unchanged_file_update", "source_path": "verification/performance/query_projects/edit_loop/main.sifr", "warmups": 3, "measured": 20, "timeout_ms": 30000, "budget_id": "perf.incremental.unchanged_file_update", "evidence_category": "cache-hit"},
     {"id": "incremental-local-loop-002-leaf-module-change", "group": "incremental-local-loop", "kind": "frontend-query", "scenario": "incremental.leaf_module_change", "source_path": "verification/performance/query_projects/edit_loop/main.sifr", "warmups": 3, "measured": 20, "timeout_ms": 30000, "budget_id": "perf.incremental.leaf_module_change", "evidence_category": "cache-invalidation"},
