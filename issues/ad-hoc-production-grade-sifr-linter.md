@@ -148,6 +148,138 @@ Ruff linter code is classified as one of:
 | Ruff server settings model | adapt | Add editor/global/workspace lint settings with config-preference behavior cleaned of Python options |
 | Ruff LSP diagnostic data payload | adapt | Add typed diagnostic class and code-action metadata for hard vs policy diagnostics |
 
+## Ruff Rule And Config Planning Decisions
+
+This phase makes the rule and config decisions up front. Implementation PRs must follow this section and the Milestone 1 machine-readable manifest. No implementation PR may newly port a Ruff rule family, accept a Ruff config key, or reinterpret a rejected/deferred row without a reviewed update to this phase.
+
+### Rule family audit
+
+Scan source: `/Users/yaseralnajjar/work/sifr/ruff/crates/ruff_linter/src/rules`, Ruff 0.15.12 maintenance fork.
+
+Disposition values:
+
+- `sifr-native`: implement only if the same policy is meaningful in Sifr, using Sifr syntax/HIR/workspace APIs and Sifr rule IDs.
+- `formatter-owned`: do not lint; formatter owns the behavior.
+- `future-phase`: not part of this phase; requires a later reviewed product phase before implementation.
+- `reject`: no Sifr rule in this phase.
+
+| Ruff family | Disposition | Locked Sifr decision |
+| --- | --- | --- |
+| `airflow` | reject | Airflow framework rules do not apply to Sifr. |
+| `eradicate` | sifr-native | Commented-out-code detection may be implemented as a token/comment policy rule after parser-aware suppression; no Python syntax classifier is reused. |
+| `flake8_2020` | reject | Python `sys.version` rules do not apply. |
+| `flake8_annotations` | future-phase | Sifr already requires static typing through compiler diagnostics; annotation style policy needs a Sifr type-style phase. |
+| `flake8_async` | future-phase | Async policy must wait for documented Sifr async semantics; Ruff's Python async patterns are not reused. |
+| `flake8_bandit` | future-phase | Security linting requires Sifr stdlib/runtime API rules; no Python security rules are ported. |
+| `flake8_blind_except` | reject | Sifr does not use Python exceptions. |
+| `flake8_boolean_trap` | sifr-native | Boolean-argument readability may be implemented as a Sifr syntax/HIR policy if Sifr call/parameter semantics warrant it. |
+| `flake8_bugbear` | sifr-native | Individual bug-prone-pattern ideas may become Sifr-native policy rules only when backed by Sifr semantics; no direct rule port. |
+| `flake8_builtins` | future-phase | Reserved-name policy needs Sifr namespace and stdlib conventions; Python builtin lists are rejected. |
+| `flake8_commas` | formatter-owned | Comma placement is formatter-owned. |
+| `flake8_comprehensions` | sifr-native | Comprehension simplification rules may be added only for Sifr AST constructs with equivalent semantics. |
+| `flake8_copyright` | sifr-native | Header/copyright checks are file/comment policy rules if Sifr wants them. |
+| `flake8_datetimez` | future-phase | Requires Sifr datetime API policy; Python datetime semantics are rejected. |
+| `flake8_debugger` | sifr-native | Debug/probe call detection may be Sifr-native once Sifr debug APIs are named. |
+| `flake8_django` | reject | Django framework rules do not apply. |
+| `flake8_errmsg` | reject | Python exception message rules do not apply. |
+| `flake8_executable` | sifr-native | Executable/shebang policy may apply to CLI scripts and demos through file metadata rules. |
+| `flake8_fixme` | sifr-native | FIXME/TODO comment policy can be Sifr-native with Sifr-owned tag configuration. |
+| `flake8_future_annotations` | reject | Python future-annotation rules do not apply. |
+| `flake8_gettext` | future-phase | Requires Sifr i18n API policy. |
+| `flake8_implicit_str_concat` | formatter-owned | String literal concatenation layout belongs to parser/formatter policy unless a Sifr semantic rule is later approved. |
+| `flake8_import_conventions` | future-phase | Import alias conventions require Sifr import/package semantics. |
+| `flake8_logging` | future-phase | Requires Sifr logging API policy. |
+| `flake8_logging_format` | future-phase | Requires Sifr logging API policy. |
+| `flake8_no_pep420` | reject | Python namespace package rules do not apply. |
+| `flake8_pie` | sifr-native | Individual cleanup rules may be Sifr-native only when the Sifr AST/HIR pattern is equivalent. |
+| `flake8_print` | future-phase | Print/debug policy depends on Sifr CLI/runtime conventions; no Python print rule is ported. |
+| `flake8_pyi` | reject | Python stub-file rules do not apply. |
+| `flake8_pytest_style` | future-phase | Requires Sifr test framework conventions. |
+| `flake8_quotes` | formatter-owned | Quote style is formatter-owned. |
+| `flake8_raise` | reject | Python raise/exception rules do not apply. |
+| `flake8_return` | sifr-native | Return-control-flow simplifications may be Sifr-native after HIR control-flow support. |
+| `flake8_self` | reject | Python `self` conventions do not apply as Ruff defines them. |
+| `flake8_simplify` | sifr-native | Simplification ideas may be Sifr-native when proven semantics-preserving for Sifr HIR. |
+| `flake8_slots` | reject | Python `__slots__` rules do not apply. |
+| `flake8_tidy_imports` | future-phase | Import restrictions require Sifr import/package semantics. |
+| `flake8_todos` | sifr-native | TODO comment policy can be Sifr-native with Sifr-owned tag configuration. |
+| `flake8_trio` | future-phase | Trio-specific async rules do not apply; Sifr async policy belongs in a later phase. |
+| `flake8_type_checking` | reject | Python runtime/type-checking import rules do not apply. |
+| `flake8_unused_arguments` | sifr-native | Unused-argument policy may be Sifr-native if it stays policy-only and does not duplicate hard compiler diagnostics. |
+| `flake8_use_pathlib` | future-phase | Requires Sifr filesystem/path API policy. |
+| `flynt` | reject | Python f-string conversion rules do not apply. |
+| `isort` | future-phase | Import sorting/organization is out of scope until Sifr import-order semantics and LSP organize-import behavior are specified. |
+| `mccabe` | sifr-native | Complexity metrics may be implemented against Sifr CFG/HIR with Sifr thresholds. |
+| `numpy` | reject | NumPy framework rules do not apply. |
+| `pandas_vet` | reject | Pandas framework rules do not apply. |
+| `pep8_naming` | future-phase | Naming conventions need a Sifr naming-style phase; Python naming exceptions are rejected. |
+| `perflint` | sifr-native | Performance policy may be Sifr-native when based on Sifr HIR/codegen semantics. |
+| `pycodestyle` | formatter-owned | Formatting-style rules are formatter-owned; only non-format text policies may become Sifr-native through separate rows. |
+| `pydocstyle` | future-phase | Requires Sifr documentation-comment conventions. |
+| `pyflakes` | sifr-native | Only policy checks such as unused imports/variables may be Sifr-native; undefined names and correctness remain hard compiler diagnostics. |
+| `pygrep_hooks` | sifr-native | Text/comment/file pattern checks may be Sifr-native with Sifr-owned rule IDs. |
+| `pylint` | sifr-native | Only individual Sifr-equivalent policy ideas may be implemented; Python object-model, dunder, exception, and import rules are rejected. |
+| `pyupgrade` | reject | Python-version modernization rules do not apply. |
+| `refurb` | sifr-native | Modernization/cleanup ideas may be Sifr-native only after a Sifr language-edition policy exists. |
+| `ruff` | sifr-native | Ruff's own meta/text rules may be used as reference only; each shipped rule must be Sifr-owned. |
+| `tryceratops` | reject | Python exception rules do not apply. |
+
+Milestone 1 must encode this table in `verification/tooling/linter_manifests/ruff_rule_config_audit.json`. `check_linter_reuse_contract.py` must fail if a Ruff rule-family directory exists in the fork but is missing from the manifest. The manifest is pinned to the Ruff fork state at phase planning time, and the check must compare the manifest against the actual filesystem directories under the pinned fork. Any filesystem directory not present in the manifest is a failure. Milestone 5 must fail if a new Sifr rule references a row whose disposition is `reject`, `formatter-owned`, or `future-phase` without a reviewed phase update.
+
+### Config surface audit
+
+Scan sources: Ruff docs `docs/linter.md`, `docs/configuration.md`, `crates/ruff_workspace/src/options.rs`, and `crates/ruff_workspace/src/configuration.rs`.
+
+| Ruff config/CLI surface | Disposition | Locked Sifr decision |
+| --- | --- | --- |
+| `select`, `extend-select`, `ignore` | adapt | Support in `[lint]` using Sifr rule IDs/categories, not Ruff prefixes. |
+| `extend-ignore` | reject | Deprecated Ruff compatibility spelling; Sifr has no legacy Ruff config compatibility surface, so users must use `ignore`. |
+| `fixable`, `extend-fixable`, `unfixable`, `extend-unfixable` | adapt | Support once fixes exist; validate against Sifr fix metadata. |
+| `extend-safe-fixes`, `extend-unsafe-fixes` | adapt | Support as Sifr fix-safety overrides after M6; only policy diagnostics are affected. |
+| `unsafe-fixes` / `--unsafe-fixes` / `--no-unsafe-fixes` | adapt | Use Sifr `disabled`/`hint`/`enabled` model; never applies hard diagnostics. |
+| `per-file-ignores`, `extend-per-file-ignores` | adapt | Support with Sifr glob matching and Sifr rule IDs. |
+| Inline `# noqa`, file-level `# ruff: noqa`, `--ignore-noqa` | reject | Sifr uses `# sifr: ignore[rule-id]`; blanket file suppression remains forbidden in this phase. |
+| `preview`, `explicit-preview-rules` | adapt | Support preview/experimental Sifr policy rules through Sifr `RuleStatus`; no Ruff preview rule semantics. |
+| `exclude`, `extend-exclude`, `include`, `extend-include`, `force-exclude`, `respect-gitignore` | adapt | Support with `.sifr` defaults and explicit-target semantics. |
+| `extend` config inheritance | adapt | Support path-relative inheritance, ordered merge, cycle detection, and deterministic diagnostics. |
+| `--config` path and inline config overrides | adapt | Support Sifr lint overrides after config loader exists; inline overrides use Sifr keys only. |
+| `pyproject.toml`, `ruff.toml`, `.ruff.toml`, `[tool.ruff]` | reject | Sifr lint config authority is `sifr.toml`; migration mode requires a future reviewed phase. |
+| `target-version`, `per-file-target-version` | reject | Python-version gates do not apply. |
+| `extension`, Python file-type mapping, notebooks | reject | Sifr lint targets `.sifr`; notebook support is out of scope. |
+| `src`, `namespace-packages`, `builtins`, `typing-modules` | reject | Python import/module behavior is not Sifr lint authority. |
+| `dummy-variable-rgx` | future-phase | Only a Sifr unused-symbol policy can define ignored-name conventions. |
+| `task-tags` | sifr-native | May support Sifr-owned TODO/FIXME tag policy if comment rules ship. |
+| `allowed-confusables` | sifr-native | May support Sifr-owned Unicode/confusable policy. |
+| `logger-objects` | future-phase | Requires Sifr logging API policy. |
+| Plugin option blocks (`flake8-*`, `isort`, `mccabe`, `pep8-naming`, `pycodestyle`, `pydocstyle`, `pyflakes`, `pylint`, `pyupgrade`) | reject | Plugin config blocks are not accepted wholesale; Sifr-native equivalents need Sifr-owned config keys. |
+| `line-length`, `indent-width` | formatter-owned | Formatter config owns formatting dimensions; lint may read only if a reviewed Sifr policy rule needs it. |
+| `fix`, `fix-only`, `show-fixes`, `diff`, `exit-non-zero-on-fix` | adapt | CLI behavior follows Ruff's user model but acts through Sifr fix engine and Sifr diagnostics. |
+| `output-format` | adapt | Start with human and JSON output; SARIF/GitHub/GitLab/JUnit require explicit Sifr schema tests before support. |
+| `cache-dir`, `no-cache` | future-phase | Add only after lint caching has a Sifr cache key and invalidation contract. |
+| `required-version` | future-phase | Consider later as a Sifr toolchain version guard. |
+| `isolated` | adapt | Support no-config lint mode for CI/editor troubleshooting. |
+| `watch`, daemon/server-specific settings | future-phase | Editor/LSP behavior is owned by `sifr_lsp`, not Ruff server. |
+
+Milestone 1 must include these config decisions in the same `ruff_rule_config_audit.json` manifest. `check_linter_reuse_contract.py` must fail on accepted config keys that are absent from this audit, and on Ruff/Python config keys accepted without a `sifr-native` or `adapt` disposition.
+
+The audit manifest schema is:
+
+- `schema`: integer schema version.
+- `ruff_fork_pin`: Ruff fork commit SHA or exact version tag used for the scan.
+- `rule_family_source`: absolute or repository-relative path to the scanned Ruff `crates/ruff_linter/src/rules` directory.
+- `rule_families`: array of objects with `name`, `directory`, `disposition`, `rationale`, and `sifr_requirement_note`.
+- `config_sources`: array of scanned Ruff docs/source paths.
+- `config_surfaces`: array of objects with `key`, `kind` (`config`, `cli`, `comment-directive`, or `plugin-block`), `disposition`, `rationale`, and `sifr_requirement_note`.
+- `accepted_sifr_config_keys`: array of config keys accepted by Sifr lint in the current implementation.
+- `rejected_ruff_config_keys`: array of Ruff/Python keys that must fail if accepted as Sifr lint configuration.
+
+Manifest validation must prove:
+
+- every actual Ruff rule-family directory is represented exactly once;
+- every accepted Sifr lint config key appears in `accepted_sifr_config_keys` and has an `adapt` or `sifr-native` disposition;
+- no rejected, formatter-owned, or future-phase rule family/config surface is exposed as an enabled Sifr lint feature;
+- the manifest fork pin and source paths match the checked Ruff fork.
+
 ## Sifr Lint Architecture Requirements
 
 ### Rule ownership
@@ -273,6 +405,7 @@ Fix-capable rules must not ship until the fix engine supports:
 | AC-12 | Full local validation passes before phase closure |
 | AC-13 | A mechanical gate prevents syntax, HIR, and workspace lint rules from shipping before parser-aware suppression support is enabled |
 | AC-14 | Unsafe fixes are never applied automatically unless the rule is policy-only, the fix is explicitly enabled, and the edit applicability permits it |
+| AC-15 | Every Ruff rule family and Ruff lint config surface scanned for this phase has a locked `sifr-native`, `adapt`, `formatter-owned`, `future-phase`, or `reject` decision before implementation starts |
 
 ## Milestone Breakdown
 
@@ -285,12 +418,16 @@ Goal: lock the Ruff reuse decisions into enforceable contracts.
 Scope:
 
 - create a linter reuse manifest matching this document
+- create `verification/tooling/linter_manifests/ruff_rule_config_audit.json` matching the Ruff rule-family and config-surface audit in this document
 - create a lint rule metadata manifest
 - create `verification/tooling/check_linter_reuse_contract.py`
 - make `check_linter_reuse_contract.py` verify:
   - `crates/sifr_lint/Cargo.toml` does not depend on forbidden Ruff/Python lint crates
   - `cargo tree -p sifr_lint` does not contain `ruff_linter`, `ruff_python_semantic`, Python project/runtime crates, or Ruff Server semantic behavior
   - production Sifr crates do not import `ruff_linter::rules`, `ruff_linter::registry`, `ruff_linter::linter`, `ruff_linter::noqa`, Python `Rule` IDs, or `ruff_python_semantic`
+  - every directory under the pinned Ruff fork's `crates/ruff_linter/src/rules` appears in `ruff_rule_config_audit.json`
+  - every Sifr-accepted lint config key is represented in the config-surface audit with an allowed disposition
+  - no implementation code references a rejected, formatter-owned, or future-phase Ruff family/config key as an enabled lint feature
   - seeded negative fixtures fail the check
 - create a placeholder lint config schema manifest
 - create `verification/tooling/linter_manifests/suppression_gate.json`
@@ -307,6 +444,7 @@ Scope:
 Validation:
 
 - manifest self-tests
+- Ruff rule/config audit manifest self-test
 - forbidden dependency guardrail and self-test
 - `python3 verification/tooling/check_linter_reuse_contract.py`
 - `python3 verification/tooling/check_linter_reuse_contract.py --self-test`
@@ -398,6 +536,7 @@ Scope:
 - add representative syntax rules
 - add representative HIR/frontend policy rules
 - add workspace/import policy rules only where Sifr workspace/import semantics are already specified
+- only add rules whose originating planning row is `sifr-native`; any rule inspired by a `future-phase`, `formatter-owned`, or `reject` Ruff family requires a reviewed planning update before implementation
 - classify every rule by category, suppression complexity, default severity, status, and fix availability
 - keep the static `RULES` slice until the shipped policy-rule count exceeds 50. At that point, implementation must add a reviewed planning update before introducing a `RuleSelector` specificity system or macro-generated registry.
 - keep hard correctness diagnostics out of `sifr_lint`

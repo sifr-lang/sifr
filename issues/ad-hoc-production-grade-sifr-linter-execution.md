@@ -8,6 +8,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 
 - [ ] Phase plan reviewed and approved for implementation
 - [ ] Ruff linter reuse manifest created
+- [ ] Ruff rule-family and config-surface audit manifest created
 - [ ] Forbidden Ruff/Python lint dependency guardrail completed
 - [ ] Lint config and file discovery completed
 - [ ] Parser-aware suppression engine completed
@@ -34,6 +35,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 | W-6 | Fix-capable policy rules lack a production fix engine. | Milestone 6 adds applicability, edit isolation, conflict resolution, source-map tracking, and idempotence checks. |
 | W-7 | The Ruff/Python lint reuse contract is not machine-enforced yet. | Milestone 1 adds `verification/tooling/check_linter_reuse_contract.py` with positive and negative self-tests. |
 | W-8 | The parser-aware suppression gate is advisory until made mechanical. | Milestone 1 creates the gate manifest; Milestone 3 enables it; Milestone 5 cannot add non-physical-line rules unless the gate is closed. |
+| W-9 | Ruff has many existing Python rule families and config keys; leaving their disposition to implementation would invite accidental porting. | Planning locks a full Ruff rule-family/config audit; Milestone 1 encodes it in `ruff_rule_config_audit.json`; Milestone 5 may only add rules/config from approved rows. |
 
 ### Locked Reuse Decisions
 
@@ -49,6 +51,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 | Ruff fix engine | Adapt applicability/isolation/apply-fixes concepts |
 | Ruff LSP code actions | Adapt deferred resolution, workspace edit tracking, settings patterns |
 | Ruff Server diagnostics | Reference only; Sifr diagnostics remain canonical |
+| Ruff rule families/config keys | Locked by planning audit; no implementation-time reinterpretation without reviewed phase update |
 
 ## Review Log
 
@@ -59,6 +62,9 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-26`: Claude phase review pass 1 found two planning blockers: the forbidden Ruff/Python lint dependency check needed a named enforceable guardrail, and the parser-aware suppression prerequisite needed a mechanical gate before syntax/HIR/workspace rules. The phase was updated to require `check_linter_reuse_contract.py`, a suppression-gate manifest, and rule-family enforcement.
 - `2026-05-26`: Claude phase review pass 2 found the suppression-gate manifest and M3-to-M5 enforcement path were still underspecified. The phase was updated to define `verification/tooling/linter_manifests/suppression_gate.json`, its schema, the `physical_line_only` to `parser_aware` transition, and a single compile-time parser-aware suppression API dependency for non-physical-line rules.
 - `2026-05-26`: Claude phase review pass 3 confirmed all pass-2 blockers are resolved and the phase is implementation-ready with no remaining blockers.
+- `2026-05-26`: User review required Ruff rule/config decisions to be made during planning, not implementation. The phase was updated with a full Ruff rule-family audit, a config-surface audit, and a required `ruff_rule_config_audit.json` enforcement manifest.
+- `2026-05-26`: Claude phase review pass 4 found the new rule-family audit complete and implementation-ready, with precision edits requested for the audit manifest schema and Ruff's deprecated `extend-ignore` surface. Both edits were applied before final review.
+- `2026-05-26`: Claude phase review pass 5 verified the `extend-ignore` classification, audit manifest schema, rule/config audit completeness, and execution tracker update. The reviewer confirmed the phase is implementation-ready with no remaining blockers.
 
 ## Validation Log
 
