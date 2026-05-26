@@ -1,16 +1,16 @@
 # Ad Hoc Phase Execution: Production-Grade Sifr Linter
 
-Status: planning
+Status: implementation in progress
 
 Phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 
 ## Checklist
 
-- [ ] Phase plan reviewed and approved for implementation
-- [ ] Ruff linter reuse manifest created
-- [ ] Ruff rule-family and config-surface audit manifest created
-- [ ] Linter CLI parity manifest created
-- [ ] Forbidden Ruff/Python lint dependency guardrail completed
+- [x] Phase plan reviewed and approved for implementation
+- [x] Ruff linter reuse manifest created
+- [x] Ruff rule-family and config-surface audit manifest created
+- [x] Linter CLI parity manifest created
+- [x] Forbidden Ruff/Python lint dependency guardrail completed
 - [ ] Lint config and file discovery completed
 - [ ] Parser-aware suppression engine completed
 - [ ] Phase-gated lint runner completed
@@ -74,11 +74,18 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-26`: Claude linter CLI review pass 2 confirmed all pass-1 precision edits applied, manifest schema and validation obligations complete, all behavioral areas specified, and the plan is implementation-ready with no remaining blockers.
 - `2026-05-26`: Claude linter CLI review pass 3 verified the final disposition spelling cleanup and confirmed the CLI plan is implementation-ready and elegant enough for implementation.
 - `2026-05-27`: Claude pre-implementation discovery review found no blockers and confirmed M1 can start. It requested precision edits for manifest key population, suppression-gate milestone format, parser-aware API import checks, lint CLI file-size planning, and diagnostic-class code-action guardrails; the phase was updated accordingly.
+- `2026-05-27`: Claude M1 reuse-contract review pass 1 found no blockers and returned `SATISFIED` for M1 closure. Review artifact: `reviews/sifr-linter-m1-reuse-contract-review-pass-1.md`.
 
 ## Validation Log
 
 - Validation evidence will be recorded per implementation milestone.
 - Planning PR validation starts with `git diff --check` and docs/review artifact checks.
+- `2026-05-27` M1 local checks:
+  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `cargo test -p sifr_lint` passed: 3 unit tests and 0 doctests.
+  - `git diff --check` passed.
+  - `python3 scripts/check_file_size_guardrails.py` passed.
 
 ## PR Log
 
