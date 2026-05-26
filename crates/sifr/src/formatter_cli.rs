@@ -36,7 +36,7 @@ pub(crate) struct FmtArgs {
     pub(crate) exclude: Vec<String>,
 
     /// Respect VCS ignore files
-    #[arg(long, default_value_t = true, conflicts_with = "no_respect_gitignore")]
+    #[arg(long, conflicts_with = "no_respect_gitignore")]
     pub(crate) respect_gitignore: bool,
 
     /// Do not respect VCS ignore files

@@ -8,6 +8,7 @@ use super::diagnostic_rendering_and_run::{
     package_session_for_cwd, render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
+use super::formatter_config::{effective_fmt_config, EffectiveFmtConfig};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
@@ -15,7 +16,9 @@ use sifr_driver::{
     check_project, check_single_file, compile, emit_project, run_tests, CachedBinaryArtifact,
     CompileResult, PackageEntrypoint,
 };
+use std::collections::hash_map::DefaultHasher;
 use std::fs;
+use std::hash::{Hash as _, Hasher as _};
 use std::io::{self, IsTerminal as _, Read as _, Write as _};
 use std::path::{Path, PathBuf};
 pub(super) fn redacted_args(args: &[String]) -> Vec<String> {
@@ -249,10 +252,15 @@ pub(super) fn paths_equal(left: &Path, right: &Path) -> bool {
     left == right
 }
 
-pub(super) fn cmd_fmt(args: &FmtArgs, diagnostic_format: DiagnosticFormat) -> i32 {
+pub(super) fn cmd_fmt(
+    args: &FmtArgs,
+    config_inputs: &[String],
+    isolated: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
     let result = match run_with_panic_boundary(
         "internal compiler panic during fmt command execution",
-        || fmt_entrypoint(args),
+        || fmt_entrypoint(args, config_inputs, isolated),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -267,9 +275,6 @@ pub(super) fn cmd_fmt(args: &FmtArgs, diagnostic_format: DiagnosticFormat) -> i3
                 } else {
                     render_diagnostics(&changed, diagnostic_format)
                 }
-            } else if changed.is_empty() {
-                emit_success_message(diagnostic_format, "Sifr source files already formatted");
-                EXIT_SUCCESS
             } else {
                 emit_success_message(diagnostic_format, "formatted Sifr source files");
                 EXIT_SUCCESS
@@ -404,8 +409,11 @@ pub(super) fn emit_entrypoint(file: &Path) -> CompileResult {
 
 pub(super) fn fmt_entrypoint(
     args: &FmtArgs,
+    config_inputs: &[String],
+    isolated: bool,
 ) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
-    let options = format_options_from_args(args);
+    let config = effective_fmt_config(args, config_inputs, isolated)?;
+    let options = config.format_options;
     if args.stdin_filename.is_some() || (args.paths.is_empty() && !io::stdin().is_terminal()) {
         return fmt_stdin(args, options);
     }
@@ -417,7 +425,8 @@ pub(super) fn fmt_entrypoint(
     };
     let mut diagnostics = Vec::new();
     for target in targets {
-        let files = sifr_format::collect_sifr_files(&target)?;
+        let explicit_target = target.is_file();
+        let files = select_formatter_files(&target, &config, explicit_target)?;
         for file in files {
             if args.check {
                 diagnostics.extend(sifr_format::check_path_with_options(&file, options)?);
@@ -450,7 +459,11 @@ pub(super) fn fmt_entrypoint(
                     })?;
                 }
             } else {
+                if try_formatter_cache_hit(&file, options, &config)? {
+                    continue;
+                }
                 let _formatted = sifr_format::format_path_with_options(&file, false, options)?;
+                write_formatter_cache_entry(&file, options, &config)?;
             }
         }
     }
@@ -486,14 +499,6 @@ fn fmt_stdin(
     Ok(Vec::new())
 }
 
-fn format_options_from_args(args: &FmtArgs) -> sifr_format::FormatOptions {
-    sifr_format::FormatOptions {
-        line_length: args.line_length.unwrap_or(88),
-        preview: args.preview && !args.no_preview,
-        ..sifr_format::FormatOptions::default()
-    }
-}
-
 fn format_source_or_range(
     source: &str,
     file: &Path,
@@ -513,6 +518,112 @@ fn format_source_or_range(
     } else {
         sifr_format::format_source(source, Some(file), options).map(|result| result.formatted)
     }
+}
+
+fn select_formatter_files(
+    target: &Path,
+    config: &EffectiveFmtConfig,
+    explicit_target: bool,
+) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
+    let files = sifr_format::collect_sifr_files(target)?;
+    let mut selected = Vec::new();
+    let ignore_patterns = if config.respect_gitignore {
+        read_gitignore_patterns()?
+    } else {
+        Vec::new()
+    };
+    for file in files {
+        let excluded =
+            pattern_matches(&file, &config.exclude) || pattern_matches(&file, &ignore_patterns);
+        if excluded && (!explicit_target || config.force_exclude) {
+            continue;
+        }
+        selected.push(file);
+    }
+    Ok(selected)
+}
+
+fn read_gitignore_patterns() -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
+    let path = Path::new(".gitignore");
+    if !path.is_file() {
+        return Ok(Vec::new());
+    }
+    let source = fs::read_to_string(path).map_err(|err| {
+        vec![formatter_cli_diagnostic(format!(
+            "could not read .gitignore for formatter discovery: {err}"
+        ))]
+    })?;
+    Ok(source
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(str::to_string)
+        .collect())
+}
+
+fn pattern_matches(path: &Path, patterns: &[String]) -> bool {
+    let path = path.to_string_lossy();
+    patterns.iter().any(|pattern| {
+        let pattern = pattern.trim().trim_matches('*').trim_matches('/');
+        !pattern.is_empty() && path.contains(pattern)
+    })
+}
+
+fn try_formatter_cache_hit(
+    path: &Path,
+    options: sifr_format::FormatOptions,
+    config: &EffectiveFmtConfig,
+) -> Result<bool, Vec<RenderedDiagnostic>> {
+    if config.no_cache {
+        return Ok(false);
+    }
+    let source = fs::read_to_string(path).map_err(|err| {
+        vec![formatter_cli_diagnostic(format!(
+            "could not read file {}: {err}",
+            path.display()
+        ))]
+    })?;
+    let key = formatter_cache_key(path, &source, options);
+    Ok(config.cache_dir.join(key).is_file())
+}
+
+fn write_formatter_cache_entry(
+    path: &Path,
+    options: sifr_format::FormatOptions,
+    config: &EffectiveFmtConfig,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    if config.no_cache {
+        return Ok(());
+    }
+    let source = fs::read_to_string(path).map_err(|err| {
+        vec![formatter_cli_diagnostic(format!(
+            "could not read file {}: {err}",
+            path.display()
+        ))]
+    })?;
+    fs::create_dir_all(&config.cache_dir).map_err(|err| {
+        vec![formatter_cli_diagnostic(format!(
+            "could not create formatter cache {}: {err}",
+            config.cache_dir.display()
+        ))]
+    })?;
+    let key = formatter_cache_key(path, &source, options);
+    fs::write(config.cache_dir.join(key), b"ok").map_err(|err| {
+        vec![formatter_cli_diagnostic(format!(
+            "could not write formatter cache {}: {err}",
+            config.cache_dir.display()
+        ))]
+    })
+}
+
+fn formatter_cache_key(path: &Path, source: &str, options: sifr_format::FormatOptions) -> String {
+    let mut hasher = DefaultHasher::new();
+    path.to_string_lossy().hash(&mut hasher);
+    source.hash(&mut hasher);
+    options.final_newline.hash(&mut hasher);
+    options.line_length.hash(&mut hasher);
+    options.preview.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
 }
 
 fn parse_byte_range(raw: &str) -> Result<TextRange, Vec<RenderedDiagnostic>> {
