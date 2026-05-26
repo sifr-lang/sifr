@@ -1,12 +1,12 @@
-//! Sifr-owned formatter foundation over `sifr_syntax`.
-//!
-//! The formatter deliberately starts with conservative, syntax-validated edits:
-//! normalize line endings to LF, trim trailing horizontal whitespace outside
-//! string tokens, and ensure a final newline. This keeps formatting idempotent
-//! and parser-round-tripped while preserving comments and string contents.
+//! Sifr-owned formatter API backed by the Sifr-aware Ruff formatter.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-use ruff_text_size::{Ranged as _, TextRange, TextSize};
+use ruff_formatter::printer::LineEnding;
+use ruff_python_formatter::{
+    format_sifr_module_source, format_sifr_range as ruff_format_sifr_range, FormatModuleError,
+    PyFormatOptions,
+};
+use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
 use sifr_syntax::{parse_module, SourceText};
 use std::collections::BTreeMap;
@@ -55,17 +55,10 @@ pub fn format_source(
     file: Option<&Path>,
     options: FormatOptions,
 ) -> Result<FormatResult, Vec<RenderedDiagnostic>> {
-    let parsed = parse_module(
-        source,
-        file.map(|path| path.display().to_string()).as_deref(),
-    )?;
-    let protected = parsed
-        .tokens()
-        .iter()
-        .filter(|token| token.kind.as_str() == "String")
-        .map(|token| token.range)
-        .collect::<Vec<_>>();
-    let formatted = normalize_source(source, &protected, options);
+    let ruff_options = ruff_options(file, options)?;
+    let formatted = format_sifr_module_source(source, ruff_options)
+        .map_err(|error| vec![format_module_error_diagnostic(source, file, &error)])?
+        .into_code();
     parse_module(
         &formatted,
         file.map(|path| path.display().to_string()).as_deref(),
@@ -99,20 +92,27 @@ pub fn format_range(
     file: Option<&Path>,
     options: FormatOptions,
 ) -> Result<Vec<TextEdit>, Vec<RenderedDiagnostic>> {
-    let result = format_source(source, file, options)?;
-    if !result.changed {
+    let ruff_options = ruff_options(file, options)?;
+    validate_range(source, range, file)?;
+    let printed = ruff_format_sifr_range(source, range, ruff_options)
+        .map_err(|error| vec![format_module_error_diagnostic(source, file, &error)])?;
+    let edit_range = printed.source_range();
+    if edit_range.is_empty() {
         return Ok(Vec::new());
     }
-    let full = full_range(source);
-    if range != full {
-        return Ok(vec![TextEdit {
-            range: full,
-            replacement: result.formatted,
-        }]);
+    let replacement = printed.into_code();
+    if source_slice(source, edit_range).is_some_and(|current| current == replacement) {
+        return Ok(Vec::new());
     }
+    let roundtripped = source_with_edit(source, edit_range, &replacement)
+        .ok_or_else(|| vec![invalid_range_diagnostic(source, file, edit_range)])?;
+    parse_module(
+        &roundtripped,
+        file.map(|path| path.display().to_string()).as_deref(),
+    )?;
     Ok(vec![TextEdit {
-        range,
-        replacement: result.formatted,
+        range: edit_range,
+        replacement,
     }])
 }
 
@@ -191,55 +191,147 @@ fn collect_sifr_files_inner(
     Ok(())
 }
 
-fn normalize_source(source: &str, protected: &[TextRange], options: FormatOptions) -> String {
-    let normalized = source.replace("\r\n", "\n").replace('\r', "\n");
-    let mut output = String::with_capacity(normalized.len() + 1);
-    let mut offset = 0usize;
-    for segment in normalized.split_inclusive('\n') {
-        let line = segment.strip_suffix('\n').unwrap_or(segment);
-        let trimmed_len = trim_line_len_outside_protected(line, offset, protected);
-        output.push_str(&line[..trimmed_len]);
-        if segment.ends_with('\n') {
-            output.push('\n');
-        }
-        offset = offset.saturating_add(segment.len());
+fn ruff_options(
+    file: Option<&Path>,
+    options: FormatOptions,
+) -> Result<PyFormatOptions, Vec<RenderedDiagnostic>> {
+    if !options.final_newline {
+        return Err(vec![unsupported_option_diagnostic(
+            file,
+            "final_newline=false",
+            "the Ruff-backed Sifr formatter currently requires a final newline",
+        )]);
     }
-    if options.final_newline && !output.is_empty() && !output.ends_with('\n') {
-        output.push('\n');
-    }
-    output
+    let options = file.map_or_else(PyFormatOptions::default, PyFormatOptions::from_extension);
+    Ok(options.with_line_ending(LineEnding::LineFeed))
 }
 
-fn trim_line_len_outside_protected(
-    line: &str,
-    line_offset: usize,
-    protected: &[TextRange],
-) -> usize {
-    let mut end = line.len();
-    while end > 0 {
-        let Some(ch) = line[..end].chars().next_back() else {
-            break;
-        };
-        if ch != ' ' && ch != '\t' {
-            break;
-        }
-        let byte_start = end.saturating_sub(ch.len_utf8());
-        if protected_contains(protected, line_offset.saturating_add(byte_start)) {
-            break;
-        }
-        end = byte_start;
+fn validate_range(
+    source: &str,
+    range: TextRange,
+    file: Option<&Path>,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    let start = usize::from(range.start());
+    let end = usize::from(range.end());
+    if end > source.len()
+        || start > end
+        || !source.is_char_boundary(start)
+        || !source.is_char_boundary(end)
+    {
+        return Err(vec![invalid_range_diagnostic(source, file, range)]);
     }
-    end
+    Ok(())
 }
 
-fn protected_contains(protected: &[TextRange], offset: usize) -> bool {
-    let Ok(raw) = u32::try_from(offset) else {
-        return false;
+fn source_slice(source: &str, range: TextRange) -> Option<&str> {
+    source.get(usize::from(range.start())..usize::from(range.end()))
+}
+
+fn source_with_edit(source: &str, range: TextRange, replacement: &str) -> Option<String> {
+    let start = usize::from(range.start());
+    let end = usize::from(range.end());
+    source.get(start..end)?;
+    let mut output = String::with_capacity(
+        source
+            .len()
+            .saturating_sub(end.saturating_sub(start))
+            .saturating_add(replacement.len()),
+    );
+    output.push_str(source.get(..start)?);
+    output.push_str(replacement);
+    output.push_str(source.get(end..)?);
+    Some(output)
+}
+
+fn format_module_error_diagnostic(
+    source: &str,
+    file: Option<&Path>,
+    error: &FormatModuleError,
+) -> RenderedDiagnostic {
+    let (message, help) = match error {
+        FormatModuleError::ParseError(_) => (
+            "formatter could not parse Sifr source",
+            Some("fix the syntax error before running `sifr fmt`"),
+        ),
+        FormatModuleError::FormatError(_) => (
+            "formatter could not format Sifr source",
+            Some("reduce the formatted range or report this formatter case"),
+        ),
+        FormatModuleError::PrintError(_) => (
+            "formatter could not print Sifr source",
+            Some("report this formatter print failure"),
+        ),
     };
-    let offset = TextSize::new(raw);
-    protected
-        .iter()
-        .any(|range| range.start() <= offset && offset < range.end())
+    let spans = error
+        .range()
+        .and_then(|range| span_for_range(source, file, range, "formatter failed here"))
+        .into_iter()
+        .collect();
+    diagnostic(
+        DiagnosticCode::FMT_FORMATTING_DRIFT,
+        message,
+        [
+            ("path", file_display(file)),
+            ("formatter_error", error.to_string()),
+        ],
+        spans,
+        help,
+    )
+}
+
+fn invalid_range_diagnostic(
+    source: &str,
+    file: Option<&Path>,
+    range: TextRange,
+) -> RenderedDiagnostic {
+    let spans = span_for_range(source, file, range, "invalid formatter range")
+        .into_iter()
+        .collect();
+    diagnostic(
+        DiagnosticCode::FMT_FORMATTING_DRIFT,
+        "formatter range is outside Sifr source bounds or not on UTF-8 boundaries",
+        [("path", file_display(file))],
+        spans,
+        Some("request formatting for a valid source range"),
+    )
+}
+
+fn unsupported_option_diagnostic(
+    file: Option<&Path>,
+    option: &str,
+    help: &str,
+) -> RenderedDiagnostic {
+    diagnostic(
+        DiagnosticCode::FMT_FORMATTING_DRIFT,
+        format!("unsupported formatter option: {option}"),
+        [("path", file_display(file)), ("option", option.to_string())],
+        Vec::new(),
+        Some(help),
+    )
+}
+
+fn span_for_range(
+    source: &str,
+    file: Option<&Path>,
+    range: TextRange,
+    label: &str,
+) -> Option<DiagnosticSpan> {
+    let source_text = SourceText::new(source.to_string());
+    let start = range.start().to_u32();
+    let end = range.end().to_u32().max(start.saturating_add(1));
+    let position = source_text.text_position(TextSize::new(start))?;
+    Some(DiagnosticSpan {
+        file: file.map(|path| path.display().to_string()),
+        byte_start: start,
+        byte_end: end,
+        line: Some(position.line.saturating_add(1)),
+        column: Some(position.character.saturating_add(1)),
+        end_line: Some(position.line.saturating_add(1)),
+        end_column: Some(position.character.saturating_add(2)),
+        is_primary: true,
+        label: Some(label.to_string()),
+        lines: Vec::new(),
+    })
 }
 
 fn formatting_drift_diagnostic(
@@ -339,11 +431,6 @@ fn diagnostic(
     }
 }
 
-fn full_range(source: &str) -> TextRange {
-    let end = u32::try_from(source.len()).unwrap_or(u32::MAX);
-    TextRange::new(TextSize::new(0), TextSize::new(end))
-}
-
 fn file_display(file: Option<&Path>) -> String {
     file.map_or_else(|| "<memory>".to_string(), |path| path.display().to_string())
 }
@@ -367,8 +454,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn formatter_is_idempotent_and_preserves_string_trailing_space() {
-        let source = "def main():  \n    value: str = \"kept \"  \n    print(value)\n";
+    fn formatter_is_ruff_backed_and_preserves_string_contents() {
+        let source = "def main():\n    value: str = \"kept \"\n    print(  value  )\n";
         let first = format_source(source, None, FormatOptions::default())
             .expect("source should format")
             .formatted;
@@ -377,13 +464,70 @@ mod tests {
             .formatted;
         assert_eq!(first, second);
         assert!(first.contains("\"kept \""));
-        assert!(!first.contains("def main():  \n"));
+        assert!(first.contains("print(value)"));
+        parse_module(&first, None).expect("formatted source should parse");
+    }
+
+    #[test]
+    fn formatter_canonicalizes_sifr_parameter_conventions() {
+        let source = "def consume(mut own data: list[int]) -> Result[int, Error]:\n    match data:\n        case []:\n            return 0\n        case _:\n            return data[0]\n";
+        let formatted = format_source(source, None, FormatOptions::default())
+            .expect("source should format")
+            .formatted;
+        assert!(formatted.contains("def consume(own mut data: list[int]) -> Result[int, Error]:"));
+        assert!(!formatted.contains("mut own data"));
+        parse_module(&formatted, None).expect("formatted Sifr extensions should parse");
+    }
+
+    #[test]
+    fn range_formatting_returns_minimal_text_edit() {
+        let source = "def main():\n    x=1\n    y = 2\n";
+        let range = TextRange::new(TextSize::new(16), TextSize::new(19));
+        let edits = format_range(source, range, None, FormatOptions::default())
+            .expect("range should format");
+        assert_eq!(edits.len(), 1);
+        assert_eq!(edits[0].replacement, "    x = 1");
+        let formatted = source_with_edit(source, edits[0].range, &edits[0].replacement)
+            .expect("edit should apply");
+        assert_eq!(formatted, "def main():\n    x = 1\n    y = 2\n");
     }
 
     #[test]
     fn check_reports_formatting_drift() {
-        let check = check_source("def main():  \n    pass", None, FormatOptions::default())
-            .expect("check should run");
+        let check = check_source(
+            "def main():\n    print( 1 )\n",
+            None,
+            FormatOptions::default(),
+        )
+        .expect("check should run");
         assert_eq!(check.diagnostics[0].code, "SIFR-FMT-0001");
+    }
+
+    #[test]
+    fn invalid_source_reports_sifr_diagnostic() {
+        let diagnostics =
+            format_source("def broken(:\n", None, FormatOptions::default()).expect_err("invalid");
+        assert_eq!(diagnostics[0].code, "SIFR-FMT-0001");
+        assert_eq!(
+            diagnostics[0].message,
+            "formatter could not parse Sifr source"
+        );
+    }
+
+    #[test]
+    fn unsupported_final_newline_option_reports_diagnostic() {
+        let diagnostics = format_source(
+            "def main():\n    pass\n",
+            None,
+            FormatOptions {
+                final_newline: false,
+            },
+        )
+        .expect_err("unsupported option");
+        assert_eq!(diagnostics[0].code, "SIFR-FMT-0001");
+        assert_eq!(
+            diagnostics[0].message,
+            "unsupported formatter option: final_newline=false"
+        );
     }
 }

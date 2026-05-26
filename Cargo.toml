@@ -33,6 +33,8 @@ ruff_text_size = { path = "third_party/ruff/crates/ruff_text_size" }
 ruff_source_file = { path = "third_party/ruff/crates/ruff_source_file" }
 ruff_python_trivia = { path = "third_party/ruff/crates/ruff_python_trivia" }
 ruff_python_literal = { path = "third_party/ruff/crates/ruff_python_literal" }
+ruff_formatter = { path = "third_party/ruff/crates/ruff_formatter" }
+ruff_python_formatter = { path = "third_party/ruff/crates/ruff_python_formatter" }
 
 # Parser/AST crates -- maintained in the Ruff fork submodule and imported under Sifr crate aliases.
 ruff_python_ast = { path = "third_party/ruff/crates/ruff_python_ast" }
