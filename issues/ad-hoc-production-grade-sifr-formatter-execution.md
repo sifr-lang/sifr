@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution: Production-Grade Sifr Formatter
 
-Status: implementation in progress
+Status: completed
 
 Phase contract: `issues/ad-hoc-production-grade-sifr-formatter.md`
 
@@ -16,7 +16,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-formatter.md`
 - [x] Formatter corpus, guardrails, and performance checks completed
 - [x] Formatter showcase demo copied to `.sifr`, formatted, and recorded
 - [x] Internal and public docs updated
-- [ ] Full local validation recorded
+- [x] Full local validation recorded
 - [x] Final production-readiness review approved
 
 ## Planning Lock Addendum
@@ -420,6 +420,8 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Milestone 6 quick validation passed from committed state with `scripts/run_all_tests.sh --profile quick`. The lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded `wall_time=1804.37s`, `cache_hits=12/12`, no swaps, and warm wall-time/group-skew advisories.
 - `2026-05-26`: Milestone 7 formatter showcase smoke passed by copying `demos/formatter_showcase/main.sifr.input` to `target/formatter_showcase_m7/main.sifr`, running `cargo run -q -p sifr -- fmt --no-cache target/formatter_showcase_m7/main.sifr`, and checking the formatted result with `cargo run -q -p sifr -- check target/formatter_showcase_m7/main.sifr`.
 - `2026-05-26`: Milestone 7 targeted docs/contract validation passed: `cargo fmt -p sifr --check`, `python3 verification/tooling/check_editor_assets.py`, `python3 verification/tooling/check_editor_assets.py --self-test`, `python3 verification/tooling/check_formatter_ast_coverage.py`, `python3 verification/tooling/check_formatter_ast_coverage.py --self-test`, `python3 verification/tooling/check_formatter_phase_manifests.py`, `python3 verification/tooling/check_formatter_phase_manifests.py --self-test`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check --ignore-submodules=none`.
+- `2026-05-26`: final quick validation passed from committed state with `scripts/run_all_tests.sh --profile quick`. The lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded `wall_time=1148.21s`, `max_rss=672.6MiB`, `swaps=0`, `cache_hits=12/12`, and warm wall-time/group-skew advisories.
+- `2026-05-26`: final full validation passed from committed state with `scripts/run_all_tests.sh`. The lane exited 0 and wrote `target/validation_lane_reports/pr.latest.json`; it recorded `wall_time=3138.75s`, `max_rss=525.2MiB`, `swaps=0`, `cache_hits=0/19`, hardening `variants=28` with `blocking_failures=0`, and warm wall-time/group-skew advisories.
 
 Formatter showcase before/after evidence:
 
