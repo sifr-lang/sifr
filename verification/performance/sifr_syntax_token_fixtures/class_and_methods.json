@@ -1,7 +1,7 @@
 {
   "id": "class-and-methods",
   "source_path": "inline",
-  "ruff_fork_revision": "b251656613629e054308951a4df1928b3f749b1b",
+  "ruff_fork_revision": "f9da46641894c8a2380b1e0f17bed68f09c46643",
   "source": "class Counter:\n    value: int\n\n    def inc(mut self, amount: int) -> int:\n        self.value = self.value + amount\n        return self.value\n",
   "expected_token_kinds": [
     "Class",

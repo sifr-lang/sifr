@@ -9,7 +9,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-formatter.md`
 - [x] Phase plan reviewed and approved for implementation
 - [x] Ruff fork parameter-convention formatter PR merged and submodule pinned
 - [x] Ruff-to-Sifr formatter capability matrix created
-- [ ] Ruff fork formatter Sifr AST support completed
+- [x] Ruff fork formatter Sifr AST support completed
 - [ ] Sifr formatter core switched to Ruff-backed in-process formatting
 - [ ] CLI and config parity completed
 - [ ] Analysis, LSP, and editor integration formatting parity completed
@@ -376,6 +376,8 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Milestone 1 implementation review requested for checked formatter capability, CLI parity, AST coverage, and Ruff baseline manifests.
 - `2026-05-26`: Claude Opus Milestone 1 review pass 1 approved the manifests and baseline checks, with one blocking pre-existing validation issue: `verification/tooling/check_phase36_closeout.py` still referenced the pre-archive Phase 36 execution issue path.
 - `2026-05-26`: Claude Opus Milestone 1 review pass 2 confirmed the archive-path fix resolves the pass-1 blocker and explicitly approved Milestone 1 to close so Milestone 2 may begin.
+- `2026-05-26`: Claude Opus Milestone 2 review approved the Ruff fork changes with no blockers and confirmed the current Sifr AST extension surface is covered by the public Sifr wrappers plus formatter fixture corpus.
+- `2026-05-26`: Claude Opus Milestone 2 superproject consumption review approved the Sifr PR with no blockers and explicitly approved Milestone 2 consumption to merge so Milestone 3 may begin.
 
 ## Validation Log
 
@@ -394,7 +396,11 @@ Milestone 6 must add fixtures for every supported pragma form and for expression
 - `2026-05-26`: Milestone 1 fixed the Phase 36 closeout guardrail to reference `issues/archive/phase36-developer-tooling-execution.md`, matching the archived issue layout.
 - `2026-05-26`: `python3 verification/tooling/check_phase36_closeout.py`, `python3 verification/tooling/check_phase36_closeout.py --self-test`, and `git diff --check` passed after the archive-path fix.
 - `2026-05-26`: `scripts/run_all_tests.sh --profile quick` passed end to end after the archive-path fix. The lane report was written to `target/validation_lane_reports/quick.latest.json`; it recorded a warm wall-time advisory but exit status was 0.
+- `2026-05-26`: Milestone 2 Ruff fork validation passed from `third_party/ruff`: `cargo fmt -p ruff_python_formatter --check`, `cargo test -p ruff_python_formatter sifr_ --quiet`, `cargo test -p ruff_python_formatter --test fixtures sifr_extensions --quiet`, `cargo test -p ruff_python_formatter --lib --quiet`, and `git -C third_party/ruff diff --check`.
+- `2026-05-26`: Ruff fork PR <https://github.com/sifr-lang/ruff/pull/2> merged into `sifr/0.15.12-maintenance` as `f9da46641894c8a2380b1e0f17bed68f09c46643`, adding public Sifr formatter wrapper entrypoints and Sifr formatter fixture coverage.
+- `2026-05-26`: Milestone 2 superproject consumption validation passed: `python3 verification/performance/check_ruff_fork_update_contract.py`, `python3 verification/tooling/check_formatter_phase_manifests.py`, `cargo test -p sifr_syntax`, `git diff --check`, and `scripts/run_all_tests.sh --profile quick`. The quick lane exited 0 and wrote `target/validation_lane_reports/quick.latest.json`; it recorded warm wall-time and group-skew advisories.
 
 ## PR Log
 
 - Milestone 1 `formatter_contract_manifests_and_ast_inventory`: <https://github.com/sifr-lang/sifr/pull/2175>
+- Milestone 2 `ruff_fork_sifr_formatter_ast_completion`: Ruff fork PR <https://github.com/sifr-lang/ruff/pull/2>; superproject consumption PR <https://github.com/sifr-lang/sifr/pull/2176>
