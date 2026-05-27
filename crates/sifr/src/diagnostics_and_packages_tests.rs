@@ -4,14 +4,13 @@ use crate::cli_model_and_entrypoint::{
     Cli, CompilationMode, DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
     EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
 };
-use crate::diagnostic_rendering_and_run::{
-    canonical_diagnostic_stream, render_compact_diagnostics, render_diagnostic_output,
-};
+use crate::diagnostic_rendering_and_run::{canonical_diagnostic_stream, render_diagnostic_output};
 use crate::mode_resolution_tests::{mktemp_dir, resolved_mode, TestProject};
 use crate::mode_resolution_tests::{primary_test_span, test_diagnostic};
 use clap::Parser;
 use sifr_diagnostics::{
-    ChildSeverity, DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity,
+    render_compact_diagnostics, ChildSeverity, DiagnosticArg, DiagnosticCode, RenderedDiagnostic,
+    Severity,
 };
 use sifr_driver::CompileResult;
 use std::fmt::Write as _;
@@ -250,10 +249,11 @@ pub(super) fn test_check_entrypoint_single_file_arithmetic_warning_is_structured
 
     let human = render_diagnostic_output(&diagnostics, DiagnosticFormat::Human)
         .expect("human warning diagnostics should render");
-    assert_eq!(
-        human,
-        "warning: integer multiplication may overflow at runtime\n"
+    assert!(
+        human.contains("warning[SIFR-TYPE-0901]: integer multiplication may overflow at runtime")
     );
+    assert!(human.contains(&format!("  --> {}:2:", main.display())));
+    assert!(human.contains("^"));
 
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -542,6 +542,24 @@ pub(super) fn test_diagnostic_format_cli_accepts_compact_value() {
 }
 
 #[test]
+pub(super) fn test_format_selection_regression_check_build_run_emit_commands() {
+    let cases: &[(&str, &[&str])] = &[
+        ("format_selection_regression_check", &["check", "main.sifr"]),
+        ("format_selection_regression_build", &["build", "main.sifr"]),
+        ("format_selection_regression_run", &["run", "main.sifr"]),
+        ("format_selection_regression_emit", &["emit", "main.sifr"]),
+    ];
+    for (marker, command_args) in cases {
+        let mut args = vec!["sifr", "--diagnostic-format", "compact"];
+        args.extend_from_slice(command_args);
+        let cli = Cli::try_parse_from(args).unwrap_or_else(|error| {
+            panic!("{marker}: diagnostic format should route through parser: {error}")
+        });
+        assert_eq!(cli.diagnostic_format, DiagnosticFormat::Compact, "{marker}");
+    }
+}
+
+#[test]
 pub(super) fn test_run_with_panic_boundary_converts_panic_to_internal_diagnostic() {
     let error = run_with_panic_boundary(
         "internal compiler panic during test boundary",
@@ -559,7 +577,7 @@ pub(super) fn test_run_with_panic_boundary_converts_panic_to_internal_diagnostic
 }
 
 #[test]
-pub(super) fn test_compact_renderer_invariants_summary_grouping_and_bounds() {
+pub(super) fn test_compact_renderer_invariants_one_line_per_diagnostic() {
     let mut diagnostics = Vec::new();
     for idx in 0..8 {
         diagnostics.push(test_diagnostic(
@@ -573,21 +591,13 @@ pub(super) fn test_compact_renderer_invariants_summary_grouping_and_bounds() {
     let compact = render_compact_diagnostics(&diagnostics);
     let mut lines = compact.lines();
     let first_line = lines.next().expect("compact output should have first line");
-    assert!(
-        first_line.starts_with("summary: "),
-        "first line should be severity summary, got: {first_line}"
-    );
-    assert!(compact.contains("error [SIFR-TYPE-0002]"));
-    assert!(compact.contains(" (x8)"));
-    assert_eq!(compact.matches("help: ").count(), 1);
-    assert_eq!(
-        compact
-            .matches("url: https://sifr.sh/docs/errors/SIFR-TYPE-0002")
-            .count(),
-        1
-    );
-    assert_eq!(compact.matches("  at main.sifr:").count(), 5);
-    assert!(compact.contains("  ... +3 more"));
+    assert_eq!(first_line, "8 errors, 0 warnings, 0 notes");
+    assert_eq!(lines.count(), diagnostics.len());
+    assert_eq!(compact.matches("E SIFR-TYPE-0002 main.sifr:").count(), 8);
+    assert!(!compact.contains("help: "));
+    assert!(!compact.contains("url: "));
+    assert!(!compact.contains(" (x"));
+    assert!(!compact.contains("  at "));
 }
 
 #[test]
@@ -610,17 +620,7 @@ pub(super) fn test_compact_renderer_never_drops_or_invents_relative_to_json_coun
         test_diagnostic("SIFR-PARSE-0002", Severity::Error, "parse fail", None, None),
     ];
     let compact = render_compact_diagnostics(&diagnostics);
-    let grouped_total: usize = compact
-        .lines()
-        .filter_map(|line| {
-            let marker = " (x";
-            let start = line.find(marker)?;
-            let rest = &line[(start + marker.len())..];
-            let end = rest.find(')')?;
-            rest[..end].parse::<usize>().ok()
-        })
-        .sum();
-    assert_eq!(grouped_total, diagnostics.len());
+    assert_eq!(compact.lines().skip(1).count(), diagnostics.len());
 }
 
 #[test]
@@ -681,13 +681,10 @@ pub(super) fn test_diagnostic_formats_share_canonical_sorted_capped_stream() {
 
     let human_output = render_diagnostic_output(&diagnostics, DiagnosticFormat::Human)
         .expect("human diagnostics should render");
-    let expected_human = canonical
-        .iter()
-        .map(legacy_diagnostic_display)
-        .collect::<Vec<_>>()
-        .join("\n")
-        + "\n";
-    assert_eq!(human_output, expected_human);
+    assert!(human_output.contains("error[SIFR-TYPE-0002]: aaa repeated mismatch"));
+    assert!(human_output.contains("  --> aaa_repeated.sifr:"));
+    assert!(human_output.contains("note[SIFR-INTERNAL-0002]: 6 additional diagnostics omitted"));
+    assert!(human_output.contains("  = location: <unavailable>"));
 
     let compact_output = render_diagnostic_output(&diagnostics, DiagnosticFormat::Compact)
         .expect("compact diagnostics should render");
@@ -695,22 +692,11 @@ pub(super) fn test_diagnostic_formats_share_canonical_sorted_capped_stream() {
         .lines()
         .next()
         .expect("compact output should start with a summary");
-    assert_eq!(
-        summary,
-        "summary: 48 error(s), 0 warning(s), 2 note(s), 0 help item(s)"
+    assert_eq!(summary, "48 errors, 0 warnings, 2 notes");
+    assert_eq!(compact_output.lines().skip(1).count(), canonical.len());
+    assert!(
+        compact_output.contains("E SIFR-TYPE-0002 zzz_distinct_42.sifr:1:1 distinct diagnostic 42")
     );
-    let compact_total: usize = compact_output
-        .lines()
-        .filter_map(|line| {
-            let marker = " (x";
-            let start = line.find(marker)?;
-            let rest = &line[(start + marker.len())..];
-            let end = rest.find(')')?;
-            rest[..end].parse::<usize>().ok()
-        })
-        .sum();
-    assert_eq!(compact_total, canonical.len());
-    assert!(compact_output.contains("error [SIFR-TYPE-0002] distinct diagnostic 42 (x1)"));
     assert!(!compact_output.contains("distinct diagnostic 43"));
 }
 
@@ -734,12 +720,17 @@ pub(super) fn test_human_diagnostic_format_renders_child_notes() {
         .expect("human diagnostics should render");
     assert_eq!(
         human_output,
-        "parse error: syntax error: expected expression\nnote: while parsing helper\n"
+        concat!(
+            "error[SIFR-PARSE-0002]: syntax error: expected expression\n",
+            "  = location: <unavailable>\n",
+            "  = note: while parsing helper\n",
+            "  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0002\n",
+        )
     );
 }
 
 #[test]
-pub(super) fn test_compact_renderer_snapshot_repeated_diagnostics_summary_group_last() {
+pub(super) fn test_compact_renderer_snapshot_repeated_diagnostics_preserves_order() {
     let mut diagnostics = Vec::new();
     for _ in 0..5 {
         diagnostics.push(test_diagnostic(
@@ -759,11 +750,13 @@ pub(super) fn test_compact_renderer_snapshot_repeated_diagnostics_summary_group_
     ));
 
     let expected = concat!(
-        "summary: 6 error(s), 0 warning(s), 0 note(s), 0 help item(s)\n",
-        "error [SIFR-TYPE-0002] type mismatch: expected 'int', got 'str' (x5)\n",
-        "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0002\n",
-        "error [SIFR-TYPE-0002] ... +3 more similar diagnostics (x1)\n",
-        "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0002\n",
+        "6 errors, 0 warnings, 0 notes\n",
+        "E SIFR-TYPE-0002 <unknown> type mismatch: expected 'int', got 'str'\n",
+        "E SIFR-TYPE-0002 <unknown> type mismatch: expected 'int', got 'str'\n",
+        "E SIFR-TYPE-0002 <unknown> type mismatch: expected 'int', got 'str'\n",
+        "E SIFR-TYPE-0002 <unknown> type mismatch: expected 'int', got 'str'\n",
+        "E SIFR-TYPE-0002 <unknown> type mismatch: expected 'int', got 'str'\n",
+        "E SIFR-TYPE-0002 <unknown> ... +3 more similar diagnostics\n",
     );
     assert_eq!(render_compact_diagnostics(&diagnostics), expected);
 }
@@ -795,14 +788,10 @@ pub(super) fn test_compact_renderer_snapshot_multi_severity_group_order() {
     ];
 
     let expected = concat!(
-        "summary: 1 error(s), 1 warning(s), 1 note(s), 1 help item(s)\n",
-        "error [SIFR-PARSE-0002] parse failure (x1)\n",
-        "  url: https://sifr.sh/docs/errors/SIFR-PARSE-0002\n",
-        "warning [SIFR-TYPE-0002] unused value (x1)\n",
-        "  help: remove the assignment\n",
-        "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0002\n",
-        "note [SIFR-INTERNAL-0002] consider adding a type annotation (x1)\n",
-        "  url: https://sifr.sh/docs/errors/SIFR-INTERNAL-0002\n",
+        "1 error, 1 warning, 1 note\n",
+        "W SIFR-TYPE-0002 <unknown> unused value\n",
+        "E SIFR-PARSE-0002 <unknown> parse failure\n",
+        "N SIFR-INTERNAL-0002 <unknown> consider adding a type annotation\n",
     );
     assert_eq!(render_compact_diagnostics(&diagnostics), expected);
 }

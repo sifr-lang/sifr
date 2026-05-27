@@ -1,0 +1,53 @@
+[
+  {
+    "code": "SIFR-FLOW-0007",
+    "severity": "Error",
+    "message": "[main] invalid assignment target: attribute assignment target must be a simple name",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] invalid assignment target: attribute assignment target must be a simple name"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-FLOW-0007",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/crates/sifr/tests/verification/diagnostics/multiline_span_rendering/main.sifr",
+        "byte_start": 126,
+        "byte_end": 161,
+        "line": 3,
+        "column": 5,
+        "end_line": 6,
+        "end_column": 6,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    (",
+            "highlight_start": 5,
+            "highlight_end": 6
+          },
+          {
+            "text": "        left,",
+            "highlight_start": 1,
+            "highlight_end": 14
+          },
+          {
+            "text": "        right",
+            "highlight_start": 1,
+            "highlight_end": 14
+          },
+          {
+            "text": "    ).field = 1",
+            "highlight_start": 1,
+            "highlight_end": 6
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  }
+]

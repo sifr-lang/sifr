@@ -1,0 +1,6 @@
+# verification diagnostics fixture: invalid multiline assignment target must render all highlighted lines.
+def subject():
+    (
+        left,
+        right
+    ).field = 1

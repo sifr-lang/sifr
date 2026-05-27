@@ -1,0 +1,20 @@
+error[SIFR-TYPE-0002]: carriage return normalized
+  --> <WORKSPACE>/crates/sifr/tests/verification/diagnostics/presentation_contract_cases/main.sifr:2:5
+     |
+   2 |     value: int = 1
+     |     ^^^^^ primary span
+  ::: <WORKSPACE>/crates/sifr/tests/verification/diagnostics/presentation_contract_cases/main.sifr:3:5
+     |
+   3 |     related: int = 2
+     |     ^^^^^^^ related span
+     = related span
+  = note: child note rendered
+  = help: child help rendered
+  = help: child help rendered
+  = suggestion: replace value with safer expression
+    replace <WORKSPACE>/crates/sifr/tests/verification/diagnostics/presentation_contract_cases/main.sifr:2:5 with "\"safe\""
+  = docs: https://sifr.sh/docs/errors/SIFR-TYPE-0002
+error[SIFR-INTERNAL-0001]: spanless internal diagnostic
+  = location: <unavailable>
+  = help: report this compiler bug
+  = docs: https://sifr.sh/docs/errors/SIFR-INTERNAL-0001

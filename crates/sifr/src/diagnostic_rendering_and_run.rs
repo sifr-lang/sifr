@@ -3,88 +3,20 @@ use super::check_and_package_commands::{
     package_compiler_context, paths_equal, redacted_args,
 };
 use super::cli_model_and_entrypoint::{
-    compact_location_label, compact_severity_summary, diagnostic_exit_code, diagnostic_with_code,
-    human_label, package_diagnostic, run_with_panic_boundary, severity_label, severity_rank,
+    diagnostic_exit_code, diagnostic_with_code, package_diagnostic, run_with_panic_boundary,
     DiagnosticFormat, PackageGraphContext, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
-    EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC, MAX_COMPACT_REPRESENTATIVE_LOCATIONS,
+    EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
 };
 use super::workspace_run_selection::resolve_run_session;
-use sifr_diagnostics::{ChildSeverity, DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build_cached_package_project, CachedBinaryArtifact,
     PackageEntrypoint,
 };
-use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::Write as _;
+use std::collections::BTreeSet;
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
 use std::process;
-pub(super) fn render_compact_diagnostics(diagnostics: &[RenderedDiagnostic]) -> String {
-    let mut grouped: BTreeMap<(u8, String, bool, String), Vec<&RenderedDiagnostic>> =
-        BTreeMap::new();
-    for diagnostic in diagnostics {
-        let is_summary_group = diagnostic.message.starts_with("... +")
-            && diagnostic.message.ends_with("more similar diagnostics");
-        let key = (
-            severity_rank(diagnostic.severity),
-            diagnostic.code.clone(),
-            is_summary_group,
-            diagnostic.message.clone(),
-        );
-        grouped.entry(key).or_default().push(diagnostic);
-    }
-
-    let mut output = String::new();
-    output.push_str(&compact_severity_summary(diagnostics));
-    output.push('\n');
-
-    for ((_severity_rank, code, _is_summary_group, message), group) in grouped {
-        let severity = group[0].severity;
-        let _ = writeln!(
-            output,
-            "{} [{code}] {message} (x{})",
-            severity_label(severity),
-            group.len()
-        );
-
-        let mut locations: BTreeSet<String> = BTreeSet::new();
-        for diagnostic in &group {
-            if let Some(span) = diagnostic.spans.iter().find(|span| span.is_primary) {
-                locations.insert(compact_location_label(span));
-            }
-        }
-
-        let rendered_locations = locations
-            .iter()
-            .take(MAX_COMPACT_REPRESENTATIVE_LOCATIONS)
-            .collect::<Vec<_>>();
-        for location in rendered_locations {
-            let _ = writeln!(output, "  at {location}");
-        }
-        if locations.len() > MAX_COMPACT_REPRESENTATIVE_LOCATIONS {
-            let _ = writeln!(
-                output,
-                "  ... +{} more",
-                locations.len() - MAX_COMPACT_REPRESENTATIVE_LOCATIONS
-            );
-        }
-
-        if let Some(help) = group
-            .iter()
-            .find_map(|diagnostic| diagnostic.help.as_deref())
-        {
-            let _ = writeln!(output, "  help: {help}");
-        }
-        if let Some(url) = group
-            .iter()
-            .find_map(|diagnostic| (!diagnostic.url.is_empty()).then_some(diagnostic.url.as_str()))
-        {
-            let _ = writeln!(output, "  url: {url}");
-        }
-    }
-
-    output
-}
 
 pub(super) fn canonical_diagnostic_stream(
     errors: &[RenderedDiagnostic],
@@ -99,24 +31,13 @@ pub(super) fn render_diagnostic_stream(
     let mut output = String::new();
     match format {
         DiagnosticFormat::Human => {
-            for diagnostic in diagnostics {
-                let label = human_label(diagnostic);
-                let _ = writeln!(output, "{label}: {message}", message = diagnostic.message);
-                for child in &diagnostic.children {
-                    let child_label = match child.severity {
-                        ChildSeverity::Note => "note",
-                        ChildSeverity::Help => "help",
-                    };
-                    let _ = writeln!(output, "{child_label}: {}", child.message);
-                }
-            }
+            output.push_str(&sifr_diagnostics::render_human_diagnostics(diagnostics));
         }
         DiagnosticFormat::Json => {
-            let json = serde_json::to_string_pretty(diagnostics)?;
-            let _ = writeln!(output, "{json}");
+            output.push_str(&sifr_diagnostics::render_json_diagnostics(diagnostics)?);
         }
         DiagnosticFormat::Compact => {
-            let _ = write!(output, "{}", render_compact_diagnostics(diagnostics));
+            output.push_str(&sifr_diagnostics::render_compact_diagnostics(diagnostics));
         }
     }
     Ok(output)

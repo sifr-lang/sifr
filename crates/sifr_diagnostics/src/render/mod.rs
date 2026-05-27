@@ -8,7 +8,8 @@ use std::collections::BTreeMap;
 mod presentation;
 
 pub use presentation::{
-    render_compact_envelope, render_human_envelope, render_json_envelope, render_sink_compact,
+    render_compact_diagnostics, render_compact_envelope, render_human_diagnostics,
+    render_human_envelope, render_json_diagnostics, render_json_envelope, render_sink_compact,
     render_sink_human, render_sink_json, PresentationRenderError,
 };
 

@@ -1,0 +1,3 @@
+# verification diagnostics fixture: synthetic baseline locks renderer-only cases.
+def subject():
+    value: int = 1

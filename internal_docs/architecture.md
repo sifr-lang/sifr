@@ -786,7 +786,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 **Contract:**
 
 - **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable family-local code of the form `SIFR-<FAMILY>-dddd`, for example `SIFR-NAME-0001`. Families identify the semantic domain, not merely the compiler phase. Historical `E####`/`W####` and message-embedded pseudo-codes are removed before public stability.
-- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.sh/docs/errors/<CODE>"`. This URL is part of the stable contract and must render in `human`, `json`, and `compact` outputs.
+- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.sh/docs/errors/<CODE>"`. This URL is part of the stable contract and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future reviewed verbose compact flag is added.
 - **Canonical severity enum:** the shared diagnostic model uses exactly three top-level severities:
   - `Error` -- blocks compilation or the active command
   - `Warning` -- non-blocking but actionable
@@ -797,21 +797,20 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - **Span mapping:** semantic diagnostics preserve byte ranges as `SourceSpan` values before rendering. Renderers derive display paths, byte offsets, 1-based UTF-8 character line/column positions, source snippets, and related spans at the source-map boundary. Codegen/rustc diagnostics use `.sifr` source mapping where available; unmapped compiler failures use `SIFR-INTERNAL-*`.
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
 - **Generation vs rendering separation:** semantic phases construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
-- **JSON renderer contract:** `json` output uses a versioned envelope `{ "version": 1, "diagnostics": [...] }` and must preserve the shared diagnostic model fields without human-only lossy reformatting. The checked-in schema is generated from `sifr_diagnostics`.
+- **JSON renderer contract:** CLI `json` output preserves the existing `RenderedDiagnostic[]` transport and must preserve the shared diagnostic model fields without human-only lossy reformatting. The checked-in schema is generated from `sifr_diagnostics`.
 - **CLI diagnostic-format contract:** the stable renderer flag surface is `--diagnostic-format human|json|compact`. Unknown values fail fast with exit code `2` before semantic compilation work starts.
 - **CLI exit-code contract:** compiler commands return exactly:
   - `0` success (including warning-only outcomes)
   - `1` user-facing compile/check/test diagnostics
   - `2` CLI usage/configuration error
   - `3` internal compiler failure after panic/error boundary handling
-- **Compact renderer contract:** `compact` is a token-efficient summary format inspired by the grouping/truncation strategy used in the sibling `rtk` repository at `/Users/yaseralnajjar/work/sifr/rtk`, but implemented in Sifr and fully specified here. Implementers can read `rtk` to build or validate the renderer. It must:
-  - show a one-line severity summary first
-  - group repeated diagnostics by `(severity, code, message_template, primary display file)`
-  - list at most 5 representative locations per group
-  - include one bounded help line when present
-  - include the documentation URL once per group
-  - emit truncation lines such as `... +N more` instead of flooding the terminal
-  - avoid source snippets, color escapes, and duplicated child-note spam
+- **Human renderer contract:** default `human` output is source-aware. It prints severity, code, message, primary file/line/column, source snippets, caret highlights derived from `DiagnosticSpanLine`, related spans, child notes/help, suggestions, and documentation URLs. Spanless internal diagnostics use an explicit no-source fallback.
+- **Compact renderer contract:** `compact` is a stable line-oriented summary format for agents, CI summaries, and quick terminal scanning. It must:
+  - show one severity-only summary line first
+  - render one physical line per retained diagnostic after recovery limiting
+  - keep the first four fields stable: severity abbreviation, code, location or `<unknown>`, and message
+  - preserve deterministic diagnostic ordering
+  - avoid source snippets, default URLs, help counts, and grouped `CompactKey`-style aggregation
 - **Suppression policy:** `rustc` warnings on generated code are suppressed by default (generated code includes `#[allow(warnings)]`). Only `rustc` errors are surfaced to the user.
 - **Multi-file rendering:** errors that span multiple `.sifr` files show each file's relevant snippet with labeled spans. Uses `miette` or `ariadne` for rich terminal rendering with colors, underlines, and related notes.
 - **Diagnostic ownership:** the Sifr compiler should catch as many errors as possible before invoking `rustc`. Over time, the set of errors that reach `rustc` should shrink to near-zero as the type checker and borrow checker mature.

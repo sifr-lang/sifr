@@ -1,0 +1,3 @@
+2 errors, 0 warnings, 0 notes
+E SIFR-TYPE-0002 <WORKSPACE>/crates/sifr/tests/verification/diagnostics/presentation_contract_cases/main.sifr:2:5 carriage return normalized
+E SIFR-INTERNAL-0001 <unknown> spanless internal diagnostic

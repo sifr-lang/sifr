@@ -1,0 +1,12 @@
+error[SIFR-FLOW-0007]: invalid assignment target: attribute assignment target must be a simple name
+  --> <WORKSPACE>/crates/sifr/tests/verification/diagnostics/multiline_span_rendering/main.sifr:3:5
+     |
+   3 |     (
+     |     ^
+   4 |         left,
+     | ^^^^^^^^^^^^^
+   5 |         right
+     | ^^^^^^^^^^^^^
+   6 |     ).field = 1
+     | ^^^^^
+  = docs: https://sifr.sh/docs/errors/SIFR-FLOW-0007

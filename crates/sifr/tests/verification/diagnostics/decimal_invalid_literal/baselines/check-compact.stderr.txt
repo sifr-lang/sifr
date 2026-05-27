@@ -1,4 +1,2 @@
-summary: 1 error(s), 0 warning(s), 0 note(s), 0 help item(s)
-error [SIFR-DECIMAL-0001] [main] Decimal() received invalid exact literal '12.34.56' (x1)
-  at <WORKSPACE>/crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/main.sifr:3:30
-  url: https://sifr.sh/docs/errors/SIFR-DECIMAL-0001
+1 error, 0 warnings, 0 notes
+E SIFR-DECIMAL-0001 <WORKSPACE>/crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/main.sifr:3:30 Decimal() received invalid exact literal '12.34.56'
