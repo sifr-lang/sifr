@@ -158,6 +158,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-LINT-0002`](SIFR-LINT-0002.md) | Warning | Suppression did not suppress any diagnostic. |
 | [`SIFR-LINT-0003`](SIFR-LINT-0003.md) | Warning | Suppression must list explicit Sifr policy rule ids. |
 | [`SIFR-LINT-0004`](SIFR-LINT-0004.md) | Warning | Line ends with trailing horizontal whitespace. |
+| [`SIFR-LINT-0005`](SIFR-LINT-0005.md) | Warning | Comment contains a tracked TODO or FIXME marker. |
+| [`SIFR-LINT-0006`](SIFR-LINT-0006.md) | Warning | Call passes a boolean literal positionally. |
+| [`SIFR-LINT-0007`](SIFR-LINT-0007.md) | Warning | Function has more parameters than the policy limit. |
+| [`SIFR-LINT-0008`](SIFR-LINT-0008.md) | Warning | Import duplicates a module/name pair already imported in the same source file. |
 | [`SIFR-PACKAGE-0001`](SIFR-PACKAGE-0001.md) | Error | Missing or invalid Cargo Sifr discovery metadata. |
 | [`SIFR-PACKAGE-0002`](SIFR-PACKAGE-0002.md) | Error | Missing or invalid sifr.toml package manifest. |
 | [`SIFR-PACKAGE-0003`](SIFR-PACKAGE-0003.md) | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |

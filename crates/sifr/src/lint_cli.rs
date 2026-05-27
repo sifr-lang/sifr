@@ -4,7 +4,7 @@ use super::cli_model_and_entrypoint::{
 };
 use super::diagnostic_rendering_and_run::render_diagnostic_output;
 use clap::{Args, ValueEnum};
-use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lint::{EffectiveLintConfig, LintConfigOverrides, PerFileIgnore};
 use std::io::{self, Read as _, Write as _};
 use std::path::{Path, PathBuf};
@@ -52,8 +52,12 @@ pub(crate) struct LintArgs {
     pub(crate) show_files: bool,
 
     /// Print resolved lint settings without linting
-    #[arg(long)]
+    #[arg(long, conflicts_with = "statistics")]
     pub(crate) show_settings: bool,
+
+    /// Print diagnostic counts by Sifr policy rule
+    #[arg(long, conflicts_with_all = ["show_files", "show_settings"])]
+    pub(crate) statistics: bool,
 
     /// Enable preview policy rules
     #[arg(long, conflicts_with = "no_preview")]
@@ -143,12 +147,21 @@ pub(super) fn cmd_lint(
             }
         }
         Ok(LintCommandResult::Text(output)) => write_lint_output(&output, args, true),
+        Ok(LintCommandResult::Statistics(diagnostics)) => {
+            let write_exit = write_lint_output(&render_statistics(&diagnostics), args, true);
+            if write_exit != EXIT_SUCCESS || diagnostics.is_empty() || args.exit_zero {
+                write_exit
+            } else {
+                EXIT_USER_DIAGNOSTIC
+            }
+        }
         Err(errors) => render_lint_diagnostics(&errors, lint_format, args, true),
     }
 }
 
 enum LintCommandResult {
     Diagnostics(Vec<RenderedDiagnostic>),
+    Statistics(Vec<RenderedDiagnostic>),
     Text(String),
 }
 
@@ -183,9 +196,15 @@ fn lint_entrypoint(
         })?;
         let file = args.stdin_filename.as_deref();
         let diagnostics = sifr_lint::lint_source(&source, file, &config.options).diagnostics;
+        if args.statistics {
+            return Ok(LintCommandResult::Statistics(diagnostics));
+        }
         return Ok(LintCommandResult::Diagnostics(diagnostics));
     }
     let diagnostics = sifr_lint::lint_paths(&targets, &config.options)?.diagnostics;
+    if args.statistics {
+        return Ok(LintCommandResult::Statistics(diagnostics));
+    }
     Ok(LintCommandResult::Diagnostics(diagnostics))
 }
 
@@ -288,6 +307,25 @@ fn render_settings(config: &EffectiveLintConfig) -> String {
         options.ignore_suppressions,
         options.per_file_ignores.len(),
     )
+}
+
+fn render_statistics(diagnostics: &[RenderedDiagnostic]) -> String {
+    use std::fmt::Write as _;
+
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for diagnostic in diagnostics {
+        if let Some(DiagnosticArg::String(rule)) = diagnostic.args.get("rule") {
+            *counts.entry(rule.clone()).or_default() += 1;
+        }
+    }
+    if counts.is_empty() {
+        return "0 diagnostics\n".to_string();
+    }
+    let mut output = String::new();
+    for (rule, count) in counts {
+        let _ = writeln!(output, "{count} {rule}");
+    }
+    output
 }
 
 fn flag_override(enable: bool, disable: bool) -> Option<bool> {

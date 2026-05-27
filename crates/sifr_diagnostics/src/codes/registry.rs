@@ -114,6 +114,11 @@ impl DiagnosticCode {
     pub const LINT_UNUSED_SUPPRESSION: Self = Self::new("SIFR-LINT-0002", Severity::Warning);
     pub const LINT_BLANKET_SUPPRESSION: Self = Self::new("SIFR-LINT-0003", Severity::Warning);
     pub const LINT_TRAILING_WHITESPACE: Self = Self::new("SIFR-LINT-0004", Severity::Warning);
+    pub const LINT_TODO_COMMENT: Self = Self::new("SIFR-LINT-0005", Severity::Warning);
+    pub const LINT_BOOLEAN_POSITIONAL_ARGUMENT: Self =
+        Self::new("SIFR-LINT-0006", Severity::Warning);
+    pub const LINT_LARGE_PARAMETER_LIST: Self = Self::new("SIFR-LINT-0007", Severity::Warning);
+    pub const LINT_DUPLICATE_IMPORT: Self = Self::new("SIFR-LINT-0008", Severity::Warning);
 
     pub const MATCH_NON_EXHAUSTIVE: Self = Self::new("SIFR-MATCH-0001", Severity::Error);
     pub const MATCH_GUARD_NOT_BOOL: Self = Self::new("SIFR-MATCH-0002", Severity::Error);
@@ -579,6 +584,10 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::LINT_UNUSED_SUPPRESSION,
     DiagnosticCode::LINT_BLANKET_SUPPRESSION,
     DiagnosticCode::LINT_TRAILING_WHITESPACE,
+    DiagnosticCode::LINT_TODO_COMMENT,
+    DiagnosticCode::LINT_BOOLEAN_POSITIONAL_ARGUMENT,
+    DiagnosticCode::LINT_LARGE_PARAMETER_LIST,
+    DiagnosticCode::LINT_DUPLICATE_IMPORT,
     DiagnosticCode::MATCH_NON_EXHAUSTIVE,
     DiagnosticCode::MATCH_GUARD_NOT_BOOL,
     DiagnosticCode::MATCH_INVALID_CLASS_PATTERN_FIELD,

@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 mod config;
 mod discovery;
 mod engine;
+mod rules;
 pub mod suppression;
 
 pub use config::effective_lint_config;
@@ -192,6 +193,50 @@ pub const RULES: &[RuleMetadata] = &[
         fix_availability: FixAvailability::None,
         suppression_complexity: SuppressionComplexity::PhysicalLine,
     },
+    RuleMetadata {
+        id: "todo-comment",
+        summary: "Comment contains a tracked TODO or FIXME marker.",
+        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0005",
+        default_level: RuleSeverity::Warn,
+        status: RuleStatus::Stable,
+        category: "comment-policy",
+        source: "sifr_lint::rules::todo_comment",
+        fix_availability: FixAvailability::None,
+        suppression_complexity: SuppressionComplexity::PhysicalLine,
+    },
+    RuleMetadata {
+        id: "boolean-positional-argument",
+        summary: "Call passes a boolean literal positionally.",
+        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0006",
+        default_level: RuleSeverity::Warn,
+        status: RuleStatus::Stable,
+        category: "readability-policy",
+        source: "sifr_lint::rules::boolean_positional_argument",
+        fix_availability: FixAvailability::None,
+        suppression_complexity: SuppressionComplexity::SingleNode,
+    },
+    RuleMetadata {
+        id: "large-parameter-list",
+        summary: "Function has more parameters than the policy limit.",
+        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0007",
+        default_level: RuleSeverity::Warn,
+        status: RuleStatus::Stable,
+        category: "complexity-policy",
+        source: "sifr_lint::rules::large_parameter_list",
+        fix_availability: FixAvailability::None,
+        suppression_complexity: SuppressionComplexity::StatementRange,
+    },
+    RuleMetadata {
+        id: "duplicate-import",
+        summary: "Import duplicates a module/name pair already imported in the same source file.",
+        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0008",
+        default_level: RuleSeverity::Warn,
+        status: RuleStatus::Stable,
+        category: "workspace-policy",
+        source: "sifr_lint::rules::duplicate_import",
+        fix_availability: FixAvailability::None,
+        suppression_complexity: SuppressionComplexity::SymbolWorkspace,
+    },
 ];
 
 pub fn rule_metadata(rule_id: &str) -> Option<&'static RuleMetadata> {
@@ -206,19 +251,13 @@ pub(crate) fn lint_physical_line_rules(
     source: &str,
     file: Option<&Path>,
     options: &LintOptions,
+    suppressions: &mut ParserAwareSuppressions,
 ) -> Vec<RenderedDiagnostic> {
     if options.mode == DiagnosticMode::Off {
         return Vec::new();
     }
 
-    let mut suppressions = ParserAwareSuppressions::new(source, options.ignore_suppressions);
     let mut diagnostics = Vec::new();
-    diagnostics.extend(suppression_shape_diagnostics(
-        &suppressions,
-        file,
-        source,
-        options,
-    ));
 
     for (line_index, line) in source.split_inclusive('\n').enumerate() {
         let rule = "trailing-whitespace";
@@ -234,12 +273,6 @@ pub(crate) fn lint_physical_line_rules(
         }
     }
 
-    diagnostics.extend(unused_suppression_diagnostics(
-        &suppressions,
-        file,
-        source,
-        options,
-    ));
     diagnostics
 }
 
@@ -308,7 +341,7 @@ fn per_file_ignored(rule_id: &str, file: Option<&Path>, options: &LintOptions) -
     })
 }
 
-fn suppression_shape_diagnostics(
+pub(crate) fn suppression_shape_diagnostics(
     suppressions: &ParserAwareSuppressions,
     file: Option<&Path>,
     source: &str,
@@ -369,7 +402,7 @@ fn push_if_enabled(
     }
 }
 
-fn unused_suppression_diagnostics(
+pub(crate) fn unused_suppression_diagnostics(
     suppressions: &ParserAwareSuppressions,
     file: Option<&Path>,
     source: &str,
@@ -400,7 +433,7 @@ fn unused_suppression_diagnostics(
     diagnostics
 }
 
-fn with_rule_severity(
+pub(crate) fn with_rule_severity(
     mut diagnostic: RenderedDiagnostic,
     rule: &str,
     options: &LintOptions,
@@ -408,6 +441,47 @@ fn with_rule_severity(
     if let Some(level) = options.rule_levels.get(rule) {
         diagnostic.severity = level.diagnostic_severity();
     }
+    diagnostic
+}
+
+pub(crate) struct LintDiagnosticSpec<'a> {
+    pub code: DiagnosticCode,
+    pub message: String,
+    pub message_template: &'static str,
+    pub rule: &'static str,
+    pub file: Option<&'a Path>,
+    pub source: &'a str,
+    pub byte_start: u32,
+    pub byte_end: u32,
+    pub label: &'static str,
+    pub help: Option<&'static str>,
+    pub extra_args: Vec<(&'static str, String)>,
+}
+
+pub(crate) fn lint_rule_diagnostic(spec: LintDiagnosticSpec<'_>) -> RenderedDiagnostic {
+    let (line, column) = line_column_for_byte(spec.source, spec.byte_start);
+    let (end_line, end_column) = line_column_for_byte(spec.source, spec.byte_end);
+    let mut args = vec![("rule", spec.rule.to_string())];
+    args.extend(spec.extra_args);
+    let mut diagnostic = diagnostic(
+        spec.code,
+        spec.message,
+        args,
+        vec![DiagnosticSpan {
+            file: spec.file.map(|path| path.display().to_string()),
+            byte_start: spec.byte_start,
+            byte_end: spec.byte_end.max(spec.byte_start.saturating_add(1)),
+            line: Some(line),
+            column: Some(column),
+            end_line: Some(end_line),
+            end_column: Some(end_column),
+            is_primary: true,
+            label: Some(spec.label.to_string()),
+            lines: Vec::new(),
+        }],
+        spec.help,
+    );
+    diagnostic.message_template = spec.message_template.to_string();
     diagnostic
 }
 
@@ -540,7 +614,7 @@ fn line_has_trailing_whitespace(line: &str) -> bool {
     visible.ends_with(' ') || visible.ends_with('\t')
 }
 
-fn byte_offset_for_line(source: &str, line_index: usize) -> u32 {
+pub(crate) fn byte_offset_for_line(source: &str, line_index: usize) -> u32 {
     let mut offset = 0usize;
     for (index, line) in source.split_inclusive('\n').enumerate() {
         if index == line_index {
@@ -549,6 +623,38 @@ fn byte_offset_for_line(source: &str, line_index: usize) -> u32 {
         offset = offset.saturating_add(line.len());
     }
     u32::try_from(offset).unwrap_or(u32::MAX)
+}
+
+pub(crate) fn line_index_for_byte(source: &str, byte: u32) -> usize {
+    let target = usize::try_from(byte).unwrap_or(usize::MAX);
+    let mut offset = 0usize;
+    for (index, line) in source.split_inclusive('\n').enumerate() {
+        let next = offset.saturating_add(line.len());
+        if target < next {
+            return index;
+        }
+        offset = next;
+    }
+    source.lines().count().saturating_sub(1)
+}
+
+fn line_column_for_byte(source: &str, byte: u32) -> (u32, u32) {
+    let target = usize::try_from(byte).unwrap_or(usize::MAX);
+    let mut offset = 0usize;
+    for (index, line) in source.split_inclusive('\n').enumerate() {
+        let next = offset.saturating_add(line.len());
+        if target <= next {
+            return (
+                u32::try_from(index.saturating_add(1)).unwrap_or(u32::MAX),
+                u32::try_from(target.saturating_sub(offset).saturating_add(1)).unwrap_or(u32::MAX),
+            );
+        }
+        offset = next;
+    }
+    (
+        u32::try_from(source.lines().count().max(1)).unwrap_or(u32::MAX),
+        1,
+    )
 }
 
 #[cfg(test)]

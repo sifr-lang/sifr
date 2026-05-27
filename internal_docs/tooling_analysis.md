@@ -173,6 +173,14 @@ physical-line policy diagnostics remain preserved, invalid source still runs
 source-independent policy phases, and path linting records file-discovery
 execution before per-file source checks.
 
+Milestone 5 adds representative Sifr-owned policy rule families without
+porting Python lint semantics: token/trivia TODO/FIXME comment detection,
+syntax-node positional boolean argument detection, HIR-backed large parameter
+list policy, and duplicate import declaration policy. These rules use Sifr rule
+IDs, `sifr_diagnostics`, parser-aware suppressions for non-physical rules, and
+the phase-gated runner. The CLI also exposes `sifr lint --statistics` for
+deterministic per-rule diagnostic counts.
+
 ## Generated Rust And Test Metadata
 
 Generated Rust preview uses compiler/codegen APIs and source maps. It must be cancellable, revision-checked, budgeted under `lsp-generated-rust-preview`, and must not return partial generated code after a document change invalidates the request.

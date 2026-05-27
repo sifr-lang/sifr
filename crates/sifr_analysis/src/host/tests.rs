@@ -465,6 +465,28 @@ def main():
 }
 
 #[test]
+fn analysis_lint_diagnostics_match_lint_engine_for_policy_rules() {
+    let source = "# TODO: follow up\ndef main():\n    configure(True)\n";
+    let mut host =
+        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let file = host.files()[0];
+    let analysis_codes = host
+        .diagnostics(file)
+        .expect("diagnostics should query")
+        .into_value()
+        .into_iter()
+        .filter(|diagnostic| diagnostic.code.starts_with("SIFR-LINT-"))
+        .map(|diagnostic| diagnostic.code)
+        .collect::<Vec<_>>();
+    let engine_codes = sifr_lint::lint_source(source, None, &sifr_lint::LintOptions::default())
+        .diagnostics
+        .into_iter()
+        .map(|diagnostic| diagnostic.code)
+        .collect::<Vec<_>>();
+    assert_eq!(analysis_codes, engine_codes);
+}
+
+#[test]
 fn code_actions_offer_policy_suppression_and_explain_not_found_is_explicit() {
     let source = "def main():\n    return 1  \n";
     let mut host =
