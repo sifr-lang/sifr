@@ -12,7 +12,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 - [x] Linter CLI parity manifest created
 - [x] Forbidden Ruff/Python lint dependency guardrail completed
 - [x] Lint config and file discovery completed
-- [ ] Parser-aware suppression engine completed
+- [x] Parser-aware suppression engine completed
 - [ ] Phase-gated lint runner completed
 - [ ] Sifr policy rule families completed
 - [ ] Fix engine and LSP code actions completed
@@ -76,6 +76,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-27`: Claude pre-implementation discovery review found no blockers and confirmed M1 can start. It requested precision edits for manifest key population, suppression-gate milestone format, parser-aware API import checks, lint CLI file-size planning, and diagnostic-class code-action guardrails; the phase was updated accordingly.
 - `2026-05-27`: Claude M1 reuse-contract review pass 1 found no blockers and returned `SATISFIED` for M1 closure. Review artifact: `reviews/sifr-linter-m1-reuse-contract-review-pass-1.md`.
 - `2026-05-27`: Claude M2 config/discovery review pass 1 found no blockers and returned `SATISFIED` for M2 closure. Review artifact: `reviews/sifr-linter-m2-config-discovery-review-pass-1.md`.
+- `2026-05-27`: Claude M3 parser-aware suppression review pass 1 found no blockers and returned `SATISFIED` for M3 closure. Review artifact: `reviews/sifr-linter-m3-parser-aware-suppression-review-pass-1.md`.
 
 ## Validation Log
 
@@ -98,6 +99,16 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
   - CLI smoke fixtures passed for concise diagnostics, stdin JSON diagnostics, config severity ignore, `--show-files`, `--show-settings`, `--exit-zero`, and rejected Ruff/Python flag handling.
   - `git diff --check` passed.
+  - `python3 scripts/check_file_size_guardrails.py` passed.
+- `2026-05-27` M3 local checks:
+  - `cargo check -p sifr` passed.
+  - `cargo build -p sifr` passed.
+  - `cargo test -p sifr_lint` passed: 8 unit tests and 0 doctests.
+  - `cargo test -p sifr -- --skip test_e2e_pass` passed.
+  - `cargo clippy -p sifr_lint -- -D warnings` passed.
+  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - CLI smoke fixture passed for `--ignore-suppressions`.
   - `python3 scripts/check_file_size_guardrails.py` passed.
 
 ## PR Log

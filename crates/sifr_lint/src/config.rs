@@ -244,6 +244,9 @@ fn apply_overrides(options: &mut LintOptions, overrides: &LintConfigOverrides) {
     if let Some(preview) = overrides.preview {
         options.preview = preview;
     }
+    if let Some(ignore_suppressions) = overrides.ignore_suppressions {
+        options.ignore_suppressions = ignore_suppressions;
+    }
 }
 
 fn validate_rule_selectors(options: &LintOptions) -> Result<(), Vec<RenderedDiagnostic>> {
