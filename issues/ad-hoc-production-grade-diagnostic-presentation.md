@@ -135,6 +135,7 @@ Required behavior:
 - Emit a single summary line.
 - Emit one physical line per retained diagnostic.
 - Use stable fields: severity abbreviation, code, location or `<unknown>`, message.
+- Do not group retained diagnostics by message template, rendered message, or primary file. Recovery limiting may still add explicit omission-summary diagnostics before compact rendering.
 - Do not emit snippets.
 - Do not emit URLs by default unless a future reviewed flag requests verbose compact output.
 - Count only diagnostics by severity in the summary. Help items remain visible in `human` and `json`, but are not counted separately in compact mode.
@@ -172,7 +173,7 @@ In scope:
    - CRLF source snippets in human mode
    - compact deterministic ordering
    - compact recovery-limit summaries
-   - command-level format selection for `check`, `build`, `run`, and `emit`
+   - command-level format-selection regression coverage for `check`, `build`, `run`, and `emit`
 7. Update docs for `--diagnostic-format`.
 8. Ensure LSP/editor diagnostic behavior is not regressed by CLI presentation changes.
 9. Ensure generated docs URLs and diagnostic code identities remain unchanged.
@@ -194,16 +195,19 @@ Out of scope:
 - Lock target human and compact output fixtures.
 - Confirm JSON schema remains unchanged.
 - Add a JSON schema-lock fixture that enumerates the required `RenderedDiagnostic` fields: `code`, `severity`, `message`, `message_template`, `args`, `url`, `spans`, `children`, `help`, and `suggestions`.
-- Add fixture coverage for multiline diagnostics in all three modes.
+- Add a new multiline diagnostic verification fixture, for example `crates/sifr/tests/verification/diagnostics/multiline_span_rendering`, with locked `human`, `compact`, and `json` baselines.
 - Lock snapshot path normalization behavior: verification baselines may use `<WORKSPACE>` for repository-root-relative portability, while live CLI output preserves the display path passed through the diagnostic span.
 - Document and test that CLI diagnostic rendering delegates to `sifr_diagnostics` after recovery limiting, while CLI success/status messages remain CLI-owned.
 - Record the compact summary format change from `summary: ... help item(s)` to severity-only counts as intentional.
+- Record the compact grouping decision as intentional: compact renders one line for each retained diagnostic after recovery limiting and must not reuse the old grouped `CompactKey` behavior.
+- Add regression tests proving `check`, `build`, `run`, and `emit` respect the selected diagnostic format; these tests lock existing routing behavior rather than adding new command routing.
 
 ### M2: Human Source-Aware Output
 
 - Implement default human output with file, line, column, snippet, and highlight.
 - Add a highlight renderer for `DiagnosticSpanLine.highlight_start` and `DiagnosticSpanLine.highlight_end`.
 - Add CRLF-safe snippet rendering for terminals.
+- Render related spans in human mode with their labels/kinds while keeping the primary span first.
 - Preserve child notes, help, suggestions, and docs URL.
 - Add spanless diagnostic coverage.
 - Regenerate affected verification baselines.
