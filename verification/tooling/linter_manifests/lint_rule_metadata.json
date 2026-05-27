@@ -44,6 +44,50 @@
       "source": "sifr_lint::suppressions",
       "fix_availability": "none",
       "suppression_complexity": "physical-line"
+    },
+    {
+      "id": "todo-comment",
+      "summary": "Comment contains a tracked TODO or FIXME marker.",
+      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0005",
+      "default_severity": "warn",
+      "status": "stable",
+      "category": "comment-policy",
+      "source": "sifr_lint::rules::todo_comment",
+      "fix_availability": "none",
+      "suppression_complexity": "physical-line"
+    },
+    {
+      "id": "boolean-positional-argument",
+      "summary": "Call passes a boolean literal positionally.",
+      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0006",
+      "default_severity": "warn",
+      "status": "stable",
+      "category": "readability-policy",
+      "source": "sifr_lint::rules::boolean_positional_argument",
+      "fix_availability": "none",
+      "suppression_complexity": "single-node"
+    },
+    {
+      "id": "large-parameter-list",
+      "summary": "Function has more parameters than the policy limit.",
+      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0007",
+      "default_severity": "warn",
+      "status": "stable",
+      "category": "complexity-policy",
+      "source": "sifr_lint::rules::large_parameter_list",
+      "fix_availability": "none",
+      "suppression_complexity": "statement-range"
+    },
+    {
+      "id": "duplicate-import",
+      "summary": "Import duplicates a module/name pair already imported in the same source file.",
+      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0008",
+      "default_severity": "warn",
+      "status": "stable",
+      "category": "workspace-policy",
+      "source": "sifr_lint::rules::duplicate_import",
+      "fix_availability": "none",
+      "suppression_complexity": "symbol-workspace"
     }
   ]
 }

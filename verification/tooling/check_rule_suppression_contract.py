@@ -31,7 +31,7 @@ def run_positive() -> None:
             "def main():  # sifr: ignore[not-a-rule]\n    pass  \n",
             encoding="utf-8",
         )
-        completed = run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(source)])
+        completed = run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(source)], expect=1)
         stderr = completed.stderr
         for expected in [
             "unknown Sifr policy rule id",
@@ -55,7 +55,7 @@ def run_self_test() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         source = Path(tmp) / "blanket.sifr"
         source.write_text("def main(): # sifr: ignore\n    pass\n", encoding="utf-8")
-        completed = run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(source)])
+        completed = run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(source)], expect=1)
         if "sifr suppression must list explicit policy rule ids" not in completed.stderr:
             raise SystemExit("rule/suppression self-test failed: blanket suppression passed")
     print("rule/suppression contract self-test: PASS")

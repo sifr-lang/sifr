@@ -59,4 +59,48 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         [arg!("rule")],
         ["rule"]
     ),
+    active_entry!(
+        "SIFR-LINT-0005",
+        "LINT",
+        "Comment contains a tracked TODO or FIXME marker.",
+        Severity::Warning,
+        "crates/sifr_lint/src/rules/todo_comment.rs::todo_comment_reports_tracked_marker",
+        "comment contains tracked task marker '{marker}'",
+        "sifr_lint::rules::todo_comment",
+        [arg!("rule"), arg!("marker")],
+        ["rule", "marker"]
+    ),
+    active_entry!(
+        "SIFR-LINT-0006",
+        "LINT",
+        "Call passes a boolean literal positionally.",
+        Severity::Warning,
+        "crates/sifr_lint/src/rules/boolean_positional_argument.rs::boolean_positional_argument_reports_literal_call_arg",
+        "boolean literal passed as a positional argument",
+        "sifr_lint::rules::boolean_positional_argument",
+        [arg!("rule")],
+        ["rule"]
+    ),
+    active_entry!(
+        "SIFR-LINT-0007",
+        "LINT",
+        "Function has more parameters than the policy limit.",
+        Severity::Warning,
+        "crates/sifr_lint/src/rules/large_parameter_list.rs::large_parameter_list_reports_hir_function",
+        "function '{function}' has {count} parameters, exceeding the policy limit of {limit}",
+        "sifr_lint::rules::large_parameter_list",
+        [arg!("rule"), arg!("function"), arg!("count"), arg!("limit")],
+        ["rule", "function", "count", "limit"]
+    ),
+    active_entry!(
+        "SIFR-LINT-0008",
+        "LINT",
+        "Import duplicates a module/name pair already imported in the same source file.",
+        Severity::Warning,
+        "crates/sifr_lint/src/rules/duplicate_import.rs::duplicate_import_reports_repeated_import",
+        "duplicate import of '{import}'",
+        "sifr_lint::rules::duplicate_import",
+        [arg!("rule"), arg!("import")],
+        ["rule", "import"]
+    ),
 ];

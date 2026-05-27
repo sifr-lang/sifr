@@ -1,4 +1,4 @@
-use crate::{LintOptions, LintResult, RuleMetadata, SuppressionComplexity, RULES};
+use crate::{LintOptions, LintResult, RuleMetadata, RULES};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -42,9 +42,80 @@ impl<'a> LintRunner<'a> {
     pub fn run_source(&self, source: &str, file: Option<&Path>) -> LintRun {
         let mut phases = self.phase_plan(file);
         let mut diagnostics = Vec::new();
+        let mut suppressions =
+            crate::ParserAwareSuppressions::new(source, self.options.ignore_suppressions);
+        diagnostics.extend(crate::suppression_shape_diagnostics(
+            &suppressions,
+            file,
+            source,
+            self.options,
+        ));
         if mark_phase(&mut phases, LintPhase::PhysicalLine) {
-            diagnostics.extend(crate::lint_physical_line_rules(source, file, self.options));
+            diagnostics.extend(crate::lint_physical_line_rules(
+                source,
+                file,
+                self.options,
+                &mut suppressions,
+            ));
         }
+        let parse_context = file.map(|path| path.display().to_string());
+        let parsed = if parse_dependent_phase_ran(&phases) {
+            sifr_syntax::parse_module(source, parse_context.as_deref()).ok()
+        } else {
+            None
+        };
+        if mark_phase(&mut phases, LintPhase::TokenTrivia) {
+            if let Some(parsed) = parsed.as_ref() {
+                diagnostics.extend(crate::rules::todo_comment::lint(
+                    parsed.tokens(),
+                    source,
+                    file,
+                    self.options,
+                    &mut suppressions,
+                ));
+            }
+        }
+        if mark_phase(&mut phases, LintPhase::SyntaxNode) {
+            if let Some(parsed) = parsed.as_ref() {
+                diagnostics.extend(crate::rules::boolean_positional_argument::lint(
+                    parsed.suite(),
+                    source,
+                    file,
+                    self.options,
+                    &mut suppressions,
+                ));
+            }
+        }
+        if mark_phase(&mut phases, LintPhase::Hir) {
+            if parsed.is_some() {
+                if let Some(lowered) = frontend_hir(source, file) {
+                    diagnostics.extend(crate::rules::large_parameter_list::lint(
+                        &lowered,
+                        source,
+                        file,
+                        self.options,
+                        &mut suppressions,
+                    ));
+                }
+            }
+        }
+        if mark_phase(&mut phases, LintPhase::Workspace) {
+            if let Some(parsed) = parsed.as_ref() {
+                diagnostics.extend(crate::rules::duplicate_import::lint(
+                    parsed.suite(),
+                    source,
+                    file,
+                    self.options,
+                    &mut suppressions,
+                ));
+            }
+        }
+        diagnostics.extend(crate::unused_suppression_diagnostics(
+            &suppressions,
+            file,
+            source,
+            self.options,
+        ));
         if mark_phase(&mut phases, LintPhase::Sorting) {
             diagnostics.sort_by_key(crate::diagnostic_order_key);
         }
@@ -97,22 +168,17 @@ impl<'a> LintRunner<'a> {
             return false;
         }
         match phase {
-            LintPhase::FileDiscovery
+            LintPhase::FileDiscovery | LintPhase::StatementRange | LintPhase::FixFiltering => false,
+            LintPhase::PhysicalLine
             | LintPhase::TokenTrivia
             | LintPhase::SyntaxNode
-            | LintPhase::StatementRange
             | LintPhase::Hir
-            | LintPhase::Workspace
-            | LintPhase::FixFiltering => false,
-            LintPhase::PhysicalLine => RULES
-                .iter()
-                .filter(|rule| rule.suppression_complexity == SuppressionComplexity::PhysicalLine)
-                .any(|rule| crate::rule_enabled(rule.id, file, self.options)),
+            | LintPhase::Workspace => {
+                enabled_rules(file, self.options).any(|rule| rule_phase(rule) == phase)
+            }
             LintPhase::SuppressionFiltering => {
                 !self.options.ignore_suppressions
-                    && enabled_rules(file, self.options).any(|rule| {
-                        rule.suppression_complexity == SuppressionComplexity::PhysicalLine
-                    })
+                    && enabled_rules(file, self.options).next().is_some()
             }
             LintPhase::PerFileIgnoreFiltering => !self.options.per_file_ignores.is_empty(),
             LintPhase::Sorting => enabled_rules(file, self.options).next().is_some(),
@@ -152,6 +218,39 @@ fn enabled_rules<'a>(
         .filter(move |rule| crate::rule_enabled(rule.id, file, options))
 }
 
+fn rule_phase(rule: &RuleMetadata) -> LintPhase {
+    match rule.id {
+        "todo-comment" => LintPhase::TokenTrivia,
+        "boolean-positional-argument" => LintPhase::SyntaxNode,
+        "large-parameter-list" => LintPhase::Hir,
+        "duplicate-import" => LintPhase::Workspace,
+        _ => LintPhase::PhysicalLine,
+    }
+}
+
+fn parse_dependent_phase_ran(phases: &[PhaseExecution]) -> bool {
+    [
+        LintPhase::TokenTrivia,
+        LintPhase::SyntaxNode,
+        LintPhase::Hir,
+        LintPhase::Workspace,
+    ]
+    .into_iter()
+    .any(|phase| mark_phase_readonly(phases, phase))
+}
+
+fn frontend_hir(source: &str, file: Option<&Path>) -> Option<sifr_hir::HirModule> {
+    let path = file.unwrap_or_else(|| Path::new("main.sifr"));
+    let input = sifr_frontend::FrontendInput {
+        path: sifr_frontend::SourcePath::new(path),
+        source: sifr_frontend::SourceText::new(source),
+        mode: sifr_frontend::FrontendMode::SingleFile,
+    };
+    let mut context = sifr_frontend::FrontendContext::load_single_file(input).ok()?;
+    let module = context.module_graph().entrypoint;
+    Some(context.hir_module_view(module).into_value().hir)
+}
+
 fn set_phase(phases: &mut [PhaseExecution], phase: LintPhase, ran: bool) {
     if let Some(execution) = phases.iter_mut().find(|execution| execution.phase == phase) {
         execution.ran = ran;
@@ -159,6 +258,10 @@ fn set_phase(phases: &mut [PhaseExecution], phase: LintPhase, ran: bool) {
 }
 
 fn mark_phase(phases: &mut [PhaseExecution], phase: LintPhase) -> bool {
+    mark_phase_readonly(phases, phase)
+}
+
+fn mark_phase_readonly(phases: &[PhaseExecution], phase: LintPhase) -> bool {
     phases
         .iter()
         .find(|execution| execution.phase == phase)
