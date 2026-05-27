@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution: Production-Grade Diagnostic Presentation
 
-Status: planned on 2026-05-27
+Status: completed on 2026-05-27
 
 Phase contract: `issues/ad-hoc-production-grade-diagnostic-presentation.md`
 
@@ -14,8 +14,8 @@ Phase contract: `issues/ad-hoc-production-grade-diagnostic-presentation.md`
 - [x] M3 compact stable output completed
 - [x] Diagnostic presentation verification gate completed
 - [x] M4 docs and closeout completed
-- [ ] Full local validation recorded
-- [ ] Final production-readiness review approved
+- [x] Full local validation recorded
+- [x] Final production-readiness review approved
 
 ## Planning Lock Addendum
 
@@ -71,8 +71,7 @@ This phase locks the diagnostic output-mode responsibilities before implementati
 - `python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test` -> passed, including negative checks for missing fixture, missing baseline, missing schema field, and missing run-all wiring.
 - `scripts/run_all_tests.sh --profile quick` -> completed through quick-lane guardrails, diagnostic presentation contract check/self-test, tooling checks, representative validation contracts, and quick e2e pass suite (`67 passed, 0 failed`). The latest validation report was written to `target/validation_lane_reports/quick.latest.json`.
 - Phase-owned fixtures are `decimal_invalid_literal`, `multiline_span_rendering`, and `presentation_contract_cases`; the checker enforces severity-only compact summaries and one-line-per-retained-diagnostic output against those baselines.
-- Phase-owned fixtures are `decimal_invalid_literal`, `multiline_span_rendering`, and `presentation_contract_cases`; the checker enforces severity-only compact summaries and one-line-per-retained-diagnostic output against those baselines.
 
 ## PR Log
 
-- Implementation PR links will be recorded per milestone after they are opened and merged.
+- M1-M4 implementation and closeout merged in PR [#2193](https://github.com/sifr-lang/sifr/pull/2193) (`2c3fd50a807d1bb8664439a22c9e3051efc01491`).
