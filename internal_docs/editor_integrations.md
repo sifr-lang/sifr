@@ -19,6 +19,14 @@ must not call `sifr fmt` as their primary formatting provider.
 Direct `sifr fmt` usage is reserved for CLI, CI, hook, and manual-file workflows
 and is documented in [`../docs/formatter.md`](../docs/formatter.md).
 
+Lint diagnostics and lint code actions are also served by `sifr lsp --stdio`.
+Editor integrations may expose the standard LSP code-action UI for explicit
+Sifr policy suppressions, safe individual fixes, and `source.fixAll.sifr`.
+They must not implement rule selection, suppression insertion, fix application,
+or policy diagnostics in editor-side code. Users enable or disable lint
+diagnostics through the `sifr.lint.enable` LSP setting; command-line linting for
+CI and hooks is documented in [`../docs/linter.md`](../docs/linter.md).
+
 ## Syntax Asset Source Of Truth
 
 Phase 36 uses parser-validated syntax assets. TextMate and/or Tree-sitter assets are accepted only when drift checks compare them with `sifr_syntax` tokenization fixtures. Basic highlighting must work before the LSP starts; semantic tokens come from `sifr lsp`.

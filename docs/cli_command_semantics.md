@@ -60,19 +60,20 @@ preview, config, path-selection, and cache controls, and formats only `.sifr`
 source. Editor formatting is served through `sifr lsp --stdio`, not through an
 editor-owned formatter implementation.
 
-Lint commands use the Sifr-owned policy-rule engine. `sifr lint [OPTIONS]
-[FILES]...` defaults to the current directory, accepts multiple files or
-directories, supports stdin with `-` and `--stdin-filename`, resolves `[lint]`,
-`[lint.rules]`, and `[lint.per-file-ignores]` from `sifr.toml`, and applies
-CLI/global config overrides after discovered config. The command supports
-Sifr rule selection through `--select`, `--extend-select`, and `--ignore`;
-path filtering through `--exclude`, `--extend-exclude`, gitignore controls, and
-force-exclude controls; and lint-local `--output-format concise|full|json`,
-`--output-file`, `--show-files`, `--show-settings`, `--ignore-suppressions`,
-`--statistics`, and `--exit-zero`. Safe policy fixes are available through
-`--fix`, `--fix-only`, `--diff`, `--show-fixes`, `--fixable`,
-`--extend-fixable`, `--unfixable`, `--extend-unfixable`, `--unsafe-fixes`,
-`--no-unsafe-fixes`, and `--exit-non-zero-on-fix`.
+Lint commands use the Sifr-owned policy-rule engine documented in
+[`linter.md`](./linter.md). `sifr lint [OPTIONS] [FILES]...` defaults to the
+current directory, accepts multiple files or directories, supports stdin with
+`-` and `--stdin-filename`, resolves `[lint]`, `[lint.rules]`, and
+`[lint.per-file-ignores]` from `sifr.toml`, and applies CLI/global config
+overrides after discovered config. The command supports Sifr rule selection
+through `--select`, `--extend-select`, and `--ignore`; path filtering through
+`--exclude`, `--extend-exclude`, gitignore controls, and force-exclude controls;
+and lint-local `--output-format concise|full|json`, `--output-file`,
+`--show-files`, `--show-settings`, `--ignore-suppressions`, `--statistics`, and
+`--exit-zero`. Safe policy fixes are available through `--fix`, `--fix-only`,
+`--diff`, `--show-fixes`, `--fixable`, `--extend-fixable`, `--unfixable`,
+`--extend-unfixable`, `--unsafe-fixes`, `--no-unsafe-fixes`, and
+`--exit-non-zero-on-fix`.
 
 `sifr lint` emits only suppressible policy diagnostics. It does not run,
 downgrade, suppress, or auto-fix hard compiler diagnostics from `sifr check`.
