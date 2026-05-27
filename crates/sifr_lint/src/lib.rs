@@ -6,15 +6,16 @@ use sifr_diagnostics::{
     DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
 };
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 mod config;
 mod discovery;
+mod engine;
 pub mod suppression;
 
 pub use config::effective_lint_config;
 pub use discovery::{collect_sifr_files, collect_sifr_files_for_targets};
+pub use engine::{LintPhase, LintRun, LintRunner, PhaseExecution};
 pub use suppression::ParserAwareSuppressions;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -198,10 +199,16 @@ pub fn rule_metadata(rule_id: &str) -> Option<&'static RuleMetadata> {
 }
 
 pub fn lint_source(source: &str, file: Option<&Path>, options: &LintOptions) -> LintResult {
+    LintRunner::new(options).run_source(source, file).result
+}
+
+pub(crate) fn lint_physical_line_rules(
+    source: &str,
+    file: Option<&Path>,
+    options: &LintOptions,
+) -> Vec<RenderedDiagnostic> {
     if options.mode == DiagnosticMode::Off {
-        return LintResult {
-            diagnostics: Vec::new(),
-        };
+        return Vec::new();
     }
 
     let mut suppressions = ParserAwareSuppressions::new(source, options.ignore_suppressions);
@@ -233,8 +240,7 @@ pub fn lint_source(source: &str, file: Option<&Path>, options: &LintOptions) -> 
         source,
         options,
     ));
-    diagnostics.sort_by_key(diagnostic_order_key);
-    LintResult { diagnostics }
+    diagnostics
 }
 
 pub fn lint_path(
@@ -248,25 +254,12 @@ pub fn lint_paths(
     paths: &[PathBuf],
     options: &LintOptions,
 ) -> Result<LintResult, Vec<RenderedDiagnostic>> {
-    let files = collect_sifr_files_for_targets(paths, options)?;
-    let mut diagnostics = Vec::new();
-    for file in files {
-        let source = fs::read_to_string(&file).map_err(|err| {
-            vec![diagnostic(
-                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-                format!("could not read file {}: {err}", file.display()),
-                [("path", file.display().to_string())],
-                Vec::new(),
-                None,
-            )]
-        })?;
-        diagnostics.extend(lint_source(&source, Some(&file), options).diagnostics);
-    }
-    diagnostics.sort_by_key(diagnostic_order_key);
-    Ok(LintResult { diagnostics })
+    LintRunner::new(options)
+        .run_paths(paths)
+        .map(|run| run.result)
 }
 
-fn rule_enabled(rule_id: &str, file: Option<&Path>, options: &LintOptions) -> bool {
+pub(crate) fn rule_enabled(rule_id: &str, file: Option<&Path>, options: &LintOptions) -> bool {
     let Some(metadata) = rule_metadata(rule_id) else {
         return false;
     };
@@ -532,7 +525,7 @@ pub(crate) fn diagnostic(
     }
 }
 
-fn diagnostic_order_key(diagnostic: &RenderedDiagnostic) -> (String, u32, u32, String) {
+pub(crate) fn diagnostic_order_key(diagnostic: &RenderedDiagnostic) -> (String, u32, u32, String) {
     let span = diagnostic.spans.iter().find(|span| span.is_primary);
     (
         span.and_then(|span| span.file.clone()).unwrap_or_default(),
@@ -562,6 +555,7 @@ fn byte_offset_for_line(source: &str, line_index: usize) -> u32 {
 mod tests {
     use super::*;
     use std::collections::BTreeSet;
+    use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]

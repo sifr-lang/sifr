@@ -164,6 +164,15 @@ statement ranges depending on rule suppression complexity, supports
 deterministically, and transitions the suppression gate manifest to
 `parser_aware` for future syntax, HIR, and workspace policy rules.
 
+Milestone 4 routes source and path linting through
+`sifr_lint::LintRunner`. The runner exposes explicit phase execution state for
+file discovery, token/trivia, physical-line, syntax-node, statement-range, HIR,
+workspace, suppression filtering, per-file ignore filtering, fix filtering, and
+deterministic sorting. Disabled rule families skip their phases, current
+physical-line policy diagnostics remain preserved, invalid source still runs
+source-independent policy phases, and path linting records file-discovery
+execution before per-file source checks.
+
 ## Generated Rust And Test Metadata
 
 Generated Rust preview uses compiler/codegen APIs and source maps. It must be cancellable, revision-checked, budgeted under `lsp-generated-rust-preview`, and must not return partial generated code after a document change invalidates the request.
