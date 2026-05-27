@@ -3,6 +3,7 @@ use crate::model::Severity;
 use crate::source_map::{SourceMap, SourceMapError};
 use crate::DiagnosticSink;
 use std::fmt::Write as _;
+use std::path::Path;
 
 #[derive(Debug)]
 pub enum PresentationRenderError {
@@ -240,13 +241,34 @@ impl SpanRole {
 
 fn location_label(span: &DiagnosticSpan) -> String {
     match (&span.file, span.line, span.column) {
-        (Some(file), Some(line), Some(column)) => format!("{file}:{line}:{column}"),
-        (Some(file), Some(line), None) => format!("{file}:{line}"),
-        (Some(file), None, _) => file.clone(),
+        (Some(file), Some(line), Some(column)) => {
+            format!("{}:{line}:{column}", display_file_path(file))
+        }
+        (Some(file), Some(line), None) => format!("{}:{line}", display_file_path(file)),
+        (Some(file), None, _) => display_file_path(file),
         (None, Some(line), Some(column)) => format!("<unknown>:{line}:{column}"),
         (None, Some(line), None) => format!("<unknown>:{line}"),
         (None, None, Some(column)) => format!("<unknown>:0:{column}"),
         (None, None, None) => "<unknown>".to_string(),
+    }
+}
+
+fn display_file_path(file: &str) -> String {
+    let path = Path::new(file);
+    if !path.is_absolute() {
+        return file.to_string();
+    }
+
+    let Ok(current_dir) = std::env::current_dir() else {
+        return file.to_string();
+    };
+    let Ok(relative) = path.strip_prefix(current_dir) else {
+        return file.to_string();
+    };
+    if relative.as_os_str().is_empty() {
+        file.to_string()
+    } else {
+        relative.display().to_string()
     }
 }
 

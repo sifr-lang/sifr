@@ -85,13 +85,13 @@
               "kind": "contains",
               "command_id": "negative_check",
               "stream": "stderr",
-              "text": "type error: [helper] return type mismatch: expected 'int', got 'str'"
+              "text": "error[SIFR-TYPE-0002]: return type mismatch: expected 'int', got 'str'"
             },
             {
               "kind": "contains",
               "command_id": "negative_test",
               "stream": "stderr",
-              "text": "type error: [helper] return type mismatch: expected 'int', got 'str'"
+              "text": "error[SIFR-TYPE-0002]: return type mismatch: expected 'int', got 'str'"
             }
           ]
         }
@@ -390,7 +390,7 @@
               "kind": "contains",
               "command_id": "m24_5_neg_check",
               "stream": "stderr",
-              "text": "type error: [main] return type mismatch: expected 'int', got 'str'"
+              "text": "error[SIFR-TYPE-0002]: return type mismatch: expected 'int', got 'str'"
             }
           ]
         },
@@ -521,7 +521,7 @@
               "kind": "contains",
               "command_id": "m25_5_neg_check",
               "stream": "stderr",
-              "text": "type error: [main] return type mismatch: expected 'int', got 'str'"
+              "text": "error[SIFR-TYPE-0002]: return type mismatch: expected 'int', got 'str'"
             }
           ]
         },
