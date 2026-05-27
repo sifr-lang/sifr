@@ -59,6 +59,7 @@ This phase locks the diagnostic output-mode responsibilities before implementati
 - `2026-05-27`: Claude verification-contract review pass 2 verified the pass-1 precision edits and returned `SATISFIED` with no blockers, no required precision edits, and no remaining verification or discovery gaps. Review artifact: `reviews/diagnostic-presentation-verification-contract-review-pass-2.md`.
 - `2026-05-27`: Implementation wave 1 moved CLI diagnostic formatting onto `sifr_diagnostics` presentation helpers after recovery limiting; added source-aware human rendering, stable compact one-line rendering, multiline and synthetic presentation contract fixtures, JSON schema lock evidence, and the phase-owned contract checker with negative self-tests.
 - `2026-05-27`: Claude implementation review pass 4 returned `SATISFIED` with no blockers. It verified CLI delegation, human/compact/JSON contracts, fixtures, checker/self-test wiring, docs, and execution tracker evidence. Review artifact: `reviews/diagnostic-presentation-implementation-review-pass-4.md`.
+- `2026-05-27`: Quick-gate validation exposed a post-merge human/compact path-display mismatch between `check` and `run`. The follow-up fix normalizes absolute source paths under the current workspace to relative display paths in human/compact renderers only, preserving JSON transport paths. Claude implementation review pass 5 returned `SATISFIED` with no blockers. Review artifact: `reviews/diagnostic-presentation-implementation-review-pass-5.md`.
 
 ## Validation Log
 
@@ -69,9 +70,12 @@ This phase locks the diagnostic output-mode responsibilities before implementati
 - `python3 scripts/check_diagnostic_baseline_hygiene.py && python3 scripts/check_diagnostic_schema_sync.py && python3 scripts/check_diagnostic_docs_sync.py && python3 scripts/check_diagnostic_code_coverage.py` -> passed.
 - `python3 verification/tooling/check_diagnostic_presentation_contract.py` -> passed.
 - `python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test` -> passed, including negative checks for missing fixture, missing baseline, missing schema field, and missing run-all wiring.
-- `scripts/run_all_tests.sh --profile quick` -> completed through quick-lane guardrails, diagnostic presentation contract check/self-test, tooling checks, representative validation contracts, and quick e2e pass suite (`67 passed, 0 failed`). The latest validation report was written to `target/validation_lane_reports/quick.latest.json`.
+- `CARGO_INCREMENTAL=0 bash scripts/run_validation_contract_matrix.sh` -> passed after updating legacy validation-contract expected text to the new code-bearing human diagnostic header.
+- `CARGO_INCREMENTAL=0 python3 verification/performance/run_benchmarks.py --sample-scale smoke --case formatter-corpus-001-project-check --case formatter-large-file-001-check --case incremental-local-loop-001-unchanged-file-update --case interactive-tooling-foundation-002-warm-diagnostics-query` -> passed after warming the frontend query benchmark helper.
+- `CARGO_INCREMENTAL=0 scripts/run_all_tests.sh --profile quick` -> passed through quick-lane guardrails, diagnostic presentation contract check/self-test, tooling checks, performance smoke checks, diagnostics/unit tests, representative validation contracts, and quick e2e pass suite (`67 passed, 0 failed`). The run reported a wall-time advisory from cold caches, but exited successfully and wrote `target/validation_lane_reports/quick.latest.json`.
 - Phase-owned fixtures are `decimal_invalid_literal`, `multiline_span_rendering`, and `presentation_contract_cases`; the checker enforces severity-only compact summaries and one-line-per-retained-diagnostic output against those baselines.
 
 ## PR Log
 
 - M1-M4 implementation and closeout merged in PR [#2193](https://github.com/sifr-lang/sifr/pull/2193) (`2c3fd50a807d1bb8664439a22c9e3051efc01491`).
+- Post-gate path-display follow-up opened in PR [#2195](https://github.com/sifr-lang/sifr/pull/2195) (`777cb37ab93374d173814127164f89812e1673fd`).
