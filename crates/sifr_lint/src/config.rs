@@ -1,6 +1,6 @@
 use crate::{
     lint_config_diagnostic, rule_metadata, EffectiveLintConfig, LintConfigOverrides, LintOptions,
-    PerFileIgnore, RuleSeverity, RULES,
+    PerFileIgnore, RuleSeverity, UnsafeFixPolicy, RULES,
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeSet;
@@ -145,17 +145,20 @@ fn apply_lint_table(
             "force-exclude" | "force_exclude" => options.force_exclude = as_bool(key, value)?,
             "rules" => apply_rule_table(options, value)?,
             "per-file-ignores" | "per_file_ignores" => apply_per_file_ignores(options, value)?,
+            "fixable" => options.fixable = as_string_list(key, value)?,
+            "extend-fixable" | "extend_fixable" => {
+                options.extend_fixable.extend(as_string_list(key, value)?);
+            }
+            "unfixable" => options.unfixable = as_string_list(key, value)?,
+            "extend-unfixable" | "extend_unfixable" => {
+                options.extend_unfixable.extend(as_string_list(key, value)?);
+            }
+            "unsafe-fixes" | "unsafe_fixes" => options.unsafe_fixes = as_unsafe_fixes(key, value)?,
             "extend-ignore" | "extend_ignore" | "target-version" | "target_version"
             | "extension" | "src" | "namespace-packages" | "namespace_packages" | "builtins"
             | "typing-modules" | "typing_modules" => {
                 return Err(vec![lint_config_diagnostic(format!(
                     "unsupported Ruff/Python lint option in Sifr config: {key}"
-                ))]);
-            }
-            "fixable" | "extend-fixable" | "extend_fixable" | "unfixable" | "extend-unfixable"
-            | "extend_unfixable" | "unsafe-fixes" | "unsafe_fixes" => {
-                return Err(vec![lint_config_diagnostic(format!(
-                    "lint fix config key is reserved until fix support lands: {key}"
                 ))]);
             }
             _ => {
@@ -233,6 +236,14 @@ fn apply_overrides(options: &mut LintOptions, overrides: &LintConfigOverrides) {
     options
         .per_file_ignores
         .extend(overrides.extend_per_file_ignores.clone());
+    options.fixable.extend(overrides.fixable.clone());
+    options
+        .extend_fixable
+        .extend(overrides.extend_fixable.clone());
+    options.unfixable.extend(overrides.unfixable.clone());
+    options
+        .extend_unfixable
+        .extend(overrides.extend_unfixable.clone());
     options.exclude.extend(overrides.exclude.clone());
     options.exclude.extend(overrides.extend_exclude.clone());
     if let Some(respect_gitignore) = overrides.respect_gitignore {
@@ -247,6 +258,9 @@ fn apply_overrides(options: &mut LintOptions, overrides: &LintConfigOverrides) {
     if let Some(ignore_suppressions) = overrides.ignore_suppressions {
         options.ignore_suppressions = ignore_suppressions;
     }
+    if let Some(unsafe_fixes) = overrides.unsafe_fixes {
+        options.unsafe_fixes = unsafe_fixes;
+    }
 }
 
 fn validate_rule_selectors(options: &LintOptions) -> Result<(), Vec<RenderedDiagnostic>> {
@@ -255,6 +269,10 @@ fn validate_rule_selectors(options: &LintOptions) -> Result<(), Vec<RenderedDiag
         .iter()
         .chain(options.extend_select.iter())
         .chain(options.ignore.iter())
+        .chain(options.fixable.iter())
+        .chain(options.extend_fixable.iter())
+        .chain(options.unfixable.iter())
+        .chain(options.extend_unfixable.iter())
     {
         if selector == "default" || selector == "all" {
             continue;
@@ -307,6 +325,20 @@ fn as_rule_severity(
         "error" => Ok(RuleSeverity::Error),
         _ => Err(vec![lint_config_diagnostic(format!(
             "{key} severity must be one of ignore, warn, or error"
+        ))]),
+    }
+}
+
+fn as_unsafe_fixes(
+    key: &str,
+    value: &toml::Value,
+) -> Result<UnsafeFixPolicy, Vec<RenderedDiagnostic>> {
+    match as_string(key, value)?.as_str() {
+        "disabled" => Ok(UnsafeFixPolicy::Disabled),
+        "hint" => Ok(UnsafeFixPolicy::Hint),
+        "enabled" => Ok(UnsafeFixPolicy::Enabled),
+        _ => Err(vec![lint_config_diagnostic(format!(
+            "{key} must be one of disabled, hint, or enabled"
         ))]),
     }
 }

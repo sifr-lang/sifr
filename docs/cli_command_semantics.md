@@ -69,11 +69,14 @@ Sifr rule selection through `--select`, `--extend-select`, and `--ignore`;
 path filtering through `--exclude`, `--extend-exclude`, gitignore controls, and
 force-exclude controls; and lint-local `--output-format concise|full|json`,
 `--output-file`, `--show-files`, `--show-settings`, `--ignore-suppressions`,
-`--statistics`, and `--exit-zero`.
+`--statistics`, and `--exit-zero`. Safe policy fixes are available through
+`--fix`, `--fix-only`, `--diff`, `--show-fixes`, `--fixable`,
+`--extend-fixable`, `--unfixable`, `--extend-unfixable`, `--unsafe-fixes`,
+`--no-unsafe-fixes`, and `--exit-non-zero-on-fix`.
 
 `sifr lint` emits only suppressible policy diagnostics. It does not run,
 downgrade, suppress, or auto-fix hard compiler diagnostics from `sifr check`.
-Fix-related lint flags are reserved for the production fix-engine milestone.
+Fix-all is policy-only and safe-by-default.
 
 ## Edge Cases
 

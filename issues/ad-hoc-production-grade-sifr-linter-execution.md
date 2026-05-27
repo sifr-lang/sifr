@@ -15,7 +15,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 - [x] Parser-aware suppression engine completed
 - [x] Phase-gated lint runner completed
 - [x] Sifr policy rule families completed
-- [ ] Fix engine and LSP code actions completed
+- [x] Fix engine and LSP code actions completed
 - [ ] LSP/editor docs and contracts updated
 - [ ] Full local validation recorded
 - [ ] Final production-readiness review approved
@@ -81,6 +81,8 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-27`: Claude M5 policy rule families review pass 1 found no blockers and returned `SATISFIED` for M5 closure. Review artifact: `reviews/sifr-linter-m5-policy-rule-families-review-pass-1.md`.
 - `2026-05-27`: M5 post-review quick validation exposed two closure blockers: direct `lower_module(` use from `sifr_lint` violated the split-brain guardrail, and the rule/suppression contract still expected lint diagnostics to exit 0. M5 was updated to route HIR access through `sifr_frontend::FrontendContext::hir_module_view` and to make the rule/suppression contract expect diagnostic exit code 1.
 - `2026-05-27`: Claude M5 policy rule families review pass 2b rechecked the post-fix implementation, found no remaining blockers, and returned `SATISFIED` for M5 closure. Review artifact: `reviews/sifr-linter-m5-policy-rule-families-review-pass-2b.md`.
+- `2026-05-27`: M6 pre-review implementation added safe fix application, fix-related lint CLI surfaces, typed policy/hard diagnostic-class LSP code-action gating, deferred fix-all resolution, stale-version rejection, and a diagnostic-class guardrail.
+- `2026-05-27`: Claude M6 fix engine/code actions review pass 1 found no blockers and returned `SATISFIED` for M6 closure. Review artifact: `reviews/sifr-linter-m6-fix-engine-code-actions-review-pass-1.md`.
 
 ## Validation Log
 
@@ -141,6 +143,26 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `python3 verification/tooling/check_rule_suppression_contract.py` passed.
   - `python3 verification/tooling/check_rule_suppression_contract.py --self-test` passed.
   - `scripts/run_all_tests.sh --profile quick` passed after the split-brain and rule/suppression contract fixes. The lane reported wall-time budget advisories only, with no validation failures.
+- `2026-05-27` M6 pre-review local checks:
+  - `cargo check -p sifr_lint -p sifr_analysis -p sifr_lsp -p sifr` passed.
+  - `cargo test -p sifr_lint` passed: 22 unit tests and 0 doctests.
+  - `cargo test -p sifr_analysis` passed: 10 unit tests and 0 doctests.
+  - `cargo test -p sifr_lsp` passed: 0 unit tests and 0 doctests.
+  - `cargo test -p sifr -- --skip test_e2e_pass` passed.
+  - `cargo clippy -p sifr_lint -p sifr_analysis -p sifr_lsp -- -D warnings` passed.
+  - `cargo clippy -p sifr -- -D warnings` remains blocked only by the pre-existing `clippy::too_many_arguments` in `crates/sifr/src/diagnostic_rendering_and_run.rs:219`, outside the M6 diff.
+  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_diagnostic_class.py` passed.
+  - `python3 verification/tooling/check_linter_diagnostic_class.py --self-test` passed.
+  - `python3 verification/tooling/lsp_protocol_smoke.py` passed.
+  - `python3 verification/tooling/lsp_protocol_smoke.py --self-test` passed.
+  - `python3 verification/tooling/lsp_protocol_stress.py` passed.
+  - `python3 verification/tooling/lsp_protocol_stress.py --self-test` passed.
+  - CLI smoke fixtures passed for `--fix --show-fixes`, `--diff`, `--show-fixes`, and `--fix-only`.
+  - `python3 scripts/check_file_size_guardrails.py` passed.
+  - `git diff --check` passed.
+  - `scripts/run_all_tests.sh --profile quick` passed. The lane reported warm wall-time and batching-skew advisories only, with no validation failures.
 
 ## PR Log
 
@@ -150,3 +172,4 @@ Implementation PR links will be recorded here as each milestone closes.
 - M2 `lint_config_and_file_discovery`: https://github.com/sifr-lang/sifr/pull/2185
 - M3 `parser_aware_suppression_engine`: https://github.com/sifr-lang/sifr/pull/2186
 - M4 `phase_gated_lint_engine`: https://github.com/sifr-lang/sifr/pull/2187
+- M5 `policy_rule_families`: https://github.com/sifr-lang/sifr/pull/2188
