@@ -13,7 +13,7 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 - [x] Forbidden Ruff/Python lint dependency guardrail completed
 - [x] Lint config and file discovery completed
 - [x] Parser-aware suppression engine completed
-- [ ] Phase-gated lint runner completed
+- [x] Phase-gated lint runner completed
 - [ ] Sifr policy rule families completed
 - [ ] Fix engine and LSP code actions completed
 - [ ] LSP/editor docs and contracts updated
@@ -77,6 +77,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-27`: Claude M1 reuse-contract review pass 1 found no blockers and returned `SATISFIED` for M1 closure. Review artifact: `reviews/sifr-linter-m1-reuse-contract-review-pass-1.md`.
 - `2026-05-27`: Claude M2 config/discovery review pass 1 found no blockers and returned `SATISFIED` for M2 closure. Review artifact: `reviews/sifr-linter-m2-config-discovery-review-pass-1.md`.
 - `2026-05-27`: Claude M3 parser-aware suppression review pass 1 found no blockers and returned `SATISFIED` for M3 closure. Review artifact: `reviews/sifr-linter-m3-parser-aware-suppression-review-pass-1.md`.
+- `2026-05-27`: Claude M4 phase-gated runner review pass 1 found no blockers and returned `SATISFIED` for M4 closure. Review artifact: `reviews/sifr-linter-m4-phase-gated-runner-review-pass-1.md`.
 
 ## Validation Log
 
@@ -110,7 +111,21 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
   - CLI smoke fixture passed for `--ignore-suppressions`.
   - `python3 scripts/check_file_size_guardrails.py` passed.
+- `2026-05-27` M4 pre-review local checks:
+  - `cargo check -p sifr` passed.
+  - `cargo build -p sifr` passed.
+  - `cargo test -p sifr_lint` passed: 15 unit tests and 0 doctests.
+  - `cargo test -p sifr -- --skip test_e2e_pass` passed.
+  - `cargo clippy -p sifr_lint -- -D warnings` passed.
+  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 scripts/check_file_size_guardrails.py` passed.
+  - `git diff --check` passed.
 
 ## PR Log
 
 Implementation PR links will be recorded here as each milestone closes.
+
+- M1 `lint_reuse_contract_and_manifests`: https://github.com/sifr-lang/sifr/pull/2184
+- M2 `lint_config_and_file_discovery`: https://github.com/sifr-lang/sifr/pull/2185
+- M3 `parser_aware_suppression_engine`: https://github.com/sifr-lang/sifr/pull/2186
