@@ -27,6 +27,10 @@ pub(crate) struct LintArgs {
     #[arg(long, value_delimiter = ',')]
     pub(crate) ignore: Vec<String>,
 
+    /// Ignore `# sifr: ignore[...]` suppression comments for this run
+    #[arg(long)]
+    pub(crate) ignore_suppressions: bool,
+
     /// Ignore rules for files matching a glob, as GLOB:RULE[,RULE]
     #[arg(long)]
     pub(crate) per_file_ignores: Vec<String>,
@@ -197,6 +201,7 @@ fn lint_cli_overrides(args: &LintArgs) -> Result<LintConfigOverrides, Vec<Render
         respect_gitignore: flag_override(args.respect_gitignore, args.no_respect_gitignore),
         force_exclude: flag_override(args.force_exclude, args.no_force_exclude),
         preview: flag_override(args.preview, args.no_preview),
+        ignore_suppressions: args.ignore_suppressions.then_some(true),
     })
 }
 
@@ -267,7 +272,7 @@ fn lint_start_dir(args: &LintArgs) -> PathBuf {
 fn render_settings(config: &EffectiveLintConfig) -> String {
     let options = &config.options;
     format!(
-        "config = {}\npreview = {}\nselect = {:?}\nextend_select = {:?}\nignore = {:?}\ninclude = {:?}\nexclude = {:?}\nrespect_gitignore = {}\nforce_exclude = {}\nper_file_ignores = {}\n",
+        "config = {}\npreview = {}\nselect = {:?}\nextend_select = {:?}\nignore = {:?}\ninclude = {:?}\nexclude = {:?}\nrespect_gitignore = {}\nforce_exclude = {}\nignore_suppressions = {}\nper_file_ignores = {}\n",
         config
             .config_path
             .as_ref()
@@ -280,6 +285,7 @@ fn render_settings(config: &EffectiveLintConfig) -> String {
         options.exclude,
         options.respect_gitignore,
         options.force_exclude,
+        options.ignore_suppressions,
         options.per_file_ignores.len(),
     )
 }

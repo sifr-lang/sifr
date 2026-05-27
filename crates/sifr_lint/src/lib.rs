@@ -5,15 +5,17 @@ use globset::Glob;
 use sifr_diagnostics::{
     DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 mod config;
 mod discovery;
+pub mod suppression;
 
 pub use config::effective_lint_config;
 pub use discovery::{collect_sifr_files, collect_sifr_files_for_targets};
+pub use suppression::ParserAwareSuppressions;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RuleSeverity {
@@ -95,6 +97,7 @@ pub struct LintOptions {
     pub ignore: Vec<String>,
     pub rule_levels: BTreeMap<String, RuleSeverity>,
     pub per_file_ignores: Vec<PerFileIgnore>,
+    pub ignore_suppressions: bool,
 }
 
 impl Default for LintOptions {
@@ -112,6 +115,7 @@ impl Default for LintOptions {
             ignore: Vec::new(),
             rule_levels: BTreeMap::new(),
             per_file_ignores: Vec::new(),
+            ignore_suppressions: false,
         }
     }
 }
@@ -128,6 +132,7 @@ pub struct LintConfigOverrides {
     pub respect_gitignore: Option<bool>,
     pub force_exclude: Option<bool>,
     pub preview: Option<bool>,
+    pub ignore_suppressions: Option<bool>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -139,13 +144,6 @@ pub struct EffectiveLintConfig {
 #[derive(Clone, Debug, PartialEq)]
 pub struct LintResult {
     pub diagnostics: Vec<RenderedDiagnostic>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct Suppression {
-    line: usize,
-    rules: Vec<String>,
-    used_rules: BTreeSet<String>,
 }
 
 pub const RULES: &[RuleMetadata] = &[
@@ -206,7 +204,7 @@ pub fn lint_source(source: &str, file: Option<&Path>, options: &LintOptions) -> 
         };
     }
 
-    let mut suppressions = parse_suppressions(source);
+    let mut suppressions = ParserAwareSuppressions::new(source, options.ignore_suppressions);
     let mut diagnostics = Vec::new();
     diagnostics.extend(suppression_shape_diagnostics(
         &suppressions,
@@ -218,7 +216,7 @@ pub fn lint_source(source: &str, file: Option<&Path>, options: &LintOptions) -> 
     for (line_index, line) in source.split_inclusive('\n').enumerate() {
         let rule = "trailing-whitespace";
         if line_has_trailing_whitespace(line) && rule_enabled(rule, file, options) {
-            if mark_suppressed(&mut suppressions, line_index, rule) {
+            if suppressions.mark_suppressed(line_index, rule, SuppressionComplexity::PhysicalLine) {
                 continue;
             }
             diagnostics.push(with_rule_severity(
@@ -317,49 +315,14 @@ fn per_file_ignored(rule_id: &str, file: Option<&Path>, options: &LintOptions) -
     })
 }
 
-fn parse_suppressions(source: &str) -> Vec<Suppression> {
-    let mut suppressions = Vec::new();
-    for (line_index, line) in source.lines().enumerate() {
-        let Some(comment_start) = line.find('#') else {
-            continue;
-        };
-        let comment = &line[comment_start..];
-        let Some(ignore_start) = comment.find("sifr: ignore") else {
-            continue;
-        };
-        let suffix = &comment[ignore_start + "sifr: ignore".len()..];
-        let rules = if let Some(stripped) = suffix.strip_prefix('[') {
-            stripped
-                .split_once(']')
-                .map(|(rule_list, _)| {
-                    rule_list
-                        .split(',')
-                        .map(str::trim)
-                        .filter(|rule| !rule.is_empty())
-                        .map(str::to_string)
-                        .collect::<Vec<_>>()
-                })
-                .unwrap_or_default()
-        } else {
-            Vec::new()
-        };
-        suppressions.push(Suppression {
-            line: line_index,
-            rules,
-            used_rules: BTreeSet::new(),
-        });
-    }
-    suppressions
-}
-
 fn suppression_shape_diagnostics(
-    suppressions: &[Suppression],
+    suppressions: &ParserAwareSuppressions,
     file: Option<&Path>,
     source: &str,
     options: &LintOptions,
 ) -> Vec<RenderedDiagnostic> {
     let mut diagnostics = Vec::new();
-    for suppression in suppressions {
+    for suppression in suppressions.directives() {
         if suppression.rules.is_empty() {
             push_if_enabled(
                 &mut diagnostics,
@@ -413,26 +376,16 @@ fn push_if_enabled(
     }
 }
 
-fn mark_suppressed(suppressions: &mut [Suppression], line: usize, rule: &str) -> bool {
-    let Some(suppression) = suppressions.iter_mut().find(|suppression| {
-        suppression.line == line && suppression.rules.iter().any(|candidate| candidate == rule)
-    }) else {
-        return false;
-    };
-    suppression.used_rules.insert(rule.to_string());
-    true
-}
-
 fn unused_suppression_diagnostics(
-    suppressions: &[Suppression],
+    suppressions: &ParserAwareSuppressions,
     file: Option<&Path>,
     source: &str,
     options: &LintOptions,
 ) -> Vec<RenderedDiagnostic> {
     let mut diagnostics = Vec::new();
-    for suppression in suppressions {
+    for suppression in suppressions.directives() {
         for rule in &suppression.rules {
-            if rule_metadata(rule).is_some() && !suppression.used_rules.contains(rule) {
+            if rule_metadata(rule).is_some() && !suppression.is_used_for(rule) {
                 push_if_enabled(
                     &mut diagnostics,
                     suppression_diagnostic(
@@ -608,6 +561,7 @@ fn byte_offset_for_line(source: &str, line_index: usize) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeSet;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]

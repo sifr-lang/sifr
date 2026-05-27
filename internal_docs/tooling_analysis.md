@@ -156,6 +156,14 @@ glob-based include/exclude matching, and `ignore`-crate backed gitignore
 discovery. The suppression gate remains `physical_line_only`; non-line rules
 are still blocked until the parser-aware suppression milestone.
 
+Milestone 3 replaces line-only suppression attachment with
+`sifr_lint::suppression::ParserAwareSuppressions`. The API parses Sifr
+suppression directives once per source file, attaches them to physical-line or
+statement ranges depending on rule suppression complexity, supports
+`--ignore-suppressions`, reports unknown/unused/blanket suppression diagnostics
+deterministically, and transitions the suppression gate manifest to
+`parser_aware` for future syntax, HIR, and workspace policy rules.
+
 ## Generated Rust And Test Metadata
 
 Generated Rust preview uses compiler/codegen APIs and source maps. It must be cancellable, revision-checked, budgeted under `lsp-generated-rust-preview`, and must not return partial generated code after a document change invalidates the request.

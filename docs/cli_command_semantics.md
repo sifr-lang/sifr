@@ -68,7 +68,8 @@ CLI/global config overrides after discovered config. The command supports
 Sifr rule selection through `--select`, `--extend-select`, and `--ignore`;
 path filtering through `--exclude`, `--extend-exclude`, gitignore controls, and
 force-exclude controls; and lint-local `--output-format concise|full|json`,
-`--output-file`, `--show-files`, `--show-settings`, and `--exit-zero`.
+`--output-file`, `--show-files`, `--show-settings`, `--ignore-suppressions`,
+and `--exit-zero`.
 
 `sifr lint` emits only suppressible policy diagnostics. It does not run,
 downgrade, suppress, or auto-fix hard compiler diagnostics from `sifr check`.
