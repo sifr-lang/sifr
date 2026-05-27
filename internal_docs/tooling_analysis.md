@@ -181,6 +181,14 @@ IDs, `sifr_diagnostics`, parser-aware suppressions for non-physical rules, and
 the phase-gated runner. The CLI also exposes `sifr lint --statistics` for
 deterministic per-rule diagnostic counts.
 
+Milestone 6 adds the first Sifr-owned safe fix engine and policy-only editor
+actions. `trailing-whitespace` now carries a machine-applicable safe suggestion,
+`sifr_lint` applies non-overlapping fix groups deterministically, `sifr lint`
+implements the fix-related Ruff-compatible surfaces through Sifr rule metadata,
+and LSP code actions use typed `Hard`/`Policy` diagnostic class payloads instead
+of diagnostic-code prefixes. Safe per-diagnostic fixes are synchronous; fix-all
+is deferred through `codeAction/resolve` and rejects stale document versions.
+
 ## Generated Rust And Test Metadata
 
 Generated Rust preview uses compiler/codegen APIs and source maps. It must be cancellable, revision-checked, budgeted under `lsp-generated-rust-preview`, and must not return partial generated code after a document change invalidates the request.

@@ -3,12 +3,12 @@ use crate::errors::{LspError, LspResult};
 use ruff_text_size::TextRange;
 use serde_json::{json, Value};
 use sifr_analysis::{
-    CodeAction, CompletionItem, DiagnosticId, DocumentHighlight, DocumentSymbol, FileId,
-    FileTextEdits, FoldingRange, GeneratedRustPreview, HoverInfo, InlayHint, Location,
-    SemanticToken, SignatureHelp, TestCommand, TestCommandKind, TestItem, TextEdit,
-    TypeHierarchyItem, WorkspaceEdit, WorkspaceSymbol,
+    CodeAction, CompletionItem, DeferredCodeAction, DiagnosticClass, DiagnosticId,
+    DocumentHighlight, DocumentSymbol, FileId, FileTextEdits, FoldingRange, GeneratedRustPreview,
+    HoverInfo, InlayHint, Location, SemanticToken, SignatureHelp, TestCommand, TestCommandKind,
+    TestItem, TextEdit, TypeHierarchyItem, WorkspaceEdit, WorkspaceSymbol,
 };
-use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
+use sifr_diagnostics::{DiagnosticArg, DiagnosticSpan, RenderedDiagnostic, Severity};
 use sifr_syntax::{SourceText as SyntaxSourceText, TextPosition};
 use std::path::PathBuf;
 use url::Url;
@@ -250,8 +250,22 @@ pub(crate) fn code_action(
         "title": action.title,
         "kind": action.kind,
         "edit": edit,
-        "data": { "sifrResolved": true }
+        "data": code_action_data(action.data)
     }))
+}
+
+fn code_action_data(data: Option<sifr_analysis::CodeActionData>) -> Value {
+    match data {
+        Some(data) => json!({
+            "sifrResolved": false,
+            "action": match data.action {
+                DeferredCodeAction::FixAllSafePolicy => "fixAllSafePolicy",
+            },
+            "file": data.file.as_u32(),
+            "expectedVersion": data.expected_version,
+        }),
+        None => json!({ "sifrResolved": true }),
+    }
 }
 
 pub(crate) fn workspace_edit(
@@ -294,6 +308,8 @@ pub(crate) fn diagnostic(diagnostic: RenderedDiagnostic) -> Value {
         .iter()
         .find(|span| span.is_primary)
         .or_else(|| diagnostic.spans.first());
+    let class = diagnostic_class(&diagnostic);
+    let rule_id = diagnostic_rule_id(&diagnostic);
     json!({
         "range": primary.map_or_else(default_range, diagnostic_span_range),
         "severity": diagnostic_severity(diagnostic.severity),
@@ -303,6 +319,8 @@ pub(crate) fn diagnostic(diagnostic: RenderedDiagnostic) -> Value {
         "message": diagnostic.message,
         "data": {
             "code": diagnostic.code,
+            "diagnosticClass": class,
+            "ruleId": rule_id,
             "help": diagnostic.help,
             "children": diagnostic.children,
             "suggestions": diagnostic.suggestions
@@ -311,10 +329,39 @@ pub(crate) fn diagnostic(diagnostic: RenderedDiagnostic) -> Value {
 }
 
 pub(crate) fn diagnostic_id(value: &Value) -> Option<DiagnosticId> {
-    value
-        .get("code")
+    let code = value.get("code").and_then(Value::as_str)?;
+    let data = value.get("data");
+    let class = match data
+        .and_then(|data| data.get("diagnosticClass"))
         .and_then(Value::as_str)
-        .map(|code| DiagnosticId(code.to_string()))
+    {
+        Some("policy") => DiagnosticClass::Policy,
+        _ => DiagnosticClass::Hard,
+    };
+    let rule_id = data
+        .and_then(|data| data.get("ruleId"))
+        .and_then(Value::as_str)
+        .map(str::to_string);
+    Some(DiagnosticId {
+        code: code.to_string(),
+        class,
+        rule_id,
+    })
+}
+
+fn diagnostic_class(diagnostic: &RenderedDiagnostic) -> &'static str {
+    if diagnostic_rule_id(diagnostic).is_some() {
+        "policy"
+    } else {
+        "hard"
+    }
+}
+
+fn diagnostic_rule_id(diagnostic: &RenderedDiagnostic) -> Option<&str> {
+    match diagnostic.args.get("rule") {
+        Some(DiagnosticArg::String(rule)) => Some(rule),
+        _ => None,
+    }
 }
 
 pub(crate) fn generated_rust_preview(preview: GeneratedRustPreview) -> Value {

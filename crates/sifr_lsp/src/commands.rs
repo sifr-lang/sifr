@@ -33,7 +33,7 @@ fn explain_diagnostic(store: &mut DocumentStore, arguments: &[Value]) -> LspResu
     let id = arguments
         .first()
         .and_then(Value::as_str)
-        .map(|code| DiagnosticId(code.to_string()))
+        .map(DiagnosticId::hard)
         .ok_or_else(|| {
             LspError::invalid_params("sifr.explainDiagnostic requires a diagnostic code argument")
         })?;
@@ -52,7 +52,7 @@ fn explain_diagnostic(store: &mut DocumentStore, arguments: &[Value]) -> LspResu
     }
     Err(LspError::invalid_params(format!(
         "diagnostic code {} is not present in the current workspace snapshot",
-        id.0
+        id.code
     )))
 }
 

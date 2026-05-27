@@ -127,7 +127,8 @@
   "accepted_sifr_config_keys": [
     "extend", "preview", "select", "extend-select", "ignore", "include", "extend-include",
     "exclude", "extend-exclude", "respect-gitignore", "force-exclude", "rules",
-    "per-file-ignores", "config", "isolated"
+    "per-file-ignores", "fixable", "extend-fixable", "unfixable", "extend-unfixable",
+    "unsafe-fixes", "config", "isolated"
   ],
   "rejected_ruff_config_keys": [
     "extend-ignore", "inline-noqa", "pyproject.toml", "ruff.toml", ".ruff.toml", "tool.ruff",

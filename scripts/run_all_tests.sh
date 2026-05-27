@@ -133,6 +133,8 @@ python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_dependency_boundari
 python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_dependency_boundaries.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/check_linter_diagnostic_class.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_linter_diagnostic_class.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension.py"

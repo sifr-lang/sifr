@@ -9,7 +9,7 @@
       "status": "stable",
       "category": "style-policy",
       "source": "sifr_lint::rules::trailing_whitespace",
-      "fix_availability": "none",
+      "fix_availability": "safe",
       "suppression_complexity": "physical-line"
     },
     {

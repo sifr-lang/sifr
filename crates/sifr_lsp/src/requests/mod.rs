@@ -46,7 +46,7 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "typeHierarchy/supertypes" => type_hierarchy::supertypes(session, params),
         "typeHierarchy/subtypes" => type_hierarchy::subtypes(session, params),
         "textDocument/codeAction" => code_action::code_action(session, params),
-        "codeAction/resolve" => code_action::resolve(params),
+        "codeAction/resolve" => code_action::resolve(session, params),
         "textDocument/formatting" => formatting::formatting(session, params),
         "textDocument/rangeFormatting" => formatting::range_formatting(session, params),
         _ => Err(LspError::method_not_found(format!(

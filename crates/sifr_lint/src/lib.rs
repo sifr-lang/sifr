@@ -2,8 +2,10 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 use globset::Glob;
+use sifr_diagnostics::render::{RenderedDiagnosticSuggestion, RenderedSuggestionEdit};
 use sifr_diagnostics::{
     DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
+    SuggestionApplicability,
 };
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -11,12 +13,17 @@ use std::path::{Path, PathBuf};
 mod config;
 mod discovery;
 mod engine;
+mod fixes;
 mod rules;
 pub mod suppression;
 
 pub use config::effective_lint_config;
 pub use discovery::{collect_sifr_files, collect_sifr_files_for_targets};
 pub use engine::{LintPhase, LintRun, LintRunner, PhaseExecution};
+pub use fixes::{
+    collect_fixes, fix_rule_allowed, fix_source, FixOptions, FixedSource, LintFix, SourceEdit,
+    UnsafeFixPolicy,
+};
 pub use suppression::ParserAwareSuppressions;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -100,6 +107,11 @@ pub struct LintOptions {
     pub rule_levels: BTreeMap<String, RuleSeverity>,
     pub per_file_ignores: Vec<PerFileIgnore>,
     pub ignore_suppressions: bool,
+    pub fixable: Vec<String>,
+    pub extend_fixable: Vec<String>,
+    pub unfixable: Vec<String>,
+    pub extend_unfixable: Vec<String>,
+    pub unsafe_fixes: UnsafeFixPolicy,
 }
 
 impl Default for LintOptions {
@@ -118,6 +130,11 @@ impl Default for LintOptions {
             rule_levels: BTreeMap::new(),
             per_file_ignores: Vec::new(),
             ignore_suppressions: false,
+            fixable: Vec::new(),
+            extend_fixable: Vec::new(),
+            unfixable: Vec::new(),
+            extend_unfixable: Vec::new(),
+            unsafe_fixes: UnsafeFixPolicy::Hint,
         }
     }
 }
@@ -135,6 +152,11 @@ pub struct LintConfigOverrides {
     pub force_exclude: Option<bool>,
     pub preview: Option<bool>,
     pub ignore_suppressions: Option<bool>,
+    pub fixable: Vec<String>,
+    pub extend_fixable: Vec<String>,
+    pub unfixable: Vec<String>,
+    pub extend_unfixable: Vec<String>,
+    pub unsafe_fixes: Option<UnsafeFixPolicy>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -157,7 +179,7 @@ pub const RULES: &[RuleMetadata] = &[
         status: RuleStatus::Stable,
         category: "style-policy",
         source: "sifr_lint::rules::trailing_whitespace",
-        fix_availability: FixAvailability::None,
+        fix_availability: FixAvailability::Safe,
         suppression_complexity: SuppressionComplexity::PhysicalLine,
     },
     RuleMetadata {
@@ -302,7 +324,7 @@ pub(crate) fn rule_enabled(rule_id: &str, file: Option<&Path>, options: &LintOpt
     if options
         .ignore
         .iter()
-        .any(|selector| selector_matches(selector, metadata))
+        .any(|selector| rule_selector_matches(selector, metadata))
     {
         return false;
     }
@@ -310,7 +332,7 @@ pub(crate) fn rule_enabled(rule_id: &str, file: Option<&Path>, options: &LintOpt
         .select
         .iter()
         .chain(options.extend_select.iter())
-        .any(|selector| selector_matches(selector, metadata));
+        .any(|selector| rule_selector_matches(selector, metadata));
     let level = options
         .rule_levels
         .get(rule_id)
@@ -319,7 +341,7 @@ pub(crate) fn rule_enabled(rule_id: &str, file: Option<&Path>, options: &LintOpt
     selected && level != RuleSeverity::Ignore
 }
 
-fn selector_matches(selector: &str, rule: &RuleMetadata) -> bool {
+pub(crate) fn rule_selector_matches(selector: &str, rule: &RuleMetadata) -> bool {
     match selector {
         "all" => rule.status != RuleStatus::Deprecated,
         "default" => {
@@ -518,6 +540,14 @@ fn trailing_whitespace_diagnostic(
         Some("run `sifr fmt` to remove trailing whitespace"),
     );
     diagnostic.message_template = "line has trailing whitespace".to_string();
+    diagnostic.suggestions.push(RenderedDiagnosticSuggestion {
+        message: "remove trailing whitespace".to_string(),
+        applicability: SuggestionApplicability::MachineApplicable,
+        edits: vec![RenderedSuggestionEdit {
+            span: diagnostic.spans[0].clone(),
+            replacement: String::new(),
+        }],
+    });
     diagnostic
 }
 

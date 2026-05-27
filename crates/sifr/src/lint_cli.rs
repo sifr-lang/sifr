@@ -5,7 +5,8 @@ use super::cli_model_and_entrypoint::{
 use super::diagnostic_rendering_and_run::render_diagnostic_output;
 use clap::{Args, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
-use sifr_lint::{EffectiveLintConfig, LintConfigOverrides, PerFileIgnore};
+use sifr_lint::{EffectiveLintConfig, LintConfigOverrides, PerFileIgnore, UnsafeFixPolicy};
+use std::collections::BTreeMap;
 use std::io::{self, Read as _, Write as _};
 use std::path::{Path, PathBuf};
 
@@ -56,8 +57,48 @@ pub(crate) struct LintArgs {
     pub(crate) show_settings: bool,
 
     /// Print diagnostic counts by Sifr policy rule
-    #[arg(long, conflicts_with_all = ["show_files", "show_settings"])]
+    #[arg(long, conflicts_with_all = ["show_files", "show_settings", "diff"])]
     pub(crate) statistics: bool,
+
+    /// Limit fix application to selected Sifr policy rules or categories
+    #[arg(long, value_delimiter = ',')]
+    pub(crate) fixable: Vec<String>,
+
+    /// Extend selected fixable Sifr policy rules or categories
+    #[arg(long, value_delimiter = ',')]
+    pub(crate) extend_fixable: Vec<String>,
+
+    /// Exclude selected Sifr policy rules or categories from fixes
+    #[arg(long, value_delimiter = ',')]
+    pub(crate) unfixable: Vec<String>,
+
+    /// Extend selected unfixable Sifr policy rules or categories
+    #[arg(long, value_delimiter = ',')]
+    pub(crate) extend_unfixable: Vec<String>,
+
+    /// Apply safe Sifr policy fixes to files
+    #[arg(long, conflicts_with = "diff")]
+    pub(crate) fix: bool,
+
+    /// Apply fixes and suppress remaining diagnostic output
+    #[arg(long, conflicts_with = "diff")]
+    pub(crate) fix_only: bool,
+
+    /// Print a patch for safe Sifr policy fixes without writing files
+    #[arg(long, conflicts_with_all = ["fix", "fix_only", "statistics"])]
+    pub(crate) diff: bool,
+
+    /// Enable unsafe Sifr policy fixes
+    #[arg(long, conflicts_with = "no_unsafe_fixes")]
+    pub(crate) unsafe_fixes: bool,
+
+    /// Disable unsafe Sifr policy fixes
+    #[arg(long)]
+    pub(crate) no_unsafe_fixes: bool,
+
+    /// Print a deterministic summary of available fixes
+    #[arg(long)]
+    pub(crate) show_fixes: bool,
 
     /// Enable preview policy rules
     #[arg(long, conflicts_with = "no_preview")]
@@ -92,8 +133,12 @@ pub(crate) struct LintArgs {
     pub(crate) no_force_exclude: bool,
 
     /// Exit successfully even when lint diagnostics remain
-    #[arg(long)]
+    #[arg(long, conflicts_with = "exit_non_zero_on_fix")]
     pub(crate) exit_zero: bool,
+
+    /// Exit with diagnostics status when fixes were applied
+    #[arg(long)]
+    pub(crate) exit_non_zero_on_fix: bool,
 
     /// Input .sifr files or directories; defaults to current directory
     #[arg(value_name = "FILES")]
@@ -155,6 +200,7 @@ pub(super) fn cmd_lint(
                 EXIT_USER_DIAGNOSTIC
             }
         }
+        Ok(LintCommandResult::Fixes(result)) => render_fix_result(&result, lint_format, args),
         Err(errors) => render_lint_diagnostics(&errors, lint_format, args, true),
     }
 }
@@ -162,7 +208,15 @@ pub(super) fn cmd_lint(
 enum LintCommandResult {
     Diagnostics(Vec<RenderedDiagnostic>),
     Statistics(Vec<RenderedDiagnostic>),
+    Fixes(FixCommandResult),
     Text(String),
+}
+
+struct FixCommandResult {
+    diagnostics: Vec<RenderedDiagnostic>,
+    summary: String,
+    diff: String,
+    applied_count: usize,
 }
 
 fn lint_entrypoint(
@@ -186,6 +240,9 @@ fn lint_entrypoint(
             .join("\n");
         return Ok(LintCommandResult::Text(format!("{output}\n")));
     }
+    if fix_mode_requested(args) {
+        return run_fix_command(args, &config.options).map(LintCommandResult::Fixes);
+    }
     if reads_stdin(args) {
         let mut source = String::new();
         io::stdin().read_to_string(&mut source).map_err(|err| {
@@ -208,6 +265,159 @@ fn lint_entrypoint(
     Ok(LintCommandResult::Diagnostics(diagnostics))
 }
 
+fn fix_mode_requested(args: &LintArgs) -> bool {
+    args.fix || args.fix_only || args.diff || args.show_fixes
+}
+
+fn run_fix_command(
+    args: &LintArgs,
+    options: &sifr_lint::LintOptions,
+) -> Result<FixCommandResult, Vec<RenderedDiagnostic>> {
+    if reads_stdin(args) {
+        let mut source = String::new();
+        io::stdin().read_to_string(&mut source).map_err(|err| {
+            vec![diagnostic_with_code(
+                format!("could not read lint source from stdin: {err}"),
+                DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+            )]
+        })?;
+        let fixed = sifr_lint::fix_source(&source, args.stdin_filename.as_deref(), options);
+        let diff = render_source_diff(
+            args.stdin_filename
+                .as_deref()
+                .unwrap_or_else(|| Path::new("<stdin>")),
+            &source,
+            &fixed.fixed_source,
+        );
+        let diagnostics = fix_result_diagnostics(&fixed, args);
+        return Ok(FixCommandResult {
+            diagnostics,
+            summary: render_fix_summary(&fixed.applied_fixes),
+            diff,
+            applied_count: fixed.applied_fixes.len(),
+        });
+    }
+
+    let files = sifr_lint::collect_sifr_files_for_targets(&lint_targets(args), options)?;
+    let mut diagnostics = Vec::new();
+    let mut summary_counts = BTreeMap::<String, usize>::new();
+    let mut diff = String::new();
+    let mut applied_count = 0usize;
+
+    for file in files {
+        let source = std::fs::read_to_string(&file).map_err(|err| {
+            vec![diagnostic_with_code(
+                format!("could not read lint file {}: {err}", file.display()),
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
+        })?;
+        let fixed = sifr_lint::fix_source(&source, Some(&file), options);
+        for fix in &fixed.applied_fixes {
+            *summary_counts.entry(fix.rule_id.clone()).or_default() += 1;
+        }
+        applied_count = applied_count.saturating_add(fixed.applied_fixes.len());
+        if args.diff {
+            diff.push_str(&render_source_diff(&file, &source, &fixed.fixed_source));
+        } else if (args.fix || args.fix_only) && fixed.fixed_source != source {
+            std::fs::write(&file, &fixed.fixed_source).map_err(|err| {
+                vec![diagnostic_with_code(
+                    format!("could not write fixed lint file {}: {err}", file.display()),
+                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                )]
+            })?;
+        }
+        diagnostics.extend(fix_result_diagnostics(&fixed, args));
+    }
+
+    Ok(FixCommandResult {
+        diagnostics,
+        summary: render_fix_counts(&summary_counts),
+        diff,
+        applied_count,
+    })
+}
+
+fn fix_result_diagnostics(
+    fixed: &sifr_lint::FixedSource,
+    args: &LintArgs,
+) -> Vec<RenderedDiagnostic> {
+    if args.fix_only {
+        Vec::new()
+    } else if args.fix || args.diff {
+        fixed.remaining_diagnostics.clone()
+    } else {
+        fixed.diagnostics.clone()
+    }
+}
+
+fn render_fix_result(result: &FixCommandResult, format: DiagnosticFormat, args: &LintArgs) -> i32 {
+    if args.diff {
+        let write_exit = write_lint_output(&result.diff, args, true);
+        return if write_exit != EXIT_SUCCESS || result.applied_count == 0 {
+            write_exit
+        } else {
+            EXIT_USER_DIAGNOSTIC
+        };
+    }
+    if args.show_fixes || args.fix_only {
+        let write_exit = write_lint_output(&result.summary, args, true);
+        if write_exit != EXIT_SUCCESS {
+            return write_exit;
+        }
+    }
+    if !result.diagnostics.is_empty() {
+        return render_lint_diagnostics(&result.diagnostics, format, args, false);
+    }
+    if args.exit_non_zero_on_fix && result.applied_count > 0 {
+        EXIT_USER_DIAGNOSTIC
+    } else {
+        EXIT_SUCCESS
+    }
+}
+
+fn render_source_diff(path: &Path, before: &str, after: &str) -> String {
+    if before == after {
+        return String::new();
+    }
+    let mut output = format!("--- {}\n+++ {}\n@@\n", path.display(), path.display());
+    for line in before.split_inclusive('\n') {
+        output.push('-');
+        output.push_str(line);
+        if !line.ends_with('\n') {
+            output.push('\n');
+        }
+    }
+    for line in after.split_inclusive('\n') {
+        output.push('+');
+        output.push_str(line);
+        if !line.ends_with('\n') {
+            output.push('\n');
+        }
+    }
+    output
+}
+
+fn render_fix_summary(fixes: &[sifr_lint::LintFix]) -> String {
+    let mut counts = BTreeMap::<String, usize>::new();
+    for fix in fixes {
+        *counts.entry(fix.rule_id.clone()).or_default() += 1;
+    }
+    render_fix_counts(&counts)
+}
+
+fn render_fix_counts(counts: &BTreeMap<String, usize>) -> String {
+    use std::fmt::Write as _;
+
+    if counts.is_empty() {
+        return "0 fixes\n".to_string();
+    }
+    let mut output = String::new();
+    for (rule, count) in counts {
+        let _ = writeln!(output, "{count} {rule}");
+    }
+    output
+}
+
 fn lint_cli_overrides(args: &LintArgs) -> Result<LintConfigOverrides, Vec<RenderedDiagnostic>> {
     Ok(LintConfigOverrides {
         select: (!args.select.is_empty()).then(|| args.select.clone()),
@@ -221,6 +431,11 @@ fn lint_cli_overrides(args: &LintArgs) -> Result<LintConfigOverrides, Vec<Render
         force_exclude: flag_override(args.force_exclude, args.no_force_exclude),
         preview: flag_override(args.preview, args.no_preview),
         ignore_suppressions: args.ignore_suppressions.then_some(true),
+        fixable: args.fixable.clone(),
+        extend_fixable: args.extend_fixable.clone(),
+        unfixable: args.unfixable.clone(),
+        extend_unfixable: args.extend_unfixable.clone(),
+        unsafe_fixes: unsafe_fix_policy_override(args.unsafe_fixes, args.no_unsafe_fixes),
     })
 }
 
@@ -291,7 +506,7 @@ fn lint_start_dir(args: &LintArgs) -> PathBuf {
 fn render_settings(config: &EffectiveLintConfig) -> String {
     let options = &config.options;
     format!(
-        "config = {}\npreview = {}\nselect = {:?}\nextend_select = {:?}\nignore = {:?}\ninclude = {:?}\nexclude = {:?}\nrespect_gitignore = {}\nforce_exclude = {}\nignore_suppressions = {}\nper_file_ignores = {}\n",
+        "config = {}\npreview = {}\nselect = {:?}\nextend_select = {:?}\nignore = {:?}\ninclude = {:?}\nexclude = {:?}\nrespect_gitignore = {}\nforce_exclude = {}\nignore_suppressions = {}\nper_file_ignores = {}\nfixable = {:?}\nextend_fixable = {:?}\nunfixable = {:?}\nextend_unfixable = {:?}\nunsafe_fixes = {:?}\n",
         config
             .config_path
             .as_ref()
@@ -306,6 +521,11 @@ fn render_settings(config: &EffectiveLintConfig) -> String {
         options.force_exclude,
         options.ignore_suppressions,
         options.per_file_ignores.len(),
+        options.fixable,
+        options.extend_fixable,
+        options.unfixable,
+        options.extend_unfixable,
+        options.unsafe_fixes,
     )
 }
 
@@ -333,6 +553,16 @@ fn flag_override(enable: bool, disable: bool) -> Option<bool> {
         Some(false)
     } else if enable {
         Some(true)
+    } else {
+        None
+    }
+}
+
+fn unsafe_fix_policy_override(enable: bool, disable: bool) -> Option<UnsafeFixPolicy> {
+    if disable {
+        Some(UnsafeFixPolicy::Disabled)
+    } else if enable {
+        Some(UnsafeFixPolicy::Enabled)
     } else {
         None
     }

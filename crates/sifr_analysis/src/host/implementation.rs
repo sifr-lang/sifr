@@ -1,12 +1,12 @@
 use crate::completion::{rank_completion_candidates, CompletionCandidate};
 use crate::editor::{line_end_insert_range, EditorFacts, EditorToken};
 use crate::queries::{
-    CodeAction, CodeActionContext, CompletionItem, CompletionItems, DiagnosticExplanation,
-    DiagnosticId, DocumentHighlight, DocumentSymbol, FileDiagnostics, FileTextEdits, FoldingRange,
-    FormatOptions, GeneratedRustPreview, HoverInfo, InlayHint, Location, RenameTarget,
-    SelectionRange, SemanticToken, SignatureHelp, SymbolName, SymbolQuery, TestCommand,
-    TestCommandKind, TestItem, TestItemId, TypeHierarchyItem, TypeHierarchyItemId, WorkspaceEdit,
-    WorkspaceSymbol,
+    CodeAction, CodeActionContext, CodeActionData, CompletionItem, CompletionItems,
+    DeferredCodeAction, DiagnosticClass, DiagnosticExplanation, DiagnosticId, DocumentHighlight,
+    DocumentSymbol, FileDiagnostics, FileTextEdits, FoldingRange, FormatOptions,
+    GeneratedRustPreview, HoverInfo, InlayHint, Location, RenameTarget, SelectionRange,
+    SemanticToken, SignatureHelp, SymbolName, SymbolQuery, TestCommand, TestCommandKind, TestItem,
+    TestItemId, TypeHierarchyItem, TypeHierarchyItemId, WorkspaceEdit, WorkspaceSymbol,
 };
 use crate::snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
@@ -367,28 +367,97 @@ impl AnalysisHost {
     ) -> QueryResult<Vec<CodeAction>> {
         let source = self.source_text(file)?;
         let mut actions = Vec::new();
-        if context
+        if let Some(policy) = context
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.0.starts_with("SIFR-LINT-"))
+            .find(|diagnostic| diagnostic.class == DiagnosticClass::Policy)
         {
             if let Some(insert_range) = line_end_insert_range(&source, range) {
+                let rule = policy.rule_id.as_deref().unwrap_or("trailing-whitespace");
                 actions.push(CodeAction {
-                    title: "Suppress trailing-whitespace policy diagnostic".to_string(),
+                    title: format!("Suppress {rule} policy diagnostic"),
                     kind: "quickfix.sifr.suppress".to_string(),
                     edit: Some(WorkspaceEdit {
                         edits: vec![FileTextEdits {
                             file,
                             edits: vec![sifr_format::TextEdit {
                                 range: insert_range,
-                                replacement: "  # sifr: ignore[trailing-whitespace]".to_string(),
+                                replacement: format!("  # sifr: ignore[{rule}]"),
                             }],
                         }],
                     }),
+                    data: None,
                 });
             }
         }
+        actions.extend(self.safe_fix_actions(file, range, context)?);
         Ok(self.result(AnalysisQueryKind::CodeActions, actions))
+    }
+
+    pub fn safe_fix_all_action(&mut self, file: FileId) -> QueryResult<WorkspaceEdit> {
+        let source = self.source_text(file)?;
+        let fixed = sifr_lint::fix_source(&source, None, &sifr_lint::LintOptions::default());
+        Ok(self.result(
+            AnalysisQueryKind::CodeActions,
+            WorkspaceEdit {
+                edits: fixed_source_edits(file, &source, &fixed.fixed_source),
+            },
+        ))
+    }
+
+    fn safe_fix_actions(
+        &mut self,
+        file: FileId,
+        range: TextRange,
+        context: &CodeActionContext,
+    ) -> Result<Vec<CodeAction>, AnalysisError> {
+        let source = self.source_text(file)?;
+        let lint = sifr_lint::lint_source(&source, None, &sifr_lint::LintOptions::default());
+        let fixes = sifr_lint::collect_fixes(
+            &lint.diagnostics,
+            &sifr_lint::FixOptions::from(&sifr_lint::LintOptions::default()),
+        );
+        let mut actions = Vec::new();
+        for fix in fixes {
+            if !context.diagnostics.iter().any(|diagnostic| {
+                diagnostic.class == DiagnosticClass::Policy
+                    && diagnostic.rule_id.as_deref() == Some(fix.rule_id.as_str())
+            }) {
+                continue;
+            }
+            let edits = fix
+                .edits
+                .iter()
+                .map(source_edit_to_text_edit)
+                .collect::<Vec<_>>();
+            if edits.is_empty() || !edits.iter().any(|edit| ranges_overlap(edit.range, range)) {
+                continue;
+            }
+            actions.push(CodeAction {
+                title: format!("Apply safe fix for {}", fix.rule_id),
+                kind: "quickfix.sifr.applySafeFix".to_string(),
+                edit: Some(WorkspaceEdit {
+                    edits: vec![FileTextEdits { file, edits }],
+                }),
+                data: None,
+            });
+        }
+        if !actions.is_empty() {
+            actions.push(CodeAction {
+                title: "Fix all safe Sifr policy diagnostics".to_string(),
+                kind: "source.fixAll.sifr".to_string(),
+                edit: None,
+                data: Some(CodeActionData {
+                    action: DeferredCodeAction::FixAllSafePolicy,
+                    file,
+                    expected_version: self
+                        .context
+                        .document_version_for_file(file)
+                        .map(DocumentVersion::as_i64),
+                }),
+            });
+        }
+        Ok(actions)
     }
 
     pub fn format_document(
@@ -468,7 +537,7 @@ impl AnalysisHost {
             .into_value()
             .into_iter()
             .flat_map(|file| file.diagnostics)
-            .find(|rendered| rendered.code == diagnostic.0);
+            .find(|rendered| rendered.code == diagnostic.code);
         let explanation = DiagnosticExplanation {
             unavailable_reason: found
                 .is_none()
@@ -701,6 +770,32 @@ pub(super) fn full_range(source: &str) -> Result<TextRange, AnalysisError> {
         )
     })?;
     Ok(TextRange::new(TextSize::new(0), TextSize::new(end)))
+}
+
+fn source_edit_to_text_edit(edit: &sifr_lint::SourceEdit) -> sifr_format::TextEdit {
+    sifr_format::TextEdit {
+        range: TextRange::new(TextSize::new(edit.byte_start), TextSize::new(edit.byte_end)),
+        replacement: edit.replacement.clone(),
+    }
+}
+
+fn fixed_source_edits(file: FileId, source: &str, fixed: &str) -> Vec<FileTextEdits> {
+    if source == fixed {
+        Vec::new()
+    } else {
+        vec![FileTextEdits {
+            file,
+            edits: vec![sifr_format::TextEdit {
+                range: full_range(source)
+                    .unwrap_or_else(|_| TextRange::new(TextSize::new(0), TextSize::new(u32::MAX))),
+                replacement: fixed.to_string(),
+            }],
+        }]
+    }
+}
+
+fn ranges_overlap(left: TextRange, right: TextRange) -> bool {
+    left.start() < right.end() && right.start() < left.end()
 }
 
 pub(super) fn unknown_file(file: FileId) -> AnalysisError {

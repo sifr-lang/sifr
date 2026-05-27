@@ -23,6 +23,7 @@ REQUIRED_TOOLING_CHECKS = [
     "check_tooling_contract_lock.py",
     "check_tooling_dependency_boundaries.py",
     "check_lsp_split_brain.py",
+    "check_linter_diagnostic_class.py",
     "check_vscode_extension_contract.py",
     "check_vscode_extension.py",
     "check_formatter_contract.py",

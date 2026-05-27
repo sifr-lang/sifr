@@ -125,6 +125,19 @@ pub struct CodeAction {
     pub title: String,
     pub kind: String,
     pub edit: Option<WorkspaceEdit>,
+    pub data: Option<CodeActionData>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CodeActionData {
+    pub action: DeferredCodeAction,
+    pub file: FileId,
+    pub expected_version: Option<i64>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DeferredCodeAction {
+    FixAllSafePolicy,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -135,8 +148,36 @@ pub struct GeneratedRustPreview {
     pub unavailable_reason: Option<String>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DiagnosticClass {
+    Hard,
+    Policy,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DiagnosticId(pub String);
+pub struct DiagnosticId {
+    pub code: String,
+    pub class: DiagnosticClass,
+    pub rule_id: Option<String>,
+}
+
+impl DiagnosticId {
+    pub fn hard(code: impl Into<String>) -> Self {
+        Self {
+            code: code.into(),
+            class: DiagnosticClass::Hard,
+            rule_id: None,
+        }
+    }
+
+    pub fn policy(code: impl Into<String>, rule_id: impl Into<String>) -> Self {
+        Self {
+            code: code.into(),
+            class: DiagnosticClass::Policy,
+            rule_id: Some(rule_id.into()),
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct DiagnosticExplanation {

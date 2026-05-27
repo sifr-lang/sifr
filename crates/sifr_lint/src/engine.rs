@@ -168,7 +168,9 @@ impl<'a> LintRunner<'a> {
             return false;
         }
         match phase {
-            LintPhase::FileDiscovery | LintPhase::StatementRange | LintPhase::FixFiltering => false,
+            LintPhase::FileDiscovery | LintPhase::StatementRange => false,
+            LintPhase::FixFiltering => enabled_rules(file, self.options)
+                .any(|rule| crate::fix_rule_allowed(rule.id, self.options)),
             LintPhase::PhysicalLine
             | LintPhase::TokenTrivia
             | LintPhase::SyntaxNode

@@ -5,6 +5,7 @@ use crate::{
     CodeActionContext, DiagnosticId, DocumentVersion, FormatOptions, FrontendInput, ProjectRoot,
     SourceText, SymbolName, TestItemId, TextPosition, TypeHierarchyItemId,
 };
+use sifr_diagnostics::DiagnosticArg;
 use sifr_frontend::{FrontendMode, SourcePath};
 
 fn single_file_input(source: &str) -> FrontendInput {
@@ -327,10 +328,13 @@ fn all_editor_query_methods_expose_current_revision_metadata() {
         AnalysisQueryKind::GeneratedRustPreview
     );
     assert_eq!(
-        host.explain_diagnostic(&DiagnosticId("SIFR-LINT-0004".to_string()))
-            .expect("query should run")
-            .metadata()
-            .query,
+        host.explain_diagnostic(&DiagnosticId::policy(
+            "SIFR-LINT-0004",
+            "trailing-whitespace",
+        ))
+        .expect("query should run")
+        .metadata()
+        .query,
         AnalysisQueryKind::ExplainDiagnostic
     );
     assert_eq!(
@@ -475,7 +479,7 @@ fn analysis_lint_diagnostics_match_lint_engine_for_policy_rules() {
         .expect("diagnostics should query")
         .into_value()
         .into_iter()
-        .filter(|diagnostic| diagnostic.code.starts_with("SIFR-LINT-"))
+        .filter(|diagnostic| matches!(diagnostic.args.get("rule"), Some(DiagnosticArg::String(_))))
         .map(|diagnostic| diagnostic.code)
         .collect::<Vec<_>>();
     let engine_codes = sifr_lint::lint_source(source, None, &sifr_lint::LintOptions::default())
@@ -498,7 +502,10 @@ fn code_actions_offer_policy_suppression_and_explain_not_found_is_explicit() {
             file,
             range,
             &CodeActionContext {
-                diagnostics: vec![DiagnosticId("SIFR-LINT-0004".to_string())],
+                diagnostics: vec![DiagnosticId::policy(
+                    "SIFR-LINT-0004",
+                    "trailing-whitespace",
+                )],
             },
         )
         .expect("code actions should query")
@@ -509,9 +516,36 @@ fn code_actions_offer_policy_suppression_and_explain_not_found_is_explicit() {
             .any(|action| action.kind == "quickfix.sifr.suppress" && action.edit.is_some()),
         "lint diagnostics should offer explicit suppression edits"
     );
+    assert!(
+        actions
+            .iter()
+            .any(|action| action.kind == "quickfix.sifr.applySafeFix" && action.edit.is_some()),
+        "safe policy diagnostics should offer explicit fix edits"
+    );
+    assert!(
+        actions
+            .iter()
+            .any(|action| action.kind == "source.fixAll.sifr" && action.edit.is_none()),
+        "safe policy diagnostics should offer deferred fix-all"
+    );
+
+    let hard_actions = host
+        .code_actions(
+            file,
+            range,
+            &CodeActionContext {
+                diagnostics: vec![DiagnosticId::hard("SIFR-TYPE-0001")],
+            },
+        )
+        .expect("hard diagnostic code actions should query")
+        .into_value();
+    assert!(
+        hard_actions.is_empty(),
+        "hard diagnostics must not offer policy suppression or fix actions"
+    );
 
     let explanation = host
-        .explain_diagnostic(&DiagnosticId("SIFR-NOPE-0000".to_string()))
+        .explain_diagnostic(&DiagnosticId::hard("SIFR-NOPE-0000"))
         .expect("explain diagnostic should query")
         .into_value();
     assert!(explanation.diagnostic.is_none());

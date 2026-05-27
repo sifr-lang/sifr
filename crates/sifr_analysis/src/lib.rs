@@ -18,12 +18,12 @@ pub use completion::{
 };
 pub use host::AnalysisHost;
 pub use queries::{
-    CodeAction, CodeActionContext, CompletionItem, CompletionItems, Declaration,
-    DiagnosticExplanation, DiagnosticId, DocumentHighlight, DocumentSymbol, FileDiagnostics,
-    FileTextEdits, FoldingRange, FormatOptions, GeneratedRustPreview, HoverInfo, InlayHint,
-    Location, RenameTarget, SelectionRange, SemanticToken, SignatureHelp, SymbolName, SymbolQuery,
-    TestCommand, TestCommandKind, TestItem, TestItemId, TextEdit, TypeHierarchyItem,
-    TypeHierarchyItemId, WorkspaceEdit, WorkspaceSymbol,
+    CodeAction, CodeActionContext, CodeActionData, CompletionItem, CompletionItems, Declaration,
+    DeferredCodeAction, DiagnosticClass, DiagnosticExplanation, DiagnosticId, DocumentHighlight,
+    DocumentSymbol, FileDiagnostics, FileTextEdits, FoldingRange, FormatOptions,
+    GeneratedRustPreview, HoverInfo, InlayHint, Location, RenameTarget, SelectionRange,
+    SemanticToken, SignatureHelp, SymbolName, SymbolQuery, TestCommand, TestCommandKind, TestItem,
+    TestItemId, TextEdit, TypeHierarchyItem, TypeHierarchyItemId, WorkspaceEdit, WorkspaceSymbol,
 };
 pub use snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
