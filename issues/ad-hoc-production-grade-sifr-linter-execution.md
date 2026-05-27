@@ -200,3 +200,4 @@ Implementation PR links will be recorded here as each milestone closes.
 - M4 `phase_gated_lint_engine`: https://github.com/sifr-lang/sifr/pull/2187
 - M5 `policy_rule_families`: https://github.com/sifr-lang/sifr/pull/2188
 - M6 `lint_fixes_and_code_actions`: https://github.com/sifr-lang/sifr/pull/2189
+- M7 `lsp_editor_docs_and_closeout`: https://github.com/sifr-lang/sifr/pull/2190
