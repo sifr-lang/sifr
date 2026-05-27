@@ -6,10 +6,10 @@ use super::diagnostic_rendering_and_run::{
 use super::formatter_cli::FmtArgs;
 use super::lint_cli::{cmd_lint, LintArgs};
 use clap::{Parser, Subcommand, ValueEnum};
-use sifr_diagnostics::{
-    DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity,
-};
-use sifr_driver::{diagnostic_label_for_code_str, find_workspace_root};
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
+#[cfg(test)]
+use sifr_driver::diagnostic_label_for_code_str;
+use sifr_driver::find_workspace_root;
 use sifr_python_ast::Stmt;
 use sifr_syntax::parse_module_suite;
 use std::collections::BTreeMap;
@@ -293,8 +293,6 @@ pub(super) const EXIT_SUCCESS: i32 = 0;
 pub(super) const EXIT_USER_DIAGNOSTIC: i32 = 1;
 pub(super) const EXIT_USAGE_OR_CONFIG: i32 = 2;
 pub(super) const EXIT_INTERNAL_COMPILER_FAILURE: i32 = 3;
-pub(super) const MAX_COMPACT_REPRESENTATIVE_LOCATIONS: usize = 5;
-
 pub(super) struct PackageCompilerContext {
     pub(super) graph: sifr_package::SifrPackageGraph,
     pub(super) source_map: sifr_package::PackageSourceMap,
@@ -777,22 +775,6 @@ impl Drop for InvocationWorkspace {
     }
 }
 
-pub(super) fn severity_rank(severity: Severity) -> u8 {
-    match severity {
-        Severity::Error => 0,
-        Severity::Warning => 1,
-        Severity::Note => 2,
-    }
-}
-
-pub(super) fn severity_label(severity: Severity) -> &'static str {
-    match severity {
-        Severity::Error => "error",
-        Severity::Warning => "warning",
-        Severity::Note => "note",
-    }
-}
-
 pub(super) fn panic_payload_message(payload: &(dyn std::any::Any + Send)) -> String {
     if let Some(msg) = payload.downcast_ref::<&str>() {
         return (*msg).to_string();
@@ -839,6 +821,7 @@ pub(super) fn legacy_diagnostic_display(diagnostic: &RenderedDiagnostic) -> Stri
     format!("{}: {}", human_label(diagnostic), diagnostic.message)
 }
 
+#[cfg(test)]
 pub(super) fn human_label(diagnostic: &RenderedDiagnostic) -> &'static str {
     match diagnostic.severity {
         Severity::Error if diagnostic.code.starts_with("SIFR-") => {
@@ -847,37 +830,5 @@ pub(super) fn human_label(diagnostic: &RenderedDiagnostic) -> &'static str {
         Severity::Error => "error",
         Severity::Warning => "warning",
         Severity::Note => "note",
-    }
-}
-
-pub(super) fn compact_severity_summary(diagnostics: &[RenderedDiagnostic]) -> String {
-    let mut error_count = 0usize;
-    let mut warning_count = 0usize;
-    let mut note_count = 0usize;
-    let mut help_count = 0usize;
-    for diagnostic in diagnostics {
-        match diagnostic.severity {
-            Severity::Error => error_count += 1,
-            Severity::Warning => warning_count += 1,
-            Severity::Note => note_count += 1,
-        }
-        if diagnostic.help.is_some() {
-            help_count += 1;
-        }
-    }
-    format!(
-        "summary: {error_count} error(s), {warning_count} warning(s), {note_count} note(s), {help_count} help item(s)"
-    )
-}
-
-pub(super) fn compact_location_label(span: &DiagnosticSpan) -> String {
-    match (&span.file, span.line, span.column) {
-        (Some(file), Some(line), Some(column)) => format!("{file}:{line}:{column}"),
-        (Some(file), Some(line), None) => format!("{file}:{line}"),
-        (Some(file), None, _) => file.clone(),
-        (None, Some(line), Some(column)) => format!("<unknown>:{line}:{column}"),
-        (None, Some(line), None) => format!("<unknown>:{line}"),
-        (None, None, Some(column)) => format!("<unknown>:0:{column}"),
-        (None, None, None) => "<unknown>".to_string(),
     }
 }

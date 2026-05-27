@@ -621,9 +621,7 @@ fn emit_success(format: DiagnosticFormat, args: &LintArgs) -> i32 {
     let output = match format {
         DiagnosticFormat::Human => "no lint diagnostics found\n".to_string(),
         DiagnosticFormat::Json => "[]\n".to_string(),
-        DiagnosticFormat::Compact => {
-            "summary: 0 error(s), 0 warning(s), 0 note(s), 0 help item(s)\n".to_string()
-        }
+        DiagnosticFormat::Compact => "0 errors, 0 warnings, 0 notes\n".to_string(),
     };
     write_lint_output(&output, args, false)
 }

@@ -53,6 +53,31 @@ Notes:
 
 Package-management commands use Cargo-backed package coordination as documented in [`package_management.md`](./package_management.md). Cargo owns external dependency resolution, lockfiles, registry/Git/path sources, publishing, and vendoring; Sifr validates package metadata, source roots, exports, trust policy, archive contents, and diagnostics before delegating Cargo-owned behavior.
 
+## Diagnostic Output Formats
+
+Compiler-facing commands accept `--diagnostic-format human|json|compact`.
+`human` is the default developer-facing format and renders source locations,
+snippets, caret highlights, related spans, notes/help, suggestions, and docs
+URLs when span data is available. Spanless internal diagnostics use an explicit
+`location: <unavailable>` fallback.
+
+`compact` is a stable line-oriented format for CI, agents, and quick terminal
+scanning. It emits one severity-only summary line followed by one physical line
+per retained diagnostic after recovery limiting:
+
+```text
+1 error, 0 warnings, 0 notes
+E SIFR-DECIMAL-0001 src/main.sifr:3:30 Decimal() received invalid exact literal '12.34.56'
+```
+
+The first four compact fields are stable: severity abbreviation, diagnostic
+code, location or `<unknown>`, then the message. Compact mode intentionally
+does not emit snippets or docs URLs by default.
+
+`json` preserves the existing `RenderedDiagnostic[]` transport for tools and
+editor integrations, including code, severity, message template, args, URL,
+spans, children, help, and suggestions.
+
 Formatter commands use the Ruff-backed Sifr formatter documented in
 [`formatter.md`](./formatter.md). `sifr fmt [OPTIONS] [FILES]...` defaults to
 the current directory, supports write, check, diff, stdin, explicit range,

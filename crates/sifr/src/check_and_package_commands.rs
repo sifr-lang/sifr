@@ -95,10 +95,7 @@ pub(super) fn cmd_check_file(file: &Path, diagnostic_format: DiagnosticFormat) -
                 let _ = writeln!(io::stdout(), "[]");
             }
             DiagnosticFormat::Compact => {
-                let _ = writeln!(
-                    io::stderr(),
-                    "summary: 0 error(s), 0 warning(s), 0 note(s), 0 help item(s)"
-                );
+                let _ = writeln!(io::stderr(), "0 errors, 0 warnings, 0 notes");
             }
         }
         EXIT_SUCCESS
@@ -293,10 +290,7 @@ pub(super) fn emit_success_message(diagnostic_format: DiagnosticFormat, message:
             let _ = writeln!(io::stdout(), "[]");
         }
         DiagnosticFormat::Compact => {
-            let _ = writeln!(
-                io::stderr(),
-                "summary: 0 error(s), 0 warning(s), 0 note(s), 0 help item(s)"
-            );
+            let _ = writeln!(io::stderr(), "0 errors, 0 warnings, 0 notes");
         }
     }
 }

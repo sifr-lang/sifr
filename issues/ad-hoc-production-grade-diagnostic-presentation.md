@@ -249,6 +249,7 @@ The checker must verify:
 
 - The existing `crates/sifr/tests/verification/diagnostics/decimal_invalid_literal` fixture continues to provide locked single-line span baselines for `human`, `compact`, and `json`.
 - Required verification fixture directories exist for single-line and multiline diagnostics.
+- `crates/sifr/tests/verification/diagnostics/presentation_contract_cases` provides phase-owned synthetic baselines for spanless, related-span, child note/help, suggestion, and CRLF-safe presentation cases.
 - Required `human`, `compact`, and `json` baselines exist for each diagnostic-presentation fixture.
 - JSON schema-lock coverage enumerates `RenderedDiagnostic` fields: `code`, `severity`, `message`, `message_template`, `args`, `url`, `spans`, `children`, `help`, and `suggestions`.
 - Human-mode baselines include file/line/column, source snippet, visual highlight marker, docs URL, spanless diagnostic fallback, related-span rendering, child note/help rendering, suggestion rendering, and CRLF-safe output coverage.

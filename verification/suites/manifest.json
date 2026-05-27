@@ -17,6 +17,17 @@
             "json",
             "compact"
           ]
+        },
+        {
+          "id": "multiline_span_rendering",
+          "entry": "crates/sifr/tests/verification/diagnostics/multiline_span_rendering/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
         }
       ]
     },

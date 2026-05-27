@@ -1,0 +1,14 @@
+{
+  "rendered_diagnostic_required_fields": [
+    "code",
+    "severity",
+    "message",
+    "message_template",
+    "args",
+    "url",
+    "spans",
+    "children",
+    "help",
+    "suggestions"
+  ]
+}

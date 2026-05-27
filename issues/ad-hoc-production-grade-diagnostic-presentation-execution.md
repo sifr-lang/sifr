@@ -9,11 +9,11 @@ Phase contract: `issues/ad-hoc-production-grade-diagnostic-presentation.md`
 - [x] Phase plan drafted
 - [x] Phase plan reviewed and approved for implementation
 - [x] Implementation-readiness review approved
-- [ ] M1 renderer contract lock completed
-- [ ] M2 human source-aware output completed
-- [ ] M3 compact stable output completed
-- [ ] Diagnostic presentation verification gate completed
-- [ ] M4 docs and closeout completed
+- [x] M1 renderer contract lock completed
+- [x] M2 human source-aware output completed
+- [x] M3 compact stable output completed
+- [x] Diagnostic presentation verification gate completed
+- [x] M4 docs and closeout completed
 - [ ] Full local validation recorded
 - [ ] Final production-readiness review approved
 
@@ -57,13 +57,21 @@ This phase locks the diagnostic output-mode responsibilities before implementati
 - `2026-05-27`: User review found the phase did not make verification a first-class deliverable. The phase was updated to require `verification/tooling/check_diagnostic_presentation_contract.py`, negative self-tests, quick-lane wiring, and per-mode fixture/baseline enforcement.
 - `2026-05-27`: Claude verification-contract review pass 1 returned `SATISFIED` with no blockers and two required precision edits. The phase was updated to name `decimal_invalid_literal` as the existing locked single-line fixture and to clarify that `check_diagnostic_presentation_contract.py` is an M1 deliverable, not a pre-existing guardrail. Review artifact: `reviews/diagnostic-presentation-verification-contract-review-pass-1.md`.
 - `2026-05-27`: Claude verification-contract review pass 2 verified the pass-1 precision edits and returned `SATISFIED` with no blockers, no required precision edits, and no remaining verification or discovery gaps. Review artifact: `reviews/diagnostic-presentation-verification-contract-review-pass-2.md`.
+- `2026-05-27`: Implementation wave 1 moved CLI diagnostic formatting onto `sifr_diagnostics` presentation helpers after recovery limiting; added source-aware human rendering, stable compact one-line rendering, multiline and synthetic presentation contract fixtures, JSON schema lock evidence, and the phase-owned contract checker with negative self-tests.
+- `2026-05-27`: Claude implementation review pass 4 returned `SATISFIED` with no blockers. It verified CLI delegation, human/compact/JSON contracts, fixtures, checker/self-test wiring, docs, and execution tracker evidence. Review artifact: `reviews/diagnostic-presentation-implementation-review-pass-4.md`.
 
 ## Validation Log
 
-- Validation evidence will be recorded per implementation milestone.
-- Planning PR validation starts with `git diff --check` and review artifact checks.
-- `check_diagnostic_presentation_contract.py` does not exist yet. It is an M1 deliverable, not a pre-existing guardrail; M1 must author the tool, prove it fails against missing obligations in negative self-tests, and then wire it into the quick lane.
-- M1 validation must include `python3 verification/tooling/check_diagnostic_presentation_contract.py`, `python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test`, and proof that both are wired into `scripts/run_all_tests.sh --profile quick`.
+- `cargo test -p sifr_diagnostics -q` -> passed (`32 passed`), covering source-aware human rendering, multiline span rendering, CRLF terminal normalization, related spans, suggestions, spanless diagnostics, compact one-line output, and JSON preservation.
+- `cargo test -p sifr -q diagnostic -- --nocapture` -> passed (`28 passed`), covering CLI diagnostic output routing, recovery-limited stream sharing, compact output snapshots, and command-level diagnostic format behavior.
+- `python3 scripts/run_verification_hardening.py --profile pr --suite diagnostics --bless` -> passed and regenerated the locked diagnostics baselines for `decimal_invalid_literal` and `multiline_span_rendering`.
+- `python3 scripts/run_verification_hardening.py --profile pr --suite diagnostics` -> passed (`variants=6, failures=0`).
+- `python3 scripts/check_diagnostic_baseline_hygiene.py && python3 scripts/check_diagnostic_schema_sync.py && python3 scripts/check_diagnostic_docs_sync.py && python3 scripts/check_diagnostic_code_coverage.py` -> passed.
+- `python3 verification/tooling/check_diagnostic_presentation_contract.py` -> passed.
+- `python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test` -> passed, including negative checks for missing fixture, missing baseline, missing schema field, and missing run-all wiring.
+- `scripts/run_all_tests.sh --profile quick` -> completed through quick-lane guardrails, diagnostic presentation contract check/self-test, tooling checks, representative validation contracts, and quick e2e pass suite (`67 passed, 0 failed`). The latest validation report was written to `target/validation_lane_reports/quick.latest.json`.
+- Phase-owned fixtures are `decimal_invalid_literal`, `multiline_span_rendering`, and `presentation_contract_cases`; the checker enforces severity-only compact summaries and one-line-per-retained-diagnostic output against those baselines.
+- Phase-owned fixtures are `decimal_invalid_literal`, `multiline_span_rendering`, and `presentation_contract_cases`; the checker enforces severity-only compact summaries and one-line-per-retained-diagnostic output against those baselines.
 
 ## PR Log
 

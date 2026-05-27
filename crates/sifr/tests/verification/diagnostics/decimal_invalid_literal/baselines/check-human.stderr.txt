@@ -1,1 +1,6 @@
-type error: [main] Decimal() received invalid exact literal '12.34.56'
+error[SIFR-DECIMAL-0001]: Decimal() received invalid exact literal '12.34.56'
+  --> <WORKSPACE>/crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/main.sifr:3:30
+     |
+   3 |     value: decimal = Decimal("12.34.56")
+     |                              ^^^^^^^^^^
+  = docs: https://sifr.sh/docs/errors/SIFR-DECIMAL-0001
