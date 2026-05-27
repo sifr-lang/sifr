@@ -12,6 +12,7 @@ Phase contract: `issues/ad-hoc-production-grade-diagnostic-presentation.md`
 - [ ] M1 renderer contract lock completed
 - [ ] M2 human source-aware output completed
 - [ ] M3 compact stable output completed
+- [ ] Diagnostic presentation verification gate completed
 - [ ] M4 docs and closeout completed
 - [ ] Full local validation recorded
 - [ ] Final production-readiness review approved
@@ -36,6 +37,7 @@ This phase locks the diagnostic output-mode responsibilities before implementati
 | W-10 | Multiline diagnostics need explicit verification coverage. | M1 creates a multiline diagnostic verification fixture with locked `human`, `compact`, and `json` baselines. |
 | W-11 | Compact mode must not inherit the old grouped `CompactKey` behavior. | M1 locks one-line-per-retained-diagnostic compact rendering after recovery limiting; M3 implements that contract. |
 | W-12 | Related spans are present in the canonical diagnostic model but not rendered by current human presentation. | M2 renders related spans with labels/kinds after the primary span. |
+| W-13 | The phase lacks a named mechanical verification gate. | M1 adds `verification/tooling/check_diagnostic_presentation_contract.py`, its `--self-test`, and `scripts/run_all_tests.sh --profile quick` wiring; M2/M3/M4 close all checker obligations. |
 
 ### Locked Mode Decisions
 
@@ -52,11 +54,15 @@ This phase locks the diagnostic output-mode responsibilities before implementati
 - `2026-05-27`: Claude phase review pass 2 returned `SATISFIED` with no remaining blockers. One non-blocking precision edit was applied: M1 now requires a JSON schema-lock fixture enumerating the required `RenderedDiagnostic` fields. Review artifact: `reviews/diagnostic-presentation-phase-review-pass-2.md`.
 - `2026-05-27`: Claude implementation-readiness review pass 1 returned `SATISFIED` with no blockers and four required precision edits. The phase was updated to require a new multiline verification fixture, clarify that command-format tests lock existing routing behavior, forbid inheriting old compact grouping behavior, and explicitly scope related-span rendering into M2. Review artifact: `reviews/diagnostic-presentation-implementation-readiness-review-pass-1.md`.
 - `2026-05-27`: Claude implementation-readiness review pass 2 verified all pass-1 precision edits and returned `SATISFIED` with no blockers, unresolved decisions, or discovery gaps. Review artifact: `reviews/diagnostic-presentation-implementation-readiness-review-pass-2.md`.
+- `2026-05-27`: User review found the phase did not make verification a first-class deliverable. The phase was updated to require `verification/tooling/check_diagnostic_presentation_contract.py`, negative self-tests, quick-lane wiring, and per-mode fixture/baseline enforcement.
+- `2026-05-27`: Claude verification-contract review pass 1 returned `SATISFIED` with no blockers and two required precision edits. The phase was updated to name `decimal_invalid_literal` as the existing locked single-line fixture and to clarify that `check_diagnostic_presentation_contract.py` is an M1 deliverable, not a pre-existing guardrail. Review artifact: `reviews/diagnostic-presentation-verification-contract-review-pass-1.md`.
 
 ## Validation Log
 
 - Validation evidence will be recorded per implementation milestone.
 - Planning PR validation starts with `git diff --check` and review artifact checks.
+- `check_diagnostic_presentation_contract.py` does not exist yet. It is an M1 deliverable, not a pre-existing guardrail; M1 must author the tool, prove it fails against missing obligations in negative self-tests, and then wire it into the quick lane.
+- M1 validation must include `python3 verification/tooling/check_diagnostic_presentation_contract.py`, `python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test`, and proof that both are wired into `scripts/run_all_tests.sh --profile quick`.
 
 ## PR Log
 
