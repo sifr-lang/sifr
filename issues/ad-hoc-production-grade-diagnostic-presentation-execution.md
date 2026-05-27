@@ -78,4 +78,4 @@ This phase locks the diagnostic output-mode responsibilities before implementati
 ## PR Log
 
 - M1-M4 implementation and closeout merged in PR [#2193](https://github.com/sifr-lang/sifr/pull/2193) (`2c3fd50a807d1bb8664439a22c9e3051efc01491`).
-- Post-gate path-display follow-up opened in PR [#2195](https://github.com/sifr-lang/sifr/pull/2195) (`777cb37ab93374d173814127164f89812e1673fd`).
+- Post-gate path-display follow-up merged in PR [#2195](https://github.com/sifr-lang/sifr/pull/2195) (`c295051fb38109b398b1d9ef54e17b725163cff8`).
