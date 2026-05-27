@@ -168,6 +168,38 @@ guardrail, editor asset guardrail, and formatter performance budget subset.
 
 Each script must pass on positive fixtures and fail on seeded negative fixtures.
 
+## Linter Hardening Checks
+
+The ad-hoc production-grade linter phase extends the Phase 36 lint foundation
+with Ruff-informed but Sifr-owned config, discovery, parser-aware suppressions,
+phase-gated orchestration, policy rule families, safe fixes, and editor code
+actions.
+
+Required linter closeout commands:
+
+```bash
+python3 verification/tooling/check_linter_reuse_contract.py
+python3 verification/tooling/check_linter_reuse_contract.py --self-test
+python3 verification/tooling/check_rule_suppression_contract.py
+python3 verification/tooling/check_rule_suppression_contract.py --self-test
+python3 verification/tooling/check_linter_diagnostic_class.py
+python3 verification/tooling/check_linter_diagnostic_class.py --self-test
+python3 verification/tooling/lsp_protocol_smoke.py
+python3 verification/tooling/lsp_protocol_smoke.py --self-test
+python3 verification/tooling/lsp_protocol_stress.py
+python3 verification/tooling/lsp_protocol_stress.py --self-test
+```
+
+`check_linter_reuse_contract.py` validates the Ruff rule/config/CLI manifests,
+forbidden Python/Ruff lint dependencies, parser-aware suppression gate, rule
+metadata, and implemented `sifr lint` option coverage. `check_linter_diagnostic_class.py`
+fails if analysis or LSP code-action handlers gate policy actions by
+`SIFR-LINT-` string prefixes instead of typed `Hard`/`Policy` diagnostic data.
+
+The quick validation lane runs the linter reuse contract, rule/suppression
+contract, diagnostic-class guardrail, LSP smoke/stress checks, editor asset
+guardrail, VS Code extension contract/package checks, and phase closeout checks.
+
 ## Contract Lock
 
 `check_tooling_contract_lock.py` verifies:

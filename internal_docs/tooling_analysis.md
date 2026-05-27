@@ -189,6 +189,15 @@ and LSP code actions use typed `Hard`/`Policy` diagnostic class payloads instead
 of diagnostic-code prefixes. Safe per-diagnostic fixes are synchronous; fix-all
 is deferred through `codeAction/resolve` and rejects stale document versions.
 
+Milestone 7 closes the production-grade linter phase by making the public and
+internal docs match the shipped command/editor contract. `docs/linter.md`
+documents config, rule IDs, parser-aware suppressions, safe fix behavior, exit
+status, and editor behavior. `internal_docs/lsp_server.md`,
+`internal_docs/editor_integrations.md`, `internal_docs/vscode_extension.md`, and
+`internal_docs/tooling_verification.md` lock the LSP/editor contract that only
+typed policy diagnostics receive suppression or fix actions and that editor
+adapters must not implement lint semantics locally.
+
 ## Generated Rust And Test Metadata
 
 Generated Rust preview uses compiler/codegen APIs and source maps. It must be cancellable, revision-checked, budgeted under `lsp-generated-rust-preview`, and must not return partial generated code after a document change invalidates the request.

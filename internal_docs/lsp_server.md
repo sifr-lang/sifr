@@ -92,6 +92,21 @@ setting for a request. The LSP server remains a protocol adapter: formatter
 decisions live in `sifr_format`, and editor integrations must not provide a
 separate formatter implementation.
 
+Lint diagnostics are published by `sifr_analysis` after it combines frontend
+hard diagnostics with `sifr_lint` policy diagnostics. LSP diagnostic `data`
+must include a typed diagnostic class:
+
+- `hard`: compiler/frontend diagnostics that are not suppressible,
+  downgradeable, or fixable through lint code actions.
+- `policy`: Sifr lint diagnostics with a `ruleId` matching the Sifr-owned rule
+  registry.
+
+Suppression actions, safe per-diagnostic fixes, and source fix-all actions are
+offered only for `policy` diagnostics. The server must not infer this from
+diagnostic-code prefixes. Deferred policy fix-all actions use
+`codeAction/resolve`, carry the expected document version, recompute edits
+through `sifr_analysis`, and fail closed if the document version changed.
+
 ## Commands
 
 Required command identifiers:
@@ -104,6 +119,16 @@ Required command identifiers:
 - `sifr.runTests`
 
 Command payloads are Sifr-owned and versioned through this document and the protocol matrix.
+
+Lint-related code actions use standard LSP code-action kinds:
+
+- `quickfix`: insert an explicit `# sifr: ignore[rule-id]` suppression for a
+  policy diagnostic or apply an individual safe policy fix.
+- `source.fixAll.sifr`: resolve and apply all currently safe policy fixes for
+  the document.
+
+No editor command may implement a separate Sifr linter or rewrite Sifr source
+for policy fixes outside the native LSP/CLI surfaces.
 
 ## Versioning Policy
 

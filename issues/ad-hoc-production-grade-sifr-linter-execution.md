@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution: Production-Grade Sifr Linter
 
-Status: implementation in progress
+Status: completed on 2026-05-27
 
 Phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 
@@ -16,9 +16,9 @@ Phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 - [x] Phase-gated lint runner completed
 - [x] Sifr policy rule families completed
 - [x] Fix engine and LSP code actions completed
-- [ ] LSP/editor docs and contracts updated
-- [ ] Full local validation recorded
-- [ ] Final production-readiness review approved
+- [x] LSP/editor docs and contracts updated
+- [x] Full local validation recorded
+- [x] Final production-readiness review approved
 
 ## Planning Lock Addendum
 
@@ -83,6 +83,8 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-27`: Claude M5 policy rule families review pass 2b rechecked the post-fix implementation, found no remaining blockers, and returned `SATISFIED` for M5 closure. Review artifact: `reviews/sifr-linter-m5-policy-rule-families-review-pass-2b.md`.
 - `2026-05-27`: M6 pre-review implementation added safe fix application, fix-related lint CLI surfaces, typed policy/hard diagnostic-class LSP code-action gating, deferred fix-all resolution, stale-version rejection, and a diagnostic-class guardrail.
 - `2026-05-27`: Claude M6 fix engine/code actions review pass 1 found no blockers and returned `SATISFIED` for M6 closure. Review artifact: `reviews/sifr-linter-m6-fix-engine-code-actions-review-pass-1.md`.
+- `2026-05-27`: Claude M7 docs closeout review pass 1 found no blockers and returned `SATISFIED` for docs/contract closure, with final validation and final production-readiness review remaining as the only residual gates. Review artifact: `reviews/sifr-linter-m7-docs-closeout-review-pass-1.md`.
+- `2026-05-27`: Claude final production-readiness review pass 1 found no blockers, returned `SATISFIED`, and approved closing the phase. Review artifact: `reviews/sifr-linter-final-production-readiness-review-pass-1.md`.
 
 ## Validation Log
 
@@ -163,6 +165,30 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `python3 scripts/check_file_size_guardrails.py` passed.
   - `git diff --check` passed.
   - `scripts/run_all_tests.sh --profile quick` passed. The lane reported warm wall-time and batching-skew advisories only, with no validation failures.
+- `2026-05-27` M7 closeout local checks:
+  - `python3 verification/tooling/check_tooling_contract_lock.py` passed.
+  - `python3 verification/tooling/check_tooling_contract_lock.py --self-test` passed.
+  - `python3 verification/tooling/check_vscode_extension_contract.py` passed.
+  - `python3 verification/tooling/check_vscode_extension_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_diagnostic_class.py` passed.
+  - `python3 verification/tooling/check_linter_diagnostic_class.py --self-test` passed.
+  - `python3 verification/tooling/check_rule_suppression_contract.py` passed.
+  - `python3 verification/tooling/check_rule_suppression_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_editor_assets.py` passed.
+  - `python3 verification/tooling/check_editor_assets.py --self-test` passed.
+  - `python3 verification/tooling/lsp_protocol_smoke.py` passed.
+  - `python3 verification/tooling/lsp_protocol_smoke.py --self-test` passed.
+  - `python3 verification/tooling/lsp_protocol_stress.py` passed.
+  - `python3 verification/tooling/lsp_protocol_stress.py --self-test` passed.
+  - `python3 verification/tooling/check_phase36_closeout.py` passed.
+  - `python3 verification/tooling/check_phase36_closeout.py --self-test` passed.
+  - `cargo fmt --check` passed.
+  - `python3 scripts/check_file_size_guardrails.py` passed.
+  - `git diff --check` passed.
+  - `scripts/run_all_tests.sh --profile quick` passed. The lane reported warm wall-time and batching-skew advisories only, with no validation failures.
+  - `scripts/run_all_tests.sh` passed. The lane reported warm wall-time and batching-skew advisories only, with no validation failures.
 
 ## PR Log
 
@@ -173,3 +199,4 @@ Implementation PR links will be recorded here as each milestone closes.
 - M3 `parser_aware_suppression_engine`: https://github.com/sifr-lang/sifr/pull/2186
 - M4 `phase_gated_lint_engine`: https://github.com/sifr-lang/sifr/pull/2187
 - M5 `policy_rule_families`: https://github.com/sifr-lang/sifr/pull/2188
+- M6 `lint_fixes_and_code_actions`: https://github.com/sifr-lang/sifr/pull/2189

@@ -46,6 +46,13 @@ delegates to `editor.action.formatDocument`, which uses the native LSP document
 formatting provider. The extension must not implement formatter logic or use a
 direct `sifr fmt` fallback as its document-formatting provider.
 
+Lint diagnostics are advertised by the Sifr LSP server when `sifr.lint.enable`
+is true. VS Code quick fixes and source fix-all actions must come from LSP
+`textDocument/codeAction` and `codeAction/resolve`. The extension may expose
+the `sifr.runLint` CLI command for manual or task-style lint runs, but it must
+not implement lint rule logic, suppression insertion, fix conflict resolution,
+or fix-all edits in TypeScript.
+
 ## Allowed Responsibilities
 
 The extension may:
@@ -57,6 +64,7 @@ The extension may:
 - send Sifr LSP requests and commands
 - call Sifr CLI commands for check, fmt, lint, and tests
 - present VS Code UI for Sifr-produced results
+- present LSP-provided Sifr policy suppressions and safe policy fixes
 - package `.vsix` artifacts
 
 ## Forbidden Responsibilities
