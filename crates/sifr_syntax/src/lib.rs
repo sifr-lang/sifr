@@ -6,9 +6,9 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 use ruff_text_size::{Ranged as _, TextRange, TextSize};
-use sifr_diagnostics::render::RenderedDiagnosticChild;
 use sifr_diagnostics::{
-    ChildSeverity, DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity,
+    ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink,
+    RenderedDiagnostic, Severity, SourceMap, SourceSpan,
 };
 use sifr_python_ast::token::TokenKind;
 use sifr_python_ast::{ModModule, PythonVersion, Stmt};
@@ -193,14 +193,14 @@ pub fn parse_module_raw(
         return Err(parsed
             .errors()
             .iter()
-            .map(|error| parse_error_diagnostic(error, context))
+            .map(|error| parse_error_diagnostic(source, error, context))
             .collect());
     }
     if !parsed.unsupported_syntax_errors().is_empty() {
         return Err(parsed
             .unsupported_syntax_errors()
             .iter()
-            .map(|error| unsupported_syntax_diagnostic(error, context))
+            .map(|error| unsupported_syntax_diagnostic(source, error, context))
             .collect());
     }
     Ok(parsed)
@@ -221,11 +221,21 @@ fn diagnostic_with_code(message: impl Into<String>, code: DiagnosticCode) -> Ren
     }
 }
 
-fn parse_error_diagnostic(error: &ParseError, context: Option<&str>) -> RenderedDiagnostic {
-    parse_diagnostic(parse_error_details(&error.error), context)
+fn parse_error_diagnostic(
+    source: &str,
+    error: &ParseError,
+    context: Option<&str>,
+) -> RenderedDiagnostic {
+    parse_diagnostic(
+        parse_error_details(&error.error),
+        source,
+        error.location,
+        context,
+    )
 }
 
 fn unsupported_syntax_diagnostic(
+    source: &str,
     error: &UnsupportedSyntaxError,
     context: Option<&str>,
 ) -> RenderedDiagnostic {
@@ -237,6 +247,8 @@ fn unsupported_syntax_diagnostic(
             arg_value: error.to_string(),
             parser_category: "unsupported_syntax",
         },
+        source,
+        error.range(),
         context,
     )
 }
@@ -249,37 +261,44 @@ struct ParseDiagnosticDetails {
     parser_category: &'static str,
 }
 
-fn parse_diagnostic(details: ParseDiagnosticDetails, context: Option<&str>) -> RenderedDiagnostic {
-    let message = details
-        .template
-        .replace(&format!("{{{}}}", details.arg_name), &details.arg_value);
-    let mut args = BTreeMap::new();
-    args.insert(
-        details.arg_name.to_string(),
-        DiagnosticArg::String(details.arg_value),
-    );
-    args.insert(
-        "parser_category".to_string(),
-        DiagnosticArg::String(details.parser_category.to_string()),
-    );
-    let children = context
-        .map(|label| RenderedDiagnosticChild {
-            severity: ChildSeverity::Note,
-            message: format!("while parsing {label}"),
-        })
-        .into_iter()
-        .collect();
-    RenderedDiagnostic {
-        code: details.code.code().to_string(),
-        severity: Severity::Error,
-        message,
-        message_template: details.template.to_string(),
-        args,
-        url: details.code.docs_url(),
-        spans: Vec::new(),
-        children,
-        help: None,
-        suggestions: Vec::new(),
+fn parse_diagnostic(
+    details: ParseDiagnosticDetails,
+    source: &str,
+    range: TextRange,
+    context: Option<&str>,
+) -> RenderedDiagnostic {
+    let display_path = context.unwrap_or("main");
+    let mut source_map = SourceMap::new();
+    let source_id = source_map.register_source(display_path, source);
+    let span = match SourceSpan::new_validated(&source_map, source_id, range) {
+        Ok(span) => span,
+        Err(error) => {
+            return diagnostic_with_code(
+                format!("internal compiler error: invalid parser diagnostic span: {error:?}"),
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            );
+        }
+    };
+    let mut builder = DiagnosticBuilder::source(details.code, Severity::Error, span)
+        .message_template(details.template)
+        .arg(details.arg_name, details.arg_value)
+        .arg("parser_category", details.parser_category);
+    if let Some(label) = context {
+        builder = builder.child(ChildSeverity::Note, format!("while parsing {label}"));
+    }
+    let diagnostic = builder.build();
+    let mut sink = DiagnosticSink::new();
+    let _ = sink.emit_error(diagnostic);
+    match sifr_diagnostics::render::render_sink(&sink, &source_map) {
+        Ok(mut envelope) if envelope.diagnostics.len() == 1 => envelope.diagnostics.remove(0),
+        Ok(_) => diagnostic_with_code(
+            "internal compiler error: parser diagnostic renderer emitted an unexpected diagnostic count",
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
+        Err(error) => diagnostic_with_code(
+            format!("internal compiler error: invalid parser diagnostic span: {error:?}"),
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
     }
 }
 
@@ -535,7 +554,11 @@ fn unsupported_details(
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_module, SourceText, TextPosition};
+    use super::{
+        expected_details, parse_diagnostic, parse_module, parse_module_raw, SourceText,
+        TextPosition,
+    };
+    use ruff_text_size::{TextRange, TextSize};
 
     #[test]
     fn parse_module_exposes_suite_and_tokens() {
@@ -567,5 +590,103 @@ mod tests {
                 character: 1
             })
         );
+    }
+
+    #[test]
+    fn parser_diagnostic_uses_parse_error_location_span() {
+        let source = "def main():\nprint('bad indent')\n";
+        let mut diagnostics =
+            parse_module_raw(source, Some("bad_indent.sifr")).expect_err("source must fail");
+        let diagnostic = diagnostics.remove(0);
+
+        assert_eq!(diagnostic.code, "SIFR-PARSE-0002");
+        let span = diagnostic.spans.first().expect("primary span");
+        assert_eq!(span.file.as_deref(), Some("bad_indent.sifr"));
+        assert_eq!(span.byte_start, 12);
+        assert_eq!(span.line, Some(2));
+        assert_eq!(span.column, Some(1));
+        assert_eq!(span.lines[0].text, "print('bad indent')");
+        assert_eq!(span.lines[0].highlight_start, 1);
+    }
+
+    #[test]
+    fn parser_diagnostic_columns_are_utf8_character_based() {
+        let source = "name = '🦀'\ndef main():\nprint('bad indent')\n";
+        let mut diagnostics =
+            parse_module_raw(source, Some("utf8.sifr")).expect_err("source must fail");
+        let diagnostic = diagnostics.remove(0);
+        let span = diagnostic.spans.first().expect("primary span");
+
+        assert_eq!(
+            span.byte_start,
+            u32::try_from(source.find("print").expect("print offset")).unwrap()
+        );
+        assert_eq!(span.line, Some(3));
+        assert_eq!(span.column, Some(1));
+        assert_eq!(span.lines[0].text, "print('bad indent')");
+    }
+
+    #[test]
+    fn parser_diagnostic_preserves_crlf_source_text_in_json_span() {
+        let source = "def main():\r\nprint('bad indent')\r\n";
+        let mut diagnostics =
+            parse_module_raw(source, Some("crlf.sifr")).expect_err("source must fail");
+        let diagnostic = diagnostics.remove(0);
+        let span = diagnostic.spans.first().expect("primary span");
+
+        assert_eq!(span.line, Some(2));
+        assert_eq!(span.column, Some(1));
+        assert_eq!(span.lines[0].text, "print('bad indent')\r");
+    }
+
+    #[test]
+    fn parser_diagnostic_renders_zero_length_eof_span() {
+        let diagnostic = parse_diagnostic(
+            expected_details("end of file", "parser_recovery"),
+            "",
+            TextRange::new(TextSize::new(0), TextSize::new(0)),
+            Some("empty.sifr"),
+        );
+        let span = diagnostic.spans.first().expect("primary span");
+
+        assert_eq!(diagnostic.code, "SIFR-PARSE-0002");
+        assert_eq!(span.byte_start, 0);
+        assert_eq!(span.byte_end, 0);
+        assert_eq!(span.line, Some(1));
+        assert_eq!(span.column, Some(1));
+        assert_eq!(span.lines[0].text, "");
+        assert_eq!(span.lines[0].highlight_start, 1);
+        assert_eq!(span.lines[0].highlight_end, 1);
+    }
+
+    #[test]
+    fn parser_diagnostic_invalid_span_becomes_internal_error() {
+        let diagnostic = parse_diagnostic(
+            expected_details("identifier", "parser_recovery"),
+            "x\n",
+            TextRange::new(TextSize::new(9), TextSize::new(9)),
+            Some("invalid.sifr"),
+        );
+
+        assert_eq!(diagnostic.code, "SIFR-INTERNAL-0001");
+        assert!(diagnostic
+            .message
+            .contains("invalid parser diagnostic span"));
+        assert!(diagnostic.spans.is_empty());
+    }
+
+    #[test]
+    fn unsupported_syntax_diagnostic_uses_ruff_range() {
+        let mut diagnostics = parse_module_raw("lazy import value\n", Some("lazy.sifr"))
+            .expect_err("source must fail");
+        let diagnostic = diagnostics.remove(0);
+        let span = diagnostic.spans.first().expect("primary span");
+
+        assert_eq!(diagnostic.code, "SIFR-PARSE-0009");
+        assert_eq!(span.byte_start, 0);
+        assert_eq!(span.byte_end, 4);
+        assert_eq!(span.line, Some(1));
+        assert_eq!(span.column, Some(1));
+        assert_eq!(span.lines[0].text, "lazy import value");
     }
 }

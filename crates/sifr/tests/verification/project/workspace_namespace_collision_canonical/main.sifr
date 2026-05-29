@@ -1,0 +1,4 @@
+from helper.value import data
+
+def main():
+    print(data)

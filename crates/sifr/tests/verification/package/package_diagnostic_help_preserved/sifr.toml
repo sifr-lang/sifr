@@ -1,0 +1,10 @@
+[package]
+name = "package_diagnostic_help_preserved"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[exports]
+modules = ["package_diagnostic_help_preserved"]

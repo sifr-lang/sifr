@@ -55,6 +55,9 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md) | Error | Unknown source module import target. |
 | [`SIFR-IMPORT-0003`](SIFR-IMPORT-0003.md) | Error | Unsupported import statement form. |
 | [`SIFR-IMPORT-0004`](SIFR-IMPORT-0004.md) | Error | Private module member import. |
+| [`SIFR-IMPORT-0005`](SIFR-IMPORT-0005.md) | Error | Ambiguous source module import target. |
+| [`SIFR-IMPORT-0006`](SIFR-IMPORT-0006.md) | Error | Source module namespace and file import collision. |
+| [`SIFR-IMPORT-0007`](SIFR-IMPORT-0007.md) | Error | Circular source module import graph. |
 | [`SIFR-TYPE-0002`](SIFR-TYPE-0002.md) | Error | Expected and actual types are incompatible. |
 | [`SIFR-TYPE-0003`](SIFR-TYPE-0003.md) | Error | If-expression or conditional branches have incompatible types. |
 | [`SIFR-TYPE-0004`](SIFR-TYPE-0004.md) | Error | A required type annotation is missing. |
@@ -142,10 +145,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-WORKSPACE-0002`](SIFR-WORKSPACE-0002.md) | Error | Workspace source root escapes the workspace root. |
 | [`SIFR-WORKSPACE-0003`](SIFR-WORKSPACE-0003.md) | Error | Workspace source root is not a directory. |
 | [`SIFR-WORKSPACE-0004`](SIFR-WORKSPACE-0004.md) | Error | Workspace source root entry has an invalid shape or path. |
-| [`SIFR-WORKSPACE-0101`](SIFR-WORKSPACE-0101.md) | Error | Workspace import target could not be resolved. |
-| [`SIFR-WORKSPACE-0102`](SIFR-WORKSPACE-0102.md) | Error | Workspace import target is ambiguous. |
-| [`SIFR-WORKSPACE-0103`](SIFR-WORKSPACE-0103.md) | Error | Workspace namespace package collision. |
-| [`SIFR-WORKSPACE-0104`](SIFR-WORKSPACE-0104.md) | Error | Workspace import graph contains a cycle. |
+| [`SIFR-WORKSPACE-0101`](SIFR-WORKSPACE-0101.md) | Error | Legacy workspace import target could not be resolved; source imports use SIFR-IMPORT-0002. |
+| [`SIFR-WORKSPACE-0102`](SIFR-WORKSPACE-0102.md) | Error | Legacy workspace import target is ambiguous; source imports use SIFR-IMPORT-0005. |
+| [`SIFR-WORKSPACE-0103`](SIFR-WORKSPACE-0103.md) | Error | Legacy workspace namespace package collision; source imports use SIFR-IMPORT-0006. |
+| [`SIFR-WORKSPACE-0104`](SIFR-WORKSPACE-0104.md) | Error | Legacy workspace import graph cycle; source imports use SIFR-IMPORT-0007. |
 | [`SIFR-BUILD-0002`](SIFR-BUILD-0002.md) | Error | Build file materialization failed. |
 | [`SIFR-BUILD-0003`](SIFR-BUILD-0003.md) | Error | Temporary build workspace creation failed. |
 | [`SIFR-BUILD-0004`](SIFR-BUILD-0004.md) | Error | Cargo manifest generation failed. |

@@ -124,6 +124,10 @@ echo "Running diagnostic presentation contract check"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_diagnostic_presentation_contract.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_diagnostic_presentation_contract.py" --self-test
 
+echo "Running diagnostic source canonicalization contract check"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_diagnostic_source_canonicalization_contract.py"
+python3 "${SCRIPT_DIR}/../verification/tooling/check_diagnostic_source_canonicalization_contract.py" --self-test
+
 echo "Running Phase 35 frontend and syntax guardrails"
 python3 "${SCRIPT_DIR}/../verification/performance/check_ruff_fork_update_contract.py"
 python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.py"

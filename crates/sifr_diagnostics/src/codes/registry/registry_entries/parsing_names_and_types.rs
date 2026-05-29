@@ -203,6 +203,47 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["name", "module"]
         ),
     active_entry!(
+            "SIFR-IMPORT-0005",
+            "IMPORT",
+            "Ambiguous source module import target.",
+            Severity::Error,
+            "crates/sifr/tests/verification/project/workspace_ambiguous_import_canonical",
+            "ambiguous import target: '{module}'",
+            "sifr_driver::project::discovery",
+            [
+                arg!("module"),
+                json_arg!("candidate_paths"),
+                json_arg!("resolution_scope")
+            ],
+            ["module", "candidate_paths", "resolution_scope"]
+        ),
+    active_entry!(
+            "SIFR-IMPORT-0006",
+            "IMPORT",
+            "Source module namespace and file import collision.",
+            Severity::Error,
+            "crates/sifr/tests/verification/project/workspace_namespace_collision_canonical",
+            "import target '{module}' collides with a namespace package",
+            "sifr_driver::project::discovery",
+            [
+                arg!("module"),
+                json_arg!("resolved_path"),
+                json_arg!("parent_path")
+            ],
+            ["module", "resolved_path", "parent_path"]
+        ),
+    active_entry!(
+            "SIFR-IMPORT-0007",
+            "IMPORT",
+            "Circular source module import graph.",
+            Severity::Error,
+            "crates/sifr/tests/verification/project/import_cycle_source_spans",
+            "circular import detected: {cycle}",
+            "sifr_driver::project::compile_order",
+            [arg!("cycle"), json_arg!("cycle_edges")],
+            ["cycle", "cycle_edges"]
+        ),
+    active_entry!(
             "SIFR-TYPE-0002",
             "TYPE",
             "Expected and actual types are incompatible.",

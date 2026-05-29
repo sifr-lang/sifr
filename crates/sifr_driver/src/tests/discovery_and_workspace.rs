@@ -2,6 +2,7 @@ use crate::{
     create_invocation_workspace, discover_test_root_modules, parse_import_closure_modules,
     DiscoveryDiagnosticStyle, ModuleResolver, SifrWorkspaceConfig, WorkspaceRoot,
 };
+use sifr_diagnostics::DiagnosticCode;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
@@ -291,9 +292,22 @@ fn test_workspace_resolver_reports_ambiguous_source_roots() {
     )
     .expect_err("ambiguous workspace helper should fail");
 
-    assert!(errors[0].message.contains("module 'helper' is ambiguous"));
-    assert!(errors[0].message.contains("lib_a/helper.sifr"));
-    assert!(errors[0].message.contains("lib_b/helper.sifr"));
+    assert_eq!(
+        errors[0].code,
+        DiagnosticCode::IMPORT_AMBIGUOUS_SOURCE_MODULE.code()
+    );
+    assert!(errors[0]
+        .message
+        .contains("ambiguous import target: 'helper'"));
+    assert!(errors[0].spans.iter().any(|span| span.is_primary));
+    assert!(errors[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("lib_a/helper.sifr")));
+    assert!(errors[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("lib_b/helper.sifr")));
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -323,12 +337,26 @@ fn test_workspace_resolver_reports_unresolved_tried_paths() {
     )
     .expect_err("missing workspace helper should fail");
 
+    assert_eq!(
+        errors[0].code,
+        DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code()
+    );
     assert!(errors[0]
         .message
-        .contains("could not resolve import 'missing'"));
-    assert!(errors[0].message.contains("cases/missing.sifr"));
-    assert!(errors[0].message.contains("lib/missing.sifr"));
-    assert!(errors[0].message.contains("missing.sifr"));
+        .contains("unknown import target: 'missing'"));
+    assert!(errors[0].spans.iter().any(|span| span.is_primary));
+    assert!(errors[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("cases/missing.sifr")));
+    assert!(errors[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("lib/missing.sifr")));
+    assert!(errors[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("missing.sifr")));
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -402,10 +430,18 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
     )
     .expect_err("namespace collision should fail");
 
+    assert_eq!(
+        errors[0].code,
+        DiagnosticCode::IMPORT_NAMESPACE_COLLISION.code()
+    );
     assert!(errors[0]
         .message
-        .contains("package directories are not supported"));
-    assert!(errors[0].message.contains("parent name 'helpers'"));
+        .contains("import target 'helpers.list_node' collides with a namespace package"));
+    assert!(errors[0].spans.iter().any(|span| span.is_primary));
+    assert!(errors[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("helpers.sifr")));
 
     let _ = std::fs::remove_dir_all(&dir);
 }
