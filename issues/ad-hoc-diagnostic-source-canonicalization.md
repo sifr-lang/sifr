@@ -587,6 +587,7 @@ M2-M5 implementation status:
 
 M6 closeout status:
 
+- Merged implementation PR: https://github.com/sifr-lang/sifr/pull/2197 (`71730845b5e0f86a91360fa368257e1881e277fb`).
 - `cargo fmt --check` passed locally on 2026-05-29.
 - `python3 verification/tooling/check_diagnostic_presentation_contract.py` and `python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test` passed locally on 2026-05-29.
 - `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py` and `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test` passed locally on 2026-05-29.
