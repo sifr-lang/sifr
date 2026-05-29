@@ -51,7 +51,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
             "SIFR-WORKSPACE-0101",
             "WORKSPACE",
-            "Workspace import target could not be resolved.",
+            "Legacy workspace import target could not be resolved; source imports use SIFR-IMPORT-0002.",
             Severity::Error,
             "crates/sifr/tests/verification/project/workspace_unresolved_import",
             "could not resolve import {module}",
@@ -62,7 +62,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
             "SIFR-WORKSPACE-0102",
             "WORKSPACE",
-            "Workspace import target is ambiguous.",
+            "Legacy workspace import target is ambiguous; source imports use SIFR-IMPORT-0005.",
             Severity::Error,
             "crates/sifr/tests/verification/project/workspace_ambiguous_import",
             "module {module} is ambiguous in workspace {workspace}",
@@ -77,7 +77,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
             "SIFR-WORKSPACE-0103",
             "WORKSPACE",
-            "Workspace namespace package collision.",
+            "Legacy workspace namespace package collision; source imports use SIFR-IMPORT-0006.",
             Severity::Error,
             "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
             "module {module} collides with namespace path {path}",
@@ -88,7 +88,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
             "SIFR-WORKSPACE-0104",
             "WORKSPACE",
-            "Workspace import graph contains a cycle.",
+            "Legacy workspace import graph cycle; source imports use SIFR-IMPORT-0007.",
             Severity::Error,
             "crates/sifr_driver/src/tests/project_graph.rs",
             "workspace import cycle detected: {cycle}",

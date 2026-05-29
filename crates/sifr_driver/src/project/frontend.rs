@@ -1,4 +1,6 @@
+#[cfg(test)]
 use super::compile_order::compute_module_compile_order;
+use super::compile_order::{compute_module_compile_order_with_sources, CompileOrderSourceModule};
 use super::discovery::ParsedProjectModule;
 use crate::diagnostics::{apply_diagnostic_recovery_limits, write_stderr_line, RenderedDiagnostic};
 use sifr_diagnostics::DiagnosticCode;
@@ -138,11 +140,20 @@ pub(crate) fn collect_project_hir_source_modules(
     parsed_modules: &HashMap<String, ParsedProjectModule>,
     mut external_defs: ExternalDefs,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
-    let suites: HashMap<String, Vec<Stmt>> = parsed_modules
+    let suites: HashMap<String, CompileOrderSourceModule<'_>> = parsed_modules
         .iter()
-        .map(|(name, module)| (name.clone(), module.suite.clone()))
+        .map(|(name, module)| {
+            (
+                name.clone(),
+                CompileOrderSourceModule {
+                    suite: &module.suite,
+                    source: &module.source,
+                    display_path: &module.display_path,
+                },
+            )
+        })
         .collect();
-    let compile_order = compute_module_compile_order(&suites)?;
+    let compile_order = compute_module_compile_order_with_sources(&suites)?;
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
     let mut module_diagnostics: HashMap<String, FrontendModuleDiagnostics> = HashMap::new();
 

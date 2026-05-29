@@ -1,0 +1,2 @@
+def main():
+    print("package diagnostic help")

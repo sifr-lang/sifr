@@ -1,7 +1,11 @@
-use crate::{apply_diagnostic_recovery_limits, diagnostic_label_for_code};
+use crate::{
+    apply_diagnostic_recovery_limits, diagnostic_label_for_code, render_package_diagnostic,
+};
 use sifr_diagnostics::DiagnosticArg;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
+use sifr_package::{CargoPackageId, PackageDiagnostic};
+use std::path::Path;
 
 fn test_diagnostic(
     code: &str,
@@ -36,6 +40,34 @@ fn primary_test_span(file: &str, line: u32, column: u32) -> DiagnosticSpan {
         label: None,
         lines: Vec::new(),
     }
+}
+
+#[test]
+fn test_render_package_diagnostic_preserves_manifest_origin_and_help() {
+    let diagnostic = PackageDiagnostic::manifest_exports_not_production(
+        &CargoPackageId("path+file:///demo#pkg@0.1.0".to_string()),
+        Path::new("/demo/sifr.toml"),
+    );
+
+    let rendered = render_package_diagnostic(diagnostic);
+
+    assert_eq!(
+        rendered.code,
+        DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION.code()
+    );
+    assert_eq!(
+        rendered.args.get("origin_kind"),
+        Some(&DiagnosticArg::String("sifr_manifest".to_string()))
+    );
+    assert_eq!(
+        rendered.args.get("manifest_path"),
+        Some(&DiagnosticArg::String("/demo/sifr.toml".to_string()))
+    );
+    assert_eq!(
+        rendered.args.get("manifest_key"),
+        Some(&DiagnosticArg::String("exports.modules".to_string()))
+    );
+    assert!(rendered.help.is_some());
 }
 
 #[test]

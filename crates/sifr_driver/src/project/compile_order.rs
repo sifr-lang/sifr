@@ -1,5 +1,9 @@
 use crate::diagnostics::RenderedDiagnostic;
-use sifr_diagnostics::DiagnosticCode;
+use ruff_text_size::{Ranged as _, TextRange};
+use sifr_diagnostics::{
+    ChildSeverity, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, RelatedKind, Severity,
+    SourceMap, SourceSpan,
+};
 use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -37,6 +41,42 @@ fn collect_local_module_dependencies(
         {
             if local_modules.contains(&dependency) {
                 deps.insert(dependency);
+                break;
+            }
+        }
+    }
+    deps
+}
+
+fn collect_local_module_dependency_ranges(
+    current_module: &str,
+    stmts: &[Stmt],
+    local_modules: &BTreeSet<String>,
+) -> BTreeMap<String, TextRange> {
+    let mut deps = BTreeMap::new();
+    for stmt in stmts {
+        let Stmt::ImportFrom(import_from) = stmt else {
+            continue;
+        };
+        if import_from.level > 1 {
+            continue;
+        }
+        let Some(module) = &import_from.module else {
+            continue;
+        };
+        let module_name = module.to_string();
+        if module_name == "typing"
+            || module_name == "enum"
+            || module_name.starts_with("sifr.")
+            || module_name.starts_with("_sifr.")
+        {
+            continue;
+        }
+        for dependency in
+            dependency_candidates(current_module, module_name.as_str(), import_from.level)
+        {
+            if local_modules.contains(&dependency) {
+                deps.entry(dependency).or_insert_with(|| module.range());
                 break;
             }
         }
@@ -165,6 +205,7 @@ fn find_dependency_cycle_path(
     None
 }
 
+#[cfg(test)]
 pub(crate) fn compute_module_compile_order(
     parsed_modules: &HashMap<String, Vec<Stmt>>,
 ) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
@@ -217,6 +258,140 @@ pub(crate) fn compute_module_compile_order(
         message,
         DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
     )])
+}
+
+pub(crate) struct CompileOrderSourceModule<'a> {
+    pub(crate) suite: &'a [Stmt],
+    pub(crate) source: &'a str,
+    pub(crate) display_path: &'a str,
+}
+
+pub(crate) fn compute_module_compile_order_with_sources(
+    parsed_modules: &HashMap<String, CompileOrderSourceModule<'_>>,
+) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
+    let suites = parsed_modules
+        .iter()
+        .map(|(module, input)| (module.clone(), input.suite.to_vec()))
+        .collect::<HashMap<_, _>>();
+    let graph = build_module_dependency_graph(&suites);
+    let mut indegree: BTreeMap<String, usize> = graph
+        .dependencies
+        .iter()
+        .map(|(module_name, deps)| (module_name.clone(), deps.len()))
+        .collect();
+    let mut ready: BTreeSet<String> = indegree
+        .iter()
+        .filter(|(_, degree)| **degree == 0)
+        .map(|(module_name, _)| module_name.clone())
+        .collect();
+    let mut compile_order = Vec::with_capacity(indegree.len());
+
+    while let Some(module_name) = ready.iter().next().cloned() {
+        ready.remove(&module_name);
+        compile_order.push(module_name.clone());
+        if let Some(dependents) = graph.reverse_dependencies.get(&module_name) {
+            for dependent in dependents {
+                if let Some(degree) = indegree.get_mut(dependent) {
+                    *degree = degree.saturating_sub(1);
+                    if *degree == 0 {
+                        ready.insert(dependent.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    if compile_order.len() == indegree.len() {
+        return Ok(compile_order);
+    }
+
+    let cycle_path = canonicalize_cycle_path(
+        find_dependency_cycle_path(&graph.dependencies)
+            .unwrap_or_else(|| vec!["<cycle>".to_string()]),
+    );
+    Err(vec![cycle_source_diagnostic(parsed_modules, &cycle_path)])
+}
+
+fn cycle_source_diagnostic(
+    parsed_modules: &HashMap<String, CompileOrderSourceModule<'_>>,
+    cycle_path: &[String],
+) -> RenderedDiagnostic {
+    let cycle = cycle_path.join(" -> ");
+    let cycle_edges = cycle_path
+        .windows(2)
+        .map(|edge| format!("{} imports {}", edge[0], edge[1]))
+        .collect::<Vec<_>>()
+        .join("; ");
+    let local_modules = parsed_modules.keys().cloned().collect::<BTreeSet<_>>();
+    let mut edge_spans = Vec::new();
+    for edge in cycle_path.windows(2) {
+        let [from, to] = edge else {
+            continue;
+        };
+        let Some(module) = parsed_modules.get(from) else {
+            continue;
+        };
+        let ranges = collect_local_module_dependency_ranges(from, module.suite, &local_modules);
+        if let Some(range) = ranges.get(to) {
+            edge_spans.push((from.clone(), to.clone(), module, *range));
+        }
+    }
+    let Some((from, to, first_module, first_range)) = edge_spans.first() else {
+        return crate::diagnostics::diagnostic_with_code(
+            format!("circular import detected: {cycle}"),
+            DiagnosticCode::IMPORT_CYCLE,
+        );
+    };
+    let mut source_map = SourceMap::new();
+    let first_source_id =
+        source_map.register_source(first_module.display_path, first_module.source);
+    let primary = match SourceSpan::new_validated(&source_map, first_source_id, *first_range) {
+        Ok(span) => span,
+        Err(error) => {
+            return crate::diagnostics::diagnostic_with_code(
+                format!("internal compiler error: invalid import cycle span: {error:?}"),
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            );
+        }
+    };
+    let mut builder =
+        DiagnosticBuilder::source(DiagnosticCode::IMPORT_CYCLE, Severity::Error, primary)
+            .message_template("circular import detected: {cycle}")
+            .arg("cycle", cycle)
+            .arg("cycle_edges", cycle_edges)
+            .child(
+                ChildSeverity::Help,
+                "break the cycle by moving shared declarations into a separate module",
+            )
+            .related(
+                SourceSpan::new(first_source_id, *first_range),
+                RelatedKind::Note,
+                Some(format!("{from} imports {to}")),
+            );
+    for (from, to, module, range) in edge_spans.iter().skip(1) {
+        let source_id = source_map.register_source(module.display_path, module.source);
+        if let Ok(span) = SourceSpan::new_validated(&source_map, source_id, *range) {
+            builder = builder.related(
+                span,
+                RelatedKind::Note,
+                Some(format!("{from} imports {to}")),
+            );
+        }
+    }
+    let diagnostic = builder.build();
+    let mut sink = DiagnosticSink::new();
+    let _ = sink.emit_error(diagnostic);
+    match sifr_diagnostics::render::render_sink(&sink, &source_map) {
+        Ok(mut envelope) if envelope.diagnostics.len() == 1 => envelope.diagnostics.remove(0),
+        Ok(_) => crate::diagnostics::diagnostic_with_code(
+            "internal compiler error: import cycle renderer emitted an unexpected diagnostic count",
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
+        Err(error) => crate::diagnostics::diagnostic_with_code(
+            format!("internal compiler error: invalid import cycle span: {error:?}"),
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
+    }
 }
 
 fn canonicalize_cycle_path(cycle_path: Vec<String>) -> Vec<String> {

@@ -232,7 +232,7 @@
               "kind": "contains",
               "command_id": "cycle_check_first",
               "stream": "stderr",
-              "text": "module dependency cycle detected: a -> b -> c -> a; import chain: a imports b, b imports c, c imports a"
+              "text": "circular import detected: a -> b -> c -> a"
             }
           ]
         },

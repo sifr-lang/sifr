@@ -573,7 +573,7 @@ pub(super) fn cmd_repair(check: bool, diagnostic_format: DiagnosticFormat) -> i3
 pub(super) fn package_diagnostic(
     diagnostic: sifr_package::PackageDiagnostic,
 ) -> RenderedDiagnostic {
-    diagnostic_with_code(diagnostic.message, diagnostic.code)
+    sifr_driver::render_package_diagnostic(diagnostic)
 }
 
 pub(super) fn lock_mode_from_flags(

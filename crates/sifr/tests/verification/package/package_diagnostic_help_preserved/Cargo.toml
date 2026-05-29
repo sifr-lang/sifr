@@ -1,0 +1,10 @@
+[package]
+name = "package-diagnostic-help-preserved"
+version = "0.1.0"
+edition = "2021"
+include = ["Cargo.toml", "sifr.toml", "src/lib.rs"]
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[workspace]

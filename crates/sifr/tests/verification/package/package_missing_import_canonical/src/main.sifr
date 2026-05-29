@@ -1,0 +1,4 @@
+from missing_helper import value
+
+def main():
+    print(value)

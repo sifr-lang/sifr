@@ -1,11 +1,11 @@
 use crate::diagnostics::RenderedDiagnostic;
 use crate::workspace::WorkspaceRoot;
-use ruff_text_size::TextRange;
-use sifr_diagnostics::DiagnosticCode;
-use sifr_package::{
-    DottedModulePath, PackageImportOrigin, PackageSourceMap, SifrPackageGraph, SifrPackageId,
+use ruff_text_size::{Ranged as _, TextRange};
+use sifr_diagnostics::{
+    ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, Severity,
+    SourceMap, SourceSpan,
 };
-use sifr_python_ast::{Identifier, Stmt};
+use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -27,6 +27,12 @@ pub(crate) struct ResolvedModule {
     pub(crate) module_name: String,
     pub(crate) path: PathBuf,
     pub(crate) origin: ModuleOrigin,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct ImportDependency {
+    module_name: String,
+    range: TextRange,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -235,6 +241,84 @@ impl ResolutionError {
             }
         }
     }
+
+    fn to_source_diagnostic(
+        &self,
+        resolver: &ModuleResolver,
+        display_path: &str,
+        source: &str,
+        range: TextRange,
+    ) -> RenderedDiagnostic {
+        let (code, template, args, notes) = match &self.kind {
+            ResolutionFailureKind::Unresolved => {
+                let tried_paths = display_paths(&self.tried_paths);
+                (
+                    DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
+                    "unknown import target: '{module}'",
+                    vec![
+                        ("module", DiagnosticArg::String(self.module_name.clone())),
+                        (
+                            "resolution_scope",
+                            DiagnosticArg::String(resolution_scope(resolver)),
+                        ),
+                        ("tried_paths", DiagnosticArg::String(tried_paths.clone())),
+                    ],
+                    path_notes("tried", &self.tried_paths),
+                )
+            }
+            ResolutionFailureKind::Ambiguous => {
+                let candidate_paths = display_paths(&self.matches);
+                (
+                    DiagnosticCode::IMPORT_AMBIGUOUS_SOURCE_MODULE,
+                    "ambiguous import target: '{module}'",
+                    vec![
+                        ("module", DiagnosticArg::String(self.module_name.clone())),
+                        (
+                            "resolution_scope",
+                            DiagnosticArg::String(resolution_scope(resolver)),
+                        ),
+                        (
+                            "candidate_paths",
+                            DiagnosticArg::String(candidate_paths.clone()),
+                        ),
+                    ],
+                    path_notes("candidate", &self.matches),
+                )
+            }
+            ResolutionFailureKind::NamespaceFileCollision { parent_name } => {
+                let resolved_path = self
+                    .tried_paths
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| resolver.module_source_path(&self.module_name));
+                let parent_path = self
+                    .tried_paths
+                    .get(1)
+                    .cloned()
+                    .unwrap_or_else(|| resolver.module_source_path(parent_name));
+                (
+                    DiagnosticCode::IMPORT_NAMESPACE_COLLISION,
+                    "import target '{module}' collides with a namespace package",
+                    vec![
+                        ("module", DiagnosticArg::String(self.module_name.clone())),
+                        (
+                            "resolved_path",
+                            DiagnosticArg::String(resolved_path.display().to_string()),
+                        ),
+                        (
+                            "parent_path",
+                            DiagnosticArg::String(parent_path.display().to_string()),
+                        ),
+                    ],
+                    vec![
+                        format!("resolved module file: {}", resolved_path.display()),
+                        format!("colliding parent module file: {}", parent_path.display()),
+                    ],
+                )
+            }
+        };
+        diagnostic_with_source_range(code, display_path, source, range, template, &args, &notes)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -282,6 +366,73 @@ fn module_name_to_relative_path(module_name: &str) -> PathBuf {
     }
     path.set_extension("sifr");
     path
+}
+
+pub(super) fn diagnostic_with_source_range(
+    code: DiagnosticCode,
+    display_path: &str,
+    source: &str,
+    range: TextRange,
+    message_template: &'static str,
+    args: &[(&'static str, DiagnosticArg)],
+    notes: &[String],
+) -> RenderedDiagnostic {
+    let mut source_map = SourceMap::new();
+    let source_id = source_map.register_source(display_path, source);
+    let span = match SourceSpan::new_validated(&source_map, source_id, range) {
+        Ok(span) => span,
+        Err(error) => {
+            return crate::diagnostics::diagnostic_with_code(
+                format!("internal compiler error: invalid import diagnostic span: {error:?}"),
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            );
+        }
+    };
+    let mut builder =
+        DiagnosticBuilder::source(code, Severity::Error, span).message_template(message_template);
+    for (name, value) in args {
+        builder = builder.arg(name, value.clone());
+    }
+    for note in notes {
+        builder = builder.child(ChildSeverity::Note, note.clone());
+    }
+    let diagnostic = builder.build();
+    let mut sink = DiagnosticSink::new();
+    let _ = sink.emit_error(diagnostic);
+    match sifr_diagnostics::render::render_sink(&sink, &source_map) {
+        Ok(mut envelope) if envelope.diagnostics.len() == 1 => envelope.diagnostics.remove(0),
+        Ok(_) => crate::diagnostics::diagnostic_with_code(
+            "internal compiler error: import diagnostic renderer emitted an unexpected diagnostic count",
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
+        Err(error) => crate::diagnostics::diagnostic_with_code(
+            format!("internal compiler error: invalid import diagnostic span: {error:?}"),
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
+    }
+}
+
+fn display_paths(paths: &[PathBuf]) -> String {
+    paths
+        .iter()
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>()
+        .join(";")
+}
+
+fn path_notes(label: &str, paths: &[PathBuf]) -> Vec<String> {
+    paths
+        .iter()
+        .map(|path| format!("{label} path: {}", path.display()))
+        .collect()
+}
+
+fn resolution_scope(resolver: &ModuleResolver) -> String {
+    if resolver.has_workspace() {
+        "workspace".to_string()
+    } else {
+        "entry-relative".to_string()
+    }
 }
 
 fn unresolved_import_message(module_name: &str, tried_paths: &[PathBuf]) -> String {
@@ -338,7 +489,7 @@ fn namespace_collision_message(
     )
 }
 
-fn discovery_label(
+pub(super) fn discovery_label(
     module_name: &str,
     path: &Path,
     diagnostic_style: DiscoveryDiagnosticStyle,
@@ -349,8 +500,10 @@ fn discovery_label(
     }
 }
 
-fn collect_import_closure_module_dependencies(stmts: &[Stmt]) -> BTreeSet<String> {
-    let mut deps = BTreeSet::new();
+fn collect_import_closure_module_dependencies(
+    stmts: &[Stmt],
+) -> BTreeMap<String, ImportDependency> {
+    let mut dependencies = BTreeMap::new();
     for stmt in stmts {
         let Stmt::ImportFrom(import_from) = stmt else {
             continue;
@@ -369,9 +522,14 @@ fn collect_import_closure_module_dependencies(stmts: &[Stmt]) -> BTreeSet<String
         {
             continue;
         }
-        deps.insert(module_name);
+        dependencies
+            .entry(module_name)
+            .or_insert_with(|| ImportDependency {
+                module_name: module.to_string(),
+                range: module.range(),
+            });
     }
-    deps
+    dependencies
 }
 
 #[cfg(test)]
@@ -421,16 +579,21 @@ pub(crate) fn parse_import_closure_source_modules(
         })?;
         let label = discovery_label(&module_name, &path, diagnostic_style);
         let suite = sifr_frontend::parse_source(&source, Some(&label))?;
-        for dependency in collect_import_closure_module_dependencies(&suite) {
-            if parsed_names.contains(dependency.as_str()) {
+        for dependency in collect_import_closure_module_dependencies(&suite).into_values() {
+            if parsed_names.contains(dependency.module_name.as_str()) {
                 continue;
             }
-            match resolver.resolve(&dependency) {
+            match resolver.resolve(&dependency.module_name) {
                 Ok(_) => {
-                    pending.insert(dependency);
+                    pending.insert(dependency.module_name);
                 }
                 Err(error) if resolver.has_workspace() => {
-                    return Err(vec![error.to_diagnostic(resolver)]);
+                    return Err(vec![error.to_source_diagnostic(
+                        resolver,
+                        &path.display().to_string(),
+                        &source,
+                        dependency.range,
+                    )]);
                 }
                 Err(_) => {}
             }
@@ -446,290 +609,4 @@ pub(crate) fn parse_import_closure_source_modules(
     }
 
     Ok(parsed_modules)
-}
-
-pub(crate) fn parse_package_import_closure_source_modules(
-    graph: &SifrPackageGraph,
-    source_map: &PackageSourceMap,
-    entry_package_id: &SifrPackageId,
-    entry_file: &Path,
-    diagnostic_style: DiscoveryDiagnosticStyle,
-) -> Result<(String, HashMap<String, ParsedProjectModule>), Vec<RenderedDiagnostic>> {
-    let Some(entry_module) = source_map.module_for_file(entry_package_id, entry_file) else {
-        return Err(vec![crate::diagnostics::diagnostic_with_code(
-            format!(
-                "package entrypoint '{}' is not part of the selected package source map",
-                entry_file.display()
-            ),
-            DiagnosticCode::PACKAGE_UNDECLARED_DIRECT_IMPORT,
-        )]);
-    };
-    let entry_module_name = entry_module.module_path.0.clone();
-    let mut parsed_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
-    let mut parsed_names: BTreeSet<PackageDiscoveryItem> = BTreeSet::new();
-    let mut pending = BTreeSet::from([PackageDiscoveryItem {
-        package_id: entry_package_id.clone(),
-        source_module_path: DottedModulePath(entry_module_name.clone()),
-        compile_module_name: entry_module_name.clone(),
-    }]);
-
-    while let Some(item) = pending.pop_first() {
-        if !parsed_names.insert(item.clone()) {
-            continue;
-        }
-        let resolved = source_map
-            .resolve_import(graph, &item.package_id, &item.source_module_path)
-            .map_err(|error| vec![package_import_diagnostic(error)])?;
-        let source = std::fs::read_to_string(&resolved.resolved_module.file_path).map_err(|e| {
-            vec![crate::diagnostics::diagnostic_with_code(
-                format!(
-                    "failed to read '{}': {}",
-                    resolved.resolved_module.file_path.display(),
-                    e
-                ),
-                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-            )]
-        })?;
-        let label = discovery_label(
-            &item.compile_module_name,
-            &resolved.resolved_module.file_path,
-            diagnostic_style,
-        );
-        let mut suite = sifr_frontend::parse_source(&source, Some(&label))?;
-        let is_namespace_module = resolved
-            .resolved_module
-            .file_path
-            .file_name()
-            .and_then(|name| name.to_str())
-            == Some("__init__.sifr");
-        for dependency in
-            package_import_dependencies(&item.source_module_path.0, is_namespace_module, &suite)
-        {
-            let dependency_resolution = source_map
-                .resolve_import(graph, &resolved.resolved_module.package_id, &dependency)
-                .map_err(|error| vec![package_import_diagnostic(error)])?;
-            let compile_module_name = compile_module_name_for_dependency(
-                entry_package_id,
-                &item,
-                &dependency_resolution.origin,
-                &dependency_resolution.import_path,
-                &dependency_resolution.resolved_module.module_path,
-            );
-            rewrite_import_from_dependency(
-                &mut suite,
-                &item.source_module_path.0,
-                is_namespace_module,
-                &dependency,
-                &compile_module_name,
-            );
-            let dependency_item = PackageDiscoveryItem {
-                package_id: dependency_resolution.resolved_module.package_id,
-                source_module_path: dependency_resolution.resolved_module.module_path,
-                compile_module_name,
-            };
-            if !parsed_names.contains(&dependency_item) {
-                pending.insert(dependency_item);
-            }
-        }
-        parsed_modules.insert(
-            item.compile_module_name,
-            ParsedProjectModule {
-                suite,
-                source,
-                display_path: resolved.resolved_module.file_path.display().to_string(),
-            },
-        );
-    }
-
-    Ok((entry_module_name, parsed_modules))
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct PackageDiscoveryItem {
-    package_id: SifrPackageId,
-    source_module_path: DottedModulePath,
-    compile_module_name: String,
-}
-
-fn compile_module_name_for_dependency(
-    entry_package_id: &SifrPackageId,
-    current: &PackageDiscoveryItem,
-    origin: &PackageImportOrigin,
-    import_path: &DottedModulePath,
-    resolved_module_path: &DottedModulePath,
-) -> String {
-    match origin {
-        PackageImportOrigin::DirectDependency {
-            dependency_package_id,
-            ..
-        } => {
-            if &current.package_id == entry_package_id {
-                import_path.0.clone()
-            } else {
-                scoped_dependency_compile_name(
-                    &current.compile_module_name,
-                    dependency_package_id,
-                    &import_path.0,
-                )
-            }
-        }
-        PackageImportOrigin::OwnPackage => remap_own_package_compile_name(
-            &current.source_module_path.0,
-            &current.compile_module_name,
-            &resolved_module_path.0,
-        ),
-    }
-}
-
-fn scoped_dependency_compile_name(
-    current_compile_module: &str,
-    dependency_package_id: &SifrPackageId,
-    import_path: &str,
-) -> String {
-    let current_root = current_compile_module
-        .split('.')
-        .next()
-        .filter(|root| !root.is_empty())
-        .unwrap_or("pkg");
-    format!(
-        "{current_root}.__pkg_{}.{}",
-        package_instance_hash(dependency_package_id),
-        import_path
-    )
-}
-
-fn package_instance_hash(package_id: &SifrPackageId) -> String {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in package_id.0.bytes() {
-        hash ^= u64::from(byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    format!("{hash:016x}")
-}
-
-fn remap_own_package_compile_name(
-    current_source_module: &str,
-    current_compile_module: &str,
-    resolved_source_module: &str,
-) -> String {
-    let Some(source_root) = current_source_module.split('.').next() else {
-        return resolved_source_module.to_string();
-    };
-    let Some(compile_root) = current_compile_module.split('.').next() else {
-        return resolved_source_module.to_string();
-    };
-    if source_root == compile_root {
-        return resolved_source_module.to_string();
-    }
-    if resolved_source_module == source_root {
-        return compile_root.to_string();
-    }
-    resolved_source_module
-        .strip_prefix(source_root)
-        .and_then(|suffix| suffix.strip_prefix('.'))
-        .map_or_else(
-            || resolved_source_module.to_string(),
-            |suffix| format!("{compile_root}.{suffix}"),
-        )
-}
-
-fn package_import_dependencies(
-    current_module: &str,
-    is_namespace_module: bool,
-    stmts: &[Stmt],
-) -> BTreeSet<DottedModulePath> {
-    let mut deps = BTreeSet::new();
-    for stmt in stmts {
-        let Stmt::ImportFrom(import_from) = stmt else {
-            continue;
-        };
-        if import_from.level > 1 {
-            continue;
-        }
-        let Some(module) = &import_from.module else {
-            continue;
-        };
-        let module_name = module.to_string();
-        if module_name == "typing"
-            || module_name == "enum"
-            || module_name.starts_with("sifr.")
-            || module_name.starts_with("_sifr.")
-        {
-            continue;
-        }
-        let resolved = if import_from.level == 1 {
-            package_relative_import_module(current_module, is_namespace_module, &module_name)
-        } else {
-            module_name
-        };
-        deps.insert(DottedModulePath(resolved));
-    }
-    deps
-}
-
-fn rewrite_import_from_dependency(
-    stmts: &mut [Stmt],
-    current_module: &str,
-    is_namespace_module: bool,
-    dependency: &DottedModulePath,
-    compile_module_name: &str,
-) {
-    for stmt in stmts {
-        let Stmt::ImportFrom(import_from) = stmt else {
-            continue;
-        };
-        if import_from.level > 1 {
-            continue;
-        }
-        let Some(module) = &import_from.module else {
-            continue;
-        };
-        let module_name = module.to_string();
-        if module_name == "typing"
-            || module_name == "enum"
-            || module_name.starts_with("sifr.")
-            || module_name.starts_with("_sifr.")
-        {
-            continue;
-        }
-        let resolved = if import_from.level == 1 {
-            package_relative_import_module(current_module, is_namespace_module, &module_name)
-        } else {
-            module_name
-        };
-        if resolved != dependency.0 {
-            continue;
-        }
-        import_from.module = Some(Identifier::new(
-            compile_module_name.to_string(),
-            import_from
-                .module
-                .as_ref()
-                .map_or(TextRange::default(), |module| module.range),
-        ));
-        import_from.level = 0;
-    }
-}
-
-fn package_relative_import_module(
-    current_module: &str,
-    is_namespace_module: bool,
-    module_name: &str,
-) -> String {
-    let base = if is_namespace_module {
-        current_module
-    } else {
-        current_module
-            .rsplit_once('.')
-            .map_or(current_module, |(parent, _)| parent)
-    };
-    if base.is_empty() {
-        module_name.to_string()
-    } else {
-        format!("{base}.{module_name}")
-    }
-}
-
-fn package_import_diagnostic(error: sifr_package::PackageDiagnostic) -> RenderedDiagnostic {
-    crate::diagnostics::diagnostic_with_code(error.message, error.code)
 }

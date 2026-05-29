@@ -516,7 +516,9 @@ def main():\n    assert value() == 1\n",
     assert!(
         errors
             .iter()
-            .any(|error| error.code == DiagnosticCode::WORKSPACE_IMPORT_CYCLE.code()),
+            .any(|error| error.code == DiagnosticCode::IMPORT_CYCLE.code()
+                && error.spans.iter().any(|span| span.is_primary)
+                && error.spans.iter().filter(|span| !span.is_primary).count() >= 2),
         "package re-export cycle should be reported: {errors:?}"
     );
     let _ = std::fs::remove_dir_all(dir);
