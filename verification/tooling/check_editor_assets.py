@@ -204,7 +204,8 @@ def validate(root: Path = ASSET_ROOT) -> list[str]:
 def run_self_test() -> None:
     with tempfile.TemporaryDirectory(dir=REPO_ROOT / "target") as tmp:
         temp_root = Path(tmp) / "editor_integrations"
-        shutil.copytree(ASSET_ROOT, temp_root)
+        ignore_vcs = shutil.ignore_patterns(".git")
+        shutil.copytree(ASSET_ROOT, temp_root, ignore=ignore_vcs)
 
         neovim_lsp = temp_root / "neovim" / "lsp" / "sifr.lua"
         neovim_lsp.write_text(neovim_lsp.read_text(encoding="utf-8").replace('"--stdio"', '"--tcp"'), encoding="utf-8")
@@ -213,7 +214,7 @@ def run_self_test() -> None:
             raise SystemExit("editor assets self-test failed: bad Neovim launch passed")
 
         shutil.rmtree(temp_root)
-        shutil.copytree(ASSET_ROOT, temp_root)
+        shutil.copytree(ASSET_ROOT, temp_root, ignore=ignore_vcs)
         scope_map_path = temp_root / "syntaxes" / "sifr-token-scope-map.json"
         scope_map = read_json(scope_map_path)
         scope_map["token_scopes"].pop("String", None)
@@ -223,7 +224,7 @@ def run_self_test() -> None:
             raise SystemExit("editor assets self-test failed: missing syntax token scope passed")
 
         shutil.rmtree(temp_root)
-        shutil.copytree(ASSET_ROOT, temp_root)
+        shutil.copytree(ASSET_ROOT, temp_root, ignore=ignore_vcs)
         neovim_lsp = temp_root / "neovim" / "lsp" / "sifr.lua"
         neovim_lsp.write_text(
             neovim_lsp.read_text(encoding="utf-8") + "\n-- formatter fallback: sifr fmt\n",
