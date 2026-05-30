@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#23`
+Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
@@ -719,6 +719,7 @@ Completed M2 waves:
 - `sifr-lang/sifr#2208` and `sifr-lang/leetcode#21`: completed attribute-list mutation and stateful list clone removal for `1472_design_browser_history`. Codegen now handles `self.field[index] = value` in structured statement bodies by lowering attribute-list subscript assignment to bounded `get_mut`, and direct `self.field` read receivers no longer clone for read-only method calls or borrowed helper arguments. The Sifr source now uses direct `self.history[self.i + 1] = str(url)` instead of copying `history` and assigning it back. Targeted benchmark with the rebuilt compiler shows Sifr faster than Python at every `1472` size (`~4.8x` to `~5.2x`), removing `1472` from the measured-slower table and reducing measured-slower problems from 65 to 64. Local gates: focused `sifr_codegen` regression tests, `cargo build -p sifr`, generated-runner emit check, direct Sifr run, targeted `1472` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer refresh, metadata Python compile, JSON validation, `cargo fmt --check`, `git diff --check`, HIR guardrail, file-size guardrail, Claude Opus reviews `reviews/leetcode-attribute-list-mutation-m2-review-pass-1.md` and `reviews/leetcode-attribute-list-mutation-m2-review-pass-2.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
 - `sifr-lang/leetcode#22`: completed the tuple route-key parity cleanup for `1396_design_underground_system`. The Sifr implementation now mirrors the Python tuple-key route representation with `dict[tuple[str, str], list[int]]` instead of constructing length-prefixed string route keys in the hot path. Targeted benchmark with the rebuilt compiler shows Sifr faster than Python at every `1396` size (`~3.6x` to `~4.5x`), removing `1396` from the measured-slower table and reducing measured-slower problems from 64 to 63. Local gates: direct Sifr run, generated-code emit check showing `HashMap<(String, String), Vec<i64>>`, targeted `1396` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer refresh, metadata Python compile, JSON validation, `git diff --check`, and Claude Opus review `reviews/leetcode-underground-tuple-route-m2-review-pass-1.md`.
 - `sifr-lang/leetcode#23`: completed trie direct-state cleanup for `0208_implement_trie_prefix_tree` and `0211_design_add_and_search_words_data_structure`. Insert paths now mutate `self.edges` and `self.end` directly instead of cloning full trie state into local aliases; `0211` wildcard search also iterates `row.values()` directly instead of allocating a child list per wildcard. This does not reduce the measured-slower count, but it removes the stale `field_clone`/`stateful_object` attribution: `0208` is now a small residual/noise row, while `0211` remains a `mixed` + `equivalent` recursive-search/dict-iteration row. Local gates: direct Sifr runs, generated-code emit checks showing direct `self.edges.get_mut` / `self.end.get_mut`, targeted trie benchmark subset with `SIFR_BIN=target/debug/sifr`, analyzer refresh, metadata Python compile, JSON validation, `git diff --check`, and Claude Opus review `reviews/leetcode-trie-direct-state-m2-review-pass-1.md`.
+- `sifr-lang/leetcode#24`: completed TinyURL encode-map cleanup for `0535_encode_and_decode_tinyurl`. The Sifr implementation now uses a `get`/default early return instead of membership/indexing that generated whole-map `contains_key` clones, computes the short URL once, and drops the unused tree import. Targeted benchmark with the rebuilt compiler shows Sifr faster than Python at every `0535` size (`~4.5x` to `~5.3x`), removing `0535` from the measured-slower table and reducing measured-slower problems from 63 to 62. Local gates: direct Sifr run, generated-code emit check confirming the map-clone membership path is gone, targeted `0535` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer refresh, metadata Python compile, JSON validation, `git diff --check`, and Claude Opus review `reviews/leetcode-tinyurl-encode-map-m2-review-pass-1.md`.
 
 ### M3: Recursive And Matrix Compiler Repairs
 
@@ -814,7 +815,7 @@ Fix-phase Claude review rounds:
 | Registry problems | 325 |
 | Fully complete problems | 274 |
 | Complete fixture pairs | 820 |
-| Measured-slower problems | 63 |
+| Measured-slower problems | 62 |
 | Partial benchmark problems | 1 |
 | No-pair failed problems | 50 |
 
@@ -823,7 +824,6 @@ Fix-phase Claude review rounds:
 | Problem | Category | Worst Py/Sifr | Slower sizes | Owner | Parity | Tags |
 | --- | --- | --- | --- | --- | --- | --- |
 | `2130_maximum_twin_sum_of_a_linked_list` | Linked List | 0.004x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0535_encode_and_decode_tinyurl` | Arrays & Hashing | 0.011x | 1000, 5000, 10000 | compiler | equivalent | field_clone, stateful_object, string_allocation |
 | `1768_merge_strings_alternately` | Two Pointers | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
 | `1888_minimum_number_of_flips_to_make_the_binary_string_alternating` | Sliding Window | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
 | `0003_longest_substring_without_repeating_characters` | Sliding Window | 0.017x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
