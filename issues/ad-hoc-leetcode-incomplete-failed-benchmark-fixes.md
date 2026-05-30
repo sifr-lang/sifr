@@ -1,6 +1,6 @@
 # Ad Hoc Phase: LeetCode Incomplete And Failed Benchmark Fixes
 
-Status: planned on 2026-05-30
+Status: implementation complete through M2e plus M4 reintegration follow-ups on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, and `sifr-lang/leetcode#20`
 Context: follow-up phase for the `Incomplete And Failed Problem Appendix` in `issues/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md`.
 
 ## Purpose
@@ -440,6 +440,23 @@ Dependency order: **M0 -> M1 -> M2 -> M3 -> M4**.
 - Add typed stack annotations for tuple stack problems.
 - Fix `0212`, `0269`, `0707`, and `0006` as problem-specific ports.
 - Re-run the full incomplete subset after each small batch.
+
+Completed waves:
+
+- M0 failure inventory lock: `sifr-lang/leetcode#8` added deterministic failed/incomplete JSON inventory output.
+- M1 harness unblockers: `sifr-lang/leetcode#9` fixed structured result rendering, owned tree input rebuilding, and tree/list wrong-result formatting in generated runners.
+- M2a Sifr-code unblockers: `sifr-lang/leetcode#10` fixed the first Sifr-code failure batch.
+- M2b safe math unblockers: `sifr-lang/leetcode#11` added explicit safe-math handling for division/modulo failure cases.
+- M2c nullable tree inputs: `sifr-lang/leetcode#12` fixed nullable tree API failures.
+- M2d correctness blockers: `sifr-lang/leetcode#13` fixed `0212_word_search_ii` duplicate semantics and `0269_alien_dictionary` fixture order parity.
+- M2e linked-list object timeout: `sifr-lang/leetcode#14` replaced `0707_design_linked_list` recursive node rebuilding with vector-backed state and marked it complete/equivalent.
+- M4a 0212 reintegration: `sifr-lang/leetcode#19` reran `0212_word_search_ii` as a complete benchmark, moved it out of failed inventory, and handed its residual `mixed` + `equivalent` trie slowness back to the slowness phase.
+- M4b stateful parity reintegration: `sifr-lang/leetcode#20` reran the remaining stateful M1 rows and kept them in the slowness phase as complete `mixed` + `equivalent` rows; it did not add new failed or partial cases.
+
+Post-M2e validation:
+
+- The full formerly incomplete subset of 53 problem IDs passed targeted correctness after `sifr-lang/leetcode#14` was merged.
+- `python3 benchmarks/analyze_slowness.py --check-metadata` reported 50 no-pair failures after the refreshed `0212_word_search_ii` and stateful parity reintegration; the remaining phase closure work is full re-benchmark/report reintegration under M4.
 
 ### M3: Compiler Ergonomics Follow-Ups
 

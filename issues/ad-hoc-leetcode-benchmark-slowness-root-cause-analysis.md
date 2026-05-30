@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: planned and Claude-reviewed as implementation-ready on 2026-05-30
+Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 attribute-list mutation/codegen wave merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#21`
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
@@ -92,7 +92,7 @@ Primary LeetCode-code causes:
    The Tries category is the clearest case: Python defines problem-specific trie nodes, while Sifr imports `helpers.trie.Trie`. That helper is arena-based, vector-of-edges based, and currently emits full-structure clones.
 
 3. **Correctness divergence in failed cases.**
-   `0212_word_search_ii` returns duplicate found words on fixtures with duplicate input words; Python returns unique words via a set/pruning path.
+   `0212_word_search_ii` previously returned duplicate found words on fixtures with duplicate input words; PR `sifr-lang/leetcode#19` moved it to a complete, equivalent trie-parity row with residual mixed slowness.
 
 4. **Sifr workaround code is more defensive than the Python source.**
    Many Sifr solutions include `None` guards, wrapper helpers, copied rows, or fallback default values because current language/library support makes direct Python-style code hard. Some of that is necessary today, but it means the benchmark is not comparing equivalent code.
@@ -311,9 +311,9 @@ Partial benchmarks are allowed in this diagnostic inventory only when at least o
 | `0239_sliding_window_maximum` | Sliding Window | 0.404x | 50k | LeetCode Sifr code | Python uses a deque/monotonic queue O(n) approach. Sifr is brute-force O(n*k) over each window. |
 | `1046_last_stone_weight` | Heap / Priority Queue | 0.784x | 10k | LeetCode Sifr code | Python uses `heapq`; Sifr repeatedly sorts or linearly selects stones. This is data-structure non-parity even though the measured gap is modest. |
 
-## Failed Tries Case Not Counted as Slower
+## Former Failed Tries Case Now Counted as Slower
 
-`0212_word_search_ii` did not produce benchmark rows because Sifr fails correctness at the largest fixture.
+`0212_word_search_ii` did not originally produce benchmark rows because Sifr failed correctness at the largest fixture. PR `sifr-lang/leetcode#19` replaced the shared trie helper with a problem-local dict-backed trie arena, added `refs`/`removeWord` pruning parity, and refreshed benchmark rows for all three sizes.
 
 Observed failure:
 
@@ -327,7 +327,7 @@ Root cause:
 - Sifr writes into `found: dict[str, bool]`, but then appends once for every input word that is present.
 - The generated large fixture repeats two-letter words after the 26-letter cycle, so Sifr returns duplicates while expected output counts unique found words.
 
-Fix owner: **LeetCode Sifr code**, with secondary compiler concern because `helpers.trie` is clone-heavy even after correctness is fixed.
+Current owner: **Mixed**. The LeetCode parity/correctness issue is fixed; remaining slowness is attributed to trie/dict/field clone and recursive-search lowering, with Sifr using substantially less memory in the refreshed subset run.
 
 ## Compiler Work Track
 
@@ -698,12 +698,25 @@ Track ownership matrix:
 - Review and repair stateful problem parity before compiler attribution: `0146`, `0355`, `0380`, `1396`, `1472`.
 - Re-run each repaired subset and update registry metadata from the analyzer.
 
+Completed M1 waves:
+
+- `sifr-lang/leetcode#15`: ported `1985`, `0973`, `0703`, `1046`, `1834`, `1631`, and `0778` to heap-backed Sifr implementations, refreshed registry metadata to `parity_status: "equivalent"`, and reduced the measured-slower inventory from 75 to 68. Local gates: targeted correctness and benchmark subset, `python3 benchmarks/analyze_slowness.py --check-metadata`, `git diff --check`, file-size guardrail, Claude Opus review `reviews/leetcode-heap-parity-m1a-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/skew advisories only).
+- `sifr-lang/leetcode#16`: completed residual heap/stateful parity classification for `0355_design_twitter` and `0295_find_median_from_data_stream`, updated `benchmarks/slowness_seed.py` so M1 heap rows remain `heap_parity`, and left `0355`/`0295` visible as measured-slower `mixed` + `equivalent` rows for later stateful/codegen work. Local gates: `0355` direct run, targeted correctness for `0355` and `0295`, targeted benchmark subset, analyzer metadata check, seed Python compile, `git diff --check`, file-size guardrail, Claude Opus reviews `reviews/leetcode-heap-stateful-parity-m1b-review-pass-1.md` and `reviews/leetcode-heap-stateful-parity-m1b-review-pass-2.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/skew advisories only).
+- `sifr-lang/leetcode#17`: replaced shared `helpers.trie.Trie` usage in `0208_implement_trie_prefix_tree` and `0211_design_add_and_search_words_data_structure` with problem-local dict-backed trie arenas, regenerated object fixtures with explicit `__init__` operations so Python and Sifr runners consume matching streams, and reclassified both rows as `mixed` + `equivalent` residual trie/dict/field-clone cases. Local gates: direct Sifr runs for both problems, targeted correctness for all trie fixture sizes, targeted benchmark subset, analyzer metadata check, seed and generator Python compile, `git diff --check`, file-size guardrail, Claude Opus review `reviews/leetcode-trie-parity-m1c-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/skew advisories only).
+- `sifr-lang/leetcode#18`: ported the direct hand-divergence rows `0015_3sum`, `0239_sliding_window_maximum`, `0496_next_greater_element_i`, and `2306_naming_a_company` to the Python benchmark algorithms/data structures, updated registry metadata to `parity_status: "equivalent"`, and removed those rows from the measured-slower analyzer output in the refreshed subset run. Local gates: direct Sifr runs for all four problems, targeted fixture correctness, targeted benchmark subset showing Sifr faster with lower memory for all four, analyzer metadata check, seed Python compile, `git diff --check`, file-size and HIR guardrails, Claude Opus review `reviews/leetcode-direct-parity-m1d-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/skew advisories only).
+- `sifr-lang/leetcode#19`: completed the remaining trie/failure crossover by moving `0212_word_search_ii` from failed correctness to a complete `mixed` + `equivalent` measured-slower row, using a problem-local dict-backed trie with terminal/ref-count pruning parity. Local gates: direct Sifr run, targeted fixture correctness, targeted benchmark subset, analyzer metadata check, failed-inventory consistency check, seed Python compile, `git diff --check`, file-size guardrail, Claude Opus review `reviews/leetcode-word-search-trie-m1e-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; cache/wall-time/skew advisories only).
+- `sifr-lang/leetcode#20`: completed the remaining M1 stateful parity review for `1472_design_browser_history`, `0380_insert_delete_getrandom_o1`, `1396_design_underground_system`, and `0146_lru_cache`; fixed the `1472` forward-history overwrite and `0380` indexed helper paths, replaced `1396` hardcoded station codes with generic length-prefixed route keys, and marked all four rows `mixed` + `equivalent` for later stateful/codegen work. Local gates: direct Sifr runs for all four problems, regenerated fixtures, targeted correctness and benchmark subset, post-key-change `1396` rerun, analyzer metadata check, seed Python compile, JSON validation, `git diff --check`, file-size and HIR guardrails, Claude Opus review `reviews/leetcode-stateful-parity-m1f-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
+
 ### M2: High-Impact Compiler Codegen Repairs
 
 - Fix string index/iteration lowering for equivalent string-heavy problems.
 - Fix collection and class-field clone elision for dictionary, set, list, trie, and object-state reads.
 - Add generated-code regression tests for every fixed lowering pattern.
 - Re-run affected string/container/stateful benchmark subsets and update metadata.
+
+Completed M2 waves:
+
+- `sifr-lang/sifr#2208` and `sifr-lang/leetcode#21`: completed attribute-list mutation and stateful list clone removal for `1472_design_browser_history`. Codegen now handles `self.field[index] = value` in structured statement bodies by lowering attribute-list subscript assignment to bounded `get_mut`, and direct `self.field` read receivers no longer clone for read-only method calls or borrowed helper arguments. The Sifr source now uses direct `self.history[self.i + 1] = str(url)` instead of copying `history` and assigning it back. Targeted benchmark with the rebuilt compiler shows Sifr faster than Python at every `1472` size (`~4.8x` to `~5.2x`), removing `1472` from the measured-slower table and reducing measured-slower problems from 65 to 64. Local gates: focused `sifr_codegen` regression tests, `cargo build -p sifr`, generated-runner emit check, direct Sifr run, targeted `1472` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer refresh, metadata Python compile, JSON validation, `cargo fmt --check`, `git diff --check`, HIR guardrail, file-size guardrail, Claude Opus reviews `reviews/leetcode-attribute-list-mutation-m2-review-pass-1.md` and `reviews/leetcode-attribute-list-mutation-m2-review-pass-2.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
 
 ### M3: Recursive And Matrix Compiler Repairs
 
@@ -797,33 +810,27 @@ Fix-phase Claude review rounds:
 | Metric | Count |
 | --- | --- |
 | Registry problems | 325 |
-| Fully complete problems | 272 |
-| Complete fixture pairs | 814 |
-| Measured-slower problems | 75 |
+| Fully complete problems | 274 |
+| Complete fixture pairs | 820 |
+| Measured-slower problems | 64 |
 | Partial benchmark problems | 1 |
-| No-pair failed problems | 52 |
+| No-pair failed problems | 50 |
 
 ### Measured-Slower Problems
 
 | Problem | Category | Worst Py/Sifr | Slower sizes | Owner | Parity | Tags |
 | --- | --- | --- | --- | --- | --- | --- |
-| `1985_find_the_kth_largest_integer_in_the_array` | Heap / Priority Queue | 0.003x | 1000, 5000, 10000 | leetcode_sifr_code | known_divergent | heap_missing, string_indexing |
-| `0211_design_add_and_search_words_data_structure` | Tries | 0.003x | 1000, 5000, 10000 | mixed | known_divergent | trie_helper, field_clone |
-| `0208_implement_trie_prefix_tree` | Tries | 0.004x | 1000, 5000, 10000 | mixed | known_divergent | trie_helper, field_clone |
 | `2130_maximum_twin_sum_of_a_linked_list` | Linked List | 0.004x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0208_implement_trie_prefix_tree` | Tries | 0.005x | 1000, 5000, 10000 | mixed | equivalent | trie_parity, field_clone, dict_clone, stateful_object |
+| `0211_design_add_and_search_words_data_structure` | Tries | 0.009x | 1000, 5000, 10000 | mixed | equivalent | trie_parity, field_clone, dict_clone, stateful_object |
+| `1396_design_underground_system` | Arrays & Hashing | 0.01x | 1000, 10000, 100000 | mixed | equivalent | stateful_object, field_clone, string_key |
 | `0535_encode_and_decode_tinyurl` | Arrays & Hashing | 0.011x | 1000, 5000, 10000 | compiler | equivalent | field_clone, stateful_object, string_allocation |
-| `2306_naming_a_company` | Arrays & Hashing | 0.014x | 100, 250, 500 | leetcode_sifr_code | known_divergent | algorithm_divergence, set_grouping_missing |
-| `0973_k_closest_points_to_origin` | Heap / Priority Queue | 0.015x | 1000, 5000, 10000 | leetcode_sifr_code | known_divergent | heap_missing |
 | `1768_merge_strings_alternately` | Two Pointers | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
 | `1888_minimum_number_of_flips_to_make_the_binary_string_alternating` | Sliding Window | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
-| `1472_design_browser_history` | Linked List | 0.017x | 1000, 5000, 10000 | mixed | unknown | stateful_object, field_clone, list_clone |
 | `0003_longest_substring_without_repeating_characters` | Sliding Window | 0.017x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
-| `1631_path_with_minimum_effort` | Advanced Graphs | 0.02x | 30, 60 | leetcode_sifr_code | known_divergent | heap_missing, matrix_clone |
 | `1461_check_if_a_string_contains_all_binary_codes_of_size_k` | Arrays & Hashing | 0.02x | 10000, 100000 | compiler | equivalent | substring_allocation, set_clone |
 | `0680_valid_palindrome_ii` | Two Pointers | 0.021x | 10000, 100000 | compiler | equivalent | string_indexing |
 | `0187_repeated_dna_sequences` | Arrays & Hashing | 0.024x | 1000, 10000, 100000 | compiler | equivalent | substring_allocation, set_clone |
-| `0778_swim_in_rising_water` | Advanced Graphs | 0.025x | 30, 60 | leetcode_sifr_code | known_divergent | heap_missing, matrix_clone |
-| `0496_next_greater_element_i` | Arrays & Hashing | 0.029x | 10000, 100000 | leetcode_sifr_code | known_divergent | algorithm_divergence |
 | `0763_partition_labels` | Greedy | 0.032x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
 | `0058_length_of_last_word` | Arrays & Hashing | 0.033x | 10000, 100000 | compiler | equivalent | string_indexing |
 | `0139_word_break` | 1-D Dynamic Programming | 0.039x | 10000, 50000 | compiler | equivalent | substring_allocation, set_clone |
@@ -832,39 +839,35 @@ Fix-phase Claude review rounds:
 | `0567_permutation_in_string` | Sliding Window | 0.043x | 1000, 10000, 100000 | mixed | unknown | string_indexing, list_clone |
 | `0125_valid_palindrome` | Two Pointers | 0.057x | 10000, 100000 | compiler | equivalent | string_indexing |
 | `0424_longest_repeating_character_replacement` | Sliding Window | 0.058x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
-| `0015_3sum` | Two Pointers | 0.074x | 300, 800 | leetcode_sifr_code | known_divergent | algorithm_divergence |
+| `0380_insert_delete_getrandom_o1` | Arrays & Hashing | 0.08x | 10000, 100000 | mixed | equivalent | stateful_object, field_clone, array_map_parity |
 | `0234_palindrome_linked_list` | Linked List | 0.081x | 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0380_insert_delete_getrandom_o1` | Arrays & Hashing | 0.087x | 10000, 100000 | mixed | unknown | stateful_object, field_clone |
-| `0146_lru_cache` | Linked List | 0.092x | 5000, 10000 | mixed | unknown | stateful_object, field_clone |
+| `0146_lru_cache` | Linked List | 0.091x | 5000, 10000 | mixed | equivalent | stateful_object, field_clone, lru_parity |
 | `0706_design_hashmap` | Arrays & Hashing | 0.109x | 1000, 5000, 10000 | mixed | unknown | stateful_object, field_clone |
 | `0402_remove_k_digits` | Stack | 0.134x | 1000, 10000, 100000 | compiler | unknown | string_indexing, list_clone |
-| `0703_kth_largest_element_in_a_stream` | Heap / Priority Queue | 0.142x | 5000, 10000 | leetcode_sifr_code | known_divergent | heap_missing, stateful_object |
 | `0049_group_anagrams` | Arrays & Hashing | 0.146x | 1000, 5000, 20000 | compiler | unknown | dict_clone, list_clone |
 | `0221_maximal_square` | 2-D Dynamic Programming | 0.176x | 50, 150, 300 | compiler | equivalent | matrix_clone |
+| `0355_design_twitter` | Heap / Priority Queue | 0.177x | 1000, 5000, 10000 | mixed | equivalent | stateful_object, field_clone, heap_parity |
 | `0179_largest_number` | Arrays & Hashing | 0.182x | 500, 1000 | mixed | unknown | string_allocation, algorithm_parity_unknown |
 | `0014_longest_common_prefix` | Arrays & Hashing | 0.199x | 1000, 10000, 100000 | compiler | equivalent | string_indexing |
 | `0895_maximum_frequency_stack` | Stack | 0.202x | 5000, 10000 | mixed | unknown | stateful_object, field_clone |
+| `0212_word_search_ii` | Tries | 0.208x | 100, 400, 900 | mixed | equivalent | trie_parity, field_clone, dict_clone, recursive_search |
 | `0200_number_of_islands` | Graphs | 0.249x | 20, 40, 80 | compiler | equivalent | matrix_clone, set_clone |
 | `0981_time_based_key_value_store` | Binary Search | 0.255x | 5000, 10000 | mixed | unknown | stateful_object, field_clone, binary_search |
 | `1930_unique_length_3_palindromic_subsequences` | Arrays & Hashing | 0.255x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
 | `0036_valid_sudoku` | Arrays & Hashing | 0.255x | 9 | compiler | equivalent | set_clone, safe_indexing |
-| `0355_design_twitter` | Heap / Priority Queue | 0.255x | 1000, 5000, 10000 | mixed | unknown | stateful_object, field_clone, heap_missing |
 | `2001_number_of_pairs_of_interchangeable_rectangles` | Arrays & Hashing | 0.293x | 100, 1000, 5000 | compiler | equivalent | dict_clone |
 | `0721_accounts_merge` | Graphs | 0.3x | 100, 300, 700 | mixed | unknown | dict_clone, list_clone, set_clone |
-| `1396_design_underground_system` | Arrays & Hashing | 0.319x | 100000 | mixed | unknown | stateful_object, field_clone, string_key |
 | `0572_subtree_of_another_tree` | Trees | 0.332x | 1000, 5000 | compiler | equivalent | tree_clone, optional_clone |
 | `0130_surrounded_regions` | Graphs | 0.342x | 20, 40, 80 | compiler | equivalent | matrix_clone |
 | `0100_same_tree` | Trees | 0.351x | 1000, 5000 | compiler | equivalent | tree_clone, optional_clone |
 | `0067_add_binary` | Bit Manipulation | 0.365x | 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
-| `0239_sliding_window_maximum` | Sliding Window | 0.404x | 50000 | leetcode_sifr_code | known_divergent | algorithm_divergence |
 | `0752_open_the_lock` | Graphs | 0.434x | 100 | mixed | unknown | string_indexing, set_clone, queue_clone |
 | `0149_max_points_on_a_line` | Math & Geometry | 0.453x | 100, 300, 600 | compiler | equivalent | dict_clone, tuple_key_clone |
 | `0344_reverse_string` | Two Pointers | 0.459x | 10000, 100000 | compiler | equivalent | list_clone, string_indexing |
 | `0102_binary_tree_level_order_traversal` | Trees | 0.467x | 1000, 5000 | compiler | equivalent | tree_clone, optional_clone |
 | `2013_detect_squares` | Math & Geometry | 0.468x | 100, 500, 1000 | mixed | unknown | stateful_object, dict_clone |
-| `0295_find_median_from_data_stream` | Heap / Priority Queue | 0.51x | 10000 | mixed | unknown | heap_missing, stateful_object |
+| `0295_find_median_from_data_stream` | Heap / Priority Queue | 0.484x | 10000 | mixed | equivalent | heap_parity, field_clone, stateful_object |
 | `0005_longest_palindromic_substring` | 1-D Dynamic Programming | 0.517x | 300, 800 | compiler | equivalent | string_indexing, substring_allocation |
-| `1834_single_threaded_cpu` | Heap / Priority Queue | 0.52x | 300, 700 | leetcode_sifr_code | known_divergent | heap_missing |
 | `1189_maximum_number_of_balloons` | Arrays & Hashing | 0.543x | 1000, 10000, 100000 | compiler | equivalent | dict_clone, string_iteration |
 | `0189_rotate_array` | Two Pointers | 0.548x | 5000, 10000 | compiler | equivalent | list_clone |
 | `0205_isomorphic_strings` | Arrays & Hashing | 0.552x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
@@ -873,7 +876,6 @@ Fix-phase Claude review rounds:
 | `0929_unique_email_addresses` | Arrays & Hashing | 0.709x | 1000, 10000, 100000 | compiler | unknown | string_allocation, set_clone |
 | `2405_optimal_partition_of_string` | Arrays & Hashing | 0.71x | 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
 | `0013_roman_to_integer` | Math & Geometry | 0.724x | 5000 | compiler | equivalent | string_indexing, dict_clone |
-| `1046_last_stone_weight` | Heap / Priority Queue | 0.784x | 10000 | leetcode_sifr_code | known_divergent | heap_missing |
 | `0606_construct_string_from_binary_tree` | Trees | 0.801x | 1000, 5000 | compiler | equivalent | tree_clone, string_allocation |
 | `0094_binary_tree_inorder_traversal` | Trees | 0.885x | 5000 | compiler | equivalent | tree_clone, optional_clone |
 | `0104_maximum_depth_of_binary_tree` | Trees | 0.902x | 5000 | compiler | equivalent | tree_clone, optional_clone |
@@ -915,8 +917,7 @@ Fix-phase Claude review rounds:
 | `0147_insertion_sort_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `0148_sort_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `0203_remove_linked_list_elements` | failed_build | type error: [main] use of moved value: 'result' |
-| `0206_reverse_linked_list` | failed_build | type error: [main] use of moved value: 'result' |
-| `0212_word_search_ii` | failed_correctness | wrong result: ["ab", "bc", "cd", "de", "ef", "fg", "gh", "hi", "ij", "jk", "kl", "lm", "mn", "no", "op", "pq", "qr", "rs", "st", "tu", "uv", "vw", "wx", "xy", "yz", "za", "ab", "bc", "cd", "de"] |
+| `0206_reverse_linked_list` | failed_build | no complete Python/Sifr result pair was recorded |
 | `0226_invert_binary_tree` | failed_build | build error: cargo build failed: |
 | `0230_kth_smallest_element_in_a_bst` | failed_build | type error: [main] argument 1 ('root') of function 'kthSmallest': expected 'TreeNode', got 'None \| TreeNode' |
 | `0263_ugly_number` | failed_build | type error: [main] cannot compare 'Result[int, DivisionError]' and 'int' with == |
@@ -931,7 +932,6 @@ Fix-phase Claude review rounds:
 | `0669_trim_a_binary_search_tree` | failed_build | type error: [main] use of moved value: 'root' |
 | `0698_partition_to_k_equal_sum_subsets` | failed_build | type error: [main] cannot compare 'Result[int, DivisionError]' and 'int' with != |
 | `0701_insert_into_a_binary_search_tree` | failed_build | type error: [main] use of moved value: 'root' |
-| `0707_design_linked_list` | failed_timeout | built 0707_design_linked_list in 0.54s: /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/benchmarks/generated/bin/sifr_output/target/release/sifr_output |
 | `0739_daily_temperatures` | failed_build | type error: [main] cannot index type 'Any \| None' with 'int' |
 | `0743_network_delay_time` | failed_build | type error: [main] use of moved value: 'w1' |
 | `0846_hand_of_straights` | failed_build | type error: [main] cannot compare 'Result[int, DivisionError]' and 'int' with != |
