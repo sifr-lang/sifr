@@ -1,18 +1,20 @@
-# Ad Hoc Phase: LeetCode Benchmark Slowness Root Cause Analysis
+# Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: implemented and Claude-reviewed on 2026-05-30
-Context: corrective benchmark-analysis phase for `audits/leetcode` after the first broad Python-vs-Sifr benchmark report exposed several Sifr-slower cases.
+Status: planned and Claude-reviewed as implementation-ready on 2026-05-30
+Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
 
-Explain every benchmarked case where Sifr is slower than Python, separate compiler/runtime work from LeetCode Sifr implementation work, and prevent the benchmark report from driving misleading conclusions.
+Fix the actual root causes behind the LeetCode benchmark slowness, not just classify them. This phase turns the prior diagnostic inventory into an implementation plan that restores apples-to-apples benchmark parity, removes generated-code performance pathologies, and prevents the report from presenting known-divergent implementations as language-performance evidence.
 
-This phase is deliberately diagnostic. It does not assume that "native should always be faster." The benchmark only becomes a language-performance signal when:
+The benchmark only becomes a language-performance signal when:
 
 - the Python and Sifr problem implementations use equivalent algorithms and data structures,
 - generated Rust preserves the intended complexity instead of inserting hidden full-container copies,
 - benchmark harness overhead is symmetric enough to not dominate the result,
 - failed correctness cases are not treated as performance data.
+
+This phase is successful only when the known root-cause families below have either been fixed or explicitly reclassified with fresh emitted-code evidence and benchmark results.
 
 ## Source Inputs
 
@@ -45,7 +47,16 @@ This phase uses the 75 measured-slower problem definition for the slowness table
 
 ## Executive Summary
 
-There are two distinct classes of slowness.
+There are two distinct classes of slowness, and they must be fixed in this order:
+
+1. **Restore benchmark parity first.**
+   If the Python and Sifr solutions use different algorithms or data structures, port the Sifr LeetCode solution to the Python algorithm before treating the result as a compiler-performance problem.
+
+2. **Fix compiler/runtime lowering where parity already exists.**
+   Equivalent Sifr solutions should not emit repeated string scans, full container clones, cloned optional trees/lists, or row-copying matrix updates in hot loops.
+
+3. **Re-run and reclassify after each fix.**
+   A problem only leaves this phase when correctness passes, runtime and memory are refreshed from raw benchmark output, and the registry metadata is updated from the analyzer.
 
 ### Fix in the Sifr compiler/runtime
 
@@ -85,6 +96,127 @@ Primary LeetCode-code causes:
 
 4. **Sifr workaround code is more defensive than the Python source.**
    Many Sifr solutions include `None` guards, wrapper helpers, copied rows, or fallback default values because current language/library support makes direct Python-style code hard. Some of that is necessary today, but it means the benchmark is not comparing equivalent code.
+
+## Implementation Decisions
+
+These decisions are locked for this phase so implementation work can proceed without re-litigating benchmark semantics.
+
+### D1: Apples-To-Apples Means Same Algorithm And Comparable Data Structure
+
+For benchmark purposes, "same problem" is not enough. A Sifr solution is equivalent only when it uses the same algorithmic complexity class and a comparable data structure to the Python implementation selected by the runner.
+
+Implications:
+
+- `heapq` Python solutions must be matched with a Sifr heap/priority-queue implementation, not repeated scans or sorted-vector insertion.
+- Python deque/monotonic-queue solutions must be matched with a Sifr deque/monotonic-queue implementation, not window rescans.
+- Python trie-node solutions must be matched by equivalent Sifr trie-node algorithms for the audited problems, even if a shared Sifr helper also exists.
+- Stateful design problems must compare against the final Python class definition that the runner imports, not an earlier alternate class in the file.
+
+### D2: Fix LeetCode Sifr Code Before Compiler Attribution For Known-Divergent Rows
+
+Rows marked `leetcode_sifr_code` or known-divergent `mixed` are not compiler regressions yet. Their first implementation ticket is a Sifr-code parity repair. Only after the Sifr code uses the equivalent algorithm should remaining slowness be attributed to compiler/runtime lowering.
+
+Primary parity repairs:
+
+- Heap/priority queue: `1985`, `0973`, `0703`, `1046`, `1834`, `0295`, `1631`, `0778`.
+- Trie/correctness: `0208`, `0211`, `0212`.
+- Direct algorithm divergence: `0015`, `0239`, `0496`, `2306`.
+- Stateful parity review before compiler-only work: `0146`, `0355`, `0380`, `1396`, `1472`.
+
+### D3: Add Reusable Audit Helpers Only When They Preserve Parity
+
+Reusable helpers are allowed, but they must not change the benchmarked algorithm.
+
+Decisions:
+
+- Use the existing `lib/sifr/heapq.sifr` API for heap parity unless a specific problem proves a missing operation:
+  - `heapify(heap)`,
+  - `heappush(heap, item)`,
+  - `heappop(heap) -> T | None`,
+  - `heappushpop(heap, item) -> T | None`,
+  - `heapreplace(heap, item) -> T | None`,
+  - `nsmallest(n, items)`,
+  - `nlargest(n, items)`.
+- Use the existing `sifr.collections.deque` API for monotonic queue parity:
+  - `append`,
+  - `appendleft`,
+  - `pop`,
+  - `popleft`,
+  - `len`,
+  - `clear`.
+- Do not use the current shared `helpers.trie.Trie` as the parity implementation for `0208`, `0211`, or `0212` unless the Python benchmark side is changed to the same representation. The default fix is direct Sifr ports that mirror the Python trie algorithms.
+- Helper APIs must have focused fixture tests before broad benchmark use, because a helper bug can contaminate many problem results.
+
+Trie port structure decision:
+
+- `0208`, `0211`, and `0212` should each carry the trie structure needed by the Python source in the Sifr problem file or a problem-local helper under `audits/leetcode/benchmarks/cases/<category>` only if multiple fixtures need it.
+- Do not introduce a new shared benchmark trie helper during M1. Shared trie optimization belongs to M2 after parity is restored.
+- If a shared helper is later used, both Python and Sifr benchmark sides must intentionally use comparable helper semantics.
+
+### D4: Compiler Fixes Must Preserve Safety Semantics
+
+Compiler/runtime work must remove accidental work without weakening Sifr's safety guarantees.
+
+Decisions:
+
+- String indexing fixes use cached `Vec<char>` or equivalent code-point storage for immutable/index-heavy strings. They must not silently switch Python/Sifr character indexing to byte indexing.
+- Repeated `len(s)` in a loop is cached only when the string is loop-invariant.
+- Container membership, length, and index reads lower through borrowed access whenever the source expression is a read, not a move.
+- Mutable list/matrix cell updates lower as place mutations instead of clone-modify-reassign when the ownership model proves the container is uniquely mutable.
+- Optional tree/list traversal uses borrowed child accessors where possible; cloning boxed nodes/subtrees in traversal is a bug unless ownership requires it.
+- No fix may introduce user-triggerable panics or data-dependent unwraps in generated runtime code.
+
+### D5: Every Fix Needs A Generated-Code Regression Test
+
+Benchmark speedups are necessary but not sufficient. Each compiler/root-cause fix needs a generated-code regression that checks the emitted Rust shape.
+
+Test location and runner:
+
+- Compiler emitted-code assertions live in `crates/sifr_codegen/src/lib_codegen_tests/`, following the existing `generate_rust_from_source` / `generate_rust_with_metadata` pattern.
+- Add focused tests near the affected lowering module, or create a dedicated `leetcode_performance_codegen_tests.rs` module if the fixture spans multiple lowering surfaces.
+- Run the focused test with `cargo test -p sifr_codegen -- <test_name>`.
+- Closure for compiler fixes also runs `scripts/run_all_tests.sh --profile quick`.
+- LeetCode parity fixes use benchmark fixtures plus existing stdlib fixtures where relevant:
+  - `crates/sifr/tests/e2e/pass/cpython_heapq*.sifr` for heap behavior,
+  - `crates/sifr/tests/e2e/pass/*deque*.sifr` for deque behavior,
+  - the affected `audits/leetcode` problem fixtures for benchmark parity.
+
+Required negative assertions:
+
+- String hot-loop fixtures should not contain repeated `chars().nth(...)` or loop-invariant `chars().count()`.
+- Field reads such as `self.map.len()` and `self.map.contains_key(...)` should not emit `self.map.clone()`.
+- Trie/table reads should not clone full `_children`, `_terminal`, maps, or rows for lookup-only paths.
+- Tree/list traversal fixtures should not emit subtree/node clones in simple traversal paths.
+- Matrix cell update fixtures should not clone a whole row for each cell mutation.
+
+Representative emitted-code contracts:
+
+| Track | Before | After |
+| --- | --- | --- |
+| C1 string indexing | `s.chars().nth(i as usize)` inside the loop | one loop-scope cached character storage such as `let __s_chars: Vec<char> = s.chars().collect();` followed by indexed reads from `__s_chars` |
+| C1 string length | `s.chars().count()` repeated in loop conditions | one loop-invariant cached length derived from the same cached character storage |
+| C2 field reads | `(self.map.clone()).contains_key(...)` / `(self.map.clone()).len()` | `self.map.contains_key(...)` / `self.map.len()` borrowed reads |
+| C2 container index reads | `self.rows.clone()[i as usize].clone()` for lookup-only paths | borrowed row/item access where the result is not moved |
+| C3 optional tree/list traversal | `root.as_deref().cloned()` in traversal/comparison paths | borrowed `root.as_deref()` access with cloning only at ownership boundaries |
+| C4 matrix mutation | clone row, mutate clone, assign whole row back per cell | direct mutable place update such as `grid[r as usize][c as usize] = value` when the matrix is uniquely mutable |
+
+### D6: Benchmark Reclassification Is Data-Driven
+
+Manual intuition does not close a fix.
+
+Decisions:
+
+- Re-run the affected subset after each fix, then the full category if the subset passes.
+- Run the analyzer after every benchmark run and update metadata from the analyzer output.
+- A runtime fix with a Peak RSS regression greater than 10% at the same fixture size remains open with a memory-specific tag unless the PR documents why the memory tradeoff is intentional and bounded.
+- A fixed failed problem that becomes benchmarkable may enter the slower inventory and must be handled by this phase.
+
+Benchmark commands:
+
+- Subset: `python3 benchmarks/bench.py run --runs 2 --warmup 1 --memory-runs 1 <problem_id> ...`
+- Report: `python3 benchmarks/bench.py report-html`
+- Analyzer: `python3 benchmarks/analyze_slowness.py --check-metadata`
+- Full closure benchmark uses the same command shape without explicit problem ids.
 
 ## Classification Rule
 
@@ -375,9 +507,7 @@ Current issue:
 
 Required direction:
 
-- Decide whether benchmark parity means:
-  - port the Python trie node algorithms directly to Sifr, or
-  - port the Sifr shared helper algorithm to Python and benchmark that too.
+- Port the Python trie node algorithms directly to Sifr for `0208`, `0211`, and `0212` unless the benchmark intentionally changes both languages to the same shared-helper representation.
 - Fix `0212` uniqueness semantics.
 - After parity is restored, address compiler clone-elision in `helpers.trie`.
 
@@ -396,6 +526,7 @@ Required direction:
   - `same_algorithm: true`
   - `known_divergence: heap_missing`, `trie_helper`, `stateful_helper`, etc.
 - Report UI should distinguish "Sifr slower on equivalent implementation" from "Sifr slower on known-divergent implementation."
+- Code parity changes must land before compiler attribution changes for the same problem unless emitted Rust already proves a compiler-only issue.
 
 ## Benchmark/Report Contract Updates
 
@@ -416,7 +547,7 @@ python3 benchmarks/bench.py report-html
 python3 benchmarks/analyze_slowness.py --output issues/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md
 ```
 
-The second command does not exist yet. It is an implementation prerequisite, not a current capability. M0 below must add it before this phase is used to drive implementation tickets.
+The analyzer was added by the predecessor reporting phase and is now the authoritative way to refresh this phase's generated snapshot. If analyzer output and hand-written phase text disagree, treat the analyzer output as the benchmark-data source and update the hand-written implementation plan accordingly.
 
 Concrete metadata path:
 
@@ -457,7 +588,7 @@ Reclassification thresholds:
 - `python.mean / sifr.mean < 0.8`: still materially slower; keep the current owner or reclassify based on the new emitted code and parity review.
 - Any correctness/build failure after a fix overrides runtime data and sets `benchmark_status` to the corresponding failed state.
 
-Memory must be rechecked with the same status discipline. A runtime win with a large Peak RSS regression is not considered fully fixed; it remains a benchmark concern with a memory-specific tag.
+Memory must be rechecked with the same status discipline. A runtime win with a Peak RSS regression greater than 10% at the same fixture size is not considered fully fixed unless the PR explicitly documents an intentional and bounded memory tradeoff; otherwise it remains a benchmark concern with a memory-specific tag.
 
 ## Failed-To-Benchmarkable Conversion
 
@@ -532,77 +663,96 @@ These problems are not part of the 75 measured-slower table unless they have at 
 
 ## Milestones
 
-Dependency order: **M0 -> M1 -> M2/M3 -> M4**. M2 and M3 can proceed in parallel after M1, but M4 depends on seeded metadata from M0/M1.
+Dependency order: **M0 -> M1 -> M2/M3 -> M4 -> M5**. M2 and M3 can proceed in parallel only for disjoint problem families. Any problem marked `known_divergent` must go through M1 before compiler performance work is credited as a fix.
 
-### M0: Reproducible Analyzer And Metadata Bootstrap
+Track ownership matrix:
 
-- Add `audits/leetcode/benchmarks/analyze_slowness.py`.
-- Read raw hyperfine and memory output from `audits/leetcode/benchmarks/results/.raw`.
-- Emit:
-  - complete problem count,
-  - measured-slower problem inventory,
-  - partial benchmark inventory,
-  - no-pair/failed inventory,
-  - worst Python/Sifr ratio per problem,
-  - slower fixture sizes,
-  - failure excerpts.
-- Seed registry metadata for all 75 measured-slower problems and all 53 incomplete/failed problems:
-  - `benchmark_status`,
-  - `parity_status`,
-  - `primary_slowness_owner`,
-  - `slowness_tags`.
-- Make analyzer output deterministic so future benchmark runs can diff slowness classification changes.
+| Track | Primary scope | Must wait for |
+| --- | --- | --- |
+| M1 heap/deque/trie/direct parity | `1985`, `0973`, `0703`, `1046`, `1834`, `0295`, `1631`, `0778`, `0208`, `0211`, `0212`, `0015`, `0239`, `0496`, `2306`, `0146`, `0355`, `0380`, `1396`, `1472` | baseline metadata only |
+| M2 string/container/stateful codegen | C1/C2 families after any known-divergent row is ported | M1 for overlapping known-divergent or mixed rows |
+| M3 recursive/matrix codegen | C3/C4 tree/list/grid families | M1 only for overlapping mixed rows |
+| M4 report/analyzer gates | all benchmark metadata and report summaries | M1/M2/M3 metadata updates |
+| M5 closure | full suite and residual tickets | M1-M4 |
 
-### M1: Slowness Taxonomy Lock
+### M0: Baseline Lock And Ticket Slicing
 
-- Review analyzer output against this phase and lock the initial metadata.
-- Split classifications into compiler/runtime, LeetCode Sifr code, mixed, and low-priority/noise.
-- Record failed-but-relevant cases such as `0212_word_search_ii`.
-- Gate report language so it cannot imply apples-to-apples parity for known-divergent solutions.
+- Confirm the generated analyzer snapshot still matches the raw benchmark results before implementation starts.
+- Cut implementation tickets from the decisions in this phase:
+  - LeetCode Sifr parity repairs,
+  - compiler string lowering,
+  - compiler container/field clone elision,
+  - tree/list optional traversal borrowing,
+  - matrix/list cell mutation lowering,
+  - report/analyzer reclassification gates.
+- Each ticket must name the affected problem set, expected emitted-code change, benchmark subset, and acceptance gate.
+- Do not start broad compiler work from a known-divergent benchmark row until the parity ticket for that row is complete.
 
-### M2: LeetCode Sifr Parity Repairs
+### M1: LeetCode Sifr Parity Repairs
 
-- Fix heap/priority-queue problem ports or add a reusable heap helper.
-- Fix trie parity and `0212` duplicate output semantics.
-- Fix known hand-port divergences: `2306`, `1472`, `0239`, and stateful data structures.
-- Re-run benchmark subset after each parity repair.
+- Add Sifr heap/priority-queue support or use an existing equivalent helper.
+- Port heap/priority-queue problems to match Python algorithms: `1985`, `0973`, `0703`, `1046`, `1834`, `0295`, `1631`, `0778`.
+- Port trie problems to parity with Python problem-local trie algorithms: `0208`, `0211`, `0212`.
+- Fix `0212_word_search_ii` duplicate-result semantics.
+- Fix direct hand-port divergences: `0015`, `0239`, `0496`, `2306`.
+- Review and repair stateful problem parity before compiler attribution: `0146`, `0355`, `0380`, `1396`, `1472`.
+- Re-run each repaired subset and update registry metadata from the analyzer.
 
-### M3: Compiler Codegen Performance Repairs
+### M2: High-Impact Compiler Codegen Repairs
 
-- String index/iteration lowering.
-- Collection and class-field clone elision.
-- Tree/list optional traversal borrow preservation.
-- Matrix/list cell mutation lowering.
-- Dict/set borrowed access and update lowering.
-- Generated-code regression tests for each repaired class.
+- Fix string index/iteration lowering for equivalent string-heavy problems.
+- Fix collection and class-field clone elision for dictionary, set, list, trie, and object-state reads.
+- Add generated-code regression tests for every fixed lowering pattern.
+- Re-run affected string/container/stateful benchmark subsets and update metadata.
 
-### M4: Benchmark Report Semantics
+### M3: Recursive And Matrix Compiler Repairs
 
-- Depends on M0/M1 metadata being present in the problem registry.
-- Add UI badges or filters for:
+- Fix tree/list optional traversal borrow preservation.
+- Fix moved-value and optional-node failure classes that currently block linked-list/tree benchmarks where feasible in this phase.
+- Fix matrix/list cell mutation lowering.
+- Add generated-code regression tests for traversal and matrix mutation.
+- Re-run affected tree/list/graph/DP benchmark subsets and update metadata.
+
+### M4: Benchmark Report And Analyzer Enforcement
+
+- Ensure report summaries include only `complete` + `equivalent` comparisons by default.
+- Ensure known-divergent, unknown, partial, and failed cases remain visible as coverage/work items.
+- Add or maintain UI badges and filters for:
   - equivalent implementation,
   - known divergent Sifr code,
   - suspected compiler/codegen bottleneck,
-  - failed correctness/build.
-- Keep runtime and memory graphs, but let engineers filter to apples-to-apples results only.
+  - failed correctness/build,
+  - partial benchmark.
+- Make analyzer checks fail when a problem is missing required metadata after it becomes benchmarkable.
 - Add category summaries that ignore known-divergent solutions unless explicitly requested.
+
+### M5: Full Re-Benchmark And Closure
+
+- Run the full LeetCode benchmark suite with the production benchmark command.
+- Regenerate the HTML report and analyzer snapshot.
+- Confirm every formerly known-divergent row is either:
+  - fixed and reclassified,
+  - still divergent with a follow-up ticket,
+  - or moved to failed/partial with a concrete blocker.
+- Confirm compiler-fixed families no longer emit the targeted pathological Rust in regression fixtures.
+- Confirm runtime and memory outcomes are both acceptable; runtime fixes with material Peak RSS regressions stay open.
+- Record final PR links, validation commands, and residual follow-up tickets in this document.
 
 ## Acceptance Criteria
 
-- Every current Sifr-slower complete benchmark is listed in this phase.
-- Partial measured benchmarks, currently `0234_palindrome_linked_list`, are explicitly marked and excluded from apples-to-apples summaries until complete.
-- Every listed problem has a primary owner and root-cause rationale.
-- `0212_word_search_ii` is tracked as a failed Tries case, not a slower benchmark.
-- `benchmarks/analyze_slowness.py` or an equivalent reproducible analyzer exists before implementation work depends on this inventory.
-- Registry metadata is seeded and validated for the 75 measured-slower problems and the 53 incomplete/failed problems.
-- Fixed problems follow the post-fix re-benchmark protocol before being reclassified.
-- Claude review has approved the taxonomy after at least two rounds.
-- The benchmark report no longer encourages treating known-divergent implementations as direct language-performance evidence.
-- Follow-up implementation tickets can be cut directly from the compiler and LeetCode-code tracks.
+- Known-divergent LeetCode Sifr implementations named in M1 are either ported to equivalent algorithms/data structures or explicitly deferred with linked follow-up tickets and report metadata that keeps them out of apples-to-apples summaries.
+- Compiler fixes in M2/M3 include generated-code regression tests that prove the targeted pathological lowering is gone.
+- Each fixed problem follows the post-fix re-benchmark protocol before metadata is reclassified.
+- Runtime and Peak RSS both remain visible in the report; a runtime improvement with a Peak RSS regression greater than 10% at the same fixture size does not close the ticket unless the PR documents an intentional bounded tradeoff.
+- `0212_word_search_ii` passes correctness before any Tries runtime comparison is treated as benchmark evidence.
+- Partial measured benchmarks, currently `0234_palindrome_linked_list`, are excluded from apples-to-apples summaries until every fixture builds, passes correctness, and produces runtime plus memory rows.
+- The analyzer snapshot and report agree on complete, partial, failed, known-divergent, unknown, and equivalent counts.
+- The final phase closure records implementation PRs, validation commands, benchmark command, refreshed analyzer counts, and any residual follow-up tickets.
+- Claude review has approved this fix-oriented phase as implementation-ready after iterative review.
 
-## Phase Closure
+## Predecessor Baseline Work
 
-Implemented on 2026-05-30:
+Completed on 2026-05-30 by the prior benchmark-analysis/report phase:
 
 - Added `audits/leetcode/benchmarks/analyze_slowness.py` for deterministic `.raw` result analysis.
 - Added `audits/leetcode/benchmarks/slowness_seed.py` and seeded registry metadata for the 75 measured-slower problems plus the 53 incomplete/failed entries.
@@ -627,10 +777,15 @@ Validation run:
 - `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/skew advisories only)
 - touched source files checked under the 900-line guardrail
 
-Claude review rounds:
+Prior Claude review rounds for the predecessor analysis/report phase:
 
 - `reviews/leetcode-slowness-phase-review-pass-1.md`: satisfied, no blocking issues.
 - `reviews/leetcode-slowness-phase-review-pass-2.md`: satisfied, no blocking or important issues remain.
+
+Fix-phase Claude review rounds:
+
+- `reviews/leetcode-slowness-fix-phase-review-pass-1.md`: confirmed the phase was fix-oriented; requested concrete helper APIs, trie structure, emitted-code contracts, regression-test location, parallelism grounding, and memory threshold.
+- `reviews/leetcode-slowness-fix-phase-review-pass-2.md`: confirmed those gaps were resolved and no blocking issues remain.
 
 <!-- analyze_slowness:start -->
 ## Generated Analyzer Snapshot
