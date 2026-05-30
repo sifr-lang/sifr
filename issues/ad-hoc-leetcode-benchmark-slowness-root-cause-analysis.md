@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; M4 reintegration merged through `sifr-lang/leetcode#26`
+Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; M4 reintegration merged through `sifr-lang/sifr#2215` and `sifr-lang/leetcode#27`
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
@@ -746,6 +746,7 @@ Completed M4 waves:
 
 - `sifr-lang/leetcode#25`: reintegrated the safe-math formerly-failed benchmark family by rerunning 16 rows through correctness, runtime, and memory measurement. Fifteen rows now benchmark as complete/equivalent and faster than Python, so they were removed from the failed inventory: `0853`, `0441`, `0875`, `0622`, `1383`, `0502`, `0698`, `0909`, `0743`, `0062`, `1220`, `0846`, `0263`, `1260`, and `0007`. `1209_remove_all_adjacent_duplicates_in_string_ii` was rewritten to stack-parity Sifr and moved from failed-build metadata into the complete/equivalent measured-slower table with residual `compiler` tags `string_allocation` and `stack_clone`; it is faster at `1k`/`10k` but remains slower at `100k`. The refreshed analyzer state is 290 fully complete problems, 868 complete fixture pairs, 63 measured-slower problems, and 34 no-pair failures. Local gates: targeted safe-math batch benchmark with `SIFR_BIN=target/debug/sifr`, focused `1209` direct run, generated-code emit check, focused `1209` benchmark rerun, analyzer metadata check, metadata Python compile, full registry JSON parse, `git diff --check`, HIR guardrail, file-size guardrail, and Claude Opus review `reviews/leetcode-safe-math-reintegration-m4-review-pass-1.md`.
 - `sifr-lang/leetcode#26`: reintegrated the typed-stack/string-move rows `0739_daily_temperatures`, `0084_largest_rectangle_in_histogram`, and `0006_zigzag_conversion`. Existing Sifr source fixes already produced complete/equivalent benchmarks, and targeted runs show Sifr faster than Python at all configured sizes, so the rows were removed from failed inventory without adding slowness metadata. The refreshed analyzer state is 293 fully complete problems, 877 complete fixture pairs, 63 measured-slower problems, and 31 no-pair failures. Local gates: targeted benchmark for all three rows with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, registry JSON validation, `git diff --check`, and Claude Opus review `reviews/leetcode-typed-stack-string-reintegration-m4-review-pass-1.md`.
+- `sifr-lang/sifr#2215` and `sifr-lang/leetcode#27`: fixed owned recursive optional field lowering so linked-list child reads move boxed children instead of cloning tails, while borrowed helper reads still clone. `0206_reverse_linked_list` now emits `cur.next.map(|...| *...)` and `Some(cur)`, and `nodeNext` still emits `as_deref().cloned()`. The refreshed `0206` benchmark is complete/equivalent and faster than Python at every configured size (`~5.19x`, `~3.68x`, and `~3.95x`), reducing no-pair failures from 31 to 30 and raising fully complete problems from 293 to 294. Local gates: focused codegen tests, direct Sifr run, targeted `0206` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, `cargo fmt --check`, `git diff --check`, HIR and file-size guardrails, Claude Opus review `reviews/leetcode-recursive-option-move-m4-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
 
 ### M5: Full Re-Benchmark And Closure
 
@@ -818,11 +819,11 @@ Fix-phase Claude review rounds:
 | Metric | Count |
 | --- | --- |
 | Registry problems | 325 |
-| Fully complete problems | 293 |
-| Complete fixture pairs | 877 |
+| Fully complete problems | 294 |
+| Complete fixture pairs | 880 |
 | Measured-slower problems | 63 |
 | Partial benchmark problems | 1 |
-| No-pair failed problems | 31 |
+| No-pair failed problems | 30 |
 
 ### Measured-Slower Problems
 
@@ -920,7 +921,6 @@ Fix-phase Claude review rounds:
 | `0147_insertion_sort_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `0148_sort_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `0203_remove_linked_list_elements` | failed_build | type error: [main] use of moved value: 'result' |
-| `0206_reverse_linked_list` | failed_build | no complete Python/Sifr result pair was recorded |
 | `0226_invert_binary_tree` | failed_build | build error: cargo build failed: |
 | `0230_kth_smallest_element_in_a_bst` | failed_build | type error: [main] argument 1 ('root') of function 'kthSmallest': expected 'TreeNode', got 'None \| TreeNode' |
 | `0269_alien_dictionary` | failed_correctness | wrong result: abc |
