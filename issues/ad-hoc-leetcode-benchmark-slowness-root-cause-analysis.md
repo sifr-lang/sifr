@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; M4 reintegration merged through `sifr-lang/sifr#2215` and `sifr-lang/leetcode#28`
+Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; M4 reintegration merged through `sifr-lang/sifr#2218` and `sifr-lang/leetcode#29`
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
@@ -748,6 +748,7 @@ Completed M4 waves:
 - `sifr-lang/leetcode#26`: reintegrated the typed-stack/string-move rows `0739_daily_temperatures`, `0084_largest_rectangle_in_histogram`, and `0006_zigzag_conversion`. Existing Sifr source fixes already produced complete/equivalent benchmarks, and targeted runs show Sifr faster than Python at all configured sizes, so the rows were removed from failed inventory without adding slowness metadata. The refreshed analyzer state is 293 fully complete problems, 877 complete fixture pairs, 63 measured-slower problems, and 31 no-pair failures. Local gates: targeted benchmark for all three rows with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, registry JSON validation, `git diff --check`, and Claude Opus review `reviews/leetcode-typed-stack-string-reintegration-m4-review-pass-1.md`.
 - `sifr-lang/sifr#2215` and `sifr-lang/leetcode#27`: fixed owned recursive optional field lowering so linked-list child reads move boxed children instead of cloning tails, while borrowed helper reads still clone. `0206_reverse_linked_list` now emits `cur.next.map(|...| *...)` and `Some(cur)`, and `nodeNext` still emits `as_deref().cloned()`. The refreshed `0206` benchmark is complete/equivalent and faster than Python at every configured size (`~5.19x`, `~3.68x`, and `~3.95x`), reducing no-pair failures from 31 to 30 and raising fully complete problems from 293 to 294. Local gates: focused codegen tests, direct Sifr run, targeted `0206` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, `cargo fmt --check`, `git diff --check`, HIR and file-size guardrails, Claude Opus review `reviews/leetcode-recursive-option-move-m4-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
 - `sifr-lang/leetcode#28`: reran `0002_add_two_numbers` and `0019_remove_nth_node_from_end_of_list` after the recursive-option lowering fix made their runners benchmarkable. Both rows moved from failed-build/no-pair metadata to complete/equivalent measured-slower rows with residual `compiler` tags `list_node_clone` and `optional_clone`. `0002` is faster at size `100` but Python is faster at `1000`/`5000`; `0019` remains Python-faster at all sizes. This reduces no-pair failures from 30 to 28, raises fully complete problems from 294 to 296, and raises complete fixture pairs from 880 to 886. Local gates: targeted two-problem benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, full registry JSON parse, `git diff --check`, and Claude Opus review `reviews/leetcode-linked-list-measured-slower-m5-review-pass-1.md`.
+- `sifr-lang/sifr#2218` and `sifr-lang/leetcode#29`: fixed the partial-move follow-up for owned recursive optional field reads by lowering moved child reads through `.take().map(...)`, then reran the remaining 11 linked-list moved-result rows. `0024_swap_nodes_in_pairs` and `0147_insertion_sort_list` are now complete/equivalent and faster than Python at every configured size. The other nine rows are complete/equivalent measured-slower rows with residual `compiler` tags `list_node_clone` and `optional_clone`: `0021`, `0025`, `0061`, `0083`, `0086`, `0148`, `0203`, `0876`, and `1721`. This reduces no-pair failures from 28 to 17, raises fully complete problems from 296 to 307, and raises complete fixture pairs from 886 to 919. Local gates: focused recursive-option codegen tests, direct `0024`/`0206` Sifr runs, targeted 11-problem benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, full registry JSON parse, `cargo fmt --check`, `git diff --check`, HIR and file-size guardrails, Claude Opus reviews `reviews/leetcode-recursive-option-take-m6-review-pass-1.md` and `reviews/leetcode-linked-list-moved-result-m6-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
 
 ### M5: Full Re-Benchmark And Closure
 
@@ -820,18 +821,25 @@ Fix-phase Claude review rounds:
 | Metric | Count |
 | --- | --- |
 | Registry problems | 325 |
-| Fully complete problems | 296 |
-| Complete fixture pairs | 886 |
-| Measured-slower problems | 65 |
+| Fully complete problems | 307 |
+| Complete fixture pairs | 919 |
+| Measured-slower problems | 74 |
 | Partial benchmark problems | 1 |
-| No-pair failed problems | 28 |
+| No-pair failed problems | 17 |
 
 ### Measured-Slower Problems
 
 | Problem | Category | Worst Py/Sifr | Slower sizes | Owner | Parity | Tags |
 | --- | --- | --- | --- | --- | --- | --- |
 | `2130_maximum_twin_sum_of_a_linked_list` | Linked List | 0.004x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0876_middle_of_the_linked_list` | Linked List | 0.005x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0083_remove_duplicates_from_sorted_list` | Linked List | 0.005x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `1721_swapping_nodes_in_a_linked_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `0019_remove_nth_node_from_end_of_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0203_remove_linked_list_elements` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0086_partition_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0061_rotate_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0025_reverse_nodes_in_k_group` | Linked List | 0.007x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `0002_add_two_numbers` | Linked List | 0.014x | 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `1768_merge_strings_alternately` | Two Pointers | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
 | `1888_minimum_number_of_flips_to_make_the_binary_string_alternating` | Sliding Window | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
@@ -847,6 +855,7 @@ Fix-phase Claude review rounds:
 | `0567_permutation_in_string` | Sliding Window | 0.043x | 1000, 10000, 100000 | mixed | unknown | string_indexing, list_clone |
 | `0125_valid_palindrome` | Two Pointers | 0.057x | 10000, 100000 | compiler | equivalent | string_indexing |
 | `0424_longest_repeating_character_replacement` | Sliding Window | 0.058x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
+| `0021_merge_two_sorted_lists` | Linked List | 0.079x | 500, 900 | compiler | equivalent | list_node_clone, optional_clone |
 | `0380_insert_delete_getrandom_o1` | Arrays & Hashing | 0.08x | 10000, 100000 | mixed | equivalent | stateful_object, field_clone, array_map_parity |
 | `0234_palindrome_linked_list` | Linked List | 0.081x | 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `1209_remove_all_adjacent_duplicates_in_string_ii` | Stack | 0.086x | 100000 | compiler | equivalent | string_allocation, stack_clone |
@@ -857,6 +866,7 @@ Fix-phase Claude review rounds:
 | `0221_maximal_square` | 2-D Dynamic Programming | 0.176x | 50, 150, 300 | compiler | equivalent | matrix_clone |
 | `0355_design_twitter` | Heap / Priority Queue | 0.177x | 1000, 5000, 10000 | mixed | equivalent | stateful_object, field_clone, heap_parity |
 | `0179_largest_number` | Arrays & Hashing | 0.182x | 500, 1000 | mixed | unknown | string_allocation, algorithm_parity_unknown |
+| `0148_sort_list` | Linked List | 0.193x | 300, 700 | compiler | equivalent | list_node_clone, optional_clone |
 | `0014_longest_common_prefix` | Arrays & Hashing | 0.199x | 1000, 10000, 100000 | compiler | equivalent | string_indexing |
 | `0895_maximum_frequency_stack` | Stack | 0.202x | 5000, 10000 | mixed | unknown | stateful_object, field_clone |
 | `0212_word_search_ii` | Tries | 0.208x | 100, 400, 900 | mixed | equivalent | trie_parity, field_clone, dict_clone, recursive_search |
@@ -906,12 +916,6 @@ Fix-phase Claude review rounds:
 
 | Problem | Status | Failure excerpt |
 | --- | --- | --- |
-| `0021_merge_two_sorted_lists` | failed_build | type error: [main] use of moved value: 'result' |
-| `0024_swap_nodes_in_pairs` | failed_build | type error: [main] use of moved value: 'result' |
-| `0025_reverse_nodes_in_k_group` | failed_build | type error: [main] use of moved value: 'result' |
-| `0061_rotate_list` | failed_build | type error: [main] use of moved value: 'result' |
-| `0083_remove_duplicates_from_sorted_list` | failed_build | type error: [main] use of moved value: 'result' |
-| `0086_partition_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `0103_binary_tree_zigzag_level_order_traversal` | failed_build | type error: [main] use of moved value: 'root' |
 | `0105_construct_binary_tree_from_preorder_and_inorder_traversal` | failed_build | build error: cargo build failed: |
 | `0106_construct_binary_tree_from_inorder_and_postorder_traversal` | failed_build | build error: cargo build failed: |
@@ -919,9 +923,6 @@ Fix-phase Claude review rounds:
 | `0141_linked_list_cycle` | failed_build | type error: [main] argument 1 ('head') of function 'hasCycle': expected 'ListNode', got 'None \| ListNode' |
 | `0144_binary_tree_preorder_traversal` | failed_build | type error: [main] use of moved value: 'root' |
 | `0145_binary_tree_postorder_traversal` | failed_build | type error: [main] use of moved value: 'root' |
-| `0147_insertion_sort_list` | failed_build | type error: [main] use of moved value: 'result' |
-| `0148_sort_list` | failed_build | type error: [main] use of moved value: 'result' |
-| `0203_remove_linked_list_elements` | failed_build | type error: [main] use of moved value: 'result' |
 | `0226_invert_binary_tree` | failed_build | build error: cargo build failed: |
 | `0230_kth_smallest_element_in_a_bst` | failed_build | type error: [main] argument 1 ('root') of function 'kthSmallest': expected 'TreeNode', got 'None \| TreeNode' |
 | `0269_alien_dictionary` | failed_correctness | wrong result: abc |
@@ -931,7 +932,5 @@ Fix-phase Claude review rounds:
 | `0662_maximum_width_of_binary_tree` | failed_build | type error: [main] use of moved value: 'root' |
 | `0669_trim_a_binary_search_tree` | failed_build | type error: [main] use of moved value: 'root' |
 | `0701_insert_into_a_binary_search_tree` | failed_build | type error: [main] use of moved value: 'root' |
-| `0876_middle_of_the_linked_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `1448_count_good_nodes_in_binary_tree` | failed_build | type error: [main] argument 1 ('root') of function 'goodNodes': expected 'TreeNode', got 'None \| TreeNode' |
-| `1721_swapping_nodes_in_a_linked_list` | failed_build | type error: [main] use of moved value: 'result' |
 <!-- analyze_slowness:end -->
