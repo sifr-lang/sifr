@@ -156,6 +156,12 @@ impl RustEmitter {
             if needs_shared_borrow || needs_mut_borrow {
                 lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(hir_arg, lowered_arg);
             }
+            if (needs_shared_borrow || needs_mut_borrow)
+                && matches!(hir_arg, HirExpr::FieldAccess { object, .. }
+                    if matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self"))
+            {
+                lowered_arg = Self::strip_redundant_borrowed_self_field_clone(lowered_arg);
+            }
 
             if needs_shared_borrow && !already_borrowed {
                 lowered_arg = crate::RustExpr::Ref {
@@ -172,6 +178,19 @@ impl RustEmitter {
             adapted.push(lowered_arg);
         }
         adapted
+    }
+
+    pub(crate) fn strip_redundant_borrowed_self_field_clone(
+        expr: crate::RustExpr,
+    ) -> crate::RustExpr {
+        match expr {
+            crate::RustExpr::MethodCall {
+                receiver,
+                method,
+                args,
+            } if method == "clone" && args.is_empty() => *receiver,
+            other => other,
+        }
     }
 
     pub(crate) fn lower_recursive_capture_arg_for_ir(

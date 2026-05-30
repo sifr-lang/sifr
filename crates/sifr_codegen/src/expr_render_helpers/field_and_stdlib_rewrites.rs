@@ -30,12 +30,12 @@ impl RustEmitter {
             return true;
         }
 
-        if !crate::helpers::MUTATING_METHODS.contains(&method) {
-            return false;
-        }
-
         if matches!(parent.as_ref(), HirExpr::Name { name, .. } if name == "self") {
             return true;
+        }
+
+        if !crate::helpers::MUTATING_METHODS.contains(&method) {
+            return false;
         }
 
         let parent_class_name = match crate::resolve_alias_type_for_plain_call(parent.ty()) {

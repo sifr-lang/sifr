@@ -681,6 +681,61 @@ fn test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if()
 }
 
 #[test]
+fn test_structured_stmt_path_handles_attribute_list_subscript_assign_inside_if() {
+    let stmt = HirStmt::If {
+        condition: HirExpr::BoolLiteral(true),
+        then_body: vec![HirStmt::AttributeSubscriptAssign {
+            object: "self".to_string(),
+            field: "history".to_string(),
+            index: HirExpr::BinOp {
+                left: Box::new(HirExpr::Name {
+                    name: "i".to_string(),
+                    ty: Type::Int,
+                }),
+                op: "+".to_string(),
+                right: Box::new(HirExpr::IntLiteral(1)),
+                ty: Type::Int,
+            },
+            value: HirExpr::Call {
+                func: "str".to_string(),
+                args: vec![HirExpr::Name {
+                    name: "url".to_string(),
+                    ty: Type::Str,
+                }],
+                ty: Type::Str,
+            },
+            field_ty: Type::List(Box::new(Type::Str)),
+        }],
+        elif_clauses: vec![],
+        else_body: None,
+    };
+
+    let mut emitter = RustEmitter::new();
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    assert!(matches!(captured.first(), Some(RustStmt::If { .. })));
+}
+
+#[test]
+fn test_structured_stmt_path_handles_top_level_attribute_list_subscript_assign() {
+    let stmt = HirStmt::AttributeSubscriptAssign {
+        object: "self".to_string(),
+        field: "history".to_string(),
+        index: HirExpr::Name {
+            name: "i".to_string(),
+            ty: Type::Int,
+        },
+        value: HirExpr::StringLiteral("page".to_string()),
+        field_ty: Type::List(Box::new(Type::Str)),
+    };
+
+    let mut emitter = RustEmitter::new();
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    assert!(matches!(captured.first(), Some(RustStmt::Block(_))));
+}
+
+#[test]
 fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
     let stmt = HirStmt::For {
         target: "ch".to_string(),

@@ -358,25 +358,6 @@ impl RustEmitter {
                 field_ty,
             } = stmt
             {
-                let Type::Dict(key_ty, _) = field_ty else {
-                    return Ok(None);
-                };
-
-                let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_))
-                    && matches!(index, HirExpr::Name { name, .. }
-                            if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()));
-                let key_is_non_copy_name = matches!(index, HirExpr::Name { .. })
-                    && matches!(
-                        crate::resolve_alias_type_for_plain_call(index.ty()),
-                        Type::Str | Type::LiteralStr(_)
-                    );
-
-                let Some(mut index_expr) = self.lower_rendered_expr_for_ir(index)? else {
-                    return Ok(None);
-                };
-                if key_needs_clone || key_is_non_copy_name {
-                    index_expr = crate::RustExpr::Clone(Box::new(index_expr));
-                }
                 let Some(value_expr) = self.lower_rendered_expr_for_ir(value)? else {
                     return Ok(None);
                 };
@@ -385,14 +366,40 @@ impl RustEmitter {
                     expr: Box::new(Self::object_name_expr_for_ir(object)),
                     field: field.clone(),
                 };
-                (
-                    vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                        receiver: Box::new(receiver),
-                        method: "insert".to_string(),
-                        args: vec![index_expr, value_expr],
-                    })],
-                    true,
-                )
+                let lowered_stmt = match field_ty {
+                    Type::List(_) => {
+                        let Some(index_expr) = self.lower_rendered_expr_for_ir(index)? else {
+                            return Ok(None);
+                        };
+                        crate::build_list_subscript_assign_stmt(receiver, index_expr, value_expr)
+                    }
+                    Type::Dict(key_ty, _) => {
+                        let key_needs_clone = matches!(
+                            key_ty.as_ref(),
+                            Type::Str | Type::TypeVar(_)
+                        ) && matches!(index, HirExpr::Name { name, .. }
+                                    if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()));
+                        let key_is_non_copy_name = matches!(index, HirExpr::Name { .. })
+                            && matches!(
+                                crate::resolve_alias_type_for_plain_call(index.ty()),
+                                Type::Str | Type::LiteralStr(_)
+                            );
+
+                        let Some(mut index_expr) = self.lower_rendered_expr_for_ir(index)? else {
+                            return Ok(None);
+                        };
+                        if key_needs_clone || key_is_non_copy_name {
+                            index_expr = crate::RustExpr::Clone(Box::new(index_expr));
+                        }
+                        crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                            receiver: Box::new(receiver),
+                            method: "insert".to_string(),
+                            args: vec![index_expr, value_expr],
+                        })
+                    }
+                    _ => return Ok(None),
+                };
+                (vec![lowered_stmt], true)
             } else if let HirStmt::FieldAssign {
                 object,
                 field,

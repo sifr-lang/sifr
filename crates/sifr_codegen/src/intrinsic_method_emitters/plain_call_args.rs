@@ -188,6 +188,12 @@ impl RustEmitter {
             if requires_shared_borrow || requires_mut_borrow {
                 lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(arg, lowered_arg);
             }
+            if (requires_shared_borrow || requires_mut_borrow)
+                && matches!(arg, HirExpr::FieldAccess { object, .. }
+                    if matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self"))
+            {
+                lowered_arg = Self::strip_redundant_borrowed_self_field_clone(lowered_arg);
+            }
 
             if requires_shared_borrow
                 && !self.arg_is_already_borrowed_for_registry_call(arg, &lowered_arg)
