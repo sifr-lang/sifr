@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`
+Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; M4 safe-math reintegration merged through `sifr-lang/leetcode#25`
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
@@ -742,6 +742,10 @@ Completed M2 waves:
 - Make analyzer checks fail when a problem is missing required metadata after it becomes benchmarkable.
 - Add category summaries that ignore known-divergent solutions unless explicitly requested.
 
+Completed M4 waves:
+
+- `sifr-lang/leetcode#25`: reintegrated the safe-math formerly-failed benchmark family by rerunning 16 rows through correctness, runtime, and memory measurement. Fifteen rows now benchmark as complete/equivalent and faster than Python, so they were removed from the failed inventory: `0853`, `0441`, `0875`, `0622`, `1383`, `0502`, `0698`, `0909`, `0743`, `0062`, `1220`, `0846`, `0263`, `1260`, and `0007`. `1209_remove_all_adjacent_duplicates_in_string_ii` was rewritten to stack-parity Sifr and moved from failed-build metadata into the complete/equivalent measured-slower table with residual `compiler` tags `string_allocation` and `stack_clone`; it is faster at `1k`/`10k` but remains slower at `100k`. The refreshed analyzer state is 290 fully complete problems, 868 complete fixture pairs, 63 measured-slower problems, and 34 no-pair failures. Local gates: targeted safe-math batch benchmark with `SIFR_BIN=target/debug/sifr`, focused `1209` direct run, generated-code emit check, focused `1209` benchmark rerun, analyzer metadata check, metadata Python compile, full registry JSON parse, `git diff --check`, HIR guardrail, file-size guardrail, and Claude Opus review `reviews/leetcode-safe-math-reintegration-m4-review-pass-1.md`.
+
 ### M5: Full Re-Benchmark And Closure
 
 - Run the full LeetCode benchmark suite with the production benchmark command.
@@ -813,11 +817,11 @@ Fix-phase Claude review rounds:
 | Metric | Count |
 | --- | --- |
 | Registry problems | 325 |
-| Fully complete problems | 274 |
-| Complete fixture pairs | 820 |
-| Measured-slower problems | 62 |
+| Fully complete problems | 290 |
+| Complete fixture pairs | 868 |
+| Measured-slower problems | 63 |
 | Partial benchmark problems | 1 |
-| No-pair failed problems | 50 |
+| No-pair failed problems | 34 |
 
 ### Measured-Slower Problems
 
@@ -840,6 +844,7 @@ Fix-phase Claude review rounds:
 | `0424_longest_repeating_character_replacement` | Sliding Window | 0.058x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
 | `0380_insert_delete_getrandom_o1` | Arrays & Hashing | 0.08x | 10000, 100000 | mixed | equivalent | stateful_object, field_clone, array_map_parity |
 | `0234_palindrome_linked_list` | Linked List | 0.081x | 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `1209_remove_all_adjacent_duplicates_in_string_ii` | Stack | 0.086x | 100000 | compiler | equivalent | string_allocation, stack_clone |
 | `0146_lru_cache` | Linked List | 0.091x | 5000, 10000 | mixed | equivalent | stateful_object, field_clone, lru_parity |
 | `0706_design_hashmap` | Arrays & Hashing | 0.109x | 1000, 5000, 10000 | mixed | unknown | stateful_object, field_clone |
 | `0402_remove_k_digits` | Stack | 0.134x | 1000, 10000, 100000 | compiler | unknown | string_indexing, list_clone |
@@ -898,13 +903,11 @@ Fix-phase Claude review rounds:
 | --- | --- | --- |
 | `0002_add_two_numbers` | failed_build | type error: [main] use of moved value: 'result' |
 | `0006_zigzag_conversion` | failed_build | type error: [main] use of moved value: 's' |
-| `0007_reverse_integer` | failed_build | type error: [main] exact integer to float conversion requires handling possible overflow or precision loss |
 | `0019_remove_nth_node_from_end_of_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `0021_merge_two_sorted_lists` | failed_build | type error: [main] use of moved value: 'result' |
 | `0024_swap_nodes_in_pairs` | failed_build | type error: [main] use of moved value: 'result' |
 | `0025_reverse_nodes_in_k_group` | failed_build | type error: [main] use of moved value: 'result' |
 | `0061_rotate_list` | failed_build | type error: [main] use of moved value: 'result' |
-| `0062_unique_paths` | failed_build | type error: [main] type mismatch: cannot assign 'Result[int, DivisionError]' to variable 'result' of type 'int' |
 | `0083_remove_duplicates_from_sorted_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `0084_largest_rectangle_in_histogram` | failed_build | type error: [main] cannot index type 'Any \| None' with 'int' |
 | `0086_partition_list` | failed_build | type error: [main] use of moved value: 'result' |
@@ -921,29 +924,15 @@ Fix-phase Claude review rounds:
 | `0206_reverse_linked_list` | failed_build | no complete Python/Sifr result pair was recorded |
 | `0226_invert_binary_tree` | failed_build | build error: cargo build failed: |
 | `0230_kth_smallest_element_in_a_bst` | failed_build | type error: [main] argument 1 ('root') of function 'kthSmallest': expected 'TreeNode', got 'None \| TreeNode' |
-| `0263_ugly_number` | failed_build | type error: [main] cannot compare 'Result[int, DivisionError]' and 'int' with == |
 | `0269_alien_dictionary` | failed_correctness | wrong result: abc |
-| `0441_arranging_coins` | failed_build | type error: [main] exact integer to float conversion requires handling possible overflow or precision loss |
 | `0450_delete_node_in_a_bst` | failed_build | type error: [main] use of moved value: 'root' |
-| `0502_ipo` | failed_build | type error: [main] '<=' not supported between instances of 'Result[int, DivisionError]' and 'int' |
 | `0513_find_bottom_left_tree_value` | failed_build | type error: [main] use of moved value: 'root' |
 | `0617_merge_two_binary_trees` | failed_build | type error: [main] use of moved value: 'p' |
-| `0622_design_circular_queue` | failed_build | type error: [main] cannot index type 'list[int]' with 'Result[int, DivisionError]' |
 | `0662_maximum_width_of_binary_tree` | failed_build | type error: [main] use of moved value: 'root' |
 | `0669_trim_a_binary_search_tree` | failed_build | type error: [main] use of moved value: 'root' |
-| `0698_partition_to_k_equal_sum_subsets` | failed_build | type error: [main] cannot compare 'Result[int, DivisionError]' and 'int' with != |
 | `0701_insert_into_a_binary_search_tree` | failed_build | type error: [main] use of moved value: 'root' |
 | `0739_daily_temperatures` | failed_build | type error: [main] cannot index type 'Any \| None' with 'int' |
-| `0743_network_delay_time` | failed_build | type error: [main] use of moved value: 'w1' |
-| `0846_hand_of_straights` | failed_build | type error: [main] cannot compare 'Result[int, DivisionError]' and 'int' with != |
-| `0853_car_fleet` | failed_build | type error: [main] exact integer to float conversion requires handling possible overflow or precision loss |
-| `0875_koko_eating_bananas` | failed_build | type error: [main] unsupported operand type(s) for +: 'int' and 'Result[int, DivisionError]' |
 | `0876_middle_of_the_linked_list` | failed_build | type error: [main] use of moved value: 'result' |
-| `0909_snakes_and_ladders` | failed_build | type error: [main] return type mismatch: expected 'list[int]', got 'list[Result[int, DivisionError]]' |
-| `1209_remove_all_adjacent_duplicates_in_string_ii` | failed_build | type error: [main] cannot compare 'Result[int, DivisionError]' and 'int' with != |
-| `1220_count_vowels_permutation` | failed_build | type error: [main] type mismatch: cannot assign 'Result[int, DivisionError]' to variable 'a' of type 'int' |
-| `1260_shift_2d_grid` | failed_build | type error: [main] return type mismatch: expected 'list[int]', got 'list[Result[int, DivisionError]]' |
-| `1383_maximum_performance_of_a_team` | failed_build | type error: [main] return type mismatch: expected 'int', got 'Result[int, DivisionError]' |
 | `1448_count_good_nodes_in_binary_tree` | failed_build | type error: [main] argument 1 ('root') of function 'goodNodes': expected 'TreeNode', got 'None \| TreeNode' |
 | `1721_swapping_nodes_in_a_linked_list` | failed_build | type error: [main] use of moved value: 'result' |
 <!-- analyze_slowness:end -->
