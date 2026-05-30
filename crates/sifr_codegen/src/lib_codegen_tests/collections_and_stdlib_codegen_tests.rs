@@ -1,4 +1,36 @@
 use super::*;
+
+#[test]
+fn method_calls_on_self_collection_fields_do_not_clone_for_read_only_receivers() {
+    let generated = generate_rust_from_source(
+        r#"
+def head(values: list[int]) -> int:
+    value: int | None = values[0]
+    if value is not None:
+        return value
+    return 0
+
+class Store:
+    items: list[int]
+    lookup: dict[int, int]
+
+    def __init__(self):
+        self.items = [1, 2, 3]
+        self.lookup = {1: 10}
+
+    def total(self, key: int) -> int:
+        return len(self.items) + self.lookup.get(key, 0) + head(self.items)
+"#,
+    );
+
+    assert!(generated.contains("self.items.len() as i64"));
+    assert!(generated.contains("self.lookup.get(&key)"));
+    assert!(generated.contains("head(&self.items)"));
+    assert!(!generated.contains("self.items.clone().len()"));
+    assert!(!generated.contains("self.lookup.clone().get"));
+    assert!(!generated.contains("head(&self.items.clone())"));
+}
+
 #[test]
 fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_condition() {
     let tuple_ty = Type::Tuple(vec![Type::Int, Type::Int]);
