@@ -610,6 +610,11 @@ Implemented on 2026-05-30:
 - Updated the HTML report so summary metrics only include `complete` + `equivalent` comparisons, while divergent, unknown, partial, and failed cases remain visible through metadata badges and the coverage inventory.
 - Generated analyzer snapshot below confirms the phase inventory counts.
 
+Merged PRs:
+
+- `sifr-lang/leetcode#7`: benchmark analyzer, metadata seeding, and report filtering.
+- `sifr-lang/sifr#2201`: phase closure docs, review artifacts, validation note, and subrepo pointer update.
+
 Validation run:
 
 - `python3 -m py_compile benchmarks/analyze_slowness.py benchmarks/report_metadata.py benchmarks/report.py benchmarks/specs.py benchmarks/slowness_seed.py`
