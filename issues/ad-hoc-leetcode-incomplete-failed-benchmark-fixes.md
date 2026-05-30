@@ -1,6 +1,6 @@
 # Ad Hoc Phase: LeetCode Incomplete And Failed Benchmark Fixes
 
-Status: implementation complete through M2e plus M4 reintegration follow-ups on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, `sifr-lang/leetcode#26`, `sifr-lang/leetcode#27`, and `sifr-lang/leetcode#28`
+Status: implementation complete through M2e plus M4 reintegration follow-ups on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, `sifr-lang/leetcode#26`, `sifr-lang/leetcode#27`, `sifr-lang/leetcode#28`, and `sifr-lang/leetcode#29`
 Context: follow-up phase for the `Incomplete And Failed Problem Appendix` in `issues/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md`.
 
 ## Purpose
@@ -456,11 +456,12 @@ Completed waves:
 - M4d typed-stack/string-move reintegration: `sifr-lang/leetcode#26` reran `0739_daily_temperatures`, `0084_largest_rectangle_in_histogram`, and `0006_zigzag_conversion`. All three moved from failed-build metadata to complete/equivalent faster-than-Python benchmark rows. This reduced no-pair failures from 34 to 31 and raised fully complete problems from 290 to 293.
 - M4e reverse-linked-list reintegration: `sifr-lang/sifr#2215` fixed owned recursive optional field move lowering and `sifr-lang/leetcode#27` reran `0206_reverse_linked_list`. The row moved from failed-build/no-pair metadata to complete/equivalent faster-than-Python benchmark data at all sizes, reducing no-pair failures from 31 to 30 and raising fully complete problems from 293 to 294.
 - M4f linked-list measured-slower reintegration: `sifr-lang/leetcode#28` reran `0002_add_two_numbers` and `0019_remove_nth_node_from_end_of_list`. Both rows moved from failed-build/no-pair metadata to complete/equivalent benchmark data and were handed to the slowness phase as residual compiler-owned list-node/optional clone cases, reducing no-pair failures from 30 to 28 and raising fully complete problems from 294 to 296.
+- M4g linked-list moved-result reintegration: `sifr-lang/sifr#2218` fixed the recursive optional field partial-move follow-up by lowering moved child reads through `.take().map(...)`, and `sifr-lang/leetcode#29` reran the remaining 11 linked-list moved-result rows. `0024_swap_nodes_in_pairs` and `0147_insertion_sort_list` moved to complete/equivalent faster-than-Python benchmark data. The nine residual slower rows were handed to the slowness phase as compiler-owned list-node/optional clone cases, reducing no-pair failures from 28 to 17 and raising fully complete problems from 296 to 307.
 
 Post-M2e validation:
 
 - The full formerly incomplete subset of 53 problem IDs passed targeted correctness after `sifr-lang/leetcode#14` was merged.
-- After `sifr-lang/leetcode#28`, `python3 benchmarks/analyze_slowness.py --check-metadata` reports 28 no-pair failures, 296 fully complete problems, and 886 complete fixture pairs. The remaining phase closure work is full re-benchmark/report reintegration under M4 for the linked-list/tree residual families.
+- After `sifr-lang/leetcode#29`, `python3 benchmarks/analyze_slowness.py --check-metadata` reports 17 no-pair failures, 307 fully complete problems, and 919 complete fixture pairs. The remaining phase closure work is full re-benchmark/report reintegration under M4 for the tree residual family plus the remaining nullable/signature and correctness outliers.
 
 ### M3: Compiler Ergonomics Follow-Ups
 
