@@ -133,8 +133,8 @@ def reverseInto(own mut cur: ListNode | None, own prev: ListNode | None) -> List
     );
 
     assert!(
-        rust_code.contains("(cur.next).map(|__sifr_boxed_recursive_value|"),
-        "owned recursive field read should move the boxed child instead of cloning it:\n{rust_code}"
+        rust_code.contains("cur.next.take().map(|__sifr_boxed_recursive_value|"),
+        "owned recursive field read should take and move the boxed child instead of cloning it:\n{rust_code}"
     );
     assert!(
         !rust_code.contains("(cur.next).as_deref().cloned()"),
@@ -143,6 +143,44 @@ def reverseInto(own mut cur: ListNode | None, own prev: ListNode | None) -> List
     assert!(
         !rust_code.contains("Some((cur).clone())"),
         "owned optional parameter wrapping should move cur instead of cloning it:\n{rust_code}"
+    );
+}
+
+#[test]
+fn test_owned_recursive_option_field_take_preserves_parent_use() {
+    let rust_code = generate_rust_from_source(
+        r#"class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+def swapPairs(own mut head: ListNode | None) -> ListNode | None:
+    if head is None:
+        return None
+    second: ListNode | None = head.next
+    if second is None:
+        return head
+    rest: ListNode | None = second.next
+    head.next = rest
+    second.next = head
+    return second
+"#,
+    );
+
+    assert!(
+        rust_code.contains("head.next.take().map(|__sifr_boxed_recursive_value|"),
+        "owned recursive field read should leave the parent usable after an empty child:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("return Some(head);"),
+        "regression should keep returning the parent after taking an empty child:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("(head.next).map(|__sifr_boxed_recursive_value|"),
+        "owned recursive field read must not partially move the parent field:\n{rust_code}"
     );
 }
 
