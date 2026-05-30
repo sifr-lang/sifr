@@ -64,7 +64,13 @@ impl RustEmitter {
                 let needs_box_inner =
                     param_ty.rust_type().starts_with("Option<Box<") || is_recursive_ctor_param;
                 if !arg_is_option && !matches!(hir_arg, HirExpr::NoneLiteral) {
-                    let wrapped_inner = Self::clone_non_copy_name_expr_for_ir(hir_arg, lowered_arg);
+                    let param_rust_type = param_ty.rust_type();
+                    let param_is_owned_rust_value = !param_rust_type.starts_with('&');
+                    let wrapped_inner = if param_is_owned_rust_value && !borrowed_name_arg {
+                        lowered_arg
+                    } else {
+                        Self::clone_non_copy_name_expr_for_ir(hir_arg, lowered_arg)
+                    };
                     lowered_arg = if needs_box_inner {
                         Self::ensure_some_box_inner_for_ir(wrapped_inner)
                     } else {

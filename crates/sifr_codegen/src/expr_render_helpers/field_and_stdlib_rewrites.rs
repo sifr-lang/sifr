@@ -178,6 +178,22 @@ impl RustEmitter {
                 return lowered_field;
             }
             if crate::helpers::is_option_type(ty) {
+                if self.recursive_option_field_can_move(object) {
+                    return crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__sifr_boxed_recursive_value".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::Deref(Box::new(
+                                crate::RustExpr::Ident("__sifr_boxed_recursive_value".to_string()),
+                            ))),
+                            is_move: false,
+                        }],
+                    };
+                }
                 return crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
@@ -208,6 +224,15 @@ impl RustEmitter {
         }
 
         lowered_field
+    }
+
+    fn recursive_option_field_can_move(&self, object: &HirExpr) -> bool {
+        let HirExpr::Name { name, .. } = object else {
+            return false;
+        };
+        name != "self"
+            && !self.borrowed_params.contains(name)
+            && !self.mut_borrowed_params.contains(name)
     }
 }
 

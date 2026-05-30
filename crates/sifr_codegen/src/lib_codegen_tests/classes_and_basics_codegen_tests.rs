@@ -113,6 +113,64 @@ fn test_guarded_non_option_compare_does_not_emit_some_wrapping() {
 }
 
 #[test]
+fn test_owned_recursive_option_field_moves_without_tail_clone() {
+    let rust_code = generate_rust_from_source(
+        r#"class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+def reverseInto(own mut cur: ListNode | None, own prev: ListNode | None) -> ListNode | None:
+    if cur is None:
+        return prev
+    next_node: ListNode | None = cur.next
+    cur.next = prev
+    return reverseInto(next_node, cur)
+"#,
+    );
+
+    assert!(
+        rust_code.contains("(cur.next).map(|__sifr_boxed_recursive_value|"),
+        "owned recursive field read should move the boxed child instead of cloning it:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("(cur.next).as_deref().cloned()"),
+        "owned recursive field read should not clone the remaining list tail:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("Some((cur).clone())"),
+        "owned optional parameter wrapping should move cur instead of cloning it:\n{rust_code}"
+    );
+}
+
+#[test]
+fn test_borrowed_recursive_option_field_still_clones() {
+    let rust_code = generate_rust_from_source(
+        r#"class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+"#,
+    );
+
+    assert!(
+        rust_code.contains("(node.next).as_deref().cloned()"),
+        "borrowed recursive field read must keep cloning semantics:\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_empty_print() {
     // print() should emit println!() not println!("{}", "")
     let module = HirModule {

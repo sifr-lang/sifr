@@ -22,6 +22,10 @@ impl RustEmitter {
             let effective_arg_ty = self.effective_registry_expr_ty(arg);
             let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
             let mut lowered_arg = self.try_lower_registry_expr_strict(arg)?;
+            let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty }
+                if self.borrowed_params.contains(name)
+                    || self.mut_borrowed_params.contains(name)
+                    || ty.rust_type().starts_with('&'));
             if let Some(aligned_callable) = self
                 .try_build_registry_callable_convention_alignment_expr(
                     arg,
@@ -72,7 +76,11 @@ impl RustEmitter {
                 let needs_box_inner =
                     param_ty.rust_type().starts_with("Option<Box<") || is_recursive_ctor_param;
                 if !arg_is_option && !matches!(arg, HirExpr::NoneLiteral) {
-                    if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
+                    let param_rust_type = param_ty.rust_type();
+                    let param_is_owned_rust_value = !param_rust_type.starts_with('&');
+                    if (!param_is_owned_rust_value || borrowed_name_arg)
+                        && !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty)
+                    {
                         lowered_arg = crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
                             method: "clone".to_string(),
@@ -161,10 +169,6 @@ impl RustEmitter {
                 }
             }
 
-            let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty }
-                if self.borrowed_params.contains(name)
-                    || self.mut_borrowed_params.contains(name)
-                    || ty.rust_type().starts_with('&'));
             if convention.is_owned() && borrowed_name_arg {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
