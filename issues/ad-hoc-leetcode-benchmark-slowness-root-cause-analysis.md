@@ -615,6 +615,7 @@ Merged PRs:
 - `sifr-lang/leetcode#7`: benchmark analyzer, metadata seeding, and report filtering.
 - `sifr-lang/sifr#2201`: phase closure docs, review artifacts, validation note, and initial subrepo pointer update.
 - `sifr-lang/sifr#2202`: normalized `audits/leetcode` to the squash-merged `leetcode` main commit.
+- `sifr-lang/sifr#2204`: restored the phase review artifacts referenced by this document.
 
 Validation run:
 
