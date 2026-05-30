@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#22`
+Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#23`
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
@@ -718,6 +718,7 @@ Completed M2 waves:
 
 - `sifr-lang/sifr#2208` and `sifr-lang/leetcode#21`: completed attribute-list mutation and stateful list clone removal for `1472_design_browser_history`. Codegen now handles `self.field[index] = value` in structured statement bodies by lowering attribute-list subscript assignment to bounded `get_mut`, and direct `self.field` read receivers no longer clone for read-only method calls or borrowed helper arguments. The Sifr source now uses direct `self.history[self.i + 1] = str(url)` instead of copying `history` and assigning it back. Targeted benchmark with the rebuilt compiler shows Sifr faster than Python at every `1472` size (`~4.8x` to `~5.2x`), removing `1472` from the measured-slower table and reducing measured-slower problems from 65 to 64. Local gates: focused `sifr_codegen` regression tests, `cargo build -p sifr`, generated-runner emit check, direct Sifr run, targeted `1472` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer refresh, metadata Python compile, JSON validation, `cargo fmt --check`, `git diff --check`, HIR guardrail, file-size guardrail, Claude Opus reviews `reviews/leetcode-attribute-list-mutation-m2-review-pass-1.md` and `reviews/leetcode-attribute-list-mutation-m2-review-pass-2.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
 - `sifr-lang/leetcode#22`: completed the tuple route-key parity cleanup for `1396_design_underground_system`. The Sifr implementation now mirrors the Python tuple-key route representation with `dict[tuple[str, str], list[int]]` instead of constructing length-prefixed string route keys in the hot path. Targeted benchmark with the rebuilt compiler shows Sifr faster than Python at every `1396` size (`~3.6x` to `~4.5x`), removing `1396` from the measured-slower table and reducing measured-slower problems from 64 to 63. Local gates: direct Sifr run, generated-code emit check showing `HashMap<(String, String), Vec<i64>>`, targeted `1396` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer refresh, metadata Python compile, JSON validation, `git diff --check`, and Claude Opus review `reviews/leetcode-underground-tuple-route-m2-review-pass-1.md`.
+- `sifr-lang/leetcode#23`: completed trie direct-state cleanup for `0208_implement_trie_prefix_tree` and `0211_design_add_and_search_words_data_structure`. Insert paths now mutate `self.edges` and `self.end` directly instead of cloning full trie state into local aliases; `0211` wildcard search also iterates `row.values()` directly instead of allocating a child list per wildcard. This does not reduce the measured-slower count, but it removes the stale `field_clone`/`stateful_object` attribution: `0208` is now a small residual/noise row, while `0211` remains a `mixed` + `equivalent` recursive-search/dict-iteration row. Local gates: direct Sifr runs, generated-code emit checks showing direct `self.edges.get_mut` / `self.end.get_mut`, targeted trie benchmark subset with `SIFR_BIN=target/debug/sifr`, analyzer refresh, metadata Python compile, JSON validation, `git diff --check`, and Claude Opus review `reviews/leetcode-trie-direct-state-m2-review-pass-1.md`.
 
 ### M3: Recursive And Matrix Compiler Repairs
 
@@ -822,8 +823,6 @@ Fix-phase Claude review rounds:
 | Problem | Category | Worst Py/Sifr | Slower sizes | Owner | Parity | Tags |
 | --- | --- | --- | --- | --- | --- | --- |
 | `2130_maximum_twin_sum_of_a_linked_list` | Linked List | 0.004x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0208_implement_trie_prefix_tree` | Tries | 0.005x | 1000, 5000, 10000 | mixed | equivalent | trie_parity, field_clone, dict_clone, stateful_object |
-| `0211_design_add_and_search_words_data_structure` | Tries | 0.009x | 1000, 5000, 10000 | mixed | equivalent | trie_parity, field_clone, dict_clone, stateful_object |
 | `0535_encode_and_decode_tinyurl` | Arrays & Hashing | 0.011x | 1000, 5000, 10000 | compiler | equivalent | field_clone, stateful_object, string_allocation |
 | `1768_merge_strings_alternately` | Two Pointers | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
 | `1888_minimum_number_of_flips_to_make_the_binary_string_alternating` | Sliding Window | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
@@ -876,12 +875,14 @@ Fix-phase Claude review rounds:
 | `0929_unique_email_addresses` | Arrays & Hashing | 0.709x | 1000, 10000, 100000 | compiler | unknown | string_allocation, set_clone |
 | `2405_optimal_partition_of_string` | Arrays & Hashing | 0.71x | 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
 | `0013_roman_to_integer` | Math & Geometry | 0.724x | 5000 | compiler | equivalent | string_indexing, dict_clone |
+| `0211_design_add_and_search_words_data_structure` | Tries | 0.79x | 5000, 10000 | mixed | equivalent | trie_parity, recursive_search, dict_iteration |
 | `0606_construct_string_from_binary_tree` | Trees | 0.801x | 1000, 5000 | compiler | equivalent | tree_clone, string_allocation |
 | `0094_binary_tree_inorder_traversal` | Trees | 0.885x | 5000 | compiler | equivalent | tree_clone, optional_clone |
 | `0104_maximum_depth_of_binary_tree` | Trees | 0.902x | 5000 | compiler | equivalent | tree_clone, optional_clone |
 | `0682_baseball_game` | Stack | 0.915x | 100000 | noise | equivalent | stack_clone, string_parse |
 | `0199_binary_tree_right_side_view` | Trees | 0.92x | 5000 | compiler | equivalent | tree_clone, list_clone |
 | `0072_edit_distance` | 2-D Dynamic Programming | 0.928x | 100, 200 | noise | equivalent | string_indexing |
+| `0208_implement_trie_prefix_tree` | Tries | 0.936x | 5000, 10000 | noise | equivalent | trie_parity, small_residual_gap |
 | `0020_valid_parentheses` | Stack | 0.981x | 10000, 100000 | noise | equivalent | list_clone, dict_clone |
 | `0064_minimum_path_sum` | 2-D Dynamic Programming | 0.982x | 300 | noise | equivalent | matrix_clone |
 
