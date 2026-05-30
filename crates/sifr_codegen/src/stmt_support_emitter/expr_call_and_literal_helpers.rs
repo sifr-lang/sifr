@@ -262,11 +262,26 @@ pub(crate) fn should_force_mutable_binding(ty: &Type) -> bool {
         })
     }
 
+    fn class_has_recursive_option_field(ty: &Type) -> bool {
+        let Type::Class { name, fields, .. } = ty.resolve_alias() else {
+            return false;
+        };
+        fields.iter().any(|(_, field_ty)| {
+            let Type::Union(members) = field_ty.resolve_alias() else {
+                return false;
+            };
+            members.iter().any(|member| {
+                matches!(member.resolve_alias(), Type::Class { name: field_name, .. } if field_name == name)
+            })
+        })
+    }
+
     matches!(
         ty,
         Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
     ) || matches!(ty.resolve_alias(), Type::Iterator(_))
         || class_has_next_protocol(ty)
+        || class_has_recursive_option_field(ty)
 }
 
 pub(crate) fn type_contains_any_or_unknown(ty: &Type) -> bool {

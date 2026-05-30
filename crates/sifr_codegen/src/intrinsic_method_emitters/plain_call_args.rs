@@ -77,7 +77,8 @@ impl RustEmitter {
                     param_ty.rust_type().starts_with("Option<Box<") || is_recursive_ctor_param;
                 if !arg_is_option && !matches!(arg, HirExpr::NoneLiteral) {
                     let param_rust_type = param_ty.rust_type();
-                    let param_is_owned_rust_value = !param_rust_type.starts_with('&');
+                    let param_is_owned_rust_value =
+                        convention.is_owned() && !param_rust_type.starts_with('&');
                     if (!param_is_owned_rust_value || borrowed_name_arg)
                         && !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty)
                     {
