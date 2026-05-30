@@ -1,6 +1,6 @@
 # Ad Hoc Phase: LeetCode Incomplete And Failed Benchmark Fixes
 
-Status: implementation complete through M2e plus M4 reintegration follow-ups on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, and `sifr-lang/leetcode#25`
+Status: implementation complete through M2e plus M4 reintegration follow-ups on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, and `sifr-lang/leetcode#26`
 Context: follow-up phase for the `Incomplete And Failed Problem Appendix` in `issues/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md`.
 
 ## Purpose
@@ -453,11 +453,12 @@ Completed waves:
 - M4a 0212 reintegration: `sifr-lang/leetcode#19` reran `0212_word_search_ii` as a complete benchmark, moved it out of failed inventory, and handed its residual `mixed` + `equivalent` trie slowness back to the slowness phase.
 - M4b stateful parity reintegration: `sifr-lang/leetcode#20` reran the remaining stateful M1 rows and kept them in the slowness phase as complete `mixed` + `equivalent` rows; it did not add new failed or partial cases.
 - M4c safe-math reintegration: `sifr-lang/leetcode#25` reran the safe-math formerly-failed family. Fifteen rows moved from failed-build metadata to complete/equivalent faster-than-Python benchmark rows, while `1209_remove_all_adjacent_duplicates_in_string_ii` was rewritten to stack parity and handed to the slowness phase as a complete/equivalent residual compiler row (`string_allocation`, `stack_clone`). This reduced no-pair failures from 50 to 34 and raised fully complete problems from 274 to 290.
+- M4d typed-stack/string-move reintegration: `sifr-lang/leetcode#26` reran `0739_daily_temperatures`, `0084_largest_rectangle_in_histogram`, and `0006_zigzag_conversion`. All three moved from failed-build metadata to complete/equivalent faster-than-Python benchmark rows. This reduced no-pair failures from 34 to 31 and raised fully complete problems from 290 to 293.
 
 Post-M2e validation:
 
 - The full formerly incomplete subset of 53 problem IDs passed targeted correctness after `sifr-lang/leetcode#14` was merged.
-- After `sifr-lang/leetcode#25`, `python3 benchmarks/analyze_slowness.py --check-metadata` reports 34 no-pair failures, 290 fully complete problems, and 868 complete fixture pairs. The remaining phase closure work is full re-benchmark/report reintegration under M4 for the linked-list/tree/typed-stack/string-move residual families.
+- After `sifr-lang/leetcode#26`, `python3 benchmarks/analyze_slowness.py --check-metadata` reports 31 no-pair failures, 293 fully complete problems, and 877 complete fixture pairs. The remaining phase closure work is full re-benchmark/report reintegration under M4 for the linked-list/tree residual families.
 
 ### M3: Compiler Ergonomics Follow-Ups
 
