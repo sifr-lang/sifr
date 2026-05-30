@@ -179,8 +179,13 @@ impl RustEmitter {
             }
             if crate::helpers::is_option_type(ty) {
                 if self.recursive_option_field_can_move(object) {
+                    let moved_field = crate::RustExpr::MethodCall {
+                        receiver: Box::new(lowered_field),
+                        method: "take".to_string(),
+                        args: vec![],
+                    };
                     return crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
+                        receiver: Box::new(moved_field),
                         method: "map".to_string(),
                         args: vec![crate::RustExpr::Closure {
                             params: vec![crate::RustParam::Named {
