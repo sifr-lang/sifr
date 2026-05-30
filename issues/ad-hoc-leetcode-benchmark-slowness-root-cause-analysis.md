@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; M4 reintegration merged through `sifr-lang/sifr#2215` and `sifr-lang/leetcode#27`
+Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; M4 reintegration merged through `sifr-lang/sifr#2215` and `sifr-lang/leetcode#28`
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
@@ -747,6 +747,7 @@ Completed M4 waves:
 - `sifr-lang/leetcode#25`: reintegrated the safe-math formerly-failed benchmark family by rerunning 16 rows through correctness, runtime, and memory measurement. Fifteen rows now benchmark as complete/equivalent and faster than Python, so they were removed from the failed inventory: `0853`, `0441`, `0875`, `0622`, `1383`, `0502`, `0698`, `0909`, `0743`, `0062`, `1220`, `0846`, `0263`, `1260`, and `0007`. `1209_remove_all_adjacent_duplicates_in_string_ii` was rewritten to stack-parity Sifr and moved from failed-build metadata into the complete/equivalent measured-slower table with residual `compiler` tags `string_allocation` and `stack_clone`; it is faster at `1k`/`10k` but remains slower at `100k`. The refreshed analyzer state is 290 fully complete problems, 868 complete fixture pairs, 63 measured-slower problems, and 34 no-pair failures. Local gates: targeted safe-math batch benchmark with `SIFR_BIN=target/debug/sifr`, focused `1209` direct run, generated-code emit check, focused `1209` benchmark rerun, analyzer metadata check, metadata Python compile, full registry JSON parse, `git diff --check`, HIR guardrail, file-size guardrail, and Claude Opus review `reviews/leetcode-safe-math-reintegration-m4-review-pass-1.md`.
 - `sifr-lang/leetcode#26`: reintegrated the typed-stack/string-move rows `0739_daily_temperatures`, `0084_largest_rectangle_in_histogram`, and `0006_zigzag_conversion`. Existing Sifr source fixes already produced complete/equivalent benchmarks, and targeted runs show Sifr faster than Python at all configured sizes, so the rows were removed from failed inventory without adding slowness metadata. The refreshed analyzer state is 293 fully complete problems, 877 complete fixture pairs, 63 measured-slower problems, and 31 no-pair failures. Local gates: targeted benchmark for all three rows with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, registry JSON validation, `git diff --check`, and Claude Opus review `reviews/leetcode-typed-stack-string-reintegration-m4-review-pass-1.md`.
 - `sifr-lang/sifr#2215` and `sifr-lang/leetcode#27`: fixed owned recursive optional field lowering so linked-list child reads move boxed children instead of cloning tails, while borrowed helper reads still clone. `0206_reverse_linked_list` now emits `cur.next.map(|...| *...)` and `Some(cur)`, and `nodeNext` still emits `as_deref().cloned()`. The refreshed `0206` benchmark is complete/equivalent and faster than Python at every configured size (`~5.19x`, `~3.68x`, and `~3.95x`), reducing no-pair failures from 31 to 30 and raising fully complete problems from 293 to 294. Local gates: focused codegen tests, direct Sifr run, targeted `0206` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, `cargo fmt --check`, `git diff --check`, HIR and file-size guardrails, Claude Opus review `reviews/leetcode-recursive-option-move-m4-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
+- `sifr-lang/leetcode#28`: reran `0002_add_two_numbers` and `0019_remove_nth_node_from_end_of_list` after the recursive-option lowering fix made their runners benchmarkable. Both rows moved from failed-build/no-pair metadata to complete/equivalent measured-slower rows with residual `compiler` tags `list_node_clone` and `optional_clone`. `0002` is faster at size `100` but Python is faster at `1000`/`5000`; `0019` remains Python-faster at all sizes. This reduces no-pair failures from 30 to 28, raises fully complete problems from 294 to 296, and raises complete fixture pairs from 880 to 886. Local gates: targeted two-problem benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, full registry JSON parse, `git diff --check`, and Claude Opus review `reviews/leetcode-linked-list-measured-slower-m5-review-pass-1.md`.
 
 ### M5: Full Re-Benchmark And Closure
 
@@ -819,17 +820,19 @@ Fix-phase Claude review rounds:
 | Metric | Count |
 | --- | --- |
 | Registry problems | 325 |
-| Fully complete problems | 294 |
-| Complete fixture pairs | 880 |
-| Measured-slower problems | 63 |
+| Fully complete problems | 296 |
+| Complete fixture pairs | 886 |
+| Measured-slower problems | 65 |
 | Partial benchmark problems | 1 |
-| No-pair failed problems | 30 |
+| No-pair failed problems | 28 |
 
 ### Measured-Slower Problems
 
 | Problem | Category | Worst Py/Sifr | Slower sizes | Owner | Parity | Tags |
 | --- | --- | --- | --- | --- | --- | --- |
 | `2130_maximum_twin_sum_of_a_linked_list` | Linked List | 0.004x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0019_remove_nth_node_from_end_of_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0002_add_two_numbers` | Linked List | 0.014x | 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `1768_merge_strings_alternately` | Two Pointers | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
 | `1888_minimum_number_of_flips_to_make_the_binary_string_alternating` | Sliding Window | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
 | `0003_longest_substring_without_repeating_characters` | Sliding Window | 0.017x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
@@ -903,8 +906,6 @@ Fix-phase Claude review rounds:
 
 | Problem | Status | Failure excerpt |
 | --- | --- | --- |
-| `0002_add_two_numbers` | failed_build | type error: [main] use of moved value: 'result' |
-| `0019_remove_nth_node_from_end_of_list` | failed_build | type error: [main] use of moved value: 'result' |
 | `0021_merge_two_sorted_lists` | failed_build | type error: [main] use of moved value: 'result' |
 | `0024_swap_nodes_in_pairs` | failed_build | type error: [main] use of moved value: 'result' |
 | `0025_reverse_nodes_in_k_group` | failed_build | type error: [main] use of moved value: 'result' |
