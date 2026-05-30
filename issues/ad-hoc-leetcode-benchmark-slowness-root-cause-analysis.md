@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: in progress on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; M4 reintegration merged through `sifr-lang/sifr#2218` and `sifr-lang/leetcode#29`
+Status: complete on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; final reintegration merged through `sifr-lang/sifr#2220`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
 
 ## Purpose
@@ -229,7 +229,7 @@ Each slower problem below is assigned a primary owner:
 
 Ratio convention: `0.25x` means Python/Sifr ratio is 0.25, so Sifr is roughly 4x slower for that fixture.
 
-Partial benchmarks are allowed in this diagnostic inventory only when at least one fixture has complete Python/Sifr timing rows. They must be marked as partial and excluded from apples-to-apples report summaries until every fixture for that problem builds, passes correctness, and produces comparable runtime and memory rows. `0234_palindrome_linked_list` is the current partial measured-slower case.
+Partial benchmarks are allowed in this diagnostic inventory only when at least one fixture has complete Python/Sifr timing rows. They must be marked as partial and excluded from apples-to-apples report summaries until every fixture for that problem builds, passes correctness, and produces comparable runtime and memory rows. `0234_palindrome_linked_list` was the only partial measured-slower case and was completed in `sifr-lang/leetcode#31`.
 
 ## Every Sifr-Slower Benchmark Result
 
@@ -287,7 +287,7 @@ Partial benchmarks are allowed in this diagnostic inventory only when at least o
 | `0005_longest_palindromic_substring` | 1-D Dynamic Programming | 0.517x | 300, 800 | Compiler | Same palindrome expansion class; string slicing/indexing and allocation dominate. |
 | `0981_time_based_key_value_store` | Binary Search | 0.255x | 5k, 10k | Mixed | Stateful dict/list binary-search workload; emitted HashMap/list clones around object state. |
 | `0572_subtree_of_another_tree` | Trees | 0.332x | 1k, 5k | Compiler | Recursive tree comparison/search clones optional tree nodes and subtrees during traversal. |
-| `0234_palindrome_linked_list` | Linked List | 0.081x | 5k | Compiler | Partial benchmark: one fixture produced complete timing rows, but another fixture fails with optional `ListNode` typing. Linked-list helper lowering clones nodes while traversing; exclude from apples-to-apples summaries until all fixtures pass. |
+| `0234_palindrome_linked_list` | Linked List | 0.005x | 100, 1k, 5k | Compiler | Completed in `sifr-lang/leetcode#31`; residual slowness remains linked-list helper/codegen cloning while traversing optional nodes. |
 | `2405_optimal_partition_of_string` | Arrays & Hashing | 0.710x | 10k, 100k | Compiler | Same set-partition greedy; string/set operations allocate more. |
 | `0100_same_tree` | Trees | 0.351x | 1k, 5k | Compiler | Recursive optional tree handling clones nodes/subtrees. |
 | `0072_edit_distance` | 2-D Dynamic Programming | 0.928x | 100, 200 | Low-priority/noise | Near parity; string indexing/counting overhead keeps Sifr slightly behind. |
@@ -503,7 +503,7 @@ Current issue:
 
 - Python uses problem-specific trie nodes.
 - Sifr uses a shared helper with a different representation.
-- `0212` is currently correctness-divergent on duplicate words.
+- `0212` was originally correctness-divergent on duplicate words; `sifr-lang/leetcode#19` restored correctness and left only residual mixed trie slowness.
 
 Required direction:
 
@@ -567,7 +567,7 @@ Initial seeding rules:
 - Rows marked **LeetCode Sifr code** should start with `parity_status: "known_divergent"`.
 - Rows marked **Mixed** should start with `parity_status: "unknown"` unless the divergence is already known, such as trie helper or heap-helper mismatch.
 - Low-priority/noise rows should still get metadata so the report can avoid silently reclassifying them.
-- `0234_palindrome_linked_list` must use `benchmark_status: "partial"` until all fixtures pass.
+- `0234_palindrome_linked_list` used `benchmark_status: "partial"` until all fixtures passed; `sifr-lang/leetcode#31` marks it complete after rerunning the missing size-100 pair.
 
 ## Post-Fix Re-Benchmark Protocol
 
@@ -603,7 +603,7 @@ When a failed problem becomes correctness-passing:
 
 ## Incomplete And Failed Problem Appendix
 
-These problems are not part of the 75 measured-slower table unless they have at least one complete Python/Sifr pair. They must still be tracked because failed correctness/build cases are benchmark blockers.
+These rows are the historical baseline failure appendix that drove the fix phase. The generated analyzer snapshot below is authoritative for current state after `sifr-lang/leetcode#31`: 0 partial benchmarks and 0 no-pair failed problems.
 
 | Problem | Failure mode | Representative excerpt |
 | --- | --- | --- |
@@ -749,6 +749,8 @@ Completed M4 waves:
 - `sifr-lang/sifr#2215` and `sifr-lang/leetcode#27`: fixed owned recursive optional field lowering so linked-list child reads move boxed children instead of cloning tails, while borrowed helper reads still clone. `0206_reverse_linked_list` now emits `cur.next.map(|...| *...)` and `Some(cur)`, and `nodeNext` still emits `as_deref().cloned()`. The refreshed `0206` benchmark is complete/equivalent and faster than Python at every configured size (`~5.19x`, `~3.68x`, and `~3.95x`), reducing no-pair failures from 31 to 30 and raising fully complete problems from 293 to 294. Local gates: focused codegen tests, direct Sifr run, targeted `0206` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, `cargo fmt --check`, `git diff --check`, HIR and file-size guardrails, Claude Opus review `reviews/leetcode-recursive-option-move-m4-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
 - `sifr-lang/leetcode#28`: reran `0002_add_two_numbers` and `0019_remove_nth_node_from_end_of_list` after the recursive-option lowering fix made their runners benchmarkable. Both rows moved from failed-build/no-pair metadata to complete/equivalent measured-slower rows with residual `compiler` tags `list_node_clone` and `optional_clone`. `0002` is faster at size `100` but Python is faster at `1000`/`5000`; `0019` remains Python-faster at all sizes. This reduces no-pair failures from 30 to 28, raises fully complete problems from 294 to 296, and raises complete fixture pairs from 880 to 886. Local gates: targeted two-problem benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, full registry JSON parse, `git diff --check`, and Claude Opus review `reviews/leetcode-linked-list-measured-slower-m5-review-pass-1.md`.
 - `sifr-lang/sifr#2218` and `sifr-lang/leetcode#29`: fixed the partial-move follow-up for owned recursive optional field reads by lowering moved child reads through `.take().map(...)`, then reran the remaining 11 linked-list moved-result rows. `0024_swap_nodes_in_pairs` and `0147_insertion_sort_list` are now complete/equivalent and faster than Python at every configured size. The other nine rows are complete/equivalent measured-slower rows with residual `compiler` tags `list_node_clone` and `optional_clone`: `0021`, `0025`, `0061`, `0083`, `0086`, `0148`, `0203`, `0876`, and `1721`. This reduces no-pair failures from 28 to 17, raises fully complete problems from 296 to 307, and raises complete fixture pairs from 886 to 919. Local gates: focused recursive-option codegen tests, direct `0024`/`0206` Sifr runs, targeted 11-problem benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, full registry JSON parse, `cargo fmt --check`, `git diff --check`, HIR and file-size guardrails, Claude Opus reviews `reviews/leetcode-recursive-option-take-m6-review-pass-1.md` and `reviews/leetcode-linked-list-moved-result-m6-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
+- `sifr-lang/sifr#2220` and `sifr-lang/leetcode#30`: fixed recursive-node tree codegen residuals by making locals with optional recursive fields mutable and by cloning non-copy name arguments for borrowed optional parameters, then reran the final 17 no-pair residual rows. Sixteen rows are complete/equivalent and faster than Python at every configured size; `0269_alien_dictionary` is complete/equivalent with a small residual `noise` row at size `5000`. This reduces no-pair failures from 17 to 0, raises fully complete problems from 307 to 324, and raises complete fixture pairs from 919 to 970. Local gates: focused recursive-node codegen tests, targeted residual benchmark batches with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, full registry JSON parse, `cargo fmt --check`, `git diff --check`, HIR and file-size guardrails, Claude Opus reviews `reviews/leetcode-recursive-node-tree-m7-review-pass-1.md` and `reviews/leetcode-final-residual-metadata-m7-review-pass-1.md`, and `scripts/run_all_tests.sh --profile quick` (exit 0; wall-time/cache/skew advisories only).
+- `sifr-lang/leetcode#31`: reran `0234_palindrome_linked_list` for the missing size-100 pair and refreshed all three configured sizes. Correctness passes for sizes `100`, `1000`, and `5000`; the row is now complete/equivalent and remains in the measured-slower table as a compiler-owned linked-list clone case. This reduces partial benchmark problems from 1 to 0, raises fully complete problems from 324 to 325, and raises complete fixture pairs from 970 to 971. Local gates: targeted `0234` benchmark with `SIFR_BIN=target/debug/sifr`, analyzer metadata check, metadata Python compile, full registry JSON parse, `git diff --check`, and Claude Opus review `reviews/leetcode-palindrome-partial-m8-review-pass-1.md`.
 
 ### M5: Full Re-Benchmark And Closure
 
@@ -769,7 +771,7 @@ Completed M4 waves:
 - Each fixed problem follows the post-fix re-benchmark protocol before metadata is reclassified.
 - Runtime and Peak RSS both remain visible in the report; a runtime improvement with a Peak RSS regression greater than 10% at the same fixture size does not close the ticket unless the PR documents an intentional bounded tradeoff.
 - `0212_word_search_ii` passes correctness before any Tries runtime comparison is treated as benchmark evidence.
-- Partial measured benchmarks, currently `0234_palindrome_linked_list`, are excluded from apples-to-apples summaries until every fixture builds, passes correctness, and produces runtime plus memory rows.
+- No partial measured benchmarks remain; `0234_palindrome_linked_list` now builds, passes correctness, and produces runtime plus memory rows for every configured fixture.
 - The analyzer snapshot and report agree on complete, partial, failed, known-divergent, unknown, and equivalent counts.
 - The final phase closure records implementation PRs, validation commands, benchmark command, refreshed analyzer counts, and any residual follow-up tickets.
 - Claude review has approved this fix-oriented phase as implementation-ready after iterative review.
@@ -821,17 +823,18 @@ Fix-phase Claude review rounds:
 | Metric | Count |
 | --- | --- |
 | Registry problems | 325 |
-| Fully complete problems | 307 |
-| Complete fixture pairs | 919 |
-| Measured-slower problems | 74 |
-| Partial benchmark problems | 1 |
-| No-pair failed problems | 17 |
+| Fully complete problems | 325 |
+| Complete fixture pairs | 971 |
+| Measured-slower problems | 75 |
+| Partial benchmark problems | 0 |
+| No-pair failed problems | 0 |
 
 ### Measured-Slower Problems
 
 | Problem | Category | Worst Py/Sifr | Slower sizes | Owner | Parity | Tags |
 | --- | --- | --- | --- | --- | --- | --- |
 | `2130_maximum_twin_sum_of_a_linked_list` | Linked List | 0.004x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
+| `0234_palindrome_linked_list` | Linked List | 0.005x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `0876_middle_of_the_linked_list` | Linked List | 0.005x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `0083_remove_duplicates_from_sorted_list` | Linked List | 0.005x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `1721_swapping_nodes_in_a_linked_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
@@ -857,7 +860,6 @@ Fix-phase Claude review rounds:
 | `0424_longest_repeating_character_replacement` | Sliding Window | 0.058x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
 | `0021_merge_two_sorted_lists` | Linked List | 0.079x | 500, 900 | compiler | equivalent | list_node_clone, optional_clone |
 | `0380_insert_delete_getrandom_o1` | Arrays & Hashing | 0.08x | 10000, 100000 | mixed | equivalent | stateful_object, field_clone, array_map_parity |
-| `0234_palindrome_linked_list` | Linked List | 0.081x | 5000 | compiler | equivalent | list_node_clone, optional_clone |
 | `1209_remove_all_adjacent_duplicates_in_string_ii` | Stack | 0.086x | 100000 | compiler | equivalent | string_allocation, stack_clone |
 | `0146_lru_cache` | Linked List | 0.091x | 5000, 10000 | mixed | equivalent | stateful_object, field_clone, lru_parity |
 | `0706_design_hashmap` | Arrays & Hashing | 0.109x | 1000, 5000, 10000 | mixed | unknown | stateful_object, field_clone |
@@ -905,32 +907,15 @@ Fix-phase Claude review rounds:
 | `0208_implement_trie_prefix_tree` | Tries | 0.936x | 5000, 10000 | noise | equivalent | trie_parity, small_residual_gap |
 | `0020_valid_parentheses` | Stack | 0.981x | 10000, 100000 | noise | equivalent | list_clone, dict_clone |
 | `0064_minimum_path_sum` | 2-D Dynamic Programming | 0.982x | 300 | noise | equivalent | matrix_clone |
+| `0269_alien_dictionary` | Advanced Graphs | 0.991x | 5000 | noise | equivalent | small_residual_gap |
 
 ### Partial Benchmarks
 
 | Problem | Complete pairs | Missing sizes | Status |
 | --- | --- | --- | --- |
-| `0234_palindrome_linked_list` | 2 | 100 | partial |
 
 ### No-Pair Failures
 
 | Problem | Status | Failure excerpt |
 | --- | --- | --- |
-| `0103_binary_tree_zigzag_level_order_traversal` | failed_build | type error: [main] use of moved value: 'root' |
-| `0105_construct_binary_tree_from_preorder_and_inorder_traversal` | failed_build | build error: cargo build failed: |
-| `0106_construct_binary_tree_from_inorder_and_postorder_traversal` | failed_build | build error: cargo build failed: |
-| `0108_convert_sorted_array_to_binary_search_tree` | failed_build | build error: cargo build failed: |
-| `0141_linked_list_cycle` | failed_build | type error: [main] argument 1 ('head') of function 'hasCycle': expected 'ListNode', got 'None \| ListNode' |
-| `0144_binary_tree_preorder_traversal` | failed_build | type error: [main] use of moved value: 'root' |
-| `0145_binary_tree_postorder_traversal` | failed_build | type error: [main] use of moved value: 'root' |
-| `0226_invert_binary_tree` | failed_build | build error: cargo build failed: |
-| `0230_kth_smallest_element_in_a_bst` | failed_build | type error: [main] argument 1 ('root') of function 'kthSmallest': expected 'TreeNode', got 'None \| TreeNode' |
-| `0269_alien_dictionary` | failed_correctness | wrong result: abc |
-| `0450_delete_node_in_a_bst` | failed_build | type error: [main] use of moved value: 'root' |
-| `0513_find_bottom_left_tree_value` | failed_build | type error: [main] use of moved value: 'root' |
-| `0617_merge_two_binary_trees` | failed_build | type error: [main] use of moved value: 'p' |
-| `0662_maximum_width_of_binary_tree` | failed_build | type error: [main] use of moved value: 'root' |
-| `0669_trim_a_binary_search_tree` | failed_build | type error: [main] use of moved value: 'root' |
-| `0701_insert_into_a_binary_search_tree` | failed_build | type error: [main] use of moved value: 'root' |
-| `1448_count_good_nodes_in_binary_tree` | failed_build | type error: [main] argument 1 ('root') of function 'goodNodes': expected 'TreeNode', got 'None \| TreeNode' |
 <!-- analyze_slowness:end -->

@@ -1,6 +1,6 @@
 # Ad Hoc Phase: LeetCode Incomplete And Failed Benchmark Fixes
 
-Status: implementation complete through M2e plus M4 reintegration follow-ups on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, `sifr-lang/leetcode#26`, `sifr-lang/leetcode#27`, `sifr-lang/leetcode#28`, and `sifr-lang/leetcode#29`
+Status: complete on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, `sifr-lang/leetcode#26`, `sifr-lang/leetcode#27`, `sifr-lang/leetcode#28`, `sifr-lang/leetcode#29`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`, plus compiler support in `sifr-lang/sifr#2215`, `sifr-lang/sifr#2218`, and `sifr-lang/sifr#2220`
 Context: follow-up phase for the `Incomplete And Failed Problem Appendix` in `issues/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md`.
 
 ## Purpose
@@ -26,7 +26,7 @@ Inventory from the source appendix:
 - **52 no-complete-pair failures**
 - **1 partial benchmark**: `0234_palindrome_linked_list`
 
-The table in this phase is the authoritative working copy for all 53 rows copied from the slowness phase failure appendix. The 52 no-complete-pair failures are all rows except `0234_palindrome_linked_list`, which remains partial because at least one fixture produced complete Python/Sifr timing rows while another fixture failed.
+The table in this phase is the authoritative working copy for all 53 rows copied from the slowness phase failure appendix. All 52 original no-complete-pair failures and the `0234_palindrome_linked_list` partial row are now complete, correctness-passing benchmark cases.
 
 ## Executive Summary
 
@@ -457,11 +457,13 @@ Completed waves:
 - M4e reverse-linked-list reintegration: `sifr-lang/sifr#2215` fixed owned recursive optional field move lowering and `sifr-lang/leetcode#27` reran `0206_reverse_linked_list`. The row moved from failed-build/no-pair metadata to complete/equivalent faster-than-Python benchmark data at all sizes, reducing no-pair failures from 31 to 30 and raising fully complete problems from 293 to 294.
 - M4f linked-list measured-slower reintegration: `sifr-lang/leetcode#28` reran `0002_add_two_numbers` and `0019_remove_nth_node_from_end_of_list`. Both rows moved from failed-build/no-pair metadata to complete/equivalent benchmark data and were handed to the slowness phase as residual compiler-owned list-node/optional clone cases, reducing no-pair failures from 30 to 28 and raising fully complete problems from 294 to 296.
 - M4g linked-list moved-result reintegration: `sifr-lang/sifr#2218` fixed the recursive optional field partial-move follow-up by lowering moved child reads through `.take().map(...)`, and `sifr-lang/leetcode#29` reran the remaining 11 linked-list moved-result rows. `0024_swap_nodes_in_pairs` and `0147_insertion_sort_list` moved to complete/equivalent faster-than-Python benchmark data. The nine residual slower rows were handed to the slowness phase as compiler-owned list-node/optional clone cases, reducing no-pair failures from 28 to 17 and raising fully complete problems from 296 to 307.
+- M4h final residual reintegration: `sifr-lang/sifr#2220` fixed recursive-node tree codegen residuals and `sifr-lang/leetcode#30` reran the final 17 no-pair residual rows. Sixteen rows moved to complete/equivalent faster-than-Python benchmark data, while `0269_alien_dictionary` became a complete/equivalent small residual noise row, reducing no-pair failures from 17 to 0 and raising fully complete problems from 307 to 324.
+- M4i partial cleanup: `sifr-lang/leetcode#31` reran `0234_palindrome_linked_list` at the missing size 100 and refreshed all configured sizes. The row moved from partial to complete/equivalent measured-slower metadata, reducing partial benchmark problems from 1 to 0 and raising fully complete problems from 324 to 325.
 
-Post-M2e validation:
+Post-closure validation:
 
 - The full formerly incomplete subset of 53 problem IDs passed targeted correctness after `sifr-lang/leetcode#14` was merged.
-- After `sifr-lang/leetcode#29`, `python3 benchmarks/analyze_slowness.py --check-metadata` reports 17 no-pair failures, 307 fully complete problems, and 919 complete fixture pairs. The remaining phase closure work is full re-benchmark/report reintegration under M4 for the tree residual family plus the remaining nullable/signature and correctness outliers.
+- After `sifr-lang/leetcode#31`, `python3 benchmarks/analyze_slowness.py --check-metadata` reports 0 no-pair failures, 0 partial benchmark problems, 325 fully complete problems, and 971 complete fixture pairs. No incomplete or failed benchmark rows remain.
 
 ### M3: Compiler Ergonomics Follow-Ups
 
@@ -487,5 +489,5 @@ Post-M2e validation:
 - Harness fixes unblock harness-owned failures without requiring LeetCode solution rewrites.
 - LeetCode Sifr code fixes preserve Sifr safety semantics and do not rely on implicit division/modulo unwraps.
 - Correctness fixes for `0212` and `0269` are validated against fixture semantics, not just one expected string.
-- `0707_design_linked_list` either completes all configured sizes or is reclassified with a concrete residual performance blocker.
-- Claude review confirms the phase is implementation-ready and has no unresolved ownership-boundary gaps.
+- `0707_design_linked_list` completes all configured sizes and is classified with concrete residual metadata.
+- Claude review approved each milestone and the phase has no unresolved incomplete/failed benchmark rows.
