@@ -47,6 +47,9 @@ demos/**/*.exe
 # Generated snapshot proposals from insta
 *.snap.new
 
+# Local Sifr compiler cache
+.sifr_cache/
+
 # External sub-repositories restored by scripts/clone_subrepos.sh
 /audits/leetcode/
 
