@@ -1,0 +1,14 @@
+# Tests self-referential ChainCell class with Box<T>
+
+class ChainCell:
+    val: int
+    next: ChainCell | None
+
+    def __init__(self, val: int, next: ChainCell | None):
+        self.val = val
+        self.next = next
+
+def main():
+    node2: ChainCell = ChainCell(2, None)
+    node1: ChainCell = ChainCell(1, node2)
+    assert str(node1.val) == '1'

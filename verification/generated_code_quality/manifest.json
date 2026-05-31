@@ -56,7 +56,7 @@
     {"id": "e2e-045-pep695-generic-class", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/pep695_generic_class.sifr", "expected_command": "build", "evidence_category": "generics"},
     {"id": "e2e-046-pep695-generic-function", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/pep695_generic_function.sifr", "expected_command": "build", "evidence_category": "generics"},
     {"id": "e2e-047-protocol-dispatch", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/protocol_dispatch.sifr", "expected_command": "build", "evidence_category": "classes"},
-    {"id": "e2e-048-recursive-listnode", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/recursive_listnode.sifr", "expected_command": "build", "evidence_category": "classes"},
+    {"id": "e2e-048-recursive-chain-cell", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/recursive_chain_cell.sifr", "expected_command": "build", "evidence_category": "classes"},
     {"id": "e2e-049-runtime-file-basics", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/runtime_file_basics.sifr", "expected_command": "build", "evidence_category": "stdlib-io"},
     {"id": "e2e-050-scope-spawn-join", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/scope_spawn_join.sifr", "expected_command": "build", "evidence_category": "async-concurrency"},
 

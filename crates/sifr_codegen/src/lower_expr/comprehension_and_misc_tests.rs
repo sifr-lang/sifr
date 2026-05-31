@@ -225,7 +225,7 @@ pub(super) fn lowers_map_builtin_call_with_typed_lambda() {
 #[test]
 pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
     let node_ty = Type::Class {
-        name: "TreeNode".to_string(),
+        name: "BinaryBranch".to_string(),
         fields: vec![],
         methods: vec![],
         parent_class: None,

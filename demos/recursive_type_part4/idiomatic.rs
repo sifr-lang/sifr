@@ -1,11 +1,11 @@
-struct TreeNode {
+struct BinaryBranch {
     val: i64,
-    left: Option<Box<TreeNode>>,
-    right: Option<Box<TreeNode>>,
+    left: Option<Box<BinaryBranch>>,
+    right: Option<Box<BinaryBranch>>,
 }
 
-impl TreeNode {
-    fn new(val: i64, left: Option<TreeNode>, right: Option<TreeNode>) -> Self {
+impl BinaryBranch {
+    fn new(val: i64, left: Option<BinaryBranch>, right: Option<BinaryBranch>) -> Self {
         Self {
             val,
             left: left.map(Box::new),
@@ -14,14 +14,14 @@ impl TreeNode {
     }
 }
 
-fn tree_sum(node: Option<&TreeNode>) -> i64 {
+fn tree_sum(node: Option<&BinaryBranch>) -> i64 {
     match node {
         Some(node) => node.val + tree_sum(node.left.as_deref()) + tree_sum(node.right.as_deref()),
         None => 0,
     }
 }
 
-fn same_shape_and_sum(p: Option<&TreeNode>, q: Option<&TreeNode>) -> i64 {
+fn same_shape_and_sum(p: Option<&BinaryBranch>, q: Option<&BinaryBranch>) -> i64 {
     match (p, q) {
         (None, None) => 0,
         (Some(_), None) | (None, Some(_)) => -1,
@@ -35,20 +35,20 @@ fn same_shape_and_sum(p: Option<&TreeNode>, q: Option<&TreeNode>) -> i64 {
 }
 
 fn main() {
-    let root_a = TreeNode::new(
+    let root_a = BinaryBranch::new(
         1,
-        Some(TreeNode::new(2, None, None)),
-        Some(TreeNode::new(3, None, None)),
+        Some(BinaryBranch::new(2, None, None)),
+        Some(BinaryBranch::new(3, None, None)),
     );
-    let root_b = TreeNode::new(
+    let root_b = BinaryBranch::new(
         1,
-        Some(TreeNode::new(2, None, None)),
-        Some(TreeNode::new(3, None, None)),
+        Some(BinaryBranch::new(2, None, None)),
+        Some(BinaryBranch::new(3, None, None)),
     );
-    let root_c = TreeNode::new(
+    let root_c = BinaryBranch::new(
         1,
-        Some(TreeNode::new(2, None, None)),
-        Some(TreeNode::new(3, None, None)),
+        Some(BinaryBranch::new(2, None, None)),
+        Some(BinaryBranch::new(3, None, None)),
     );
 
     assert_eq!(tree_sum(Some(&root_a)), 6);

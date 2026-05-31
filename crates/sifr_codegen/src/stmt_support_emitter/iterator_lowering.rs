@@ -72,6 +72,30 @@ impl RustEmitter {
         self.lower_iter_source_expr_for_ir_with_mode(source, false, element_type_hint, None)
     }
 
+    pub(crate) fn lower_string_chars_for_iter_expr_for_ir(
+        &mut self,
+        source: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::IteratorCall { op, args, .. } = source {
+            if *op == HirIteratorOp::Iter && args.len() == 1 {
+                return self.lower_string_chars_for_iter_expr_for_ir(&args[0]);
+            }
+        }
+        if let HirExpr::Call { func, args, .. } = source {
+            if func == "iter" && args.len() == 1 {
+                return self.lower_string_chars_for_iter_expr_for_ir(&args[0]);
+            }
+        }
+        let Some(lowered_source) = self.lower_rendered_expr_for_ir(source)? else {
+            return Ok(None);
+        };
+        Ok(Some(crate::RustExpr::MethodCall {
+            receiver: Box::new(Self::normalize_for_loop_iter_expr(lowered_source)),
+            method: "chars".to_string(),
+            args: vec![],
+        }))
+    }
+
     pub(crate) fn lower_iter_source_expr_for_ir(
         &mut self,
         source: &HirExpr,
@@ -279,6 +303,16 @@ impl RustEmitter {
             }
         }
 
+        if let Some(lowered_dict_list_iter) = self
+            .try_lower_dict_indexed_list_iter_source_expr_for_ir(
+                source,
+                prefer_boxed_iterator,
+                element_type_hint,
+            )?
+        {
+            return Ok(Some(lowered_dict_list_iter));
+        }
+
         let Some(lowered_source) = self.lower_rendered_expr_for_ir(source)? else {
             return Ok(None);
         };
@@ -460,6 +494,64 @@ impl RustEmitter {
             iterator_expr,
             prefer_boxed_iterator,
         )))
+    }
+
+    fn try_lower_dict_indexed_list_iter_source_expr_for_ir(
+        &mut self,
+        source: &HirExpr,
+        prefer_boxed_iterator: bool,
+        element_type_hint: Option<&Type>,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let HirExpr::Index { object, index, .. } = source else {
+            return Ok(None);
+        };
+        let Type::Dict(_, value_ty) = crate::resolve_alias_type_for_plain_call(object.ty()) else {
+            return Ok(None);
+        };
+        if !matches!(
+            crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
+            Type::List(_)
+        ) {
+            return Ok(None);
+        }
+
+        let Some(lowered_object) = self.lower_rendered_expr_for_ir(object)? else {
+            return Ok(None);
+        };
+        let Some(lowered_index) = self.lower_rendered_expr_for_ir(index)? else {
+            return Ok(None);
+        };
+        let plan =
+            crate::helpers::plan_iterator_ownership_with_element_hint(source, element_type_hint);
+        let iter_binding = "__sifr_dict_iter_source".to_string();
+        let iterator = Self::apply_copy_clone_yield_mode_for_ir(
+            crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Ident(iter_binding.clone())),
+                method: "iter".to_string(),
+                args: vec![],
+            },
+            plan.yield_mode,
+        );
+        let iterator = Self::wrap_iterator_expr_for_mode_for_ir(iterator, prefer_boxed_iterator);
+        Ok(Some(crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::LetElse {
+                pattern: format!("Some({iter_binding})"),
+                value: crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_object),
+                    method: "get".to_string(),
+                    args: vec![Self::build_dict_lookup_key_arg_for_ir(lowered_index)],
+                },
+                else_body: vec![crate::RustStmt::Expr(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "std".to_string(),
+                        "process".to_string(),
+                        "abort".to_string(),
+                    ])),
+                    args: vec![],
+                })],
+            }],
+            expr: Some(Box::new(iterator)),
+        }))
     }
 
     pub(crate) fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {

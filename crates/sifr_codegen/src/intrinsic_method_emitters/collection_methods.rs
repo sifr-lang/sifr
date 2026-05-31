@@ -66,8 +66,55 @@ impl RustEmitter {
         {
             return Some(lowered);
         }
+        if method == "append" && args.len() == 1 {
+            if let HirExpr::Index {
+                object: index_object,
+                index,
+                ..
+            } = object
+            {
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(index_object.ty()),
+                    Type::Dict(_, _)
+                ) && matches!(object_ty, Type::List(_))
+                {
+                    let lowered_object =
+                        self.try_lower_dict_indexed_list_mutation_object(index_object)?;
+                    let lowered_index = self.try_lower_registry_expr_strict(index)?;
+                    let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
+                    let key_arg = Self::build_dict_lookup_key_arg_for_ir(
+                        Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
+                    );
+                    let pushed_arg =
+                        Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
+                    return Some(crate::RustExpr::Block {
+                        stmts: vec![crate::RustStmt::IfLet {
+                            pattern: "Some(__elem)".to_string(),
+                            expr: crate::RustExpr::MethodCall {
+                                receiver: Box::new(lowered_object),
+                                method: "get_mut".to_string(),
+                                args: vec![key_arg],
+                            },
+                            then_body: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident("__elem".to_string())),
+                                method: "push".to_string(),
+                                args: vec![pushed_arg],
+                            })],
+                            else_body: None,
+                        }],
+                        expr: None,
+                    });
+                }
+            }
+        }
         let is_deque_data_field = self.is_deque_data_field(object);
         let object_expr = self.try_lower_registry_expr_strict(object)?;
+        if method == "len"
+            && args.is_empty()
+            && matches!(object_ty, Type::Str | Type::LiteralStr(_))
+        {
+            return Some(self.lower_string_len_with_cache(object, object_expr));
+        }
         let mut arg_exprs = self.try_lower_registry_exprs_strict(args)?;
 
         if matches!(object_ty, Type::List(_))
@@ -81,6 +128,12 @@ impl RustEmitter {
                 method: "clone".to_string(),
                 args: vec![],
             };
+        }
+        if matches!(object_ty, Type::List(_))
+            && matches!(method, "append" | "appendleft")
+            && !args.is_empty()
+        {
+            arg_exprs[0] = Self::clone_owned_append_arg_expr_for_ir(&args[0], arg_exprs[0].clone());
         }
 
         if matches!(object_ty, Type::List(_)) && method == "insert" && args.len() >= 2 {
@@ -430,6 +483,108 @@ impl RustEmitter {
             }),
             _ => None,
         }
+    }
+
+    pub(crate) fn try_lower_defaultdict_index_contains_expr(
+        &mut self,
+        element: &HirExpr,
+        collection: &HirExpr,
+    ) -> Option<crate::RustExpr> {
+        let HirExpr::Index {
+            object: base_object,
+            index,
+            ..
+        } = collection
+        else {
+            return None;
+        };
+        let (alias_name, key_ty, _) = registry_defaultdict_alias_parts(base_object.ty())?;
+        if !matches!(
+            alias_name,
+            "__compat_defaultdict_list" | "__compat_defaultdict_set"
+        ) {
+            return None;
+        }
+        let lowered_object = self.try_lower_registry_expr_strict(base_object)?;
+        let lowered_index = self.try_lower_registry_expr_strict(index)?;
+        let lowered_element = self.lower_stmt_expr_for_ir(element).ok()??;
+        let entry_expr = crate::RustExpr::MethodCall {
+            receiver: Box::new(crate::RustExpr::MethodCall {
+                receiver: Box::new(lowered_object),
+                method: "entry".to_string(),
+                args: vec![registry_defaultdict_key_arg(index, lowered_index, key_ty)],
+            }),
+            method: "or_insert".to_string(),
+            args: vec![registry_defaultdict_default_expr(alias_name)],
+        };
+        Some(crate::RustExpr::MethodCall {
+            receiver: Box::new(entry_expr),
+            method: "contains".to_string(),
+            args: vec![crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+            }],
+        })
+    }
+
+    pub(crate) fn try_lower_last_use_set_add_expr(
+        &mut self,
+        expr: &HirExpr,
+        preceding_stmts: &[crate::HirStmt],
+        following_stmts: &[crate::HirStmt],
+    ) -> Option<crate::RustExpr> {
+        let HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ..
+        } = expr
+        else {
+            return None;
+        };
+        if method != "add" || args.len() != 1 {
+            return None;
+        }
+        if self.stmt_block_depth > 2 {
+            return None;
+        }
+        if !matches!(
+            crate::resolve_alias_type_for_plain_call(object.ty()),
+            Type::Set(_)
+        ) {
+            return None;
+        }
+        let HirExpr::Name { name, ty } = &args[0] else {
+            return None;
+        };
+        if self.borrowed_params.contains(name)
+            || self.mut_borrowed_params.contains(name)
+            || crate::helpers::is_copy_type_for_codegen(ty)
+        {
+            return None;
+        }
+        if !preceding_stmts.iter().any(|stmt| {
+            matches!(
+                stmt,
+                crate::HirStmt::Let {
+                    name: binding_name,
+                    ..
+                } if binding_name == name
+            )
+        }) {
+            return None;
+        }
+        if crate::collect_referenced_vars_with_types(following_stmts)
+            .iter()
+            .any(|(referenced, _)| referenced == name)
+        {
+            return None;
+        }
+        Some(crate::RustExpr::MethodCall {
+            receiver: Box::new(self.try_lower_registry_expr_strict(object)?),
+            method: "insert".to_string(),
+            args: vec![crate::RustExpr::Ident(name.clone())],
+        })
     }
 
     pub(crate) fn try_lower_registry_exprs_strict(

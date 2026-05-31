@@ -25,6 +25,10 @@ mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
 mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
+mod performance_codegen_tests;
+#[cfg(test)]
+mod performance_nested_mutation_codegen_tests;
+#[cfg(test)]
 mod recursive_node_codegen_tests;
 #[cfg(test)]
 mod structured_lowering_codegen_tests;

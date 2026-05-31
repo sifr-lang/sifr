@@ -3,25 +3,16 @@ use super::{
     should_force_mutable_binding, should_omit_local_type_annotation, type_contains_any_or_unknown,
     HirExpr, HirStmt, RustEmitter, RustStmt, Type,
 };
+
 impl RustEmitter {
-    pub(crate) fn try_lower_stmt_block_for_ir(
+    pub(crate) fn try_lower_stmt_block_for_ir_inner(
         &mut self,
         stmts: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
-        let scope_ctx = crate::ScopeContext {
-            function_return_type: self.current_return_type.clone(),
-            in_generator_closure: self.emission_ctx.in_generator_closure,
-            in_display_impl: self.emission_ctx.in_display_impl,
-            in_loop_with_else: self.current_loop_has_else(),
-            class_scope: if self.current_class_name.is_some() {
-                crate::ClassScope::Inside
-            } else {
-                crate::ClassScope::Outside
-            },
-        };
+        let scope_ctx = self.stmt_block_scope_context();
 
         let mut lowered_block = Vec::new();
-        for stmt in stmts {
+        for (stmt_index, stmt) in stmts.iter().enumerate() {
             let maybe_simple_lowered =
                 if self.try_closure_depth == 0 && self.active_timeout_durations.is_empty() {
                     crate::try_lower_simple_stmt_with_scope_result_and_bindings(
@@ -35,10 +26,7 @@ impl RustEmitter {
                     None
                 };
 
-            let should_bypass_simple_lowering = matches!(
-                stmt,
-                HirStmt::NestedFunction { .. } | HirStmt::Assign { .. }
-            ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+            let should_bypass_simple_lowering = self.should_bypass_simple_block_lowering(stmt);
             let maybe_simple_lowered = if should_bypass_simple_lowering {
                 None
             } else {
@@ -50,10 +38,22 @@ impl RustEmitter {
                 let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
                 };
-                (
-                    crate::lower_tuple_unpack_targets(targets, lowered_value, &self.mutated_vars),
-                    false,
-                )
+                let mut lowered =
+                    crate::lower_tuple_unpack_targets(targets, lowered_value, &self.mutated_vars);
+                for target in targets {
+                    let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding else {
+                        continue;
+                    };
+                    let cache_stmt = if target.rebind_existing {
+                        self.string_char_cache_rebuild_stmt_for_local(name)
+                    } else {
+                        self.force_string_char_cache_init_stmt_for_local(name, &target.ty)
+                    };
+                    if let Some(cache_stmt) = cache_stmt {
+                        lowered.push(cache_stmt);
+                    }
+                }
+                (lowered, false)
             } else if let HirStmt::Let {
                 name, ty, value, ..
             } = stmt
@@ -73,28 +73,12 @@ impl RustEmitter {
                         ..
                     } if self.generic_classes.contains(class_name)
                 );
-                let lowered_value =
-                    if effective_ty.ownership() == sifr_type_system::OwnershipKind::Move {
-                        if let HirExpr::Name {
-                            name: value_name, ..
-                        } = value
-                        {
-                            if self.borrowed_params.contains(value_name)
-                                || self.mut_borrowed_params.contains(value_name)
-                            {
-                                Some(crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
-                                    value_name.clone(),
-                                ))))
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    };
-                let lowered_value = if let Some(clone_expr) = lowered_value {
+                let borrowed_dict_get = None;
+                let lowered_value = if let Some(lowered) = borrowed_dict_get.clone() {
+                    lowered
+                } else if let Some(clone_expr) =
+                    self.try_lower_borrowed_move_name_clone_for_ir(&effective_ty, value)
+                {
                     clone_expr
                 } else {
                     let lowered = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
@@ -109,6 +93,8 @@ impl RustEmitter {
                 };
                 let lowered_ty = if name == "_"
                     || is_generic_class
+                    || borrowed_dict_get.is_some()
+                    || Self::is_borrowed_empty_list_get_expr_for_ir(&lowered_value)
                     || should_omit_local_type_annotation(&effective_ty, value)
                 {
                     None
@@ -125,85 +111,134 @@ impl RustEmitter {
                 } else {
                     Some(self.rust_ir_type_with_generics(&effective_ty))
                 };
-                (
-                    vec![RustStmt::Let {
-                        mutable: self.mutated_vars.contains(name)
-                            || should_force_mutable_binding(&effective_ty),
-                        name: name.clone(),
-                        ty: lowered_ty,
-                        value: lowered_value,
-                    }],
-                    true,
-                )
-            } else if let HirStmt::Assign { name, value } = stmt {
-                let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
-                    lowered
-                } else {
-                    let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
-                        return Ok(None);
-                    };
-                    lowered
-                };
-                let lowered_value = if let Some(target_ty) =
-                    self.local_binding_types.get(name).cloned()
+                let mut lowered = vec![RustStmt::Let {
+                    mutable: self.mutated_vars.contains(name)
+                        || should_force_mutable_binding(&effective_ty),
+                    name: name.clone(),
+                    ty: lowered_ty,
+                    value: lowered_value,
+                }];
+                if let Some(cache_stmt) =
+                    self.string_char_cache_init_stmt_for_local(name, &effective_ty)
                 {
-                    let mut lowered = self.coerce_local_value_for_target_type_for_ir(
-                        &target_ty,
-                        value,
-                        lowered_value,
-                    )?;
-                    if !crate::helpers::is_option_type(&target_ty)
-                        && crate::helpers::is_option_type(value.ty())
-                    {
-                        let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
-                            crate::RustExpr::Ident(name.clone())
-                        } else {
-                            crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(name.clone())))
-                        };
-                        lowered = crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                            method: "unwrap_or".to_string(),
-                            args: vec![fallback],
-                        };
-                    }
-                    lowered
+                    lowered.push(cache_stmt);
+                }
+                (lowered, true)
+            } else if let HirStmt::Assign { name, value } = stmt {
+                if let Some(lowered) =
+                    self.try_lower_self_string_concat_assign_for_ir(name, value)?
+                {
+                    (lowered, true)
                 } else {
-                    lowered_value
-                };
-                (
-                    vec![RustStmt::Assign {
+                    let lowered_value =
+                        if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                            lowered
+                        } else {
+                            let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
+                                return Ok(None);
+                            };
+                            lowered
+                        };
+                    let lowered_value = if let Some(target_ty) =
+                        self.local_binding_types.get(name).cloned()
+                    {
+                        let mut lowered = self.coerce_local_value_for_target_type_for_ir(
+                            &target_ty,
+                            value,
+                            lowered_value,
+                        )?;
+                        if !crate::helpers::is_option_type(&target_ty)
+                            && crate::helpers::is_option_type(value.ty())
+                        {
+                            let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
+                                crate::RustExpr::Ident(name.clone())
+                            } else {
+                                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
+                                    name.clone(),
+                                )))
+                            };
+                            lowered = crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                                method: "unwrap_or".to_string(),
+                                args: vec![fallback],
+                            };
+                        }
+                        lowered
+                    } else {
+                        lowered_value
+                    };
+                    let mut lowered = vec![RustStmt::Assign {
                         target: crate::RustExpr::Ident(name.clone()),
                         value: lowered_value,
-                    }],
-                    true,
-                )
+                    }];
+                    if let Some(cache_stmt) = self.string_char_cache_rebuild_stmt_for_local(name) {
+                        lowered.push(cache_stmt);
+                    }
+                    (lowered, true)
+                }
             } else if let HirStmt::AugAssign { name, op, value } = stmt {
                 let value_ty = Self::resolve_alias_type_for_loop_iter(value.ty());
                 if op == "+=" {
                     match value_ty {
                         Type::Str => {
-                            let arg_expr = if let HirExpr::StringLiteral(val) = value {
-                                crate::RustExpr::Ident(format!("{val:?}"))
+                            let cache_name = self.string_char_cache_vars.get(name).cloned();
+                            let mut stmts = Vec::new();
+                            let (arg_expr, cache_chars_source) = if cache_name.is_some()
+                                && !matches!(value, HirExpr::StringLiteral(_))
+                            {
+                                let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
+                                    return Ok(None);
+                                };
+                                let temp_name = format!("__sifr_string_augassign_{name}");
+                                stmts.push(crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: temp_name.clone(),
+                                    ty: None,
+                                    value: value_expr,
+                                });
+                                let as_str = crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                        crate::RustExpr::Ident(temp_name),
+                                    ))),
+                                    method: "as_str".to_string(),
+                                    args: vec![],
+                                };
+                                (as_str.clone(), as_str)
+                            } else if let HirExpr::StringLiteral(val) = value {
+                                let literal = crate::RustExpr::Ident(format!("{val:?}"));
+                                (literal.clone(), literal)
                             } else {
                                 let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
                                     return Ok(None);
                                 };
-                                crate::RustExpr::MethodCall {
+                                let as_str = crate::RustExpr::MethodCall {
                                     receiver: Box::new(crate::RustExpr::Paren(Box::new(
                                         value_expr,
                                     ))),
                                     method: "as_str".to_string(),
                                     args: vec![],
-                                }
+                                };
+                                (as_str.clone(), as_str)
                             };
-                            (
-                                vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Ident(name.clone())),
-                                    method: "push_str".to_string(),
-                                    args: vec![arg_expr],
-                                })],
-                                true,
-                            )
+                            stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident(name.clone())),
+                                method: "push_str".to_string(),
+                                args: vec![arg_expr],
+                            }));
+                            if let Some(cache_name) = cache_name {
+                                stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Ident(cache_name)),
+                                    method: "extend".to_string(),
+                                    args: vec![crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                            cache_chars_source,
+                                        ))),
+                                        method: "chars".to_string(),
+                                        args: vec![],
+                                    }],
+                                }));
+                            }
+                            (stmts, true)
                         }
                         Type::List(_) => {
                             let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
@@ -294,18 +329,27 @@ impl RustEmitter {
                 let Type::List(inner) = Self::resolve_alias_type_for_loop_iter(object_ty) else {
                     return Ok(None);
                 };
-                let Type::List(elem) = Self::resolve_alias_type_for_loop_iter(inner) else {
-                    return Ok(None);
+                let lowered_stmt = match Self::resolve_alias_type_for_loop_iter(inner) {
+                    Type::List(elem) => self
+                        .lower_structured_nested_list_subscript_assign_stmt_for_ir(
+                            object,
+                            outer_index,
+                            inner_index,
+                            value,
+                            elem,
+                        )?,
+                    Type::Dict(key_ty, elem) => self
+                        .lower_structured_nested_list_dict_subscript_assign_stmt_for_ir(
+                            object,
+                            outer_index,
+                            inner_index,
+                            value,
+                            key_ty,
+                            elem,
+                        )?,
+                    _ => return Ok(None),
                 };
-                let Some(lowered_stmt) = self
-                    .lower_structured_nested_list_subscript_assign_stmt_for_ir(
-                        object,
-                        outer_index,
-                        inner_index,
-                        value,
-                        elem,
-                    )?
-                else {
+                let Some(lowered_stmt) = lowered_stmt else {
                     return Ok(None);
                 };
                 (vec![lowered_stmt], true)
@@ -361,7 +405,6 @@ impl RustEmitter {
                 let Some(value_expr) = self.lower_rendered_expr_for_ir(value)? else {
                     return Ok(None);
                 };
-
                 let receiver = crate::RustExpr::Field {
                     expr: Box::new(Self::object_name_expr_for_ir(object)),
                     field: field.clone(),
@@ -384,7 +427,6 @@ impl RustEmitter {
                                 crate::resolve_alias_type_for_plain_call(index.ty()),
                                 Type::Str | Type::LiteralStr(_)
                             );
-
                         let Some(mut index_expr) = self.lower_rendered_expr_for_ir(index)? else {
                             return Ok(None);
                         };
@@ -469,17 +511,22 @@ impl RustEmitter {
                     true,
                 )
             } else if let HirStmt::Expr { expr } = stmt {
-                let lowered_expr =
-                    if let Some(lowered) = self.try_lower_stmt_expr_statement_only(expr)? {
-                        lowered
-                    } else if let Some(lowered) = self.lower_rendered_expr_for_ir(expr)? {
-                        lowered
-                    } else {
-                        let Some(lowered) = self.lower_stmt_expr_for_ir(expr)? else {
-                            return Ok(None);
-                        };
-                        lowered
+                let lowered_expr = if let Some(lowered) = self.try_lower_last_use_set_add_expr(
+                    expr,
+                    &stmts[..stmt_index],
+                    &stmts[stmt_index + 1..],
+                ) {
+                    lowered
+                } else if let Some(lowered) = self.try_lower_stmt_expr_statement_only(expr)? {
+                    lowered
+                } else if let Some(lowered) = self.lower_rendered_expr_for_ir(expr)? {
+                    lowered
+                } else {
+                    let Some(lowered) = self.lower_stmt_expr_for_ir(expr)? else {
+                        return Ok(None);
                     };
+                    lowered
+                };
                 (vec![RustStmt::Expr(lowered_expr)], true)
             } else if let HirStmt::Return { value } = stmt {
                 let return_ty_snapshot = self.current_return_type.clone();
@@ -719,13 +766,38 @@ impl RustEmitter {
                 if else_body.is_some() {
                     return Ok(None);
                 }
-                let Some(lowered_iter) = self.try_lower_for_iter_expr_for_ir(iter, target_ty)?
-                else {
+                let char_set_loop = Self::should_lower_string_set_loop_target_as_char(
+                    target, target_ty, iter, body,
+                );
+                let Some(lowered_iter) = (if char_set_loop {
+                    self.lower_string_chars_for_iter_expr_for_ir(iter)?
+                } else {
+                    self.try_lower_for_iter_expr_for_ir(iter, target_ty)?
+                }) else {
                     return Ok(None);
                 };
-                let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                let previous_target_cache = self.string_char_cache_vars.get(target).cloned();
+                let target_cache_init = if char_set_loop || target.contains(',') {
+                    None
+                } else {
+                    self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
+                };
+                let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                    if let Some(previous) = previous_target_cache {
+                        self.string_char_cache_vars.insert(target.clone(), previous);
+                    } else {
+                        self.string_char_cache_vars.remove(target);
+                    }
                     return Ok(None);
                 };
+                if let Some(cache_stmt) = target_cache_init {
+                    lowered_body.insert(0, cache_stmt);
+                }
+                if let Some(previous) = previous_target_cache {
+                    self.string_char_cache_vars.insert(target.clone(), previous);
+                } else {
+                    self.string_char_cache_vars.remove(target);
+                }
                 let var = if target.contains(',') {
                     let names = target
                         .split(',')

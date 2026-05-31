@@ -91,20 +91,20 @@ fn test_recursive_nested_helper_infers_int_signature_from_usage() {
 #[test]
 fn test_recursive_nested_helper_infers_mutable_collection_param_from_usage() {
     let module = lower_source(
-        "def combination_sum(candidates: list[int], target: int) -> list[list[int]]:\n    res = []\n\n    def dfs(i, cur, total):\n        if total == target:\n            res.append(cur.copy())\n            return\n        if i >= len(candidates) or total > target:\n            return\n        cur.append(candidates[i])\n        dfs(i, cur, total + candidates[i])\n        cur.pop()\n        dfs(i + 1, cur, total)\n\n    dfs(0, [], 0)\n    return res\n",
+        "def collect_budget_routes(weights: list[int], budget: int) -> list[list[int]]:\n    routes = []\n\n    def visit(index, current, total):\n        if total == budget:\n            routes.append(current.copy())\n            return\n        if index >= len(weights) or total > budget:\n            return\n        current.append(weights[index])\n        visit(index, current, total + weights[index])\n        current.pop()\n        visit(index + 1, current, total)\n\n    visit(0, [], 0)\n    return routes\n",
     )
     .expect("recursive local helpers should infer mutable collection params from usage");
 
-    let combination_sum = module
+    let collect_budget_routes = module
         .functions
         .iter()
-        .find(|function| function.name == "combination_sum")
-        .expect("combination_sum function missing");
-    let HirStmt::NestedFunction { func } = &combination_sum.body[1] else {
-        panic!("expected nested dfs helper");
+        .find(|function| function.name == "collect_budget_routes")
+        .expect("collect_budget_routes function missing");
+    let HirStmt::NestedFunction { func } = &collect_budget_routes.body[1] else {
+        panic!("expected nested visit helper");
     };
 
-    assert_eq!(func.params[1].name, "cur");
+    assert_eq!(func.params[1].name, "current");
     assert_eq!(func.params[1].ty, Type::List(Box::new(Type::Int)));
     assert_eq!(func.params[1].convention, ParamConvention::mut_borrow());
 }
@@ -225,28 +225,28 @@ fn test_nonlocal_current_binding_conflict_has_flow_code() {
 #[test]
 fn test_nested_helper_usage_refines_outer_empty_collection_types() {
     let module = lower_source(
-        "def subsets(limit: int) -> list[list[int]]:\n    res = []\n    subset = []\n\n    def dfs(i: int):\n        if i >= limit:\n            res.append(subset.copy())\n            return\n        subset.append(i)\n        dfs(i + 1)\n        subset.pop()\n        dfs(i + 1)\n\n    dfs(0)\n    return res\n",
+        "def collect_route_prefixes(limit: int) -> list[list[int]]:\n    routes = []\n    prefix = []\n\n    def visit(depth: int):\n        routes.append(prefix.copy())\n        if depth >= limit:\n            return\n        prefix.append(depth)\n        visit(depth + 1)\n        prefix.pop()\n\n    visit(0)\n    return routes\n",
     )
     .expect("nested helper capture usage should refine outer empty collection types");
 
-    let subsets = module
+    let collect_route_prefixes = module
         .functions
         .iter()
-        .find(|function| function.name == "subsets")
-        .expect("subsets function missing");
+        .find(|function| function.name == "collect_route_prefixes")
+        .expect("collect_route_prefixes function missing");
 
-    let HirStmt::Let { ty: res_ty, .. } = &subsets.body[0] else {
-        panic!("expected first subsets statement to be the result binding");
+    let HirStmt::Let { ty: routes_ty, .. } = &collect_route_prefixes.body[0] else {
+        panic!("expected first collect_route_prefixes statement to be the routes binding");
     };
-    let HirStmt::Let { ty: subset_ty, .. } = &subsets.body[1] else {
-        panic!("expected second subsets statement to be the subset binding");
+    let HirStmt::Let { ty: prefix_ty, .. } = &collect_route_prefixes.body[1] else {
+        panic!("expected second collect_route_prefixes statement to be the prefix binding");
     };
 
     assert_eq!(
-        res_ty,
+        routes_ty,
         &Type::List(Box::new(Type::List(Box::new(Type::Int))))
     );
-    assert_eq!(subset_ty, &Type::List(Box::new(Type::Int)));
+    assert_eq!(prefix_ty, &Type::List(Box::new(Type::Int)));
 }
 
 #[test]
@@ -279,7 +279,7 @@ fn test_nested_ambiguous_return_inference_has_code_and_primary_range() {
 #[test]
 fn test_recursive_memoized_nested_helper_infers_deterministic_int_return() {
     let result = lower_source(
-        "def max_profit(prices: list[int]) -> int:\n    dp = {}\n\n    def dfs(i, buying):\n        if i >= len(prices):\n            return 0\n        if (i, buying) in dp:\n            return dp[(i, buying)]\n\n        cooldown = dfs(i + 1, buying)\n        if buying:\n            buy = dfs(i + 1, not buying) - prices[i]\n            dp[(i, buying)] = max(buy, cooldown)\n        else:\n            sell = dfs(i + 2, not buying) + prices[i]\n            dp[(i, buying)] = max(sell, cooldown)\n        return dp[(i, buying)]\n\n    return dfs(0, True)\n",
+        "def schedule_score(weights: list[int]) -> int:\n    memo = {}\n\n    def score(index, enabled):\n        if index >= len(weights):\n            return 0\n        if (index, enabled) in memo:\n            return memo[(index, enabled)]\n\n        skipped = score(index + 1, enabled)\n        if enabled:\n            accepted = score(index + 1, not enabled) + weights[index]\n            memo[(index, enabled)] = max(accepted, skipped)\n        else:\n            delayed = score(index + 2, not enabled) + weights[index]\n            memo[(index, enabled)] = max(delayed, skipped)\n        return memo[(index, enabled)]\n\n    return score(0, True)\n",
     );
     assert!(
         result.is_ok(),
@@ -290,7 +290,7 @@ fn test_recursive_memoized_nested_helper_infers_deterministic_int_return() {
 #[test]
 fn test_tuple_for_target_inference_specializes_empty_dict_for_membership_index_pattern() {
     let result = lower_source(
-        "def two_sum(nums: list[int], target: int) -> list[int]:\n    prev_map = {}\n    for i, n in enumerate(nums):\n        diff = target - n\n        if diff in prev_map:\n            return [prev_map[diff], i]\n        prev_map[n] = i\n    fallback: list[int] = []\n    return fallback\n",
+        "def first_repeated_bucket(events: list[int], seed: int) -> list[int]:\n    first_seen = {}\n    for index, event in enumerate(events):\n        bucket = event + seed\n        if bucket in first_seen:\n            return [first_seen[bucket], index]\n        first_seen[bucket] = index\n    fallback: list[int] = []\n    return fallback\n",
     );
     assert!(
         result.is_ok(),

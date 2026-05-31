@@ -50,6 +50,7 @@ macro_rules! stmt_expr_unit_slice {
 
         match crate::resolve_alias_type_for_plain_call($object.ty()) {
             Type::Str => {
+                let cached_chars = $emitter.string_char_cache_for_expr($object);
                 let start_i64 = normalize_bound_i64(
                     lowered_start_raw,
                     crate::RustExpr::Literal(crate::RustLiteral::Int(0)),
@@ -80,18 +81,72 @@ macro_rules! stmt_expr_unit_slice {
                     }),
                     ty: crate::RustType::Named("usize".to_string()),
                 };
-                let iter = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
+                let slice_src_value = if let Some(cache_name) = cached_chars.as_ref() {
+                    crate::RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(crate::RustExpr::Ident(cache_name.clone())),
+                    }
+                } else {
+                    crate::RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new($lowered_object),
+                    }
+                };
+                let slice_len_value = if cached_chars.is_some() {
+                    crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Ident("_slice_src".to_string())),
-                            method: "chars".to_string(),
+                            method: "len".to_string(),
                             args: vec![],
                         }),
+                        ty: crate::RustType::I64,
+                    }
+                } else {
+                    crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident(
+                                    "_slice_src".to_string(),
+                                )),
+                                method: "chars".to_string(),
+                                args: vec![],
+                            }),
+                            method: "count".to_string(),
+                            args: vec![],
+                        }),
+                        ty: crate::RustType::I64,
+                    }
+                };
+                let slice_iter_source = if cached_chars.is_some() {
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("_slice_src".to_string())),
+                        method: "iter".to_string(),
+                        args: vec![],
+                    }
+                } else {
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("_slice_src".to_string())),
+                        method: "chars".to_string(),
+                        args: vec![],
+                    }
+                };
+                let iter = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(slice_iter_source),
                         method: "skip".to_string(),
                         args: vec![start_usize],
                     }),
                     method: "take".to_string(),
                     args: vec![take_count],
+                };
+                let iter = if cached_chars.is_some() {
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(iter),
+                        method: "copied".to_string(),
+                        args: vec![],
+                    }
+                } else {
+                    iter
                 };
                 let slice_expr = crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
@@ -106,26 +161,13 @@ macro_rules! stmt_expr_unit_slice {
                             mutable: false,
                             name: "_slice_src".to_string(),
                             ty: None,
-                            value: $lowered_object,
+                            value: slice_src_value,
                         },
                         crate::RustStmt::Let {
                             mutable: false,
                             name: "_slice_len_i64".to_string(),
                             ty: None,
-                            value: crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::MethodCall {
-                                        receiver: Box::new(crate::RustExpr::Ident(
-                                            "_slice_src".to_string(),
-                                        )),
-                                        method: "chars".to_string(),
-                                        args: vec![],
-                                    }),
-                                    method: "count".to_string(),
-                                    args: vec![],
-                                }),
-                                ty: crate::RustType::I64,
-                            },
+                            value: slice_len_value,
                         },
                         crate::RustStmt::Let {
                             mutable: false,

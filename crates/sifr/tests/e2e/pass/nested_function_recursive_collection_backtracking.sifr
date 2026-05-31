@@ -1,22 +1,22 @@
 # Test: Recursive nested helper with captured collection state lowers through production codegen
 
-def combination_sum(candidates: list[int], target: int) -> list[list[int]]:
-    res = []
+def collect_budget_routes(weights: list[int], budget: int) -> list[list[int]]:
+    routes = []
 
-    def dfs(i, cur, total):
-        if total == target:
-            res.append(cur.copy())
+    def visit(index, current, total):
+        if total == budget:
+            routes.append(current.copy())
             return
-        if i >= len(candidates) or total > target:
+        if index >= len(weights) or total > budget:
             return
 
-        cur.append(candidates[i])
-        dfs(i, cur, total + candidates[i])
-        cur.pop()
-        dfs(i + 1, cur, total)
+        current.append(weights[index])
+        visit(index, current, total + weights[index])
+        current.pop()
+        visit(index + 1, current, total)
 
-    dfs(0, [], 0)
-    return res
+    visit(0, [], 0)
+    return routes
 
 def main():
-    assert str(combination_sum([2, 3, 6, 7], 7)) == '[[2, 2, 3], [7]]'
+    assert str(collect_budget_routes([2, 3, 6, 7], 7)) == '[[2, 2, 3], [7]]'

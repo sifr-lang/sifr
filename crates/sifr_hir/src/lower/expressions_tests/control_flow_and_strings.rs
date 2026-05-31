@@ -48,6 +48,22 @@ pub(super) fn test_continue_outside_loop() {
 }
 
 #[test]
+pub(super) fn test_continue_guard_narrows_optional_for_rest_of_loop_body() {
+    let result = lower_source(
+        "def sum_present(values: list[int | None]) -> int:\n    total = 0\n    for value in values:\n        if value is None:\n            continue\n        total += value\n    return total\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+pub(super) fn test_break_guard_narrows_optional_for_rest_of_loop_body() {
+    let result = lower_source(
+        "def sum_until_gap(mut values: list[int | None]) -> int:\n    total = 0\n    while len(values) > 0:\n        value: int | None = values.pop()\n        if value is None:\n            break\n        total += value\n    return total\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
 pub(super) fn test_break_inside_loop() {
     let module = lower_source("def main():\n    while True:\n        break\n").unwrap();
     assert_eq!(module.functions.len(), 1);
@@ -647,7 +663,7 @@ pub(super) fn test_comparable_bound_accepts_homogeneous_tuples() {
 #[test]
 pub(super) fn test_recursive_tree_attributes_narrow_after_truthiness_or_guard() {
     let result = lower_source(
-        "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef mirrored_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return 0\n    left: TreeNode | None = p.left\n    right: TreeNode | None = q.right\n    return p.val + q.val + mirrored_sum(left, q.left) + mirrored_sum(p.right, right)\n",
+        "class BinaryBranch:\n    val: int\n    left: BinaryBranch | None\n    right: BinaryBranch | None\n\n    def __init__(self, val: int, left: BinaryBranch | None, right: BinaryBranch | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef mirrored_sum(p: BinaryBranch | None, q: BinaryBranch | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return 0\n    left: BinaryBranch | None = p.left\n    right: BinaryBranch | None = q.right\n    return p.val + q.val + mirrored_sum(left, q.left) + mirrored_sum(p.right, right)\n",
     );
     assert!(
         result.is_ok(),

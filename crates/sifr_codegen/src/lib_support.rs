@@ -25,6 +25,17 @@ pub(crate) fn resolve_alias_type_for_plain_call(ty: &Type) -> &Type {
     }
 }
 
+pub(crate) fn homogeneous_large_tuple_backing_array(ty: &Type) -> Option<(&Type, usize)> {
+    let Type::Tuple(items) = resolve_alias_type_for_plain_call(ty) else {
+        return None;
+    };
+    let first = items.first()?;
+    if items.len() <= 12 || !items.iter().all(|item| item == first) {
+        return None;
+    }
+    Some((first, items.len()))
+}
+
 pub(crate) fn type_has_typevar(ty: &Type) -> bool {
     match ty {
         Type::Alias {

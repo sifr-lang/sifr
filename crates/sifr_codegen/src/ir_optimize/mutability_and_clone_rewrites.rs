@@ -1,4 +1,4 @@
-use super::{is_copy_type, not_expr};
+use super::{is_copy_type, not_expr, string_key_loop_rewrite::rewrite_string_key_loop_iter};
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType};
 
 const MUTATING_METHODS: &[&str] = &[
@@ -618,8 +618,9 @@ pub(super) fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             }
             removed
         }
-        RustStmt::For { iter, body, .. } => {
-            let mut removed = optimize_expr(iter);
+        RustStmt::For { var, iter, body } => {
+            let mut removed = rewrite_string_key_loop_iter(var, iter, body);
+            removed += optimize_expr(iter);
             removed += optimize_block(body);
             removed
         }

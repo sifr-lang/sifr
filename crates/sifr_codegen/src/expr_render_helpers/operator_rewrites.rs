@@ -375,6 +375,13 @@ impl RustEmitter {
                         }
                     }
                     Type::Str => {
+                        if self.string_char_cache_for_expr(object).is_some() {
+                            return Some(self.lower_string_index_option_with_cache(
+                                object,
+                                container_expr,
+                                lowered_index.clone(),
+                            ));
+                        }
                         let object_name = "__sifr_index_str".to_string();
                         let index_name = "__sifr_index_i".to_string();
                         let normalized_name = "__sifr_index_norm".to_string();
@@ -545,9 +552,11 @@ impl RustEmitter {
                         "compiler-verified tuple index should be in range",
                     )));
                 }
-                return Err(crate::CodegenError::new(
-                    "internal codegen invariant violated: index on optional list/dict/bytes/str produced non-optional result type",
-                ));
+                return Ok(Some(Self::lower_proven_index_option_expr_for_ir(
+                    option_expr,
+                    "__sifr_index_value",
+                    "compiler-verified optional index should be in range",
+                )));
             }
 
             let Some(lowered_expr) = build_inner_index(lowered_object) else {
@@ -563,9 +572,11 @@ impl RustEmitter {
                     "__sifr_index_value",
                     "compiler-verified index should be in range",
                 ))),
-                Type::Dict(_, _) => Err(crate::CodegenError::new(
-                    "internal codegen invariant violated: dict index produced non-optional result type",
-                )),
+                Type::Dict(_, _) => Ok(Some(Self::lower_proven_index_option_expr_for_ir(
+                    lowered_expr,
+                    "__sifr_index_value",
+                    "compiler-verified dict key should be present",
+                ))),
                 _ => Err(crate::CodegenError::new(
                     "internal codegen invariant violated: list/dict/bytes/str index produced non-optional result type",
                 )),

@@ -2,12 +2,12 @@
   {
     "code": "SIFR-WORKSPACE-0101",
     "severity": "Error",
-    "message": "could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/audits/leetcode/src/missing_math_utils.sifr', '<WORKSPACE>/./missing_math_utils.sifr'",
+    "message": "could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr'",
     "message_template": "{message}",
     "args": {
       "message": {
         "kind": "string",
-        "value": "could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/audits/leetcode/src/missing_math_utils.sifr', '<WORKSPACE>/./missing_math_utils.sifr'"
+        "value": "could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr'"
       }
     },
     "url": "https://sifr.sh/docs/errors/SIFR-WORKSPACE-0101",

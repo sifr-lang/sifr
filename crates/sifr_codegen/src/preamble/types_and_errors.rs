@@ -1,4 +1,7 @@
-use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType, Type, Visibility};
+use crate::{
+    homogeneous_large_tuple_backing_array, RustExpr, RustItem, RustParam, RustStmt, RustType, Type,
+    Visibility,
+};
 
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty {
@@ -14,7 +17,17 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
             Box::new(sifr_type_to_rust_type(value)),
         ),
         Type::Set(inner) => RustType::HashSet(Box::new(sifr_type_to_rust_type(inner))),
-        Type::Tuple(items) => RustType::Tuple(items.iter().map(sifr_type_to_rust_type).collect()),
+        Type::Tuple(items) => {
+            if let Some((elem, len)) = homogeneous_large_tuple_backing_array(ty) {
+                RustType::Named(format!(
+                    "[{}; {}]",
+                    crate::Renderer::render_type_string(&sifr_type_to_rust_type(elem)),
+                    len
+                ))
+            } else {
+                RustType::Tuple(items.iter().map(sifr_type_to_rust_type).collect())
+            }
+        }
         Type::Result(ok, err) => RustType::Result(
             Box::new(sifr_type_to_rust_type(ok)),
             Box::new(sifr_type_to_rust_type(err)),

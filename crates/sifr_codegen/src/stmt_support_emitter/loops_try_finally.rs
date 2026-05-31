@@ -95,15 +95,29 @@ impl RustEmitter {
 
         self.loop_else_stack.push(has_else);
         let lowered_iter = self.try_lower_for_iter_expr_for_ir(iter, target_ty)?;
+        let previous_target_cache = self.string_char_cache_vars.get(target).cloned();
+        let target_cache_init = if target.contains(',') {
+            None
+        } else {
+            self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
+        };
         let lowered_body = self.try_lower_stmt_block_for_ir(body)?;
+        if let Some(previous) = previous_target_cache {
+            self.string_char_cache_vars.insert(target.clone(), previous);
+        } else {
+            self.string_char_cache_vars.remove(target);
+        }
         let popped = self.loop_else_stack.pop();
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
         let Some(lowered_iter) = lowered_iter else {
             return Ok(false);
         };
-        let Some(lowered_body) = lowered_body else {
+        let Some(mut lowered_body) = lowered_body else {
             return Ok(false);
         };
+        if let Some(cache_stmt) = target_cache_init {
+            lowered_body.insert(0, cache_stmt);
+        }
 
         if let Some(else_body) = else_body {
             let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)? else {

@@ -125,11 +125,11 @@ pub(super) fn resolve_str_method_type(
             }
             Some(Type::Str)
         }
-        "find" => {
+        "find" | "rfind" => {
             if args.len() != 1 {
                 reject_exact_method_arg_count(
                     ctx,
-                    "str.find",
+                    &format!("str.{method}"),
                     1,
                     args.len(),
                     arg_ranges,
@@ -137,7 +137,7 @@ pub(super) fn resolve_str_method_type(
                 );
                 return None;
             }
-            // find() returns Option[int] = int | None
+            // find()/rfind() return Option[int] = int | None
             Some(Type::Union(vec![Type::Int, Type::None]))
         }
         "encode" => resolve_str_encode_method_type(args, arg_ranges, method_range, ctx),

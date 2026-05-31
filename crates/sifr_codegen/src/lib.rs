@@ -34,7 +34,9 @@ pub(crate) use helpers::{
     collect_referenced_vars_with_types, default_param_convention, is_hashable_type_codegen,
     module_uses_bigint,
 };
+mod borrowed_string_compare;
 mod hir_analysis;
+mod hoisted_literals;
 mod intrinsic_method_emitters;
 mod intrinsics;
 mod ir_imports;
@@ -46,7 +48,8 @@ pub(crate) use lib_modules_and_codegen::{
     BUILTIN_ERROR_CLASSES,
 };
 pub(crate) use lib_support::{
-    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
+    homogeneous_large_tuple_backing_array, resolve_alias_type_for_plain_call,
+    try_lower_leaf_or_name_expr_result,
 };
 pub(crate) use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 pub(crate) use sifr_type_system::{ParamConvention, Type};
@@ -64,6 +67,7 @@ mod methods;
 mod module_body;
 mod module_constants;
 mod module_prescan;
+mod nested_list_element;
 mod operator_protocol_emitters;
 mod output_helpers;
 mod preamble;
@@ -74,6 +78,8 @@ mod rust_ir;
 pub use rust_ir::*;
 mod stdlib_filter;
 mod stmt_support_emitter;
+mod string_char_cache;
+mod string_char_cache_scan;
 mod type_emitters;
 mod union_type_helpers;
 

@@ -376,7 +376,26 @@ pub(crate) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<Stri
 /// Check if a block of HIR statements always exits (return, break, continue).
 /// Used for early-return narrowing in codegen.
 pub(crate) fn codegen_body_always_exits(stmts: &[HirStmt]) -> bool {
-    queries::block_control_flow_effect(stmts).always_exits()
+    stmts.iter().any(stmt_always_leaves_current_path)
+}
+
+fn stmt_always_leaves_current_path(stmt: &HirStmt) -> bool {
+    match stmt {
+        HirStmt::Return { .. } | HirStmt::Break | HirStmt::Continue | HirStmt::Raise { .. } => true,
+        HirStmt::If {
+            then_body,
+            elif_clauses,
+            else_body: Some(else_body),
+            ..
+        } => {
+            codegen_body_always_exits(then_body)
+                && elif_clauses
+                    .iter()
+                    .all(|(_, body)| codegen_body_always_exits(body))
+                && codegen_body_always_exits(else_body)
+        }
+        _ => false,
+    }
 }
 
 /// Detect `x is None` pattern. Returns the variable name.

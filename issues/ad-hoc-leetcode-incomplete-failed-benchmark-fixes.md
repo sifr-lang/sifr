@@ -1,7 +1,21 @@
 # Ad Hoc Phase: LeetCode Incomplete And Failed Benchmark Fixes
 
-Status: complete on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, `sifr-lang/leetcode#26`, `sifr-lang/leetcode#27`, `sifr-lang/leetcode#28`, `sifr-lang/leetcode#29`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`, plus compiler support in `sifr-lang/sifr#2215`, `sifr-lang/sifr#2218`, and `sifr-lang/sifr#2220`
+Status: complete on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, `sifr-lang/leetcode#26`, `sifr-lang/leetcode#27`, `sifr-lang/leetcode#28`, `sifr-lang/leetcode#29`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`, plus compiler support in `sifr-lang/sifr#2215`, `sifr-lang/sifr#2218`, and `sifr-lang/sifr#2220`; 2026-05-31 rerun confirms 325/325 benchmarkable problems complete with no partial or no-pair failures
 Context: follow-up phase for the `Incomplete And Failed Problem Appendix` in `issues/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md`.
+
+## 2026-05-31 Closure Addendum
+
+The follow-up benchmark closure used the rebuilt release compiler and the canonical Python oracle audit from commit `091aade2a6c76637f9d2c50ccf00d5e8d972dd7d`. The full Python/Sifr run completed locally and the analyzer reported:
+
+| Metric | Count |
+| --- | ---: |
+| Benchmarkable problems | 325 |
+| Fully complete problems | 325 |
+| Complete fixture pairs | 971 |
+| Partial benchmark problems | 0 |
+| No-pair failed problems | 0 |
+
+No additional incomplete or failed benchmark rows remain after the canonicality and emitted-code fixes in the final closure wave.
 
 ## Purpose
 

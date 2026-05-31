@@ -1,4 +1,5 @@
-use crate::helpers::collect_mutated_vars_with_sigs;
+use crate::helpers::{collect_mutated_vars_with_sigs, collect_reassigned_vars};
+use crate::stmt_support_emitter::performance_lowering_gate::stmt_needs_performance_lowering;
 use crate::{
     is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result_and_bindings, ClassScope,
     RustEmitter, RustStmt, ScopeContext,
@@ -21,6 +22,7 @@ impl RustEmitter {
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
+        let saved_string_char_cache_vars = self.string_char_cache_vars.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
@@ -30,6 +32,7 @@ impl RustEmitter {
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         self.local_binding_types.clear();
+        self.string_char_cache_vars.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
         for param in &func.params {
@@ -56,19 +59,25 @@ impl RustEmitter {
             class_scope: ClassScope::Inside,
         };
 
-        let mut lowered_body = Vec::new();
+        let reassigned_vars = collect_reassigned_vars(&func.body);
+        let mut lowered_body = self.prepare_string_char_cache_stmts(func, &reassigned_vars);
         for stmt in &func.body {
             self.lowering_stats.stmt_total += 1;
             if is_simple_stmt_candidate(stmt) {
                 self.lowering_stats.stmt_candidate_total += 1;
             }
-            match try_lower_simple_stmt_with_scope_result_and_bindings(
-                stmt,
-                &self.mutated_vars,
-                &self.borrowed_params,
-                &self.local_binding_types,
-                &scope_ctx,
-            ) {
+            let simple_lowered = if stmt_needs_performance_lowering(stmt) {
+                Ok(None)
+            } else {
+                try_lower_simple_stmt_with_scope_result_and_bindings(
+                    stmt,
+                    &self.mutated_vars,
+                    &self.borrowed_params,
+                    &self.local_binding_types,
+                    &scope_ctx,
+                )
+            };
+            match simple_lowered {
                 Ok(Some(lowered)) => {
                     self.lowering_stats.expr_candidate_total += 1;
                     self.lowering_stats.expr_candidate_structured += 1;
@@ -103,6 +112,7 @@ impl RustEmitter {
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
         self.local_binding_types = saved_local_binding_types;
+        self.string_char_cache_vars = saved_string_char_cache_vars;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         lowered_body

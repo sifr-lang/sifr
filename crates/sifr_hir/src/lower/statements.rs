@@ -10,7 +10,7 @@ use super::control_flow_conditions::validate_control_flow_condition;
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::fixed_width_class_payload::class_specialization_payload_conflicts;
 use super::fixed_width_fitting::{validate_fixed_width_initializer, FixedWidthInitializerFit};
-use super::flow_helpers::then_body_always_exits;
+use super::flow_helpers::{body_always_leaves_current_path, then_body_always_exits};
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::if_branch_bindings::{
     predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,

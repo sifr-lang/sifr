@@ -65,10 +65,20 @@ pub(super) fn try_lower_simple_for_stmt(
     }
 
     if let Some(else_body) = parts.else_body {
+        let iter = if crate::RustEmitter::should_lower_string_set_loop_target_as_char(
+            parts.target,
+            parts.target_ty,
+            parts.iter,
+            parts.body,
+        ) {
+            try_lower_simple_string_chars_for_iter_expr(parts.iter)?
+        } else {
+            try_lower_simple_for_iter_expr(parts.iter, parts.target_ty)?
+        };
         return try_lower_loop_else_stmts(
             RustStmt::For {
                 var: parts.target.to_string(),
-                iter: try_lower_simple_for_iter_expr(parts.iter, parts.target_ty)?,
+                iter,
                 // Breaks in the loop body should mark this loop's `_broke`.
                 body: try_lower_simple_stmt_block(
                     parts.body,
@@ -85,9 +95,19 @@ pub(super) fn try_lower_simple_for_stmt(
         );
     }
 
+    let iter = if crate::RustEmitter::should_lower_string_set_loop_target_as_char(
+        parts.target,
+        parts.target_ty,
+        parts.iter,
+        parts.body,
+    ) {
+        try_lower_simple_string_chars_for_iter_expr(parts.iter)?
+    } else {
+        try_lower_simple_for_iter_expr(parts.iter, parts.target_ty)?
+    };
     Some(vec![RustStmt::For {
         var: parts.target.to_string(),
-        iter: try_lower_simple_for_iter_expr(parts.iter, parts.target_ty)?,
+        iter,
         // Entering a nested for without else resets loop-else break marker context.
         body: try_lower_simple_stmt_block(
             parts.body,
@@ -97,6 +117,24 @@ pub(super) fn try_lower_simple_for_stmt(
             ctx,
         )?,
     }])
+}
+
+pub(super) fn try_lower_simple_string_chars_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
+    let iter_source = match iter {
+        HirExpr::IteratorCall {
+            op: sifr_hir::HirIteratorOp::Iter,
+            args,
+            ..
+        } if args.len() == 1 => &args[0],
+        HirExpr::Call { func, args, .. } if func == "iter" && args.len() == 1 => &args[0],
+        _ => iter,
+    };
+    let lowered_iter = try_lower_leaf_or_name_expr(iter_source)?;
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(lowered_iter),
+        method: "chars".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<RustExpr> {

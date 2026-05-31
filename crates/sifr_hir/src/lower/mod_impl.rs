@@ -21,7 +21,7 @@ pub(in crate::lower) fn lower_module_impl(
     integer_literal_diagnostics::validate_module_integer_literals(stmts, &mut ctx);
     // Pass 0: Pre-register all class names as forward references.
     // This allows function signatures and other classes to reference classes
-    // defined later in the file (e.g., ListNode, TreeNode, Node).
+    // defined later in the file (e.g., ChainCell, BinaryBranch, Node).
     for stmt in stmts {
         if let Stmt::ClassDef(class_def) = stmt {
             let class_name = class_def.name.to_string();

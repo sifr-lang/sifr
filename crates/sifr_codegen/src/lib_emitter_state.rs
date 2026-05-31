@@ -6,6 +6,7 @@ use super::{
     HirExpr, HirFunction, HirModule, HirStmt, LoweringStats, NestedFnCapture, ParamConvention,
     RefCell, RustExpr, RustItem, RustLiteral, RustStmt, ScopeContext, Type,
 };
+use crate::stmt_support_emitter::performance_lowering_gate::stmt_needs_performance_lowering;
 pub struct RustEmitter {
     pub(crate) collection_needs: CollectionNeeds,
     pub(crate) runtime_needs: RuntimeNeeds,
@@ -98,6 +99,14 @@ pub struct RustEmitter {
     /// Map from local binding name -> declared type for the active function-like scope.
     /// Used to preserve assignment coercions that depend on the target local type.
     pub(crate) local_binding_types: HashMap<String, Type>,
+    /// Per-function cache variables for borrowed string parameters that are indexed or sliced.
+    pub(crate) string_char_cache_vars: HashMap<String, String>,
+    /// String names that are indexed/sliced/length-read and may need a local char cache.
+    pub(crate) string_char_cache_required_names: HashSet<String>,
+    /// Read-only local dict literals that can be materialized once per process.
+    pub(crate) hoistable_static_dict_locals: HashSet<String>,
+    /// Monotonic suffix for generated hoisted literal static names.
+    pub(crate) hoisted_literal_counter: usize,
     /// Local names widened to `T | None` due `name = None` reassignment in current scope.
     pub(crate) none_widened_local_bindings: HashSet<String>,
     /// Local names whose generated Rust binding has been promoted from plain `i64` storage to `SifrInt`.
@@ -124,6 +133,8 @@ pub struct RustEmitter {
     pub(crate) current_sifr_int_result_return: Cell<bool>,
     /// Stack used to capture structured statement emission as IR nodes.
     pub(crate) stmt_capture_stack: Vec<Vec<RustStmt>>,
+    /// Depth of the currently lowered statement block inside a function-like body.
+    pub(crate) stmt_block_depth: usize,
     /// Recursion guard for non-structured emitter paths.
     pub(crate) lowering_stats: LoweringStats,
 }
@@ -222,6 +233,10 @@ impl RustEmitter {
             try_closure_error_type: Vec::new(),
             callable_var_conventions: HashMap::new(),
             local_binding_types: HashMap::new(),
+            string_char_cache_vars: HashMap::new(),
+            string_char_cache_required_names: HashSet::new(),
+            hoistable_static_dict_locals: HashSet::new(),
+            hoisted_literal_counter: 0,
             none_widened_local_bindings: HashSet::new(),
             sifr_int_local_bindings: RefCell::new(HashSet::new()),
             sifr_int_forced_local_bindings: RefCell::new(HashSet::new()),
@@ -235,6 +250,7 @@ impl RustEmitter {
             current_sifr_int_return: Cell::new(false),
             current_sifr_int_result_return: Cell::new(false),
             stmt_capture_stack: Vec::new(),
+            stmt_block_depth: 0,
             lowering_stats: LoweringStats::default(),
         }
     }
@@ -342,7 +358,9 @@ impl RustEmitter {
                 kind: sifr_hir::HirAsyncWithKind::UserDefined { .. },
                 ..
             }
-        ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+        ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))
+            || matches!(stmt, HirStmt::Let { name, .. } if self.hoistable_static_dict_locals.contains(name))
+            || stmt_needs_performance_lowering(stmt);
         if !should_bypass_simple_lowering {
             if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
@@ -414,6 +432,20 @@ impl RustEmitter {
                 for lowered_stmt in lowered_stmts {
                     self.push_captured_stmt(&lowered_stmt);
                 }
+                for target in targets {
+                    let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding else {
+                        continue;
+                    };
+                    let cache_stmt = if target.rebind_existing {
+                        self.string_char_cache_rebuild_stmt_for_local(name)
+                    } else {
+                        self.force_string_char_cache_init_stmt_for_local(name, &target.ty)
+                    };
+                    if let Some(cache_stmt) = cache_stmt {
+                        let cache_stmt = self.rewrite_stdlib_constant_idents_in_stmt(cache_stmt);
+                        self.push_captured_stmt(&cache_stmt);
+                    }
+                }
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
                 return Ok(true);
@@ -429,6 +461,14 @@ impl RustEmitter {
                 .get(name)
                 .cloned()
                 .unwrap_or_else(|| ty.clone());
+            if let Some(hoisted_stmt) =
+                self.try_hoist_static_readonly_dict_literal(name, &effective_ty, value)?
+            {
+                self.push_captured_stmt(&hoisted_stmt);
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
+            }
             let is_generic_class = matches!(
                 &effective_ty,
                 Type::Class {
@@ -457,7 +497,10 @@ impl RustEmitter {
             } else {
                 None
             };
-            let lowered_value = if let Some(clone_expr) = lowered_value {
+            let borrowed_dict_get = None;
+            let lowered_value = if let Some(lowered) = borrowed_dict_get.clone() {
+                lowered
+            } else if let Some(clone_expr) = lowered_value {
                 clone_expr
             } else {
                 if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
@@ -480,6 +523,8 @@ impl RustEmitter {
                 name: name.clone(),
                 ty: if name == "_"
                     || is_generic_class
+                    || borrowed_dict_get.is_some()
+                    || Self::is_borrowed_empty_list_get_expr_for_ir(&lowered_value)
                     || match (&effective_ty, value) {
                         (resolved_ty, HirExpr::Call { func, args, .. })
                             if matches!(
@@ -519,12 +564,30 @@ impl RustEmitter {
             };
             let lowered_stmt = self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt);
             self.push_captured_stmt(&lowered_stmt);
+            if let Some(cache_stmt) =
+                self.string_char_cache_init_stmt_for_local(name, &effective_ty)
+            {
+                let cache_stmt = self.rewrite_stdlib_constant_idents_in_stmt(cache_stmt);
+                self.push_captured_stmt(&cache_stmt);
+            }
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
 
         if let HirStmt::Assign { name, value } = stmt {
+            if let Some(lowered_stmts) =
+                self.try_lower_self_string_concat_assign_for_ir(name, value)?
+            {
+                let lowered_stmts = lowered_stmts
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect::<Vec<_>>();
+                self.emit_lowered_stmts(&lowered_stmts);
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
+            }
             let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
                 if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
                     let mut lowered =
@@ -578,6 +641,10 @@ impl RustEmitter {
             };
             let lowered_stmt = self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt);
             self.push_captured_stmt(&lowered_stmt);
+            if let Some(cache_stmt) = self.string_char_cache_rebuild_stmt_for_local(name) {
+                let cache_stmt = self.rewrite_stdlib_constant_idents_in_stmt(cache_stmt);
+                self.push_captured_stmt(&cache_stmt);
+            }
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);

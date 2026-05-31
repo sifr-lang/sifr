@@ -13,6 +13,66 @@ macro_rules! stmt_expr_method_call {
             ..
         } = $expr
         {
+            if let Some(lowered) = $emitter.try_lower_dict_indexed_list_append_expr($expr) {
+                return Ok(Some(lowered));
+            }
+            if let Some(lowered) = $emitter.try_lower_dict_indexed_list_pop_expr($expr) {
+                return Ok(Some(lowered));
+            }
+            if let Some(lowered) = $emitter.try_lower_dict_indexed_list_len_expr($expr) {
+                return Ok(Some(lowered));
+            }
+            if method == "len"
+                && args.is_empty()
+                && matches!(
+                    crate::resolve_alias_type_for_plain_call(object.ty()),
+                    Type::Str | Type::LiteralStr(_)
+                )
+            {
+                let Some(lowered_object) = $emitter.lower_stmt_expr_for_ir(object)? else {
+                    return Ok(None);
+                };
+                return Ok(Some($emitter.lower_string_len_with_cache(object, lowered_object)));
+            }
+            if method == "len" && args.is_empty() {
+                if let HirExpr::Call {
+                    func,
+                    args: set_args,
+                    ..
+                } = object.as_ref()
+                {
+                    if func == "set"
+                        && set_args.len() == 1
+                        && matches!(
+                            crate::resolve_alias_type_for_plain_call(set_args[0].ty()),
+                            Type::Str | Type::LiteralStr(_)
+                        )
+                    {
+                        let Some(lowered_source) =
+                            $emitter.lower_stmt_expr_for_ir(&set_args[0])?
+                        else {
+                            return Ok(None);
+                        };
+                        let char_set = crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(lowered_source),
+                                method: "chars".to_string(),
+                                args: vec![],
+                            }),
+                            method: "collect::<std::collections::HashSet<_>>".to_string(),
+                            args: vec![],
+                        };
+                        return Ok(Some(crate::RustExpr::Cast {
+                            expr: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(char_set),
+                                method: "len".to_string(),
+                                args: vec![],
+                            }),
+                            ty: crate::RustType::I64,
+                        }));
+                    }
+                }
+            }
             if method == "append" && args.len() == 1 {
                 if let HirExpr::Index {
                     object: index_object,
@@ -40,7 +100,7 @@ macro_rules! stmt_expr_method_call {
                             let lowered_index =
                                 Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
                             let lowered_arg =
-                                Self::clone_non_copy_name_expr_for_ir(&args[0], lowered_arg);
+                                Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
                             let key_arg = Self::build_dict_lookup_key_arg_for_ir(lowered_index);
                             return Ok(Some(crate::RustExpr::Block {
                                 stmts: vec![crate::RustStmt::IfLet {
@@ -102,6 +162,8 @@ macro_rules! stmt_expr_method_call {
                     Type::List(_)
                 )
             {
+                lowered_args[0] =
+                    Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_args[0].clone());
                 return Ok(Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_object),
                     method: "push".to_string(),

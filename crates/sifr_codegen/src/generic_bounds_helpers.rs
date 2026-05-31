@@ -74,18 +74,39 @@ impl RustEmitter {
                 self.rust_type_with_generics(value)
             ),
             Type::Set(inner) => format!("HashSet<{}>", self.rust_type_with_generics(inner)),
-            Type::Tuple(items) => format!(
-                "({})",
-                items
-                    .iter()
-                    .map(|item| self.rust_type_with_generics(item))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
+            Type::Tuple(items) => {
+                if let Some((elem, len)) = crate::homogeneous_large_tuple_backing_array(ty) {
+                    format!("[{}; {}]", self.rust_type_with_generics(elem), len)
+                } else {
+                    format!(
+                        "({})",
+                        items
+                            .iter()
+                            .map(|item| self.rust_type_with_generics(item))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                }
+            }
             Type::Result(ok, err) => format!(
                 "Result<{}, {}>",
                 self.rust_type_with_generics(ok),
                 self.rust_type_with_generics(err)
+            ),
+            Type::Task(ok, err) => format!(
+                "__SifrTask<{}, {}>",
+                self.rust_type_with_generics(ok),
+                self.rust_generator_error_type_with_generics(err)
+            ),
+            Type::BlockingTask(ok, err) => format!(
+                "__SifrBlockingTask<{}, {}>",
+                self.rust_type_with_generics(ok),
+                self.rust_generator_error_type_with_generics(err)
+            ),
+            Type::TaskResult(ok, err) => format!(
+                "__SifrTaskResult<{}, {}>",
+                self.rust_type_with_generics(ok),
+                self.rust_generator_error_type_with_generics(err)
             ),
             Type::Union(members) => {
                 let non_none: Vec<&Type> = members
@@ -107,11 +128,17 @@ impl RustEmitter {
             Type::TimeoutResult(err) => {
                 format!("__SifrTimeoutResult<{}>", self.rust_type_with_generics(err))
             }
+            Type::Select2(first, second) => format!(
+                "__SifrSelect2<{}, {}>",
+                self.rust_type_with_generics(first),
+                self.rust_type_with_generics(second)
+            ),
             Type::AsyncGenerator(item, err) => format!(
                 "AsyncGenerator<{}, {}>",
                 self.rust_type_with_generics(item),
                 self.rust_generator_error_type_with_generics(err)
             ),
+            Type::Never => "std::convert::Infallible".to_string(),
             Type::TypeVar(name) => name.clone(),
             Type::Callable(params, conventions, ret) => {
                 let param_types = params
