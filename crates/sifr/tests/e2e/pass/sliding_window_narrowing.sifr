@@ -3,35 +3,35 @@
 # zero-based pointers, preserve direct string indexing, and keep generated code
 # on the non-optional path for set.remove/add.
 
-def maxVowels(s: str, k: int) -> int:
+def max_signal_count(stream: str, k: int) -> int:
     l, res, total = 0, 0, 0
-    vowels = "aeiou"
+    signal_codes = "ABC"
 
-    for r in range(len(s)):
-        if s[r] in vowels:
+    for r in range(len(stream)):
+        if stream[r] in signal_codes:
             total += 1
         if (r - l + 1) > k:
-            if s[l] in vowels:
+            if stream[l] in signal_codes:
                 total -= 1
             l += 1
         res = max(res, total)
     return res
 
-def lengthOfLongestSubstring(s: str) -> int:
-    charSet = set()
+def longest_distinct_badge_run(badges: str) -> int:
+    active = set()
     l = 0
     res = 0
 
-    for r in range(len(s)):
-        while s[r] in charSet:
-            charSet.remove(s[l])
+    for r in range(len(badges)):
+        while badges[r] in active:
+            active.remove(badges[l])
             l += 1
-        charSet.add(s[r])
+        active.add(badges[r])
         res = max(res, r - l + 1)
     return res
 
 def main():
-    assert str(maxVowels("abciiidef", 3)) == '3'
-    assert str(maxVowels("aeiou", 2)) == '2'
-    assert str(lengthOfLongestSubstring("abcabcbb")) == '3'
-    assert str(lengthOfLongestSubstring("bbbbb")) == '1'
+    assert str(max_signal_count("ABxCCCz", 3)) == '3'
+    assert str(max_signal_count("ABCDE", 2)) == '2'
+    assert str(longest_distinct_badge_run("abcabcbb")) == '3'
+    assert str(longest_distinct_badge_run("zzzzz")) == '1'

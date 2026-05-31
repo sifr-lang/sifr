@@ -50,6 +50,7 @@ pub(crate) fn lower_method_with_context(
         (Type::Str, "split") => string::lower_split(object, args),
         (Type::Str, "replace") => string::lower_replace(object, args),
         (Type::Str, "find") => string::lower_find(object, args),
+        (Type::Str, "rfind") => string::lower_rfind(object, args),
         (Type::Str, "lstrip") => string::lower_lstrip(object, args),
         (Type::Str, "rstrip") => string::lower_rstrip(object, args),
         (Type::Str, "count") => string::lower_count(object, args),
@@ -188,7 +189,7 @@ mod tests {
             &[],
         )
         .expect("tuple len lowers");
-        assert_eq!(render_expr(&tuple_len.expr), "3 as i64");
+        assert_eq!(render_expr(&tuple_len.expr), "3_i64");
 
         let tuple_count = lower_method(
             &Type::Tuple(vec![Type::Int, Type::Str, Type::Bool]),
@@ -220,7 +221,7 @@ mod tests {
         .expect("option len lowers");
         assert_eq!(
             render_expr(&option_len.expr),
-            "opt.as_ref().map_or(0 as usize, |v| v.len()) as i64"
+            "opt.as_ref().map_or(0_usize, |v| v.len()) as i64"
         );
 
         let generic_len = lower_method(
@@ -271,6 +272,13 @@ mod tests {
         let find =
             lower_method(&Type::Str, "find", "s", &["needle".to_string()]).expect("find lowers");
         assert_eq!(render_expr(&find.expr), "s.find(&needle).map(|i| i as i64)");
+
+        let rfind =
+            lower_method(&Type::Str, "rfind", "s", &["needle".to_string()]).expect("rfind lowers");
+        assert_eq!(
+            render_expr(&rfind.expr),
+            "s.rfind(&needle).map(|i| i as i64)"
+        );
 
         let lstrip = lower_method(&Type::Str, "lstrip", "s", &[]).expect("lstrip lowers");
         assert_eq!(render_expr(&lstrip.expr), "s.trim_start().to_string()");
@@ -556,7 +564,7 @@ mod tests {
         let set_ty = Type::Set(Box::new(Type::Int));
         let set_add =
             lower_method(&set_ty, "add", "s", &["1".to_string()]).expect("set add lowers");
-        assert_eq!(render_expr(&set_add.expr), "s.insert(1)");
+        assert_eq!(render_expr(&set_add.expr), "s.insert((1).clone())");
 
         let set_remove =
             lower_method(&set_ty, "remove", "s", &["1".to_string()]).expect("set remove lowers");

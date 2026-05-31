@@ -237,12 +237,12 @@ fn test_workspace_resolver_finds_declared_source_roots_and_dotted_paths() {
     std::fs::create_dir_all(&helper_dir).expect("helper dir should be created");
     std::fs::write(
         entry_dir.join("main.sifr"),
-        "from helpers.list_node import ListNode\n",
+        "from helpers.list_node import ChainCell\n",
     )
     .expect("main should be written");
     std::fs::write(
         helper_dir.join("list_node.sifr"),
-        "class ListNode:\n    pass\n",
+        "class ChainCell:\n    pass\n",
     )
     .expect("helper should be written");
 
@@ -411,14 +411,14 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
     std::fs::create_dir_all(dir.join("lib/helpers")).expect("helper dir should be created");
     std::fs::write(
         entry_dir.join("main.sifr"),
-        "from helpers.list_node import ListNode\n",
+        "from helpers.list_node import ChainCell\n",
     )
     .expect("main should be written");
     std::fs::write(dir.join("lib/helpers.sifr"), "VALUE: int = 1\n")
         .expect("parent helper should be written");
     std::fs::write(
         dir.join("lib/helpers/list_node.sifr"),
-        "class ListNode:\n    pass\n",
+        "class ChainCell:\n    pass\n",
     )
     .expect("dotted helper should be written");
 

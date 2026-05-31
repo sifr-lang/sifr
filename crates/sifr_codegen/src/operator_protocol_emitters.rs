@@ -355,6 +355,7 @@ impl RustEmitter {
             }
             HirStmt::For {
                 target,
+                target_ty,
                 iter,
                 body,
                 else_body,
@@ -363,9 +364,17 @@ impl RustEmitter {
                 if else_body.is_some() {
                     return None;
                 }
+                let char_set_loop = Self::should_lower_string_set_loop_target_as_char(
+                    target, target_ty, iter, body,
+                );
+                let iter = if char_set_loop {
+                    self.lower_operator_string_chars_for_iter_ir(iter)?
+                } else {
+                    self.lower_operator_for_iter_ir(iter)?
+                };
                 Some(vec![RustStmt::For {
                     var: target.clone(),
-                    iter: self.lower_operator_for_iter_ir(iter)?,
+                    iter,
                     body: self.lower_operator_stmt_block_ir(body)?,
                 }])
             }
@@ -563,6 +572,28 @@ impl RustEmitter {
                 _ => lowered_iter,
             },
         )
+    }
+
+    pub(crate) fn lower_operator_string_chars_for_iter_ir(
+        &mut self,
+        iter: &HirExpr,
+    ) -> Option<RustExpr> {
+        if let HirExpr::IteratorCall { op, args, .. } = iter {
+            if *op == sifr_hir::HirIteratorOp::Iter && args.len() == 1 {
+                return self.lower_operator_string_chars_for_iter_ir(&args[0]);
+            }
+        }
+        if let HirExpr::Call { func, args, .. } = iter {
+            if func == "iter" && args.len() == 1 {
+                return self.lower_operator_string_chars_for_iter_ir(&args[0]);
+            }
+        }
+        let lowered_iter = self.lower_operator_expr_ir(iter)?;
+        Some(RustExpr::MethodCall {
+            receiver: Box::new(lowered_iter),
+            method: "chars".to_string(),
+            args: vec![],
+        })
     }
 
     pub(crate) fn detect_option_truthiness_alias_for_operator(expr: &HirExpr) -> Option<String> {

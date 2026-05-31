@@ -181,11 +181,7 @@ fn render_span_block(output: &mut String, span: &DiagnosticSpan, role: SpanRole)
             .and_then(|line| line.checked_add(u32::try_from(index).unwrap_or(u32::MAX)))
             .map_or_else(String::new, |line| line.to_string());
         let text = terminal_line_text(line);
-        let _ = writeln!(
-            output,
-            "   {line_number:>width$} | {text}",
-            width = gutter_width
-        );
+        let _ = writeln!(output, "   {line_number:>gutter_width$} | {text}");
         let marker = highlight_marker(line);
         let label = span
             .label

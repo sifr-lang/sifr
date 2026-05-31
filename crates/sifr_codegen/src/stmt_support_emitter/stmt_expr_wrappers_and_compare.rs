@@ -73,6 +73,15 @@ macro_rules! stmt_expr_wrappers_range_index {
             object, index, ty, ..
         } = $expr
         {
+            if let Some(lowered) = $emitter.try_lower_nested_list_element_expr($expr) {
+                return Ok(Some(lowered));
+            }
+            if let Some(lowered) = $emitter.try_lower_list_indexed_dict_element_expr($expr) {
+                return Ok(Some(lowered));
+            }
+            if let Some(lowered) = $emitter.try_lower_dict_indexed_list_element_expr($expr) {
+                return Ok(Some(lowered));
+            }
             if !crate::helpers::is_option_type(ty) {
                 if let Some(lowered) = $emitter.lower_non_option_index_expr_for_ir(object, index)? {
                     return Ok(Some(lowered));
@@ -406,12 +415,39 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
             ..
         } = $expr
         {
+            if let Some(lowered) =
+                $emitter.try_lower_defaultdict_index_contains_expr(element, collection)
+            {
+                return Ok(Some(lowered));
+            }
             let Some(lowered_element) = $emitter.lower_stmt_expr_for_ir(element)? else {
                 return Ok(None);
             };
+            if let Some(lowered) = $emitter.try_lower_list_indexed_dict_contains_expr(
+                element,
+                collection,
+                lowered_element.clone(),
+            ) {
+                return Ok(Some(lowered));
+            }
+            let suppress_collection_clone = matches!(collection.as_ref(), HirExpr::FieldAccess { .. });
+            let suppression_prev = $emitter.pending_self_field_clone_suppression;
+            if suppress_collection_clone {
+                $emitter.pending_self_field_clone_suppression += 1;
+            }
             let Some(lowered_collection) = $emitter.lower_stmt_expr_for_ir(collection)? else {
+                if suppress_collection_clone
+                    && $emitter.pending_self_field_clone_suppression > suppression_prev
+                {
+                    $emitter.pending_self_field_clone_suppression -= 1;
+                }
                 return Ok(None);
             };
+            if suppress_collection_clone
+                && $emitter.pending_self_field_clone_suppression > suppression_prev
+            {
+                $emitter.pending_self_field_clone_suppression -= 1;
+            }
             let lowered = match crate::resolve_alias_type_for_plain_call(collection.ty()) {
                 Type::Dict(_, _) => {
                     let key_arg = if let HirExpr::StringLiteral(value) = element.as_ref() {
@@ -574,6 +610,39 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         "is not" => "!=".to_string(),
                         _ => return Ok(None),
                     };
+                    if matches!(lowered_op.as_str(), "==" | "!=") {
+                        let borrowed_left =
+                            $emitter.try_lower_borrowed_string_lookup_for_compare(lhs_expr)?;
+                        let borrowed_right =
+                            $emitter.try_lower_borrowed_string_lookup_for_compare(rhs_expr)?;
+                        let borrowed_left_name =
+                            crate::RustEmitter::lower_borrowed_string_name_for_compare(lhs_expr);
+                        let borrowed_right_name =
+                            crate::RustEmitter::lower_borrowed_string_name_for_compare(rhs_expr);
+                        if let Some((lowered_left, lowered_right)) = borrowed_left
+                            .clone()
+                            .zip(borrowed_right.clone())
+                            .or_else(|| borrowed_left.zip(borrowed_right_name))
+                            .or_else(|| borrowed_left_name.zip(borrowed_right))
+                        {
+                            let lowered_cmp = crate::RustExpr::BinOp {
+                                left: Box::new(lowered_left),
+                                op: lowered_op,
+                                right: Box::new(lowered_right),
+                            };
+                            lowered_chain = Some(if let Some(existing) = lowered_chain {
+                                crate::RustExpr::BinOp {
+                                    left: Box::new(existing),
+                                    op: "&&".to_string(),
+                                    right: Box::new(lowered_cmp),
+                                }
+                            } else {
+                                lowered_cmp
+                            });
+                            lhs_expr = rhs_expr;
+                            continue;
+                        }
+                    }
                     let Some(lowered_left) = $emitter.lower_stmt_expr_for_ir(lhs_expr)? else {
                         return Ok(None);
                     };

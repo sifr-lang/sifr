@@ -1,4 +1,4 @@
-use super::{queries, HirExpr, HirStmt, RustEmitter, RustStmt, Type};
+use super::{HirExpr, HirStmt, RustEmitter, RustStmt, Type};
 impl RustEmitter {
     pub(crate) fn try_lower_borrowed_name_compare_condition_for_ir(
         &self,
@@ -23,6 +23,55 @@ impl RustEmitter {
             "is not" => "!=",
             _ => return None,
         };
+        let borrowed_string_literal_operand =
+            |operand: &HirExpr, emitter: &Self| -> Option<crate::RustExpr> {
+                let HirExpr::Name { name, ty } = operand else {
+                    return None;
+                };
+                if !emitter.borrowed_params.contains(name)
+                    && !emitter.mut_borrowed_params.contains(name)
+                {
+                    return None;
+                }
+                if !matches!(
+                    crate::resolve_alias_type_for_plain_call(ty),
+                    Type::Str | Type::LiteralStr(_)
+                ) {
+                    return None;
+                }
+                Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Ident(
+                        name.clone(),
+                    )))),
+                    method: "as_str".to_string(),
+                    args: vec![],
+                })
+            };
+        match (left.as_ref(), rhs) {
+            (name_expr, HirExpr::StringLiteral(literal)) => {
+                if let Some(lowered_name) = borrowed_string_literal_operand(name_expr, self) {
+                    return Some(crate::RustExpr::BinOp {
+                        left: Box::new(lowered_name),
+                        op: lowered_op.to_string(),
+                        right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
+                            literal.clone(),
+                        ))),
+                    });
+                }
+            }
+            (HirExpr::StringLiteral(literal), name_expr) => {
+                if let Some(lowered_name) = borrowed_string_literal_operand(name_expr, self) {
+                    return Some(crate::RustExpr::BinOp {
+                        left: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
+                            literal.clone(),
+                        ))),
+                        op: lowered_op.to_string(),
+                        right: Box::new(lowered_name),
+                    });
+                }
+            }
+            _ => {}
+        }
         let effective_name_ty = |operand: &HirExpr, emitter: &Self| -> Option<Type> {
             let HirExpr::Name { name, ty } = operand else {
                 return None;
@@ -273,7 +322,7 @@ impl RustEmitter {
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         if elif_clauses.is_empty()
             && else_body.is_none()
-            && queries::block_control_flow_effect(then_body).always_exits()
+            && crate::helpers::codegen_body_always_exits(then_body)
         {
             let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
                 return Ok(None);

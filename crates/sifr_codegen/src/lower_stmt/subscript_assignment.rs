@@ -224,15 +224,17 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
     value: &HirExpr,
     object_ty: &Type,
 ) -> Option<Vec<RustStmt>> {
+    let Type::List(inner_ty) = resolve_alias_type(object_ty) else {
+        return None;
+    };
+    let Type::List(target_elem_ty) = resolve_alias_type(inner_ty) else {
+        return None;
+    };
     let lowered_outer_index = try_lower_leaf_or_name_expr(outer_index)?;
     let lowered_inner_index = try_lower_leaf_or_name_expr(inner_index)?;
     let outer_index_is_option = is_option_like_type(outer_index.ty());
     let inner_index_is_option = is_option_like_type(inner_index.ty());
-    let target_elem_is_option = matches!(
-        resolve_alias_type(object_ty),
-        Type::List(inner)
-            if matches!(resolve_alias_type(inner), Type::List(elem) if is_option_like_type(elem))
-    );
+    let target_elem_is_option = is_option_like_type(target_elem_ty);
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
     let assign_elem_stmt = if is_option_like_type(value.ty()) && !target_elem_is_option {
         RustStmt::IfLet {
@@ -405,15 +407,17 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
     value: &HirExpr,
     field_ty: &Type,
 ) -> Option<Vec<RustStmt>> {
+    let Type::List(inner_ty) = resolve_alias_type(field_ty) else {
+        return None;
+    };
+    let Type::List(target_elem_ty) = resolve_alias_type(inner_ty) else {
+        return None;
+    };
     let lowered_outer_index = try_lower_leaf_or_name_expr(outer_index)?;
     let lowered_inner_index = try_lower_leaf_or_name_expr(inner_index)?;
     let outer_index_is_option = is_option_like_type(outer_index.ty());
     let inner_index_is_option = is_option_like_type(inner_index.ty());
-    let target_elem_is_option = matches!(
-        resolve_alias_type(field_ty),
-        Type::List(inner)
-            if matches!(resolve_alias_type(inner), Type::List(elem) if is_option_like_type(elem))
-    );
+    let target_elem_is_option = is_option_like_type(target_elem_ty);
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
     let assign_elem_stmt = if is_option_like_type(value.ty()) && !target_elem_is_option {
         RustStmt::IfLet {

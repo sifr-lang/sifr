@@ -328,12 +328,17 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             then_expr: Box::new(try_lower_leaf_expr(then_expr)?),
             else_expr: Some(Box::new(try_lower_leaf_expr(else_expr)?)),
         }),
-        HirExpr::TupleLiteral { elements, .. } => Some(RustExpr::Tuple(
-            elements
+        HirExpr::TupleLiteral { elements, ty } => {
+            let lowered = elements
                 .iter()
                 .map(try_lower_leaf_expr)
-                .collect::<Option<Vec<_>>>()?,
-        )),
+                .collect::<Option<Vec<_>>>()?;
+            if crate::homogeneous_large_tuple_backing_array(ty).is_some() {
+                Some(RustExpr::Array(lowered))
+            } else {
+                Some(RustExpr::Tuple(lowered))
+            }
+        }
         HirExpr::ListLiteral { elements, ty } => {
             let list_ty = resolve_alias_type(ty);
             let mut lowered = elements
@@ -378,6 +383,20 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             collection,
             ..
         } => {
+            if matches!(
+                collection.as_ref(),
+                HirExpr::Index { object, .. }
+                    if matches!(
+                        object.ty(),
+                        Type::Alias { name, .. }
+                            if matches!(
+                                name.as_str(),
+                                "__compat_defaultdict_list" | "__compat_defaultdict_set"
+                            )
+                    )
+            ) {
+                return None;
+            }
             let collection_ty = resolve_alias_type(collection.ty());
             let method = match collection_ty {
                 Type::Dict(_, _) => "contains_key",

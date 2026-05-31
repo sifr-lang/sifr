@@ -309,7 +309,7 @@ pub(super) fn test_imported_counter_iterable_constructor_remains_unsupported() {
 #[test]
 pub(super) fn test_constructor_assigned_fields_infer_class_instance_types() {
     let result = lower_source(
-        "class Node:\n    def __init__(self):\n        self.marked = False\n\nclass Trie:\n    def __init__(self):\n        self.root = Node()\n\n    def is_marked(self) -> bool:\n        return self.root.marked\n\ndef main() -> bool:\n    trie = Trie()\n    return trie.is_marked()\n",
+        "class Marker:\n    def __init__(self):\n        self.marked = False\n\nclass Registry:\n    def __init__(self):\n        self.root = Marker()\n\n    def is_marked(self) -> bool:\n        return self.root.marked\n\ndef main() -> bool:\n    registry = Registry()\n    return registry.is_marked()\n",
     );
     assert!(
         result.is_ok(),
@@ -797,7 +797,7 @@ pub(super) fn test_invalid_subscript_receiver_has_type_code() {
 #[test]
 pub(super) fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
     let result = lower_source(
-        "class ListNode:\n    next: ListNode | None\n\n    def __init__(self):\n        self.next = None\n\nclass Wrapper:\n    head: ListNode\n\n    def __init__(self):\n        self.head = ListNode()\n        self.head.next = ListNode()\n",
+        "class ChainCell:\n    next: ChainCell | None\n\n    def __init__(self):\n        self.next = None\n\nclass Wrapper:\n    head: ChainCell\n\n    def __init__(self):\n        self.head = ChainCell()\n        self.head.next = ChainCell()\n",
     );
     assert!(
         result.is_ok(),
@@ -809,7 +809,7 @@ pub(super) fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
 #[test]
 pub(super) fn test_nested_attribute_assignment_lowers_for_optional_field_base() {
     let result = lower_source(
-        "class ListNode:\n    next: ListNode | None\n    prev: ListNode | None\n\n    def __init__(self):\n        self.next = None\n        self.prev = None\n\ndef relink(mut node: ListNode) -> None:\n    if node.prev is not None:\n        node.prev.next = node.next\n",
+        "class ChainCell:\n    next: ChainCell | None\n    prev: ChainCell | None\n\n    def __init__(self):\n        self.next = None\n        self.prev = None\n\ndef relink(mut node: ChainCell) -> None:\n    if node.prev is not None:\n        node.prev.next = node.next\n",
     );
     assert!(
         result.is_ok(),

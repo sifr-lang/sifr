@@ -314,6 +314,21 @@ impl Renderer {
         }
     }
 
+    fn let_type_should_be_omitted(ty: Option<&RustType>, value: &RustExpr) -> bool {
+        let Some(RustType::Vec(_)) = ty else {
+            return false;
+        };
+        matches!(
+            value,
+            RustExpr::MethodCall { method, args, receiver }
+                if method == "unwrap_or"
+                    && matches!(args.as_slice(), [RustExpr::Ident(default)] if default == "&[]")
+                    && matches!(receiver.as_ref(), RustExpr::MethodCall { method, args, .. }
+                        if method == "map"
+                            && matches!(args.as_slice(), [RustExpr::Path(path)] if path == &["Vec".to_string(), "as_slice".to_string()]))
+        )
+    }
+
     pub(crate) fn render_stmt_with_tail(&mut self, stmt: &RustStmt, tail: bool) {
         match stmt {
             RustStmt::Let {
@@ -323,12 +338,15 @@ impl Renderer {
                 value,
             } => {
                 let mutability = if *mutable { "mut " } else { "" };
-                let ty = ty
-                    .as_ref()
-                    .map(|t| format!(": {}", Self::render_type_string(t)))
-                    .unwrap_or_default();
+                let rendered_ty = if Self::let_type_should_be_omitted(ty.as_ref(), value) {
+                    String::new()
+                } else {
+                    ty.as_ref()
+                        .map(|t| format!(": {}", Self::render_type_string(t)))
+                        .unwrap_or_default()
+                };
                 self.emit_line(&format!(
-                    "let {mutability}{name}{ty} = {value};",
+                    "let {mutability}{name}{rendered_ty} = {value};",
                     name = Self::render_identifier(name),
                     value = Self::render_expr_string(value)
                 ));

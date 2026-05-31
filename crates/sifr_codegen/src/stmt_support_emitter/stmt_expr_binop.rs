@@ -155,6 +155,51 @@ macro_rules! stmt_expr_binop {
                     (_, (true, true)) => (lowered_right.clone(), lowered_left.clone()),
                     _ => return Ok(None),
                 };
+                if let crate::RustExpr::Vec(items) = &collection_expr {
+                    if let [item] = items.as_slice() {
+                        return Ok(Some(crate::RustExpr::Block {
+                            stmts: vec![crate::RustStmt::Let {
+                                mutable: false,
+                                name: "__sifr_repeat_n".to_string(),
+                                ty: None,
+                                value: count_expr,
+                            }],
+                            expr: Some(Box::new(crate::RustExpr::If {
+                                cond: Box::new(crate::RustExpr::BinOp {
+                                    left: Box::new(crate::RustExpr::Ident(
+                                        "__sifr_repeat_n".to_string(),
+                                    )),
+                                    op: "<=".to_string(),
+                                    right: Box::new(crate::RustExpr::Literal(
+                                        crate::RustLiteral::Int(0),
+                                    )),
+                                }),
+                                then_expr: Box::new(crate::RustExpr::Vec(vec![])),
+                                else_expr: Some(Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::FnCall {
+                                            func: Box::new(crate::RustExpr::Path(vec![
+                                                "std".to_string(),
+                                                "iter".to_string(),
+                                                "repeat".to_string(),
+                                            ])),
+                                            args: vec![item.clone()],
+                                        }),
+                                        method: "take".to_string(),
+                                        args: vec![crate::RustExpr::Cast {
+                                            expr: Box::new(crate::RustExpr::Ident(
+                                                "__sifr_repeat_n".to_string(),
+                                            )),
+                                            ty: crate::RustType::Named("usize".to_string()),
+                                        }],
+                                    }),
+                                    method: "collect::<Vec<_>>".to_string(),
+                                    args: vec![],
+                                })),
+                            })),
+                        }));
+                    }
+                }
                 return Ok(Some(crate::RustExpr::Block {
                     stmts: vec![
                         crate::RustStmt::Let {
@@ -838,15 +883,14 @@ macro_rules! stmt_expr_binop {
                     }],
                 }));
             }
-            return Ok(Some(crate::RustExpr::BinOp {
-                left: Box::new(lowered_left),
-                op: if op == "//" {
-                    "/".to_string()
-                } else {
-                    op.clone()
-                },
-                right: Box::new(lowered_right),
-            }));
+            return Ok(Some(crate::stmt_support_emitter::binop_with_optional_operands(
+                lowered_left,
+                lowered_right,
+                op,
+                &resolved_left_ty,
+                &resolved_right_ty,
+                resolved_result_ty,
+            )));
         }
     }};
 }

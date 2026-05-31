@@ -10,6 +10,7 @@ use std::collections::HashSet;
 
 impl RustEmitter {
     pub(crate) fn class_method_requires_mutable_self(
+        &self,
         class: &HirClass,
         method: &HirFunction,
     ) -> bool {
@@ -17,10 +18,11 @@ impl RustEmitter {
             return false;
         }
         let mut visiting = HashSet::new();
-        Self::class_method_requires_mutable_self_recursive(class, &method.name, &mut visiting)
+        self.class_method_requires_mutable_self_recursive(class, &method.name, &mut visiting)
     }
 
     pub(crate) fn class_method_requires_mutable_self_recursive(
+        &self,
         class: &HirClass,
         method_name: &str,
         visiting: &mut HashSet<String>,
@@ -36,6 +38,9 @@ impl RustEmitter {
         if body_contains_field_assign_codegen(&method.body) {
             return true;
         }
+        if self.body_contains_mut_borrowed_self_field_call(&method.body) {
+            return true;
+        }
 
         if !visiting.insert(method_name.to_string()) {
             return false;
@@ -43,11 +48,8 @@ impl RustEmitter {
 
         let delegated_calls = Self::collect_direct_self_method_calls(&method.body);
         for delegated_method in delegated_calls {
-            if Self::class_method_requires_mutable_self_recursive(
-                class,
-                &delegated_method,
-                visiting,
-            ) {
+            if self.class_method_requires_mutable_self_recursive(class, &delegated_method, visiting)
+            {
                 visiting.remove(method_name);
                 return true;
             }
@@ -55,6 +57,51 @@ impl RustEmitter {
 
         visiting.remove(method_name);
         false
+    }
+
+    fn body_contains_mut_borrowed_self_field_call(&self, stmts: &[HirStmt]) -> bool {
+        let found = std::cell::Cell::new(false);
+        let mut on_stmt = |_stmt: &HirStmt| {};
+        let mut on_expr = |expr: &HirExpr| {
+            if found.get() {
+                return;
+            }
+            let HirExpr::Call { func, args, .. } = expr else {
+                return;
+            };
+            let Some(params) = self.resolve_plain_call_param_info(func, args.len()) else {
+                return;
+            };
+            if args
+                .iter()
+                .zip(params.iter())
+                .any(|(arg, (_, convention))| {
+                    convention.is_mut_borrow() && Self::expr_is_self_field_path(arg)
+                })
+            {
+                found.set(true);
+            }
+        };
+        traversal::walk_stmts(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        found.get()
+    }
+
+    fn expr_is_self_field_path(expr: &HirExpr) -> bool {
+        match expr {
+            HirExpr::FieldAccess { object, .. } => {
+                matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self")
+                    || Self::expr_is_self_field_path(object)
+            }
+            HirExpr::Index { object, .. } | HirExpr::Slice { object, .. } => {
+                Self::expr_is_self_field_path(object)
+            }
+            _ => false,
+        }
     }
 
     pub(crate) fn collect_direct_self_method_calls(stmts: &[HirStmt]) -> HashSet<String> {
@@ -593,7 +640,7 @@ impl RustEmitter {
         match method.method_kind {
             MethodKind::Regular if method.name != "new" => {
                 params.push(RustParam::SelfParam {
-                    mutable: Self::class_method_requires_mutable_self(class, method),
+                    mutable: self.class_method_requires_mutable_self(class, method),
                 });
             }
             _ => {}

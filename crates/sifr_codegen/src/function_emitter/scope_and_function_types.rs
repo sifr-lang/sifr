@@ -506,6 +506,8 @@ impl RustEmitter {
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
+        let saved_string_char_cache_vars = self.string_char_cache_vars.clone();
+        let saved_string_char_cache_required_names = self.string_char_cache_required_names.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
@@ -522,6 +524,10 @@ impl RustEmitter {
         self.mut_borrowed_params.clear();
         self.local_binding_types.clear();
         self.none_widened_local_bindings.clear();
+        if is_recursive {
+            self.string_char_cache_vars.clear();
+            self.string_char_cache_required_names.clear();
+        }
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
         self.sifr_int_result_local_bindings.borrow_mut().clear();
@@ -584,6 +590,8 @@ impl RustEmitter {
             .clone_from(&saved_callable_var_conventions);
         self.local_binding_types = saved_local_binding_types;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
+        self.string_char_cache_vars = saved_string_char_cache_vars;
+        self.string_char_cache_required_names = saved_string_char_cache_required_names;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;

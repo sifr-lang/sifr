@@ -1,0 +1,17 @@
+# Tests self-referential BinaryBranch class with Box<T>
+
+class BinaryBranch:
+    val: int
+    left: BinaryBranch | None
+    right: BinaryBranch | None
+
+    def __init__(self, val: int, left: BinaryBranch | None, right: BinaryBranch | None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def main():
+    left: BinaryBranch = BinaryBranch(2, None, None)
+    right: BinaryBranch = BinaryBranch(3, None, None)
+    root: BinaryBranch = BinaryBranch(1, left, right)
+    assert str(root.val) == '1'

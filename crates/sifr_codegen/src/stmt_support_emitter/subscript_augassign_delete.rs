@@ -168,7 +168,17 @@ impl RustEmitter {
         object: &HirExpr,
         index: &HirExpr,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
+        let suppress_field_clone = matches!(object, HirExpr::FieldAccess { .. });
+        let suppression_prev = self.pending_self_field_clone_suppression;
+        if suppress_field_clone {
+            self.pending_self_field_clone_suppression += 1;
+        }
+        let lowered_object_result = self.lower_stmt_expr_for_ir(object);
+        if suppress_field_clone && self.pending_self_field_clone_suppression > suppression_prev {
+            self.pending_self_field_clone_suppression -= 1;
+        }
+        let lowered_object = lowered_object_result?;
+        let Some(lowered_object) = lowered_object else {
             return Ok(None);
         };
         let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
@@ -299,18 +309,26 @@ impl RustEmitter {
         let Type::List(inner) = Self::resolve_alias_type_for_loop_iter(object_ty) else {
             return Ok(false);
         };
-        let Type::List(elem) = Self::resolve_alias_type_for_loop_iter(inner) else {
-            return Ok(false);
+        let lowered = match Self::resolve_alias_type_for_loop_iter(inner) {
+            Type::List(elem) => self.lower_structured_nested_list_subscript_assign_stmt_for_ir(
+                object,
+                outer_index,
+                inner_index,
+                value,
+                elem,
+            )?,
+            Type::Dict(key_ty, elem) => self
+                .lower_structured_nested_list_dict_subscript_assign_stmt_for_ir(
+                    object,
+                    outer_index,
+                    inner_index,
+                    value,
+                    key_ty,
+                    elem,
+                )?,
+            _ => return Ok(false),
         };
-
-        let Some(lowered) = self.lower_structured_nested_list_subscript_assign_stmt_for_ir(
-            object,
-            outer_index,
-            inner_index,
-            value,
-            elem,
-        )?
-        else {
+        let Some(lowered) = lowered else {
             return Ok(false);
         };
         self.emit_lowered_stmts(std::slice::from_ref(&lowered));

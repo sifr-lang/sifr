@@ -343,7 +343,7 @@ fn test_assemble_project_main_rs_declares_dotted_modules_by_top_level_namespace(
     rust_files.insert("main".to_string(), "fn main() {}\n".to_string());
     rust_files.insert(
         "helpers.list_node".to_string(),
-        "pub struct ListNode;\n".to_string(),
+        "pub struct ChainCell;\n".to_string(),
     );
 
     let main_rs = assemble_project_main_rs(&compile_order, &rust_files);

@@ -1,0 +1,20 @@
+# Test: Recursive nested backtracking helper preserves deterministic prefix order.
+
+def collect_route_prefixes(limit: int) -> list[list[int]]:
+    routes = []
+    prefix = []
+
+    def visit(depth):
+        routes.append(prefix.copy())
+        if depth >= limit:
+            return
+        prefix.append(depth)
+        visit(depth + 1)
+        prefix.pop()
+
+    visit(0)
+    return routes
+
+
+def main():
+    assert str(collect_route_prefixes(3)) == '[[], [0], [0, 1], [0, 1, 2]]'

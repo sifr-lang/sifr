@@ -1,0 +1,17 @@
+# Test: recursive branch attributes still require narrowing away None.
+
+class BinaryBranch:
+    val: int
+    left: BinaryBranch | None
+    right: BinaryBranch | None
+
+    def __init__(self, val: int, left: BinaryBranch | None, right: BinaryBranch | None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def unsafe_value(node: BinaryBranch | None) -> int:
+    return node.val
+
+def main():
+    print(unsafe_value(None))

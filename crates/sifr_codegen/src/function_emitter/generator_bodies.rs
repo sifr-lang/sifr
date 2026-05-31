@@ -245,6 +245,8 @@ impl RustEmitter {
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
+        let saved_string_char_cache_vars = self.string_char_cache_vars.clone();
+        let saved_hoistable_static_dict_locals = self.hoistable_static_dict_locals.clone();
         let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
@@ -263,6 +265,8 @@ impl RustEmitter {
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
         self.local_binding_types.clear();
+        self.string_char_cache_vars.clear();
+        self.hoistable_static_dict_locals = self.collect_hoistable_static_dict_locals(func);
         self.none_widened_local_bindings.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
@@ -322,6 +326,7 @@ impl RustEmitter {
             self.lower_generator_function_body(func, &mutable_param_shadows)
         } else {
             let mut lowered = Self::emit_mutable_param_shadow_stmts(&mutable_param_shadows);
+            lowered.extend(self.prepare_string_char_cache_stmts(func, &reassigned_vars));
             for stmt in &func.body {
                 lowered.extend(
                     self.lower_stmt_strict_for_function(stmt, "function body statement lowering"),
@@ -380,6 +385,8 @@ impl RustEmitter {
         self.mut_borrowed_params = saved_mut_borrowed_params;
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
+        self.string_char_cache_vars = saved_string_char_cache_vars;
+        self.hoistable_static_dict_locals = saved_hoistable_static_dict_locals;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;

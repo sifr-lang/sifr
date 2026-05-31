@@ -125,44 +125,52 @@ pub(super) fn cmd_run(
         Ok(session) => session,
         Err(exit_code) => return exit_code,
     };
-    cmd_run_with_session(
-        &session,
+    cmd_run_with_session(&RunSessionRequest {
+        session: &session,
         target,
         bin,
         script,
         app_args,
         lock_mode,
         diagnostic_format,
-        0,
-    )
+        script_depth: 0,
+    })
 }
 
-fn cmd_run_with_session(
-    session: &sifr_package::PackageSession,
-    target: Option<&str>,
-    bin: Option<&str>,
-    script: Option<&str>,
-    app_args: &[String],
+struct RunSessionRequest<'a> {
+    session: &'a sifr_package::PackageSession,
+    target: Option<&'a str>,
+    bin: Option<&'a str>,
+    script: Option<&'a str>,
+    app_args: &'a [String],
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
     script_depth: u8,
-) -> i32 {
+}
+
+fn cmd_run_with_session(request: &RunSessionRequest<'_>) -> i32 {
+    let session = request.session;
     let plan = session.plan_run(&sifr_package::PackageRunRequest {
-        target_or_path: target.map(str::to_string),
-        bin: bin.map(str::to_string),
-        script: script.map(str::to_string),
-        app_args: app_args.to_vec(),
-        script_depth,
+        target_or_path: request.target.map(str::to_string),
+        bin: request.bin.map(str::to_string),
+        script: request.script.map(str::to_string),
+        app_args: request.app_args.to_vec(),
+        script_depth: request.script_depth,
     });
     let plan = match plan {
         Ok(plan) => plan,
         Err(error) => {
-            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            render_diagnostics(&[package_diagnostic(error)], request.diagnostic_format);
             return EXIT_USER_DIAGNOSTIC;
         }
     };
     if let Some(origin) = plan.script_origin {
-        return cmd_script(&origin, Some(session), lock_mode, diagnostic_format);
+        return cmd_script(
+            &origin,
+            Some(session),
+            request.lock_mode,
+            request.diagnostic_format,
+        );
     }
     if let Some(
         sifr_package::ResolvedRunTarget::File(path)
@@ -170,12 +178,18 @@ fn cmd_run_with_session(
     ) = plan.run_target
     {
         if !session.manifest_less_mode {
-            return cmd_run_package_file(&path, session, lock_mode, app_args, diagnostic_format);
+            return cmd_run_package_file(
+                &path,
+                session,
+                request.lock_mode,
+                request.app_args,
+                request.diagnostic_format,
+            );
         }
-        return cmd_run_file(&path, app_args, diagnostic_format);
+        return cmd_run_file(&path, request.app_args, request.diagnostic_format);
     }
     if let Some(cargo) = plan.cargo {
-        return execute_cargo_plan(&cargo, lock_mode, diagnostic_format);
+        return execute_cargo_plan(&cargo, request.lock_mode, request.diagnostic_format);
     }
     EXIT_SUCCESS
 }
@@ -189,16 +203,16 @@ pub(super) fn cmd_script(
     match origin.command.as_str() {
         "run" => {
             if let Some(session) = run_session {
-                cmd_run_with_session(
+                cmd_run_with_session(&RunSessionRequest {
                     session,
-                    origin.args.first().map(String::as_str),
-                    None,
-                    None,
-                    &[],
+                    target: origin.args.first().map(String::as_str),
+                    bin: None,
+                    script: None,
+                    app_args: &[],
                     lock_mode,
                     diagnostic_format,
-                    1,
-                )
+                    script_depth: 1,
+                })
             } else {
                 cmd_run(
                     origin.args.first().map(String::as_str),

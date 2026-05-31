@@ -77,6 +77,10 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
     assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
     assert!(result
         .rust_source
+        .contains("let handle: __SifrTask<i64, ValueError>"));
+    assert!(!result.rust_source.contains("let handle: Task<"));
+    assert!(result
+        .rust_source
         .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));
     assert!(result
         .rust_source
@@ -110,6 +114,7 @@ fn test_task_gather_fallible_tasks_keeps_error_parameter_unwrapped() {
     assert!(result
         .rust_source
         .contains("__SifrTaskResult::Err(__SifrFailure::new(err))"));
+    assert!(!result.rust_source.contains("let result: TaskResult<"));
     assert!(result
         .rust_source
         .contains("let result: __SifrTaskResult<Vec<i64>, ValueError>"));

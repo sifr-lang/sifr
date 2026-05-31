@@ -18,7 +18,7 @@
     "generic_class_method",
     "keyword_args_basic",
     "type_alias",
-    "recursive_tree_traversal_runtime",
+    "recursive_branch_traversal_runtime",
     "nested_function_basic",
     "nested_function_recursive_capture",
     "spawn_owned_send_value",

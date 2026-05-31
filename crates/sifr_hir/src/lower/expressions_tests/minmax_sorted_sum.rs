@@ -557,6 +557,13 @@ pub(super) fn test_str_method_wrong_positional_count_has_call_code() {
 }
 
 #[test]
+pub(super) fn test_str_rfind_lowers_to_optional_int() {
+    let source =
+        "def main():\n    text: str = \"abcabc\"\n    index: int | None = text.rfind(\"a\")\n";
+    lower_source(source).expect("str.rfind should lower");
+}
+
+#[test]
 pub(super) fn test_str_method_type_mismatch_has_type_code() {
     let source = "def main():\n    text: str = \"a,b\"\n    text.split(\",\", \"bad\")\n";
     let result = lower_source(source);

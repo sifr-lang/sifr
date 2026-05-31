@@ -312,35 +312,7 @@ impl RustEmitter {
                 ty: crate::RustType::Named("u8".to_string()),
             },
             Type::Str => {
-                let nth_expr = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_object),
-                        method: "chars".to_string(),
-                        args: vec![],
-                    }),
-                    method: "nth".to_string(),
-                    args: vec![crate::RustExpr::Cast {
-                        expr: Box::new(lowered_index),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                };
-                crate::RustExpr::Block {
-                    stmts: vec![crate::RustStmt::LetElse {
-                        pattern: "Some(__indexed_char)".to_string(),
-                        value: nth_expr,
-                        else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
-                            name: "unreachable".to_string(),
-                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
-                                "compiler-verified string index should be in range".to_string(),
-                            ))],
-                        })],
-                    }],
-                    expr: Some(Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident("__indexed_char".to_string())),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    })),
-                }
+                self.lower_string_index_unwrapped_with_cache(object, lowered_object, lowered_index)
             }
             _ => return Ok(None),
         };

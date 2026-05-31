@@ -4,37 +4,37 @@
 # Showcases self-referential types with automatic Box<T> wrapping
 
 # === Linked List ===
-class ListNode:
+class ChainCell:
     val: int
-    next: ListNode | None
+    next: ChainCell | None
 
-    def __init__(self, val: int, next: ListNode | None):
+    def __init__(self, val: int, next: ChainCell | None):
         self.val = val
         self.next = next
 
 # === Binary Tree ===
-class TreeNode:
+class BinaryBranch:
     val: int
-    left: TreeNode | None
-    right: TreeNode | None
+    left: BinaryBranch | None
+    right: BinaryBranch | None
 
-    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):
+    def __init__(self, val: int, left: BinaryBranch | None, right: BinaryBranch | None):
         self.val = val
         self.left = left
         self.right = right
 
 def main():
     # Build a linked list: 1 -> 2 -> 3 -> None
-    n3: ListNode = ListNode(3, None)
-    n2: ListNode = ListNode(2, n3)
-    n1: ListNode = ListNode(1, n2)
+    n3: ChainCell = ChainCell(3, None)
+    n2: ChainCell = ChainCell(2, n3)
+    n1: ChainCell = ChainCell(1, n2)
     print(n1.val)  # 1
 
     # Build a binary tree:
     #       1
     #      / \
     #     2   3
-    left: TreeNode = TreeNode(2, None, None)
-    right: TreeNode = TreeNode(3, None, None)
-    root: TreeNode = TreeNode(1, left, right)
+    left: BinaryBranch = BinaryBranch(2, None, None)
+    right: BinaryBranch = BinaryBranch(3, None, None)
+    root: BinaryBranch = BinaryBranch(1, left, right)
     print(root.val)  # 1

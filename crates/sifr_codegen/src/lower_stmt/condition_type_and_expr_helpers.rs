@@ -204,14 +204,71 @@ pub(super) fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustEx
         return Some(RustExpr::Literal(RustLiteral::Str(combined)));
     }
 
-    Some(RustExpr::FormatMacro {
-        name: "format".to_string(),
-        format_str: "{}".repeat(parts.len()),
-        args: parts
-            .iter()
-            .map(|part| try_lower_leaf_or_name_expr(part))
-            .collect::<Option<Vec<_>>>()?,
+    let capacity = string_concat_capacity_expr(&parts);
+    let mut stmts = vec![RustStmt::Let {
+        mutable: true,
+        name: "__sifr_concat".to_string(),
+        ty: Some(RustType::String_),
+        value: RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "String".to_string(),
+                "with_capacity".to_string(),
+            ])),
+            args: vec![capacity],
+        },
+    }];
+    for part in parts {
+        let arg = if let HirExpr::StringLiteral(value) = part {
+            RustExpr::Ident(format!("{value:?}"))
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(try_lower_leaf_or_name_expr(
+                    part,
+                )?))),
+                method: "as_str".to_string(),
+                args: vec![],
+            }
+        };
+        stmts.push(RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__sifr_concat".to_string())),
+            method: "push_str".to_string(),
+            args: vec![arg],
+        }));
+    }
+    Some(RustExpr::Block {
+        stmts,
+        expr: Some(Box::new(RustExpr::Ident("__sifr_concat".to_string()))),
     })
+}
+
+fn string_concat_capacity_expr(parts: &[&HirExpr]) -> RustExpr {
+    let mut capacity_parts = Vec::with_capacity(parts.len());
+    for part in parts {
+        let len_expr = if let HirExpr::StringLiteral(value) = part {
+            RustExpr::Ident(format!("{}usize", value.len()))
+        } else if let HirExpr::Name { name, .. } = part {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(name.clone())),
+                method: "len".to_string(),
+                args: vec![],
+            }
+        } else {
+            RustExpr::Ident("0usize".to_string())
+        };
+        capacity_parts.push(len_expr);
+    }
+    let mut iter = capacity_parts.into_iter();
+    let mut capacity = iter
+        .next()
+        .unwrap_or_else(|| RustExpr::Ident("0usize".to_string()));
+    for part in iter {
+        capacity = RustExpr::BinOp {
+            left: Box::new(capacity),
+            op: "+".to_string(),
+            right: Box::new(part),
+        };
+    }
+    capacity
 }
 
 pub(super) fn collect_stmt_string_concat_parts<'a>(

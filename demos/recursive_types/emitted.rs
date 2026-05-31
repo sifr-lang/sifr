@@ -1,35 +1,35 @@
 #[derive(Debug, Clone, PartialEq)]
-struct ListNode {
+struct ChainCell {
     val: i64,
-    next: Option<Box<ListNode>>,
+    next: Option<Box<ChainCell>>,
 }
 
-impl ListNode {
-    fn new(val: i64, next: Option<Box<ListNode>>) -> Self {
+impl ChainCell {
+    fn new(val: i64, next: Option<Box<ChainCell>>) -> Self {
         return Self { val: val, next: next };
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct TreeNode {
+struct BinaryBranch {
     val: i64,
-    left: Option<Box<TreeNode>>,
-    right: Option<Box<TreeNode>>,
+    left: Option<Box<BinaryBranch>>,
+    right: Option<Box<BinaryBranch>>,
 }
 
-impl TreeNode {
-    fn new(val: i64, left: Option<Box<TreeNode>>, right: Option<Box<TreeNode>>) -> Self {
+impl BinaryBranch {
+    fn new(val: i64, left: Option<Box<BinaryBranch>>, right: Option<Box<BinaryBranch>>) -> Self {
         return Self { val: val, left: left, right: right };
     }
 }
 
 fn main() {
-    let n3: ListNode = ListNode::new(3 as i64, None);
-    let n2: ListNode = ListNode::new(2 as i64, Some(Box::new(n3)));
-    let n1: ListNode = ListNode::new(1 as i64, Some(Box::new(n2)));
+    let n3: ChainCell = ChainCell::new(3 as i64, None);
+    let n2: ChainCell = ChainCell::new(2 as i64, Some(Box::new(n3)));
+    let n1: ChainCell = ChainCell::new(1 as i64, Some(Box::new(n2)));
     println!("{}", n1.val);
-    let left: TreeNode = TreeNode::new(2 as i64, None, None);
-    let right: TreeNode = TreeNode::new(3 as i64, None, None);
-    let root: TreeNode = TreeNode::new(1 as i64, Some(Box::new(left)), Some(Box::new(right)));
+    let left: BinaryBranch = BinaryBranch::new(2 as i64, None, None);
+    let right: BinaryBranch = BinaryBranch::new(3 as i64, None, None);
+    let root: BinaryBranch = BinaryBranch::new(1 as i64, Some(Box::new(left)), Some(Box::new(right)));
     println!("{}", root.val);
 }

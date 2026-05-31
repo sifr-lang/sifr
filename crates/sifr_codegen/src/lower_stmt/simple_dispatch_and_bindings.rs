@@ -362,6 +362,13 @@ pub(super) fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> b
                 || matches!(value_ty.as_ref(), Type::List(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
                 || matches!(value_ty.as_ref(), Type::Set(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
         }
+        (_, HirExpr::MethodCall { method, args, .. })
+            if method == "get"
+                && args.len() == 2
+                && matches!(&args[1], HirExpr::ListLiteral { elements, .. } if elements.is_empty()) =>
+        {
+            true
+        }
         _ => false,
     }
 }

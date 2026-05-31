@@ -1,28 +1,28 @@
 # Reference: phase31_two_pointer_while_guard_narrowing
 # Same-sequence two-pointer `while` loops should narrow safe index reads.
 
-def trap(height: list[int]) -> int:
-    if not height:
+def envelope_adjustment(readings: list[int]) -> int:
+    if not readings:
         return 0
 
-    l, r = 0, len(height) - 1
-    left_max: int = height[l]
-    right_max: int = height[r]
+    l, r = 0, len(readings) - 1
+    left_max: int = readings[l]
+    right_max: int = readings[r]
     total = 0
 
     while l < r:
         if left_max < right_max:
             l += 1
-            left_max = max(left_max, height[l])
-            total += left_max - height[l]
+            left_max = max(left_max, readings[l])
+            total += left_max - readings[l]
         else:
             r -= 1
-            right_max = max(right_max, height[r])
-            total += right_max - height[r]
+            right_max = max(right_max, readings[r])
+            total += right_max - readings[r]
 
     return total
 
 
 def main():
-    assert str(trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1])) == "6"
-    assert str(trap([4, 2, 0, 3, 2, 5])) == "9"
+    assert str(envelope_adjustment([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1])) == "6"
+    assert str(envelope_adjustment([4, 2, 0, 3, 2, 5])) == "9"

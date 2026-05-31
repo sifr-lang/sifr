@@ -32,6 +32,60 @@ class Store:
 }
 
 #[test]
+fn dict_get_empty_list_default_returns_owned_list_value() {
+    let generated = generate_rust_from_source(
+        r#"
+class Store:
+    values: dict[str, list[tuple[str, int]]]
+
+    def __init__(self):
+        self.values = {}
+
+    def count(self, key: str) -> int:
+        values = self.values.get(key, [])
+        return len(values)
+"#,
+    );
+
+    assert!(
+        generated.contains("self.values.get((key).as_str()).cloned().unwrap_or(vec![])"),
+        "{generated}"
+    );
+    assert!(
+        !generated.contains("self.values.get((key).as_str()).map(Vec::as_slice).unwrap_or(&[])"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn string_loop_set_membership_uses_char_storage() {
+    let generated = generate_rust_from_source(
+        r#"
+def count_groups(text: str) -> int:
+    groups = 0
+    seen = set()
+    for ch in text:
+        if ch in seen:
+            groups = groups + 1
+            seen = set()
+        seen.add(ch)
+    return groups + 1
+"#,
+    );
+
+    assert!(generated.contains("for ch in text.chars()"), "{generated}");
+    assert!(generated.contains("seen.contains(&ch)"), "{generated}");
+    assert!(
+        generated.contains("seen.insert((ch).clone())"),
+        "{generated}"
+    );
+    assert!(
+        !generated.contains("text.chars().map(|c| c.to_string())"),
+        "{generated}"
+    );
+}
+
+#[test]
 fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_condition() {
     let tuple_ty = Type::Tuple(vec![Type::Int, Type::Int]);
     let stmt = HirStmt::While {
@@ -385,7 +439,8 @@ fn test_list_repeat_lowers_without_vec_mul_shape() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(!generated.rust_source.contains("vec![0 as i64] * n"));
-    assert!(generated.rust_source.contains("__sifr_repeat_out.extend("));
+    assert!(generated.rust_source.contains("std::iter::repeat(0_i64)"));
+    assert!(!generated.rust_source.contains("__sifr_repeat_out.extend("));
 }
 
 #[test]
@@ -499,7 +554,7 @@ fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool() {
 #[test]
 fn test_string_slice_negative_stop_normalizes_against_length() {
     let rust_code = generate_rust_from_source(
-        "def repeatedSubstringPattern(s: str) -> bool:\n    return s in (s + s)[1:-1]\n",
+        "def has_marker_inside_sentinel_window(text: str) -> bool:\n    framed = \"[\" + text + \"]\"\n    return \"!\" in framed[1:-1]\n",
     );
     assert!(
         rust_code.contains("_slice_len_i64"),
@@ -535,14 +590,11 @@ fn test_union_enum_definitions_emit_structured_items() {
 
 #[test]
 fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
-    let lib_src = include_str!("../lib.rs");
+    let lib_src = include_str!("../lib_modules_and_codegen.rs");
     let start = lib_src
         .find("pub fn generate_rust_with_stdlib")
         .expect("generate_rust_with_stdlib should exist");
-    let end = lib_src
-        .find("/// Generate Rust source code for a multi-module project.")
-        .expect("generate_rust_multi docs should exist");
-    let generate_block = &lib_src[start..end];
+    let generate_block = &lib_src[start..];
 
     assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
     assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
@@ -553,19 +605,19 @@ fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
 
 #[test]
 fn test_generate_rust_multi_assembles_single_rust_file() {
-    let lib_src = include_str!("../lib.rs");
+    let lib_src = include_str!("../lib_project_codegen.rs");
     let start = lib_src
-        .find("pub fn generate_rust_multi")
-        .expect("generate_rust_multi should exist");
+        .find("pub fn generate_rust_multi_with_metadata")
+        .expect("generate_rust_multi_with_metadata should exist");
     let end = lib_src
         .find("/// Generate a complete Rust project (Cargo.toml + main.rs content).")
         .expect("generate_project docs should exist");
     let generate_block = &lib_src[start..end];
 
-    assert!(generate_block.contains("RustItem::UseAlias"));
-    assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
-    assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
-    assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(generate_block.contains("generate_rust_with_stdlib(module, &project_codegen_code)"));
+    assert!(generate_block.contains("render_local_module_imports(module)"));
+    assert!(generate_block.contains("publicize_generated_module_source(&rust_source)"));
+    assert!(generate_block.contains("required_crates.extend(codegen_result.required_crates)"));
     assert!(!generate_block.contains("assert_output_drained("));
     assert!(!generate_block.contains("emitter.output"));
     assert!(!generate_block.contains("module_import_prelude"));
@@ -589,7 +641,7 @@ fn test_generate_project_emits_sifr_runtime_path_dependency_when_required() {
 fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
     let result = generate_rust_with_metadata(
         &lower_module(
-            parse_module("async def main() -> None:\n    return None\n")
+            parse_module("async def main() -> None:\n    await task.sleep(0.0)\n    return None\n")
                 .expect("parse failed")
                 .suite(),
         )
@@ -608,9 +660,11 @@ fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
 fn test_async_result_main_entrypoint_keeps_result_return() {
     let result = generate_rust_with_metadata(
         &lower_module(
-            parse_module("async def main() -> Result[None, ValueError]:\n    return None\n")
-                .expect("parse failed")
-                .suite(),
+            parse_module(
+                "async def main() -> Result[None, ValueError]:\n    await task.sleep(0.0)\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
         )
         .expect("lowering failed")
         .module,
@@ -622,7 +676,7 @@ fn test_async_result_main_entrypoint_keeps_result_return() {
     assert!(result
         .rust_source
         .contains("async fn main() -> Result<(), ValueError>"));
-    assert!(result.rust_source.contains("return Ok(());"));
+    assert!(result.rust_source.contains("Ok(())"));
     assert!(result.required_crates.contains("tokio"));
 }
 
@@ -695,7 +749,7 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n    return None\n",
+                "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -722,7 +776,7 @@ fn test_spawn_blocking_lowers_to_distinct_blocking_task_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "def compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    handle = task.spawn_blocking(compute_value)\n    result = await handle\n    return None\n",
+                "@cpu_heavy\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    handle = task.spawn_blocking(compute_value)\n    result = await handle\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -751,7 +805,7 @@ fn test_thread_pool_executor_submit_reuses_blocking_task_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "class ThreadPoolExecutor:\n    pass\n\n\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(compute_value)\n    result = await handle\n    return None\n",
+                "class ThreadPoolExecutor:\n    pass\n\n\n@cpu_heavy\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(compute_value)\n    result = await handle\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -777,7 +831,7 @@ fn test_scope_spawn_lowers_owned_coroutine_arguments() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker(value: int) -> int:\n    return value\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        value: int = 41\n        handle = scope.spawn(worker(value))\n        result = await handle\n    return None\n",
+                "async def worker(value: int) -> int:\n    await task.sleep(0.0)\n    return value\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        value: int = 41\n        handle = scope.spawn(worker(value))\n        result = await handle\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -796,7 +850,7 @@ fn test_scope_spawn_lowers_owned_move_coroutine_arguments() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker(own items: list[int]) -> int:\n    return len(items)\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker([1, 2]))\n        result = await handle\n    return None\n",
+                "async def worker(own items: list[int]) -> int:\n    await task.sleep(0.0)\n    return len(items)\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker([1, 2]))\n        result = await handle\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -807,5 +861,5 @@ fn test_scope_spawn_lowers_owned_move_coroutine_arguments() {
 
     assert!(result
         .rust_source
-        .contains("scope.__sifr_spawn_infallible(worker(vec![1 as i64, 2 as i64]));"));
+        .contains("scope.__sifr_spawn_infallible(worker(vec![1_i64, 2_i64]));"));
 }

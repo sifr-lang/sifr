@@ -389,14 +389,22 @@ pub(super) fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExp
             method,
             args,
             ..
-        } if method == "len" && args.is_empty() => Some(RustExpr::Cast {
-            expr: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                method: "len".to_string(),
-                args: vec![],
-            }),
-            ty: RustType::I64,
-        }),
+        } if method == "len" && args.is_empty() => {
+            if matches!(
+                resolve_alias_type(object.ty()),
+                Type::Str | Type::LiteralStr(_)
+            ) {
+                return None;
+            }
+            Some(RustExpr::Cast {
+                expr: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "len".to_string(),
+                    args: vec![],
+                }),
+                ty: RustType::I64,
+            })
+        }
         HirExpr::Index {
             object, index, ty, ..
         } => try_lower_condition_index_operand_expr(object, index, ty),
@@ -479,34 +487,7 @@ pub(super) fn try_lower_condition_index_operand_expr(
                 args: vec![],
             })
         }
-        Type::Str if !is_option_like_type(result_ty) => Some(RustExpr::Block {
-            stmts: vec![RustStmt::LetElse {
-                pattern: "Some(__indexed_char)".to_string(),
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                        method: "chars".to_string(),
-                        args: vec![],
-                    }),
-                    method: "nth".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
-                        ty: RustType::Named("usize".to_string()),
-                    }],
-                },
-                else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
-                    name: "unreachable".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Str(
-                        "compiler-verified string index should be in range".to_string(),
-                    ))],
-                })],
-            }],
-            expr: Some(Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__indexed_char".to_string())),
-                method: "to_string".to_string(),
-                args: vec![],
-            })),
-        }),
+        Type::Str if !is_option_like_type(result_ty) => None,
         _ => None,
     }
 }

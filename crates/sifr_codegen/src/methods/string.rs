@@ -1,5 +1,3 @@
-//! String method lowerers for registry lowering.
-
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
 fn lower_zero_arg_method(object: &RustExpr, args: &[RustExpr], method: &str) -> Option<RustExpr> {
@@ -46,6 +44,9 @@ fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
 
 fn render_borrowed_arg_expr(arg: &RustExpr) -> RustExpr {
     match arg {
+        RustExpr::Literal(RustLiteral::Str(value)) => {
+            RustExpr::Ident(format!("\"{}\"", value.escape_default()))
+        }
         RustExpr::Ref { .. } => arg.clone(),
         _ if is_already_borrowed_rendered_expr(arg) => arg.clone(),
         _ => RustExpr::Ref {
@@ -53,6 +54,25 @@ fn render_borrowed_arg_expr(arg: &RustExpr) -> RustExpr {
             expr: Box::new(arg.clone()),
         },
     }
+}
+
+fn literal_single_char(arg: &RustExpr) -> Option<char> {
+    let RustExpr::Literal(RustLiteral::Str(value)) = arg else {
+        return None;
+    };
+    let mut chars = value.chars();
+    let ch = chars.next()?;
+    if chars.next().is_some() {
+        return None;
+    }
+    Some(ch)
+}
+
+fn string_pattern_arg(arg: &RustExpr) -> RustExpr {
+    literal_single_char(arg).map_or_else(
+        || render_borrowed_arg_expr(arg),
+        |ch| RustExpr::Literal(RustLiteral::Char(ch)),
+    )
 }
 
 fn is_none_expr(expr: &RustExpr) -> bool {
@@ -241,7 +261,7 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                     receiver: Box::new(RustExpr::MethodCall {
                         receiver: Box::new(object.clone()),
                         method: "split".to_string(),
-                        args: vec![render_borrowed_arg_expr(&args[0])],
+                        args: vec![string_pattern_arg(&args[0])],
                     }),
                     method: "map".to_string(),
                     args: vec![RustExpr::Closure {
@@ -359,7 +379,7 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                         ))),
                                         ty: RustType::Named("usize".to_string()),
                                     },
-                                    render_borrowed_arg_expr(&args[0]),
+                                    string_pattern_arg(&args[0]),
                                 ],
                             }),
                             method: "map".to_string(),
@@ -391,7 +411,7 @@ pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
         [old, new] => Some(RustExpr::MethodCall {
             receiver: Box::new(object.clone()),
             method: "replace".to_string(),
-            args: vec![render_borrowed_arg_expr(old), render_borrowed_arg_expr(new)],
+            args: vec![string_pattern_arg(old), render_borrowed_arg_expr(new)],
         }),
         [old, new, count] => Some(RustExpr::If {
             cond: Box::new(RustExpr::BinOp {
@@ -402,13 +422,13 @@ pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
             then_expr: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(object.clone()),
                 method: "replace".to_string(),
-                args: vec![render_borrowed_arg_expr(old), render_borrowed_arg_expr(new)],
+                args: vec![string_pattern_arg(old), render_borrowed_arg_expr(new)],
             }),
             else_expr: Some(Box::new(RustExpr::MethodCall {
                 receiver: Box::new(object.clone()),
                 method: "replacen".to_string(),
                 args: vec![
-                    render_borrowed_arg_expr(old),
+                    string_pattern_arg(old),
                     render_borrowed_arg_expr(new),
                     RustExpr::Cast {
                         expr: Box::new(count.clone()),
@@ -422,13 +442,21 @@ pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
 }
 
 pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_find_like(object, args, "find")
+}
+
+pub(super) fn lower_rfind(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_find_like(object, args, "rfind")
+}
+
+fn lower_find_like(object: &RustExpr, args: &[RustExpr], rust_method: &str) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
             receiver: Box::new(object.clone()),
-            method: "find".to_string(),
+            method: rust_method.to_string(),
             args: vec![render_borrowed_arg_expr(&args[0])],
         }),
         method: "map".to_string(),

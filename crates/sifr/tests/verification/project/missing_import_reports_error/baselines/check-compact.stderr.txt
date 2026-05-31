@@ -1,3 +1,3 @@
 summary: 1 error(s), 0 warning(s), 0 note(s), 0 help item(s)
-error [SIFR-WORKSPACE-0101] could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/audits/leetcode/src/missing_math_utils.sifr', '<WORKSPACE>/./missing_math_utils.sifr' (x1)
+error [SIFR-WORKSPACE-0101] could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr' (x1)
   url: https://sifr.sh/docs/errors/SIFR-WORKSPACE-0101

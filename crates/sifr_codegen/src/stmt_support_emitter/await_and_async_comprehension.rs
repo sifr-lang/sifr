@@ -246,18 +246,63 @@ impl RustEmitter {
             ))));
         }
 
-        let mut lowered_parts = Vec::with_capacity(parts.len());
+        let capacity = Self::string_concat_capacity_expr_for_ir(&parts);
+        let mut stmts = vec![crate::RustStmt::Let {
+            mutable: true,
+            name: "__sifr_concat".to_string(),
+            ty: Some(crate::RustType::String_),
+            value: crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "String".to_string(),
+                    "with_capacity".to_string(),
+                ])),
+                args: vec![capacity],
+            },
+        }];
         for part in parts {
-            let Some(lowered_part) = self.lower_stmt_expr_for_ir(part)? else {
-                return Ok(None);
-            };
-            lowered_parts.push(lowered_part);
+            let push_arg = self.lower_string_push_str_arg_for_ir(part)?;
+            stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Ident("__sifr_concat".to_string())),
+                method: "push_str".to_string(),
+                args: vec![push_arg],
+            }));
         }
-        Ok(Some(crate::RustExpr::FormatMacro {
-            name: "format".to_string(),
-            format_str: "{}".repeat(lowered_parts.len()),
-            args: lowered_parts,
+        Ok(Some(crate::RustExpr::Block {
+            stmts,
+            expr: Some(Box::new(crate::RustExpr::Ident(
+                "__sifr_concat".to_string(),
+            ))),
         }))
+    }
+
+    fn string_concat_capacity_expr_for_ir(parts: &[&HirExpr]) -> crate::RustExpr {
+        let mut capacity_parts = Vec::with_capacity(parts.len());
+        for part in parts {
+            let len_expr = if let HirExpr::StringLiteral(value) = part {
+                crate::RustExpr::Ident(format!("{}usize", value.len()))
+            } else if let HirExpr::Name { name, .. } = part {
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident(name.clone())),
+                    method: "len".to_string(),
+                    args: vec![],
+                }
+            } else {
+                crate::RustExpr::Ident("0usize".to_string())
+            };
+            capacity_parts.push(len_expr);
+        }
+        let mut iter = capacity_parts.into_iter();
+        let Some(mut capacity) = iter.next() else {
+            return crate::RustExpr::Ident("0usize".to_string());
+        };
+        for part in iter {
+            capacity = crate::RustExpr::BinOp {
+                left: Box::new(capacity),
+                op: "+".to_string(),
+                right: Box::new(part),
+            };
+        }
+        capacity
     }
 
     pub(crate) fn resolve_alias_type_for_loop_iter(ty: &Type) -> &Type {

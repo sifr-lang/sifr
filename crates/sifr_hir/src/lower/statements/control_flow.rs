@@ -1,16 +1,17 @@
 use super::{
-    apply_narrowing, callable_builtin_element_type, detect_false_exit_sequence_guards,
-    detect_false_nonzero_integer_guards, detect_narrowing_condition, detect_range_sequence_guards,
-    detect_true_nonzero_integer_guards, detect_true_sequence_guards, detect_while_sequence_guards,
-    ensure_mutable_parameter_binding, failed_initializer_taint,
-    finish_async_generator_advance_for_expr, invalidate_rebound_binding_facts,
-    is_collection_backed_iter_source, loop_body_mutates_iter_source, lower_aug_assign_impl,
-    lower_expr, lower_star_unpack_assign, lower_stmts, lower_tuple_unpack_assign,
-    maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards, name_diagnostics,
-    numeric_domain_for_type, numeric_sentinel_kind, ownership_diagnostics,
-    predeclare_exhaustive_if_assigned_names, reconcile_optional_reassignment,
-    record_async_generator_advance_binding, record_const_integer_binding, record_len_alias_fact,
-    record_sequence_pointer_fact, resolve_field_type_from_type, resolve_object_field_type,
+    apply_narrowing, body_always_leaves_current_path, callable_builtin_element_type,
+    detect_false_exit_sequence_guards, detect_false_nonzero_integer_guards,
+    detect_narrowing_condition, detect_range_sequence_guards, detect_true_nonzero_integer_guards,
+    detect_true_sequence_guards, detect_while_sequence_guards, ensure_mutable_parameter_binding,
+    failed_initializer_taint, finish_async_generator_advance_for_expr,
+    invalidate_rebound_binding_facts, is_collection_backed_iter_source,
+    loop_body_mutates_iter_source, lower_aug_assign_impl, lower_expr, lower_star_unpack_assign,
+    lower_stmts, lower_tuple_unpack_assign, maybe_record_dict_assignment_guard,
+    merge_exhaustive_branch_sequence_guards, name_diagnostics, numeric_domain_for_type,
+    numeric_sentinel_kind, ownership_diagnostics, predeclare_exhaustive_if_assigned_names,
+    reconcile_optional_reassignment, record_async_generator_advance_binding,
+    record_const_integer_binding, record_len_alias_fact, record_sequence_pointer_fact,
+    resolve_field_type_from_type, resolve_object_field_type,
     restore_const_integer_state_after_branches, seed_binding_after_failed_initializer,
     seed_exhaustive_if_bindings, sequence_shape_fact, should_adopt_inferred_binding_hint,
     should_rebind_simple_name, statement_diagnostics, str, task_group_spawn_owner,
@@ -100,8 +101,27 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     if let Expr::Subscript(sub) = &assign.targets[0] {
         // Handle nested subscript: matrix[i][j] = val
         if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
-            let obj_name = if let Expr::Name(n) = inner_sub.value.as_ref() {
-                n.id.to_string()
+            let (obj_name, field_name, obj_ty) = if let Expr::Name(n) = inner_sub.value.as_ref() {
+                let obj_ty = ctx
+                    .scope
+                    .lookup(&n.id)
+                    .map(|info| info.effective_type().clone())
+                    .unwrap_or(Type::Unknown);
+                (n.id.to_string(), None, obj_ty)
+            } else if let Expr::Attribute(attr) = inner_sub.value.as_ref() {
+                let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
+                    n.id.to_string()
+                } else {
+                    statement_diagnostics::invalid_assignment_target(
+                        ctx,
+                        "nested subscript assignment target must be a simple name",
+                        attr.value.range(),
+                    );
+                    return None;
+                };
+                let field_name = attr.attr.to_string();
+                let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
+                (obj_name, Some(field_name), field_ty)
             } else {
                 statement_diagnostics::invalid_assignment_target(
                     ctx,
@@ -114,11 +134,6 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
                 return None;
             }
-            let obj_ty = ctx
-                .scope
-                .lookup(&obj_name)
-                .map(|info| info.effective_type().clone())
-                .unwrap_or(Type::Unknown);
             if matches!(obj_ty.resolve_alias(), Type::Bytes) {
                 super::ownership_diagnostics::immutable_bytes_subscript_assignment(
                     ctx,
@@ -129,6 +144,16 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
             let inner_index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&assign.value, ctx)?;
+            if let Some(field) = field_name {
+                return Some(HirStmt::AttributeNestedSubscriptAssign {
+                    object: obj_name,
+                    field,
+                    outer_index,
+                    inner_index,
+                    value,
+                    field_ty: obj_ty,
+                });
+            }
             return Some(HirStmt::NestedSubscriptAssign {
                 object: obj_name,
                 outer_index,
@@ -539,11 +564,15 @@ pub(in crate::lower) fn lower_if(
     // apply the inverse narrowing after the if block.
     // e.g., `if x is None: return` -> after the if, x is not None
     if let Some(ref cond) = narrowing_cond {
-        if then_body_always_exits(&then_body) && elif_clauses.is_empty() && else_body.is_none() {
+        if body_always_leaves_current_path(&then_body)
+            && elif_clauses.is_empty()
+            && else_body.is_none()
+        {
             apply_narrowing(ctx, cond, false);
         }
     }
-    if then_body_always_exits(&then_body) && elif_clauses.is_empty() && else_body.is_none() {
+    if body_always_leaves_current_path(&then_body) && elif_clauses.is_empty() && else_body.is_none()
+    {
         for guard in detect_false_exit_sequence_guards(&if_stmt.test, ctx) {
             ctx.add_sequence_guard(guard);
         }

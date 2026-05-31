@@ -1,7 +1,40 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: complete on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; final reintegration merged through `sifr-lang/sifr#2220`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`
+Status: complete on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; final reintegration merged through `sifr-lang/sifr#2220`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`; 2026-05-31 canonical-Python audit and fresh full Python/Sifr benchmark closure completed locally with 0 measured-slower problems
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
+
+## 2026-05-31 Closure Addendum
+
+The Python LeetCode sources are treated as the canonical oracle. Changes introduced after `091aade2a6c76637f9d2c50ccf00d5e8d972dd7d` that altered Python problem algorithms were reverted to that canonical state. Matching Sifr fixtures were then updated toward the Python algorithms unless current Sifr semantics require an explicit, documented deviation.
+
+Important fixture decisions:
+
+- `0929_unique_email_addresses`: Python remains canonical. Sifr uses the same split/replace normalization shape, but consumes the owned benchmark input with `pop()` because the result is a set and input order is irrelevant; this avoids generated per-element string clones while preserving problem semantics.
+- `0205_isomorphic_strings` and `0567_permutation_in_string`: Sifr keeps fixed-array/explicit-index helpers because canonical Python relies on cheap dynamic character keys/`ord()`, while Sifr's dynamic string `ord()` is fallible and current string-key dictionary lowering is not yet comparable.
+- `0149_max_points_on_a_line` and `2001_number_of_pairs_of_interchangeable_rectangles`: Sifr keeps exact reduced tuple keys because Rust `f64` is not a `HashMap` key and exact rational keys avoid precision drift.
+- `0049_group_anagrams`: Sifr uses the canonical count-key algorithm; the key is chunked because Rust tuple `Hash`/`Eq` support is bounded.
+- `2002_maximum_product_of_the_length_of_two_palindromic_subsequences`: Python was restored to the canonical `lru_cache` recurrence from `091aade2a6c76637f9d2c50ccf00d5e8d972dd7d`; Sifr now uses the same memoized recurrence with an explicit list cache because decorators are not Sifr syntax.
+
+Fresh local closure run:
+
+```text
+SIFR_BIN=target/release/sifr python3 benchmarks/bench.py run --language python --language sifr --runs 2 --warmup 1
+python3 benchmarks/analyze_slowness.py --check-metadata
+```
+
+Analyzer snapshot after the run:
+
+| Metric | Count |
+| --- | ---: |
+| Registry problems | 394 |
+| Benchmarkable problems | 325 |
+| Fully complete problems | 325 |
+| Complete fixture pairs | 971 |
+| Measured-slower problems | 0 |
+| Partial benchmark problems | 0 |
+| No-pair failed problems | 0 |
+
+Compiler/root-cause fixes added in this closure wave include string split/replace literal-pattern lowering, dead string character-cache suppression for mutated strings that are never indexed/sliced/`len`-queried, nested list/dict mutation lowering, borrowed string comparisons, cached string-index comparison without `String` allocation, efficient single-element list repeat lowering, self-field clone suppression, and direct mutable state updates for list-indexed dictionaries.
 
 ## Purpose
 
@@ -822,10 +855,12 @@ Fix-phase Claude review rounds:
 
 | Metric | Count |
 | --- | --- |
-| Registry problems | 325 |
+| Registry problems | 394 |
+| Benchmarkable problems | 325 |
+| Source-only/unbenchmarked problems | 69 |
 | Fully complete problems | 325 |
 | Complete fixture pairs | 971 |
-| Measured-slower problems | 75 |
+| Measured-slower problems | 0 |
 | Partial benchmark problems | 0 |
 | No-pair failed problems | 0 |
 
@@ -833,86 +868,11 @@ Fix-phase Claude review rounds:
 
 | Problem | Category | Worst Py/Sifr | Slower sizes | Owner | Parity | Tags |
 | --- | --- | --- | --- | --- | --- | --- |
-| `2130_maximum_twin_sum_of_a_linked_list` | Linked List | 0.004x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0234_palindrome_linked_list` | Linked List | 0.005x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0876_middle_of_the_linked_list` | Linked List | 0.005x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0083_remove_duplicates_from_sorted_list` | Linked List | 0.005x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `1721_swapping_nodes_in_a_linked_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0019_remove_nth_node_from_end_of_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0203_remove_linked_list_elements` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0086_partition_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0061_rotate_list` | Linked List | 0.006x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0025_reverse_nodes_in_k_group` | Linked List | 0.007x | 100, 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `0002_add_two_numbers` | Linked List | 0.014x | 1000, 5000 | compiler | equivalent | list_node_clone, optional_clone |
-| `1768_merge_strings_alternately` | Two Pointers | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
-| `1888_minimum_number_of_flips_to_make_the_binary_string_alternating` | Sliding Window | 0.016x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
-| `0003_longest_substring_without_repeating_characters` | Sliding Window | 0.017x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
-| `1461_check_if_a_string_contains_all_binary_codes_of_size_k` | Arrays & Hashing | 0.02x | 10000, 100000 | compiler | equivalent | substring_allocation, set_clone |
-| `0680_valid_palindrome_ii` | Two Pointers | 0.021x | 10000, 100000 | compiler | equivalent | string_indexing |
-| `0187_repeated_dna_sequences` | Arrays & Hashing | 0.024x | 1000, 10000, 100000 | compiler | equivalent | substring_allocation, set_clone |
-| `0763_partition_labels` | Greedy | 0.032x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
-| `0058_length_of_last_word` | Arrays & Hashing | 0.033x | 10000, 100000 | compiler | equivalent | string_indexing |
-| `0139_word_break` | 1-D Dynamic Programming | 0.039x | 10000, 50000 | compiler | equivalent | substring_allocation, set_clone |
-| `0392_is_subsequence` | Arrays & Hashing | 0.039x | 10000, 100000 | compiler | equivalent | string_indexing |
-| `1456_maximum_number_of_vowels_in_a_substring_of_given_length` | Sliding Window | 0.039x | 10000, 100000 | compiler | equivalent | string_indexing |
-| `0567_permutation_in_string` | Sliding Window | 0.043x | 1000, 10000, 100000 | mixed | unknown | string_indexing, list_clone |
-| `0125_valid_palindrome` | Two Pointers | 0.057x | 10000, 100000 | compiler | equivalent | string_indexing |
-| `0424_longest_repeating_character_replacement` | Sliding Window | 0.058x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
-| `0021_merge_two_sorted_lists` | Linked List | 0.079x | 500, 900 | compiler | equivalent | list_node_clone, optional_clone |
-| `0380_insert_delete_getrandom_o1` | Arrays & Hashing | 0.08x | 10000, 100000 | mixed | equivalent | stateful_object, field_clone, array_map_parity |
-| `1209_remove_all_adjacent_duplicates_in_string_ii` | Stack | 0.086x | 100000 | compiler | equivalent | string_allocation, stack_clone |
-| `0146_lru_cache` | Linked List | 0.091x | 5000, 10000 | mixed | equivalent | stateful_object, field_clone, lru_parity |
-| `0706_design_hashmap` | Arrays & Hashing | 0.109x | 1000, 5000, 10000 | mixed | unknown | stateful_object, field_clone |
-| `0402_remove_k_digits` | Stack | 0.134x | 1000, 10000, 100000 | compiler | unknown | string_indexing, list_clone |
-| `0049_group_anagrams` | Arrays & Hashing | 0.146x | 1000, 5000, 20000 | compiler | unknown | dict_clone, list_clone |
-| `0221_maximal_square` | 2-D Dynamic Programming | 0.176x | 50, 150, 300 | compiler | equivalent | matrix_clone |
-| `0355_design_twitter` | Heap / Priority Queue | 0.177x | 1000, 5000, 10000 | mixed | equivalent | stateful_object, field_clone, heap_parity |
-| `0179_largest_number` | Arrays & Hashing | 0.182x | 500, 1000 | mixed | unknown | string_allocation, algorithm_parity_unknown |
-| `0148_sort_list` | Linked List | 0.193x | 300, 700 | compiler | equivalent | list_node_clone, optional_clone |
-| `0014_longest_common_prefix` | Arrays & Hashing | 0.199x | 1000, 10000, 100000 | compiler | equivalent | string_indexing |
-| `0895_maximum_frequency_stack` | Stack | 0.202x | 5000, 10000 | mixed | unknown | stateful_object, field_clone |
-| `0212_word_search_ii` | Tries | 0.208x | 100, 400, 900 | mixed | equivalent | trie_parity, field_clone, dict_clone, recursive_search |
-| `0200_number_of_islands` | Graphs | 0.249x | 20, 40, 80 | compiler | equivalent | matrix_clone, set_clone |
-| `0981_time_based_key_value_store` | Binary Search | 0.255x | 5000, 10000 | mixed | unknown | stateful_object, field_clone, binary_search |
-| `1930_unique_length_3_palindromic_subsequences` | Arrays & Hashing | 0.255x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
-| `0036_valid_sudoku` | Arrays & Hashing | 0.255x | 9 | compiler | equivalent | set_clone, safe_indexing |
-| `2001_number_of_pairs_of_interchangeable_rectangles` | Arrays & Hashing | 0.293x | 100, 1000, 5000 | compiler | equivalent | dict_clone |
-| `0721_accounts_merge` | Graphs | 0.3x | 100, 300, 700 | mixed | unknown | dict_clone, list_clone, set_clone |
-| `0572_subtree_of_another_tree` | Trees | 0.332x | 1000, 5000 | compiler | equivalent | tree_clone, optional_clone |
-| `0130_surrounded_regions` | Graphs | 0.342x | 20, 40, 80 | compiler | equivalent | matrix_clone |
-| `0100_same_tree` | Trees | 0.351x | 1000, 5000 | compiler | equivalent | tree_clone, optional_clone |
-| `0067_add_binary` | Bit Manipulation | 0.365x | 10000, 100000 | compiler | equivalent | string_indexing, string_allocation |
-| `0752_open_the_lock` | Graphs | 0.434x | 100 | mixed | unknown | string_indexing, set_clone, queue_clone |
-| `0149_max_points_on_a_line` | Math & Geometry | 0.453x | 100, 300, 600 | compiler | equivalent | dict_clone, tuple_key_clone |
-| `0344_reverse_string` | Two Pointers | 0.459x | 10000, 100000 | compiler | equivalent | list_clone, string_indexing |
-| `0102_binary_tree_level_order_traversal` | Trees | 0.467x | 1000, 5000 | compiler | equivalent | tree_clone, optional_clone |
-| `2013_detect_squares` | Math & Geometry | 0.468x | 100, 500, 1000 | mixed | unknown | stateful_object, dict_clone |
-| `0295_find_median_from_data_stream` | Heap / Priority Queue | 0.484x | 10000 | mixed | equivalent | heap_parity, field_clone, stateful_object |
-| `0005_longest_palindromic_substring` | 1-D Dynamic Programming | 0.517x | 300, 800 | compiler | equivalent | string_indexing, substring_allocation |
-| `1189_maximum_number_of_balloons` | Arrays & Hashing | 0.543x | 1000, 10000, 100000 | compiler | equivalent | dict_clone, string_iteration |
-| `0189_rotate_array` | Two Pointers | 0.548x | 5000, 10000 | compiler | equivalent | list_clone |
-| `0205_isomorphic_strings` | Arrays & Hashing | 0.552x | 1000, 10000, 100000 | compiler | equivalent | string_indexing, dict_clone |
-| `0647_palindromic_substrings` | 1-D Dynamic Programming | 0.564x | 300, 800 | compiler | equivalent | string_indexing |
-| `0054_spiral_matrix` | Math & Geometry | 0.604x | 300, 700 | compiler | equivalent | matrix_clone |
-| `0929_unique_email_addresses` | Arrays & Hashing | 0.709x | 1000, 10000, 100000 | compiler | unknown | string_allocation, set_clone |
-| `2405_optimal_partition_of_string` | Arrays & Hashing | 0.71x | 10000, 100000 | compiler | equivalent | string_indexing, set_clone |
-| `0013_roman_to_integer` | Math & Geometry | 0.724x | 5000 | compiler | equivalent | string_indexing, dict_clone |
-| `0211_design_add_and_search_words_data_structure` | Tries | 0.79x | 5000, 10000 | mixed | equivalent | trie_parity, recursive_search, dict_iteration |
-| `0606_construct_string_from_binary_tree` | Trees | 0.801x | 1000, 5000 | compiler | equivalent | tree_clone, string_allocation |
-| `0094_binary_tree_inorder_traversal` | Trees | 0.885x | 5000 | compiler | equivalent | tree_clone, optional_clone |
-| `0104_maximum_depth_of_binary_tree` | Trees | 0.902x | 5000 | compiler | equivalent | tree_clone, optional_clone |
-| `0682_baseball_game` | Stack | 0.915x | 100000 | noise | equivalent | stack_clone, string_parse |
-| `0199_binary_tree_right_side_view` | Trees | 0.92x | 5000 | compiler | equivalent | tree_clone, list_clone |
-| `0072_edit_distance` | 2-D Dynamic Programming | 0.928x | 100, 200 | noise | equivalent | string_indexing |
-| `0208_implement_trie_prefix_tree` | Tries | 0.936x | 5000, 10000 | noise | equivalent | trie_parity, small_residual_gap |
-| `0020_valid_parentheses` | Stack | 0.981x | 10000, 100000 | noise | equivalent | list_clone, dict_clone |
-| `0064_minimum_path_sum` | 2-D Dynamic Programming | 0.982x | 300 | noise | equivalent | matrix_clone |
-| `0269_alien_dictionary` | Advanced Graphs | 0.991x | 5000 | noise | equivalent | small_residual_gap |
 
 ### Partial Benchmarks
 
 | Problem | Complete pairs | Missing sizes | Status |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 
 ### No-Pair Failures
 

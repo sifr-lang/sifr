@@ -142,6 +142,17 @@ pub(super) fn try_lower_simple_assign_value(
     {
         return None;
     }
+    if matches!(
+        value,
+        HirExpr::BinOp { op, ty, .. }
+            if op == "+"
+                && matches!(
+                    crate::resolve_alias_type_for_plain_call(ty),
+                    Type::Str | Type::LiteralStr(_)
+                )
+    ) {
+        return None;
+    }
     try_lower_leaf_or_name_expr(value)
 }
 
