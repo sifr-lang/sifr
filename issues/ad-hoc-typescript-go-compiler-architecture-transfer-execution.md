@@ -11,7 +11,7 @@ Phase contract: `issues/ad-hoc-typescript-go-compiler-architecture-transfer.md`
 - [x] M0 source and position foundation completed
 - [x] M1 architecture contract and guardrails completed
 - [x] M2 source provider and overlay store completed
-- [ ] M3 workspace session data model completed
+- [x] M3 workspace session data model completed
 - [ ] M4 analysis snapshot migration completed
 - [ ] M5 LSP persistent session integration completed
 - [ ] M6 event compaction and dirty scope completed
@@ -180,6 +180,7 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`, `python3 scripts/check_file_size_guardrails.py`, and `python3 scripts/check_package_manager_guardrails.py` -> PASS for M3.
 - `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS for M3; report `target/validation_lane_reports/quick.latest.json`, wall time 261.09s.
 - `2026-06-01`: M3 implementation review pass 1 recorded in `reviews/typescript-go-m3-workspace-session-review-pass-1.md`; reviewer approved M3 for PR after validation and requested only pre-PR tracker/doc/test cleanup. Cleanup was applied, and `cargo test -p sifr_frontend workspace_session`, `cargo clippy -p sifr_frontend -- -D warnings`, `cargo fmt --check`, and `git diff --check` passed after cleanup.
+- `2026-06-01`: M3 merged via PR [#2235](https://github.com/sifr-lang/sifr/pull/2235), merge commit `b5582baf42ad3f4cf37643d9dd6e96d2107dd088`.
 
 ## PR Log
 
@@ -187,4 +188,5 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: M0 source and position foundation merged in [#2229](https://github.com/sifr-lang/sifr/pull/2229).
 - `2026-06-01`: M1 architecture contract and guardrails merged in [#2230](https://github.com/sifr-lang/sifr/pull/2230).
 - `2026-06-01`: M2 source provider and overlay store merged in [#2233](https://github.com/sifr-lang/sifr/pull/2233).
+- `2026-06-01`: M3 workspace session data model merged in [#2235](https://github.com/sifr-lang/sifr/pull/2235).
 - Additional implementation PR links will be recorded per milestone after they are opened and merged.
