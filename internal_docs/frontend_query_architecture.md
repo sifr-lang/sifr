@@ -46,6 +46,12 @@ handlers capture an `AnalysisSnapshot` at the document-store boundary and route
 diagnostics, symbols, formatting, generated Rust preview, and editor/navigation
 queries through snapshot methods while execution remains serialized.
 
+TypeScript-Go architecture transfer M9 note: `sifr_frontend::cache_keys`
+defines the deterministic identity layer for future snapshot reuse. Query/cache
+families now have typed key structures that include source content, compiler,
+workspace, package/config, and policy fingerprints before M10 adds reusable
+cache storage.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

@@ -30,6 +30,18 @@ impl SourceRevision {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourceHash(pub(crate) String);
 
+impl SourceHash {
+    #[must_use]
+    pub fn from_source_text(source: &str) -> Self {
+        crate::stable_source_hash(source)
+    }
+
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourcePath(PathBuf);
 

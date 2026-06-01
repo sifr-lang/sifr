@@ -15,6 +15,7 @@ Status: in progress
 | M6 Event Compaction And Dirty Scope | merged | [#2239](https://github.com/sifr-lang/sifr/pull/2239) | Compacts batched document edits before analysis updates, summarizes watcher events before dirty-scope classification, records precise dirty scope/reason reports, and degrades incompatible or stormy invalidation conservatively. |
 | M7 Module Signatures And Dependency Invalidation | merged | [#2241](https://github.com/sifr-lang/sifr/pull/2241) | Adds import/export/module signatures, reverse-dependency closure invalidation, and local private-body edit reuse for unchanged public/import signatures. |
 | M8 First-Class Flow Graph | merged | [#2243](https://github.com/sifr-lang/sifr/pull/2243), [#2244](https://github.com/sifr-lang/sifr/pull/2244), [#2245](https://github.com/sifr-lang/sifr/pull/2245) | Adds `sifr_hir::flow_graph`, snapshot-scoped `LoweringResult.flow_graph`, graph-backed `FlowFacts` debug/fingerprint access, and lowering-time flow effects for narrowing, mutation invalidation, moves, and borrows. |
+| M9 Fingerprints And Cache Keys | in progress | pending | Adds deterministic compiler/cache fingerprints and typed key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph caches before reuse lands. |
 
 M2 local validation so far:
 
@@ -138,6 +139,24 @@ M8 local validation so far:
 - Claude reviewer loop-else follow-up pass 1 -> SATISFIED (`reviews/typescript-go-m8-loop-else-follow-up-review-pass-1.md`)
 - M8 closeout quick validation: `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 280.58s, advisory: group skew is high
 - Claude reviewer closeout pass 1 -> SATISFIED (`reviews/typescript-go-m8-closeout-review-pass-1.md`)
+
+M9 local validation so far:
+
+- `cargo fmt --check`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_package_manager_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `cargo test -p sifr_frontend cache_key -- --nocapture`
+- `cargo test -p sifr_frontend`
+- `cargo test -p sifr_analysis -p sifr_lsp`
+- `cargo test -p sifr_driver`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `cargo clippy -p sifr_frontend -- -D warnings`
+- `cargo clippy --workspace -- -D warnings`
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 274.87s, advisory: group skew is high
+- Claude reviewer pass 4 -> SATISFIED (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-4.md`)
 
 ## Purpose
 
