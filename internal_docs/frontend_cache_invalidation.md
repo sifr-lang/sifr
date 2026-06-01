@@ -17,6 +17,12 @@ canonicalization, and failed lookups. These records are not yet consumed for
 dirty-scope invalidation; M3-M6 wire them into session snapshots and
 dependency-sensitive invalidation.
 
+TypeScript-Go architecture transfer M3 note: `WorkspaceSession` now owns the
+tracked dependency records and freezes them into `WorkspaceSnapshot` alongside
+source maps, module graphs, overlay records, compiler options, package/config
+identity, and cache-registry handles. M6 still owns consuming those records for
+dirty-scope classification and dependency-sensitive invalidation.
+
 ## Cache State
 
 Each `FrontendContext` module owns cached parse, lower, diagnostics, and analysis entries. Query results include metadata with:

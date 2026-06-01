@@ -10,7 +10,7 @@ Phase contract: `issues/ad-hoc-typescript-go-compiler-architecture-transfer.md`
 - [x] Phase plan reviewed and approved for implementation
 - [x] M0 source and position foundation completed
 - [x] M1 architecture contract and guardrails completed
-- [ ] M2 source provider and overlay store completed
+- [x] M2 source provider and overlay store completed
 - [ ] M3 workspace session data model completed
 - [ ] M4 analysis snapshot migration completed
 - [ ] M5 LSP persistent session integration completed
@@ -174,6 +174,12 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS after M2 remediation; report `target/validation_lane_reports/quick.latest.json`, wall time 260.57s.
 - `2026-06-01`: M2 final implementation review pass 4 recorded in `reviews/typescript-go-m2-source-provider-overlay-review-pass-4.md`; reviewer approved the current post-remediation tree for PR.
 - `2026-06-01`: M2 merged via PR [#2233](https://github.com/sifr-lang/sifr/pull/2233), merge commit `c74d73b59d179156b3a19c5f4176fc5738c49ab4`.
+- `2026-06-01`: M3 validation completed on branch `wave_tsgo_m3_workspace_session`.
+- `2026-06-01`: `cargo test -p sifr_frontend workspace_session`, `cargo test -p sifr_frontend`, `cargo test -p sifr_analysis`, `cargo test -p sifr_lsp`, and `cargo test -p sifr -- --skip test_e2e_pass` -> PASS for M3.
+- `2026-06-01`: `cargo fmt --check`, `git diff --check`, and `cargo clippy --workspace -- -D warnings` -> PASS for M3.
+- `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`, `python3 scripts/check_file_size_guardrails.py`, and `python3 scripts/check_package_manager_guardrails.py` -> PASS for M3.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS for M3; report `target/validation_lane_reports/quick.latest.json`, wall time 261.09s.
+- `2026-06-01`: M3 implementation review pass 1 recorded in `reviews/typescript-go-m3-workspace-session-review-pass-1.md`; reviewer approved M3 for PR after validation and requested only pre-PR tracker/doc/test cleanup. Cleanup was applied, and `cargo test -p sifr_frontend workspace_session`, `cargo clippy -p sifr_frontend -- -D warnings`, `cargo fmt --check`, and `git diff --check` passed after cleanup.
 
 ## PR Log
 

@@ -9,6 +9,7 @@ Status: in progress
 | M0 Source And Position Foundation | merged | [#2229](https://github.com/sifr-lang/sifr/pull/2229) | Added `sifr_source`, real source-map conversions, and source-position guardrails. |
 | M1 Architecture Contract And Guardrails | merged | [#2230](https://github.com/sifr-lang/sifr/pull/2230), [#2232](https://github.com/sifr-lang/sifr/pull/2232) | Added pre-flight direct-read/LSP/budget guardrails and follow-up tracker update. |
 | M2 Source Provider And Overlay Store | merged | [#2233](https://github.com/sifr-lang/sifr/pull/2233) | Adds `SourceProvider`, `DiskSourceProvider`, `OverlaySourceProvider`, `TrackingSourceProvider`, `OverlayDocument`, `SourceDependency*`, provider-backed project/package/lint/format reads, `PackageImportAmbiguity`, and `PackageImportResolutionResult`; new tests cover overlay shadowing, nested overlay directories, tracked reads, provider-backed project loading, package ambiguity, unresolved/private/fatal import states, and existing lint/format/package behavior. |
+| M3 Workspace Session Data Model | in progress | pending | Adds `WorkspaceSession` and `WorkspaceSnapshot` as the serialized mutable compiler-service owner and frozen inspection handle for overlays, tracked dependencies, source maps, module graphs, compiler options, package/config identity, cache-registry handles, and revision counters while leaving analysis/LSP migration to M4/M5. |
 
 M2 local validation so far:
 
@@ -20,7 +21,22 @@ M2 local validation so far:
 - `cargo test -p sifr_driver -p sifr_package -p sifr_frontend -p sifr_format -p sifr_lint`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 274.59s
-- `scripts/run_all_tests.sh --profile quick` passed after package source-map and manifest helper modules were split under the package-manager line guardrail.
+
+M3 local validation so far:
+
+- `cargo test -p sifr_frontend workspace_session`
+- `cargo test -p sifr_frontend`
+- `cargo test -p sifr_analysis`
+- `cargo test -p sifr_lsp`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `cargo fmt --check`
+- `git diff --check`
+- `cargo clippy --workspace -- -D warnings`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_package_manager_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 261.09s
 
 ## Purpose
 

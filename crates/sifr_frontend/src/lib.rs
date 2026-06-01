@@ -14,3 +14,5 @@ mod source_provider;
 pub use source_provider::*;
 mod source_maps;
 pub use source_maps::*;
+mod workspace_session;
+pub use workspace_session::*;

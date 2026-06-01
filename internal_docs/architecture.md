@@ -271,6 +271,7 @@ New crates added per milestone as needed:
 - TypeScript-Go architecture transfer M0: `sifr_source` (bottom-of-graph source text, line-map, source-file metadata, and editor position conversion authority)
 - TypeScript-Go architecture transfer M1: `internal_docs/typescript_go_architecture_transfer_m1_guardrails.md` records the pre-session direct-read inventory, current LSP single-file rebuild caveat, aggregate LSP budget caveat, and guardrail automation before M2-M5 behavior migration.
 - TypeScript-Go architecture transfer M2: `sifr_frontend::SourceProvider` is the typed semantic filesystem boundary. `internal_docs/typescript_go_architecture_transfer_m2_source_provider.md` records how `DiskSourceProvider`, `OverlaySourceProvider`, and `TrackingSourceProvider` cover disk reads, unsaved editor buffers, read/probe/canonicalization dependency records, failed lookup records, and package import ambiguity before `WorkspaceSession` owns overlay lifecycle in M3.
+- TypeScript-Go architecture transfer M3: `sifr_frontend::WorkspaceSession` owns serialized compiler-service workspace state and can freeze inspectable `WorkspaceSnapshot` values. `internal_docs/typescript_go_architecture_transfer_m3_workspace_session.md` records the pre-analysis-migration session/snapshot state.
 - milestone_ffi: FFI codegen extensions in `sifr_codegen`
 - Phase 35 shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
 - milestone_dev_tooling: `sifr_lsp` (language server), `sifr_format` (formatter), `sifr_lint` (linter)
