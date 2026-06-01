@@ -7,26 +7,26 @@ use sifr_analysis::SymbolName;
 use std::collections::BTreeMap;
 
 pub(crate) fn definition(session: &mut Session, params: Value) -> LspResult<Value> {
-    locations(session, params, |host, file, position| {
-        host.definition(file, position)
+    locations(session, params, |snapshot, host, file, position| {
+        snapshot.definition(host, file, position)
     })
 }
 
 pub(crate) fn declaration(session: &mut Session, params: Value) -> LspResult<Value> {
-    locations(session, params, |host, file, position| {
-        host.declaration(file, position)
+    locations(session, params, |snapshot, host, file, position| {
+        snapshot.declaration(host, file, position)
     })
 }
 
 pub(crate) fn type_definition(session: &mut Session, params: Value) -> LspResult<Value> {
-    locations(session, params, |host, file, position| {
-        host.type_definition(file, position)
+    locations(session, params, |snapshot, host, file, position| {
+        snapshot.type_definition(host, file, position)
     })
 }
 
 pub(crate) fn references(session: &mut Session, params: Value) -> LspResult<Value> {
-    locations(session, params, |host, file, position| {
-        host.references(file, position)
+    locations(session, params, |snapshot, host, file, position| {
+        snapshot.references(host, file, position)
     })
 }
 
@@ -34,9 +34,9 @@ pub(crate) fn document_highlight(session: &mut Session, params: Value) -> LspRes
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, source| {
-        let highlights = host
-            .document_highlights(file, &position)
+    document.with_host(|snapshot, host, file, source| {
+        let highlights = snapshot
+            .document_highlights(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         highlights
@@ -51,9 +51,9 @@ pub(crate) fn prepare_rename(session: &mut Session, params: Value) -> LspResult<
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, _source| {
-        let target = host
-            .prepare_rename(file, &position)
+    document.with_host(|snapshot, host, file, _source| {
+        let target = snapshot
+            .prepare_rename(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         let Some(target) = target else {
@@ -84,9 +84,9 @@ pub(crate) fn rename(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri_map = session.store().uri_map();
     let source_map = session.store().source_map();
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, _source| {
-        let edit = host
-            .rename(file, &position, &SymbolName(new_name.to_string()))
+    document.with_host(|snapshot, host, file, _source| {
+        let edit = snapshot
+            .rename(host, file, &position, &SymbolName(new_name.to_string()))
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         conversion::workspace_edit(
@@ -101,6 +101,7 @@ fn locations(
     session: &mut Session,
     params: Value,
     operation: impl FnOnce(
+        &sifr_analysis::AnalysisSnapshot,
         &mut sifr_analysis::AnalysisHost,
         sifr_analysis::FileId,
         &sifr_analysis::TextPosition,
@@ -114,8 +115,8 @@ fn locations(
     let source_lookup = session.store().source_map();
     let uri_lookup = session.store().uri_map();
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, source| {
-        operation(host, file, &position)
+    document.with_host(|snapshot, host, file, source| {
+        operation(snapshot, host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
             .into_value()
             .into_iter()

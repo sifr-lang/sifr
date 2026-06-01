@@ -16,41 +16,47 @@ use crate::symbols::SymbolIndex;
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::{
-    DocumentVersion, FileId, FrontendContext, FrontendInput, InvalidationReport, ModuleId,
-    ProjectRoot, SourceText,
+    DocumentVersion, FileId, FrontendInput, InvalidationReport, ModuleId, ProjectRoot, SourceText,
+    UpdatedDocumentInfo, WorkspaceSession, WorkspaceSnapshot,
 };
 use sifr_syntax::TextPosition;
 use std::collections::BTreeMap;
 
-type QueryResult<T> = Result<AnalysisQueryResult<T>, AnalysisError>;
+pub(super) type QueryResult<T> = Result<AnalysisQueryResult<T>, AnalysisError>;
 
 pub struct AnalysisHost {
-    context: FrontendContext,
+    session: WorkspaceSession,
     file_to_module: BTreeMap<FileId, ModuleId>,
     symbol_index: Option<SymbolIndex>,
     last_invalidation: Option<InvalidationReport>,
+    current_revision: AnalysisRevision,
 }
 
 impl AnalysisHost {
     pub fn open_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let context = FrontendContext::load_project(root)?;
-        Ok(Self::new(context))
+        let session = WorkspaceSession::open_project(root.clone())?;
+        Self::new(session)
     }
 
     pub fn open_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let context = FrontendContext::load_single_file(input)?;
-        Ok(Self::new(context))
+        let session = WorkspaceSession::open_single_file(input)?;
+        Self::new(session)
     }
 
-    fn new(context: FrontendContext) -> Self {
+    fn new(mut session: WorkspaceSession) -> Result<Self, Vec<RenderedDiagnostic>> {
+        let snapshot = session.snapshot();
+        let Some(current_revision) = revision_from_workspace_snapshot(&snapshot) else {
+            return Err(Vec::new());
+        };
         let mut host = Self {
-            context,
+            session,
             file_to_module: BTreeMap::new(),
             symbol_index: None,
             last_invalidation: None,
+            current_revision,
         };
         host.refresh_file_map();
-        host
+        Ok(host)
     }
 
     pub fn update_document(
@@ -62,7 +68,8 @@ impl AnalysisHost {
         let Some(module) = self.file_to_module.get(&file).copied() else {
             return Err(unknown_file(file));
         };
-        if let Some(current) = self.context.document_version_for_file(file) {
+        let current_version = self.context()?.document_version_for_file(file);
+        if let Some(current) = current_version {
             if version <= current {
                 return Err(AnalysisError::new(
                     AnalysisErrorKind::StaleDocumentVersion,
@@ -75,19 +82,44 @@ impl AnalysisHost {
                 ));
             }
         }
-        let report = self
-            .context
-            .update_module_source(module, text, Some(version))
-            .map_err(|diagnostics| frontend_diagnostics(&diagnostics))?;
+        let previous_revision = self.current_revision.graph;
+        let report = {
+            let context = self.context_mut()?;
+            context
+                .update_module_source(module, text, Some(version))
+                .map_err(|diagnostics| frontend_diagnostics(&diagnostics))?
+        };
         self.refresh_file_map();
+        self.refresh_current_revision();
+        self.session.record_analysis_document_update();
         self.symbol_index = None;
+        let report = InvalidationReport {
+            previous_revision,
+            next_revision: self.current_revision.graph,
+            invalidated_modules: report.invalidated_modules,
+            invalidated_queries: report.invalidated_queries,
+            updated_documents: vec![UpdatedDocumentInfo {
+                file,
+                old_version: current_version,
+                new_version: Some(version),
+                text_changed: report
+                    .updated_documents
+                    .first()
+                    .is_some_and(|document| document.text_changed),
+            }],
+        };
         self.last_invalidation = Some(report.clone());
         Ok(report)
     }
 
+    pub fn snapshot(&mut self) -> AnalysisSnapshot {
+        AnalysisSnapshot::new(self.session.snapshot(), self.current_revision)
+    }
+
     #[must_use]
-    pub fn snapshot(&self) -> AnalysisSnapshot {
-        AnalysisSnapshot::new(self.current_revision())
+    pub fn is_snapshot_current(&self, snapshot: &AnalysisSnapshot) -> bool {
+        snapshot.revision() == self.current_revision
+            && snapshot.workspace().revision == self.session.revision()
     }
 
     #[must_use]
@@ -103,7 +135,7 @@ impl AnalysisHost {
     pub fn diagnostics(&mut self, file: FileId) -> QueryResult<Vec<RenderedDiagnostic>> {
         let module = self.module_for_file(file)?;
         let mut diagnostics = self
-            .context
+            .context_mut()?
             .diagnostics_for_module(module)
             .into_value()
             .diagnostics;
@@ -451,7 +483,7 @@ impl AnalysisHost {
                     action: DeferredCodeAction::FixAllSafePolicy,
                     file,
                     expected_version: self
-                        .context
+                        .context()?
                         .document_version_for_file(file)
                         .map(DocumentVersion::as_i64),
                 }),
@@ -466,7 +498,7 @@ impl AnalysisHost {
         options: FormatOptions,
     ) -> QueryResult<Vec<sifr_format::TextEdit>> {
         let source = self.source_text(file)?;
-        let path = self.context.path_for_file(file);
+        let path = self.context()?.path_for_file(file);
         let result = sifr_format::format_source(&source, path, options)
             .map_err(|diagnostics| frontend_diagnostics(&diagnostics))?;
         let edits = if result.formatted == source {
@@ -487,7 +519,7 @@ impl AnalysisHost {
         options: FormatOptions,
     ) -> QueryResult<Vec<sifr_format::TextEdit>> {
         let source = self.source_text(file)?;
-        let path = self.context.path_for_file(file);
+        let path = self.context()?.path_for_file(file);
         let edits = sifr_format::format_range(&source, range, path, options)
             .map_err(|diagnostics| frontend_diagnostics(&diagnostics))?;
         Ok(self.result(AnalysisQueryKind::FormatRange, edits))
@@ -571,14 +603,14 @@ impl AnalysisHost {
     }
 
     fn symbol_index(&mut self) -> Result<&SymbolIndex, AnalysisError> {
-        let revision = self.current_revision();
+        let revision = self.current_revision;
         let needs_refresh = self
             .symbol_index
             .as_ref()
             .is_none_or(|index| index.revision() != revision);
         if needs_refresh {
-            let graph = self.context.module_graph();
-            let analysis = self.context.analysis_for_project();
+            let graph = self.context()?.module_graph();
+            let analysis = self.context_mut()?.analysis_for_project();
             let query_revision = AnalysisRevision {
                 graph: analysis.metadata().graph_revision,
                 source: analysis.metadata().source_revision,
@@ -595,14 +627,14 @@ impl AnalysisHost {
 
     fn lint_diagnostics(&self, file: FileId) -> Result<Vec<RenderedDiagnostic>, AnalysisError> {
         let source = self.source_text(file)?;
-        let path = self.context.path_for_file(file);
+        let path = self.context()?.path_for_file(file);
         Ok(sifr_lint::lint_source(&source, path, &sifr_lint::LintOptions::default()).diagnostics)
     }
 
     fn editor_facts(&mut self, file: FileId) -> Result<EditorFacts, AnalysisError> {
         let module = self.module_for_file(file)?;
         let source = self.source_text(file)?;
-        let parsed = self.context.parse_module(module).into_value().parsed;
+        let parsed = self.context_mut()?.parse_module(module).into_value().parsed;
         let tokens = parsed
             .tokens()
             .iter()
@@ -681,7 +713,7 @@ impl AnalysisHost {
     }
 
     fn source_text(&self, file: FileId) -> Result<String, AnalysisError> {
-        self.context
+        self.context()?
             .source_text_for_file(file)
             .map(str::to_owned)
             .ok_or_else(|| unknown_file(file))
@@ -694,27 +726,49 @@ impl AnalysisHost {
             .ok_or_else(|| unknown_file(file))
     }
 
-    fn refresh_file_map(&mut self) {
-        self.file_to_module = self
-            .context
-            .module_graph()
-            .modules
-            .into_iter()
-            .map(|module| (module.file, module.id))
-            .collect();
+    fn context(&self) -> Result<&sifr_frontend::FrontendContext, AnalysisError> {
+        self.session.context().ok_or_else(|| {
+            AnalysisError::new(
+                AnalysisErrorKind::FrontendDiagnostic,
+                "analysis workspace session has not loaded frontend state",
+            )
+        })
     }
 
-    fn current_revision(&self) -> AnalysisRevision {
-        AnalysisRevision {
-            graph: self.context.module_graph().revision,
-            source: self.context.source_map().revision,
+    fn context_mut(&mut self) -> Result<&mut sifr_frontend::FrontendContext, AnalysisError> {
+        self.session.context_mut().ok_or_else(|| {
+            AnalysisError::new(
+                AnalysisErrorKind::FrontendDiagnostic,
+                "analysis workspace session has not loaded frontend state",
+            )
+        })
+    }
+
+    fn refresh_file_map(&mut self) {
+        if let Some(context) = self.session.context() {
+            self.file_to_module = context
+                .module_graph()
+                .modules
+                .into_iter()
+                .map(|module| (module.file, module.id))
+                .collect();
+        }
+    }
+
+    fn refresh_current_revision(&mut self) {
+        if let Some(context) = self.session.context() {
+            self.current_revision = AnalysisRevision {
+                graph: context.module_graph().revision,
+                source: context.source_map().revision,
+            };
         }
     }
 
     fn metadata(&self, query: AnalysisQueryKind) -> QueryMetadata {
         QueryMetadata {
             query,
-            revision: self.current_revision(),
+            revision: self.current_revision,
+            workspace_snapshot_id: None,
         }
     }
 
@@ -723,43 +777,35 @@ impl AnalysisHost {
     }
 }
 
-impl AnalysisSnapshot {
-    pub fn diagnostics(
-        &self,
-        host: &mut AnalysisHost,
-        file: FileId,
-    ) -> QueryResult<Vec<RenderedDiagnostic>> {
-        host.ensure_snapshot_current(self)?;
-        host.diagnostics(file)
-    }
-
-    pub fn workspace_symbols(
-        &self,
-        host: &mut AnalysisHost,
-        query: &SymbolQuery,
-    ) -> QueryResult<Vec<WorkspaceSymbol>> {
-        host.ensure_snapshot_current(self)?;
-        host.workspace_symbols(query)
-    }
-}
-
 impl AnalysisHost {
-    fn ensure_snapshot_current(&self, snapshot: &AnalysisSnapshot) -> Result<(), AnalysisError> {
-        let current = self.current_revision();
-        if snapshot.revision() == current {
+    pub(super) fn ensure_snapshot_current(
+        &self,
+        snapshot: &AnalysisSnapshot,
+    ) -> Result<(), AnalysisError> {
+        let current = self.current_revision;
+        if self.is_snapshot_current(snapshot) {
             return Ok(());
         }
         Err(AnalysisError::new(
             AnalysisErrorKind::StaleSnapshot,
             format!(
-                "analysis snapshot is stale: captured graph/source {}:{}, current graph/source {}:{}",
+                "analysis snapshot is stale: captured workspace {} graph/source {}:{}, current workspace {} graph/source {}:{}",
+                snapshot.workspace().revision.as_u64(),
                 snapshot.revision().graph.as_u64(),
                 snapshot.revision().source.as_u64(),
+                self.session.revision().as_u64(),
                 current.graph.as_u64(),
                 current.source.as_u64()
             ),
         ))
     }
+}
+
+fn revision_from_workspace_snapshot(snapshot: &WorkspaceSnapshot) -> Option<AnalysisRevision> {
+    Some(AnalysisRevision {
+        graph: snapshot.module_graph.as_ref()?.revision,
+        source: snapshot.source_map.as_ref()?.revision,
+    })
 }
 
 pub(super) fn full_range(source: &str) -> Result<TextRange, AnalysisError> {

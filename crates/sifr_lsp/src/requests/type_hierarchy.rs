@@ -10,9 +10,9 @@ pub(crate) fn prepare(session: &mut Session, params: Value) -> LspResult<Value> 
     let position = position(&params)?;
     let uri_map = session.store().uri_map();
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, source| {
-        let item = host
-            .prepare_type_hierarchy(file, &position)
+    document.with_host(|snapshot, host, file, source| {
+        let item = snapshot
+            .prepare_type_hierarchy(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         let Some(item) = item else {
@@ -40,11 +40,11 @@ fn hierarchy(session: &mut Session, params: Value, supertypes: bool) -> LspResul
         .and_then(Value::as_str)
         .ok_or_else(|| LspError::invalid_params("typeHierarchy request requires item data"))?;
     for document in session.store_mut().documents_mut() {
-        let items = document.with_host(|host, _file, _source| {
+        let items = document.with_host(|snapshot, host, _file, _source| {
             if supertypes {
-                host.type_hierarchy_supertypes(TypeHierarchyItemId(id.to_string()))
+                snapshot.type_hierarchy_supertypes(host, TypeHierarchyItemId(id.to_string()))
             } else {
-                host.type_hierarchy_subtypes(TypeHierarchyItemId(id.to_string()))
+                snapshot.type_hierarchy_subtypes(host, TypeHierarchyItemId(id.to_string()))
             }
             .map_err(|error| LspError::internal(error.message))
             .map(AnalysisQueryResult::into_value)

@@ -79,6 +79,7 @@ fn stale_snapshot_is_rejected_after_update() {
         .expect("single-file analysis host should load");
     let file = host.files()[0];
     let snapshot = host.snapshot();
+    assert!(host.is_snapshot_current(&snapshot));
 
     host.update_document(
         file,
@@ -86,12 +87,77 @@ fn stale_snapshot_is_rejected_after_update() {
         SourceText::new("def main():\n    return 2\n"),
     )
     .expect("document update should invalidate snapshot");
+    assert!(!host.is_snapshot_current(&snapshot));
 
     let error = snapshot
         .diagnostics(&mut host, file)
         .expect_err("stale snapshot should not answer queries");
 
     assert_eq!(error.kind, AnalysisErrorKind::StaleSnapshot);
+}
+
+#[test]
+fn analysis_snapshot_carries_workspace_state_and_query_metadata() {
+    let source = "def main():\n    return 1\n";
+    let mut host =
+        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let file = host.files()[0];
+    let snapshot = host.snapshot();
+    let snapshot_id = snapshot.workspace_snapshot_id();
+    let position = TextPosition {
+        line: 0,
+        character: 0,
+    };
+    let range = full_range(source).expect("source should fit in range");
+
+    assert!(snapshot.workspace().source_map.is_some());
+    assert!(snapshot.workspace().module_graph.is_some());
+    assert_eq!(
+        snapshot.workspace().dirty_scope_report.scope,
+        sifr_frontend::WorkspaceDirtyScope::None
+    );
+
+    let diagnostics = snapshot
+        .diagnostics(&mut host, file)
+        .expect("snapshot query should run");
+    assert_eq!(
+        diagnostics.metadata().workspace_snapshot_id,
+        Some(snapshot_id)
+    );
+    assert_eq!(diagnostics.metadata().revision, snapshot.revision());
+
+    for metadata in [
+        snapshot
+            .document_symbols(&mut host, file)
+            .expect("snapshot document symbols should run")
+            .metadata(),
+        snapshot
+            .workspace_symbols(&mut host, &SymbolQuery::default())
+            .expect("snapshot workspace symbols should run")
+            .metadata(),
+        snapshot
+            .completion(&mut host, file, &position)
+            .expect("snapshot completion should run")
+            .metadata(),
+        snapshot
+            .code_actions(&mut host, file, range, &CodeActionContext::default())
+            .expect("snapshot code actions should run")
+            .metadata(),
+        snapshot
+            .format_document(&mut host, file, FormatOptions::default())
+            .expect("snapshot formatting should run")
+            .metadata(),
+        snapshot
+            .generated_rust_preview(&mut host, file, None)
+            .expect("snapshot generated Rust preview should run")
+            .metadata(),
+    ] {
+        assert_eq!(metadata.workspace_snapshot_id, Some(snapshot_id));
+        assert_eq!(metadata.revision, snapshot.revision());
+    }
+
+    let next_snapshot = host.snapshot();
+    assert!(next_snapshot.workspace_snapshot_id().as_u64() > snapshot_id.as_u64());
 }
 
 #[test]

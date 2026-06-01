@@ -1,4 +1,4 @@
-use sifr_frontend::{GraphRevision, SourceRevision};
+use sifr_frontend::{GraphRevision, SourceRevision, WorkspaceSnapshot, WorkspaceSnapshotId};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AnalysisRevision {
@@ -42,6 +42,7 @@ pub enum AnalysisQueryKind {
 pub struct QueryMetadata {
     pub query: AnalysisQueryKind,
     pub revision: AnalysisRevision,
+    pub workspace_snapshot_id: Option<WorkspaceSnapshotId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -70,22 +71,42 @@ impl<T> AnalysisQueryResult<T> {
     pub fn into_value(self) -> T {
         self.value
     }
+
+    #[must_use]
+    pub(crate) fn with_workspace_snapshot_id(mut self, snapshot_id: WorkspaceSnapshotId) -> Self {
+        self.metadata.workspace_snapshot_id = Some(snapshot_id);
+        self
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AnalysisSnapshot {
+    workspace: WorkspaceSnapshot,
     revision: AnalysisRevision,
 }
 
 impl AnalysisSnapshot {
     #[must_use]
-    pub(crate) fn new(revision: AnalysisRevision) -> Self {
-        Self { revision }
+    pub(crate) fn new(workspace: WorkspaceSnapshot, revision: AnalysisRevision) -> Self {
+        Self {
+            workspace,
+            revision,
+        }
     }
 
     #[must_use]
     pub fn revision(&self) -> AnalysisRevision {
         self.revision
+    }
+
+    #[must_use]
+    pub fn workspace(&self) -> &WorkspaceSnapshot {
+        &self.workspace
+    }
+
+    #[must_use]
+    pub fn workspace_snapshot_id(&self) -> WorkspaceSnapshotId {
+        self.workspace.id
     }
 }
 

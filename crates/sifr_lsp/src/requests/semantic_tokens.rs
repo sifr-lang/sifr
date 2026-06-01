@@ -25,9 +25,9 @@ fn tokens(
 ) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, source| {
-        let tokens = host
-            .semantic_tokens(file, range)
+    document.with_host(|snapshot, host, file, source| {
+        let tokens = snapshot
+            .semantic_tokens(host, file, range)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         conversion::semantic_tokens(tokens, source)

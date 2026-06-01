@@ -8,9 +8,9 @@ pub(crate) fn completion(session: &mut Session, params: Value) -> LspResult<Valu
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, _source| {
-        let result = host
-            .completion(file, &position)
+    document.with_host(|snapshot, host, file, _source| {
+        let result = snapshot
+            .completion(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         Ok(json!({

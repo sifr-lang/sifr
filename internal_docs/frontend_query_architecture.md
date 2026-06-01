@@ -39,6 +39,13 @@ cache registry generation handles. `WorkspaceSnapshot` freezes inspectable
 source-map and module-graph views, but analysis queries still use the existing
 `AnalysisHost` revision-token snapshot until M4 migrates them.
 
+TypeScript-Go architecture transfer M4 note: `sifr_analysis::AnalysisHost` now
+owns a `WorkspaceSession`, and `AnalysisSnapshot` carries a frozen
+`WorkspaceSnapshot` handle plus the analysis graph/source revision. LSP request
+handlers capture an `AnalysisSnapshot` at the document-store boundary and route
+diagnostics, symbols, formatting, generated Rust preview, and editor/navigation
+queries through snapshot methods while execution remains serialized.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

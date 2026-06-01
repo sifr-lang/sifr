@@ -55,9 +55,9 @@ pub(crate) fn document_diagnostics(state: &mut DocumentState) -> LspResult<Vec<V
             .map(conversion::diagnostic)
             .collect());
     }
-    state.with_host(|host, file, _source| {
-        let diagnostics = host
-            .diagnostics(file)
+    state.with_host(|snapshot, host, file, _source| {
+        let diagnostics = snapshot
+            .diagnostics(host, file)
             .map_err(|error| crate::errors::LspError::internal(error.message))?
             .into_value();
         Ok(diagnostics

@@ -12,9 +12,9 @@ pub(crate) fn formatting(session: &mut Session, params: Value) -> LspResult<Valu
     let path = session.store().document(&uri)?.path().to_path_buf();
     let options = format_options(&params, &path)?;
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, source| {
-        let edits = host
-            .format_document(file, options)
+    document.with_host(|snapshot, host, file, source| {
+        let edits = snapshot
+            .format_document(host, file, options)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         conversion::text_edits(edits, source)
@@ -33,9 +33,9 @@ pub(crate) fn range_formatting(session: &mut Session, params: Value) -> LspResul
         .and_then(|range| conversion::lsp_range(range, &source))?;
     let options = format_options(&params, &path)?;
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, source| {
-        let edits = host
-            .format_range(file, range, options)
+    document.with_host(|snapshot, host, file, source| {
+        let edits = snapshot
+            .format_range(host, file, range, options)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         conversion::text_edits(edits, source)

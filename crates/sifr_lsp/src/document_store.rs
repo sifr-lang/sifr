@@ -1,6 +1,8 @@
 use crate::conversion::uri_to_path;
 use crate::errors::{LspError, LspResult};
-use sifr_analysis::{AnalysisHost, FileId, FrontendInput, SourcePath, SourceText};
+use sifr_analysis::{
+    AnalysisHost, AnalysisSnapshot, FileId, FrontendInput, SourcePath, SourceText,
+};
 use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -220,7 +222,7 @@ impl DocumentState {
 
     pub(crate) fn with_host<T>(
         &mut self,
-        operation: impl FnOnce(&mut AnalysisHost, FileId, &str) -> LspResult<T>,
+        operation: impl FnOnce(&AnalysisSnapshot, &mut AnalysisHost, FileId, &str) -> LspResult<T>,
     ) -> LspResult<T> {
         let Some(file) = self.analysis.file else {
             return Err(LspError::internal(format!(
@@ -235,8 +237,8 @@ impl DocumentState {
             )));
         };
         let snapshot = host.snapshot();
-        let result = operation(host, file, &self.text)?;
-        if snapshot.revision() != host.snapshot().revision() {
+        let result = operation(&snapshot, host, file, &self.text)?;
+        if !host.is_snapshot_current(&snapshot) {
             return Err(LspError::request_cancelled(
                 "query result was superseded by a newer analysis snapshot",
             ));
