@@ -38,8 +38,9 @@ fn explain_diagnostic(store: &mut DocumentStore, arguments: &[Value]) -> LspResu
             LspError::invalid_params("sifr.explainDiagnostic requires a diagnostic code argument")
         })?;
     for document in store.documents_mut() {
-        let explanation = document.with_host(|host, _file, _source| {
-            host.explain_diagnostic(&id)
+        let explanation = document.with_host(|snapshot, host, _file, _source| {
+            snapshot
+                .explain_diagnostic(host, &id)
                 .map_err(|error| LspError::internal(error.message))
                 .map(AnalysisQueryResult::into_value)
         })?;
@@ -61,8 +62,9 @@ fn generated_rust_preview(store: &mut DocumentStore, arguments: &[Value]) -> Lsp
         LspError::invalid_params("sifr.showGeneratedRust requires a document URI argument")
     })?;
     let document = store.document_mut(uri)?;
-    document.with_host(|host, file, _source| {
-        host.generated_rust_preview(file, None)
+    document.with_host(|snapshot, host, file, _source| {
+        snapshot
+            .generated_rust_preview(host, file, None)
             .map_err(|error| LspError::internal(error.message))
             .map(|result| conversion::generated_rust_preview(result.into_value()))
     })
@@ -71,8 +73,9 @@ fn generated_rust_preview(store: &mut DocumentStore, arguments: &[Value]) -> Lsp
 fn run_tests(store: &mut DocumentStore, arguments: &[Value]) -> LspResult<Value> {
     if let Some(test_id) = arguments.first().and_then(Value::as_str) {
         if let Some(document) = store.documents_mut().next() {
-            let command = document.with_host(|host, _file, _source| {
-                host.test_command(TestItemId(test_id.to_string()))
+            let command = document.with_host(|snapshot, host, _file, _source| {
+                snapshot
+                    .test_command(host, TestItemId(test_id.to_string()))
                     .map_err(|error| LspError::internal(error.message))
                     .map(AnalysisQueryResult::into_value)
             })?;
@@ -81,8 +84,9 @@ fn run_tests(store: &mut DocumentStore, arguments: &[Value]) -> LspResult<Value>
     }
     let mut tests = Vec::new();
     for document in store.documents_mut() {
-        let mut document_tests = document.with_host(|host, _file, _source| {
-            host.discover_tests()
+        let mut document_tests = document.with_host(|snapshot, host, _file, _source| {
+            snapshot
+                .discover_tests(host)
                 .map_err(|error| LspError::internal(error.message))
                 .map(AnalysisQueryResult::into_value)
         })?;

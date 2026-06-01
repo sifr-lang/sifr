@@ -54,6 +54,14 @@ m36.4 implementation:
 - Generated Rust preview calls the canonical `sifr_driver::compile_with_metadata` handoff and returns structured unavailability when compilation fails.
 - Parity coverage lives in `verification/tooling/parity_manifest.json`, `verification/tooling/editor_query_snapshots/`, and `verification/tooling/completion_quality/`.
 
+TypeScript-Go architecture transfer M4 implementation:
+
+- `AnalysisHost` owns a serialized `sifr_frontend::WorkspaceSession` instead of a bare `FrontendContext`.
+- `AnalysisSnapshot` carries the captured `WorkspaceSnapshot` and the graph/source analysis revision.
+- Snapshot query methods cover the full Phase 36 editor query surface and stamp `QueryMetadata::workspace_snapshot_id`.
+- LSP analysis-backed requests capture a snapshot in `DocumentState::with_host`, execute through snapshot methods, and reject results if the host advances before publication.
+- Direct `AnalysisHost` query methods remain for internal tests and serialized callers; M5 owns replacing request-local LSP hosts with persistent workspace-session ownership.
+
 ## Required Frontend Exports
 
 Phase 35 exports are sufficient for m36.1 to proceed:

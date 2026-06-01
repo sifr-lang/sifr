@@ -14,8 +14,9 @@ pub(crate) fn selection_range(session: &mut Session, params: Value) -> LspResult
         .map(conversion::lsp_position)
         .collect::<LspResult<Vec<_>>>()?;
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, source| {
-        host.selection_ranges(file, &positions)
+    document.with_host(|snapshot, host, file, source| {
+        snapshot
+            .selection_ranges(host, file, &positions)
             .map_err(|error| LspError::internal(error.message))?
             .into_value()
             .into_iter()

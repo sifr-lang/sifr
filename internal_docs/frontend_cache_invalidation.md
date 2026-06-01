@@ -23,6 +23,12 @@ source maps, module graphs, overlay records, compiler options, package/config
 identity, and cache-registry handles. M6 still owns consuming those records for
 dirty-scope classification and dependency-sensitive invalidation.
 
+TypeScript-Go architecture transfer M4 note: `WorkspaceSnapshot` now carries a
+dirty-scope report slot consumed by `AnalysisSnapshot`. The report is
+conservative in M4: reloads, overlay changes, and analysis document updates mark
+workspace scope, while precise event compaction and dependency-sensitive dirty
+scope remain M6 work.
+
 ## Cache State
 
 Each `FrontendContext` module owns cached parse, lower, diagnostics, and analysis entries. Query results include metadata with:

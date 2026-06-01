@@ -57,6 +57,35 @@ pub struct WorkspaceCacheRegistryHandles {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WorkspaceDirtyScopeReport {
+    pub scope: WorkspaceDirtyScope,
+    pub reasons: Vec<WorkspaceDirtyReason>,
+}
+
+impl Default for WorkspaceDirtyScopeReport {
+    fn default() -> Self {
+        Self {
+            scope: WorkspaceDirtyScope::None,
+            reasons: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum WorkspaceDirtyScope {
+    #[default]
+    None,
+    Workspace,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorkspaceDirtyReason {
+    SessionReload,
+    OverlayChanged,
+    AnalysisDocumentUpdate,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WorkspaceSnapshot {
     pub id: WorkspaceSnapshotId,
     pub revision: WorkspaceRevision,
@@ -67,6 +96,7 @@ pub struct WorkspaceSnapshot {
     pub module_graph: Option<ModuleGraphView>,
     pub compiler_options: WorkspaceCompilerOptions,
     pub package_config_identity: WorkspacePackageConfigIdentity,
+    pub dirty_scope_report: WorkspaceDirtyScopeReport,
     pub cache_registry: WorkspaceCacheRegistryHandles,
 }
 
@@ -80,6 +110,7 @@ pub struct WorkspaceSession {
     next_snapshot_id: u64,
     compiler_options: WorkspaceCompilerOptions,
     package_config_identity: WorkspacePackageConfigIdentity,
+    dirty_scope_report: WorkspaceDirtyScopeReport,
     cache_registry: WorkspaceCacheRegistryHandles,
 }
 
@@ -136,11 +167,13 @@ impl WorkspaceSession {
             next_snapshot_id: 0,
             compiler_options,
             package_config_identity,
+            dirty_scope_report: WorkspaceDirtyScopeReport::default(),
             cache_registry: WorkspaceCacheRegistryHandles::default(),
         }
     }
 
     pub fn reload(&mut self) -> Result<(), Vec<RenderedDiagnostic>> {
+        let had_context = self.context.is_some();
         match &self.target {
             WorkspaceSessionTarget::Project(root) => {
                 let mut overlay_provider = OverlaySourceProvider::new(DiskSourceProvider::new());
@@ -160,6 +193,14 @@ impl WorkspaceSession {
             }
         }
         self.revision.0 += 1;
+        self.dirty_scope_report = if had_context {
+            WorkspaceDirtyScopeReport {
+                scope: WorkspaceDirtyScope::Workspace,
+                reasons: vec![WorkspaceDirtyReason::SessionReload],
+            }
+        } else {
+            WorkspaceDirtyScopeReport::default()
+        };
         Ok(())
     }
 
@@ -175,14 +216,30 @@ impl WorkspaceSession {
         self.overlays
             .insert(overlay.path.as_path().to_path_buf(), overlay);
         self.revision.0 += 1;
+        self.dirty_scope_report = WorkspaceDirtyScopeReport {
+            scope: WorkspaceDirtyScope::Workspace,
+            reasons: vec![WorkspaceDirtyReason::OverlayChanged],
+        };
     }
 
     pub fn remove_overlay(&mut self, path: &Path) -> Option<OverlayDocument> {
         let removed = self.overlays.remove(path);
         if removed.is_some() {
             self.revision.0 += 1;
+            self.dirty_scope_report = WorkspaceDirtyScopeReport {
+                scope: WorkspaceDirtyScope::Workspace,
+                reasons: vec![WorkspaceDirtyReason::OverlayChanged],
+            };
         }
         removed
+    }
+
+    pub fn record_analysis_document_update(&mut self) {
+        self.revision.0 += 1;
+        self.dirty_scope_report = WorkspaceDirtyScopeReport {
+            scope: WorkspaceDirtyScope::Workspace,
+            reasons: vec![WorkspaceDirtyReason::AnalysisDocumentUpdate],
+        };
     }
 
     #[must_use]
@@ -199,6 +256,7 @@ impl WorkspaceSession {
             module_graph: self.context.as_ref().map(FrontendContext::module_graph),
             compiler_options: self.compiler_options.clone(),
             package_config_identity: self.package_config_identity.clone(),
+            dirty_scope_report: self.dirty_scope_report.clone(),
             cache_registry: self.cache_registry.clone(),
         }
     }
@@ -223,6 +281,11 @@ impl WorkspaceSession {
         self.context.as_ref()
     }
 
+    #[must_use]
+    pub fn context_mut(&mut self) -> Option<&mut FrontendContext> {
+        self.context.as_mut()
+    }
+
     fn single_file_input(&self, target: &WorkspaceSingleFileTarget) -> FrontendInput {
         let source = self.overlays.get(target.path.as_path()).map_or_else(
             || {
@@ -242,7 +305,9 @@ impl WorkspaceSession {
 
 #[cfg(test)]
 mod tests {
-    use super::{WorkspaceSession, WorkspaceSessionTarget};
+    use super::{
+        WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceSession, WorkspaceSessionTarget,
+    };
     use crate::{
         DocumentVersion, FrontendMode, ProjectRoot, SourceDependencyKind, SourcePath, SourceText,
     };
@@ -263,6 +328,10 @@ mod tests {
         let expected_entrypoint = root.entrypoint.clone();
         let mut session = WorkspaceSession::open_project(root).expect("project opens");
         let opened_revision = session.revision().as_u64();
+        assert_eq!(
+            session.snapshot().dirty_scope_report.scope,
+            WorkspaceDirtyScope::None
+        );
 
         session.upsert_overlay(
             SourcePath::new(temp.root.join("helper.sifr")),
@@ -275,6 +344,14 @@ mod tests {
         session.reload().expect("overlay-backed reload succeeds");
         assert_eq!(session.revision().as_u64(), opened_revision + 2);
         let snapshot = session.snapshot();
+        assert_eq!(
+            snapshot.dirty_scope_report.scope,
+            WorkspaceDirtyScope::Workspace
+        );
+        assert_eq!(
+            snapshot.dirty_scope_report.reasons,
+            vec![WorkspaceDirtyReason::SessionReload]
+        );
 
         assert!(matches!(
             snapshot.target,
@@ -324,7 +401,12 @@ mod tests {
         let removed = session.remove_overlay(&temp.root.join("helper.sifr"));
         assert!(removed.is_some());
         assert_eq!(session.revision().as_u64(), snapshot.revision.as_u64() + 1);
-        assert!(session.snapshot().overlays.is_empty());
+        let removed_snapshot = session.snapshot();
+        assert!(removed_snapshot.overlays.is_empty());
+        assert_eq!(
+            removed_snapshot.dirty_scope_report.reasons,
+            vec![WorkspaceDirtyReason::OverlayChanged]
+        );
     }
 
     #[test]

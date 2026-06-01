@@ -18,9 +18,9 @@ pub(crate) fn code_action(session: &mut Session, params: Value) -> LspResult<Val
     let uri_map = session.store().uri_map();
     let source_map = session.store().source_map();
     let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|host, file, _source| {
-        let actions = host
-            .code_actions(file, range, &context)
+    document.with_host(|snapshot, host, file, _source| {
+        let actions = snapshot
+            .code_actions(host, file, range, &context)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         actions
@@ -89,9 +89,9 @@ pub(crate) fn resolve(session: &mut Session, mut params: Value) -> LspResult<Val
             )));
         }
     }
-    let edit = document.with_host(|host, file, _source| {
-        let edit = host
-            .safe_fix_all_action(file)
+    let edit = document.with_host(|snapshot, host, file, _source| {
+        let edit = snapshot
+            .safe_fix_all_action(host, file)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         conversion::workspace_edit(

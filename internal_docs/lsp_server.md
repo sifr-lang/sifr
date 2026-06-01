@@ -1,6 +1,6 @@
 # Sifr LSP Server Architecture
 
-status: phase36-m36.5-implemented; TypeScript-Go architecture transfer M1 current-state caveats recorded
+status: phase36-m36.5-implemented; TypeScript-Go architecture transfer M4 current-state caveats recorded
 
 ## Protocol Target
 
@@ -58,22 +58,27 @@ The stdio server terminates explicitly on `exit` after a successful `shutdown`
 response. This avoids retaining protocol IO threads after the client completes
 the required LSP shutdown sequence.
 
-## Current M1 Compiler-Service Caveats
+## Current M4 Compiler-Service Caveats
 
-The TypeScript-Go architecture transfer keeps M1-M4 serialized until captured
-workspace snapshots and publication identity are mechanical. Current
+The TypeScript-Go architecture transfer keeps M4 serialized now that captured
+workspace snapshots and query identity are mechanical. Current
 implementation reality:
 
 - `DocumentStore` still owns per-document `AnalysisHost` values.
 - `DocumentState::rebuild` calls `AnalysisHost::open_single_file` with
   `FrontendMode::SingleFile` on open/change/save.
+- `DocumentState::with_host` captures an `AnalysisSnapshot` for each
+  analysis-backed request and routes diagnostics, symbols, navigation,
+  formatting, code actions, generated Rust preview, diagnostic explanation, and
+  test metadata through snapshot methods.
 - `RequestQueue` tracks pending request ids and shutdown state; it is not yet a
   cancellation-token registry.
 - `Scheduler` maps methods to lane labels only; it does not yet run priority
   queues, debounce, background workers, delayed progress, or cancellation.
-- Stale-result rejection uses current analysis revision checks inside
-  `DocumentState::with_host`, not immutable `WorkspaceSnapshot` and document
-  version publication identity.
+- Stale-result rejection compares captured `WorkspaceSnapshot` and analysis
+  graph/source revisions against the serialized host. M5 must promote this from
+  per-document request-local hosts to a persistent LSP workspace session and add
+  document-version publication identity.
 
 M5 owns persistent LSP session integration on `WorkspaceSession` snapshots.
 M11 owns priority queues/debounce. M13 owns cancellation, progress, and
