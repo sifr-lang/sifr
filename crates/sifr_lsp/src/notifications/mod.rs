@@ -15,7 +15,7 @@ pub(crate) fn handle(
         "$/cancelRequest" => cancel_request(session, &params),
         "workspace/didChangeConfiguration" => workspace_did_change_configuration(session, params),
         "workspace/didChangeWatchedFiles" => {
-            workspace_did_change_watched_files(session, connection)
+            workspace_did_change_watched_files(session, params, connection)
         }
         "textDocument/didOpen" => text_document_did_open(session, connection, params),
         "textDocument/didChange" => text_document_did_change(session, connection, params),
@@ -53,8 +53,14 @@ fn workspace_did_change_configuration(session: &mut Session, params: Value) -> L
 
 fn workspace_did_change_watched_files(
     session: &mut Session,
+    params: Value,
     connection: &Connection,
 ) -> LspResult<()> {
+    let changes = params
+        .get("changes")
+        .and_then(Value::as_array)
+        .map_or(0, Vec::len);
+    session.record_watcher_events(changes);
     DiagnosticsController::publish_all(connection, session)
 }
 
@@ -85,15 +91,11 @@ fn text_document_did_change(
         .ok_or_else(|| {
             LspError::invalid_params("textDocument/didChange requires contentChanges")
         })?;
-    for change in changes {
-        if let Some(range) = change.get("range") {
-            let text = required_string(change, "/text")?;
-            session.change_incremental(&uri, version, range, &text)?;
-        } else {
-            let text = required_string(change, "/text")?;
-            session.change_full(&uri, version, text)?;
-        }
-    }
+    let summary = session.change_compacted(&uri, version, changes)?;
+    session.trace(format!(
+        "compacted {} textDocument/didChange edits for {uri} into {} applied edit(s), text_changed={}",
+        summary.raw_change_count, summary.compacted_change_count, summary.text_changed
+    ));
     let mode = session.store().settings().diagnostics_mode;
     DiagnosticsController::publish_document(connection, session, &uri, mode)
 }

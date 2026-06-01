@@ -18,6 +18,8 @@ struct LspDocumentAnalysis {
 }
 
 impl LspAnalysisWorkspace {
+    pub(crate) const WATCHER_STORM_THRESHOLD: usize = 64;
+
     pub(crate) fn open_document(&mut self, document: &DocumentState) {
         let analysis = LspDocumentAnalysis::open(document);
         self.documents.insert(document.uri().to_string(), analysis);
@@ -35,6 +37,14 @@ impl LspAnalysisWorkspace {
 
     pub(crate) fn close_document(&mut self, uri: &str) {
         self.documents.remove(uri);
+    }
+
+    pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
+        for analysis in self.documents.values_mut() {
+            if let Some(host) = analysis.host.as_mut() {
+                host.record_watcher_events(event_count, Self::WATCHER_STORM_THRESHOLD);
+            }
+        }
     }
 
     pub(crate) fn load_diagnostics(&self, uri: &str) -> &[RenderedDiagnostic] {

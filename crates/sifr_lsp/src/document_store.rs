@@ -1,4 +1,5 @@
 use crate::conversion::uri_to_path;
+use crate::document_events::{CompactedDocumentChange, DocumentContentChange};
 use crate::errors::{LspError, LspResult};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -78,41 +79,27 @@ impl DocumentStore {
         Ok(())
     }
 
-    pub(crate) fn change_full(
+    pub(crate) fn apply_compacted_change(
         &mut self,
         uri: &str,
         version: Option<i32>,
-        text: String,
-    ) -> LspResult<()> {
+        change: &CompactedDocumentChange,
+    ) -> LspResult<bool> {
         let state = self.document_mut(uri)?;
         state.reject_stale(version)?;
-        state.version = version;
-        state.text = text;
-        Ok(())
-    }
-
-    pub(crate) fn change_incremental(
-        &mut self,
-        uri: &str,
-        version: Option<i32>,
-        range: &serde_json::Value,
-        text: &str,
-    ) -> LspResult<()> {
-        let state = self.document_mut(uri)?;
-        state.reject_stale(version)?;
-        let range = crate::conversion::lsp_range(range, &state.text)?;
-        let start = usize::try_from(range.start().to_u32())
-            .map_err(|_| LspError::invalid_params("incremental edit start is out of range"))?;
-        let end = usize::try_from(range.end().to_u32())
-            .map_err(|_| LspError::invalid_params("incremental edit end is out of range"))?;
-        if start > end || end > state.text.len() {
-            return Err(LspError::invalid_params(
-                "incremental edit range is invalid",
-            ));
+        let previous = state.text.clone();
+        for item in &change.changes {
+            match item {
+                DocumentContentChange::Full { text } => {
+                    state.text.clone_from(text);
+                }
+                DocumentContentChange::Incremental { range, text } => {
+                    state.apply_incremental_change(range, text)?;
+                }
+            }
         }
-        state.text.replace_range(start..end, text);
         state.version = version;
-        Ok(())
+        Ok(state.text != previous)
     }
 
     pub(crate) fn save(&mut self, uri: &str, text: Option<String>) -> bool {
@@ -180,6 +167,21 @@ impl DocumentState {
                 )));
             }
         }
+        Ok(())
+    }
+
+    fn apply_incremental_change(&mut self, range: &serde_json::Value, text: &str) -> LspResult<()> {
+        let range = crate::conversion::lsp_range(range, &self.text)?;
+        let start = usize::try_from(range.start().to_u32())
+            .map_err(|_| LspError::invalid_params("incremental edit start is out of range"))?;
+        let end = usize::try_from(range.end().to_u32())
+            .map_err(|_| LspError::invalid_params("incremental edit end is out of range"))?;
+        if start > end || end > self.text.len() {
+            return Err(LspError::invalid_params(
+                "incremental edit range is invalid",
+            ));
+        }
+        self.text.replace_range(start..end, text);
         Ok(())
     }
 }

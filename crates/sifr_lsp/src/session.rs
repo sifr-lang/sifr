@@ -1,4 +1,5 @@
 use crate::analysis_workspace::LspAnalysisWorkspace;
+use crate::document_events::{compact_content_changes, CompactedDocumentChange};
 use crate::document_store::DocumentStore;
 use crate::errors::LspResult;
 use crate::request_queue::RequestQueue;
@@ -16,6 +17,12 @@ pub(crate) struct Session {
     shutdown_requested: bool,
     exit_requested: bool,
     traces: Vec<String>,
+}
+
+pub(crate) struct DocumentChangeSummary {
+    pub(crate) raw_change_count: usize,
+    pub(crate) compacted_change_count: usize,
+    pub(crate) text_changed: bool,
 }
 
 impl Session {
@@ -52,29 +59,32 @@ impl Session {
         Ok(())
     }
 
-    pub(crate) fn change_full(
+    pub(crate) fn change_compacted(
         &mut self,
         uri: &str,
         version: Option<i32>,
-        text: String,
-    ) -> LspResult<()> {
-        self.store.change_full(uri, version, text)?;
-        let document = self.store.document(uri)?;
-        self.analysis.update_document(document);
-        Ok(())
+        changes: &[Value],
+    ) -> LspResult<DocumentChangeSummary> {
+        let compacted = compact_content_changes(changes)?;
+        self.apply_compacted_change(uri, version, compacted)
     }
 
-    pub(crate) fn change_incremental(
+    fn apply_compacted_change(
         &mut self,
         uri: &str,
         version: Option<i32>,
-        range: &Value,
-        text: &str,
-    ) -> LspResult<()> {
-        self.store.change_incremental(uri, version, range, text)?;
+        compacted: CompactedDocumentChange,
+    ) -> LspResult<DocumentChangeSummary> {
+        let text_changed = self
+            .store
+            .apply_compacted_change(uri, version, &compacted)?;
         let document = self.store.document(uri)?;
         self.analysis.update_document(document);
-        Ok(())
+        Ok(DocumentChangeSummary {
+            raw_change_count: compacted.raw_change_count,
+            compacted_change_count: compacted.changes.len(),
+            text_changed,
+        })
     }
 
     pub(crate) fn save_document(&mut self, uri: &str, text: Option<String>) -> LspResult<bool> {
@@ -89,6 +99,13 @@ impl Session {
     pub(crate) fn close_document(&mut self, uri: &str) -> bool {
         self.analysis.close_document(uri);
         self.store.close(uri)
+    }
+
+    pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
+        self.analysis.record_watcher_events(event_count);
+        self.trace(format!(
+            "recorded {event_count} compacted workspace watcher event(s)"
+        ));
     }
 
     pub(crate) fn document_uris(&self) -> Vec<String> {
@@ -178,6 +195,7 @@ impl Session {
 #[cfg(test)]
 mod tests {
     use super::Session;
+    use serde_json::json;
 
     #[test]
     fn open_document_analysis_uses_unsaved_overlay_text() {
@@ -226,10 +244,10 @@ mod tests {
             )
             .expect("open document");
         session
-            .change_full(
+            .change_compacted(
                 &uri,
                 Some(2),
-                "def main() -> int:\n    return \"changed\"\n".to_string(),
+                &[json!({"text": "def main() -> int:\n    return \"changed\"\n"})],
             )
             .expect("change document");
 
@@ -238,6 +256,48 @@ mod tests {
         assert!(
             !diagnostics.is_empty(),
             "diagnostics should reflect the changed overlay text"
+        );
+        assert_eq!(
+            session.store().document(&uri).expect("document").version(),
+            Some(2)
+        );
+    }
+
+    #[test]
+    fn document_change_batch_compacts_before_analysis_update() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let path = temp.path().join("main.sifr");
+        std::fs::write(&path, "def main() -> int:\n    return 1\n").expect("write disk source");
+        let uri = url::Url::from_file_path(&path)
+            .expect("file uri")
+            .to_string();
+
+        let mut session = Session::new();
+        session
+            .open_document(
+                uri.clone(),
+                crate::capabilities::LANGUAGE_ID,
+                Some(1),
+                "def main() -> int:\n    return 1\n".to_string(),
+            )
+            .expect("open document");
+        let summary = session
+            .change_compacted(
+                &uri,
+                Some(2),
+                &[
+                    json!({"text": "def main() -> int:\n    return 2\n"}),
+                    json!({"text": "def main() -> int:\n    return 3\n"}),
+                ],
+            )
+            .expect("compact change batch");
+
+        assert_eq!(summary.raw_change_count, 2);
+        assert_eq!(summary.compacted_change_count, 1);
+        assert!(summary.text_changed);
+        assert_eq!(
+            session.store().document(&uri).expect("document").text(),
+            "def main() -> int:\n    return 3\n"
         );
         assert_eq!(
             session.store().document(&uri).expect("document").version(),
