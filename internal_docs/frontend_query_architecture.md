@@ -32,6 +32,13 @@ buffer text for disk files without mutating disk state. The overlay record owns
 URI, path, document version, source hash, source text/line map, and disk-match
 state; M3 will move overlay lifecycle ownership into `WorkspaceSession`.
 
+TypeScript-Go architecture transfer M3 note: `WorkspaceSession` now owns the
+overlay table, last loaded `FrontendContext`, tracked provider dependencies,
+workspace revision, snapshot ids, compiler options, package/config identity, and
+cache registry generation handles. `WorkspaceSnapshot` freezes inspectable
+source-map and module-graph views, but analysis queries still use the existing
+`AnalysisHost` revision-token snapshot until M4 migrates them.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.
