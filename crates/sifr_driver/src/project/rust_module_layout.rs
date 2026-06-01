@@ -66,15 +66,15 @@ mod tests {
     #[test]
     fn test_dotted_module_id_maps_to_nested_rust_file() {
         assert_eq!(
-            rust_module_file_path("helpers.list_node"),
-            PathBuf::from("helpers").join("list_node.rs")
+            rust_module_file_path("helpers.nodes"),
+            PathBuf::from("helpers").join("nodes.rs")
         );
     }
 
     #[test]
     fn test_top_level_declarations_deduplicate_dotted_namespaces() {
         let module_ids = vec![
-            "helpers.list_node".to_string(),
+            "helpers.nodes".to_string(),
             "helpers.tree_node".to_string(),
             "math".to_string(),
         ];
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn test_namespace_files_declare_direct_children() {
         let module_ids = vec![
-            "helpers.list_node".to_string(),
+            "helpers.nodes".to_string(),
             "helpers.nested.value".to_string(),
         ];
 
@@ -99,7 +99,7 @@ mod tests {
             vec![
                 NamespaceModuleFile {
                     path: PathBuf::from("helpers").join("mod.rs"),
-                    declarations: vec!["list_node".to_string(), "nested".to_string()],
+                    declarations: vec!["nested".to_string(), "nodes".to_string()],
                 },
                 NamespaceModuleFile {
                     path: PathBuf::from("helpers").join("nested").join("mod.rs"),

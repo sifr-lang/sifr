@@ -3,39 +3,39 @@
 # Ad hoc recursive type feature, part 4:
 # recursive node values behave like normal typed class values after guard narrowing.
 
-class BinaryBranch:
+class TreeNode:
     val: int
-    left: BinaryBranch | None
-    right: BinaryBranch | None
+    left: TreeNode | None
+    right: TreeNode | None
 
-    def __init__(self, val: int, left: BinaryBranch | None, right: BinaryBranch | None):
+    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):
         self.val = val
         self.left = left
         self.right = right
 
-def tree_sum(node: BinaryBranch | None) -> int:
+def tree_value_sum(node: TreeNode | None) -> int:
     if not node:
         return 0
-    left: BinaryBranch | None = node.left
-    right: BinaryBranch | None = node.right
-    return node.val + tree_sum(left) + tree_sum(right)
+    left: TreeNode | None = node.left
+    right: TreeNode | None = node.right
+    return node.val + tree_value_sum(left) + tree_value_sum(right)
 
-def same_shape_and_sum(p: BinaryBranch | None, q: BinaryBranch | None) -> int:
+def paired_tree_value_sum(p: TreeNode | None, q: TreeNode | None) -> int:
     if not p and not q:
         return 0
     if not p or not q:
         return -1
-    return p.val + q.val + same_shape_and_sum(p.left, q.left) + same_shape_and_sum(p.right, q.right)
+    return p.val + q.val + paired_tree_value_sum(p.left, q.left) + paired_tree_value_sum(p.right, q.right)
 
 def main():
-    left_a: BinaryBranch = BinaryBranch(2, None, None)
-    right_a: BinaryBranch = BinaryBranch(3, None, None)
-    root_a: BinaryBranch = BinaryBranch(1, left_a, right_a)
-    left_b: BinaryBranch = BinaryBranch(2, None, None)
-    right_b: BinaryBranch = BinaryBranch(3, None, None)
-    root_b: BinaryBranch = BinaryBranch(1, left_b, right_b)
-    left_c: BinaryBranch = BinaryBranch(2, None, None)
-    right_c: BinaryBranch = BinaryBranch(3, None, None)
-    root_c: BinaryBranch = BinaryBranch(1, left_c, right_c)
-    assert tree_sum(root_a) == 6
-    assert same_shape_and_sum(root_b, root_c) == 12
+    left_a: TreeNode = TreeNode(2, None, None)
+    right_a: TreeNode = TreeNode(3, None, None)
+    root_a: TreeNode = TreeNode(1, left_a, right_a)
+    left_b: TreeNode = TreeNode(2, None, None)
+    right_b: TreeNode = TreeNode(3, None, None)
+    root_b: TreeNode = TreeNode(1, left_b, right_b)
+    left_c: TreeNode = TreeNode(2, None, None)
+    right_c: TreeNode = TreeNode(3, None, None)
+    root_c: TreeNode = TreeNode(1, left_c, right_c)
+    assert tree_value_sum(root_a) == 6
+    assert paired_tree_value_sum(root_b, root_c) == 12

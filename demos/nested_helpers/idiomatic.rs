@@ -1,42 +1,42 @@
 use std::collections::{HashMap, HashSet};
 
-fn demo_letter_combinations(digits: &str) -> Vec<String> {
+fn expand_keyed_strings(keys: &str) -> Vec<String> {
     let mut results = Vec::new();
-    let digit_to_chars = HashMap::from([('2', ['a', 'b', 'c']), ('3', ['d', 'e', 'f'])]);
+    let key_to_suffixes = HashMap::from([('L', ['a', 'b', 'c']), ('R', ['d', 'e', 'f'])]);
 
     fn backtrack(
         index: usize,
         current: &mut String,
-        digits: &[char],
-        digit_to_chars: &HashMap<char, [char; 3]>,
+        keys: &[char],
+        key_to_suffixes: &HashMap<char, [char; 3]>,
         results: &mut Vec<String>,
     ) {
-        if index >= digits.len() {
+        if index >= keys.len() {
             results.push(current.clone());
             return;
         }
 
-        let Some(chars) = digit_to_chars.get(&digits[index]) else {
+        let Some(suffixes) = key_to_suffixes.get(&keys[index]) else {
             return;
         };
 
-        for ch in chars {
-            current.push(*ch);
-            backtrack(index + 1, current, digits, digit_to_chars, results);
+        for suffix in suffixes {
+            current.push(*suffix);
+            backtrack(index + 1, current, keys, key_to_suffixes, results);
             current.pop();
         }
     }
 
-    if !digits.is_empty() {
-        let digits = digits.chars().collect::<Vec<_>>();
+    if !keys.is_empty() {
+        let keys = keys.chars().collect::<Vec<_>>();
         let mut current = String::new();
-        backtrack(0, &mut current, &digits, &digit_to_chars, &mut results);
+        backtrack(0, &mut current, &keys, &key_to_suffixes, &mut results);
     }
 
     results
 }
 
-fn demo_total_n_queens(n: i64) -> i64 {
+fn count_configurations(n: i64) -> i64 {
     fn backtrack(
         row: i64,
         n: i64,
@@ -113,7 +113,7 @@ fn union_nodes(n1: i64, n2: i64, parent: &mut [i64], rank: &mut [i64]) -> bool {
     true
 }
 
-fn demo_redundant_connection(edges: &[(i64, i64)]) -> Vec<i64> {
+fn detect_first_cycle(edges: &[(i64, i64)]) -> Vec<i64> {
     let mut parent = (0..=edges.len() as i64).collect::<Vec<_>>();
     let mut rank = vec![1; edges.len() + 1];
 
@@ -128,12 +128,12 @@ fn demo_redundant_connection(edges: &[(i64, i64)]) -> Vec<i64> {
 
 fn main() {
     assert_eq!(
-        format!("{:?}", demo_letter_combinations("23")),
+        format!("{:?}", expand_keyed_strings("LR")),
         "[\"ad\", \"ae\", \"af\", \"bd\", \"be\", \"bf\", \"cd\", \"ce\", \"cf\"]"
     );
-    assert_eq!(demo_total_n_queens(4), 2);
+    assert_eq!(count_configurations(4), 2);
     assert_eq!(
-        demo_redundant_connection(&[(1, 2), (1, 3), (2, 3)]),
+        detect_first_cycle(&[(1, 2), (1, 3), (2, 3)]),
         vec![2, 3]
     );
 }

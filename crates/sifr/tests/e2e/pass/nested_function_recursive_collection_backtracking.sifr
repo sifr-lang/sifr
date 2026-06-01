@@ -1,22 +1,22 @@
 # Test: Recursive nested helper with captured collection state lowers through production codegen
 
-def collect_budget_routes(weights: list[int], budget: int) -> list[list[int]]:
-    routes = []
+def accumulate_items(items: list[int], limit: int) -> list[list[int]]:
+    snapshots = []
 
     def visit(index, current, total):
-        if total == budget:
-            routes.append(current.copy())
+        if total == limit:
+            snapshots.append(current.copy())
             return
-        if index >= len(weights) or total > budget:
+        if index >= len(items) or total > limit:
             return
 
-        current.append(weights[index])
-        visit(index, current, total + weights[index])
+        current.append(items[index])
+        visit(index, current, total + items[index])
         current.pop()
         visit(index + 1, current, total)
 
     visit(0, [], 0)
-    return routes
+    return snapshots
 
 def main():
-    assert str(collect_budget_routes([2, 3, 6, 7], 7)) == '[[2, 2, 3], [7]]'
+    assert str(accumulate_items([1, 2, 4], 4)) == '[[1, 1, 1, 1], [1, 1, 2], [2, 2], [4]]'

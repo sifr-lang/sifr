@@ -51,16 +51,16 @@ The resolver keeps embedded stdlib resolution separate and highest priority. For
 1. the entry file's parent directory;
 2. each configured workspace source root in declaration order.
 
-The entry parent is an unconditional winner. Workspace-root matches are checked for ambiguity, and ambiguous modules fail with `SIFR-WORKSPACE-0102`. Unresolved workspace imports fail with `SIFR-WORKSPACE-0101` and list every attempted path. Dotted modules such as `helpers.list_node` map to `helpers/list_node.sifr`.
+The entry parent is an unconditional winner. Workspace-root matches are checked for ambiguity, and ambiguous modules fail with `SIFR-WORKSPACE-0102`. Unresolved workspace imports fail with `SIFR-WORKSPACE-0101` and list every attempted path. Dotted modules such as `helpers.nodes` map to `helpers/nodes.sifr`.
 
-Package directories are not implemented in this phase. A graph containing both `helpers.sifr` and `helpers/list_node.sifr` fails with `SIFR-WORKSPACE-0103`.
+Package directories are not implemented in this phase. A graph containing both `helpers.sifr` and `helpers/nodes.sifr` fails with `SIFR-WORKSPACE-0103`.
 
 ## Rust Layout
 
 Canonical module IDs remain dotted. The build materializer maps them into nested Rust module files:
 
-- `helpers.list_node` -> `src/helpers/list_node.rs`
-- generated namespace file `src/helpers/mod.rs` contains `pub mod list_node;`
+- `helpers.nodes` -> `src/helpers/nodes.rs`
+- generated namespace file `src/helpers/mod.rs` contains `pub mod nodes;`
 - `src/main.rs` declares only the top-level namespace with `mod helpers;`
 
 This keeps HIR and codegen keyed by the canonical dotted module name while producing valid Rust module trees.

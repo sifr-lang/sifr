@@ -3,29 +3,29 @@
 # Ad hoc recursive type feature, part 6:
 # the full regression matrix closes with runnable recursive classes and aliases.
 
-class BinaryBranch:
+class TreeNode:
     val: int
-    left: BinaryBranch | None
-    right: BinaryBranch | None
+    left: TreeNode | None
+    right: TreeNode | None
 
-    def __init__(self, val: int, left: BinaryBranch | None, right: BinaryBranch | None):
+    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):
         self.val = val
         self.left = left
         self.right = right
 
-def tree_sum(node: BinaryBranch | None) -> int:
+def tree_value_sum(node: TreeNode | None) -> int:
     if not node:
         return 0
-    left: BinaryBranch | None = node.left
-    right: BinaryBranch | None = node.right
-    return node.val + tree_sum(left) + tree_sum(right)
+    left: TreeNode | None = node.left
+    right: TreeNode | None = node.right
+    return node.val + tree_value_sum(left) + tree_value_sum(right)
 
 type Packet[T] = T | list[Packet[T]]
 
 def main():
-    left: BinaryBranch = BinaryBranch(2, None, None)
-    right: BinaryBranch = BinaryBranch(3, None, None)
-    root: BinaryBranch = BinaryBranch(1, left, right)
-    assert tree_sum(root) == 6
+    left: TreeNode = TreeNode(2, None, None)
+    right: TreeNode = TreeNode(3, None, None)
+    root: TreeNode = TreeNode(1, left, right)
+    assert tree_value_sum(root) == 6
     print("tree sum ok")
     print("packet alias declared")

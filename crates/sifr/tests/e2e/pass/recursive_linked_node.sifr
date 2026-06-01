@@ -1,0 +1,14 @@
+# Tests self-referential LinkedNode class with Box<T>
+
+class LinkedNode:
+    val: int
+    next: LinkedNode | None
+
+    def __init__(self, val: int, next: LinkedNode | None):
+        self.val = val
+        self.next = next
+
+def main():
+    node2: LinkedNode = LinkedNode(2, None)
+    node1: LinkedNode = LinkedNode(1, node2)
+    assert str(node1.val) == '1'

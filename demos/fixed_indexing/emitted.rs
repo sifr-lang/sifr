@@ -1,20 +1,21 @@
+// src/main.rs
 fn second_or_zero(values: &Vec<i64>) -> i64 {
-    if (values.len() as i64) < (2 as i64) {
-        return 0 as i64;
+    if (values.len() as i64) < (2_i64) {
+        return 0_i64;
     }
-    return values[(1 as i64) as usize];
+    values[(1_i64) as usize]
 }
 
-fn min_cost_climbing(cost: &mut Vec<i64>) -> i64 {
-    if (cost.len() as i64) < (2 as i64) {
-        return 0 as i64;
+fn neighbor_min_cost(cost: &mut Vec<i64>) -> i64 {
+    if (cost.len() as i64) < (2_i64) {
+        return 0_i64;
     }
-    for i in (-(1 as i64) + (1 as i64)..((cost.len() as i64) - (3 as i64)) + (1 as i64)).rev() {
+    for i in (-(1_i64) + (1_i64)..((cost.len() as i64) - (3_i64)) + (1_i64)).rev() {
         {
             let __assign_value = cost[i as usize] + std::cmp::min({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
-    let __sifr_index_i = i + (1 as i64);
+    let __sifr_index_i = i + (1_i64);
     let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
     __sifr_index_list.get(__sifr_index_norm).copied()
 }) else {
@@ -24,7 +25,7 @@ fn min_cost_climbing(cost: &mut Vec<i64>) -> i64 {
 }, {
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
-    let __sifr_index_i = i + (2 as i64);
+    let __sifr_index_i = i + (2_i64);
     let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
     __sifr_index_list.get(__sifr_index_norm).copied()
 }) else {
@@ -43,10 +44,10 @@ fn min_cost_climbing(cost: &mut Vec<i64>) -> i64 {
             }
         }
     }
-    return std::cmp::min({
+    std::cmp::min({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
-    let __sifr_index_i = 0 as i64;
+    let __sifr_index_i = 0_i64;
     let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
     __sifr_index_list.get(__sifr_index_norm).copied()
 }) else {
@@ -56,18 +57,18 @@ fn min_cost_climbing(cost: &mut Vec<i64>) -> i64 {
 }, {
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
-    let __sifr_index_i = 1 as i64;
+    let __sifr_index_i = 1_i64;
     let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
     __sifr_index_list.get(__sifr_index_norm).copied()
 }) else {
         unreachable!("compiler-verified index should be in range");
     };
     __sifr_index_value
-});
+})
 }
 
 fn main() {
-    assert!(second_or_zero(&vec![8 as i64, 13 as i64]) == (13 as i64));
-    assert!(second_or_zero(&vec![8 as i64]) == (0 as i64));
-    assert!(min_cost_climbing(&mut vec![10 as i64, 15 as i64, 20 as i64]) == (15 as i64));
+    assert!((second_or_zero(&vec![8_i64, 13_i64]) == (13_i64)));
+    assert!((second_or_zero(&vec![8_i64]) == (0_i64)));
+    assert!((neighbor_min_cost(&mut vec![10_i64, 15_i64, 20_i64]) == (15_i64)));
 }

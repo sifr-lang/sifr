@@ -315,9 +315,9 @@ fn test_mut_on_reassigned_variable() {
 }
 
 #[test]
-fn test_generate_rust_recursive_branch_traversal_uses_option_let_else_and_cloned_box_reads() {
+fn test_generate_rust_recursive_tree_traversal_uses_option_let_else_and_cloned_box_reads() {
     let rust_code = generate_rust_from_source(
-        "class BinaryBranch:\n    val: int\n    left: BinaryBranch | None\n    right: BinaryBranch | None\n\n    def __init__(self, val: int, left: BinaryBranch | None, right: BinaryBranch | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef branch_sum(node: BinaryBranch | None) -> int:\n    if not node:\n        return 0\n    left: BinaryBranch | None = node.left\n    right: BinaryBranch | None = node.right\n    return node.val + branch_sum(left) + branch_sum(right)\n\ndef same_shape_and_sum(p: BinaryBranch | None, q: BinaryBranch | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return -1\n    return p.val + q.val + same_shape_and_sum(p.left, q.left) + same_shape_and_sum(p.right, q.right)\n",
+        "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef tree_value_sum(node: TreeNode | None) -> int:\n    if not node:\n        return 0\n    left: TreeNode | None = node.left\n    right: TreeNode | None = node.right\n    return node.val + tree_value_sum(left) + tree_value_sum(right)\n\ndef paired_tree_value_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return -1\n    return p.val + q.val + paired_tree_value_sum(p.left, q.left) + paired_tree_value_sum(p.right, q.right)\n",
     );
 
     assert!(rust_code.contains("let Some(node) = node.as_ref() else {"));

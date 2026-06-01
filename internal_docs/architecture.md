@@ -301,8 +301,8 @@ large-file check and a representative project check.
 - `RootedEntrypointShape::SingleFile` models the one-module case.
 - `RootedEntrypointShape::Project` models the reachable user import closure. Outside a workspace, legacy activation remains `main.sifr` plus local sibling imports. Inside the nearest ancestor `sifr.toml` workspace, any entry filename can activate project mode.
 - Native `sifr.toml` workspace discovery lives in `sifr_driver::workspace`. `[source].roots` define workspace user-module search roots, defaulting to `["."]`; malformed workspace config is a hard build diagnostic rather than a single-file fallback.
-- User module resolution keeps embedded `sifr.*` / `_sifr.*` stdlib registry precedence separate from filesystem lookup, then searches the entry parent first and configured workspace source roots second. Dotted module IDs such as `helpers.list_node` map to `helpers/list_node.sifr`.
-- Generated Rust preserves canonical dotted module IDs through HIR/codegen and materializes them as nested Rust files, for example `helpers.list_node` -> `src/helpers/list_node.rs` plus `src/helpers/mod.rs`.
+- User module resolution keeps embedded `sifr.*` / `_sifr.*` stdlib registry precedence separate from filesystem lookup, then searches the entry parent first and configured workspace source roots second. Dotted module IDs such as `helpers.nodes` map to `helpers/nodes.sifr`.
+- Generated Rust preserves canonical dotted module IDs through HIR/codegen and materializes them as nested Rust files, for example `helpers.nodes` -> `src/helpers/nodes.rs` plus `src/helpers/mod.rs`.
 - Both shapes materialize through the same generated-binary-project path and the same Cargo manifest generation helper.
 - Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
 - Workspace design details and deferred package-management semantics are tracked in [`sifr_workspace_design.md`](./sifr_workspace_design.md).

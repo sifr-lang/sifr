@@ -1,10 +1,10 @@
-struct ChainCell {
+struct LinkedNode {
     val: i64,
-    next: Option<Box<ChainCell>>,
+    next: Option<Box<LinkedNode>>,
 }
 
-impl ChainCell {
-    fn new(val: i64, next: Option<ChainCell>) -> Self {
+impl LinkedNode {
+    fn new(val: i64, next: Option<LinkedNode>) -> Self {
         Self {
             val,
             next: next.map(Box::new),
@@ -12,14 +12,14 @@ impl ChainCell {
     }
 }
 
-struct BinaryBranch {
+struct TreeNode {
     val: i64,
-    left: Option<Box<BinaryBranch>>,
-    right: Option<Box<BinaryBranch>>,
+    left: Option<Box<TreeNode>>,
+    right: Option<Box<TreeNode>>,
 }
 
-impl BinaryBranch {
-    fn new(val: i64, left: Option<BinaryBranch>, right: Option<BinaryBranch>) -> Self {
+impl TreeNode {
+    fn new(val: i64, left: Option<TreeNode>, right: Option<TreeNode>) -> Self {
         Self {
             val,
             left: left.map(Box::new),
@@ -29,13 +29,13 @@ impl BinaryBranch {
 }
 
 fn main() {
-    let n1 = ChainCell::new(1, Some(ChainCell::new(2, Some(ChainCell::new(3, None)))));
+    let n1 = LinkedNode::new(1, Some(LinkedNode::new(2, Some(LinkedNode::new(3, None)))));
     println!("{}", n1.val);
 
-    let root = BinaryBranch::new(
+    let root = TreeNode::new(
         1,
-        Some(BinaryBranch::new(2, None, None)),
-        Some(BinaryBranch::new(3, None, None)),
+        Some(TreeNode::new(2, None, None)),
+        Some(TreeNode::new(3, None, None)),
     );
     println!("{}", root.val);
 

@@ -83,19 +83,20 @@ def main():\n\
 #[test]
 fn test_non_option_local_widened_to_option_when_reassigned_none() {
     let rust_code = generate_rust_from_source(
-        "class BinaryBranch:\n\
-    val: int\n\
-\n\
-    def __init__(self, val: int = 0):\n\
-        self.val = val\n\
-\n\
-def main():\n\
-    root = BinaryBranch(1)\n\
-    root = None\n",
+        r#"class Payload:
+    val: int
+
+    def __init__(self, val: int = 0):
+        self.val = val
+
+def main():
+    item = Payload(1)
+    item = None
+"#,
     );
 
-    assert!(rust_code.contains("let mut root: Option<BinaryBranch> = Some("));
-    assert!(rust_code.contains("root = None;"));
+    assert!(rust_code.contains("let mut item: Option<Payload> = Some("));
+    assert!(rust_code.contains("item = None;"));
 }
 
 #[test]

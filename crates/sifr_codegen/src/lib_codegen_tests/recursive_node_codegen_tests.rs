@@ -3,20 +3,20 @@ use super::*;
 #[test]
 fn test_owned_recursive_option_field_moves_without_tail_clone() {
     let rust_code = generate_rust_from_source(
-        r#"class ChainCell:
+        r#"class LinkedNode:
     val: int
-    next: ChainCell | None
+    next: LinkedNode | None
 
-    def __init__(self, val: int = 0, next: ChainCell | None = None):
+    def __init__(self, val: int = 0, next: LinkedNode | None = None):
         self.val = val
         self.next = next
 
-def reverseInto(own mut cur: ChainCell | None, own prev: ChainCell | None) -> ChainCell | None:
+def moveNextInto(own mut cur: LinkedNode | None, own prev: LinkedNode | None) -> LinkedNode | None:
     if cur is None:
         return prev
-    next_node: ChainCell | None = cur.next
+    next_node: LinkedNode | None = cur.next
     cur.next = prev
-    return reverseInto(next_node, cur)
+    return moveNextInto(next_node, cur)
 "#,
     );
 
@@ -37,21 +37,21 @@ def reverseInto(own mut cur: ChainCell | None, own prev: ChainCell | None) -> Ch
 #[test]
 fn test_owned_recursive_option_field_take_preserves_parent_use() {
     let rust_code = generate_rust_from_source(
-        r#"class ChainCell:
+        r#"class LinkedNode:
     val: int
-    next: ChainCell | None
+    next: LinkedNode | None
 
-    def __init__(self, val: int = 0, next: ChainCell | None = None):
+    def __init__(self, val: int = 0, next: LinkedNode | None = None):
         self.val = val
         self.next = next
 
-def detachChildOrKeepParent(own mut head: ChainCell | None) -> ChainCell | None:
+def detachNextOrKeepParent(own mut head: LinkedNode | None) -> LinkedNode | None:
     if head is None:
         return None
-    child: ChainCell | None = head.next
+    child: LinkedNode | None = head.next
     if child is None:
         return head
-    rest: ChainCell | None = child.next
+    rest: LinkedNode | None = child.next
     head.next = rest
     return child
 "#,
@@ -74,30 +74,30 @@ def detachChildOrKeepParent(own mut head: ChainCell | None) -> ChainCell | None:
 #[test]
 fn test_local_recursive_node_binding_is_mutable_for_child_moves() {
     let rust_code = generate_rust_from_source(
-        r#"class BinaryBranch:
+        r#"class TreeNode:
     val: int
-    left: BinaryBranch | None
-    right: BinaryBranch | None
+    left: TreeNode | None
+    right: TreeNode | None
 
-    def __init__(self, val: int = 0, left: BinaryBranch | None = None, right: BinaryBranch | None = None):
+    def __init__(self, val: int = 0, left: TreeNode | None = None, right: TreeNode | None = None):
         self.val = val
         self.left = left
         self.right = right
 
-def walk(own root: BinaryBranch | None) -> list[int]:
+def walk(own root: TreeNode | None) -> list[int]:
     if root is None:
         return []
-    q: list[BinaryBranch] = []
+    q: list[TreeNode] = []
     q.append(root)
     while q:
         node = q.pop(0)
-        left_child: BinaryBranch | None = node.left
+        left_child: TreeNode | None = node.left
     return []
 "#,
     );
 
     assert!(
-        rust_code.contains("let mut node: BinaryBranch ="),
+        rust_code.contains("let mut node: TreeNode ="),
         "local recursive class binding must be mutable so child reads can use .take():\n{rust_code}"
     );
     assert!(
@@ -109,38 +109,38 @@ def walk(own root: BinaryBranch | None) -> list[int]:
 #[test]
 fn test_borrowed_optional_wrapper_clones_recursive_node() {
     let rust_code = generate_rust_from_source(
-        r#"class BinaryBranch:
+        r#"class TreeNode:
     val: int
-    left: BinaryBranch | None
-    right: BinaryBranch | None
+    left: TreeNode | None
+    right: TreeNode | None
 
-    def __init__(self, val: int = 0, left: BinaryBranch | None = None, right: BinaryBranch | None = None):
+    def __init__(self, val: int = 0, left: TreeNode | None = None, right: TreeNode | None = None):
         self.val = val
         self.left = left
         self.right = right
 
-def nodeValue(node: BinaryBranch | None) -> int:
+def value_or_zero(node: TreeNode | None) -> int:
     if node is None:
         return 0
     return node.val
 
-def readThenQueue(own root: BinaryBranch | None) -> int:
+def read_then_store(own root: TreeNode | None) -> int:
     if root is None:
         return 0
-    root_node: BinaryBranch = root
-    answer: int = nodeValue(root_node)
-    q: list[BinaryBranch] = [root_node]
+    root_node: TreeNode = root
+    answer: int = value_or_zero(root_node)
+    q: list[TreeNode] = [root_node]
     return answer
 "#,
     );
 
     assert!(
-        rust_code.contains("nodeValue(&Some((root_node).clone()))")
-            || rust_code.contains("nodeValue(&Some(root_node.clone()))"),
+        rust_code.contains("value_or_zero(&Some((root_node).clone()))")
+            || rust_code.contains("value_or_zero(&Some(root_node.clone()))"),
         "borrowed optional helper call should not move a local recursive node:\n{rust_code}"
     );
     assert!(
-        !rust_code.contains("nodeValue(&Some(root_node));"),
+        !rust_code.contains("value_or_zero(&Some(root_node));"),
         "borrowed optional wrapper must clone before the local is reused:\n{rust_code}"
     );
 }
@@ -148,15 +148,15 @@ def readThenQueue(own root: BinaryBranch | None) -> int:
 #[test]
 fn test_borrowed_recursive_option_field_still_clones() {
     let rust_code = generate_rust_from_source(
-        r#"class ChainCell:
+        r#"class LinkedNode:
     val: int
-    next: ChainCell | None
+    next: LinkedNode | None
 
-    def __init__(self, val: int = 0, next: ChainCell | None = None):
+    def __init__(self, val: int = 0, next: LinkedNode | None = None):
         self.val = val
         self.next = next
 
-def nodeNext(node: ChainCell | None) -> ChainCell | None:
+def nextNode(node: LinkedNode | None) -> LinkedNode | None:
     if node is None:
         return None
     return node.next

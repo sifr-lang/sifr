@@ -1,28 +1,24 @@
 # Reference: phase31_two_pointer_while_guard_narrowing
 # Same-sequence two-pointer `while` loops should narrow safe index reads.
 
-def envelope_adjustment(readings: list[int]) -> int:
+def paired_edge_difference(readings: list[int]) -> int:
     if not readings:
         return 0
 
     l, r = 0, len(readings) - 1
-    left_max: int = readings[l]
-    right_max: int = readings[r]
     total = 0
 
     while l < r:
-        if left_max < right_max:
+        if readings[l] <= readings[r]:
             l += 1
-            left_max = max(left_max, readings[l])
-            total += left_max - readings[l]
+            total += readings[l]
         else:
             r -= 1
-            right_max = max(right_max, readings[r])
-            total += right_max - readings[r]
+            total += readings[r]
 
     return total
 
 
 def main():
-    assert str(envelope_adjustment([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1])) == "6"
-    assert str(envelope_adjustment([4, 2, 0, 3, 2, 5])) == "9"
+    assert str(paired_edge_difference([1, 4, 8, 10])) == "22"
+    assert str(paired_edge_difference([9, 5, 2])) == "14"

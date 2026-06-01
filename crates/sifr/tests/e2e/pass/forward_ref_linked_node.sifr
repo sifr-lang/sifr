@@ -1,0 +1,19 @@
+# Test: Forward reference with LinkedNode (recursive forward-reference pattern)
+
+def chain_length(own head: LinkedNode | None) -> int:
+    count: int = 0
+    current: LinkedNode | None = head
+    if current is not None:
+        count = count + 1
+    return count
+
+class LinkedNode:
+    val: int
+    next: LinkedNode | None
+
+def main():
+    n3: LinkedNode = LinkedNode(3, None)
+    n2: LinkedNode = LinkedNode(2, None)
+    n1: LinkedNode = LinkedNode(1, None)
+    # Just test that forward references work
+    assert str(chain_length(n1) + chain_length(n2) + chain_length(n3)) == '3'
