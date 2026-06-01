@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer M8 First-Class Flow Graph
 
-status: M8 implementation review
+status: M8 merged
 
 M8 adds a first-class HIR flow graph alongside the existing control-flow graph.
 The CFG remains responsible for structural reachability and return facts. The
@@ -27,6 +27,10 @@ Each `FlowGraph` exposes:
 Effects use the existing type model directly. A narrowing to `None` is recorded
 as `FlowEffect::Narrow` with `narrowed_type = Type::None`; M8 does not introduce
 a parallel `RefinedToNone` vocabulary.
+
+Loop graphs emit a synthetic `Join { label: "loop" }` for the no-`else` exit
+frontier. Loops with an `else` body use the else-body frontier as the loop exit
+instead, so they do not add an unused loop join node.
 
 `shape_fingerprint()` includes effect payload labels as well as node/edge shape,
 so structurally identical graphs with different calls, mutations, or narrowed
@@ -75,3 +79,8 @@ M8 focused validation so far:
   advisories: warm wall-time budget exceeded; group skew is high
 - Claude reviewer pass 3 -> SATISFIED
   (`reviews/typescript-go-m8-first-class-flow-graph-review-pass-3.md`)
+- M8 loop-else follow-up: `cargo fmt --check`,
+  `cargo test -p sifr_hir flow_graph -- --nocapture`,
+  `cargo clippy -p sifr_hir -- -D warnings`
+- Claude reviewer loop-else follow-up pass 1 -> SATISFIED
+  (`reviews/typescript-go-m8-loop-else-follow-up-review-pass-1.md`)

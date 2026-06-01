@@ -481,12 +481,12 @@ impl FlowGraphBuilder {
         body: &[HirStmt],
         else_body: Option<&[HirStmt]>,
     ) -> Vec<FlowNodeId> {
-        let join = self.join_node("loop");
         let body_frontier = self.build_stmt_list(vec![node], FlowEdgeKind::True, body, false);
         self.connect_frontier(&body_frontier, node, FlowEdgeKind::LoopBack);
         if let Some(else_body) = else_body {
             self.build_stmt_list(vec![node], FlowEdgeKind::False, else_body, false)
         } else {
+            let join = self.join_node("loop");
             self.add_edge(node, join, FlowEdgeKind::False);
             vec![join]
         }
@@ -515,5 +515,6 @@ impl FlowGraphBuilder {
         )
     }
 }
+
 #[cfg(test)]
 mod tests;
