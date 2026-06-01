@@ -227,6 +227,7 @@ impl FlowExitEffect {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FlowFacts {
     exit_effect: FlowExitEffect,
+    flow_graph: crate::flow_graph::FlowGraph,
     reachable_top_level_stmt_indices: Vec<usize>,
     unreachable_top_level_stmt_indices: Vec<usize>,
     reachable_return_types: Vec<Type>,
@@ -261,6 +262,18 @@ impl FlowFacts {
 
     pub fn unreachable_top_level_stmt_indices(&self) -> &[usize] {
         &self.unreachable_top_level_stmt_indices
+    }
+
+    pub fn flow_graph(&self) -> &crate::flow_graph::FlowGraph {
+        &self.flow_graph
+    }
+
+    pub fn flow_graph_fingerprint(&self) -> String {
+        self.flow_graph.shape_fingerprint()
+    }
+
+    pub fn flow_graph_debug_trace(&self) -> String {
+        self.flow_graph.debug_trace()
     }
 }
 
@@ -562,6 +575,7 @@ pub fn build_control_flow_graph(stmts: &[HirStmt]) -> ControlFlowGraph {
 
 pub fn flow_facts(stmts: &[HirStmt]) -> FlowFacts {
     let cfg = build_control_flow_graph(stmts);
+    let flow_graph = crate::flow_graph::build_statement_flow_graph(stmts);
     let reachable = cfg.reachable_blocks();
 
     let mut reachable_top_level_stmt_indices = Vec::new();
@@ -608,6 +622,7 @@ pub fn flow_facts(stmts: &[HirStmt]) -> FlowFacts {
 
     FlowFacts {
         exit_effect,
+        flow_graph,
         reachable_top_level_stmt_indices,
         unreachable_top_level_stmt_indices,
         reachable_return_types,

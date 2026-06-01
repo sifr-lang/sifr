@@ -280,7 +280,7 @@ pub(super) fn failed_initializer_taint(
 }
 
 pub(super) fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
-    ctx.scope.clear_narrowing(name);
+    ctx.clear_narrowing_with_flow(name);
     ctx.scope.clear_const_integer_value(name);
     ctx.clear_sequence_guards_for_binding(name);
     ctx.clear_proven_nonzero_integer_binding(name);
@@ -409,7 +409,7 @@ pub(in crate::lower) fn lower_ann_assign(
                     initializer_range,
                 );
             } else {
-                ctx.scope.mark_moved(src_name);
+                ctx.mark_moved_with_flow(src_name);
             }
         }
     }

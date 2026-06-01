@@ -320,12 +320,19 @@ impl RootedEntrypointPlan {
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]
         })?;
+        let flow_graph = project_lowering.flow_graphs.remove("main").ok_or_else(|| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                "internal error: frontend lowering missing 'main' flow graph",
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            )]
+        })?;
         let main_diag = project_lowering
             .module_diagnostics
             .remove("main")
             .unwrap_or_default();
         let lowering_result = LoweringResult {
             module: main_module,
+            flow_graph,
             function_defaults: std::collections::HashMap::new(),
             function_varargs: std::collections::HashMap::new(),
             constant_integer_values: std::collections::HashMap::new(),

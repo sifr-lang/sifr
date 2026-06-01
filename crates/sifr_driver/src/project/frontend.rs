@@ -10,12 +10,13 @@ use sifr_frontend::{
     collect_module_exports, compile_module_hir_with_source, reveal_type_diagnostics,
     warning_diagnostics, FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
 };
-use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
+use sifr_hir::{flow_graph::FlowGraph, ExternalDefs, HirModule, LoweringResult};
 use sifr_python_ast::Stmt;
 use std::collections::HashMap;
 
 pub(crate) struct ProjectLowering {
     pub(crate) hir_modules: HashMap<String, HirModule>,
+    pub(crate) flow_graphs: HashMap<String, FlowGraph>,
     pub(crate) external_defs: ExternalDefs,
     pub(crate) compile_order: Vec<String>,
     pub(crate) module_diagnostics: HashMap<String, FrontendModuleDiagnostics>,
@@ -28,6 +29,7 @@ pub(crate) fn compile_frontend_modules(
     diagnostic_style: FrontendDiagnosticStyle,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
+    let mut flow_graphs: HashMap<String, FlowGraph> = HashMap::new();
     let mut module_diagnostics: HashMap<String, FrontendModuleDiagnostics> = HashMap::new();
     let compile_order = compute_module_compile_order(parsed_modules)?;
 
@@ -41,6 +43,7 @@ pub(crate) fn compile_frontend_modules(
         let result = compile_module_hir(module_name, stmts, &external_defs, diagnostic_style)?;
         let LoweringResult {
             module,
+            flow_graph,
             function_defaults,
             function_varargs,
             constant_integer_values,
@@ -49,6 +52,7 @@ pub(crate) fn compile_frontend_modules(
         } = result;
         let lowering_result = LoweringResult {
             module: module.clone(),
+            flow_graph: flow_graph.clone(),
             function_defaults,
             function_varargs,
             constant_integer_values,
@@ -57,6 +61,7 @@ pub(crate) fn compile_frontend_modules(
         };
         collect_module_exports(module_name, &lowering_result, &mut external_defs);
         hir_modules.insert(module_name.clone(), module);
+        flow_graphs.insert(module_name.clone(), flow_graph);
         module_diagnostics.insert(
             module_name.clone(),
             FrontendModuleDiagnostics {
@@ -70,6 +75,7 @@ pub(crate) fn compile_frontend_modules(
 
     Ok(ProjectLowering {
         hir_modules,
+        flow_graphs,
         external_defs,
         compile_order,
         module_diagnostics,
@@ -92,6 +98,7 @@ pub(crate) fn compile_single_frontend_module_with_source(
     )?;
     let LoweringResult {
         module,
+        flow_graph,
         function_defaults,
         function_varargs,
         constant_integer_values,
@@ -100,6 +107,7 @@ pub(crate) fn compile_single_frontend_module_with_source(
     } = result;
     let lowering_result = LoweringResult {
         module: module.clone(),
+        flow_graph: flow_graph.clone(),
         function_defaults,
         function_varargs,
         constant_integer_values,
@@ -110,6 +118,7 @@ pub(crate) fn compile_single_frontend_module_with_source(
 
     Ok(ProjectLowering {
         hir_modules: HashMap::from([(module_name.to_string(), module)]),
+        flow_graphs: HashMap::from([(module_name.to_string(), flow_graph)]),
         external_defs,
         compile_order: vec![module_name.to_string()],
         module_diagnostics: HashMap::from([(
@@ -155,6 +164,7 @@ pub(crate) fn collect_project_hir_source_modules(
         .collect();
     let compile_order = compute_module_compile_order_with_sources(&suites)?;
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
+    let mut flow_graphs: HashMap<String, FlowGraph> = HashMap::new();
     let mut module_diagnostics: HashMap<String, FrontendModuleDiagnostics> = HashMap::new();
 
     for module_name in &compile_order {
@@ -180,6 +190,7 @@ pub(crate) fn collect_project_hir_source_modules(
         };
         let LoweringResult {
             module,
+            flow_graph,
             function_defaults,
             function_varargs,
             constant_integer_values,
@@ -188,6 +199,7 @@ pub(crate) fn collect_project_hir_source_modules(
         } = result;
         let lowering_result = LoweringResult {
             module: module.clone(),
+            flow_graph: flow_graph.clone(),
             function_defaults,
             function_varargs,
             constant_integer_values,
@@ -196,6 +208,7 @@ pub(crate) fn collect_project_hir_source_modules(
         };
         collect_module_exports(module_name, &lowering_result, &mut external_defs);
         hir_modules.insert(module_name.clone(), module);
+        flow_graphs.insert(module_name.clone(), flow_graph);
         module_diagnostics.insert(
             module_name.clone(),
             FrontendModuleDiagnostics {
@@ -209,6 +222,7 @@ pub(crate) fn collect_project_hir_source_modules(
 
     Ok(ProjectLowering {
         hir_modules,
+        flow_graphs,
         external_defs,
         compile_order,
         module_diagnostics,

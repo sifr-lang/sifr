@@ -134,8 +134,8 @@ pub(in crate::lower) fn lower_tuple_unpack_assign(
                             range,
                         );
                     }
-                    ctx.scope.reset_moved(&name);
-                    ctx.scope.clear_narrowing(&name);
+                    ctx.reset_moved_with_flow(&name);
+                    ctx.clear_narrowing_with_flow(&name);
                     ctx.clear_sequence_guards_for_binding(&name);
                 } else {
                     ctx.scope.define(name.clone(), ty.clone());

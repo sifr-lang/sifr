@@ -3,6 +3,7 @@ use super::{
     len_aliases, mod_impl, numeric_sentinels, sequence_guards, sequence_pointers, sequence_shapes,
     str, workload_annotations,
 };
+use crate::flow_graph::{FlowEffect, FlowGraph};
 use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 use crate::scope::{ErrorTaint, Scope};
 use async_effects::AsyncSuspensionSummary;
@@ -109,6 +110,7 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) empty_collection_hint_adoption: Vec<bool>,
     pub(in crate::lower) empty_dict_specializations: HashMap<String, Type>,
     pub(in crate::lower) const_integer_values: HashMap<String, num_bigint::BigInt>,
+    pub(in crate::lower) flow_effects: Vec<FlowEffect>,
 }
 
 impl LowerCtx {
@@ -167,6 +169,7 @@ impl LowerCtx {
             empty_collection_hint_adoption: Vec::new(),
             empty_dict_specializations: HashMap::new(),
             const_integer_values: HashMap::new(),
+            flow_effects: Vec::new(),
         }
     }
 
@@ -230,6 +233,50 @@ impl LowerCtx {
             .last()
             .copied()
             .unwrap_or(false)
+    }
+
+    pub(in crate::lower) fn record_flow_effect(&mut self, effect: FlowEffect) {
+        self.flow_effects.push(effect);
+    }
+
+    pub(in crate::lower) fn narrow_var_with_flow(
+        &mut self,
+        name: &str,
+        narrowed_type: Type,
+        condition: String,
+        is_true: bool,
+    ) {
+        self.scope.narrow_var(name, narrowed_type.clone());
+        self.record_flow_effect(FlowEffect::Narrow {
+            binding: name.to_string(),
+            narrowed_type,
+            condition,
+            is_true,
+        });
+    }
+
+    pub(in crate::lower) fn clear_narrowing_with_flow(&mut self, name: &str) {
+        self.scope.clear_narrowing(name);
+        self.record_flow_effect(FlowEffect::ClearNarrowing {
+            binding: name.to_string(),
+        });
+    }
+
+    pub(in crate::lower) fn mark_moved_with_flow(&mut self, name: &str) -> bool {
+        let moved = self.scope.mark_moved(name);
+        if moved {
+            self.record_flow_effect(FlowEffect::Move {
+                binding: name.to_string(),
+            });
+        }
+        moved
+    }
+
+    pub(in crate::lower) fn reset_moved_with_flow(&mut self, name: &str) {
+        self.scope.reset_moved(name);
+        self.record_flow_effect(FlowEffect::ResetMove {
+            binding: name.to_string(),
+        });
     }
 }
 /// Substitute type variables in a type with concrete types.
@@ -369,6 +416,7 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
 /// Result of lowering, including the HIR module and any diagnostics.
 pub struct LoweringResult {
     pub module: HirModule,
+    pub flow_graph: FlowGraph,
     pub function_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
     pub function_varargs: std::collections::HashMap<String, usize>,
     pub constant_integer_values: std::collections::HashMap<String, num_bigint::BigInt>,

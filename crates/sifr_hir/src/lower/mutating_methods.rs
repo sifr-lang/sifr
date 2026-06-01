@@ -97,6 +97,13 @@ pub(in crate::lower) fn invalidate_collection_flow_facts_for_method(
         return;
     }
     if let Some(target) = super::sequence_guards::hir_sequence_guard_target_name(object) {
+        ctx.record_flow_effect(crate::flow_graph::FlowEffect::Mutation {
+            target: target.clone(),
+            operation: format!("method {method}"),
+        });
+        ctx.record_flow_effect(crate::flow_graph::FlowEffect::ClearNarrowing {
+            binding: target.clone(),
+        });
         ctx.clear_sequence_guards_for_target(&target);
     }
 }

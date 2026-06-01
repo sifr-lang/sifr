@@ -7,6 +7,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 pub mod cfg;
+pub mod flow_graph;
 mod hir_nodes;
 mod lower;
 mod lowering_outcome;

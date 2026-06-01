@@ -29,7 +29,7 @@ pub(in crate::lower) fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> O
 
     for (name, was_moved) in then_moved.iter().chain(else_moved.iter()) {
         if *was_moved {
-            ctx.scope.mark_moved(name);
+            ctx.mark_moved_with_flow(name);
         }
     }
 
