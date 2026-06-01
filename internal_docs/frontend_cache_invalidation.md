@@ -4,6 +4,12 @@ status: active
 
 Phase 35 v1 frontend caching is process-local and module-granular.
 
+TypeScript-Go architecture transfer M1 note: this document describes the
+pre-session cache behavior. Dependency-sensitive invalidation, dirty-scope
+classification, module signatures, structural replacement, and snapshot-scoped
+cache reuse are planned in M6-M10 and are not implemented by the current
+`FrontendContext::update_module_source` path.
+
 ## Cache State
 
 Each `FrontendContext` module owns cached parse, lower, diagnostics, and analysis entries. Query results include metadata with:
