@@ -32,6 +32,12 @@ scope remain later work. M6 replaces that placeholder with explicit
 session-level dirty-scope reports and event compaction; M7 maps frontend
 invalidation reports to one-module, reverse-dependency, and graph dirty scopes.
 
+TypeScript-Go architecture transfer M9 note: cache reuse is still deferred to
+M10, but cache identity is now explicit. `sifr_frontend::cache_keys` defines
+deterministic compiler/cache fingerprints and typed key inputs for parse,
+source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol
+bucket, and flow graph cache families.
+
 ## Cache State
 
 Each `FrontendContext` module owns cached parse, lower, diagnostics, and analysis entries. Query results include metadata with:

@@ -5,6 +5,8 @@
 //! deterministic invalidation reports.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
+mod cache_keys;
+pub use cache_keys::*;
 mod graph_cache_and_queries;
 pub use graph_cache_and_queries::*;
 mod hir_views;

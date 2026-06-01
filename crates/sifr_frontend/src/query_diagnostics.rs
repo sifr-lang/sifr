@@ -15,7 +15,6 @@ use sifr_hir::{
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{BTreeMap, HashMap};
-use std::hash::{Hash, Hasher};
 pub(super) fn module_state(
     id: ModuleId,
     file: FileId,
@@ -42,9 +41,7 @@ pub(super) fn module_state(
 }
 
 pub(super) fn source_hash(source: &str) -> SourceHash {
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    source.hash(&mut hasher);
-    SourceHash(format!("{:016x}", hasher.finish()))
+    SourceHash::from_source_text(source)
 }
 
 pub(super) fn local_import_dependencies(
