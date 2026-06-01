@@ -19,6 +19,11 @@ status: active
 
 `sifr_frontend` consumes `sifr_syntax` for parsing and `sifr_hir` for lowering and semantic diagnostics. It does not invoke codegen, rustc, cargo, CLI policy, or build artifact creation.
 
+TypeScript-Go architecture transfer M1 note: the `FrontendContext` API described
+here is the pre-session, process-local query facade. M3/M4 own re-expressing
+this surface around `WorkspaceSession` and immutable `WorkspaceSnapshot`
+handles; M2 owns moving semantic file reads behind `SourceProvider` first.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

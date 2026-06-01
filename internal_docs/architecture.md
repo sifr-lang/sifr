@@ -269,6 +269,7 @@ New crates added per milestone as needed:
 - milestone_core_stdlib/milestone_ext_collections: `sifr_std` (standard library wrappers, extended collections)
 - Ad-hoc semantic diagnostic taxonomy: `sifr_diagnostics` (shared diagnostic model and schema, introduced before migrating existing emission paths)
 - TypeScript-Go architecture transfer M0: `sifr_source` (bottom-of-graph source text, line-map, source-file metadata, and editor position conversion authority)
+- TypeScript-Go architecture transfer M1: `internal_docs/typescript_go_architecture_transfer_m1_guardrails.md` records the pre-session direct-read inventory, current LSP single-file rebuild caveat, aggregate LSP budget caveat, and guardrail automation before M2-M5 behavior migration.
 - milestone_ffi: FFI codegen extensions in `sifr_codegen`
 - Phase 35 shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
 - milestone_dev_tooling: `sifr_lsp` (language server), `sifr_format` (formatter), `sifr_lint` (linter)
