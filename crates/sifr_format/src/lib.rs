@@ -10,6 +10,7 @@ use ruff_python_formatter::{
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use sifr_syntax::{parse_module, SourceText};
 use std::collections::BTreeMap;
 use std::fs;
@@ -174,10 +175,18 @@ pub fn check_path_with_options(
 }
 
 pub fn collect_sifr_files(path: &Path) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
-    if path.is_file() {
+    let mut provider = DiskSourceProvider::new();
+    collect_sifr_files_with_provider(path, &mut provider)
+}
+
+pub fn collect_sifr_files_with_provider(
+    path: &Path,
+    provider: &mut impl SourceProvider,
+) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
+    if provider.is_file(path) {
         return Ok(vec![path.to_path_buf()]);
     }
-    if !path.is_dir() {
+    if !provider.is_dir(path) {
         return Err(vec![io_diagnostic(
             DiagnosticCode::FMT_FORMATTING_DRIFT,
             format!("format target does not exist: {}", path.display()),
@@ -185,7 +194,7 @@ pub fn collect_sifr_files(path: &Path) -> Result<Vec<PathBuf>, Vec<RenderedDiagn
         )]);
     }
     let mut files = Vec::new();
-    collect_sifr_files_inner(path, &mut files)?;
+    collect_sifr_files_inner(path, &mut files, provider)?;
     files.sort();
     Ok(files)
 }
@@ -193,31 +202,22 @@ pub fn collect_sifr_files(path: &Path) -> Result<Vec<PathBuf>, Vec<RenderedDiagn
 fn collect_sifr_files_inner(
     path: &Path,
     files: &mut Vec<PathBuf>,
+    provider: &mut impl SourceProvider,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
-    for entry in fs::read_dir(path).map_err(|err| {
+    for entry in provider.read_dir(path).map_err(|err| {
         vec![io_diagnostic(
             DiagnosticCode::FMT_FORMATTING_DRIFT,
             format!("could not read directory {}: {err}", path.display()),
             Some(path),
         )]
     })? {
-        let entry = entry.map_err(|err| {
-            vec![io_diagnostic(
-                DiagnosticCode::FMT_FORMATTING_DRIFT,
-                format!(
-                    "could not read directory entry under {}: {err}",
-                    path.display()
-                ),
-                Some(path),
-            )]
-        })?;
-        let child = entry.path();
-        if child.is_dir() {
+        let child = entry.path;
+        if entry.is_dir {
             if is_default_excluded_dir(&child) {
                 continue;
             }
-            collect_sifr_files_inner(&child, files)?;
-        } else if is_sifr_file(&child) {
+            collect_sifr_files_inner(&child, files, provider)?;
+        } else if entry.is_file && is_sifr_file(&child) {
             files.push(child);
         }
     }
@@ -443,13 +443,24 @@ fn first_diff_offset(left: &str, right: &str) -> u32 {
 }
 
 fn read_source(path: &Path) -> Result<String, Vec<RenderedDiagnostic>> {
-    fs::read_to_string(path).map_err(|err| {
-        vec![io_diagnostic(
-            DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-            format!("could not read file {}: {err}", path.display()),
-            Some(path),
-        )]
-    })
+    let mut provider = DiskSourceProvider::new();
+    read_source_with_provider(path, &mut provider)
+}
+
+pub fn read_source_with_provider(
+    path: &Path,
+    provider: &mut impl SourceProvider,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    provider
+        .read_file(path)
+        .map(|source| source.as_str().to_string())
+        .map_err(|err| {
+            vec![io_diagnostic(
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                format!("could not read file {}: {err}", path.display()),
+                Some(path),
+            )]
+        })
 }
 
 fn write_source(path: &Path, source: &str) -> Result<(), Vec<RenderedDiagnostic>> {

@@ -1,3 +1,4 @@
+use sifr_frontend::{DiskSourceProvider, SourceProvider, SourceProviderError};
 use std::path::Path;
 
 const CANONICAL_PURE_MARKER: &str =
@@ -27,7 +28,18 @@ pub fn validate_pure_marker_source(source: &str) -> MarkerValidation {
 }
 
 pub fn validate_pure_marker_file(path: &Path) -> Result<MarkerValidation, std::io::Error> {
-    std::fs::read_to_string(path).map(|source| validate_pure_marker_source(&source))
+    let mut provider = DiskSourceProvider::new();
+    validate_pure_marker_file_with_provider(path, &mut provider)
+        .map_err(|error| std::io::Error::other(error.to_string()))
+}
+
+pub fn validate_pure_marker_file_with_provider(
+    path: &Path,
+    provider: &mut impl SourceProvider,
+) -> Result<MarkerValidation, SourceProviderError> {
+    provider
+        .read_file(path)
+        .map(|source| validate_pure_marker_source(source.as_str()))
 }
 
 fn strip_rust_comments_and_whitespace(source: &str) -> String {

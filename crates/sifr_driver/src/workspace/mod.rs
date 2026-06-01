@@ -1,5 +1,6 @@
 use crate::diagnostics::RenderedDiagnostic;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::path::{Component, Path, PathBuf};
 
 const MANIFEST_FILE: &str = "sifr.toml";
@@ -23,14 +24,22 @@ struct SifrManifest {
 }
 
 pub fn find_workspace_root(entry: &Path) -> Result<Option<WorkspaceRoot>, Vec<RenderedDiagnostic>> {
+    let mut provider = DiskSourceProvider::new();
+    find_workspace_root_with_provider(entry, &mut provider)
+}
+
+pub(crate) fn find_workspace_root_with_provider(
+    entry: &Path,
+    provider: &mut impl SourceProvider,
+) -> Result<Option<WorkspaceRoot>, Vec<RenderedDiagnostic>> {
     let Some(mut current) = entry.parent().map(Path::to_path_buf) else {
         return Ok(None);
     };
 
     loop {
         let manifest_path = current.join(MANIFEST_FILE);
-        if manifest_path.is_file() {
-            let config = parse_workspace_config(&current, &manifest_path)?;
+        if provider.is_file(&manifest_path) {
+            let config = parse_workspace_config_with_provider(&current, &manifest_path, provider)?;
             return Ok(Some(WorkspaceRoot {
                 dir: current,
                 config,
@@ -42,17 +51,21 @@ pub fn find_workspace_root(entry: &Path) -> Result<Option<WorkspaceRoot>, Vec<Re
     }
 }
 
-fn parse_workspace_config(
+fn parse_workspace_config_with_provider(
     workspace_root: &Path,
     manifest_path: &Path,
+    provider: &mut impl SourceProvider,
 ) -> Result<SifrWorkspaceConfig, Vec<RenderedDiagnostic>> {
-    let source = std::fs::read_to_string(manifest_path)
+    let source = provider
+        .read_file(manifest_path)
         .map_err(|error| vec![parse_manifest_error(manifest_path, error)])?;
-    let manifest = parse_manifest(manifest_path, &source)?;
+    let manifest = parse_manifest(manifest_path, source.as_str())?;
     let source_roots = manifest
         .source_roots
         .iter()
-        .map(|source_root| validate_source_root(workspace_root, source_root))
+        .map(|source_root| {
+            validate_source_root_with_provider(workspace_root, source_root, provider)
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(SifrWorkspaceConfig {
@@ -115,9 +128,10 @@ fn parse_source_roots(
         .collect()
 }
 
-fn validate_source_root(
+fn validate_source_root_with_provider(
     workspace_root: &Path,
     source_root: &str,
+    provider: &mut impl SourceProvider,
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let raw = Path::new(source_root);
     if source_root.is_empty() || raw.is_absolute() {
@@ -153,7 +167,7 @@ fn validate_source_root(
         normalized
     };
     let absolute = workspace_root.join(&relative);
-    if !absolute.is_dir() {
+    if !provider.is_dir(&absolute) {
         return Err(vec![source_root_error(
             source_root,
             SourceRootErrorKind::NotDirectory,

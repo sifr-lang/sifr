@@ -44,8 +44,8 @@ pub use crate::graph::workspace::{
     WorkspacePackageSelection,
 };
 pub use crate::imports::source_map::{
-    DottedModulePath, PackageImportOrigin, PackageImportResolution, PackageModuleKey,
-    PackageModuleSource, PackageSourceMap,
+    DottedModulePath, PackageImportAmbiguity, PackageImportOrigin, PackageImportResolution,
+    PackageImportResolutionResult, PackageModuleKey, PackageModuleSource, PackageSourceMap,
 };
 pub use crate::manifest::metadata::{CargoSifrAliasMetadata, CargoSifrMetadata};
 pub use crate::manifest::package_sections::{SifrDependency, SifrScript};
@@ -86,6 +86,8 @@ mod milestone_adhoc_pkg_1_tests;
 mod milestone_adhoc_pkg_2_tests;
 #[cfg(test)]
 mod milestone_adhoc_pkg_3_tests;
+#[cfg(test)]
+mod milestone_adhoc_tsgo_m2_tests;
 
 #[cfg(test)]
 mod tests {

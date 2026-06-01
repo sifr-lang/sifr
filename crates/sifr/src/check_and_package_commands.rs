@@ -16,6 +16,7 @@ use sifr_driver::{
     CompileResult, PackageEntrypoint,
 };
 use sifr_format::config::{effective_format_config, EffectiveFormatConfig, FormatConfigOverrides};
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
 use std::hash::{Hash as _, Hasher as _};
@@ -405,31 +406,22 @@ pub(super) fn fmt_entrypoint(
         args.paths.clone()
     };
     let mut diagnostics = Vec::new();
+    let mut provider = DiskSourceProvider::new();
     for target in targets {
-        let explicit_target = target.is_file();
+        let explicit_target = provider.is_file(&target);
         let files = select_formatter_files(&target, &config, explicit_target)?;
         for file in files {
             if args.check {
                 diagnostics.extend(sifr_format::check_path_with_options(&file, options)?);
             } else if args.diff {
-                let source = fs::read_to_string(&file).map_err(|err| {
-                    vec![formatter_cli_diagnostic(format!(
-                        "could not read file {}: {err}",
-                        file.display()
-                    ))]
-                })?;
+                let source = read_formatter_source(&file)?;
                 let formatted = format_source_or_range(&source, &file, args, options)?;
                 if formatted != source {
                     write_unified_diff(&file, &source, &formatted);
                     diagnostics.push(formatting_drift_for_path(&source, &file));
                 }
             } else if args.range.is_some() {
-                let source = fs::read_to_string(&file).map_err(|err| {
-                    vec![formatter_cli_diagnostic(format!(
-                        "could not read file {}: {err}",
-                        file.display()
-                    ))]
-                })?;
+                let source = read_formatter_source(&file)?;
                 let formatted = format_source_or_range(&source, &file, args, options)?;
                 if formatted != source {
                     fs::write(&file, formatted).map_err(|err| {
@@ -548,15 +540,17 @@ fn select_formatter_files(
 
 fn read_gitignore_patterns() -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
     let path = Path::new(".gitignore");
-    if !path.is_file() {
+    let mut provider = DiskSourceProvider::new();
+    if !provider.is_file(path) {
         return Ok(Vec::new());
     }
-    let source = fs::read_to_string(path).map_err(|err| {
+    let source = provider.read_file(path).map_err(|err| {
         vec![formatter_cli_diagnostic(format!(
             "could not read .gitignore for formatter discovery: {err}"
         ))]
     })?;
     Ok(source
+        .as_str()
         .lines()
         .map(str::trim)
         .filter(|line| !line.is_empty() && !line.starts_with('#'))
@@ -580,12 +574,7 @@ fn try_formatter_cache_hit(
     if config.no_cache {
         return Ok(false);
     }
-    let source = fs::read_to_string(path).map_err(|err| {
-        vec![formatter_cli_diagnostic(format!(
-            "could not read file {}: {err}",
-            path.display()
-        ))]
-    })?;
+    let source = read_formatter_source(path)?;
     let key = formatter_cache_key(path, &source, options);
     Ok(config.cache_dir.join(key).is_file())
 }
@@ -598,12 +587,7 @@ fn write_formatter_cache_entry(
     if config.no_cache {
         return Ok(());
     }
-    let source = fs::read_to_string(path).map_err(|err| {
-        vec![formatter_cli_diagnostic(format!(
-            "could not read file {}: {err}",
-            path.display()
-        ))]
-    })?;
+    let source = read_formatter_source(path)?;
     fs::create_dir_all(&config.cache_dir).map_err(|err| {
         vec![formatter_cli_diagnostic(format!(
             "could not create formatter cache {}: {err}",
@@ -617,6 +601,18 @@ fn write_formatter_cache_entry(
             config.cache_dir.display()
         ))]
     })
+}
+
+fn read_formatter_source(path: &Path) -> Result<String, Vec<RenderedDiagnostic>> {
+    DiskSourceProvider::new()
+        .read_file(path)
+        .map(|source| source.as_str().to_string())
+        .map_err(|err| {
+            vec![formatter_cli_diagnostic(format!(
+                "could not read file {}: {err}",
+                path.display()
+            ))]
+        })
 }
 
 fn formatter_cache_key(path: &Path, source: &str, options: sifr_format::FormatOptions) -> String {

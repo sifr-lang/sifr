@@ -10,6 +10,13 @@ classification, module signatures, structural replacement, and snapshot-scoped
 cache reuse are planned in M6-M10 and are not implemented by the current
 `FrontendContext::update_module_source` path.
 
+TypeScript-Go architecture transfer M2 note: project loading can now record
+source-provider dependency reads before snapshots exist. The tracked records
+include successful file reads, directory reads, file and directory probes,
+canonicalization, and failed lookups. These records are not yet consumed for
+dirty-scope invalidation; M3-M6 wire them into session snapshots and
+dependency-sensitive invalidation.
+
 ## Cache State
 
 Each `FrontendContext` module owns cached parse, lower, diagnostics, and analysis entries. Query results include metadata with:

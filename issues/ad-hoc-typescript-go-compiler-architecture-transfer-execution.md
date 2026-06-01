@@ -157,6 +157,22 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: M1 implementation review pass 2 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-2.md`; reviewer requested fixing the direct-read/probe regex and adding `crates/sifr_package/src/cargo/lock_modes.rs:46`.
 - `2026-06-01`: M1 implementation review pass 3 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-3.md`; reviewer approved M1 for PR after focused validation.
 - `2026-06-01`: M1 merged via PR [#2230](https://github.com/sifr-lang/sifr/pull/2230), merge commit `a1a402c01348181684fc028c6fc14fba76d8b0cf`. Duplicate PR [#2231](https://github.com/sifr-lang/sifr/pull/2231) was closed without merge.
+- `2026-06-01`: M2 validation in progress on branch `wave_tsgo_m2_source_provider_overlay`.
+- `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS for M2 after excluding the intentional `SourceProvider` boundary implementation from the direct-read scan and documenting remaining non-semantic exceptions.
+- `2026-06-01`: `cargo fmt --check` -> PASS for M2.
+- `2026-06-01`: `python3 scripts/check_file_size_guardrails.py` -> PASS for M2.
+- `2026-06-01`: `cargo test -p sifr -- --skip test_e2e_pass` -> PASS for M2.
+- `2026-06-01`: `cargo test -p sifr_driver -p sifr_package -p sifr_frontend -p sifr_format -p sifr_lint` -> PASS for M2.
+- `2026-06-01`: `cargo clippy --workspace -- -D warnings` -> PASS for M2.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` initially failed for M2 on package-manager file-size guardrails; `imports/source_map.rs`, `manifest/sifr.rs`, and the M2 package tests were split by responsibility.
+- `2026-06-01`: `python3 scripts/check_package_manager_guardrails.py` and `cargo test -p sifr_package` -> PASS after M2 package guardrail remediation.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS for M2; report `target/validation_lane_reports/quick.latest.json`, wall time 274.59s.
+- `2026-06-01`: `cargo clippy --workspace -- -D warnings` -> PASS after final M2 package guardrail splits.
+- `2026-06-01`: M2 implementation review pass 3 recorded in `reviews/typescript-go-m2-source-provider-overlay-review-pass-3.md`; reviewer approved M2 for PR with non-blocking follow-up notes.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` initially failed on package-manager file-size guardrails after M2 expanded `source_map.rs`, `manifest/sifr.rs`, and `milestone_37_3_tests.rs`; source-map discovery/resolution and manifest field parsing were split by responsibility.
+- `2026-06-01`: `cargo test -p sifr_package`, `cargo clippy --workspace -- -D warnings`, and `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS after the package-manager guardrail remediation.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS after M2 remediation; report `target/validation_lane_reports/quick.latest.json`, wall time 260.57s.
+- `2026-06-01`: M2 final implementation review pass 4 recorded in `reviews/typescript-go-m2-source-provider-overlay-review-pass-4.md`; reviewer approved the current post-remediation tree for PR.
 
 ## PR Log
 

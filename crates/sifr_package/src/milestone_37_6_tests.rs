@@ -373,7 +373,9 @@ fn source_map(package: &SifrPackageMetadata) -> PackageSourceMap {
                 main,
             ),
         ]),
+        ambiguous_modules: BTreeMap::new(),
         public_apis: BTreeMap::new(),
+        fatal_diagnostics: Vec::new(),
     }
 }
 

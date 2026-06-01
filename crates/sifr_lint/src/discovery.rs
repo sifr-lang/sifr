@@ -2,6 +2,7 @@ use crate::{diagnostic, LintOptions};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use ignore::WalkBuilder;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -16,6 +17,15 @@ pub fn collect_sifr_files_for_targets(
     paths: &[PathBuf],
     options: &LintOptions,
 ) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
+    let mut provider = DiskSourceProvider::new();
+    collect_sifr_files_for_targets_with_provider(paths, options, &mut provider)
+}
+
+pub(crate) fn collect_sifr_files_for_targets_with_provider(
+    paths: &[PathBuf],
+    options: &LintOptions,
+    provider: &mut impl SourceProvider,
+) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
     let targets = if paths.is_empty() {
         vec![PathBuf::from(".")]
     } else {
@@ -26,12 +36,12 @@ pub fn collect_sifr_files_for_targets(
     let exclude = globset("exclude", &exclude_patterns)?;
     let mut files = BTreeSet::new();
     for target in targets {
-        if target.is_file() {
+        if provider.is_file(&target) {
             if should_include_explicit_file(&target, &include, &exclude, options) {
                 files.insert(target);
             }
-        } else if target.is_dir() {
-            collect_directory_files(&target, &include, &exclude, options, &mut files)?;
+        } else if provider.is_dir(&target) {
+            collect_directory_files(&target, &include, &exclude, options, &mut files, provider)?;
         } else {
             return Err(vec![diagnostic(
                 DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
@@ -51,6 +61,7 @@ fn collect_directory_files(
     exclude: &GlobSet,
     options: &LintOptions,
     files: &mut BTreeSet<PathBuf>,
+    provider: &mut impl SourceProvider,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let mut builder = WalkBuilder::new(root);
     builder
@@ -76,7 +87,7 @@ fn collect_directory_files(
             )]
         })?;
         let path = entry.path();
-        if path.is_dir() || is_default_excluded_dir(path) {
+        if provider.is_dir(path) || is_default_excluded_dir(path) {
             continue;
         }
         if path_matches(root, path, include) && !path_matches(root, path, exclude) {

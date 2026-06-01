@@ -1,6 +1,7 @@
 use crate::diag::PackageDiagnostic;
 use crate::imports::source_map::DottedModulePath;
 use crate::CargoPackageId;
+use sifr_frontend::SourceProvider;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -28,8 +29,9 @@ pub fn parse_init_sifr_reexports(
     namespace_path: &DottedModulePath,
     init_path: &Path,
     package_source_root: &Path,
+    provider: &mut impl SourceProvider,
 ) -> Result<NamespaceApi, Vec<PackageDiagnostic>> {
-    let source = match std::fs::read_to_string(init_path) {
+    let source = match provider.read_file(init_path) {
         Ok(source) => source,
         Err(error) => {
             return Err(vec![PackageDiagnostic::invalid_sifr_manifest(
@@ -46,7 +48,7 @@ pub fn parse_init_sifr_reexports(
     };
     let mut diagnostics = Vec::new();
 
-    for raw_line in source.lines() {
+    for raw_line in source.as_str().lines() {
         if raw_line.starts_with(char::is_whitespace) {
             continue;
         }
@@ -68,6 +70,7 @@ pub fn parse_init_sifr_reexports(
                 sifr_manifest,
                 namespace_path,
                 package_source_root,
+                provider,
                 &mut api,
                 rest,
             ) {
@@ -109,6 +112,7 @@ fn parse_relative_from(
     sifr_manifest: &Path,
     namespace_path: &DottedModulePath,
     package_source_root: &Path,
+    provider: &mut impl SourceProvider,
     api: &mut NamespaceApi,
     rest: &str,
 ) -> Result<(), PackageDiagnostic> {
@@ -125,6 +129,7 @@ fn parse_relative_from(
             sifr_manifest,
             namespace_path,
             package_source_root,
+            provider,
             api,
             imported,
         )
@@ -145,6 +150,7 @@ fn parse_child_namespace_exports(
     sifr_manifest: &Path,
     namespace_path: &DottedModulePath,
     package_source_root: &Path,
+    provider: &mut impl SourceProvider,
     api: &mut NamespaceApi,
     imported: &str,
 ) -> Result<(), PackageDiagnostic> {
@@ -158,7 +164,7 @@ fn parse_child_namespace_exports(
             .map_or(child, |(_, alias)| alias)
             .trim();
         if !valid_identifier(child_name)
-            || !public_child_namespace_exists(package_source_root, child_name)
+            || !public_child_namespace_exists(package_source_root, child_name, provider)
         {
             return Err(unsupported_api_form(
                 cargo_package_id,
@@ -257,11 +263,12 @@ fn top_level_definition_name(line: &str) -> Option<&str> {
     valid_identifier(name).then_some(name)
 }
 
-fn public_child_namespace_exists(package_source_root: &Path, child: &str) -> bool {
-    package_source_root
-        .join(child)
-        .join("__init__.sifr")
-        .is_file()
+fn public_child_namespace_exists(
+    package_source_root: &Path,
+    child: &str,
+    provider: &mut impl SourceProvider,
+) -> bool {
+    provider.is_file(&package_source_root.join(child).join("__init__.sifr"))
 }
 
 fn looks_like_public_assignment(line: &str) -> bool {
