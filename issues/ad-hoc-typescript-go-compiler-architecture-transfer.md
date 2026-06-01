@@ -8,7 +8,7 @@ Status: in progress
 | --- | --- | --- | --- |
 | M0 Source And Position Foundation | merged | [#2229](https://github.com/sifr-lang/sifr/pull/2229) | Added `sifr_source`, real source-map conversions, and source-position guardrails. |
 | M1 Architecture Contract And Guardrails | merged | [#2230](https://github.com/sifr-lang/sifr/pull/2230), [#2232](https://github.com/sifr-lang/sifr/pull/2232) | Added pre-flight direct-read/LSP/budget guardrails and follow-up tracker update. |
-| M2 Source Provider And Overlay Store | in PR | [#2233](https://github.com/sifr-lang/sifr/pull/2233) | Adds `SourceProvider`, `DiskSourceProvider`, `OverlaySourceProvider`, `TrackingSourceProvider`, `OverlayDocument`, `SourceDependency*`, provider-backed project/package/lint/format reads, `PackageImportAmbiguity`, and `PackageImportResolutionResult`; new tests cover overlay shadowing, nested overlay directories, tracked reads, provider-backed project loading, package ambiguity, unresolved/private/fatal import states, and existing lint/format/package behavior. |
+| M2 Source Provider And Overlay Store | merged | [#2233](https://github.com/sifr-lang/sifr/pull/2233) | Adds `SourceProvider`, `DiskSourceProvider`, `OverlaySourceProvider`, `TrackingSourceProvider`, `OverlayDocument`, `SourceDependency*`, provider-backed project/package/lint/format reads, `PackageImportAmbiguity`, and `PackageImportResolutionResult`; new tests cover overlay shadowing, nested overlay directories, tracked reads, provider-backed project loading, package ambiguity, unresolved/private/fatal import states, and existing lint/format/package behavior. |
 
 M2 local validation so far:
 

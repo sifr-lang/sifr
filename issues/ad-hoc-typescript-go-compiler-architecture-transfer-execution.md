@@ -173,10 +173,12 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: `cargo test -p sifr_package`, `cargo clippy --workspace -- -D warnings`, and `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS after the package-manager guardrail remediation.
 - `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS after M2 remediation; report `target/validation_lane_reports/quick.latest.json`, wall time 260.57s.
 - `2026-06-01`: M2 final implementation review pass 4 recorded in `reviews/typescript-go-m2-source-provider-overlay-review-pass-4.md`; reviewer approved the current post-remediation tree for PR.
+- `2026-06-01`: M2 merged via PR [#2233](https://github.com/sifr-lang/sifr/pull/2233), merge commit `c74d73b59d179156b3a19c5f4176fc5738c49ab4`.
 
 ## PR Log
 
 - `2026-05-30`: Phase planning/review PR [#2206](https://github.com/sifr-lang/sifr/pull/2206) records the architecture transfer contract, execution tracker, and incorporated review artifacts.
 - `2026-06-01`: M0 source and position foundation merged in [#2229](https://github.com/sifr-lang/sifr/pull/2229).
 - `2026-06-01`: M1 architecture contract and guardrails merged in [#2230](https://github.com/sifr-lang/sifr/pull/2230).
+- `2026-06-01`: M2 source provider and overlay store merged in [#2233](https://github.com/sifr-lang/sifr/pull/2233).
 - Additional implementation PR links will be recorded per milestone after they are opened and merged.
