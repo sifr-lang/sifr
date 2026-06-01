@@ -1,1 +1,8 @@
-build error: module 'helper' is ambiguous in workspace '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import': matches '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr' and '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr'; reorder [source].roots or rename one module to disambiguate
+error[SIFR-IMPORT-0005]: ambiguous import target: 'helper'
+  --> crates/sifr/tests/verification/project/workspace_ambiguous_import/main.sifr:1:6
+     |
+   1 | from helper import value
+     |      ^^^^^^
+  = note: candidate path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr
+  = note: candidate path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr
+  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0005

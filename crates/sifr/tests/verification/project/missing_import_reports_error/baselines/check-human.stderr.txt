@@ -1,1 +1,8 @@
-build error: could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr'
+error[SIFR-IMPORT-0002]: unknown import target: 'missing_math_utils'
+  --> crates/sifr/tests/verification/project/missing_import_reports_error/main.sifr:1:6
+     |
+   1 | from missing_math_utils import add
+     |      ^^^^^^^^^^^^^^^^^^
+  = note: tried path: <WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr
+  = note: tried path: <WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr
+  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0002

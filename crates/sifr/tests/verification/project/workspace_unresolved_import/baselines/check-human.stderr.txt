@@ -1,1 +1,9 @@
-build error: could not resolve import 'missing.helper'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/missing/helper.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/lib/missing/helper.sifr', '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/./missing/helper.sifr'
+error[SIFR-IMPORT-0002]: unknown import target: 'missing.helper'
+  --> crates/sifr/tests/verification/project/workspace_unresolved_import/main.sifr:1:6
+     |
+   1 | from missing.helper import value
+     |      ^^^^^^^^^^^^^^
+  = note: tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/missing/helper.sifr
+  = note: tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/lib/missing/helper.sifr
+  = note: tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/./missing/helper.sifr
+  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0002

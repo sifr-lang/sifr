@@ -361,10 +361,7 @@ def join_pair(left: str, right: str) -> str:
         generated.contains("__sifr_concat.push_str((left).as_str())"),
         "{generated}"
     );
-    assert!(
-        generated.contains("__sifr_concat.push_str(\"@\")"),
-        "{generated}"
-    );
+    assert!(generated.contains("__sifr_concat.push('@')"), "{generated}");
     assert!(
         generated.contains("__sifr_concat.push_str((right).as_str())"),
         "{generated}"
@@ -535,7 +532,7 @@ def join_marked(parts: list[str]) -> str:
 "##,
     );
 
-    assert!(generated.contains("out.push_str(\"#\")"), "{generated}");
+    assert!(generated.contains("out.push('#')"), "{generated}");
     assert!(generated.contains("out.push_str((part).as_str())"));
     assert!(!generated.contains("out = format!"));
 }

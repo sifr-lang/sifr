@@ -1,3 +1,2 @@
-summary: 1 error(s), 0 warning(s), 0 note(s), 0 help item(s)
-error [SIFR-WORKSPACE-0102] module 'helper' is ambiguous in workspace '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import': matches '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr' and '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr'; reorder [source].roots or rename one module to disambiguate (x1)
-  url: https://sifr.sh/docs/errors/SIFR-WORKSPACE-0102
+1 error, 0 warnings, 0 notes
+E SIFR-IMPORT-0005 crates/sifr/tests/verification/project/workspace_ambiguous_import/main.sifr:1:6 ambiguous import target: 'helper'
