@@ -54,7 +54,7 @@ pub(in crate::lower) fn lower_task_handle_method_call(
     let result_err_ty = err_ty.clone();
     if let HirExpr::Name { name, .. } = &object {
         mark_task_handle_observed(name, ctx);
-        ctx.scope.mark_moved(name);
+        ctx.mark_moved_with_flow(name);
     }
     Some(HirExpr::MethodCall {
         object: Box::new(object),

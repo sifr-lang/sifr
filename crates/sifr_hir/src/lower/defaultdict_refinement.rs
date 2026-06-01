@@ -59,7 +59,12 @@ pub(in crate::lower) fn refine_defaultdict_binding_expr(
             Box::new(inferred_value_ty.clone()),
         )),
     };
-    ctx.scope.narrow_var(name, refined_ty.clone());
+    ctx.narrow_var_with_flow(
+        name,
+        refined_ty.clone(),
+        "defaultdict-refinement".to_string(),
+        true,
+    );
     Some(HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: name.clone(),

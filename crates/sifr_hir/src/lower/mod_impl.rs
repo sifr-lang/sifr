@@ -645,15 +645,18 @@ pub(in crate::lower) fn lower_module_impl(
     }
     if ctx.errors.is_empty() {
         imports.extend(ctx.synthetic_imports.clone());
+        let module = HirModule {
+            functions,
+            classes,
+            imports,
+            constants,
+            generic_functions: ctx.generic_functions.clone(),
+            type_param_bounds: ctx.type_param_bounds.clone(),
+        };
+        let flow_graph = crate::flow_graph::build_module_flow_graph(&module, &ctx.flow_effects);
         Ok(LoweringResult {
-            module: HirModule {
-                functions,
-                classes,
-                imports,
-                constants,
-                generic_functions: ctx.generic_functions.clone(),
-                type_param_bounds: ctx.type_param_bounds.clone(),
-            },
+            module,
+            flow_graph,
             function_defaults: ctx.function_defaults.clone(),
             function_varargs: ctx.vararg_functions.clone(),
             constant_integer_values: ctx.const_integer_values.clone(),

@@ -69,7 +69,7 @@ pub(super) fn lower_regular_call(
                 // Own convention: transfer ownership, mark variable as moved
                 if let HirExpr::Name { name, ty } = arg {
                     if ty.ownership() == OwnershipKind::Move {
-                        ctx.scope.mark_moved(name);
+                        ctx.mark_moved_with_flow(name);
                     }
                 }
             }
@@ -251,6 +251,10 @@ pub(super) fn lower_regular_call(
                         .map(|(_, _, c)| *c)
                         .unwrap_or(ParamConvention::borrow());
                     if convention.is_mut_borrow() {
+                        ctx.record_flow_effect(crate::flow_graph::FlowEffect::Borrow {
+                            binding: name.clone(),
+                            mutable: true,
+                        });
                         if mut_borrowed.contains(name) {
                             ownership_diagnostics::double_mutable_borrow(
                                 ctx,
@@ -268,6 +272,10 @@ pub(super) fn lower_regular_call(
                         }
                         mut_borrowed.push(name.clone());
                     } else if convention.is_shared_borrow() {
+                        ctx.record_flow_effect(crate::flow_graph::FlowEffect::Borrow {
+                            binding: name.clone(),
+                            mutable: false,
+                        });
                         if mut_borrowed.contains(name) {
                             ownership_diagnostics::immutable_borrow_after_mutable(
                                 ctx,
@@ -296,7 +304,7 @@ pub(super) fn lower_regular_call(
                     .map(|(_, _, c)| *c)
                     .unwrap_or(ParamConvention::borrow());
                 if convention.is_owned() {
-                    ctx.scope.mark_moved(name);
+                    ctx.mark_moved_with_flow(name);
                 }
             }
         }

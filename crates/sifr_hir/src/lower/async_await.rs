@@ -62,7 +62,7 @@ pub(in crate::lower) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) 
     ) {
         if let HirExpr::Name { name, .. } = &value {
             mark_task_handle_observed(name, ctx);
-            ctx.scope.mark_moved(name);
+            ctx.mark_moved_with_flow(name);
         }
     }
     finish_async_generator_advance_for_expr(ctx, &value);

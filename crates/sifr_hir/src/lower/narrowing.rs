@@ -2,7 +2,7 @@ use super::flow_helpers::expr_to_literal_value;
 use super::LowerCtx;
 use sifr_python_ast::{BoolOp, CmpOp, Expr, UnaryOp};
 use sifr_type_system::infer::resolve_type_annotation;
-use sifr_type_system::{narrow_type, NarrowingCondition};
+use sifr_type_system::NarrowingCondition;
 
 /// Detect a narrowing condition from an if-test expression.
 pub(in crate::lower) fn detect_narrowing_condition(
@@ -140,8 +140,25 @@ pub(in crate::lower) fn apply_narrowing(
             if let Some(var_name) = condition.var_name() {
                 if let Some(info) = ctx.scope.lookup(var_name) {
                     let current_ty = info.effective_type().clone();
-                    let narrowed = narrow_type(&current_ty, condition, is_true);
-                    ctx.scope.narrow_var(var_name, narrowed);
+                    let effects = crate::flow_graph::narrowing_effects_for_condition(
+                        condition,
+                        is_true,
+                        &current_ty,
+                    );
+                    let narrowed = effects
+                        .iter()
+                        .find_map(|effect| match effect {
+                            crate::flow_graph::FlowEffect::Narrow {
+                                binding,
+                                narrowed_type,
+                                ..
+                            } if binding == var_name => Some(narrowed_type.clone()),
+                            _ => None,
+                        })
+                        .unwrap_or_else(|| {
+                            sifr_type_system::narrow_type(&current_ty, condition, is_true)
+                        });
+                    ctx.narrow_var_with_flow(var_name, narrowed, format!("{condition:?}"), is_true);
                 }
             }
         }

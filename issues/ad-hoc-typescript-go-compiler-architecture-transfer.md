@@ -14,6 +14,7 @@ Status: in progress
 | M5 LSP Persistent Session Integration | merged | [#2238](https://github.com/sifr-lang/sifr/pull/2238) | Moves LSP analysis ownership from `DocumentStore` into the serialized `Session`, feeds open/change/save buffers into `WorkspaceSession` overlays, and rejects stale request publication by captured snapshot plus document version while preserving serialized request handling. |
 | M6 Event Compaction And Dirty Scope | merged | [#2239](https://github.com/sifr-lang/sifr/pull/2239) | Compacts batched document edits before analysis updates, summarizes watcher events before dirty-scope classification, records precise dirty scope/reason reports, and degrades incompatible or stormy invalidation conservatively. |
 | M7 Module Signatures And Dependency Invalidation | merged | [#2241](https://github.com/sifr-lang/sifr/pull/2241) | Adds import/export/module signatures, reverse-dependency closure invalidation, and local private-body edit reuse for unchanged public/import signatures. |
+| M8 First-Class Flow Graph | in progress | [#2243](https://github.com/sifr-lang/sifr/pull/2243) | Adds `sifr_hir::flow_graph`, snapshot-scoped `LoweringResult.flow_graph`, graph-backed `FlowFacts` debug/fingerprint access, and lowering-time flow effects for narrowing, mutation invalidation, moves, and borrows. |
 
 M2 local validation so far:
 
@@ -116,6 +117,23 @@ M7 local validation so far:
 - `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 254.29s, advisory: group skew is high
+
+M8 local validation so far:
+
+- `cargo fmt --check`
+- `git diff --check`
+- `cargo test -p sifr_hir flow_graph -- --nocapture`
+- `cargo test -p sifr_hir`
+- `cargo test -p sifr_driver`
+- `cargo test -p sifr_frontend -p sifr_analysis -p sifr_lsp`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_package_manager_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `cargo clippy --workspace -- -D warnings`
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 306.27s, advisories: warm wall-time budget exceeded; group skew is high
+- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m8-first-class-flow-graph-review-pass-3.md`)
 
 ## Purpose
 

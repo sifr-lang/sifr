@@ -543,7 +543,7 @@ fn lower_task_timeout_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLower
     }
     if let HirExpr::Name { name, .. } = &handle {
         mark_task_handle_observed(name, ctx);
-        ctx.scope.mark_moved(name);
+        ctx.mark_moved_with_flow(name);
     }
     TaskCallLowering::Lowered(HirExpr::MethodCall {
         object: Box::new(handle),
@@ -560,10 +560,10 @@ fn mark_task_handle_names_moved(expr: &HirExpr, ctx: &mut LowerCtx) {
     match expr {
         HirExpr::Name { name, .. } if matches!(expr.ty().resolve_alias(), Type::Task(_, _)) => {
             mark_task_handle_observed(name, ctx);
-            ctx.scope.mark_moved(name);
+            ctx.mark_moved_with_flow(name);
         }
         HirExpr::Name { name, .. } if matches!(expr.ty().resolve_alias(), Type::List(_)) => {
-            ctx.scope.mark_moved(name);
+            ctx.mark_moved_with_flow(name);
         }
         HirExpr::ListLiteral { elements, .. } | HirExpr::TupleLiteral { elements, .. } => {
             for element in elements {

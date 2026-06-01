@@ -294,7 +294,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     } = value
     {
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-            ctx.scope.mark_moved(src_name);
+            ctx.mark_moved_with_flow(src_name);
         }
     }
 
@@ -324,7 +324,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             );
         }
         // Reset moved state on reassignment
-        ctx.scope.reset_moved(&name);
+        ctx.reset_moved_with_flow(&name);
         ctx.task_handle_group_owners.remove(&name);
         record_async_generator_advance_binding(ctx, &name, &value);
         invalidate_rebound_binding_facts(ctx, &name);
@@ -552,7 +552,7 @@ pub(in crate::lower) fn lower_if(
     for branch_state in &branch_moved_states {
         for (name, was_moved) in branch_state {
             if *was_moved {
-                ctx.scope.mark_moved(name);
+                ctx.mark_moved_with_flow(name);
             }
         }
     }
@@ -743,7 +743,7 @@ pub(in crate::lower) fn lower_for(
 
     if consumes_task_handle_collection {
         if let Some(source_name) = iter_source_name.as_deref() {
-            ctx.scope.mark_moved(source_name);
+            ctx.mark_moved_with_flow(source_name);
         }
     }
 

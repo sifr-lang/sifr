@@ -42,7 +42,12 @@ pub(in crate::lower) fn refine_generic_class_binding_expr(
     }
 
     let _ = ctx.scope.set_type(name, refined_ty.clone());
-    ctx.scope.narrow_var(name, refined_ty.clone());
+    ctx.narrow_var_with_flow(
+        name,
+        refined_ty.clone(),
+        "generic-receiver-specialization".to_string(),
+        true,
+    );
     HirExpr::Name {
         name: name.clone(),
         ty: refined_ty,
