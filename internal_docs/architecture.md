@@ -270,6 +270,7 @@ New crates added per milestone as needed:
 - Ad-hoc semantic diagnostic taxonomy: `sifr_diagnostics` (shared diagnostic model and schema, introduced before migrating existing emission paths)
 - TypeScript-Go architecture transfer M0: `sifr_source` (bottom-of-graph source text, line-map, source-file metadata, and editor position conversion authority)
 - TypeScript-Go architecture transfer M1: `internal_docs/typescript_go_architecture_transfer_m1_guardrails.md` records the pre-session direct-read inventory, current LSP single-file rebuild caveat, aggregate LSP budget caveat, and guardrail automation before M2-M5 behavior migration.
+- TypeScript-Go architecture transfer M2: `sifr_frontend::SourceProvider` is the typed semantic filesystem boundary. `internal_docs/typescript_go_architecture_transfer_m2_source_provider.md` records how `DiskSourceProvider`, `OverlaySourceProvider`, and `TrackingSourceProvider` cover disk reads, unsaved editor buffers, read/probe/canonicalization dependency records, failed lookup records, and package import ambiguity before `WorkspaceSession` owns overlay lifecycle in M3.
 - milestone_ffi: FFI codegen extensions in `sifr_codegen`
 - Phase 35 shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
 - milestone_dev_tooling: `sifr_lsp` (language server), `sifr_format` (formatter), `sifr_lint` (linter)
@@ -282,7 +283,9 @@ flows through `sifr_syntax` into the Sifr Ruff fork parser, AST, comments,
 trivia, and formatter rules, then through the Sifr-owned `sifr_format` wrapper.
 `sifr_format` owns Sifr-facing options, config conversion, deterministic
 diagnostics, and text edits; it does not lower to HIR, type-check, or run
-ownership analysis.
+ownership analysis. Standalone file and config reads use short-lived
+`sifr_frontend::SourceProvider` instances so formatting does not create a
+separate source text or line-map authority.
 
 The single formatter core is shared by:
 
@@ -653,7 +656,7 @@ This contract is split across three milestones: milestone_imports (multi-file co
 
 - **Cargo-backed package substrate:** `Cargo.toml` and `Cargo.lock` own external dependency resolution, lockfile behavior, registries, Git/path sources, workspaces, publishing, vendoring, and backend Rust/native dependencies.
 - **Sifr compiler metadata:** `sifr.toml` owns Sifr package name, edition, compiler requirement, source roots, exports, privacy, aliases, and native trust policy. It does not own external dependency resolution or registry credentials.
-- **Package graph:** `crates/sifr_package` consumes `cargo metadata --format-version 1`, normalizes Cargo packages and resolved dependency edges, and derives `SifrPackageGraph` plus `PackageSourceMap` for the normal frontend/HIR/codegen pipeline.
+- **Package graph:** `crates/sifr_package` consumes `cargo metadata --format-version 1`, normalizes Cargo packages and resolved dependency edges, and derives `SifrPackageGraph` plus `PackageSourceMap` for the normal frontend/HIR/codegen pipeline. Package source-map construction uses the SourceProvider boundary for source-root traversal and `__init__.sifr` API reads, and preserves otherwise legal ambiguous module candidates for import-site `SIFR-IMPORT-0005` diagnostics instead of failing construction as `SIFR-PACKAGE-*`.
 - **Package identity:** package instance identity includes Cargo package id, version, and source identity. Multiple Cargo-selected versions are allowed when each package's direct dependency scope remains unambiguous.
 - **Distribution:** a Sifr package is a valid Cargo package carrying `.sifr` source and `[package.metadata.sifr] manifest = "sifr.toml"`. Pure Sifr packages include only the canonical Rust marker target; Rust-backed packages must declare and pass backend trust validation.
 - **No Sifr-native lockfile in Phase 37:** there is no committed `sifr.lock`; reproducibility is derived from `Cargo.toml`, `Cargo.lock`, `sifr.toml`, selected Sifr source, compiler/toolchain inputs, and package feature/selector inputs.

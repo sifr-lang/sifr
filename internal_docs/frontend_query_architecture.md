@@ -24,6 +24,14 @@ here is the pre-session, process-local query facade. M3/M4 own re-expressing
 this surface around `WorkspaceSession` and immutable `WorkspaceSnapshot`
 handles; M2 owns moving semantic file reads behind `SourceProvider` first.
 
+TypeScript-Go architecture transfer M2 note: `sifr_frontend` now exposes the
+source-provider boundary. `FrontendContext::load_project_with_provider` accepts
+any `SourceProvider`, `load_project_tracked` returns dependency reads captured
+by `TrackingSourceProvider`, and `OverlaySourceProvider` can substitute unsaved
+buffer text for disk files without mutating disk state. The overlay record owns
+URI, path, document version, source hash, source text/line map, and disk-match
+state; M3 will move overlay lifecycle ownership into `WorkspaceSession`.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

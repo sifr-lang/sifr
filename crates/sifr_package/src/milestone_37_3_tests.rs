@@ -255,7 +255,11 @@ fn write_pure_package(
 }
 
 fn write_module(package_root: &Path, module: &str) {
-    let mut path = package_root.join("sifr");
+    write_module_under(package_root, "sifr", module);
+}
+
+fn write_module_under(package_root: &Path, source_root: &str, module: &str) {
+    let mut path = package_root.join(source_root);
     for part in module.split('.') {
         path.push(part);
     }

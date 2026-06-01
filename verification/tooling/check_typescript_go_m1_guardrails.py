@@ -31,6 +31,7 @@ DIRECT_FS_SCAN_ROOTS = [
     REPO_ROOT / "crates" / "sifr_lint" / "src",
     REPO_ROOT / "crates" / "sifr_package" / "src",
 ]
+SOURCE_PROVIDER_BOUNDARY = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "source_provider.rs"
 
 REQUIRED_DOC_SNIPPETS = [
     "SourceProvider",
@@ -95,11 +96,13 @@ REQUIRED_DOC_SNIPPETS = [
     "crates/sifr_package/src/projection.rs:187",
     "crates/sifr/src/lint_cli.rs:308",
     "crates/sifr/src/lint_cli.rs:496",
+    "crates/sifr/src/lint_cli.rs:499",
     "crates/sifr/src/check_and_package_commands.rs:409",
     "crates/sifr/src/check_and_package_commands.rs:415",
     "crates/sifr/src/check_and_package_commands.rs:427",
     "crates/sifr/src/check_and_package_commands.rs:551",
     "crates/sifr/src/check_and_package_commands.rs:554",
+    "crates/sifr/src/check_and_package_commands.rs:579",
     "crates/sifr/src/check_and_package_commands.rs:583",
     "crates/sifr/src/check_and_package_commands.rs:590",
     "crates/sifr/src/check_and_package_commands.rs:601",
@@ -128,6 +131,8 @@ def validate_doc(text: str, failures: list[str]) -> None:
 
 
 def is_production_source(path: Path) -> bool:
+    if path == SOURCE_PROVIDER_BOUNDARY:
+        return False
     relative_parts = path.relative_to(REPO_ROOT).parts
     if "tests" in relative_parts or "bin" in relative_parts:
         return False

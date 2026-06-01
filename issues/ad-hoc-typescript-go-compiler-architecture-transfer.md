@@ -1,6 +1,26 @@
 # Ad Hoc Phase: TypeScript-Go Compiler Architecture Transfer
 
-Status: planned on 2026-05-27
+Status: in progress
+
+## Execution Tracker
+
+| Milestone | State | PR | Notes |
+| --- | --- | --- | --- |
+| M0 Source And Position Foundation | merged | [#2229](https://github.com/sifr-lang/sifr/pull/2229) | Added `sifr_source`, real source-map conversions, and source-position guardrails. |
+| M1 Architecture Contract And Guardrails | merged | [#2230](https://github.com/sifr-lang/sifr/pull/2230), [#2232](https://github.com/sifr-lang/sifr/pull/2232) | Added pre-flight direct-read/LSP/budget guardrails and follow-up tracker update. |
+| M2 Source Provider And Overlay Store | in PR | [#2233](https://github.com/sifr-lang/sifr/pull/2233) | Adds `SourceProvider`, `DiskSourceProvider`, `OverlaySourceProvider`, `TrackingSourceProvider`, `OverlayDocument`, `SourceDependency*`, provider-backed project/package/lint/format reads, `PackageImportAmbiguity`, and `PackageImportResolutionResult`; new tests cover overlay shadowing, nested overlay directories, tracked reads, provider-backed project loading, package ambiguity, unresolved/private/fatal import states, and existing lint/format/package behavior. |
+
+M2 local validation so far:
+
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `cargo fmt --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `cargo test -p sifr_driver -p sifr_package -p sifr_frontend -p sifr_format -p sifr_lint`
+- `cargo clippy --workspace -- -D warnings`
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 274.59s
+- `scripts/run_all_tests.sh --profile quick` passed after package source-map and manifest helper modules were split under the package-manager line guardrail.
 
 ## Purpose
 
@@ -280,10 +300,10 @@ The current repo has enough compiler-service foundation to start a TypeScript-Go
 | D0-2 | A shared source text and line-map authority is required before overlay snapshots. | `sifr_frontend::SourceText` is a string wrapper, `sifr_syntax::SourceText` has UTF-8 line starts, and `sifr_diagnostics::SourceMap` has a separate line-start model. | M0 must define which type owns canonical line maps and UTF-8/UTF-16/UTF-32 conversions so frontend, diagnostics, and LSP do not keep diverging conversion logic. |
 | D0-3 | The VFS/source-provider boundary is a phase-start blocker for project snapshots. | `FrontendContext::load_project` reads entrypoints, project directories, and modules through `std::fs` directly. Additional examples include `crates/sifr_driver/src/project/discovery.rs` project directory and module reads, `crates/sifr_lint/src/engine.rs` lint file reads, `crates/sifr_format/src/lib.rs` formatter directory/file reads, and `crates/sifr_package/src/manifest/sifr.rs` manifest reads. | M1 must inventory every production direct read with file/line references. M2 cannot close until workspace-backed compiler reads go through a typed source provider with disk, overlay, and tracked-read implementations. |
 | D0-4 | LSP must stop owning per-document compiler hosts before snapshot scheduling can be meaningful. | `DocumentState::new`, `change_full`, `change_incremental`, and `save` call `rebuild`; `rebuild` creates `FrontendMode::SingleFile` and calls `AnalysisHost::open_single_file`. | Persistent workspace `AnalysisSession` is required before M4 scheduler/cancellation work. Until then, LSP performance evidence mostly measures fast single-file rebuilds, not a long-lived project service. |
-| D0-5 | The current snapshot type is only a revision token. | `AnalysisSnapshot` stores only `AnalysisRevision`; it does not own immutable file, graph, source-map, cache, symbol-index, or overlay state. | M1 must define real snapshot contents. M2 must introduce immutable snapshot handles before any copy-on-write or stale-result guarantees are claimed. |
+| D0-5 | The current snapshot type is only a revision token. | `AnalysisSnapshot` stores only `AnalysisRevision`; it does not own immutable file, graph, source-map, cache, symbol-index, or overlay state. | M1 defines real snapshot contents. M3 introduces the workspace session data model and M4 migrates analysis onto immutable snapshot handles before any copy-on-write or stale-result guarantees are claimed. |
 | D0-6 | Dirty-scope and module-signature design must precede structural replacement. | `FrontendContext::update_module_source` clears lower, diagnostics, and analysis for all modules on any text change and bumps graph revision. Repository search finds no existing `DirtyScope`, `ModuleSignature`, `ExportSignature`, `can_replace_module_in_project`, `CowProjectState`, `WorkspaceSession`, or `WorkspaceSnapshot` implementation outside this planning issue. | M1 defines `DirtyScope` and `ModuleSignature`; M3 implements them before `can_replace_module_in_project` is allowed to reuse state. |
 | D0-7 | A real scheduler needs cancellation tokens and snapshot identity first. | `Scheduler` only maps methods to labels, `RequestQueue` only tracks pending IDs, request handling is synchronous, and `$/cancelRequest` only removes an ID from the pending set. | M1-M3 implementation must stay serialized unless cancellation/snapshot tokens are introduced earlier. M4 builds cancellation around captured snapshots and request tokens before background diagnostics, references, index warming, progress, or parallel request work are enabled. |
-| D0-8 | Raw editor/watch events must be compacted before asynchronous scheduling or fine-grained watcher invalidation. | `workspace/didChangeWatchedFiles` republishes diagnostics directly; `didChange` applies each edit immediately and republishes diagnostics. | Event compaction is not a standalone phase-start correctness blocker while the server stays synchronous. It becomes required before async scheduler behavior or watcher-storm invalidation ships. M2 introduces editor-event compaction for open/change/save/close; M9 extends it to watcher storms and seen-file-derived watch globs. |
+| D0-8 | Raw editor/watch events must be compacted before asynchronous scheduling or fine-grained watcher invalidation. | `workspace/didChangeWatchedFiles` republishes diagnostics directly; `didChange` applies each edit immediately and republishes diagnostics. | Event compaction is not a standalone phase-start correctness blocker while the server stays synchronous. M6 introduces editor-event compaction and dirty-scope classification for open/change/save/close; M15 extends watcher-storm degradation and seen-file-derived watch globs. |
 | D0-9 | Protocol-level performance gates are not yet split enough to prove editor latency. | `verification/performance/manifest.json` has Phase 35 `perf.interactive.*` cases and one aggregate `perf.lsp.request_families` case. `lsp_query_bench.py` only implements the aggregate scenario. | M10 must split the harness and manifest into per-request LSP cases. Aggregate request-family timing remains smoke coverage only. |
 | D0-10 | Symbol/index ranges need the M0 source-map foundation before editor features can claim range correctness. | `SymbolIndex::document_symbols` currently returns `range: None`, and workspace symbols use one whole-project index keyed by graph/source revision. | M1/M4 LSP correctness work must not claim precise symbol/navigation ranges until M0 conversion is complete. M5 bucketed indexes then require project/package/stdlib buckets before auto-import or workspace completion scaling is claimed. |
 | D0-11 | Current docs overstate some desired layers as implemented reality. | `internal_docs/lsp_server.md` describes `RequestQueue`, `Scheduler`, `SnapshotLayer`, line indexes, cancellation tokens, and UTF conversion as required layers, but the current code only implements a small subset. | M0/M1 must update issue wording and implementation trackers to distinguish completed foundations from planned architecture. Future closeout gates must verify behavior, not only names. |

@@ -1,6 +1,6 @@
 use crate::{LintOptions, LintResult, RuleMetadata, RULES};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
-use std::fs;
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -130,8 +130,9 @@ impl<'a> LintRunner<'a> {
         set_phase(&mut phases, LintPhase::FileDiscovery, true);
         let files = crate::collect_sifr_files_for_targets(paths, self.options)?;
         let mut diagnostics = Vec::new();
+        let mut provider = DiskSourceProvider::new();
         for file in files {
-            let source = fs::read_to_string(&file).map_err(|err| {
+            let source = provider.read_file(&file).map_err(|err| {
                 vec![crate::diagnostic(
                     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
                     format!("could not read file {}: {err}", file.display()),
@@ -140,7 +141,7 @@ impl<'a> LintRunner<'a> {
                     None,
                 )]
             })?;
-            let file_run = self.run_source(&source, Some(&file));
+            let file_run = self.run_source(source.as_str(), Some(&file));
             merge_phases(&mut phases, &file_run.phases);
             diagnostics.extend(file_run.result.diagnostics);
         }
@@ -281,6 +282,7 @@ fn merge_phases(target: &mut [PhaseExecution], source: &[PhaseExecution]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]

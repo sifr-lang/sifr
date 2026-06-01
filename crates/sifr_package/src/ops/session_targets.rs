@@ -1,4 +1,5 @@
 use crate::diag::PackageDiagnostic;
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -12,16 +13,17 @@ pub(super) fn discover_app_targets(
     package_name: &str,
 ) -> Result<Vec<AppTarget>, PackageDiagnostic> {
     let mut targets = Vec::new();
+    let mut provider = DiskSourceProvider::new();
     for source_root in source_roots {
         let main = source_root.join("main.sifr");
-        if main.is_file() {
+        if provider.is_file(&main) {
             targets.push(AppTarget {
                 name: package_name.to_string(),
                 path: main,
             });
         }
         let bin_root = source_root.join("bin");
-        collect_bin_targets(&bin_root, &bin_root, &mut targets)?;
+        collect_bin_targets(&bin_root, &bin_root, &mut targets, &mut provider)?;
     }
     Ok(targets)
 }
@@ -30,20 +32,19 @@ fn collect_bin_targets(
     root: &Path,
     current: &Path,
     targets: &mut Vec<AppTarget>,
+    provider: &mut impl SourceProvider,
 ) -> Result<(), PackageDiagnostic> {
-    let Ok(entries) = std::fs::read_dir(current) else {
+    let Ok(entries) = provider.read_dir(current) else {
         return Ok(());
     };
     for entry in entries {
-        let Ok(entry) = entry else {
-            continue;
-        };
-        let path = entry.path();
-        if path.is_dir() {
-            collect_bin_targets(root, &path, targets)?;
-        } else if path
-            .extension()
-            .is_some_and(|extension| extension == "sifr")
+        let path = entry.path;
+        if entry.is_dir {
+            collect_bin_targets(root, &path, targets, provider)?;
+        } else if entry.is_file
+            && path
+                .extension()
+                .is_some_and(|extension| extension == "sifr")
         {
             let Some(name) = target_name(root, &path) else {
                 continue;

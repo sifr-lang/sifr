@@ -10,5 +10,7 @@ pub use graph_cache_and_queries::*;
 mod hir_views;
 mod query_diagnostics;
 pub use query_diagnostics::*;
+mod source_provider;
+pub use source_provider::*;
 mod source_maps;
 pub use source_maps::*;

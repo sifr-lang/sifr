@@ -8,6 +8,12 @@ the actual pre-session state after M0 and before M2-M5 behavior migration. Later
 milestones may update this file and its checker when they intentionally replace
 one of these current limitations.
 
+M2 update: `crates/sifr_frontend/src/source_provider.rs` is now the intentional
+filesystem boundary implementation and is excluded from the direct-read
+inventory scan. Direct `std::fs` calls or physical `Path` probes outside that
+boundary remain inventory-controlled until they are migrated or explicitly
+classified as non-semantic exceptions.
+
 ## Locked Terms
 
 M1 locks the following terms before behavior migration starts:
@@ -56,8 +62,8 @@ without treating probes as source content reads.
 | Package namespace API | `crates/sifr_package/src/imports/namespace_api.rs:32`, `crates/sifr_package/src/imports/namespace_api.rs:264` | Package public API extraction reads `__init__.sifr` and probes child namespaces. | Provider-tracked package source reads and probes. |
 | Package source layout | `crates/sifr_package/src/source/layout.rs:30` | Pure-marker validation reads generated package source files. | Reviewed provider-backed package tooling read or non-semantic generated-output exception. |
 | Package session discovery and targets | `crates/sifr_package/src/ops/session_discovery.rs:6`, `crates/sifr_package/src/ops/session_discovery.rs:13`, `crates/sifr_package/src/ops/session_discovery.rs:25`, `crates/sifr_package/src/ops/session_targets.rs:17`, `crates/sifr_package/src/ops/session_targets.rs:34`, `crates/sifr_package/src/ops/session_targets.rs:42` | Package CLI/session discovery probes manifests and source roots. | Provider-tracked package session reads and probes where they affect compilation. |
-| CLI lint command reads | `crates/sifr/src/lint_cli.rs:308`, `crates/sifr/src/lint_cli.rs:496` | CLI lint command reads individual files for linting and probes path exclusion. | Provider-backed for semantic source reads; CLI target filtering remains a documented command-surface probe until M2 classifies it. |
-| CLI check/package command reads | `crates/sifr/src/check_and_package_commands.rs:409`, `crates/sifr/src/check_and_package_commands.rs:415`, `crates/sifr/src/check_and_package_commands.rs:427`, `crates/sifr/src/check_and_package_commands.rs:551`, `crates/sifr/src/check_and_package_commands.rs:554`, `crates/sifr/src/check_and_package_commands.rs:583`, `crates/sifr/src/check_and_package_commands.rs:590`, `crates/sifr/src/check_and_package_commands.rs:601` | CLI package/check command surfaces probe targets and cache paths and read package sources for command output. | Provider-backed for semantic source reads; command-output/cache probes remain documented exceptions where non-semantic. |
+| CLI lint command reads | `crates/sifr/src/lint_cli.rs:308`, `crates/sifr/src/lint_cli.rs:496`, `crates/sifr/src/lint_cli.rs:499` | CLI lint command reads individual files for linting and probes path exclusion/start-dir shape. | Provider-backed for semantic source reads; CLI target filtering remains a documented command-surface probe until M2 classifies it. |
+| CLI check/package command reads | `crates/sifr/src/check_and_package_commands.rs:409`, `crates/sifr/src/check_and_package_commands.rs:415`, `crates/sifr/src/check_and_package_commands.rs:427`, `crates/sifr/src/check_and_package_commands.rs:551`, `crates/sifr/src/check_and_package_commands.rs:554`, `crates/sifr/src/check_and_package_commands.rs:579`, `crates/sifr/src/check_and_package_commands.rs:583`, `crates/sifr/src/check_and_package_commands.rs:590`, `crates/sifr/src/check_and_package_commands.rs:601` | CLI package/check command surfaces probe targets and cache paths and read package sources for command output. | Provider-backed for semantic source reads; command-output/cache probes remain documented exceptions where non-semantic. |
 | CLI entrypoint probing | `crates/sifr/src/cli_model_and_entrypoint.rs:634`, `crates/sifr/src/cli_model_and_entrypoint.rs:690`, `crates/sifr/src/cli_model_and_entrypoint.rs:716`, `crates/sifr/src/cli_model_and_entrypoint.rs:721` | CLI mode resolution reads manifests/source files and probes sibling modules. | Provider-backed for semantic source reads; CLI mode-selection probes remain tracked lookup dependencies. |
 
 Permitted M1 exceptions:
@@ -80,6 +86,27 @@ Permitted M1 exceptions:
   `crates/sifr_package/src/projection.rs:187` are package-management output and
   repair-state effects unless a later package-aware snapshot milestone promotes
   a specific read into package identity.
+
+## M2 Disposition
+
+M2 introduced `sifr_frontend::SourceProvider` and moved the following rows
+behind provider-backed APIs while keeping disk-backed compatibility wrappers for
+pre-session callers:
+
+- Frontend project entrypoint, directory, and module reads.
+- Formatter source, config, and directory traversal reads.
+- Linter source, config, and target-probe reads that are not delegated to the
+  `ignore` walker.
+- Package manifest reads and manifest validation probes.
+- Package source-map traversal, namespace API reads, and namespace child probes.
+- Package session manifest discovery and app target discovery.
+- Package pure-marker validation and offline source-availability probes.
+
+Remaining CLI command-output and cache probes, including
+`crates/sifr/src/check_and_package_commands.rs:579`, stay documented
+non-semantic command-surface exceptions until a later package-aware snapshot or
+build-metadata milestone promotes a specific path into compiler-service
+identity.
 
 ## Current Source-Map Guardrail
 
@@ -140,6 +167,12 @@ coverage is smoke coverage only.
 
 - M2 must either route every non-exempt inventory row through `SourceProvider`
   or update this inventory with a reviewed exception before closure.
+- M3 must move overlay lifecycle and tracked dependency records into
+  `WorkspaceSession` snapshots instead of leaving them as ad hoc provider
+  outputs.
+- M6 must consume tracked file, directory, canonicalization, probe, and failed
+  lookup records for dirty-scope classification and dependency-sensitive
+  invalidation.
 - M5 must update the current LSP single-file rebuild caveat and the matching
   script checks when `DocumentStore` stops owning request-local
   `AnalysisHost::open_single_file` rebuilds.

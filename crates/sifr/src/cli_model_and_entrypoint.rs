@@ -10,6 +10,7 @@ use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severi
 #[cfg(test)]
 use sifr_driver::diagnostic_label_for_code_str;
 use sifr_driver::find_workspace_root;
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use sifr_python_ast::Stmt;
 use sifr_syntax::parse_module_suite;
 use std::collections::BTreeMap;
@@ -631,8 +632,9 @@ pub(super) fn diagnostic_explanation(code: &str) -> Option<String> {
         .parent()?
         .to_path_buf();
     let path = repo_root.join("docs/errors").join(format!("{code}.md"));
-    let text = std::fs::read_to_string(path).ok()?;
+    let text = DiskSourceProvider::new().read_file(&path).ok()?;
     let mut lines = text
+        .as_str()
         .lines()
         .filter(|line| !line.starts_with("<!--") && !line.starts_with('|'));
     let title = lines.find(|line| line.starts_with("# "))?;
@@ -687,10 +689,11 @@ pub(super) fn has_local_project_imports(file: &Path) -> bool {
     let Some(parent) = file.parent() else {
         return false;
     };
-    let Ok(source) = std::fs::read_to_string(file) else {
+    let mut provider = DiskSourceProvider::new();
+    let Ok(source) = provider.read_file(file) else {
         return false;
     };
-    let suite = match parse_module_suite(&source, Some(&file.display().to_string())) {
+    let suite = match parse_module_suite(source.as_str(), Some(&file.display().to_string())) {
         Ok(suite) => suite,
         _ => return false,
     };
@@ -713,12 +716,12 @@ pub(super) fn has_local_project_imports(file: &Path) -> bool {
         {
             return false;
         }
-        parent.join(format!("{module_name}.sifr")).is_file()
+        provider.is_file(&parent.join(format!("{module_name}.sifr")))
     })
 }
 
 pub(super) fn read_source(file: &Path) -> String {
-    match std::fs::read_to_string(file) {
+    match DiskSourceProvider::new().read_file(file) {
         Ok(source) => source,
         Err(e) => {
             let _ = writeln!(
@@ -729,6 +732,8 @@ pub(super) fn read_source(file: &Path) -> String {
             process::exit(EXIT_USAGE_OR_CONFIG);
         }
     }
+    .as_str()
+    .to_string()
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug)]
@@ -69,12 +69,20 @@ pub fn effective_format_options_for_file(
 }
 
 fn discover_sifr_toml(start_dir: &Path) -> Result<Option<PathBuf>, Vec<RenderedDiagnostic>> {
+    let mut provider = DiskSourceProvider::new();
+    discover_sifr_toml_with_provider(start_dir, &mut provider)
+}
+
+fn discover_sifr_toml_with_provider(
+    start_dir: &Path,
+    provider: &mut impl SourceProvider,
+) -> Result<Option<PathBuf>, Vec<RenderedDiagnostic>> {
     let base = if start_dir.as_os_str().is_empty() {
         Path::new(".")
     } else {
         start_dir
     };
-    let canonical = base.canonicalize().map_err(|err| {
+    let canonical = provider.canonicalize(base).map_err(|err| {
         vec![fmt_diagnostic(format!(
             "could not resolve formatter config start directory {}: {err}",
             base.display()
@@ -82,7 +90,7 @@ fn discover_sifr_toml(start_dir: &Path) -> Result<Option<PathBuf>, Vec<RenderedD
     })?;
     for dir in canonical.ancestors() {
         let candidate = dir.join("sifr.toml");
-        if candidate.is_file() {
+        if provider.is_file(&candidate) {
             return Ok(Some(candidate));
         }
     }
@@ -94,7 +102,17 @@ fn apply_config_file(
     path: &Path,
     seen: &mut BTreeSet<PathBuf>,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
-    let canonical = path.canonicalize().map_err(|err| {
+    let mut provider = DiskSourceProvider::new();
+    apply_config_file_with_provider(config, path, seen, &mut provider)
+}
+
+fn apply_config_file_with_provider(
+    config: &mut EffectiveFormatConfig,
+    path: &Path,
+    seen: &mut BTreeSet<PathBuf>,
+    provider: &mut impl SourceProvider,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    let canonical = provider.canonicalize(path).map_err(|err| {
         vec![fmt_diagnostic(format!(
             "could not resolve formatter config {}: {err}",
             path.display()
@@ -106,12 +124,15 @@ fn apply_config_file(
             path.display()
         ))]);
     }
-    let source = fs::read_to_string(&canonical).map_err(|err| {
-        vec![fmt_diagnostic(format!(
-            "could not read formatter config {}: {err}",
-            canonical.display()
-        ))]
-    })?;
+    let source = provider
+        .read_file(&canonical)
+        .map(|source| source.as_str().to_string())
+        .map_err(|err| {
+            vec![fmt_diagnostic(format!(
+                "could not read formatter config {}: {err}",
+                canonical.display()
+            ))]
+        })?;
     let value = toml::from_str::<toml::Value>(&source).map_err(|err| {
         vec![fmt_diagnostic(format!(
             "could not parse formatter config {}: {err}",
@@ -119,9 +140,9 @@ fn apply_config_file(
         ))]
     })?;
     let parent = canonical.parent().unwrap_or_else(|| Path::new("."));
-    apply_extends(config, value.get("extend"), parent, seen)?;
+    apply_extends(config, value.get("extend"), parent, seen, provider)?;
     if let Some(format) = value.get("format") {
-        apply_extends(config, format.get("extend"), parent, seen)?;
+        apply_extends(config, format.get("extend"), parent, seen, provider)?;
         apply_format_table(config, format)?;
     }
     Ok(())
@@ -132,19 +153,20 @@ fn apply_extends(
     value: Option<&toml::Value>,
     parent: &Path,
     seen: &mut BTreeSet<PathBuf>,
+    provider: &mut impl SourceProvider,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let Some(value) = value else {
         return Ok(());
     };
     if let Some(path) = value.as_str() {
-        return apply_config_file(config, &parent.join(path), seen);
+        return apply_config_file_with_provider(config, &parent.join(path), seen, provider);
     }
     let Some(paths) = value.as_array() else {
         return Err(vec![fmt_diagnostic("extend must be a string or array")]);
     };
     for path in paths {
         let path = as_string("extend", path)?;
-        apply_config_file(config, &parent.join(path), seen)?;
+        apply_config_file_with_provider(config, &parent.join(path), seen, provider)?;
     }
     Ok(())
 }

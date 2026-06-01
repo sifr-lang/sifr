@@ -5,6 +5,7 @@ use super::cli_model_and_entrypoint::{
 use super::diagnostic_rendering_and_run::render_diagnostic_output;
 use clap::{Args, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use sifr_lint::{EffectiveLintConfig, LintConfigOverrides, PerFileIgnore, UnsafeFixPolicy};
 use std::collections::BTreeMap;
 use std::io::{self, Read as _, Write as _};
@@ -303,14 +304,16 @@ fn run_fix_command(
     let mut summary_counts = BTreeMap::<String, usize>::new();
     let mut diff = String::new();
     let mut applied_count = 0usize;
+    let mut provider = DiskSourceProvider::new();
 
     for file in files {
-        let source = std::fs::read_to_string(&file).map_err(|err| {
+        let source = provider.read_file(&file).map_err(|err| {
             vec![diagnostic_with_code(
                 format!("could not read lint file {}: {err}", file.display()),
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
         })?;
+        let source = source.as_str().to_string();
         let fixed = sifr_lint::fix_source(&source, Some(&file), options);
         for fix in &fixed.applied_fixes {
             *summary_counts.entry(fix.rule_id.clone()).or_default() += 1;
@@ -493,7 +496,8 @@ fn lint_start_dir(args: &LintArgs) -> PathBuf {
         .iter()
         .find(|path| path != &Path::new("-"))
         .and_then(|path| {
-            if path.is_dir() {
+            let mut provider = DiskSourceProvider::new();
+            if provider.is_dir(path) {
                 Some(path.as_path())
             } else {
                 path.parent()

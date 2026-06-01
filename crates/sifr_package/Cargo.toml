@@ -8,6 +8,7 @@ license = { workspace = true }
 
 [dependencies]
 sifr_diagnostics = { workspace = true }
+sifr_frontend = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 toml = { workspace = true }

@@ -1,8 +1,9 @@
 use super::{
     collect_module_exports, diagnostic_with_code, empty_hir_module, hir_diagnostic_to_rendered,
     local_import_dependencies, module_state, reveal_type_diagnostics, source_hash,
-    symbols_from_hir, warning_diagnostics, DocumentVersion, FileId, SourceFileView, SourceHash,
-    SourceMapView, SourcePath, SourceRevision, SourceText,
+    symbols_from_hir, warning_diagnostics, DiskSourceProvider, DocumentVersion, FileId,
+    SourceDependency, SourceFileView, SourceHash, SourceMapView, SourcePath, SourceProvider,
+    SourceRevision, SourceText, TrackingSourceProvider,
 };
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_hir::{
@@ -307,9 +308,26 @@ impl FrontendContext {
     }
 
     pub fn load_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
+        let mut provider = TrackingSourceProvider::new(DiskSourceProvider::new());
+        Self::load_project_with_provider(root, &mut provider)
+    }
+
+    pub fn load_project_tracked(
+        root: &ProjectRoot,
+    ) -> Result<(Self, Vec<SourceDependency>), Vec<RenderedDiagnostic>> {
+        let mut provider = TrackingSourceProvider::new(DiskSourceProvider::new());
+        let context = Self::load_project_with_provider(root, &mut provider)?;
+        let (_, dependencies) = provider.into_parts();
+        Ok((context, dependencies))
+    }
+
+    pub fn load_project_with_provider(
+        root: &ProjectRoot,
+        provider: &mut impl SourceProvider,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let entrypoint = root.entrypoint.as_path();
         let project_dir = root.root.as_path();
-        let entry_source = std::fs::read_to_string(entrypoint).map_err(|error| {
+        let entry_source = provider.read_file(entrypoint).map_err(|error| {
             vec![diagnostic_with_code(
                 format!(
                     "failed to read project entrypoint '{}': {error}",
@@ -319,7 +337,7 @@ impl FrontendContext {
             )]
         })?;
         let mut files = vec![entrypoint.to_path_buf()];
-        for entry in std::fs::read_dir(project_dir).map_err(|error| {
+        for entry in provider.read_dir(project_dir).map_err(|error| {
             vec![diagnostic_with_code(
                 format!(
                     "failed to read project root '{}': {error}",
@@ -328,14 +346,7 @@ impl FrontendContext {
                 DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
             )]
         })? {
-            let path = entry
-                .map_err(|error| {
-                    vec![diagnostic_with_code(
-                        format!("failed to read project root entry: {error}"),
-                        DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
-                    )]
-                })?
-                .path();
+            let path = entry.path;
             if path.extension().is_some_and(|ext| ext == "sifr") && path != entrypoint {
                 files.push(path);
             }
@@ -356,7 +367,7 @@ impl FrontendContext {
             let source = if path == entrypoint {
                 entry_source.clone()
             } else {
-                std::fs::read_to_string(&path).map_err(|error| {
+                provider.read_file(&path).map_err(|error| {
                     vec![diagnostic_with_code(
                         format!(
                             "failed to read project module '{}': {error}",
@@ -378,7 +389,7 @@ impl FrontendContext {
                 FileId(numeric_id),
                 module_name,
                 SourcePath::new(path),
-                SourceText::new(source),
+                source,
                 None,
             ));
         }

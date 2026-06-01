@@ -519,8 +519,9 @@ pub fn collect_module_exports(
 #[cfg(test)]
 mod tests {
     use crate::{
-        CacheStatus, DocumentVersion, FrontendContext, FrontendInput, FrontendMode, ModuleId,
-        ProjectRoot, SourcePath, SourceText,
+        CacheStatus, DiskSourceProvider, DocumentVersion, FrontendContext, FrontendInput,
+        FrontendMode, ModuleId, OverlayDocument, OverlaySourceProvider, ProjectRoot,
+        SourceDependencyKind, SourcePath, SourceText, TrackingSourceProvider,
     };
 
     fn input(source: &str) -> FrontendInput {
@@ -606,5 +607,54 @@ mod tests {
             diagnostics.is_empty(),
             "project diagnostics should consume dependency exports from the canonical frontend: {diagnostics:?}"
         );
+    }
+
+    #[test]
+    fn project_loading_uses_overlay_and_tracking_provider() {
+        let dir = std::env::temp_dir().join(format!(
+            "sifr_frontend_project_overlay_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).expect("temp project should be created");
+        let main_path = dir.join("main.sifr");
+        let helper_path = dir.join("helper.sifr");
+        std::fs::write(
+            &main_path,
+            "from helper import value\n\ndef main():\n    print(value)\n",
+        )
+        .expect("main should be written");
+        std::fs::write(&helper_path, "value: int = 1\n").expect("helper should be written");
+
+        let mut overlay = OverlaySourceProvider::new(DiskSourceProvider::new());
+        overlay.insert_overlay(OverlayDocument::new(
+            SourcePath::new(&helper_path),
+            None,
+            DocumentVersion::new(5),
+            SourceText::new("value: int = 2\n"),
+            Some("value: int = 1\n"),
+        ));
+        let mut provider = TrackingSourceProvider::new(overlay);
+
+        let context = FrontendContext::load_project_with_provider(
+            &ProjectRoot {
+                root: SourcePath::new(&dir),
+                entrypoint: SourcePath::new(&main_path),
+            },
+            &mut provider,
+        )
+        .expect("project should load through provider");
+
+        assert!(provider
+            .dependencies()
+            .iter()
+            .any(|dependency| dependency.kind == SourceDependencyKind::DirectoryRead));
+        assert!(context.source_map().files.iter().any(|file| {
+            file.canonical_path.as_path() == helper_path
+                && file.source.as_str() == "value: int = 2\n"
+        }));
     }
 }

@@ -146,6 +146,7 @@ struct CanonicalGraph<'a> {
 struct CanonicalSourceMap<'a> {
     roots: Vec<CanonicalSourceRoot<'a>>,
     modules: Vec<CanonicalSourceModule<'a>>,
+    ambiguous_modules: Vec<CanonicalSourceModule<'a>>,
 }
 
 #[derive(Serialize)]
@@ -178,6 +179,17 @@ impl<'a> From<&'a PackageSourceMap> for CanonicalSourceMap<'a> {
             modules: source_map
                 .modules
                 .values()
+                .map(|module| CanonicalSourceModule {
+                    package_id: &module.package_id.0,
+                    module_path: &module.module_path.0,
+                    file_path: module.file_path.display().to_string(),
+                    source_root: module.source_root.display().to_string(),
+                })
+                .collect(),
+            ambiguous_modules: source_map
+                .ambiguous_modules
+                .values()
+                .flat_map(|modules| modules.iter())
                 .map(|module| CanonicalSourceModule {
                     package_id: &module.package_id.0,
                     module_path: &module.module_path.0,

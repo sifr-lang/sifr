@@ -4,8 +4,10 @@ use super::discovery::{
 use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::{Ranged as _, TextRange};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use sifr_package::{
-    DottedModulePath, PackageImportOrigin, PackageSourceMap, SifrPackageGraph, SifrPackageId,
+    DottedModulePath, PackageImportAmbiguity, PackageImportOrigin, PackageImportResolution,
+    PackageImportResolutionResult, PackageSourceMap, SifrPackageGraph, SifrPackageId,
 };
 use sifr_python_ast::{Identifier, Stmt};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -37,6 +39,7 @@ pub(crate) fn parse_package_import_closure_source_modules(
     let entry_module_name = entry_module.module_path.0.clone();
     let mut parsed_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
     let mut parsed_names: BTreeSet<PackageDiscoveryItem> = BTreeSet::new();
+    let mut provider = DiskSourceProvider::new();
     let mut pending = BTreeSet::from([PackageDiscoveryItem {
         package_id: entry_package_id.clone(),
         source_module_path: DottedModulePath(entry_module_name.clone()),
@@ -47,19 +50,21 @@ pub(crate) fn parse_package_import_closure_source_modules(
         if !parsed_names.insert(item.clone()) {
             continue;
         }
-        let resolved = source_map
-            .resolve_import(graph, &item.package_id, &item.source_module_path)
+        let resolved = package_import_resolution_for_discovery(source_map, graph, &item)
             .map_err(|error| vec![package_import_diagnostic(error)])?;
-        let source = std::fs::read_to_string(&resolved.resolved_module.file_path).map_err(|e| {
-            vec![crate::diagnostics::diagnostic_with_code(
-                format!(
-                    "failed to read '{}': {}",
-                    resolved.resolved_module.file_path.display(),
-                    e
-                ),
-                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-            )]
-        })?;
+        let source = provider
+            .read_file(&resolved.resolved_module.file_path)
+            .map(|source| source.as_str().to_string())
+            .map_err(|e| {
+                vec![crate::diagnostics::diagnostic_with_code(
+                    format!(
+                        "failed to read '{}': {}",
+                        resolved.resolved_module.file_path.display(),
+                        e
+                    ),
+                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                )]
+            })?;
         let label = discovery_label(
             &item.compile_module_name,
             &resolved.resolved_module.file_path,
@@ -76,22 +81,38 @@ pub(crate) fn parse_package_import_closure_source_modules(
             package_import_dependencies(&item.source_module_path.0, is_namespace_module, &suite)
                 .into_values()
         {
-            let dependency_resolution = source_map
-                .resolve_import(
-                    graph,
-                    &resolved.resolved_module.package_id,
-                    &dependency.resolved_import_path,
-                )
-                .map_err(|error| {
-                    vec![package_import_source_diagnostic(
+            let dependency_resolution = match source_map.resolve_import_result(
+                graph,
+                &resolved.resolved_module.package_id,
+                &dependency.resolved_import_path,
+            ) {
+                PackageImportResolutionResult::Resolved(resolution) => resolution,
+                PackageImportResolutionResult::Ambiguous(ambiguity) => {
+                    return Err(vec![package_import_ambiguity_source_diagnostic(
+                        &ambiguity,
+                        &dependency,
+                        &resolved.resolved_module.file_path.display().to_string(),
+                        &source,
+                    )]);
+                }
+                PackageImportResolutionResult::Unresolved(error)
+                | PackageImportResolutionResult::PrivateAccess(error) => {
+                    return Err(vec![package_import_source_diagnostic(
                         &error,
                         &dependency,
                         &resolved.resolved_module.file_path.display().to_string(),
                         &source,
                         &resolved.resolved_module.package_id,
                         graph,
-                    )]
-                })?;
+                    )]);
+                }
+                PackageImportResolutionResult::FatalPackageMapFailure(errors) => {
+                    return Err(errors
+                        .into_iter()
+                        .map(package_import_diagnostic)
+                        .collect::<Vec<_>>());
+                }
+            };
             let compile_module_name = compile_module_name_for_dependency(
                 entry_package_id,
                 &item,
@@ -183,6 +204,123 @@ fn package_import_source_diagnostic(
         &args,
         &notes,
     )
+}
+
+fn package_import_ambiguity_source_diagnostic(
+    ambiguity: &PackageImportAmbiguity,
+    dependency: &PackageImportDependency,
+    display_path: &str,
+    source: &str,
+) -> RenderedDiagnostic {
+    let candidate_paths = ambiguity
+        .candidates
+        .iter()
+        .map(|candidate| candidate.file_path.display().to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let origin = package_import_origin_label(&ambiguity.origin);
+    let args = [
+        (
+            "module",
+            DiagnosticArg::String(dependency.written_module_name.clone()),
+        ),
+        (
+            "resolution_scope",
+            DiagnosticArg::String("package".to_string()),
+        ),
+        (
+            "candidate_paths",
+            DiagnosticArg::String(candidate_paths.clone()),
+        ),
+        (
+            "written_module_path",
+            DiagnosticArg::String(dependency.written_module_name.clone()),
+        ),
+        (
+            "resolved_package_import_path",
+            DiagnosticArg::String(ambiguity.module_path.0.clone()),
+        ),
+        (
+            "package_import_origin",
+            DiagnosticArg::String(origin.clone()),
+        ),
+        (
+            "package_id",
+            DiagnosticArg::String(ambiguity.package_id.0.clone()),
+        ),
+        (
+            "cargo_package_id",
+            DiagnosticArg::String(ambiguity.cargo_package_id.0.clone()),
+        ),
+    ];
+    let mut notes = vec![
+        format!("package import path: {}", dependency.resolved_import_path.0),
+        format!("package origin: {origin}"),
+    ];
+    notes.extend(
+        ambiguity
+            .candidates
+            .iter()
+            .map(|candidate| format!("candidate path: {}", candidate.file_path.display())),
+    );
+    diagnostic_with_source_range(
+        DiagnosticCode::IMPORT_AMBIGUOUS_SOURCE_MODULE,
+        display_path,
+        source,
+        dependency.written_range,
+        "ambiguous import target: '{module}'",
+        &args,
+        &notes,
+    )
+}
+
+fn package_import_origin_label(origin: &PackageImportOrigin) -> String {
+    match origin {
+        PackageImportOrigin::OwnPackage => "own_package".to_string(),
+        PackageImportOrigin::DirectDependency {
+            import_root,
+            target_export_root,
+            dependency_package_id,
+        } => format!(
+            "direct_dependency:{}:{}->{}",
+            dependency_package_id.0, import_root.0, target_export_root.0
+        ),
+    }
+}
+
+fn package_import_resolution_for_discovery(
+    source_map: &PackageSourceMap,
+    graph: &SifrPackageGraph,
+    item: &PackageDiscoveryItem,
+) -> Result<PackageImportResolution, sifr_package::PackageDiagnostic> {
+    match source_map.resolve_import_result(graph, &item.package_id, &item.source_module_path) {
+        PackageImportResolutionResult::Resolved(resolution) => Ok(resolution),
+        PackageImportResolutionResult::Ambiguous(ambiguity) => {
+            let candidates = ambiguity
+                .candidates
+                .iter()
+                .map(|candidate| candidate.file_path.display().to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            Err(sifr_package::PackageDiagnostic::undeclared_direct_import(
+                &ambiguity.cargo_package_id,
+                &item.package_id,
+                format!(
+                    "{} (ambiguous candidates: {candidates})",
+                    item.source_module_path.0
+                ),
+            ))
+        }
+        PackageImportResolutionResult::Unresolved(error)
+        | PackageImportResolutionResult::PrivateAccess(error) => Err(error),
+        PackageImportResolutionResult::FatalPackageMapFailure(errors) => {
+            Err(errors.into_iter().next().unwrap_or_else(|| {
+                sifr_package::PackageDiagnostic::cargo_metadata_parse(
+                    "package source map is invalid",
+                )
+            }))
+        }
+    }
 }
 
 fn package_import_targets_known_external_package(

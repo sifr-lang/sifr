@@ -5,6 +5,7 @@ use sifr_diagnostics::{
     ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, Severity,
     SourceMap, SourceSpan,
 };
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -85,15 +86,25 @@ impl ModuleResolver {
         self.workspace.is_some()
     }
 
+    #[cfg(test)]
     pub(crate) fn resolve(&self, module_name: &str) -> Result<ResolvedModule, ResolutionError> {
+        let mut provider = DiskSourceProvider::new();
+        self.resolve_with_provider(module_name, &mut provider)
+    }
+
+    pub(crate) fn resolve_with_provider(
+        &self,
+        module_name: &str,
+        provider: &mut impl SourceProvider,
+    ) -> Result<ResolvedModule, ResolutionError> {
         let entry_path = self.module_source_path(module_name);
-        if entry_path.is_file() {
+        if provider.is_file(&entry_path) {
             let resolved = ResolvedModule {
                 module_name: module_name.to_string(),
                 path: entry_path,
                 origin: ModuleOrigin::EntryParent,
             };
-            self.reject_namespace_file_collision(&resolved)?;
+            self.reject_namespace_file_collision(&resolved, provider)?;
             return Ok(resolved);
         }
 
@@ -115,7 +126,7 @@ impl ModuleResolver {
                 .join(source_root)
                 .join(&relative_path);
             tried_paths.push(candidate.clone());
-            if candidate.is_file() && !matches.contains(&candidate) {
+            if provider.is_file(&candidate) && !matches.contains(&candidate) {
                 matches.push(candidate);
             }
         }
@@ -141,7 +152,7 @@ impl ModuleResolver {
                 path,
                 origin: ModuleOrigin::WorkspaceSource { source_root },
             };
-            self.reject_namespace_file_collision(&resolved)?;
+            self.reject_namespace_file_collision(&resolved, provider)?;
             return Ok(resolved);
         }
 
@@ -156,8 +167,10 @@ impl ModuleResolver {
     fn reject_namespace_file_collision(
         &self,
         resolved: &ResolvedModule,
+        provider: &mut impl SourceProvider,
     ) -> Result<(), ResolutionError> {
-        let Some((parent_name, parent_path)) = self.parent_module_file(&resolved.module_name)
+        let Some((parent_name, parent_path)) =
+            self.parent_module_file(&resolved.module_name, provider)
         else {
             return Ok(());
         };
@@ -169,7 +182,11 @@ impl ModuleResolver {
         })
     }
 
-    fn parent_module_file(&self, module_name: &str) -> Option<(String, PathBuf)> {
+    fn parent_module_file(
+        &self,
+        module_name: &str,
+        provider: &mut impl SourceProvider,
+    ) -> Option<(String, PathBuf)> {
         let parts: Vec<&str> = module_name.split('.').collect();
         if parts.len() < 2 {
             return None;
@@ -177,7 +194,7 @@ impl ModuleResolver {
         for end in 1..parts.len() {
             let parent_name = parts[..end].join(".");
             for candidate in self.candidate_paths(&parent_name) {
-                if candidate.is_file() {
+                if provider.is_file(&candidate) {
                     return Some((parent_name, candidate));
                 }
             }
@@ -328,11 +345,19 @@ pub(crate) enum DiscoveryDiagnosticStyle {
 }
 
 fn discover_project_sifr_files(project_dir: &Path) -> Vec<PathBuf> {
+    let mut provider = DiskSourceProvider::new();
+    discover_project_sifr_files_with_provider(project_dir, &mut provider)
+}
+
+fn discover_project_sifr_files_with_provider(
+    project_dir: &Path,
+    provider: &mut impl SourceProvider,
+) -> Vec<PathBuf> {
     let mut sifr_files = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(project_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().is_some_and(|ext| ext == "sifr") {
+    if let Ok(entries) = provider.read_dir(project_dir) {
+        for entry in entries {
+            let path = entry.path;
+            if entry.is_file && path.extension().is_some_and(|ext| ext == "sifr") {
                 sifr_files.push(path);
             }
         }
@@ -554,13 +579,14 @@ pub(crate) fn parse_import_closure_source_modules(
     let mut parsed_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
     let mut parsed_names: BTreeSet<String> = BTreeSet::new();
     let mut pending = root_modules.clone();
+    let mut provider = DiskSourceProvider::new();
 
     while let Some(module_name) = pending.pop_first() {
         if !parsed_names.insert(module_name.clone()) {
             continue;
         }
 
-        let path = match resolver.resolve(&module_name) {
+        let path = match resolver.resolve_with_provider(&module_name, &mut provider) {
             Ok(resolved) => resolved.path,
             Err(error) if resolver.has_workspace() => {
                 return Err(vec![error.to_diagnostic(resolver)]);
@@ -571,19 +597,22 @@ pub(crate) fn parse_import_closure_source_modules(
                 .next()
                 .unwrap_or_else(|| resolver.module_source_path(&module_name)),
         };
-        let source = std::fs::read_to_string(&path).map_err(|e| {
-            vec![crate::diagnostics::diagnostic_with_code(
-                format!("failed to read '{}': {}", path.display(), e),
-                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-            )]
-        })?;
+        let source = provider
+            .read_file(&path)
+            .map(|source| source.as_str().to_string())
+            .map_err(|e| {
+                vec![crate::diagnostics::diagnostic_with_code(
+                    format!("failed to read '{}': {}", path.display(), e),
+                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                )]
+            })?;
         let label = discovery_label(&module_name, &path, diagnostic_style);
         let suite = sifr_frontend::parse_source(&source, Some(&label))?;
         for dependency in collect_import_closure_module_dependencies(&suite).into_values() {
             if parsed_names.contains(dependency.module_name.as_str()) {
                 continue;
             }
-            match resolver.resolve(&dependency.module_name) {
+            match resolver.resolve_with_provider(&dependency.module_name, &mut provider) {
                 Ok(_) => {
                     pending.insert(dependency.module_name);
                 }
