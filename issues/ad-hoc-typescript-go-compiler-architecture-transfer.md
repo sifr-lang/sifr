@@ -13,7 +13,7 @@ Status: in progress
 | M4 Analysis Snapshot Migration | merged | [#2237](https://github.com/sifr-lang/sifr/pull/2237) | Migrates `sifr_analysis::AnalysisSnapshot` to carry a captured `WorkspaceSnapshot`, routes LSP analysis requests through snapshot methods, adds conservative snapshot dirty-scope state, and keeps execution serialized before scheduler work. |
 | M5 LSP Persistent Session Integration | merged | [#2238](https://github.com/sifr-lang/sifr/pull/2238) | Moves LSP analysis ownership from `DocumentStore` into the serialized `Session`, feeds open/change/save buffers into `WorkspaceSession` overlays, and rejects stale request publication by captured snapshot plus document version while preserving serialized request handling. |
 | M6 Event Compaction And Dirty Scope | merged | [#2239](https://github.com/sifr-lang/sifr/pull/2239) | Compacts batched document edits before analysis updates, summarizes watcher events before dirty-scope classification, records precise dirty scope/reason reports, and degrades incompatible or stormy invalidation conservatively. |
-| M7 Module Signatures And Dependency Invalidation | review | [#2241](https://github.com/sifr-lang/sifr/pull/2241) | Adds import/export/module signatures, reverse-dependency closure invalidation, and local private-body edit reuse for unchanged public/import signatures. |
+| M7 Module Signatures And Dependency Invalidation | merged | [#2241](https://github.com/sifr-lang/sifr/pull/2241) | Adds import/export/module signatures, reverse-dependency closure invalidation, and local private-body edit reuse for unchanged public/import signatures. |
 
 M2 local validation so far:
 
