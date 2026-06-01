@@ -2,7 +2,7 @@
 
 status: active
 
-`crates/sifr_frontend/` is the canonical process-local frontend query crate. It owns session loading, module identities, graph views, source-map views, parse/lower/type-check/diagnostic/analysis query methods, cache metadata, and update invalidation reports.
+`crates/sifr_frontend/` is the canonical process-local frontend query crate. It owns session loading, module identities, graph views, source-map views, parse/lower/type-check/diagnostic/analysis query methods, cache metadata, and update invalidation reports. Source text, line maps, source-file metadata, and UTF-8/UTF-16/UTF-32 position conversions are provided by the lower-level `sifr_source` crate so frontend, diagnostics, syntax, and LSP do not keep separate source-position authorities.
 
 ## Current Boundary
 
@@ -11,7 +11,7 @@ status: active
 - single-file context loading with optional external definitions for driver integration
 - project loading from an entrypoint directory with the entrypoint pinned to `ModuleId(0)`
 - deterministic `FileId` and `ModuleId` assignment within a context revision
-- module graph and source map inspection
+- module graph and source map inspection, including real source-map position/range round trips for registered source files
 - parse, lower, type-check, module diagnostics, project diagnostics, module analysis, and project analysis queries
 - query metadata with cache hit/miss status plus graph/source revisions
 - dependency-first project lowering so imported module exports are available before importers are checked

@@ -96,6 +96,9 @@ python3 "${SCRIPT_DIR}/check_hir_maintainability_guardrails.py"
 echo "Running file-size guardrails"
 python3 "${SCRIPT_DIR}/check_file_size_guardrails.py"
 
+echo "Running source crate dependency-direction guardrail"
+python3 "${SCRIPT_DIR}/check_source_crate_dependency_direction.py"
+
 echo "Running sifr_driver maintainability guardrails"
 python3 "${SCRIPT_DIR}/check_sifr_driver_maintainability_guardrails.py"
 

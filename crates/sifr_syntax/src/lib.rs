@@ -5,7 +5,7 @@
 //! parser APIs.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-use ruff_text_size::{Ranged as _, TextRange, TextSize};
+use ruff_text_size::{Ranged as _, TextRange};
 use sifr_diagnostics::{
     ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink,
     RenderedDiagnostic, Severity, SourceMap, SourceSpan,
@@ -16,6 +16,7 @@ use sifr_python_parser::{
     parse_unchecked, InterpolatedStringErrorType, LexicalErrorType, Mode, ParseError,
     ParseErrorType, ParseOptions, Parsed, UnsupportedSyntaxError,
 };
+pub use sifr_source::{SourceText, TextPosition, TextRangeUtf};
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]
@@ -68,84 +69,6 @@ impl SyntaxTokenKind {
 impl From<TokenKind> for SyntaxTokenKind {
     fn from(value: TokenKind) -> Self {
         Self(format!("{value:?}"))
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TextPosition {
-    pub line: u32,
-    pub character: u32,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TextRangeUtf {
-    pub start: TextPosition,
-    pub end: TextPosition,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourceText {
-    text: String,
-    line_starts: Vec<usize>,
-}
-
-impl SourceText {
-    #[must_use]
-    pub fn new(text: impl Into<String>) -> Self {
-        let text = text.into();
-        let mut line_starts = vec![0];
-        for (idx, byte) in text.bytes().enumerate() {
-            if byte == b'\n' {
-                line_starts.push(idx + 1);
-            }
-        }
-        Self { text, line_starts }
-    }
-
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.text
-    }
-
-    #[must_use]
-    pub fn byte_offset(&self, position: &TextPosition) -> Option<TextSize> {
-        let line = usize::try_from(position.line).ok()?;
-        let character = usize::try_from(position.character).ok()?;
-        let line_start = *self.line_starts.get(line)?;
-        let line_end = self
-            .line_starts
-            .get(line + 1)
-            .copied()
-            .unwrap_or(self.text.len());
-        let offset = line_start.checked_add(character)?;
-        (offset <= line_end && self.text.is_char_boundary(offset))
-            .then(|| u32::try_from(offset).ok().map(TextSize::new))
-            .flatten()
-    }
-
-    #[must_use]
-    pub fn text_position(&self, offset: TextSize) -> Option<TextPosition> {
-        let offset = usize::try_from(offset.to_u32()).ok()?;
-        if offset > self.text.len() || !self.text.is_char_boundary(offset) {
-            return None;
-        }
-        let line_index = match self.line_starts.binary_search(&offset) {
-            Ok(index) => index,
-            Err(index) => index.checked_sub(1)?,
-        };
-        let line_start = *self.line_starts.get(line_index)?;
-        Some(TextPosition {
-            line: u32::try_from(line_index).ok()?,
-            character: u32::try_from(offset - line_start).ok()?,
-        })
-    }
-
-    #[must_use]
-    pub fn text_range(&self, range: TextRange) -> Option<TextRangeUtf> {
-        Some(TextRangeUtf {
-            start: self.text_position(range.start())?,
-            end: self.text_position(range.end())?,
-        })
     }
 }
 

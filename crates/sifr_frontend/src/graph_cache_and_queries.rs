@@ -1,29 +1,19 @@
 use super::{
     collect_module_exports, diagnostic_with_code, empty_hir_module, hir_diagnostic_to_rendered,
     local_import_dependencies, module_state, reveal_type_diagnostics, source_hash,
-    symbols_from_hir, warning_diagnostics,
+    symbols_from_hir, warning_diagnostics, DocumentVersion, FileId, SourceFileView, SourceHash,
+    SourceMapView, SourcePath, SourceRevision, SourceText,
 };
-use ruff_text_size::TextRange;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_hir::{
     lower_module_with_externals_and_name, ExternalDefs, HirModule, LoweringResult,
     LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 use sifr_python_ast::Stmt;
-use sifr_syntax::{ParsedModule, TextPosition, TextRangeUtf};
+use sifr_syntax::ParsedModule;
 use std::collections::{BTreeMap, BTreeSet};
 use std::hash::Hash;
-use std::path::{Path, PathBuf};
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct FileId(u32);
-
-impl FileId {
-    #[must_use]
-    pub fn as_u32(self) -> u32 {
-        self.0
-    }
-}
+use std::path::Path;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ModuleId(pub(crate) u32);
@@ -46,67 +36,6 @@ impl GraphRevision {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SourceRevision(u64);
-
-impl SourceRevision {
-    #[must_use]
-    pub fn as_u64(self) -> u64 {
-        self.0
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourceHash(pub(super) String);
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourcePath(PathBuf);
-
-impl SourcePath {
-    #[must_use]
-    pub fn new(path: impl Into<PathBuf>) -> Self {
-        Self(path.into())
-    }
-
-    #[must_use]
-    pub fn as_path(&self) -> &Path {
-        &self.0
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourceText(String);
-
-impl SourceText {
-    #[must_use]
-    pub fn new(source: impl Into<String>) -> Self {
-        Self(source.into())
-    }
-
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourceUri(String);
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct DocumentVersion(i64);
-
-impl DocumentVersion {
-    #[must_use]
-    pub fn new(version: i64) -> Self {
-        Self(version)
-    }
-
-    #[must_use]
-    pub fn as_i64(self) -> i64 {
-        self.0
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FrontendMode {
     SingleFile,
     ProjectEntrypoint,
@@ -123,13 +52,6 @@ pub struct FrontendInput {
 pub struct ProjectRoot {
     pub root: SourcePath,
     pub entrypoint: SourcePath,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PositionEncoding {
-    UTF8,
-    UTF16,
-    UTF32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -205,42 +127,6 @@ pub struct ModuleGraphView {
     pub edges: Vec<ModuleGraphEdge>,
     pub entrypoint: ModuleId,
     pub revision: GraphRevision,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourceFileView {
-    pub id: FileId,
-    pub canonical_path: SourcePath,
-    pub uri: Option<SourceUri>,
-    pub source_hash: SourceHash,
-    pub document_version: Option<DocumentVersion>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourceMapView {
-    pub files: Vec<SourceFileView>,
-    pub revision: SourceRevision,
-}
-
-impl SourceMapView {
-    #[must_use]
-    pub fn text_position_to_span(
-        &self,
-        _file: FileId,
-        _position: TextPosition,
-        _encoding: PositionEncoding,
-    ) -> Option<TextRange> {
-        None
-    }
-
-    #[must_use]
-    pub fn span_to_text_range(
-        &self,
-        _span: TextRange,
-        _encoding: PositionEncoding,
-    ) -> Option<TextRangeUtf> {
-        None
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -614,6 +500,7 @@ impl FrontendContext {
                     uri: None,
                     source_hash: module.source_hash.clone(),
                     document_version: module.document_version,
+                    source: module.source.clone(),
                 })
                 .collect(),
             revision: self.source_revision,

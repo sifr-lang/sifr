@@ -488,15 +488,26 @@ Goal: remove the source-map stub risk before any snapshot or LSP architecture wo
 Scope:
 
 - add `sifr_source` at the bottom of the dependency hierarchy
+- lock `sifr_source` public API for M0: `SourceText`, `LineMap`, `PositionEncoding`, `TextPosition`, `TextRangeUtf`, and `SourceFile`
 - migrate syntax, diagnostics, frontend, and LSP conversion to shared `SourceText`, `LineMap`, `PositionEncoding`, `TextPosition`, and `TextRangeUtf`
+- migrate known M0 call sites: parser-side `sifr_syntax::SourceText` consumers, `sifr_diagnostics::SourceMap` line-map storage/rendering, `crates/sifr_frontend/src/graph_cache_and_queries.rs` source-map view construction/conversion, `crates/sifr_frontend/src/bin/frontend_query_bench.rs` `interactive.source_map_lookup`, and `crates/sifr_lsp/src/conversion.rs` range/position conversion helpers
 - replace `SourceMapView` stubs with UTF-8/UTF-16/UTF-32 conversions
 - make `interactive.source_map_lookup` assert real round trips
 - add multibyte, CRLF, EOF, invalid-boundary, and rendered-diagnostic parity tests
+- add a dependency-direction guardrail proving `sifr_source` does not depend on higher compiler/tooling crates
+
+Out of scope:
+
+- no `SourceProvider`, `WorkspaceSession`, `WorkspaceSnapshot`, `DirtyScope`, cache reuse, scheduler behavior, or LSP request-flow migration
+- no direct filesystem read migration; M1 inventories direct reads and M2 moves semantic reads behind the provider boundary
 
 Closeout:
 
 - frontend, diagnostics, and LSP have one source-position authority
-- no valid source-map lookup returns `None` because the method is stubbed
+- source conversions return `Some` for positions on character boundaries inside registered source files and return `None` only for genuinely invalid positions, such as unregistered files, byte offsets inside multibyte scalars or CRLF line endings, surrogate-pair interiors, and out-of-range positions
+- UTF-8, UTF-16, UTF-32, multibyte, CRLF, EOF, invalid-boundary, rendered-diagnostic parity, and LSP UTF-16 conversion tests pass
+- `interactive.source_map_lookup` is no longer a no-op benchmark path
+- dependency-direction guardrail is part of local validation
 - symbol/navigation range correctness is unblocked for later milestones
 
 ### M1: Architecture Contract And Guardrails

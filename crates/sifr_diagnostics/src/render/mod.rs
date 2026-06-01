@@ -1,8 +1,10 @@
 use crate::model::{ChildSeverity, DiagnosticArg, DiagnosticSuggestion, RelatedKind, Severity};
 use crate::source_map::{SourceMap, SourceMapError, SourceSpan};
 use crate::{DiagnosticSink, SifrDiagnostic};
+use ruff_text_size::TextSize;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use sifr_source::LineMap;
 use std::collections::BTreeMap;
 
 mod presentation;
@@ -244,16 +246,15 @@ fn render_span(
     label: Option<String>,
 ) -> Result<DiagnosticSpan, SourceMapError> {
     source_map.validate_span(span)?;
-    let text = source_map
-        .source_text(span.source_id)
+    let source = source_map
+        .source(span.source_id)
         .ok_or(SourceMapError::UnknownSource(span.source_id))?;
-    let line_starts = source_map
-        .line_starts(span.source_id)
-        .ok_or(SourceMapError::UnknownSource(span.source_id))?;
+    let text = source.as_str();
+    let line_map = source.line_map();
     let byte_start = span.range.start().to_u32();
     let byte_end = span.range.end().to_u32();
-    let (line, column) = line_column(text, line_starts, byte_start);
-    let (end_line, end_column) = line_column(text, line_starts, byte_end);
+    let (line, column) = line_column(text, line_map, byte_start);
+    let (end_line, end_column) = line_column(text, line_map, byte_end);
     Ok(DiagnosticSpan {
         file: source_map.display_path(span.source_id).map(str::to_string),
         byte_start,
@@ -264,17 +265,19 @@ fn render_span(
         end_column: Some(end_column),
         is_primary,
         label,
-        lines: span_lines(text, line_starts, byte_start, byte_end),
+        lines: span_lines(text, line_map, byte_start, byte_end),
     })
 }
 
-fn line_column(text: &str, line_starts: &[u32], byte_pos: u32) -> (u32, u32) {
+fn line_column(text: &str, line_map: &LineMap, byte_pos: u32) -> (u32, u32) {
+    let byte_pos = TextSize::new(byte_pos);
+    let line_starts = line_map.line_starts();
     let line_index = match line_starts.binary_search(&byte_pos) {
         Ok(index) => index,
         Err(index) => index.saturating_sub(1),
     };
-    let line_start = usize::try_from(line_starts[line_index]).unwrap_or(0);
-    let byte_pos_usize = usize::try_from(byte_pos).unwrap_or(text.len());
+    let line_start = usize::try_from(line_starts[line_index].to_u32()).unwrap_or(0);
+    let byte_pos_usize = usize::try_from(byte_pos.to_u32()).unwrap_or(text.len());
     let prefix = text.get(line_start..byte_pos_usize).unwrap_or_default();
     (
         u32::try_from(line_index + 1).unwrap_or(u32::MAX),
@@ -286,10 +289,13 @@ fn line_column(text: &str, line_starts: &[u32], byte_pos: u32) -> (u32, u32) {
 // normalize or strip it before printing snippets to a terminal.
 fn span_lines(
     text: &str,
-    line_starts: &[u32],
+    line_map: &LineMap,
     byte_start: u32,
     byte_end: u32,
 ) -> Vec<DiagnosticSpanLine> {
+    let byte_start = TextSize::new(byte_start);
+    let byte_end = TextSize::new(byte_end);
+    let line_starts = line_map.line_starts();
     let start_line_index = match line_starts.binary_search(&byte_start) {
         Ok(index) => index,
         Err(index) => index.saturating_sub(1),
@@ -299,22 +305,31 @@ fn span_lines(
         Err(index) => index.saturating_sub(1),
     };
     (start_line_index..=end_line_index)
-        .map(|line_index| render_line(text, line_starts, line_index, byte_start, byte_end))
+        .map(|line_index| {
+            render_line(
+                text,
+                line_map,
+                line_index,
+                byte_start.to_u32(),
+                byte_end.to_u32(),
+            )
+        })
         .collect()
 }
 
 fn render_line(
     text: &str,
-    line_starts: &[u32],
+    line_map: &LineMap,
     line_index: usize,
     byte_start: u32,
     byte_end: u32,
 ) -> DiagnosticSpanLine {
-    let line_start = usize::try_from(line_starts[line_index]).unwrap_or(0);
-    let line_end = line_starts
-        .get(line_index + 1)
-        .and_then(|next| usize::try_from(*next).ok())
-        .unwrap_or(text.len());
+    let line = u32::try_from(line_index).unwrap_or(u32::MAX);
+    let full_range = line_map
+        .line_full_byte_range(line)
+        .unwrap_or_else(|| ruff_text_size::TextRange::new(line_map.eof(), line_map.eof()));
+    let line_start = usize::try_from(full_range.start().to_u32()).unwrap_or(0);
+    let line_end = usize::try_from(full_range.end().to_u32()).unwrap_or(text.len());
     let line_text = text[line_start..line_end]
         .trim_end_matches('\n')
         .to_string();

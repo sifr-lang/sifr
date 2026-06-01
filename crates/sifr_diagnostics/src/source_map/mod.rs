@@ -1,5 +1,6 @@
 use ruff_text_size::TextRange;
 use serde::{Deserialize, Serialize};
+use sifr_source::SourceText;
 use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -57,8 +58,7 @@ struct SourceFile {
     display_path: String,
     module_name: Option<String>,
     source_hash: u64,
-    text: String,
-    line_starts: Vec<u32>,
+    text: SourceText,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -93,9 +93,8 @@ impl SourceMap {
             .next_id
             .checked_add(1)
             .unwrap_or_else(|| panic!("source id allocation overflowed"));
-        let text = text.into();
-        let line_starts = line_starts(&text);
-        let source_hash = stable_hash(&text);
+        let text = SourceText::new(text);
+        let source_hash = text.source_hash();
         self.sources.insert(
             id,
             SourceFile {
@@ -104,7 +103,6 @@ impl SourceMap {
                 module_name: module_name.map(Into::into),
                 source_hash,
                 text,
-                line_starts,
             },
         );
         id
@@ -145,7 +143,7 @@ impl SourceMap {
             .ok_or(SourceMapError::UnknownSource(span.source_id))?;
         let byte_start = span.range.start().to_u32();
         let byte_end = span.range.end().to_u32();
-        let source_len = u32::try_from(source.text.len()).unwrap_or(u32::MAX);
+        let source_len = u32::try_from(source.text.as_str().len()).unwrap_or(u32::MAX);
         if byte_start > byte_end || byte_end > source_len {
             return Err(SourceMapError::InvalidSpan {
                 source_id: span.source_id,
@@ -157,37 +155,9 @@ impl SourceMap {
         Ok(())
     }
 
-    pub(crate) fn source_text(&self, source_id: SourceId) -> Option<&str> {
-        self.sources
-            .get(&source_id)
-            .map(|source| source.text.as_str())
+    pub(crate) fn source(&self, source_id: SourceId) -> Option<&SourceText> {
+        self.sources.get(&source_id).map(|source| &source.text)
     }
-
-    pub(crate) fn line_starts(&self, source_id: SourceId) -> Option<&[u32]> {
-        self.sources
-            .get(&source_id)
-            .map(|source| source.line_starts.as_slice())
-    }
-}
-
-fn line_starts(text: &str) -> Vec<u32> {
-    let mut starts = vec![0];
-    for (index, byte) in text.bytes().enumerate() {
-        if byte == b'\n' {
-            if let Ok(next) = u32::try_from(index + 1) {
-                starts.push(next);
-            }
-        }
-    }
-    starts
-}
-
-fn stable_hash(text: &str) -> u64 {
-    const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
-    const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
-    text.as_bytes().iter().fold(FNV_OFFSET, |hash, byte| {
-        (hash ^ u64::from(*byte)).wrapping_mul(FNV_PRIME)
-    })
 }
 
 mod text_range_serde {
