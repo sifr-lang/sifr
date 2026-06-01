@@ -156,9 +156,11 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS after M1 review remediation; report `target/validation_lane_reports/quick.latest.json`, wall time 221.14s.
 - `2026-06-01`: M1 implementation review pass 2 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-2.md`; reviewer requested fixing the direct-read/probe regex and adding `crates/sifr_package/src/cargo/lock_modes.rs:46`.
 - `2026-06-01`: M1 implementation review pass 3 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-3.md`; reviewer approved M1 for PR after focused validation.
+- `2026-06-01`: M1 merged via PR [#2230](https://github.com/sifr-lang/sifr/pull/2230), merge commit `a1a402c01348181684fc028c6fc14fba76d8b0cf`. Duplicate PR [#2231](https://github.com/sifr-lang/sifr/pull/2231) was closed without merge.
 
 ## PR Log
 
 - `2026-05-30`: Phase planning/review PR [#2206](https://github.com/sifr-lang/sifr/pull/2206) records the architecture transfer contract, execution tracker, and incorporated review artifacts.
 - `2026-06-01`: M0 source and position foundation merged in [#2229](https://github.com/sifr-lang/sifr/pull/2229).
+- `2026-06-01`: M1 architecture contract and guardrails merged in [#2230](https://github.com/sifr-lang/sifr/pull/2230).
 - Additional implementation PR links will be recorded per milestone after they are opened and merged.
