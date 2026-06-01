@@ -1,6 +1,6 @@
 use super::{
-    FrontendMode, ProjectRoot, SourceHash, SourcePath, WorkspaceCompilerOptions,
-    WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
+    FrontendDiagnosticStyle, FrontendMode, ProjectRoot, SourceHash, SourcePath,
+    WorkspaceCompilerOptions, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
 };
 
 const CACHE_KEY_SCHEMA_VERSION: &str = "m9-cache-key-v1";
@@ -11,6 +11,7 @@ const LOWERING_OPTIONS_VERSION: &str = "sifr-hir-lowering-v1";
 const DIAGNOSTIC_POLICY_VERSION: &str = "sifr-diagnostics-v1";
 const LINT_POLICY_VERSION: &str = "sifr-lint-v1";
 const FORMAT_POLICY_VERSION: &str = "sifr-format-v1";
+const FORMAT_OPTIONS_VERSION: &str = "sifr-format-options-default-v1";
 const PACKAGE_GRAPH_POLICY_VERSION: &str = "sifr-package-graph-v1";
 const SYMBOL_BUCKET_POLICY_VERSION: &str = "sifr-symbol-buckets-v1";
 const FLOW_GRAPH_POLICY_VERSION: &str = "sifr-flow-graph-v1";
@@ -30,15 +31,11 @@ impl CompilerFingerprint {
         builder.field("diagnostic_policy", DIAGNOSTIC_POLICY_VERSION);
         builder.field("lint_policy", LINT_POLICY_VERSION);
         builder.field("format_policy", FORMAT_POLICY_VERSION);
+        builder.field("format_options", FORMAT_OPTIONS_VERSION);
         builder.field("package_graph_policy", PACKAGE_GRAPH_POLICY_VERSION);
         builder.field("symbol_bucket_policy", SYMBOL_BUCKET_POLICY_VERSION);
         builder.field("flow_graph_policy", FLOW_GRAPH_POLICY_VERSION);
         Self(builder.finish_hex())
-    }
-
-    #[must_use]
-    pub fn for_testing(value: impl Into<String>) -> Self {
-        Self(value.into())
     }
 
     #[must_use]
@@ -66,7 +63,7 @@ impl WorkspaceContextFingerprint {
         let mut builder = FingerprintBuilder::new("workspace-context");
         builder.field("kind", "single-file");
         builder.path_field("path", path);
-        builder.field("mode", format!("{mode:?}"));
+        builder.field("mode", frontend_mode_label(mode));
         Self(builder.finish_hex())
     }
 
@@ -90,11 +87,6 @@ impl WorkspaceContextFingerprint {
     }
 
     #[must_use]
-    pub fn for_testing(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -106,15 +98,14 @@ pub struct PackageContextFingerprint(String);
 impl PackageContextFingerprint {
     #[must_use]
     pub fn from_identity(identity: &WorkspacePackageConfigIdentity) -> Self {
+        let WorkspacePackageConfigIdentity {
+            workspace_root,
+            entrypoint,
+        } = identity;
         let mut builder = FingerprintBuilder::new("package-context");
-        builder.optional_path_field("workspace_root", identity.workspace_root.as_ref());
-        builder.optional_path_field("entrypoint", identity.entrypoint.as_ref());
+        builder.optional_path_field("workspace_root", workspace_root.as_ref());
+        builder.optional_path_field("entrypoint", entrypoint.as_ref());
         Self(builder.finish_hex())
-    }
-
-    #[must_use]
-    pub fn for_testing(value: impl Into<String>) -> Self {
-        Self(value.into())
     }
 
     #[must_use]
@@ -241,9 +232,22 @@ pub struct ParseCacheKey {
 impl ParseCacheKey {
     #[must_use]
     pub fn new(source_hash: SourceHash, context: CacheKeyContext) -> Self {
+        Self::with_parser_options(
+            source_hash,
+            QueryPolicyFingerprint::default_for_cache_family(CacheFamily::Parse),
+            context,
+        )
+    }
+
+    #[must_use]
+    pub fn with_parser_options(
+        source_hash: SourceHash,
+        parser_options: QueryPolicyFingerprint,
+        context: CacheKeyContext,
+    ) -> Self {
         Self {
             source_hash,
-            parser_options: QueryPolicyFingerprint::default_for_cache_family(CacheFamily::Parse),
+            parser_options,
             context,
         }
     }
@@ -296,7 +300,10 @@ impl HirLoweringCacheKey {
     pub fn fingerprint(&self) -> CacheKeyFingerprint {
         let mut builder = key_builder(CacheFamily::HirLowering, &self.source_hash, &self.context);
         builder.field("parse_fingerprint", self.parse_fingerprint.as_str());
-        builder.field("compiler_options", format!("{:?}", self.compiler_options));
+        builder.field(
+            "compiler_options",
+            compiler_options_fingerprint(&self.compiler_options),
+        );
         builder.finish()
     }
 }
@@ -305,7 +312,7 @@ impl HirLoweringCacheKey {
 pub struct DiagnosticsCacheKey {
     pub source_hash: SourceHash,
     pub hir_fingerprint: CacheKeyFingerprint,
-    pub diagnostic_style: String,
+    pub diagnostic_style: FrontendDiagnosticStyle,
     pub context: CacheKeyContext,
 }
 
@@ -314,7 +321,10 @@ impl DiagnosticsCacheKey {
     pub fn fingerprint(&self) -> CacheKeyFingerprint {
         let mut builder = key_builder(CacheFamily::Diagnostics, &self.source_hash, &self.context);
         builder.field("hir_fingerprint", self.hir_fingerprint.as_str());
-        builder.field("diagnostic_style", &self.diagnostic_style);
+        builder.field(
+            "diagnostic_style",
+            diagnostic_style_label(self.diagnostic_style),
+        );
         builder.finish()
     }
 }
@@ -341,14 +351,26 @@ impl LintCacheKey {
 pub struct FormatCacheKey {
     pub source_hash: SourceHash,
     pub formatter_policy: QueryPolicyFingerprint,
+    pub formatter_options: QueryPolicyFingerprint,
     pub context: CacheKeyContext,
 }
 
 impl FormatCacheKey {
     #[must_use]
+    pub fn new(source_hash: SourceHash, context: CacheKeyContext) -> Self {
+        Self {
+            source_hash,
+            formatter_policy: QueryPolicyFingerprint::default_for_cache_family(CacheFamily::Format),
+            formatter_options: QueryPolicyFingerprint::new(FORMAT_OPTIONS_VERSION),
+            context,
+        }
+    }
+
+    #[must_use]
     pub fn fingerprint(&self) -> CacheKeyFingerprint {
         let mut builder = key_builder(CacheFamily::Format, &self.source_hash, &self.context);
         builder.field("formatter_policy", self.formatter_policy.as_str());
+        builder.field("formatter_options", self.formatter_options.as_str());
         builder.finish()
     }
 }
@@ -373,7 +395,7 @@ impl PackageGraphCacheKey {
 pub struct SymbolBucketsCacheKey {
     pub source_hash: SourceHash,
     pub module_graph_fingerprint: CacheKeyFingerprint,
-    pub bucket_scope: String,
+    pub bucket_scope: SymbolBucketScope,
     pub context: CacheKeyContext,
 }
 
@@ -385,8 +407,27 @@ impl SymbolBucketsCacheKey {
             "module_graph_fingerprint",
             self.module_graph_fingerprint.as_str(),
         );
-        builder.field("bucket_scope", &self.bucket_scope);
+        builder.field("bucket_scope", self.bucket_scope.label());
         builder.finish()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SymbolBucketScope {
+    Workspace,
+    Package,
+    Module,
+    Stdlib,
+}
+
+impl SymbolBucketScope {
+    fn label(self) -> &'static str {
+        match self {
+            Self::Workspace => "workspace",
+            Self::Package => "package",
+            Self::Module => "module",
+            Self::Stdlib => "stdlib",
+        }
     }
 }
 
@@ -430,6 +471,27 @@ fn key_builder(
     builder.field("package", context.package.as_str());
     builder.field("query_policy", context.query_policy.as_str());
     builder
+}
+
+fn compiler_options_fingerprint(options: &WorkspaceCompilerOptions) -> String {
+    let WorkspaceCompilerOptions { mode } = options;
+    let mut builder = FingerprintBuilder::new("workspace-compiler-options");
+    builder.field("mode", frontend_mode_label(*mode));
+    builder.finish_hex()
+}
+
+fn frontend_mode_label(mode: FrontendMode) -> &'static str {
+    match mode {
+        FrontendMode::SingleFile => "single-file",
+        FrontendMode::ProjectEntrypoint => "project-entrypoint",
+    }
+}
+
+fn diagnostic_style_label(style: FrontendDiagnosticStyle) -> &'static str {
+    match style {
+        FrontendDiagnosticStyle::Bare => "bare",
+        FrontendDiagnosticStyle::ModulePrefixed => "module-prefixed",
+    }
 }
 
 struct CacheKeyBuilder {
@@ -506,11 +568,12 @@ mod tests {
         CacheFamily, CacheKeyContext, CacheKeyFingerprint, CompilerFingerprint,
         DiagnosticsCacheKey, FlowGraphCacheKey, FormatCacheKey, HirLoweringCacheKey, LintCacheKey,
         PackageContextFingerprint, PackageGraphCacheKey, ParseCacheKey, QueryPolicyFingerprint,
-        SourceMapCacheKey, SymbolBucketsCacheKey, WorkspaceContextFingerprint,
+        SourceMapCacheKey, SymbolBucketScope, SymbolBucketsCacheKey, WorkspaceContextFingerprint,
     };
     use crate::{
-        FrontendMode, SourceHash, SourcePath, WorkspaceCompilerOptions,
-        WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
+        DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendMode, SourceHash, SourcePath,
+        WorkspaceCompilerOptions, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
+        WorkspaceSingleFileTarget,
     };
 
     fn source(value: &str) -> SourceHash {
@@ -524,9 +587,9 @@ mod tests {
     fn context(family: CacheFamily) -> CacheKeyContext {
         CacheKeyContext::new(
             family,
-            CompilerFingerprint::for_testing("compiler-a"),
-            WorkspaceContextFingerprint::for_testing("workspace-a"),
-            PackageContextFingerprint::for_testing("package-a"),
+            CompilerFingerprint("compiler-a".to_string()),
+            WorkspaceContextFingerprint("workspace-a".to_string()),
+            PackageContextFingerprint("package-a".to_string()),
         )
     }
 
@@ -553,21 +616,28 @@ mod tests {
         assert_ne!(base_fingerprint, changed_source.fingerprint());
 
         let mut changed_compiler = base.clone();
-        changed_compiler.context.compiler = CompilerFingerprint::for_testing("compiler-b");
+        changed_compiler.context.compiler = CompilerFingerprint("compiler-b".to_string());
         assert_ne!(base_fingerprint, changed_compiler.fingerprint());
 
         let mut changed_workspace = base.clone();
         changed_workspace.context.workspace =
-            WorkspaceContextFingerprint::for_testing("workspace-b");
+            WorkspaceContextFingerprint("workspace-b".to_string());
         assert_ne!(base_fingerprint, changed_workspace.fingerprint());
 
         let mut changed_package = base.clone();
-        changed_package.context.package = PackageContextFingerprint::for_testing("package-b");
+        changed_package.context.package = PackageContextFingerprint("package-b".to_string());
         assert_ne!(base_fingerprint, changed_package.fingerprint());
 
         let mut changed_policy = base;
         changed_policy.context.query_policy = QueryPolicyFingerprint::new("policy-b");
         assert_ne!(base_fingerprint, changed_policy.fingerprint());
+
+        let custom_parser_options = ParseCacheKey::with_parser_options(
+            source("x = 1"),
+            QueryPolicyFingerprint::new("parser-options-b"),
+            context(CacheFamily::Parse),
+        );
+        assert_ne!(base_fingerprint, custom_parser_options.fingerprint());
     }
 
     #[test]
@@ -604,7 +674,7 @@ mod tests {
         let base = DiagnosticsCacheKey {
             source_hash: source("x = 1"),
             hir_fingerprint: fingerprint("hir-a"),
-            diagnostic_style: "bare".to_string(),
+            diagnostic_style: FrontendDiagnosticStyle::Bare,
             context: context(CacheFamily::Diagnostics),
         };
         let mut changed_hir = base.clone();
@@ -612,7 +682,7 @@ mod tests {
         assert_ne!(base.fingerprint(), changed_hir.fingerprint());
 
         let mut changed_style = base.clone();
-        changed_style.diagnostic_style = "module-prefixed".to_string();
+        changed_style.diagnostic_style = FrontendDiagnosticStyle::ModulePrefixed;
         assert_ne!(base.fingerprint(), changed_style.fingerprint());
     }
 
@@ -631,11 +701,15 @@ mod tests {
         let format = FormatCacheKey {
             source_hash: source("x = 1"),
             formatter_policy: QueryPolicyFingerprint::new("format-a"),
+            formatter_options: QueryPolicyFingerprint::new("line-width-88"),
             context: context(CacheFamily::Format),
         };
         let mut format_changed = format.clone();
         format_changed.formatter_policy = QueryPolicyFingerprint::new("format-b");
         assert_ne!(format.fingerprint(), format_changed.fingerprint());
+        let mut format_options_changed = format.clone();
+        format_options_changed.formatter_options = QueryPolicyFingerprint::new("line-width-100");
+        assert_ne!(format.fingerprint(), format_options_changed.fingerprint());
 
         let package = PackageGraphCacheKey {
             source_hash: source("manifest-a"),
@@ -649,11 +723,11 @@ mod tests {
         let symbols = SymbolBucketsCacheKey {
             source_hash: source("x = 1"),
             module_graph_fingerprint: fingerprint("graph-a"),
-            bucket_scope: "workspace".to_string(),
+            bucket_scope: SymbolBucketScope::Workspace,
             context: context(CacheFamily::SymbolBuckets),
         };
         let mut symbols_changed = symbols.clone();
-        symbols_changed.bucket_scope = "package".to_string();
+        symbols_changed.bucket_scope = SymbolBucketScope::Package;
         assert_ne!(symbols.fingerprint(), symbols_changed.fingerprint());
 
         let flow = FlowGraphCacheKey {
@@ -665,6 +739,9 @@ mod tests {
         let mut flow_changed = flow.clone();
         flow_changed.control_flow_fingerprint = fingerprint("cfg-b");
         assert_ne!(flow.fingerprint(), flow_changed.fingerprint());
+        let mut flow_hir_changed = flow.clone();
+        flow_hir_changed.hir_fingerprint = fingerprint("hir-b");
+        assert_ne!(flow.fingerprint(), flow_hir_changed.fingerprint());
     }
 
     #[test]
@@ -714,5 +791,98 @@ mod tests {
         let key = ParseCacheKey::new(source("x = 1"), context);
         let changed_key = ParseCacheKey::new(source("x = 1"), changed_context);
         assert_ne!(key.fingerprint(), changed_key.fingerprint());
+    }
+
+    #[test]
+    fn document_identity_inputs_are_intentionally_omitted_from_content_keys() {
+        fn parse_key_for_document(
+            source_text: &str,
+            _version: DocumentVersion,
+            _file: FileId,
+            _uri: Option<&str>,
+        ) -> ParseCacheKey {
+            ParseCacheKey::new(source(source_text), context(CacheFamily::Parse))
+        }
+
+        fn diagnostics_key_for_document(
+            source_text: &str,
+            _version: DocumentVersion,
+            _file: FileId,
+            _uri: Option<&str>,
+        ) -> DiagnosticsCacheKey {
+            DiagnosticsCacheKey {
+                source_hash: source(source_text),
+                hir_fingerprint: fingerprint("hir-a"),
+                diagnostic_style: FrontendDiagnosticStyle::Bare,
+                context: context(CacheFamily::Diagnostics),
+            }
+        }
+
+        let first = parse_key_for_document(
+            "x = 1",
+            DocumentVersion::new(1),
+            FileId::new(1),
+            Some("file:///first.sifr"),
+        );
+        let second = parse_key_for_document(
+            "x = 1",
+            DocumentVersion::new(99),
+            FileId::new(2),
+            Some("file:///second.sifr"),
+        );
+
+        assert_eq!(first.fingerprint(), second.fingerprint());
+
+        let diagnostics_first = diagnostics_key_for_document(
+            "x = 1",
+            DocumentVersion::new(1),
+            FileId::new(1),
+            Some("file:///first.sifr"),
+        );
+        let diagnostics_second = diagnostics_key_for_document(
+            "x = 1",
+            DocumentVersion::new(99),
+            FileId::new(2),
+            Some("file:///second.sifr"),
+        );
+        assert_eq!(
+            diagnostics_first.fingerprint(),
+            diagnostics_second.fingerprint()
+        );
+    }
+
+    #[test]
+    fn package_identity_optional_paths_are_distinct_and_exhaustive() {
+        let none = PackageContextFingerprint::from_identity(&WorkspacePackageConfigIdentity {
+            workspace_root: None,
+            entrypoint: None,
+        });
+        let root_only = PackageContextFingerprint::from_identity(&WorkspacePackageConfigIdentity {
+            workspace_root: Some(SourcePath::new("pkg")),
+            entrypoint: None,
+        });
+        let entry_only =
+            PackageContextFingerprint::from_identity(&WorkspacePackageConfigIdentity {
+                workspace_root: None,
+                entrypoint: Some(SourcePath::new("pkg/main.sifr")),
+            });
+
+        assert_ne!(none.as_str(), root_only.as_str());
+        assert_ne!(none.as_str(), entry_only.as_str());
+        assert_ne!(root_only.as_str(), entry_only.as_str());
+    }
+
+    #[test]
+    fn project_workspace_context_is_path_sensitive() {
+        let first = WorkspaceContextFingerprint::project(&crate::ProjectRoot {
+            root: SourcePath::new("pkg"),
+            entrypoint: SourcePath::new("pkg/main.sifr"),
+        });
+        let second = WorkspaceContextFingerprint::project(&crate::ProjectRoot {
+            root: SourcePath::new("pkg"),
+            entrypoint: SourcePath::new("pkg/other.sifr"),
+        });
+
+        assert_ne!(first.as_str(), second.as_str());
     }
 }
