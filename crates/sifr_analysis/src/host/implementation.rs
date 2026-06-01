@@ -91,13 +91,15 @@ impl AnalysisHost {
         };
         self.refresh_file_map();
         self.refresh_current_revision();
-        self.session.record_analysis_document_update();
+        self.session
+            .record_dirty_scope(report.dirty_scope_report.clone());
         self.symbol_index = None;
         let report = InvalidationReport {
             previous_revision,
             next_revision: self.current_revision.graph,
             invalidated_modules: report.invalidated_modules,
             invalidated_queries: report.invalidated_queries,
+            dirty_scope_report: report.dirty_scope_report,
             updated_documents: vec![UpdatedDocumentInfo {
                 file,
                 old_version: current_version,

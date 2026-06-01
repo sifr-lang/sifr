@@ -3,8 +3,10 @@ use super::{
     local_import_dependencies, module_state, reveal_type_diagnostics, source_hash,
     symbols_from_hir, warning_diagnostics, DiskSourceProvider, DocumentVersion, FileId,
     SourceDependency, SourceFileView, SourceHash, SourceMapView, SourcePath, SourceProvider,
-    SourceRevision, SourceText, TrackingSourceProvider,
+    SourceRevision, SourceText, TrackingSourceProvider, WorkspaceDirtyReason, WorkspaceDirtyScope,
+    WorkspaceDirtyScopeReport,
 };
+use crate::module_signatures::{module_signature, ModuleSignature};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_hir::{
     lower_module_with_externals_and_name, ExternalDefs, HirModule, LoweringResult,
@@ -145,6 +147,7 @@ pub struct InvalidationReport {
     pub invalidated_modules: Vec<ModuleId>,
     pub invalidated_queries: Vec<QueryKind>,
     pub updated_documents: Vec<UpdatedDocumentInfo>,
+    pub dirty_scope_report: WorkspaceDirtyScopeReport,
 }
 
 #[derive(Clone, Debug)]
@@ -223,6 +226,7 @@ pub(super) struct ModuleState {
     pub(super) source: SourceText,
     pub(super) source_hash: SourceHash,
     pub(super) document_version: Option<DocumentVersion>,
+    pub(super) signature: ModuleSignature,
     pub(super) parsed: Option<ParsedModule>,
     pub(super) lowered: Option<LoweringResult>,
     pub(super) diagnostics: Option<Vec<RenderedDiagnostic>>,
@@ -234,6 +238,7 @@ pub struct FrontendContext {
     module_by_id: BTreeMap<ModuleId, usize>,
     entrypoint: ModuleId,
     edges: Vec<ModuleGraphEdge>,
+    reverse_edges: BTreeMap<ModuleId, Vec<ModuleId>>,
     graph_revision: GraphRevision,
     source_revision: SourceRevision,
     base_external_defs: ExternalDefs,
@@ -297,6 +302,7 @@ impl FrontendContext {
             module_by_id: BTreeMap::from([(ModuleId(0), 0)]),
             entrypoint: ModuleId(0),
             edges: Vec::new(),
+            reverse_edges: BTreeMap::new(),
             graph_revision: GraphRevision(0),
             source_revision: SourceRevision(0),
             base_external_defs: external_defs.clone(),
@@ -404,6 +410,7 @@ impl FrontendContext {
             module_by_id,
             entrypoint: ModuleId(0),
             edges: Vec::new(),
+            reverse_edges: BTreeMap::new(),
             graph_revision: GraphRevision(0),
             source_revision: SourceRevision(0),
             base_external_defs: ExternalDefs::default(),
@@ -430,29 +437,41 @@ impl FrontendContext {
         let old_hash = self.modules[index].source_hash.clone();
         let new_hash = source_hash(source.as_str());
         let old_version = self.modules[index].document_version;
+        let old_signature = self.modules[index].signature.clone();
         let file = self.modules[index].file;
+        let path = self.modules[index].path.clone();
         let text_changed = old_hash != new_hash;
+        let parsed =
+            sifr_syntax::parse_module(source.as_str(), Some(&self.modules[index].module_name));
+        let new_signature = parsed.as_ref().map_or_else(
+            |_| ModuleSignature::default(),
+            |parsed| module_signature(parsed.suite()),
+        );
         self.modules[index].source = source;
         self.modules[index].source_hash = new_hash;
         self.modules[index].document_version = document_version;
+        self.modules[index].signature = new_signature.clone();
         self.source_revision.0 += 1;
 
         let mut invalidated_modules = Vec::new();
         let mut invalidated_queries = Vec::new();
-        if text_changed {
-            self.external_defs = self.base_external_defs.clone();
-            self.lowering_modules.clear();
-            for module_state in &mut self.modules {
-                if module_state.id == module {
-                    module_state.parsed = None;
-                }
-                module_state.lowered = None;
-                module_state.diagnostics = None;
-                module_state.analysis = None;
-                invalidated_modules.push(module_state.id);
+        let dirty_scope_report = if text_changed {
+            let imports_changed = old_signature.imports != new_signature.imports;
+            let exports_changed = old_signature.exports != new_signature.exports;
+            let parse_failed = parsed.is_err();
+            invalidated_modules = if imports_changed || exports_changed || parse_failed {
+                self.reverse_dependency_closure(module)
+            } else {
+                vec![module]
+            };
+            self.clear_module_caches(&invalidated_modules);
+            if imports_changed || exports_changed || parse_failed {
+                self.external_defs = self.base_external_defs.clone();
+                self.rebuild_external_defs_from_lowered();
+                self.lowering_modules.clear();
+                self.graph_revision.0 += 1;
+                self.rebuild_edges();
             }
-            invalidated_modules.sort();
-            invalidated_modules.dedup();
             invalidated_queries.extend([
                 QueryKind::Parse,
                 QueryKind::Lower,
@@ -462,9 +481,30 @@ impl FrontendContext {
                 QueryKind::ModuleAnalysis,
                 QueryKind::ProjectAnalysis,
             ]);
-            self.graph_revision.0 += 1;
-            self.rebuild_edges();
-        }
+            let mut reasons = vec![WorkspaceDirtyReason::SourceTextChanged];
+            if imports_changed {
+                reasons.push(WorkspaceDirtyReason::ImportSignatureChanged);
+            }
+            if exports_changed {
+                reasons.push(WorkspaceDirtyReason::ExportSignatureChanged);
+            }
+            if parse_failed {
+                reasons.push(WorkspaceDirtyReason::Unknown);
+            }
+            let scope = if parse_failed || imports_changed {
+                WorkspaceDirtyScope::GraphStructure
+            } else if exports_changed {
+                WorkspaceDirtyScope::ReverseDependencies { path }
+            } else {
+                WorkspaceDirtyScope::OneModule { path }
+            };
+            WorkspaceDirtyScopeReport::new(scope, reasons)
+        } else {
+            WorkspaceDirtyScopeReport::new(
+                WorkspaceDirtyScope::None,
+                vec![WorkspaceDirtyReason::DocumentVersionOnly],
+            )
+        };
 
         Ok(InvalidationReport {
             previous_revision,
@@ -477,6 +517,7 @@ impl FrontendContext {
                 new_version: document_version,
                 text_changed,
             }],
+            dirty_scope_report,
         })
     }
 
@@ -557,6 +598,7 @@ impl FrontendContext {
                 Some(&self.modules[index].module_name),
             )
             .unwrap_or_else(|_| ParsedModule::empty());
+            self.modules[index].signature = module_signature(parsed.suite());
             self.modules[index].parsed = Some(parsed);
             CacheStatus::Miss
         };
@@ -668,6 +710,7 @@ impl FrontendContext {
             self.modules[index].source.as_str(),
             Some(&self.modules[index].module_name),
         )?;
+        self.modules[index].signature = module_signature(parsed.suite());
         self.modules[index].parsed = Some(parsed);
         Ok(CacheStatus::Miss)
     }
@@ -694,6 +737,7 @@ impl FrontendContext {
                 return CacheStatus::Miss;
             }
         };
+        self.modules[index].signature = module_signature(&parsed);
         let module_names: BTreeMap<String, ModuleId> = self
             .modules
             .iter()
@@ -779,12 +823,14 @@ impl FrontendContext {
             .map(|module| (module.module_name.clone(), module.id))
             .collect();
         let mut edges = BTreeSet::new();
-        for module in &self.modules {
+        for index in 0..self.modules.len() {
+            let module = &self.modules[index];
             if let Ok(parsed) =
                 sifr_syntax::parse_module(module.source.as_str(), Some(&module.module_name))
             {
+                self.modules[index].signature = module_signature(parsed.suite());
                 for import in local_import_dependencies(parsed.suite(), &module_names) {
-                    edges.insert((module.id, import));
+                    edges.insert((self.modules[index].id, import));
                 }
             }
         }
@@ -792,5 +838,50 @@ impl FrontendContext {
             .into_iter()
             .map(|(importer, imported)| ModuleGraphEdge { importer, imported })
             .collect();
+        self.reverse_edges = BTreeMap::new();
+        for edge in &self.edges {
+            self.reverse_edges
+                .entry(edge.imported)
+                .or_default()
+                .push(edge.importer);
+        }
+        for dependents in self.reverse_edges.values_mut() {
+            dependents.sort();
+            dependents.dedup();
+        }
+    }
+
+    fn reverse_dependency_closure(&self, module: ModuleId) -> Vec<ModuleId> {
+        let mut seen = BTreeSet::from([module]);
+        let mut queue = vec![module];
+        while let Some(current) = queue.pop() {
+            if let Some(dependents) = self.reverse_edges.get(&current) {
+                for dependent in dependents {
+                    if seen.insert(*dependent) {
+                        queue.push(*dependent);
+                    }
+                }
+            }
+        }
+        seen.into_iter().collect()
+    }
+
+    fn clear_module_caches(&mut self, modules: &[ModuleId]) {
+        for module in modules {
+            let index = self.index_for_module(*module);
+            let module_state = &mut self.modules[index];
+            module_state.parsed = None;
+            module_state.lowered = None;
+            module_state.diagnostics = None;
+            module_state.analysis = None;
+        }
+    }
+
+    fn rebuild_external_defs_from_lowered(&mut self) {
+        for module in &self.modules {
+            if let Some(lowered) = &module.lowered {
+                collect_module_exports(&module.module_name, lowered, &mut self.external_defs);
+            }
+        }
     }
 }
