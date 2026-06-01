@@ -797,7 +797,7 @@ pub(super) fn test_invalid_subscript_receiver_has_type_code() {
 #[test]
 pub(super) fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
     let result = lower_source(
-        "class ChainCell:\n    next: ChainCell | None\n\n    def __init__(self):\n        self.next = None\n\nclass Wrapper:\n    head: ChainCell\n\n    def __init__(self):\n        self.head = ChainCell()\n        self.head.next = ChainCell()\n",
+        "class LinkedNode:\n    next: LinkedNode | None\n\n    def __init__(self):\n        self.next = None\n\nclass Wrapper:\n    head: LinkedNode\n\n    def __init__(self):\n        self.head = LinkedNode()\n        self.head.next = LinkedNode()\n",
     );
     assert!(
         result.is_ok(),
@@ -809,7 +809,7 @@ pub(super) fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
 #[test]
 pub(super) fn test_nested_attribute_assignment_lowers_for_optional_field_base() {
     let result = lower_source(
-        "class ChainCell:\n    next: ChainCell | None\n    prev: ChainCell | None\n\n    def __init__(self):\n        self.next = None\n        self.prev = None\n\ndef relink(mut node: ChainCell) -> None:\n    if node.prev is not None:\n        node.prev.next = node.next\n",
+        "class LinkedNode:\n    next: LinkedNode | None\n    prev: LinkedNode | None\n\n    def __init__(self):\n        self.next = None\n        self.prev = None\n\ndef relink(mut node: LinkedNode) -> None:\n    if node.prev is not None:\n        node.prev.next = node.next\n",
     );
     assert!(
         result.is_ok(),

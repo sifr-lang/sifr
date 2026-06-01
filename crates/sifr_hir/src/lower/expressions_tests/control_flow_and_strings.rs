@@ -663,7 +663,7 @@ pub(super) fn test_comparable_bound_accepts_homogeneous_tuples() {
 #[test]
 pub(super) fn test_recursive_tree_attributes_narrow_after_truthiness_or_guard() {
     let result = lower_source(
-        "class BinaryBranch:\n    val: int\n    left: BinaryBranch | None\n    right: BinaryBranch | None\n\n    def __init__(self, val: int, left: BinaryBranch | None, right: BinaryBranch | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef mirrored_sum(p: BinaryBranch | None, q: BinaryBranch | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return 0\n    left: BinaryBranch | None = p.left\n    right: BinaryBranch | None = q.right\n    return p.val + q.val + mirrored_sum(left, q.left) + mirrored_sum(p.right, right)\n",
+        "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef paired_tree_value_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return 0\n    left: TreeNode | None = p.left\n    right: TreeNode | None = q.right\n    return p.val + q.val + paired_tree_value_sum(left, q.left) + paired_tree_value_sum(p.right, right)\n",
     );
     assert!(
         result.is_ok(),

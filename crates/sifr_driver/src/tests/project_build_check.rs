@@ -151,28 +151,28 @@ fn test_build_project_preserves_imported_class_constructors_and_signatures() {
     std::fs::write(
         &main_file,
         r#"
-from helpers.list_node import Bag, ChainCell, nodeVal
+from helpers.nodes import NodeBag, LinkedNode, node_value
 
 def main():
-    bag = Bag()
+    bag = NodeBag()
     assert bag.count() == 0
-    head = ChainCell(1, ChainCell(2, None))
-    assert nodeVal(head) == 1
+    head = LinkedNode(1, LinkedNode(2, None))
+    assert node_value(head) == 1
 "#,
     )
     .expect("entry should be written");
     std::fs::write(
-        dir.join("lib/helpers/list_node.sifr"),
+        dir.join("lib/helpers/nodes.sifr"),
         r#"
-class ChainCell:
+class LinkedNode:
     val: int
-    next: ChainCell | None
+    next: LinkedNode | None
 
-    def __init__(self, val: int = 0, next: ChainCell | None = None):
+    def __init__(self, val: int = 0, next: LinkedNode | None = None):
         self.val = val
         self.next = next
 
-class Bag:
+class NodeBag:
     items: list[int]
 
     def __init__(self):
@@ -181,7 +181,7 @@ class Bag:
     def count(self) -> int:
         return len(self.items)
 
-def nodeVal(node: ChainCell | None) -> int:
+def node_value(node: LinkedNode | None) -> int:
     if node is None:
         return 0
     return node.val

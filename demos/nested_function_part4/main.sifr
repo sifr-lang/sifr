@@ -2,25 +2,25 @@
 # Source issue: ad-hoc-full-nested-function-pipeline-part4-execution.md
 # Part 4 demo: production nested-helper lowering for recursive collection-capture patterns
 
-def combination_sum(candidates: list[int], target: int) -> list[list[int]]:
+def collect_value_groups(items: list[int], limit: int) -> list[list[int]]:
     result = []
 
     def dfs(i, cur, total):
-        if total == target:
+        if total == limit:
             result.append(cur.copy())
             return
-        if i >= len(candidates) or total > target:
+        if i >= len(items) or total > limit:
             return
 
-        cur.append(candidates[i])
-        dfs(i, cur, total + candidates[i])
+        cur.append(items[i])
+        dfs(i, cur, total + items[i])
         cur.pop()
         dfs(i + 1, cur, total)
 
     dfs(0, [], 0)
     return result
 
-def subsets(nums: list[int]) -> list[list[int]]:
+def collect_prefixes(nums: list[int]) -> list[list[int]]:
     result = []
     subset = []
 
@@ -38,5 +38,5 @@ def subsets(nums: list[int]) -> list[list[int]]:
     return result
 
 def main():
-    assert str(combination_sum([2, 3, 6, 7], 7)) == '[[2, 2, 3], [7]]'
-    assert str(subsets([1, 2, 3])) == '[[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]'
+    assert str(collect_value_groups([1, 2, 4], 4)) == '[[1, 1, 1, 1], [1, 1, 2], [2, 2], [4]]'
+    assert str(collect_prefixes([1, 2, 3])) == '[[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]'

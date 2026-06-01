@@ -220,7 +220,7 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
             DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
         ),
         (
-            "module 'helpers.list_node' resolves to file '/tmp/ws/lib/helpers/list_node.sifr' but parent name 'helpers' is also a module file '/tmp/ws/lib/helpers.sifr'; package directories are not supported",
+            "module 'helpers.nodes' resolves to file '/tmp/ws/lib/helpers/nodes.sifr' but parent name 'helpers' is also a module file '/tmp/ws/lib/helpers.sifr'; package directories are not supported",
             DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
         ),
     ];

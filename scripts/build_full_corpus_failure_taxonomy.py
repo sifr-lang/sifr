@@ -92,7 +92,7 @@ HEURISTIC_RULES: list[tuple[str, list[str]]] = [
         "recursive_node_and_field_expression_surface",
         [
             "unknown type: 'TreeNode'",
-            "unknown type: 'ListNode'",
+            "unknown type: 'LinkedNode'",
             "attribute access '.right' is not supported as an expression",
             "attribute access '.left' is not supported as an expression",
         ],

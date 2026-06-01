@@ -61,7 +61,7 @@ fn test_run_tests_resolves_dotted_local_support_modules() {
     std::fs::create_dir_all(test_dir.join("helpers")).expect("test helper dir should be created");
 
     std::fs::write(
-        test_dir.join("helpers").join("list_node.sifr"),
+        test_dir.join("helpers").join("nodes.sifr"),
         r#"
 def value() -> int:
     return 41
@@ -71,7 +71,7 @@ def value() -> int:
     std::fs::write(
         test_dir.join("test_dotted_imports.sifr"),
         r#"
-from helpers.list_node import value
+from helpers.nodes import value
 
 def test_dotted_import():
     assert value() == 41
@@ -447,7 +447,7 @@ fn test_compose_test_runner_lib_is_test_scoped() {
 #[test]
 fn test_compose_test_runner_lib_declares_dotted_modules_by_namespace() {
     let support_modules = vec![
-        "helpers.list_node".to_string(),
+        "helpers.nodes".to_string(),
         "helpers.tree_node".to_string(),
         "math".to_string(),
     ];
@@ -458,6 +458,6 @@ fn test_compose_test_runner_lib_declares_dotted_modules_by_namespace() {
     assert!(lib_source.starts_with("#![cfg(test)]"));
     assert!(lib_source.contains("mod helpers;\n"));
     assert!(lib_source.contains("mod math;\n"));
-    assert!(!lib_source.contains("mod helpers.list_node;"));
+    assert!(!lib_source.contains("mod helpers.nodes;"));
     assert!(lib_source.contains("#[test]\nfn smoke() {}"));
 }

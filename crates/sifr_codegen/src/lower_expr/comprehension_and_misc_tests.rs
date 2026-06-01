@@ -225,7 +225,7 @@ pub(super) fn lowers_map_builtin_call_with_typed_lambda() {
 #[test]
 pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
     let node_ty = Type::Class {
-        name: "BinaryBranch".to_string(),
+        name: "TreeNode".to_string(),
         fields: vec![],
         methods: vec![],
         parent_class: None,
@@ -235,7 +235,7 @@ pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
         func: "map".to_string(),
         args: vec![
             HirExpr::Name {
-                name: "treeToString".to_string(),
+                name: "format_node".to_string(),
                 ty: Type::Function(sifr_type_system::FunctionType {
                     params: vec![(
                         "node".to_string(),
@@ -267,7 +267,7 @@ pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
                                 if matches!(
                                     body.as_ref(),
                                     RustExpr::FnCall { func, args }
-                                        if matches!(func.as_ref(), RustExpr::Ident(name) if name == "treeToString")
+                                        if matches!(func.as_ref(), RustExpr::Ident(name) if name == "format_node")
                                             && matches!(
                                                 args.first(),
                                                 Some(RustExpr::Ref { mutable: false, expr })

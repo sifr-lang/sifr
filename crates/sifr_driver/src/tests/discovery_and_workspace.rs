@@ -237,21 +237,21 @@ fn test_workspace_resolver_finds_declared_source_roots_and_dotted_paths() {
     std::fs::create_dir_all(&helper_dir).expect("helper dir should be created");
     std::fs::write(
         entry_dir.join("main.sifr"),
-        "from helpers.list_node import ChainCell\n",
+        "from helpers.nodes import LinkedNode\n",
     )
     .expect("main should be written");
     std::fs::write(
-        helper_dir.join("list_node.sifr"),
-        "class ChainCell:\n    pass\n",
+        helper_dir.join("nodes.sifr"),
+        "class LinkedNode:\n    pass\n",
     )
     .expect("helper should be written");
 
     let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib"]);
     let resolved = resolver
-        .resolve("helpers.list_node")
+        .resolve("helpers.nodes")
         .expect("dotted helper should resolve");
 
-    assert_eq!(resolved.path, helper_dir.join("list_node.sifr"));
+    assert_eq!(resolved.path, helper_dir.join("nodes.sifr"));
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -411,14 +411,14 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
     std::fs::create_dir_all(dir.join("lib/helpers")).expect("helper dir should be created");
     std::fs::write(
         entry_dir.join("main.sifr"),
-        "from helpers.list_node import ChainCell\n",
+        "from helpers.nodes import LinkedNode\n",
     )
     .expect("main should be written");
     std::fs::write(dir.join("lib/helpers.sifr"), "VALUE: int = 1\n")
         .expect("parent helper should be written");
     std::fs::write(
-        dir.join("lib/helpers/list_node.sifr"),
-        "class ChainCell:\n    pass\n",
+        dir.join("lib/helpers/nodes.sifr"),
+        "class LinkedNode:\n    pass\n",
     )
     .expect("dotted helper should be written");
 
@@ -436,7 +436,7 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
     );
     assert!(errors[0]
         .message
-        .contains("import target 'helpers.list_node' collides with a namespace package"));
+        .contains("import target 'helpers.nodes' collides with a namespace package"));
     assert!(errors[0].spans.iter().any(|span| span.is_primary));
     assert!(errors[0]
         .children

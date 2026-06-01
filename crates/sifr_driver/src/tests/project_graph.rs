@@ -337,13 +337,13 @@ fn test_assemble_project_main_rs_is_deterministic_against_hashmap_order() {
 
 #[test]
 fn test_assemble_project_main_rs_declares_dotted_modules_by_top_level_namespace() {
-    let compile_order = vec!["helpers.list_node".to_string(), "main".to_string()];
+    let compile_order = vec!["helpers.nodes".to_string(), "main".to_string()];
 
     let mut rust_files = HashMap::new();
     rust_files.insert("main".to_string(), "fn main() {}\n".to_string());
     rust_files.insert(
-        "helpers.list_node".to_string(),
-        "pub struct ChainCell;\n".to_string(),
+        "helpers.nodes".to_string(),
+        "pub struct LinkedNode;\n".to_string(),
     );
 
     let main_rs = assemble_project_main_rs(&compile_order, &rust_files);

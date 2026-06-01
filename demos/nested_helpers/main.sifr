@@ -3,29 +3,29 @@
 # Phase 31 m31_d demo: nested-helper canonical closure
 
 # Example 1: typed nested helper with explicit dict-key guard.
-def demo_letter_combinations(digits: str) -> list[str]:
+def expand_keyed_strings(keys: str) -> list[str]:
     res: list[str] = []
-    digit_to_chars: dict[str, list[str]] = {
-        "2": ["a", "b", "c"],
-        "3": ["d", "e", "f"],
+    key_to_suffixes: dict[str, list[str]] = {
+        "L": ["a", "b", "c"],
+        "R": ["d", "e", "f"],
     }
 
     def backtrack(i: int, cur: str) -> None:
-        if i >= len(digits):
+        if i >= len(keys):
             res.append(str(cur))
             return
-        d = digits[i]
-        if d not in digit_to_chars:
+        key = keys[i]
+        if key not in key_to_suffixes:
             return
-        for ch in digit_to_chars[d]:
-            backtrack(i + 1, cur + ch)
+        for suffix in key_to_suffixes[key]:
+            backtrack(i + 1, cur + suffix)
 
-    if len(digits) > 0:
+    if len(keys) > 0:
         backtrack(0, "")
     return res
 
 # Example 2: recursive helper returns count directly (no nonlocal mutation).
-def demo_total_n_queens(n: int) -> int:
+def count_configurations(n: int) -> int:
     def backtrack(i: int, cols: set[int], posdiag: set[int], negdiag: set[int]) -> int:
         if i == n:
             return 1
@@ -44,7 +44,7 @@ def demo_total_n_queens(n: int) -> int:
 
     return backtrack(0, set(), set(), set())
 
-# Example 3: top-level helper pipeline for DSU to avoid nested closure borrow issues.
+# Example 3: top-level relation helpers to avoid nested closure borrow issues.
 def find_root(n: int, par: list[int]) -> int:
     if n < 0 or n >= len(par):
         return 0
@@ -68,7 +68,7 @@ def union_nodes(n1: int, n2: int, mut par: list[int], mut rank: list[int]) -> bo
         rank[p2] = rank[p2] + rank[p1]
     return True
 
-def demo_redundant_connection(edges: list[tuple[int, int]]) -> list[int]:
+def detect_first_cycle(edges: list[tuple[int, int]]) -> list[int]:
     par: list[int] = [i for i in range(len(edges) + 1)]
     rank: list[int] = [1 for _ in range(len(edges) + 1)]
     for n1, n2 in edges:
@@ -77,6 +77,6 @@ def demo_redundant_connection(edges: list[tuple[int, int]]) -> list[int]:
     return []
 
 def main():
-    assert str(demo_letter_combinations("23")) == '["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"]'
-    assert demo_total_n_queens(4) == 2
-    assert demo_redundant_connection([(1, 2), (1, 3), (2, 3)]) == [2, 3]
+    assert str(expand_keyed_strings("LR")) == '["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"]'
+    assert count_configurations(4) == 2
+    assert detect_first_cycle([(1, 2), (1, 3), (2, 3)]) == [2, 3]

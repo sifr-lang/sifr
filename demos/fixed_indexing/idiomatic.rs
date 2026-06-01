@@ -6,7 +6,7 @@ fn second_or_zero(values: &[i64]) -> i64 {
     }
 }
 
-fn min_cost_climbing(mut cost: Vec<i64>) -> i64 {
+fn neighbor_min_cost(mut cost: Vec<i64>) -> i64 {
     if cost.len() < 2 {
         return 0;
     }
@@ -21,5 +21,5 @@ fn min_cost_climbing(mut cost: Vec<i64>) -> i64 {
 fn main() {
     assert_eq!(second_or_zero(&[8, 13]), 13);
     assert_eq!(second_or_zero(&[8]), 0);
-    assert_eq!(min_cost_climbing(vec![10, 15, 20]), 15);
+    assert_eq!(neighbor_min_cost(vec![10, 15, 20]), 15);
 }

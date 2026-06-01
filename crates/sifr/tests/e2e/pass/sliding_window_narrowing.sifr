@@ -17,21 +17,21 @@ def max_signal_count(stream: str, k: int) -> int:
         res = max(res, total)
     return res
 
-def longest_distinct_badge_run(badges: str) -> int:
+def longest_unique_window(text: str) -> int:
     active = set()
     l = 0
     res = 0
 
-    for r in range(len(badges)):
-        while badges[r] in active:
-            active.remove(badges[l])
+    for r in range(len(text)):
+        while text[r] in active:
+            active.remove(text[l])
             l += 1
-        active.add(badges[r])
+        active.add(text[r])
         res = max(res, r - l + 1)
     return res
 
 def main():
     assert str(max_signal_count("ABxCCCz", 3)) == '3'
     assert str(max_signal_count("ABCDE", 2)) == '2'
-    assert str(longest_distinct_badge_run("abcabcbb")) == '3'
-    assert str(longest_distinct_badge_run("zzzzz")) == '1'
+    assert str(longest_unique_window("abcaef")) == '5'
+    assert str(longest_unique_window("xxxxx")) == '1'

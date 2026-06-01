@@ -7,7 +7,7 @@ def second_or_zero(values: list[int]) -> int:
         return 0
     return values[1]
 
-def min_cost_climbing(mut cost: list[int]) -> int:
+def neighbor_min_cost(mut cost: list[int]) -> int:
     if len(cost) < 2:
         return 0
     for i in range(len(cost) - 3, -1, -1):
@@ -17,4 +17,4 @@ def min_cost_climbing(mut cost: list[int]) -> int:
 def main():
     assert second_or_zero([8, 13]) == 13
     assert second_or_zero([8]) == 0
-    assert min_cost_climbing([10, 15, 20]) == 15
+    assert neighbor_min_cost([10, 15, 20]) == 15

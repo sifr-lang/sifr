@@ -91,16 +91,16 @@ fn test_recursive_nested_helper_infers_int_signature_from_usage() {
 #[test]
 fn test_recursive_nested_helper_infers_mutable_collection_param_from_usage() {
     let module = lower_source(
-        "def collect_budget_routes(weights: list[int], budget: int) -> list[list[int]]:\n    routes = []\n\n    def visit(index, current, total):\n        if total == budget:\n            routes.append(current.copy())\n            return\n        if index >= len(weights) or total > budget:\n            return\n        current.append(weights[index])\n        visit(index, current, total + weights[index])\n        current.pop()\n        visit(index + 1, current, total)\n\n    visit(0, [], 0)\n    return routes\n",
+        "def accumulate_items(items: list[int], limit: int) -> list[list[int]]:\n    snapshots = []\n\n    def visit(index, current, total):\n        if total == limit:\n            snapshots.append(current.copy())\n            return\n        if index >= len(items) or total > limit:\n            return\n        current.append(items[index])\n        visit(index, current, total + items[index])\n        current.pop()\n        visit(index + 1, current, total)\n\n    visit(0, [], 0)\n    return snapshots\n",
     )
     .expect("recursive local helpers should infer mutable collection params from usage");
 
-    let collect_budget_routes = module
+    let accumulate_items = module
         .functions
         .iter()
-        .find(|function| function.name == "collect_budget_routes")
-        .expect("collect_budget_routes function missing");
-    let HirStmt::NestedFunction { func } = &collect_budget_routes.body[1] else {
+        .find(|function| function.name == "accumulate_items")
+        .expect("accumulate_items function missing");
+    let HirStmt::NestedFunction { func } = &accumulate_items.body[1] else {
         panic!("expected nested visit helper");
     };
 
