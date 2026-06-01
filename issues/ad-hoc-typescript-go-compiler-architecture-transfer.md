@@ -14,8 +14,7 @@ Status: in progress
 | M5 LSP Persistent Session Integration | merged | [#2238](https://github.com/sifr-lang/sifr/pull/2238) | Moves LSP analysis ownership from `DocumentStore` into the serialized `Session`, feeds open/change/save buffers into `WorkspaceSession` overlays, and rejects stale request publication by captured snapshot plus document version while preserving serialized request handling. |
 | M6 Event Compaction And Dirty Scope | merged | [#2239](https://github.com/sifr-lang/sifr/pull/2239) | Compacts batched document edits before analysis updates, summarizes watcher events before dirty-scope classification, records precise dirty scope/reason reports, and degrades incompatible or stormy invalidation conservatively. |
 | M7 Module Signatures And Dependency Invalidation | merged | [#2241](https://github.com/sifr-lang/sifr/pull/2241) | Adds import/export/module signatures, reverse-dependency closure invalidation, and local private-body edit reuse for unchanged public/import signatures. |
-| M8 First-Class Flow Graph | in progress | TBD | Adds `sifr_hir::flow_graph`, snapshot-scoped `LoweringResult.flow_graph`, graph-backed `FlowFacts` debug/fingerprint access, and lowering-time flow effects for narrowing, mutation invalidation, moves, and borrows. |
-| M8 First-Class Flow Graph | in progress | pending | Adds snapshot-scoped HIR flow graphs, records narrowing/mutation/ownership effects during lowering, exposes graph fingerprints/traces, and carries per-module flow graphs through project lowering. |
+| M8 First-Class Flow Graph | in progress | [#2243](https://github.com/sifr-lang/sifr/pull/2243) | Adds `sifr_hir::flow_graph`, snapshot-scoped `LoweringResult.flow_graph`, graph-backed `FlowFacts` debug/fingerprint access, and lowering-time flow effects for narrowing, mutation invalidation, moves, and borrows. |
 
 M2 local validation so far:
 
@@ -135,16 +134,6 @@ M8 local validation so far:
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 306.27s, advisories: warm wall-time budget exceeded; group skew is high
 - Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m8-first-class-flow-graph-review-pass-3.md`)
-
-M8 local validation so far:
-
-- `cargo fmt --check`
-- `git diff --check`
-- `cargo test -p sifr_hir flow_graph`
-- `cargo test -p sifr_hir -- --skip test_e2e_pass`
-- `cargo test -p sifr_driver --lib`
-- `cargo clippy -p sifr_hir -p sifr_driver -- -D warnings`
-- `python3 scripts/check_file_size_guardrails.py`
 
 ## Purpose
 
