@@ -1,7 +1,38 @@
 # Ad Hoc Phase: Fix LeetCode Benchmark Slowness Root Causes
 
-Status: complete on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; final reintegration merged through `sifr-lang/sifr#2220`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`; 2026-05-31 canonical-Python audit and fresh full Python/Sifr benchmark closure completed locally with 0 measured-slower problems
+Status: complete on 2026-05-30; M1 heap/trie/direct/stateful parity waves merged through `sifr-lang/leetcode#20`; M2 stateful/list-key/trie-direct-state/TinyURL waves merged through `sifr-lang/sifr#2208` and `sifr-lang/leetcode#24`; final reintegration merged through `sifr-lang/sifr#2220`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`; 2026-05-31 canonical-Python audit and fresh full Python/Sifr benchmark closure completed locally with 0 measured-slower problems; 2026-06-01 394-problem Python/Sifr runtime and memory closure completed locally with 0 regressions
 Context: corrective implementation phase for `audits/leetcode` after the completed benchmark analyzer/report phase identified every measured Sifr-slower, partial, and failed LeetCode benchmark case.
+
+## 2026-06-01 394-Problem Closure Addendum
+
+The LeetCode benchmark registry now has 394 benchmarkable problems with both canonical Python sources and matching Sifr sources. Python sources were not changed for this closure; Sifr fixtures and benchmark harness code were adjusted where emitted Rust or runner behavior made the comparison non-representative.
+
+Fresh local raw-result audit after the split full run and affected-harness reruns:
+
+| Metric | Count |
+| --- | ---: |
+| Registry problems | 394 |
+| Benchmarkable problems | 394 |
+| Fully complete problems | 394 |
+| Complete fixture pairs | 1178 |
+| Measured Sifr runtime regressions vs Python | 0 |
+| Measured Sifr peak-RSS regressions vs Python | 0 |
+| Partial benchmark problems | 0 |
+| No-pair failed problems | 0 |
+
+Merged PRs: `sifr-lang/leetcode#36` and `sifr-lang/sifr#2225`.
+
+Closure fixes included:
+
+- `0076_minimum_window_substring`: explicit `dict[str, int]` annotations avoid mixed string/character map inference in generated Rust.
+- `0662_maximum_width_of_binary_tree`: direct optional index unwrapping avoids nested optional codegen in the runner build.
+- `0981_time_based_key_value_store`: direct map membership plus indexed bucket reads avoid cloning the full timestamp list on every binary-search lookup.
+- `0332_reconstruct_itinerary`: sorted adjacency traversal now uses map bucket append and per-source cursors instead of cloned adjacency slices.
+- `1462_course_schedule_iv`: Sifr now follows the Python DFS/memo prerequisite-set algorithm, including self-prerequisite membership.
+- Generic Sifr benchmark runners now avoid retaining large validation list results into benchmark loops, use structural checksums for `list[list[int]]` loop results, and copy parsed base inputs for mutating list runners instead of repeatedly tokenizing large fixtures.
+- `0047_permutations_ii` fixture generation now uses four repeated copies per value (`index // 4`) instead of three. This keeps the duplicate-permutation algorithm covered while preventing benchmark memory from being dominated by an enormous expected/result artifact.
+
+Claude Opus review round `reviews/complete-sifr-leetcode-benchmarks-review-2.md` found no blockers.
 
 ## 2026-05-31 Closure Addendum
 
@@ -856,10 +887,10 @@ Fix-phase Claude review rounds:
 | Metric | Count |
 | --- | --- |
 | Registry problems | 394 |
-| Benchmarkable problems | 325 |
-| Source-only/unbenchmarked problems | 69 |
-| Fully complete problems | 325 |
-| Complete fixture pairs | 971 |
+| Benchmarkable problems | 394 |
+| Source-only/unbenchmarked problems | 0 |
+| Fully complete problems | 394 |
+| Complete fixture pairs | 1178 |
 | Measured-slower problems | 0 |
 | Partial benchmark problems | 0 |
 | No-pair failed problems | 0 |
@@ -872,7 +903,7 @@ Fix-phase Claude review rounds:
 ### Partial Benchmarks
 
 | Problem | Complete pairs | Missing sizes | Status |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 
 ### No-Pair Failures
 

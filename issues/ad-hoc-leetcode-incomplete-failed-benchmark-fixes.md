@@ -1,7 +1,25 @@
 # Ad Hoc Phase: LeetCode Incomplete And Failed Benchmark Fixes
 
-Status: complete on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, `sifr-lang/leetcode#26`, `sifr-lang/leetcode#27`, `sifr-lang/leetcode#28`, `sifr-lang/leetcode#29`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`, plus compiler support in `sifr-lang/sifr#2215`, `sifr-lang/sifr#2218`, and `sifr-lang/sifr#2220`; 2026-05-31 rerun confirms 325/325 benchmarkable problems complete with no partial or no-pair failures
+Status: complete on 2026-05-30; merged `sifr-lang/leetcode#8` through `sifr-lang/leetcode#14`, `sifr-lang/leetcode#19`, `sifr-lang/leetcode#20`, `sifr-lang/leetcode#25`, `sifr-lang/leetcode#26`, `sifr-lang/leetcode#27`, `sifr-lang/leetcode#28`, `sifr-lang/leetcode#29`, `sifr-lang/leetcode#30`, and `sifr-lang/leetcode#31`, plus compiler support in `sifr-lang/sifr#2215`, `sifr-lang/sifr#2218`, and `sifr-lang/sifr#2220`; 2026-05-31 rerun confirms 325/325 benchmarkable problems complete with no partial or no-pair failures; 2026-06-01 rerun confirms 394/394 benchmarkable problems complete with no partial or no-pair failures
 Context: follow-up phase for the `Incomplete And Failed Problem Appendix` in `issues/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md`.
+
+## 2026-06-01 394-Problem Closure Addendum
+
+The expanded benchmark registry now includes all 394 problem entries with Python and Sifr sources. The full Python/Sifr raw analyzer reports:
+
+| Metric | Count |
+| --- | ---: |
+| Benchmarkable problems | 394 |
+| Fully complete problems | 394 |
+| Complete fixture pairs | 1178 |
+| Partial benchmark problems | 0 |
+| No-pair failed problems | 0 |
+
+Merged PRs: `sifr-lang/leetcode#36` and `sifr-lang/sifr#2225`.
+
+Build and correctness fixes in this final closure wave covered the remaining Sifr-only issues discovered by the all-problem run: explicit map type annotations for `0076`, optional-index shape cleanup for `0662`, Python-shaped DFS/memo behavior for `1462`, and runner-level memory/copy fixes for mutating lists and nested integer-list checksums.
+
+Claude Opus review round `reviews/complete-sifr-leetcode-benchmarks-review-2.md` found no blockers.
 
 ## 2026-05-31 Closure Addendum
 

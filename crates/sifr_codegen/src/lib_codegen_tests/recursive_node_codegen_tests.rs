@@ -45,16 +45,15 @@ fn test_owned_recursive_option_field_take_preserves_parent_use() {
         self.val = val
         self.next = next
 
-def swapPairs(own mut head: ChainCell | None) -> ChainCell | None:
+def detachChildOrKeepParent(own mut head: ChainCell | None) -> ChainCell | None:
     if head is None:
         return None
-    second: ChainCell | None = head.next
-    if second is None:
+    child: ChainCell | None = head.next
+    if child is None:
         return head
-    rest: ChainCell | None = second.next
+    rest: ChainCell | None = child.next
     head.next = rest
-    second.next = head
-    return second
+    return child
 "#,
     );
 
