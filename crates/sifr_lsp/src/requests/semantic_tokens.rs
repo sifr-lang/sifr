@@ -24,8 +24,7 @@ fn tokens(
     range: Option<ruff_text_size::TextRange>,
 ) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let tokens = snapshot
             .semantic_tokens(host, file, range)
             .map_err(|error| LspError::internal(error.message))?

@@ -1,9 +1,5 @@
 use crate::conversion::uri_to_path;
 use crate::errors::{LspError, LspResult};
-use sifr_analysis::{
-    AnalysisHost, AnalysisSnapshot, FileId, FrontendInput, SourcePath, SourceText,
-};
-use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -41,14 +37,6 @@ pub(crate) struct DocumentState {
     path: PathBuf,
     version: Option<i32>,
     text: String,
-    analysis: DocumentAnalysis,
-}
-
-#[derive(Default)]
-struct DocumentAnalysis {
-    host: Option<AnalysisHost>,
-    file: Option<FileId>,
-    load_diagnostics: Vec<RenderedDiagnostic>,
 }
 
 impl DocumentStore {
@@ -100,7 +88,6 @@ impl DocumentStore {
         state.reject_stale(version)?;
         state.version = version;
         state.text = text;
-        state.rebuild();
         Ok(())
     }
 
@@ -125,7 +112,6 @@ impl DocumentStore {
         }
         state.text.replace_range(start..end, text);
         state.version = version;
-        state.rebuild();
         Ok(())
     }
 
@@ -135,7 +121,6 @@ impl DocumentStore {
         };
         if let Some(text) = text {
             state.text = text;
-            state.rebuild();
         }
         true
     }
@@ -156,44 +141,19 @@ impl DocumentStore {
             .ok_or_else(|| LspError::invalid_params(format!("document is not open: {uri}")))
     }
 
-    pub(crate) fn documents_mut(&mut self) -> impl Iterator<Item = &mut DocumentState> {
-        self.documents.values_mut()
-    }
-
-    pub(crate) fn uri_map(&self) -> BTreeMap<u32, String> {
-        self.documents
-            .values()
-            .filter_map(|document| {
-                document
-                    .file()
-                    .map(|file| (file.as_u32(), document.uri().to_string()))
-            })
-            .collect()
-    }
-
-    pub(crate) fn source_map(&self) -> BTreeMap<u32, String> {
-        self.documents
-            .values()
-            .filter_map(|document| {
-                document
-                    .file()
-                    .map(|file| (file.as_u32(), document.text().to_string()))
-            })
-            .collect()
+    pub(crate) fn document_uris(&self) -> Vec<String> {
+        self.documents.keys().cloned().collect()
     }
 }
 
 impl DocumentState {
     fn new(uri: String, path: PathBuf, version: Option<i32>, text: String) -> Self {
-        let mut state = Self {
+        Self {
             uri,
             path,
             version,
             text,
-            analysis: DocumentAnalysis::default(),
-        };
-        state.rebuild();
-        state
+        }
     }
 
     pub(crate) fn uri(&self) -> &str {
@@ -212,40 +172,6 @@ impl DocumentState {
         &self.path
     }
 
-    pub(crate) fn file(&self) -> Option<FileId> {
-        self.analysis.file
-    }
-
-    pub(crate) fn load_diagnostics(&self) -> &[RenderedDiagnostic] {
-        &self.analysis.load_diagnostics
-    }
-
-    pub(crate) fn with_host<T>(
-        &mut self,
-        operation: impl FnOnce(&AnalysisSnapshot, &mut AnalysisHost, FileId, &str) -> LspResult<T>,
-    ) -> LspResult<T> {
-        let Some(file) = self.analysis.file else {
-            return Err(LspError::internal(format!(
-                "analysis is unavailable for {}",
-                self.path.display()
-            )));
-        };
-        let Some(host) = self.analysis.host.as_mut() else {
-            return Err(LspError::internal(format!(
-                "analysis is unavailable for {}",
-                self.path.display()
-            )));
-        };
-        let snapshot = host.snapshot();
-        let result = operation(&snapshot, host, file, &self.text)?;
-        if !host.is_snapshot_current(&snapshot) {
-            return Err(LspError::request_cancelled(
-                "query result was superseded by a newer analysis snapshot",
-            ));
-        }
-        Ok(result)
-    }
-
     fn reject_stale(&self, version: Option<i32>) -> LspResult<()> {
         if let (Some(next), Some(current)) = (version, self.version) {
             if next <= current {
@@ -255,30 +181,5 @@ impl DocumentState {
             }
         }
         Ok(())
-    }
-
-    fn rebuild(&mut self) {
-        let input = FrontendInput {
-            path: SourcePath::new(self.path.clone()),
-            source: SourceText::new(self.text.clone()),
-            mode: sifr_analysis::FrontendMode::SingleFile,
-        };
-        match AnalysisHost::open_single_file(input) {
-            Ok(host) => {
-                let file = host.files().first().copied();
-                self.analysis = DocumentAnalysis {
-                    host: Some(host),
-                    file,
-                    load_diagnostics: Vec::new(),
-                };
-            }
-            Err(diagnostics) => {
-                self.analysis = DocumentAnalysis {
-                    host: None,
-                    file: None,
-                    load_diagnostics: diagnostics,
-                };
-            }
-        }
     }
 }

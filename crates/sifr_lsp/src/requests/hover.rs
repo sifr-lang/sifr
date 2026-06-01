@@ -7,8 +7,7 @@ use serde_json::Value;
 pub(crate) fn hover(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, _source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let hover = snapshot
             .hover(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
@@ -20,8 +19,7 @@ pub(crate) fn hover(session: &mut Session, params: Value) -> LspResult<Value> {
 pub(crate) fn signature_help(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, _source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let help = snapshot
             .signature_help(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?

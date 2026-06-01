@@ -8,9 +8,8 @@ use sifr_analysis::{AnalysisQueryResult, TypeHierarchyItemId};
 pub(crate) fn prepare(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let uri_map = session.store().uri_map();
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, source| {
+    let uri_map = session.uri_map();
+    session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let item = snapshot
             .prepare_type_hierarchy(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
@@ -39,8 +38,8 @@ fn hierarchy(session: &mut Session, params: Value, supertypes: bool) -> LspResul
         .pointer("/item/data")
         .and_then(Value::as_str)
         .ok_or_else(|| LspError::invalid_params("typeHierarchy request requires item data"))?;
-    for document in session.store_mut().documents_mut() {
-        let items = document.with_host(|snapshot, host, _file, _source| {
+    for uri in session.document_uris() {
+        let items = session.with_document_analysis(&uri, |snapshot, host, _file, _source| {
             if supertypes {
                 snapshot.type_hierarchy_supertypes(host, TypeHierarchyItemId(id.to_string()))
             } else {

@@ -33,8 +33,7 @@ pub(crate) fn references(session: &mut Session, params: Value) -> LspResult<Valu
 pub(crate) fn document_highlight(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let highlights = snapshot
             .document_highlights(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
@@ -50,8 +49,7 @@ pub(crate) fn document_highlight(session: &mut Session, params: Value) -> LspRes
 pub(crate) fn prepare_rename(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, _source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let target = snapshot
             .prepare_rename(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
@@ -81,10 +79,9 @@ pub(crate) fn rename(session: &mut Session, params: Value) -> LspResult<Value> {
         .get("newName")
         .and_then(Value::as_str)
         .ok_or_else(|| LspError::invalid_params("textDocument/rename requires newName"))?;
-    let uri_map = session.store().uri_map();
-    let source_map = session.store().source_map();
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, _source| {
+    let uri_map = session.uri_map();
+    let source_map = session.source_map();
+    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let edit = snapshot
             .rename(host, file, &position, &SymbolName(new_name.to_string()))
             .map_err(|error| LspError::internal(error.message))?
@@ -112,10 +109,9 @@ fn locations(
 ) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let source_lookup = session.store().source_map();
-    let uri_lookup = session.store().uri_map();
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, source| {
+    let source_lookup = session.source_map();
+    let uri_lookup = session.uri_map();
+    session.with_document_analysis(&uri, |snapshot, host, file, source| {
         operation(snapshot, host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
             .into_value()

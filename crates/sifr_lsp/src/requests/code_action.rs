@@ -15,10 +15,9 @@ pub(crate) fn code_action(session: &mut Session, params: Value) -> LspResult<Val
     let context = CodeActionContext {
         diagnostics: code_action_context_diagnostics(&params),
     };
-    let uri_map = session.store().uri_map();
-    let source_map = session.store().source_map();
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, _source| {
+    let uri_map = session.uri_map();
+    let source_map = session.source_map();
+    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let actions = snapshot
             .code_actions(host, file, range, &context)
             .map_err(|error| LspError::internal(error.message))?
@@ -74,22 +73,22 @@ pub(crate) fn resolve(session: &mut Session, mut params: Value) -> LspResult<Val
         .ok_or_else(|| LspError::invalid_params("codeAction/resolve missing action file"))?;
     let expected_version = data.get("expectedVersion").and_then(Value::as_i64);
     let uri = session
-        .store()
         .uri_map()
         .get(&file)
         .cloned()
         .ok_or_else(|| LspError::invalid_params(format!("unknown action file {file}")))?;
-    let uri_map = session.store().uri_map();
-    let source_map = session.store().source_map();
-    let document = session.store_mut().document_mut(&uri)?;
-    if let (Some(expected), Some(current)) = (expected_version, document.version()) {
+    let uri_map = session.uri_map();
+    let source_map = session.source_map();
+    if let (Some(expected), Some(current)) =
+        (expected_version, session.store().document(&uri)?.version())
+    {
         if expected != i64::from(current) {
             return Err(LspError::invalid_params(format!(
                 "stale code action for version {expected}; current version is {current}"
             )));
         }
     }
-    let edit = document.with_host(|snapshot, host, file, _source| {
+    let edit = session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let edit = snapshot
             .safe_fix_all_action(host, file)
             .map_err(|error| LspError::internal(error.message))?

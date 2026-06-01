@@ -7,8 +7,7 @@ use sifr_analysis::{AnalysisQueryResult, SymbolQuery};
 
 pub(crate) fn document_symbol(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, source| {
         snapshot
             .document_symbols(host, file)
             .map_err(|error| LspError::internal(error.message))?
@@ -25,20 +24,21 @@ pub(crate) fn workspace_symbol(session: &mut Session, params: Value) -> LspResul
         .get("query")
         .and_then(Value::as_str)
         .unwrap_or_default();
-    let uri_map = session.store().uri_map();
+    let uri_map = session.uri_map();
     let mut symbols = Vec::new();
-    for document in session.store_mut().documents_mut() {
-        let mut document_symbols = document.with_host(|snapshot, host, _file, _source| {
-            snapshot
-                .workspace_symbols(
-                    host,
-                    &SymbolQuery {
-                        query: query.to_string(),
-                    },
-                )
-                .map_err(|error| LspError::internal(error.message))
-                .map(AnalysisQueryResult::into_value)
-        })?;
+    for uri in session.document_uris() {
+        let mut document_symbols =
+            session.with_document_analysis(&uri, |snapshot, host, _file, _source| {
+                snapshot
+                    .workspace_symbols(
+                        host,
+                        &SymbolQuery {
+                            query: query.to_string(),
+                        },
+                    )
+                    .map_err(|error| LspError::internal(error.message))
+                    .map(AnalysisQueryResult::into_value)
+            })?;
         symbols.append(&mut document_symbols);
     }
     Ok(Value::Array(

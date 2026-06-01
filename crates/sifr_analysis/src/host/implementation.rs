@@ -25,11 +25,11 @@ use std::collections::BTreeMap;
 pub(super) type QueryResult<T> = Result<AnalysisQueryResult<T>, AnalysisError>;
 
 pub struct AnalysisHost {
-    session: WorkspaceSession,
-    file_to_module: BTreeMap<FileId, ModuleId>,
-    symbol_index: Option<SymbolIndex>,
-    last_invalidation: Option<InvalidationReport>,
-    current_revision: AnalysisRevision,
+    pub(super) session: WorkspaceSession,
+    pub(super) file_to_module: BTreeMap<FileId, ModuleId>,
+    pub(super) symbol_index: Option<SymbolIndex>,
+    pub(super) last_invalidation: Option<InvalidationReport>,
+    pub(super) current_revision: AnalysisRevision,
 }
 
 impl AnalysisHost {
@@ -43,7 +43,7 @@ impl AnalysisHost {
         Self::new(session)
     }
 
-    fn new(mut session: WorkspaceSession) -> Result<Self, Vec<RenderedDiagnostic>> {
+    pub(super) fn new(mut session: WorkspaceSession) -> Result<Self, Vec<RenderedDiagnostic>> {
         let snapshot = session.snapshot();
         let Some(current_revision) = revision_from_workspace_snapshot(&snapshot) else {
             return Err(Vec::new());
@@ -744,7 +744,7 @@ impl AnalysisHost {
         })
     }
 
-    fn refresh_file_map(&mut self) {
+    pub(super) fn refresh_file_map(&mut self) {
         if let Some(context) = self.session.context() {
             self.file_to_module = context
                 .module_graph()
@@ -755,7 +755,7 @@ impl AnalysisHost {
         }
     }
 
-    fn refresh_current_revision(&mut self) {
+    pub(super) fn refresh_current_revision(&mut self) {
         if let Some(context) = self.session.context() {
             self.current_revision = AnalysisRevision {
                 graph: context.module_graph().revision,

@@ -11,6 +11,7 @@ Status: in progress
 | M2 Source Provider And Overlay Store | merged | [#2233](https://github.com/sifr-lang/sifr/pull/2233) | Adds `SourceProvider`, `DiskSourceProvider`, `OverlaySourceProvider`, `TrackingSourceProvider`, `OverlayDocument`, `SourceDependency*`, provider-backed project/package/lint/format reads, `PackageImportAmbiguity`, and `PackageImportResolutionResult`; new tests cover overlay shadowing, nested overlay directories, tracked reads, provider-backed project loading, package ambiguity, unresolved/private/fatal import states, and existing lint/format/package behavior. |
 | M3 Workspace Session Data Model | merged | [#2235](https://github.com/sifr-lang/sifr/pull/2235) | Adds `WorkspaceSession` and `WorkspaceSnapshot` as the serialized mutable compiler-service owner and frozen inspection handle for overlays, tracked dependencies, source maps, module graphs, compiler options, package/config identity, cache-registry handles, and revision counters while leaving analysis/LSP migration to M4/M5. |
 | M4 Analysis Snapshot Migration | merged | [#2237](https://github.com/sifr-lang/sifr/pull/2237) | Migrates `sifr_analysis::AnalysisSnapshot` to carry a captured `WorkspaceSnapshot`, routes LSP analysis requests through snapshot methods, adds conservative snapshot dirty-scope state, and keeps execution serialized before scheduler work. |
+| M5 LSP Persistent Session Integration | merged | [#2238](https://github.com/sifr-lang/sifr/pull/2238) | Moves LSP analysis ownership from `DocumentStore` into the serialized `Session`, feeds open/change/save buffers into `WorkspaceSession` overlays, and rejects stale request publication by captured snapshot plus document version while preserving serialized request handling. |
 
 M2 local validation so far:
 
@@ -54,6 +55,25 @@ M4 local validation so far:
 - `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 234.97s
+
+M5 local validation so far:
+
+- `cargo test -p sifr_lsp`
+- `cargo test -p sifr_analysis`
+- `cargo test -p sifr_frontend`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `python3 verification/tooling/lsp_protocol_smoke.py`
+- `python3 verification/tooling/lsp_protocol_smoke.py --self-test`
+- `python3 verification/tooling/lsp_protocol_stress.py`
+- `python3 verification/tooling/lsp_protocol_stress.py --self-test`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `cargo fmt --check`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_package_manager_guardrails.py`
+- `cargo clippy --workspace -- -D warnings`
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 227.66s
 
 ## Purpose
 

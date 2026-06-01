@@ -16,6 +16,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DOC = REPO_ROOT / "internal_docs" / "typescript_go_architecture_transfer_m1_guardrails.md"
 SOURCE_MAPS = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "source_maps.rs"
 DOCUMENT_STORE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "document_store.rs"
+LSP_ANALYSIS_WORKSPACE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "analysis_workspace.rs"
+LSP_SESSION = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "session.rs"
 SCHEDULER = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "scheduler.rs"
 REQUEST_QUEUE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "request_queue.rs"
 PERF_MANIFEST = REPO_ROOT / "verification" / "performance" / "manifest.json"
@@ -114,7 +116,7 @@ REQUIRED_DOC_SNIPPETS = [
     "DocumentState::rebuild",
     "AnalysisHost::open_single_file",
     "M1-M4 remain serialized",
-    "M5 must update",
+    "M5 updated",
     "M12 must update",
     "perf.lsp.request_families",
 ]
@@ -190,12 +192,29 @@ def validate_source_maps(text: str, failures: list[str]) -> None:
 
 def validate_lsp_current_state(failures: list[str]) -> None:
     document_store = DOCUMENT_STORE.read_text(encoding="utf-8")
+    analysis_workspace = LSP_ANALYSIS_WORKSPACE.read_text(encoding="utf-8")
+    session = LSP_SESSION.read_text(encoding="utf-8")
     scheduler = SCHEDULER.read_text(encoding="utf-8")
     request_queue = REQUEST_QUEUE.read_text(encoding="utf-8")
     require(
-        "AnalysisHost::open_single_file" in document_store
-        and "FrontendMode::SingleFile" in document_store,
-        "M1 must explicitly track the current LSP single-file rebuild path until M5 replaces it",
+        "AnalysisHost::open_single_file" not in document_store
+        and "FrontendMode::SingleFile" not in document_store
+        and "with_host" not in document_store,
+        "M5 requires DocumentStore to keep protocol text/version state without per-document hosts",
+        failures,
+    )
+    require(
+        "analysis: LspAnalysisWorkspace" in session
+        and "with_document_analysis" in session
+        and "LspAnalysisWorkspace::default()" in session,
+        "M5 requires Session to own the persistent LSP analysis workspace",
+        failures,
+    )
+    require(
+        "open_single_file_overlay" in analysis_workspace
+        and "upsert_overlay_document" in analysis_workspace
+        and "load_diagnostics" in analysis_workspace,
+        "M5 requires LSP analysis to load and update documents through workspace overlays",
         failures,
     )
     require(

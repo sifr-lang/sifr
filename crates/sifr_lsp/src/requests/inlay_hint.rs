@@ -12,8 +12,7 @@ pub(crate) fn inlay_hint(session: &mut Session, params: Value) -> LspResult<Valu
         .as_ref()
         .map(|range| conversion::lsp_range(range, &source))
         .transpose()?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, _source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let hints = snapshot
             .inlay_hints(host, file, range)
             .map_err(|error| LspError::internal(error.message))?

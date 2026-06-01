@@ -13,7 +13,7 @@ Phase contract: `issues/ad-hoc-typescript-go-compiler-architecture-transfer.md`
 - [x] M2 source provider and overlay store completed
 - [x] M3 workspace session data model completed
 - [x] M4 analysis snapshot migration completed
-- [ ] M5 LSP persistent session integration completed
+- [x] M5 LSP persistent session integration completed
 - [ ] M6 event compaction and dirty scope completed
 - [ ] M7 module signatures and dependency invalidation completed
 - [ ] M8 first-class flow graph completed
@@ -97,6 +97,7 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-05-30`: Claude package source-map review recorded in `reviews/ad-hoc-typescript-go-package-ambiguous-import-source-map-review.md`. Feedback incorporated by adding explicit package import-resolution state coverage, candidate-retention proof, end-to-end diagnostic fixtures, and non-duplication checks.
 - `2026-06-01`: Claude implementation-start review recorded in `reviews/typescript-go-architecture-transfer-plan-review-pass-1.md`. M0 approved as the first implementation PR after tightening its public API, migration-site, test-gate, out-of-scope, and dependency-direction guardrail language.
 - `2026-06-01`: M4 implementation review pass 1 recorded in `reviews/typescript-go-m4-analysis-snapshot-review-pass-1.md`; reviewer approved M4 for PR after confirming captured workspace snapshots, snapshot query metadata, LSP snapshot routing, stale-result checks, conservative dirty-scope state, and serialized execution.
+- `2026-06-01`: M5 implementation review pass 9 recorded in `reviews/typescript-go-m5-lsp-persistent-session-review-pass-9.md`; reviewer approved M5 for PR after confirming `DocumentStore` analysis ownership removal, session-owned persistent analysis, overlay-fed open/change/save handling, snapshot and document-version stale-result checks, serialized execution, and docs/guardrail/tracker coverage.
 
 ## Validation Log
 
@@ -190,6 +191,15 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`, `python3 scripts/check_file_size_guardrails.py`, and `python3 scripts/check_package_manager_guardrails.py` -> PASS for M4.
 - `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS for M4; report `target/validation_lane_reports/quick.latest.json`, wall time 234.97s.
 - `2026-06-01`: `cargo test -p sifr_analysis`, `cargo clippy -p sifr_analysis -- -D warnings`, `cargo fmt --check`, and `git diff --check` -> PASS after adding full snapshot query metadata coverage.
+- `2026-06-01`: M5 validation in progress on branch `wave_tsgo_m5_lsp_persistent_session`.
+- `2026-06-01`: `cargo test -p sifr_lsp`, `cargo test -p sifr_analysis`, and `cargo test -p sifr_frontend` -> PASS for M5.
+- `2026-06-01`: `cargo test -p sifr -- --skip test_e2e_pass` -> PASS for M5.
+- `2026-06-01`: `python3 verification/tooling/lsp_protocol_smoke.py && python3 verification/tooling/lsp_protocol_smoke.py --self-test` -> PASS for M5.
+- `2026-06-01`: `python3 verification/tooling/lsp_protocol_stress.py && python3 verification/tooling/lsp_protocol_stress.py --self-test` -> PASS for M5.
+- `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS for M5.
+- `2026-06-01`: `cargo fmt --check`, `git diff --check`, `python3 scripts/check_file_size_guardrails.py`, and `python3 scripts/check_package_manager_guardrails.py` -> PASS for M5.
+- `2026-06-01`: `cargo clippy --workspace -- -D warnings` -> PASS for M5.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS for M5; report `target/validation_lane_reports/quick.latest.json`, wall time 227.66s.
 
 ## PR Log
 
@@ -199,4 +209,5 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: M2 source provider and overlay store merged in [#2233](https://github.com/sifr-lang/sifr/pull/2233).
 - `2026-06-01`: M3 workspace session data model merged in [#2235](https://github.com/sifr-lang/sifr/pull/2235).
 - `2026-06-01`: M4 analysis snapshot migration merged in [#2237](https://github.com/sifr-lang/sifr/pull/2237).
+- `2026-06-01`: M5 LSP persistent session integration merged in [#2238](https://github.com/sifr-lang/sifr/pull/2238).
 - Additional implementation PR links will be recorded per milestone after they are opened and merged.
