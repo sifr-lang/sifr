@@ -155,7 +155,7 @@ M9 local validation so far:
 - `cargo test -p sifr -- --skip test_e2e_pass`
 - `cargo clippy -p sifr_frontend -- -D warnings`
 - `cargo clippy --workspace -- -D warnings`
-- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 274.87s, advisory: group skew is high
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 338.91s, advisories: warm wall-time budget exceeded; group skew is high
 - Claude reviewer pass 6 -> SATISFIED (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-6.md`)
 
 ## Purpose
