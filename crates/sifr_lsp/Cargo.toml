@@ -9,7 +9,7 @@ license = { workspace = true }
 [dependencies]
 sifr_analysis = { workspace = true }
 sifr_diagnostics = { workspace = true }
-sifr_syntax = { workspace = true }
+sifr_source = { workspace = true }
 ruff_text_size = { workspace = true }
 lsp-server = { workspace = true }
 lsp-types = { workspace = true }

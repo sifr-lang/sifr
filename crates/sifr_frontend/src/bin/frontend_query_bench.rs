@@ -263,14 +263,19 @@ fn run_iteration(
             else {
                 return Err("source map did not expose entrypoint file".to_string());
             };
-            let _ = source_map.text_position_to_span(
-                file.id,
-                TextPosition {
-                    line: 0,
-                    character: 0,
-                },
-                PositionEncoding::UTF8,
-            );
+            let target = TextPosition {
+                line: 0,
+                character: 0,
+            };
+            let span = source_map
+                .text_position_to_span(file.id, &target, PositionEncoding::UTF8)
+                .ok_or_else(|| "source map lookup failed for entrypoint start".to_string())?;
+            let round_trip = source_map
+                .span_to_text_range(file.id, span, PositionEncoding::UTF8)
+                .ok_or_else(|| "source map round trip failed for entrypoint start".to_string())?;
+            if round_trip.start != target || round_trip.end != target {
+                return Err("source map round trip changed the entrypoint start".to_string());
+            }
         }
         other => {
             return Err(format!(

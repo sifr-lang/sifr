@@ -7,7 +7,7 @@ Phase contract: `issues/ad-hoc-typescript-go-compiler-architecture-transfer.md`
 ## Checklist
 
 - [x] Phase plan drafted
-- [ ] Phase plan reviewed and approved for implementation
+- [x] Phase plan reviewed and approved for implementation
 - [ ] M0 source and position foundation completed
 - [ ] M1 architecture contract and guardrails completed
 - [ ] M2 source provider and overlay store completed
@@ -95,6 +95,7 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-05-29`: Claude milestone-slicing review rounds recorded in `reviews/ad-hoc-typescript-go-milestone-slicing-claude-review.md`. Feedback incorporated by splitting session/snapshot/LSP work, scheduler/cancellation work, cache-key/reuse work, adding explicit dependencies, moving flow graph earlier, and clarifying trace/status as a normalization milestone.
 - `2026-05-30`: Package ambiguous-import source-map consideration incorporated. The phase now locks the boundary between fatal package/source-map diagnostics and canonical import-site `SIFR-IMPORT-0005` diagnostics.
 - `2026-05-30`: Claude package source-map review recorded in `reviews/ad-hoc-typescript-go-package-ambiguous-import-source-map-review.md`. Feedback incorporated by adding explicit package import-resolution state coverage, candidate-retention proof, end-to-end diagnostic fixtures, and non-duplication checks.
+- `2026-06-01`: Claude implementation-start review recorded in `reviews/typescript-go-architecture-transfer-plan-review-pass-1.md`. M0 approved as the first implementation PR after tightening its public API, migration-site, test-gate, out-of-scope, and dependency-direction guardrail language.
 
 ## Validation Log
 
@@ -111,6 +112,23 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-05-30`: `rg -n "[[:blank:]]+$" issues/ad-hoc-typescript-go-compiler-architecture-transfer.md issues/ad-hoc-typescript-go-compiler-architecture-transfer-execution.md reviews/ad-hoc-typescript-go-package-ambiguous-import-source-map-review.md` -> no trailing whitespace.
 - `2026-05-30`: `git diff --no-index --check /dev/null <planning/review file>` loop over the seven TypeScript-Go planning/review files -> passed with no whitespace errors.
 - `2026-05-30`: `python3 scripts/check_file_size_guardrails.py` -> PASS after package source-map diagnostic boundary update.
+- `2026-06-01`: M0 focused validation in progress on branch `wave_tsgo_m0_source_foundation`.
+- `2026-06-01`: `cargo test -p sifr_source` -> PASS.
+- `2026-06-01`: `cargo test -p sifr_syntax` -> PASS.
+- `2026-06-01`: `cargo test -p sifr_diagnostics && cargo test -p sifr_frontend && cargo test -p sifr_lsp` -> PASS after source-position authority migration.
+- `2026-06-01`: `cargo test -p sifr_analysis` -> PASS.
+- `2026-06-01`: `cargo test -p sifr -- --skip test_e2e_pass` -> PASS.
+- `2026-06-01`: `cargo fmt --check` -> PASS.
+- `2026-06-01`: `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `2026-06-01`: `python3 scripts/check_source_crate_dependency_direction.py` -> PASS.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS before M0 implementation review; report `target/validation_lane_reports/quick.latest.json`, wall time 272.93s.
+- `2026-06-01`: M0 implementation review pass 1 recorded in `reviews/typescript-go-m0-source-foundation-review-pass-1.md`; reviewer required fixing `cargo clippy --workspace -- -D warnings`.
+- `2026-06-01`: `cargo clippy --workspace -- -D warnings` -> PASS after changing `SourceMapView::text_position_to_span` to borrow `TextPosition`.
+- `2026-06-01`: `cargo test -p sifr_frontend` -> PASS after clippy follow-up.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS after clippy follow-up; report `target/validation_lane_reports/quick.latest.json`, wall time 232.80s.
+- `2026-06-01`: `git diff --check` -> PASS after clippy follow-up.
+- `2026-06-01`: `cargo fmt --check` -> PASS after clippy follow-up.
+- `2026-06-01`: M0 implementation review pass 2 recorded in `reviews/typescript-go-m0-source-foundation-review-pass-2.md`; reviewer approved M0 for PR.
 
 ## PR Log
 

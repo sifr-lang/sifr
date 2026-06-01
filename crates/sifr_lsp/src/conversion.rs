@@ -9,7 +9,7 @@ use sifr_analysis::{
     TestItem, TextEdit, TypeHierarchyItem, WorkspaceEdit, WorkspaceSymbol,
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticSpan, RenderedDiagnostic, Severity};
-use sifr_syntax::{SourceText as SyntaxSourceText, TextPosition};
+use sifr_source::{PositionEncoding, SourceText as SourceTextMap, TextPosition};
 use std::path::PathBuf;
 use url::Url;
 
@@ -43,6 +43,14 @@ pub(crate) fn lsp_position(value: &Value) -> LspResult<TextPosition> {
 }
 
 pub(crate) fn lsp_range(value: &Value, source: &str) -> LspResult<TextRange> {
+    lsp_range_with_encoding(value, source, PositionEncoding::Utf8)
+}
+
+fn lsp_range_with_encoding(
+    value: &Value,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<TextRange> {
     let start = value
         .get("start")
         .ok_or_else(|| LspError::invalid_params("missing LSP range start"))
@@ -51,12 +59,12 @@ pub(crate) fn lsp_range(value: &Value, source: &str) -> LspResult<TextRange> {
         .get("end")
         .ok_or_else(|| LspError::invalid_params("missing LSP range end"))
         .and_then(lsp_position)?;
-    let source = SyntaxSourceText::new(source);
+    let source = SourceTextMap::new(source);
     let start = source
-        .byte_offset(&start)
+        .byte_offset_with_encoding(&start, encoding)
         .ok_or_else(|| LspError::invalid_params("range start is outside the document"))?;
     let end = source
-        .byte_offset(&end)
+        .byte_offset_with_encoding(&end, encoding)
         .ok_or_else(|| LspError::invalid_params("range end is outside the document"))?;
     if start > end {
         return Err(LspError::invalid_params(
@@ -67,8 +75,16 @@ pub(crate) fn lsp_range(value: &Value, source: &str) -> LspResult<TextRange> {
 }
 
 pub(crate) fn text_range(range: TextRange, source: &str) -> LspResult<Value> {
-    let source = SyntaxSourceText::new(source);
-    let Some(utf_range) = source.text_range(range) else {
+    text_range_with_encoding(range, source, PositionEncoding::Utf8)
+}
+
+fn text_range_with_encoding(
+    range: TextRange,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
+    let source = SourceTextMap::new(source);
+    let Some(utf_range) = source.range_at(range, encoding) else {
         return Err(LspError::internal(
             "analysis returned a range outside the document",
         ));
@@ -150,7 +166,7 @@ pub(crate) fn signature_help(help: SignatureHelp) -> Value {
 }
 
 pub(crate) fn semantic_tokens(tokens: Vec<SemanticToken>, source: &str) -> LspResult<Value> {
-    let source_map = SyntaxSourceText::new(source);
+    let source_map = SourceTextMap::new(source);
     let mut encoded = Vec::new();
     let mut previous_line = 0;
     let mut previous_start = 0;
@@ -457,4 +473,37 @@ fn token_modifier_bits(modifiers: &[String]) -> u32 {
         };
         bits | (1_u32 << shift)
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{lsp_range_with_encoding, text_range_with_encoding};
+    use ruff_text_size::{TextRange, TextSize};
+    use serde_json::json;
+    use sifr_source::PositionEncoding;
+
+    #[test]
+    fn utf16_ranges_round_trip_through_conversion_layer() {
+        let source = "a🦀b\n";
+        let range_json = json!({
+            "start": { "line": 0, "character": 1 },
+            "end": { "line": 0, "character": 3 }
+        });
+        let range = lsp_range_with_encoding(&range_json, source, PositionEncoding::Utf16).unwrap();
+        assert_eq!(range, TextRange::new(TextSize::new(1), TextSize::new(5)));
+        assert_eq!(
+            text_range_with_encoding(range, source, PositionEncoding::Utf16).unwrap(),
+            range_json
+        );
+    }
+
+    #[test]
+    fn utf16_ranges_reject_surrogate_pair_interiors() {
+        let source = "a🦀b\n";
+        let range_json = json!({
+            "start": { "line": 0, "character": 2 },
+            "end": { "line": 0, "character": 3 }
+        });
+        assert!(lsp_range_with_encoding(&range_json, source, PositionEncoding::Utf16).is_err());
+    }
 }

@@ -9,6 +9,7 @@ license = { workspace = true }
 [dependencies]
 sifr_diagnostics = { workspace = true }
 sifr_hir = { workspace = true }
+sifr_source = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_type_system = { workspace = true }
 sifr_python_ast = { workspace = true }

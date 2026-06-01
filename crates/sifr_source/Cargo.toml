@@ -1,5 +1,5 @@
 [package]
-name = "sifr_diagnostics"
+name = "sifr_source"
 version = "0.0.0"
 publish = false
 edition = { workspace = true }
@@ -8,13 +8,6 @@ license = { workspace = true }
 
 [dependencies]
 ruff_text_size = { workspace = true }
-sifr_source = { workspace = true }
-schemars = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-
-[dev-dependencies]
-static_assertions = { workspace = true }
 
 [lints]
 workspace = true
