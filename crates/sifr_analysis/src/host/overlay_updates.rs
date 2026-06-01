@@ -34,6 +34,11 @@ impl AnalysisHost {
         Ok(())
     }
 
+    pub fn record_watcher_events(&mut self, event_count: usize, storm_threshold: usize) {
+        self.session
+            .record_watcher_events(event_count, storm_threshold);
+    }
+
     pub fn document_file_for_path(
         &self,
         path: &std::path::Path,

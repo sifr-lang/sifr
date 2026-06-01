@@ -75,12 +75,19 @@ reality:
   capture `AnalysisSnapshot` values, and reject results if either the captured
   workspace snapshot becomes stale or the document version changes before
   publication.
+- `textDocument/didChange` compacts each content-change batch before applying
+  it to `DocumentStore` or forwarding the latest document text into analysis.
+  Repeated full-document replacements collapse to the latest replacement plus
+  any following incremental edits.
+- `workspace/didChangeWatchedFiles` summarizes each watcher batch once before
+  invalidation. Normal watcher batches select graph-structure dirty scope;
+  watcher storms degrade to workspace dirty scope with `WatcherStorm`.
 - `RequestQueue` tracks pending request ids and shutdown state; it is not yet a
   cancellation-token registry.
 - `Scheduler` maps methods to lane labels only; it does not yet run priority
   queues, debounce, background workers, delayed progress, or cancellation.
 
-M6 owns precise dirty scopes and event compaction. M11 owns priority
+M7 owns dependency-sensitive signature invalidation. M11 owns priority
 queues/debounce. M13 owns cancellation, progress, and parent-process watchdog
 behavior.
 

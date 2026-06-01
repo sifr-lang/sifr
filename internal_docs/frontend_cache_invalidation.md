@@ -7,27 +7,32 @@ Phase 35 v1 frontend caching is process-local and module-granular.
 TypeScript-Go architecture transfer M1 note: this document describes the
 pre-session cache behavior. Dependency-sensitive invalidation, dirty-scope
 classification, module signatures, structural replacement, and snapshot-scoped
-cache reuse are planned in M6-M10 and are not implemented by the current
+cache reuse are planned across M6-M10. M6 adds the first session-level
+dirty-scope vocabulary and event compaction; dependency-sensitive module
+replacement remains M7-M10 work and is not implemented by the current
 `FrontendContext::update_module_source` path.
 
 TypeScript-Go architecture transfer M2 note: project loading can now record
 source-provider dependency reads before snapshots exist. The tracked records
 include successful file reads, directory reads, file and directory probes,
 canonicalization, and failed lookups. These records are not yet consumed for
-dirty-scope invalidation; M3-M6 wire them into session snapshots and
-dependency-sensitive invalidation.
+dependency-sensitive invalidation; M3-M6 wire them into session snapshots and
+M7 consumes them for dependency-sensitive invalidation.
 
 TypeScript-Go architecture transfer M3 note: `WorkspaceSession` now owns the
 tracked dependency records and freezes them into `WorkspaceSnapshot` alongside
 source maps, module graphs, overlay records, compiler options, package/config
-identity, and cache-registry handles. M6 still owns consuming those records for
-dirty-scope classification and dependency-sensitive invalidation.
+identity, and cache-registry handles. M6 adds the session-level dirty-scope
+vocabulary and event compaction; dependency-sensitive invalidation remains M7
+work.
 
 TypeScript-Go architecture transfer M4 note: `WorkspaceSnapshot` now carries a
 dirty-scope report slot consumed by `AnalysisSnapshot`. The report is
 conservative in M4: reloads, overlay changes, and analysis document updates mark
 workspace scope, while precise event compaction and dependency-sensitive dirty
-scope remain M6 work.
+scope remain later work. M6 replaces that placeholder with explicit
+session-level dirty-scope reports and event compaction; dependency-sensitive
+module invalidation remains M7.
 
 ## Cache State
 

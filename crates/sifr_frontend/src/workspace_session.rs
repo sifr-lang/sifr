@@ -64,25 +64,118 @@ pub struct WorkspaceDirtyScopeReport {
 
 impl Default for WorkspaceDirtyScopeReport {
     fn default() -> Self {
+        Self::none()
+    }
+}
+
+impl WorkspaceDirtyScopeReport {
+    #[must_use]
+    pub fn none() -> Self {
         Self {
             scope: WorkspaceDirtyScope::None,
             reasons: Vec::new(),
         }
     }
+
+    #[must_use]
+    pub fn new(scope: WorkspaceDirtyScope, reasons: Vec<WorkspaceDirtyReason>) -> Self {
+        let mut report = Self {
+            scope,
+            reasons: Vec::new(),
+        };
+        for reason in reasons {
+            report.add_reason(reason);
+        }
+        report
+    }
+
+    pub fn merge(&mut self, other: Self) {
+        self.scope = self.scope.merged_with(other.scope);
+        for reason in other.reasons {
+            self.add_reason(reason);
+        }
+    }
+
+    fn add_reason(&mut self, reason: WorkspaceDirtyReason) {
+        if !self.reasons.contains(&reason) {
+            self.reasons.push(reason);
+        }
+    }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub enum WorkspaceDirtyScope {
     #[default]
     None,
+    OneModule {
+        path: SourcePath,
+    },
+    ReverseDependencies {
+        path: SourcePath,
+    },
+    GraphStructure,
+    ConfigProject,
     Workspace,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WorkspaceDirtyReason {
-    SessionReload,
-    OverlayChanged,
-    AnalysisDocumentUpdate,
+    DocumentVersionOnly,
+    SourceTextChanged,
+    ImportSignatureChanged,
+    ExportSignatureChanged,
+    ParseOptionsChanged,
+    CompilerOptionsChanged,
+    ConfigChanged,
+    PackageManifestChanged,
+    PackageGraphChanged,
+    FileCreated,
+    FileDeleted,
+    FileMoved,
+    FailedLookupChanged,
+    DirectoryEntriesChanged,
+    WatcherStorm,
+    Unknown,
+}
+
+impl WorkspaceDirtyScope {
+    fn merged_with(&self, other: Self) -> Self {
+        if other.severity() > self.severity() {
+            return other;
+        }
+        if other.severity() < self.severity() {
+            return self.clone();
+        }
+        match (self, other) {
+            (Self::OneModule { path: left }, Self::OneModule { path: right }) if left == &right => {
+                self.clone()
+            }
+            (Self::OneModule { .. }, Self::OneModule { .. }) => Self::GraphStructure,
+            (
+                Self::ReverseDependencies { path: left },
+                Self::ReverseDependencies { path: right },
+            ) if left == &right => self.clone(),
+            (Self::ReverseDependencies { .. }, Self::ReverseDependencies { .. }) => {
+                Self::GraphStructure
+            }
+            (Self::None, Self::None)
+            | (Self::GraphStructure, Self::GraphStructure)
+            | (Self::ConfigProject, Self::ConfigProject)
+            | (Self::Workspace, Self::Workspace) => self.clone(),
+            (_, scope) => scope,
+        }
+    }
+
+    fn severity(&self) -> u8 {
+        match self {
+            Self::None => 0,
+            Self::OneModule { .. } => 1,
+            Self::ReverseDependencies { .. } => 2,
+            Self::GraphStructure => 3,
+            Self::ConfigProject => 4,
+            Self::Workspace => 5,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -193,15 +286,44 @@ impl WorkspaceSession {
             }
         }
         self.revision.0 += 1;
-        self.dirty_scope_report = if had_context {
-            WorkspaceDirtyScopeReport {
-                scope: WorkspaceDirtyScope::Workspace,
-                reasons: vec![WorkspaceDirtyReason::SessionReload],
-            }
-        } else {
-            WorkspaceDirtyScopeReport::default()
-        };
+        if self.dirty_scope_report.scope == WorkspaceDirtyScope::None
+            && self.dirty_scope_report.reasons.is_empty()
+        {
+            self.dirty_scope_report = if had_context {
+                WorkspaceDirtyScopeReport::new(
+                    WorkspaceDirtyScope::Workspace,
+                    vec![WorkspaceDirtyReason::Unknown],
+                )
+            } else {
+                WorkspaceDirtyScopeReport::default()
+            };
+        }
         Ok(())
+    }
+
+    pub fn record_dirty_scope(&mut self, report: WorkspaceDirtyScopeReport) {
+        if report.scope != WorkspaceDirtyScope::None || !report.reasons.is_empty() {
+            self.dirty_scope_report.merge(report);
+            self.revision.0 += 1;
+        }
+    }
+
+    pub fn record_watcher_events(&mut self, event_count: usize, storm_threshold: usize) {
+        if event_count == 0 {
+            return;
+        }
+        let report = if event_count > storm_threshold {
+            WorkspaceDirtyScopeReport::new(
+                WorkspaceDirtyScope::Workspace,
+                vec![WorkspaceDirtyReason::WatcherStorm],
+            )
+        } else {
+            WorkspaceDirtyScopeReport::new(
+                WorkspaceDirtyScope::GraphStructure,
+                vec![WorkspaceDirtyReason::DirectoryEntriesChanged],
+            )
+        };
+        self.record_dirty_scope(report);
     }
 
     pub fn upsert_overlay(
@@ -212,34 +334,51 @@ impl WorkspaceSession {
         source: SourceText,
         disk_source: Option<&str>,
     ) {
+        let path_for_report = path.clone();
+        let previous = self.overlays.get(path_for_report.as_path());
+        let had_context = self.context.is_some();
+        let text_changed = previous.is_none_or(|overlay| overlay.source != source);
         let overlay = OverlayDocument::new(path, uri, version, source, disk_source);
         self.overlays
             .insert(overlay.path.as_path().to_path_buf(), overlay);
         self.revision.0 += 1;
-        self.dirty_scope_report = WorkspaceDirtyScopeReport {
-            scope: WorkspaceDirtyScope::Workspace,
-            reasons: vec![WorkspaceDirtyReason::OverlayChanged],
-        };
+        if had_context {
+            self.dirty_scope_report = if text_changed {
+                WorkspaceDirtyScopeReport::new(
+                    WorkspaceDirtyScope::OneModule {
+                        path: path_for_report,
+                    },
+                    vec![WorkspaceDirtyReason::SourceTextChanged],
+                )
+            } else {
+                WorkspaceDirtyScopeReport::new(
+                    WorkspaceDirtyScope::None,
+                    vec![WorkspaceDirtyReason::DocumentVersionOnly],
+                )
+            };
+        }
     }
 
     pub fn remove_overlay(&mut self, path: &Path) -> Option<OverlayDocument> {
         let removed = self.overlays.remove(path);
         if removed.is_some() {
             self.revision.0 += 1;
-            self.dirty_scope_report = WorkspaceDirtyScopeReport {
-                scope: WorkspaceDirtyScope::Workspace,
-                reasons: vec![WorkspaceDirtyReason::OverlayChanged],
-            };
+            self.dirty_scope_report = WorkspaceDirtyScopeReport::new(
+                WorkspaceDirtyScope::OneModule {
+                    path: SourcePath::new(path.to_path_buf()),
+                },
+                vec![WorkspaceDirtyReason::SourceTextChanged],
+            );
         }
         removed
     }
 
     pub fn record_analysis_document_update(&mut self) {
         self.revision.0 += 1;
-        self.dirty_scope_report = WorkspaceDirtyScopeReport {
-            scope: WorkspaceDirtyScope::Workspace,
-            reasons: vec![WorkspaceDirtyReason::AnalysisDocumentUpdate],
-        };
+        self.dirty_scope_report = WorkspaceDirtyScopeReport::new(
+            WorkspaceDirtyScope::Workspace,
+            vec![WorkspaceDirtyReason::SourceTextChanged],
+        );
     }
 
     #[must_use]
@@ -306,7 +445,8 @@ impl WorkspaceSession {
 #[cfg(test)]
 mod tests {
     use super::{
-        WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceSession, WorkspaceSessionTarget,
+        WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport, WorkspaceSession,
+        WorkspaceSessionTarget,
     };
     use crate::{
         DocumentVersion, FrontendMode, ProjectRoot, SourceDependencyKind, SourcePath, SourceText,
@@ -346,11 +486,13 @@ mod tests {
         let snapshot = session.snapshot();
         assert_eq!(
             snapshot.dirty_scope_report.scope,
-            WorkspaceDirtyScope::Workspace
+            WorkspaceDirtyScope::OneModule {
+                path: SourcePath::new(temp.root.join("helper.sifr"))
+            }
         );
         assert_eq!(
             snapshot.dirty_scope_report.reasons,
-            vec![WorkspaceDirtyReason::SessionReload]
+            vec![WorkspaceDirtyReason::SourceTextChanged]
         );
 
         assert!(matches!(
@@ -405,7 +547,135 @@ mod tests {
         assert!(removed_snapshot.overlays.is_empty());
         assert_eq!(
             removed_snapshot.dirty_scope_report.reasons,
-            vec![WorkspaceDirtyReason::OverlayChanged]
+            vec![WorkspaceDirtyReason::SourceTextChanged]
+        );
+    }
+
+    #[test]
+    fn dirty_scope_reports_merge_by_conservative_priority() {
+        let temp = TempProject::new("workspace_session_dirty_scope");
+        temp.write("main.sifr", "print(1)\n");
+        temp.write("first.sifr", "print(1)\n");
+        temp.write("second.sifr", "print(2)\n");
+        let root = ProjectRoot {
+            root: SourcePath::new(temp.root.clone()),
+            entrypoint: SourcePath::new(temp.root.join("main.sifr")),
+        };
+        let mut session = WorkspaceSession::open_project(root).expect("project opens");
+
+        session.upsert_overlay(
+            SourcePath::new(temp.root.join("first.sifr")),
+            Some("file:///first.sifr".to_string()),
+            DocumentVersion::new(2),
+            SourceText::new("print(3)\n"),
+            Some("print(1)\n"),
+        );
+        session.record_dirty_scope(super::WorkspaceDirtyScopeReport::new(
+            WorkspaceDirtyScope::OneModule {
+                path: SourcePath::new(temp.root.join("second.sifr")),
+            },
+            vec![WorkspaceDirtyReason::FailedLookupChanged],
+        ));
+        let degraded_snapshot = session.snapshot();
+        assert_eq!(
+            degraded_snapshot.dirty_scope_report.scope,
+            WorkspaceDirtyScope::GraphStructure
+        );
+        assert_eq!(
+            degraded_snapshot.dirty_scope_report.reasons,
+            vec![
+                WorkspaceDirtyReason::SourceTextChanged,
+                WorkspaceDirtyReason::FailedLookupChanged
+            ]
+        );
+
+        session.record_watcher_events(2, 64);
+        let graph_snapshot = session.snapshot();
+        assert_eq!(
+            graph_snapshot.dirty_scope_report.scope,
+            WorkspaceDirtyScope::GraphStructure
+        );
+        assert_eq!(
+            graph_snapshot.dirty_scope_report.reasons,
+            vec![
+                WorkspaceDirtyReason::SourceTextChanged,
+                WorkspaceDirtyReason::FailedLookupChanged,
+                WorkspaceDirtyReason::DirectoryEntriesChanged
+            ]
+        );
+
+        session.record_watcher_events(65, 64);
+        let storm_snapshot = session.snapshot();
+        assert_eq!(
+            storm_snapshot.dirty_scope_report.scope,
+            WorkspaceDirtyScope::Workspace
+        );
+        assert_eq!(
+            storm_snapshot.dirty_scope_report.reasons,
+            vec![
+                WorkspaceDirtyReason::SourceTextChanged,
+                WorkspaceDirtyReason::FailedLookupChanged,
+                WorkspaceDirtyReason::DirectoryEntriesChanged,
+                WorkspaceDirtyReason::WatcherStorm
+            ]
+        );
+    }
+
+    #[test]
+    fn dirty_scope_report_merge_covers_dependency_and_config_scopes() {
+        let first = SourcePath::new("first.sifr");
+        let second = SourcePath::new("second.sifr");
+        let mut report = WorkspaceDirtyScopeReport::new(
+            WorkspaceDirtyScope::ReverseDependencies {
+                path: first.clone(),
+            },
+            vec![WorkspaceDirtyReason::ImportSignatureChanged],
+        );
+
+        report.merge(WorkspaceDirtyScopeReport::new(
+            WorkspaceDirtyScope::ReverseDependencies { path: first },
+            vec![WorkspaceDirtyReason::ExportSignatureChanged],
+        ));
+        assert_eq!(
+            report.scope,
+            WorkspaceDirtyScope::ReverseDependencies {
+                path: SourcePath::new("first.sifr")
+            }
+        );
+        assert_eq!(
+            report.reasons,
+            vec![
+                WorkspaceDirtyReason::ImportSignatureChanged,
+                WorkspaceDirtyReason::ExportSignatureChanged
+            ]
+        );
+
+        report.merge(WorkspaceDirtyScopeReport::new(
+            WorkspaceDirtyScope::ReverseDependencies { path: second },
+            vec![WorkspaceDirtyReason::FailedLookupChanged],
+        ));
+        assert_eq!(report.scope, WorkspaceDirtyScope::GraphStructure);
+
+        report.merge(WorkspaceDirtyScopeReport::new(
+            WorkspaceDirtyScope::ConfigProject,
+            vec![WorkspaceDirtyReason::ConfigChanged],
+        ));
+        assert_eq!(report.scope, WorkspaceDirtyScope::ConfigProject);
+
+        report.merge(WorkspaceDirtyScopeReport::new(
+            WorkspaceDirtyScope::Workspace,
+            vec![WorkspaceDirtyReason::PackageGraphChanged],
+        ));
+        assert_eq!(report.scope, WorkspaceDirtyScope::Workspace);
+        assert_eq!(
+            report.reasons,
+            vec![
+                WorkspaceDirtyReason::ImportSignatureChanged,
+                WorkspaceDirtyReason::ExportSignatureChanged,
+                WorkspaceDirtyReason::FailedLookupChanged,
+                WorkspaceDirtyReason::ConfigChanged,
+                WorkspaceDirtyReason::PackageGraphChanged
+            ]
         );
     }
 

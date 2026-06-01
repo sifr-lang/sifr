@@ -12,6 +12,7 @@ Status: in progress
 | M3 Workspace Session Data Model | merged | [#2235](https://github.com/sifr-lang/sifr/pull/2235) | Adds `WorkspaceSession` and `WorkspaceSnapshot` as the serialized mutable compiler-service owner and frozen inspection handle for overlays, tracked dependencies, source maps, module graphs, compiler options, package/config identity, cache-registry handles, and revision counters while leaving analysis/LSP migration to M4/M5. |
 | M4 Analysis Snapshot Migration | merged | [#2237](https://github.com/sifr-lang/sifr/pull/2237) | Migrates `sifr_analysis::AnalysisSnapshot` to carry a captured `WorkspaceSnapshot`, routes LSP analysis requests through snapshot methods, adds conservative snapshot dirty-scope state, and keeps execution serialized before scheduler work. |
 | M5 LSP Persistent Session Integration | merged | [#2238](https://github.com/sifr-lang/sifr/pull/2238) | Moves LSP analysis ownership from `DocumentStore` into the serialized `Session`, feeds open/change/save buffers into `WorkspaceSession` overlays, and rejects stale request publication by captured snapshot plus document version while preserving serialized request handling. |
+| M6 Event Compaction And Dirty Scope | review | [#2239](https://github.com/sifr-lang/sifr/pull/2239) | Compacts batched document edits before analysis updates, summarizes watcher events before dirty-scope classification, records precise dirty scope/reason reports, and degrades incompatible or stormy invalidation conservatively. |
 
 M2 local validation so far:
 
@@ -74,6 +75,26 @@ M5 local validation so far:
 - `python3 scripts/check_package_manager_guardrails.py`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 227.66s
+
+M6 local validation so far:
+
+- `cargo test -p sifr_frontend workspace_session`
+- `cargo test -p sifr_lsp`
+- `cargo fmt --check`
+- `cargo test -p sifr_frontend`
+- `cargo test -p sifr_analysis`
+- `python3 verification/tooling/lsp_protocol_smoke.py`
+- `python3 verification/tooling/lsp_protocol_smoke.py --self-test`
+- `python3 verification/tooling/lsp_protocol_stress.py`
+- `python3 verification/tooling/lsp_protocol_stress.py --self-test`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `cargo clippy --workspace -- -D warnings`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_package_manager_guardrails.py`
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 227.48s
 
 ## Purpose
 

@@ -11,6 +11,7 @@ mod capabilities;
 mod commands;
 mod conversion;
 mod diagnostics;
+mod document_events;
 mod document_store;
 mod errors;
 mod notifications;
