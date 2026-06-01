@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Refactor LeetCode-Shaped Compiler Fixtures
 
-Status: locally validated on 2026-06-01; PR opened
+Status: complete and merged on 2026-06-01
 Context: planning phase for refactoring compiler tests, Sifr fixtures, and generated demo companions that currently read like LeetCode problem ports rather than focused compiler/language feature tests.
 
 ## Purpose
@@ -341,4 +341,5 @@ Validation completed:
 
 ## PR Log
 
-- Implementation PR opened: https://github.com/sifr-lang/sifr/pull/2226
+- Implementation PR merged: https://github.com/sifr-lang/sifr/pull/2226
+- Merge commit: `0a616e13b56e03e39d21c23972cc2d5e2e1a1ec1`
