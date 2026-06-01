@@ -15,7 +15,7 @@ Status: in progress
 | M6 Event Compaction And Dirty Scope | merged | [#2239](https://github.com/sifr-lang/sifr/pull/2239) | Compacts batched document edits before analysis updates, summarizes watcher events before dirty-scope classification, records precise dirty scope/reason reports, and degrades incompatible or stormy invalidation conservatively. |
 | M7 Module Signatures And Dependency Invalidation | merged | [#2241](https://github.com/sifr-lang/sifr/pull/2241) | Adds import/export/module signatures, reverse-dependency closure invalidation, and local private-body edit reuse for unchanged public/import signatures. |
 | M8 First-Class Flow Graph | merged | [#2243](https://github.com/sifr-lang/sifr/pull/2243), [#2244](https://github.com/sifr-lang/sifr/pull/2244), [#2245](https://github.com/sifr-lang/sifr/pull/2245) | Adds `sifr_hir::flow_graph`, snapshot-scoped `LoweringResult.flow_graph`, graph-backed `FlowFacts` debug/fingerprint access, and lowering-time flow effects for narrowing, mutation invalidation, moves, and borrows. |
-| M9 Fingerprints And Cache Keys | merged | [#2246](https://github.com/sifr-lang/sifr/pull/2246) | Adds deterministic compiler/cache fingerprints and typed key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph caches before reuse lands. |
+| M9 Fingerprints And Cache Keys | merged | [#2246](https://github.com/sifr-lang/sifr/pull/2246), [#2248](https://github.com/sifr-lang/sifr/pull/2248) | Adds deterministic compiler/cache fingerprints and typed key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph caches before reuse lands. |
 
 M2 local validation so far:
 
