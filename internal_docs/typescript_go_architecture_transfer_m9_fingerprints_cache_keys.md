@@ -21,6 +21,8 @@ identities, not security hashes.
 helper instead of `DefaultHasher`, so source identity is stable across
 processes and public cache-key constructors can be built without internal
 frontend access.
+Pre-M9 `SourceHash` strings are intentionally not comparable to M9 hashes; no
+snapshot cache reuse exists yet, so M10 starts from this identity contract.
 
 ## Common Inputs
 
@@ -52,8 +54,26 @@ M9 defines typed keys for:
 
 Family-specific inputs include parser options, line-map algorithm, parse/HIR
 fingerprints, compiler options, diagnostic rendering style, lint/format policy,
-manifest fingerprint, module graph fingerprint, bucket scope, and control-flow
-fingerprint where relevant.
+formatter options, manifest fingerprint, module graph fingerprint, typed bucket
+scope, and control-flow fingerprint where relevant.
+
+Default constructors use the current M9 policy constants. `ParseCacheKey` also
+exposes `with_parser_options`, and `FormatCacheKey` carries a separate
+`formatter_options` fingerprint so M10 can key user-configured parser and
+formatter behavior without changing the key shape.
+
+## Intentionally Omitted Inputs
+
+Content-derived keys intentionally omit transient editor identity:
+
+- document version;
+- file id;
+- URI/display path.
+
+Those values affect stale-result publication and editor routing, but they do not
+change parse, source-map, HIR, diagnostic, lint, format, symbol, or flow results
+when source content, workspace/package context, compiler fingerprint, and query
+policy are unchanged. M9 tests pin this omission before M10 introduces reuse.
 
 ## Validation
 
@@ -75,5 +95,5 @@ M9 focused validation so far:
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report
   `target/validation_lane_reports/quick.latest.json`, wall time 274.87s,
   advisory: group skew is high
-- Claude reviewer pass 4 -> SATISFIED
-  (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-4.md`)
+- Claude reviewer pass 6 -> SATISFIED
+  (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-6.md`)
