@@ -7,6 +7,51 @@ fn lower_source(source: &str) -> crate::LoweringResult {
     lower_module(parsed.suite()).expect("source should lower")
 }
 
+fn call_stmt(callee: &str) -> HirStmt {
+    HirStmt::Expr {
+        expr: HirExpr::Call {
+            func: callee.to_string(),
+            args: vec![],
+            ty: Type::None,
+        },
+    }
+}
+
+fn loop_node_id(graph: &FlowGraph) -> FlowNodeId {
+    graph
+        .nodes()
+        .iter()
+        .find_map(|node| match &node.kind {
+            FlowNodeKind::Loop { label } if label == "while" => Some(node.id),
+            _ => None,
+        })
+        .expect("flow graph should contain a while loop node")
+}
+
+fn call_node_id(graph: &FlowGraph, callee: &str) -> FlowNodeId {
+    graph
+        .nodes()
+        .iter()
+        .find_map(|node| {
+            node.effects
+                .iter()
+                .any(|effect| matches!(effect, FlowEffect::Call { callee: name } if name == callee))
+                .then_some(node.id)
+        })
+        .expect("flow graph should contain the requested call node")
+}
+
+fn loop_join_ids(graph: &FlowGraph) -> Vec<FlowNodeId> {
+    graph
+        .nodes()
+        .iter()
+        .filter_map(|node| match &node.kind {
+            FlowNodeKind::Join { label } if label == "loop" => Some(node.id),
+            _ => None,
+        })
+        .collect()
+}
+
 #[test]
 fn statement_graph_tracks_branches_loops_mutations_and_exits() {
     let stmts = vec![
@@ -46,21 +91,58 @@ fn statement_graph_tracks_branches_loops_mutations_and_exits() {
 }
 
 #[test]
+fn loop_with_else_omits_synthetic_loop_join() {
+    let graph = build_statement_flow_graph(&[
+        HirStmt::While {
+            condition: HirExpr::BoolLiteral(true),
+            body: vec![call_stmt("loop_body")],
+            else_body: Some(vec![call_stmt("loop_else")]),
+        },
+        call_stmt("after_loop"),
+    ]);
+
+    assert!(loop_join_ids(&graph).is_empty());
+
+    let loop_node = loop_node_id(&graph);
+    let else_node = call_node_id(&graph, "loop_else");
+    let after_loop_node = call_node_id(&graph, "after_loop");
+    assert!(graph.edges().iter().any(|edge| edge.from == loop_node
+        && edge.to == else_node
+        && edge.kind == FlowEdgeKind::False));
+    assert!(graph.edges().iter().any(|edge| edge.from == else_node
+        && edge.to == after_loop_node
+        && edge.kind == FlowEdgeKind::Sequence));
+}
+
+#[test]
+fn loop_without_else_emits_single_synthetic_loop_join() {
+    let graph = build_statement_flow_graph(&[
+        HirStmt::While {
+            condition: HirExpr::BoolLiteral(true),
+            body: vec![call_stmt("loop_body")],
+            else_body: None,
+        },
+        call_stmt("after_loop"),
+    ]);
+
+    let joins = loop_join_ids(&graph);
+    assert_eq!(joins.len(), 1);
+
+    let loop_node = loop_node_id(&graph);
+    let join_node = joins[0];
+    let after_loop_node = call_node_id(&graph, "after_loop");
+    assert!(graph.edges().iter().any(|edge| edge.from == loop_node
+        && edge.to == join_node
+        && edge.kind == FlowEdgeKind::False));
+    assert!(graph.edges().iter().any(|edge| edge.from == join_node
+        && edge.to == after_loop_node
+        && edge.kind == FlowEdgeKind::Sequence));
+}
+
+#[test]
 fn graph_fingerprint_includes_effect_payloads() {
-    let first = build_statement_flow_graph(&[HirStmt::Expr {
-        expr: HirExpr::Call {
-            func: "first".to_string(),
-            args: vec![],
-            ty: Type::None,
-        },
-    }]);
-    let second = build_statement_flow_graph(&[HirStmt::Expr {
-        expr: HirExpr::Call {
-            func: "second".to_string(),
-            args: vec![],
-            ty: Type::None,
-        },
-    }]);
+    let first = build_statement_flow_graph(&[call_stmt("first")]);
+    let second = build_statement_flow_graph(&[call_stmt("second")]);
 
     assert_ne!(first.shape_fingerprint(), second.shape_fingerprint());
 }
