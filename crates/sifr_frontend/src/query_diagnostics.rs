@@ -2,6 +2,7 @@ use super::{
     DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendSourceContext, ModuleId, ModuleState,
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
+use crate::module_signatures::ModuleSignature;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::{
     DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, RenderedDiagnostic, Severity,
@@ -32,6 +33,7 @@ pub(super) fn module_state(
         source,
         source_hash,
         document_version,
+        signature: ModuleSignature::default(),
         parsed: None,
         lowered: None,
         diagnostics: None,
@@ -521,7 +523,8 @@ mod tests {
     use crate::{
         CacheStatus, DiskSourceProvider, DocumentVersion, FrontendContext, FrontendInput,
         FrontendMode, ModuleId, OverlayDocument, OverlaySourceProvider, ProjectRoot,
-        SourceDependencyKind, SourcePath, SourceText, TrackingSourceProvider,
+        SourceDependencyKind, SourcePath, SourceText, TrackingSourceProvider, WorkspaceDirtyReason,
+        WorkspaceDirtyScope,
     };
 
     fn input(source: &str) -> FrontendInput {
@@ -570,6 +573,185 @@ mod tests {
                 .metadata()
                 .cache_status,
             CacheStatus::Miss
+        );
+    }
+
+    #[test]
+    fn private_module_body_update_stays_local_when_signatures_match() {
+        let dir = temp_project_dir("private_body_invalidation");
+        std::fs::write(
+            dir.join("main.sifr"),
+            "from helper import value\n\ndef main() -> int:\n    return value()\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def value() -> int:\n    return 1\n",
+        )
+        .expect("helper should be written");
+        let mut context = load_temp_project(&dir);
+        let helper = ModuleId(1);
+        let main = ModuleId(0);
+        assert!(context
+            .diagnostics_for_project()
+            .into_value()
+            .diagnostics
+            .is_empty());
+
+        let report = context
+            .update_module_source(
+                helper,
+                SourceText::new("def value() -> int:\n    return 2\n"),
+                Some(DocumentVersion::new(2)),
+            )
+            .expect("helper update should succeed");
+
+        assert_eq!(report.invalidated_modules, vec![helper]);
+        assert!(!report.invalidated_modules.contains(&main));
+        assert_eq!(
+            report.dirty_scope_report.scope,
+            WorkspaceDirtyScope::OneModule {
+                path: SourcePath::new(dir.join("helper.sifr"))
+            }
+        );
+        assert_eq!(
+            report.dirty_scope_report.reasons,
+            vec![WorkspaceDirtyReason::SourceTextChanged]
+        );
+    }
+
+    #[test]
+    fn private_body_update_with_unchanged_imports_stays_local() {
+        let dir = temp_project_dir("private_body_import_signature");
+        std::fs::write(
+            dir.join("main.sifr"),
+            "from helper import value\n\ndef main() -> int:\n    return value()\n",
+        )
+        .expect("main should be written");
+        std::fs::write(dir.join("dep.sifr"), "other: int = 1\n").expect("dep should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "from dep import other\n\ndef value() -> int:\n    return other\n",
+        )
+        .expect("helper should be written");
+        let mut context = load_temp_project(&dir);
+        let helper = ModuleId(2);
+        let main = ModuleId(0);
+        assert!(context
+            .diagnostics_for_project()
+            .into_value()
+            .diagnostics
+            .is_empty());
+
+        let report = context
+            .update_module_source(
+                helper,
+                SourceText::new(
+                    "from dep import other\n\ndef value() -> int:\n    return other + 1\n",
+                ),
+                Some(DocumentVersion::new(2)),
+            )
+            .expect("helper update should succeed");
+
+        assert_eq!(report.invalidated_modules, vec![helper]);
+        assert!(!report.invalidated_modules.contains(&main));
+        assert_eq!(
+            report.dirty_scope_report.scope,
+            WorkspaceDirtyScope::OneModule {
+                path: SourcePath::new(dir.join("helper.sifr"))
+            }
+        );
+        assert_eq!(
+            report.dirty_scope_report.reasons,
+            vec![WorkspaceDirtyReason::SourceTextChanged]
+        );
+    }
+
+    #[test]
+    fn public_export_update_invalidates_reverse_dependents() {
+        let dir = temp_project_dir("export_signature_invalidation");
+        std::fs::write(
+            dir.join("main.sifr"),
+            "from helper import value\n\ndef main() -> int:\n    return value()\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def value() -> int:\n    return 1\n",
+        )
+        .expect("helper should be written");
+        let mut context = load_temp_project(&dir);
+        let helper = ModuleId(1);
+        let main = ModuleId(0);
+        let _ = context.diagnostics_for_project();
+
+        let report = context
+            .update_module_source(
+                helper,
+                SourceText::new("def value() -> str:\n    return \"changed\"\n"),
+                Some(DocumentVersion::new(2)),
+            )
+            .expect("helper update should succeed");
+
+        assert_eq!(report.invalidated_modules, vec![main, helper]);
+        assert_eq!(
+            report.dirty_scope_report.scope,
+            WorkspaceDirtyScope::ReverseDependencies {
+                path: SourcePath::new(dir.join("helper.sifr"))
+            }
+        );
+        assert_eq!(
+            report.dirty_scope_report.reasons,
+            vec![
+                WorkspaceDirtyReason::SourceTextChanged,
+                WorkspaceDirtyReason::ExportSignatureChanged
+            ]
+        );
+    }
+
+    #[test]
+    fn import_signature_update_selects_graph_scope() {
+        let dir = temp_project_dir("import_signature_invalidation");
+        std::fs::write(
+            dir.join("main.sifr"),
+            "from helper import value\n\ndef main() -> int:\n    return value()\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def value() -> int:\n    return 1\n",
+        )
+        .expect("helper should be written");
+        std::fs::write(
+            dir.join("other.sifr"),
+            "def other() -> int:\n    return 2\n",
+        )
+        .expect("other should be written");
+        let mut context = load_temp_project(&dir);
+        let main = ModuleId(0);
+        let _ = context.diagnostics_for_project();
+
+        let report = context
+            .update_module_source(
+                main,
+                SourceText::new(
+                    "from other import other\n\ndef main() -> int:\n    return other()\n",
+                ),
+                Some(DocumentVersion::new(2)),
+            )
+            .expect("main update should succeed");
+
+        assert_eq!(
+            report.dirty_scope_report.scope,
+            WorkspaceDirtyScope::GraphStructure
+        );
+        assert_eq!(
+            report.dirty_scope_report.reasons,
+            vec![
+                WorkspaceDirtyReason::SourceTextChanged,
+                WorkspaceDirtyReason::ImportSignatureChanged,
+                WorkspaceDirtyReason::ExportSignatureChanged
+            ]
         );
     }
 
@@ -656,5 +838,26 @@ mod tests {
             file.canonical_path.as_path() == helper_path
                 && file.source.as_str() == "value: int = 2\n"
         }));
+    }
+
+    fn temp_project_dir(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "sifr_frontend_{name}_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).expect("temp project should be created");
+        dir
+    }
+
+    fn load_temp_project(dir: &std::path::Path) -> FrontendContext {
+        FrontendContext::load_project(&ProjectRoot {
+            root: SourcePath::new(dir),
+            entrypoint: SourcePath::new(dir.join("main.sifr")),
+        })
+        .expect("project should load")
     }
 }

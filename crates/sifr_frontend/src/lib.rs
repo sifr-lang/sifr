@@ -8,6 +8,7 @@
 mod graph_cache_and_queries;
 pub use graph_cache_and_queries::*;
 mod hir_views;
+mod module_signatures;
 mod query_diagnostics;
 pub use query_diagnostics::*;
 mod source_provider;

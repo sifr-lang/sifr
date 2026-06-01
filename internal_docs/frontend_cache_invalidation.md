@@ -5,12 +5,10 @@ status: active
 Phase 35 v1 frontend caching is process-local and module-granular.
 
 TypeScript-Go architecture transfer M1 note: this document describes the
-pre-session cache behavior. Dependency-sensitive invalidation, dirty-scope
-classification, module signatures, structural replacement, and snapshot-scoped
-cache reuse are planned across M6-M10. M6 adds the first session-level
-dirty-scope vocabulary and event compaction; dependency-sensitive module
-replacement remains M7-M10 work and is not implemented by the current
-`FrontendContext::update_module_source` path.
+pre-session cache behavior. M6 added session-level dirty-scope vocabulary and
+event compaction. M7 adds import/export/module signatures plus
+reverse-dependency invalidation, while structural replacement and snapshot-scoped
+cache reuse remain M10 work.
 
 TypeScript-Go architecture transfer M2 note: project loading can now record
 source-provider dependency reads before snapshots exist. The tracked records
@@ -23,16 +21,16 @@ TypeScript-Go architecture transfer M3 note: `WorkspaceSession` now owns the
 tracked dependency records and freezes them into `WorkspaceSnapshot` alongside
 source maps, module graphs, overlay records, compiler options, package/config
 identity, and cache-registry handles. M6 adds the session-level dirty-scope
-vocabulary and event compaction; dependency-sensitive invalidation remains M7
-work.
+vocabulary and event compaction; M7 consumes module signatures and reverse
+dependencies for dependency-sensitive invalidation.
 
 TypeScript-Go architecture transfer M4 note: `WorkspaceSnapshot` now carries a
 dirty-scope report slot consumed by `AnalysisSnapshot`. The report is
 conservative in M4: reloads, overlay changes, and analysis document updates mark
 workspace scope, while precise event compaction and dependency-sensitive dirty
 scope remain later work. M6 replaces that placeholder with explicit
-session-level dirty-scope reports and event compaction; dependency-sensitive
-module invalidation remains M7.
+session-level dirty-scope reports and event compaction; M7 maps frontend
+invalidation reports to one-module, reverse-dependency, and graph dirty scopes.
 
 ## Cache State
 
