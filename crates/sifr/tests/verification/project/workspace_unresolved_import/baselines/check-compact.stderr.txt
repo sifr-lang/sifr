@@ -1,3 +1,2 @@
-summary: 1 error(s), 0 warning(s), 0 note(s), 0 help item(s)
-error [SIFR-WORKSPACE-0101] could not resolve import 'missing.helper'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/missing/helper.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/lib/missing/helper.sifr', '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/./missing/helper.sifr' (x1)
-  url: https://sifr.sh/docs/errors/SIFR-WORKSPACE-0101
+1 error, 0 warnings, 0 notes
+E SIFR-IMPORT-0002 crates/sifr/tests/verification/project/workspace_unresolved_import/main.sifr:1:6 unknown import target: 'missing.helper'

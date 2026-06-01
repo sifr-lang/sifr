@@ -118,6 +118,8 @@ GENERATED_CLIPPY_ARGS = [
     "-A",
     "clippy::collapsible_if",
     "-A",
+    "clippy::collapsible_str_replace",
+    "-A",
     "clippy::double_parens",
     "-A",
     "clippy::eq_op",

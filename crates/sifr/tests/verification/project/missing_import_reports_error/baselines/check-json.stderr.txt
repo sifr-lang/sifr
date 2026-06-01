@@ -1,18 +1,54 @@
 [
   {
-    "code": "SIFR-WORKSPACE-0101",
+    "code": "SIFR-IMPORT-0002",
     "severity": "Error",
-    "message": "could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr'",
-    "message_template": "{message}",
+    "message": "unknown import target: 'missing_math_utils'",
+    "message_template": "unknown import target: '{module}'",
     "args": {
-      "message": {
+      "module": {
         "kind": "string",
-        "value": "could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr'"
+        "value": "missing_math_utils"
+      },
+      "resolution_scope": {
+        "kind": "string",
+        "value": "workspace"
+      },
+      "tried_paths": {
+        "kind": "string",
+        "value": "<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr;<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-WORKSPACE-0101",
-    "spans": [],
-    "children": [],
+    "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/main.sifr",
+        "byte_start": 5,
+        "byte_end": 23,
+        "line": 1,
+        "column": 6,
+        "end_line": 1,
+        "end_column": 24,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "from missing_math_utils import add",
+            "highlight_start": 6,
+            "highlight_end": 24
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr"
+      },
+      {
+        "severity": "Note",
+        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr"
+      }
+    ],
     "help": null,
     "suggestions": []
   }

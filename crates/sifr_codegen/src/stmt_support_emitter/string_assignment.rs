@@ -25,50 +25,65 @@ impl RustEmitter {
             let mentions_target = Self::expr_mentions_name(part, name);
             let materialize_for_cache =
                 cache_name.is_some() && !matches!(part, HirExpr::StringLiteral(_));
-            let (push_arg, cache_chars_source) = if mentions_target || materialize_for_cache {
-                let Some(part_expr) = self.lower_stmt_expr_for_ir(part)? else {
-                    return Err(crate::CodegenError::new(
-                        "could not lower string concat assignment part",
-                    ));
-                };
-                let temp_name = format!("__sifr_string_concat_{name}_{index}");
-                stmts.push(RustStmt::Let {
-                    mutable: false,
-                    name: temp_name.clone(),
-                    ty: None,
-                    value: if mentions_target {
-                        crate::RustExpr::Clone(Box::new(part_expr))
-                    } else {
-                        part_expr
-                    },
-                });
-                let as_str = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Ident(
-                        temp_name.clone(),
-                    )))),
-                    method: "as_str".to_string(),
-                    args: vec![],
-                };
-                (as_str.clone(), as_str)
-            } else {
-                let arg = self.lower_string_push_str_arg_for_ir(part)?;
-                (arg.clone(), arg)
+            let single_literal_char = match part {
+                HirExpr::StringLiteral(value) => Self::single_char_string_literal(value),
+                _ => None,
             };
+            let (push_method, push_arg, cache_chars_source) =
+                if mentions_target || materialize_for_cache {
+                    let Some(part_expr) = self.lower_stmt_expr_for_ir(part)? else {
+                        return Err(crate::CodegenError::new(
+                            "could not lower string concat assignment part",
+                        ));
+                    };
+                    let temp_name = format!("__sifr_string_concat_{name}_{index}");
+                    stmts.push(RustStmt::Let {
+                        mutable: false,
+                        name: temp_name.clone(),
+                        ty: None,
+                        value: if mentions_target {
+                            crate::RustExpr::Clone(Box::new(part_expr))
+                        } else {
+                            part_expr
+                        },
+                    });
+                    let as_str = crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                            crate::RustExpr::Ident(temp_name.clone()),
+                        ))),
+                        method: "as_str".to_string(),
+                        args: vec![],
+                    };
+                    ("push_str".to_string(), as_str.clone(), as_str)
+                } else {
+                    let (method, arg) = self.lower_string_push_method_and_arg_for_ir(part)?;
+                    (method, arg.clone(), arg)
+                };
             stmts.push(RustStmt::Expr(crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Ident(name.to_string())),
-                method: "push_str".to_string(),
+                method: push_method,
                 args: vec![push_arg],
             }));
             if let Some(cache_name) = &cache_name {
-                stmts.push(RustStmt::Expr(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Ident(cache_name.clone())),
-                    method: "extend".to_string(),
-                    args: vec![crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(cache_chars_source))),
-                        method: "chars".to_string(),
-                        args: vec![],
-                    }],
-                }));
+                if let Some(ch) = single_literal_char {
+                    stmts.push(RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(cache_name.clone())),
+                        method: "push".to_string(),
+                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Char(ch))],
+                    }));
+                } else {
+                    stmts.push(RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(cache_name.clone())),
+                        method: "extend".to_string(),
+                        args: vec![crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                cache_chars_source,
+                            ))),
+                            method: "chars".to_string(),
+                            args: vec![],
+                        }],
+                    }));
+                }
             }
         }
         Ok(Some(stmts))
@@ -268,5 +283,38 @@ impl RustEmitter {
             method: "as_str".to_string(),
             args: vec![],
         })
+    }
+
+    pub(crate) fn lower_string_push_method_and_arg_for_ir(
+        &mut self,
+        value: &HirExpr,
+    ) -> Result<(String, crate::RustExpr), crate::CodegenError> {
+        if let HirExpr::StringLiteral(val) = value {
+            if let Some(ch) = Self::single_char_string_literal(val) {
+                return Ok((
+                    "push".to_string(),
+                    crate::RustExpr::Literal(crate::RustLiteral::Char(ch)),
+                ));
+            }
+            return Ok((
+                "push_str".to_string(),
+                crate::RustExpr::Ident(format!("{val:?}")),
+            ));
+        }
+
+        Ok((
+            "push_str".to_string(),
+            self.lower_string_push_str_arg_for_ir(value)?,
+        ))
+    }
+
+    fn single_char_string_literal(value: &str) -> Option<char> {
+        let mut chars = value.chars();
+        let ch = chars.next()?;
+        if chars.next().is_none() {
+            Some(ch)
+        } else {
+            None
+        }
     }
 }

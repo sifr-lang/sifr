@@ -218,20 +218,28 @@ pub(super) fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustEx
         },
     }];
     for part in parts {
-        let arg = if let HirExpr::StringLiteral(value) = part {
-            RustExpr::Ident(format!("{value:?}"))
-        } else {
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Paren(Box::new(try_lower_leaf_or_name_expr(
-                    part,
-                )?))),
-                method: "as_str".to_string(),
-                args: vec![],
+        let (method, arg) = if let HirExpr::StringLiteral(value) = part {
+            let mut chars = value.chars();
+            if let (Some(ch), None) = (chars.next(), chars.next()) {
+                ("push", RustExpr::Literal(crate::RustLiteral::Char(ch)))
+            } else {
+                ("push_str", RustExpr::Ident(format!("{value:?}")))
             }
+        } else {
+            (
+                "push_str",
+                RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(try_lower_leaf_or_name_expr(
+                        part,
+                    )?))),
+                    method: "as_str".to_string(),
+                    args: vec![],
+                },
+            )
         };
         stmts.push(RustStmt::Expr(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("__sifr_concat".to_string())),
-            method: "push_str".to_string(),
+            method: method.to_string(),
             args: vec![arg],
         }));
     }

@@ -1,18 +1,54 @@
 [
   {
-    "code": "SIFR-WORKSPACE-0102",
+    "code": "SIFR-IMPORT-0005",
     "severity": "Error",
-    "message": "module 'helper' is ambiguous in workspace '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import': matches '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr' and '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr'; reorder [source].roots or rename one module to disambiguate",
-    "message_template": "{message}",
+    "message": "ambiguous import target: 'helper'",
+    "message_template": "ambiguous import target: '{module}'",
     "args": {
-      "message": {
+      "candidate_paths": {
         "kind": "string",
-        "value": "module 'helper' is ambiguous in workspace '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import': matches '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr' and '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr'; reorder [source].roots or rename one module to disambiguate"
+        "value": "<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr;<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr"
+      },
+      "module": {
+        "kind": "string",
+        "value": "helper"
+      },
+      "resolution_scope": {
+        "kind": "string",
+        "value": "workspace"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-WORKSPACE-0102",
-    "spans": [],
-    "children": [],
+    "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0005",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/main.sifr",
+        "byte_start": 5,
+        "byte_end": 11,
+        "line": 1,
+        "column": 6,
+        "end_line": 1,
+        "end_column": 12,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "from helper import value",
+            "highlight_start": 6,
+            "highlight_end": 12
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "candidate path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr"
+      },
+      {
+        "severity": "Note",
+        "message": "candidate path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr"
+      }
+    ],
     "help": null,
     "suggestions": []
   }

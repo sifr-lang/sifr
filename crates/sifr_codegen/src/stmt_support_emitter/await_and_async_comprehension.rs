@@ -260,10 +260,10 @@ impl RustEmitter {
             },
         }];
         for part in parts {
-            let push_arg = self.lower_string_push_str_arg_for_ir(part)?;
+            let (push_method, push_arg) = self.lower_string_push_method_and_arg_for_ir(part)?;
             stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Ident("__sifr_concat".to_string())),
-                method: "push_str".to_string(),
+                method: push_method,
                 args: vec![push_arg],
             }));
         }
