@@ -1,6 +1,6 @@
 # Sifr LSP Server Architecture
 
-status: phase36-m36.5-implemented
+status: phase36-m36.5-implemented; TypeScript-Go architecture transfer M1 current-state caveats recorded
 
 ## Protocol Target
 
@@ -28,7 +28,7 @@ It does not own parser logic, lowering, type checking, HIR construction, symbol-
 
 ## Internal Layers
 
-The LSP implementation must expose these layers:
+The LSP implementation is being migrated toward these compiler-service layers:
 
 - `CapabilityRegistry`: resolves position encoding, workspace configuration, pull diagnostics, dynamic registration, related information, semantic tokens, signature label offsets, hierarchical document symbols, completion details/documentation, work-done progress, file watching, and code-action resolve support.
 - `DocumentStore`: tracks open `.sifr` documents by URI, version, language id, source text, line index, canonical `FileId`, edit application, and UTF-8/UTF-16/UTF-32 conversion.
@@ -57,6 +57,27 @@ The concrete m36.5 modules are:
 The stdio server terminates explicitly on `exit` after a successful `shutdown`
 response. This avoids retaining protocol IO threads after the client completes
 the required LSP shutdown sequence.
+
+## Current M1 Compiler-Service Caveats
+
+The TypeScript-Go architecture transfer keeps M1-M4 serialized until captured
+workspace snapshots and publication identity are mechanical. Current
+implementation reality:
+
+- `DocumentStore` still owns per-document `AnalysisHost` values.
+- `DocumentState::rebuild` calls `AnalysisHost::open_single_file` with
+  `FrontendMode::SingleFile` on open/change/save.
+- `RequestQueue` tracks pending request ids and shutdown state; it is not yet a
+  cancellation-token registry.
+- `Scheduler` maps methods to lane labels only; it does not yet run priority
+  queues, debounce, background workers, delayed progress, or cancellation.
+- Stale-result rejection uses current analysis revision checks inside
+  `DocumentState::with_host`, not immutable `WorkspaceSnapshot` and document
+  version publication identity.
+
+M5 owns persistent LSP session integration on `WorkspaceSession` snapshots.
+M11 owns priority queues/debounce. M13 owns cancellation, progress, and
+parent-process watchdog behavior.
 
 ## Capability Matrix
 

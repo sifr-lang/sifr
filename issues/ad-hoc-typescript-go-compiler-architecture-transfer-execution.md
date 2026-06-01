@@ -8,8 +8,8 @@ Phase contract: `issues/ad-hoc-typescript-go-compiler-architecture-transfer.md`
 
 - [x] Phase plan drafted
 - [x] Phase plan reviewed and approved for implementation
-- [ ] M0 source and position foundation completed
-- [ ] M1 architecture contract and guardrails completed
+- [x] M0 source and position foundation completed
+- [x] M1 architecture contract and guardrails completed
 - [ ] M2 source provider and overlay store completed
 - [ ] M3 workspace session data model completed
 - [ ] M4 analysis snapshot migration completed
@@ -129,8 +129,36 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 - `2026-06-01`: `git diff --check` -> PASS after clippy follow-up.
 - `2026-06-01`: `cargo fmt --check` -> PASS after clippy follow-up.
 - `2026-06-01`: M0 implementation review pass 2 recorded in `reviews/typescript-go-m0-source-foundation-review-pass-2.md`; reviewer approved M0 for PR.
+- `2026-06-01`: M0 merged via PR [#2229](https://github.com/sifr-lang/sifr/pull/2229), merge commit `e548c11310690553d614dc859a86177217a4c958`.
+- `2026-06-01`: M1 validation in progress on branch `wave_tsgo_m1_architecture_guardrails`.
+- `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS.
+- `2026-06-01`: `cargo clippy --workspace -- -D warnings` -> PASS.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS with new M1 guardrail wired into local validation; report `target/validation_lane_reports/quick.latest.json`, wall time 242.39s.
+- `2026-06-01`: `git diff --check` -> PASS.
+- `2026-06-01`: `cargo fmt --check` -> PASS.
+- `2026-06-01`: M1 focused validation in progress on branch `wave_tsgo_m1_architecture_guardrails`.
+- `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS.
+- `2026-06-01`: `cargo fmt --check` -> PASS for M1.
+- `2026-06-01`: `git diff --check` -> PASS for M1.
+- `2026-06-01`: `python3 scripts/check_file_size_guardrails.py && python3 scripts/check_source_crate_dependency_direction.py` -> PASS for M1.
+- `2026-06-01`: `cargo test -p sifr_frontend && cargo test -p sifr_lsp` -> PASS for M1.
+- `2026-06-01`: `cargo test -p sifr_analysis` -> PASS for M1.
+- `2026-06-01`: `cargo test -p sifr -- --skip test_e2e_pass` -> PASS for M1.
+- `2026-06-01`: M1 implementation review pass 1 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-1.md`; reviewer requested direct-read inventory corrections and completeness/drift checking before PR.
+- `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS after M1 review remediation.
+- `2026-06-01`: M1 implementation review pass 2 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-2.md`; reviewer found the probe regex missed `.is_file()`/`.is_dir()` and one package lock-mode probe.
+- `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS after M1 review pass 2 remediation.
+- `2026-06-01`: M1 implementation review pass 3 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-3.md`; reviewer approved M1 for PR.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS for M1 (`target/validation_lane_reports/quick.latest.json`, wall time 282.00s).
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` initially failed after M1 review remediation because the guardrail doc omitted `crates/sifr_driver/src/build/workspace.rs:296`; the inventory and script were corrected.
+- `2026-06-01`: `python3 verification/tooling/check_typescript_go_m1_guardrails.py && python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS after build-metadata inventory correction.
+- `2026-06-01`: `git diff --check`, `cargo fmt --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS after build-metadata inventory correction.
+- `2026-06-01`: `scripts/run_all_tests.sh --profile quick` -> PASS after M1 review remediation; report `target/validation_lane_reports/quick.latest.json`, wall time 221.14s.
+- `2026-06-01`: M1 implementation review pass 2 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-2.md`; reviewer requested fixing the direct-read/probe regex and adding `crates/sifr_package/src/cargo/lock_modes.rs:46`.
+- `2026-06-01`: M1 implementation review pass 3 recorded in `reviews/typescript-go-architecture-transfer-m1-review-pass-3.md`; reviewer approved M1 for PR after focused validation.
 
 ## PR Log
 
 - `2026-05-30`: Phase planning/review PR [#2206](https://github.com/sifr-lang/sifr/pull/2206) records the architecture transfer contract, execution tracker, and incorporated review artifacts.
-- Implementation PR links will be recorded per milestone after they are opened and merged.
+- `2026-06-01`: M0 source and position foundation merged in [#2229](https://github.com/sifr-lang/sifr/pull/2229).
+- Additional implementation PR links will be recorded per milestone after they are opened and merged.
