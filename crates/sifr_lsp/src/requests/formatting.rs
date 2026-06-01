@@ -11,8 +11,7 @@ pub(crate) fn formatting(session: &mut Session, params: Value) -> LspResult<Valu
     let uri = text_document_uri(&params)?;
     let path = session.store().document(&uri)?.path().to_path_buf();
     let options = format_options(&params, &path)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let edits = snapshot
             .format_document(host, file, options)
             .map_err(|error| LspError::internal(error.message))?
@@ -32,8 +31,7 @@ pub(crate) fn range_formatting(session: &mut Session, params: Value) -> LspResul
         .ok_or_else(|| LspError::invalid_params("rangeFormatting requires range"))
         .and_then(|range| conversion::lsp_range(range, &source))?;
     let options = format_options(&params, &path)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let edits = snapshot
             .format_range(host, file, range, options)
             .map_err(|error| LspError::internal(error.message))?

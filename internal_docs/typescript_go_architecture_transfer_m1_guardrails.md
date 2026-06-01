@@ -119,10 +119,10 @@ M0 replaced the old `SourceMapView` stubs. Current guardrail:
 - Valid registered source-file conversions return `Some`; invalid files,
   non-boundary positions, and out-of-range spans return `None`.
 
-## Current LSP Reality
+## Historical M1 LSP Reality And M5 Update
 
 `internal_docs/lsp_server.md` describes both implemented Phase 36 behavior and
-future compiler-service layers. As of M1:
+future compiler-service layers. At the M1 planning gate:
 
 - `DocumentStore` still owns per-document analysis hosts.
 - `DocumentState::rebuild` calls `AnalysisHost::open_single_file` with
@@ -139,6 +139,11 @@ M1-M4 remain serialized. M5 is the first milestone allowed to remove the
 request-local LSP host shape by making LSP consume captured workspace snapshots.
 M11/M13 own priority queues, cancellation, progress, debounce, and operational
 hardening.
+
+M5 replaced the request-local LSP host shape. `DocumentStore` now owns protocol
+document state only, and `Session` owns `LspAnalysisWorkspace`, which feeds
+open/change/save text through `WorkspaceSession` overlays before analysis-backed
+requests capture snapshots.
 
 ## Current LSP Budget Reality
 
@@ -158,8 +163,10 @@ coverage is smoke coverage only.
   limitations, serialized M1-M4 rule, and aggregate LSP budget status.
 - `sifr_source` still has bottom-of-graph dependency direction.
 - `SourceMapView` no longer has no-op conversion stubs.
-- Current LSP single-file rebuild and shallow scheduler/request queue reality is
-  visible in code while M1 is active.
+- M5 LSP session ownership is visible in code: `DocumentStore` has no
+  per-document analysis host, `Session` owns `LspAnalysisWorkspace`, and overlay
+  updates flow through the analysis workspace. The scheduler/request queue
+  remain shallow until M11/M13.
 - The performance manifest still has the aggregate-only LSP request-family
   budget, so M12 cannot be accidentally claimed early.
 
@@ -173,8 +180,8 @@ coverage is smoke coverage only.
 - M6 must consume tracked file, directory, canonicalization, probe, and failed
   lookup records for dirty-scope classification and dependency-sensitive
   invalidation.
-- M5 must update the current LSP single-file rebuild caveat and the matching
-  script checks when `DocumentStore` stops owning request-local
+- M5 updated the current LSP single-file rebuild caveat and matching script
+  checks when `DocumentStore` stopped owning request-local
   `AnalysisHost::open_single_file` rebuilds.
 - M12 must update the aggregate-only LSP budget caveat and the matching script
   checks when `lsp.request_families` is split into per-request scenarios.

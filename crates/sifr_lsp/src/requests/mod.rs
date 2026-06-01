@@ -64,7 +64,7 @@ fn execute_command(session: &mut Session, params: Value) -> LspResult<Value> {
         .get("arguments")
         .and_then(Value::as_array)
         .map_or(&[][..], Vec::as_slice);
-    CommandRegistry::execute(session.store_mut(), command, arguments)
+    CommandRegistry::execute(session, command, arguments)
 }
 
 fn text_document_uri(params: &Value) -> LspResult<String> {

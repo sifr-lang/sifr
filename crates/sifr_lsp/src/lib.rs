@@ -6,6 +6,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 #![allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
 
+mod analysis_workspace;
 mod capabilities;
 mod commands;
 mod conversion;

@@ -7,8 +7,7 @@ use serde_json::{json, Value};
 pub(crate) fn completion(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let document = session.store_mut().document_mut(&uri)?;
-    document.with_host(|snapshot, host, file, _source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let result = snapshot
             .completion(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?

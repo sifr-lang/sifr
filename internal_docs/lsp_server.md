@@ -58,31 +58,31 @@ The stdio server terminates explicitly on `exit` after a successful `shutdown`
 response. This avoids retaining protocol IO threads after the client completes
 the required LSP shutdown sequence.
 
-## Current M4 Compiler-Service Caveats
+## Current M5 Compiler-Service State
 
-The TypeScript-Go architecture transfer keeps M4 serialized now that captured
-workspace snapshots and query identity are mechanical. Current
-implementation reality:
+The TypeScript-Go architecture transfer keeps M5 serialized while moving LSP
+analysis ownership into the language-server session. Current implementation
+reality:
 
-- `DocumentStore` still owns per-document `AnalysisHost` values.
-- `DocumentState::rebuild` calls `AnalysisHost::open_single_file` with
-  `FrontendMode::SingleFile` on open/change/save.
-- `DocumentState::with_host` captures an `AnalysisSnapshot` for each
-  analysis-backed request and routes diagnostics, symbols, navigation,
-  formatting, code actions, generated Rust preview, diagnostic explanation, and
-  test metadata through snapshot methods.
+- `DocumentStore` owns only protocol text, URI, path, and version state.
+- `Session` owns `LspAnalysisWorkspace`, which holds persistent analysis handles
+  for open documents. Those handles wrap `WorkspaceSession` and update unsaved
+  editor buffers through `WorkspaceSession` overlays.
+- LSP notifications update `DocumentStore` first, then feed the latest document
+  text/version into the session-owned analysis workspace before diagnostics or
+  semantic requests capture snapshots.
+- Analysis-backed requests route through `Session::with_document_analysis`,
+  capture `AnalysisSnapshot` values, and reject results if either the captured
+  workspace snapshot becomes stale or the document version changes before
+  publication.
 - `RequestQueue` tracks pending request ids and shutdown state; it is not yet a
   cancellation-token registry.
 - `Scheduler` maps methods to lane labels only; it does not yet run priority
   queues, debounce, background workers, delayed progress, or cancellation.
-- Stale-result rejection compares captured `WorkspaceSnapshot` and analysis
-  graph/source revisions against the serialized host. M5 must promote this from
-  per-document request-local hosts to a persistent LSP workspace session and add
-  document-version publication identity.
 
-M5 owns persistent LSP session integration on `WorkspaceSession` snapshots.
-M11 owns priority queues/debounce. M13 owns cancellation, progress, and
-parent-process watchdog behavior.
+M6 owns precise dirty scopes and event compaction. M11 owns priority
+queues/debounce. M13 owns cancellation, progress, and parent-process watchdog
+behavior.
 
 ## Capability Matrix
 

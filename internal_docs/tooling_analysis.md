@@ -59,8 +59,14 @@ TypeScript-Go architecture transfer M4 implementation:
 - `AnalysisHost` owns a serialized `sifr_frontend::WorkspaceSession` instead of a bare `FrontendContext`.
 - `AnalysisSnapshot` carries the captured `WorkspaceSnapshot` and the graph/source analysis revision.
 - Snapshot query methods cover the full Phase 36 editor query surface and stamp `QueryMetadata::workspace_snapshot_id`.
-- LSP analysis-backed requests capture a snapshot in `DocumentState::with_host`, execute through snapshot methods, and reject results if the host advances before publication.
-- Direct `AnalysisHost` query methods remain for internal tests and serialized callers; M5 owns replacing request-local LSP hosts with persistent workspace-session ownership.
+- Direct `AnalysisHost` query methods remain for internal tests and serialized callers.
+
+TypeScript-Go architecture transfer M5 implementation:
+
+- `sifr_lsp::Session` owns the persistent LSP analysis workspace instead of storing analysis hosts in `DocumentStore`.
+- `DocumentStore` now tracks protocol document state only: URI, path, text, version, and settings.
+- Open/change/save notifications feed the latest document state into session-owned analysis handles through `WorkspaceSession` overlays.
+- Analysis-backed LSP requests capture snapshots through `Session::with_document_analysis` and reject publication if the workspace snapshot or document version is stale.
 
 ## Required Frontend Exports
 

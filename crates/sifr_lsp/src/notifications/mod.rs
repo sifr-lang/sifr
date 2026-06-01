@@ -55,7 +55,7 @@ fn workspace_did_change_watched_files(
     session: &mut Session,
     connection: &Connection,
 ) -> LspResult<()> {
-    DiagnosticsController::publish_all(connection, session.store_mut())
+    DiagnosticsController::publish_all(connection, session)
 }
 
 fn text_document_did_open(
@@ -67,12 +67,9 @@ fn text_document_did_open(
     let language_id = required_string(&params, "/textDocument/languageId")?;
     let version = optional_i32(&params, "/textDocument/version")?;
     let text = required_string(&params, "/textDocument/text")?;
-    session
-        .store_mut()
-        .open(uri.clone(), &language_id, version, text)?;
+    session.open_document(uri.clone(), &language_id, version, text)?;
     let mode = session.store().settings().diagnostics_mode;
-    let document = session.store_mut().document_mut(&uri)?;
-    DiagnosticsController::publish_document(connection, document, mode)
+    DiagnosticsController::publish_document(connection, session, &uri, mode)
 }
 
 fn text_document_did_change(
@@ -91,17 +88,14 @@ fn text_document_did_change(
     for change in changes {
         if let Some(range) = change.get("range") {
             let text = required_string(change, "/text")?;
-            session
-                .store_mut()
-                .change_incremental(&uri, version, range, &text)?;
+            session.change_incremental(&uri, version, range, &text)?;
         } else {
             let text = required_string(change, "/text")?;
-            session.store_mut().change_full(&uri, version, text)?;
+            session.change_full(&uri, version, text)?;
         }
     }
     let mode = session.store().settings().diagnostics_mode;
-    let document = session.store_mut().document_mut(&uri)?;
-    DiagnosticsController::publish_document(connection, document, mode)
+    DiagnosticsController::publish_document(connection, session, &uri, mode)
 }
 
 fn text_document_did_save(
@@ -114,10 +108,9 @@ fn text_document_did_save(
         .get("text")
         .and_then(Value::as_str)
         .map(str::to_owned);
-    if session.store_mut().save(&uri, text) {
+    if session.save_document(&uri, text)? {
         let mode = session.store().settings().diagnostics_mode;
-        let document = session.store_mut().document_mut(&uri)?;
-        DiagnosticsController::publish_document(connection, document, mode)?;
+        DiagnosticsController::publish_document(connection, session, &uri, mode)?;
     }
     Ok(())
 }
@@ -128,7 +121,7 @@ fn text_document_did_close(
     params: Value,
 ) -> LspResult<()> {
     let uri = required_string(&params, "/textDocument/uri")?;
-    if !session.store_mut().close(&uri) {
+    if !session.close_document(&uri) {
         session.trace(format!("ignored close for unopened document {uri}"));
         return Ok(());
     }
