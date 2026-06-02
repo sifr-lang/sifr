@@ -10,6 +10,13 @@ pub(crate) fn settings_from_initialize_params(
     parse_workspace_settings(root, current)
 }
 
+pub(crate) fn work_done_progress_from_initialize_params(params: &Value) -> bool {
+    params
+        .pointer("/capabilities/window/workDoneProgress")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+}
+
 pub(crate) fn parse_workspace_settings(
     root: &Value,
     current: &WorkspaceSettings,

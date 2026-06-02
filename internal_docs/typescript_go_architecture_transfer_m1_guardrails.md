@@ -128,17 +128,20 @@ future compiler-service layers. At the M1 planning gate:
 - `DocumentState::rebuild` calls `AnalysisHost::open_single_file` with
   `FrontendMode::SingleFile` on open/change/save.
 - The current `RequestQueue` tracks pending request ids and shutdown state only.
-- The current `Scheduler` maps request methods to lane labels only; it does not
-  yet provide priority queues, cancellation tokens, debounce, background lanes,
-  progress, or worker execution.
+- The current `Scheduler` maps request methods to lane labels only. M11 moved
+  priority queues and debounce into `RequestQueue`/`Session`; M13 moved
+  cancellation tokens/state, delayed progress gates, and parent-pid watchdog
+  state into `CancellationToken`, `RequestQueue`, `ProgressState`, `Session`,
+  and `ParentWatchdog`.
 - Stale-result rejection is revision-token based inside per-document
   `AnalysisHost` use, not `WorkspaceSnapshot`/document-version publication
   identity.
 
 M1-M4 remain serialized. M5 is the first milestone allowed to remove the
 request-local LSP host shape by making LSP consume captured workspace snapshots.
-M11/M13 own priority queues, cancellation, progress, debounce, and operational
-hardening.
+M11 owns priority queues and debounce. M13 owns request cancellation tokens,
+delayed progress, parent-pid watchdogs, and operational hardening. Worker
+execution remains serialized until a later milestone proves safe parallel lanes.
 
 M5 replaced the request-local LSP host shape. `DocumentStore` now owns protocol
 document state only, and `Session` owns `LspAnalysisWorkspace`, which feeds
@@ -167,8 +170,9 @@ type hierarchy, code actions, formatting, and generated Rust preview
 - `SourceMapView` no longer has no-op conversion stubs.
 - M5 LSP session ownership is visible in code: `DocumentStore` has no
   per-document analysis host, `Session` owns `LspAnalysisWorkspace`, and overlay
-  updates flow through the analysis workspace. The scheduler/request queue
-  remain shallow until M11/M13.
+  updates flow through the analysis workspace. M11/M13 scheduler, request-queue,
+  progress, and watchdog surfaces are visible without moving compiler ownership
+  out of the serialized session.
 - The performance manifest contains the M12 split LSP request-family scenarios
   and keeps `lsp.request_families` as aggregate smoke coverage only.
 
@@ -187,7 +191,8 @@ type hierarchy, code actions, formatting, and generated Rust preview
   `AnalysisHost::open_single_file` rebuilds.
 - M12 updated the aggregate-only LSP budget caveat and the matching script
   checks when `lsp.request_families` was split into per-request scenarios.
-- M13 must update the scheduler/request-queue caveats if cancellation tokens,
-  progress, or background queues land in the scheduler modules.
+- M13 updated the scheduler/request-queue caveats and matching script checks
+  when cancellation tokens/state, delayed progress gates, and parent-pid
+  watchdogs landed in the LSP modules.
 - M15 must update the build-metadata exception when `.sifrbuildinfo` or
   equivalent persistent metadata becomes an explicit compiler-service input.

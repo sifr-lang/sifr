@@ -21,7 +21,7 @@ class LspProtocolError(RuntimeError):
 
 
 class LspClient:
-    def __init__(self, timeout: float = 90.0) -> None:
+    def __init__(self, timeout: float = 90.0, extra_args: list[str] | None = None) -> None:
         command = os.environ.get("SIFR_LSP_COMMAND")
         binary = REPO_ROOT / "target" / "debug" / "sifr"
         args = (
@@ -31,6 +31,8 @@ class LspClient:
             if binary.exists()
             else ["cargo", "run", "-q", "-p", "sifr", "--", "lsp", "--stdio"]
         )
+        if extra_args:
+            args.extend(extra_args)
         self.process = subprocess.Popen(
             args,
             cwd=REPO_ROOT,

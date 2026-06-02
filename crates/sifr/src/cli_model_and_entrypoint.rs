@@ -263,6 +263,9 @@ pub(crate) enum Commands {
         /// Use stdio transport
         #[arg(long)]
         stdio: bool,
+        /// Exit the language server when the parent process is no longer alive
+        #[arg(long = "parent-pid")]
+        parent_pid: Option<u32>,
     },
     /// Show the generated Rust source code
     Emit {
@@ -504,7 +507,7 @@ fn run_cli(cli: Cli) -> i32 {
         }
         Commands::Fmt(args) => cmd_fmt(&args, &config, isolated, diagnostic_format),
         Commands::Lint(args) => cmd_lint(&args, &config, isolated, diagnostic_format),
-        Commands::Lsp { stdio } => cmd_lsp(stdio),
+        Commands::Lsp { stdio, parent_pid } => cmd_lsp(stdio, parent_pid),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
         Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
     }
@@ -646,7 +649,7 @@ pub(super) fn diagnostic_explanation(code: &str) -> Option<String> {
     ))
 }
 
-pub(super) fn cmd_lsp(stdio: bool) -> i32 {
+pub(super) fn cmd_lsp(stdio: bool, parent_pid: Option<u32>) -> i32 {
     if !stdio {
         let diagnostic = diagnostic_with_code(
             "sifr lsp requires --stdio in Phase 36",
@@ -655,7 +658,7 @@ pub(super) fn cmd_lsp(stdio: bool) -> i32 {
         render_diagnostics(&[diagnostic], DiagnosticFormat::Human);
         return EXIT_USAGE_OR_CONFIG;
     }
-    match sifr_lsp::run_stdio() {
+    match sifr_lsp::run_stdio_with_options(sifr_lsp::LspServerOptions { parent_pid }) {
         Ok(()) => EXIT_SUCCESS,
         Err(error) => {
             let diagnostic = diagnostic_with_code(

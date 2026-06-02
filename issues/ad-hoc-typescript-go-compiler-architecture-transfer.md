@@ -19,6 +19,7 @@ Status: in progress
 | M10 Snapshot Reuse And Structural Replacement | merged | [#2251](https://github.com/sifr-lang/sifr/pull/2251) | Adds ref-counted M9-keyed parse/source-map/HIR/diagnostics/index reuse, Arc-backed snapshot payloads, and conservative safe one-module replacement when import/export signatures are unchanged. |
 | M11 LSP Scheduler Queues | merged | [#2253](https://github.com/sifr-lang/sifr/pull/2253) | Adds real request priority queues for latency-sensitive, formatting, workspace, and background lanes plus debounced diagnostic jobs guarded by captured document versions. |
 | M12 Per-Request Editor Latency Budgets | merged | [#2255](https://github.com/sifr-lang/sifr/pull/2255) | Splits aggregate LSP request-family performance evidence into per-request protocol latency scenarios with explicit `perf.lsp.*` budgets while retaining the aggregate case as smoke coverage. |
+| M13 LSP Cancellation, Progress, And Watchdog | in progress | pending | Adds queued/in-flight request cancellation state, phase-boundary cancellation checks, delayed work progress for multi-document diagnostics, and `sifr lsp --parent-pid` watchdog plumbing. |
 
 M2 local validation so far:
 
@@ -102,6 +103,27 @@ M12 local validation so far:
 - Claude reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-2.md`)
 - Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 256.95s, advisory: group skew is high
+
+M13 local validation so far:
+
+- `cargo fmt --check` -> PASS
+- `cargo build -p sifr` -> PASS
+- `cargo test -p sifr_lsp` -> PASS, 23 tests
+- `cargo clippy -p sifr_lsp -p sifr -- -D warnings` -> PASS
+- `python3 -m py_compile verification/tooling/lsp_protocol.py verification/tooling/lsp_protocol_smoke.py verification/tooling/lsp_protocol_stress.py` -> PASS
+- `python3 verification/tooling/lsp_protocol_smoke.py` -> PASS
+- `python3 verification/tooling/lsp_protocol_stress.py` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/tooling/check_phase36_closeout.py` -> PASS
+- `python3 verification/tooling/check_phase36_closeout.py --self-test` -> PASS
+- `python3 scripts/check_diagnostic_cancel_usage.py` -> PASS
+- `git diff --check` -> PASS
+- `python3 scripts/check_file_size_guardrails.py` -> PASS
+- Claude reviewer pass 1 -> SATISFIED with residual cleanup (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-1.md`)
+- Claude reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-2.md`)
+- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-3.md`)
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 280.41s, advisory: group skew is high
 
 M4 local validation so far:
 

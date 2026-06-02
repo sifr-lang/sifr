@@ -1,8 +1,10 @@
 use crate::analysis_workspace::LspAnalysisWorkspace;
+use crate::cancellation::CancellationToken;
 use crate::document_events::{compact_content_changes, CompactedDocumentChange};
 use crate::document_store::DocumentStore;
-use crate::errors::LspResult;
-use crate::request_queue::{RequestQueue, ScheduledRequest};
+use crate::errors::{LspError, LspResult};
+use crate::progress::{ProgressHandle, ProgressKind, ProgressState};
+use crate::request_queue::{CancellationTarget, RequestQueue, ScheduledRequest};
 use crate::scheduler::WorkLane;
 use lsp_server::RequestId;
 use serde_json::Value;
@@ -14,6 +16,8 @@ pub(crate) struct Session {
     store: DocumentStore,
     analysis: LspAnalysisWorkspace,
     queue: RequestQueue,
+    progress: ProgressState,
+    active_request: Option<CancellationToken>,
     initialized: bool,
     shutdown_requested: bool,
     exit_requested: bool,
@@ -41,6 +45,8 @@ impl Session {
             store: DocumentStore::new(),
             analysis: LspAnalysisWorkspace::default(),
             queue: RequestQueue::default(),
+            progress: ProgressState::default(),
+            active_request: None,
             initialized: false,
             shutdown_requested: false,
             exit_requested: false,
@@ -142,11 +148,13 @@ impl Session {
         uri: &str,
         operation: impl FnOnce(&AnalysisSnapshot, &mut AnalysisHost, FileId, &str) -> LspResult<T>,
     ) -> LspResult<T> {
+        self.check_active_request_cancelled()?;
         let before_version = self.store.document(uri)?.version();
         let result = {
             let document = self.store.document(uri)?;
             self.analysis.with_document(document, operation)?
         };
+        self.check_active_request_cancelled()?;
         let after_version = self.store.document(uri)?.version();
         if after_version != before_version {
             return Err(crate::errors::LspError::request_cancelled(
@@ -154,6 +162,31 @@ impl Session {
             ));
         }
         Ok(result)
+    }
+
+    pub(crate) fn set_work_done_progress_enabled(&mut self, enabled: bool) {
+        self.progress.set_enabled(enabled);
+    }
+
+    pub(crate) fn begin_progress(
+        &mut self,
+        kind: ProgressKind,
+        work_units: usize,
+    ) -> Option<ProgressHandle> {
+        let handle = self.progress.begin(kind, work_units)?;
+        self.trace(format!(
+            "started progress token={} kind={kind:?} units={work_units}",
+            handle.token()
+        ));
+        Some(handle)
+    }
+
+    pub(crate) fn end_progress(&mut self, handle: ProgressHandle, message: &str) {
+        self.trace(format!(
+            "ended progress token={} message={message}",
+            handle.token()
+        ));
+        self.progress.end(handle, message);
     }
 
     pub(crate) fn enqueue_request(
@@ -180,30 +213,52 @@ impl Session {
         Some(scheduled)
     }
 
+    pub(crate) fn begin_request_execution(&mut self, id: &RequestId) -> LspResult<()> {
+        self.active_request = Some(CancellationToken::new(id));
+        self.check_request_cancelled(id)
+    }
+
     pub(crate) fn finish_request(&mut self, id: &RequestId) {
+        if self
+            .active_request
+            .as_ref()
+            .is_some_and(|token| token.request_id() == id)
+        {
+            self.active_request = None;
+        }
         self.queue.finish(id);
     }
 
-    pub(crate) fn cancel_request(&mut self, id: &Value) {
-        let request_id = if let Some(raw) = id.as_i64() {
-            let Ok(raw) = i32::try_from(raw) else {
-                return;
-            };
-            RequestId::from(raw)
-        } else if let Some(raw) = id.as_str() {
-            RequestId::from(raw.to_string())
-        } else {
-            return;
-        };
-        if self.queue.remove_pending(&request_id) {
-            self.trace(format!("cancelled request {request_id:?}"));
+    pub(crate) fn cancel_request(&mut self, id: &RequestId) -> CancellationTarget {
+        let target = self.queue.mark_cancelled(id);
+        if target != CancellationTarget::None {
+            self.trace(format!("cancelled request {id:?} target={target:?}"));
         }
+        target
+    }
+
+    pub(crate) fn check_request_cancelled(&self, id: &RequestId) -> LspResult<()> {
+        if self.queue.is_cancelled(id) {
+            Err(LspError::request_cancelled(format!(
+                "request {id:?} was cancelled"
+            )))
+        } else {
+            Ok(())
+        }
+    }
+
+    pub(crate) fn check_active_request_cancelled(&self) -> LspResult<()> {
+        if let Some(token) = &self.active_request {
+            self.check_request_cancelled(token.request_id())?;
+        }
+        Ok(())
     }
 
     pub(crate) fn begin_shutdown(&mut self) {
         self.shutdown_requested = true;
         self.queue.begin_shutdown();
         self.diagnostic_jobs.clear();
+        self.active_request = None;
     }
 
     pub(crate) fn clear_diagnostic_jobs(&mut self) {
@@ -275,6 +330,9 @@ impl Session {
 #[cfg(test)]
 mod tests {
     use super::Session;
+    use crate::progress::ProgressKind;
+    use crate::request_queue::CancellationTarget;
+    use lsp_server::RequestId;
     use serde_json::json;
 
     #[test]
@@ -341,6 +399,42 @@ mod tests {
             session.store().document(&uri).expect("document").version(),
             Some(2)
         );
+    }
+
+    #[test]
+    fn active_request_cancellation_fails_phase_boundary_checks() {
+        let mut session = Session::new();
+        let id = RequestId::from(7);
+        session
+            .enqueue_request(
+                &id,
+                "textDocument/references",
+                crate::scheduler::WorkLane::Workspace,
+            )
+            .expect("request should enqueue");
+        let scheduled = session.start_next_request().expect("request should start");
+
+        session
+            .begin_request_execution(scheduled.id())
+            .expect("request should not start cancelled");
+        assert_eq!(session.cancel_request(&id), CancellationTarget::InFlight);
+        assert!(session.check_active_request_cancelled().is_err());
+        session.finish_request(&id);
+        assert!(session.check_request_cancelled(&id).is_ok());
+    }
+
+    #[test]
+    fn progress_gate_records_only_delayed_work() {
+        let mut session = Session::new();
+        session.set_work_done_progress_enabled(true);
+
+        assert!(session
+            .begin_progress(ProgressKind::FullDiagnostics, 1)
+            .is_none());
+        let handle = session
+            .begin_progress(ProgressKind::FullDiagnostics, 2)
+            .expect("multi-document diagnostics should report progress");
+        session.end_progress(handle, "checked 2 document(s)");
     }
 
     #[test]

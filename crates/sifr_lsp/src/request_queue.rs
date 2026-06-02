@@ -43,11 +43,19 @@ struct QueuedRequest {
 pub(crate) struct RequestQueue {
     queued: BTreeMap<WorkLane, VecDeque<QueuedRequest>>,
     in_flight: BTreeMap<String, ScheduledRequest>,
+    cancelled: BTreeSet<String>,
     queued_keys: BTreeSet<String>,
     shutdown_requested: bool,
     next_sequence: u64,
     priority_dispatches_since_fairness: usize,
     fairness_cursor: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CancellationTarget {
+    None,
+    Queued,
+    InFlight,
 }
 
 impl RequestQueue {
@@ -93,19 +101,30 @@ impl RequestQueue {
     }
 
     pub(crate) fn finish(&mut self, id: &RequestId) {
-        self.in_flight.remove(&request_key(id));
+        let key = request_key(id);
+        self.in_flight.remove(&key);
+        self.cancelled.remove(&key);
     }
 
-    pub(crate) fn remove_pending(&mut self, id: &RequestId) -> bool {
+    pub(crate) fn mark_cancelled(&mut self, id: &RequestId) -> CancellationTarget {
         let key = request_key(id);
         for lane_queue in self.queued.values_mut() {
             if let Some(index) = lane_queue.iter().position(|request| request.key == key) {
                 lane_queue.remove(index);
                 self.queued_keys.remove(&key);
-                return true;
+                self.cancelled.insert(key);
+                return CancellationTarget::Queued;
             }
         }
-        self.in_flight.remove(&key).is_some()
+        if self.in_flight.contains_key(&key) {
+            self.cancelled.insert(key);
+            return CancellationTarget::InFlight;
+        }
+        CancellationTarget::None
+    }
+
+    pub(crate) fn is_cancelled(&self, id: &RequestId) -> bool {
+        self.cancelled.contains(&request_key(id))
     }
 
     pub(crate) fn begin_shutdown(&mut self) {
@@ -113,6 +132,7 @@ impl RequestQueue {
         self.queued.clear();
         self.queued_keys.clear();
         self.in_flight.clear();
+        self.cancelled.clear();
     }
 
     fn select_next_lane(&mut self) -> Option<WorkLane> {
@@ -153,7 +173,7 @@ pub(crate) fn request_key(id: &RequestId) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::RequestQueue;
+    use super::{CancellationTarget, RequestQueue};
     use crate::scheduler::WorkLane;
     use lsp_server::RequestId;
 
@@ -237,7 +257,26 @@ mod tests {
             .enqueue(&id, "workspace/diagnostic", WorkLane::Workspace)
             .expect("request should enqueue");
 
-        assert!(queue.remove_pending(&id));
+        assert_eq!(queue.mark_cancelled(&id), CancellationTarget::Queued);
         assert!(queue.start_next().is_none());
+        assert!(queue.is_cancelled(&id));
+        queue.finish(&id);
+        assert!(!queue.is_cancelled(&id));
+    }
+
+    #[test]
+    fn cancellation_marks_in_flight_request_until_finish() {
+        let mut queue = RequestQueue::default();
+        let id = RequestId::from(42);
+        queue
+            .enqueue(&id, "textDocument/references", WorkLane::Workspace)
+            .expect("request should enqueue");
+        let scheduled = queue.start_next().expect("request should start");
+
+        assert_eq!(scheduled.id(), &id);
+        assert_eq!(queue.mark_cancelled(&id), CancellationTarget::InFlight);
+        assert!(queue.is_cancelled(&id));
+        queue.finish(&id);
+        assert!(!queue.is_cancelled(&id));
     }
 }
