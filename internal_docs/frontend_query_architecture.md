@@ -73,6 +73,12 @@ worker execution is constrained to `ApprovedWorkerLane`; type identity,
 ownership mutation, package graph mutation, and codegen state remain listed as
 single-owner phases.
 
+TypeScript-Go architecture transfer M15 note: `WorkspaceSession` snapshots now
+carry project residency, config registry, watcher registration, and verified
+build-info state. `.sifrbuildinfo` candidates are rejected unless the current
+source hashes, package/config identity, and compiler fingerprint match the
+active workspace, so metadata never becomes correctness authority.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

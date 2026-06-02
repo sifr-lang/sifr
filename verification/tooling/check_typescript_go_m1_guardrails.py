@@ -25,6 +25,8 @@ PROGRESS = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "progress.rs"
 WATCHDOG = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "watchdog.rs"
 ANALYSIS_SYMBOLS = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "symbols.rs"
 ANALYSIS_WORKER_LANES = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "worker_lanes.rs"
+WORKSPACE_SESSION = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_session.rs"
+WORKSPACE_RESIDENCY = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_residency.rs"
 PERF_MANIFEST = REPO_ROOT / "verification" / "performance" / "manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
 DIRECT_FS_PATTERN = re.compile(
@@ -125,6 +127,7 @@ REQUIRED_DOC_SNIPPETS = [
     "M12 updated",
     "M13 updated",
     "M14 updated",
+    "M15 updated",
     "CancellationToken",
     "ParentWatchdog",
     "ProgressState",
@@ -132,6 +135,9 @@ REQUIRED_DOC_SNIPPETS = [
     "SymbolBucketReadinessState",
     "ApprovedWorkerLane",
     "SingleOwnerCompilerPhase",
+    "ProjectResidencyKind",
+    "WatchRegistrationReason",
+    "SifrBuildInfoCandidate",
     "perf.lsp.request_families",
     "perf.lsp.generated_rust_preview.document",
 ]
@@ -395,6 +401,36 @@ def validate_m14_bucket_and_lane_state(failures: list[str]) -> None:
     )
 
 
+def validate_m15_residency_state(failures: list[str]) -> None:
+    session = WORKSPACE_SESSION.read_text(encoding="utf-8")
+    residency = WORKSPACE_RESIDENCY.read_text(encoding="utf-8")
+    require(
+        "WorkspaceResidencySnapshot" in session
+        and "refresh_residency" in session
+        and "verify_build_info" in session
+        and "mark_config_pending_reload" in session,
+        "M15 requires WorkspaceSession to expose residency snapshots and build-info verification",
+        failures,
+    )
+    require(
+        "ProjectResidencyKind" in residency
+        and "OpenFileOwner" in residency
+        and "ExplicitApiOpen" in residency
+        and "Evictable" in residency
+        and "ConfigRegistryEntry" in residency
+        and "pending_reload" in residency
+        and "WatchRegistrationReason" in residency
+        and "FailedLookup" in residency
+        and "GeneratedArtifact" in residency
+        and "StdlibRoot" in residency
+        and "SifrBuildInfoCandidate" in residency
+        and "SifrBuildInfoVerification" in residency
+        and "SourceHashMismatch" in residency,
+        "M15 requires residency/config/watch/build-info state vocabulary",
+        failures,
+    )
+
+
 def validate_source_dep_guard(failures: list[str]) -> None:
     result = subprocess.run(
         [sys.executable, str(SOURCE_DEP_GUARD)],
@@ -438,6 +474,7 @@ def main() -> int:
     validate_lsp_current_state(failures)
     validate_lsp_budget_reality(failures)
     validate_m14_bucket_and_lane_state(failures)
+    validate_m15_residency_state(failures)
     validate_source_dep_guard(failures)
 
     if failures:

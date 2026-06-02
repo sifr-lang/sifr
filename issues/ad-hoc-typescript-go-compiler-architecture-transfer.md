@@ -21,6 +21,7 @@ Status: in progress
 | M12 Per-Request Editor Latency Budgets | merged | [#2255](https://github.com/sifr-lang/sifr/pull/2255) | Splits aggregate LSP request-family performance evidence into per-request protocol latency scenarios with explicit `perf.lsp.*` budgets while retaining the aggregate case as smoke coverage. |
 | M13 LSP Cancellation, Progress, And Watchdog | merged | [#2257](https://github.com/sifr-lang/sifr/pull/2257) | Adds queued/in-flight request cancellation state, phase-boundary cancellation checks, delayed work progress for multi-document diagnostics, and `sifr lsp --parent-pid` watchdog plumbing. |
 | M14 Bucketed Indexes And Safe Parallel Lanes | merged | [#2259](https://github.com/sifr-lang/sifr/pull/2259) | Adds workspace/package/stdlib symbol and import bucket readiness states, dirty-bucket symbol-index refreshes, and explicit approved worker-lane versus single-owner compiler-phase policy; package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. |
+| M15 Project Residency, Watchers, And Build Info | in progress | pending | Adds project residency snapshots, config pending reload state, deduped watch registrations, and verified non-authoritative `.sifrbuildinfo` metadata. |
 
 M2 local validation so far:
 
@@ -143,6 +144,21 @@ M14 local validation so far:
 - Claude reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m14-bucketed-indexes-review-pass-2.md`)
 - Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m14-bucketed-indexes-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 261.03s, advisory: group skew is high
+
+M15 local validation so far:
+
+- `cargo test -p sifr_frontend workspace_session` -> PASS, 8 tests
+- `cargo test -p sifr_frontend` -> PASS, 42 tests
+- `cargo fmt --check` -> PASS
+- `cargo clippy -p sifr_frontend -- -D warnings` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `git diff --check` -> PASS
+- `python3 scripts/check_file_size_guardrails.py` -> PASS
+- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m15-project-residency-review-pass-1.md`)
+- Claude reviewer pass 2 -> SATISFIED (`reviews/typescript-go-m15-project-residency-review-pass-2.md`)
+- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m15-project-residency-review-pass-3.md`)
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 292.53s, advisory: group skew is high
 
 M4 local validation so far:
 
