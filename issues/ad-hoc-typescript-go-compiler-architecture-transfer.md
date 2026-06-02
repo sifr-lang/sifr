@@ -20,7 +20,7 @@ Status: in progress
 | M11 LSP Scheduler Queues | merged | [#2253](https://github.com/sifr-lang/sifr/pull/2253) | Adds real request priority queues for latency-sensitive, formatting, workspace, and background lanes plus debounced diagnostic jobs guarded by captured document versions. |
 | M12 Per-Request Editor Latency Budgets | merged | [#2255](https://github.com/sifr-lang/sifr/pull/2255) | Splits aggregate LSP request-family performance evidence into per-request protocol latency scenarios with explicit `perf.lsp.*` budgets while retaining the aggregate case as smoke coverage. |
 | M13 LSP Cancellation, Progress, And Watchdog | merged | [#2257](https://github.com/sifr-lang/sifr/pull/2257) | Adds queued/in-flight request cancellation state, phase-boundary cancellation checks, delayed work progress for multi-document diagnostics, and `sifr lsp --parent-pid` watchdog plumbing. |
-| M14 Bucketed Indexes And Safe Parallel Lanes | in progress | pending | Adds workspace/package/stdlib symbol and import bucket readiness states, dirty-bucket symbol-index refreshes, and explicit approved worker-lane versus single-owner compiler-phase policy; package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. |
+| M14 Bucketed Indexes And Safe Parallel Lanes | merged | [#2259](https://github.com/sifr-lang/sifr/pull/2259) | Adds workspace/package/stdlib symbol and import bucket readiness states, dirty-bucket symbol-index refreshes, and explicit approved worker-lane versus single-owner compiler-phase policy; package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. |
 
 M2 local validation so far:
 
