@@ -218,13 +218,18 @@ def validate_lsp_current_state(failures: list[str]) -> None:
         failures,
     )
     require(
-        "pub(crate) fn lane_for_method" in scheduler and "CancellationToken" not in scheduler,
-        "M1 scheduler guardrail expects lane labels only, with cancellation deferred",
+        "pub(crate) fn lane_for_method" in scheduler
+        and "Background" in scheduler
+        and "CancellationToken" not in scheduler,
+        "scheduler guardrail expects M11 lane classification, with cancellation deferred",
         failures,
     )
     require(
-        "pending: BTreeSet<String>" in request_queue and "remove_pending" in request_queue,
-        "M1 request queue guardrail expects pending-id tracking only",
+        "VecDeque<QueuedRequest>" in request_queue
+        and "start_next" in request_queue
+        and "FAIRNESS_INTERVAL" in request_queue
+        and "remove_pending" in request_queue,
+        "request queue guardrail expects M11 priority queues with bounded fairness",
         failures,
     )
 

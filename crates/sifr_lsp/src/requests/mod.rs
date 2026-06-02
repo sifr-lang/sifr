@@ -13,13 +13,10 @@ mod type_hierarchy;
 
 use crate::commands::CommandRegistry;
 use crate::errors::{LspError, LspResult};
-use crate::scheduler::Scheduler;
 use crate::session::Session;
 use serde_json::Value;
 
 pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspResult<Value> {
-    let lane = Scheduler::lane_for_method(method);
-    session.trace(format!("dispatching {method} on {lane:?} lane"));
     match method {
         "workspace/symbol" => symbols::workspace_symbol(session, params),
         "workspace/executeCommand" => execute_command(session, params),
