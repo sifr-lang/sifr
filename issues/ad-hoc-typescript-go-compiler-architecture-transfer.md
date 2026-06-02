@@ -19,7 +19,7 @@ Status: in progress
 | M10 Snapshot Reuse And Structural Replacement | merged | [#2251](https://github.com/sifr-lang/sifr/pull/2251) | Adds ref-counted M9-keyed parse/source-map/HIR/diagnostics/index reuse, Arc-backed snapshot payloads, and conservative safe one-module replacement when import/export signatures are unchanged. |
 | M11 LSP Scheduler Queues | merged | [#2253](https://github.com/sifr-lang/sifr/pull/2253) | Adds real request priority queues for latency-sensitive, formatting, workspace, and background lanes plus debounced diagnostic jobs guarded by captured document versions. |
 | M12 Per-Request Editor Latency Budgets | merged | [#2255](https://github.com/sifr-lang/sifr/pull/2255) | Splits aggregate LSP request-family performance evidence into per-request protocol latency scenarios with explicit `perf.lsp.*` budgets while retaining the aggregate case as smoke coverage. |
-| M13 LSP Cancellation, Progress, And Watchdog | in progress | pending | Adds queued/in-flight request cancellation state, phase-boundary cancellation checks, delayed work progress for multi-document diagnostics, and `sifr lsp --parent-pid` watchdog plumbing. |
+| M13 LSP Cancellation, Progress, And Watchdog | merged | [#2257](https://github.com/sifr-lang/sifr/pull/2257) | Adds queued/in-flight request cancellation state, phase-boundary cancellation checks, delayed work progress for multi-document diagnostics, and `sifr lsp --parent-pid` watchdog plumbing. |
 
 M2 local validation so far:
 
