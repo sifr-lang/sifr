@@ -1,6 +1,7 @@
 use crate::conversion;
 use crate::document_store::DiagnosticsMode;
 use crate::errors::LspResult;
+use crate::progress::{begin_notification, end_notification, ProgressKind};
 use crate::session::Session;
 use lsp_server::{Connection, Message, Notification};
 use serde_json::{json, Value};
@@ -29,10 +30,23 @@ impl DiagnosticsController {
             session.clear_diagnostic_jobs();
             return Ok(());
         }
-        for uri in session.document_uris() {
-            session.schedule_document_diagnostics(&uri)?;
+        let uris = session.document_uris();
+        let progress = session.begin_progress(ProgressKind::FullDiagnostics, uris.len());
+        if let Some(handle) = &progress {
+            publish_progress(
+                connection,
+                begin_notification(handle, "Checking Sifr workspace"),
+            )?;
+        }
+        for uri in &uris {
+            session.schedule_document_diagnostics(uri)?;
         }
         Self::flush_ready(connection, session, mode)?;
+        if let Some(handle) = progress {
+            let message = format!("checked {} document(s)", uris.len());
+            publish_progress(connection, end_notification(&handle, &message))?;
+            session.end_progress(handle, &message);
+        }
         Ok(())
     }
 
@@ -80,6 +94,18 @@ impl DiagnosticsController {
         }
         Ok(())
     }
+}
+
+fn publish_progress(connection: &Connection, params: Value) -> LspResult<()> {
+    connection
+        .sender
+        .send(Message::Notification(Notification {
+            method: "$/progress".to_string(),
+            params,
+        }))
+        .map_err(|error| {
+            crate::errors::LspError::internal(format!("failed to publish progress: {error}"))
+        })
 }
 
 pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResult<Vec<Value>> {

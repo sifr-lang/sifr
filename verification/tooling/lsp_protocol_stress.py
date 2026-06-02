@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -22,10 +23,23 @@ def run_stress() -> None:
         source = root / "main.sifr"
         source.write_text(SAMPLE, encoding="utf-8")
         uri = file_uri(source)
-        client = LspClient()
+        client = LspClient(extra_args=["--parent-pid", str(os.getpid())])
         try:
-            initialize(client, root)
+            initialize(client, root, work_done_progress=True)
             open_document(client, source, SAMPLE)
+            secondary = root / "secondary.sifr"
+            secondary.write_text(SAMPLE, encoding="utf-8")
+            open_document(client, secondary, SAMPLE)
+
+            client.notify("workspace/didChangeWatchedFiles", {"changes": [{"uri": uri, "type": 2}]})
+            progress = client.wait_for_notification("$/progress")
+            if progress.get("params", {}).get("value", {}).get("kind") != "begin":
+                raise LspProtocolError("workspace diagnostics progress did not begin")
+            progress = client.wait_for_notification("$/progress")
+            if progress.get("params", {}).get("value", {}).get("kind") != "end":
+                raise LspProtocolError("workspace diagnostics progress did not end")
+            for _ in range(2):
+                client.wait_for_notification("textDocument/publishDiagnostics")
 
             client.notify("$/cancelRequest", {"id": 99999})
             client.notify(

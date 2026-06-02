@@ -20,6 +20,9 @@ LSP_ANALYSIS_WORKSPACE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "analysis_w
 LSP_SESSION = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "session.rs"
 SCHEDULER = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "scheduler.rs"
 REQUEST_QUEUE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "request_queue.rs"
+CANCELLATION = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "cancellation.rs"
+PROGRESS = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "progress.rs"
+WATCHDOG = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "watchdog.rs"
 PERF_MANIFEST = REPO_ROOT / "verification" / "performance" / "manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
 DIRECT_FS_PATTERN = re.compile(
@@ -118,6 +121,10 @@ REQUIRED_DOC_SNIPPETS = [
     "M1-M4 remain serialized",
     "M5 updated",
     "M12 updated",
+    "M13 updated",
+    "CancellationToken",
+    "ParentWatchdog",
+    "ProgressState",
     "perf.lsp.request_families",
     "perf.lsp.generated_rust_preview.document",
 ]
@@ -239,6 +246,9 @@ def validate_lsp_current_state(failures: list[str]) -> None:
     session = LSP_SESSION.read_text(encoding="utf-8")
     scheduler = SCHEDULER.read_text(encoding="utf-8")
     request_queue = REQUEST_QUEUE.read_text(encoding="utf-8")
+    cancellation = CANCELLATION.read_text(encoding="utf-8")
+    progress = PROGRESS.read_text(encoding="utf-8")
+    watchdog = WATCHDOG.read_text(encoding="utf-8")
     require(
         "AnalysisHost::open_single_file" not in document_store
         and "FrontendMode::SingleFile" not in document_store
@@ -264,15 +274,37 @@ def validate_lsp_current_state(failures: list[str]) -> None:
         "pub(crate) fn lane_for_method" in scheduler
         and "Background" in scheduler
         and "CancellationToken" not in scheduler,
-        "scheduler guardrail expects M11 lane classification, with cancellation deferred",
+        "scheduler guardrail expects lane classification to remain separate from cancellation state",
         failures,
     )
     require(
         "VecDeque<QueuedRequest>" in request_queue
         and "start_next" in request_queue
         and "FAIRNESS_INTERVAL" in request_queue
-        and "remove_pending" in request_queue,
-        "request queue guardrail expects M11 priority queues with bounded fairness",
+        and "CancellationTarget" in request_queue
+        and "is_cancelled" in request_queue,
+        "request queue guardrail expects M11 priority queues plus M13 cancellation state",
+        failures,
+    )
+    require(
+        "ProgressState" in progress
+        and "ProgressKind" in progress
+        and "FullDiagnostics" in progress,
+        "M13 requires delayed LSP progress state for long-running work",
+        failures,
+    )
+    require(
+        "CancellationToken" in cancellation
+        and "request_id" in cancellation
+        and "RequestId" in cancellation,
+        "M13 requires explicit LSP request cancellation tokens",
+        failures,
+    )
+    require(
+        "ParentWatchdog" in watchdog
+        and "LspServerOptions" in watchdog
+        and "parent_pid" in watchdog,
+        "M13 requires parent-pid watchdog options for LSP",
         failures,
     )
 

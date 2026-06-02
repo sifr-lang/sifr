@@ -28,19 +28,28 @@ def main()->int:
     return value
 """
 
-def initialize(client: LspClient, root: Path, initialization_options: dict[str, Any] | None = None) -> dict[str, Any]:
+def initialize(
+    client: LspClient,
+    root: Path,
+    initialization_options: dict[str, Any] | None = None,
+    *,
+    work_done_progress: bool = False,
+) -> dict[str, Any]:
+    capabilities: dict[str, Any] = {
+        "textDocument": {
+            "publishDiagnostics": {"relatedInformation": True},
+            "semanticTokens": {"requests": {"full": True, "range": True}},
+        },
+        "workspace": {"configuration": True, "workspaceFolders": True},
+    }
+    if work_done_progress:
+        capabilities["window"] = {"workDoneProgress": True}
     result = client.request(
         "initialize",
         {
             "processId": None,
             "rootUri": file_uri(root),
-            "capabilities": {
-                "textDocument": {
-                    "publishDiagnostics": {"relatedInformation": True},
-                    "semanticTokens": {"requests": {"full": True, "range": True}},
-                },
-                "workspace": {"configuration": True, "workspaceFolders": True},
-            },
+            "capabilities": capabilities,
             "workspaceFolders": [{"uri": file_uri(root), "name": "sifr-lsp-smoke"}],
             "initializationOptions": initialization_options or {},
         },

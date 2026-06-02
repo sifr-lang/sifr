@@ -1,7 +1,7 @@
 use crate::diagnostics::DiagnosticsController;
 use crate::errors::{optional_i32, required_string, LspError, LspResult};
 use crate::session::Session;
-use lsp_server::Connection;
+use lsp_server::{Connection, RequestId};
 use serde_json::Value;
 
 pub(crate) fn handle(
@@ -12,7 +12,6 @@ pub(crate) fn handle(
 ) -> LspResult<()> {
     match method {
         "initialized" => initialized(session),
-        "$/cancelRequest" => cancel_request(session, &params),
         "workspace/didChangeConfiguration" => workspace_did_change_configuration(session, params),
         "workspace/didChangeWatchedFiles" => {
             workspace_did_change_watched_files(session, params, connection)
@@ -37,11 +36,14 @@ fn initialized(session: &mut Session) -> LspResult<()> {
     Ok(())
 }
 
-fn cancel_request(session: &mut Session, params: &Value) -> LspResult<()> {
-    if let Some(id) = params.get("id") {
-        session.cancel_request(id);
+pub(crate) fn cancel_request_id(params: &Value) -> Option<RequestId> {
+    let id = params.get("id")?;
+    if let Some(raw) = id.as_i64() {
+        let raw = i32::try_from(raw).ok()?;
+        Some(RequestId::from(raw))
+    } else {
+        id.as_str().map(|raw| RequestId::from(raw.to_string()))
     }
-    Ok(())
 }
 
 fn workspace_did_change_configuration(session: &mut Session, params: Value) -> LspResult<()> {
