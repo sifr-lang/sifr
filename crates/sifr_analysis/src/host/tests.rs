@@ -1,9 +1,11 @@
+use super::text_edits::full_range;
 use super::*;
 use crate::queries::SymbolQuery;
 use crate::snapshot::{AnalysisErrorKind, AnalysisQueryKind};
 use crate::{
     CodeActionContext, DiagnosticId, DocumentVersion, FormatOptions, FrontendInput, ProjectRoot,
-    SourceText, SymbolName, TestItemId, TextPosition, TypeHierarchyItemId,
+    SourceText, SymbolBucketKind, SymbolBucketReadinessState, SymbolName, TestItemId, TextPosition,
+    TypeHierarchyItemId,
 };
 use sifr_diagnostics::DiagnosticArg;
 use sifr_frontend::{FrontendMode, SourcePath};
@@ -202,6 +204,100 @@ fn project_symbol_index_is_stable_for_workspace_queries() {
         .value()
         .iter()
         .any(|symbol| symbol.name == "helper_value"));
+}
+
+#[test]
+fn project_symbol_index_refreshes_dirty_module_buckets_only() {
+    let dir = std::env::temp_dir().join(format!(
+        "sifr_analysis_bucket_refresh_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    ));
+    std::fs::create_dir_all(&dir).expect("temp project should be created");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from helper import helper_value\n\ndef main():\n    return helper_value\n",
+    )
+    .expect("main should be written");
+    std::fs::write(dir.join("helper.sifr"), "helper_value: int = 1\n")
+        .expect("helper should be written");
+
+    let mut host = AnalysisHost::open_project(&ProjectRoot {
+        root: SourcePath::new(&dir),
+        entrypoint: SourcePath::new(dir.join("main.sifr")),
+    })
+    .expect("project analysis host should load");
+    let snapshot = host.snapshot();
+    let main_file = snapshot
+        .workspace()
+        .source_map
+        .as_ref()
+        .expect("source map should exist")
+        .files
+        .iter()
+        .find(|file| file.source.as_str().contains("def main"))
+        .map(|file| file.id)
+        .expect("main file should be indexed");
+
+    let before = host
+        .workspace_symbols(&SymbolQuery::default())
+        .expect("workspace symbols should build the index");
+    let helper_before = before
+        .value()
+        .iter()
+        .find(|symbol| symbol.name == "helper_value")
+        .cloned()
+        .expect("helper symbol should exist before edit");
+    let readiness_before = host
+        .symbol_bucket_readiness()
+        .expect("bucket readiness should be available");
+    assert!(readiness_before.iter().any(|bucket| {
+        bucket.id.kind == SymbolBucketKind::Workspace
+            && bucket.state == SymbolBucketReadinessState::Exact
+            && bucket.entry_count > 0
+    }));
+    assert!(readiness_before.iter().any(|bucket| {
+        bucket.id.kind == SymbolBucketKind::Stdlib
+            && bucket.state == SymbolBucketReadinessState::Unavailable
+    }));
+    assert_eq!(
+        host.workspace_import_symbols(&SymbolQuery {
+            query: "helper_value".to_string(),
+        })
+        .expect("import symbols should query bucketed imports")
+        .metadata()
+        .query,
+        AnalysisQueryKind::WorkspaceSymbols
+    );
+
+    host.update_document(
+        main_file,
+        DocumentVersion::new(2),
+        SourceText::new(
+            "from helper import helper_value\n\ndef renamed():\n    return helper_value\n",
+        ),
+    )
+    .expect("main module edit should update");
+
+    let after = host
+        .workspace_symbols(&SymbolQuery::default())
+        .expect("workspace symbols should reuse clean buckets after edit");
+    let helper_after = after
+        .value()
+        .iter()
+        .find(|symbol| symbol.name == "helper_value")
+        .cloned()
+        .expect("helper symbol should remain after unrelated edit");
+    let readiness_after = host
+        .symbol_bucket_readiness()
+        .expect("bucket readiness should remain available");
+
+    assert_eq!(helper_before, helper_after);
+    assert_eq!(readiness_before.len(), readiness_after.len());
+    assert!(after.value().iter().any(|symbol| symbol.name == "renamed"));
 }
 
 #[test]
@@ -554,6 +650,25 @@ fn analysis_lint_diagnostics_match_lint_engine_for_policy_rules() {
         .map(|diagnostic| diagnostic.code)
         .collect::<Vec<_>>();
     assert_eq!(analysis_codes, engine_codes);
+}
+
+#[test]
+fn workspace_diagnostic_order_is_stable_across_repeated_queries() {
+    let source = "# TODO: follow up\ndef main():\n    return 1  \n";
+    let mut host =
+        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+
+    let first = host
+        .workspace_diagnostics()
+        .expect("workspace diagnostics should query")
+        .into_value();
+    let second = host
+        .workspace_diagnostics()
+        .expect("workspace diagnostics should query again")
+        .into_value();
+
+    assert_eq!(first, second);
+    assert!(first.iter().any(|file| !file.diagnostics.is_empty()));
 }
 
 #[test]

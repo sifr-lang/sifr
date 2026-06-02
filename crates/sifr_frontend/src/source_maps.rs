@@ -21,6 +21,12 @@ impl FileId {
 pub struct SourceRevision(pub(crate) u64);
 
 impl SourceRevision {
+    #[doc(hidden)]
+    #[must_use]
+    pub fn new(value: u64) -> Self {
+        Self(value)
+    }
+
     #[must_use]
     pub fn as_u64(self) -> u64 {
         self.0
@@ -31,6 +37,12 @@ impl SourceRevision {
 pub struct SourceHash(pub(crate) String);
 
 impl SourceHash {
+    #[doc(hidden)]
+    #[must_use]
+    pub fn new(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+
     #[must_use]
     pub fn from_source_text(source: &str) -> Self {
         crate::stable_source_hash(source)

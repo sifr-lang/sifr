@@ -42,7 +42,8 @@ m36.3 implementation:
 - `AnalysisHost::open_single_file` and `AnalysisHost::open_project` wrap `sifr_frontend::FrontendContext`.
 - `AnalysisHost::update_document` enforces monotonic document versions before updating the canonical frontend context.
 - `AnalysisSnapshot` captures graph/source revisions and rejects stale queries after document invalidation.
-- The current-workspace `SymbolIndex` is built from `sifr_frontend::ProjectAnalysisView` and `ModuleGraphView`; symbol ids include graph/source revision, module, file, kind, name, and ordinal.
+- The current-workspace `SymbolIndex` is built from `sifr_frontend::ProjectAnalysisView` and `ModuleGraphView`; symbol ids include module, file, kind, name, and ordinal so dirty-bucket refresh and cold rebuild paths preserve identity for unchanged symbols.
+- TypeScript-Go M14 adds bucket readiness over workspace/package/stdlib symbol and import entries. Package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. When a document update invalidates known modules and an index already exists, `AnalysisHost` refreshes only those dirty buckets before completion, workspace-symbol, and import-symbol queries reuse the clean buckets.
 - All Phase 36 editor query methods compile through `sifr_analysis`. m36.3 implements session/query plumbing, diagnostics, workspace diagnostics, document/workspace symbols, formatter handoff, lint handoff, and completion ranking infrastructure; the full feature logic for hover, references, rename edits, semantic tokens, code actions, generated Rust preview, explain diagnostic enrichment, and test metadata lands in m36.4.
 
 m36.4 implementation:

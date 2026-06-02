@@ -1,3 +1,4 @@
+use super::text_edits::{fixed_source_edits, full_range, ranges_overlap, source_edit_to_text_edit};
 use crate::completion::{rank_completion_candidates, CompletionCandidate};
 use crate::editor::{line_end_insert_range, EditorFacts, EditorToken};
 use crate::queries::{
@@ -12,8 +13,8 @@ use crate::snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
     AnalysisSnapshot, QueryMetadata,
 };
-use crate::symbols::SymbolIndex;
-use ruff_text_size::{TextRange, TextSize};
+use crate::symbols::{SymbolBucketReadiness, SymbolIndex};
+use ruff_text_size::TextRange;
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::{
     DocumentVersion, FileId, FrontendInput, InvalidationReport, ModuleId, ProjectRoot, SourceText,
@@ -93,7 +94,7 @@ impl AnalysisHost {
         self.refresh_current_revision();
         self.session
             .record_dirty_scope(report.dirty_scope_report.clone());
-        self.symbol_index = None;
+        self.refresh_existing_symbol_index(&report.invalidated_modules)?;
         let report = InvalidationReport {
             previous_revision,
             next_revision: self.current_revision.graph,
@@ -168,7 +169,7 @@ impl AnalysisHost {
             .unwrap_or_default();
         let candidates = self
             .symbol_index()?
-            .workspace_symbols("")
+            .completion_symbols("")
             .into_iter()
             .map(|symbol| CompletionCandidate {
                 label: symbol.name,
@@ -301,6 +302,18 @@ impl AnalysisHost {
     pub fn workspace_symbols(&mut self, query: &SymbolQuery) -> QueryResult<Vec<WorkspaceSymbol>> {
         let symbols = self.symbol_index()?.workspace_symbols(&query.query);
         Ok(self.result(AnalysisQueryKind::WorkspaceSymbols, symbols))
+    }
+
+    pub fn workspace_import_symbols(
+        &mut self,
+        query: &SymbolQuery,
+    ) -> QueryResult<Vec<WorkspaceSymbol>> {
+        let symbols = self.symbol_index()?.workspace_import_symbols(&query.query);
+        Ok(self.result(AnalysisQueryKind::WorkspaceSymbols, symbols))
+    }
+
+    pub fn symbol_bucket_readiness(&mut self) -> Result<Vec<SymbolBucketReadiness>, AnalysisError> {
+        Ok(self.symbol_index()?.bucket_readiness())
     }
 
     pub fn semantic_tokens(
@@ -627,6 +640,25 @@ impl AnalysisHost {
         })
     }
 
+    fn refresh_existing_symbol_index(
+        &mut self,
+        dirty_modules: &[ModuleId],
+    ) -> Result<(), AnalysisError> {
+        if self.symbol_index.is_none() {
+            return Ok(());
+        }
+        let graph = self.context()?.module_graph();
+        let analysis = self.context_mut()?.analysis_for_project();
+        let query_revision = AnalysisRevision {
+            graph: analysis.metadata().graph_revision,
+            source: analysis.metadata().source_revision,
+        };
+        if let Some(index) = self.symbol_index.as_mut() {
+            index.refresh_modules(query_revision, &graph, analysis.value(), dirty_modules);
+        }
+        Ok(())
+    }
+
     fn lint_diagnostics(&self, file: FileId) -> Result<Vec<RenderedDiagnostic>, AnalysisError> {
         let source = self.source_text(file)?;
         let path = self.context()?.path_for_file(file);
@@ -808,42 +840,6 @@ fn revision_from_workspace_snapshot(snapshot: &WorkspaceSnapshot) -> Option<Anal
         graph: snapshot.module_graph.as_ref()?.revision,
         source: snapshot.source_map.as_ref()?.revision,
     })
-}
-
-pub(super) fn full_range(source: &str) -> Result<TextRange, AnalysisError> {
-    let end = u32::try_from(source.len()).map_err(|_| {
-        AnalysisError::new(
-            AnalysisErrorKind::InvalidFormatRange,
-            "source is too large to format through TextRange",
-        )
-    })?;
-    Ok(TextRange::new(TextSize::new(0), TextSize::new(end)))
-}
-
-fn source_edit_to_text_edit(edit: &sifr_lint::SourceEdit) -> sifr_format::TextEdit {
-    sifr_format::TextEdit {
-        range: TextRange::new(TextSize::new(edit.byte_start), TextSize::new(edit.byte_end)),
-        replacement: edit.replacement.clone(),
-    }
-}
-
-fn fixed_source_edits(file: FileId, source: &str, fixed: &str) -> Vec<FileTextEdits> {
-    if source == fixed {
-        Vec::new()
-    } else {
-        vec![FileTextEdits {
-            file,
-            edits: vec![sifr_format::TextEdit {
-                range: full_range(source)
-                    .unwrap_or_else(|_| TextRange::new(TextSize::new(0), TextSize::new(u32::MAX))),
-                replacement: fixed.to_string(),
-            }],
-        }]
-    }
-}
-
-fn ranges_overlap(left: TextRange, right: TextRange) -> bool {
-    left.start() < right.end() && right.start() < left.end()
 }
 
 pub(super) fn unknown_file(file: FileId) -> AnalysisError {

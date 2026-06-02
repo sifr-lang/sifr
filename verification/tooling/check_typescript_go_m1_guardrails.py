@@ -23,6 +23,8 @@ REQUEST_QUEUE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "request_queue.rs"
 CANCELLATION = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "cancellation.rs"
 PROGRESS = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "progress.rs"
 WATCHDOG = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "watchdog.rs"
+ANALYSIS_SYMBOLS = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "symbols.rs"
+ANALYSIS_WORKER_LANES = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "worker_lanes.rs"
 PERF_MANIFEST = REPO_ROOT / "verification" / "performance" / "manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
 DIRECT_FS_PATTERN = re.compile(
@@ -122,9 +124,14 @@ REQUIRED_DOC_SNIPPETS = [
     "M5 updated",
     "M12 updated",
     "M13 updated",
+    "M14 updated",
     "CancellationToken",
     "ParentWatchdog",
     "ProgressState",
+    "SymbolBucketReadiness",
+    "SymbolBucketReadinessState",
+    "ApprovedWorkerLane",
+    "SingleOwnerCompilerPhase",
     "perf.lsp.request_families",
     "perf.lsp.generated_rust_preview.document",
 ]
@@ -337,6 +344,57 @@ def validate_lsp_budget_reality(failures: list[str]) -> None:
     )
 
 
+def validate_m14_bucket_and_lane_state(failures: list[str]) -> None:
+    symbols = ANALYSIS_SYMBOLS.read_text(encoding="utf-8")
+    worker_lanes = ANALYSIS_WORKER_LANES.read_text(encoding="utf-8")
+    require(
+        "SymbolBucketReadiness" in symbols
+        and "SymbolBucketKind::Workspace" in symbols
+        and "SymbolBucketKind::Package" in symbols
+        and "SymbolBucketKind::Stdlib" in symbols
+        and "refresh_modules" in symbols
+        and "completion_symbols" in symbols
+        and "workspace_import_symbols" in symbols
+        and "import_entry_count" in symbols,
+        "M14 requires bucketed workspace/package/stdlib symbol and import readiness state",
+        failures,
+    )
+    require(
+        "SymbolBucketReadinessState::Exact" in symbols
+        and "SymbolBucketReadinessState::StaleButUsable" in symbols
+        and "SymbolBucketReadinessState::NeedsBackgroundRefresh" in symbols
+        and "SymbolBucketReadinessState::Unavailable" in symbols,
+        "M14 requires all symbol bucket readiness states to remain representable",
+        failures,
+    )
+    require(
+        "ApprovedWorkerLane" in worker_lanes
+        and "SourceMapCreation" in worker_lanes
+        and "IndependentHirLower" in worker_lanes
+        and "SingleOwnerCompilerPhase" in worker_lanes
+        and "TypeIdentityCreation" in worker_lanes
+        and "OwnershipMutation" in worker_lanes
+        and "PackageGraphMutation" in worker_lanes
+        and "CodegenState" in worker_lanes,
+        "M14 requires approved worker lanes plus explicit single-owner compiler phases",
+        failures,
+    )
+    host = (REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "implementation.rs").read_text(
+        encoding="utf-8"
+    )
+    tests = (REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "tests.rs").read_text(
+        encoding="utf-8"
+    )
+    require(
+        "completion_symbols" in host
+        and "workspace_import_symbols" in host
+        and "project_symbol_index_refreshes_dirty_module_buckets_only" in tests
+        and "workspace_diagnostic_order_is_stable_across_repeated_queries" in tests,
+        "M14 requires host queries and regression tests to exercise bucketed symbols/imports",
+        failures,
+    )
+
+
 def validate_source_dep_guard(failures: list[str]) -> None:
     result = subprocess.run(
         [sys.executable, str(SOURCE_DEP_GUARD)],
@@ -379,6 +437,7 @@ def main() -> int:
     validate_source_maps(SOURCE_MAPS.read_text(encoding="utf-8"), failures)
     validate_lsp_current_state(failures)
     validate_lsp_budget_reality(failures)
+    validate_m14_bucket_and_lane_state(failures)
     validate_source_dep_guard(failures)
 
     if failures:

@@ -63,6 +63,16 @@ parse entries across semantic invalidation. `WorkspaceSnapshot` freezes reusable
 compiler options, and package/config identity; per-module parse/HIR/diagnostic
 entries remain retained by active frontend query state in M10.
 
+TypeScript-Go architecture transfer M14 note: editor-facing symbol/import
+queries now retain bucket readiness in `sifr_analysis::SymbolIndex`. Existing
+indices refresh only invalidated module buckets after document updates, while
+workspace/package/stdlib aggregate readiness remains deterministic for
+completion and import suggestions. Package and stdlib buckets are explicit
+`Unavailable` states until frontend graph views carry those identities. Future
+worker execution is constrained to `ApprovedWorkerLane`; type identity,
+ownership mutation, package graph mutation, and codegen state remain listed as
+single-owner phases.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

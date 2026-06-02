@@ -29,6 +29,12 @@ mod reuse;
 pub struct ModuleId(pub(crate) u32);
 
 impl ModuleId {
+    #[doc(hidden)]
+    #[must_use]
+    pub fn new(value: u32) -> Self {
+        Self(value)
+    }
+
     #[must_use]
     pub fn as_u32(self) -> u32 {
         self.0
@@ -39,6 +45,12 @@ impl ModuleId {
 pub struct GraphRevision(u64);
 
 impl GraphRevision {
+    #[doc(hidden)]
+    #[must_use]
+    pub fn new(value: u64) -> Self {
+        Self(value)
+    }
+
     #[must_use]
     pub fn as_u64(self) -> u64 {
         self.0
