@@ -181,6 +181,10 @@ type hierarchy, code actions, formatting, and generated Rust preview
   workspace/package/stdlib symbol and import bucket state, host completion and
   import-symbol queries exercise bucketed APIs, and `ApprovedWorkerLane` stays
   separate from `SingleOwnerCompilerPhase`.
+- M15 residency, watcher, config, and build-info surfaces are visible:
+  `ProjectResidencyKind`, `ConfigRegistryEntry`, `WatchRegistrationReason`, and
+  `SifrBuildInfoCandidate` keep long-lived project state and `.sifrbuildinfo`
+  verification non-authoritative.
 
 ### Future Milestone Update Obligations
 
@@ -202,5 +206,6 @@ type hierarchy, code actions, formatting, and generated Rust preview
   watchdogs landed in the LSP modules.
 - M14 updated the serialized-execution caveat and matching script checks when
   bucketed symbol/import readiness and approved worker-lane policy landed.
-- M15 must update the build-metadata exception when `.sifrbuildinfo` or
-  equivalent persistent metadata becomes an explicit compiler-service input.
+- M15 updated the build-metadata exception and matching script checks when
+  verified, non-authoritative `.sifrbuildinfo` state became an explicit
+  compiler-service input.

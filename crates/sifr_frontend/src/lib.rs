@@ -23,3 +23,5 @@ mod source_maps;
 pub use source_maps::*;
 mod workspace_session;
 pub use workspace_session::*;
+mod workspace_residency;
+pub use workspace_residency::*;

@@ -1,7 +1,8 @@
 use super::{
     DiskSourceProvider, DocumentVersion, FrontendContext, FrontendInput, FrontendMode,
-    ModuleGraphView, OverlayDocument, OverlaySourceProvider, ProjectRoot, SourceDependency,
-    SourceMapView, SourcePath, SourceText, TrackingSourceProvider,
+    ModuleGraphView, OverlayDocument, OverlaySourceProvider, ProjectRoot, SifrBuildInfoCandidate,
+    SifrBuildInfoVerification, SourceDependency, SourceMapView, SourcePath, SourceText,
+    TrackingSourceProvider, WorkspaceResidencySnapshot, WorkspaceResidencyState,
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeMap;
@@ -192,6 +193,7 @@ pub struct WorkspaceSnapshot {
     pub package_config_identity: Arc<WorkspacePackageConfigIdentity>,
     pub dirty_scope_report: WorkspaceDirtyScopeReport,
     pub cache_registry: WorkspaceCacheRegistryHandles,
+    pub residency: Arc<WorkspaceResidencySnapshot>,
 }
 
 pub struct WorkspaceSession {
@@ -208,6 +210,7 @@ pub struct WorkspaceSession {
     snapshot_package_config_identity: Arc<WorkspacePackageConfigIdentity>,
     dirty_scope_report: WorkspaceDirtyScopeReport,
     cache_registry: WorkspaceCacheRegistryHandles,
+    residency: WorkspaceResidencyState,
 }
 
 impl WorkspaceSession {
@@ -226,11 +229,8 @@ impl WorkspaceSession {
             workspace_root: Some(root.root.clone()),
             entrypoint: Some(root.entrypoint.clone()),
         };
-        Self::new(
-            WorkspaceSessionTarget::Project(root),
-            compiler_options,
-            package_config_identity,
-        )
+        let target = WorkspaceSessionTarget::Project(root);
+        Self::new(target, compiler_options, package_config_identity)
     }
 
     pub fn open_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
@@ -244,11 +244,8 @@ impl WorkspaceSession {
     pub fn single_file(path: SourcePath, mode: FrontendMode) -> Self {
         let compiler_options = WorkspaceCompilerOptions { mode };
         let package_config_identity = WorkspacePackageConfigIdentity::default();
-        Self::new(
-            WorkspaceSessionTarget::SingleFile(WorkspaceSingleFileTarget { path, mode }),
-            compiler_options,
-            package_config_identity,
-        )
+        let target = WorkspaceSessionTarget::SingleFile(WorkspaceSingleFileTarget { path, mode });
+        Self::new(target, compiler_options, package_config_identity)
     }
 
     fn new(
@@ -256,6 +253,7 @@ impl WorkspaceSession {
         compiler_options: WorkspaceCompilerOptions,
         package_config_identity: WorkspacePackageConfigIdentity,
     ) -> Self {
+        let residency = WorkspaceResidencyState::for_target(&target);
         Self {
             target,
             overlays: BTreeMap::new(),
@@ -270,6 +268,7 @@ impl WorkspaceSession {
             snapshot_source_dependencies: None,
             dirty_scope_report: WorkspaceDirtyScopeReport::default(),
             cache_registry: WorkspaceCacheRegistryHandles::default(),
+            residency,
         }
     }
 
@@ -308,6 +307,7 @@ impl WorkspaceSession {
                 WorkspaceDirtyScopeReport::default()
             };
         }
+        self.refresh_residency();
         Ok(())
     }
 
@@ -375,6 +375,8 @@ impl WorkspaceSession {
         if removed.is_some() {
             self.snapshot_overlays = None;
             self.revision.0 += 1;
+            self.residency.release_open_file_project(path);
+            self.refresh_residency();
             self.dirty_scope_report = WorkspaceDirtyScopeReport::new(
                 WorkspaceDirtyScope::OneModule {
                     path: SourcePath::new(path.to_path_buf()),
@@ -383,6 +385,34 @@ impl WorkspaceSession {
             );
         }
         removed
+    }
+
+    pub fn mark_config_pending_reload(&mut self, path: SourcePath) {
+        self.residency.mark_config_pending_reload(path);
+        self.record_dirty_scope(WorkspaceDirtyScopeReport::new(
+            WorkspaceDirtyScope::ConfigProject,
+            vec![WorkspaceDirtyReason::ConfigChanged],
+        ));
+    }
+
+    pub fn retain_stdlib_root(&mut self, path: SourcePath) {
+        self.residency.retain_stdlib_root(path);
+    }
+
+    pub fn retain_generated_artifact(&mut self, path: SourcePath) {
+        self.residency.retain_generated_artifact(path);
+    }
+
+    pub fn verify_build_info(
+        &mut self,
+        candidate: SifrBuildInfoCandidate,
+    ) -> SifrBuildInfoVerification {
+        let source_map = self.context.as_ref().map(FrontendContext::source_map);
+        self.residency.verify_build_info(
+            candidate,
+            source_map.as_ref(),
+            self.snapshot_package_config_identity.as_ref(),
+        )
     }
 
     pub fn record_analysis_document_update(&mut self) {
@@ -421,6 +451,7 @@ impl WorkspaceSession {
             package_config_identity: Arc::clone(&self.snapshot_package_config_identity),
             dirty_scope_report: self.dirty_scope_report.clone(),
             cache_registry: self.cache_registry.clone(),
+            residency: self.residency.snapshot(),
         }
     }
 
@@ -449,6 +480,22 @@ impl WorkspaceSession {
         self.context.as_mut()
     }
 
+    fn refresh_residency(&mut self) {
+        let source_map = self.context.as_ref().map(FrontendContext::source_map);
+        let module_graph = self.context.as_ref().map(FrontendContext::module_graph);
+        // Package/config identity is immutable in the current WorkspaceSession
+        // model. When config reload starts updating it, this is the handoff
+        // that must receive the live identity rather than the snapshot Arc.
+        self.residency.refresh_after_reload(
+            &self.target,
+            &self.overlays,
+            &self.source_dependencies,
+            source_map.as_ref(),
+            module_graph.as_ref(),
+            self.snapshot_package_config_identity.as_ref(),
+        );
+    }
+
     fn single_file_input(&self, target: &WorkspaceSingleFileTarget) -> FrontendInput {
         let source = self.overlays.get(target.path.as_path()).map_or_else(
             || {
@@ -467,317 +514,5 @@ impl WorkspaceSession {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{
-        WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport, WorkspaceSession,
-        WorkspaceSessionTarget,
-    };
-    use crate::{
-        DocumentVersion, FrontendMode, ProjectRoot, SourceDependencyKind, SourcePath, SourceText,
-    };
-    use std::fs;
-    use std::path::{Path, PathBuf};
-    use std::sync::Arc;
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    #[test]
-    fn project_session_snapshot_records_overlay_and_dependencies() {
-        let temp = TempProject::new("workspace_session_project");
-        temp.write("main.sifr", "from helper import value\nprint(value)\n");
-        temp.write("helper.sifr", "value = 1\n");
-        let root = ProjectRoot {
-            root: SourcePath::new(temp.root.clone()),
-            entrypoint: SourcePath::new(temp.root.join("main.sifr")),
-        };
-        let expected_root = root.root.clone();
-        let expected_entrypoint = root.entrypoint.clone();
-        let mut session = WorkspaceSession::open_project(root).expect("project opens");
-        let opened_revision = session.revision().as_u64();
-        assert_eq!(
-            session.snapshot().dirty_scope_report.scope,
-            WorkspaceDirtyScope::None
-        );
-
-        session.upsert_overlay(
-            SourcePath::new(temp.root.join("helper.sifr")),
-            Some("file:///helper.sifr".to_string()),
-            DocumentVersion::new(4),
-            SourceText::new("value = 2\n"),
-            Some("value = 1\n"),
-        );
-        assert_eq!(session.revision().as_u64(), opened_revision + 1);
-        session.reload().expect("overlay-backed reload succeeds");
-        assert_eq!(session.revision().as_u64(), opened_revision + 2);
-        let snapshot = session.snapshot();
-        assert_eq!(
-            snapshot.dirty_scope_report.scope,
-            WorkspaceDirtyScope::OneModule {
-                path: SourcePath::new(temp.root.join("helper.sifr"))
-            }
-        );
-        assert_eq!(
-            snapshot.dirty_scope_report.reasons,
-            vec![WorkspaceDirtyReason::SourceTextChanged]
-        );
-
-        assert!(matches!(
-            snapshot.target,
-            WorkspaceSessionTarget::Project(_)
-        ));
-        assert_eq!(snapshot.revision, session.revision());
-        assert_eq!(
-            snapshot.compiler_options.mode,
-            FrontendMode::ProjectEntrypoint
-        );
-        assert_eq!(
-            snapshot.package_config_identity.workspace_root,
-            Some(expected_root)
-        );
-        assert_eq!(
-            snapshot.package_config_identity.entrypoint,
-            Some(expected_entrypoint)
-        );
-        assert_eq!(snapshot.cache_registry.parse_generation, 0);
-        assert_eq!(snapshot.cache_registry.hir_generation, 0);
-        assert_eq!(snapshot.overlays.len(), 1);
-        assert!(!snapshot.overlays[0].matches_disk);
-        assert_eq!(snapshot.overlays[0].source.as_str(), "value = 2\n");
-        assert!(snapshot
-            .source_dependencies
-            .iter()
-            .any(|dependency| matches!(dependency.kind, SourceDependencyKind::FileRead)));
-        assert_eq!(
-            snapshot
-                .source_map
-                .as_ref()
-                .expect("source map exists")
-                .files
-                .len(),
-            2
-        );
-        assert_eq!(
-            snapshot
-                .module_graph
-                .as_ref()
-                .expect("module graph exists")
-                .modules
-                .len(),
-            2
-        );
-
-        let removed = session.remove_overlay(&temp.root.join("helper.sifr"));
-        assert!(removed.is_some());
-        assert_eq!(session.revision().as_u64(), snapshot.revision.as_u64() + 1);
-        let removed_snapshot = session.snapshot();
-        assert!(removed_snapshot.overlays.is_empty());
-        assert_eq!(
-            removed_snapshot.dirty_scope_report.reasons,
-            vec![WorkspaceDirtyReason::SourceTextChanged]
-        );
-    }
-
-    #[test]
-    fn dirty_scope_reports_merge_by_conservative_priority() {
-        let temp = TempProject::new("workspace_session_dirty_scope");
-        temp.write("main.sifr", "print(1)\n");
-        temp.write("first.sifr", "print(1)\n");
-        temp.write("second.sifr", "print(2)\n");
-        let root = ProjectRoot {
-            root: SourcePath::new(temp.root.clone()),
-            entrypoint: SourcePath::new(temp.root.join("main.sifr")),
-        };
-        let mut session = WorkspaceSession::open_project(root).expect("project opens");
-
-        session.upsert_overlay(
-            SourcePath::new(temp.root.join("first.sifr")),
-            Some("file:///first.sifr".to_string()),
-            DocumentVersion::new(2),
-            SourceText::new("print(3)\n"),
-            Some("print(1)\n"),
-        );
-        session.record_dirty_scope(super::WorkspaceDirtyScopeReport::new(
-            WorkspaceDirtyScope::OneModule {
-                path: SourcePath::new(temp.root.join("second.sifr")),
-            },
-            vec![WorkspaceDirtyReason::FailedLookupChanged],
-        ));
-        let degraded_snapshot = session.snapshot();
-        assert_eq!(
-            degraded_snapshot.dirty_scope_report.scope,
-            WorkspaceDirtyScope::GraphStructure
-        );
-        assert_eq!(
-            degraded_snapshot.dirty_scope_report.reasons,
-            vec![
-                WorkspaceDirtyReason::SourceTextChanged,
-                WorkspaceDirtyReason::FailedLookupChanged
-            ]
-        );
-
-        session.record_watcher_events(2, 64);
-        let graph_snapshot = session.snapshot();
-        assert_eq!(
-            graph_snapshot.dirty_scope_report.scope,
-            WorkspaceDirtyScope::GraphStructure
-        );
-        assert_eq!(
-            graph_snapshot.dirty_scope_report.reasons,
-            vec![
-                WorkspaceDirtyReason::SourceTextChanged,
-                WorkspaceDirtyReason::FailedLookupChanged,
-                WorkspaceDirtyReason::DirectoryEntriesChanged
-            ]
-        );
-
-        session.record_watcher_events(65, 64);
-        let storm_snapshot = session.snapshot();
-        assert_eq!(
-            storm_snapshot.dirty_scope_report.scope,
-            WorkspaceDirtyScope::Workspace
-        );
-        assert_eq!(
-            storm_snapshot.dirty_scope_report.reasons,
-            vec![
-                WorkspaceDirtyReason::SourceTextChanged,
-                WorkspaceDirtyReason::FailedLookupChanged,
-                WorkspaceDirtyReason::DirectoryEntriesChanged,
-                WorkspaceDirtyReason::WatcherStorm
-            ]
-        );
-    }
-
-    #[test]
-    fn dirty_scope_report_merge_covers_dependency_and_config_scopes() {
-        let first = SourcePath::new("first.sifr");
-        let second = SourcePath::new("second.sifr");
-        let mut report = WorkspaceDirtyScopeReport::new(
-            WorkspaceDirtyScope::ReverseDependencies {
-                path: first.clone(),
-            },
-            vec![WorkspaceDirtyReason::ImportSignatureChanged],
-        );
-
-        report.merge(WorkspaceDirtyScopeReport::new(
-            WorkspaceDirtyScope::ReverseDependencies { path: first },
-            vec![WorkspaceDirtyReason::ExportSignatureChanged],
-        ));
-        assert_eq!(
-            report.scope,
-            WorkspaceDirtyScope::ReverseDependencies {
-                path: SourcePath::new("first.sifr")
-            }
-        );
-        assert_eq!(
-            report.reasons,
-            vec![
-                WorkspaceDirtyReason::ImportSignatureChanged,
-                WorkspaceDirtyReason::ExportSignatureChanged
-            ]
-        );
-
-        report.merge(WorkspaceDirtyScopeReport::new(
-            WorkspaceDirtyScope::ReverseDependencies { path: second },
-            vec![WorkspaceDirtyReason::FailedLookupChanged],
-        ));
-        assert_eq!(report.scope, WorkspaceDirtyScope::GraphStructure);
-
-        report.merge(WorkspaceDirtyScopeReport::new(
-            WorkspaceDirtyScope::ConfigProject,
-            vec![WorkspaceDirtyReason::ConfigChanged],
-        ));
-        assert_eq!(report.scope, WorkspaceDirtyScope::ConfigProject);
-
-        report.merge(WorkspaceDirtyScopeReport::new(
-            WorkspaceDirtyScope::Workspace,
-            vec![WorkspaceDirtyReason::PackageGraphChanged],
-        ));
-        assert_eq!(report.scope, WorkspaceDirtyScope::Workspace);
-        assert_eq!(
-            report.reasons,
-            vec![
-                WorkspaceDirtyReason::ImportSignatureChanged,
-                WorkspaceDirtyReason::ExportSignatureChanged,
-                WorkspaceDirtyReason::FailedLookupChanged,
-                WorkspaceDirtyReason::ConfigChanged,
-                WorkspaceDirtyReason::PackageGraphChanged
-            ]
-        );
-    }
-
-    #[test]
-    fn single_file_session_freezes_overlay_state() {
-        let path = SourcePath::new("scratch.sifr");
-        let mut session = WorkspaceSession::single_file(path.clone(), FrontendMode::SingleFile);
-        session.upsert_overlay(
-            path,
-            Some("file:///scratch.sifr".to_string()),
-            DocumentVersion::new(1),
-            SourceText::new("x = 1\n"),
-            None,
-        );
-        session.reload().expect("single file overlay reloads");
-        let first = session.snapshot();
-        let second = session.snapshot();
-
-        assert_eq!(first.id.as_u64(), 0);
-        assert_eq!(second.id.as_u64(), 1);
-        assert_eq!(first.overlays.len(), 1);
-        assert!(Arc::ptr_eq(&first.overlays, &second.overlays));
-        assert!(Arc::ptr_eq(
-            &first.source_dependencies,
-            &second.source_dependencies
-        ));
-        assert!(Arc::ptr_eq(
-            first.source_map.as_ref().expect("first source map"),
-            second.source_map.as_ref().expect("second source map")
-        ));
-        assert!(Arc::ptr_eq(
-            first.module_graph.as_ref().expect("first graph"),
-            second.module_graph.as_ref().expect("second graph")
-        ));
-        assert!(Arc::ptr_eq(
-            &first.compiler_options,
-            &second.compiler_options
-        ));
-        assert!(Arc::ptr_eq(
-            &first.package_config_identity,
-            &second.package_config_identity
-        ));
-        assert_eq!(first.compiler_options.mode, FrontendMode::SingleFile);
-        assert!(first.source_dependencies.is_empty());
-        assert!(first.module_graph.is_some());
-    }
-
-    struct TempProject {
-        root: PathBuf,
-    }
-
-    impl TempProject {
-        fn new(name: &str) -> Self {
-            let nonce = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .expect("clock should be after epoch")
-                .as_nanos();
-            let root = std::env::temp_dir().join(format!(
-                "sifr_frontend_{name}_{}_{nonce}",
-                std::process::id()
-            ));
-            fs::create_dir_all(&root).expect("create temp project");
-            Self { root }
-        }
-
-        fn write(&self, relative: &str, source: &str) {
-            let path = self.root.join(relative);
-            if let Some(parent) = path.parent() {
-                fs::create_dir_all(parent).expect("create parent");
-            }
-            fs::write(path, source).expect("write source");
-        }
-    }
-
-    impl Drop for TempProject {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(Path::new(&self.root));
-        }
-    }
-}
+#[path = "workspace_session_tests.rs"]
+mod workspace_session_tests;
