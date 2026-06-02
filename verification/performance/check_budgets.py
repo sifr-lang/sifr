@@ -329,29 +329,30 @@ def run_self_test() -> None:
     baselines = load_json(DEFAULT_BASELINES)
     check_budgets(manifest, budgets, waivers, baselines)
 
-    assert_budget_fails("budget_median_regression_result.json", "median_ms regression")
-    assert_budget_fails("budget_p95_regression_result.json", "p95_ms regression")
-    assert_budget_fails("budget_rss_regression_result.json", "peak_rss_bytes regression")
-    assert_budget_fails("budget_timeout_result.json", "timeout regression")
+    assert_budget_fails("budget_median_regression_result.json", "median_ms regression", allow_subset=True)
+    assert_budget_fails("budget_p95_regression_result.json", "p95_ms regression", allow_subset=True)
+    assert_budget_fails("budget_rss_regression_result.json", "peak_rss_bytes regression", allow_subset=True)
+    assert_budget_fails("budget_timeout_result.json", "timeout regression", allow_subset=True)
     assert_budget_fails("budget_missing_result.json", "missing benchmark ids")
-    assert_budget_fails("budget_unknown_id_result.json", "unknown benchmark id")
-    assert_budget_fails("budget_malformed_result.json", "missing metric")
+    assert_budget_fails("budget_unknown_id_result.json", "unknown benchmark id", allow_subset=True)
+    assert_budget_fails("budget_malformed_result.json", "missing metric", allow_subset=True)
     assert_waiver_fails("expired_waiver.json", "expired")
     assert_waiver_fails("malformed_waiver.json", "owner")
     assert_waiver_fails("correctness_waiver.json", "non-performance")
 
     active_waiver = load_json(NEGATIVE_ROOT / "active_median_waiver.json")
     median_regression = load_json(NEGATIVE_ROOT / "budget_median_regression_result.json")
-    check_budgets(manifest, budgets, active_waiver, median_regression)
+    check_budgets(manifest, budgets, active_waiver, median_regression, allow_subset=True)
 
 
-def assert_budget_fails(seed: str, expected: str) -> None:
+def assert_budget_fails(seed: str, expected: str, *, allow_subset: bool = False) -> None:
     try:
         check_budgets(
             load_json(DEFAULT_MANIFEST),
             load_json(DEFAULT_BUDGETS),
             EMPTY_WAIVERS,
             load_json(NEGATIVE_ROOT / seed),
+            allow_subset=allow_subset,
         )
     except BudgetError as error:
         if expected not in str(error):

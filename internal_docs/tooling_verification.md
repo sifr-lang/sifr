@@ -73,7 +73,11 @@ python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test
 
 `scripts/run_all_tests.sh` now runs the protocol smoke/stress checks under
 "Developer Tooling Checks". The Phase 35 performance gate also includes
-`lsp-query-001-request-families` and budget id `perf.lsp.request_families`.
+M12 per-request `lsp-query-*` cases for cold start, diagnostics, completion,
+hover, signature help, navigation, references, rename, semantic tokens, inlay
+hints, selection range, type hierarchy, code actions, formatting, workspace
+diagnostics, and generated Rust preview. `lsp-query-001-request-families` with
+budget id `perf.lsp.request_families` remains aggregate smoke coverage only.
 
 ## m36.6 Checks
 
@@ -138,7 +142,7 @@ regression.
 
 `check_phase36_closeout.py` verifies that all Phase 36 tooling and performance
 checks are present, wired into `scripts/run_all_tests.sh`, documented, backed by
-the LSP request-family budget, and free of active LSP performance waivers.
+the LSP request-family budgets, and free of active LSP performance waivers.
 
 ## Formatter Hardening Checks
 

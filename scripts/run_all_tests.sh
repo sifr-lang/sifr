@@ -197,6 +197,7 @@ run_performance_budget_subset() {
     --case formatter-large-file-001-check \
     --case incremental-local-loop-001-unchanged-file-update \
     --case interactive-tooling-foundation-002-warm-diagnostics-query \
+    --case lsp-query-003-diagnostics \
     --case phase27-non-regression-002-json-diagnostic-schema \
     --json-out "${perf_results}"
   python3 "${SCRIPT_DIR}/../verification/performance/check_budgets.py" \
@@ -209,7 +210,8 @@ if [[ "${PROFILE}" == "quick" ]]; then
     --case formatter-corpus-001-project-check \
     --case formatter-large-file-001-check \
     --case incremental-local-loop-001-unchanged-file-update \
-    --case interactive-tooling-foundation-002-warm-diagnostics-query
+    --case interactive-tooling-foundation-002-warm-diagnostics-query \
+    --case lsp-query-003-diagnostics
 else
   PERF_RESULTS="target/performance/${PROFILE}.budget.latest.json"
   if ! run_performance_budget_subset "${PERF_RESULTS}"; then

@@ -147,13 +147,15 @@ requests capture snapshots.
 
 ## Current LSP Budget Reality
 
-The enforced protocol-level LSP performance gate is still the aggregate
-`lsp.request_families` scenario with budget id `perf.lsp.request_families`.
-M12 must split this into per-request cases for cold start, diagnostics,
-completion, hover, signature help, navigation, references, rename, semantic
-tokens, inlay hints, selection range, type hierarchy, code actions, formatting,
-generated Rust preview, and workspace diagnostics. Until M12, aggregate LSP
-coverage is smoke coverage only.
+M12 updated the protocol-level LSP performance gate from aggregate-only coverage
+to per-request editor latency budgets. `lsp.request_families` remains in
+`verification/performance/manifest.json` with budget id
+`perf.lsp.request_families`, but its evidence category is now aggregate smoke
+coverage only. Enforced request-family budgets cover cold start, document
+diagnostics, workspace diagnostics, completion, hover, signature help,
+navigation, references, rename, semantic tokens, inlay hints, selection range,
+type hierarchy, code actions, formatting, and generated Rust preview
+(`perf.lsp.generated_rust_preview.document`).
 
 ## Automation
 
@@ -167,8 +169,8 @@ coverage is smoke coverage only.
   per-document analysis host, `Session` owns `LspAnalysisWorkspace`, and overlay
   updates flow through the analysis workspace. The scheduler/request queue
   remain shallow until M11/M13.
-- The performance manifest still has the aggregate-only LSP request-family
-  budget, so M12 cannot be accidentally claimed early.
+- The performance manifest contains the M12 split LSP request-family scenarios
+  and keeps `lsp.request_families` as aggregate smoke coverage only.
 
 ### Future Milestone Update Obligations
 
@@ -183,8 +185,8 @@ coverage is smoke coverage only.
 - M5 updated the current LSP single-file rebuild caveat and matching script
   checks when `DocumentStore` stopped owning request-local
   `AnalysisHost::open_single_file` rebuilds.
-- M12 must update the aggregate-only LSP budget caveat and the matching script
-  checks when `lsp.request_families` is split into per-request scenarios.
+- M12 updated the aggregate-only LSP budget caveat and the matching script
+  checks when `lsp.request_families` was split into per-request scenarios.
 - M13 must update the scheduler/request-queue caveats if cancellation tokens,
   progress, or background queues land in the scheduler modules.
 - M15 must update the build-metadata exception when `.sifrbuildinfo` or
