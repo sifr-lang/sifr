@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer M11: LSP Scheduler Queues
 
-status: in progress
+status: merged in [#2253](https://github.com/sifr-lang/sifr/pull/2253)
 
 M11 makes LSP request scheduling concrete while deliberately keeping execution
 serialized until M13 adds cancellation tokens, progress, and worker execution.
