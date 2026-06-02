@@ -131,6 +131,10 @@ impl DocumentStore {
     pub(crate) fn document_uris(&self) -> Vec<String> {
         self.documents.keys().cloned().collect()
     }
+
+    pub(crate) fn documents(&self) -> impl Iterator<Item = &DocumentState> {
+        self.documents.values()
+    }
 }
 
 impl DocumentState {

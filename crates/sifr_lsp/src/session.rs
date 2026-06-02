@@ -1,4 +1,4 @@
-use crate::analysis_workspace::LspAnalysisWorkspace;
+use crate::analysis_workspace::{LspAnalysisWorkspace, LspFileMaps, LspWorkspaceSymbol};
 use crate::cancellation::CancellationToken;
 use crate::document_events::{compact_content_changes, CompactedDocumentChange};
 use crate::document_store::DocumentStore;
@@ -81,6 +81,7 @@ impl Session {
         self.store.open(uri.clone(), language_id, version, text)?;
         let document = self.store.document(&uri)?;
         self.analysis.open_document(document);
+        self.analysis.refresh_projects(&self.store);
         Ok(())
     }
 
@@ -105,6 +106,7 @@ impl Session {
             .apply_compacted_change(uri, version, &compacted)?;
         let document = self.store.document(uri)?;
         self.analysis.update_document(document);
+        self.analysis.refresh_projects(&self.store);
         Ok(DocumentChangeSummary {
             raw_change_count: compacted.raw_change_count,
             compacted_change_count: compacted.changes.len(),
@@ -118,13 +120,16 @@ impl Session {
         }
         let document = self.store.document(uri)?;
         self.analysis.update_document(document);
+        self.analysis.refresh_projects(&self.store);
         Ok(true)
     }
 
     pub(crate) fn close_document(&mut self, uri: &str) -> bool {
         self.diagnostic_jobs.remove(uri);
         self.analysis.close_document(uri);
-        self.store.close(uri)
+        let closed = self.store.close(uri);
+        self.analysis.refresh_projects(&self.store);
+        closed
     }
 
     pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
@@ -143,12 +148,23 @@ impl Session {
         self.analysis.load_diagnostics(uri)
     }
 
-    pub(crate) fn uri_map(&self) -> BTreeMap<u32, String> {
-        self.analysis.uri_map()
+    pub(crate) fn file_maps_for_uri(&self, uri: &str) -> LspResult<LspFileMaps> {
+        let document = self.store.document(uri)?;
+        self.analysis.file_maps_for_document(document, &self.store)
     }
 
-    pub(crate) fn source_map(&self) -> BTreeMap<u32, String> {
-        self.analysis.source_map(&self.store)
+    pub(crate) fn workspace_symbols(
+        &mut self,
+        query: &sifr_analysis::SymbolQuery,
+    ) -> LspResult<Vec<LspWorkspaceSymbol>> {
+        self.check_active_request_cancelled()?;
+        let symbols = self.analysis.workspace_symbols(query)?;
+        self.check_active_request_cancelled()?;
+        self.trace(
+            WorkspaceTracePhase::LspTiming,
+            format!("workspace_symbols count={}", symbols.len()),
+        );
+        Ok(symbols)
     }
 
     pub(crate) fn with_document_analysis<T>(

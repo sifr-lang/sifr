@@ -33,6 +33,29 @@ impl ParentWatchdog {
             )))
         }
     }
+
+    pub(crate) fn spawn_exit_thread(self) {
+        if self.parent_pid.is_none() {
+            return;
+        }
+        self.spawn_thread_with(std::time::Duration::from_millis(500), || {
+            std::process::exit(0);
+        });
+    }
+
+    fn spawn_thread_with(
+        self,
+        interval: std::time::Duration,
+        on_missing_parent: impl FnOnce() + Send + 'static,
+    ) -> std::thread::JoinHandle<()> {
+        std::thread::spawn(move || loop {
+            std::thread::sleep(interval);
+            if self.check().is_err() {
+                on_missing_parent();
+                break;
+            }
+        })
+    }
 }
 
 #[cfg(unix)]
@@ -76,5 +99,24 @@ mod tests {
     #[test]
     fn obviously_missing_parent_pid_cancels_server() {
         assert!(ParentWatchdog::new(Some(u32::MAX)).check().is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn idle_watchdog_thread_observes_missing_parent() {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let handle = ParentWatchdog::new(Some(u32::MAX)).spawn_thread_with(
+            std::time::Duration::from_millis(1),
+            move || {
+                sender
+                    .send(())
+                    .expect("test receiver should observe watchdog exit");
+            },
+        );
+
+        receiver
+            .recv_timeout(std::time::Duration::from_secs(2))
+            .expect("watchdog thread should report a missing parent");
+        handle.join().expect("watchdog test thread should finish");
     }
 }

@@ -1,0 +1,4 @@
+from service import service_value
+
+def worker_value() -> int:
+    return service_value() + 1

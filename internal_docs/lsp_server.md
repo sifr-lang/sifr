@@ -66,8 +66,11 @@ session. Current implementation reality:
 
 - `DocumentStore` owns only protocol text, URI, path, and version state.
 - `Session` owns `LspAnalysisWorkspace`, which holds persistent analysis handles
-  for open documents. Those handles wrap `WorkspaceSession` and update unsaved
-  editor buffers through `WorkspaceSession` overlays.
+  for open documents. Files under a discovered `sifr.toml` root share one
+  project-mode analysis host fed by all current open-document overlays; scratch
+  files without a workspace manifest keep the single-file fallback. Both paths
+  wrap `WorkspaceSession` and update unsaved editor buffers through
+  `WorkspaceSession` overlays.
 - LSP notifications update `DocumentStore` first, then feed the latest document
   text/version into the session-owned analysis workspace before diagnostics or
   semantic requests capture snapshots.
@@ -92,8 +95,10 @@ session. Current implementation reality:
   version is no longer current, preserves a document's original queue slot when
   the same URI is rescheduled, and clears pending jobs when diagnostics are
   disabled.
-- `Scheduler` does not yet run background worker threads, delayed progress, or
-  cancellation tokens.
+- `Scheduler` does not yet run background worker threads. Cancellation remains
+  serialized but is tracked through request ids, delayed workspace-diagnostic
+  progress is reported for multi-document diagnostics, and the parent-process
+  watchdog has both message-loop checks and an idle timer thread.
 
 M7 owns dependency-sensitive signature invalidation. M11 owns priority
 queues/debounce. M13 owns cancellation, progress, background execution, and

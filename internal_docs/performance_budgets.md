@@ -76,7 +76,11 @@ Frontend-query and local edit-loop benchmarks use stricter latency thresholds:
   `perf.lsp.request_families`; M12 keeps that case as aggregate protocol smoke
   coverage only and adds per-request `lsp-query-*` cases with concrete
   `perf.lsp.*` budget ids. These cases execute `lsp_query_bench.py` through
-  `sifr lsp --stdio` and are validated by the same manifest/budget gate.
+  `sifr lsp --stdio` and are validated by the same manifest/budget gate. Cold
+  start, workspace diagnostics, references, and rename run against
+  `verification/performance/query_projects/lsp_workspace/`, a multi-file
+  workspace fixture, so workspace-shaped protocol costs are not measured only
+  on the single-file smoke fixture.
 
 LSP query budgets use their own policy because they measure editor-observed
 JSON-RPC operations instead of in-process compiler queries:

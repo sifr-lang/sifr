@@ -8,7 +8,7 @@ use sifr_analysis::{AnalysisQueryResult, TypeHierarchyItemId};
 pub(crate) fn prepare(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let uri_map = session.uri_map();
+    let file_maps = session.file_maps_for_uri(&uri)?;
     session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let item = snapshot
             .prepare_type_hierarchy(host, file, &position)
@@ -17,10 +17,7 @@ pub(crate) fn prepare(session: &mut Session, params: Value) -> LspResult<Value> 
         let Some(item) = item else {
             return Ok(Value::Null);
         };
-        let uri = uri_map
-            .get(&item.location.file.as_u32())
-            .cloned()
-            .ok_or_else(|| LspError::internal("type hierarchy item references unopened file"))?;
+        let uri = file_maps.uri_for(item.location.file)?;
         conversion::type_hierarchy_item(item, uri, source)
     })
 }

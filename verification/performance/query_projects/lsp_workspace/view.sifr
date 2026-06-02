@@ -1,0 +1,4 @@
+from worker import worker_value
+
+def view_value() -> int:
+    return worker_value() + 1

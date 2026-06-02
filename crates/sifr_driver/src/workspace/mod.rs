@@ -40,10 +40,12 @@ pub(crate) fn find_workspace_root_with_provider(
         let manifest_path = current.join(MANIFEST_FILE);
         if provider.is_file(&manifest_path) {
             let config = parse_workspace_config_with_provider(&current, &manifest_path, provider)?;
-            return Ok(Some(WorkspaceRoot {
-                dir: current,
-                config,
-            }));
+            let dir = if current.as_os_str().is_empty() {
+                PathBuf::from(".")
+            } else {
+                current
+            };
+            return Ok(Some(WorkspaceRoot { dir, config }));
         }
         if !current.pop() {
             return Ok(None);

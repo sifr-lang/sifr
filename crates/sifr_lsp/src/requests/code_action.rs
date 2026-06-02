@@ -15,8 +15,7 @@ pub(crate) fn code_action(session: &mut Session, params: Value) -> LspResult<Val
     let context = CodeActionContext {
         diagnostics: code_action_context_diagnostics(&params),
     };
-    let uri_map = session.uri_map();
-    let source_map = session.source_map();
+    let file_maps = session.file_maps_for_uri(&uri)?;
     session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let actions = snapshot
             .code_actions(host, file, range, &context)
@@ -27,16 +26,9 @@ pub(crate) fn code_action(session: &mut Session, params: Value) -> LspResult<Val
             .map(|action| {
                 conversion::code_action(
                     action,
-                    |file| {
-                        uri_map.get(&file.as_u32()).cloned().ok_or_else(|| {
-                            LspError::internal(format!("unknown action file {}", file.as_u32()))
-                        })
-                    },
-                    |file| {
-                        source_map.get(&file.as_u32()).cloned().ok_or_else(|| {
-                            LspError::internal(format!("unknown action source {}", file.as_u32()))
-                        })
-                    },
+                    &uri,
+                    |file| file_maps.uri_for(file),
+                    |file| file_maps.source_for(file),
                 )
             })
             .collect::<LspResult<Vec<_>>>()
@@ -66,19 +58,18 @@ pub(crate) fn resolve(session: &mut Session, mut params: Value) -> LspResult<Val
             "unknown Sifr deferred code action {action:?}"
         )));
     }
-    let file = data
+    let data_file = data
         .get("file")
         .and_then(Value::as_u64)
         .and_then(|value| u32::try_from(value).ok())
         .ok_or_else(|| LspError::invalid_params("codeAction/resolve missing action file"))?;
+    let uri = data
+        .get("uri")
+        .and_then(Value::as_str)
+        .ok_or_else(|| LspError::invalid_params("codeAction/resolve missing action uri"))?
+        .to_string();
     let expected_version = data.get("expectedVersion").and_then(Value::as_i64);
-    let uri = session
-        .uri_map()
-        .get(&file)
-        .cloned()
-        .ok_or_else(|| LspError::invalid_params(format!("unknown action file {file}")))?;
-    let uri_map = session.uri_map();
-    let source_map = session.source_map();
+    let file_maps = session.file_maps_for_uri(&uri)?;
     if let (Some(expected), Some(current)) =
         (expected_version, session.store().document(&uri)?.version())
     {
@@ -89,22 +80,20 @@ pub(crate) fn resolve(session: &mut Session, mut params: Value) -> LspResult<Val
         }
     }
     let edit = session.with_document_analysis(&uri, |snapshot, host, file, _source| {
+        if file.as_u32() != data_file {
+            return Err(LspError::invalid_params(format!(
+                "stale code action file {data_file}; current file is {}",
+                file.as_u32()
+            )));
+        }
         let edit = snapshot
             .safe_fix_all_action(host, file)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         conversion::workspace_edit(
             edit,
-            |file| {
-                uri_map.get(&file.as_u32()).cloned().ok_or_else(|| {
-                    LspError::internal(format!("unknown action file {}", file.as_u32()))
-                })
-            },
-            |file| {
-                source_map.get(&file.as_u32()).cloned().ok_or_else(|| {
-                    LspError::internal(format!("unknown action source {}", file.as_u32()))
-                })
-            },
+            |file| file_maps.uri_for(file),
+            |file| file_maps.source_for(file),
         )
     })?;
     params["edit"] = edit;

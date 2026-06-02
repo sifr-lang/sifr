@@ -217,7 +217,7 @@ fn package_import_ambiguity_source_diagnostic(
         .iter()
         .map(|candidate| candidate.file_path.display().to_string())
         .collect::<Vec<_>>()
-        .join(", ");
+        .join(";");
     let origin = package_import_origin_label(&ambiguity.origin);
     let args = [
         (

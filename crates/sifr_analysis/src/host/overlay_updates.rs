@@ -1,9 +1,23 @@
 use super::implementation::AnalysisHost;
 use crate::snapshot::{AnalysisError, AnalysisErrorKind};
 use sifr_diagnostics::RenderedDiagnostic;
-use sifr_frontend::{DocumentVersion, FrontendMode, SourcePath, SourceText, WorkspaceSession};
+use sifr_frontend::{
+    DocumentVersion, FrontendMode, ProjectRoot, SourcePath, SourceText, WorkspaceSession,
+};
 
 impl AnalysisHost {
+    pub fn open_project_with_overlays(
+        root: &ProjectRoot,
+        overlays: Vec<(SourcePath, Option<String>, DocumentVersion, SourceText)>,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        let mut session = WorkspaceSession::project(root.clone());
+        for (path, uri, version, source) in overlays {
+            session.upsert_overlay(path, uri, version, source, None);
+        }
+        session.reload()?;
+        Self::new(session)
+    }
+
     pub fn open_single_file_overlay(
         path: SourcePath,
         uri: Option<String>,
