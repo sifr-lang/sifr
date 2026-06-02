@@ -3,7 +3,8 @@ use crate::errors::{LspError, LspResult};
 use crate::requests::text_document_uri;
 use crate::session::Session;
 use serde_json::Value;
-use sifr_analysis::{AnalysisQueryResult, SymbolQuery};
+use sifr_analysis::SymbolQuery;
+use std::collections::BTreeSet;
 
 pub(crate) fn document_symbol(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
@@ -24,32 +25,23 @@ pub(crate) fn workspace_symbol(session: &mut Session, params: Value) -> LspResul
         .get("query")
         .and_then(Value::as_str)
         .unwrap_or_default();
-    let uri_map = session.uri_map();
-    let mut symbols = Vec::new();
-    for uri in session.document_uris() {
-        let mut document_symbols =
-            session.with_document_analysis(&uri, |snapshot, host, _file, _source| {
-                snapshot
-                    .workspace_symbols(
-                        host,
-                        &SymbolQuery {
-                            query: query.to_string(),
-                        },
-                    )
-                    .map_err(|error| LspError::internal(error.message))
-                    .map(AnalysisQueryResult::into_value)
-            })?;
-        symbols.append(&mut document_symbols);
-    }
+    let mut seen = BTreeSet::new();
+    let symbols = session.workspace_symbols(&SymbolQuery {
+        query: query.to_string(),
+    })?;
     Ok(Value::Array(
         symbols
             .into_iter()
-            .filter_map(|symbol| {
-                uri_map
-                    .get(&symbol.file.as_u32())
-                    .cloned()
-                    .map(|uri| conversion::workspace_symbol(symbol, uri))
+            .filter(|mapped| {
+                seen.insert((
+                    mapped.symbol.file.as_u32(),
+                    mapped.uri.clone(),
+                    mapped.symbol.name.clone(),
+                    mapped.symbol.kind.clone(),
+                    mapped.symbol.container_name.clone(),
+                ))
             })
+            .map(|mapped| conversion::workspace_symbol(mapped.symbol, mapped.uri))
             .collect(),
     ))
 }

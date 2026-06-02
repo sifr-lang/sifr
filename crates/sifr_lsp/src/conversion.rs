@@ -255,6 +255,7 @@ pub(crate) fn type_hierarchy_item(
 
 pub(crate) fn code_action(
     action: CodeAction,
+    request_uri: &str,
     uri_for_file: impl Fn(FileId) -> LspResult<String>,
     source_for_file: impl Fn(FileId) -> LspResult<String>,
 ) -> LspResult<Value> {
@@ -266,17 +267,18 @@ pub(crate) fn code_action(
         "title": action.title,
         "kind": action.kind,
         "edit": edit,
-        "data": code_action_data(action.data)
+        "data": code_action_data(action.data, request_uri)
     }))
 }
 
-fn code_action_data(data: Option<sifr_analysis::CodeActionData>) -> Value {
+fn code_action_data(data: Option<sifr_analysis::CodeActionData>, request_uri: &str) -> Value {
     match data {
         Some(data) => json!({
             "sifrResolved": false,
             "action": match data.action {
                 DeferredCodeAction::FixAllSafePolicy => "fixAllSafePolicy",
             },
+            "uri": request_uri,
             "file": data.file.as_u32(),
             "expectedVersion": data.expected_version,
         }),

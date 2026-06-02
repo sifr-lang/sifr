@@ -502,10 +502,10 @@ impl FrontendContext {
         self.modules[index].source_hash = new_hash;
         self.modules[index].document_version = document_version;
         self.modules[index].signature = new_signature.clone();
-        self.modules[index].source_file_view = None;
-        self.source_revision.0 += 1;
-        self.source_map_cache = None;
         if text_changed {
+            self.modules[index].source_file_view = None;
+            self.source_revision.0 += 1;
+            self.source_map_cache = None;
             self.module_graph_cache = None;
         }
 

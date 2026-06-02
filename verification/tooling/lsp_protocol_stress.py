@@ -132,6 +132,95 @@ def run_stress() -> None:
             client.notify("exit", {})
         finally:
             client.close()
+    run_project_cross_file_queries()
+    run_multi_project_workspace_symbols()
+
+
+def run_project_cross_file_queries() -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-lsp-project-") as raw:
+        root = Path(raw)
+        (root / "sifr.toml").write_text('[package]\nname = "lsp_project"\n', encoding="utf-8")
+        main = root / "main.sifr"
+        helper = root / "utils.sifr"
+        main_text = "from utils import helper\n\ndef main() -> int:\n    return helper(41)\n"
+        helper_text = "def helper(value: int) -> int:\n    return value + 1\n"
+        main.write_text(main_text, encoding="utf-8")
+        helper.write_text(helper_text, encoding="utf-8")
+        client = LspClient()
+        try:
+            initialize(client, root)
+            open_document(client, main, main_text)
+            symbols = client.request("workspace/symbol", {"query": "helper"})
+            helper_symbols = [
+                item for item in symbols
+                if item.get("name") == "helper"
+                and item.get("location", {}).get("uri") == file_uri(helper)
+            ]
+            if len(helper_symbols) != 1:
+                raise LspProtocolError(f"project workspace/symbol did not return one helper definition: {symbols}")
+            references = client.request(
+                "textDocument/references",
+                {"textDocument": {"uri": file_uri(main)}, "position": {"line": 3, "character": 14}},
+            )
+            reference_uris = {item.get("uri") for item in references}
+            if file_uri(main) not in reference_uris or file_uri(helper) not in reference_uris:
+                raise LspProtocolError(f"project references did not cross files: {references}")
+            rename = client.request(
+                "textDocument/rename",
+                {
+                    "textDocument": {"uri": file_uri(main)},
+                    "position": {"line": 3, "character": 14},
+                    "newName": "renamed_helper",
+                },
+            )
+            changes = rename.get("changes", {}) if isinstance(rename, dict) else {}
+            if file_uri(main) not in changes or file_uri(helper) not in changes:
+                raise LspProtocolError(f"project rename did not edit both files: {rename}")
+            client.request("shutdown", {})
+            client.notify("exit", {})
+        finally:
+            client.close()
+
+
+def run_multi_project_workspace_symbols() -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-lsp-multiproject-") as raw:
+        root = Path(raw)
+        alpha_root = root / "alpha"
+        beta_root = root / "beta"
+        alpha_root.mkdir()
+        beta_root.mkdir()
+        for project_root, package, function_name in [
+            (alpha_root, "alpha", "alpha_entry"),
+            (beta_root, "beta", "beta_entry"),
+        ]:
+            (project_root / "sifr.toml").write_text(
+                f'[package]\nname = "{package}"\n',
+                encoding="utf-8",
+            )
+            (project_root / "main.sifr").write_text(
+                f"def {function_name}() -> int:\n    return 1\n",
+                encoding="utf-8",
+            )
+        client = LspClient()
+        try:
+            initialize(client, root)
+            open_document(client, alpha_root / "main.sifr", (alpha_root / "main.sifr").read_text(encoding="utf-8"))
+            open_document(client, beta_root / "main.sifr", (beta_root / "main.sifr").read_text(encoding="utf-8"))
+            symbols = client.request("workspace/symbol", {"query": "_entry"})
+            actual = {
+                (item.get("name"), item.get("location", {}).get("uri"))
+                for item in symbols
+            }
+            expected = {
+                ("alpha_entry", file_uri(alpha_root / "main.sifr")),
+                ("beta_entry", file_uri(beta_root / "main.sifr")),
+            }
+            if expected - actual:
+                raise LspProtocolError(f"multi-project symbols lost URI identity: {symbols}")
+            client.request("shutdown", {})
+            client.notify("exit", {})
+        finally:
+            client.close()
 
 
 def run_self_test() -> None:

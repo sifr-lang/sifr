@@ -4,7 +4,6 @@ use crate::requests::{position, text_document_uri};
 use crate::session::Session;
 use serde_json::{json, Value};
 use sifr_analysis::SymbolName;
-use std::collections::BTreeMap;
 
 pub(crate) fn definition(session: &mut Session, params: Value) -> LspResult<Value> {
     locations(session, params, |snapshot, host, file, position| {
@@ -79,8 +78,7 @@ pub(crate) fn rename(session: &mut Session, params: Value) -> LspResult<Value> {
         .get("newName")
         .and_then(Value::as_str)
         .ok_or_else(|| LspError::invalid_params("textDocument/rename requires newName"))?;
-    let uri_map = session.uri_map();
-    let source_map = session.source_map();
+    let file_maps = session.file_maps_for_uri(&uri)?;
     session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let edit = snapshot
             .rename(host, file, &position, &SymbolName(new_name.to_string()))
@@ -88,8 +86,8 @@ pub(crate) fn rename(session: &mut Session, params: Value) -> LspResult<Value> {
             .into_value();
         conversion::workspace_edit(
             edit,
-            |file| uri_map.uri_for(file),
-            |file| source_map.source_for(file),
+            |file| file_maps.uri_for(file),
+            |file| file_maps.source_for(file),
         )
     })
 }
@@ -109,45 +107,19 @@ fn locations(
 ) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = position(&params)?;
-    let source_lookup = session.source_map();
-    let uri_lookup = session.uri_map();
+    let file_maps = session.file_maps_for_uri(&uri)?;
     session.with_document_analysis(&uri, |snapshot, host, file, source| {
         operation(snapshot, host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
             .into_value()
             .into_iter()
             .map(|location| {
-                let source = source_lookup
-                    .get(&location.file.as_u32())
-                    .map(String::as_str)
-                    .unwrap_or(source);
-                conversion::location(&location, |file| uri_lookup.uri_for(file), source)
+                let location_source = file_maps
+                    .source_for(location.file)
+                    .unwrap_or_else(|_| source.to_string());
+                conversion::location(&location, |file| file_maps.uri_for(file), &location_source)
             })
             .collect::<LspResult<Vec<_>>>()
             .map(Value::Array)
     })
-}
-
-trait UriLookup {
-    fn uri_for(&self, file: sifr_analysis::FileId) -> LspResult<String>;
-}
-
-impl UriLookup for BTreeMap<u32, String> {
-    fn uri_for(&self, file: sifr_analysis::FileId) -> LspResult<String> {
-        self.get(&file.as_u32())
-            .cloned()
-            .ok_or_else(|| LspError::internal(format!("unknown file {}", file.as_u32())))
-    }
-}
-
-trait SourceLookup {
-    fn source_for(&self, file: sifr_analysis::FileId) -> LspResult<String>;
-}
-
-impl SourceLookup for BTreeMap<u32, String> {
-    fn source_for(&self, file: sifr_analysis::FileId) -> LspResult<String> {
-        self.get(&file.as_u32())
-            .cloned()
-            .ok_or_else(|| LspError::internal(format!("unknown source {}", file.as_u32())))
-    }
 }

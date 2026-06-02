@@ -233,7 +233,6 @@ impl FrontendContext {
                 canonical_path: module.path.clone(),
                 uri: None,
                 source_hash: module.source_hash.clone(),
-                document_version: module.document_version,
                 source: module.source.clone(),
             },
         );
@@ -269,7 +268,6 @@ impl FrontendContext {
                     canonical_path: module.path.clone(),
                     uri: None,
                     source_hash: module.source_hash.clone(),
-                    document_version: module.document_version,
                     source: module.source.clone(),
                 })
                 .collect(),
@@ -305,13 +303,6 @@ impl FrontendContext {
                 ),
                 ("file", module.file.as_u32().to_string()),
                 ("path", module.path.as_path().to_string_lossy().into_owned()),
-                (
-                    "document_version",
-                    module.document_version.map_or_else(
-                        || "none".to_string(),
-                        |version| version.as_i64().to_string(),
-                    ),
-                ),
             ],
         )
     }
@@ -558,7 +549,7 @@ mod tests {
     }
 
     #[test]
-    fn document_version_only_update_recaches_source_file_view() {
+    fn document_version_only_update_reuses_source_file_view() {
         let mut context =
             FrontendContext::load_single_file(input("def main() -> int:\n    return 1\n"))
                 .expect("context should load");
@@ -583,16 +574,16 @@ mod tests {
         let second_graph = context.module_graph_arc_for_reuse();
         let second_source_map = context.source_map_arc_for_reuse();
         assert!(Arc::ptr_eq(&first_graph, &second_graph));
-        assert!(!Arc::ptr_eq(&first_source_map, &second_source_map));
+        assert!(Arc::ptr_eq(&first_source_map, &second_source_map));
         assert_eq!(
-            second_source_map.files[0].document_version,
+            context.document_version_for_file(file),
             Some(DocumentVersion::new(2))
         );
-        assert_ne!(
+        assert_eq!(
             first_source_identity,
             context
                 .source_file_cache_identity(file)
-                .expect("source file should be recached for the new document version")
+                .expect("source file should be reused for the same source text")
         );
         assert_eq!(context.cache_reuse_stats().source_map_entries, 1);
     }

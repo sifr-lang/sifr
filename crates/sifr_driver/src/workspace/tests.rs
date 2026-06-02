@@ -1,4 +1,31 @@
 use super::*;
+use std::sync::{Mutex, MutexGuard, OnceLock};
+
+static CWD_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+struct CurrentDirGuard {
+    previous: PathBuf,
+    _lock: MutexGuard<'static, ()>,
+}
+
+impl Drop for CurrentDirGuard {
+    fn drop(&mut self) {
+        std::env::set_current_dir(&self.previous).expect("restore cwd");
+    }
+}
+
+fn enter_test_cwd(path: &Path) -> CurrentDirGuard {
+    let lock = CWD_TEST_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("cwd test lock should not be poisoned");
+    let previous = std::env::current_dir().expect("cwd exists");
+    std::env::set_current_dir(path).expect("chdir to test cwd");
+    CurrentDirGuard {
+        previous,
+        _lock: lock,
+    }
+}
 
 struct TempWorkspace {
     path: PathBuf,
@@ -70,6 +97,19 @@ fn test_find_workspace_root_returns_nearest_manifest() {
     assert_eq!(root.dir, tmp.path().join("outer/inner"));
     assert_eq!(root.config.package_name.as_deref(), Some("inner"));
     assert_eq!(root.config.source_roots, vec![PathBuf::from(".")]);
+}
+
+#[test]
+fn test_find_workspace_root_normalizes_relative_root_manifest_to_curdir() {
+    let tmp = TempWorkspace::new("relative_root");
+    tmp.write("sifr.toml", "[package]\nname = \"relative\"\n");
+    tmp.write("main.sifr", "");
+    let _cwd = enter_test_cwd(tmp.path());
+
+    let root = discovered(Path::new("main.sifr"));
+
+    assert_eq!(root.dir, PathBuf::from("."));
+    assert_eq!(root.config.package_name.as_deref(), Some("relative"));
 }
 
 #[test]

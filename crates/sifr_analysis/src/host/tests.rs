@@ -738,6 +738,60 @@ fn workspace_diagnostic_order_is_stable_across_repeated_queries() {
 }
 
 #[test]
+fn workspace_diagnostic_order_is_stable_under_parallel_readers() {
+    let dir = temp_project_dir("parallel_diagnostic_order");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "# TODO: main follow up\ndef main():\n    return 1  \n",
+    )
+    .expect("main source should be written");
+    std::fs::write(
+        dir.join("helper.sifr"),
+        "# TODO: helper follow up\ndef helper() -> int:\n    return 2  \n",
+    )
+    .expect("helper source should be written");
+    let root = ProjectRoot {
+        root: SourcePath::new(dir.clone()),
+        entrypoint: SourcePath::new(dir.join("main.sifr")),
+    };
+
+    let mut host = AnalysisHost::open_project(&root).expect("project host should load");
+    let expected = host
+        .workspace_diagnostics()
+        .expect("workspace diagnostics should query")
+        .into_value();
+    let snapshot = host.snapshot();
+    let shared_host = std::sync::Arc::new(std::sync::Mutex::new(host));
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(8));
+
+    let handles = (0..8)
+        .map(|_| {
+            let snapshot = snapshot.clone();
+            let shared_host = std::sync::Arc::clone(&shared_host);
+            let barrier = std::sync::Arc::clone(&barrier);
+            std::thread::spawn(move || {
+                barrier.wait();
+                let mut host = shared_host
+                    .lock()
+                    .expect("shared host should not be poisoned");
+                snapshot
+                    .workspace_diagnostics(&mut host)
+                    .expect("shared snapshot diagnostics should query")
+                    .into_value()
+            })
+        })
+        .collect::<Vec<_>>();
+
+    for handle in handles {
+        let diagnostics = handle.join().expect("parallel reader should not panic");
+        assert_eq!(diagnostics, expected);
+    }
+    assert!(expected.iter().any(|file| !file.diagnostics.is_empty()));
+
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 fn code_actions_offer_policy_suppression_and_explain_not_found_is_explicit() {
     let source = "def main():\n    return 1  \n";
     let mut host =

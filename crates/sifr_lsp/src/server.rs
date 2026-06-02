@@ -30,11 +30,13 @@ struct LspServer {
 impl LspServer {
     fn stdio(options: LspServerOptions) -> Self {
         let (connection, io_threads) = Connection::stdio();
+        let watchdog = ParentWatchdog::new(options.parent_pid);
+        watchdog.spawn_exit_thread();
         Self {
             connection,
             io_threads,
             session: Session::new(),
-            watchdog: ParentWatchdog::new(options.parent_pid),
+            watchdog,
             queued_requests: BTreeMap::new(),
         }
     }

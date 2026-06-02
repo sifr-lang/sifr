@@ -1,0 +1,4 @@
+from api import api_value
+
+def service_value() -> int:
+    return api_value() + 1

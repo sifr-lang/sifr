@@ -93,7 +93,6 @@ pub struct SourceFileView {
     pub canonical_path: SourcePath,
     pub uri: Option<SourceUri>,
     pub source_hash: SourceHash,
-    pub document_version: Option<DocumentVersion>,
     pub source: SourceText,
 }
 
@@ -138,8 +137,8 @@ impl SourceMapView {
 #[cfg(test)]
 mod tests {
     use super::{
-        DocumentVersion, FileId, PositionEncoding, SourceFileView, SourceHash, SourceMapView,
-        SourcePath, SourceRevision, SourceText, TextPosition,
+        FileId, PositionEncoding, SourceFileView, SourceHash, SourceMapView, SourcePath,
+        SourceRevision, SourceText, TextPosition,
     };
     use ruff_text_size::{TextRange, TextSize};
 
@@ -150,7 +149,6 @@ mod tests {
                 canonical_path: SourcePath::new("main.sifr"),
                 uri: None,
                 source_hash: SourceHash("hash".to_string()),
-                document_version: Some(DocumentVersion::new(7)),
                 source: SourceText::new(source),
             }],
             revision: SourceRevision(0),
