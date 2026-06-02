@@ -14,7 +14,7 @@
         "perf.phase27.json_diagnostic_schema"
       ],
       "created": "2026-05-19",
-      "expires": "2026-06-02",
+      "expires": "2026-06-06",
       "id": "phase37-command-budget-recalibration",
       "issue": "https://github.com/sifr-lang/sifr/issues/2148",
       "override": {

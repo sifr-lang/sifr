@@ -42,33 +42,55 @@ pub(crate) struct LspWorkspaceSymbol {
 impl LspAnalysisWorkspace {
     pub(crate) const WATCHER_STORM_THRESHOLD: usize = 64;
 
-    pub(crate) fn open_document(&mut self, document: &DocumentState) {
-        if workspace_root_for(document.path()).is_some() {
-            self.documents.remove(document.uri());
-            return;
-        }
-        let analysis = LspDocumentAnalysis::open(document);
-        self.documents.insert(document.uri().to_string(), analysis);
-    }
-
-    pub(crate) fn update_document(&mut self, document: &DocumentState) {
-        let uri = document.uri().to_string();
+    pub(crate) fn open_document(&mut self, document: &DocumentState) -> bool {
         if let Some(root) = workspace_root_for(document.path()) {
-            self.documents.remove(&uri);
-            let remove_project = self
-                .projects
-                .get_mut(&root)
-                .is_some_and(|project| project.update_document(document).is_err());
-            if remove_project {
-                self.projects.remove(&root);
+            self.documents.remove(document.uri());
+            match self.projects.get_mut(&root) {
+                Some(project) => {
+                    if project.open_document(document).is_ok() {
+                        false
+                    } else {
+                        let analysis = LspDocumentAnalysis::open(document);
+                        self.documents.insert(document.uri().to_string(), analysis);
+                        false
+                    }
+                }
+                None => true,
             }
-            return;
-        }
-        if let Some(analysis) = self.documents.get_mut(&uri) {
-            analysis.update(document);
         } else {
             let analysis = LspDocumentAnalysis::open(document);
-            self.documents.insert(uri, analysis);
+            self.documents.insert(document.uri().to_string(), analysis);
+            false
+        }
+    }
+
+    pub(crate) fn update_document(&mut self, document: &DocumentState) -> bool {
+        let uri = document.uri().to_string();
+        if let Some(root) = workspace_root_for(document.path()) {
+            if let Some(analysis) = self.documents.get_mut(&uri) {
+                analysis.update(document);
+                return false;
+            }
+            match self.projects.get_mut(&root) {
+                Some(project) => {
+                    if project.update_document(document).is_ok() {
+                        false
+                    } else {
+                        let analysis = LspDocumentAnalysis::open(document);
+                        self.documents.insert(uri, analysis);
+                        false
+                    }
+                }
+                None => true,
+            }
+        } else {
+            if let Some(analysis) = self.documents.get_mut(&uri) {
+                analysis.update(document);
+            } else {
+                let analysis = LspDocumentAnalysis::open(document);
+                self.documents.insert(uri, analysis);
+            }
+            false
         }
     }
 
@@ -80,7 +102,6 @@ impl LspAnalysisWorkspace {
         let mut grouped: BTreeMap<PathBuf, Vec<&DocumentState>> = BTreeMap::new();
         for document in documents.documents() {
             if let Some(root) = workspace_root_for(document.path()) {
-                self.documents.remove(document.uri());
                 grouped.entry(root).or_default().push(document);
             }
         }
@@ -95,6 +116,14 @@ impl LspAnalysisWorkspace {
                 continue;
             }
             let analysis = LspProjectAnalysis::open(root.clone(), &documents);
+            for document in &documents {
+                if analysis.files_by_uri.contains_key(document.uri()) {
+                    self.documents.remove(document.uri());
+                } else {
+                    let fallback = LspDocumentAnalysis::open(document);
+                    self.documents.insert(document.uri().to_string(), fallback);
+                }
+            }
             self.projects.insert(root, analysis);
         }
     }
@@ -266,6 +295,28 @@ impl LspProjectAnalysis {
                 open_uris: open_uris(documents),
             },
         }
+    }
+
+    fn open_document(&mut self, document: &DocumentState) -> Result<(), ()> {
+        let Some(host) = self.host.as_mut() else {
+            return Err(());
+        };
+        let started = Instant::now();
+        host.upsert_overlay_document(
+            SourcePath::new(document.path().to_path_buf()),
+            Some(document.uri().to_string()),
+            document_version(document),
+            SourceText::new(document.text().to_string()),
+        )
+        .map_err(|_| ())?;
+        let file = host
+            .document_file_for_path(document.path())
+            .map_err(|_| ())?;
+        host.record_update_latency_ms(elapsed_ms(started));
+        self.files_by_uri.insert(document.uri().to_string(), file);
+        self.load_diagnostics.remove(document.uri());
+        self.open_uris.insert(document.uri().to_string());
+        Ok(())
     }
 
     fn update_document(&mut self, document: &DocumentState) -> Result<(), ()> {

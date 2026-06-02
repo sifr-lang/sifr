@@ -4,6 +4,7 @@ use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::{
     DocumentVersion, FrontendMode, ProjectRoot, SourcePath, SourceText, WorkspaceSession,
 };
+use std::path::Path;
 
 impl AnalysisHost {
     pub fn open_project_with_overlays(
@@ -55,7 +56,7 @@ impl AnalysisHost {
 
     pub fn document_file_for_path(
         &self,
-        path: &std::path::Path,
+        path: &Path,
     ) -> Result<sifr_frontend::FileId, AnalysisError> {
         self.session
             .context()
@@ -64,7 +65,7 @@ impl AnalysisHost {
                     .source_map()
                     .files
                     .into_iter()
-                    .find(|file| file.canonical_path.as_path() == path)
+                    .find(|file| paths_match(file.canonical_path.as_path(), path))
                     .map(|file| file.id)
             })
             .ok_or_else(|| {
@@ -73,5 +74,48 @@ impl AnalysisHost {
                     format!("analysis file is unavailable for {}", path.display()),
                 )
             })
+    }
+}
+
+fn paths_match(candidate: &Path, requested: &Path) -> bool {
+    if candidate == requested {
+        return true;
+    }
+    // Project source maps may store module paths relative to the project root
+    // while LSP document URIs arrive as absolute paths. The lookup is scoped to
+    // one analysis host, so a relative suffix match cannot cross project roots.
+    if candidate.is_absolute() || !requested.is_absolute() {
+        return false;
+    }
+    requested.ends_with(candidate)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::paths_match;
+    use std::path::Path;
+
+    #[test]
+    fn path_match_accepts_exact_paths() {
+        assert!(paths_match(
+            Path::new("/tmp/project/src/main.sifr"),
+            Path::new("/tmp/project/src/main.sifr"),
+        ));
+    }
+
+    #[test]
+    fn path_match_accepts_project_relative_source_paths() {
+        assert!(paths_match(
+            Path::new("src/main.sifr"),
+            Path::new("/tmp/project/src/main.sifr"),
+        ));
+    }
+
+    #[test]
+    fn path_match_rejects_unrelated_paths() {
+        assert!(!paths_match(
+            Path::new("src/main.sifr"),
+            Path::new("/tmp/project/src/helper.sifr"),
+        ));
     }
 }
