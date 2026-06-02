@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer M10: Snapshot Reuse And Structural Replacement
 
-status: in progress
+status: merged via [#2251](https://github.com/sifr-lang/sifr/pull/2251)
 
 M10 introduces the first process-local reuse storage after M9 locked cache
 identity. `sifr_frontend` now keeps ref-counted cache entries for parse trees,
