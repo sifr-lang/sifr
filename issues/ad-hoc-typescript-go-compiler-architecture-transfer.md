@@ -22,6 +22,7 @@ Status: in progress
 | M13 LSP Cancellation, Progress, And Watchdog | merged | [#2257](https://github.com/sifr-lang/sifr/pull/2257) | Adds queued/in-flight request cancellation state, phase-boundary cancellation checks, delayed work progress for multi-document diagnostics, and `sifr lsp --parent-pid` watchdog plumbing. |
 | M14 Bucketed Indexes And Safe Parallel Lanes | merged | [#2259](https://github.com/sifr-lang/sifr/pull/2259) | Adds workspace/package/stdlib symbol and import bucket readiness states, dirty-bucket symbol-index refreshes, and explicit approved worker-lane versus single-owner compiler-phase policy; package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. |
 | M15 Project Residency, Watchers, And Build Info | merged | [#2261](https://github.com/sifr-lang/sifr/pull/2261) | Adds project residency snapshots, config pending reload state, deduped watch registrations, and verified non-authoritative `.sifrbuildinfo` metadata. |
+| M16 Trace And Status Surfaces | in progress | pending | Adds deterministic compiler-service trace phases, bounded debug status snapshots, LSP scheduler/cancellation/stale/timing trace events via `sifr/debugTrace`, analysis index-readiness status, and `sifr trace` CLI output. |
 
 M2 local validation so far:
 
@@ -159,6 +160,30 @@ M15 local validation so far:
 - Claude reviewer pass 2 -> SATISFIED (`reviews/typescript-go-m15-project-residency-review-pass-2.md`)
 - Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m15-project-residency-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 292.53s, advisory: group skew is high
+
+M16 local validation so far:
+
+- `cargo test -p sifr_frontend workspace_session -- --nocapture` -> PASS, 9 tests
+- `cargo test -p sifr_frontend` -> PASS, 43 tests
+- `cargo test -p sifr_analysis dependency_sensitive_invalidation_is_explained_in_trace -- --nocapture` -> PASS
+- `cargo test -p sifr_analysis stale_snapshot_is_rejected_after_update -- --nocapture` -> PASS
+- `cargo test -p sifr_analysis` -> PASS, 21 tests
+- `cargo test -p sifr_lsp debug_trace_request_exposes_lsp_trace_events -- --nocapture` -> PASS
+- `cargo test -p sifr_lsp active_request_cancellation_fails_phase_boundary_checks -- --nocapture` -> PASS
+- `cargo test -p sifr_lsp diagnostic_job_version_guard_rejects_stale_capture -- --nocapture` -> PASS
+- `cargo test -p sifr_lsp` -> PASS, 24 tests
+- `cargo test -p sifr trace_entrypoint_renders_status_and_trace_snapshot -- --nocapture` -> PASS
+- `cargo test -p sifr -- --skip test_e2e_pass` -> PASS, 57 unit tests and 33 non-pass e2e tests
+- `cargo check -p sifr_frontend -p sifr_analysis -p sifr_lsp -p sifr` -> PASS
+- `cargo fmt --check` -> PASS
+- `cargo clippy -p sifr_frontend -p sifr_analysis -p sifr_lsp -p sifr -- -D warnings` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `git diff --check` -> PASS
+- `python3 scripts/check_file_size_guardrails.py` -> PASS
+- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m16-trace-status-review-pass-1.md`)
+- Claude reviewer pass 2 -> SATISFIED with residual recommendations (`reviews/typescript-go-m16-trace-status-review-pass-2.md`)
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 295.57s, advisory: group skew is high
 
 M4 local validation so far:
 

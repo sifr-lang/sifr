@@ -46,6 +46,7 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "codeAction/resolve" => code_action::resolve(session, params),
         "textDocument/formatting" => formatting::formatting(session, params),
         "textDocument/rangeFormatting" => formatting::range_formatting(session, params),
+        "sifr/debugTrace" => Ok(Value::String(session.trace_snapshot().render_text())),
         _ => Err(LspError::method_not_found(format!(
             "unsupported Sifr LSP request: {method}"
         ))),

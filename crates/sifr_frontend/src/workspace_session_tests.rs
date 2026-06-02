@@ -6,6 +6,7 @@ use crate::{
     CompilerFingerprint, DocumentVersion, FrontendMode, ProjectResidencyKind, ProjectRoot,
     SifrBuildInfoCandidate, SifrBuildInfoRejection, SifrBuildInfoSource, SifrBuildInfoVerification,
     SourceDependencyKind, SourceHash, SourcePath, SourceText, WatchRegistrationReason,
+    WorkspaceTracePhase,
 };
 use std::collections::BTreeSet;
 use std::fs;
@@ -141,6 +142,50 @@ fn project_session_snapshot_records_overlay_and_dependencies() {
         .watchers
         .iter()
         .any(|watcher| watcher.reasons.contains(&WatchRegistrationReason::SeenFile)));
+}
+
+#[test]
+fn debug_snapshot_explains_invalidation_and_status_counts() {
+    let temp = TempProject::new("workspace_session_debug");
+    temp.write("main.sifr", "from helper import value\nprint(value)\n");
+    temp.write("helper.sifr", "value = 1\n");
+    let mut session = WorkspaceSession::open_project(ProjectRoot {
+        root: SourcePath::new(temp.root.clone()),
+        entrypoint: SourcePath::new(temp.root.join("main.sifr")),
+    })
+    .expect("project opens");
+
+    session.upsert_overlay(
+        SourcePath::new(temp.root.join("helper.sifr")),
+        Some("file:///helper.sifr".to_string()),
+        DocumentVersion::new(2),
+        SourceText::new("value = 2\n"),
+        Some("value = 1\n"),
+    );
+    session.reload().expect("reload after dependency edit");
+    let debug = session.snapshot().debug;
+
+    assert_eq!(debug.status.target_kind, "project");
+    assert_eq!(debug.status.open_file_count, 1);
+    assert_eq!(debug.status.source_file_count, 2);
+    assert_eq!(debug.status.module_count, 2);
+    assert!(debug.status.memory.source_text_bytes > 0);
+    assert!(debug.status.memory.retained_watchers > 0);
+    assert!(debug
+        .trace
+        .events
+        .iter()
+        .any(|event| event.phase == WorkspaceTracePhase::SourceUpdate
+            && event.detail.contains("overlay_upsert")));
+    assert!(debug
+        .trace
+        .events
+        .iter()
+        .any(|event| event.phase == WorkspaceTracePhase::Invalidation
+            && event.detail.contains("SourceTextChanged")));
+    let rendered = debug.render_text();
+    assert!(rendered.contains("[status]"));
+    assert!(rendered.contains("phase=parse"));
 }
 
 #[test]

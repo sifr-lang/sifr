@@ -8,6 +8,7 @@ use crate::scheduler::Scheduler;
 use crate::session::Session;
 use crate::watchdog::{LspServerOptions, ParentWatchdog};
 use lsp_server::{Connection, IoThreads, Message, Request, Response};
+use sifr_analysis::WorkspaceTracePhase;
 use std::collections::BTreeMap;
 
 pub fn run_stdio() -> ServerResult<()> {
@@ -83,11 +84,14 @@ impl LspServer {
                         &notification.method,
                         notification.params,
                     ) {
-                        self.session.trace(format!(
-                            "notification {} failed: {}",
-                            notification.method,
-                            error.message()
-                        ));
+                        self.session.trace(
+                            WorkspaceTracePhase::LspTiming,
+                            format!(
+                                "notification {} failed: {}",
+                                notification.method,
+                                error.message()
+                            ),
+                        );
                     }
                     if is_exit {
                         #[allow(clippy::bool_to_int_with_if)]
