@@ -17,6 +17,7 @@ Status: in progress
 | M8 First-Class Flow Graph | merged | [#2243](https://github.com/sifr-lang/sifr/pull/2243), [#2244](https://github.com/sifr-lang/sifr/pull/2244), [#2245](https://github.com/sifr-lang/sifr/pull/2245) | Adds `sifr_hir::flow_graph`, snapshot-scoped `LoweringResult.flow_graph`, graph-backed `FlowFacts` debug/fingerprint access, and lowering-time flow effects for narrowing, mutation invalidation, moves, and borrows. |
 | M9 Fingerprints And Cache Keys | merged | [#2246](https://github.com/sifr-lang/sifr/pull/2246), [#2247](https://github.com/sifr-lang/sifr/pull/2247), [#2248](https://github.com/sifr-lang/sifr/pull/2248), [#2249](https://github.com/sifr-lang/sifr/pull/2249) | Adds deterministic compiler/cache fingerprints and typed key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph caches before reuse lands. |
 | M10 Snapshot Reuse And Structural Replacement | merged | [#2251](https://github.com/sifr-lang/sifr/pull/2251) | Adds ref-counted M9-keyed parse/source-map/HIR/diagnostics/index reuse, Arc-backed snapshot payloads, and conservative safe one-module replacement when import/export signatures are unchanged. |
+| M11 LSP Scheduler Queues | in progress | pending | Adds real request priority queues for latency-sensitive, formatting, workspace, and background lanes plus debounced diagnostic jobs guarded by captured document versions. |
 
 M2 local validation so far:
 
@@ -61,6 +62,23 @@ M10 local validation so far:
 - Claude reviewer pass 2 -> SATISFIED with residual recommendations (`reviews/typescript-go-m10-snapshot-reuse-review-pass-2.md`)
 - Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m10-snapshot-reuse-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 330.61s, advisories: warm wall-time budget exceeded; group skew is high
+
+M11 local validation so far:
+
+- `cargo test -p sifr_lsp` -> PASS, 13 tests
+- `python3 verification/tooling/lsp_protocol_smoke.py` -> PASS
+- `python3 verification/tooling/lsp_protocol_stress.py` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `cargo fmt --check` -> PASS
+- `cargo clippy -p sifr_lsp -- -D warnings` -> PASS
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-1.md`)
+- Claude reviewer pass 2 -> SATISFIED with residual low-priority cleanup (`reviews/typescript-go-m11-lsp-scheduler-review-pass-2.md`)
+- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-3.md`)
+- `cargo clippy --workspace -- -D warnings` -> PASS
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 263.26s, advisory: group skew is high
 
 M4 local validation so far:
 

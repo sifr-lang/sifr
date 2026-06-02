@@ -46,8 +46,13 @@ fn cancel_request(session: &mut Session, params: &Value) -> LspResult<()> {
 
 fn workspace_did_change_configuration(session: &mut Session, params: Value) -> LspResult<()> {
     let root = params.get("settings").unwrap_or(&params);
+    let previous_mode = session.store().settings().diagnostics_mode;
     let settings = crate::settings::parse_workspace_settings(root, session.store().settings())?;
+    let next_mode = settings.diagnostics_mode;
     session.store_mut().apply_settings(settings);
+    if previous_mode != next_mode && next_mode == crate::document_store::DiagnosticsMode::Off {
+        session.clear_diagnostic_jobs();
+    }
     Ok(())
 }
 

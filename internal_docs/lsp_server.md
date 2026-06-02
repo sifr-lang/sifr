@@ -60,9 +60,9 @@ the required LSP shutdown sequence.
 
 ## Current M5 Compiler-Service State
 
-The TypeScript-Go architecture transfer keeps M5 serialized while moving LSP
-analysis ownership into the language-server session. Current implementation
-reality:
+The TypeScript-Go architecture transfer keeps request execution serialized while
+moving LSP analysis ownership and scheduling state into the language-server
+session. Current implementation reality:
 
 - `DocumentStore` owns only protocol text, URI, path, and version state.
 - `Session` owns `LspAnalysisWorkspace`, which holds persistent analysis handles
@@ -82,14 +82,22 @@ reality:
 - `workspace/didChangeWatchedFiles` summarizes each watcher batch once before
   invalidation. Normal watcher batches select graph-structure dirty scope;
   watcher storms degrade to workspace dirty scope with `WatcherStorm`.
-- `RequestQueue` tracks pending request ids and shutdown state; it is not yet a
-  cancellation-token registry.
-- `Scheduler` maps methods to lane labels only; it does not yet run priority
-  queues, debounce, background workers, delayed progress, or cancellation.
+- `RequestQueue` owns M11 priority queues for latency-sensitive, formatting,
+  workspace, and background lanes. Dispatch remains serialized, but queued
+  requests are selected through bounded-fairness scheduling so workspace and
+  background work cannot permanently starve and cannot dominate latency-sensitive
+  work.
+- `DiagnosticsController` schedules document diagnostics as debounced jobs keyed
+  by URI and captured document version. Publication skips jobs whose captured
+  version is no longer current, preserves a document's original queue slot when
+  the same URI is rescheduled, and clears pending jobs when diagnostics are
+  disabled.
+- `Scheduler` does not yet run background worker threads, delayed progress, or
+  cancellation tokens.
 
 M7 owns dependency-sensitive signature invalidation. M11 owns priority
-queues/debounce. M13 owns cancellation, progress, and parent-process watchdog
-behavior.
+queues/debounce. M13 owns cancellation, progress, background execution, and
+parent-process watchdog behavior.
 
 ## Capability Matrix
 

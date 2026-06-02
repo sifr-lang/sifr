@@ -109,6 +109,12 @@ def run_stress() -> None:
                 raise LspProtocolError(f"closed document query returned unexpected error: {error}")
 
             client.request("shutdown", {})
+            error = client.request_error(
+                "textDocument/hover",
+                {"textDocument": {"uri": uri}, "position": {"line": 4, "character": 19}},
+            )
+            if error.get("code") != -32800:
+                raise LspProtocolError(f"post-shutdown request returned unexpected error: {error}")
             client.notify("exit", {})
         finally:
             client.close()
