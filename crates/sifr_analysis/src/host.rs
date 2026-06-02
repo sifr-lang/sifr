@@ -1,3 +1,4 @@
+mod debug_status;
 mod implementation;
 pub use implementation::*;
 mod overlay_updates;

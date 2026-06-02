@@ -119,6 +119,10 @@ impl AnalysisHost {
         AnalysisSnapshot::new(self.session.snapshot(), self.current_revision)
     }
 
+    pub fn record_update_latency_ms(&mut self, latency_ms: u64) {
+        self.session.record_update_latency_ms(latency_ms);
+    }
+
     #[must_use]
     pub fn is_snapshot_current(&self, snapshot: &AnalysisSnapshot) -> bool {
         snapshot.revision() == self.current_revision
@@ -617,7 +621,7 @@ impl AnalysisHost {
         ))
     }
 
-    fn symbol_index(&mut self) -> Result<&SymbolIndex, AnalysisError> {
+    pub(super) fn symbol_index(&mut self) -> Result<&SymbolIndex, AnalysisError> {
         let revision = self.current_revision;
         let needs_refresh = self
             .symbol_index
@@ -813,13 +817,22 @@ impl AnalysisHost {
 
 impl AnalysisHost {
     pub(super) fn ensure_snapshot_current(
-        &self,
+        &mut self,
         snapshot: &AnalysisSnapshot,
     ) -> Result<(), AnalysisError> {
         let current = self.current_revision;
         if self.is_snapshot_current(snapshot) {
             return Ok(());
         }
+        self.session.record_stale_rejection(format!(
+            "captured_workspace={} current_workspace={} captured_graph_source={}:{} current_graph_source={}:{}",
+            snapshot.workspace().revision.as_u64(),
+            self.session.revision().as_u64(),
+            snapshot.revision().graph.as_u64(),
+            snapshot.revision().source.as_u64(),
+            current.graph.as_u64(),
+            current.source.as_u64()
+        ));
         Err(AnalysisError::new(
             AnalysisErrorKind::StaleSnapshot,
             format!(

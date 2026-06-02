@@ -40,7 +40,7 @@ pub use worker_lanes::{
 
 pub use sifr_frontend::{
     DocumentVersion, FileId, FrontendInput, FrontendMode, InvalidationReport, ProjectRoot,
-    SourcePath, SourceText,
+    SourcePath, SourceText, WorkspaceTraceEvent, WorkspaceTraceLog, WorkspaceTracePhase,
 };
 pub use sifr_syntax::TextPosition;
 

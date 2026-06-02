@@ -5,6 +5,7 @@ use super::diagnostic_rendering_and_run::{
 };
 use super::formatter_cli::FmtArgs;
 use super::lint_cli::{cmd_lint, LintArgs};
+use super::trace_cli::cmd_trace;
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
 #[cfg(test)]
@@ -267,6 +268,11 @@ pub(crate) enum Commands {
         #[arg(long = "parent-pid")]
         parent_pid: Option<u32>,
     },
+    /// Print deterministic compiler-service trace and status output
+    Trace {
+        /// Input .sifr file
+        file: PathBuf,
+    },
     /// Show the generated Rust source code
     Emit {
         /// Input .sifr file
@@ -508,6 +514,7 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Fmt(args) => cmd_fmt(&args, &config, isolated, diagnostic_format),
         Commands::Lint(args) => cmd_lint(&args, &config, isolated, diagnostic_format),
         Commands::Lsp { stdio, parent_pid } => cmd_lsp(stdio, parent_pid),
+        Commands::Trace { file } => cmd_trace(&file, diagnostic_format),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
         Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
     }

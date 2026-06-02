@@ -8,7 +8,7 @@ use crate::{
     TypeHierarchyItemId,
 };
 use sifr_diagnostics::DiagnosticArg;
-use sifr_frontend::{FrontendMode, SourcePath};
+use sifr_frontend::{FrontendMode, SourcePath, WorkspaceTracePhase};
 
 fn single_file_input(source: &str) -> FrontendInput {
     FrontendInput {
@@ -16,6 +16,19 @@ fn single_file_input(source: &str) -> FrontendInput {
         source: SourceText::new(source),
         mode: FrontendMode::SingleFile,
     }
+}
+
+fn temp_project_dir(name: &str) -> std::path::PathBuf {
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("time should move forward")
+        .as_nanos();
+    let dir = std::env::temp_dir().join(format!(
+        "sifr_analysis_{name}_{}_{nonce}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).expect("temp project should be created");
+    dir
 }
 
 #[test]
@@ -96,6 +109,59 @@ fn stale_snapshot_is_rejected_after_update() {
         .expect_err("stale snapshot should not answer queries");
 
     assert_eq!(error.kind, AnalysisErrorKind::StaleSnapshot);
+    let debug = host.debug_snapshot();
+    assert!(debug
+        .trace
+        .events
+        .iter()
+        .any(|event| event.phase == WorkspaceTracePhase::StaleRejection
+            && event.detail.contains("captured_workspace")));
+}
+
+#[test]
+fn dependency_sensitive_invalidation_is_explained_in_trace() {
+    let dir = temp_project_dir("dependency_trace");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from helper import value\n\ndef main() -> int:\n    return value()\n",
+    )
+    .expect("main should be written");
+    std::fs::write(
+        dir.join("helper.sifr"),
+        "def value() -> int:\n    return 1\n",
+    )
+    .expect("helper should be written");
+    let root = ProjectRoot {
+        root: SourcePath::new(dir.clone()),
+        entrypoint: SourcePath::new(dir.join("main.sifr")),
+    };
+    let mut host = AnalysisHost::open_project(&root).expect("project host should load");
+    let helper = host
+        .document_file_for_path(&dir.join("helper.sifr"))
+        .expect("helper file should be known");
+
+    let report = host
+        .update_document(
+            helper,
+            DocumentVersion::new(2),
+            SourceText::new("def value() -> str:\n    return \"changed\"\n"),
+        )
+        .expect("export signature update should invalidate");
+
+    assert!(matches!(
+        report.dirty_scope_report.scope,
+        sifr_frontend::WorkspaceDirtyScope::ReverseDependencies { .. }
+    ));
+    let debug = host.debug_snapshot();
+    assert!(debug
+        .trace
+        .events
+        .iter()
+        .any(|event| event.phase == WorkspaceTracePhase::Invalidation
+            && event.detail.contains("ReverseDependencies")
+            && event.detail.contains("ExportSignatureChanged")));
+
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 #[test]

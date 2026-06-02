@@ -3,6 +3,7 @@ use crate::errors::{optional_i32, required_string, LspError, LspResult};
 use crate::session::Session;
 use lsp_server::{Connection, RequestId};
 use serde_json::Value;
+use sifr_analysis::WorkspaceTracePhase;
 
 pub(crate) fn handle(
     session: &mut Session,
@@ -25,7 +26,10 @@ pub(crate) fn handle(
             Ok(())
         }
         _ => {
-            session.trace(format!("ignored unsupported notification {method}"));
+            session.trace(
+                WorkspaceTracePhase::LspTiming,
+                format!("ignored unsupported notification {method}"),
+            );
             Ok(())
         }
     }
@@ -99,10 +103,13 @@ fn text_document_did_change(
             LspError::invalid_params("textDocument/didChange requires contentChanges")
         })?;
     let summary = session.change_compacted(&uri, version, changes)?;
-    session.trace(format!(
-        "compacted {} textDocument/didChange edits for {uri} into {} applied edit(s), text_changed={}",
-        summary.raw_change_count, summary.compacted_change_count, summary.text_changed
-    ));
+    session.trace(
+        WorkspaceTracePhase::SourceUpdate,
+        format!(
+            "compacted_did_change uri={uri} raw={} compacted={} text_changed={}",
+            summary.raw_change_count, summary.compacted_change_count, summary.text_changed
+        ),
+    );
     let mode = session.store().settings().diagnostics_mode;
     DiagnosticsController::publish_document(connection, session, &uri, mode)
 }
@@ -131,7 +138,10 @@ fn text_document_did_close(
 ) -> LspResult<()> {
     let uri = required_string(&params, "/textDocument/uri")?;
     if !session.close_document(&uri) {
-        session.trace(format!("ignored close for unopened document {uri}"));
+        session.trace(
+            WorkspaceTracePhase::SourceUpdate,
+            format!("ignored close for unopened document {uri}"),
+        );
         return Ok(());
     }
     connection

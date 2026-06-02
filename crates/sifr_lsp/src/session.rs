@@ -8,9 +8,14 @@ use crate::request_queue::{CancellationTarget, RequestQueue, ScheduledRequest};
 use crate::scheduler::WorkLane;
 use lsp_server::RequestId;
 use serde_json::Value;
-use sifr_analysis::{AnalysisHost, AnalysisSnapshot, FileId};
+use sifr_analysis::{
+    AnalysisHost, AnalysisSnapshot, FileId, WorkspaceTraceEvent, WorkspaceTraceLog,
+    WorkspaceTracePhase,
+};
 use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeMap;
+
+const MAX_LSP_TRACE_EVENTS: usize = 256;
 
 pub(crate) struct Session {
     store: DocumentStore,
@@ -21,7 +26,8 @@ pub(crate) struct Session {
     initialized: bool,
     shutdown_requested: bool,
     exit_requested: bool,
-    traces: Vec<String>,
+    traces: Vec<WorkspaceTraceEvent>,
+    next_trace_sequence: u64,
     diagnostic_jobs: BTreeMap<String, ScheduledDiagnosticJob>,
     next_diagnostic_sequence: u64,
 }
@@ -51,6 +57,7 @@ impl Session {
             shutdown_requested: false,
             exit_requested: false,
             traces: Vec::new(),
+            next_trace_sequence: 0,
             diagnostic_jobs: BTreeMap::new(),
             next_diagnostic_sequence: 0,
         }
@@ -122,9 +129,10 @@ impl Session {
 
     pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
         self.analysis.record_watcher_events(event_count);
-        self.trace(format!(
-            "recorded {event_count} compacted workspace watcher event(s)"
-        ));
+        self.trace(
+            WorkspaceTracePhase::SourceUpdate,
+            format!("compacted_workspace_watcher_events count={event_count}"),
+        );
     }
 
     pub(crate) fn document_uris(&self) -> Vec<String> {
@@ -157,10 +165,20 @@ impl Session {
         self.check_active_request_cancelled()?;
         let after_version = self.store.document(uri)?.version();
         if after_version != before_version {
+            self.trace(
+                WorkspaceTracePhase::StaleRejection,
+                format!(
+                    "document_version uri={uri} captured={before_version:?} current={after_version:?}"
+                ),
+            );
             return Err(crate::errors::LspError::request_cancelled(
                 "query result was superseded by a newer document version",
             ));
         }
+        self.trace(
+            WorkspaceTracePhase::LspTiming,
+            format!("query uri={uri} version={after_version:?}"),
+        );
         Ok(result)
     }
 
@@ -174,18 +192,21 @@ impl Session {
         work_units: usize,
     ) -> Option<ProgressHandle> {
         let handle = self.progress.begin(kind, work_units)?;
-        self.trace(format!(
-            "started progress token={} kind={kind:?} units={work_units}",
-            handle.token()
-        ));
+        self.trace(
+            WorkspaceTracePhase::LspTiming,
+            format!(
+                "progress_start token={} kind={kind:?} units={work_units}",
+                handle.token()
+            ),
+        );
         Some(handle)
     }
 
     pub(crate) fn end_progress(&mut self, handle: ProgressHandle, message: &str) {
-        self.trace(format!(
-            "ended progress token={} message={message}",
-            handle.token()
-        ));
+        self.trace(
+            WorkspaceTracePhase::LspTiming,
+            format!("progress_end token={} message={message}", handle.token()),
+        );
         self.progress.end(handle, message);
     }
 
@@ -196,20 +217,24 @@ impl Session {
         lane: WorkLane,
     ) -> Result<(), &'static str> {
         self.queue.enqueue(id, method, lane)?;
-        self.trace(format!(
-            "queued request {id:?} method={method} lane={lane:?}"
-        ));
+        self.trace(
+            WorkspaceTracePhase::Scheduler,
+            format!("queued request={id:?} method={method} lane={lane:?}"),
+        );
         Ok(())
     }
 
     pub(crate) fn start_next_request(&mut self) -> Option<ScheduledRequest> {
         let scheduled = self.queue.start_next()?;
-        self.trace(format!(
-            "dispatching request {:?} method={} lane={:?}",
-            scheduled.id(),
-            scheduled.method(),
-            scheduled.lane()
-        ));
+        self.trace(
+            WorkspaceTracePhase::Scheduler,
+            format!(
+                "dispatch request={:?} method={} lane={:?}",
+                scheduled.id(),
+                scheduled.method(),
+                scheduled.lane()
+            ),
+        );
         Some(scheduled)
     }
 
@@ -232,7 +257,10 @@ impl Session {
     pub(crate) fn cancel_request(&mut self, id: &RequestId) -> CancellationTarget {
         let target = self.queue.mark_cancelled(id);
         if target != CancellationTarget::None {
-            self.trace(format!("cancelled request {id:?} target={target:?}"));
+            self.trace(
+                WorkspaceTracePhase::Cancellation,
+                format!("cancelled request={id:?} target={target:?}"),
+            );
         }
         target
     }
@@ -271,7 +299,10 @@ impl Session {
 
     pub(crate) fn note_initialized(&mut self) {
         if self.initialized {
-            self.trace("ignored duplicate initialized notification".to_string());
+            self.trace(
+                WorkspaceTracePhase::LspTiming,
+                "ignored duplicate initialized notification",
+            );
         }
         self.initialized = true;
     }
@@ -280,8 +311,23 @@ impl Session {
         self.exit_requested = true;
     }
 
-    pub(crate) fn trace(&mut self, message: String) {
-        self.traces.push(message);
+    pub(crate) fn trace(&mut self, phase: WorkspaceTracePhase, detail: impl Into<String>) {
+        if self.traces.len() >= MAX_LSP_TRACE_EVENTS {
+            self.traces.remove(0);
+        }
+        self.traces.push(WorkspaceTraceEvent {
+            sequence: self.next_trace_sequence,
+            phase,
+            snapshot_id: None,
+            detail: detail.into(),
+        });
+        self.next_trace_sequence = self.next_trace_sequence.saturating_add(1);
+    }
+
+    pub(crate) fn trace_snapshot(&self) -> WorkspaceTraceLog {
+        WorkspaceTraceLog {
+            events: self.traces.clone(),
+        }
     }
 
     pub(crate) fn schedule_document_diagnostics(
@@ -302,10 +348,10 @@ impl Session {
             sequence,
         };
         self.diagnostic_jobs.insert(uri.to_string(), job.clone());
-        self.trace(format!(
-            "scheduled diagnostics for {uri} at version {:?}",
-            job.version
-        ));
+        self.trace(
+            WorkspaceTracePhase::Scheduler,
+            format!("scheduled_diagnostics uri={uri} version={:?}", job.version),
+        );
         Ok(job)
     }
 
@@ -334,6 +380,7 @@ mod tests {
     use crate::request_queue::CancellationTarget;
     use lsp_server::RequestId;
     use serde_json::json;
+    use sifr_analysis::WorkspaceTracePhase;
 
     #[test]
     fn open_document_analysis_uses_unsaved_overlay_text() {
@@ -421,6 +468,39 @@ mod tests {
         assert!(session.check_active_request_cancelled().is_err());
         session.finish_request(&id);
         assert!(session.check_request_cancelled(&id).is_ok());
+        let trace = session.trace_snapshot();
+        assert!(trace
+            .events
+            .iter()
+            .any(|event| event.phase == WorkspaceTracePhase::Scheduler
+                && event.detail.contains("dispatch")));
+        assert!(trace
+            .events
+            .iter()
+            .any(|event| event.phase == WorkspaceTracePhase::Cancellation
+                && event.detail.contains("InFlight")));
+    }
+
+    #[test]
+    fn debug_trace_request_exposes_lsp_trace_events() {
+        let mut session = Session::new();
+        let id = RequestId::from(9);
+        session
+            .enqueue_request(
+                &id,
+                "textDocument/completion",
+                crate::scheduler::WorkLane::LatencySensitive,
+            )
+            .expect("request should enqueue");
+        let _ = session.start_next_request().expect("request should start");
+        assert_eq!(session.cancel_request(&id), CancellationTarget::InFlight);
+
+        let trace =
+            crate::requests::handle(&mut session, "sifr/debugTrace", serde_json::Value::Null)
+                .expect("debug trace request should answer");
+        let trace = trace.as_str().expect("trace should be a string");
+        assert!(trace.contains("phase=scheduler"));
+        assert!(trace.contains("phase=cancellation"));
     }
 
     #[test]
@@ -550,6 +630,14 @@ mod tests {
         assert!(!session
             .document_version_matches(&job.uri, job.version)
             .expect("document should still exist"));
+        session.trace(
+            WorkspaceTracePhase::StaleRejection,
+            format!("diagnostic_job_version captured={:?}", job.version),
+        );
+        assert!(session
+            .trace_snapshot()
+            .render_text()
+            .contains("phase=stale_rejection"));
     }
 
     #[test]

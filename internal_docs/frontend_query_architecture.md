@@ -79,6 +79,14 @@ build-info state. `.sifrbuildinfo` candidates are rejected unless the current
 source hashes, package/config identity, and compiler fingerprint match the
 active workspace, so metadata never becomes correctness authority.
 
+TypeScript-Go architecture transfer M16 note: `WorkspaceSession` snapshots now
+carry bounded `WorkspaceDebugSnapshot` trace/status output. `WorkspaceTracePhase`
+normalizes compiler-service source-update, compiler phase, cache, invalidation,
+stale-rejection, and LSP timing events. LSP scheduler/cancellation/stale/timing
+events are available through `sifr/debugTrace`; `AnalysisHost::debug_snapshot`
+enriches status with side-effect-free symbol bucket readiness, and `sifr trace`
+exposes a local CLI snapshot for bug reports.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

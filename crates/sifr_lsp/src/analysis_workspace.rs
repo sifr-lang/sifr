@@ -5,6 +5,7 @@ use sifr_analysis::{
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeMap;
+use std::time::Instant;
 
 #[derive(Default)]
 pub(crate) struct LspAnalysisWorkspace {
@@ -91,6 +92,7 @@ impl LspAnalysisWorkspace {
 
 impl LspDocumentAnalysis {
     fn open(document: &DocumentState) -> Self {
+        let started = Instant::now();
         match AnalysisHost::open_single_file_overlay(
             SourcePath::new(document.path().to_path_buf()),
             Some(document.uri().to_string()),
@@ -98,7 +100,10 @@ impl LspDocumentAnalysis {
             SourceText::new(document.text().to_string()),
             FrontendMode::SingleFile,
         ) {
-            Ok(host) => Self::from_host(host, document),
+            Ok(mut host) => {
+                host.record_update_latency_ms(elapsed_ms(started));
+                Self::from_host(host, document)
+            }
             Err(diagnostics) => Self {
                 host: None,
                 file: None,
@@ -108,6 +113,7 @@ impl LspDocumentAnalysis {
     }
 
     fn update(&mut self, document: &DocumentState) {
+        let started = Instant::now();
         let result = if let Some(host) = self.host.as_mut() {
             host.upsert_overlay_document(
                 SourcePath::new(document.path().to_path_buf()),
@@ -120,7 +126,8 @@ impl LspDocumentAnalysis {
         };
         match result {
             Ok(()) => {
-                if let Some(host) = self.host.take() {
+                if let Some(mut host) = self.host.take() {
+                    host.record_update_latency_ms(elapsed_ms(started));
                     *self = Self::from_host(host, document);
                 }
             }
@@ -171,4 +178,8 @@ impl LspDocumentAnalysis {
 
 fn document_version(document: &DocumentState) -> DocumentVersion {
     DocumentVersion::new(i64::from(document.version().unwrap_or_default()))
+}
+
+fn elapsed_ms(started: Instant) -> u64 {
+    u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX)
 }

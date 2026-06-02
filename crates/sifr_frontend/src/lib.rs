@@ -25,3 +25,5 @@ mod workspace_session;
 pub use workspace_session::*;
 mod workspace_residency;
 pub use workspace_residency::*;
+mod workspace_trace;
+pub use workspace_trace::*;

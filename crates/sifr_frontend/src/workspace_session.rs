@@ -1,8 +1,11 @@
 use super::{
-    DiskSourceProvider, DocumentVersion, FrontendContext, FrontendInput, FrontendMode,
-    ModuleGraphView, OverlayDocument, OverlaySourceProvider, ProjectRoot, SifrBuildInfoCandidate,
-    SifrBuildInfoVerification, SourceDependency, SourceMapView, SourcePath, SourceText,
-    TrackingSourceProvider, WorkspaceResidencySnapshot, WorkspaceResidencyState,
+    dirty_scope_detail, source_path_detail, target_kind, DiskSourceProvider, DocumentVersion,
+    FrontendContext, FrontendInput, FrontendMode, ModuleGraphView, OverlayDocument,
+    OverlaySourceProvider, ProjectRoot, SifrBuildInfoCandidate, SifrBuildInfoVerification,
+    SourceDependency, SourceMapView, SourcePath, SourceText, TrackingSourceProvider,
+    WorkspaceCacheStatus, WorkspaceDebugSnapshot, WorkspaceIndexReadinessStatus,
+    WorkspaceMemoryCounters, WorkspaceResidencySnapshot, WorkspaceResidencyState,
+    WorkspaceStatusSnapshot, WorkspaceTracePhase, WorkspaceTraceState,
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeMap;
@@ -194,6 +197,7 @@ pub struct WorkspaceSnapshot {
     pub dirty_scope_report: WorkspaceDirtyScopeReport,
     pub cache_registry: WorkspaceCacheRegistryHandles,
     pub residency: Arc<WorkspaceResidencySnapshot>,
+    pub debug: Arc<WorkspaceDebugSnapshot>,
 }
 
 pub struct WorkspaceSession {
@@ -211,6 +215,7 @@ pub struct WorkspaceSession {
     dirty_scope_report: WorkspaceDirtyScopeReport,
     cache_registry: WorkspaceCacheRegistryHandles,
     residency: WorkspaceResidencyState,
+    trace: WorkspaceTraceState,
 }
 
 impl WorkspaceSession {
@@ -237,6 +242,8 @@ impl WorkspaceSession {
         let mut session = Self::single_file(input.path.clone(), input.mode);
         session.single_file_source = Some(input.source.clone());
         session.context = Some(FrontendContext::load_single_file(input)?);
+        session.refresh_residency();
+        session.record_compiler_phase_trace();
         Ok(session)
     }
 
@@ -254,6 +261,11 @@ impl WorkspaceSession {
         package_config_identity: WorkspacePackageConfigIdentity,
     ) -> Self {
         let residency = WorkspaceResidencyState::for_target(&target);
+        let mut trace = WorkspaceTraceState::default();
+        trace.record(
+            WorkspaceTracePhase::SourceUpdate,
+            format!("initialized target={}", target_kind(&target)),
+        );
         Self {
             target,
             overlays: BTreeMap::new(),
@@ -269,6 +281,7 @@ impl WorkspaceSession {
             dirty_scope_report: WorkspaceDirtyScopeReport::default(),
             cache_registry: WorkspaceCacheRegistryHandles::default(),
             residency,
+            trace,
         }
     }
 
@@ -308,11 +321,16 @@ impl WorkspaceSession {
             };
         }
         self.refresh_residency();
+        self.record_compiler_phase_trace();
         Ok(())
     }
 
     pub fn record_dirty_scope(&mut self, report: WorkspaceDirtyScopeReport) {
         if report.scope != WorkspaceDirtyScope::None || !report.reasons.is_empty() {
+            self.trace.record(
+                WorkspaceTracePhase::Invalidation,
+                dirty_scope_detail(&report),
+            );
             self.dirty_scope_report.merge(report);
             self.revision.0 += 1;
         }
@@ -333,6 +351,10 @@ impl WorkspaceSession {
                 vec![WorkspaceDirtyReason::DirectoryEntriesChanged],
             )
         };
+        self.trace.record(
+            WorkspaceTracePhase::SourceUpdate,
+            format!("watcher_events count={event_count} threshold={storm_threshold}"),
+        );
         self.record_dirty_scope(report);
     }
 
@@ -353,6 +375,14 @@ impl WorkspaceSession {
             .insert(overlay.path.as_path().to_path_buf(), overlay);
         self.snapshot_overlays = None;
         self.revision.0 += 1;
+        self.trace.record(
+            WorkspaceTracePhase::SourceUpdate,
+            format!(
+                "overlay_upsert path={} version={} text_changed={text_changed}",
+                source_path_detail(&path_for_report),
+                version.as_i64()
+            ),
+        );
         if had_context {
             self.dirty_scope_report = if text_changed {
                 WorkspaceDirtyScopeReport::new(
@@ -383,6 +413,10 @@ impl WorkspaceSession {
                 },
                 vec![WorkspaceDirtyReason::SourceTextChanged],
             );
+            self.trace.record(
+                WorkspaceTracePhase::SourceUpdate,
+                format!("overlay_remove path={}", path.to_string_lossy()),
+            );
         }
         removed
     }
@@ -401,6 +435,15 @@ impl WorkspaceSession {
 
     pub fn retain_generated_artifact(&mut self, path: SourcePath) {
         self.residency.retain_generated_artifact(path);
+    }
+
+    pub fn record_update_latency_ms(&mut self, latency_ms: u64) {
+        self.trace.record_update_latency_ms(latency_ms);
+    }
+
+    pub fn record_stale_rejection(&mut self, detail: impl Into<String>) {
+        self.trace
+            .record(WorkspaceTracePhase::StaleRejection, detail);
     }
 
     pub fn verify_build_info(
@@ -433,25 +476,43 @@ impl WorkspaceSession {
                 Some(context.module_graph_arc_for_reuse()),
             )
         });
-        let overlays = self
-            .snapshot_overlays
-            .get_or_insert_with(|| Arc::new(self.overlays.values().cloned().collect()));
-        let source_dependencies = self
-            .snapshot_source_dependencies
-            .get_or_insert_with(|| Arc::new(self.source_dependencies.clone()));
+        let overlays = Arc::clone(
+            self.snapshot_overlays
+                .get_or_insert_with(|| Arc::new(self.overlays.values().cloned().collect())),
+        );
+        let source_dependencies = Arc::clone(
+            self.snapshot_source_dependencies
+                .get_or_insert_with(|| Arc::new(self.source_dependencies.clone())),
+        );
+        self.trace.record_with_snapshot(
+            WorkspaceTracePhase::Cache,
+            id,
+            self.context.as_ref().map_or_else(
+                || "cache unavailable".to_string(),
+                |context| format!("cache={:?}", context.cache_reuse_stats()),
+            ),
+        );
+        let residency = self.residency.snapshot();
+        let debug = Arc::new(self.debug_snapshot(
+            id,
+            source_map.as_deref(),
+            module_graph.as_deref(),
+            residency.as_ref(),
+        ));
         WorkspaceSnapshot {
             id,
             revision: self.revision,
             target: self.target.clone(),
-            overlays: Arc::clone(overlays),
-            source_dependencies: Arc::clone(source_dependencies),
+            overlays,
+            source_dependencies,
             source_map,
             module_graph,
             compiler_options: Arc::clone(&self.snapshot_compiler_options),
             package_config_identity: Arc::clone(&self.snapshot_package_config_identity),
             dirty_scope_report: self.dirty_scope_report.clone(),
             cache_registry: self.cache_registry.clone(),
-            residency: self.residency.snapshot(),
+            residency,
+            debug,
         }
     }
 
@@ -494,6 +555,92 @@ impl WorkspaceSession {
             module_graph.as_ref(),
             self.snapshot_package_config_identity.as_ref(),
         );
+    }
+
+    fn record_compiler_phase_trace(&mut self) {
+        let Some(context) = self.context.as_ref() else {
+            return;
+        };
+        let module_count = context.module_graph().modules.len();
+        self.trace.record(
+            WorkspaceTracePhase::Parse,
+            format!("modules={module_count}"),
+        );
+        self.trace.record(
+            WorkspaceTracePhase::Lower,
+            format!("modules={module_count}"),
+        );
+        self.trace.record(
+            WorkspaceTracePhase::TypeCheck,
+            format!("modules={module_count}"),
+        );
+        self.trace.record(
+            WorkspaceTracePhase::Ownership,
+            format!("modules={module_count}"),
+        );
+        self.trace
+            .record(WorkspaceTracePhase::Flow, format!("modules={module_count}"));
+        self.trace.record(
+            WorkspaceTracePhase::Invalidation,
+            dirty_scope_detail(&self.dirty_scope_report),
+        );
+    }
+
+    fn debug_snapshot(
+        &self,
+        snapshot_id: WorkspaceSnapshotId,
+        source_map: Option<&SourceMapView>,
+        module_graph: Option<&ModuleGraphView>,
+        residency: &WorkspaceResidencySnapshot,
+    ) -> WorkspaceDebugSnapshot {
+        let cache = self
+            .context
+            .as_ref()
+            .map_or_else(WorkspaceCacheStatus::default, |context| {
+                context.cache_reuse_stats().into()
+            });
+        let source_file_count = source_map.map_or(0, |map| map.files.len());
+        let source_text_bytes = source_map.map_or(0, |map| {
+            map.files
+                .iter()
+                .map(|file| file.source.as_str().len())
+                .sum()
+        });
+        let module_count = module_graph.map_or(0, |graph| graph.modules.len());
+        WorkspaceDebugSnapshot {
+            status: WorkspaceStatusSnapshot {
+                snapshot_id,
+                revision: self.revision,
+                target_kind: target_kind(&self.target),
+                open_file_count: self.overlays.len(),
+                project_count: residency.projects.len(),
+                source_file_count,
+                module_count,
+                dependency_count: self.source_dependencies.len(),
+                cache,
+                index_readiness: vec![WorkspaceIndexReadinessStatus {
+                    bucket: "frontend".to_string(),
+                    readiness: if module_count == 0 {
+                        "unavailable".to_string()
+                    } else {
+                        "exact".to_string()
+                    },
+                }],
+                last_update_latency_ms: self.trace.last_update_latency_ms(),
+                memory: WorkspaceMemoryCounters {
+                    source_text_bytes,
+                    overlay_text_bytes: self
+                        .overlays
+                        .values()
+                        .map(|overlay| overlay.source.as_str().len())
+                        .sum(),
+                    retained_watchers: residency.watchers.len(),
+                    retained_configs: residency.configs.len(),
+                    retained_build_info: residency.build_info.is_some(),
+                },
+            },
+            trace: self.trace.snapshot(),
+        }
     }
 
     fn single_file_input(&self, target: &WorkspaceSingleFileTarget) -> FrontendInput {

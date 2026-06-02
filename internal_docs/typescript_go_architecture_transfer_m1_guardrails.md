@@ -185,6 +185,11 @@ type hierarchy, code actions, formatting, and generated Rust preview
   `ProjectResidencyKind`, `ConfigRegistryEntry`, `WatchRegistrationReason`, and
   `SifrBuildInfoCandidate` keep long-lived project state and `.sifrbuildinfo`
   verification non-authoritative.
+- M16 trace and status surfaces are visible: `WorkspaceTracePhase`,
+  `WorkspaceStatusSnapshot`, and `WorkspaceDebugSnapshot` normalize compiler
+  service phase traces, bounded status counters, side-effect-free index
+  readiness, `sifr/debugTrace`, and `sifr trace` CLI output for local
+  debugging.
 
 ### Future Milestone Update Obligations
 
@@ -209,3 +214,6 @@ type hierarchy, code actions, formatting, and generated Rust preview
 - M15 updated the build-metadata exception and matching script checks when
   verified, non-authoritative `.sifrbuildinfo` state became an explicit
   compiler-service input.
+- M16 updated the trace/status caveat and matching script checks when
+  deterministic compiler-service trace phases, debug status snapshots, LSP
+  trace events, and `sifr trace` landed.

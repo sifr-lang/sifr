@@ -5,6 +5,7 @@ use crate::progress::{begin_notification, end_notification, ProgressKind};
 use crate::session::Session;
 use lsp_server::{Connection, Message, Notification};
 use serde_json::{json, Value};
+use sifr_analysis::WorkspaceTracePhase;
 
 #[derive(Default)]
 pub(crate) struct DiagnosticsController;
@@ -61,18 +62,24 @@ impl DiagnosticsController {
         }
         while let Some(job) = session.take_next_diagnostic_job() {
             if !session.document_version_matches(&job.uri, job.version)? {
-                session.trace(format!(
-                    "skipped stale diagnostics for {} captured at version {:?}",
-                    job.uri, job.version
-                ));
+                session.trace(
+                    WorkspaceTracePhase::StaleRejection,
+                    format!(
+                        "skipped_diagnostics uri={} captured={:?}",
+                        job.uri, job.version
+                    ),
+                );
                 continue;
             }
             let diagnostics = document_diagnostics(session, &job.uri)?;
             if !session.document_version_matches(&job.uri, job.version)? {
-                session.trace(format!(
-                    "skipped stale diagnostics publish for {} captured at version {:?}",
-                    job.uri, job.version
-                ));
+                session.trace(
+                    WorkspaceTracePhase::StaleRejection,
+                    format!(
+                        "skipped_diagnostics_publish uri={} captured={:?}",
+                        job.uri, job.version
+                    ),
+                );
                 continue;
             }
             let params = json!({

@@ -18,6 +18,7 @@ SOURCE_MAPS = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "source_maps.rs"
 DOCUMENT_STORE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "document_store.rs"
 LSP_ANALYSIS_WORKSPACE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "analysis_workspace.rs"
 LSP_SESSION = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "session.rs"
+LSP_REQUESTS = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "requests" / "mod.rs"
 SCHEDULER = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "scheduler.rs"
 REQUEST_QUEUE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "request_queue.rs"
 CANCELLATION = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "cancellation.rs"
@@ -27,6 +28,9 @@ ANALYSIS_SYMBOLS = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "symbols.rs"
 ANALYSIS_WORKER_LANES = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "worker_lanes.rs"
 WORKSPACE_SESSION = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_session.rs"
 WORKSPACE_RESIDENCY = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_residency.rs"
+WORKSPACE_TRACE = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_trace.rs"
+ANALYSIS_DEBUG_STATUS = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "debug_status.rs"
+TRACE_CLI = REPO_ROOT / "crates" / "sifr" / "src" / "trace_cli.rs"
 PERF_MANIFEST = REPO_ROOT / "verification" / "performance" / "manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
 DIRECT_FS_PATTERN = re.compile(
@@ -128,6 +132,7 @@ REQUIRED_DOC_SNIPPETS = [
     "M13 updated",
     "M14 updated",
     "M15 updated",
+    "M16 updated",
     "CancellationToken",
     "ParentWatchdog",
     "ProgressState",
@@ -138,6 +143,10 @@ REQUIRED_DOC_SNIPPETS = [
     "ProjectResidencyKind",
     "WatchRegistrationReason",
     "SifrBuildInfoCandidate",
+    "WorkspaceTracePhase",
+    "WorkspaceStatusSnapshot",
+    "WorkspaceDebugSnapshot",
+    "sifr trace",
     "perf.lsp.request_families",
     "perf.lsp.generated_rust_preview.document",
 ]
@@ -431,6 +440,77 @@ def validate_m15_residency_state(failures: list[str]) -> None:
     )
 
 
+def validate_m16_trace_status_state(failures: list[str]) -> None:
+    session = WORKSPACE_SESSION.read_text(encoding="utf-8")
+    trace = WORKSPACE_TRACE.read_text(encoding="utf-8")
+    lsp_session = LSP_SESSION.read_text(encoding="utf-8")
+    lsp_analysis = LSP_ANALYSIS_WORKSPACE.read_text(encoding="utf-8")
+    lsp_requests = LSP_REQUESTS.read_text(encoding="utf-8")
+    analysis_debug = ANALYSIS_DEBUG_STATUS.read_text(encoding="utf-8")
+    trace_cli = TRACE_CLI.read_text(encoding="utf-8")
+    require(
+        "WorkspaceDebugSnapshot" in session
+        and "record_compiler_phase_trace" in session
+        and "record_stale_rejection" in session
+        and "record_update_latency_ms" in session,
+        "M16 requires WorkspaceSession snapshots to expose deterministic debug trace/status state",
+        failures,
+    )
+    require(
+        "WorkspaceTracePhase" in trace
+        and "MAX_TRACE_EVENTS" in trace
+        and "SourceUpdate" in trace
+        and "Parse" in trace
+        and "Lower" in trace
+        and "TypeCheck" in trace
+        and "Ownership" in trace
+        and "Flow" in trace
+        and "Cache" in trace
+        and "Invalidation" in trace
+        and "Scheduler" in trace
+        and "Cancellation" in trace
+        and "StaleRejection" in trace
+        and "LspTiming" in trace
+        and "WorkspaceStatusSnapshot" in trace
+        and "WorkspaceMemoryCounters" in trace,
+        "M16 requires normalized trace phases plus status and memory-counter vocabulary",
+        failures,
+    )
+    require(
+        "WorkspaceTraceEvent" in lsp_session
+        and "MAX_LSP_TRACE_EVENTS" in lsp_session
+        and "WorkspaceTracePhase::Scheduler" in lsp_session
+        and "WorkspaceTracePhase::Cancellation" in lsp_session
+        and "WorkspaceTracePhase::StaleRejection" in lsp_session
+        and "WorkspaceTracePhase::LspTiming" in lsp_session,
+        "M16 requires LSP scheduler/cancellation/stale/timing trace events",
+        failures,
+    )
+    require(
+        "record_update_latency_ms" in lsp_analysis and "elapsed_ms" in lsp_analysis,
+        "M16 requires LSP analysis open/update paths to feed status latency counters",
+        failures,
+    )
+    require(
+        '"sifr/debugTrace"' in lsp_requests and "trace_snapshot().render_text()" in lsp_requests,
+        "M16 requires an editor-reachable LSP debug trace request",
+        failures,
+    )
+    require(
+        "WorkspaceIndexReadinessStatus" in analysis_debug
+        and "bucket_readiness" in analysis_debug
+        and "symbol_index.as_ref()" in analysis_debug
+        and "symbol_index()?" not in analysis_debug,
+        "M16 requires editor debug status to include readiness without building indexes on demand",
+        failures,
+    )
+    require(
+        "cmd_trace" in trace_cli and "trace_entrypoint" in trace_cli and "render_text" in trace_cli,
+        "M16 requires a representative CLI trace snapshot command",
+        failures,
+    )
+
+
 def validate_source_dep_guard(failures: list[str]) -> None:
     result = subprocess.run(
         [sys.executable, str(SOURCE_DEP_GUARD)],
@@ -475,6 +555,7 @@ def main() -> int:
     validate_lsp_budget_reality(failures)
     validate_m14_bucket_and_lane_state(failures)
     validate_m15_residency_state(failures)
+    validate_m16_trace_status_state(failures)
     validate_source_dep_guard(failures)
 
     if failures:
