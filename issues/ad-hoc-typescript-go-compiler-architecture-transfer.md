@@ -16,6 +16,7 @@ Status: in progress
 | M7 Module Signatures And Dependency Invalidation | merged | [#2241](https://github.com/sifr-lang/sifr/pull/2241) | Adds import/export/module signatures, reverse-dependency closure invalidation, and local private-body edit reuse for unchanged public/import signatures. |
 | M8 First-Class Flow Graph | merged | [#2243](https://github.com/sifr-lang/sifr/pull/2243), [#2244](https://github.com/sifr-lang/sifr/pull/2244), [#2245](https://github.com/sifr-lang/sifr/pull/2245) | Adds `sifr_hir::flow_graph`, snapshot-scoped `LoweringResult.flow_graph`, graph-backed `FlowFacts` debug/fingerprint access, and lowering-time flow effects for narrowing, mutation invalidation, moves, and borrows. |
 | M9 Fingerprints And Cache Keys | merged | [#2246](https://github.com/sifr-lang/sifr/pull/2246), [#2247](https://github.com/sifr-lang/sifr/pull/2247), [#2248](https://github.com/sifr-lang/sifr/pull/2248), [#2249](https://github.com/sifr-lang/sifr/pull/2249) | Adds deterministic compiler/cache fingerprints and typed key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph caches before reuse lands. |
+| M10 Snapshot Reuse And Structural Replacement | in progress | pending | Adds ref-counted M9-keyed parse/source-map/HIR/diagnostics/index reuse, Arc-backed snapshot payloads, and conservative safe one-module replacement when import/export signatures are unchanged. |
 
 M2 local validation so far:
 
@@ -38,11 +39,28 @@ M3 local validation so far:
 - `cargo fmt --check`
 - `git diff --check`
 - `cargo clippy --workspace -- -D warnings`
+
+M10 local validation so far:
+
+- `cargo test -p sifr_frontend ref_counted_module_caches_reuse_identity_on_hits`
+- `cargo test -p sifr_frontend structural_one_module_replacement_reuses_unchanged_cache_entries`
+- `cargo test -p sifr_frontend document_version_only_update_recaches_source_file_view`
+- `cargo test -p sifr_frontend reverse_dependent_invalidation_reuses_unchanged_parse_entry`
+- `cargo test -p sifr_frontend dunder_method_signature_update_invalidates_reverse_dependents`
+- `cargo test -p sifr_frontend single_underscore_method_signature_update_invalidates_reverse_dependents`
+- `cargo test -p sifr_frontend class_decorator_update_invalidates_reverse_dependents`
+- `cargo test -p sifr_frontend leading_whitespace_edit_preserves_export_signature_scope`
+- `cargo test -p sifr_frontend public_constant_value_update_invalidates_reverse_dependents`
+- `cargo test -p sifr_frontend` -> PASS, 38 tests
+- `cargo check --workspace`
+- `cargo fmt --check`
+- `cargo clippy -p sifr_frontend -- -D warnings`
+- `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`
-- `python3 scripts/check_package_manager_guardrails.py`
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
-- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 261.09s
+- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m10-snapshot-reuse-review-pass-1.md`)
+- Claude reviewer pass 2 -> SATISFIED with residual recommendations (`reviews/typescript-go-m10-snapshot-reuse-review-pass-2.md`)
+- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m10-snapshot-reuse-review-pass-3.md`)
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 330.61s, advisories: warm wall-time budget exceeded; group skew is high
 
 M4 local validation so far:
 
@@ -398,7 +416,7 @@ Out of scope:
 | Overlay filesystem | adopt | Open editor buffers overlay disk/package files without mutating canonical disk state. |
 | Tracking/cached VFS | adopt | Reads, directory entries, realpaths, config files, package files, and failed lookups are tracked for invalidation. |
 | File-change summary and event compaction | adopt | Raw editor/watch events are compacted before dirty-scope classification and invalidation. |
-| Ref-counted parse cache | adopt | Parse trees/source maps are reused across snapshots by content/options hash and released when snapshots no longer reference them. |
+| Ref-counted parse cache | adopt | Parse trees/source-map file views are reused by content/options hash while active frontend context state or retained snapshot payloads reference them. |
 | HIR/lowering cache | adopt with Sifr ownership | HIR lowering results are reused by content/options/package context and invalidated by syntax or semantic-boundary changes. |
 | Dirty file precision | adopt | `DirtyScope` records whether an edit is none, one module, reverse-dependency fanout, graph structure, config/project, or workspace. |
 | Structural program cloning | adopt | `can_replace_module_in_project` allows one-module replacement only when project structure and public interface remain stable. |
@@ -554,7 +572,7 @@ Required shape:
 - diagnostics/cache keys include query kind, source/HIR fingerprints, package context, and diagnostic policy settings
 - `CompilerFingerprint` is a stable hash of compiler-version-sensitive options that affect parse, source maps, lowering, type checking, ownership checks, diagnostics, package resolution, or codegen preview output
 - `CacheKeyFingerprint` values must be deterministic across processes and include the relevant `CompilerFingerprint`
-- cache entries are reference-counted by snapshots and are released when no retained snapshot can observe them
+- cache entries are reference-counted by active frontend context state and retained snapshot payloads, then released when no live owner can observe them
 - copy-on-write maps use `Arc<BTreeMap<...>>` plus dirty overlays for source files, module graph, reverse dependencies, diagnostics, symbol buckets, config entries, package metadata, and watcher state
 - identity reuse across snapshots must be testable for unchanged maps
 

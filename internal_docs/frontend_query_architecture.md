@@ -52,6 +52,17 @@ families now have typed key structures that include source content, compiler,
 workspace, package/config, and policy fingerprints before M10 adds reusable
 cache storage.
 
+TypeScript-Go architecture transfer M10 note: `FrontendContext` now owns
+ref-counted cache storage for parse trees, source-map file views, lowered HIR,
+module diagnostics, and module symbol indexes. The storage uses the M9 typed key
+families plus a semantic graph fingerprint for HIR and downstream entries, so
+unchanged dependents do not observe stale imported signatures. Changed modules
+drop their parse entries, while unchanged reverse dependents retain content-valid
+parse entries across semantic invalidation. `WorkspaceSnapshot` freezes reusable
+`Arc` payloads for overlays, dependency records, source maps, module graphs,
+compiler options, and package/config identity; per-module parse/HIR/diagnostic
+entries remain retained by active frontend query state in M10.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

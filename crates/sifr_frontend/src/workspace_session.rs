@@ -6,6 +6,7 @@ use super::{
 use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct WorkspaceSnapshotId(u64);
@@ -183,12 +184,12 @@ pub struct WorkspaceSnapshot {
     pub id: WorkspaceSnapshotId,
     pub revision: WorkspaceRevision,
     pub target: WorkspaceSessionTarget,
-    pub overlays: Vec<OverlayDocument>,
-    pub source_dependencies: Vec<SourceDependency>,
-    pub source_map: Option<SourceMapView>,
-    pub module_graph: Option<ModuleGraphView>,
-    pub compiler_options: WorkspaceCompilerOptions,
-    pub package_config_identity: WorkspacePackageConfigIdentity,
+    pub overlays: Arc<Vec<OverlayDocument>>,
+    pub source_dependencies: Arc<Vec<SourceDependency>>,
+    pub source_map: Option<Arc<SourceMapView>>,
+    pub module_graph: Option<Arc<ModuleGraphView>>,
+    pub compiler_options: Arc<WorkspaceCompilerOptions>,
+    pub package_config_identity: Arc<WorkspacePackageConfigIdentity>,
     pub dirty_scope_report: WorkspaceDirtyScopeReport,
     pub cache_registry: WorkspaceCacheRegistryHandles,
 }
@@ -201,8 +202,10 @@ pub struct WorkspaceSession {
     context: Option<FrontendContext>,
     revision: WorkspaceRevision,
     next_snapshot_id: u64,
-    compiler_options: WorkspaceCompilerOptions,
-    package_config_identity: WorkspacePackageConfigIdentity,
+    snapshot_overlays: Option<Arc<Vec<OverlayDocument>>>,
+    snapshot_source_dependencies: Option<Arc<Vec<SourceDependency>>>,
+    snapshot_compiler_options: Arc<WorkspaceCompilerOptions>,
+    snapshot_package_config_identity: Arc<WorkspacePackageConfigIdentity>,
     dirty_scope_report: WorkspaceDirtyScopeReport,
     cache_registry: WorkspaceCacheRegistryHandles,
 }
@@ -216,15 +219,16 @@ impl WorkspaceSession {
 
     #[must_use]
     pub fn project(root: ProjectRoot) -> Self {
+        let compiler_options = WorkspaceCompilerOptions {
+            mode: FrontendMode::ProjectEntrypoint,
+        };
         let package_config_identity = WorkspacePackageConfigIdentity {
             workspace_root: Some(root.root.clone()),
             entrypoint: Some(root.entrypoint.clone()),
         };
         Self::new(
             WorkspaceSessionTarget::Project(root),
-            WorkspaceCompilerOptions {
-                mode: FrontendMode::ProjectEntrypoint,
-            },
+            compiler_options,
             package_config_identity,
         )
     }
@@ -238,10 +242,12 @@ impl WorkspaceSession {
 
     #[must_use]
     pub fn single_file(path: SourcePath, mode: FrontendMode) -> Self {
+        let compiler_options = WorkspaceCompilerOptions { mode };
+        let package_config_identity = WorkspacePackageConfigIdentity::default();
         Self::new(
             WorkspaceSessionTarget::SingleFile(WorkspaceSingleFileTarget { path, mode }),
-            WorkspaceCompilerOptions { mode },
-            WorkspacePackageConfigIdentity::default(),
+            compiler_options,
+            package_config_identity,
         )
     }
 
@@ -258,8 +264,10 @@ impl WorkspaceSession {
             context: None,
             revision: WorkspaceRevision(0),
             next_snapshot_id: 0,
-            compiler_options,
-            package_config_identity,
+            snapshot_compiler_options: Arc::new(compiler_options),
+            snapshot_package_config_identity: Arc::new(package_config_identity),
+            snapshot_overlays: None,
+            snapshot_source_dependencies: None,
             dirty_scope_report: WorkspaceDirtyScopeReport::default(),
             cache_registry: WorkspaceCacheRegistryHandles::default(),
         }
@@ -278,11 +286,13 @@ impl WorkspaceSession {
                 let (_, dependencies) = provider.into_parts();
                 self.context = Some(context);
                 self.source_dependencies = dependencies;
+                self.snapshot_source_dependencies = None;
             }
             WorkspaceSessionTarget::SingleFile(target) => {
                 let input = self.single_file_input(target);
                 self.context = Some(FrontendContext::load_single_file(input)?);
                 self.source_dependencies = Vec::new();
+                self.snapshot_source_dependencies = None;
             }
         }
         self.revision.0 += 1;
@@ -341,6 +351,7 @@ impl WorkspaceSession {
         let overlay = OverlayDocument::new(path, uri, version, source, disk_source);
         self.overlays
             .insert(overlay.path.as_path().to_path_buf(), overlay);
+        self.snapshot_overlays = None;
         self.revision.0 += 1;
         if had_context {
             self.dirty_scope_report = if text_changed {
@@ -362,6 +373,7 @@ impl WorkspaceSession {
     pub fn remove_overlay(&mut self, path: &Path) -> Option<OverlayDocument> {
         let removed = self.overlays.remove(path);
         if removed.is_some() {
+            self.snapshot_overlays = None;
             self.revision.0 += 1;
             self.dirty_scope_report = WorkspaceDirtyScopeReport::new(
                 WorkspaceDirtyScope::OneModule {
@@ -385,16 +397,28 @@ impl WorkspaceSession {
     pub fn snapshot(&mut self) -> WorkspaceSnapshot {
         let id = WorkspaceSnapshotId(self.next_snapshot_id);
         self.next_snapshot_id += 1;
+        let (source_map, module_graph) = self.context.as_mut().map_or((None, None), |context| {
+            (
+                Some(context.source_map_arc_for_reuse()),
+                Some(context.module_graph_arc_for_reuse()),
+            )
+        });
+        let overlays = self
+            .snapshot_overlays
+            .get_or_insert_with(|| Arc::new(self.overlays.values().cloned().collect()));
+        let source_dependencies = self
+            .snapshot_source_dependencies
+            .get_or_insert_with(|| Arc::new(self.source_dependencies.clone()));
         WorkspaceSnapshot {
             id,
             revision: self.revision,
             target: self.target.clone(),
-            overlays: self.overlays.values().cloned().collect(),
-            source_dependencies: self.source_dependencies.clone(),
-            source_map: self.context.as_ref().map(FrontendContext::source_map),
-            module_graph: self.context.as_ref().map(FrontendContext::module_graph),
-            compiler_options: self.compiler_options.clone(),
-            package_config_identity: self.package_config_identity.clone(),
+            overlays: Arc::clone(overlays),
+            source_dependencies: Arc::clone(source_dependencies),
+            source_map,
+            module_graph,
+            compiler_options: Arc::clone(&self.snapshot_compiler_options),
+            package_config_identity: Arc::clone(&self.snapshot_package_config_identity),
             dirty_scope_report: self.dirty_scope_report.clone(),
             cache_registry: self.cache_registry.clone(),
         }
@@ -453,6 +477,7 @@ mod tests {
     };
     use std::fs;
     use std::path::{Path, PathBuf};
+    use std::sync::Arc;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
@@ -697,6 +722,27 @@ mod tests {
         assert_eq!(first.id.as_u64(), 0);
         assert_eq!(second.id.as_u64(), 1);
         assert_eq!(first.overlays.len(), 1);
+        assert!(Arc::ptr_eq(&first.overlays, &second.overlays));
+        assert!(Arc::ptr_eq(
+            &first.source_dependencies,
+            &second.source_dependencies
+        ));
+        assert!(Arc::ptr_eq(
+            first.source_map.as_ref().expect("first source map"),
+            second.source_map.as_ref().expect("second source map")
+        ));
+        assert!(Arc::ptr_eq(
+            first.module_graph.as_ref().expect("first graph"),
+            second.module_graph.as_ref().expect("second graph")
+        ));
+        assert!(Arc::ptr_eq(
+            &first.compiler_options,
+            &second.compiler_options
+        ));
+        assert!(Arc::ptr_eq(
+            &first.package_config_identity,
+            &second.package_config_identity
+        ));
         assert_eq!(first.compiler_options.mode, FrontendMode::SingleFile);
         assert!(first.source_dependencies.is_empty());
         assert!(first.module_graph.is_some());

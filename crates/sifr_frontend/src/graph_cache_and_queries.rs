@@ -1,11 +1,15 @@
 use super::{
-    collect_module_exports, diagnostic_with_code, empty_hir_module, hir_diagnostic_to_rendered,
+    collect_module_exports, diagnostic_with_code, hir_diagnostic_to_rendered,
     local_import_dependencies, module_state, reveal_type_diagnostics, source_hash,
-    symbols_from_hir, warning_diagnostics, DiskSourceProvider, DocumentVersion, FileId,
-    SourceDependency, SourceFileView, SourceHash, SourceMapView, SourcePath, SourceProvider,
-    SourceRevision, SourceText, TrackingSourceProvider, WorkspaceDirtyReason, WorkspaceDirtyScope,
-    WorkspaceDirtyScopeReport,
+    symbols_from_hir, warning_diagnostics, CacheFamily, CacheKeyContext, DiagnosticsCacheKey,
+    DiskSourceProvider, DocumentVersion, FileId, HirLoweringCacheKey, ParseCacheKey,
+    SourceDependency, SourceFileView, SourceHash, SourceMapCacheKey, SourceMapView, SourcePath,
+    SourceProvider, SourceRevision, SourceText, SymbolBucketScope, SymbolBucketsCacheKey,
+    TrackingSourceProvider, WorkspaceCompilerOptions, WorkspaceDirtyReason, WorkspaceDirtyScope,
+    WorkspaceDirtyScopeReport, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
+    WorkspaceSingleFileTarget,
 };
+use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{module_signature, ModuleSignature};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_hir::{
@@ -17,6 +21,9 @@ use sifr_syntax::ParsedModule;
 use std::collections::{BTreeMap, BTreeSet};
 use std::hash::Hash;
 use std::path::Path;
+use std::sync::Arc;
+
+mod reuse;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ModuleId(pub(crate) u32);
@@ -227,10 +234,11 @@ pub(super) struct ModuleState {
     pub(super) source_hash: SourceHash,
     pub(super) document_version: Option<DocumentVersion>,
     pub(super) signature: ModuleSignature,
-    pub(super) parsed: Option<ParsedModule>,
-    pub(super) lowered: Option<LoweringResult>,
-    pub(super) diagnostics: Option<Vec<RenderedDiagnostic>>,
-    pub(super) analysis: Option<ModuleAnalysisView>,
+    pub(super) source_file_view: Option<Arc<SourceFileView>>,
+    pub(super) parsed: Option<Arc<ParsedModule>>,
+    pub(super) lowered: Option<Arc<LoweringResult>>,
+    pub(super) diagnostics: Option<Arc<Vec<RenderedDiagnostic>>>,
+    pub(super) analysis: Option<Arc<ModuleAnalysisView>>,
 }
 
 pub struct FrontendContext {
@@ -241,6 +249,12 @@ pub struct FrontendContext {
     reverse_edges: BTreeMap<ModuleId, Vec<ModuleId>>,
     graph_revision: GraphRevision,
     source_revision: SourceRevision,
+    module_graph_cache: Option<Arc<ModuleGraphView>>,
+    source_map_cache: Option<Arc<SourceMapView>>,
+    reuse_caches: FrontendReuseCaches,
+    cache_target: WorkspaceSessionTarget,
+    compiler_options: WorkspaceCompilerOptions,
+    package_config_identity: WorkspacePackageConfigIdentity,
     base_external_defs: ExternalDefs,
     external_defs: ExternalDefs,
     lowering_modules: BTreeSet<ModuleId>,
@@ -289,6 +303,11 @@ impl FrontendContext {
         input: FrontendInput,
         external_defs: ExternalDefs,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        let cache_target = WorkspaceSessionTarget::SingleFile(WorkspaceSingleFileTarget {
+            path: input.path.clone(),
+            mode: input.mode,
+        });
+        let compiler_options = WorkspaceCompilerOptions { mode: input.mode };
         let module = module_state(
             ModuleId(0),
             FileId(0),
@@ -305,6 +324,12 @@ impl FrontendContext {
             reverse_edges: BTreeMap::new(),
             graph_revision: GraphRevision(0),
             source_revision: SourceRevision(0),
+            module_graph_cache: None,
+            source_map_cache: None,
+            reuse_caches: FrontendReuseCaches::new(),
+            cache_target,
+            compiler_options,
+            package_config_identity: WorkspacePackageConfigIdentity::default(),
             base_external_defs: external_defs.clone(),
             external_defs,
             lowering_modules: BTreeSet::new(),
@@ -405,6 +430,14 @@ impl FrontendContext {
             .enumerate()
             .map(|(index, module)| (module.id, index))
             .collect();
+        let cache_target = WorkspaceSessionTarget::Project(root.clone());
+        let compiler_options = WorkspaceCompilerOptions {
+            mode: FrontendMode::ProjectEntrypoint,
+        };
+        let package_config_identity = WorkspacePackageConfigIdentity {
+            workspace_root: Some(root.root.clone()),
+            entrypoint: Some(root.entrypoint.clone()),
+        };
         let mut context = Self {
             modules,
             module_by_id,
@@ -413,6 +446,12 @@ impl FrontendContext {
             reverse_edges: BTreeMap::new(),
             graph_revision: GraphRevision(0),
             source_revision: SourceRevision(0),
+            module_graph_cache: None,
+            source_map_cache: None,
+            reuse_caches: FrontendReuseCaches::new(),
+            cache_target,
+            compiler_options,
+            package_config_identity,
             base_external_defs: ExternalDefs::default(),
             external_defs: ExternalDefs::default(),
             lowering_modules: BTreeSet::new(),
@@ -451,7 +490,12 @@ impl FrontendContext {
         self.modules[index].source_hash = new_hash;
         self.modules[index].document_version = document_version;
         self.modules[index].signature = new_signature.clone();
+        self.modules[index].source_file_view = None;
         self.source_revision.0 += 1;
+        self.source_map_cache = None;
+        if text_changed {
+            self.module_graph_cache = None;
+        }
 
         let mut invalidated_modules = Vec::new();
         let mut invalidated_queries = Vec::new();
@@ -459,13 +503,18 @@ impl FrontendContext {
             let imports_changed = old_signature.imports != new_signature.imports;
             let exports_changed = old_signature.exports != new_signature.exports;
             let parse_failed = parsed.is_err();
-            invalidated_modules = if imports_changed || exports_changed || parse_failed {
-                self.reverse_dependency_closure(module)
-            } else {
+            let can_replace_module = Self::signatures_can_replace_module_in_project(
+                &old_signature,
+                &new_signature,
+                parse_failed,
+            );
+            invalidated_modules = if can_replace_module {
                 vec![module]
+            } else {
+                self.reverse_dependency_closure(module)
             };
-            self.clear_module_caches(&invalidated_modules);
-            if imports_changed || exports_changed || parse_failed {
+            self.clear_module_caches(&invalidated_modules, &[module]);
+            if !can_replace_module {
                 self.external_defs = self.base_external_defs.clone();
                 self.rebuild_external_defs_from_lowered();
                 self.lowering_modules.clear();
@@ -505,6 +554,7 @@ impl FrontendContext {
                 vec![WorkspaceDirtyReason::DocumentVersionOnly],
             )
         };
+        self.reuse_caches.prune_unshared();
 
         Ok(InvalidationReport {
             previous_revision,
@@ -523,40 +573,12 @@ impl FrontendContext {
 
     #[must_use]
     pub fn module_graph(&self) -> ModuleGraphView {
-        ModuleGraphView {
-            modules: self
-                .modules
-                .iter()
-                .map(|module| ModuleGraphNode {
-                    id: module.id,
-                    file: module.file,
-                    canonical_path: module.path.clone(),
-                    source_hash: module.source_hash.clone(),
-                })
-                .collect(),
-            edges: self.edges.clone(),
-            entrypoint: self.entrypoint,
-            revision: self.graph_revision,
-        }
+        self.module_graph_view()
     }
 
     #[must_use]
     pub fn source_map(&self) -> SourceMapView {
-        SourceMapView {
-            files: self
-                .modules
-                .iter()
-                .map(|module| SourceFileView {
-                    id: module.file,
-                    canonical_path: module.path.clone(),
-                    uri: None,
-                    source_hash: module.source_hash.clone(),
-                    document_version: module.document_version,
-                    source: module.source.clone(),
-                })
-                .collect(),
-            revision: self.source_revision,
-        }
+        self.source_map_view()
     }
 
     #[must_use]
@@ -588,103 +610,6 @@ impl FrontendContext {
         self.modules[index].document_version
     }
 
-    pub fn parse_module(&mut self, module: ModuleId) -> QueryResult<ParsedModuleView> {
-        let index = self.index_for_module(module);
-        let cache_status = if self.modules[index].parsed.is_some() {
-            CacheStatus::Hit
-        } else {
-            let parsed = sifr_syntax::parse_module(
-                self.modules[index].source.as_str(),
-                Some(&self.modules[index].module_name),
-            )
-            .unwrap_or_else(|_| ParsedModule::empty());
-            self.modules[index].signature = module_signature(parsed.suite());
-            self.modules[index].parsed = Some(parsed);
-            CacheStatus::Miss
-        };
-        QueryResult::new(
-            ParsedModuleView {
-                module,
-                parsed: self.modules[index]
-                    .parsed
-                    .clone()
-                    .unwrap_or_else(ParsedModule::empty),
-            },
-            self.metadata(QueryKind::Parse, cache_status),
-        )
-    }
-
-    pub fn lower_module(&mut self, module: ModuleId) -> QueryResult<LoweredModuleView> {
-        let _ = self.ensure_lowered(module);
-        let index = self.index_for_module(module);
-        QueryResult::new(
-            LoweredModuleView {
-                module,
-                hir: self.modules[index]
-                    .lowered
-                    .as_ref()
-                    .map(|lowered| lowered.module.clone())
-                    .unwrap_or_else(empty_hir_module),
-            },
-            self.metadata(QueryKind::Lower, CacheStatus::Hit),
-        )
-    }
-
-    pub fn type_check_module(&mut self, module: ModuleId) -> QueryResult<ModuleDiagnostics> {
-        self.diagnostics_for_module(module)
-    }
-
-    pub fn diagnostics_for_module(&mut self, module: ModuleId) -> QueryResult<ModuleDiagnostics> {
-        let cache_status = self.ensure_diagnostics(module);
-        let index = self.index_for_module(module);
-        QueryResult::new(
-            ModuleDiagnostics {
-                module,
-                diagnostics: self.modules[index].diagnostics.clone().unwrap_or_default(),
-            },
-            self.metadata(QueryKind::ModuleDiagnostics, cache_status),
-        )
-    }
-
-    pub fn diagnostics_for_project(&mut self) -> QueryResult<ProjectDiagnostics> {
-        let module_ids: Vec<ModuleId> = self.modules.iter().map(|module| module.id).collect();
-        let mut diagnostics = Vec::new();
-        for module in module_ids {
-            diagnostics.extend(self.diagnostics_for_module(module).into_value().diagnostics);
-        }
-        QueryResult::new(
-            ProjectDiagnostics { diagnostics },
-            self.metadata(QueryKind::ProjectDiagnostics, CacheStatus::Miss),
-        )
-    }
-
-    pub fn analysis_for_module(&mut self, module: ModuleId) -> QueryResult<ModuleAnalysisView> {
-        let cache_status = self.ensure_analysis(module);
-        let index = self.index_for_module(module);
-        QueryResult::new(
-            self.modules[index]
-                .analysis
-                .clone()
-                .unwrap_or(ModuleAnalysisView {
-                    module,
-                    symbols: Vec::new(),
-                }),
-            self.metadata(QueryKind::ModuleAnalysis, cache_status),
-        )
-    }
-
-    pub fn analysis_for_project(&mut self) -> QueryResult<ProjectAnalysisView> {
-        let module_ids: Vec<ModuleId> = self.modules.iter().map(|module| module.id).collect();
-        let modules = module_ids
-            .into_iter()
-            .map(|module| self.analysis_for_module(module).into_value())
-            .collect();
-        QueryResult::new(
-            ProjectAnalysisView { modules },
-            self.metadata(QueryKind::ProjectAnalysis, CacheStatus::Miss),
-        )
-    }
-
     fn index_for_module(&self, module: ModuleId) -> usize {
         self.module_by_id
             .get(&module)
@@ -706,12 +631,18 @@ impl FrontendContext {
         if self.modules[index].parsed.is_some() {
             return Ok(CacheStatus::Hit);
         }
+        let key = self.parse_key_fingerprint(index);
+        if let Some(parsed) = self.reuse_caches.parse(&key) {
+            self.modules[index].signature = module_signature(parsed.suite());
+            self.modules[index].parsed = Some(parsed);
+            return Ok(CacheStatus::Hit);
+        }
         let parsed = sifr_syntax::parse_module(
             self.modules[index].source.as_str(),
             Some(&self.modules[index].module_name),
         )?;
         self.modules[index].signature = module_signature(parsed.suite());
-        self.modules[index].parsed = Some(parsed);
+        self.modules[index].parsed = Some(self.reuse_caches.insert_parse(key, parsed));
         Ok(CacheStatus::Miss)
     }
 
@@ -732,7 +663,7 @@ impl FrontendContext {
                 .map(|parsed| parsed.suite().to_vec())
                 .unwrap_or_default(),
             Err(errors) => {
-                self.modules[index].diagnostics = Some(errors);
+                self.modules[index].diagnostics = Some(Arc::new(errors));
                 self.lowering_modules.remove(&module);
                 return CacheStatus::Miss;
             }
@@ -747,6 +678,14 @@ impl FrontendContext {
             let _ = self.ensure_lowered(dependency);
         }
         let index = self.index_for_module(module);
+        let hir_key = self.hir_key_fingerprint(index);
+        if let Some(lowered) = self.reuse_caches.hir(&hir_key) {
+            let module_name = self.modules[index].module_name.clone();
+            collect_module_exports(&module_name, &lowered, &mut self.external_defs);
+            self.modules[index].lowered = Some(lowered);
+            self.lowering_modules.remove(&module);
+            return CacheStatus::Hit;
+        }
         match compile_module_hir_with_source(
             &self.modules[index].module_name,
             &parsed,
@@ -760,10 +699,10 @@ impl FrontendContext {
             Ok(lowered) => {
                 let module_name = self.modules[index].module_name.clone();
                 collect_module_exports(&module_name, &lowered, &mut self.external_defs);
-                self.modules[index].lowered = Some(lowered);
+                self.modules[index].lowered = Some(self.reuse_caches.insert_hir(hir_key, lowered));
             }
             Err(errors) => {
-                self.modules[index].diagnostics = Some(errors);
+                self.modules[index].diagnostics = Some(Arc::new(errors));
             }
         }
         self.lowering_modules.remove(&module);
@@ -775,9 +714,14 @@ impl FrontendContext {
         if self.modules[index].diagnostics.is_some() {
             return CacheStatus::Hit;
         }
-        let status = self.ensure_lowered(module);
+        let _ = self.ensure_lowered(module);
         let index = self.index_for_module(module);
         if self.modules[index].diagnostics.is_none() {
+            let diagnostics_key = self.diagnostics_key_fingerprint(index);
+            if let Some(diagnostics) = self.reuse_caches.diagnostics(&diagnostics_key) {
+                self.modules[index].diagnostics = Some(diagnostics);
+                return CacheStatus::Hit;
+            }
             let diagnostics = self.modules[index]
                 .lowered
                 .as_ref()
@@ -795,9 +739,13 @@ impl FrontendContext {
                     diagnostics
                 })
                 .unwrap_or_default();
-            self.modules[index].diagnostics = Some(diagnostics);
+            self.modules[index].diagnostics = Some(
+                self.reuse_caches
+                    .insert_diagnostics(diagnostics_key, diagnostics),
+            );
+            return CacheStatus::Miss;
         }
-        status
+        CacheStatus::Miss
     }
 
     fn ensure_analysis(&mut self, module: ModuleId) -> CacheStatus {
@@ -807,12 +755,20 @@ impl FrontendContext {
         }
         let _ = self.ensure_lowered(module);
         let index = self.index_for_module(module);
+        let index_key = self.index_key_fingerprint(index);
+        if let Some(analysis) = self.reuse_caches.index(&index_key) {
+            self.modules[index].analysis = Some(analysis);
+            return CacheStatus::Hit;
+        }
         let symbols = self.modules[index]
             .lowered
             .as_ref()
             .map(|lowered| symbols_from_hir(&lowered.module))
             .unwrap_or_default();
-        self.modules[index].analysis = Some(ModuleAnalysisView { module, symbols });
+        self.modules[index].analysis = Some(
+            self.reuse_caches
+                .insert_index(index_key, ModuleAnalysisView { module, symbols }),
+        );
         CacheStatus::Miss
     }
 
@@ -866,15 +822,26 @@ impl FrontendContext {
         seen.into_iter().collect()
     }
 
-    fn clear_module_caches(&mut self, modules: &[ModuleId]) {
+    fn clear_module_caches(
+        &mut self,
+        modules: &[ModuleId],
+        modules_with_source_changes: &[ModuleId],
+    ) {
+        let clear_parse_modules = modules_with_source_changes
+            .iter()
+            .copied()
+            .collect::<BTreeSet<_>>();
         for module in modules {
             let index = self.index_for_module(*module);
             let module_state = &mut self.modules[index];
-            module_state.parsed = None;
+            if clear_parse_modules.contains(module) {
+                module_state.parsed = None;
+            }
             module_state.lowered = None;
             module_state.diagnostics = None;
             module_state.analysis = None;
         }
+        self.reuse_caches.prune_unshared();
     }
 
     fn rebuild_external_defs_from_lowered(&mut self) {
