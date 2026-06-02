@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer M16: Trace And Status Surfaces
 
-Status: in progress
+Status: merged via [#2263](https://github.com/sifr-lang/sifr/pull/2263)
 
 M16 normalizes compiler-service trace and status output so stale requests,
 cache state, invalidation, and editor-facing readiness can be explained from a
