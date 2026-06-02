@@ -1,0 +1,7 @@
+from helper import helper_value
+
+def main():
+    value: int = helper_value
+# @marker value_binding line=3 character=6 queries=hover,completion,definition,references,rename,semantic_tokens,formatting,code_actions
+    return value  
+# @marker stale_return line=4 character=11 queries=diagnostics,stale_snapshot

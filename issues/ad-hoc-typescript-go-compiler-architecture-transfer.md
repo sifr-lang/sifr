@@ -23,6 +23,7 @@ Status: in progress
 | M14 Bucketed Indexes And Safe Parallel Lanes | merged | [#2259](https://github.com/sifr-lang/sifr/pull/2259) | Adds workspace/package/stdlib symbol and import bucket readiness states, dirty-bucket symbol-index refreshes, and explicit approved worker-lane versus single-owner compiler-phase policy; package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. |
 | M15 Project Residency, Watchers, And Build Info | merged | [#2261](https://github.com/sifr-lang/sifr/pull/2261) | Adds project residency snapshots, config pending reload state, deduped watch registrations, and verified non-authoritative `.sifrbuildinfo` metadata. |
 | M16 Trace And Status Surfaces | merged | [#2263](https://github.com/sifr-lang/sifr/pull/2263) | Adds deterministic compiler-service trace phases, bounded debug status snapshots, LSP scheduler/cancellation/stale/timing trace events via `sifr/debugTrace`, analysis index-readiness status, and `sifr trace` CLI output. |
+| M17 Editor Corpus And Snapshot Handles | in progress | pending | Adds marker-based multi-file editor query corpus fixtures, internal snapshot-scoped handles, and runtime package diagnostic non-duplication fixtures. |
 
 M2 local validation so far:
 
@@ -184,6 +185,24 @@ M16 local validation so far:
 - Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m16-trace-status-review-pass-1.md`)
 - Claude reviewer pass 2 -> SATISFIED with residual recommendations (`reviews/typescript-go-m16-trace-status-review-pass-2.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 295.57s, advisory: group skew is high
+
+M17 local validation so far:
+
+- `cargo test -p sifr_analysis marker_editor_corpus_covers_multifile_queries_and_stale_snapshots -- --nocapture` -> PASS
+- `cargo test -p sifr_analysis snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution -- --nocapture` -> PASS
+- `cargo test -p sifr_analysis` -> PASS, 23 tests
+- `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py` -> PASS
+- `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `cargo test -p sifr -- --skip test_e2e_pass` -> PASS, 57 unit tests and 33 non-pass e2e tests
+- `cargo fmt --check` -> PASS
+- `cargo clippy -p sifr_analysis -p sifr -- -D warnings` -> PASS
+- `python3 scripts/check_file_size_guardrails.py` -> PASS
+- `git diff --check` -> PASS
+- Claude reviewer pass 1 -> SATISFIED with residual recommendations (`reviews/typescript-go-m17-editor-corpus-snapshot-handles-review-pass-1.md`)
+- Claude reviewer pass 2 -> SATISFIED (`reviews/typescript-go-m17-editor-corpus-snapshot-handles-review-pass-2.md`)
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 279.93s, advisory: group skew is high
 
 M4 local validation so far:
 

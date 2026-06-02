@@ -87,6 +87,13 @@ events are available through `sifr/debugTrace`; `AnalysisHost::debug_snapshot`
 enriches status with side-effect-free symbol bucket readiness, and `sifr trace`
 exposes a local CLI snapshot for bug reports.
 
+TypeScript-Go architecture transfer M17 note: marker-based multi-file editor
+fixtures in `verification/tooling/editor_query_corpus` exercise query behavior
+through `AnalysisHost`, not duplicated protocol semantics. Internal snapshot
+handles for symbols, types, signatures, diagnostics, and source spans store
+`WorkspaceSnapshotId` plus graph/source revision and reject wrong-snapshot
+resolution; they remain private preparation for future compiler API work.
+
 ## Driver Consumption
 
 Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.

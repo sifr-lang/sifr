@@ -49,6 +49,11 @@ CYCLE_FIXTURES = {
 
 PACKAGE_FIXTURES = {
     "package_missing_import_canonical": "SIFR-IMPORT-0002",
+    "package_ambiguous_import_canonical": "SIFR-IMPORT-0005",
+}
+
+PACKAGE_FATAL_FIXTURES = {
+    "package_fatal_source_map_no_import_ambiguity": "SIFR-PACKAGE-0713",
 }
 
 SPAN_FIELDS = (
@@ -112,7 +117,7 @@ def check_required_fixtures(root: Path) -> None:
     for fixture in PROJECT_FIXTURES | CYCLE_FIXTURES:
         path = root / "crates/sifr/tests/verification/project" / fixture / "main.sifr"
         require(path.is_file(), f"required project fixture missing: {fixture}")
-    for fixture in PACKAGE_FIXTURES | {"package_ambiguous_import_canonical": "SIFR-IMPORT-0005"}:
+    for fixture in PACKAGE_FIXTURES | PACKAGE_FATAL_FIXTURES:
         path = root / "crates/sifr/tests/verification/package" / fixture
         require((path / "Cargo.toml").is_file(), f"package fixture missing Cargo.toml: {fixture}")
         require((path / "sifr.toml").is_file(), f"package fixture missing sifr.toml: {fixture}")
@@ -208,6 +213,7 @@ def assert_json_contract(
     expected_code: str,
     case_id: str,
     forbidden_codes: set[str] | None = None,
+    forbidden_prefixes: tuple[str, ...] = (),
     required_args: set[str] | None = None,
     require_help: bool = False,
     require_span: bool = True,
@@ -230,6 +236,9 @@ def assert_json_contract(
     if forbidden_codes:
         leaked = sorted(codes.intersection(forbidden_codes))
         require(not leaked, f"{case_id}: retired workspace import code leaked: {leaked}")
+    for prefix in forbidden_prefixes:
+        leaked = sorted(code for code in codes if code.startswith(prefix))
+        require(not leaked, f"{case_id}: forbidden diagnostic family leaked: {leaked}")
 
 
 def assert_text_format(
@@ -246,7 +255,10 @@ def assert_text_format(
     require(result.exit_code != 0, f"{diagnostic_format} command unexpectedly succeeded")
     stderr = result.stderr
     require(expected_code in stderr, f"{diagnostic_format} output missing {expected_code}")
-    require("<unknown>" not in stderr, f"{diagnostic_format} output still uses <unknown>")
+    require(
+        "<unknown>" not in stderr,
+        f"{diagnostic_format} output still uses <unknown> for {entry}",
+    )
     if diagnostic_format == "human":
         require("-->" in stderr, "human output missing source location arrow")
     if diagnostic_format == "compact":
@@ -332,6 +344,7 @@ def check_package_runtime_contract(root: Path) -> None:
             expected_code=code,
             case_id=fixture,
             forbidden_codes=set(LEGACY_WORKSPACE_IMPORT_CODES),
+            forbidden_prefixes=("SIFR-PACKAGE-",),
             required_args=required_args[fixture],
         )
         assert_text_format(
@@ -345,6 +358,21 @@ def check_package_runtime_contract(root: Path) -> None:
             expected_code=code,
             diagnostic_format="compact",
             cwd=package,
+        )
+    for fixture, code in PACKAGE_FATAL_FIXTURES.items():
+        package = base / fixture
+        entry = next(package.glob("src*/main.sifr"))
+        json_result = run_sifr(
+            ["--diagnostic-format", "json", "check", str(entry.relative_to(package))],
+            cwd=package,
+        )
+        assert_json_contract(
+            json_result,
+            expected_code=code,
+            case_id=fixture,
+            forbidden_prefixes=("SIFR-IMPORT-",),
+            required_args={"origin_kind", "manifest_path", "manifest_key"},
+            require_span=False,
         )
 
 def check_package_help_contract(root: Path) -> None:
@@ -410,7 +438,7 @@ def seed_minimal_repo(root: Path) -> None:
             root / f"crates/sifr/tests/verification/project/{fixture}/main.sifr",
             "def main():\n    pass\n",
         )
-    for fixture in PACKAGE_FIXTURES | {"package_ambiguous_import_canonical": "SIFR-IMPORT-0005"}:
+    for fixture in PACKAGE_FIXTURES | PACKAGE_FATAL_FIXTURES:
         write(root / f"crates/sifr/tests/verification/package/{fixture}/Cargo.toml", "[package]\n")
         write(root / f"crates/sifr/tests/verification/package/{fixture}/sifr.toml", "[package]\n")
     write(

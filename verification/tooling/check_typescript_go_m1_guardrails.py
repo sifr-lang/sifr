@@ -30,7 +30,13 @@ WORKSPACE_SESSION = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_
 WORKSPACE_RESIDENCY = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_residency.rs"
 WORKSPACE_TRACE = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_trace.rs"
 ANALYSIS_DEBUG_STATUS = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "debug_status.rs"
+ANALYSIS_HANDLES = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "handles.rs"
+ANALYSIS_M17_TESTS = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "m17_tests.rs"
 TRACE_CLI = REPO_ROOT / "crates" / "sifr" / "src" / "trace_cli.rs"
+EDITOR_QUERY_CORPUS = REPO_ROOT / "verification" / "tooling" / "editor_query_corpus" / "multi_file"
+DIAGNOSTIC_CANONICALIZATION = (
+    REPO_ROOT / "verification" / "tooling" / "check_diagnostic_source_canonicalization_contract.py"
+)
 PERF_MANIFEST = REPO_ROOT / "verification" / "performance" / "manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
 DIRECT_FS_PATTERN = re.compile(
@@ -133,6 +139,7 @@ REQUIRED_DOC_SNIPPETS = [
     "M14 updated",
     "M15 updated",
     "M16 updated",
+    "M17 updated",
     "CancellationToken",
     "ParentWatchdog",
     "ProgressState",
@@ -146,6 +153,9 @@ REQUIRED_DOC_SNIPPETS = [
     "WorkspaceTracePhase",
     "WorkspaceStatusSnapshot",
     "WorkspaceDebugSnapshot",
+    "SnapshotHandleKind",
+    "editor_query_corpus",
+    "package_fatal_source_map_no_import_ambiguity",
     "sifr trace",
     "perf.lsp.request_families",
     "perf.lsp.generated_rust_preview.document",
@@ -511,6 +521,57 @@ def validate_m16_trace_status_state(failures: list[str]) -> None:
     )
 
 
+def validate_m17_editor_corpus_and_handles(failures: list[str]) -> None:
+    handles = ANALYSIS_HANDLES.read_text(encoding="utf-8")
+    m17_tests = ANALYSIS_M17_TESTS.read_text(encoding="utf-8")
+    diagnostic_contract = DIAGNOSTIC_CANONICALIZATION.read_text(encoding="utf-8")
+    main_fixture = EDITOR_QUERY_CORPUS / "main.sifr"
+    helper_fixture = EDITOR_QUERY_CORPUS / "helper.sifr"
+    require(
+        main_fixture.is_file()
+        and helper_fixture.is_file()
+        and "# @marker" in main_fixture.read_text(encoding="utf-8")
+        and "# @marker" in helper_fixture.read_text(encoding="utf-8"),
+        "M17 requires marker-based multi-file editor corpus fixtures",
+        failures,
+    )
+    require(
+        "SnapshotHandleKind" in handles
+        and "SymbolHandle" in handles
+        and "TypeHandle" in handles
+        and "SignatureHandle" in handles
+        and "DiagnosticHandle" in handles
+        and "SourceSpanHandle" in handles
+        and "ensure_handle_current" in handles
+        and "AnalysisErrorKind::StaleSnapshot" in handles,
+        "M17 requires internal snapshot-scoped handle types with stale-snapshot rejection",
+        failures,
+    )
+    require(
+        "marker_editor_corpus_covers_multifile_queries_and_stale_snapshots" in m17_tests
+        and "snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution" in m17_tests
+        and "hover" in m17_tests
+        and "completion" in m17_tests
+        and "definition" in m17_tests
+        and "references" in m17_tests
+        and "rename" in m17_tests
+        and "diagnostics" in m17_tests
+        and "semantic_tokens" in m17_tests
+        and "format_document" in m17_tests
+        and "code_actions" in m17_tests,
+        "M17 requires editor query corpus coverage for the milestone query families",
+        failures,
+    )
+    require(
+        "package_ambiguous_import_canonical" in diagnostic_contract
+        and "package_fatal_source_map_no_import_ambiguity" in diagnostic_contract
+        and 'forbidden_prefixes=("SIFR-PACKAGE-",)' in diagnostic_contract
+        and 'forbidden_prefixes=("SIFR-IMPORT-",)' in diagnostic_contract,
+        "M17 requires runtime package fixtures proving import/package diagnostic non-duplication",
+        failures,
+    )
+
+
 def validate_source_dep_guard(failures: list[str]) -> None:
     result = subprocess.run(
         [sys.executable, str(SOURCE_DEP_GUARD)],
@@ -556,6 +617,7 @@ def main() -> int:
     validate_m14_bucket_and_lane_state(failures)
     validate_m15_residency_state(failures)
     validate_m16_trace_status_state(failures)
+    validate_m17_editor_corpus_and_handles(failures)
     validate_source_dep_guard(failures)
 
     if failures:

@@ -190,6 +190,11 @@ type hierarchy, code actions, formatting, and generated Rust preview
   service phase traces, bounded status counters, side-effect-free index
   readiness, `sifr/debugTrace`, and `sifr trace` CLI output for local
   debugging.
+- M17 editor corpus and handle preparation are visible: `SnapshotHandleKind`
+  stays internal to `sifr_analysis`, marker fixtures live under
+  `verification/tooling/editor_query_corpus`, and runtime package fixtures
+  include `package_fatal_source_map_no_import_ambiguity` to prove fatal
+  package-map diagnostics do not duplicate source import ambiguity.
 
 ### Future Milestone Update Obligations
 
@@ -217,3 +222,6 @@ type hierarchy, code actions, formatting, and generated Rust preview
 - M16 updated the trace/status caveat and matching script checks when
   deterministic compiler-service trace phases, debug status snapshots, LSP
   trace events, and `sifr trace` landed.
+- M17 updated editor-query corpus and package diagnostic caveats when
+  marker-based fixtures, internal snapshot handles, and package diagnostic
+  non-duplication runtime checks landed.
