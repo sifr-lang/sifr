@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer M14: Bucketed Indexes And Safe Parallel Lanes
 
-Status: implementation under review
+Status: merged in [#2259](https://github.com/sifr-lang/sifr/pull/2259)
 
 M14 scales editor symbol/import queries without weakening deterministic compiler
 identity.
