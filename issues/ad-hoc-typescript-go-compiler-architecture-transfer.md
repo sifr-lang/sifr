@@ -18,7 +18,7 @@ Status: in progress
 | M9 Fingerprints And Cache Keys | merged | [#2246](https://github.com/sifr-lang/sifr/pull/2246), [#2247](https://github.com/sifr-lang/sifr/pull/2247), [#2248](https://github.com/sifr-lang/sifr/pull/2248), [#2249](https://github.com/sifr-lang/sifr/pull/2249) | Adds deterministic compiler/cache fingerprints and typed key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph caches before reuse lands. |
 | M10 Snapshot Reuse And Structural Replacement | merged | [#2251](https://github.com/sifr-lang/sifr/pull/2251) | Adds ref-counted M9-keyed parse/source-map/HIR/diagnostics/index reuse, Arc-backed snapshot payloads, and conservative safe one-module replacement when import/export signatures are unchanged. |
 | M11 LSP Scheduler Queues | merged | [#2253](https://github.com/sifr-lang/sifr/pull/2253) | Adds real request priority queues for latency-sensitive, formatting, workspace, and background lanes plus debounced diagnostic jobs guarded by captured document versions. |
-| M12 Per-Request Editor Latency Budgets | in progress | pending | Splits aggregate LSP request-family performance evidence into per-request protocol latency scenarios with explicit `perf.lsp.*` budgets while retaining the aggregate case as smoke coverage. |
+| M12 Per-Request Editor Latency Budgets | merged | [#2255](https://github.com/sifr-lang/sifr/pull/2255) | Splits aggregate LSP request-family performance evidence into per-request protocol latency scenarios with explicit `perf.lsp.*` budgets while retaining the aggregate case as smoke coverage. |
 
 M2 local validation so far:
 
