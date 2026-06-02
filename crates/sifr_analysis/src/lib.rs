@@ -11,6 +11,7 @@ mod host;
 mod queries;
 mod snapshot;
 mod symbols;
+mod worker_lanes;
 
 pub use completion::{
     evaluate_completion_ranking, rank_completion_candidates, CompletionCandidate,
@@ -29,7 +30,13 @@ pub use snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
     AnalysisSnapshot, QueryMetadata,
 };
-pub use symbols::{SymbolId, SymbolIndex, SymbolIndexEntry};
+pub use symbols::{
+    SymbolBucketId, SymbolBucketKind, SymbolBucketReadiness, SymbolBucketReadinessState, SymbolId,
+    SymbolIndex, SymbolIndexEntry,
+};
+pub use worker_lanes::{
+    ApprovedWorkerLane, SingleOwnerCompilerPhase, APPROVED_WORKER_LANES, SINGLE_OWNER_PHASES,
+};
 
 pub use sifr_frontend::{
     DocumentVersion, FileId, FrontendInput, FrontendMode, InvalidationReport, ProjectRoot,

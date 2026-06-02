@@ -140,8 +140,9 @@ future compiler-service layers. At the M1 planning gate:
 M1-M4 remain serialized. M5 is the first milestone allowed to remove the
 request-local LSP host shape by making LSP consume captured workspace snapshots.
 M11 owns priority queues and debounce. M13 owns request cancellation tokens,
-delayed progress, parent-pid watchdogs, and operational hardening. Worker
-execution remains serialized until a later milestone proves safe parallel lanes.
+delayed progress, parent-pid watchdogs, and operational hardening. M14 defines
+approved worker lanes in `sifr_analysis::ApprovedWorkerLane` while preserving
+single-owner compiler phases in `SingleOwnerCompilerPhase`.
 
 M5 replaced the request-local LSP host shape. `DocumentStore` now owns protocol
 document state only, and `Session` owns `LspAnalysisWorkspace`, which feeds
@@ -175,6 +176,11 @@ type hierarchy, code actions, formatting, and generated Rust preview
   out of the serialized session.
 - The performance manifest contains the M12 split LSP request-family scenarios
   and keeps `lsp.request_families` as aggregate smoke coverage only.
+- M14 bucketed index and worker-lane surfaces are visible:
+  `SymbolBucketReadiness` and `SymbolBucketReadinessState` track
+  workspace/package/stdlib symbol and import bucket state, host completion and
+  import-symbol queries exercise bucketed APIs, and `ApprovedWorkerLane` stays
+  separate from `SingleOwnerCompilerPhase`.
 
 ### Future Milestone Update Obligations
 
@@ -194,5 +200,7 @@ type hierarchy, code actions, formatting, and generated Rust preview
 - M13 updated the scheduler/request-queue caveats and matching script checks
   when cancellation tokens/state, delayed progress gates, and parent-pid
   watchdogs landed in the LSP modules.
+- M14 updated the serialized-execution caveat and matching script checks when
+  bucketed symbol/import readiness and approved worker-lane policy landed.
 - M15 must update the build-metadata exception when `.sifrbuildinfo` or
   equivalent persistent metadata becomes an explicit compiler-service input.
