@@ -23,7 +23,7 @@ Status: in progress
 | M14 Bucketed Indexes And Safe Parallel Lanes | merged | [#2259](https://github.com/sifr-lang/sifr/pull/2259) | Adds workspace/package/stdlib symbol and import bucket readiness states, dirty-bucket symbol-index refreshes, and explicit approved worker-lane versus single-owner compiler-phase policy; package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. |
 | M15 Project Residency, Watchers, And Build Info | merged | [#2261](https://github.com/sifr-lang/sifr/pull/2261) | Adds project residency snapshots, config pending reload state, deduped watch registrations, and verified non-authoritative `.sifrbuildinfo` metadata. |
 | M16 Trace And Status Surfaces | merged | [#2263](https://github.com/sifr-lang/sifr/pull/2263) | Adds deterministic compiler-service trace phases, bounded debug status snapshots, LSP scheduler/cancellation/stale/timing trace events via `sifr/debugTrace`, analysis index-readiness status, and `sifr trace` CLI output. |
-| M17 Editor Corpus And Snapshot Handles | in progress | pending | Adds marker-based multi-file editor query corpus fixtures, internal snapshot-scoped handles, and runtime package diagnostic non-duplication fixtures. |
+| M17 Editor Corpus And Snapshot Handles | merged | [#2265](https://github.com/sifr-lang/sifr/pull/2265) | Adds marker-based multi-file editor query corpus fixtures, internal snapshot-scoped handles, and runtime package diagnostic non-duplication fixtures. |
 
 M2 local validation so far:
 

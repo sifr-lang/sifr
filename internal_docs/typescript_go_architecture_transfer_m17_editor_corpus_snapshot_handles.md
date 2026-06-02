@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer M17: Editor Corpus And Snapshot Handles
 
-Status: in progress
+Status: merged via [#2265](https://github.com/sifr-lang/sifr/pull/2265)
 
 M17 locks representative editor query behavior with marker-based multi-file
 fixtures and prepares internal snapshot-scoped handles for future compiler API
