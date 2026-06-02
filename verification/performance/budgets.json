@@ -614,8 +614,8 @@
       "policy": "formatter-command-default",
       "rationale": "Derived from Milestone 6 formatter corpus and large-file benchmark samples with a conservative local CLI threshold.",
       "thresholds": {
-        "median_ms": 2000.0,
-        "p95_ms": 3000.0,
+        "median_ms": 2000,
+        "p95_ms": 3000,
         "peak_rss_bytes": 342556672,
         "timeout_ms": 60000
       }
@@ -634,8 +634,8 @@
       "policy": "formatter-command-default",
       "rationale": "Derived from Milestone 6 formatter corpus and large-file benchmark samples with a conservative local CLI threshold.",
       "thresholds": {
-        "median_ms": 2000.0,
-        "p95_ms": 3000.0,
+        "median_ms": 2000,
+        "p95_ms": 3000,
         "peak_rss_bytes": 342556672,
         "timeout_ms": 60000
       }
@@ -848,22 +848,360 @@
     },
     {
       "baseline": {
-        "coefficient_variation": 0.052139,
-        "median_ms": 1.342,
-        "p95_ms": 1.477,
-        "peak_rss_bytes": 20398080
+        "coefficient_variation": 0.044632,
+        "median_ms": 13.766,
+        "p95_ms": 14.739,
+        "peak_rss_bytes": 42057728
       },
       "benchmark_id": "lsp-query-001-request-families",
       "budget_id": "perf.lsp.request_families",
-      "cache": {
-        "max_misses": 6
-      },
+      "cache": {},
       "group": "lsp-query",
       "policy": "lsp-query",
-      "rationale": "Derived from Phase 36 m36.5 checked-in LSP request-family baseline.",
+      "rationale": "Aggregate protocol smoke coverage retained after M12 split; per-request LSP budgets below enforce editor latency.",
       "thresholds": {
-        "median_ms": 5.0,
-        "p95_ms": 10.0,
+        "median_ms": 50,
+        "p95_ms": 100,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.04457,
+        "median_ms": 4.496,
+        "p95_ms": 4.638,
+        "peak_rss_bytes": 21282816
+      },
+      "benchmark_id": "lsp-query-002-cold-start",
+      "budget_id": "perf.lsp.cold_start.workspace",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Cold-start editor latency from spawning sifr lsp through initialize response.",
+      "thresholds": {
+        "median_ms": 13.488,
+        "p95_ms": 18.552,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.013097,
+        "median_ms": 0.91,
+        "p95_ms": 0.933,
+        "peak_rss_bytes": 21184512
+      },
+      "benchmark_id": "lsp-query-003-diagnostics",
+      "budget_id": "perf.lsp.diagnostics.document",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm document diagnostics request latency after an initialized server and open document.",
+      "thresholds": {
+        "median_ms": 5.91,
+        "p95_ms": 10.933,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.056219,
+        "median_ms": 0.324,
+        "p95_ms": 0.345,
+        "peak_rss_bytes": 21102592
+      },
+      "benchmark_id": "lsp-query-004-workspace-diagnostics",
+      "budget_id": "perf.lsp.diagnostics.workspace",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm workspace diagnostics pull latency across the benchmark workspace.",
+      "thresholds": {
+        "median_ms": 5.324,
+        "p95_ms": 10.345,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.039517,
+        "median_ms": 0.12,
+        "p95_ms": 0.127,
+        "peak_rss_bytes": 21233664
+      },
+      "benchmark_id": "lsp-query-005-completion",
+      "budget_id": "perf.lsp.completion.local_scope",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm completion request latency for local-scope editor completion.",
+      "thresholds": {
+        "median_ms": 5.12,
+        "p95_ms": 10.127,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.032784,
+        "median_ms": 0.088,
+        "p95_ms": 0.092,
+        "peak_rss_bytes": 21331968
+      },
+      "benchmark_id": "lsp-query-006-hover",
+      "budget_id": "perf.lsp.hover.symbol",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm hover request latency for a resolved symbol.",
+      "thresholds": {
+        "median_ms": 5.088,
+        "p95_ms": 10.092,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.028856,
+        "median_ms": 0.091,
+        "p95_ms": 0.096,
+        "peak_rss_bytes": 21266432
+      },
+      "benchmark_id": "lsp-query-007-signature-help",
+      "budget_id": "perf.lsp.signature_help.call",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm signature-help request latency for a call expression.",
+      "thresholds": {
+        "median_ms": 5.091,
+        "p95_ms": 10.096,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.045075,
+        "median_ms": 0.864,
+        "p95_ms": 0.954,
+        "peak_rss_bytes": 21168128
+      },
+      "benchmark_id": "lsp-query-008-navigation",
+      "budget_id": "perf.lsp.navigation.symbol",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm navigation-family latency for symbols and source-map backed locations.",
+      "thresholds": {
+        "median_ms": 5.864,
+        "p95_ms": 10.954,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.033384,
+        "median_ms": 0.152,
+        "p95_ms": 0.161,
+        "peak_rss_bytes": 21151744
+      },
+      "benchmark_id": "lsp-query-009-references",
+      "budget_id": "perf.lsp.references.workspace_symbol",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm references request latency for workspace symbol usage.",
+      "thresholds": {
+        "median_ms": 5.152,
+        "p95_ms": 10.161,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.077175,
+        "median_ms": 0.258,
+        "p95_ms": 0.277,
+        "peak_rss_bytes": 21200896
+      },
+      "benchmark_id": "lsp-query-010-rename",
+      "budget_id": "perf.lsp.rename.workspace_edit",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm rename workspace-edit request latency.",
+      "thresholds": {
+        "median_ms": 5.258,
+        "p95_ms": 10.277,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.070397,
+        "median_ms": 0.302,
+        "p95_ms": 0.339,
+        "peak_rss_bytes": 21266432
+      },
+      "benchmark_id": "lsp-query-011-semantic-tokens",
+      "budget_id": "perf.lsp.semantic_tokens.full",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm full semantic-token request latency.",
+      "thresholds": {
+        "median_ms": 5.302,
+        "p95_ms": 10.339,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.034185,
+        "median_ms": 0.125,
+        "p95_ms": 0.131,
+        "peak_rss_bytes": 21250048
+      },
+      "benchmark_id": "lsp-query-012-inlay-hints",
+      "budget_id": "perf.lsp.inlay_hints.module",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm inlay-hint request latency for the benchmark module.",
+      "thresholds": {
+        "median_ms": 5.125,
+        "p95_ms": 10.131,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.02998,
+        "median_ms": 0.173,
+        "p95_ms": 0.178,
+        "peak_rss_bytes": 21250048
+      },
+      "benchmark_id": "lsp-query-013-selection-range",
+      "budget_id": "perf.lsp.selection_ranges.nested",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm nested selection-range request latency.",
+      "thresholds": {
+        "median_ms": 5.173,
+        "p95_ms": 10.178,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.049952,
+        "median_ms": 0.077,
+        "p95_ms": 0.085,
+        "peak_rss_bytes": 21364736
+      },
+      "benchmark_id": "lsp-query-014-type-hierarchy",
+      "budget_id": "perf.lsp.type_hierarchy.symbol",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm type-hierarchy request latency for a symbol.",
+      "thresholds": {
+        "median_ms": 5.077,
+        "p95_ms": 10.085,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.031112,
+        "median_ms": 0.323,
+        "p95_ms": 0.336,
+        "peak_rss_bytes": 21168128
+      },
+      "benchmark_id": "lsp-query-015-code-actions",
+      "budget_id": "perf.lsp.code_action.diagnostic",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm diagnostic code-action request latency.",
+      "thresholds": {
+        "median_ms": 5.323,
+        "p95_ms": 10.336,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.028678,
+        "median_ms": 0.52,
+        "p95_ms": 0.541,
+        "peak_rss_bytes": 21053440
+      },
+      "benchmark_id": "lsp-query-016-formatting",
+      "budget_id": "perf.lsp.formatting.document",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm document-formatting request latency.",
+      "thresholds": {
+        "median_ms": 5.52,
+        "p95_ms": 10.541,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.062438,
+        "median_ms": 7.982,
+        "p95_ms": 8.451,
+        "peak_rss_bytes": 40845312
+      },
+      "benchmark_id": "lsp-query-017-generated-rust-preview",
+      "budget_id": "perf.lsp.generated_rust_preview.document",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "Warm generated Rust preview command latency.",
+      "thresholds": {
+        "median_ms": 23.946,
+        "p95_ms": 33.804,
+        "peak_rss_bytes": 67108864,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.024163,
+        "median_ms": 0.737,
+        "p95_ms": 0.754,
+        "peak_rss_bytes": 21921792
+      },
+      "benchmark_id": "lsp-query-018-did-open-diagnostics",
+      "budget_id": "perf.lsp.document_sync.did_open",
+      "cache": {},
+      "group": "lsp-query",
+      "policy": "lsp-query",
+      "rationale": "didOpen document-sync latency through diagnostics publication.",
+      "thresholds": {
+        "median_ms": 5.737,
+        "p95_ms": 10.754,
         "peak_rss_bytes": 67108864,
         "timeout_ms": 60000
       }
@@ -975,7 +1313,10 @@
     "command_p95_ms": "max(baseline_p95 * 1.15, baseline_p95 + 50ms)",
     "frontend_query_median_ms": "max(baseline_median * 1.05, baseline_median + 2ms)",
     "frontend_query_p95_ms": "max(baseline_p95 * 1.10, baseline_p95 + 5ms)",
-    "peak_rss_bytes": "max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)"
+    "peak_rss_bytes": "max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)",
+    "lsp_query_median_ms": "smoke fixed broad; otherwise min(slo_median, max(baseline_median * 3, baseline_median + 5ms))",
+    "lsp_query_p95_ms": "smoke fixed broad; otherwise min(slo_p95, max(baseline_p95 * 4, baseline_p95 + 10ms))",
+    "lsp_query_cache": "not enforced until LSP exports stable per-request cache counters"
   },
   "description": "Phase 35 performance budgets derived from verification/performance/baselines.json.",
   "version": 1

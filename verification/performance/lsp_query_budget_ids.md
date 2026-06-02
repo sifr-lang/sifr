@@ -13,12 +13,17 @@ Rules:
 Reserved ids:
 
 - `perf.lsp.cold_start.workspace`
+- `perf.lsp.diagnostics.document`
+- `perf.lsp.diagnostics.workspace`
 - `perf.lsp.completion.local_scope`
 - `perf.lsp.completion.auto_import`
 - `perf.lsp.hover.symbol`
+- `perf.lsp.signature_help.call`
 - `perf.lsp.definition.local_symbol`
+- `perf.lsp.navigation.symbol`
 - `perf.lsp.references.workspace_symbol`
 - `perf.lsp.rename.prepare`
+- `perf.lsp.rename.workspace_edit`
 - `perf.lsp.semantic_tokens.full`
 - `perf.lsp.semantic_tokens.delta`
 - `perf.lsp.document_symbols.module`
@@ -26,6 +31,8 @@ Reserved ids:
 - `perf.lsp.selection_ranges.nested`
 - `perf.lsp.inlay_hints.module`
 - `perf.lsp.code_action.diagnostic`
+- `perf.lsp.formatting.document`
+- `perf.lsp.generated_rust_preview.document`
 - `perf.lsp.document_sync.did_open`
 - `perf.lsp.document_sync.unchanged_did_change`
 - `perf.lsp.document_sync.changed_did_change`
@@ -45,11 +52,10 @@ Reserved ids:
 ## m36.8 Closeout Coverage
 
 The Phase 36 protocol matrix keeps user-facing budget labels on individual LSP
-request families while the enforced Phase 35 budget model records the aggregate
-stdio-session budget as `perf.lsp.request_families`. The closeout gate verifies
-that every non-null matrix label below remains documented and covered by the
-aggregate benchmark until a later phase splits the aggregate case into separate
-per-family benchmarks:
+request families. Before M12 those labels were covered by the aggregate
+stdio-session budget `perf.lsp.request_families`; after M12, the labels map to
+the concrete per-family budgets recorded below while the aggregate remains smoke
+coverage only:
 
 - `lsp-cold-start`
 - `lsp-code-actions`
@@ -71,3 +77,35 @@ per-family benchmarks:
 - `lsp-type-hierarchy`
 - `lsp-workspace-diagnostics`
 - `lsp-workspace-symbols`
+
+## TypeScript-Go Transfer M12 Implemented Evidence
+
+M12 splits the aggregate LSP benchmark into per-family performance manifest
+cases. `perf.lsp.request_families` remains as aggregate smoke coverage only.
+The enforced request-family mappings are:
+
+| Protocol label | Budget id | Manifest case |
+| --- | --- | --- |
+| `lsp-cold-start` | `perf.lsp.cold_start.workspace` | `lsp-query-002-cold-start` |
+| `lsp-did-open-diagnostics` | `perf.lsp.document_sync.did_open` | `lsp-query-018-did-open-diagnostics` |
+| `lsp-did-change-diagnostics` | `perf.lsp.diagnostics.document` | `lsp-query-003-diagnostics` |
+| `lsp-workspace-diagnostics` | `perf.lsp.diagnostics.workspace` | `lsp-query-004-workspace-diagnostics` |
+| `lsp-completion` | `perf.lsp.completion.local_scope` | `lsp-query-005-completion` |
+| `lsp-hover` | `perf.lsp.hover.symbol` | `lsp-query-006-hover` |
+| `lsp-signature-help` | `perf.lsp.signature_help.call` | `lsp-query-007-signature-help` |
+| `lsp-definition`, `lsp-document-highlights`, `lsp-document-symbols`, `lsp-folding-ranges`, `lsp-workspace-symbols` | `perf.lsp.navigation.symbol` | `lsp-query-008-navigation` |
+| `lsp-references` | `perf.lsp.references.workspace_symbol` | `lsp-query-009-references` |
+| `lsp-rename` | `perf.lsp.rename.workspace_edit` | `lsp-query-010-rename` |
+| `lsp-semantic-tokens` | `perf.lsp.semantic_tokens.full` | `lsp-query-011-semantic-tokens` |
+| `lsp-inlay-hints` | `perf.lsp.inlay_hints.module` | `lsp-query-012-inlay-hints` |
+| `lsp-selection-range` | `perf.lsp.selection_ranges.nested` | `lsp-query-013-selection-range` |
+| `lsp-type-hierarchy` | `perf.lsp.type_hierarchy.symbol` | `lsp-query-014-type-hierarchy` |
+| `lsp-code-actions` | `perf.lsp.code_action.diagnostic` | `lsp-query-015-code-actions` |
+| `lsp-formatting` | `perf.lsp.formatting.document` | `lsp-query-016-formatting` |
+| generated Rust preview command | `perf.lsp.generated_rust_preview.document` | `lsp-query-017-generated-rust-preview` |
+
+Reserved ids not listed in the implemented evidence table are intentionally
+deferred. They keep the Phase 36 budget namespace stable for later auto-import,
+delta-token, document-symbol, folding-range, rename-prepare, document-highlight,
+workspace-symbol, didChange, recovery, transport initialize, and shutdown cases,
+but M12 does not claim enforcement for them until a manifest case maps to the id.

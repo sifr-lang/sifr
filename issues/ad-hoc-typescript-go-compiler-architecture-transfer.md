@@ -18,6 +18,7 @@ Status: in progress
 | M9 Fingerprints And Cache Keys | merged | [#2246](https://github.com/sifr-lang/sifr/pull/2246), [#2247](https://github.com/sifr-lang/sifr/pull/2247), [#2248](https://github.com/sifr-lang/sifr/pull/2248), [#2249](https://github.com/sifr-lang/sifr/pull/2249) | Adds deterministic compiler/cache fingerprints and typed key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph caches before reuse lands. |
 | M10 Snapshot Reuse And Structural Replacement | merged | [#2251](https://github.com/sifr-lang/sifr/pull/2251) | Adds ref-counted M9-keyed parse/source-map/HIR/diagnostics/index reuse, Arc-backed snapshot payloads, and conservative safe one-module replacement when import/export signatures are unchanged. |
 | M11 LSP Scheduler Queues | merged | [#2253](https://github.com/sifr-lang/sifr/pull/2253) | Adds real request priority queues for latency-sensitive, formatting, workspace, and background lanes plus debounced diagnostic jobs guarded by captured document versions. |
+| M12 Per-Request Editor Latency Budgets | in progress | pending | Splits aggregate LSP request-family performance evidence into per-request protocol latency scenarios with explicit `perf.lsp.*` budgets while retaining the aggregate case as smoke coverage. |
 
 M2 local validation so far:
 
@@ -79,6 +80,28 @@ M11 local validation so far:
 - Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-3.md`)
 - `cargo clippy --workspace -- -D warnings` -> PASS
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 263.26s, advisory: group skew is high
+
+M12 local validation so far:
+
+- `python3 verification/performance/run_benchmarks.py --validate-only` -> PASS, 65 cases
+- `python3 verification/performance/check_budgets.py` -> PASS
+- `python3 verification/performance/run_benchmarks.py --self-test` -> PASS
+- `python3 verification/performance/check_budgets.py --self-test` -> PASS
+- `python3 verification/performance/run_benchmarks.py --groups lsp-query --json-out target/performance/m12_lsp_query_run.json` -> PASS, evidence `target/performance/evidence/bench-1780400105-94623.json`
+- `python3 verification/performance/run_benchmarks.py --groups lsp-query --sample-scale smoke --json-out target/performance/m12_lsp_query_smoke.json` -> PASS, evidence `target/performance/evidence/bench-1780400215-529.json`
+- `python3 verification/performance/check_budgets.py --results target/performance/m12_lsp_query_run.json --allow-subset` -> PASS
+- `python3 verification/performance/check_budgets.py --results target/performance/m12_lsp_query_smoke.json --allow-subset` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/tooling/check_phase36_closeout.py` -> PASS
+- `python3 verification/tooling/check_phase36_closeout.py --self-test` -> PASS
+- `python3 -m py_compile verification/performance/lsp_query_bench.py verification/performance/check_budgets.py verification/performance/run_benchmarks.py verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `git diff --check` -> PASS
+- `python3 scripts/check_file_size_guardrails.py` -> PASS
+- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-1.md`)
+- Claude reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-2.md`)
+- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-3.md`)
+- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 256.95s, advisory: group skew is high
 
 M4 local validation so far:
 

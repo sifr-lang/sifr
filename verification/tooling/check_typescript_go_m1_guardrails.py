@@ -117,8 +117,51 @@ REQUIRED_DOC_SNIPPETS = [
     "AnalysisHost::open_single_file",
     "M1-M4 remain serialized",
     "M5 updated",
-    "M12 must update",
+    "M12 updated",
     "perf.lsp.request_families",
+    "perf.lsp.generated_rust_preview.document",
+]
+
+EXPECTED_LSP_SCENARIOS = [
+    "lsp.code_actions",
+    "lsp.cold_start",
+    "lsp.completion",
+    "lsp.diagnostics",
+    "lsp.did_open_diagnostics",
+    "lsp.formatting",
+    "lsp.generated_rust_preview",
+    "lsp.hover",
+    "lsp.inlay_hints",
+    "lsp.navigation",
+    "lsp.references",
+    "lsp.rename",
+    "lsp.request_families",
+    "lsp.selection_range",
+    "lsp.semantic_tokens",
+    "lsp.signature_help",
+    "lsp.type_hierarchy",
+    "lsp.workspace_diagnostics",
+]
+
+EXPECTED_LSP_BUDGET_IDS = [
+    "perf.lsp.code_action.diagnostic",
+    "perf.lsp.cold_start.workspace",
+    "perf.lsp.completion.local_scope",
+    "perf.lsp.diagnostics.document",
+    "perf.lsp.diagnostics.workspace",
+    "perf.lsp.document_sync.did_open",
+    "perf.lsp.formatting.document",
+    "perf.lsp.generated_rust_preview.document",
+    "perf.lsp.hover.symbol",
+    "perf.lsp.inlay_hints.module",
+    "perf.lsp.navigation.symbol",
+    "perf.lsp.references.workspace_symbol",
+    "perf.lsp.rename.workspace_edit",
+    "perf.lsp.request_families",
+    "perf.lsp.selection_ranges.nested",
+    "perf.lsp.semantic_tokens.full",
+    "perf.lsp.signature_help.call",
+    "perf.lsp.type_hierarchy.symbol",
 ]
 
 
@@ -244,13 +287,20 @@ def validate_lsp_budget_reality(failures: list[str]) -> None:
     ]
     scenarios = sorted(case.get("scenario") for case in lsp_cases)
     require(
-        scenarios == ["lsp.request_families"],
-        f"M1 expects aggregate-only LSP budget reality until M12, found: {scenarios}",
+        scenarios == EXPECTED_LSP_SCENARIOS,
+        f"M12 expects split per-request LSP budget scenarios, found: {scenarios}",
         failures,
     )
+    budget_ids = sorted(case.get("budget_id") for case in lsp_cases)
     require(
-        lsp_cases[0].get("budget_id") == "perf.lsp.request_families" if lsp_cases else False,
-        "M1 aggregate LSP budget id must be perf.lsp.request_families",
+        budget_ids == EXPECTED_LSP_BUDGET_IDS,
+        f"M12 expects split per-request LSP budget ids, found: {budget_ids}",
+        failures,
+    )
+    aggregate = [case for case in lsp_cases if case.get("scenario") == "lsp.request_families"]
+    require(
+        len(aggregate) == 1 and aggregate[0].get("evidence_category") == "lsp-query-smoke",
+        "M12 requires perf.lsp.request_families to remain as aggregate smoke coverage only",
         failures,
     )
 

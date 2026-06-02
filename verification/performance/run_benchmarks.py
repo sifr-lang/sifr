@@ -355,6 +355,7 @@ def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
         str(case.raw["scenario"]),
         str(REPO_ROOT / case.raw["source_path"]),
         str(warmups + measured),
+        str(case.raw.get("inner_repetitions", 1)),
     ]
     result = run_subprocess(command, case.timeout_ms)
     if result["timed_out"]:
