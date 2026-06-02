@@ -5,3 +5,6 @@ sifr-version = ">=0.3,<0.4"
 
 [source]
 roots = ["src_a", "src_b"]
+
+[exports]
+modules = ["helper"]

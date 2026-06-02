@@ -1,0 +1,2 @@
+helper_value: int = 1
+# @marker helper_export line=0 character=2 queries=definition,references,semantic_tokens
