@@ -38,9 +38,24 @@ deterministic compiler/cache fingerprints and typed key inputs for parse,
 source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol
 bucket, and flow graph cache families.
 
+TypeScript-Go architecture transfer M10 note: `FrontendContext` now stores
+ref-counted, M9-keyed parse, source-map file, HIR, diagnostics, and symbol-index
+entries. Safe one-module replacement is accepted only when parsing succeeds and
+the changed module's import/export signature is unchanged. These replacements
+preserve graph revision and unchanged module cache identity while rebuilding
+source-map and module-graph views whenever source-hash metadata changes.
+Public export signatures include assigned constants, class decorators, and all
+class-body methods so dependent modules are invalidated before they can observe
+stale exported facts. Export signature shapes use Ruff AST comparable views so
+source ranges and node indexes do not over-invalidate on whitespace-only edits.
+Source-file view keys include document version because those views carry editor
+metadata; parse/HIR content keys still omit document identity inputs.
+
 ## Cache State
 
-Each `FrontendContext` module owns cached parse, lower, diagnostics, and analysis entries. Query results include metadata with:
+Each `FrontendContext` module references cached parse, lower, diagnostics, and
+analysis entries stored in ref-counted process-local cache maps. Query results
+include metadata with:
 
 - query kind
 - cache hit or miss
@@ -53,11 +68,11 @@ Each `FrontendContext` module owns cached parse, lower, diagnostics, and analysi
 
 1. Computes the new source hash.
 2. Preserves query cache entries when the source hash is unchanged.
-3. Invalidates the changed module's parse entry when source text changes.
-4. Resets lowered HIR, diagnostics, analysis, and exported definition state for all modules in the context so downstream importers cannot observe stale dependency exports.
-5. Invalidates parse, lower, type-check, module diagnostics, project diagnostics, module analysis, and project analysis query kinds in the returned report.
+3. Replaces only the changed module when parsing succeeds and import/export signatures are unchanged.
+4. Invalidates reverse dependents when a public export changes, and graph structure when imports change or parsing fails.
+5. Reports parse, lower, type-check, module diagnostics, project diagnostics, module analysis, and project analysis query kinds in the returned report, while preserving unchanged parse entries for reverse dependents whose source text did not change.
 6. Advances the source revision on every update.
-7. Advances the graph revision when text changes and rebuilds deterministic import edges.
+7. Advances the graph revision only for graph-structure or reverse-dependency changes, while rebuilding visible graph/source-map views whenever source-hash metadata changes.
 8. Records the changed file, document version transition, invalidated modules, and invalidated query kinds in `InvalidationReport`.
 
 Dependency-sensitive query recomputation lowers local imports before the importing module and repopulates external definitions through the same `sifr_frontend` export collector used by driver project compilation.

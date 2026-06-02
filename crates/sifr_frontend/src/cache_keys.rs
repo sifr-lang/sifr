@@ -54,6 +54,17 @@ impl CacheKeyFingerprint {
     }
 }
 
+pub(crate) fn stable_cache_fingerprint(
+    domain: &str,
+    fields: impl IntoIterator<Item = (&'static str, String)>,
+) -> CacheKeyFingerprint {
+    let mut builder = FingerprintBuilder::new(domain);
+    for (name, value) in fields {
+        builder.field(name, value);
+    }
+    CacheKeyFingerprint(builder.finish_hex())
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WorkspaceContextFingerprint(String);
 

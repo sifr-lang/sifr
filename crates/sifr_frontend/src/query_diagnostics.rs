@@ -33,6 +33,7 @@ pub(super) fn module_state(
         source_hash,
         document_version,
         signature: ModuleSignature::default(),
+        source_file_view: None,
         parsed: None,
         lowered: None,
         diagnostics: None,
@@ -746,8 +747,7 @@ mod tests {
             report.dirty_scope_report.reasons,
             vec![
                 WorkspaceDirtyReason::SourceTextChanged,
-                WorkspaceDirtyReason::ImportSignatureChanged,
-                WorkspaceDirtyReason::ExportSignatureChanged
+                WorkspaceDirtyReason::ImportSignatureChanged
             ]
         );
     }
