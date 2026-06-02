@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer M15: Project Residency, Watchers, And Build Info
 
-Status: in progress
+Status: merged in [#2261](https://github.com/sifr-lang/sifr/pull/2261)
 
 M15 keeps long-lived compiler-service sessions bounded without making generated
 metadata authoritative.
