@@ -176,6 +176,10 @@ python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py" --self-test
+git submodule update --init verification/sifr-large-lsp-verification
+python3 "${SCRIPT_DIR}/../verification/sifr-large-lsp-verification/tools/generate_corpus.py" check
+python3 "${SCRIPT_DIR}/../verification/tooling/lsp_large_session.py" --self-test
+python3 "${SCRIPT_DIR}/../verification/tooling/lsp_large_session.py" --mode smoke --require-submodule
 python3 "${SCRIPT_DIR}/../verification/tooling/check_editor_assets.py"
 python3 "${SCRIPT_DIR}/../verification/tooling/check_editor_assets.py" --self-test
 python3 "${SCRIPT_DIR}/../verification/tooling/check_phase36_closeout.py"
