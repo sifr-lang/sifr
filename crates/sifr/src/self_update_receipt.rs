@@ -1,6 +1,15 @@
 use serde_json::Value;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
 use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
+use std::path::{Path, PathBuf};
+
+const SUPPORTED_TARGETS: &[&str] = &[
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct InstallReceipt {
@@ -12,6 +21,189 @@ pub(crate) struct InstallReceipt {
     pub(crate) binary_path: String,
     pub(crate) artifact: String,
     pub(crate) modify_path: bool,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct ReceiptDiscoveryEnv {
+    pub(crate) current_executable: PathBuf,
+    pub(crate) manifest_dir: Option<PathBuf>,
+    pub(crate) home_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct DiscoveredReceipt {
+    pub(crate) receipt: InstallReceipt,
+    pub(crate) receipt_path: PathBuf,
+    pub(crate) current_executable: PathBuf,
+    pub(crate) matches_receipt: bool,
+}
+
+impl ReceiptDiscoveryEnv {
+    pub(crate) fn production() -> Result<Self, Box<RenderedDiagnostic>> {
+        let current_executable = std::env::current_exe().map_err(|error| {
+            unmanaged_receipt_diagnostic(format!(
+                "could not determine current Sifr executable for self-update eligibility: {error}"
+            ))
+        })?;
+        let current_executable = current_executable.canonicalize().map_err(|error| {
+            unmanaged_receipt_diagnostic(format!(
+                "could not canonicalize current Sifr executable {} for self-update eligibility: {error}",
+                current_executable.display()
+            ))
+        })?;
+        Ok(Self {
+            current_executable,
+            manifest_dir: std::env::var_os("SIFR_INSTALL_MANIFEST_DIR").map(PathBuf::from),
+            home_dir: std::env::var_os("HOME").map(PathBuf::from),
+        })
+    }
+}
+
+pub(crate) fn discover_install_receipt(
+    env: &ReceiptDiscoveryEnv,
+) -> Result<DiscoveredReceipt, Box<RenderedDiagnostic>> {
+    let receipt_path = discover_receipt_path(env)?;
+    let input = fs::read_to_string(&receipt_path).map_err(|error| {
+        unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt {} could not be read: {error}; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed contract",
+            receipt_path.display()
+        ))
+    })?;
+    let receipt = parse_install_receipt_json(&input)?;
+    validate_receipt_eligibility(&receipt, &receipt_path, env)?;
+    Ok(DiscoveredReceipt {
+        receipt,
+        receipt_path,
+        current_executable: env.current_executable.clone(),
+        matches_receipt: true,
+    })
+}
+
+fn discover_receipt_path(env: &ReceiptDiscoveryEnv) -> Result<PathBuf, Box<RenderedDiagnostic>> {
+    if let Some(manifest_dir) = &env.manifest_dir {
+        let receipt_path = manifest_dir.join("install.json");
+        if receipt_path.is_file() {
+            return Ok(receipt_path);
+        }
+        return Err(missing_receipt_diagnostic(format!(
+            "standalone install receipt is missing at {} from SIFR_INSTALL_MANIFEST_DIR",
+            receipt_path.display()
+        )));
+    }
+
+    if let Some(parent) = env.current_executable.parent() {
+        let receipt_path = parent.join("install.json");
+        if receipt_path.is_file() {
+            return Ok(receipt_path);
+        }
+    }
+
+    if let Some(home_dir) = &env.home_dir {
+        let default_binary = home_dir.join(".sifr/bin/sifr");
+        if same_file(&env.current_executable, &default_binary).unwrap_or(false) {
+            let receipt_path = home_dir.join(".sifr/install.json");
+            if receipt_path.is_file() {
+                return Ok(receipt_path);
+            }
+        }
+    }
+
+    Err(missing_receipt_diagnostic(
+        "standalone install receipt is missing; use your package manager for package-managed installs or re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed contract",
+    ))
+}
+
+fn validate_receipt_eligibility(
+    receipt: &InstallReceipt,
+    receipt_path: &Path,
+    env: &ReceiptDiscoveryEnv,
+) -> Result<(), Box<RenderedDiagnostic>> {
+    if !SUPPORTED_TARGETS.contains(&receipt.target.as_str()) {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt target {} is not supported by the preview distribution",
+            receipt.target
+        )));
+    }
+    if receipt.channel != "alpha" && receipt.channel != "beta" {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt channel {} is not supported before Phase 39; use alpha or beta",
+            receipt.channel
+        )));
+    }
+    if !same_file(&env.current_executable, Path::new(&receipt.binary_path)).map_err(|error| {
+        unmanaged_receipt_diagnostic(format!(
+            "could not compare current executable {} with receipt binary {}: {error}",
+            env.current_executable.display(),
+            receipt.binary_path
+        ))
+    })? {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt belongs to {}, but the current executable is {}",
+            receipt.binary_path,
+            env.current_executable.display()
+        )));
+    }
+
+    let install_dir = canonicalize_for_receipt(Path::new(&receipt.install_dir), "install_dir")?;
+    let binary_path = canonicalize_for_receipt(Path::new(&receipt.binary_path), "binary_path")?;
+    let binary_parent = binary_path.parent().ok_or_else(|| {
+        unmanaged_receipt_diagnostic(
+            "standalone install receipt binary_path has no parent directory",
+        )
+    })?;
+    if !paths_same_after_canonicalization(&install_dir, binary_parent) {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt binary_path {} is outside install_dir {}",
+            receipt.binary_path, receipt.install_dir
+        )));
+    }
+    if !receipt_path.is_file() {
+        return Err(missing_receipt_diagnostic(format!(
+            "standalone install receipt is missing at {}",
+            receipt_path.display()
+        )));
+    }
+    Ok(())
+}
+
+fn canonicalize_for_receipt(path: &Path, field: &str) -> Result<PathBuf, Box<RenderedDiagnostic>> {
+    path.canonicalize().map_err(|error| {
+        unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt field `{field}` could not be canonicalized at {}: {error}",
+            path.display()
+        ))
+    })
+}
+
+fn paths_same_after_canonicalization(left: &Path, right: &Path) -> bool {
+    #[cfg(unix)]
+    {
+        same_metadata(left, right).unwrap_or_else(|_| left == right)
+    }
+    #[cfg(not(unix))]
+    {
+        left == right
+    }
+}
+
+fn same_file(left: &Path, right: &Path) -> Result<bool, std::io::Error> {
+    #[cfg(unix)]
+    {
+        same_metadata(left, right)
+    }
+    #[cfg(not(unix))]
+    {
+        Ok(left.canonicalize()? == right.canonicalize()?)
+    }
+}
+
+#[cfg(unix)]
+fn same_metadata(left: &Path, right: &Path) -> Result<bool, std::io::Error> {
+    use std::os::unix::fs::MetadataExt as _;
+
+    let left = fs::metadata(left)?;
+    let right = fs::metadata(right)?;
+    Ok(left.dev() == right.dev() && left.ino() == right.ino())
 }
 
 const RECEIPT_FIELDS: &[&str] = &[
@@ -28,7 +220,7 @@ const RECEIPT_FIELDS: &[&str] = &[
 
 pub(crate) fn parse_install_receipt_json(
     input: &str,
-) -> Result<InstallReceipt, RenderedDiagnostic> {
+) -> Result<InstallReceipt, Box<RenderedDiagnostic>> {
     let value = serde_json::from_str::<Value>(input).map_err(|error| {
         unmanaged_receipt_diagnostic(format!(
             "standalone install receipt is not valid JSON: {error}; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the self-update-managed install contract"
@@ -43,9 +235,9 @@ pub(crate) fn parse_install_receipt_json(
     let expected = RECEIPT_FIELDS.iter().copied().collect::<BTreeSet<_>>();
     let actual = object.keys().map(String::as_str).collect::<BTreeSet<_>>();
     if actual != expected {
-        return Err(unmanaged_receipt_diagnostic(format!(
-            "standalone install receipt predates or diverges from the schema-versioned self-update contract; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed contract"
-        )));
+        return Err(unmanaged_receipt_diagnostic(
+            "standalone install receipt predates or diverges from the schema-versioned self-update contract; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed contract",
+        ));
     }
 
     let schema_version = object
@@ -83,7 +275,7 @@ pub(crate) fn parse_install_receipt_json(
 fn string_field<'a>(
     object: &'a serde_json::Map<String, Value>,
     field: &str,
-) -> Result<&'a str, RenderedDiagnostic> {
+) -> Result<&'a str, Box<RenderedDiagnostic>> {
     object
         .get(field)
         .and_then(Value::as_str)
@@ -91,17 +283,17 @@ fn string_field<'a>(
         .ok_or_else(|| malformed_field(field))
 }
 
-fn malformed_field(field: &str) -> RenderedDiagnostic {
+fn malformed_field(field: &str) -> Box<RenderedDiagnostic> {
     unmanaged_receipt_diagnostic(format!(
         "standalone install receipt field `{field}` is missing or malformed; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the self-update-managed install contract"
     ))
 }
 
-fn unmanaged_receipt_diagnostic(message: impl Into<String>) -> RenderedDiagnostic {
+fn unmanaged_receipt_diagnostic(message: impl Into<String>) -> Box<RenderedDiagnostic> {
     let message = message.into();
     let mut args = BTreeMap::new();
     args.insert("message".to_owned(), DiagnosticArg::String(message.clone()));
-    RenderedDiagnostic {
+    Box::new(RenderedDiagnostic {
         code: DiagnosticCode::SELF_UPDATE_UNMANAGED_RECEIPT.code().to_owned(),
         severity: Severity::Error,
         message,
@@ -114,13 +306,27 @@ fn unmanaged_receipt_diagnostic(message: impl Into<String>) -> RenderedDiagnosti
             "standalone self-update requires a schema-versioned install.json written by the official Sifr installer".to_owned(),
         ),
         suggestions: Vec::new(),
-    }
+    })
+}
+
+fn missing_receipt_diagnostic(message: impl Into<String>) -> Box<RenderedDiagnostic> {
+    let mut diagnostic = unmanaged_receipt_diagnostic(message);
+    diagnostic.help = Some(
+        "self-update is available only for official standalone installs with install.json receipts"
+            .to_owned(),
+    );
+    diagnostic
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_install_receipt_json, InstallReceipt};
+    use super::{
+        discover_install_receipt, parse_install_receipt_json, InstallReceipt, ReceiptDiscoveryEnv,
+    };
     use sifr_diagnostics::DiagnosticCode;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     const VALID_RECEIPT: &str = r#"{
   "schema_version": 1,
@@ -133,6 +339,70 @@ mod tests {
   "artifact": "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz",
   "modify_path": true
 }"#;
+
+    struct TestDir(PathBuf);
+
+    impl TestDir {
+        fn new(name: &str) -> Self {
+            let nonce = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("system clock")
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!(
+                "sifr-self-update-{name}-{}-{nonce}",
+                std::process::id()
+            ));
+            fs::create_dir_all(&path).expect("create temp dir");
+            Self(path)
+        }
+
+        fn path(&self) -> &Path {
+            &self.0
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn touch(path: &Path) {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).expect("create parent");
+        }
+        fs::write(path, b"sifr").expect("write file");
+    }
+
+    fn receipt_json(
+        version: &str,
+        channel: &str,
+        install_dir: &Path,
+        binary_path: &Path,
+    ) -> String {
+        serde_json::json!({
+            "schema_version": 1,
+            "name": "sifr",
+            "version": version,
+            "channel": channel,
+            "target": "aarch64-apple-darwin",
+            "install_dir": install_dir.display().to_string(),
+            "binary_path": binary_path.display().to_string(),
+            "artifact": format!("sifr-{version}-aarch64-apple-darwin.tar.gz"),
+            "modify_path": true,
+        })
+        .to_string()
+    }
+
+    fn write_receipt(path: &Path, version: &str, channel: &str, binary_path: &Path) {
+        let install_dir = binary_path.parent().expect("binary parent");
+        fs::create_dir_all(path.parent().expect("receipt parent")).expect("create receipt parent");
+        fs::write(
+            path,
+            receipt_json(version, channel, install_dir, binary_path),
+        )
+        .expect("write receipt");
+    }
 
     #[test]
     fn parses_schema_versioned_receipt_shape() {
@@ -249,5 +519,134 @@ mod tests {
         )
         .expect_err("wrong field types are rejected");
         assert!(error.message.contains("modify_path"));
+    }
+
+    #[test]
+    fn discovers_manifest_dir_before_adjacent_manifest() {
+        let tmp = TestDir::new("discovery-order");
+        let binary = tmp.path().join("bin/sifr");
+        touch(&binary);
+        write_receipt(
+            &tmp.path().join("manifest/install.json"),
+            "0.1.0-beta.2",
+            "beta",
+            &binary,
+        );
+        write_receipt(
+            &tmp.path().join("bin/install.json"),
+            "0.1.0-alpha.1",
+            "alpha",
+            &binary,
+        );
+
+        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: binary,
+            manifest_dir: Some(tmp.path().join("manifest")),
+            home_dir: None,
+        })
+        .expect("receipt discovers");
+
+        assert_eq!(discovered.receipt.version, "0.1.0-beta.2");
+        assert!(discovered
+            .receipt_path
+            .ends_with(Path::new("manifest/install.json")));
+    }
+
+    #[test]
+    fn discovers_default_home_manifest_only_for_default_binary() {
+        let tmp = TestDir::new("default-home");
+        let binary = tmp.path().join(".sifr/bin/sifr");
+        touch(&binary);
+        write_receipt(
+            &tmp.path().join(".sifr/install.json"),
+            "0.1.0-beta.2",
+            "beta",
+            &binary,
+        );
+
+        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: binary,
+            manifest_dir: None,
+            home_dir: Some(tmp.path().to_path_buf()),
+        })
+        .expect("default receipt discovers");
+
+        assert_eq!(discovered.receipt.version, "0.1.0-beta.2");
+    }
+
+    #[test]
+    fn rejects_receipt_for_different_executable() {
+        let tmp = TestDir::new("mismatch");
+        let current = tmp.path().join("bin/sifr");
+        let other = tmp.path().join("other/sifr");
+        touch(&current);
+        touch(&other);
+        write_receipt(
+            &tmp.path().join("manifest/install.json"),
+            "0.1.0-beta.2",
+            "beta",
+            &other,
+        );
+
+        let error = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: current,
+            manifest_dir: Some(tmp.path().join("manifest")),
+            home_dir: None,
+        })
+        .expect_err("mismatched executable is rejected");
+
+        assert!(error.message.contains("belongs to"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn accepts_symlinked_current_executable_using_same_file_metadata() {
+        use std::os::unix::fs::symlink;
+
+        let tmp = TestDir::new("symlink");
+        let binary = tmp.path().join("bin/sifr");
+        let symlink_path = tmp.path().join("linked-sifr");
+        touch(&binary);
+        symlink(&binary, &symlink_path).expect("create symlink");
+        write_receipt(
+            &tmp.path().join("manifest/install.json"),
+            "0.1.0-beta.2",
+            "beta",
+            &binary,
+        );
+
+        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: symlink_path,
+            manifest_dir: Some(tmp.path().join("manifest")),
+            home_dir: None,
+        })
+        .expect("symlink matches receipt binary");
+
+        assert!(discovered.matches_receipt);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn accepts_hardlinked_current_executable_using_same_file_metadata() {
+        let tmp = TestDir::new("hardlink");
+        let binary = tmp.path().join("bin/sifr");
+        let hardlink_path = tmp.path().join("hardlinked-sifr");
+        touch(&binary);
+        fs::hard_link(&binary, &hardlink_path).expect("create hardlink");
+        write_receipt(
+            &tmp.path().join("manifest/install.json"),
+            "0.1.0-beta.2",
+            "beta",
+            &binary,
+        );
+
+        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: hardlink_path,
+            manifest_dir: Some(tmp.path().join("manifest")),
+            home_dir: None,
+        })
+        .expect("hardlink matches receipt binary");
+
+        assert!(discovered.matches_receipt);
     }
 }
