@@ -17,7 +17,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_PATH = REPO_ROOT / "verification" / "tooling" / "vscode_extension_contract.json"
 
 REQUIRED_SCRIPTS = ["lint", "typecheck", "test", "test:extension", "package"]
-REQUIRED_OUTPUT = Path("dist/sifr-vscode-0.0.0.vsix")
 REQUIRED_COMMANDS = {
     "sifr.restartLanguageServer",
     "sifr.showLanguageServerLogs",
@@ -95,6 +94,14 @@ def validate_package_json(repo_path: Path, package_json: dict[str, Any]) -> list
     return failures
 
 
+def expected_package_output(package_json: dict[str, Any]) -> Path:
+    name = package_json.get("name")
+    version = package_json.get("version")
+    if not isinstance(name, str) or not isinstance(version, str):
+        return Path("dist") / "<invalid-package-name-or-version>.vsix"
+    return Path("dist") / f"{name}-{version}.vsix"
+
+
 def run_command(repo_path: Path, command: list[str]) -> str | None:
     result = subprocess.run(
         command,
@@ -121,7 +128,8 @@ def validate(require_commands: bool = True) -> list[str]:
     if not package_path.exists():
         return [f"VS Code extension checkout has no package.json: {repo_path}"]
 
-    failures = validate_package_json(repo_path, read_json(package_path))
+    package_json = read_json(package_path)
+    failures = validate_package_json(repo_path, package_json)
     if failures or not require_commands:
         return failures
 
@@ -137,8 +145,9 @@ def validate(require_commands: bool = True) -> list[str]:
             failures.append(failure)
             return failures
 
-    if not (repo_path / REQUIRED_OUTPUT).is_file():
-        failures.append(f"package script did not produce {REQUIRED_OUTPUT}")
+    required_output = expected_package_output(package_json)
+    if not (repo_path / required_output).is_file():
+        failures.append(f"package script did not produce {required_output}")
     return failures
 
 
