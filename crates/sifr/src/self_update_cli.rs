@@ -5,11 +5,12 @@ use crate::cli_model_and_entrypoint::{
 use crate::diagnostic_rendering_and_run::render_diagnostics;
 use crate::self_update_metadata::{
     fetch_channel_metadata, parse_channel, resolve_update_plan, PreviewChannel, PreviewVersion,
-    TargetRequest, UpdatePlan,
+    TargetRequest, UpdateAction, UpdatePlan,
 };
 use crate::self_update_receipt::{
     discover_install_receipt, DiscoveredReceipt, ReceiptDiscoveryEnv,
 };
+use crate::self_update_runner::SelfUpdateRunner;
 use clap::{Args, Subcommand, ValueEnum};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use std::io::{self, Write as _};
@@ -115,12 +116,24 @@ fn cmd_update(args: &SelfUpdateArgs, diagnostic_format: DiagnosticFormat) -> i32
         return EXIT_SUCCESS;
     }
 
-    render_user_error(
-        self_update_diagnostic(
-            "self-update installer delegation is not available until the installer delegation milestone",
+    if plan.action == UpdateAction::NoOp {
+        let _ = writeln!(
+            io::stdout(),
+            "Sifr {} is already installed at {}",
+            plan.current_version.text,
+            discovered.receipt.binary_path
+        );
+        return EXIT_SUCCESS;
+    }
+
+    match SelfUpdateRunner::production().run(&plan, &discovered) {
+        Ok(exit_code) => exit_code,
+        Err(error) => render_user_error_with_exit(
+            error.diagnostic.as_ref(),
+            diagnostic_format,
+            error.exit_code,
         ),
-        diagnostic_format,
-    )
+    }
 }
 
 fn cmd_version(args: &SelfVersionArgs, diagnostic_format: DiagnosticFormat) -> i32 {
@@ -305,6 +318,15 @@ fn render_user_error(
     let diagnostic = diagnostic.into();
     let _ = render_diagnostics(std::slice::from_ref(diagnostic.as_ref()), diagnostic_format);
     EXIT_USER_DIAGNOSTIC
+}
+
+fn render_user_error_with_exit(
+    diagnostic: &RenderedDiagnostic,
+    diagnostic_format: DiagnosticFormat,
+    exit_code: i32,
+) -> i32 {
+    let _ = render_diagnostics(std::slice::from_ref(diagnostic), diagnostic_format);
+    exit_code
 }
 
 fn self_update_diagnostic(message: impl Into<String>) -> Box<RenderedDiagnostic> {

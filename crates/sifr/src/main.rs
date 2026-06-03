@@ -21,6 +21,7 @@ mod lint_cli;
 mod self_update_cli;
 mod self_update_metadata;
 mod self_update_receipt;
+mod self_update_runner;
 mod trace_cli;
 mod workspace_run_selection;
 

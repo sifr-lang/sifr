@@ -79,6 +79,27 @@ if [[ -e "${install_dir}/.sifr-update.lock" ]]; then
   exit 1
 fi
 
+external_lock_install_dir="${tmp_dir}/external-lock/bin"
+mkdir -p "${external_lock_install_dir}"
+mkdir "${external_lock_install_dir}/.sifr-update.lock"
+SIFR_TARGET="${target}" \
+  SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
+  SIFR_INSTALL_DIR="${external_lock_install_dir}" \
+  SIFR_NO_MODIFY_PATH=1 \
+  SIFR_INSTALL_LOCK_HELD=1 \
+  sh "${installer}" --no-modify-path >/dev/null
+
+if [[ ! -d "${external_lock_install_dir}/.sifr-update.lock" ]]; then
+  echo "installer removed a caller-owned self-update lock" >&2
+  exit 1
+fi
+rm -rf "${external_lock_install_dir}/.sifr-update.lock"
+
+if [[ ! -x "${external_lock_install_dir}/sifr" ]]; then
+  echo "installer did not install while caller-owned lock was held" >&2
+  exit 1
+fi
+
 path_install_dir="${tmp_dir}/path-managed/bin"
 home_dir="${tmp_dir}/home"
 mkdir -p "${home_dir}"
