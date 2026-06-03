@@ -35,7 +35,7 @@ Record local validation for each milestone before opening the corresponding PR.
 - M2: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, CLI dry-run smoke, file-size guardrail, `scripts/run_all_tests.sh --profile quick`, and full `scripts/run_all_tests.sh` passed before merge.
 - M3: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, file-size guardrail, non-dry-run CLI fake-installer smoke, and `scripts/run_all_tests.sh --profile quick` passed before merge.
 - M4: `bash -n` for new/updated shell scripts, M4 drift fixtures, explicit `schema_version=true` rejection probe, `scripts/run_distribution_validation.sh`, `cargo fmt --check`, file-size guardrail, and `scripts/run_all_tests.sh --profile quick` passed before merge.
-- M5: `cargo fmt --check`, file-size guardrail, self-update docs sanity grep, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, and `scripts/run_all_tests.sh --profile quick` passed before PR.
+- M5: `cargo fmt --check`, file-size guardrail, self-update docs sanity grep, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, and `scripts/run_all_tests.sh --profile quick` passed before PR. Full `scripts/run_all_tests.sh` passed before merge after rerunning a flaky `LSP protocol stress` failure that passed directly; the successful full lane reported only wall-time/skew advisories.
 
 ## Merged PRs
 

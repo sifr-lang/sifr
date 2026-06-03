@@ -10,7 +10,7 @@ Status: in progress
 - [x] `milestone_self_update_2` CLI Eligibility And Dry Run — merged in [PR #2275](https://github.com/sifr-lang/sifr/pull/2275); review artifacts: `reviews/self-update-m2-review-pass-1.md`, `reviews/self-update-m2-review-pass-2.md`.
 - [x] `milestone_self_update_3` Installer Delegation — merged in [PR #2276](https://github.com/sifr-lang/sifr/pull/2276); review artifacts: `reviews/self-update-m3-review-pass-1.md`, `reviews/self-update-m3-review-pass-2.md`.
 - [x] `milestone_self_update_4` Distribution Drift Guardrails — merged in [PR #2277](https://github.com/sifr-lang/sifr/pull/2277); review artifacts: `reviews/self-update-m4-review-pass-1.md`, `reviews/self-update-m4-review-pass-2.md`, `reviews/self-update-m4-review-pass-3.md`.
-- [ ] `milestone_self_update_5` Docs And Release Readiness — implementation in progress on `ad-hoc-self-update-m5`.
+- [ ] `milestone_self_update_5` Docs And Release Readiness — ready in [PR #2278](https://github.com/sifr-lang/sifr/pull/2278); review artifacts: `reviews/self-update-m5-review-pass-1.md`, `reviews/self-update-m5-review-pass-2.md`.
 
 ## Objective
 
