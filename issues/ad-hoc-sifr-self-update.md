@@ -94,6 +94,7 @@ sifr self version [--short] [--format text|json]
 - `--channel alpha|beta`: resolve the current version for a moving preview channel.
 - `--version <preview-version>`: resolve exactly one immutable version installer.
 - `--dry-run`: print the planned source version, target version, channel, installer URL, and install directory without mutation.
+- `--dry-run` does not acquire the install lock because it performs no mutation. It may report a stale plan if a real update is running concurrently, but the real update remains protected by the install lock.
 - `--force`: allow same-version reinstall or downgrade.
 
 Invalid combinations:
@@ -112,7 +113,9 @@ Invalid combinations:
 - target triple,
 - whether the current executable matches the receipt.
 
-The text format should be concise for humans. JSON format is schema-versioned and deterministic:
+The text format should be concise for humans. `--short` prints only the current executable version in text mode. `--short --format json` is rejected so the JSON contract has one stable shape.
+
+JSON format is schema-versioned and deterministic. This `schema_version` describes the `self version` JSON output schema; it is independent of the install receipt `schema_version`.
 
 ```json
 {
@@ -154,7 +157,8 @@ Required receipt fields after this phase:
 Receipt validity:
 
 - `schema_version` is required and must be exactly `1` until a reviewed schema bump changes the contract.
-- `binary_path`, `channel`, and `modify_path` are required. The CLI must not infer missing receipt fields.
+- All fields shown above are required. The schema file at `verification/distribution/self_update_install_receipt.schema.json` is the authoritative enumeration.
+- The CLI must not infer missing receipt fields.
 - Unknown receipt fields are rejected.
 - Malformed, partial, or pre-schema receipts are treated as unmanaged installs and fail before network access.
 
@@ -213,7 +217,7 @@ INSTALL_BASE_URL = "https://sifr.sh/install"
 installer_url = "${INSTALL_BASE_URL}/versions/${version}"
 ```
 
-Integration tests may override `INSTALL_BASE_URL` through an explicit test-only path. Production runtime configuration must not accept arbitrary installer URLs from metadata or receipts.
+Integration tests may override `INSTALL_BASE_URL` only through a compile-time or `cfg(test)` path. Production runtime environment variables must not change the installer URL, and production runtime configuration must not accept arbitrary installer URLs from metadata or receipts.
 
 The metadata file is resolution metadata only. It does not authorize the CLI to bypass the immutable installer. Checksums remain embedded in the immutable installer and verified by the installer.
 
@@ -221,7 +225,7 @@ The CLI must reject the entire metadata document before resolution if it contain
 
 - a `stable` channel,
 - any stable-looking version,
-- any channel outside the pre-Phase-39 allowlist,
+- any channel outside the pre-Phase-39 allowlist. The pre-Phase-39 allowlist is exactly `alpha` and `beta`,
 - any value that is not an exact accepted preview version string.
 
 Release automation must generate dispatchers, immutable installers, and metadata from one plan so they cannot drift.
@@ -247,9 +251,9 @@ The runner should:
 - write it to a temporary directory,
 - finish the download to a temporary file and atomically rename it before execution,
 - reject empty downloads, downloads smaller than a documented minimum size, and files whose first line does not start with `#!` before execution,
-- acquire an exclusive update lock under the install directory before invoking the installer,
+- acquire an exclusive update lock at `<install_dir>/.sifr-update.lock` before invoking the installer,
 - run it with `SIFR_INSTALL_DIR` from the receipt,
-- pass `SIFR_INSTALL_MANIFEST_DIR` when the receipt was discovered outside the default manifest path for the install directory. The default path is `<install_dir>/install.json`, except the default `~/.sifr/bin` install keeps the Phase 33 manifest path `~/.sifr/install.json`,
+- pass `SIFR_INSTALL_MANIFEST_DIR` when the receipt was discovered outside the default manifest path for the install directory by canonicalized path comparison. The default path is `<install_dir>/install.json`, except the default `~/.sifr/bin` install keeps the Phase 33 manifest path `~/.sifr/install.json`,
 - pass `SIFR_NO_MODIFY_PATH=1` when the receipt says `modify_path == false`,
 - pass `--force` only when requested,
 - preserve installer stdout/stderr and exit status in human mode,
@@ -259,15 +263,18 @@ Do not introduce an updater background process, daemon, or persistent cache.
 
 ## Diagnostics
 
-Reserve a small CLI diagnostic range for self-update failures.
+Self-update diagnostics reserve `SIFR-BUILD-09xx` until implementation assigns exact codes. If implementation introduces a dedicated CLI diagnostic family, that taxonomy change must be reviewed before replacing this reserved range.
 
 Required cases:
 
 - standalone receipt missing,
+- receipt exists but predates the schema-versioned self-update contract,
+- receipt is partial or malformed,
 - receipt belongs to a different executable,
 - unsupported install source,
 - invalid channel,
 - stable channel gated,
+- release-candidate channels or `-rc.N` version pins unsupported until Phase 39 or a reviewed channel contract adds `rc`,
 - invalid or stable-looking version,
 - metadata unavailable,
 - metadata malformed,
@@ -283,6 +290,8 @@ Human diagnostics must point to the exact remediation:
 
 - use `cargo install --force sifr` or the package-manager command when the install source is known,
 - re-run `curl -LsSf https://sifr.sh/install | sh` when no receipt exists and the user wants standalone management,
+- re-run `curl -LsSf https://sifr.sh/install | sh` when the receipt predates the schema-versioned self-update contract,
+- use `--channel alpha|beta` or a supported preview version when an `rc` channel or `-rc.N` pin is rejected before Phase 39,
 - use `--force` for intentional reinstall or downgrade,
 - use `--channel alpha|beta` or `--version <preview>` while stable is gated.
 
@@ -298,13 +307,15 @@ Unit tests:
 - channel metadata parsing,
 - preview semver validation,
 - stable-looking version rejection,
+- release-candidate channel and `-rc.N` version rejection before Phase 39,
 - update-needed comparison,
-- dry-run output in text and JSON formats.
+- dry-run output in text and JSON formats,
+- `self version --short --format json` rejection.
 
 Integration tests:
 
 - local HTTP fixture serving `channels.json` and immutable installer scripts,
-- dry-run latest update from an older schema-versioned release,
+- dry-run latest update from an older schema-versioned release using synthetic local fixture versions,
 - no-op when already current,
 - same-version reinstall requires `--force`,
 - downgrade requires `--force`,
@@ -314,6 +325,7 @@ Integration tests:
 - metadata containing stable or unknown channels is rejected,
 - installer receives the expected `SIFR_INSTALL_DIR`, `SIFR_INSTALL_MANIFEST_DIR`, `SIFR_NO_MODIFY_PATH`, and `--force` arguments,
 - concurrent update attempts serialize on the install lock and cannot produce a binary/receipt mismatch.
+- manual installer invocation and self-update invocation serialize on the same install lock and cannot produce a binary/receipt mismatch.
 
 Distribution validation:
 
@@ -322,6 +334,9 @@ Distribution validation:
 - immutable version installer embedded `APP_VERSION`, metadata channel version, dispatcher target, and GitHub release tag agree,
 - generated receipt output conforms to `verification/distribution/self_update_install_receipt.schema.json`,
 - generated receipt output writes `binary_path` as the canonicalized installed binary path when the platform can resolve it,
+- generated receipt output records `channel` derived from the installer version's semver prerelease label,
+- generated receipt output records `modify_path` from the requested installer behavior instead of hardcoding `true`,
+- generated installer writes `install.json` through an atomic temporary-file-and-rename path while holding the same install lock used by self-update,
 - metadata is absent for stable until Phase 39,
 - `scripts/run_distribution_validation.sh` includes self-update metadata drift checks.
 
@@ -366,6 +381,9 @@ flowchart TD
 Scope:
 
 - Extend generated installer receipts with `schema_version`, `channel`, `binary_path`, and `modify_path`.
+- Derive receipt `channel` from the installer version's semver prerelease label.
+- Persist receipt `modify_path` from the actual installer request, including `SIFR_NO_MODIFY_PATH`.
+- Move generated installer manifest writes to an atomic temporary-file-and-rename path guarded by the install lock.
 - Add `verification/distribution/self_update_install_receipt.schema.json`.
 - Generate channel metadata from the release plan.
 - Update `internal_docs/distribution_pipeline.md` with the receipt, metadata, fail-closed schema-versioning, and TLS policy contract.
@@ -378,6 +396,8 @@ Definition of done:
 - New metadata files are generated deterministically.
 - Receipt schema validation covers generated installer output and Rust parser expectations.
 - Receipt validation proves `binary_path` is the canonical installed binary path in generated installer output where the platform supports canonicalization.
+- Receipt validation proves `channel` and `modify_path` reflect the installer version and request.
+- Manual installer and self-update locking use the same lock path.
 - Drift checks fail on seeded channel/version mismatches.
 - Pre-schema receipt tests prove the CLI fails before network access and points users to re-run the standalone installer.
 
@@ -390,12 +410,14 @@ Scope:
 - Implement channel and explicit-version resolution.
 - Implement dry-run output.
 - Add stable gating and downgrade/same-version/channel-switch planning rules.
+- Define `--short` interaction with JSON output by rejecting `--short --format json`.
 
 Definition of done:
 
 - `sifr self update --dry-run` performs no mutation.
 - Missing and mismatched receipts fail before network access.
 - Stable channel and stable-looking version pins are rejected.
+- `rc` channels and `-rc.N` version pins are either explicitly rejected before Phase 39 or covered by a reviewed channel contract update.
 - No-argument update uses only the explicit receipt channel.
 - Text and JSON output are deterministic.
 
@@ -405,6 +427,7 @@ Scope:
 
 - Download the resolved immutable installer into a temporary directory.
 - Acquire an install lock before installer execution.
+- Ensure the immutable installer accepts `--force` before the runner depends on `--force` pass-through.
 - Execute the installer with receipt-derived environment and requested `--force`.
 - Preserve installer output and exit status.
 - Map expected installer failures into structured diagnostics.
