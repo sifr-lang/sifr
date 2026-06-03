@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sifr self-update install receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "version",
+    "channel",
+    "target",
+    "install_dir",
+    "binary_path",
+    "artifact",
+    "modify_path"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "name": { "const": "sifr" },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+-(alpha|beta|rc)\\.[0-9]+$"
+    },
+    "channel": {
+      "type": "string",
+      "enum": ["alpha", "beta", "rc"]
+    },
+    "target": { "type": "string", "minLength": 1 },
+    "install_dir": { "type": "string", "minLength": 1 },
+    "binary_path": { "type": "string", "minLength": 1 },
+    "artifact": { "type": "string", "minLength": 1 },
+    "modify_path": { "type": "boolean" }
+  }
+}
