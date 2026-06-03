@@ -77,6 +77,17 @@ if [[ "$(preview_version_channel "${BETA_VERSION}")" != "beta" ]]; then
 fi
 
 mkdir -p "${INSTALL_ROOT}/versions"
+mkdir -p "${INSTALL_ROOT}/metadata"
+
+cat >"${INSTALL_ROOT}/metadata/channels.json" <<EOF
+{
+  "schema_version": 1,
+  "channels": {
+    "alpha": "${ALPHA_VERSION}",
+    "beta": "${BETA_VERSION}"
+  }
+}
+EOF
 
 write_dispatcher() {
   local path="$1"
@@ -248,4 +259,4 @@ write_dispatcher "${INSTALL_ROOT}/index" "beta"
 write_dispatcher "${INSTALL_ROOT}/alpha" "alpha"
 write_dispatcher "${INSTALL_ROOT}/beta" "beta"
 
-echo "generated dispatchers under ${INSTALL_ROOT}"
+echo "generated dispatchers and channel metadata under ${INSTALL_ROOT}"

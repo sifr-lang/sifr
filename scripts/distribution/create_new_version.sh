@@ -213,9 +213,11 @@ current_beta=${CURRENT_BETA}
 new_alpha=${NEW_ALPHA}
 new_beta=${NEW_BETA}
 version_installer=${INSTALL_ROOT}/versions/${VERSION}
+channel_metadata=${INSTALL_ROOT}/metadata/channels.json
 stable_entrypoint=unchanged_absent
 github_release=sifr-lang/sifr:${VERSION}
-site_dispatcher_update=${CHANNEL}:${VERSION}${artifact_lines}
+site_dispatcher_update=${CHANNEL}:${VERSION}
+channel_metadata_update=alpha:${NEW_ALPHA},beta:${NEW_BETA}${artifact_lines}
 EOF
 )"
   PLAN_SHA="$(sha256_text "${PLAN_TEXT}")"
@@ -257,6 +259,7 @@ $(for target in "${TARGETS[@]}"; do echo "- [x] sifr-${VERSION}-${target}.tar.gz
 
 - [x] Immutable generated installer: ${INSTALL_ROOT}/versions/${VERSION}
 - [x] Channel dispatcher update: ${CHANNEL} -> ${VERSION}
+- [x] Channel metadata update: alpha=${NEW_ALPHA}, beta=${NEW_BETA}
 - [x] Stable entrypoint unchanged and absent
 - [x] SHA-256 checksums embedded in immutable installer
 

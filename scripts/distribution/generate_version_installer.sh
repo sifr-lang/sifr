@@ -121,6 +121,8 @@ APP_VERSION="${VERSION}"
 ARTIFACT_BASE_URL="${ARTIFACT_BASE_URL}"
 NO_MODIFY_PATH="\${SIFR_NO_MODIFY_PATH:-0}"
 FORCE_INSTALL=0
+APP_CHANNEL="${VERSION#*-}"
+APP_CHANNEL="\${APP_CHANNEL%%.*}"
 
 fail() {
   echo "sifr installer: \$*" >&2
@@ -299,17 +301,52 @@ detect_installed_version() {
   binary_version "\${installed_binary}" || true
 }
 
+canonical_path() {
+  path="\$1"
+  dir="\$(dirname "\${path}")"
+  file="\$(basename "\${path}")"
+  physical_dir="\$(cd "\${dir}" 2>/dev/null && pwd -P)" || return 1
+  printf '%s/%s\n' "\${physical_dir}" "\${file}"
+}
+
 write_install_manifest() {
   mkdir -p "\${manifest_dir}"
+  manifest_tmp="\$(mktemp "\${manifest_dir}/.install.json.XXXXXX")"
+  canonical_binary_path="\$(canonical_path "\${installed_binary}" || printf '%s\n' "\${installed_binary}")"
+  if [ "\${NO_MODIFY_PATH}" = "1" ]; then
+    modify_path=false
+  else
+    modify_path=true
+  fi
   {
     printf '%s\n' '{'
+    printf '  "schema_version": 1,\n'
     printf '  "name": "%s",\n' "\${APP_NAME}"
     printf '  "version": "%s",\n' "\${APP_VERSION}"
+    printf '  "channel": "%s",\n' "\${APP_CHANNEL}"
     printf '  "target": "%s",\n' "\${target}"
     printf '  "install_dir": "%s",\n' "\${install_dir}"
-    printf '  "artifact": "%s"\n' "\${archive_name}"
+    printf '  "binary_path": "%s",\n' "\${canonical_binary_path}"
+    printf '  "artifact": "%s",\n' "\${archive_name}"
+    printf '  "modify_path": %s\n' "\${modify_path}"
     printf '%s\n' '}'
-  } >"\${manifest_path}"
+  } >"\${manifest_tmp}"
+  mv "\${manifest_tmp}" "\${manifest_path}"
+  manifest_tmp=""
+}
+
+acquire_install_lock() {
+  mkdir -p "\${install_dir}"
+  install_lock_path="\${install_dir}/.sifr-update.lock"
+  while ! mkdir "\${install_lock_path}" 2>/dev/null; do
+    sleep 1
+  done
+}
+
+release_install_lock() {
+  if [ -n "\${install_lock_path:-}" ]; then
+    rmdir "\${install_lock_path}" 2>/dev/null || true
+  fi
 }
 
 detect_target() {
@@ -477,6 +514,8 @@ if [ -z "\${manifest_dir}" ]; then
 fi
 manifest_path="\${manifest_dir}/install.json"
 installed_binary="\${install_dir}/sifr"
+install_lock_path=""
+manifest_tmp=""
 installed_version="\$(detect_installed_version)"
 
 if [ -x "\${installed_binary}" ] && [ -n "\${installed_version}" ]; then
@@ -515,6 +554,10 @@ fi
 
 tmp_dir="\$(mktemp -d "\${TMPDIR:-/tmp}/sifr-install.XXXXXX")"
 cleanup() {
+  release_install_lock
+  if [ -n "\${manifest_tmp:-}" ] && [ -f "\${manifest_tmp}" ]; then
+    rm -f "\${manifest_tmp}"
+  fi
   rm -rf "\${tmp_dir}"
 }
 trap cleanup EXIT HUP INT TERM
@@ -534,7 +577,7 @@ if [ ! -f "\${extract_dir}/sifr" ]; then
   fail "artifact \${archive_name} does not contain sifr at archive root"
 fi
 
-mkdir -p "\${install_dir}"
+acquire_install_lock
 tmp_binary="\${install_dir}/.sifr.\$\$.tmp"
 cp "\${extract_dir}/sifr" "\${tmp_binary}"
 chmod 755 "\${tmp_binary}"

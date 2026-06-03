@@ -241,6 +241,7 @@ impl DiagnosticCode {
     pub const BUILD_CARGO_MANIFEST_FAILURE: Self = Self::new("SIFR-BUILD-0004", Severity::Error);
     pub const BUILD_RUSTC_OR_CARGO_FAILURE: Self = Self::new("SIFR-BUILD-0005", Severity::Error);
     pub const BUILD_ARTIFACT_MISSING: Self = Self::new("SIFR-BUILD-0006", Severity::Error);
+    pub const SELF_UPDATE_UNMANAGED_RECEIPT: Self = Self::new("SIFR-BUILD-0901", Severity::Error);
 
     pub const INTERNAL_COMPILER_PANIC: Self = Self::new("SIFR-INTERNAL-0001", Severity::Error);
     pub const INTERNAL_RECOVERY_OMISSION_SUMMARY: Self =
@@ -664,6 +665,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
     DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
     DiagnosticCode::BUILD_ARTIFACT_MISSING,
+    DiagnosticCode::SELF_UPDATE_UNMANAGED_RECEIPT,
     DiagnosticCode::INTERNAL_COMPILER_PANIC,
     DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY,
 ];

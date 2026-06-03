@@ -152,6 +152,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["path"]
         ),
     active_entry!(
+            "SIFR-BUILD-0901",
+            "BUILD",
+            "Standalone install receipt is missing or outside the self-update contract.",
+            Severity::Error,
+            "crates/sifr/src/self_update_receipt.rs",
+            "{message}",
+            "sifr::self_update_receipt",
+            [arg!("message")],
+            ["message"]
+        ),
+    active_entry!(
             "SIFR-INTERNAL-0001",
             "INTERNAL",
             "Unclassified compiler panic after a panic boundary.",

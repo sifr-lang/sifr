@@ -19,11 +19,13 @@ public/install/
   index
   alpha
   beta
+  metadata/
+    channels.json
   versions/
     <version>
 ```
 
-`index` is the default beta dispatcher. The deployment must serve it at `https://sifr.sh/install`; `alpha` and `beta` are served at `https://sifr.sh/install/alpha` and `https://sifr.sh/install/beta`. Immutable generated installers are served from `https://sifr.sh/install/versions/<version>`.
+`index` is the default beta dispatcher. The deployment must serve it at `https://sifr.sh/install`; `alpha` and `beta` are served at `https://sifr.sh/install/alpha` and `https://sifr.sh/install/beta`. Immutable generated installers are served from `https://sifr.sh/install/versions/<version>`. Channel resolution metadata is served from `https://sifr.sh/install/metadata/channels.json`.
 
 This directory layout avoids the impossible static-file shape where `public/install` is both an executable file and a directory for nested channel paths.
 
@@ -49,6 +51,20 @@ Dispatcher behavior:
 - The dispatcher downloads exactly one immutable generated installer and preserves its exit status.
 
 The dispatcher never resolves artifacts itself and never compiles from source.
+
+Generating dispatchers also writes `metadata/channels.json` from the same alpha/beta version inputs:
+
+```json
+{
+  "schema_version": 1,
+  "channels": {
+    "alpha": "0.1.0-alpha.1",
+    "beta": "0.1.0-beta.1"
+  }
+}
+```
+
+The metadata file is resolution metadata only. It records channel-to-version mappings and must not contain executable URLs. The Rust CLI derives immutable installer URLs from the trusted install base URL and the resolved version string. Stable metadata remains absent until Phase 39 changes the stable-channel contract.
 
 ## Phase 33.1 Validation
 
@@ -130,10 +146,40 @@ The generated installer embeds:
 - platform detection for the Phase 33 targets,
 - checksum validation before extraction or replacement,
 - atomic replacement of the installed `sifr` binary after validation,
+- schema-versioned install receipt writing through a temporary file and atomic rename,
+- update locking at `<install_dir>/.sifr-update.lock` before binary or receipt mutation,
 - shell profile wiring through `~/.sifr/env`, unless `SIFR_NO_MODIFY_PATH=1`
   or `--no-modify-path` is used.
 
 The generated installer honors `SIFR_ARTIFACT_BASE_URL`, `SIFR_TARGET`, `SIFR_INSTALL_DIR`, and `SIFR_NO_MODIFY_PATH` for local validation.
+
+## Self-Update Receipt Contract
+
+Official standalone installers write a schema-versioned `install.json` receipt:
+
+```json
+{
+  "schema_version": 1,
+  "name": "sifr",
+  "version": "0.1.0-beta.2",
+  "channel": "beta",
+  "target": "aarch64-apple-darwin",
+  "install_dir": "/Users/example/.sifr/bin",
+  "binary_path": "/Users/example/.sifr/bin/sifr",
+  "artifact": "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz",
+  "modify_path": true
+}
+```
+
+The authoritative field enumeration lives at `verification/distribution/self_update_install_receipt.schema.json`. Receipts must use `schema_version: 1`, include every listed field, and reject unknown fields. Pre-schema, partial, malformed, or mismatched receipts are treated as unmanaged installs by `sifr self update`; the diagnostic tells users to re-run `curl -LsSf https://sifr.sh/install | sh` if they want standalone self-update management.
+
+`channel` is derived from the installer version prerelease label. `modify_path` records the actual installer request, including `SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` records the canonical installed binary path when the platform can resolve it.
+
+## Self-Update TLS And Delegation Policy
+
+The Rust CLI self-update path resolves a target immutable installer and delegates installation to that installer. It must not download release archives directly, parse dispatcher scripts for versions, bypass checksum validation, or accept executable URLs from metadata or receipts.
+
+Production installer downloads use normal TLS certificate verification. Test-only install-base overrides may be compiled or configured for fixtures; production runtime environment variables must not replace the trusted installer URL base.
 
 ## Phase 33.2 Validation
 
@@ -186,7 +232,7 @@ scripts/distribution/create_new_version.sh \
 
 Dry-run validates inputs, resolves the base commit, computes every target artifact name, detects site dispatcher drift, confirms stable entrypoints remain absent, and prints the exact GitHub Release and site mutations.
 
-Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable version installer, regenerates channel dispatchers, writes a release checklist, writes a recovery note, and publishes GitHub Release assets when `--mutation-mode github` is selected. Validation uses `--mutation-mode local` to exercise the same file mutations without publishing assets.
+Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable version installer, regenerates channel dispatchers and channel metadata from one plan, writes a release checklist, writes a recovery note, and publishes GitHub Release assets when `--mutation-mode github` is selected. Validation uses `--mutation-mode local` to exercise the same file mutations without publishing assets.
 
 The Cursor command wrapper lives at `.cursor/commands/create-new-version.md`.
 

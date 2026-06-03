@@ -13,8 +13,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DIR = REPO_ROOT / "verification" / "tooling" / "formatter_manifests"
-PHASE_DOC = REPO_ROOT / "issues" / "ad-hoc-production-grade-sifr-formatter.md"
-EXECUTION_DOC = REPO_ROOT / "issues" / "ad-hoc-production-grade-sifr-formatter-execution.md"
+PHASE_DOC_NAME = "ad-hoc-production-grade-sifr-formatter.md"
+EXECUTION_DOC_NAME = "ad-hoc-production-grade-sifr-formatter-execution.md"
 GITMODULES = REPO_ROOT / ".gitmodules"
 
 ALLOWED_CLASSIFICATIONS = {"supported", "adapted", "not-applicable", "not-exposed"}
@@ -63,6 +63,16 @@ def run(command: list[str], *, cwd: Path = REPO_ROOT) -> str:
             f"command failed: {' '.join(command)}\n{completed.stdout}\n{completed.stderr}"
         )
     return completed.stdout.strip()
+
+
+def phase_doc_path(name: str) -> Path:
+    active_path = REPO_ROOT / "issues" / name
+    if active_path.exists():
+        return active_path
+    archived_path = REPO_ROOT / "issues" / "archive" / name
+    if archived_path.exists():
+        return archived_path
+    return active_path
 
 
 def require(condition: bool, message: str, failures: list[str]) -> None:
@@ -205,8 +215,8 @@ def check_baseline(failures: list[str]) -> None:
 def run_positive() -> None:
     docs_text = "\n".join(
         [
-            PHASE_DOC.read_text(encoding="utf-8"),
-            EXECUTION_DOC.read_text(encoding="utf-8"),
+            phase_doc_path(PHASE_DOC_NAME).read_text(encoding="utf-8"),
+            phase_doc_path(EXECUTION_DOC_NAME).read_text(encoding="utf-8"),
         ]
     )
     failures: list[str] = []

@@ -154,6 +154,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-BUILD-0004`](SIFR-BUILD-0004.md) | Error | Cargo manifest generation failed. |
 | [`SIFR-BUILD-0005`](SIFR-BUILD-0005.md) | Error | Rustc or Cargo execution failed. |
 | [`SIFR-BUILD-0006`](SIFR-BUILD-0006.md) | Error | Expected build artifact was not produced. |
+| [`SIFR-BUILD-0901`](SIFR-BUILD-0901.md) | Error | Standalone install receipt is missing or outside the self-update contract. |
 | [`SIFR-INTERNAL-0001`](SIFR-INTERNAL-0001.md) | Error | Unclassified compiler panic after a panic boundary. |
 | [`SIFR-INTERNAL-0002`](SIFR-INTERNAL-0002.md) | Note | Structured recovery-cap omission summary. |
 | [`SIFR-FMT-0001`](SIFR-FMT-0001.md) | Error | Source formatting drift detected by sifr fmt --check. |
