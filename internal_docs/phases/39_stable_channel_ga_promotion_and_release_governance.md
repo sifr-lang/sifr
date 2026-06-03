@@ -11,7 +11,7 @@ Phase 39 owns the point where stable distribution becomes user-facing, including
 - formal release sign-off,
 - stable-channel support in `sifr self update`.
 
-Before this phase, preview self-update must keep `stable` and stable-looking version pins gated. Phase 39 is the phase that may lift that gate, but only after stable metadata, installer behavior, self-update behavior, rollback, and release sign-off are validated as one governance surface.
+Before this phase, preview self-update must keep `stable` and stable-looking version pins gated. Phase 39 is the phase that can lift that gate, but only after stable metadata, installer behavior, self-update behavior, rollback, and release sign-off are validated as one governance surface.
 
 ## Depends on
 - Phase 38
@@ -32,7 +32,7 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
 ### milestone_39_2: Rollback and Incident Governance
 - Scope:
   - Define rollback triggers, owner responsibilities, and communication protocol.
-  - Define stable self-update rollback behavior, including whether `sifr self update` should pin, downgrade, or refuse updates when the stable channel is rolled back.
+  - Define stable self-update rollback behavior as a governed downgrade: when rollback is approved, stable metadata points to the approved rollback version, `sifr self update` refuses to install that older stable version without `--force`, and `sifr self update --force` delegates to the immutable installer for the rollback target.
   - Define how stable channel metadata and installer entrypoints are reverted without producing binary/receipt mismatches for already-installed users.
 - Definition of done:
   - Rollback path is tested and documented.
@@ -51,6 +51,7 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
   - Enable the public `stable` installer channel only through the governed release plan.
   - Generate stable channel metadata from the same plan as dispatchers and immutable installers.
   - Update `sifr self update` to accept stable channel metadata and stable-looking version pins only after the stable promotion gate is satisfied.
+  - Keep the ad hoc self-update receipt schema, `self version` JSON schema, and `channels.json` schema at `schema_version: 1`; stable activation changes the governed allowlist and accepted version classes, not field shapes.
   - Preserve preview safety rules: no installer URLs from metadata, no artifact extraction in Rust, receipt eligibility before network access, installer URLs derived from trusted constants, and immutable installer delegation for checksum/extraction/replacement.
   - Add stable self-update validation covering preview-to-stable, stable-to-stable, stable no-op, forced stable downgrade or rollback, stale metadata rejection, and mismatched receipt rejection.
   - Update public and internal docs to distinguish preview update behavior from stable update behavior.
@@ -58,6 +59,7 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
   - `sifr self update` can update an official standalone stable install to the current governed stable release.
   - `sifr self update --channel stable` and `sifr self update --version <stable-version>` work only for governed stable releases.
   - Stable metadata, dispatcher, immutable installer, GitHub release, and docs drift checks are part of local validation.
+  - Stable activation tests prove schema-version `1` metadata and receipts accept `stable` only after the governed allowlist is updated.
   - Pre-GA stable metadata and unsigned or unapproved stable versions remain rejected.
 
 ## Quality Contract

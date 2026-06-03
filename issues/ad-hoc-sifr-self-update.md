@@ -31,7 +31,7 @@ Phase 33 shipped the installer substrate:
 
 This supports updates when the user re-runs an installer. It does not provide a CLI-native update command, latest-version resolution, dry-run planning, or installed-binary eligibility diagnostics.
 
-Astral uv's self-update flow has the shape Sifr should learn from:
+Astral uv's self-update flow has the product shape Sifr adopts:
 
 - expose a `self update` command and a small `self version` command,
 - require a standalone-install receipt,
@@ -40,13 +40,13 @@ Astral uv's self-update flow has the shape Sifr should learn from:
 - support dry-run output,
 - delegate final installation to the standalone installer rather than duplicating all install logic.
 
-Sifr should adopt the product shape and safety properties, not copy uv implementation code.
+Sifr adopts the product shape and safety properties, without copying uv implementation code.
 
 ## Source Of Truth
 
 This file is the implementation contract for the ad hoc self-update phase until it is promoted into a numbered phase or superseded by Phase 39 stable governance.
 
-Implementation may update `internal_docs/distribution_pipeline.md` with the final metadata and command contract. Any implementation that conflicts with this file must update this file in a reviewed planning PR first.
+Milestone 1 must update `internal_docs/distribution_pipeline.md` with the exact metadata, receipt, installer-lock, TLS, and CLI command contract from this file. Implementation PRs must not diverge from this file; any intended divergence requires a reviewed planning PR that changes this file before implementation.
 
 ## Depends On
 
@@ -85,7 +85,7 @@ Implementation may update `internal_docs/distribution_pipeline.md` with the fina
 ## Command Contract
 
 ```text
-sifr self update [--channel alpha|beta] [--version <preview-version>] [--dry-run] [--force]
+sifr self update [--channel alpha|beta] [--version <preview-version>] [--dry-run] [--format text|json] [--force]
 sifr self version [--short] [--format text|json]
 ```
 
@@ -94,15 +94,46 @@ sifr self version [--short] [--format text|json]
 - `--channel alpha|beta`: resolve the current version for a moving preview channel.
 - `--version <preview-version>`: resolve exactly one immutable version installer.
 - `--dry-run`: print the planned source version, target version, channel, installer URL, and install directory without mutation.
-- `--dry-run` does not acquire the install lock because it performs no mutation. It may report a stale plan if a real update is running concurrently, but the real update remains protected by the install lock.
+- `--format text|json`: format dry-run output. The flag is accepted only with `--dry-run`; real updates always preserve installer stdout/stderr as human output.
+- `--dry-run` does not acquire the install lock because it performs no mutation. It can report a stale plan if a real update is running concurrently, but the real update remains protected by the install lock.
 - `--force`: allow same-version reinstall or downgrade.
 
 Invalid combinations:
 
 - `--channel` with `--version` is rejected.
+- `--format text|json` without `--dry-run` is rejected.
 - `stable`, `--channel stable`, and stable-looking versions are rejected until Phase 39.
+- `rc` channels and `-rc.N` version pins are rejected before Phase 39.
 - Unknown channels are rejected before network requests.
 - Missing or mismatched install receipts are rejected before network requests.
+
+Successful dry-run JSON output is schema-versioned and deterministic. Dry-run obeys the same force rules as a real update, so same-version reinstall, downgrade, or channel switch plans that require `--force` fail before output when `--force` is absent.
+
+```json
+{
+  "schema_version": 1,
+  "current_version": "0.1.0-beta.1",
+  "target_version": "0.1.0-beta.2",
+  "receipt_channel": "beta",
+  "requested_channel": null,
+  "resolved_channel": "beta",
+  "install_dir": "/Users/example/.sifr/bin",
+  "binary_path": "/Users/example/.sifr/bin/sifr",
+  "installer_url": "https://sifr.sh/install/versions/0.1.0-beta.2",
+  "action": "update",
+  "force": false,
+  "would_run_installer": true,
+  "warnings": []
+}
+```
+
+Dry-run JSON field requirements:
+
+- `schema_version` is exactly `1` until a reviewed output-schema bump changes this contract.
+- `requested_channel` is `null` only when no `--channel` flag was provided; absent-vs-null behavior is snapshot-tested.
+- `action` is one of `no_op`, `update`, `reinstall`, `downgrade`, or `channel_switch`.
+- `would_run_installer` is `false` only for `no_op`; every other successful action would invoke the immutable installer in a non-dry-run execution.
+- Field names, field ordering, field types, warning ordering, and absent-vs-null behavior are snapshot-tested.
 
 `sifr self version` reports:
 
@@ -113,7 +144,7 @@ Invalid combinations:
 - target triple,
 - whether the current executable matches the receipt.
 
-The text format should be concise for humans. `--short` prints only the current executable version in text mode. `--short --format json` is rejected so the JSON contract has one stable shape.
+The text format must be concise for humans. `--short` prints only the current executable version in text mode. `--short --format json` is rejected so the JSON contract has one stable shape.
 
 JSON format is schema-versioned and deterministic. This `schema_version` describes the `self version` JSON output schema; it is independent of the install receipt `schema_version`.
 
@@ -181,7 +212,7 @@ Rule 3 is a diagnostic-quality affordance for the default installer layout, not 
 Eligibility check:
 
 - canonicalize the receipt `binary_path` at install time before writing it when the platform can resolve the final path,
-- canonicalize the current executable path during self-update when possible,
+- canonicalize the current executable path during self-update and reject eligibility if canonicalization fails,
 - on Unix, compare device and inode metadata after following symlinks; path-string equality alone is not enough,
 - on platforms without stable inode metadata, use canonicalized absolute path equality and record the limitation in the implementation docs,
 - require `name == "sifr"`,
@@ -217,7 +248,7 @@ INSTALL_BASE_URL = "https://sifr.sh/install"
 installer_url = "${INSTALL_BASE_URL}/versions/${version}"
 ```
 
-Integration tests may override `INSTALL_BASE_URL` only through a compile-time or `cfg(test)` path. Production runtime environment variables must not change the installer URL, and production runtime configuration must not accept arbitrary installer URLs from metadata or receipts.
+The only permitted `INSTALL_BASE_URL` override is a compile-time or `cfg(test)` path used by tests. Production runtime environment variables must not change the installer URL, and production runtime configuration must not accept arbitrary installer URLs from metadata or receipts.
 
 The metadata file is resolution metadata only. It does not authorize the CLI to bypass the immutable installer. Checksums remain embedded in the immutable installer and verified by the installer.
 
@@ -234,23 +265,23 @@ Release automation must generate dispatchers, immutable installers, and metadata
 
 Add a focused self-update module under `crates/sifr/src/` without expanding `cli_model_and_entrypoint.rs` into a monolith.
 
-`cli_model_and_entrypoint.rs` is already close to the 900-line hand-maintained file-size guardrail. This phase must keep `Self` command argument structs, receipt types, metadata types, and runner logic outside that file; the entrypoint file should receive only minimal enum registration and dispatch glue.
+`cli_model_and_entrypoint.rs` is already close to the 900-line hand-maintained file-size guardrail. This phase must keep `Self` command argument structs, receipt types, metadata types, and runner logic outside that file; the entrypoint file must receive only minimal enum registration and dispatch glue.
 
-Suggested module boundaries:
+Required module boundaries:
 
 - `self_update_cli.rs`: clap argument structs, command dispatch helpers, output formatting.
 - `self_update_receipt.rs`: receipt schema, discovery, and eligibility checks.
 - `self_update_metadata.rs`: channel/version metadata parsing and target resolution.
 - `self_update_runner.rs`: installer download, temporary file handling, process execution, error mapping.
 
-The runner should:
+The runner must:
 
 - download only the immutable installer script,
 - derive the immutable installer URL from the trusted install base URL and resolved version,
 - use an HTTP client with normal TLS certificate verification enabled; insecure certificate bypasses are forbidden,
 - write it to a temporary directory,
 - finish the download to a temporary file and atomically rename it before execution,
-- reject empty downloads, downloads smaller than a documented minimum size, and files whose first line does not start with `#!` before execution,
+- reject downloads smaller than 1024 bytes and files whose first line does not start with `#!` before execution,
 - acquire an exclusive update lock at `<install_dir>/.sifr-update.lock` before invoking the installer,
 - run it with `SIFR_INSTALL_DIR` from the receipt,
 - pass `SIFR_INSTALL_MANIFEST_DIR` when the receipt was discovered outside the default manifest path for the install directory by canonicalized path comparison. The default path is `<install_dir>/install.json`, except the default `~/.sifr/bin` install keeps the Phase 33 manifest path `~/.sifr/install.json`,
@@ -263,7 +294,7 @@ Do not introduce an updater background process, daemon, or persistent cache.
 
 ## Diagnostics
 
-Self-update diagnostics reserve `SIFR-BUILD-09xx` until implementation assigns exact codes. If implementation introduces a dedicated CLI diagnostic family, that taxonomy change must be reviewed before replacing this reserved range.
+Self-update diagnostics use `SIFR-BUILD-09xx` in this phase. A dedicated CLI diagnostic family is out of scope for this ad hoc phase and requires a later reviewed planning change.
 
 Required cases:
 
@@ -274,7 +305,7 @@ Required cases:
 - unsupported install source,
 - invalid channel,
 - stable channel gated,
-- release-candidate channels or `-rc.N` version pins unsupported until Phase 39 or a reviewed channel contract adds `rc`,
+- release-candidate channels or `-rc.N` version pins unsupported before Phase 39,
 - invalid or stable-looking version,
 - metadata unavailable,
 - metadata malformed,
@@ -310,6 +341,7 @@ Unit tests:
 - release-candidate channel and `-rc.N` version rejection before Phase 39,
 - update-needed comparison,
 - dry-run output in text and JSON formats,
+- `sifr self update --format text|json` without `--dry-run` rejection,
 - `self version --short --format json` rejection.
 
 Integration tests:
@@ -383,6 +415,7 @@ Scope:
 - Extend generated installer receipts with `schema_version`, `channel`, `binary_path`, and `modify_path`.
 - Derive receipt `channel` from the installer version's semver prerelease label.
 - Persist receipt `modify_path` from the actual installer request, including `SIFR_NO_MODIFY_PATH`.
+- Add `--force` flag handling to the immutable installer template so same-version reinstall, downgrade, and channel-switch self-update can delegate force semantics instead of reimplementing installation.
 - Move generated installer manifest writes to an atomic temporary-file-and-rename path guarded by the install lock.
 - Add `verification/distribution/self_update_install_receipt.schema.json`.
 - Generate channel metadata from the release plan.
@@ -397,6 +430,7 @@ Definition of done:
 - Receipt schema validation covers generated installer output and Rust parser expectations.
 - Receipt validation proves `binary_path` is the canonical installed binary path in generated installer output where the platform supports canonicalization.
 - Receipt validation proves `channel` and `modify_path` reflect the installer version and request.
+- Immutable installer tests prove `--force` is accepted and preserves existing force semantics.
 - Manual installer and self-update locking use the same lock path.
 - Drift checks fail on seeded channel/version mismatches.
 - Pre-schema receipt tests prove the CLI fails before network access and points users to re-run the standalone installer.
@@ -417,7 +451,7 @@ Definition of done:
 - `sifr self update --dry-run` performs no mutation.
 - Missing and mismatched receipts fail before network access.
 - Stable channel and stable-looking version pins are rejected.
-- `rc` channels and `-rc.N` version pins are either explicitly rejected before Phase 39 or covered by a reviewed channel contract update.
+- `rc` channels and `-rc.N` version pins are rejected before Phase 39.
 - No-argument update uses only the explicit receipt channel.
 - Text and JSON output are deterministic.
 
@@ -427,8 +461,8 @@ Scope:
 
 - Download the resolved immutable installer into a temporary directory.
 - Acquire an install lock before installer execution.
-- Ensure the immutable installer accepts `--force` before the runner depends on `--force` pass-through.
-- Execute the installer with receipt-derived environment and requested `--force`.
+- Pass `--force` through to the immutable installer when requested, relying on the immutable installer template support added in milestone 1.
+- Execute the installer with receipt-derived environment.
 - Preserve installer output and exit status.
 - Map expected installer failures into structured diagnostics.
 - Ensure the CLI never downloads or replaces release archives directly.
@@ -461,7 +495,7 @@ Definition of done:
 
 Scope:
 
-- Refresh `internal_docs/distribution_pipeline.md` if milestone implementation changed any details since the milestone 1 contract update.
+- Verify `internal_docs/distribution_pipeline.md` still matches the contract in this file after implementation.
 - Add public docs for `sifr self update`.
 - Add troubleshooting docs for package-manager installs and receipt mismatch.
 - Add a milestone demo or recorded CLI transcript showing install, dry-run, update, no-op, and forced downgrade behavior against local fixtures.
@@ -478,4 +512,4 @@ Definition of done:
 
 This phase is intentionally narrow. The elegant design is to add just enough Rust CLI logic to identify the installed binary, resolve an immutable installer, and delegate installation to the existing verified installer path.
 
-Any implementation that starts duplicating artifact extraction, checksum verification, target mapping, or shell profile edits inside `sifr self update` should be rejected unless this phase is updated with reviewed rationale.
+Any implementation that starts duplicating artifact extraction, checksum verification, target mapping, or shell profile edits inside `sifr self update` must be rejected unless a reviewed planning PR updates this phase with rationale first.

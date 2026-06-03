@@ -18,7 +18,9 @@ Status: draft
 - Follow-up planning review: `reviews/ad-hoc-sifr-self-update-review-pass-2.md` -> `READY`; reviewer confirmed the architecture is elegant enough because the CLI verifies the receipt before network access, consumes version-only metadata, derives immutable installer URLs from constants, and delegates installation to the existing verified installer.
 - PR implementation-readiness review: `reviews/ad-hoc-sifr-self-update-review-pass-3.md` -> `READY`; reviewer confirmed the backward-compat cleanup made the contract cleaner and implementation-ready, with polish folded back into the phase contract before milestone work begins.
 - PR polish review: `reviews/ad-hoc-sifr-self-update-review-pass-4.md` -> `READY`; reviewer confirmed the pass-3 polish closed remaining interpretive gaps without widening the surface.
-- Final regression review: `reviews/ad-hoc-sifr-self-update-review-pass-5.md` -> `READY`; reviewer confirmed the contract is implementation-ready after final trust-boundary, diagnostic-range, lock-path, and dry-run clarifications.
+- Regression review: `reviews/ad-hoc-sifr-self-update-review-pass-5.md` -> `READY`; reviewer confirmed the contract is implementation-ready after final trust-boundary, diagnostic-range, lock-path, and dry-run clarifications.
+- Decision audit review: `reviews/ad-hoc-sifr-self-update-review-pass-6.md` -> `CHANGES_REQUESTED`; reviewer found remaining unmade decisions around dry-run JSON, installer download minimum size, immutable installer `--force` sequencing, rc rejection placement, diagnostic family ownership, and Phase 39 schema-bump behavior.
+- Final implementation-readiness review: `reviews/ad-hoc-sifr-self-update-review-pass-7.md` -> `READY`; reviewer confirmed all pass-6 findings are fixed and the phase is implementation-ready without backward compatibility concerns.
 
 ## Validation Ledger
 
