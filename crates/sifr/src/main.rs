@@ -18,7 +18,8 @@ mod check_and_package_commands;
 mod diagnostic_rendering_and_run;
 mod formatter_cli;
 mod lint_cli;
-#[cfg(test)]
+mod self_update_cli;
+mod self_update_metadata;
 mod self_update_receipt;
 mod trace_cli;
 mod workspace_run_selection;

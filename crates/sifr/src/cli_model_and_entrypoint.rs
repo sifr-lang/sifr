@@ -5,6 +5,7 @@ use super::diagnostic_rendering_and_run::{
 };
 use super::formatter_cli::FmtArgs;
 use super::lint_cli::{cmd_lint, LintArgs};
+use super::self_update_cli::{cmd_self, SelfArgs};
 use super::trace_cli::cmd_trace;
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
@@ -284,6 +285,9 @@ pub(crate) enum Commands {
         #[arg(default_value = ".")]
         dir: PathBuf,
     },
+    /// Manage a standalone Sifr installation
+    #[command(name = "self")]
+    SelfCommand(SelfArgs),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
@@ -299,9 +303,9 @@ pub(super) enum CompilationMode {
     Project,
 }
 
-pub(super) const EXIT_SUCCESS: i32 = 0;
-pub(super) const EXIT_USER_DIAGNOSTIC: i32 = 1;
-pub(super) const EXIT_USAGE_OR_CONFIG: i32 = 2;
+pub(crate) const EXIT_SUCCESS: i32 = 0;
+pub(crate) const EXIT_USER_DIAGNOSTIC: i32 = 1;
+pub(crate) const EXIT_USAGE_OR_CONFIG: i32 = 2;
 pub(super) const EXIT_INTERNAL_COMPILER_FAILURE: i32 = 3;
 pub(super) struct PackageCompilerContext {
     pub(super) graph: sifr_package::SifrPackageGraph,
@@ -315,7 +319,7 @@ pub(super) struct PackageGraphContext {
     pub(super) source_map: sifr_package::PackageSourceMap,
 }
 
-pub(super) fn diagnostic_with_code(
+pub(crate) fn diagnostic_with_code(
     message: impl Into<String>,
     code: DiagnosticCode,
 ) -> RenderedDiagnostic {
@@ -517,6 +521,7 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Trace { file } => cmd_trace(&file, diagnostic_format),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
         Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
+        Commands::SelfCommand(args) => cmd_self(&args, diagnostic_format),
     }
 }
 

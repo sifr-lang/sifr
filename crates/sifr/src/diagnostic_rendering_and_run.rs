@@ -51,7 +51,7 @@ pub(super) fn render_diagnostic_output(
     render_diagnostic_stream(&diagnostics, format)
 }
 
-pub(super) fn render_diagnostics(errors: &[RenderedDiagnostic], format: DiagnosticFormat) -> i32 {
+pub(crate) fn render_diagnostics(errors: &[RenderedDiagnostic], format: DiagnosticFormat) -> i32 {
     match render_diagnostic_output(errors, format) {
         Ok(output) => {
             let _ = write!(io::stderr(), "{output}");
