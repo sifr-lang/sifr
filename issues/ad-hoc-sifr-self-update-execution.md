@@ -1,0 +1,26 @@
+# Ad Hoc Phase Execution Checklist: Sifr Self Update
+
+Phase contract: [ad-hoc-sifr-self-update.md](./ad-hoc-sifr-self-update.md)
+
+Status: draft
+
+## Checklist
+
+- [ ] `milestone_self_update_1`: Metadata And Receipt Contract
+- [ ] `milestone_self_update_2`: CLI Eligibility And Dry Run
+- [ ] `milestone_self_update_3`: Installer Delegation
+- [ ] `milestone_self_update_4`: Distribution Drift Guardrails
+- [ ] `milestone_self_update_5`: Docs And Release Readiness
+
+## Review Artifacts
+
+- Initial planning review: `reviews/ad-hoc-sifr-self-update-review-pass-1.md` -> `CHANGES_REQUESTED`; addressed metadata URL injection, receipt schema ownership, same-file eligibility, stable metadata rejection, immutable installer drift checks, and concurrent update locking in the phase contract. A later cleanup removed legacy receipt compatibility because Sifr preview distribution is still unstable.
+- Follow-up planning review: `reviews/ad-hoc-sifr-self-update-review-pass-2.md` -> `READY`; reviewer confirmed the architecture is elegant enough because the CLI verifies the receipt before network access, consumes version-only metadata, derives immutable installer URLs from constants, and delegates installation to the existing verified installer.
+
+## Validation Ledger
+
+Record local validation for each milestone before opening the corresponding PR.
+
+## Merged PRs
+
+Record merged PR links here as each milestone lands.
