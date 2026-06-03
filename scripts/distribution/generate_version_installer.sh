@@ -120,6 +120,7 @@ APP_NAME="sifr"
 APP_VERSION="${VERSION}"
 ARTIFACT_BASE_URL="${ARTIFACT_BASE_URL}"
 NO_MODIFY_PATH="\${SIFR_NO_MODIFY_PATH:-0}"
+INSTALL_LOCK_HELD="\${SIFR_INSTALL_LOCK_HELD:-0}"
 FORCE_INSTALL=0
 APP_CHANNEL="${VERSION#*-}"
 APP_CHANNEL="\${APP_CHANNEL%%.*}"
@@ -144,6 +145,8 @@ Environment:
                           Install manifest directory (default: \$HOME/.sifr for the default install dir,
                           otherwise SIFR_INSTALL_DIR)
   SIFR_NO_MODIFY_PATH=1   Do not update shell profiles
+  SIFR_INSTALL_LOCK_HELD=1
+                          Internal self-update handoff; caller already holds the install lock
   SIFR_TARGET             Override target triple for validation
 EOFUSAGE
 }
@@ -338,12 +341,21 @@ write_install_manifest() {
 acquire_install_lock() {
   mkdir -p "\${install_dir}"
   install_lock_path="\${install_dir}/.sifr-update.lock"
+  if [ "\${INSTALL_LOCK_HELD}" = "1" ]; then
+    if [ ! -d "\${install_lock_path}" ]; then
+      fail "SIFR_INSTALL_LOCK_HELD=1 but install lock is not present at \${install_lock_path}"
+    fi
+    return 0
+  fi
   while ! mkdir "\${install_lock_path}" 2>/dev/null; do
     sleep 1
   done
 }
 
 release_install_lock() {
+  if [ "\${INSTALL_LOCK_HELD}" = "1" ]; then
+    return 0
+  fi
   if [ -n "\${install_lock_path:-}" ]; then
     rmdir "\${install_lock_path}" 2>/dev/null || true
   fi

@@ -7,8 +7,8 @@ Status: in progress
 ## Execution Status
 
 - [x] `milestone_self_update_1` Metadata And Receipt Contract — merged in [PR #2274](https://github.com/sifr-lang/sifr/pull/2274); review artifacts: `reviews/self-update-m1-review-pass-1.md`, `reviews/self-update-m1-review-pass-2.md`, `reviews/self-update-m1-review-pass-3.md`.
-- [x] `milestone_self_update_2` CLI Eligibility And Dry Run — ready in [PR #2275](https://github.com/sifr-lang/sifr/pull/2275); review artifacts: `reviews/self-update-m2-review-pass-1.md`, `reviews/self-update-m2-review-pass-2.md`.
-- [ ] `milestone_self_update_3` Installer Delegation.
+- [x] `milestone_self_update_2` CLI Eligibility And Dry Run — merged in [PR #2275](https://github.com/sifr-lang/sifr/pull/2275); review artifacts: `reviews/self-update-m2-review-pass-1.md`, `reviews/self-update-m2-review-pass-2.md`.
+- [ ] `milestone_self_update_3` Installer Delegation — implementation in progress on `ad-hoc-self-update-m3`.
 - [ ] `milestone_self_update_4` Distribution Drift Guardrails.
 - [ ] `milestone_self_update_5` Docs And Release Readiness.
 
@@ -293,6 +293,7 @@ The runner must:
 - finish the download to a temporary file and atomically rename it before execution,
 - reject downloads smaller than 1024 bytes and files whose first line does not start with `#!` before execution,
 - acquire an exclusive update lock at `<install_dir>/.sifr-update.lock` before invoking the installer,
+- pass internal `SIFR_INSTALL_LOCK_HELD=1` after acquiring the lock so the generated installer uses the caller-owned lock instead of reacquiring it,
 - run it with `SIFR_INSTALL_DIR` from the receipt,
 - pass `SIFR_INSTALL_MANIFEST_DIR` when the receipt was discovered outside the default manifest path for the install directory by canonicalized path comparison. The default path is `<install_dir>/install.json`, except the default `~/.sifr/bin` install keeps the Phase 33 manifest path `~/.sifr/install.json`,
 - pass `SIFR_NO_MODIFY_PATH=1` when the receipt says `modify_path == false`,
