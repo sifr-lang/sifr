@@ -179,6 +179,18 @@ The authoritative field enumeration lives at `verification/distribution/self_upd
 
 The Rust CLI self-update path resolves a target immutable installer and delegates installation to that installer. It must not download release archives directly, parse dispatcher scripts for versions, bypass checksum validation, or accept executable URLs from metadata or receipts.
 
+The public command surface is:
+
+```bash
+sifr self version [--short] [--format text|json]
+sifr self update [--channel alpha|beta] [--version <preview-version>] [--dry-run] [--format text|json] [--force]
+```
+
+The default update channel is the receipt channel. `--dry-run` performs no
+mutation and does not acquire the install lock. Reinstalls, downgrades, and
+channel switches require `--force`; ordinary newer-version updates on the same
+channel do not.
+
 Production installer downloads use normal TLS certificate verification. Test-only install-base overrides may be compiled or configured for fixtures; production runtime environment variables must not replace the trusted installer URL base.
 
 Before invoking an immutable installer, `sifr self update` acquires `<install_dir>/.sifr-update.lock`, passes receipt-derived install environment, and marks the internal handoff with `SIFR_INSTALL_LOCK_HELD=1`. Generated immutable installers still acquire the same lock for manual runs, but they do not reacquire or release it when that internal handoff marker is present.

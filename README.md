@@ -113,6 +113,18 @@ curl -fsSL https://sifr.sh/install | SIFR_NO_MODIFY_PATH=1 sh
 curl -fsSL https://sifr.sh/install | sh -s -- --no-modify-path
 ```
 
+Update an official standalone preview install:
+
+```bash
+sifr self update
+sifr self update --dry-run
+```
+
+`sifr self update` works only for schema-versioned standalone installs created
+by the official installer. Package-manager installs should use the package
+manager's update command. See [`docs/self_update.md`](docs/self_update.md) for
+preview channel limits, `--force` rules, and troubleshooting.
+
 Supported preview targets:
 
 - `aarch64-apple-darwin`
