@@ -2,15 +2,15 @@
 
 Phase contract: [ad-hoc-sifr-self-update.md](./ad-hoc-sifr-self-update.md)
 
-Status: draft
+Status: in progress
 
 ## Checklist
 
-- [ ] `milestone_self_update_1`: Metadata And Receipt Contract
-- [ ] `milestone_self_update_2`: CLI Eligibility And Dry Run
-- [ ] `milestone_self_update_3`: Installer Delegation
-- [ ] `milestone_self_update_4`: Distribution Drift Guardrails
-- [ ] `milestone_self_update_5`: Docs And Release Readiness
+- [x] `milestone_self_update_1`: Metadata And Receipt Contract
+- [x] `milestone_self_update_2`: CLI Eligibility And Dry Run
+- [x] `milestone_self_update_3`: Installer Delegation
+- [x] `milestone_self_update_4`: Distribution Drift Guardrails
+- [ ] `milestone_self_update_5`: Docs And Release Readiness — in progress
 
 ## Review Artifacts
 
@@ -21,11 +21,27 @@ Status: draft
 - Regression review: `reviews/ad-hoc-sifr-self-update-review-pass-5.md` -> `READY`; reviewer confirmed the contract is implementation-ready after final trust-boundary, diagnostic-range, lock-path, and dry-run clarifications.
 - Decision audit review: `reviews/ad-hoc-sifr-self-update-review-pass-6.md` -> `CHANGES_REQUESTED`; reviewer found remaining unmade decisions around dry-run JSON, installer download minimum size, immutable installer `--force` sequencing, rc rejection placement, diagnostic family ownership, and Phase 39 schema-bump behavior.
 - Final implementation-readiness review: `reviews/ad-hoc-sifr-self-update-review-pass-7.md` -> `READY`; reviewer confirmed all pass-6 findings are fixed and the phase is implementation-ready without backward compatibility concerns.
+- M1 implementation reviews: `reviews/self-update-m1-review-pass-1.md`, `reviews/self-update-m1-review-pass-2.md`, `reviews/self-update-m1-review-pass-3.md` -> `READY`.
+- M2 implementation reviews: `reviews/self-update-m2-review-pass-1.md`, `reviews/self-update-m2-review-pass-2.md` -> `READY`.
+- M3 implementation reviews: `reviews/self-update-m3-review-pass-1.md`, `reviews/self-update-m3-review-pass-2.md` -> `READY`.
+- M4 implementation reviews: `reviews/self-update-m4-review-pass-1.md`, `reviews/self-update-m4-review-pass-2.md`, `reviews/self-update-m4-review-pass-3.md` -> `READY`.
+- M5 implementation reviews: `reviews/self-update-m5-review-pass-1.md`, `reviews/self-update-m5-review-pass-2.md` -> `READY`.
 
 ## Validation Ledger
 
 Record local validation for each milestone before opening the corresponding PR.
 
+- M1: distribution validation, focused Rust receipt/metadata tests, and quick/full local validation passed before merge.
+- M2: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, CLI dry-run smoke, file-size guardrail, `scripts/run_all_tests.sh --profile quick`, and full `scripts/run_all_tests.sh` passed before merge.
+- M3: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, file-size guardrail, non-dry-run CLI fake-installer smoke, and `scripts/run_all_tests.sh --profile quick` passed before merge.
+- M4: `bash -n` for new/updated shell scripts, M4 drift fixtures, explicit `schema_version=true` rejection probe, `scripts/run_distribution_validation.sh`, `cargo fmt --check`, file-size guardrail, and `scripts/run_all_tests.sh --profile quick` passed before merge.
+- M5: `cargo fmt --check`, file-size guardrail, self-update docs sanity grep, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, and `scripts/run_all_tests.sh --profile quick` passed before PR. Targeted generated-code rustfmt passed after an interrupted full run, then full `scripts/run_all_tests.sh` passed before merge with only wall-time/skew advisories.
+
 ## Merged PRs
 
 Record merged PR links here as each milestone lands.
+
+- M1: [PR #2274](https://github.com/sifr-lang/sifr/pull/2274)
+- M2: [PR #2275](https://github.com/sifr-lang/sifr/pull/2275)
+- M3: [PR #2276](https://github.com/sifr-lang/sifr/pull/2276)
+- M4: [PR #2277](https://github.com/sifr-lang/sifr/pull/2277)
