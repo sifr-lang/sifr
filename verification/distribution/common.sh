@@ -130,6 +130,34 @@ make_target_specific_artifacts() {
   done
 }
 
+make_self_update_install_root_fixture() {
+  local install_root="$1"
+  local alpha_version="${2:-0.1.0-alpha.4}"
+  local beta_version="${3:-0.1.0-beta.7}"
+  local artifact_dir
+  mkdir -p "${install_root}/versions"
+  artifact_dir="$(mktemp -d "${TMPDIR:-/tmp}/sifr-self-update-artifacts.XXXXXX")"
+  make_target_specific_artifacts "${alpha_version}" "${artifact_dir}/alpha"
+  make_target_specific_artifacts "${beta_version}" "${artifact_dir}/beta"
+  "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
+    --install-root "${install_root}" \
+    --alpha-version "${alpha_version}" \
+    --beta-version "${beta_version}" \
+    --base-url "file://${install_root}" >/dev/null
+  "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
+    --version "${alpha_version}" \
+    --artifact-dir "${artifact_dir}/alpha" \
+    --out "${install_root}/versions/${alpha_version}" \
+    --artifact-base-url "file://${artifact_dir}/alpha" >/dev/null
+  "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
+    --version "${beta_version}" \
+    --artifact-dir "${artifact_dir}/beta" \
+    --out "${install_root}/versions/${beta_version}" \
+    --artifact-base-url "file://${artifact_dir}/beta" >/dev/null
+  # Drift fixtures inspect embedded installer metadata; they do not execute these installers.
+  rm -rf "${artifact_dir}"
+}
+
 make_site_repo_fixture() {
   local target_repo="$1"
   mkdir -p "${target_repo}/apps/sifr-site/public"

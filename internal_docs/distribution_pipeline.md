@@ -204,6 +204,16 @@ verification/distribution/artifact_target_mismatch_rejected.sh
 verification/distribution/stable_entrypoints_unchanged_by_preview_release.sh
 ```
 
+The self-update metadata drift checks validate that `metadata/channels.json`, preview dispatchers, and immutable installer `APP_VERSION` values are generated from one release plan:
+
+```bash
+scripts/distribution/validate_self_update_metadata.sh --install-root <install-root>
+verification/distribution/channel_metadata_installer_agreement.sh
+verification/distribution/channel_metadata_dispatcher_drift_rejected.sh
+verification/distribution/channel_metadata_installer_drift_rejected.sh
+verification/distribution/channel_metadata_stable_rejected.sh
+```
+
 ## Preview Release Command
 
 The `/create-new-version` workflow is backed by:

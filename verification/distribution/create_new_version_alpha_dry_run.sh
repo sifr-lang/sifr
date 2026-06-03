@@ -23,5 +23,7 @@ output="$("${REPO_ROOT}/scripts/distribution/create_new_version.sh" \
 [[ "${output}" == *"channel=alpha"* ]] || { echo "${output}" >&2; exit 1; }
 [[ "${output}" == *"version=0.1.0-alpha.2"* ]] || { echo "${output}" >&2; exit 1; }
 [[ "${output}" == *"new_alpha=0.1.0-alpha.2"* ]] || { echo "${output}" >&2; exit 1; }
+[[ "${output}" == *"channel_metadata="*"metadata/channels.json"* ]] || { echo "${output}" >&2; exit 1; }
+[[ "${output}" == *"channel_metadata_update=alpha:0.1.0-alpha.2,beta:"* ]] || { echo "${output}" >&2; exit 1; }
 [[ "${output}" == *"dry_run_side_effects=none"* ]] || { echo "${output}" >&2; exit 1; }
 [[ ! -e "${site_repo}/apps/sifr-site/public/install/versions/0.1.0-alpha.2" ]] || exit 1
