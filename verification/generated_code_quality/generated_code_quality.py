@@ -317,16 +317,42 @@ def command_env() -> dict[str, str]:
     return os.environ.copy()
 
 
+def shared_artifact_root() -> Path | None:
+    raw = os.environ.get("SIFR_GCQ_SHARED_ROOT")
+    if not raw:
+        return None
+    return (REPO_ROOT / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
+
+
+def entry_cache_key(entry: Entry) -> str:
+    digest = hashlib.sha256()
+    digest.update(entry.id.encode("utf-8"))
+    digest.update(b"\0")
+    digest.update(entry.source_path.encode("utf-8"))
+    digest.update(b"\0")
+    digest.update(entry.absolute_source.read_bytes())
+    return digest.hexdigest()[:16]
+
+
 def run_command(
     args: list[str],
     *,
     cwd: Path = REPO_ROOT,
     check: bool = True,
 ) -> subprocess.CompletedProcess[str]:
+    env = command_env()
+    shared_root = shared_artifact_root()
+    if (
+        shared_root is not None
+        and len(args) >= 2
+        and args[0] == "cargo"
+        and args[1] in {"check", "clippy"}
+    ):
+        env["CARGO_TARGET_DIR"] = str(shared_root / "cargo-target")
     result = subprocess.run(
         args,
         cwd=cwd,
-        env=command_env(),
+        env=env,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -342,23 +368,39 @@ def run_command(
 
 
 def materialize_entry(entry: Entry, run_root: Path) -> Path:
-    entry_root = run_root / entry.id
-    entry_root.mkdir(parents=True, exist_ok=True)
-    run_command(
-        [
-            "cargo",
-            "run",
-            "-q",
-            "-p",
-            "sifr",
-            "--",
-            "build",
-            entry.source_path,
-            "-o",
-            str(entry_root),
-        ]
+    shared_root = shared_artifact_root()
+    cache_key = entry_cache_key(entry)
+    entry_root = (
+        shared_root / "entries" / f"{entry.id}-{cache_key}"
+        if shared_root is not None
+        else run_root / entry.id
     )
+    entry_root.mkdir(parents=True, exist_ok=True)
     crate_root = entry_root / "sifr_output"
+    if (crate_root / "Cargo.toml").is_file():
+        print(
+            f"[sifr-artifact-cache] namespace=generated-code-quality key={cache_key} "
+            f"cache_hit=true workspace={crate_root}"
+        )
+    else:
+        print(
+            f"[sifr-artifact-cache] namespace=generated-code-quality key={cache_key} "
+            f"cache_hit=false workspace={crate_root} miss_reason=not_materialized"
+        )
+        run_command(
+            [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "build",
+                entry.source_path,
+                "-o",
+                str(entry_root),
+            ]
+        )
     cargo_toml = crate_root / "Cargo.toml"
     if not cargo_toml.is_file():
         raise RuntimeError(f"{entry.id}: generated crate missing Cargo.toml at {cargo_toml}")
@@ -467,14 +509,34 @@ def record_for_entry(entry: Entry, crate_root: Path | None, status: str) -> dict
     return record
 
 
+def timed_case(bucket: str, case_id: str, action: Any) -> Any:
+    started = time.perf_counter()
+    status = "pass"
+    try:
+        return action()
+    except Exception:
+        status = "fail"
+        raise
+    finally:
+        elapsed_ms = int((time.perf_counter() - started) * 1000.0)
+        print(
+            f"[sifr-case-timing] bucket={bucket} case={case_id} "
+            f"elapsed_ms={elapsed_ms} status={status}"
+        )
+
+
 def gate_corpus(entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("corpus")
     run_root = TARGET_ROOT / run
     records = []
     try:
         for entry in selected_positive_entries(entries, args.group):
-            crate_root = materialize_entry(entry, run_root)
-            run_command(["cargo", "check", "--manifest-path", str(crate_root / "Cargo.toml")])
+            def check_entry() -> Path:
+                crate_root_inner = materialize_entry(entry, run_root)
+                run_command(["cargo", "check", "--manifest-path", str(crate_root_inner / "Cargo.toml")])
+                return crate_root_inner
+
+            crate_root = timed_case("generated_code_quality", f"corpus/{entry.id}", check_entry)
             records.append(record_for_entry(entry, crate_root, "passed"))
         evidence = record_evidence("corpus", run, records)
         print(f"generated-code corpus passed; evidence={evidence.relative_to(REPO_ROOT)}")
@@ -491,12 +553,20 @@ def gate_panic_scan(entries: list[Entry], args: argparse.Namespace) -> None:
     run_root = TARGET_ROOT / run
     records = []
     try:
-        assert_negative_scan(GCQ_ROOT / "negative_seeds" / "forbidden_unwrap.rs")
+        timed_case(
+            "generated_code_quality",
+            "panic-scan/negative-forbidden-unwrap",
+            lambda: assert_negative_scan(GCQ_ROOT / "negative_seeds" / "forbidden_unwrap.rs"),
+        )
         for entry in selected_positive_entries(entries, args.group):
-            crate_root = materialize_entry(entry, run_root)
-            violations = scan_files(rust_files(crate_root))
-            if violations:
-                raise RuntimeError("\n".join([f"{entry.id}: forbidden constructs found", *violations]))
+            def scan_entry() -> Path:
+                crate_root_inner = materialize_entry(entry, run_root)
+                violations = scan_files(rust_files(crate_root_inner))
+                if violations:
+                    raise RuntimeError("\n".join([f"{entry.id}: forbidden constructs found", *violations]))
+                return crate_root_inner
+
+            crate_root = timed_case("generated_code_quality", f"panic-scan/{entry.id}", scan_entry)
             records.append(record_for_entry(entry, crate_root, "passed"))
         evidence = record_evidence("panic-scan", run, records)
         print(f"generated-code panic scan passed; evidence={evidence.relative_to(REPO_ROOT)}")
@@ -513,11 +583,19 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
     run_root = TARGET_ROOT / run
     records = []
     try:
-        assert_negative_rustfmt(GCQ_ROOT / "negative_seeds" / "format_violation.rs", run_root)
+        timed_case(
+            "generated_code_quality",
+            "rustfmt/negative-format-violation",
+            lambda: assert_negative_rustfmt(GCQ_ROOT / "negative_seeds" / "format_violation.rs", run_root),
+        )
         for entry in selected_positive_entries(entries, args.group):
-            crate_root = materialize_entry(entry, run_root)
-            run_command(["cargo", "fmt", "--manifest-path", str(crate_root / "Cargo.toml")])
-            run_command(["cargo", "fmt", "--manifest-path", str(crate_root / "Cargo.toml"), "--", "--check"])
+            def format_entry() -> Path:
+                crate_root_inner = materialize_entry(entry, run_root)
+                run_command(["cargo", "fmt", "--manifest-path", str(crate_root_inner / "Cargo.toml")])
+                run_command(["cargo", "fmt", "--manifest-path", str(crate_root_inner / "Cargo.toml"), "--", "--check"])
+                return crate_root_inner
+
+            crate_root = timed_case("generated_code_quality", f"rustfmt/{entry.id}", format_entry)
             records.append(record_for_entry(entry, crate_root, "passed"))
         evidence = record_evidence("rustfmt", run, records)
         print(f"generated-code rustfmt passed; evidence={evidence.relative_to(REPO_ROOT)}")
@@ -534,20 +612,28 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
     run_root = TARGET_ROOT / run
     records = []
     try:
-        assert_negative_clippy(GCQ_ROOT / "negative_seeds" / "clippy_warning.rs", run_root)
+        timed_case(
+            "generated_code_quality",
+            "clippy/negative-clippy-warning",
+            lambda: assert_negative_clippy(GCQ_ROOT / "negative_seeds" / "clippy_warning.rs", run_root),
+        )
         for entry in selected_positive_entries(entries, args.group):
-            crate_root = materialize_entry(entry, run_root)
-            run_command(["cargo", "fmt", "--manifest-path", str(crate_root / "Cargo.toml")])
-            run_command(
-                [
-                    "cargo",
-                    "clippy",
-                    "--manifest-path",
-                    str(crate_root / "Cargo.toml"),
-                    "--",
-                    *GENERATED_CLIPPY_ARGS,
-                ],
-            )
+            def clippy_entry() -> Path:
+                crate_root_inner = materialize_entry(entry, run_root)
+                run_command(["cargo", "fmt", "--manifest-path", str(crate_root_inner / "Cargo.toml")])
+                run_command(
+                    [
+                        "cargo",
+                        "clippy",
+                        "--manifest-path",
+                        str(crate_root_inner / "Cargo.toml"),
+                        "--",
+                        *GENERATED_CLIPPY_ARGS,
+                    ],
+                )
+                return crate_root_inner
+
+            crate_root = timed_case("generated_code_quality", f"clippy/{entry.id}", clippy_entry)
             records.append(record_for_entry(entry, crate_root, "passed"))
         evidence = record_evidence("clippy", run, records)
         print(f"generated-code clippy passed; evidence={evidence.relative_to(REPO_ROOT)}")
@@ -565,19 +651,27 @@ def gate_determinism(entries: list[Entry], args: argparse.Namespace) -> None:
     run_root.mkdir(parents=True, exist_ok=True)
     records = []
     try:
-        assert_negative_determinism(
-            GCQ_ROOT / "negative_seeds" / "determinism_a.rs",
-            GCQ_ROOT / "negative_seeds" / "determinism_b.rs",
+        timed_case(
+            "generated_code_quality",
+            "determinism/negative-byte-drift",
+            lambda: assert_negative_determinism(
+                GCQ_ROOT / "negative_seeds" / "determinism_a.rs",
+                GCQ_ROOT / "negative_seeds" / "determinism_b.rs",
+            ),
         )
         for entry in selected_positive_entries(entries, args.group):
-            first = emit_source(entry)
-            second = emit_source(entry)
-            if not compare_bytes(first, second):
-                first_path = run_root / f"{entry.id}.first.rs"
-                second_path = run_root / f"{entry.id}.second.rs"
-                first_path.write_bytes(first)
-                second_path.write_bytes(second)
-                raise RuntimeError(f"{entry.id}: repeated emission was not byte-stable")
+            def deterministic_entry() -> bytes:
+                first_inner = emit_source(entry)
+                second = emit_source(entry)
+                if not compare_bytes(first_inner, second):
+                    first_path = run_root / f"{entry.id}.first.rs"
+                    second_path = run_root / f"{entry.id}.second.rs"
+                    first_path.write_bytes(first_inner)
+                    second_path.write_bytes(second)
+                    raise RuntimeError(f"{entry.id}: repeated emission was not byte-stable")
+                return first_inner
+
+            first = timed_case("generated_code_quality", f"determinism/{entry.id}", deterministic_entry)
             digest = hashlib.sha256(first).hexdigest()
             records.append(
                 {

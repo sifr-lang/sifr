@@ -40,9 +40,12 @@ class LspClient:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
+        self.args = args
         self.timeout = timeout
         self.next_id = 1
         self.notifications: list[dict[str, Any]] = []
+        self.events: list[dict[str, Any]] = []
+        self._record_event("spawn", {"pid": self.process.pid, "args": args})
 
     def request(self, method: str, params: dict[str, Any] | None = None) -> Any:
         request_id = self.next_id
@@ -90,10 +93,10 @@ class LspClient:
             self.process.kill()
             self.process.wait(timeout=10)
             stderr = self.process.stderr.read().decode("utf-8", errors="replace") if self.process.stderr else ""
-            raise LspProtocolError(f"LSP did not exit after stdin close: {stderr[-1000:]}")
+            raise LspProtocolError(self._diagnostic_context("LSP did not exit after stdin close", stderr))
         if self.process.returncode not in {0, None}:
             stderr = self.process.stderr.read().decode("utf-8", errors="replace") if self.process.stderr else ""
-            raise LspProtocolError(f"LSP exited {self.process.returncode}: {stderr[-1000:]}")
+            raise LspProtocolError(self._diagnostic_context(f"LSP exited {self.process.returncode}", stderr))
 
     def _wait_for_response(self, request_id: int) -> dict[str, Any]:
         deadline = time.monotonic() + self.timeout
@@ -108,6 +111,7 @@ class LspClient:
     def _send(self, payload: dict[str, Any]) -> None:
         if self.process.stdin is None:
             raise LspProtocolError("LSP stdin is closed")
+        self._record_event("send", payload)
         body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
         header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
         self.process.stdin.write(header + body)
@@ -119,7 +123,9 @@ class LspClient:
         while True:
             if self.process.poll() is not None:
                 stderr = self.process.stderr.read().decode("utf-8", errors="replace") if self.process.stderr else ""
-                raise LspProtocolError(f"LSP exited before response: {self.process.returncode}: {stderr[-1000:]}")
+                raise LspProtocolError(
+                    self._diagnostic_context(f"LSP exited before response: {self.process.returncode}", stderr)
+                )
             remaining = max(deadline - time.monotonic(), 0.0)
             if remaining == 0:
                 raise LspProtocolError("timed out waiting for LSP output")
@@ -142,11 +148,61 @@ class LspClient:
         body = self.process.stdout.read(length)
         if len(body) != length:
             raise LspProtocolError("LSP closed stdout while reading body")
-        return json.loads(body.decode("utf-8"))
+        message = json.loads(body.decode("utf-8"))
+        self._record_event("recv", message)
+        return message
+
+    def _record_event(self, kind: str, payload: dict[str, Any]) -> None:
+        event = {
+            "kind": kind,
+            "at_unix": round(time.time(), 3),
+            "summary": protocol_summary(payload),
+        }
+        self.events.append(event)
+        self.events = self.events[-20:]
+
+    def _diagnostic_context(self, reason: str, stderr: str) -> str:
+        lifecycle = {
+            "pid": self.process.pid,
+            "returncode": self.process.returncode,
+            "args": self.args,
+        }
+        return (
+            f"{reason}\n"
+            f"lifecycle={json.dumps(lifecycle, sort_keys=True)}\n"
+            f"last_protocol_events={json.dumps(self.events[-10:], sort_keys=True)}\n"
+            f"stderr_tail={stderr[-4000:]}"
+        )
 
 
 def file_uri(path: Path) -> str:
     return path.resolve().as_uri()
+
+
+def protocol_summary(payload: dict[str, Any]) -> dict[str, Any]:
+    summary: dict[str, Any] = {}
+    if "id" in payload:
+        summary["id"] = payload.get("id")
+    if "method" in payload:
+        summary["method"] = payload.get("method")
+    if "error" in payload:
+        error = payload.get("error")
+        if isinstance(error, dict):
+            summary["error"] = {
+                "code": error.get("code"),
+                "message": error.get("message"),
+            }
+    if "result" in payload:
+        summary["result_type"] = type(payload.get("result")).__name__
+    params = payload.get("params")
+    if isinstance(params, dict):
+        if isinstance(params.get("textDocument"), dict):
+            summary["uri"] = params["textDocument"].get("uri")
+            if "version" in params["textDocument"]:
+                summary["version"] = params["textDocument"].get("version")
+        if "uri" in params:
+            summary["uri"] = params.get("uri")
+    return summary
 
 
 def assert_has_keys(value: dict[str, Any], keys: set[str], label: str) -> None:

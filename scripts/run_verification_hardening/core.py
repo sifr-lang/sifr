@@ -37,7 +37,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--profile",
-        choices=("pr", "nightly", "release", "full", "stress"),
+        choices=("create-pr", "merge", "quick", "pr", "nightly", "release", "full", "stress"),
         default="pr",
         help="Execution profile.",
     )
@@ -89,8 +89,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def canonicalize_profile(profile: str) -> str:
-    if profile == "full":
-        return "pr"
+    if profile == "quick":
+        return "create-pr"
+    if profile == "pr" or profile == "full":
+        return "merge"
     if profile == "stress":
         return "release"
     return profile
@@ -142,7 +144,9 @@ def load_text(path: Path) -> str:
 
 def should_run_suite(profile: str, suite_name: str) -> bool:
     canonical_profile = canonicalize_profile(profile)
-    if canonical_profile == "pr":
+    if canonical_profile == "create-pr":
+        return False
+    if canonical_profile == "merge":
         return suite_name in {
             "diagnostics",
             "project",
@@ -350,5 +354,3 @@ def assert_self_test_failure(description: str, expected: str, callback: Any) -> 
             ) from error
         return
     raise AssertionError(f"{description}: expected SystemExit")
-
-

@@ -253,7 +253,20 @@ def run_cases(cases: list[BenchmarkCase], output_root: Path, sample_scale: str) 
     run_root.mkdir(parents=True, exist_ok=True)
     results = []
     for case in cases:
-        results.append(run_case(case, run_root, sample_scale))
+        started = time.perf_counter()
+        status = "pass"
+        try:
+            result = run_case(case, run_root, sample_scale)
+        except Exception:
+            status = "fail"
+            raise
+        finally:
+            elapsed_ms = int((time.perf_counter() - started) * 1000.0)
+            print(
+                f"[sifr-case-timing] bucket=performance case={case.id} "
+                f"elapsed_ms={elapsed_ms} status={status}"
+            )
+        results.append(result)
     return {
         "schema_version": 1,
         "runner_version": RUNNER_VERSION,

@@ -1,6 +1,11 @@
 # Ad Hoc PR Gate Speed and Validation Lane Rebalancing
 
-status: draft
+status: implemented
+
+Implementation note: lane policy is now documented in
+`internal_docs/validation_lane_policy.md`. Canonical lanes are `create-pr`,
+`merge`, `nightly`, and `release`; legacy `quick`, `pr`, `full`, and `stress`
+remain aliases.
 
 ## Objective
 
@@ -97,42 +102,42 @@ TypeScript-Go keeps regular `go test ./...` usable, relies on Go test caching, a
 
 ### milestone_gate_speed_1: Timing And Lane Taxonomy
 
-- Add first-class timing output to `scripts/run_all_tests.sh` for every top-level bucket.
-- Add per-case timing to generated-code quality, performance budgets, contract matrix rows, hardening variants, and distribution scripts.
-- Define lane taxonomy: `create-pr`, `merge`, `nightly`, and `release`.
-- Acceptance: one run produces a machine-readable breakdown that identifies the slowest case in every bucket.
+- [x] Add first-class timing output to `scripts/run_all_tests.sh` for every top-level bucket.
+- [x] Add per-case timing to generated-code quality, performance budgets, contract matrix rows, hardening variants, and distribution scripts.
+- [x] Define lane taxonomy: `create-pr`, `merge`, `nightly`, and `release`.
+- [x] Acceptance: one run produces a machine-readable breakdown that identifies the slowest case in every bucket.
 
 ### milestone_gate_speed_2: Diagnostic Contract Harness
 
-- Replace repeated Cargo-launched diagnostic source canonicalization checks with an in-process harness or one built-binary invocation model.
-- Keep JSON/human/compact renderer coverage, source-span assertions, and package/project cases.
-- Acceptance: the same semantic assertions run in under 10s warm on the local benchmark machine.
+- [x] Replace repeated Cargo-launched diagnostic source canonicalization checks with an in-process harness or one built-binary invocation model.
+- [x] Keep JSON/human/compact renderer coverage, source-span assertions, and package/project cases.
+- [x] Acceptance: the same semantic assertions run in under 10s warm on the local benchmark machine.
 
 ### milestone_gate_speed_3: Tooling And LSP Gate Isolation
 
-- Split editor packaging/assets, formatter full contract, LSP protocol stress, and LSP large-session checks into change-aware tooling lanes.
-- Make `lsp_protocol_stress.py` emit stderr, process lifecycle, and last protocol event evidence on failure.
-- Acceptance: create-PR lane keeps compiler/tooling smoke only; full tooling lane remains available and deterministic.
+- [x] Split editor packaging/assets, formatter full contract, LSP protocol stress, and LSP large-session checks into change-aware tooling lanes.
+- [x] Make `lsp_protocol_stress.py` emit stderr, process lifecycle, and last protocol event evidence on failure.
+- [x] Acceptance: create-PR lane keeps compiler/tooling smoke only; full tooling lane remains available and deterministic.
 
 ### milestone_gate_speed_4: Generated-Code Quality Reuse
 
-- Generate the corpus once per run and reuse artifacts across panic scan, rustfmt, clippy, determinism, and demo checks.
-- Share or intentionally scope Cargo target directories so dependency builds are not repeated unnecessarily.
-- Introduce a small generated-code smoke subset for create-PR and keep full corpus for codegen-facing merge/nightly gates.
-- Acceptance: generated-code smoke is under 30s warm; full corpus reports per-fixture timings and does not silently rebuild duplicate release dependencies without justification.
+- [x] Generate the corpus once per run and reuse artifacts across panic scan, rustfmt, clippy, determinism, and demo checks.
+- [x] Share or intentionally scope Cargo target directories so dependency builds are not repeated unnecessarily.
+- [x] Introduce a small generated-code smoke subset for create-PR and keep full corpus for codegen-facing merge/nightly gates.
+- [x] Acceptance: generated-code smoke is under 30s warm; full corpus reports per-fixture timings and does not silently rebuild duplicate release dependencies without justification.
 
 ### milestone_gate_speed_5: Compiler Contract Rebalancing
 
-- Reduce create-PR contract matrix to unique compiler invariants not already covered by unit/e2e tests.
-- Move broad project-mode matrices and hardening breadth to merge or nightly lanes unless touched paths require them.
-- Keep representative e2e pass warm-cache behavior and add group-skew rebalancing for cold runs.
-- Acceptance: create-PR lane stays under 120s warm and under 300s cold, while merge lane preserves documented coverage.
+- [x] Reduce create-PR contract matrix to unique compiler invariants not already covered by unit/e2e tests.
+- [x] Move broad project-mode matrices and hardening breadth to merge or nightly lanes unless touched paths require them.
+- [x] Keep representative e2e pass warm-cache behavior and add group-skew rebalancing for cold runs.
+- [x] Acceptance: create-PR lane stays under 120s warm and under 300s cold, while merge lane preserves documented coverage.
 
 ### milestone_gate_speed_6: Policy And Validation
 
-- Update `scripts/run_all_tests.sh`, `verification/validation_lanes/manifest.json`, and docs to make the lane policy explicit.
-- Document which paths trigger change-aware tooling, distribution, generated-code, performance, and hardening lanes.
-- Acceptance: local validation and CI use the same commands; no CI-only gate behavior is introduced.
+- [x] Update `scripts/run_all_tests.sh`, `verification/validation_lanes/manifest.json`, and docs to make the lane policy explicit.
+- [x] Document which paths trigger change-aware tooling, distribution, generated-code, performance, and hardening lanes.
+- [x] Acceptance: local validation and CI use the same commands; no CI-only gate behavior is introduced.
 
 ## Required Validation
 
@@ -146,3 +151,58 @@ Before closing this ad hoc phase:
 - file-size guardrail
 
 The final report must include warm and cold wall-clock times, per-bucket timings, and a before/after comparison against the initial benchmark table above.
+
+## Implementation Measurements
+
+Measured locally after implementation on 2026-06-05 from `/Users/yaseralnajjar/work/sifr/codebase`.
+
+| Lane or bucket | Before | After | Status |
+|---|---:|---:|---|
+| create-PR lane cold (`scripts/run_all_tests.sh --profile quick`) | 367.18s reported, 375.36s wrapper | 206.74s reported | Under 300s cold target. |
+| create-PR lane warm (`scripts/run_all_tests.sh --profile quick`) | 309.43s reported | 74.82s reported | Under 120s warm target. |
+| merge lane warm/cold-local (`scripts/run_all_tests.sh --profile merge`) | `pr` failed before completion at 225.36s | 595.66s reported | Under 15-minute warm target; e2e cache was cold for this run. |
+| Diagnostic source canonicalization contract | 80.48s | 3.18s | Under 10s warm target. |
+| Generated-code smoke | PR grouped bucket interrupted after >11m | 18.11s in create-PR lane | Under 30s warm target. |
+| quick e2e cold | 57.34s lane bucket, `cache_hits=0/12`, largest group 19, median 2 | 55.12s test body, `cache_hits=0/18`, largest group 8, median 2 | Group skew capped. |
+| quick e2e warm | 2.87s direct | 1.66s test body, `cache_hits=18/18` | Warm cache preserved. |
+
+Latest create-PR per-bucket timings from `target/validation_lane_reports/quick.latest.json`:
+
+| Bucket | Wall time |
+|---|---:|
+| core guardrails | 5.91s |
+| diagnostic contracts | 7.97s |
+| frontend/syntax guardrails | 1.77s |
+| developer tooling smoke | 9.29s |
+| performance budget smoke | 7.06s |
+| verification hardening self-tests | 0.49s |
+| distribution validation | 0.23s skipped by lane policy |
+| generated-code quality smoke | 18.11s |
+| crate tests | 17.04s |
+| validation contract matrix | 0.36s no-op by lane policy |
+| e2e pass suite | 2.43s |
+| verification hardening suites | 0.25s no-op by lane policy |
+| extra e2e checks | 0.25s no-op by lane policy |
+
+Latest merge-lane per-bucket timings from `target/validation_lane_reports/merge.latest.json`:
+
+| Bucket | Wall time |
+|---|---:|
+| core guardrails | 5.82s |
+| diagnostic contracts | 15.37s |
+| frontend/syntax guardrails | 1.73s |
+| developer tooling representative | 35.36s |
+| performance budget representative | 138.51s |
+| verification hardening self-tests | 0.51s |
+| distribution representative | 28.27s |
+| generated-code quality representative | 127.12s |
+| crate tests full | 67.01s |
+| validation contract matrix | 81.44s |
+| e2e pass suite | 38.22s |
+| verification hardening suites | 52.44s |
+| extra e2e checks | 0.35s |
+
+Merge e2e used a cold cache for this run: `cache_hits=0/22`,
+`largest_group_fixtures=12`, `median_group_fixtures=1`. The lane passed with
+the non-blocking advisory `group skew is high; investigate batching balance or
+fixture clustering`.

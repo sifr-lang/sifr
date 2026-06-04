@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable
 
@@ -161,11 +162,64 @@ def check_legacy_code_docs(root: Path) -> None:
         )
 
 
+@lru_cache(maxsize=1)
+def sifr_binary() -> Path:
+    proc = subprocess.run(
+        ["cargo", "build", "-q", "-p", "sifr"],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=300,
+    )
+    if proc.returncode != 0:
+        raise AssertionError(
+            "failed to build sifr diagnostic-contract binary:\n"
+            f"--- stdout ---\n{proc.stdout}\n--- stderr ---\n{proc.stderr}"
+        )
+    binary = REPO_ROOT / "target" / "debug" / "sifr"
+    require(binary.is_file(), f"sifr binary missing after build: {binary}")
+    return binary
+
+
+@lru_cache(maxsize=1)
+def diagnostic_contract_harness_binary() -> Path:
+    proc = subprocess.run(
+        ["cargo", "build", "-q", "-p", "sifr_driver", "--bin", "diagnostic_contract_harness"],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=300,
+    )
+    if proc.returncode != 0:
+        raise AssertionError(
+            "failed to build diagnostic contract harness:\n"
+            f"--- stdout ---\n{proc.stdout}\n--- stderr ---\n{proc.stderr}"
+        )
+    binary = REPO_ROOT / "target" / "debug" / "diagnostic_contract_harness"
+    require(binary.is_file(), f"diagnostic contract harness missing after build: {binary}")
+    return binary
+
+
+def run_runtime_harness() -> None:
+    proc = subprocess.run(
+        [str(diagnostic_contract_harness_binary())],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=120,
+    )
+    if proc.returncode != 0:
+        raise AssertionError(
+            "diagnostic contract harness failed:\n"
+            f"--- stdout ---\n{proc.stdout}\n--- stderr ---\n{proc.stderr}"
+        )
+
+
 def run_sifr(args: list[str], cwd: Path = REPO_ROOT) -> CommandResult:
-    argv = ["cargo", "run", "-q"]
-    if cwd != REPO_ROOT:
-        argv.extend(["--manifest-path", str(REPO_ROOT / "Cargo.toml")])
-    argv.extend(["-p", "sifr", "--", *args])
+    argv = [str(sifr_binary()), *args]
     proc = subprocess.run(
         argv,
         cwd=cwd,
@@ -402,10 +456,7 @@ def run_static_checks(root: Path) -> None:
 
 def run_checks(root: Path) -> None:
     run_static_checks(root)
-    check_parser_runtime_contract(root)
-    check_project_runtime_contract(root)
-    check_package_runtime_contract(root)
-    check_cycle_runtime_contract(root)
+    run_runtime_harness()
     check_package_help_contract(root)
 
 
