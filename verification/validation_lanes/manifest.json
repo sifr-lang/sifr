@@ -1,35 +1,42 @@
 {
   "schema_version": 1,
   "aliases": {
-    "full": "pr",
+    "quick": "create-pr",
+    "pr": "merge",
+    "full": "merge",
     "stress": "release"
   },
   "lanes": [
     {
-      "name": "quick",
+      "name": "create-pr",
       "description": "Fast local developer confidence with bounded contract coverage and representative e2e only.",
-      "warm_wall_time_target_minutes": 5,
-      "cold_wall_time_target_minutes": 10,
+      "warm_wall_time_target_minutes": 2,
+      "cold_wall_time_target_minutes": 5,
       "thermal_policy": "bounded-local-defaults",
       "memory_policy": "avoid-swap-defaults",
-      "matrix_suites": [
-        "frontend_mode_parity",
-        "phase23_graph_isolation",
-        "integer_dtype_contract"
+      "matrix_suites": [],
+      "tooling_suites": [
+        "static",
+        "lsp-smoke"
       ],
+      "distribution": "none",
+      "generated_code_quality": "smoke",
+      "performance_budget": "smoke",
+      "crate_tests": "smoke",
       "e2e": {
         "fixture_manifest": "verification/validation_lanes/quick_e2e_manifest.json",
         "sifr_jobs": 2,
         "rust_jobs": 2,
         "run_jobs": 2,
         "cargo_build_jobs": 1,
+        "max_group_fixtures": 8,
         "disable_cache": false
       },
       "hardening_suites": [],
       "extra_checks": []
     },
     {
-      "name": "pr",
+      "name": "merge",
       "description": "Authoritative merge gate with full contract matrices, representative e2e, and selected hardening.",
       "warm_wall_time_target_minutes": 15,
       "cold_wall_time_target_minutes": 25,
@@ -42,12 +49,23 @@
         "phase24_hir_analysis",
         "phase25_cfg_flow"
       ],
+      "tooling_suites": [
+        "static",
+        "formatter",
+        "analysis",
+        "lsp-smoke"
+      ],
+      "distribution": "representative",
+      "generated_code_quality": "representative",
+      "performance_budget": "representative",
+      "crate_tests": "full",
       "e2e": {
         "fixture_manifest": "verification/validation_lanes/pr_e2e_manifest.json",
         "sifr_jobs": 4,
         "rust_jobs": 3,
         "run_jobs": 3,
         "cargo_build_jobs": 1,
+        "max_group_fixtures": 12,
         "disable_cache": false
       },
       "hardening_suites": [
@@ -73,12 +91,20 @@
         "phase24_hir_analysis",
         "phase25_cfg_flow"
       ],
+      "tooling_suites": [
+        "full"
+      ],
+      "distribution": "full",
+      "generated_code_quality": "full",
+      "performance_budget": "full",
+      "crate_tests": "full",
       "e2e": {
         "fixture_manifest": null,
         "sifr_jobs": 6,
         "rust_jobs": 4,
         "run_jobs": 4,
         "cargo_build_jobs": 1,
+        "max_group_fixtures": 16,
         "disable_cache": false
       },
       "hardening_suites": [
@@ -108,12 +134,20 @@
         "phase24_hir_analysis",
         "phase25_cfg_flow"
       ],
+      "tooling_suites": [
+        "full"
+      ],
+      "distribution": "full",
+      "generated_code_quality": "full",
+      "performance_budget": "full",
+      "crate_tests": "full",
       "e2e": {
         "fixture_manifest": null,
         "sifr_jobs": 6,
         "rust_jobs": 4,
         "run_jobs": 4,
         "cargo_build_jobs": 1,
+        "max_group_fixtures": 16,
         "disable_cache": false
       },
       "hardening_suites": [

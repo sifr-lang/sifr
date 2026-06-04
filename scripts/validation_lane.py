@@ -99,6 +99,9 @@ def emit_shell(profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
     hardening_suites = lane.get("hardening_suites", [])
     if not isinstance(hardening_suites, list):
         raise SystemExit("invalid lane manifest: 'hardening_suites' must be a list")
+    tooling_suites = lane.get("tooling_suites", [])
+    if not isinstance(tooling_suites, list):
+        raise SystemExit("invalid lane manifest: 'tooling_suites' must be a list")
     extra_checks = lane.get("extra_checks", [])
     if not isinstance(extra_checks, list):
         raise SystemExit("invalid lane manifest: 'extra_checks' must be a list")
@@ -124,6 +127,11 @@ def emit_shell(profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
         "RUN_PHASE23_GRAPH_ISOLATION": "1" if "phase23_graph_isolation" in matrix_suites else "0",
         "RUN_PHASE24_HIR_ANALYSIS": "1" if "phase24_hir_analysis" in matrix_suites else "0",
         "RUN_PHASE25_CFG_FLOW": "1" if "phase25_cfg_flow" in matrix_suites else "0",
+        "TOOLING_SUITES": ",".join(tooling_suites),
+        "DISTRIBUTION_MODE": lane.get("distribution", "none"),
+        "GENERATED_CODE_QUALITY_MODE": lane.get("generated_code_quality", "none"),
+        "PERFORMANCE_BUDGET_MODE": lane.get("performance_budget", "none"),
+        "CRATE_TEST_MODE": lane.get("crate_tests", "full"),
         "RUN_HARDENING": "1" if hardening_suites else "0",
         "HARDENING_SUITES": ",".join(hardening_suites),
         "RUN_E2E_REPORT_DETERMINISM": "1" if "e2e_report_determinism" in extra_checks else "0",
@@ -136,6 +144,7 @@ def emit_shell(profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
         "E2E_RUST_JOBS": e2e.get("rust_jobs", 1),
         "E2E_RUN_JOBS": e2e.get("run_jobs", 1),
         "E2E_CARGO_BUILD_JOBS": e2e.get("cargo_build_jobs", 1),
+        "E2E_MAX_GROUP_FIXTURES": e2e.get("max_group_fixtures", ""),
         "E2E_DISABLE_CACHE": "1" if e2e.get("disable_cache", False) else "0",
         "LANE_MANIFEST_DIR": str(lane_dir),
     }
@@ -155,6 +164,7 @@ def emit_summary(requested_profile: str, canonical_profile: str, lane: dict[str,
 
     matrix_suites = lane.get("matrix_suites", [])
     hardening_suites = lane.get("hardening_suites", [])
+    tooling_suites = lane.get("tooling_suites", [])
     extra_checks = lane.get("extra_checks", [])
 
     print("Validation lane summary")
@@ -185,6 +195,11 @@ def emit_summary(requested_profile: str, canonical_profile: str, lane: dict[str,
         "  hardening_suites="
         + (", ".join(hardening_suites) if hardening_suites else "none")
     )
+    print("  tooling_suites=" + (", ".join(tooling_suites) if tooling_suites else "none"))
+    print(f"  distribution={lane.get('distribution', 'none')}")
+    print(f"  generated_code_quality={lane.get('generated_code_quality', 'none')}")
+    print(f"  performance_budget={lane.get('performance_budget', 'none')}")
+    print(f"  crate_tests={lane.get('crate_tests', 'full')}")
     print("  extra_checks=" + (", ".join(extra_checks) if extra_checks else "none"))
     print(f"  manifest={manifest_path.relative_to(REPO_ROOT)}")
 

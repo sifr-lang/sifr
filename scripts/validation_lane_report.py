@@ -34,6 +34,13 @@ HARDENING_OK_RE = re.compile(
     r"^verification ok:\s+variants=(\d+),\s+failures=(\d+),\s+blocking_failures=(\d+),\s+non_blocking_failures=(\d+)$"
 )
 CACHE_DIR_RE = re.compile(r"^\s*cache_dir=(.+)$")
+LANE_STEP_RE = re.compile(
+    r"^\[sifr-lane-step\]\s+name=([A-Za-z0-9_-]+)\s+elapsed_ms=(\d+)\s+status=(pass|fail)$"
+)
+CASE_TIMING_RE = re.compile(
+    r"^\[sifr-case-timing\]\s+bucket=([A-Za-z0-9_-]+)\s+case=([A-Za-z0-9_.:/+-]+)"
+    r"\s+elapsed_ms=(\d+)\s+status=(pass|fail)$"
+)
 WARM_CACHE_HIT_TARGET = 0.90
 GROUP_SKEW_ADVISORY_RATIO = 4.0
 GROUP_SKEW_ABSOLUTE_DELTA = 8
@@ -148,7 +155,7 @@ def build_advisories(
         advisories.append("swap activity observed; lower worker counts or rebalance groups")
 
     max_rss_bytes = int(time_metrics.get("max_rss_bytes", 0))
-    if profile in {"quick", "pr"} and max_rss_bytes > DEFAULT_LANE_RSS_ADVISORY_BYTES:
+    if profile in {"create-pr", "merge"} and max_rss_bytes > DEFAULT_LANE_RSS_ADVISORY_BYTES:
         advisories.append("peak RSS exceeded low-single-digit GiB guidance for the default lane")
 
     if isinstance(e2e_metrics, dict):
@@ -184,6 +191,8 @@ def directory_stats(path: Path) -> dict[str, int | str]:
 
 def parse_log(path: Path) -> dict[str, Any]:
     contract_suites: list[dict[str, int | str]] = []
+    lane_steps: list[dict[str, int | str]] = []
+    case_timings: list[dict[str, int | str]] = []
     artifact_cache: dict[str, dict[str, int]] = {}
     hardening_summary: dict[str, int] | None = None
     e2e_metrics: dict[str, int] | None = None
@@ -192,6 +201,25 @@ def parse_log(path: Path) -> dict[str, Any]:
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line:
+            continue
+        if match := LANE_STEP_RE.match(line):
+            lane_steps.append(
+                {
+                    "name": match.group(1),
+                    "elapsed_ms": int(match.group(2)),
+                    "status": match.group(3),
+                }
+            )
+            continue
+        if match := CASE_TIMING_RE.match(line):
+            case_timings.append(
+                {
+                    "bucket": match.group(1),
+                    "case": match.group(2),
+                    "elapsed_ms": int(match.group(3)),
+                    "status": match.group(4),
+                }
+            )
             continue
         if match := CONTRACT_SUITE_RE.match(line):
             contract_suites.append(
@@ -252,6 +280,8 @@ def parse_log(path: Path) -> dict[str, Any]:
             cache_dir = match.group(1).strip()
 
     return {
+        "lane_steps": lane_steps,
+        "case_timings": case_timings,
         "contract_suites": contract_suites,
         "artifact_cache": artifact_cache,
         "hardening_summary": hardening_summary,
@@ -326,6 +356,8 @@ def summarize(args: argparse.Namespace) -> int:
             "group_skew_ratio": group_skew_ratio,
         },
         "advisories": advisories,
+        "lane_steps": parsed_log["lane_steps"],
+        "case_timings": parsed_log["case_timings"],
         "contract_suites": parsed_log["contract_suites"],
         "artifact_cache": parsed_log["artifact_cache"],
         "hardening_summary": parsed_log["hardening_summary"],
@@ -385,6 +417,27 @@ def summarize(args: argparse.Namespace) -> int:
         f"run={workers['run_jobs']} "
         f"cargo_build={workers['cargo_build_jobs']}"
     )
+    lane_steps = parsed_log["lane_steps"]
+    if lane_steps:
+        slowest_step = max(lane_steps, key=lambda step: int(step["elapsed_ms"]))
+        print(
+            "  slowest_step="
+            f"{slowest_step['name']} {int(slowest_step['elapsed_ms'])}ms "
+            f"status={slowest_step['status']}"
+        )
+    case_timings = parsed_log["case_timings"]
+    if case_timings:
+        by_bucket: dict[str, dict[str, int | str]] = {}
+        for timing in case_timings:
+            bucket = str(timing["bucket"])
+            current = by_bucket.get(bucket)
+            if current is None or int(timing["elapsed_ms"]) > int(current["elapsed_ms"]):
+                by_bucket[bucket] = timing
+        slowest_cases = [
+            f"{bucket}:{timing['case']}={int(timing['elapsed_ms'])}ms"
+            for bucket, timing in sorted(by_bucket.items())
+        ]
+        print("  slowest_cases=" + " ".join(slowest_cases))
     if parsed_log["artifact_cache"]:
         summaries = []
         for namespace, stats in sorted(parsed_log["artifact_cache"].items()):

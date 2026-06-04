@@ -19,6 +19,28 @@ from .property_and_fuzz import run_fuzz_smoke_suite, run_property_suite
 from .self_tests_and_baselines import run_baseline_suite, run_self_tests
 
 
+def timing_token(value: object) -> str:
+    return "".join(char if char.isalnum() or char in "_.:/+-" else "_" for char in str(value))
+
+
+def emit_case_timings(suite_name: str, suite_result: dict[str, Any]) -> None:
+    for case in suite_result.get("cases", []):
+        if not isinstance(case, dict):
+            continue
+        case_id = timing_token(case.get("id", "unknown"))
+        for variant in case.get("variants", []):
+            if not isinstance(variant, dict) or "duration_ms" not in variant:
+                continue
+            label = timing_token(variant.get("label", "variant"))
+            status = "pass" if variant.get("status") == "pass" else "fail"
+            elapsed_ms = int(float(variant["duration_ms"]))
+            print(
+                f"[sifr-case-timing] bucket=verification_hardening "
+                f"case={timing_token(suite_name)}/{case_id}/{label} "
+                f"elapsed_ms={elapsed_ms} status={status}"
+            )
+
+
 def main() -> int:
     args = parse_args()
     args.profile = canonicalize_profile(args.profile)
@@ -145,6 +167,7 @@ def main() -> int:
     for suite in selected_suites:
         suite_result = execute_suite_once(suite)
         suite_name = str(suite.get("name"))
+        emit_case_timings(suite_name, suite_result)
         suite_quarantine = [entry for entry in quarantine_entries if entry.get("suite") == suite_name]
         if suite_quarantine:
             suite_result["quarantine_entries"] = suite_quarantine

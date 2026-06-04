@@ -7,6 +7,7 @@ SIFR_JOBS_OVERRIDE=""
 RUST_JOBS_OVERRIDE=""
 RUN_JOBS_OVERRIDE=""
 CARGO_BUILD_JOBS_OVERRIDE=""
+MAX_GROUP_FIXTURES_OVERRIDE=""
 DISABLE_CACHE_OVERRIDE=""
 CACHE_DIR_OVERRIDE=""
 FIXTURE_MANIFEST_OVERRIDE=""
@@ -17,21 +18,24 @@ usage() {
 Usage: scripts/run_e2e_pass.sh [options]
 
 Profiles:
-  quick   Fast local signal; bounded parallel workers; cache enabled.
-  pr      Authoritative merge gate; representative corpus; cache enabled.
+  create-pr Fast local signal; bounded parallel workers; cache enabled.
+  merge     Authoritative merge gate; representative corpus; cache enabled.
   nightly Broad pass-corpus lane; cache enabled.
   release Highest-confidence local gate; cache enabled.
 
 Legacy aliases:
-  full    Alias for `pr`
+  quick   Alias for `create-pr`
+  pr      Alias for `merge`
+  full    Alias for `merge`
   stress  Alias for `release`
 
 Options:
-  --profile <quick|pr|nightly|release|full|stress> Local execution profile (default: pr)
+  --profile <create-pr|merge|nightly|release|quick|pr|full|stress> Local execution profile (default: pr)
   --sifr-jobs <n>              Parallel Sifr compile workers
   --rust-jobs <n>              Parallel group build workers
   --run-jobs <n>               Parallel group run workers
   --cargo-build-jobs <n>       Cargo jobs per generated group build
+  --max-group-fixtures <n>     Maximum fixtures per generated Rust batch group
   --cache-dir <path>           e2e cache directory (default: target/sifr_e2e_cache/<profile>)
   --fixture-manifest <path>    JSON manifest listing the selected e2e pass fixtures
   --no-cache                   Disable the e2e cache for this run
@@ -46,7 +50,7 @@ canonicalize_profile() {
 set_profile_defaults() {
   local profile="$1"
   case "${profile}" in
-    quick)
+    create-pr)
       SIFR_JOBS="2"
       RUST_JOBS="2"
       RUN_JOBS="2"
@@ -54,7 +58,7 @@ set_profile_defaults() {
       DISABLE_CACHE="0"
       FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/quick_e2e_manifest.json"
       ;;
-    pr)
+    merge)
       SIFR_JOBS="4"
       RUST_JOBS="3"
       RUN_JOBS="3"
@@ -100,6 +104,10 @@ while [[ $# -gt 0 ]]; do
       CARGO_BUILD_JOBS_OVERRIDE="${2:-}"
       shift 2
       ;;
+    --max-group-fixtures)
+      MAX_GROUP_FIXTURES_OVERRIDE="${2:-}"
+      shift 2
+      ;;
     --cache-dir)
       CACHE_DIR_OVERRIDE="${2:-}"
       shift 2
@@ -132,6 +140,7 @@ SIFR_JOBS="${SIFR_E2E_SIFR_JOBS:-${SIFR_JOBS}}"
 RUST_JOBS="${SIFR_E2E_RUST_JOBS:-${RUST_JOBS}}"
 RUN_JOBS="${SIFR_E2E_RUN_JOBS:-${RUN_JOBS}}"
 CARGO_BUILD_JOBS="${SIFR_E2E_CARGO_BUILD_JOBS:-${CARGO_BUILD_JOBS}}"
+MAX_GROUP_FIXTURES="${SIFR_E2E_MAX_GROUP_FIXTURES:-}"
 DISABLE_CACHE="${SIFR_E2E_DISABLE_CACHE:-${DISABLE_CACHE}}"
 CACHE_DIR="${SIFR_E2E_CACHE_DIR:-target/sifr_e2e_cache/${PROFILE}}"
 FIXTURE_MANIFEST="${SIFR_E2E_FIXTURE_MANIFEST:-${FIXTURE_MANIFEST_DEFAULT}}"
@@ -147,6 +156,9 @@ if [[ -n "${RUN_JOBS_OVERRIDE}" ]]; then
 fi
 if [[ -n "${CARGO_BUILD_JOBS_OVERRIDE}" ]]; then
   CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS_OVERRIDE}"
+fi
+if [[ -n "${MAX_GROUP_FIXTURES_OVERRIDE}" ]]; then
+  MAX_GROUP_FIXTURES="${MAX_GROUP_FIXTURES_OVERRIDE}"
 fi
 if [[ -n "${DISABLE_CACHE_OVERRIDE}" ]]; then
   DISABLE_CACHE="${DISABLE_CACHE_OVERRIDE}"
@@ -170,6 +182,9 @@ echo "  sifr_jobs=${SIFR_JOBS}"
 echo "  rust_jobs=${RUST_JOBS}"
 echo "  run_jobs=${RUN_JOBS}"
 echo "  cargo_build_jobs=${CARGO_BUILD_JOBS}"
+if [[ -n "${MAX_GROUP_FIXTURES}" ]]; then
+  echo "  max_group_fixtures=${MAX_GROUP_FIXTURES}"
+fi
 echo "  disable_cache=${DISABLE_CACHE}"
 echo "  cache_dir=${CACHE_DIR}"
 if [[ -n "${FIXTURE_MANIFEST}" ]]; then
@@ -181,6 +196,7 @@ SIFR_E2E_SIFR_JOBS="${SIFR_JOBS}" \
 SIFR_E2E_RUST_JOBS="${RUST_JOBS}" \
 SIFR_E2E_RUN_JOBS="${RUN_JOBS}" \
 SIFR_E2E_CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS}" \
+SIFR_E2E_MAX_GROUP_FIXTURES="${MAX_GROUP_FIXTURES}" \
 SIFR_E2E_DISABLE_CACHE="${DISABLE_CACHE}" \
 SIFR_E2E_CACHE_DIR="${CACHE_DIR}" \
 SIFR_E2E_FIXTURE_MANIFEST="${FIXTURE_MANIFEST}" \

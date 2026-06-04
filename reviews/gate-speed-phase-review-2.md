@@ -1,0 +1,1 @@
+Round-2 review complete. Verdict: **REQUEST CHANGES**. Two new blocker-class findings — `set +e` propagation inside `timed_step` (silently swallows mid-bucket failures across 6 runner functions) and a missed `exit 2` twin at `run_all_tests.sh:345` matching round-1 #5's anti-pattern. The six listed round-1 blocker fixes all verified clean.

@@ -1,0 +1,375 @@
+#![allow(clippy::print_stdout, clippy::print_stderr)]
+
+use serde_json::Value;
+use sifr_diagnostics::RenderedDiagnostic;
+use sifr_driver::{check_package_project, check_project, check_single_file, PackageEntrypoint};
+use sifr_package::{
+    derive_package_graph, parse_metadata_json, CargoCommandPlan, CargoLockMode, PackageSourceMap,
+};
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+const LEGACY_WORKSPACE_IMPORT_CODES: &[&str] = &[
+    "SIFR-WORKSPACE-0101",
+    "SIFR-WORKSPACE-0102",
+    "SIFR-WORKSPACE-0103",
+    "SIFR-WORKSPACE-0104",
+];
+
+const PARSER_FIXTURES: &[(&str, &str)] = &[
+    ("parser_bad_indent", "SIFR-PARSE-0002"),
+    ("parser_unterminated_string", "SIFR-PARSE-0003"),
+    ("parser_invalid_call_order", "SIFR-PARSE-0006"),
+    ("parser_empty_declaration", "SIFR-PARSE-0007"),
+    ("parser_invalid_declaration", "SIFR-PARSE-0002"),
+    ("parser_invalid_match_pattern", "SIFR-PARSE-0008"),
+    ("parser_unsupported_syntax", "SIFR-PARSE-0009"),
+];
+
+const PROJECT_FIXTURES: &[(&str, &str, &[&str])] = &[
+    (
+        "workspace_missing_import_canonical",
+        "SIFR-IMPORT-0002",
+        &["resolution_scope", "tried_paths"],
+    ),
+    (
+        "workspace_ambiguous_import_canonical",
+        "SIFR-IMPORT-0005",
+        &["resolution_scope", "candidate_paths"],
+    ),
+    (
+        "workspace_namespace_collision_canonical",
+        "SIFR-IMPORT-0006",
+        &["resolved_path", "parent_path"],
+    ),
+];
+
+const CYCLE_FIXTURES: &[(&str, &str, &[&str])] = &[(
+    "import_cycle_source_spans",
+    "SIFR-IMPORT-0007",
+    &["cycle", "cycle_edges"],
+)];
+
+const PACKAGE_FIXTURES: &[(&str, &str, &[&str])] = &[
+    (
+        "package_missing_import_canonical",
+        "SIFR-IMPORT-0002",
+        &[
+            "resolution_scope",
+            "tried_paths",
+            "written_module_path",
+            "package_import_origin",
+        ],
+    ),
+    (
+        "package_ambiguous_import_canonical",
+        "SIFR-IMPORT-0005",
+        &[
+            "resolution_scope",
+            "candidate_paths",
+            "written_module_path",
+            "package_import_origin",
+        ],
+    ),
+];
+
+const PACKAGE_FATAL_FIXTURES: &[(&str, &str, &[&str])] = &[(
+    "package_fatal_source_map_no_import_ambiguity",
+    "SIFR-PACKAGE-0713",
+    &["origin_kind", "manifest_path", "manifest_key"],
+)];
+
+fn main() {
+    if let Err(error) = run() {
+        eprintln!("diagnostic contract harness: FAIL: {error}");
+        std::process::exit(1);
+    }
+    println!("diagnostic contract harness: PASS");
+}
+
+fn run() -> Result<(), String> {
+    let repo_root = repo_root()?;
+    check_parser_runtime_contract(&repo_root)?;
+    check_project_runtime_contract(&repo_root)?;
+    check_cycle_runtime_contract(&repo_root)?;
+    check_package_runtime_contract(&repo_root)?;
+    Ok(())
+}
+
+fn repo_root() -> Result<PathBuf, String> {
+    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    manifest_dir
+        .parent()
+        .and_then(Path::parent)
+        .map(Path::to_path_buf)
+        .ok_or_else(|| "sifr_driver should live under repo_root/crates/sifr_driver".to_string())
+}
+
+fn check_parser_runtime_contract(root: &Path) -> Result<(), String> {
+    let base = root.join("crates/sifr/tests/verification/diagnostics");
+    for (fixture, code) in PARSER_FIXTURES {
+        let entry = base.join(fixture).join("main.sifr");
+        let source = std::fs::read_to_string(&entry)
+            .map_err(|err| format!("failed to read {}: {err}", entry.display()))?;
+        let diagnostics = check_single_file(&source, &entry);
+        assert_contract(&diagnostics, code, fixture, &[], &[], true, true)?;
+        assert_text_formats(&diagnostics, code, &entry)?;
+    }
+    Ok(())
+}
+
+fn check_project_runtime_contract(root: &Path) -> Result<(), String> {
+    let base = root.join("crates/sifr/tests/verification/project");
+    for (fixture, code, required_args) in PROJECT_FIXTURES {
+        let entry = base.join(fixture).join("main.sifr");
+        let diagnostics = check_project(&entry);
+        assert_contract(
+            &diagnostics,
+            code,
+            fixture,
+            LEGACY_WORKSPACE_IMPORT_CODES,
+            required_args,
+            true,
+            true,
+        )?;
+        assert_text_formats(&diagnostics, code, &entry)?;
+    }
+    Ok(())
+}
+
+fn check_cycle_runtime_contract(root: &Path) -> Result<(), String> {
+    let base = root.join("crates/sifr/tests/verification/project");
+    for (fixture, code, required_args) in CYCLE_FIXTURES {
+        let entry = base.join(fixture).join("main.sifr");
+        let diagnostics = check_project(&entry);
+        assert_contract(
+            &diagnostics,
+            code,
+            fixture,
+            LEGACY_WORKSPACE_IMPORT_CODES,
+            required_args,
+            true,
+            true,
+        )?;
+        assert_text_formats(&diagnostics, code, &entry)?;
+    }
+    Ok(())
+}
+
+fn check_package_runtime_contract(root: &Path) -> Result<(), String> {
+    let base = root.join("crates/sifr/tests/verification/package");
+    for (fixture, code, required_args) in PACKAGE_FIXTURES {
+        let package = base.join(fixture);
+        let diagnostics = package_diagnostics(&package)?;
+        assert_contract(
+            &diagnostics,
+            code,
+            fixture,
+            LEGACY_WORKSPACE_IMPORT_CODES,
+            required_args,
+            true,
+            true,
+        )?;
+        assert_no_prefix(&diagnostics, fixture, "SIFR-PACKAGE-")?;
+        assert_text_formats(&diagnostics, code, &package)?;
+    }
+    for (fixture, code, required_args) in PACKAGE_FATAL_FIXTURES {
+        let package = base.join(fixture);
+        let diagnostics = package_diagnostics(&package)?;
+        assert_contract(&diagnostics, code, fixture, &[], required_args, false, true)?;
+        assert_no_prefix(&diagnostics, fixture, "SIFR-IMPORT-")?;
+    }
+    Ok(())
+}
+
+fn package_diagnostics(package: &Path) -> Result<Vec<RenderedDiagnostic>, String> {
+    let plan = CargoCommandPlan::metadata(package.to_path_buf(), CargoLockMode::Normal);
+    let output = Command::new(&plan.program)
+        .args(&plan.args)
+        .current_dir(&plan.current_dir)
+        .output()
+        .map_err(|err| {
+            format!(
+                "failed to run cargo metadata for {}: {err}",
+                package.display()
+            )
+        })?;
+    if !output.status.success() {
+        return Err(format!(
+            "cargo metadata failed for {}: {}",
+            package.display(),
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let metadata = parse_metadata_json(&stdout).map_err(|err| {
+        format!(
+            "failed to parse cargo metadata for {}: {err:?}",
+            package.display()
+        )
+    })?;
+    let graph = match derive_package_graph(metadata) {
+        Ok(graph) => graph,
+        Err(errors) => {
+            return Ok(errors
+                .into_iter()
+                .map(sifr_driver::render_package_diagnostic)
+                .collect());
+        }
+    };
+    let source_map = match PackageSourceMap::build(&graph) {
+        Ok(source_map) => source_map,
+        Err(errors) => {
+            return Ok(errors
+                .into_iter()
+                .map(sifr_driver::render_package_diagnostic)
+                .collect());
+        }
+    };
+    let package_id = graph
+        .packages
+        .iter()
+        .find(|(_, metadata)| metadata.package_root == package)
+        .map(|(id, _)| id.clone())
+        .ok_or_else(|| format!("could not find package id for {}", package.display()))?;
+    let entry = find_package_entry(package)?;
+    let entrypoint = PackageEntrypoint {
+        main_file: entry,
+        package_id,
+        graph,
+        source_map,
+    };
+    Ok(check_package_project(&entrypoint))
+}
+
+fn find_package_entry(package: &Path) -> Result<PathBuf, String> {
+    for candidate in ["src/main.sifr", "src1/main.sifr", "src_a/main.sifr"] {
+        let path = package.join(candidate);
+        if path.is_file() {
+            return Ok(path);
+        }
+    }
+    Err(format!(
+        "package fixture missing main.sifr under {}",
+        package.display()
+    ))
+}
+
+fn assert_contract(
+    diagnostics: &[RenderedDiagnostic],
+    expected_code: &str,
+    case_id: &str,
+    forbidden_codes: &[&str],
+    required_args: &[&str],
+    require_span: bool,
+    render_json: bool,
+) -> Result<(), String> {
+    if diagnostics.is_empty() {
+        return Err(format!("{case_id}: diagnostic payload is empty"));
+    }
+    let codes = diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect::<BTreeSet<_>>();
+    if !codes.contains(expected_code) {
+        return Err(format!(
+            "{case_id}: expected {expected_code}, got {codes:?}"
+        ));
+    }
+    for code in forbidden_codes {
+        if codes.contains(code) {
+            return Err(format!(
+                "{case_id}: retired workspace import code leaked: {code}"
+            ));
+        }
+    }
+    let diagnostic = diagnostics
+        .iter()
+        .find(|diagnostic| diagnostic.code == expected_code)
+        .ok_or_else(|| format!("{case_id}: expected diagnostic disappeared"))?;
+    if require_span {
+        assert_primary_span(diagnostic)?;
+    }
+    for arg in required_args {
+        if !diagnostic.args.contains_key(*arg) {
+            return Err(format!("{expected_code} missing JSON arg: {arg}"));
+        }
+    }
+    if render_json {
+        let json = sifr_diagnostics::render_json_diagnostics(diagnostics)
+            .map_err(|err| format!("{case_id}: JSON rendering failed: {err}"))?;
+        let payload: Value =
+            serde_json::from_str(&json).map_err(|err| format!("{case_id}: invalid JSON: {err}"))?;
+        if payload.as_array().is_none_or(std::vec::Vec::is_empty) {
+            return Err(format!("{case_id}: rendered JSON payload is empty"));
+        }
+    }
+    Ok(())
+}
+
+fn assert_primary_span(diagnostic: &RenderedDiagnostic) -> Result<(), String> {
+    let span = diagnostic
+        .spans
+        .iter()
+        .find(|span| span.is_primary)
+        .or_else(|| diagnostic.spans.first())
+        .ok_or_else(|| format!("{} has no spans", diagnostic.code))?;
+    if span.file.as_deref().is_none_or(|file| file == "<unknown>") {
+        return Err(format!(
+            "{} primary span file is <unknown>",
+            diagnostic.code
+        ));
+    }
+    if span.line.is_none_or(|line| line < 1) || span.column.is_none_or(|column| column < 1) {
+        return Err(format!(
+            "{} primary span location is not 1-based",
+            diagnostic.code
+        ));
+    }
+    if span.lines.is_empty() {
+        return Err(format!(
+            "{} primary span missing snippet lines",
+            diagnostic.code
+        ));
+    }
+    Ok(())
+}
+
+fn assert_text_formats(
+    diagnostics: &[RenderedDiagnostic],
+    expected_code: &str,
+    entry: &Path,
+) -> Result<(), String> {
+    let human = sifr_diagnostics::render_human_diagnostics(diagnostics);
+    if !human.contains(expected_code) || !human.contains("-->") || human.contains("<unknown>") {
+        return Err(format!(
+            "human output failed source contract for {}",
+            entry.display()
+        ));
+    }
+    let compact = sifr_diagnostics::render_compact_diagnostics(diagnostics);
+    if !compact.contains(&format!("E {expected_code} ")) || compact.contains("<unknown>") {
+        return Err(format!(
+            "compact output failed source contract for {}",
+            entry.display()
+        ));
+    }
+    Ok(())
+}
+
+fn assert_no_prefix(
+    diagnostics: &[RenderedDiagnostic],
+    case_id: &str,
+    forbidden_prefix: &str,
+) -> Result<(), String> {
+    for diagnostic in diagnostics {
+        if diagnostic.code.starts_with(forbidden_prefix) {
+            return Err(format!(
+                "{case_id}: forbidden diagnostic family leaked: {}",
+                diagnostic.code
+            ));
+        }
+    }
+    Ok(())
+}

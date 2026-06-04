@@ -567,22 +567,32 @@ pub(crate) fn plan_batches(
 
     let mut groups = Vec::with_capacity(buckets.len());
     let mut planning_failures = Vec::new();
+    let max_group_fixtures = std::env::var("SIFR_E2E_MAX_GROUP_FIXTURES")
+        .ok()
+        .and_then(|value| value.parse::<usize>().ok())
+        .filter(|value| *value > 0)
+        .unwrap_or(usize::MAX);
     for (_, cases) in buckets {
-        let fixture_names = cases
-            .iter()
-            .map(|case| case.fixture.name.clone())
-            .collect::<Vec<_>>();
-        match build_group_sources(cases) {
-            Ok(group) => groups.push(group),
-            Err(err) => {
-                for fixture_name in fixture_names {
-                    planning_failures.push(FixtureExecution {
-                        name: fixture_name.clone(),
-                        status: Err(format!(
-                            "FAIL [{}]: failed to generate grouped crate source: {}",
-                            fixture_name, err
-                        )),
-                    });
+        let mut cases = cases;
+        cases.sort_by(|left, right| left.fixture.name.cmp(&right.fixture.name));
+        for chunk in cases.chunks(max_group_fixtures) {
+            let chunk_cases = chunk.to_vec();
+            let fixture_names = chunk_cases
+                .iter()
+                .map(|case| case.fixture.name.clone())
+                .collect::<Vec<_>>();
+            match build_group_sources(chunk_cases) {
+                Ok(group) => groups.push(group),
+                Err(err) => {
+                    for fixture_name in fixture_names {
+                        planning_failures.push(FixtureExecution {
+                            name: fixture_name.clone(),
+                            status: Err(format!(
+                                "FAIL [{}]: failed to generate grouped crate source: {}",
+                                fixture_name, err
+                            )),
+                        });
+                    }
                 }
             }
         }

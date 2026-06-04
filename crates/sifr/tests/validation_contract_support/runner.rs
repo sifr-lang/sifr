@@ -59,13 +59,29 @@ fn repo_root() -> PathBuf {
 
 fn run_suite(repo_root: &Path, suite: &Suite) -> Result<(), String> {
     for row in &suite.rows {
+        let row_started = Instant::now();
+        let mut row_status = "pass";
         println!("  row={}", row.id);
         let tmp_dir = temp_root(repo_root, &suite.name, &row.id)?;
-        let results = run_row_commands(repo_root, &tmp_dir, &row.commands)?;
-        for assertion in &row.assertions {
-            apply_assertion(assertion, &results)?;
-        }
+        let result = (|| {
+            let results = run_row_commands(repo_root, &tmp_dir, &row.commands)?;
+            for assertion in &row.assertions {
+                apply_assertion(assertion, &results)?;
+            }
+            Ok::<(), String>(())
+        })();
         let _ = std::fs::remove_dir_all(&tmp_dir);
+        if result.is_err() {
+            row_status = "fail";
+        }
+        println!(
+            "[sifr-case-timing] bucket=validation_contract case={}/{} elapsed_ms={} status={}",
+            suite.name,
+            row.id,
+            row_started.elapsed().as_millis(),
+            row_status
+        );
+        result?;
     }
     println!("{}: PASS", suite.label);
     Ok(())
