@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Stdlib Namespace Contract And Compatibility Cleanup
 
-Status: planning
+Status: complete
 
 ## Objective
 
