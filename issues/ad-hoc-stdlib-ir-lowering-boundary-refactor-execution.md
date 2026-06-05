@@ -9,7 +9,7 @@ Status: in progress
 - [x] `milestone_stdlib_boundary_1`: Create `sifr_stdlib` Contract Crate
 - [x] `milestone_stdlib_boundary_2`: Centralize Stdlib Feature And Dependency Manifest
 - [x] `milestone_ir_boundary_1`: Extract `sifr_ir` Data Crate
-- [ ] `milestone_ir_boundary_2`: Rename Remainder To `sifr_lowering`
+- [x] `milestone_ir_boundary_2`: Rename Remainder To `sifr_lowering`
 - [ ] `milestone_ir_boundary_3`: Dependency Direction Guardrails
 - [ ] `milestone_ir_boundary_4`: Documentation And Phase Closeout
 
@@ -24,6 +24,7 @@ Record planning and implementation reviews here.
 - M2 implementation review: `reviews/ad-hoc-stdlib-boundary-m2-review-4.md` -> `READY`; reviewer found no blockers and confirmed the stdlib feature/dependency manifest boundary is mergeable.
 - M3 implementation review: `reviews/ad-hoc-stdlib-boundary-m3-review-2.md` -> `READY`; reviewer found no blockers and confirmed the `sifr_ir` data boundary, codegen/lint dependency direction, and retained HIR CFG/flow-graph construction match the M3 contract.
 - M4 implementation review: `reviews/ad-hoc-stdlib-boundary-m4-review-2.md` -> `READY`; reviewer found no blockers and confirmed the `sifr_hir` crate is retired, codegen/lint dependency direction stays on `sifr_ir`, and remaining old-name references are migration-plan history.
+- M5 implementation review: `reviews/ad-hoc-stdlib-boundary-m5-review-3.md` -> `READY`; reviewer confirmed the guardrail covers parser crate edges, production source references, direct normal dependency edges, generated dependency spec ownership, allowed downstream spec reads, and test-only codegen lowering helpers.
 
 ## Validation Ledger
 
@@ -86,7 +87,14 @@ Record local validation for each milestone before opening the corresponding PR.
   - `cargo fmt --check` -> PASS.
   - `git diff --check` -> PASS.
   - `scripts/run_all_tests.sh --profile create-pr` -> PASS (`target/validation_lane_reports/create-pr.latest.json`; wall time 76.78s, advisories: none).
-- M5: pending.
+- M5: local validation passed.
+  - `python3 scripts/check_source_crate_dependency_direction.py` -> PASS.
+  - `python3 scripts/check_source_crate_dependency_direction.py --self-test` -> PASS; seeded positive and negative cases cover `sifr_source`, `sifr_ir`, parser-crate edges, production source references, test-only codegen lowering references, `sifr_stdlib`, `sifr_codegen`, `sifr_lint`, `sifr_analysis`, and generated dependency spec ownership.
+  - `python3 scripts/check_file_size_guardrails.py` -> PASS.
+  - `cargo fmt --check` -> PASS.
+  - `cargo clippy --workspace -- -D warnings` -> PASS.
+  - `git diff --check` -> PASS.
+  - `scripts/run_all_tests.sh --profile create-pr` -> PASS (`target/validation_lane_reports/create-pr.latest.json`; wall time 78.63s, advisories: none).
 - M6: pending.
 
 ## Merged PRs
@@ -96,6 +104,6 @@ Record merged PR links here as each milestone lands.
 - M1: https://github.com/sifr-lang/sifr/pull/2284
 - M2: https://github.com/sifr-lang/sifr/pull/2285
 - M3: https://github.com/sifr-lang/sifr/pull/2286
-- M4: pending.
+- M4: https://github.com/sifr-lang/sifr/pull/2287
 - M5: pending.
 - M6: pending.
