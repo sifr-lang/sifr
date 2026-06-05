@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md)
 
-Status: milestone_stdlib_namespace_3 ready for parent PR after reviewer approval and local validation
+Status: complete; all milestones merged, local create-pr and merge gates passed, and final reviewer closeout is READY.
 
 ## Checklist
 
@@ -30,6 +30,7 @@ Record planning and implementation reviews here.
 - M1 implementation review pass 2: `reviews/ad-hoc-stdlib-namespace-m1-implementation-review-pass-3.md` -> `READY`; reviewer found no blocking M1 issues and confirmed `SIFR-IMPORT-0008` registry/docs, shared bare stdlib helper behavior, lowering args/help transport, project/package probe-then-reclassify behavior, `Stmt::Import` ownership, user-module priority, and required test/fixture coverage.
 - M2 implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-m2-implementation-review-pass-1.md` -> `READY`; reviewer found no blocking M2 contract issues and called out validation hygiene items for the PR gate and M3 closeout.
 - M3 implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-m3-implementation-review-pass-3.md` -> `READY`; reviewer found no correctness blockers in the corpus adoption, defaultdict string-key lowering, typed nested closure params, speculative string-cache rollback/init, or artifact-cache concurrent populate handling. Non-blocking notes to exclude generated pending-snapshot edits and commit/update the LeetCode submodule were handled before the parent PR.
+- Final implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-final-implementation-review-pass-1.md` -> `READY`; reviewer confirmed milestones M1-M3 are complete, checklist state is closed, PRs are merged and recorded, local create-pr and merge gates passed, removed compatibility symbols remain absent from production, `SIFR-IMPORT-0008` / `IMPORT_BARE_STDLIB` is wired across the required layers, and exit gates 1-10 are satisfied.
 
 ## Validation Ledger
 
@@ -76,6 +77,9 @@ Record local validation for each milestone before opening the corresponding PR.
   - `python3 scripts/check_file_size_guardrails.py`
   - `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 149.45s, 67/67 e2e pass fixtures, non-blocking warm wall-time advisory.
   - `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 598.34s, 73/73 e2e pass fixtures, non-blocking group-skew advisory.
+- Final closeout docs:
+  - `python3 scripts/check_file_size_guardrails.py`
+  - `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 123.03s, 67/67 e2e pass fixtures, non-blocking warm wall-time advisory.
 
 ## Merged PRs
 
