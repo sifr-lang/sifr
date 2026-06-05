@@ -6,6 +6,11 @@ Implementation note: lane policy is now documented in
 `internal_docs/validation_lane_policy.md`. Canonical lanes are `create-pr`,
 `merge`, `nightly`, and `release`.
 
+Merged implementation PRs:
+
+- [#2281](https://github.com/sifr-lang/sifr/pull/2281) Rebalance validation lanes.
+- [#2282](https://github.com/sifr-lang/sifr/pull/2282) Remove validation lane aliases.
+
 ## Objective
 
 Make the local gates used for PR creation fast, deterministic, and compiler-relevant without weakening Sifr's correctness guarantees.
@@ -205,3 +210,11 @@ Merge e2e used a cold cache for this run: `cache_hits=0/22`,
 `largest_group_fixtures=12`, `median_group_fixtures=1`. The lane passed with
 the non-blocking advisory `group skew is high; investigate batching balance or
 fixture clustering`.
+
+Final alias-cleanup validation after [#2282](https://github.com/sifr-lang/sifr/pull/2282)
+passed `scripts/run_all_tests.sh --profile create-pr` with
+`wall_time=114.58s`, `budget_ok=yes`, `advisories=none`, and
+`cache_hits=18/18` using
+`verification/validation_lanes/create_pr_e2e_manifest.json`. Old validation
+profile names `quick`, `pr`, `full`, and `stress` are rejected rather than
+canonicalized.
