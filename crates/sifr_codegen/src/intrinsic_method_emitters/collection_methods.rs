@@ -465,7 +465,7 @@ impl RustEmitter {
             args: vec![registry_defaultdict_default_expr(alias_name)],
         };
         match (alias_name, method, lowered_args.as_slice()) {
-            ("__compat_defaultdict_list", "append", [value]) => Some(crate::RustExpr::Block {
+            ("__sifr_defaultdict_list", "append", [value]) => Some(crate::RustExpr::Block {
                 stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(entry_expr),
                     method: "push".to_string(),
@@ -473,7 +473,7 @@ impl RustEmitter {
                 })],
                 expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
             }),
-            ("__compat_defaultdict_set", "add", [value]) => Some(crate::RustExpr::Block {
+            ("__sifr_defaultdict_set", "add", [value]) => Some(crate::RustExpr::Block {
                 stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(entry_expr),
                     method: "insert".to_string(),
@@ -501,7 +501,7 @@ impl RustEmitter {
         let (alias_name, key_ty, _) = registry_defaultdict_alias_parts(base_object.ty())?;
         if !matches!(
             alias_name,
-            "__compat_defaultdict_list" | "__compat_defaultdict_set"
+            "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
         ) {
             return None;
         }

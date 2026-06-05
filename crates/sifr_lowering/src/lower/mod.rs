@@ -23,7 +23,6 @@ mod bytes_methods;
 mod call_argument_ranges;
 mod class_field_inference;
 mod classes;
-mod compat_imports;
 mod container_literal_diagnostics;
 mod container_literal_specialization;
 mod control_flow_conditions;

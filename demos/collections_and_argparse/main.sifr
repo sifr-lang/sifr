@@ -8,10 +8,9 @@ def main() -> None:
     counter: Counter[str] = Counter(iterable=["parse", "parse", "emit"])
     assert counter.get("parse") == 2
 
-    attempts: defaultdict[str] = defaultdict(0)
-    current_attempts: int = attempts.ensure("wave2")
-    attempts.set("wave2", current_attempts + 1)
-    assert attempts.ensure("wave2") == 1
+    attempts = defaultdict(int)
+    attempts["wave2"] += 1
+    assert attempts["wave2"] == 1
 
     parser: ArgumentParser = ArgumentParser("sifr")
     parser.add_subparsers(dest="cmd")

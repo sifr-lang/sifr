@@ -623,20 +623,40 @@ pub(super) fn test_generic_constructor_infers_typevar_from_optional_union_param(
 }
 
 #[test]
-pub(super) fn test_defaultdict_list_call_resolves_without_import() {
-    let result = lower_source(
-        "def main():\n    groups = defaultdict(list)\n    groups[\"a\"].append(\"x\")\n    assert len(groups[\"a\"]) == 1\n",
+pub(super) fn test_defaultdict_list_call_requires_explicit_import() {
+    let result = lower_source("def main():\n    groups = defaultdict(list)\n");
+    assert!(result.is_err(), "bare defaultdict(list) must be rejected");
+}
+
+#[test]
+pub(super) fn test_defaultdict_list_call_resolves_with_explicit_import() {
+    let result = lower_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef main():\n    groups = defaultdict(list)\n    groups[\"a\"].append(\"x\")\n    assert len(groups[\"a\"]) == 1\n",
     );
     assert!(
         result.is_ok(),
-        "defaultdict(list) should resolve through the compat builtin surface"
+        "defaultdict(list) should resolve through explicit sifr.collections import: {:?}",
+        result.err()
+    );
+}
+
+#[test]
+pub(super) fn test_defaultdict_alias_call_resolves_with_explicit_import() {
+    let result = lower_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict as dd\n\ndef main():\n    groups = dd(set)\n    groups[\"a\"].add(1)\n    assert 1 in groups[\"a\"]\n",
+    );
+    assert!(
+        result.is_ok(),
+        "defaultdict alias should resolve through explicit sifr.collections import: {:?}",
+        result.err()
     );
 }
 
 #[test]
 pub(super) fn test_defaultdict_keyword_constructor_unsupported_has_stdlib_code() {
-    let source = "def main():\n    groups = defaultdict(default_factory=list)\n    _ = groups\n";
-    let result = lower_source(source);
+    let source =
+        "from sifr.collections import defaultdict\n\ndef main():\n    groups = defaultdict(default_factory=list)\n    _ = groups\n";
+    let result = lower_source_with_stdlib_collections(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
@@ -649,8 +669,8 @@ pub(super) fn test_defaultdict_keyword_constructor_unsupported_has_stdlib_code()
 #[test]
 pub(super) fn test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdlib_code() {
     let source =
-        "def main():\n    groups = defaultdict(**{\"default_factory\": list})\n    _ = groups\n";
-    let result = lower_source(source);
+        "from sifr.collections import defaultdict\n\ndef main():\n    groups = defaultdict(**{\"default_factory\": list})\n    _ = groups\n";
+    let result = lower_source_with_stdlib_collections(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {

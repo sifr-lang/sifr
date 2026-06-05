@@ -2,12 +2,12 @@
 
 Phase contract: [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md)
 
-Status: milestone_stdlib_namespace_1 PR open after local validation and reviewer approval
+Status: milestone_stdlib_namespace_2 ready for PR after reviewer approval and create-pr validation
 
 ## Checklist
 
-- [ ] `milestone_stdlib_namespace_1`: Policy And Diagnostics
-- [ ] `milestone_stdlib_namespace_2`: Atomic Compatibility Removal
+- [x] `milestone_stdlib_namespace_1`: Policy And Diagnostics
+- [x] `milestone_stdlib_namespace_2`: Atomic Compatibility Removal
 - [ ] `milestone_stdlib_namespace_3`: Corpus Adoption And Closeout
 
 ## Review Artifacts
@@ -28,6 +28,7 @@ Record planning and implementation reviews here.
 - Final implementation-readiness pass 2: `reviews/ad-hoc-stdlib-namespace-contract-final-implementation-readiness-pass-2.md` -> `READY`; reviewer confirmed the phase is implementation-ready with no hidden decisions after the phase explicitly chose the typed `defaultdict(int/list/set)` public contract and rejected preserving the older integer-default `defaultdict(0)` class-style API.
 - M1 implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-m1-implementation-review-pass-2.md` -> `READY` with non-blocking cleanup items.
 - M1 implementation review pass 2: `reviews/ad-hoc-stdlib-namespace-m1-implementation-review-pass-3.md` -> `READY`; reviewer found no blocking M1 issues and confirmed `SIFR-IMPORT-0008` registry/docs, shared bare stdlib helper behavior, lowering args/help transport, project/package probe-then-reclassify behavior, `Stmt::Import` ownership, user-module priority, and required test/fixture coverage.
+- M2 implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-m2-implementation-review-pass-1.md` -> `READY`; reviewer found no blocking M2 contract issues and called out validation hygiene items for the PR gate and M3 closeout.
 
 ## Validation Ledger
 
@@ -42,13 +43,26 @@ Record local validation for each milestone before opening the corresponding PR.
   - `python3 scripts/run_verification_hardening.py --suite project`
   - `scripts/run_all_tests.sh --profile create-pr`
   - PR: https://github.com/sifr-lang/sifr/pull/2291
-- M2: pending.
+- M2: focused validation passed:
+  - `cargo check -p sifr_lowering -p sifr_codegen -p sifr_type_system -p sifr`
+  - `cargo test -p sifr_lowering defaultdict -- --nocapture`
+  - `cargo test -p sifr_codegen defaultdict -- --nocapture`
+  - `cargo test -p sifr_type_system defaultdict -- --nocapture`
+  - `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture`
+  - `cargo test -p sifr_driver stdlib_exports -- --nocapture`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/module_attribute_calls.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/defaultdict_len_and_deque.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/counter_defaultdict_and_argparse.sifr`
+  - `python3 scripts/check_file_size_guardrails.py`
+  - forbidden production-symbol scans for removed `__compat_sifr_(math|heapq|collections)_`, `__compat_defaultdict_*`, alias resolvers, and synthetic import state returned no hits.
+  - `scripts/run_all_tests.sh --profile create-pr` passed on rerun. The first run hit transient cached e2e Rust temp-dir failures for `stdlib_json_consolidated` and `stdlib_tomllib`; both fixtures passed direct `cargo run -q -p sifr -- run ...`, and the rerun passed the full create-pr lane with 67/67 e2e pass fixtures.
 - M3: pending.
+  - Final authoritative gates pending.
 
 ## Merged PRs
 
 Record merged PR links here as each milestone lands.
 
-- M1: pending.
+- M1: https://github.com/sifr-lang/sifr/pull/2291
 - M2: pending.
 - M3: pending.

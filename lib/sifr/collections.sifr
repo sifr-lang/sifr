@@ -208,56 +208,6 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
     return Counter(source=counts)
 
 
-class defaultdict[K: Hashable]:
-    default_factory: int
-    _values: dict[K, int]
-
-    def __init__(self, default_factory: int = 0, initial: dict[K, int] | None = None) -> None:
-        self.default_factory = default_factory
-        values: dict[K, int] = {}
-        if initial is not None:
-            for key, value in initial.items():
-                values[key] = value
-        self._values = values
-
-    def ensure(self, key: K) -> int:
-        current: int | None = self._values[key]
-        if current is not None:
-            return current
-        self._values[key] = self.default_factory
-        created: int | None = self._values[key]
-        if created is not None:
-            return created
-        return self.default_factory
-
-    def set(self, key: K, value: int) -> None:
-        self._values[key] = value
-
-    def has(self, key: K) -> bool:
-        return key in self._values
-
-    def pop(self, key: K) -> int | None:
-        if key in self._values:
-            return self._values.pop(key)
-        return None
-
-    def clear(self) -> None:
-        self._values = {}
-
-    def keys(self) -> list[K]:
-        return self._values.keys()
-
-    def values(self) -> list[int]:
-        return self._values.values()
-
-    def items(self) -> list[tuple[K, int]]:
-        values: list[tuple[K, int]] = []
-        for key, value in self._values.items():
-            values.append((key, value))
-        return values
-
-    def len(self) -> int:
-        return len(self._values)
 
 
 class deque[T]:

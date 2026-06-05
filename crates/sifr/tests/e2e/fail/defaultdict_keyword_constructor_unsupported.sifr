@@ -1,5 +1,7 @@
 # Reference: phase_psp_b1_defaultdict_keyword_constructor_unsupported
 # expect-error[col=26]: SIFR-STDLIB-0001
+from sifr.collections import defaultdict
+
 def main():
     groups = defaultdict(default_factory=list)
     groups["alpha"].append("beta")

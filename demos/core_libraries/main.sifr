@@ -22,8 +22,8 @@ def main():
     except RegexError as e:
         print("re error: " + e.message)
 
-    print("math.comb(8, 3) = " + str(comb(8, 3)))
-    print("math.isclose(0.1+0.2, 0.3) = " + str(isclose(0.30000000000000004, 0.3, 1e-9, 0.0)))
+    print("sifr.math.comb(8, 3) = " + str(comb(8, 3)))
+    print("sifr.math.isclose(0.1+0.2, 0.3) = " + str(isclose(0.30000000000000004, 0.3, 1e-9, 0.0)))
 
     try:
         avg: float = mean([2.0, 4.0, 6.0, 8.0])

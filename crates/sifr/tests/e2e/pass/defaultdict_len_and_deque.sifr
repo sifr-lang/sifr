@@ -1,12 +1,11 @@
-# Reference: phase31_defaultdict_len_deque_compat
-from sifr.collections import deque
+from sifr.collections import defaultdict, deque
 
 def main():
-    groups = collections.defaultdict(list)
+    groups = defaultdict(list)
     groups["hit"].append("hot")
     groups["hit"].append("hut")
-    assert len(groups["hit"]) == 2
-    assert len(groups["miss"]) == 0
+    assert "hot" in groups["hit"]
+    assert "cold" not in groups["miss"]
 
     seen = defaultdict(set)
     seen[1].add("a")

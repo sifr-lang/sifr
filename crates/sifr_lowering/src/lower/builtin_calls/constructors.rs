@@ -8,9 +8,9 @@ use sifr_type_system::{make_union, Type};
 use super::expressions::lower_expr;
 use super::LowerCtx;
 
-pub(in crate::lower) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
-pub(in crate::lower) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
-pub(in crate::lower) const DEFAULTDICT_SET_ALIAS: &str = "__compat_defaultdict_set";
+pub(in crate::lower) const DEFAULTDICT_INT_ALIAS: &str = "__sifr_defaultdict_int";
+pub(in crate::lower) const DEFAULTDICT_LIST_ALIAS: &str = "__sifr_defaultdict_list";
+pub(in crate::lower) const DEFAULTDICT_SET_ALIAS: &str = "__sifr_defaultdict_set";
 
 pub(super) fn first_keyword_range(call: &ExprCall) -> ruff_text_size::TextRange {
     call.arguments

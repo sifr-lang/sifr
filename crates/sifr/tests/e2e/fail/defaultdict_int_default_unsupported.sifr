@@ -1,0 +1,6 @@
+# expect-error[col=26]: SIFR-STDLIB-0001
+from sifr.collections import defaultdict
+
+def main():
+    counts = defaultdict(0)
+    counts["alpha"] += 1

@@ -319,8 +319,7 @@ pub(crate) fn collect_mutated_vars(
     }
 
     fn canonical_mutating_call_name(func: &str) -> &str {
-        let canonical = func.strip_prefix("__compat_sifr_heapq_").unwrap_or(func);
-        canonical.rsplit('.').next().unwrap_or(canonical)
+        func.rsplit('.').next().unwrap_or(func)
     }
 
     fn effective_nested_param_convention(

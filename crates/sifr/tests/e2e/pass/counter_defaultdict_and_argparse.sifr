@@ -13,16 +13,12 @@ def main() -> None:
     assert from_mapping.get("x") == 2
     assert from_mapping.get("y") == 1
 
-    counts: defaultdict[str] = defaultdict(0)
-    steps: int = counts.ensure("steps")
-    counts.set("steps", steps + 2)
-    steps_after_first: int = counts.ensure("steps")
-    counts.set("steps", steps_after_first + 3)
-    assert counts.ensure("steps") == 5
-    assert counts.ensure("other") == 0
-    assert counts.pop("other") == 0
-    assert counts.has("steps")
-    assert counts.len() == 1
+    counts = defaultdict(int)
+    counts["steps"] += 2
+    counts["steps"] += 3
+    assert counts["steps"] == 5
+    assert counts["other"] == 0
+    assert "steps" in counts
 
     parser: ArgumentParser = ArgumentParser("tool")
     parser.add_subparsers(dest="command")

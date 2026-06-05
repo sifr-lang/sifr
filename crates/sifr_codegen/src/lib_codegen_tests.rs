@@ -14,7 +14,9 @@ use std::collections::HashSet;
 
 #[cfg(test)]
 mod async_control_codegen_tests;
-pub(crate) use async_control_codegen_tests::{empty_module, generate_rust_from_source};
+pub(crate) use async_control_codegen_tests::{
+    empty_module, generate_rust_from_source, generate_rust_from_source_with_stdlib_collections,
+};
 #[cfg(test)]
 mod async_runtime_codegen_tests;
 #[cfg(test)]

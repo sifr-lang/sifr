@@ -264,48 +264,6 @@ fn test_structured_stmt_path_string_contains_avoids_double_borrow_pattern_arg() 
 }
 
 #[test]
-fn test_plain_call_canonicalizes_heapq_compat_symbol_name() {
-    let module = HirModule {
-        functions: vec![HirFunction {
-            name: "touch".to_string(),
-            params: vec![HirParam {
-                name: "min_h".to_string(),
-                ty: Type::List(Box::new(Type::Int)),
-                default: None,
-                keyword_only: false,
-                convention: ParamConvention::mut_borrow(),
-            }],
-            return_type: Type::None,
-            body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    func: "__compat_sifr_heapq_heapify".to_string(),
-                    args: vec![HirExpr::Name {
-                        name: "min_h".to_string(),
-                        ty: Type::List(Box::new(Type::Int)),
-                    }],
-                    ty: Type::None,
-                },
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            decorators: vec![],
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("heapify("));
-    assert!(!generated
-        .rust_source
-        .contains("__compat_sifr_heapq_heapify("));
-}
-
-#[test]
 fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
     let module = HirModule {
         functions: vec![HirFunction {

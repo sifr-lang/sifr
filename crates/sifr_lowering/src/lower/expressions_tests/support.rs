@@ -1,10 +1,25 @@
-use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
+use crate::{
+    lower_module, lower_module_with_externals, ExternalDefs, HirDiagnostic, HirExpr, HirModule,
+    HirStmt,
+};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_python_parser::parse_module;
 
 pub(crate) fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     let parsed = parse_module(source).expect("parse failed");
     lower_module(parsed.suite()).map(|r| r.module)
+}
+
+pub(crate) fn lower_source_with_stdlib_collections(
+    source: &str,
+) -> Result<HirModule, Vec<HirDiagnostic>> {
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals
+        .functions
+        .entry("sifr.collections".to_string())
+        .or_default();
+    lower_module_with_externals(parsed.suite(), &externals).map(|r| r.module)
 }
 
 pub(crate) fn range_for(source: &str, needle: &str) -> TextRange {

@@ -127,10 +127,12 @@ def is_pair_close(value: str) -> bool:
 
 #[test]
 fn defaultdict_set_membership_borrows_bucket_without_cloning() {
-    let generated = generate_rust_from_source(
+    let generated = generate_rust_from_source_with_stdlib_collections(
         r#"
+from sifr.collections import defaultdict
+
 def seen_twice(value: str) -> bool:
-    buckets = collections.defaultdict(set)
+    buckets = defaultdict(set)
     buckets[0].add(value)
     return value in buckets[0]
 "#,

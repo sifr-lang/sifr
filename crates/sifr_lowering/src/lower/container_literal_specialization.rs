@@ -222,7 +222,7 @@ pub(in crate::lower) fn validate_subscript_augassign_target(
             match object_ty {
                 Type::Alias {
                     name, type_args, ..
-                } if name.starts_with("__compat_defaultdict_") => Type::Alias {
+                } if name.starts_with("__sifr_defaultdict_") => Type::Alias {
                     name,
                     type_args,
                     body: Box::new(Type::Dict(key_ty, value_ty_expected)),

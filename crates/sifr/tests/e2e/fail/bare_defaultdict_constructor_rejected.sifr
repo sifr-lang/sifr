@@ -1,0 +1,4 @@
+# expect-error[col=14]: SIFR-NAME-0002
+def main():
+    groups = defaultdict(list)
+    groups["alpha"].append("beta")

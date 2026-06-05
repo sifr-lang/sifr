@@ -597,7 +597,7 @@ pub(super) fn try_lower_simple_subscript_augassign_stmt(
 
     if matches!(
         object_ty,
-        Type::Alias { name: alias_name, .. } if alias_name == "__compat_defaultdict_int"
+        Type::Alias { name: alias_name, .. } if alias_name == "__sifr_defaultdict_int"
     ) {
         return Some(vec![RustStmt::Block(vec![
             RustStmt::Let {

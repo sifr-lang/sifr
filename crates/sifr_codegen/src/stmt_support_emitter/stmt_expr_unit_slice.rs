@@ -248,7 +248,10 @@ macro_rules! stmt_expr_unit_slice {
                             mutable: false,
                             name: "_slice_src".to_string(),
                             ty: None,
-                            value: $lowered_object,
+                            value: crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new($lowered_object),
+                            },
                         },
                         crate::RustStmt::Let {
                             mutable: false,

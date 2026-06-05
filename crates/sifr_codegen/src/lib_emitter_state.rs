@@ -517,7 +517,7 @@ impl RustEmitter {
                     || matches!(
                         &effective_ty,
                         Type::Alias { name: alias_name, .. }
-                            if alias_name.starts_with("__compat_defaultdict_")
+                            if alias_name.starts_with("__sifr_defaultdict_")
                     )
                     || matches!(effective_ty.resolve_alias(), Type::Iterator(_)),
                 name: name.clone(),
@@ -544,7 +544,7 @@ impl RustEmitter {
                             HirExpr::Call { func, args, .. },
                         ) if func == alias_name
                             && args.is_empty()
-                            && alias_name.starts_with("__compat_defaultdict_") =>
+                            && alias_name.starts_with("__sifr_defaultdict_") =>
                         {
                             if let Type::Dict(key_ty, value_ty) = body.resolve_alias() {
                                 matches!(key_ty.as_ref(), Type::Any | Type::Unknown)

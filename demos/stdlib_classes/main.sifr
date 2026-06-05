@@ -3,10 +3,10 @@
 # milestone_stdlib_classes Demo
 # ============================
 # This demo showcases the first class-based API in the Sifr standard library:
-# collections.Counter — proving the full stdlib class pipeline end-to-end.
+# sifr.collections.Counter — proving the full stdlib class pipeline end-to-end.
 #
 # Pipeline exercised:
-#   Counter class in collections.sifr
+#   Counter class in sifr.collections
 #   → HIR lowering with &self/&mut self inference
 #   → ExternalDefs.classes export from compile_stdlib()
 #   → User import via `from sifr.collections import Counter`
