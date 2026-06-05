@@ -3,8 +3,7 @@ use super::{
     len_aliases, mod_impl, numeric_sentinels, sequence_guards, sequence_pointers, sequence_shapes,
     str, workload_annotations,
 };
-use crate::flow_graph::{FlowEffect, FlowGraph};
-use crate::hir_nodes::{HirExpr, HirImport, HirModule};
+use crate::hir_nodes::{HirExpr, HirImport};
 use crate::scope::{ErrorTaint, Scope};
 use async_effects::AsyncSuspensionSummary;
 use diagnostic_types::{HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic};
@@ -15,6 +14,7 @@ use ruff_text_size::TextRange;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_ir::{FlowEffect, LoweringResult};
 use sifr_python_ast::Stmt;
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
@@ -412,18 +412,6 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
         },
         _ => ty.clone(),
     }
-}
-/// Result of lowering, including the HIR module and any diagnostics.
-pub struct LoweringResult {
-    pub module: HirModule,
-    pub flow_graph: FlowGraph,
-    pub function_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
-    pub function_varargs: std::collections::HashMap<String, usize>,
-    pub constant_integer_values: std::collections::HashMap<String, num_bigint::BigInt>,
-    /// `reveal_type()` diagnostics (informational, printed to stderr)
-    pub reveal_types: Vec<RevealTypeDiagnostic>,
-    /// Compiler warnings (non-fatal diagnostics)
-    pub warnings: Vec<LoweringWarningDiagnostic>,
 }
 /// Lower a parsed module AST into a typed HIR module.
 pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<HirDiagnostic>> {

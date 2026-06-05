@@ -2,7 +2,7 @@
 
 Context: ad hoc architecture refactor before the next stdlib/platform work adds network, async subprocess, signal handling, IPC/process-pool, typed validation, web, and interop surfaces.
 
-Status: planned
+Status: in progress
 
 ## Objective
 

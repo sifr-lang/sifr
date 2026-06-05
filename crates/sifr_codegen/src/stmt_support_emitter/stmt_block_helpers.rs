@@ -159,7 +159,7 @@ fn collect_string_loop_target_use_expr(
         }
         HirExpr::FString { parts, .. } => {
             for part in parts {
-                if let sifr_hir::HirFStringPart::Expr(expr) = part {
+                if let sifr_ir::HirFStringPart::Expr(expr) = part {
                     collect_string_loop_target_use_expr(expr, target, usage);
                 }
             }
@@ -366,7 +366,7 @@ fn collect_string_loop_target_use_stmt(
             if targets.iter().any(|tuple_target| {
                 matches!(
                     &tuple_target.binding,
-                    sifr_hir::HirTupleTargetBinding::Name(name) if name == target
+                    sifr_ir::HirTupleTargetBinding::Name(name) if name == target
                 )
             }) {
                 usage.valid = false;
@@ -509,7 +509,7 @@ impl RustEmitter {
                 | HirStmt::Delete { .. }
         ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))
             || matches!(stmt, HirStmt::TupleUnpack { targets, .. } if targets.iter().any(|target| {
-                let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding else {
+                let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
                     return false;
                 };
                 self.string_char_cache_required_names.contains(name)

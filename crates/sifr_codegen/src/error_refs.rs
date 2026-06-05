@@ -1,4 +1,4 @@
-use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
+use sifr_ir::{HirExpr, HirFStringPart, HirModule, HirStmt};
 use sifr_type_system::Type;
 use std::collections::HashSet;
 
@@ -288,15 +288,14 @@ fn collect_stmt_error_refs(
             }
             HirStmt::AsyncWith { kind, body, .. } => {
                 match kind {
-                    sifr_hir::HirAsyncWithKind::TaskTimeout { duration } => {
+                    sifr_ir::HirAsyncWithKind::TaskTimeout { duration } => {
                         referenced.insert("TimeoutError".to_string());
                         collect_expr_error_refs(duration, referenced, builtin_error_classes);
                     }
-                    sifr_hir::HirAsyncWithKind::UserDefined { context, .. } => {
+                    sifr_ir::HirAsyncWithKind::UserDefined { context, .. } => {
                         collect_expr_error_refs(context, referenced, builtin_error_classes);
                     }
-                    sifr_hir::HirAsyncWithKind::TaskScope
-                    | sifr_hir::HirAsyncWithKind::TaskGroup => {
+                    sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup => {
                         referenced.insert("ScopeFailure".to_string());
                     }
                 }
@@ -537,7 +536,7 @@ fn collect_text_error_refs(
 #[cfg(test)]
 mod tests {
     use super::collect_referenced_builtin_error_classes;
-    use sifr_hir::{
+    use sifr_ir::{
         HirAsyncWithKind, HirClass, HirClassKind, HirExpr, HirFunction, HirModule, HirParam,
         HirStmt, MethodKind,
     };
@@ -631,7 +630,7 @@ mod tests {
         module.constants.push((
             "LAST_ERR".to_string(),
             Type::Result(Box::new(Type::Int), Box::new(error_type("JSONDecodeError"))),
-            sifr_hir::HirExpr::NoneLiteral,
+            sifr_ir::HirExpr::NoneLiteral,
         ));
 
         let referenced = collect_referenced_builtin_error_classes(

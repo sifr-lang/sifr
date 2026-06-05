@@ -1,4 +1,4 @@
-use sifr_hir::{HirExpr, HirFStringPart, HirPattern, HirStmt};
+use sifr_ir::{HirExpr, HirFStringPart, HirPattern, HirStmt};
 
 /// Traversal configuration for HIR analysis walkers.
 #[derive(Debug, Clone, Copy)]
@@ -592,17 +592,17 @@ where
         }
         HirStmt::AsyncWith { kind, body, .. } => {
             match kind {
-                sifr_hir::HirAsyncWithKind::TaskTimeout { duration } => {
+                sifr_ir::HirAsyncWithKind::TaskTimeout { duration } => {
                     if matches!(walk_expr_until(duration, on_expr), TraversalControl::Stop) {
                         return TraversalControl::Stop;
                     }
                 }
-                sifr_hir::HirAsyncWithKind::UserDefined { context, .. } => {
+                sifr_ir::HirAsyncWithKind::UserDefined { context, .. } => {
                     if matches!(walk_expr_until(context, on_expr), TraversalControl::Stop) {
                         return TraversalControl::Stop;
                     }
                 }
-                sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup => {}
+                sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup => {}
             }
             if matches!(
                 walk_stmts_until(body, config, on_stmt, on_expr),

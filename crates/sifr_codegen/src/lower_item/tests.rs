@@ -1,6 +1,6 @@
 use super::*;
 use crate::{RustExpr, RustItem, RustStmt, RustType, Visibility};
-use sifr_hir::HirExpr;
+use sifr_ir::HirExpr;
 use sifr_type_system::Type;
 
 #[test]

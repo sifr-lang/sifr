@@ -5,7 +5,7 @@ use super::{
 };
 use crate::helpers::needs_clone_for_type;
 use crate::RustEmitter;
-use sifr_hir::HirExpr;
+use sifr_ir::HirExpr;
 use sifr_type_system::Type;
 
 impl RustEmitter {

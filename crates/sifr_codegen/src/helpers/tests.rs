@@ -1,5 +1,5 @@
 use super::*;
-use sifr_hir::{HirExceptHandler, HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
+use sifr_ir::{HirExceptHandler, HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 use std::collections::HashMap;
 

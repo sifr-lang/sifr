@@ -1,5 +1,5 @@
 use crate::{helpers::is_auto_display_type, RustEmitter, BUILTIN_ERROR_CLASSES};
-use sifr_hir::HirModule;
+use sifr_ir::HirModule;
 use std::collections::HashSet;
 
 impl RustEmitter {

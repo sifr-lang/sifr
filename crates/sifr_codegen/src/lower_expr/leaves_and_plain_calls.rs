@@ -16,7 +16,7 @@ use super::{
     try_lower_simple_set_comp_expr, try_lower_simple_set_literal_expr, try_lower_simple_slice_expr,
 };
 use crate::{CodegenError, RustExpr, RustLiteral, RustStmt, RustType};
-use sifr_hir::{HirExpr, HirIteratorOp};
+use sifr_ir::{HirExpr, HirIteratorOp};
 use sifr_type_system::Type;
 use std::cell::RefCell;
 

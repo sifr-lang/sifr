@@ -6,9 +6,9 @@ use super::{
     module_function_registry, name_diagnostics, parse_typevar_bound_expr,
     parse_typevar_declaration_specs, predeclare_type_aliases, register_builtins,
     resolve_imports_early, resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs,
-    FunctionType, HirDiagnostic, HirImport, HirModule, LowerCtx, LoweringResult, Ranged, Stmt,
-    TextRange, Type,
+    FunctionType, HirDiagnostic, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
 };
+use sifr_ir::LoweringResult;
 /// Internal implementation of module lowering.
 pub(in crate::lower) fn lower_module_impl(
     stmts: &[Stmt],

@@ -1,7 +1,7 @@
 //! Expression lowering scaffolds for the IR lowering.
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
-use sifr_hir::{HirExpr, HirFStringPart, HirParam};
+use sifr_ir::{HirExpr, HirFStringPart, HirParam};
 use sifr_type_system::{ParamConvention, Type};
 
 mod leaves_and_plain_calls;

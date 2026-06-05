@@ -61,7 +61,7 @@ pub struct RustEmitter {
     /// Map of generic class name -> list of type parameter names (e.g., `Counter` -> `T`)
     pub(crate) generic_class_params: HashMap<String, Vec<String>>,
     /// Map of generic class name -> original HIR class template.
-    pub(crate) generic_class_templates: HashMap<String, sifr_hir::HirClass>,
+    pub(crate) generic_class_templates: HashMap<String, sifr_ir::HirClass>,
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
     pub(crate) borrowed_params: HashSet<String>,
@@ -347,15 +347,15 @@ impl RustEmitter {
         ) || matches!(
             stmt,
             HirStmt::AsyncWith {
-                kind: sifr_hir::HirAsyncWithKind::TaskTimeout { .. }
-                    | sifr_hir::HirAsyncWithKind::UserDefined { .. },
+                kind: sifr_ir::HirAsyncWithKind::TaskTimeout { .. }
+                    | sifr_ir::HirAsyncWithKind::UserDefined { .. },
                 body,
                 ..
             } if body_contains_await(body)
         ) || matches!(
             stmt,
             HirStmt::AsyncWith {
-                kind: sifr_hir::HirAsyncWithKind::UserDefined { .. },
+                kind: sifr_ir::HirAsyncWithKind::UserDefined { .. },
                 ..
             }
         ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))
@@ -433,7 +433,7 @@ impl RustEmitter {
                     self.push_captured_stmt(&lowered_stmt);
                 }
                 for target in targets {
-                    let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding else {
+                    let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
                         continue;
                     };
                     let cache_stmt = if target.rebind_existing {

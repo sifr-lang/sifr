@@ -1,5 +1,5 @@
 use super::*;
-use sifr_hir::MethodKind;
+use sifr_ir::MethodKind;
 
 fn int_binop_name(name: &str) -> HirExpr {
     HirExpr::BinOp {

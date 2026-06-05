@@ -1,6 +1,6 @@
 use super::*;
 use crate::ModuleFuncSignatures;
-use sifr_hir::{HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt, MethodKind};
+use sifr_ir::{HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashMap;
 
@@ -171,7 +171,7 @@ fn body_contains_yield_detects_try_except_and_loop_else_paths() {
                 value: HirExpr::IntLiteral(1),
             }]),
         }],
-        handlers: vec![sifr_hir::HirExceptHandler {
+        handlers: vec![sifr_ir::HirExceptHandler {
             error_type: Some("Error".to_string()),
             error_resolved_type: None,
             name: Some("e".to_string()),
@@ -190,7 +190,7 @@ fn collect_locally_defined_vars_includes_match_captures() {
     let stmts = vec![HirStmt::Match {
         subject: HirExpr::IntLiteral(3),
         subject_ty: Type::Int,
-        arms: vec![sifr_hir::HirMatchArm {
+        arms: vec![sifr_ir::HirMatchArm {
             pattern: HirPattern::Capture {
                 name: "x".to_string(),
                 ty: Type::Int,
@@ -415,8 +415,8 @@ fn collect_mutated_vars_marks_field_assign_object() {
 fn collect_typed_refs_in_expr_includes_fstring_interpolations() {
     let expr = HirExpr::FString {
         parts: vec![
-            sifr_hir::HirFStringPart::Literal("value=".to_string()),
-            sifr_hir::HirFStringPart::Expr(HirExpr::Name {
+            sifr_ir::HirFStringPart::Literal("value=".to_string()),
+            sifr_ir::HirFStringPart::Expr(HirExpr::Name {
                 name: "n".to_string(),
                 ty: Type::Int,
             }),
@@ -467,7 +467,7 @@ fn block_control_flow_effect_reports_always_exits_for_mixed_return_raise() {
         body: vec![HirStmt::Return {
             value: Some(HirExpr::IntLiteral(1)),
         }],
-        handlers: vec![sifr_hir::HirExceptHandler {
+        handlers: vec![sifr_ir::HirExceptHandler {
             error_type: Some("Error".to_string()),
             error_resolved_type: None,
             name: Some("e".to_string()),

@@ -48,11 +48,11 @@ impl RustEmitter {
 
     pub(crate) fn try_lower_async_with_stmt_for_ir(
         &mut self,
-        kind: &sifr_hir::HirAsyncWithKind,
+        kind: &sifr_ir::HirAsyncWithKind,
         target: Option<&str>,
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        if let sifr_hir::HirAsyncWithKind::UserDefined { context, .. } = kind {
+        if let sifr_ir::HirAsyncWithKind::UserDefined { context, .. } = kind {
             let body_always_exits = queries::block_control_flow_effect(body).always_exits();
             let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
                 return Ok(None);
@@ -142,7 +142,7 @@ impl RustEmitter {
             return Ok(Some(RustStmt::Block(stmts)));
         }
 
-        let timeout_duration = if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
+        let timeout_duration = if let sifr_ir::HirAsyncWithKind::TaskTimeout { duration } = kind {
             let Some(duration) =
                 crate::try_lower_task_duration_expr(duration, "__sifr_task_timeout_seconds")
             else {
@@ -163,7 +163,7 @@ impl RustEmitter {
             return Ok(None);
         };
         if let Some(target) = target {
-            let constructor = if matches!(kind, sifr_hir::HirAsyncWithKind::TaskGroup) {
+            let constructor = if matches!(kind, sifr_ir::HirAsyncWithKind::TaskGroup) {
                 "new_task_group"
             } else {
                 "new"
@@ -187,7 +187,7 @@ impl RustEmitter {
         if let (true, Some(target)) = (
             matches!(
                 kind,
-                sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup
+                sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup
             ),
             target,
         ) {

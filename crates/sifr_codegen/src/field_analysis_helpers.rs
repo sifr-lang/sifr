@@ -1,6 +1,6 @@
 use crate::helpers::{type_references_any_class, type_references_class};
 use crate::RustEmitter;
-use sifr_hir::{HirExpr, HirModule};
+use sifr_ir::{HirExpr, HirModule};
 use std::collections::{HashMap, HashSet};
 
 impl RustEmitter {

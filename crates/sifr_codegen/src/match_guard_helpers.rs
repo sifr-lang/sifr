@@ -1,5 +1,5 @@
 use crate::RustEmitter;
-use sifr_hir::HirPattern;
+use sifr_ir::HirPattern;
 
 impl RustEmitter {
     pub(crate) fn substitute_class_captures_in_guard(

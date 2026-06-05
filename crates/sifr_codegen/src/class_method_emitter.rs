@@ -4,7 +4,7 @@ use crate::{
     hir_analysis::traversal::{self, TraversalConfig},
     RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
-use sifr_hir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
+use sifr_ir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 

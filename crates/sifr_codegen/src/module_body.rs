@@ -1,5 +1,5 @@
 use crate::RustEmitter;
-use sifr_hir::HirModule;
+use sifr_ir::HirModule;
 
 impl RustEmitter {
     pub(crate) fn emit_module_body(

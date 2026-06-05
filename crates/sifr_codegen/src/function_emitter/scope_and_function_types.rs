@@ -411,7 +411,7 @@ impl RustEmitter {
             return false;
         };
 
-        if func.method_kind != sifr_hir::MethodKind::Regular
+        if func.method_kind != sifr_ir::MethodKind::Regular
             || !func.decorators.is_empty()
             || !func.type_params.is_empty()
             || func

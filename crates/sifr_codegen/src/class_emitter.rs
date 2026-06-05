@@ -3,7 +3,7 @@ use crate::{
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
     Visibility,
 };
-use sifr_hir::{HirClass, HirFunction, HirModule};
+use sifr_ir::{HirClass, HirFunction, HirModule};
 use sifr_type_system::Type;
 
 impl RustEmitter {

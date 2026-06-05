@@ -12,7 +12,7 @@ use crate::{
     try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustLiteral,
     RustMatchArm, RustParam, RustStmt, RustType, ScopeContext,
 };
-use sifr_hir::{
+use sifr_ir::{
     HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt, MethodKind,
 };
 use sifr_type_system::{FunctionType, Type};

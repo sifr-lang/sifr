@@ -195,8 +195,8 @@ pub(super) fn expr_has_result_flow(expr: &HirExpr) -> bool {
             .zip(values.iter())
             .any(|(k, v)| expr_has_result_flow(k) || expr_has_result_flow(v)),
         HirExpr::FString { parts, .. } => parts.iter().any(|part| match part {
-            sifr_hir::HirFStringPart::Literal(_) => false,
-            sifr_hir::HirFStringPart::Expr(e) => expr_has_result_flow(e),
+            sifr_ir::HirFStringPart::Literal(_) => false,
+            sifr_ir::HirFStringPart::Expr(e) => expr_has_result_flow(e),
         }),
         HirExpr::Lambda { body, .. } => expr_has_result_flow(body),
         HirExpr::WalrusExpr { value, .. } => expr_has_result_flow(value),
@@ -275,12 +275,12 @@ pub(super) fn try_lower_simple_stmt_block(
 }
 
 pub(crate) fn tuple_unpack_pattern(
-    targets: &[sifr_hir::HirTupleTarget],
+    targets: &[sifr_ir::HirTupleTarget],
     mutated_vars: &HashSet<String>,
 ) -> Option<String> {
     let mut names = Vec::new();
     for target in targets {
-        let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding else {
+        let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
             return None;
         };
         if mutated_vars.contains(name) {
@@ -300,14 +300,14 @@ pub(super) fn tuple_unpack_field_target_expr(object: &str, field: &str) -> RustE
 }
 
 pub(super) fn lower_tuple_target_assignments(
-    targets: &[sifr_hir::HirTupleTarget],
+    targets: &[sifr_ir::HirTupleTarget],
     temp_names: &[String],
     mutated_vars: &HashSet<String>,
 ) -> Vec<RustStmt> {
     let mut lowered = Vec::new();
     for (target, temp_name) in targets.iter().zip(temp_names.iter()) {
         match &target.binding {
-            sifr_hir::HirTupleTargetBinding::Name(name) => {
+            sifr_ir::HirTupleTargetBinding::Name(name) => {
                 if target.rebind_existing {
                     lowered.push(RustStmt::Assign {
                         target: RustExpr::Ident(name.clone()),
@@ -322,7 +322,7 @@ pub(super) fn lower_tuple_target_assignments(
                     });
                 }
             }
-            sifr_hir::HirTupleTargetBinding::Field { object, field } => {
+            sifr_ir::HirTupleTargetBinding::Field { object, field } => {
                 lowered.push(RustStmt::Assign {
                     target: tuple_unpack_field_target_expr(object, field),
                     value: RustExpr::Ident(temp_name.clone()),
@@ -334,7 +334,7 @@ pub(super) fn lower_tuple_target_assignments(
 }
 
 pub(super) fn try_lower_simple_tuple_unpack_stmt(
-    targets: &[sifr_hir::HirTupleTarget],
+    targets: &[sifr_ir::HirTupleTarget],
     value: &HirExpr,
     mutated_vars: &HashSet<String>,
 ) -> Option<Vec<RustStmt>> {
@@ -352,7 +352,7 @@ pub(super) fn try_lower_simple_tuple_unpack_stmt(
 }
 
 pub(crate) fn lower_tuple_unpack_targets(
-    targets: &[sifr_hir::HirTupleTarget],
+    targets: &[sifr_ir::HirTupleTarget],
     lowered_value: RustExpr,
     mutated_vars: &HashSet<String>,
 ) -> Vec<RustStmt> {

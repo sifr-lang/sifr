@@ -251,7 +251,7 @@ pub(super) fn lower_regular_call(
                         .map(|(_, _, c)| *c)
                         .unwrap_or(ParamConvention::borrow());
                     if convention.is_mut_borrow() {
-                        ctx.record_flow_effect(crate::flow_graph::FlowEffect::Borrow {
+                        ctx.record_flow_effect(sifr_ir::FlowEffect::Borrow {
                             binding: name.clone(),
                             mutable: true,
                         });
@@ -272,7 +272,7 @@ pub(super) fn lower_regular_call(
                         }
                         mut_borrowed.push(name.clone());
                     } else if convention.is_shared_borrow() {
-                        ctx.record_flow_effect(crate::flow_graph::FlowEffect::Borrow {
+                        ctx.record_flow_effect(sifr_ir::FlowEffect::Borrow {
                             binding: name.clone(),
                             mutable: false,
                         });

@@ -1,5 +1,5 @@
 use crate::{try_lower_simple_module_constant_item_result, RustEmitter, RustItem, Visibility};
-use sifr_hir::{HirExpr, HirModule};
+use sifr_ir::{HirExpr, HirModule};
 use sifr_type_system::Type;
 
 impl RustEmitter {

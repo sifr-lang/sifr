@@ -1,5 +1,5 @@
 use crate::RustEmitter;
-use sifr_hir::{HirClass, HirFunction, HirStmt};
+use sifr_ir::{HirClass, HirFunction, HirStmt};
 use sifr_type_system::{FunctionType, OwnershipKind, Type};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;

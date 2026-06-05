@@ -1,5 +1,5 @@
 use crate::{intrinsics, methods, RustEmitter, RustExpr};
-use sifr_hir::{HirExpr, HirFStringPart};
+use sifr_ir::{HirExpr, HirFStringPart};
 use sifr_type_system::{ParamConvention, Type};
 
 mod registry_helpers;

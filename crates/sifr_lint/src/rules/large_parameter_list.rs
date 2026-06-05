@@ -4,7 +4,7 @@ use crate::{
     LintDiagnosticSpec, LintOptions, SuppressionComplexity,
 };
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
-use sifr_hir::{HirClass, HirFunction, HirModule};
+use sifr_ir::{HirClass, HirFunction, HirModule};
 use std::path::Path;
 
 const RULE: &str = "large-parameter-list";

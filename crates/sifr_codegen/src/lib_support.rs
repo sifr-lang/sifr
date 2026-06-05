@@ -1,5 +1,5 @@
 use crate::{try_lower_leaf_expr_result, CodegenError, RustExpr, RustParam, RustType};
-use sifr_hir::HirExpr;
+use sifr_ir::HirExpr;
 use sifr_type_system::Type;
 use std::collections::HashSet;
 

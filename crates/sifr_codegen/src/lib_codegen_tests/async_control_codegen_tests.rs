@@ -1,7 +1,6 @@
 use crate::generate_rust;
-use sifr_hir::{
-    lower_module, HirExpr, HirFStringPart, HirFunction, HirModule, HirParam, HirStmt, MethodKind,
-};
+use sifr_hir::lower_module;
+use sifr_ir::{HirExpr, HirFStringPart, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 

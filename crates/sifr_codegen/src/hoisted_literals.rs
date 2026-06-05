@@ -1,4 +1,4 @@
-use sifr_hir::{HirExpr, HirFunction, HirStmt};
+use sifr_ir::{HirExpr, HirFunction, HirStmt};
 
 use crate::{
     hir_analysis::traversal::{walk_expr, walk_stmts, TraversalConfig},

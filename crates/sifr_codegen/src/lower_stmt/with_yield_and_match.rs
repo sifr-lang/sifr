@@ -70,24 +70,24 @@ pub(super) fn try_lower_simple_with_stmt(
 }
 
 pub(super) fn try_lower_simple_async_with_stmt(
-    kind: &sifr_hir::HirAsyncWithKind,
+    kind: &sifr_ir::HirAsyncWithKind,
     target: Option<&str>,
     body: &[HirStmt],
     in_loop_with_else: bool,
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if matches!(kind, sifr_hir::HirAsyncWithKind::UserDefined { .. }) {
+    if matches!(kind, sifr_ir::HirAsyncWithKind::UserDefined { .. }) {
         return None;
     }
 
-    if let sifr_hir::HirAsyncWithKind::TaskTimeout { duration } = kind {
+    if let sifr_ir::HirAsyncWithKind::TaskTimeout { duration } = kind {
         let _ = try_lower_leaf_or_name_expr(duration)?;
     }
 
     let mut block = Vec::new();
     if let Some(target) = target {
-        let constructor = if matches!(kind, sifr_hir::HirAsyncWithKind::TaskGroup) {
+        let constructor = if matches!(kind, sifr_ir::HirAsyncWithKind::TaskGroup) {
             "new_task_group"
         } else {
             "new"
@@ -116,7 +116,7 @@ pub(super) fn try_lower_simple_async_with_stmt(
     if let (true, Some(target)) = (
         matches!(
             kind,
-            sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup
+            sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup
         ),
         target,
     ) {
@@ -159,7 +159,7 @@ pub(super) fn try_lower_simple_yield_stmt(
 pub(super) fn try_lower_simple_match_stmt(
     subject: &HirExpr,
     subject_ty: &Type,
-    arms: &[sifr_hir::HirMatchArm],
+    arms: &[sifr_ir::HirMatchArm],
     in_loop_with_else: bool,
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,

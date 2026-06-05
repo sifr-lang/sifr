@@ -4,7 +4,7 @@ use crate::{
     is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result_and_bindings, ClassScope,
     RustEmitter, RustStmt, ScopeContext,
 };
-use sifr_hir::{HirFunction, HirStmt};
+use sifr_ir::{HirFunction, HirStmt};
 
 impl RustEmitter {
     pub(crate) fn lower_function_like_body<F>(
