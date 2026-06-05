@@ -561,7 +561,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
         .iter()
         .map(|param| RustParam::Named {
             name: param.name.clone(),
-            ty: RustType::Named("_".to_string()),
+            ty: crate::sifr_type_to_rust_type(&param.ty),
         })
         .collect::<Vec<_>>();
     let mutates_captures = nested_mutated_vars

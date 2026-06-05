@@ -276,6 +276,36 @@ def count_marks(words: list[str]) -> int:
 }
 
 #[test]
+fn string_local_cache_decl_survives_speculative_if_lowering_rollback() {
+    let generated = generate_rust_from_source(
+        r#"
+def parse_name(template: str) -> int:
+    i: int = 0
+    if template[0] == "{":
+        name: str = ""
+        while i < len(template):
+            part: str = template[i]
+            if part == "}":
+                break
+            name = name + part
+            i += 1
+        if len(name) == 0:
+            return 0
+    return 1
+"#,
+    );
+
+    assert!(
+        generated.contains("let mut __sifr_chars_name: Vec<char> = name.chars().collect"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("__sifr_chars_name.extend"),
+        "{generated}"
+    );
+}
+
+#[test]
 fn set_add_moves_last_use_local_string_without_clone() {
     let generated = generate_rust_from_source(
         r#"

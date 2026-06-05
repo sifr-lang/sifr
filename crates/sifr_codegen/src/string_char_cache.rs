@@ -175,9 +175,7 @@ impl RustEmitter {
         let lowered_object = self.try_lower_dict_indexed_list_mutation_object(index_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
-        let key_arg = Self::build_dict_lookup_key_arg_for_ir(
-            Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
-        );
+        let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
         let pushed_arg = Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
         Some(RustExpr::Block {
             stmts: vec![RustStmt::IfLet {
@@ -377,7 +375,10 @@ impl RustEmitter {
         })
     }
 
-    fn list_indexed_dict_lookup_key_arg(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
+    pub(crate) fn list_indexed_dict_lookup_key_arg(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
+        if let HirExpr::StringLiteral(value) = expr {
+            return RustExpr::Ident(format!("{value:?}"));
+        }
         if matches!(
             expr,
             HirExpr::Name { ty, .. }
@@ -434,9 +435,7 @@ impl RustEmitter {
 
         let lowered_object = self.try_lower_dict_indexed_list_mutation_object(index_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
-        let key_arg = Self::build_dict_lookup_key_arg_for_ir(
-            Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
-        );
+        let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
         let option_pop_expr = RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
@@ -514,9 +513,7 @@ impl RustEmitter {
 
         let lowered_object = self.try_lower_dict_indexed_list_mutation_object(index_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
-        let key_arg = Self::build_dict_lookup_key_arg_for_ir(
-            Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
-        );
+        let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
         Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
@@ -578,9 +575,7 @@ impl RustEmitter {
         let lowered_object = self.try_lower_dict_indexed_list_mutation_object(dict_object)?;
         let lowered_dict_index = self.try_lower_registry_expr_strict(dict_index)?;
         let lowered_element_index = self.try_lower_registry_expr_strict(element_index)?;
-        let key_arg = Self::build_dict_lookup_key_arg_for_ir(
-            Self::clone_non_copy_name_expr_for_ir(dict_index, lowered_dict_index),
-        );
+        let key_arg = Self::list_indexed_dict_lookup_key_arg(dict_index, lowered_dict_index);
         let projection_method = crate::helpers::option_projection_method_for_owned_type(element_ty);
         Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {

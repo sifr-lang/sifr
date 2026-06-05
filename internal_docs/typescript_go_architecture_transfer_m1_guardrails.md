@@ -75,9 +75,9 @@ Permitted M1 exceptions:
   generated artifact checks are outside the M2 semantic source-provider scope.
 - Codegen intrinsics that emit `std::fs::*` for user programs are not compiler
   service reads.
-- Build artifact cache metadata in `crates/sifr_driver/src/build/workspace.rs:219`,
-  `crates/sifr_driver/src/build/workspace.rs:282`, and
-  `crates/sifr_driver/src/build/workspace.rs:296` is M15
+- Build artifact cache metadata in `crates/sifr_driver/src/build/workspace.rs:224`,
+  `crates/sifr_driver/src/build/workspace.rs:287`, and
+  `crates/sifr_driver/src/build/workspace.rs:301` is M15
   `.sifrbuildinfo`/build-metadata territory, not M2 source-provider correctness.
 - Package projection writes and repair probes in
   `crates/sifr_package/src/projection.rs:100`,

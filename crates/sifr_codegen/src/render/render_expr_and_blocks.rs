@@ -279,7 +279,7 @@ impl Renderer {
                 let move_kw = if *is_move { "move " } else { "" };
                 let params = params
                     .iter()
-                    .map(Self::render_closure_param_string)
+                    .map(Self::render_untyped_closure_param_string)
                     .collect::<Vec<_>>()
                     .join(", ");
                 format!("{move_kw}|{params}| {}", Self::render_expr_string(body))
@@ -523,6 +523,20 @@ impl Renderer {
     }
 
     pub(crate) fn render_closure_param_string(param: &RustParam) -> String {
+        match param {
+            RustParam::SelfParam { .. } | RustParam::SelfValue => "self".to_string(),
+            RustParam::Named { name, ty } | RustParam::NamedMut { name, ty } => {
+                let rendered_name = Self::render_identifier(name);
+                if matches!(ty, RustType::Named(name) if name == "_") {
+                    rendered_name
+                } else {
+                    format!("{rendered_name}: {}", Self::render_type_string(ty))
+                }
+            }
+        }
+    }
+
+    pub(crate) fn render_untyped_closure_param_string(param: &RustParam) -> String {
         match param {
             RustParam::SelfParam { .. } | RustParam::SelfValue => "self".to_string(),
             RustParam::Named { name, .. } | RustParam::NamedMut { name, .. } => {
