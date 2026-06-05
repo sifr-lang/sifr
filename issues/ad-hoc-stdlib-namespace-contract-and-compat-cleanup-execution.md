@@ -89,3 +89,4 @@ Record merged PR links here as each milestone lands.
 - M2: https://github.com/sifr-lang/sifr/pull/2292
 - M3 corpus submodule: https://github.com/sifr-lang/leetcode/pull/38
 - M3 parent: https://github.com/sifr-lang/sifr/pull/2293
+- Final closeout: https://github.com/sifr-lang/sifr/pull/2294
