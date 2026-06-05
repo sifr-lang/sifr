@@ -1,0 +1,44 @@
+# Ad Hoc Phase Execution Checklist: Stdlib Namespace Contract And Compatibility Cleanup
+
+Phase contract: [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md)
+
+Status: planning
+
+## Checklist
+
+- [ ] `milestone_stdlib_namespace_1`: Policy And Diagnostics
+- [ ] `milestone_stdlib_namespace_2`: Atomic Compatibility Removal
+- [ ] `milestone_stdlib_namespace_3`: Corpus Adoption And Closeout
+
+## Review Artifacts
+
+Record planning and implementation reviews here.
+
+- Planning review pass 1: `reviews/ad-hoc-stdlib-namespace-contract-planning-review-pass-1.md` -> `CHANGES_REQUESTED`; requested explicit `Stmt::Import` coverage, corrected current bare-import no-op framing, pinned `SIFR-IMPORT-0008` / `IMPORT_BARE_STDLIB`, clarified stdlib-tail resolution order, split M2 synthetic-import cleanup from M3 defaultdict cleanup, added synthetic import consumer removal, tightened guardrails, and renamed typed defaultdict internals away from `__compat_defaultdict_*`.
+- Planning review pass 2: `reviews/ad-hoc-stdlib-namespace-contract-planning-review-pass-2.md` -> `CHANGES_REQUESTED`; narrowed guardrails to the removed `math|heapq|collections` synthetic aliases so retained async/task aliases stay out of scope, added explicit cleanup for Rust tests that hard-code removed aliases, kept the generic async/task codegen guard intentionally retained, required grep-driven fixture classification, and originally requested a transitional defaultdict helper. The transitional-helper decision is superseded by the no-legacy-support clarification below.
+- Planning review pass 3: `reviews/ad-hoc-stdlib-namespace-contract-planning-review-pass-3.md` -> `READY`; reviewer verified the plan was implementation-ready before the later no-legacy-support clarification removed the transitional defaultdict bridge.
+- Gap audit pass 1: `reviews/ad-hoc-stdlib-namespace-contract-gap-audit-pass-1.md` -> `CHANGES_REQUESTED`; found missing cross-layer diagnostic ownership and transport decisions. Addressed by requiring structured args in `HirDiagnostic`/lowering transport, assigning project/package `ImportFrom` diagnostics to discovery after real resolution fails, assigning all `Stmt::Import` bare-stdlib diagnostics to lowering, adding shared `sifr_stdlib` tail helpers, defining duplicate-prevention rules, expanding M1 project/package/single-file tests, and naming explicit defaultdict binding state.
+- Gap audit pass 2: `reviews/ad-hoc-stdlib-namespace-contract-gap-audit-pass-2.md` -> `READY`; reviewer confirmed all cross-layer decisions are locked, including structured lowering diagnostic transport, discovery/lowering ownership split, duplicate prevention, exact-tail/root-fallback matching, M1 test scope, explicit defaultdict binding state, and guardrail coverage.
+- Final readiness pass 1: `reviews/ad-hoc-stdlib-namespace-contract-final-readiness-pass-1.md` -> `READY`; reviewer confirmed the phase is implementation-ready after the final scan added exact diagnostic arg shape, compile-order/dependency-collector carveouts, and explicit cleanup for `class_field_inference.rs` bare `deque`/`Counter`/`defaultdict` compatibility paths.
+- No-legacy clarification: superseded the previous M2/M3 transitional split. Current phase requires atomic compatibility removal: `math.*`, `heapq.*`, `collections.*`, bare `deque(...)`, bare `Counter(...)`, bare `defaultdict(...)`, `collections.defaultdict(...)`, class-field inference compatibility, synthetic imports, and `__compat_defaultdict_*` naming are removed or converted directly to explicit `sifr.*` binding in `milestone_stdlib_namespace_2`.
+- No-legacy review pass 1: `reviews/ad-hoc-stdlib-namespace-contract-no-legacy-review-pass-1.md` -> `READY`; reviewer confirmed the revised phase has no backward-compatibility or legacy-support loopholes for CPython-style bare stdlib calls.
+- Corpus discovery update: added final LeetCode/demo adoption requirements after scanning `audits/leetcode/src` and `demos`. Current discovery found 416 checked-in LeetCode `.sifr` fixtures and 389 demo `.sifr` files; M3 must update/validate all affected LeetCode fixtures and demos, and add or update corpus validation commands so all checked-in LeetCode fixtures and all runnable demos work.
+- Corpus review pass 1: `reviews/ad-hoc-stdlib-namespace-contract-corpus-review-pass-1.md` -> `READY`; reviewer confirmed the final corpus milestone is implementation-ready and covers all checked-in LeetCode fixtures, all runnable demos, and repeated discovery after implementation.
+- Final implementation-readiness pass 1: `reviews/ad-hoc-stdlib-namespace-contract-final-implementation-readiness-pass-1.md` -> `READY` with one non-blocking observation that `demos/collections_and_argparse/main.sifr` left a small `defaultdict(0)` judgment call.
+- Final implementation-readiness pass 2: `reviews/ad-hoc-stdlib-namespace-contract-final-implementation-readiness-pass-2.md` -> `READY`; reviewer confirmed the phase is implementation-ready with no hidden decisions after the phase explicitly chose the typed `defaultdict(int/list/set)` public contract and rejected preserving the older integer-default `defaultdict(0)` class-style API.
+
+## Validation Ledger
+
+Record local validation for each milestone before opening the corresponding PR.
+
+- M1: pending.
+- M2: pending.
+- M3: pending.
+
+## Merged PRs
+
+Record merged PR links here as each milestone lands.
+
+- M1: pending.
+- M2: pending.
+- M3: pending.
