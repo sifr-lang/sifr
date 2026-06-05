@@ -49,6 +49,39 @@ trap cleanup EXIT
 git -C "$REPO_ROOT" worktree add --detach "$BASE_WT" "$BASE_REF" >/dev/null
 git -C "$REPO_ROOT" worktree add --detach "$CAND_WT" "$CANDIDATE_REF" >/dev/null
 
+materialize_ruff_submodule() {
+  local worktree="$1"
+  local ruff_path="$worktree/third_party/ruff"
+  local local_ruff_path="$REPO_ROOT/third_party/ruff"
+
+  if [[ -f "$ruff_path/crates/ruff_text_size/Cargo.toml" ]]; then
+    return
+  fi
+
+  if [[ -f "$local_ruff_path/crates/ruff_text_size/Cargo.toml" ]]; then
+    mkdir -p "$worktree/third_party"
+    rm -rf "$ruff_path"
+    ln -s "$local_ruff_path" "$ruff_path"
+    return
+  fi
+
+  git -C "$worktree" submodule update --init --recursive third_party/ruff >/dev/null
+}
+
+materialize_ruff_submodule "$BASE_WT"
+materialize_ruff_submodule "$CAND_WT"
+
+materialize_local_workspace_roots() {
+  local worktree="$1"
+
+  # This local audit corpus is intentionally not required for the size demo,
+  # but the repository sifr.toml names the directory as a workspace source root.
+  mkdir -p "$worktree/audits/leetcode/src"
+}
+
+materialize_local_workspace_roots "$BASE_WT"
+materialize_local_workspace_roots "$CAND_WT"
+
 measure_size() {
   local worktree="$1"
   local label="$2"

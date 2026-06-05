@@ -354,7 +354,7 @@ def broken() -> int:
 }
 
 #[test]
-fn test_build_project_includes_support_module_required_crates_in_manifest() {
+fn test_build_project_includes_support_module_required_features_in_manifest() {
     let dir = mktemp_dir("manifest_positive");
     let main_file = dir.join("main.sifr");
     let build_out = dir.join("build_out");
@@ -382,7 +382,7 @@ fn test_build_project_includes_support_module_required_crates_in_manifest() {
 }
 
 #[test]
-fn test_build_project_manifest_ignores_unreachable_required_crates() {
+fn test_build_project_manifest_ignores_unreachable_required_features() {
     let dir = mktemp_dir("manifest_negative");
     let main_file = dir.join("main.sifr");
     let build_out = dir.join("build_out");

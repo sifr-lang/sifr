@@ -50,7 +50,7 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     CompileResultFull::Success {
         rust_source: codegen_result.rust_source,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
-        required_crates: codegen_result.required_crates,
+        required_features: codegen_result.required_features,
         lowering_stats: codegen_result.lowering_stats,
     }
 }

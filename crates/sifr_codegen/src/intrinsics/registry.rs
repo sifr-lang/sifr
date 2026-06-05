@@ -29,22 +29,23 @@ mod uuid;
 mod zipfile;
 
 use crate::RustExpr;
+use sifr_stdlib::StdlibFeature;
 
 pub(crate) struct LoweredIntrinsic {
     pub(crate) expr: RustExpr,
-    pub(crate) required_crate: Option<&'static str>,
-    pub(crate) additional_required_crates: &'static [&'static str],
+    pub(crate) required_feature: Option<StdlibFeature>,
+    pub(crate) additional_required_features: &'static [StdlibFeature],
 }
 
-pub(crate) fn additional_required_crates(name: &str) -> &'static [&'static str] {
+pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeature] {
     match name {
         // random_gauss uses rand_distr::Normal in addition to rand::rng.
-        "random_gauss" => &["rand_distr"],
+        "random_gauss" => &[StdlibFeature::RandDistr],
         "json_loads"
         | "json_validate_integer_digit_limits"
         | "json_dumps_value_exact"
         | "json_dumps_value_web"
-        | "json_dumps_value_string_ints" => &["sifr_runtime"],
+        | "json_dumps_value_string_ints" => &[StdlibFeature::SifrRuntime],
         _ => &[],
     }
 }
@@ -54,7 +55,7 @@ pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIn
 }
 
 pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
-    let (expr, required_crate) = match name {
+    let (expr, required_feature) = match name {
         "sqrt" => (math::lower_sqrt(args), None),
         "floor" => (math::lower_floor(args), None),
         "ceil" => (math::lower_ceil(args), None),
@@ -134,8 +135,14 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "touch" => (pathlib::lower_touch(args), None),
         "resolve_path" => (pathlib::lower_resolve_path(args), None),
         "iterdir" => (pathlib::lower_iterdir(args), None),
-        "glob_pattern" => (pathlib::lower_glob_pattern(args), Some("regex")),
-        "rglob_pattern" => (pathlib::lower_rglob_pattern(args), Some("regex")),
+        "glob_pattern" => (
+            pathlib::lower_glob_pattern(args),
+            Some(StdlibFeature::Regex),
+        ),
+        "rglob_pattern" => (
+            pathlib::lower_rglob_pattern(args),
+            Some(StdlibFeature::Regex),
+        ),
         "read_text" => (io::lower_read_text(args), None),
         "write_text" => (io::lower_write_text(args), None),
         "exists" => (io::lower_exists(args), None),
@@ -163,17 +170,26 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "file_close" => (file_handles::lower_file_close(args), None),
         "file_read_bytes" => (file_handles::lower_file_read_bytes(args), None),
         "file_write_bytes" => (file_handles::lower_file_write_bytes(args), None),
-        "json_loads" => (json::lower_json_loads(args), Some("serde_json")),
+        "json_loads" => (json::lower_json_loads(args), Some(StdlibFeature::SerdeJson)),
         "json_validate_integer_digit_limits" => {
             (json::lower_json_validate_integer_digit_limits(args), None)
         }
-        "json_dumps" => (json::lower_json_dumps(args), Some("serde_json")),
-        "json_dumps_value" => (json::lower_json_dumps_value(args), Some("serde_json")),
-        "json_dumps_value_exact" => (json::lower_json_dumps_value_exact(args), Some("serde_json")),
-        "json_dumps_value_web" => (json::lower_json_dumps_value_web(args), Some("serde_json")),
+        "json_dumps" => (json::lower_json_dumps(args), Some(StdlibFeature::SerdeJson)),
+        "json_dumps_value" => (
+            json::lower_json_dumps_value(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
+        "json_dumps_value_exact" => (
+            json::lower_json_dumps_value_exact(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
+        "json_dumps_value_web" => (
+            json::lower_json_dumps_value_web(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
         "json_dumps_value_string_ints" => (
             json::lower_json_dumps_value_string_ints(args),
-            Some("serde_json"),
+            Some(StdlibFeature::SerdeJson),
         ),
         "assert_eq" => (test::lower_assert_eq(args), None),
         "assert_ne" => (test::lower_assert_ne(args), None),
@@ -192,24 +208,45 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "set_intersection" => (collections::lower_set_intersection(args), None),
         "counter_from_list" => (
             collections::lower_counter_from_list(args),
-            Some("serde_json"),
+            Some(StdlibFeature::SerdeJson),
         ),
-        "counter_get" => (collections::lower_counter_get(args), Some("serde_json")),
+        "counter_get" => (
+            collections::lower_counter_get(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
         "counter_most_common" => (
             collections::lower_counter_most_common(args),
-            Some("serde_json"),
+            Some(StdlibFeature::SerdeJson),
         ),
-        "counter_total" => (collections::lower_counter_total(args), Some("serde_json")),
-        "counter_values" => (collections::lower_counter_values(args), Some("serde_json")),
-        "counter_keys" => (collections::lower_counter_keys(args), Some("serde_json")),
-        "counter_items" => (collections::lower_counter_items(args), Some("serde_json")),
+        "counter_total" => (
+            collections::lower_counter_total(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
+        "counter_values" => (
+            collections::lower_counter_values(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
+        "counter_keys" => (
+            collections::lower_counter_keys(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
+        "counter_items" => (
+            collections::lower_counter_items(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
         "counter_increment" => (
             collections::lower_counter_increment(args),
-            Some("serde_json"),
+            Some(StdlibFeature::SerdeJson),
         ),
         "defaultdict_new" => (collections::lower_defaultdict_new(args), None),
-        "defaultdict_get" => (collections::lower_defaultdict_get(args), Some("serde_json")),
-        "defaultdict_set" => (collections::lower_defaultdict_set(args), Some("serde_json")),
+        "defaultdict_get" => (
+            collections::lower_defaultdict_get(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
+        "defaultdict_set" => (
+            collections::lower_defaultdict_set(args),
+            Some(StdlibFeature::SerdeJson),
+        ),
         "encode_utf8" => (bytes::lower_encode_utf8(args), None),
         "str_encode_utf8_result" => (bytes::lower_str_encode_utf8_result(args), None),
         "str_encode_utf8_result_with_encoding" => (
@@ -225,64 +262,88 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
         "time_now" => (time::lower_time_now(args), None),
         "sleep" => (time::lower_sleep(args), None),
-        "time_format" => (time::lower_time_format(args), Some("chrono")),
+        "time_format" => (time::lower_time_format(args), Some(StdlibFeature::Chrono)),
         "perf_counter" => (time::lower_perf_counter(args), None),
         "monotonic" => (time::lower_monotonic(args), None),
-        "strptime" => (time::lower_strptime(args), Some("chrono")),
-        "gmtime" => (time::lower_gmtime(args), Some("chrono")),
-        "localtime" => (time::lower_localtime(args), Some("chrono")),
-        "_strptime_intrinsic" => (time::lower_strptime(args), Some("chrono")),
-        "_gmtime_intrinsic" => (time::lower_gmtime(args), Some("chrono")),
-        "_localtime_intrinsic" => (time::lower_localtime(args), Some("chrono")),
-        "time_strptime" => (time::lower_time_strptime_parts(args), Some("chrono")),
-        "time_gmtime" => (time::lower_time_gmtime_parts(args), Some("chrono")),
-        "time_localtime" => (time::lower_time_localtime_parts(args), Some("chrono")),
-        "random_int" => (random::lower_random_int(args), Some("rand")),
-        "random_float" => (random::lower_random_float(args), Some("rand")),
-        "random_choice" => (random::lower_random_choice(args), Some("rand")),
-        "random_uniform" => (random::lower_random_uniform(args), Some("rand")),
-        "random_shuffle" => (random::lower_random_shuffle(args), Some("rand")),
-        "random_sample" => (random::lower_random_sample(args), Some("rand")),
-        "random_randrange" => (random::lower_random_randrange(args), Some("rand")),
-        "random_gauss" => (random::lower_random_gauss(args), Some("rand")),
+        "strptime" => (time::lower_strptime(args), Some(StdlibFeature::Chrono)),
+        "gmtime" => (time::lower_gmtime(args), Some(StdlibFeature::Chrono)),
+        "localtime" => (time::lower_localtime(args), Some(StdlibFeature::Chrono)),
+        "_strptime_intrinsic" => (time::lower_strptime(args), Some(StdlibFeature::Chrono)),
+        "_gmtime_intrinsic" => (time::lower_gmtime(args), Some(StdlibFeature::Chrono)),
+        "_localtime_intrinsic" => (time::lower_localtime(args), Some(StdlibFeature::Chrono)),
+        "time_strptime" => (
+            time::lower_time_strptime_parts(args),
+            Some(StdlibFeature::Chrono),
+        ),
+        "time_gmtime" => (
+            time::lower_time_gmtime_parts(args),
+            Some(StdlibFeature::Chrono),
+        ),
+        "time_localtime" => (
+            time::lower_time_localtime_parts(args),
+            Some(StdlibFeature::Chrono),
+        ),
+        "random_int" => (random::lower_random_int(args), Some(StdlibFeature::Rand)),
+        "random_float" => (random::lower_random_float(args), Some(StdlibFeature::Rand)),
+        "random_choice" => (random::lower_random_choice(args), Some(StdlibFeature::Rand)),
+        "random_uniform" => (
+            random::lower_random_uniform(args),
+            Some(StdlibFeature::Rand),
+        ),
+        "random_shuffle" => (
+            random::lower_random_shuffle(args),
+            Some(StdlibFeature::Rand),
+        ),
+        "random_sample" => (random::lower_random_sample(args), Some(StdlibFeature::Rand)),
+        "random_randrange" => (
+            random::lower_random_randrange(args),
+            Some(StdlibFeature::Rand),
+        ),
+        "random_gauss" => (random::lower_random_gauss(args), Some(StdlibFeature::Rand)),
         "random_module_state_words" => (random::lower_random_module_state_words(args), None),
         "random_module_state_index" => (random::lower_random_module_state_index(args), None),
         "random_module_state_gauss_next" => {
             (random::lower_random_module_state_gauss_next(args), None)
         }
         "random_module_set_state" => (random::lower_random_module_set_state(args), None),
-        "re_match" => (re::lower_re_match(args), Some("regex")),
-        "re_find" => (re::lower_re_find(args), Some("regex")),
-        "re_replace" => (re::lower_re_replace(args), Some("regex")),
-        "re_findall" => (re::lower_re_findall(args), Some("regex")),
-        "re_split" => (re::lower_re_split(args), Some("regex")),
-        "re_find_start" => (re::lower_re_find_start(args), Some("regex")),
-        "re_find_end" => (re::lower_re_find_end(args), Some("regex")),
-        "re_match_flags" => (re::lower_re_match_flags(args), Some("regex")),
-        "re_find_flags" => (re::lower_re_find_flags(args), Some("regex")),
-        "re_replace_flags" => (re::lower_re_replace_flags(args), Some("regex")),
-        "re_findall_flags" => (re::lower_re_findall_flags(args), Some("regex")),
-        "re_split_flags" => (re::lower_re_split_flags(args), Some("regex")),
-        "sha256" => (hash::lower_sha256(args), Some("sha2")),
-        "md5" => (hash::lower_md5(args), Some("md5")),
-        "sha256_bytes" => (hashlib::lower_sha256_bytes(args), Some("sha2")),
-        "md5_bytes" => (hashlib::lower_md5_bytes(args), Some("md5")),
+        "re_match" => (re::lower_re_match(args), Some(StdlibFeature::Regex)),
+        "re_find" => (re::lower_re_find(args), Some(StdlibFeature::Regex)),
+        "re_replace" => (re::lower_re_replace(args), Some(StdlibFeature::Regex)),
+        "re_findall" => (re::lower_re_findall(args), Some(StdlibFeature::Regex)),
+        "re_split" => (re::lower_re_split(args), Some(StdlibFeature::Regex)),
+        "re_find_start" => (re::lower_re_find_start(args), Some(StdlibFeature::Regex)),
+        "re_find_end" => (re::lower_re_find_end(args), Some(StdlibFeature::Regex)),
+        "re_match_flags" => (re::lower_re_match_flags(args), Some(StdlibFeature::Regex)),
+        "re_find_flags" => (re::lower_re_find_flags(args), Some(StdlibFeature::Regex)),
+        "re_replace_flags" => (re::lower_re_replace_flags(args), Some(StdlibFeature::Regex)),
+        "re_findall_flags" => (re::lower_re_findall_flags(args), Some(StdlibFeature::Regex)),
+        "re_split_flags" => (re::lower_re_split_flags(args), Some(StdlibFeature::Regex)),
+        "sha256" => (hash::lower_sha256(args), Some(StdlibFeature::Sha2)),
+        "md5" => (hash::lower_md5(args), Some(StdlibFeature::Md5)),
+        "sha256_bytes" => (hashlib::lower_sha256_bytes(args), Some(StdlibFeature::Sha2)),
+        "md5_bytes" => (hashlib::lower_md5_bytes(args), Some(StdlibFeature::Md5)),
         "platform_system" => (platform::lower_platform_system(args), None),
         "platform_arch" => (platform::lower_platform_arch(args), None),
         "platform_node" => (platform::lower_platform_node(args), None),
         "platform_release" => (platform::lower_platform_release(args), None),
         "platform_version" => (platform::lower_platform_version(args), None),
         "platform_processor" => (platform::lower_platform_processor(args), None),
-        "uuid4" => (uuid::lower_uuid4(args), Some("rand")),
-        "uuid3_text" => (uuid::lower_uuid3(args), Some("uuid")),
-        "uuid5_text" => (uuid::lower_uuid5(args), Some("uuid")),
-        "toml_parse" => (toml::lower_toml_parse(args), Some("toml")),
-        "datetime_now" => (datetime::lower_datetime_now(args), Some("chrono")),
-        "datetime_now_struct" => (datetime::lower_datetime_now_struct(args), Some("chrono")),
+        "uuid4" => (uuid::lower_uuid4(args), Some(StdlibFeature::Rand)),
+        "uuid3_text" => (uuid::lower_uuid3(args), Some(StdlibFeature::Uuid)),
+        "uuid5_text" => (uuid::lower_uuid5(args), Some(StdlibFeature::Uuid)),
+        "toml_parse" => (toml::lower_toml_parse(args), Some(StdlibFeature::Toml)),
+        "datetime_now" => (
+            datetime::lower_datetime_now(args),
+            Some(StdlibFeature::Chrono),
+        ),
+        "datetime_now_struct" => (
+            datetime::lower_datetime_now_struct(args),
+            Some(StdlibFeature::Chrono),
+        ),
         "datetime_format" => (datetime::lower_datetime_format(args), None),
         "datetime_from_timestamp" => (
             datetime::lower_datetime_from_timestamp(args),
-            Some("chrono"),
+            Some(StdlibFeature::Chrono),
         ),
         "sys_exit" => (sys::lower_sys_exit(args), None),
         "sys_version" => (sys::lower_sys_version(args), None),
@@ -296,40 +357,85 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "calendar_isleap" => (calendar::lower_calendar_isleap(args), None),
         "calendar_weekday" => (calendar::lower_calendar_weekday(args), None),
         "calendar_monthrange" => (calendar::lower_calendar_monthrange(args), None),
-        "gzip_compress" => (gzip::lower_gzip_compress(args), Some("flate2")),
-        "gzip_decompress" => (gzip::lower_gzip_decompress(args), Some("flate2")),
-        "zip_create" => (zipfile::lower_zip_create(args), Some("zip")),
-        "zip_add_file" => (zipfile::lower_zip_add_file(args), Some("zip")),
-        "zip_add_file_bytes" => (zipfile::lower_zip_add_file_bytes(args), Some("zip")),
-        "zip_read_file" => (zipfile::lower_zip_read_file(args), Some("zip")),
-        "zip_read_file_bytes" => (zipfile::lower_zip_read_file_bytes(args), Some("zip")),
-        "zip_namelist" => (zipfile::lower_zip_namelist(args), Some("zip")),
-        "base64_encode" => (base64::lower_base64_encode(args), Some("base64")),
-        "base64_decode" => (base64::lower_base64_decode(args), Some("base64")),
-        "base64_encode_bytes" => (base64::lower_base64_encode_bytes(args), Some("base64")),
-        "base64_decode_bytes" => (base64::lower_base64_decode_bytes(args), Some("base64")),
-        "base64_encode_opts" => (base64::lower_base64_encode_opts(args), Some("base64")),
-        "base64_decode_opts" => (base64::lower_base64_decode_opts(args), Some("base64")),
-        "urlsafe_b64encode" => (base64::lower_urlsafe_b64encode(args), Some("base64")),
-        "urlsafe_b64decode" => (base64::lower_urlsafe_b64decode(args), Some("base64")),
-        "urlsafe_b64encode_bytes" => (base64::lower_urlsafe_b64encode_bytes(args), Some("base64")),
-        "urlsafe_b64decode_bytes" => (base64::lower_urlsafe_b64decode_bytes(args), Some("base64")),
+        "gzip_compress" => (gzip::lower_gzip_compress(args), Some(StdlibFeature::Flate2)),
+        "gzip_decompress" => (
+            gzip::lower_gzip_decompress(args),
+            Some(StdlibFeature::Flate2),
+        ),
+        "zip_create" => (zipfile::lower_zip_create(args), Some(StdlibFeature::Zip)),
+        "zip_add_file" => (zipfile::lower_zip_add_file(args), Some(StdlibFeature::Zip)),
+        "zip_add_file_bytes" => (
+            zipfile::lower_zip_add_file_bytes(args),
+            Some(StdlibFeature::Zip),
+        ),
+        "zip_read_file" => (zipfile::lower_zip_read_file(args), Some(StdlibFeature::Zip)),
+        "zip_read_file_bytes" => (
+            zipfile::lower_zip_read_file_bytes(args),
+            Some(StdlibFeature::Zip),
+        ),
+        "zip_namelist" => (zipfile::lower_zip_namelist(args), Some(StdlibFeature::Zip)),
+        "base64_encode" => (
+            base64::lower_base64_encode(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "base64_decode" => (
+            base64::lower_base64_decode(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "base64_encode_bytes" => (
+            base64::lower_base64_encode_bytes(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "base64_decode_bytes" => (
+            base64::lower_base64_decode_bytes(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "base64_encode_opts" => (
+            base64::lower_base64_encode_opts(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "base64_decode_opts" => (
+            base64::lower_base64_decode_opts(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "urlsafe_b64encode" => (
+            base64::lower_urlsafe_b64encode(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "urlsafe_b64decode" => (
+            base64::lower_urlsafe_b64decode(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "urlsafe_b64encode_bytes" => (
+            base64::lower_urlsafe_b64encode_bytes(args),
+            Some(StdlibFeature::Base64),
+        ),
+        "urlsafe_b64decode_bytes" => (
+            base64::lower_urlsafe_b64decode_bytes(args),
+            Some(StdlibFeature::Base64),
+        ),
         "b32encode" => (base32::lower_b32encode(args), None),
         "b32decode" => (base32::lower_b32decode(args), None),
         "b32hexencode" => (base32::lower_b32hexencode(args), None),
         "b32hexdecode" => (base32::lower_b32hexdecode(args), None),
-        "sha1" => (hashlib::lower_sha1(args), Some("sha1")),
-        "sha1_bytes" => (hashlib::lower_sha1_bytes(args), Some("sha1")),
-        "sha512" => (hashlib::lower_sha512(args), Some("sha2")),
-        "sha512_bytes" => (hashlib::lower_sha512_bytes(args), Some("sha2")),
-        "sha224" => (hashlib::lower_sha224(args), Some("sha2")),
-        "sha224_bytes" => (hashlib::lower_sha224_bytes(args), Some("sha2")),
-        "sha384" => (hashlib::lower_sha384(args), Some("sha2")),
-        "sha384_bytes" => (hashlib::lower_sha384_bytes(args), Some("sha2")),
-        "blake2b" => (hashlib::lower_blake2b(args), Some("blake2")),
-        "blake2b_bytes" => (hashlib::lower_blake2b_bytes(args), Some("blake2")),
-        "blake2s" => (hashlib::lower_blake2s(args), Some("blake2")),
-        "blake2s_bytes" => (hashlib::lower_blake2s_bytes(args), Some("blake2")),
+        "sha1" => (hashlib::lower_sha1(args), Some(StdlibFeature::Sha1)),
+        "sha1_bytes" => (hashlib::lower_sha1_bytes(args), Some(StdlibFeature::Sha1)),
+        "sha512" => (hashlib::lower_sha512(args), Some(StdlibFeature::Sha2)),
+        "sha512_bytes" => (hashlib::lower_sha512_bytes(args), Some(StdlibFeature::Sha2)),
+        "sha224" => (hashlib::lower_sha224(args), Some(StdlibFeature::Sha2)),
+        "sha224_bytes" => (hashlib::lower_sha224_bytes(args), Some(StdlibFeature::Sha2)),
+        "sha384" => (hashlib::lower_sha384(args), Some(StdlibFeature::Sha2)),
+        "sha384_bytes" => (hashlib::lower_sha384_bytes(args), Some(StdlibFeature::Sha2)),
+        "blake2b" => (hashlib::lower_blake2b(args), Some(StdlibFeature::Blake2)),
+        "blake2b_bytes" => (
+            hashlib::lower_blake2b_bytes(args),
+            Some(StdlibFeature::Blake2),
+        ),
+        "blake2s" => (hashlib::lower_blake2s(args), Some(StdlibFeature::Blake2)),
+        "blake2s_bytes" => (
+            hashlib::lower_blake2s_bytes(args),
+            Some(StdlibFeature::Blake2),
+        ),
         "set_global_level" => (logging::lower_set_global_level(args), None),
         "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,
@@ -337,7 +443,7 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
 
     Some(LoweredIntrinsic {
         expr: expr?,
-        required_crate,
-        additional_required_crates: additional_required_crates(name),
+        required_feature,
+        additional_required_features: additional_required_features(name),
     })
 }

@@ -389,8 +389,12 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
         .rust_source
         .contains("use std::collections::HashSet;"));
     assert!(result.rust_source.contains("use num_bigint::BigInt;"));
-    assert!(result.required_crates.contains("num-bigint"));
-    assert!(result.required_crates.contains("num-traits"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::NumBigint));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::NumTraits));
 }
 
 #[test]

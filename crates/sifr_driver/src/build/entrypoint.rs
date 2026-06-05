@@ -375,6 +375,7 @@ impl RootedEntrypointPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sifr_stdlib::StdlibFeature;
 
     fn mktemp_dir(name: &str) -> PathBuf {
         let unique = format!(
@@ -405,7 +406,7 @@ mod tests {
         assert!(generated_project.support_modules.is_empty());
         assert!(generated_project.main_rs.contains("fn main"));
         assert!(generated_project.used_stdlib_modules.is_empty());
-        assert!(generated_project.required_crates.is_empty());
+        assert!(generated_project.required_features.is_empty());
     }
 
     #[test]
@@ -502,8 +503,12 @@ def helper() -> bigint:\n    return bigint(1)\n",
             .used_stdlib_modules
             .contains("sifr.statistics"));
         assert!(generated_project.used_stdlib_modules.contains("sifr.math"));
-        assert!(generated_project.required_crates.contains("num-bigint"));
-        assert!(generated_project.required_crates.contains("num-traits"));
+        assert!(generated_project
+            .required_features
+            .contains(&StdlibFeature::NumBigint));
+        assert!(generated_project
+            .required_features
+            .contains(&StdlibFeature::NumTraits));
 
         let _ = std::fs::remove_dir_all(dir);
     }
@@ -537,7 +542,9 @@ def helper() -> bigint:\n    return bigint(1)\n",
             .expect("project metadata aggregation should succeed");
 
         assert!(!generated_project.used_stdlib_modules.contains("sifr.json"));
-        assert!(!generated_project.required_crates.contains("serde_json"));
+        assert!(!generated_project
+            .required_features
+            .contains(&StdlibFeature::SerdeJson));
 
         let _ = std::fs::remove_dir_all(dir);
     }

@@ -18,11 +18,10 @@ use crate::stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
 };
 use sifr_hir::HirModule;
+use sifr_stdlib::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::env;
 use std::fmt::Write as _;
-use std::path::{Path, PathBuf};
 
 pub(crate) type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
 pub(crate) type ModuleFuncSignatures = HashMap<String, FuncSignature>;
@@ -32,54 +31,6 @@ pub(crate) type IsinstanceUnionMatch = (String, String, String, UnionVariantType
 pub(crate) type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
 pub use crate::entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
-
-pub fn sifr_runtime_dependency_spec() -> String {
-    let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
-    let escaped_path = runtime_path
-        .to_string_lossy()
-        .replace('\\', "\\\\")
-        .replace('"', "\\\"");
-    format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
-}
-
-pub(super) fn tokio_dependency_spec() -> String {
-    "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"sync\", \"time\"] }"
-        .to_string()
-}
-
-pub(super) fn discover_sifr_runtime_path() -> Option<PathBuf> {
-    env::var_os("SIFR_RUNTIME_PATH")
-        .map(PathBuf::from)
-        .filter(|path| path.join("Cargo.toml").is_file())
-        .or_else(discover_sifr_runtime_path_from_current_dir)
-        .or_else(discover_sifr_runtime_path_from_current_exe)
-}
-
-pub(super) fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
-    env::current_dir()
-        .ok()
-        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
-}
-
-pub(super) fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
-    env::current_exe()
-        .ok()
-        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
-}
-
-pub(super) fn discover_sifr_runtime_path_from_ancestors(start: &Path) -> Option<PathBuf> {
-    start.ancestors().find_map(|ancestor| {
-        let candidate = ancestor.join("crates").join("sifr_runtime");
-        candidate.join("Cargo.toml").is_file().then_some(candidate)
-    })
-}
-
-pub(super) fn compile_time_sifr_runtime_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")))
-        .join("sifr_runtime")
-}
 
 #[derive(Clone)]
 pub(crate) struct NestedFnCapture {
@@ -136,8 +87,8 @@ pub struct CodegenResult {
     pub rust_source: String,
     pub used_stdlib_modules: HashSet<String>,
     pub used_intrinsic_modules: HashSet<String>,
-    /// Required external crates discovered during structured lowering/codegen.
-    pub required_crates: HashSet<String>,
+    /// Required stdlib/runtime features discovered during structured lowering/codegen.
+    pub required_features: HashSet<StdlibFeature>,
     /// Map of `constant_name` -> (type, `rust_name`) for module-level constants
     pub constant_mappings: HashMap<String, (Type, String)>,
     /// Counters for structured lowering usage during emission.
@@ -148,7 +99,7 @@ pub struct CodegenResult {
 pub struct MultiModuleCodegenResult {
     pub rust_files: HashMap<String, String>,
     pub used_stdlib_modules: HashSet<String>,
-    pub required_crates: HashSet<String>,
+    pub required_features: HashSet<StdlibFeature>,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -742,29 +693,29 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         rust_source,
         used_stdlib_modules: all_used_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
-        required_crates: {
-            let mut crates = emitter.intrinsic_registry_crates;
+        required_features: {
+            let mut features = emitter.intrinsic_registry_features;
             if needs_bigint {
-                crates.insert("num-bigint".to_string());
-                crates.insert("num-traits".to_string());
+                features.insert(StdlibFeature::NumBigint);
+                features.insert(StdlibFeature::NumTraits);
             }
             if needs_decimal {
-                crates.insert("rust_decimal".to_string());
+                features.insert(StdlibFeature::RustDecimal);
             }
             if needs_bigdecimal {
-                crates.insert("bigdecimal".to_string());
+                features.insert(StdlibFeature::BigDecimal);
             }
             if needs_sifr_int {
-                crates.insert("sifr_runtime".to_string());
+                features.insert(StdlibFeature::SifrRuntime);
             }
             if has_async_main_entrypoint
                 || uses_task_sleep
                 || module_uses_task_scope(module)
                 || stdlib_preamble.contains("tokio::")
             {
-                crates.insert("tokio".to_string());
+                features.insert(StdlibFeature::Tokio);
             }
-            crates
+            features
         },
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,

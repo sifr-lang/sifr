@@ -24,7 +24,9 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
     assert!(result
         .rust_source
         .contains("if let Err(__sifr_scope_failure) = group.__sifr_join_all().await"));
-    assert!(result.required_crates.contains("tokio"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -50,7 +52,9 @@ fn test_task_gather_lowers_to_private_gather_helper() {
     assert!(result
         .rust_source
         .contains("let result: __SifrTaskResult<Vec<i64>, std::convert::Infallible>"));
-    assert!(result.required_crates.contains("tokio"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -85,7 +89,9 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
     assert!(result
         .rust_source
         .contains("let result: __SifrTaskResult<i64, ValueError>"));
-    assert!(result.required_crates.contains("tokio"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -143,7 +149,9 @@ fn test_task_race_lowers_to_private_race_helper() {
     assert!(result
         .rust_source
         .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
-    assert!(result.required_crates.contains("tokio"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -208,7 +216,9 @@ fn test_task_select_lowers_to_private_select_helper() {
     assert!(result.rust_source.contains(
         "let result: __SifrSelect2<__SifrTaskResult<i64, std::convert::Infallible>, __SifrTaskResult<String, std::convert::Infallible>>"
     ));
-    assert!(result.required_crates.contains("tokio"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::Tokio));
 }
 
 #[test]

@@ -63,8 +63,13 @@ pub(crate) fn lowers_math_intrinsics_via_registry() {
 pub(crate) fn lowers_json_intrinsics_with_dependency_metadata() {
     let loads =
         lower_intrinsic("json_loads", &["payload".to_string()]).expect("json_loads should lower");
-    assert_eq!(loads.required_crate, Some("serde_json"));
-    assert!(loads.additional_required_crates.contains(&"sifr_runtime"));
+    assert_eq!(
+        loads.required_feature,
+        Some(sifr_stdlib::StdlibFeature::SerdeJson)
+    );
+    assert!(loads
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::SifrRuntime));
     let loads_rendered = render_expr(&loads.expr);
     assert!(loads_rendered.contains("serde_json::from_str"));
     assert!(loads_rendered.contains("validate_json_integer_digit_limits"));
@@ -74,15 +79,18 @@ pub(crate) fn lowers_json_intrinsics_with_dependency_metadata() {
         &["payload".to_string()],
     )
     .expect("json_validate_integer_digit_limits should lower");
-    assert_eq!(validate.required_crate, None);
+    assert_eq!(validate.required_feature, None);
     assert!(validate
-        .additional_required_crates
-        .contains(&"sifr_runtime"));
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::SifrRuntime));
     assert!(render_expr(&validate.expr).contains("JsonLimitError"));
 
     let dumps =
         lower_intrinsic("json_dumps", &["value".to_string()]).expect("json_dumps should lower");
-    assert_eq!(dumps.required_crate, Some("serde_json"));
+    assert_eq!(
+        dumps.required_feature,
+        Some(sifr_stdlib::StdlibFeature::SerdeJson)
+    );
     assert_eq!(
         render_expr(&dumps.expr),
         "serde_json::to_string(&value).unwrap_or_default()"
@@ -180,13 +188,19 @@ pub(crate) fn lowers_pathlib_intrinsics_via_registry() {
 
     let glob = lower_intrinsic("glob_pattern", &["dir".to_string(), "pat".to_string()])
         .expect("glob_pattern lowers");
-    assert_eq!(glob.required_crate, Some("regex"));
+    assert_eq!(
+        glob.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Regex)
+    );
     assert!(render_expr(&glob.expr).contains("regex::Regex::new"));
     assert!(render_expr(&glob.expr).contains("__re.is_match(&__name)"));
 
     let rglob = lower_intrinsic("rglob_pattern", &["dir".to_string(), "pat".to_string()])
         .expect("rglob_pattern lowers");
-    assert_eq!(rglob.required_crate, Some("regex"));
+    assert_eq!(
+        rglob.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Regex)
+    );
     assert!(render_expr(&rglob.expr).contains("__stack.pop()"));
     assert!(render_expr(&rglob.expr).contains("__re.is_match(&__name)"));
 }
@@ -323,7 +337,10 @@ pub(crate) fn lowers_time_intrinsics_via_registry() {
 
     let fmt = lower_intrinsic("time_format", &["secs".to_string(), "mask".to_string()])
         .expect("time_format");
-    assert_eq!(fmt.required_crate, Some("chrono"));
+    assert_eq!(
+        fmt.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&fmt.expr).contains("DateTime::from_timestamp"));
 
     let perf = lower_intrinsic("perf_counter", &[]).expect("perf_counter");
@@ -333,33 +350,54 @@ pub(crate) fn lowers_time_intrinsics_via_registry() {
     assert!(render_expr(&mono.expr).contains("SystemTime::now()"));
 
     let parse = lower_intrinsic("strptime", &["s".to_string(), "f".to_string()]).expect("strptime");
-    assert_eq!(parse.required_crate, Some("chrono"));
+    assert_eq!(
+        parse.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&parse.expr).contains("NaiveDateTime::parse_from_str"));
 
     let gmt = lower_intrinsic("gmtime", &["ts".to_string()]).expect("gmtime");
-    assert_eq!(gmt.required_crate, Some("chrono"));
+    assert_eq!(
+        gmt.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&gmt.expr).contains("chrono::DateTime::<chrono::Utc>::from_timestamp"));
 
     let local = lower_intrinsic("localtime", &["ts".to_string()]).expect("localtime");
-    assert_eq!(local.required_crate, Some("chrono"));
+    assert_eq!(
+        local.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&local.expr).contains("with_timezone(&chrono::Local)"));
 
     let parse_alias = lower_intrinsic("_strptime_intrinsic", &["s".to_string(), "f".to_string()])
         .expect("_strptime_intrinsic");
-    assert_eq!(parse_alias.required_crate, Some("chrono"));
+    assert_eq!(
+        parse_alias.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&parse_alias.expr).contains("NaiveDateTime::parse_from_str"));
 
     let parsed_parts = lower_intrinsic("time_strptime", &["s".to_string(), "f".to_string()])
         .expect("time_strptime");
-    assert_eq!(parsed_parts.required_crate, Some("chrono"));
+    assert_eq!(
+        parsed_parts.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&parsed_parts.expr).contains("Result<Vec<i64>, ValueError>"));
 
     let gmtime_parts = lower_intrinsic("time_gmtime", &[]).expect("time_gmtime");
-    assert_eq!(gmtime_parts.required_crate, Some("chrono"));
+    assert_eq!(
+        gmtime_parts.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&gmtime_parts.expr).contains("Utc::now().naive_utc()"));
 
     let localtime_parts = lower_intrinsic("time_localtime", &[]).expect("time_localtime");
-    assert_eq!(localtime_parts.required_crate, Some("chrono"));
+    assert_eq!(
+        localtime_parts.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&localtime_parts.expr).contains("Local::now().naive_local()"));
 }
 
@@ -367,11 +405,17 @@ pub(crate) fn lowers_time_intrinsics_via_registry() {
 pub(crate) fn lowers_random_intrinsics_via_registry() {
     let rint =
         lower_intrinsic("random_int", &["1".to_string(), "9".to_string()]).expect("random_int");
-    assert_eq!(rint.required_crate, Some("rand"));
+    assert_eq!(
+        rint.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Rand)
+    );
     assert!(render_expr(&rint.expr).contains("rand::RngExt::random_range"));
 
     let rfloat = lower_intrinsic("random_float", &[]).expect("random_float");
-    assert_eq!(rfloat.required_crate, Some("rand"));
+    assert_eq!(
+        rfloat.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Rand)
+    );
     assert!(render_expr(&rfloat.expr).contains("rand::random::<f64>()"));
 
     let choice = lower_intrinsic("random_choice", &["items".to_string()]).expect("random_choice");
@@ -397,23 +441,25 @@ pub(crate) fn lowers_random_intrinsics_via_registry() {
 
     let gauss = lower_intrinsic("random_gauss", &["0.0".to_string(), "1.0".to_string()])
         .expect("random_gauss");
-    assert!(gauss.additional_required_crates.contains(&"rand_distr"));
+    assert!(gauss
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::RandDistr));
     assert!(render_expr(&gauss.expr).contains("rand_distr"));
 
     let state_words =
         lower_intrinsic("random_module_state_words", &[]).expect("random_module_state_words");
-    assert_eq!(state_words.required_crate, None);
+    assert_eq!(state_words.required_feature, None);
     assert!(render_expr(&state_words.expr).contains("__SIFR_RANDOM_MODULE_STATE"));
     assert!(render_expr(&state_words.expr).contains(".words"));
 
     let state_index =
         lower_intrinsic("random_module_state_index", &[]).expect("random_module_state_index");
-    assert_eq!(state_index.required_crate, None);
+    assert_eq!(state_index.required_feature, None);
     assert!(render_expr(&state_index.expr).contains(".index"));
 
     let state_gauss = lower_intrinsic("random_module_state_gauss_next", &[])
         .expect("random_module_state_gauss_next");
-    assert_eq!(state_gauss.required_crate, None);
+    assert_eq!(state_gauss.required_feature, None);
     assert!(render_expr(&state_gauss.expr).contains(".gauss_next"));
 
     let set_state = lower_intrinsic(
@@ -425,7 +471,7 @@ pub(crate) fn lowers_random_intrinsics_via_registry() {
         ],
     )
     .expect("random_module_set_state");
-    assert_eq!(set_state.required_crate, None);
+    assert_eq!(set_state.required_feature, None);
     assert!(render_expr(&set_state.expr).contains("length 624"));
     assert!(render_expr(&set_state.expr).contains("random module state index"));
 }
@@ -433,7 +479,7 @@ pub(crate) fn lowers_random_intrinsics_via_registry() {
 #[test]
 pub(crate) fn lowers_re_intrinsics_via_registry() {
     let m = lower_intrinsic("re_match", &["pat".to_string(), "txt".to_string()]).expect("re_match");
-    assert_eq!(m.required_crate, Some("regex"));
+    assert_eq!(m.required_feature, Some(sifr_stdlib::StdlibFeature::Regex));
     assert!(render_expr(&m.expr).contains("is_match"));
 
     let f = lower_intrinsic("re_find", &["pat".to_string(), "txt".to_string()]).expect("re_find");
@@ -479,29 +525,35 @@ pub(crate) fn lowers_re_intrinsics_via_registry() {
         ],
     )
     .expect("re_replace_flags");
-    assert_eq!(rf.required_crate, Some("regex"));
+    assert_eq!(rf.required_feature, Some(sifr_stdlib::StdlibFeature::Regex));
     assert!(render_expr(&rf.expr).contains("replace_all"));
 }
 
 #[test]
 pub(crate) fn lowers_hash_intrinsics_via_registry() {
     let sha = lower_intrinsic("sha256", &["payload".to_string()]).expect("sha256");
-    assert_eq!(sha.required_crate, Some("sha2"));
+    assert_eq!(sha.required_feature, Some(sifr_stdlib::StdlibFeature::Sha2));
     assert!(render_expr(&sha.expr).contains("<sha2::Sha256 as sha2::Digest>::digest"));
     assert!(render_expr(&sha.expr).contains(".as_bytes()"));
 
     let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
-    assert_eq!(md5.required_crate, Some("md5"));
+    assert_eq!(md5.required_feature, Some(sifr_stdlib::StdlibFeature::Md5));
     assert!(render_expr(&md5.expr).contains("md5::compute"));
     assert!(render_expr(&md5.expr).contains(".as_bytes()"));
 
     let sha_bytes =
         lower_intrinsic("sha256_bytes", &["payload".to_string()]).expect("sha256_bytes");
-    assert_eq!(sha_bytes.required_crate, Some("sha2"));
+    assert_eq!(
+        sha_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha2)
+    );
     assert!(render_expr(&sha_bytes.expr).contains("to_vec"));
 
     let md5_bytes = lower_intrinsic("md5_bytes", &["payload".to_string()]).expect("md5_bytes");
-    assert_eq!(md5_bytes.required_crate, Some("md5"));
+    assert_eq!(
+        md5_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Md5)
+    );
     assert!(render_expr(&md5_bytes.expr).contains("md5::compute"));
     assert!(render_expr(&md5_bytes.expr).contains(".0"));
     assert!(render_expr(&md5_bytes.expr).contains("to_vec"));

@@ -4,6 +4,7 @@ use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache}
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_stdlib::StdlibFeature;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -73,7 +74,7 @@ fn materialize_binary_project_at_path(
     let cargo_toml = generate_dependency_cargo_toml(
         project_name,
         &generated_project.used_stdlib_modules,
-        &generated_project.required_crates,
+        &generated_project.required_features,
     );
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
@@ -176,7 +177,7 @@ fn binary_project_cache_key(
     generated_project: &GeneratedBinaryProject,
 ) -> String {
     let stdlib_modules = sorted_lines(&generated_project.used_stdlib_modules);
-    let required_crates = sorted_lines(&generated_project.required_crates);
+    let required_features = sorted_feature_lines(&generated_project.required_features);
     let support_modules = generated_project
         .support_modules
         .iter()
@@ -188,12 +189,12 @@ fn binary_project_cache_key(
         generate_dependency_cargo_toml(
             project_name,
             &generated_project.used_stdlib_modules,
-            &generated_project.required_crates
+            &generated_project.required_features
         ),
         generated_project.main_rs,
         support_modules,
         stdlib_modules.join("\n"),
-        required_crates.join("\n")
+        required_features.join("\n")
     )
 }
 
@@ -201,6 +202,14 @@ fn sorted_lines(values: &std::collections::HashSet<String>) -> Vec<String> {
     let mut ordered: BTreeSet<&str> = BTreeSet::new();
     for value in values {
         ordered.insert(value.as_str());
+    }
+    ordered.into_iter().map(str::to_string).collect()
+}
+
+fn sorted_feature_lines(values: &std::collections::HashSet<StdlibFeature>) -> Vec<String> {
+    let mut ordered: BTreeSet<&str> = BTreeSet::new();
+    for value in values {
+        ordered.insert(value.id());
     }
     ordered.into_iter().map(str::to_string).collect()
 }

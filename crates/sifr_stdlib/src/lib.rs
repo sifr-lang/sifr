@@ -9,6 +9,7 @@ use std::collections::HashMap;
 
 mod collections_bytes_time;
 mod crypto_regex_uuid;
+mod features;
 mod io_json;
 mod math_test;
 mod platform_misc;
@@ -17,6 +18,10 @@ mod sys_fs;
 
 use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_time};
 use crypto_regex_uuid::{intrinsic_crypto, intrinsic_regex, intrinsic_uuid};
+pub use features::{
+    feature_for_codegen_requirement, features_for_stdlib_module, generated_cargo_dependencies,
+    GeneratedCargoDependency, StdlibFeature, StdlibFeatureSpec, STDLIB_FEATURE_SPECS,
+};
 use io_json::{intrinsic_io, intrinsic_json};
 use math_test::{intrinsic_math, intrinsic_test};
 use platform_misc::{

@@ -17,7 +17,9 @@ fn test_task_timeout_context_manager_wraps_awaits() {
     assert!(result.rust_source.contains("match tokio::time::timeout"));
     assert!(result.rust_source.contains("return Err(TimeoutError::new"));
     assert!(result.rust_source.contains("struct TimeoutError"));
-    assert!(result.required_crates.contains("tokio"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -143,18 +145,20 @@ fn test_sync_main_does_not_require_tokio() {
     assert!(!result
         .rust_source
         .contains("#[tokio::main(flavor = \"current_thread\")]"));
-    assert!(!result.required_crates.contains("tokio"));
+    assert!(!result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::Tokio));
 }
 
 #[test]
 fn test_generate_project_emits_tokio_dependency_when_required() {
     let module = empty_module();
-    let required_crates = HashSet::from(["tokio".to_string()]);
+    let required_features = HashSet::from([sifr_stdlib::StdlibFeature::Tokio]);
     let (cargo_toml, _main_rs) = generate_project_with_deps_and_crates(
         &module,
         "sifr_output",
         &HashSet::new(),
-        &required_crates,
+        &required_features,
     );
 
     assert!(cargo_toml.contains(

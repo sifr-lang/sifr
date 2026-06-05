@@ -10,6 +10,7 @@ license = { workspace = true }
 # Wired early by milestone_diag_1; compiler emission migration starts in milestone_diag_4a.
 sifr_diagnostics = { workspace = true }
 sifr_hir = { workspace = true }
+sifr_stdlib = { workspace = true }
 sifr_type_system = { workspace = true }
 syn = { version = "2.0.117", features = ["full", "visit"] }
 prettyplease = "0.2.37"

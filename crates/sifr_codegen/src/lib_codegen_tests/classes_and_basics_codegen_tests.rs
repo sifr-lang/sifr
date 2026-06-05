@@ -630,8 +630,12 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
     assert!(result.rust_files.contains_key("helper"));
     assert!(result.used_stdlib_modules.contains("sifr.statistics"));
     assert!(result.used_stdlib_modules.contains("sifr.math"));
-    assert!(result.required_crates.contains("num-bigint"));
-    assert!(result.required_crates.contains("num-traits"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::NumBigint));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib::StdlibFeature::NumTraits));
 }
 
 #[test]

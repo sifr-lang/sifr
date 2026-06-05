@@ -3,27 +3,39 @@ use crate::{render_expr, RustExpr};
 #[test]
 pub(crate) fn lowers_uuid_intrinsic_via_registry() {
     let uuid = lower_intrinsic("uuid4", &[]).expect("uuid4");
-    assert_eq!(uuid.required_crate, Some("rand"));
+    assert_eq!(
+        uuid.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Rand)
+    );
     assert!(render_expr(&uuid.expr).contains("rand::random::<u32>()"));
     assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}\""));
     assert!(render_expr(&uuid.expr).contains("(rand::random::<u16>() & 4095)"));
 
     let uuid3 =
         lower_intrinsic("uuid3_text", &["ns".to_string(), "name".to_string()]).expect("uuid3");
-    assert_eq!(uuid3.required_crate, Some("uuid"));
+    assert_eq!(
+        uuid3.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Uuid)
+    );
     assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::parse_str"));
     assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::new_v3"));
 
     let uuid5 =
         lower_intrinsic("uuid5_text", &["ns".to_string(), "name".to_string()]).expect("uuid5");
-    assert_eq!(uuid5.required_crate, Some("uuid"));
+    assert_eq!(
+        uuid5.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Uuid)
+    );
     assert!(render_expr(&uuid5.expr).contains("uuid::Uuid::new_v5"));
 }
 
 #[test]
 pub(crate) fn lowers_toml_intrinsic_with_dependency_metadata() {
     let parsed = lower_intrinsic("toml_parse", &["payload".to_string()]).expect("toml_parse");
-    assert_eq!(parsed.required_crate, Some("toml"));
+    assert_eq!(
+        parsed.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Toml)
+    );
     assert!(render_expr(&parsed.expr).contains("parse::<toml::Table>()"));
     assert!(render_expr(&parsed.expr).contains("TOMLDecodeError"));
 }
@@ -31,11 +43,17 @@ pub(crate) fn lowers_toml_intrinsic_with_dependency_metadata() {
 #[test]
 pub(crate) fn lowers_datetime_intrinsics_via_registry() {
     let now = lower_intrinsic("datetime_now", &[]).expect("datetime_now");
-    assert_eq!(now.required_crate, Some("chrono"));
+    assert_eq!(
+        now.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&now.expr).contains("chrono::Local::now()"));
 
     let now_struct = lower_intrinsic("datetime_now_struct", &[]).expect("datetime_now_struct");
-    assert_eq!(now_struct.required_crate, Some("chrono"));
+    assert_eq!(
+        now_struct.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&now_struct.expr).contains("chrono::Datelike::year(&__dt) as i64"));
     assert!(render_expr(&now_struct.expr).contains("chrono::Timelike::second(&__dt) as i64"));
 
@@ -45,7 +63,10 @@ pub(crate) fn lowers_datetime_intrinsics_via_registry() {
 
     let from_ts =
         lower_intrinsic("datetime_from_timestamp", &["ts".to_string()]).expect("from_timestamp");
-    assert_eq!(from_ts.required_crate, Some("chrono"));
+    assert_eq!(
+        from_ts.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Chrono)
+    );
     assert!(render_expr(&from_ts.expr).contains("DateTime::from_timestamp"));
     assert!(render_expr(&from_ts.expr).contains("ok_or_else"));
     assert!(render_expr(&from_ts.expr).contains("\"invalid timestamp\".to_string()"));
@@ -123,19 +144,28 @@ pub(crate) fn lowers_calendar_intrinsics_via_registry() {
 #[test]
 pub(crate) fn lowers_gzip_intrinsics_with_dependency_metadata() {
     let compress = lower_intrinsic("gzip_compress", &["data".to_string()]).expect("gzip_compress");
-    assert_eq!(compress.required_crate, Some("flate2"));
+    assert_eq!(
+        compress.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Flate2)
+    );
     assert!(render_expr(&compress.expr).contains("GzEncoder"));
 
     let decompress =
         lower_intrinsic("gzip_decompress", &["bytes".to_string()]).expect("gzip_decompress");
-    assert_eq!(decompress.required_crate, Some("flate2"));
+    assert_eq!(
+        decompress.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Flate2)
+    );
     assert!(render_expr(&decompress.expr).contains("GzDecoder"));
 }
 
 #[test]
 pub(crate) fn lowers_zip_intrinsics_with_dependency_metadata() {
     let create = lower_intrinsic("zip_create", &["path".to_string()]).expect("zip_create");
-    assert_eq!(create.required_crate, Some("zip"));
+    assert_eq!(
+        create.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Zip)
+    );
     assert!(render_expr(&create.expr).contains("ZipWriter::new"));
 
     let add = lower_intrinsic(
@@ -147,7 +177,7 @@ pub(crate) fn lowers_zip_intrinsics_with_dependency_metadata() {
         ],
     )
     .expect("zip_add_file");
-    assert_eq!(add.required_crate, Some("zip"));
+    assert_eq!(add.required_feature, Some(sifr_stdlib::StdlibFeature::Zip));
     assert!(render_expr(&add.expr).contains("start_file"));
 
     let add_bytes = lower_intrinsic(
@@ -159,12 +189,15 @@ pub(crate) fn lowers_zip_intrinsics_with_dependency_metadata() {
         ],
     )
     .expect("zip_add_file_bytes");
-    assert_eq!(add_bytes.required_crate, Some("zip"));
+    assert_eq!(
+        add_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Zip)
+    );
     assert!(render_expr(&add_bytes.expr).contains("write_all"));
 
     let read = lower_intrinsic("zip_read_file", &["path".to_string(), "name".to_string()])
         .expect("zip_read_file");
-    assert_eq!(read.required_crate, Some("zip"));
+    assert_eq!(read.required_feature, Some(sifr_stdlib::StdlibFeature::Zip));
     assert!(render_expr(&read.expr).contains("ZipArchive::new"));
 
     let read_bytes = lower_intrinsic(
@@ -172,34 +205,52 @@ pub(crate) fn lowers_zip_intrinsics_with_dependency_metadata() {
         &["path".to_string(), "name".to_string()],
     )
     .expect("zip_read_file_bytes");
-    assert_eq!(read_bytes.required_crate, Some("zip"));
+    assert_eq!(
+        read_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Zip)
+    );
     assert!(render_expr(&read_bytes.expr).contains("read_to_end"));
 
     let names = lower_intrinsic("zip_namelist", &["path".to_string()]).expect("zip_namelist");
-    assert_eq!(names.required_crate, Some("zip"));
+    assert_eq!(
+        names.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Zip)
+    );
     assert!(render_expr(&names.expr).contains("__zip.by_index"));
 }
 
 #[test]
 pub(crate) fn lowers_base64_intrinsics_with_dependency_metadata() {
     let enc = lower_intrinsic("base64_encode", &["text".to_string()]).expect("base64_encode");
-    assert_eq!(enc.required_crate, Some("base64"));
+    assert_eq!(
+        enc.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&enc.expr).contains("base64::Engine::encode"));
     assert!(render_expr(&enc.expr).contains("general_purpose::STANDARD"));
 
     let dec = lower_intrinsic("base64_decode", &["s".to_string()]).expect("base64_decode");
-    assert_eq!(dec.required_crate, Some("base64"));
+    assert_eq!(
+        dec.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&dec.expr).contains("base64::Engine::decode"));
     assert!(render_expr(&dec.expr).contains("general_purpose::STANDARD"));
 
     let enc_bytes =
         lower_intrinsic("base64_encode_bytes", &["b".to_string()]).expect("base64_encode_bytes");
-    assert_eq!(enc_bytes.required_crate, Some("base64"));
+    assert_eq!(
+        enc_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&enc_bytes.expr).contains("into_bytes"));
 
     let dec_bytes =
         lower_intrinsic("base64_decode_bytes", &["b".to_string()]).expect("base64_decode_bytes");
-    assert_eq!(dec_bytes.required_crate, Some("base64"));
+    assert_eq!(
+        dec_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&dec_bytes.expr).contains("base64::Engine::decode"));
 
     let enc_opts = lower_intrinsic(
@@ -207,7 +258,10 @@ pub(crate) fn lowers_base64_intrinsics_with_dependency_metadata() {
         &["s".to_string(), "alt".to_string(), "wrap".to_string()],
     )
     .expect("base64_encode_opts");
-    assert_eq!(enc_opts.required_crate, Some("base64"));
+    assert_eq!(
+        enc_opts.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&enc_opts.expr).contains("wrapcol must be >= 0"));
 
     let dec_opts = lower_intrinsic(
@@ -220,29 +274,44 @@ pub(crate) fn lowers_base64_intrinsics_with_dependency_metadata() {
         ],
     )
     .expect("base64_decode_opts");
-    assert_eq!(dec_opts.required_crate, Some("base64"));
+    assert_eq!(
+        dec_opts.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&dec_opts.expr).contains("invalid base64 character"));
 
     let url_enc =
         lower_intrinsic("urlsafe_b64encode", &["s".to_string()]).expect("urlsafe_b64encode");
-    assert_eq!(url_enc.required_crate, Some("base64"));
+    assert_eq!(
+        url_enc.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&url_enc.expr).contains("base64::Engine::encode"));
     assert!(render_expr(&url_enc.expr).contains("general_purpose::URL_SAFE"));
 
     let url_dec =
         lower_intrinsic("urlsafe_b64decode", &["s".to_string()]).expect("urlsafe_b64decode");
-    assert_eq!(url_dec.required_crate, Some("base64"));
+    assert_eq!(
+        url_dec.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&url_dec.expr).contains("base64::Engine::decode"));
     assert!(render_expr(&url_dec.expr).contains("general_purpose::URL_SAFE"));
 
     let url_enc_bytes = lower_intrinsic("urlsafe_b64encode_bytes", &["b".to_string()])
         .expect("urlsafe_b64encode_bytes");
-    assert_eq!(url_enc_bytes.required_crate, Some("base64"));
+    assert_eq!(
+        url_enc_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&url_enc_bytes.expr).contains("into_bytes"));
 
     let url_dec_bytes = lower_intrinsic("urlsafe_b64decode_bytes", &["b".to_string()])
         .expect("urlsafe_b64decode_bytes");
-    assert_eq!(url_dec_bytes.required_crate, Some("base64"));
+    assert_eq!(
+        url_dec_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Base64)
+    );
     assert!(render_expr(&url_dec_bytes.expr).contains("base64::Engine::decode"));
 }
 
@@ -264,53 +333,89 @@ pub(crate) fn lowers_base32_intrinsics_via_registry() {
 #[test]
 pub(crate) fn lowers_hashlib_intrinsics_with_dependency_metadata() {
     let sha1 = lower_intrinsic("sha1", &["s".to_string()]).expect("sha1");
-    assert_eq!(sha1.required_crate, Some("sha1"));
+    assert_eq!(
+        sha1.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha1)
+    );
     assert!(render_expr(&sha1.expr).contains("<sha1::Sha1 as sha1::Digest>::digest"));
 
     let sha1_bytes = lower_intrinsic("sha1_bytes", &["b".to_string()]).expect("sha1_bytes");
-    assert_eq!(sha1_bytes.required_crate, Some("sha1"));
+    assert_eq!(
+        sha1_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha1)
+    );
     assert!(render_expr(&sha1_bytes.expr).contains("to_vec"));
 
     let sha512 = lower_intrinsic("sha512", &["s".to_string()]).expect("sha512");
-    assert_eq!(sha512.required_crate, Some("sha2"));
+    assert_eq!(
+        sha512.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha2)
+    );
     assert!(render_expr(&sha512.expr).contains("<sha2::Sha512 as sha2::Digest>::digest"));
 
     let sha512_bytes = lower_intrinsic("sha512_bytes", &["b".to_string()]).expect("sha512_bytes");
-    assert_eq!(sha512_bytes.required_crate, Some("sha2"));
+    assert_eq!(
+        sha512_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha2)
+    );
     assert!(render_expr(&sha512_bytes.expr).contains("to_vec"));
 
     let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
-    assert_eq!(sha224.required_crate, Some("sha2"));
+    assert_eq!(
+        sha224.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha2)
+    );
     assert!(render_expr(&sha224.expr).contains("<sha2::Sha224 as sha2::Digest>::digest"));
 
     let sha224_bytes = lower_intrinsic("sha224_bytes", &["b".to_string()]).expect("sha224_bytes");
-    assert_eq!(sha224_bytes.required_crate, Some("sha2"));
+    assert_eq!(
+        sha224_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha2)
+    );
     assert!(render_expr(&sha224_bytes.expr).contains("to_vec"));
 
     let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
-    assert_eq!(sha384.required_crate, Some("sha2"));
+    assert_eq!(
+        sha384.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha2)
+    );
     assert!(render_expr(&sha384.expr).contains("<sha2::Sha384 as sha2::Digest>::digest"));
 
     let sha384_bytes = lower_intrinsic("sha384_bytes", &["b".to_string()]).expect("sha384_bytes");
-    assert_eq!(sha384_bytes.required_crate, Some("sha2"));
+    assert_eq!(
+        sha384_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Sha2)
+    );
     assert!(render_expr(&sha384_bytes.expr).contains("to_vec"));
 
     let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
-    assert_eq!(blake2b.required_crate, Some("blake2"));
+    assert_eq!(
+        blake2b.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Blake2)
+    );
     assert!(render_expr(&blake2b.expr).contains("Blake2b512"));
 
     let blake2b_bytes =
         lower_intrinsic("blake2b_bytes", &["b".to_string()]).expect("blake2b_bytes");
-    assert_eq!(blake2b_bytes.required_crate, Some("blake2"));
+    assert_eq!(
+        blake2b_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Blake2)
+    );
     assert!(render_expr(&blake2b_bytes.expr).contains("to_vec"));
 
     let blake2s = lower_intrinsic("blake2s", &["s".to_string()]).expect("blake2s");
-    assert_eq!(blake2s.required_crate, Some("blake2"));
+    assert_eq!(
+        blake2s.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Blake2)
+    );
     assert!(render_expr(&blake2s.expr).contains("Blake2s256"));
 
     let blake2s_bytes =
         lower_intrinsic("blake2s_bytes", &["b".to_string()]).expect("blake2s_bytes");
-    assert_eq!(blake2s_bytes.required_crate, Some("blake2"));
+    assert_eq!(
+        blake2s_bytes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Blake2)
+    );
     assert!(render_expr(&blake2s_bytes.expr).contains("to_vec"));
 }
 
@@ -400,5 +505,5 @@ pub(crate) fn lower_intrinsic_accepts_ir_inputs() {
     .expect("ir file_write");
 
     assert!(render_expr(&ir.expr).contains("TextWrite"));
-    assert_eq!(ir.required_crate, None);
+    assert_eq!(ir.required_feature, None);
 }

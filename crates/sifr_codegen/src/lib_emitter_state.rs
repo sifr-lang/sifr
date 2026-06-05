@@ -39,8 +39,8 @@ pub struct RustEmitter {
     pub used_stdlib_modules: HashSet<String>,
     /// Set of intrinsic function names (for codegen dispatch)
     pub(crate) intrinsic_functions: HashSet<String>,
-    /// Crates requested by intrinsic registry lowering.
-    pub(crate) intrinsic_registry_crates: HashSet<String>,
+    /// Stdlib/runtime features requested by intrinsic registry lowering.
+    pub(crate) intrinsic_registry_features: HashSet<sifr_stdlib::StdlibFeature>,
     /// Set of (`class_name`, `field_name`) pairs that are self-referential and need Box<T>
     pub(crate) recursive_fields: HashSet<(String, String)>,
     /// Map of (`class_name`, `field_name`) -> concrete Rust type used for recursive field storage.
@@ -210,7 +210,7 @@ impl RustEmitter {
             current_class_name: None,
             used_stdlib_modules: HashSet::new(),
             intrinsic_functions: HashSet::new(),
-            intrinsic_registry_crates: HashSet::new(),
+            intrinsic_registry_features: HashSet::new(),
             recursive_fields: HashSet::new(),
             recursive_field_rust_types: HashMap::new(),
             class_field_order: HashMap::new(),

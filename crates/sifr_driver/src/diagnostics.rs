@@ -2,6 +2,7 @@ use sifr_diagnostics::codes::registry_entry;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 pub(crate) use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
 use sifr_package::{PackageDiagnostic, PackageDiagnosticOrigin};
+use sifr_stdlib::StdlibFeature;
 use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::io::Write;
@@ -17,7 +18,7 @@ pub enum CompileResultFull {
     Success {
         rust_source: String,
         used_stdlib_modules: HashSet<String>,
-        required_crates: HashSet<String>,
+        required_features: HashSet<StdlibFeature>,
         lowering_stats: sifr_codegen::LoweringStats,
     },
     Errors {
