@@ -79,7 +79,7 @@ The target owner for the canonical frontend API is `crates/sifr_frontend/`. Phas
 - stdlib bootstrap/cache plumbing
 - routing CLI modes through `sifr_frontend` without reimplementing frontend semantics
 
-`sifr_lowering` continues to own HIR data structures, lowering internals, type checking internals, ownership analysis, and semantic diagnostics. Phase 35 must not move CLI-specific policy into `sifr_lowering`.
+`sifr_ir` owns reusable HIR data structures and public IR views. `sifr_lowering` owns lowering internals, type checking internals, ownership analysis, and semantic diagnostics. Phase 35 must not move CLI-specific policy into `sifr_lowering`.
 
 `sifr_analysis` or `sifr_ide` is not implemented in Phase 35, but Phase 35 must leave an explicit extension boundary for it. Editor-oriented queries such as completion, hover, go-to-definition, references, document symbols, semantic tokens, and inlay hints belong above `sifr_frontend` and below `sifr_lsp`. They must consume `sifr_frontend` query results and approved HIR views; LSP handlers must not reach into `sifr_lowering` directly for semantic answers.
 

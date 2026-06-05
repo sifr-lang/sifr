@@ -240,7 +240,7 @@ For reference, the existing parser infrastructure includes:
 - Verify that class patterns reference valid fields
 - Verify that capture variables don't shadow existing variables (or emit a warning)
 
-#### HIR (sifr_lowering)
+#### HIR Data and Lowering (`sifr_ir` / `sifr_lowering`)
 
 - Lower `StmtMatch` to HIR match node
 - Each case arm becomes an HIR branch with narrowed type environment

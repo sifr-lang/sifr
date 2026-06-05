@@ -389,8 +389,8 @@ def main():
 - `crates/sifr_type_system/src/types.rs` -- extend `Type` enum
 - `crates/sifr_type_system/src/check.rs` -- type checking for unions
 - `crates/sifr_type_system/src/infer.rs` -- inference with unions/literals
-- `crates/sifr_lowering/src/hir_nodes.rs` -- new HIR nodes for narrowing
-- `crates/sifr_lowering/src/lower.rs` -- lowering with CFG and narrowing
+- `crates/sifr_ir` -- new HIR nodes for narrowing
+- `crates/sifr_lowering/src/lower/` -- lowering with CFG and narrowing
 - `crates/sifr_lowering/src/scope.rs` -- narrowed type tracking
 - `crates/sifr_codegen/src/lib.rs` -- union -> enum codegen
 - `crates/sifr_driver/src/lib.rs` -- pipeline updates
