@@ -1,0 +1,16 @@
+[package]
+name = "sifr_ir"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+num-bigint = { workspace = true }
+ruff_text_size = { workspace = true }
+sifr_diagnostics = { workspace = true }
+sifr_type_system = { workspace = true }
+
+[lints]
+workspace = true

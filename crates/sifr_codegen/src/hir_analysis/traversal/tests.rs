@@ -1,5 +1,5 @@
 use super::{walk_expr_until, walk_stmts, walk_stmts_until, TraversalConfig, TraversalControl};
-use sifr_hir::{
+use sifr_ir::{
     HirExceptHandler, HirExpr, HirFunction, HirMatchArm, HirParam, HirPattern, HirStmt, MethodKind,
 };
 use sifr_type_system::{ParamConvention, Type};

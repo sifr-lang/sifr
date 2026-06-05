@@ -1,5 +1,5 @@
-use super::{FlowEffect, FlowExitKind};
 use crate::{HirAsyncWithKind, HirExpr, HirStmt, HirTupleTargetBinding};
+use sifr_ir::{FlowEffect, FlowExitKind};
 use sifr_type_system::{OwnershipKind, Type};
 
 pub(super) fn stmt_label(stmt: &HirStmt) -> &'static str {

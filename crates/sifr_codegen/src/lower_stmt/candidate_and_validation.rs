@@ -334,13 +334,13 @@ pub(super) fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), Codegen
         }
         HirStmt::AsyncWith { kind, body, .. } => {
             match kind {
-                sifr_hir::HirAsyncWithKind::TaskTimeout { duration } => {
+                sifr_ir::HirAsyncWithKind::TaskTimeout { duration } => {
                     validate_expr_lowering_shape(duration)?;
                 }
-                sifr_hir::HirAsyncWithKind::UserDefined { context, .. } => {
+                sifr_ir::HirAsyncWithKind::UserDefined { context, .. } => {
                     validate_expr_lowering_shape(context)?;
                 }
-                sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup => {}
+                sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup => {}
             }
             validate_stmt_block_lowering_shape(body)
         }

@@ -17,7 +17,7 @@ use crate::ir_validate::validate_items;
 use crate::stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
 };
-use sifr_hir::HirModule;
+use sifr_ir::HirModule;
 use sifr_stdlib::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -143,7 +143,7 @@ pub struct StdlibCode {
     /// Map of stdlib generic class name -> declared type parameter names.
     pub generic_class_params: HashMap<String, Vec<String>>,
     /// Map of stdlib generic class name -> template HIR class for concrete type-argument inference.
-    pub generic_class_templates: HashMap<String, sifr_hir::HirClass>,
+    pub generic_class_templates: HashMap<String, sifr_ir::HirClass>,
     /// Map of `module_name` -> (`class_name` -> ordered class fields).
     /// Multi-module project codegen also uses this for local helper modules.
     pub module_class_fields: HashMap<String, HashMap<String, Vec<(String, Type)>>>,

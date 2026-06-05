@@ -261,13 +261,13 @@ fn does_not_lower_field_assign_with_non_leaf_value() {
 fn lowers_simple_tuple_unpack_stmt() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Name("a".to_string()),
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("a".to_string()),
                 ty: Type::Int,
                 rebind_existing: false,
             },
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Name("b".to_string()),
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("b".to_string()),
                 ty: Type::Bool,
                 rebind_existing: false,
             },
@@ -293,13 +293,13 @@ fn lowers_simple_tuple_unpack_stmt() {
 fn lowers_simple_tuple_unpack_stmt_with_mutated_bindings() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Name("l".to_string()),
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("l".to_string()),
                 ty: Type::Int,
                 rebind_existing: false,
             },
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Name("r".to_string()),
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("r".to_string()),
                 ty: Type::Int,
                 rebind_existing: false,
             },
@@ -326,13 +326,13 @@ fn lowers_simple_tuple_unpack_stmt_with_mutated_bindings() {
 fn does_not_lower_tuple_unpack_with_non_leaf_value() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Name("a".to_string()),
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("a".to_string()),
                 ty: Type::Int,
                 rebind_existing: false,
             },
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Name("b".to_string()),
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("b".to_string()),
                 ty: Type::Bool,
                 rebind_existing: false,
             },
@@ -353,13 +353,13 @@ fn does_not_lower_tuple_unpack_with_non_leaf_value() {
 fn lowers_tuple_unpack_with_rebind_targets_to_temp_and_assigns() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Name("left".to_string()),
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("left".to_string()),
                 ty: Type::Int,
                 rebind_existing: true,
             },
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Name("right".to_string()),
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("right".to_string()),
                 ty: Type::Int,
                 rebind_existing: false,
             },
@@ -400,16 +400,16 @@ fn lowers_tuple_unpack_with_rebind_targets_to_temp_and_assigns() {
 fn lowers_tuple_unpack_with_field_targets_to_temp_and_field_assigns() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Field {
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Field {
                     object: "node".to_string(),
                     field: "left".to_string(),
                 },
                 ty: Type::Int,
                 rebind_existing: false,
             },
-            sifr_hir::HirTupleTarget {
-                binding: sifr_hir::HirTupleTargetBinding::Field {
+            sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Field {
                     object: "node".to_string(),
                     field: "right".to_string(),
                 },

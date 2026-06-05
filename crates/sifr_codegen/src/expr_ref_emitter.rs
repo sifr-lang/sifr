@@ -1,5 +1,5 @@
 use crate::RustEmitter;
-use sifr_hir::HirExpr;
+use sifr_ir::HirExpr;
 use sifr_type_system::Type;
 
 fn uses_debug_display_format(ty: &Type) -> bool {

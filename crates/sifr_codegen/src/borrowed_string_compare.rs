@@ -1,4 +1,4 @@
-use sifr_hir::HirExpr;
+use sifr_ir::HirExpr;
 
 use crate::{
     resolve_alias_type_for_plain_call, RustEmitter, RustExpr, RustParam, RustStmt, RustType, Type,

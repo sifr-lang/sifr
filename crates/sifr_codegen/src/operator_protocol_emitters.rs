@@ -2,7 +2,7 @@ use crate::{
     try_lower_simple_stmt_with_scope_result_and_bindings, ClassScope, RustEmitter, RustExpr,
     RustItem, RustParam, RustStmt, RustType, RustTypeParam, ScopeContext, Visibility,
 };
-use sifr_hir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
+use sifr_ir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::Type;
 
 impl RustEmitter {
@@ -579,7 +579,7 @@ impl RustEmitter {
         iter: &HirExpr,
     ) -> Option<RustExpr> {
         if let HirExpr::IteratorCall { op, args, .. } = iter {
-            if *op == sifr_hir::HirIteratorOp::Iter && args.len() == 1 {
+            if *op == sifr_ir::HirIteratorOp::Iter && args.len() == 1 {
                 return self.lower_operator_string_chars_for_iter_ir(&args[0]);
             }
         }

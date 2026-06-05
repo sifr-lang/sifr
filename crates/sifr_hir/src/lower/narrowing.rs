@@ -148,7 +148,7 @@ pub(in crate::lower) fn apply_narrowing(
                     let narrowed = effects
                         .iter()
                         .find_map(|effect| match effect {
-                            crate::flow_graph::FlowEffect::Narrow {
+                            sifr_ir::FlowEffect::Narrow {
                                 binding,
                                 narrowed_type,
                                 ..

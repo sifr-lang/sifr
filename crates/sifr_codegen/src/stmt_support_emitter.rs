@@ -1,6 +1,6 @@
 use crate::hir_analysis::queries;
 use crate::{RustEmitter, RustExpr, RustStmt};
-use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirIteratorOp, HirStmt};
+use sifr_ir::{HirExceptHandler, HirExpr, HirFStringPart, HirIteratorOp, HirStmt};
 use sifr_type_system::Type;
 
 #[macro_use]

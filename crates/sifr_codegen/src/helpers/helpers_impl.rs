@@ -3,7 +3,7 @@ use crate::hir_analysis::{
     queries,
     traversal::{self, TraversalConfig},
 };
-use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
+use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
@@ -589,10 +589,7 @@ pub(crate) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
             found.set(true);
         } else if let HirStmt::TupleUnpack { targets, .. } = stmt {
             if targets.iter().any(|target| {
-                matches!(
-                    target.binding,
-                    sifr_hir::HirTupleTargetBinding::Field { .. }
-                )
+                matches!(target.binding, sifr_ir::HirTupleTargetBinding::Field { .. })
             }) {
                 found.set(true);
             }

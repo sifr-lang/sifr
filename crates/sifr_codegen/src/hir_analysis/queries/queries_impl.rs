@@ -1,6 +1,6 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
-use sifr_hir::{cfg, HirExpr, HirIteratorOp, HirPattern, HirStmt};
+use sifr_ir::{HirExpr, HirIteratorOp, HirPattern, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -42,39 +42,170 @@ impl ControlFlowEffect {
     }
 }
 
-impl From<cfg::FlowExitEffect> for ControlFlowEffect {
-    fn from(effect: cfg::FlowExitEffect) -> Self {
-        match effect {
-            cfg::FlowExitEffect::FallsThrough => Self::FallsThrough,
-            cfg::FlowExitEffect::AlwaysReturns => Self::AlwaysReturns,
-            cfg::FlowExitEffect::AlwaysRaises => Self::AlwaysRaises,
-            cfg::FlowExitEffect::AlwaysExits => Self::AlwaysExits,
+pub(crate) fn block_control_flow_effect(stmts: &[HirStmt]) -> ControlFlowEffect {
+    flow_summary(stmts).control_flow_effect()
+}
+
+pub(crate) fn reachable_top_level_stmt_indices(stmts: &[HirStmt]) -> Vec<usize> {
+    let mut reachable = Vec::new();
+    let mut falls_through = true;
+    for (idx, stmt) in stmts.iter().enumerate() {
+        if !falls_through {
+            break;
+        }
+        reachable.push(idx);
+        falls_through = stmt_summary(stmt).falls_through;
+    }
+    reachable
+}
+
+pub(crate) fn unreachable_top_level_stmt_indices(stmts: &[HirStmt]) -> Vec<usize> {
+    let reachable_len = reachable_top_level_stmt_indices(stmts).len();
+    (reachable_len..stmts.len()).collect()
+}
+
+pub(crate) fn body_contains_return(stmts: &[HirStmt]) -> bool {
+    flow_summary(stmts).has_return
+}
+
+pub(crate) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
+    flow_summary(stmts).has_value_return
+}
+
+#[derive(Debug, Clone, Copy)]
+struct FlowSummary {
+    falls_through: bool,
+    has_return: bool,
+    has_value_return: bool,
+    has_raise: bool,
+}
+
+impl FlowSummary {
+    const fn fallthrough() -> Self {
+        Self {
+            falls_through: true,
+            has_return: false,
+            has_value_return: false,
+            has_raise: false,
+        }
+    }
+
+    const fn return_stmt(has_value: bool) -> Self {
+        Self {
+            falls_through: false,
+            has_return: true,
+            has_value_return: has_value,
+            has_raise: false,
+        }
+    }
+
+    const fn raise_stmt() -> Self {
+        Self {
+            falls_through: false,
+            has_return: false,
+            has_value_return: false,
+            has_raise: true,
+        }
+    }
+
+    fn union(self, other: Self) -> Self {
+        Self {
+            falls_through: self.falls_through || other.falls_through,
+            has_return: self.has_return || other.has_return,
+            has_value_return: self.has_value_return || other.has_value_return,
+            has_raise: self.has_raise || other.has_raise,
+        }
+    }
+
+    fn sequence(self, next: Self) -> Self {
+        if self.falls_through {
+            Self {
+                falls_through: next.falls_through,
+                has_return: self.has_return || next.has_return,
+                has_value_return: self.has_value_return || next.has_value_return,
+                has_raise: self.has_raise || next.has_raise,
+            }
+        } else {
+            self
+        }
+    }
+
+    fn control_flow_effect(self) -> ControlFlowEffect {
+        if self.falls_through {
+            ControlFlowEffect::FallsThrough
+        } else if self.has_return && !self.has_raise {
+            ControlFlowEffect::AlwaysReturns
+        } else if self.has_raise && !self.has_return {
+            ControlFlowEffect::AlwaysRaises
+        } else {
+            ControlFlowEffect::AlwaysExits
         }
     }
 }
 
-pub(crate) fn block_control_flow_effect(stmts: &[HirStmt]) -> ControlFlowEffect {
-    ControlFlowEffect::from(cfg::flow_facts(stmts).exit_effect())
+fn flow_summary(stmts: &[HirStmt]) -> FlowSummary {
+    stmts
+        .iter()
+        .fold(FlowSummary::fallthrough(), |summary, stmt| {
+            summary.sequence(stmt_summary(stmt))
+        })
 }
 
-pub(crate) fn reachable_top_level_stmt_indices(stmts: &[HirStmt]) -> Vec<usize> {
-    cfg::flow_facts(stmts)
-        .reachable_top_level_stmt_indices()
-        .to_vec()
+fn branch_summary<'a>(branches: impl IntoIterator<Item = &'a [HirStmt]>) -> FlowSummary {
+    branches
+        .into_iter()
+        .map(flow_summary)
+        .reduce(FlowSummary::union)
+        .unwrap_or_else(FlowSummary::fallthrough)
 }
 
-pub(crate) fn unreachable_top_level_stmt_indices(stmts: &[HirStmt]) -> Vec<usize> {
-    cfg::flow_facts(stmts)
-        .unreachable_top_level_stmt_indices()
-        .to_vec()
-}
-
-pub(crate) fn body_contains_return(stmts: &[HirStmt]) -> bool {
-    cfg::flow_facts(stmts).has_reachable_return()
-}
-
-pub(crate) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
-    cfg::flow_facts(stmts).has_reachable_value_return()
+fn stmt_summary(stmt: &HirStmt) -> FlowSummary {
+    match stmt {
+        HirStmt::Return { value } => FlowSummary::return_stmt(
+            value
+                .as_ref()
+                .is_some_and(|expr| !matches!(expr, HirExpr::NoneLiteral)),
+        ),
+        HirStmt::Raise { .. } => FlowSummary::raise_stmt(),
+        HirStmt::If {
+            then_body,
+            elif_clauses,
+            else_body,
+            ..
+        } => {
+            let elif_bodies = elif_clauses.iter().map(|(_, body)| body.as_slice());
+            let else_branch = else_body
+                .as_deref()
+                .map_or_else(FlowSummary::fallthrough, flow_summary);
+            branch_summary(std::iter::once(then_body.as_slice()).chain(elif_bodies))
+                .union(else_branch)
+        }
+        HirStmt::While {
+            body, else_body, ..
+        }
+        | HirStmt::For {
+            body, else_body, ..
+        }
+        | HirStmt::AsyncFor {
+            body, else_body, ..
+        } => {
+            let body_summary = flow_summary(body);
+            let else_summary = else_body
+                .as_deref()
+                .map_or_else(FlowSummary::fallthrough, flow_summary);
+            body_summary.union(else_summary)
+        }
+        HirStmt::Match { arms, .. } => branch_summary(arms.iter().map(|arm| arm.body.as_slice())),
+        HirStmt::TryExcept { body, handlers, .. } => branch_summary(
+            std::iter::once(body.as_slice())
+                .chain(handlers.iter().map(|handler| handler.body.as_slice())),
+        ),
+        HirStmt::TryFinally { body, finalbody } => {
+            flow_summary(body).sequence(flow_summary(finalbody))
+        }
+        HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => flow_summary(body),
+        _ => FlowSummary::fallthrough(),
+    }
 }
 
 pub(crate) fn body_contains_yield(stmts: &[HirStmt]) -> bool {
@@ -283,7 +414,7 @@ pub(crate) fn collect_mutated_vars(
         }
         HirStmt::AsyncWith {
             kind:
-                sifr_hir::HirAsyncWithKind::UserDefined {
+                sifr_ir::HirAsyncWithKind::UserDefined {
                     context: HirExpr::Name { name, .. },
                     ..
                 },
@@ -451,7 +582,7 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
         HirStmt::TupleUnpack { targets, .. } => {
             for target in targets {
                 if !target.rebind_existing {
-                    if let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding {
+                    if let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding {
                         defined.insert(name.clone());
                     }
                 }

@@ -1,5 +1,5 @@
 use crate::{RustEmitter, RustExpr};
-use sifr_hir::{HirExpr, HirIteratorOp};
+use sifr_ir::{HirExpr, HirIteratorOp};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 
 pub(super) fn registry_uses_debug_display_format(ty: &Type) -> bool {

@@ -3,7 +3,7 @@ use crate::{
     is_hashable_type_codegen, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt,
     RustType, RustTypeParam, Visibility,
 };
-use sifr_hir::{HirClass, HirFunction, MethodKind};
+use sifr_ir::{HirClass, HirFunction, MethodKind};
 use sifr_type_system::Type;
 
 impl RustEmitter {

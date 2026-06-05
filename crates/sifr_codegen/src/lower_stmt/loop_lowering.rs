@@ -122,7 +122,7 @@ pub(super) fn try_lower_simple_for_stmt(
 pub(super) fn try_lower_simple_string_chars_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
     let iter_source = match iter {
         HirExpr::IteratorCall {
-            op: sifr_hir::HirIteratorOp::Iter,
+            op: sifr_ir::HirIteratorOp::Iter,
             args,
             ..
         } if args.len() == 1 => &args[0],
@@ -244,7 +244,7 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
 
     let lowered_iter_call = match iter {
         HirExpr::IteratorCall {
-            op: sifr_hir::HirIteratorOp::Iter,
+            op: sifr_ir::HirIteratorOp::Iter,
             args,
             ..
         } if args.len() == 1 => try_lower_leaf_or_name_expr(iter).map(normalize_for_iter_expr),
@@ -253,7 +253,7 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
 
     let iter_source = match iter {
         HirExpr::IteratorCall {
-            op: sifr_hir::HirIteratorOp::Iter,
+            op: sifr_ir::HirIteratorOp::Iter,
             args,
             ..
         } if args.len() == 1 => &args[0],

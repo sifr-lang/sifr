@@ -242,7 +242,7 @@ fn parse_dependent_phase_ran(phases: &[PhaseExecution]) -> bool {
     .any(|phase| mark_phase_readonly(phases, phase))
 }
 
-fn frontend_hir(source: &str, file: Option<&Path>) -> Option<sifr_hir::HirModule> {
+fn frontend_hir(source: &str, file: Option<&Path>) -> Option<sifr_ir::HirModule> {
     let path = file.unwrap_or_else(|| Path::new("main.sifr"));
     let input = sifr_frontend::FrontendInput {
         path: sifr_frontend::SourcePath::new(path),

@@ -1,6 +1,6 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::stdlib_filter::strip_rust_items_by_name;
-use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
+use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
 use std::collections::HashSet;
 
 use super::{RustItem, Type};
@@ -622,7 +622,7 @@ pub(crate) fn module_uses_task_scope(module: &HirModule) -> bool {
         matches!(
             stmt,
             HirStmt::AsyncWith {
-                kind: sifr_hir::HirAsyncWithKind::TaskScope | sifr_hir::HirAsyncWithKind::TaskGroup,
+                kind: sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup,
                 ..
             }
         )

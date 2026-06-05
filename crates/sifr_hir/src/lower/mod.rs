@@ -129,7 +129,9 @@ mod workload_annotations;
 use asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
-pub use diagnostic_types::{HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic};
+pub(in crate::lower) use diagnostic_types::{
+    HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+};
 pub use external_defs::ExternalDefs;
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;

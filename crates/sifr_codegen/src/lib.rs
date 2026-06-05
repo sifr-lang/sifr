@@ -51,7 +51,7 @@ pub(crate) use lib_support::{
     homogeneous_large_tuple_backing_array, resolve_alias_type_for_plain_call,
     try_lower_leaf_or_name_expr_result,
 };
-pub(crate) use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
+pub(crate) use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
 pub(crate) use sifr_type_system::{ParamConvention, Type};
 pub(crate) use std::cell::{Cell, RefCell};
 pub(crate) use std::collections::{HashMap, HashSet};

@@ -10,14 +10,14 @@ pub mod cfg;
 pub mod flow_graph;
 mod hir_nodes;
 mod lower;
-mod lowering_outcome;
 mod scope;
 
 pub use hir_nodes::*;
 pub use lower::{
     lower_module, lower_module_stdlib, lower_module_stdlib_with_externals,
-    lower_module_with_externals, lower_module_with_externals_and_name, ExternalDefs, HirDiagnostic,
-    LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+    lower_module_with_externals, lower_module_with_externals_and_name, ExternalDefs,
 };
-pub use lowering_outcome::LoweringOutcome;
 pub use scope::{NarrowingSnapshot, Scope};
+pub use sifr_ir::{
+    HirDiagnostic, LoweringOutcome, LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+};

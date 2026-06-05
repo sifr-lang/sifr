@@ -45,7 +45,7 @@ pub(super) fn try_lower_simple_callable_expr(expr: &HirExpr) -> Option<RustExpr>
 pub(super) fn unwrap_simple_iter_source_expr(expr: &HirExpr) -> &HirExpr {
     match expr {
         HirExpr::IteratorCall {
-            op: sifr_hir::HirIteratorOp::Iter,
+            op: sifr_ir::HirIteratorOp::Iter,
             args,
             ..
         } if args.len() == 1 => &args[0],

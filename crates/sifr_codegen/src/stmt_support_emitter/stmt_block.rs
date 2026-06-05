@@ -41,7 +41,7 @@ impl RustEmitter {
                 let mut lowered =
                     crate::lower_tuple_unpack_targets(targets, lowered_value, &self.mutated_vars);
                 for target in targets {
-                    let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding else {
+                    let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
                         continue;
                     };
                     let cache_stmt = if target.rebind_existing {

@@ -191,8 +191,8 @@ impl RustEmitter {
                     || Self::expr_mentions_name(collection, needle)
             }
             HirExpr::FString { parts, .. } => parts.iter().any(|part| match part {
-                sifr_hir::HirFStringPart::Literal(_) => false,
-                sifr_hir::HirFStringPart::Expr(expr) => Self::expr_mentions_name(expr, needle),
+                sifr_ir::HirFStringPart::Literal(_) => false,
+                sifr_ir::HirFStringPart::Expr(expr) => Self::expr_mentions_name(expr, needle),
             }),
             HirExpr::Slice {
                 object,

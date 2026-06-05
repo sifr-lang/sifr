@@ -125,7 +125,7 @@ pub(crate) fn collect_string_cache_uses(expr: &HirExpr, used: &mut HashSet<Strin
         }
         HirExpr::FString { parts, .. } => {
             for part in parts {
-                if let sifr_hir::HirFStringPart::Expr(expr) = part {
+                if let sifr_ir::HirFStringPart::Expr(expr) = part {
                     collect_string_cache_uses(expr, used);
                 }
             }

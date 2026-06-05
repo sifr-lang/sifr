@@ -2,7 +2,7 @@ use crate::{
     try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustItem, RustLiteral,
     RustMatchArm, RustStmt, RustType, Visibility,
 };
-use sifr_hir::HirExpr;
+use sifr_ir::HirExpr;
 use sifr_type_system::Type;
 
 pub(super) fn resolve_alias_type(ty: &Type) -> &Type {

@@ -8,7 +8,7 @@ fn lowers_simple_match_with_literal_and_wildcard_patterns() {
         },
         subject_ty: Type::Int,
         arms: vec![
-            sifr_hir::HirMatchArm {
+            sifr_ir::HirMatchArm {
                 pattern: HirPattern::Literal {
                     value: HirExpr::IntLiteral(1),
                 },
@@ -17,7 +17,7 @@ fn lowers_simple_match_with_literal_and_wildcard_patterns() {
                     expr: HirExpr::IntLiteral(10),
                 }],
             },
-            sifr_hir::HirMatchArm {
+            sifr_ir::HirMatchArm {
                 pattern: HirPattern::Wildcard,
                 guard: None,
                 body: vec![HirStmt::Expr {
@@ -46,7 +46,7 @@ fn lowers_match_with_class_patterns_and_captures() {
         },
         subject_ty: point_ty,
         arms: vec![
-            sifr_hir::HirMatchArm {
+            sifr_ir::HirMatchArm {
                 pattern: HirPattern::Class {
                     class_name: "Point".to_string(),
                     fields: vec![
@@ -70,7 +70,7 @@ fn lowers_match_with_class_patterns_and_captures() {
                     value: Some(HirExpr::StringLiteral("axis".to_string())),
                 }],
             },
-            sifr_hir::HirMatchArm {
+            sifr_ir::HirMatchArm {
                 pattern: HirPattern::Wildcard,
                 guard: None,
                 body: vec![HirStmt::Return {
@@ -112,7 +112,7 @@ fn lowers_match_with_string_literal_patterns() {
         },
         subject_ty: Type::Str,
         arms: vec![
-            sifr_hir::HirMatchArm {
+            sifr_ir::HirMatchArm {
                 pattern: HirPattern::Literal {
                     value: HirExpr::StringLiteral("GET".to_string()),
                 },
@@ -121,7 +121,7 @@ fn lowers_match_with_string_literal_patterns() {
                     value: Some(HirExpr::StringLiteral("read".to_string())),
                 }],
             },
-            sifr_hir::HirMatchArm {
+            sifr_ir::HirMatchArm {
                 pattern: HirPattern::Wildcard,
                 guard: None,
                 body: vec![HirStmt::Return {

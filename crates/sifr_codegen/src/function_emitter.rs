@@ -9,7 +9,7 @@ use crate::{
     },
     hir_analysis::traversal::{self, TraversalConfig},
 };
-use sifr_hir::{HirExpr, HirFunction, HirModule, HirParam, HirStmt};
+use sifr_ir::{HirExpr, HirFunction, HirModule, HirParam, HirStmt};
 use sifr_type_system::{make_union, OwnershipKind, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
