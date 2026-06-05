@@ -1,11 +1,5 @@
 {
   "schema_version": 1,
-  "aliases": {
-    "quick": "create-pr",
-    "pr": "merge",
-    "full": "merge",
-    "stress": "release"
-  },
   "lanes": [
     {
       "name": "create-pr",
@@ -24,7 +18,7 @@
       "performance_budget": "smoke",
       "crate_tests": "smoke",
       "e2e": {
-        "fixture_manifest": "verification/validation_lanes/quick_e2e_manifest.json",
+        "fixture_manifest": "verification/validation_lanes/create_pr_e2e_manifest.json",
         "sifr_jobs": 2,
         "rust_jobs": 2,
         "run_jobs": 2,
@@ -60,7 +54,7 @@
       "performance_budget": "representative",
       "crate_tests": "full",
       "e2e": {
-        "fixture_manifest": "verification/validation_lanes/pr_e2e_manifest.json",
+        "fixture_manifest": "verification/validation_lanes/merge_e2e_manifest.json",
         "sifr_jobs": 4,
         "rust_jobs": 3,
         "run_jobs": 3,

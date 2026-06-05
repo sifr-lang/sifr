@@ -37,8 +37,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--profile",
-        choices=("create-pr", "merge", "quick", "pr", "nightly", "release", "full", "stress"),
-        default="pr",
+        choices=("create-pr", "merge", "nightly", "release"),
+        default="merge",
         help="Execution profile.",
     )
     parser.add_argument(
@@ -88,16 +88,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def canonicalize_profile(profile: str) -> str:
-    if profile == "quick":
-        return "create-pr"
-    if profile == "pr" or profile == "full":
-        return "merge"
-    if profile == "stress":
-        return "release"
-    return profile
-
-
 def normalize_string(value: str, repo_root: Path) -> str:
     normalized = value.replace("\r\n", "\n").replace("\r", "\n")
     normalized = normalized.replace(str(repo_root), "<WORKSPACE>")
@@ -143,10 +133,9 @@ def load_text(path: Path) -> str:
 
 
 def should_run_suite(profile: str, suite_name: str) -> bool:
-    canonical_profile = canonicalize_profile(profile)
-    if canonical_profile == "create-pr":
+    if profile == "create-pr":
         return False
-    if canonical_profile == "merge":
+    if profile == "merge":
         return suite_name in {
             "diagnostics",
             "project",

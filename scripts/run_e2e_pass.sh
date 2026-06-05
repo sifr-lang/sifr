@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-PROFILE="${SIFR_E2E_PROFILE:-pr}"
+PROFILE="${SIFR_E2E_PROFILE:-merge}"
 SIFR_JOBS_OVERRIDE=""
 RUST_JOBS_OVERRIDE=""
 RUN_JOBS_OVERRIDE=""
@@ -23,14 +23,8 @@ Profiles:
   nightly Broad pass-corpus lane; cache enabled.
   release Highest-confidence local gate; cache enabled.
 
-Legacy aliases:
-  quick   Alias for `create-pr`
-  pr      Alias for `merge`
-  full    Alias for `merge`
-  stress  Alias for `release`
-
 Options:
-  --profile <create-pr|merge|nightly|release|quick|pr|full|stress> Local execution profile (default: pr)
+  --profile <create-pr|merge|nightly|release> Local execution profile (default: merge)
   --sifr-jobs <n>              Parallel Sifr compile workers
   --rust-jobs <n>              Parallel group build workers
   --run-jobs <n>               Parallel group run workers
@@ -43,8 +37,8 @@ Options:
 EOF
 }
 
-canonicalize_profile() {
-  python3 "${SCRIPT_DIR}/validation_lane.py" canonical-profile --profile "$1"
+resolve_profile() {
+  python3 "${SCRIPT_DIR}/validation_lane.py" profile --profile "$1"
 }
 
 set_profile_defaults() {
@@ -56,7 +50,7 @@ set_profile_defaults() {
       RUN_JOBS="2"
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
-      FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/quick_e2e_manifest.json"
+      FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/create_pr_e2e_manifest.json"
       ;;
     merge)
       SIFR_JOBS="4"
@@ -64,7 +58,7 @@ set_profile_defaults() {
       RUN_JOBS="3"
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
-      FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/pr_e2e_manifest.json"
+      FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/merge_e2e_manifest.json"
       ;;
     nightly|release)
       SIFR_JOBS="6"
@@ -133,7 +127,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROFILE="$(canonicalize_profile "${PROFILE}")"
+PROFILE="$(resolve_profile "${PROFILE}")"
 set_profile_defaults "${PROFILE}"
 
 SIFR_JOBS="${SIFR_E2E_SIFR_JOBS:-${SIFR_JOBS}}"

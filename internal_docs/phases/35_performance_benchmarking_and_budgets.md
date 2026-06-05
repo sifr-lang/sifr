@@ -92,7 +92,7 @@ Phase 35 migrates from today's `sifr_driver/src/frontend/` functions to crate-ow
 3. During migration, `sifr_driver` may temporarily re-export or wrap `sifr_frontend` so callers can move incrementally, but the temporary facade must not own independent semantics.
 4. Update `sifr_driver` CLI/project/test flows to call `sifr_frontend` directly.
 5. Remove temporary `sifr_driver::frontend_query` shims and document any remaining raw `sifr_python_ast`/`sifr_python_parser` dependencies with owner and removal criteria.
-6. Add a split-brain guardrail in `scripts/run_all_tests.sh --profile quick` that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` internals. The guardrail must be structured so Phase 36 can extend it to tooling dependency checks without rewriting the core mechanism.
+6. Add a split-brain guardrail in `scripts/run_all_tests.sh --profile create-pr` that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` internals. The guardrail must be structured so Phase 36 can extend it to tooling dependency checks without rewriting the core mechanism.
 
 ## Shared Frontend API Contract
 
@@ -573,7 +573,7 @@ flowchart TD
   - Implement process-local module-level query cache keys and invalidation reports.
   - Integrate Phase 19 stdlib cache fingerprinting so stdlib reuse is an explicit query input.
   - Add representative `sifr_syntax` token/trivia fixtures and the Sifr Ruff fork update/rebase contract check.
-  - Add the split-brain guardrail script and wire it into the quick validation lane.
+  - Add the split-brain guardrail script and wire it into the create-pr validation lane.
 - Definition of done:
   - `sifr_syntax` compiles and wraps parse/source-map/token/trivia surfaces without owning semantics.
   - The frontend API compiles and has unit tests for single-file load, project load, parse, lower, type-check, diagnostics, graph inspection, source-map inspection, and per-module/project analysis queries.
@@ -613,14 +613,14 @@ flowchart TD
 ### milestone_35_3: Enforcement Integration
 - Scope:
   - Add a clearly named "Performance Budget Checks" step to `scripts/run_all_tests.sh`.
-  - Wire budget checks into `scripts/run_all_tests.sh --profile pr`.
-  - Keep `quick` fast by running manifest/schema/negative-seed budget checks and a minimal representative query-cache scenario rather than the full benchmark corpus.
+  - Wire budget checks into `scripts/run_all_tests.sh --profile merge`.
+  - Keep `create-pr` fast by running manifest/schema/negative-seed budget checks and a minimal representative query-cache scenario rather than the full benchmark corpus.
   - Add optional `nightly` or `release` coverage for broader benchmark sampling if the existing validation lane policy supports it.
   - Ensure local and CI commands are the same; CI-only performance behavior is forbidden.
 - Definition of done:
   - Regressions fail local gates unless a valid waiver exists.
-  - `scripts/run_all_tests.sh --profile quick` exercises budget schema, waiver schema, negative seeds, and minimal cache-contract checks.
-  - `scripts/run_all_tests.sh --profile pr` runs the authoritative budget gate on the required benchmark corpus or a reviewed deterministic representative subset whose full-corpus counterpart is separately documented.
+  - `scripts/run_all_tests.sh --profile create-pr` exercises budget schema, waiver schema, negative seeds, and minimal cache-contract checks.
+  - `scripts/run_all_tests.sh --profile merge` runs the authoritative budget gate on the required benchmark corpus or a reviewed deterministic representative subset whose full-corpus counterpart is separately documented.
   - Failure output points to benchmark id, budget id, measured value, threshold, and waiver status.
 
 ### milestone_35_4b: CLI Adoption and Query Regression Lock
@@ -642,17 +642,17 @@ flowchart TD
 
 ### Entry criteria
 - Phase 34 exit gate is satisfied.
-- Phase 34 generated-code quality gates are enforced in `scripts/run_all_tests.sh --profile pr`.
+- Phase 34 generated-code quality gates are enforced in `scripts/run_all_tests.sh --profile merge`.
 - Phase 27 non-regression baseline is required at phase start and must remain green through completion.
 - Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
 - Any milestone that regresses these invariants is incomplete, even if its local scope passes.
 
 ### Milestone quality checks
 - Local validation gates pass for each milestone before merge:
-  - `scripts/run_all_tests.sh --profile quick`
+  - `scripts/run_all_tests.sh --profile create-pr`
   - milestone-specific `verification/performance/*.py` checks added by the milestone
 - The authoritative pre-PR gate passes before phase-closing PRs:
-  - `scripts/run_all_tests.sh --profile pr`
+  - `scripts/run_all_tests.sh --profile merge`
 - No benchmark, budget, waiver, or cache contract uses CI-only behavior.
 - No stale query result may be returned after source update.
 - No semantic diagnostics may be generated outside `sifr_frontend` plus approved `sifr_hir` internals.
@@ -674,7 +674,7 @@ flowchart TD
   - Positive: clean benchmark output within median, p95, RSS, timeout, and cache-hit budgets passes.
   - Negative: seeded median regression, p95 regression, RSS regression, timeout, missing result, unknown budget id, expired waiver, malformed waiver, and attempted correctness waiver fail.
 - `milestone_35_3`:
-  - Positive: `scripts/run_all_tests.sh --profile quick` and `scripts/run_all_tests.sh --profile pr` invoke the expected performance checks for their lanes.
+  - Positive: `scripts/run_all_tests.sh --profile create-pr` and `scripts/run_all_tests.sh --profile merge` invoke the expected performance checks for their lanes.
   - Negative: injected regression seed fails the gate locally with benchmark id, threshold, measured value, and waiver status in output.
 - `milestone_35_4b`:
   - Positive: CLI `check`, `build`, `run`, `emit`, project build/check, and test-runner frontend flows consume `sifr_frontend` and preserve diagnostics/exit behavior.
@@ -683,7 +683,7 @@ flowchart TD
 
 ### CI Integration
 
-Performance budget checks must run in `scripts/run_all_tests.sh --profile pr` under a clearly named "Performance Budget Checks" step. Local validation and CI use the same commands. CI-only performance behavior is not allowed.
+Performance budget checks must run in `scripts/run_all_tests.sh --profile merge` under a clearly named "Performance Budget Checks" step. Local validation and CI use the same commands. CI-only performance behavior is not allowed.
 
 ## Exit criteria
 
@@ -698,8 +698,8 @@ Performance budget checks must run in `scripts/run_all_tests.sh --profile pr` un
 - `verification/performance/check_budgets.py` passes and fails on seeded regressions.
 - `verification/performance/check_frontend_cache_contract.py` passes and fails on seeded stale-result or invalidation violations.
 - `verification/performance/check_split_brain_guardrail.py` passes and fails on seeded split-brain entrypoints.
-- `scripts/run_all_tests.sh --profile quick` passes.
-- `scripts/run_all_tests.sh --profile pr` passes.
+- `scripts/run_all_tests.sh --profile create-pr` passes.
+- `scripts/run_all_tests.sh --profile merge` passes.
 - Phase 27 non-regression contract remains green.
 - Validation evidence is recorded in the phase execution checklist issue before merge.
 

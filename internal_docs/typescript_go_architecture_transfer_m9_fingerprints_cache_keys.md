@@ -92,8 +92,8 @@ M9 focused validation so far:
 - `cargo test -p sifr -- --skip test_e2e_pass`
 - `cargo clippy -p sifr_frontend -- -D warnings`
 - `cargo clippy --workspace -- -D warnings`
-- `scripts/run_all_tests.sh --profile quick` -> PASS, report
-  `target/validation_lane_reports/quick.latest.json`, wall time 338.91s,
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
+  `target/validation_lane_reports/create-pr.latest.json`, wall time 338.91s,
   advisories: warm wall-time budget exceeded; group skew is high
 - Claude reviewer pass 7 -> SATISFIED
   (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-7.md`)

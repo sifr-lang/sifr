@@ -127,8 +127,8 @@ python3 verification/tooling/check_completion_quality.py
 python3 verification/tooling/check_completion_quality.py --self-test
 python3 verification/tooling/check_phase36_closeout.py
 python3 verification/tooling/check_phase36_closeout.py --self-test
-scripts/run_all_tests.sh --profile quick
-scripts/run_all_tests.sh --profile pr
+scripts/run_all_tests.sh --profile create-pr
+scripts/run_all_tests.sh --profile merge
 ```
 
 `check_analysis_snapshot_coherence.py` preserves the phase-contract script name
@@ -200,7 +200,7 @@ metadata, and implemented `sifr lint` option coverage. `check_linter_diagnostic_
 fails if analysis or LSP code-action handlers gate policy actions by
 `SIFR-LINT-` string prefixes instead of typed `Hard`/`Policy` diagnostic data.
 
-The quick validation lane runs the linter reuse contract, rule/suppression
+The create-pr validation lane runs the linter reuse contract, rule/suppression
 contract, diagnostic-class guardrail, LSP smoke/stress checks, editor asset
 guardrail, VS Code extension contract/package checks, and phase closeout checks.
 

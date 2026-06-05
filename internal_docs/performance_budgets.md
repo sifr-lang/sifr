@@ -33,9 +33,9 @@ Run the budget gate against checked-in baselines:
 python3 verification/performance/check_budgets.py
 ```
 
-`scripts/run_all_tests.sh --profile quick` runs manifest validation, benchmark
+`scripts/run_all_tests.sh --profile create-pr` runs manifest validation, benchmark
 negative seeds, budget/waiver negative seeds, the checked-in baseline budget
-gate, and a minimal frontend-query smoke. `--profile pr`, `nightly`, and
+gate, and a minimal frontend-query smoke. `--profile merge`, `nightly`, and
 `release` run the same schema and negative checks, execute a reviewed
 representative subset with the manifest sample counts into
 `target/performance/<profile>.budget.latest.json`, and run `check_budgets.py

@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/check_e2e_sequential_parallel_equivalence.sh [--profile <pr|nightly|release|full|stress>] [--help]
+Usage: scripts/check_e2e_sequential_parallel_equivalence.sh [--profile <merge|nightly|release>] [--help]
 
 Run the e2e pass suite with sequential and parallel worker settings and assert report signature equivalence.
 EOF
@@ -31,9 +31,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-PROFILE="$(python3 "${SCRIPT_DIR}/validation_lane.py" canonical-profile --profile "${PROFILE}")"
-if [[ "${PROFILE}" == "quick" ]]; then
-  echo "sequential-vs-parallel equivalence is not part of the quick lane; use pr, nightly, or release" >&2
+PROFILE="$(python3 "${SCRIPT_DIR}/validation_lane.py" profile --profile "${PROFILE}")"
+if [[ "${PROFILE}" == "create-pr" ]]; then
+  echo "sequential-vs-parallel equivalence is not part of the create-pr lane; use merge, nightly, or release" >&2
   exit 2
 fi
 REPO_ROOT="${SCRIPT_DIR}/.."

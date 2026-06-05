@@ -38,8 +38,8 @@ python3 scripts/check_hir_maintainability_guardrails.py
 Before considering any task done, run local validation on your changes:
 
 ```bash
-scripts/run_all_tests.sh --profile quick      # Fast signal — use for PRs
-scripts/run_all_tests.sh                      # Full profile — default
+scripts/run_all_tests.sh --profile create-pr  # Fast signal — use for PRs
+scripts/run_all_tests.sh                      # Merge gate — default
 ```
 
 CI mirrors these exact scripts — no CI-only behavior. Do not wait on CI; validate locally first.

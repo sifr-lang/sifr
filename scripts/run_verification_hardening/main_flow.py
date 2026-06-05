@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from .core import canonicalize_profile, parse_args, should_run_suite
+from .core import parse_args, should_run_suite
 from .fixedbugs_and_crashes import collect_fixedbug_ids, run_crashes_suite, run_fixedbugs_suite
 from .oss_and_determinism import (
     deterministic_suite_shard,
@@ -43,7 +43,6 @@ def emit_case_timings(suite_name: str, suite_result: dict[str, Any]) -> None:
 
 def main() -> int:
     args = parse_args()
-    args.profile = canonicalize_profile(args.profile)
     if args.shard_total < 1:
         raise SystemExit("--shard-total must be >= 1")
     if args.shard_index < 0 or args.shard_index >= args.shard_total:

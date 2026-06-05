@@ -28,7 +28,7 @@ transient generated project roots for inspection.
 
 ## PR Lane Integration
 
-`scripts/run_all_tests.sh --profile pr` includes a clearly named
+`scripts/run_all_tests.sh --profile merge` includes a clearly named
 `Generated Code Quality Checks` step that runs all generated-code quality
 scripts. The same scripts are used locally and in CI.
 

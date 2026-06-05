@@ -22,7 +22,7 @@ until the alias-removal PR deletes or rewrites them:
 - `crates/sifr/tests/e2e/fail/bigint_int_mixed_comparison.sifr`
 - `crates/sifr/tests/e2e/fail/bigint_overflow_conversion.sifr`
 
-The quick and PR e2e pass manifests must not include the transition-only
+The create-pr and merge e2e pass manifests must not include the transition-only
 `bigint_arithmetic` fixture. Full e2e validation may continue to discover the
 quarantined files until alias removal so regression coverage is preserved.
 

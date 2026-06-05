@@ -4,14 +4,13 @@ status: implemented
 
 Implementation note: lane policy is now documented in
 `internal_docs/validation_lane_policy.md`. Canonical lanes are `create-pr`,
-`merge`, `nightly`, and `release`; legacy `quick`, `pr`, `full`, and `stress`
-remain aliases.
+`merge`, `nightly`, and `release`.
 
 ## Objective
 
 Make the local gates used for PR creation fast, deterministic, and compiler-relevant without weakening Sifr's correctness guarantees.
 
-This phase is complete only when `scripts/run_all_tests.sh --profile quick` is a reliable fast create-PR gate, the authoritative merge gate has a measured and justified composition, every long-running bucket emits per-case timing, and non-compiler release/editor/distribution checks are moved to change-aware, merge, nightly, or release lanes with explicit ownership.
+This phase is complete only when `scripts/run_all_tests.sh --profile create-pr` is a reliable fast create-PR gate, the authoritative merge gate has a measured and justified composition, every long-running bucket emits per-case timing, and non-compiler release/editor/distribution checks are moved to change-aware, merge, nightly, or release lanes with explicit ownership.
 
 ## Initial Benchmark Evidence
 
@@ -19,11 +18,11 @@ Benchmarks were run locally on 2026-06-04 from `/Users/yaseralnajjar/work/sifr/c
 
 | Lane or bucket | Result | Wall time | Notes |
 |---|---:|---:|---|
-| `scripts/run_all_tests.sh --profile quick` | passed | 367.18s reported, 375.36s wrapper | Cold e2e cache; exceeds warm target but within cold target. |
-| `scripts/run_all_tests.sh --profile quick` normal rerun | passed | 309.43s reported | Warm e2e cache; still exceeds 5-minute warm target. |
-| quick e2e, cold | passed | 57.34s in full lane, 49.00s test body | `cache_hits=0/12`, largest group 19 fixtures, median 2. |
-| quick e2e, warm direct | passed | 2.87s wall, 2.05s test body | `cache_hits=12/12`; e2e is not the warm-cache root cause. |
-| `scripts/run_all_tests.sh --profile pr` timestamped run | failed before completion | 225.36s to failure | Failed in `LSP protocol stress: FAIL: LSP exited 1:` before PR-only later buckets. |
+| `scripts/run_all_tests.sh --profile create-pr` | passed | 367.18s reported, 375.36s wrapper | Cold e2e cache; exceeds warm target but within cold target. |
+| `scripts/run_all_tests.sh --profile create-pr` normal rerun | passed | 309.43s reported | Warm e2e cache; still exceeds 5-minute warm target. |
+| create-pr e2e, cold | passed | 57.34s in create-pr lane, 49.00s test body | `cache_hits=0/12`, largest group 19 fixtures, median 2. |
+| create-pr e2e, warm direct | passed | 2.87s wall, 2.05s test body | `cache_hits=12/12`; e2e is not the warm-cache root cause. |
+| `scripts/run_all_tests.sh --profile merge` timestamped run | failed before completion | 225.36s to failure | Failed in `LSP protocol stress: FAIL: LSP exited 1:` before merge-only later buckets. |
 | PR e2e, cold direct | passed | 41.29s wall, 40.42s test body | `cache_hits=0/19`, largest group 43 fixtures, median 1. |
 | PR e2e, warm direct | passed | 2.66s wall, 1.70s test body | `cache_hits=19/19`. |
 | PR validation contract matrix direct | passed | 89.33s wall, 87.21s test body | 15 rows; Phase 23 graph/isolation was 33.25s. |
@@ -31,7 +30,7 @@ Benchmarks were run locally on 2026-06-04 from `/Users/yaseralnajjar/work/sifr/c
 | PR performance budget subset direct | passed | 147.53s wall | Multi-minute silent bucket. |
 | Generated-code quality grouped PR bucket | interrupted after >11m | incomplete | Corpus and panic-scan passed; run was still in remaining generated-code quality scripts. |
 
-Top cold quick-lane sections from timestamped log:
+Top cold create-pr lane sections from timestamped log:
 
 | Section | Duration |
 |---|---:|
@@ -45,11 +44,11 @@ Top cold quick-lane sections from timestamped log:
 
 ## Root Causes
 
-1. The primary authoritative PR-gate blocker is generated-code quality. The grouped PR-only bucket was interrupted after more than 11 minutes: `corpus` and `panic-scan` had passed, but remaining `rustfmt`, `clippy`, `determinism`, and `demos` scripts were still not complete. The scripts repeat the full manifest across separate modes and create transient generated Rust projects. Observed process state showed release-mode dependency compilation, including crates such as `regex-automata`, inside isolated generated workspaces. The bucket also lacks per-fixture timing, so a slow fixture is hard to identify.
+1. The primary authoritative merge-gate blocker is generated-code quality. The grouped merge-only bucket was interrupted after more than 11 minutes: `corpus` and `panic-scan` had passed, but remaining `rustfmt`, `clippy`, `determinism`, and `demos` scripts were still not complete. The scripts repeat the full manifest across separate modes and create transient generated Rust projects. Observed process state showed release-mode dependency compilation, including crates such as `regex-automata`, inside isolated generated workspaces. The bucket also lacks per-fixture timing, so a slow fixture is hard to identify.
 2. `check_diagnostic_source_canonicalization_contract.py` is a focused diagnostic contract implemented as about 42 separate `cargo run -q -p sifr -- ...` CLI invocations. It should be an in-process Rust or Python harness over one built compiler binary or frontend API, not repeated Cargo-launched checks.
 3. Developer tooling checks are broad and serial. They include formatter contract, VS Code packaging, editor asset checks, analysis snapshots, LSP protocol checks, LSP large-session smoke, and many self-tests. Several are editor/tooling release contracts rather than core compiler PR-creation gates.
-4. `lsp_protocol_stress.py` is sensitive to instrumentation or full-lane process conditions. It passed alone, in a smoke-to-stress sequence, and in the normal quick lane, but failed twice inside timestamped quick/pr full-lane runs with `LSP exited 1` and empty stderr after a long quiet interval. Blocking checks need deterministic, actionable failure evidence.
-5. The validation contract matrix repeatedly exercises project-mode/full-mode integration rows. These rows are compiler-relevant, but the current quick and PR gates include more expensive cross-mode project-build coverage than a fast create-PR gate should carry.
+4. `lsp_protocol_stress.py` is sensitive to instrumentation or broad-lane process conditions. It passed alone, in a smoke-to-stress sequence, and in the normal create-pr lane, but failed twice inside timestamped broad-lane runs with `LSP exited 1` and empty stderr after a long quiet interval. Blocking checks need deterministic, actionable failure evidence.
+5. The validation contract matrix repeatedly exercises project-mode/full-mode integration rows. These rows are compiler-relevant, but the current create-pr and merge gates include more expensive cross-mode project-build coverage than a fast create-PR gate should carry.
 6. PR performance budgets are meaningful but silent and multi-minute. They need per-case progress and a smaller smoke subset for PR creation, with the broader subset reserved for merge or performance-sensitive changes.
 7. E2E pass is not the main warm-cache problem, but cold runs have high group skew. Large groups of 19 and 43 fixtures versus medians of 2 and 1 make cold rebuilds uneven.
 
@@ -143,7 +142,7 @@ TypeScript-Go keeps regular `go test ./...` usable, relies on Go test caching, a
 
 Before closing this ad hoc phase:
 
-- `scripts/run_all_tests.sh --profile quick`
+- `scripts/run_all_tests.sh --profile create-pr`
 - create-PR lane command after implementation
 - authoritative merge lane command after implementation
 - `cargo fmt --check`
@@ -158,15 +157,15 @@ Measured locally after implementation on 2026-06-05 from `/Users/yaseralnajjar/w
 
 | Lane or bucket | Before | After | Status |
 |---|---:|---:|---|
-| create-PR lane cold (`scripts/run_all_tests.sh --profile quick`) | 367.18s reported, 375.36s wrapper | 206.74s reported | Under 300s cold target. |
-| create-PR lane warm (`scripts/run_all_tests.sh --profile quick`) | 309.43s reported | 74.82s reported | Under 120s warm target. |
-| merge lane warm/cold-local (`scripts/run_all_tests.sh --profile merge`) | `pr` failed before completion at 225.36s | 595.66s reported | Under 15-minute warm target; e2e cache was cold for this run. |
+| create-PR lane cold (`scripts/run_all_tests.sh --profile create-pr`) | 367.18s reported, 375.36s wrapper | 206.74s reported | Under 300s cold target. |
+| create-PR lane warm (`scripts/run_all_tests.sh --profile create-pr`) | 309.43s reported | 74.82s reported | Under 120s warm target. |
+| merge lane warm/cold-local (`scripts/run_all_tests.sh --profile merge`) | failed before completion at 225.36s | 595.66s reported | Under 15-minute warm target; e2e cache was cold for this run. |
 | Diagnostic source canonicalization contract | 80.48s | 3.18s | Under 10s warm target. |
 | Generated-code smoke | PR grouped bucket interrupted after >11m | 18.11s in create-PR lane | Under 30s warm target. |
-| quick e2e cold | 57.34s lane bucket, `cache_hits=0/12`, largest group 19, median 2 | 55.12s test body, `cache_hits=0/18`, largest group 8, median 2 | Group skew capped. |
-| quick e2e warm | 2.87s direct | 1.66s test body, `cache_hits=18/18` | Warm cache preserved. |
+| create-pr e2e cold | 57.34s lane bucket, `cache_hits=0/12`, largest group 19, median 2 | 55.12s test body, `cache_hits=0/18`, largest group 8, median 2 | Group skew capped. |
+| create-pr e2e warm | 2.87s direct | 1.66s test body, `cache_hits=18/18` | Warm cache preserved. |
 
-Latest create-PR per-bucket timings from `target/validation_lane_reports/quick.latest.json`:
+Latest create-PR per-bucket timings from `target/validation_lane_reports/create-pr.latest.json`:
 
 | Bucket | Wall time |
 |---|---:|

@@ -89,4 +89,4 @@ M2 focused validation:
 - `cargo test -p sifr_driver -p sifr_package -p sifr_frontend -p sifr_format -p sifr_lint`
 - `cargo clippy --workspace -- -D warnings`
 
-The full quick validation gate remains required before PR closure.
+The full create-pr validation gate remains required before PR closure.

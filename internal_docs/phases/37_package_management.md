@@ -1291,7 +1291,7 @@ Scope:
 
 Definition of done:
 
-- `scripts/run_all_tests.sh --profile quick` and full local validation pass.
+- `scripts/run_all_tests.sh --profile create-pr` and full local validation pass.
 - Cargo behavior categories are mapped to Sifr tests or explicit non-port decisions.
 - guardrails pass locally and are part of the authoritative validation gate.
 

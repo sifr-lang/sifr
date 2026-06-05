@@ -9,11 +9,11 @@ Capture a reproducible clone-heavy generated-code baseline and lock one canonica
 
 ## Baseline Validation Snapshot (2026-03-21)
 
-- validation lane: `scripts/run_all_tests.sh --profile quick`
+- validation lane: `scripts/run_all_tests.sh --profile create-pr`
 - result: PASS
   - unit + non-pass e2e: PASS (`37` + `25`)
   - validation matrix (`frontend_mode_parity`, `phase23_graph_isolation`): PASS (`7` rows)
-  - quick e2e pass suite: PASS (`24` fixtures, report signature `e1bf653aaa770517`)
+  - create-pr e2e pass suite: PASS (`24` fixtures, report signature `e1bf653aaa770517`)
 
 ## Emit Inventory Inputs
 

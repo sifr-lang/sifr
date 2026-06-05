@@ -5,9 +5,9 @@ This document defines canonical baseline governance for compiler-facing verifica
 ## Canonical Bless and Verify Workflow
 
 - Verify baselines:
-  - `python3 scripts/run_verification_hardening.py --profile full`
+  - `python3 scripts/run_verification_hardening.py --profile merge`
 - Bless baselines:
-  - `python3 scripts/run_verification_hardening.py --profile full --bless`
+  - `python3 scripts/run_verification_hardening.py --profile merge --bless`
 
 Only explicit `--bless` updates checked-in baseline files.
 

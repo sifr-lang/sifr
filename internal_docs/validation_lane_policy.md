@@ -2,14 +2,14 @@
 
 Status: active
 
-Sifr local validation uses four canonical lanes. Legacy names remain aliases so existing local and CI commands keep working:
+Sifr local validation uses four lanes:
 
-- `create-pr` (`quick` alias): fast local create-PR signal, target <=120s warm and <=300s cold.
-- `merge` (`pr` and `full` aliases): authoritative merge gate for compiler correctness.
+- `create-pr`: fast local create-PR signal, target <=120s warm and <=300s cold.
+- `merge`: authoritative merge gate for compiler correctness.
 - `nightly`: broad hardening, full generated-code quality, and full e2e pass corpus.
-- `release` (`stress` alias): highest-confidence release qualification lane.
+- `release`: highest-confidence release qualification lane.
 
-The lane manifest is `verification/validation_lanes/manifest.json`. `scripts/validation_lane.py` is the primary shell-facing resolver for lane metadata. Helper scripts that keep standalone defaults for compatibility must preserve the same alias semantics as the manifest.
+The lane manifest is `verification/validation_lanes/manifest.json`. `scripts/validation_lane.py` is the shell-facing resolver for lane metadata.
 
 ## Create-PR Lane
 

@@ -72,5 +72,5 @@ M6 focused validation so far:
 - `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`
 - `python3 scripts/check_package_manager_guardrails.py`
-- `scripts/run_all_tests.sh --profile quick` -> PASS, report
-  `target/validation_lane_reports/quick.latest.json`, wall time 227.48s
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
+  `target/validation_lane_reports/create-pr.latest.json`, wall time 227.48s

@@ -51,4 +51,4 @@ Validation so far:
 - Claude reviewer pass 1 -> SATISFIED with residual cleanup (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-1.md`)
 - Claude reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-2.md`)
 - Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-3.md`)
-- `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 280.41s, advisory: group skew is high
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 280.41s, advisory: group skew is high

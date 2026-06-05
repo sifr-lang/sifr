@@ -390,7 +390,7 @@ cargo fmt --check
 cargo clippy --workspace -- -D warnings
 cargo test -p sifr -- self_update
 scripts/run_distribution_validation.sh
-scripts/run_all_tests.sh --profile quick
+scripts/run_all_tests.sh --profile create-pr
 ```
 
 Before PR merge, run the repository's authoritative local validation:
