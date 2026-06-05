@@ -1,9 +1,9 @@
 # Reference: phase31
 # Source issue: phase31-m31c-defaultdict-len-compat-execution.md
-from sifr.collections import deque
+from sifr.collections import defaultdict, deque
 
 def main():
-    groups = collections.defaultdict(list)
+    groups = defaultdict(list)
     groups["hit"].append("hot")
     groups["hit"].append("hut")
     assert len(groups["hit"]) == 2

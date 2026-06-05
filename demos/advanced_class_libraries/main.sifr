@@ -1,7 +1,7 @@
 # Reference: milestone_stdlib_class_deepening
 # Source issue: revised_phase_roadmap_698c629c.md
 # Demo: milestone_stdlib_class_deepening
-# Demonstrates class-based APIs: collections.deque, datetime, pathlib.Path,
+# Demonstrates class-based APIs: sifr.collections.deque, datetime, pathlib.Path,
 # re.Pattern, logging.Logger, csv reader/writer
 
 from sifr.collections import deque
@@ -12,7 +12,7 @@ from sifr.logging import getLogger, DEBUG, INFO, WARNING, Logger
 from sifr.csv import reader, writer, DictReader, DictWriter
 
 def main():
-    # --- collections.deque ---
+    # --- sifr.collections.deque ---
     d: deque[int] = deque(maxlen=3)
     d.append(1)
     d.append(2)

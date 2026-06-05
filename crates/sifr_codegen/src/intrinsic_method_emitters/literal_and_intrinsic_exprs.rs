@@ -1,4 +1,3 @@
-use super::narrowing_helpers::canonicalize_compat_intrinsic_name;
 use super::{intrinsics, HirExpr, RustEmitter};
 
 impl RustEmitter {
@@ -83,7 +82,6 @@ impl RustEmitter {
         func: &str,
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
-        let intrinsic_func = canonicalize_compat_intrinsic_name(func);
         let mut ir_args = if let Some(lowered_args) = self.try_lower_registry_exprs_strict(args) {
             lowered_args
         } else {
@@ -95,7 +93,7 @@ impl RustEmitter {
             lowered_args
         };
         if matches!(
-            intrinsic_func,
+            func,
             "assert_eq" | "assert_ne" | "assert_gt" | "assert_lt" | "assert_almost_eq"
         ) {
             for (idx, arg) in args.iter().enumerate() {
@@ -114,8 +112,8 @@ impl RustEmitter {
                 }
             }
         }
-        let lowered = intrinsics::lower_intrinsic(intrinsic_func, &ir_args)?;
-        self.apply_intrinsic_registry_side_effects(intrinsic_func, &lowered);
+        let lowered = intrinsics::lower_intrinsic(func, &ir_args)?;
+        self.apply_intrinsic_registry_side_effects(func, &lowered);
         Some(lowered.expr)
     }
 }

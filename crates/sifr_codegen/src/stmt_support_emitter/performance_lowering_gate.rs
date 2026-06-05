@@ -159,7 +159,7 @@ fn defaultdict_index_contains_can_borrow(collection: &HirExpr) -> bool {
         object.ty(),
         Type::Alias { name, .. } if matches!(
             name.as_str(),
-            "__compat_defaultdict_list" | "__compat_defaultdict_set"
+            "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
         )
     )
 }

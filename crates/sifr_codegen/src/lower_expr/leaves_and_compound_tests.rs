@@ -157,15 +157,6 @@ pub(super) fn lowers_string_name_leaf_expr_variants() {
 }
 
 #[test]
-pub(super) fn compat_stdlib_alias_calls_stay_off_plain_call_fast_path() {
-    let lowered = try_lower_simple_call_expr(
-        "__compat_sifr_math_fmod",
-        &[HirExpr::IntLiteral(7), HirExpr::IntLiteral(2)],
-    );
-    assert!(lowered.is_none());
-}
-
-#[test]
 pub(super) fn lowers_simple_compound_expr_variants() {
     let bin = HirExpr::BinOp {
         left: Box::new(HirExpr::IntLiteral(1)),

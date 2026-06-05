@@ -1,8 +1,7 @@
-# Reference: phase31_python_module_attr_compat
-# Phase 31 regression: Python-style math module attribute calls resolve without explicit imports.
+from sifr.math import fmod
 
 def reverse_last_digit(x: int) -> int:
-    return int(math.fmod(float(x), 10.0))
+    return int(fmod(float(x), 10.0))
 
 def main():
     assert str(reverse_last_digit(123)) == "3"

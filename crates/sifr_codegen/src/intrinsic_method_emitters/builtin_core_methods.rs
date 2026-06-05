@@ -81,9 +81,7 @@ impl RustEmitter {
         result_ty: Option<&Type>,
     ) -> Option<crate::RustExpr> {
         match func {
-            "__compat_defaultdict_int"
-            | "__compat_defaultdict_list"
-            | "__compat_defaultdict_set"
+            "__sifr_defaultdict_int" | "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
                 if args.is_empty() =>
             {
                 Some(crate::RustExpr::FnCall {
@@ -94,9 +92,7 @@ impl RustEmitter {
                     args: vec![],
                 })
             }
-            "__compat_defaultdict_int"
-            | "__compat_defaultdict_list"
-            | "__compat_defaultdict_set"
+            "__sifr_defaultdict_int" | "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
                 if args.len() == 1 =>
             {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;

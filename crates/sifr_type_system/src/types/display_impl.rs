@@ -18,7 +18,7 @@ impl std::fmt::Display for Type {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{FixedIntType, OwnershipKind};
+    use crate::{FixedIntType, FunctionType, IterationCapability, OwnershipKind};
 
     #[test]
     fn test_ownership_primitives_are_copy() {
@@ -384,18 +384,18 @@ mod tests {
     }
 
     #[test]
-    fn test_contains_element_type_range_and_compat_defaultdict() {
+    fn test_contains_element_type_range_and_sifr_defaultdict() {
         assert_eq!(Type::Range.contains_element_type(), Some(Type::Int));
 
-        let compat_defaultdict = Type::Alias {
-            name: "__compat_defaultdict_list".to_string(),
+        let sifr_defaultdict = Type::Alias {
+            name: "__sifr_defaultdict_list".to_string(),
             type_args: Vec::new(),
             body: Box::new(Type::Dict(
                 Box::new(Type::Str),
                 Box::new(Type::List(Box::new(Type::Int))),
             )),
         };
-        assert_eq!(compat_defaultdict.contains_element_type(), Some(Type::Str));
+        assert_eq!(sifr_defaultdict.contains_element_type(), Some(Type::Str));
     }
 
     // --- Union type tests ---

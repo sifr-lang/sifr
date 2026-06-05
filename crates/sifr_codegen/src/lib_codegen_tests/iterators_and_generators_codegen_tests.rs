@@ -257,13 +257,13 @@ fn test_generate_rust_recursive_constructor_argument_wraps_optional_box_field() 
 
 #[test]
 fn test_generate_rust_defaultdict_int_augassign_uses_entry_default() {
-    let rust_code = generate_rust_from_source(
-        "def main():\n    counts = defaultdict(int)\n    counts[\"steps\"] += 1\n    counts[\"steps\"] += 2\n    assert counts[\"steps\"] == 3\n",
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef main():\n    counts = defaultdict(int)\n    counts[\"steps\"] += 1\n    counts[\"steps\"] += 2\n    assert counts[\"steps\"] == 3\n",
     );
 
     assert!(rust_code.contains("let __elem = counts.entry(\"steps\".to_string()).or_insert(0);"));
-    assert!(rust_code.contains("*__elem += 1 as i64;"));
-    assert!(rust_code.contains("*__elem += 2 as i64;"));
+    assert!(rust_code.contains("*__elem += 1_i64;"));
+    assert!(rust_code.contains("*__elem += 2_i64;"));
 }
 
 #[test]

@@ -91,7 +91,7 @@ impl RustEmitter {
 
         if matches!(
             object_ty,
-            Type::Alias { name: alias_name, .. } if alias_name == "__compat_defaultdict_int"
+            Type::Alias { name: alias_name, .. } if alias_name == "__sifr_defaultdict_int"
         ) {
             let lowered_index = Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
             return Ok(Some(RustStmt::Block(vec![

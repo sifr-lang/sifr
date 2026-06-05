@@ -1,8 +1,5 @@
 use super::async_await::lower_await;
-use super::builtin_calls::lower_bytes_type_factory_call;
-use super::compat_imports::{
-    resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
-};
+use super::builtin_calls::{lower_bytes_type_factory_call, lower_defaultdict_constructor_call};
 use super::container_literal_diagnostics::container_literal_type_conflict;
 use super::expression_diagnostics;
 use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
@@ -289,8 +286,7 @@ pub(super) fn call_arity_range(call: &ExprCall) -> TextRange {
 }
 
 pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let compat_alias = resolve_python_compat_call_alias(call, ctx);
-    if let (None, Expr::Attribute(attr)) = (&compat_alias, call.func.as_ref()) {
+    if let Expr::Attribute(attr) = call.func.as_ref() {
         if let Some(factory_call) = lower_bytes_type_factory_call(attr, call, ctx) {
             return Some(factory_call);
         }
@@ -301,11 +297,8 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
         }
         return lower_method_call(attr, call, ctx);
     }
-    let func_name = if let Some(alias) = compat_alias {
-        alias
-    } else if let Expr::Name(n) = call.func.as_ref() {
-        resolve_bare_python_compat_call_alias(n.id.as_str(), ctx)
-            .unwrap_or_else(|| n.id.to_string())
+    let func_name = if let Expr::Name(n) = call.func.as_ref() {
+        n.id.to_string()
     } else {
         expression_diagnostics::call_not_callable_or_arity(
             ctx,
@@ -318,6 +311,11 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
         TaskCallLowering::Lowered(expr) => return Some(expr),
         TaskCallLowering::Rejected => return None,
         TaskCallLowering::NoMatch => {}
+    }
+    if ctx.explicit_defaultdict_bindings.contains(&func_name)
+        && ctx.scope.lookup(&func_name).is_none()
+    {
+        return lower_defaultdict_constructor_call(call, ctx);
     }
     // Handle `cls(...)` in @classmethod as constructor call for the current class
     if func_name == "cls" {

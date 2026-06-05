@@ -247,7 +247,7 @@ impl Type {
                 name: alias_name,
                 body,
                 ..
-            } if alias_name.starts_with("__compat_defaultdict_") => {
+            } if alias_name.starts_with("__sifr_defaultdict_") => {
                 let Self::Dict(key, value) = body.resolve_alias() else {
                     return None;
                 };
@@ -346,7 +346,7 @@ impl Type {
                 name: alias_name,
                 body,
                 ..
-            } if alias_name.starts_with("__compat_defaultdict_") => {
+            } if alias_name.starts_with("__sifr_defaultdict_") => {
                 let Self::Dict(key, _) = body.resolve_alias() else {
                     return None;
                 };

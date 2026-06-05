@@ -1,12 +1,24 @@
 use crate::generate_rust;
 use sifr_ir::{HirExpr, HirFStringPart, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
-use sifr_lowering::lower_module;
+use sifr_lowering::{lower_module, lower_module_with_externals, ExternalDefs};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 
 pub(crate) fn generate_rust_from_source(source: &str) -> String {
     let parsed = parse_module(source).expect("parse failed");
     let lowering = lower_module(parsed.suite()).expect("lowering failed");
+    generate_rust(&lowering.module)
+}
+
+pub(crate) fn generate_rust_from_source_with_stdlib_collections(source: &str) -> String {
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals
+        .functions
+        .entry("sifr.collections".to_string())
+        .or_default();
+    let lowering =
+        lower_module_with_externals(parsed.suite(), &externals).expect("lowering failed");
     generate_rust(&lowering.module)
 }
 

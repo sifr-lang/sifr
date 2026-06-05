@@ -2,14 +2,10 @@ use super::{HirExpr, HirIteratorOp, RustExpr, RustStmt, Type};
 
 pub(crate) fn canonical_constructor_class_name(class_name: &str) -> &str {
     class_name
-        .strip_prefix("__compat_sifr_collections_")
-        .unwrap_or(class_name)
 }
 
 pub(crate) fn canonical_plain_call_name_for_ir(func: &str) -> &str {
-    func.strip_prefix("__compat_sifr_math_")
-        .or_else(|| func.strip_prefix("__compat_sifr_heapq_"))
-        .unwrap_or(func)
+    func
 }
 
 pub(crate) fn supports_nonempty_pop_narrowing_type_for_ir(object_ty: &Type) -> bool {
@@ -110,7 +106,7 @@ pub(crate) fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> b
             HirExpr::Call { func, args, .. },
         ) if func == alias_name
             && args.is_empty()
-            && alias_name.starts_with("__compat_defaultdict_") =>
+            && alias_name.starts_with("__sifr_defaultdict_") =>
         {
             let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
                 return false;
@@ -167,7 +163,7 @@ pub(crate) fn should_force_mutable_binding(ty: &Type) -> bool {
 
     matches!(
         ty,
-        Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
+        Type::Alias { name: alias_name, .. } if alias_name.starts_with("__sifr_defaultdict_")
     ) || matches!(ty.resolve_alias(), Type::Iterator(_))
         || class_has_next_protocol(ty)
         || class_has_recursive_option_field(ty)

@@ -3,7 +3,7 @@ use super::{
     len_aliases, mod_impl, numeric_sentinels, sequence_guards, sequence_pointers, sequence_shapes,
     str, workload_annotations,
 };
-use crate::hir_nodes::{HirExpr, HirImport};
+use crate::hir_nodes::HirExpr;
 use crate::scope::{ErrorTaint, Scope};
 use async_effects::AsyncSuspensionSummary;
 use diagnostic_types::{HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic};
@@ -17,7 +17,7 @@ use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_ir::{FlowEffect, LoweringResult};
 use sifr_python_ast::Stmt;
 use sifr_type_system::{make_union, FunctionType, Type};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use workload_annotations::WorkloadKind;
 /// The lowering context that tracks state during AST->HIR conversion.
 pub(in crate::lower) struct LowerCtx {
@@ -91,8 +91,7 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) current_module_name: Option<String>,
     pub(in crate::lower) externals: ExternalDefs,
     pub(in crate::lower) asyncio_compat_imports: HashMap<String, String>,
-    pub(in crate::lower) synthetic_imports: Vec<HirImport>,
-    pub(in crate::lower) synthetic_import_aliases: HashMap<String, String>,
+    pub(in crate::lower) explicit_defaultdict_bindings: HashSet<String>,
     pub(in crate::lower) sequence_guards: Vec<SequenceGuard>,
     pub(in crate::lower) len_aliases: Vec<LenAliasFact>,
     pub(in crate::lower) sequence_pointers: Vec<SequencePointerFact>,
@@ -153,8 +152,7 @@ impl LowerCtx {
             current_module_name: None,
             externals: ExternalDefs::default(),
             asyncio_compat_imports: HashMap::new(),
-            synthetic_imports: Vec::new(),
-            synthetic_import_aliases: HashMap::new(),
+            explicit_defaultdict_bindings: HashSet::new(),
             sequence_guards: Vec::new(),
             len_aliases: Vec::new(),
             sequence_pointers: Vec::new(),

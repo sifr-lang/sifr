@@ -255,8 +255,8 @@ pub(super) fn test_missing_required_argument_has_call_code() {
 
 #[test]
 pub(super) fn test_defaultdict_accepts_counter_initial_mapping() {
-    let result = lower_source(
-        "class Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",
+    let result = lower_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\nclass Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",
     );
     assert!(
         result.is_ok(),
@@ -267,8 +267,8 @@ pub(super) fn test_defaultdict_accepts_counter_initial_mapping() {
 
 #[test]
 pub(super) fn test_defaultdict_subscript_read_is_non_optional_value_type() {
-    let result = lower_source(
-        "def main() -> int:\n    counts = defaultdict(int)\n    counts[1] += 1\n    value: int = counts[2]\n    return value\n",
+    let result = lower_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef main() -> int:\n    counts = defaultdict(int)\n    counts[1] += 1\n    value: int = counts[2]\n    return value\n",
     );
     assert!(
         result.is_ok(),
@@ -278,12 +278,12 @@ pub(super) fn test_defaultdict_subscript_read_is_non_optional_value_type() {
 
 #[test]
 pub(super) fn test_defaultdict_membership_checks_lower() {
-    let result = lower_source(
-        "def main() -> bool:\n    groups = defaultdict(list)\n    groups[\"a\"].append(1)\n    return \"a\" in groups and \"b\" not in groups\n",
+    let result = lower_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef main() -> bool:\n    groups = defaultdict(list)\n    groups[\"a\"].append(1)\n    return \"a\" in groups and \"b\" not in groups\n",
     );
     assert!(
         result.is_ok(),
-        "defaultdict membership checks should lower through compat mapping surface: {:?}",
+        "defaultdict membership checks should lower through explicit stdlib binding: {:?}",
         result.err()
     );
 }

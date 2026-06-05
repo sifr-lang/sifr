@@ -44,10 +44,6 @@ pub(super) fn is_allowed_plain_call(func: &str) -> bool {
     ALLOWED_PLAIN_CALLS.with(|calls| calls.borrow().iter().any(|name| name == func))
 }
 
-pub(super) fn is_compat_stdlib_alias(func: &str) -> bool {
-    func.starts_with("__compat_sifr_")
-}
-
 pub fn fixed_width_literal_expr_for_target(target_ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     let Type::FixedInt(fixed) = crate::resolve_alias_type_for_plain_call(target_ty) else {
         return None;
@@ -391,7 +387,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                         Type::Alias { name, .. }
                             if matches!(
                                 name.as_str(),
-                                "__compat_defaultdict_list" | "__compat_defaultdict_set"
+                                "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
                             )
                     )
             ) {
@@ -628,9 +624,6 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
     }
 
     if is_reserved_builtin_call_func(func) {
-        return None;
-    }
-    if is_compat_stdlib_alias(func) {
         return None;
     }
     // Keep namespaced calls on the structured emitter path so ownership/convention

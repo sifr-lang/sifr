@@ -474,7 +474,7 @@ pub(super) fn try_lower_simple_defaultdict_index_expr(
     else {
         return None;
     };
-    if !alias_name.starts_with("__compat_defaultdict_") {
+    if !alias_name.starts_with("__sifr_defaultdict_") {
         return None;
     }
     let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
@@ -489,12 +489,12 @@ pub(super) fn try_lower_simple_defaultdict_index_expr(
         RustExpr::Clone(Box::new(lowered_index))
     };
     let default_expr = match alias_name.as_str() {
-        "__compat_defaultdict_int" => RustExpr::Literal(crate::RustLiteral::Int(0)),
-        "__compat_defaultdict_list" => RustExpr::FnCall {
+        "__sifr_defaultdict_int" => RustExpr::Literal(crate::RustLiteral::Int(0)),
+        "__sifr_defaultdict_list" => RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
             args: vec![],
         },
-        "__compat_defaultdict_set" => RustExpr::FnCall {
+        "__sifr_defaultdict_set" => RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec![
                 "HashSet".to_string(),
                 "new".to_string(),

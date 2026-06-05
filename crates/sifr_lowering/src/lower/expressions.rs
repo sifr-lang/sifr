@@ -2,10 +2,10 @@ use super::async_await::coroutine_result_type;
 use super::async_generator_advances::lower_anext_call;
 use super::builtin_calls::{
     callable_builtin_element_type, lower_bytes_constructor_call, lower_chr_call,
-    lower_defaultdict_constructor_call, lower_dict_constructor_call, lower_isinstance_call,
-    lower_len_call, lower_list_constructor_call, lower_ord_call, lower_range_call,
-    lower_reveal_type_call, lower_set_constructor_call, lower_tuple_constructor_call,
-    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
+    lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
+    lower_set_constructor_call, lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS,
+    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argument_range};
@@ -56,7 +56,7 @@ use super::typevar_shape_compat::is_compatible_with_unresolved_typevars;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{
     async_await, async_comprehension_diagnostics, async_comprehensions, async_generator_methods,
-    attribute_access, blocking_executor_calls, builtin_calls, collect_type_vars, compat_imports,
+    attribute_access, blocking_executor_calls, builtin_calls, collect_type_vars,
     container_literal_diagnostics, decode_typevar_constraint, expression_operators,
     fstring_support, if_expression, infer_type_var_bindings, integer_literals,
     sequence_guard_detection, str, subscript_type, substitute_type_vars, task_calls, tuple_unpack,

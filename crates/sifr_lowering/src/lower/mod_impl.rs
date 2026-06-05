@@ -315,46 +315,52 @@ pub(in crate::lower) fn lower_module_impl(
                     for name in &names {
                         let local = local_name_for(name);
                         let mut found = false;
+                        if stdlib_module_key == "sifr.collections" && name == "defaultdict" {
+                            ctx.explicit_defaultdict_bindings.insert(local.clone());
+                            found = true;
+                        }
                         // Check functions
-                        if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
-                            if let Some(ft) = module_fns.get(name) {
-                                ctx.functions.insert(local.clone(), ft.clone());
-                                if let Some(module_defaults) =
-                                    externals.function_defaults.get(&stdlib_module_key)
-                                {
-                                    imported_defaults::import_callable_defaults(
-                                        &mut ctx,
-                                        module_defaults,
-                                        name,
-                                        &local,
-                                    );
-                                }
-                                if let Some(module_varargs) =
-                                    externals.function_varargs.get(&stdlib_module_key)
-                                {
-                                    imported_defaults::import_callable_vararg(
-                                        &mut ctx,
-                                        module_varargs,
-                                        name,
-                                        &local,
-                                    );
-                                }
-                                found = true;
-                                // Import generic function info and bounds
-                                if let Some(module_gf) =
-                                    externals.generic_functions.get(&stdlib_module_key)
-                                {
-                                    if let Some(type_vars) = module_gf.get(name) {
-                                        ctx.generic_functions
-                                            .insert(local.clone(), type_vars.clone());
+                        if !found {
+                            if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
+                                if let Some(ft) = module_fns.get(name) {
+                                    ctx.functions.insert(local.clone(), ft.clone());
+                                    if let Some(module_defaults) =
+                                        externals.function_defaults.get(&stdlib_module_key)
+                                    {
+                                        imported_defaults::import_callable_defaults(
+                                            &mut ctx,
+                                            module_defaults,
+                                            name,
+                                            &local,
+                                        );
                                     }
-                                }
-                                if let Some(module_bounds) =
-                                    externals.type_param_bounds.get(&stdlib_module_key)
-                                {
-                                    if let Some(owner_bounds) = module_bounds.get(name) {
-                                        ctx.type_param_bounds
-                                            .insert(local.clone(), owner_bounds.clone());
+                                    if let Some(module_varargs) =
+                                        externals.function_varargs.get(&stdlib_module_key)
+                                    {
+                                        imported_defaults::import_callable_vararg(
+                                            &mut ctx,
+                                            module_varargs,
+                                            name,
+                                            &local,
+                                        );
+                                    }
+                                    found = true;
+                                    // Import generic function info and bounds
+                                    if let Some(module_gf) =
+                                        externals.generic_functions.get(&stdlib_module_key)
+                                    {
+                                        if let Some(type_vars) = module_gf.get(name) {
+                                            ctx.generic_functions
+                                                .insert(local.clone(), type_vars.clone());
+                                        }
+                                    }
+                                    if let Some(module_bounds) =
+                                        externals.type_param_bounds.get(&stdlib_module_key)
+                                    {
+                                        if let Some(owner_bounds) = module_bounds.get(name) {
+                                            ctx.type_param_bounds
+                                                .insert(local.clone(), owner_bounds.clone());
+                                        }
                                     }
                                 }
                             }
@@ -676,7 +682,6 @@ pub(in crate::lower) fn lower_module_impl(
         }
     }
     if ctx.errors.is_empty() {
-        imports.extend(ctx.synthetic_imports.clone());
         let module = HirModule {
             functions,
             classes,

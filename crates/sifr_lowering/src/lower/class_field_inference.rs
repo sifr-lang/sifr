@@ -69,19 +69,6 @@ fn infer_defaultdict_value_type(
     }
 }
 
-fn infer_bare_compat_constructor_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
-    let (module_name, member_name) = match name {
-        "deque" => ("sifr.collections", "deque"),
-        "Counter" => ("sifr.collections", "Counter"),
-        _ => return None,
-    };
-    ctx.externals
-        .classes
-        .get(module_name)
-        .and_then(|classes| classes.get(member_name))
-        .cloned()
-}
-
 fn infer_constructor_call_type(
     call: &sifr_python_ast::ExprCall,
     local_bindings: &HashMap<String, Type>,
@@ -91,9 +78,6 @@ fn infer_constructor_call_type(
         return Type::Any;
     };
     let name = func_name.id.as_str();
-    if let Some(compat_ty) = infer_bare_compat_constructor_type(name, ctx) {
-        return compat_ty;
-    }
     if let Some(class_ty) = ctx.class_types.get(name) {
         return class_ty.clone();
     }
@@ -102,7 +86,9 @@ fn infer_constructor_call_type(
         "list" => Type::List(Box::new(Type::Any)),
         "set" => Type::Set(Box::new(Type::Any)),
         "dict" => Type::Dict(Box::new(Type::Any), Box::new(Type::Any)),
-        "defaultdict" => {
+        name if ctx.explicit_defaultdict_bindings.contains(name)
+            && !local_bindings.contains_key(name) =>
+        {
             let value_ty =
                 infer_defaultdict_value_type(call.arguments.args.first(), local_bindings);
             Type::Dict(Box::new(Type::Any), Box::new(value_ty))

@@ -54,7 +54,7 @@ def main():
         _w1: None = write_text(base + "/a.txt", "a")
         _w2: None = write_text(base + "/sub/b.txt", "b")
 
-        root: Path = Path(base)
+        root: Path = Path(base + "")
         entries_it: Iterator[str] = root.iterdir()
         actual.append(len(list(islice(entries_it, 2))) == 2)
 
