@@ -2,11 +2,11 @@ use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
 use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
 use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
-use crate::stdlib::registry::STDLIB_FILES;
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
+use sifr_stdlib::STDLIB_SOURCES;
 use sifr_syntax::parse_module_raw;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -23,40 +23,42 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
 
-    for (module_name, source) in STDLIB_FILES {
-        let parsed = match parse_module_raw(source, Some(&format!("stdlib:{module_name}"))) {
-            Ok(parsed) => {
-                if !parsed.has_valid_syntax() {
-                    // TODO(diag_4a slice 2): classify Ruff parse failures
-                    // into the precise active parse-code buckets.
-                    let errors: Vec<RenderedDiagnostic> = parsed
-                        .errors()
-                        .iter()
-                        .map(|e| {
+    for stdlib_source in STDLIB_SOURCES {
+        let module_name = stdlib_source.module;
+        let parsed =
+            match parse_module_raw(stdlib_source.source, Some(&format!("stdlib:{module_name}"))) {
+                Ok(parsed) => {
+                    if !parsed.has_valid_syntax() {
+                        // TODO(diag_4a slice 2): classify Ruff parse failures
+                        // into the precise active parse-code buckets.
+                        let errors: Vec<RenderedDiagnostic> = parsed
+                            .errors()
+                            .iter()
+                            .map(|e| {
+                                crate::diagnostics::diagnostic_with_code(
+                                    format!("[stdlib:{module_name}] {e}"),
+                                    DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                                )
+                            })
+                            .collect();
+                        return Err(errors);
+                    }
+                    parsed
+                }
+                Err(errors) => {
+                    // TODO(diag_4a slice 2): classify Ruff parse failures into
+                    // the precise active parse-code buckets.
+                    return Err(errors
+                        .into_iter()
+                        .map(|error| {
                             crate::diagnostics::diagnostic_with_code(
-                                format!("[stdlib:{module_name}] {e}"),
+                                format!("[stdlib:{module_name}] {}", error.message),
                                 DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                             )
                         })
-                        .collect();
-                    return Err(errors);
+                        .collect());
                 }
-                parsed
-            }
-            Err(errors) => {
-                // TODO(diag_4a slice 2): classify Ruff parse failures into
-                // the precise active parse-code buckets.
-                return Err(errors
-                    .into_iter()
-                    .map(|error| {
-                        crate::diagnostics::diagnostic_with_code(
-                            format!("[stdlib:{module_name}] {}", error.message),
-                            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
-                        )
-                    })
-                    .collect());
-            }
-        };
+            };
 
         let result = match lower_module_stdlib_with_externals(parsed.suite(), &stdlib_defs) {
             Ok(result) => result,
@@ -109,8 +111,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
         for import in &result.module.imports {
             if import.module.starts_with("_sifr.") {
                 transitive_deps_for_module.insert(import.module.clone());
-                if let Some(intrinsic_mod) = sifr_hir::stdlib::get_intrinsic_module(&import.module)
-                {
+                if let Some(intrinsic_mod) = sifr_stdlib::get_intrinsic_module(&import.module) {
                     for name in &import.names {
                         if let Some(ft) = intrinsic_mod.functions.get(name) {
                             if !fn_exports.contains_key(name) {

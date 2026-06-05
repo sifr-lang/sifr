@@ -1,0 +1,15 @@
+[package]
+name = "sifr_stdlib"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+sifr_type_system = { workspace = true }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

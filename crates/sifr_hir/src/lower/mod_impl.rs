@@ -262,7 +262,7 @@ pub(in crate::lower) fn lower_module_impl(
                     continue;
                 }
                 // Resolve intrinsic imports for stdlib .sifr files
-                if let Some(intrinsic_module) = crate::stdlib::get_intrinsic_module(&module_name) {
+                if let Some(intrinsic_module) = sifr_stdlib::get_intrinsic_module(&module_name) {
                     for name in &names {
                         let local = local_name_for(name);
                         if let Some(ft) = intrinsic_module.functions.get(name) {

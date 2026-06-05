@@ -12,7 +12,6 @@ mod hir_nodes;
 mod lower;
 mod lowering_outcome;
 mod scope;
-pub mod stdlib;
 
 pub use hir_nodes::*;
 pub use lower::{

@@ -10,6 +10,7 @@ license = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_python_parser = { workspace = true }
+sifr_stdlib = { workspace = true }
 sifr_type_system = { workspace = true }
 ruff_text_size = { workspace = true }
 rust_decimal = "1.41.0"
