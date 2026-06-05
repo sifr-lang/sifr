@@ -1,0 +1,10 @@
+error[SIFR-IMPORT-0008]: bare stdlib import 'math'; Sifr stdlib lives under 'sifr.*'
+  --> crates/sifr/tests/verification/project/workspace_bare_stdlib_import/main.sifr:1:6
+     |
+   1 | from math import sqrt
+     |      ^^^^
+  = note: tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/math.sifr
+  = note: tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/lib/math.sifr
+  = note: tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/./math.sifr
+  = help: use 'from sifr.math import sqrt'
+  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0008

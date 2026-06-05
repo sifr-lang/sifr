@@ -92,6 +92,17 @@
             "json",
             "compact"
           ]
+        },
+        {
+          "id": "workspace_bare_stdlib_import",
+          "entry": "crates/sifr/tests/verification/project/workspace_bare_stdlib_import/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
         }
       ]
     },

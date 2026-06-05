@@ -360,6 +360,15 @@ impl DiagnosticBuilder {
         self
     }
 
+    pub fn arg_owned(mut self, name: &str, value: impl Into<DiagnosticArg>) -> Self {
+        assert_valid_placeholder(name);
+        assert!(
+            self.args.insert(name.to_string(), value.into()).is_none(),
+            "duplicate diagnostic arg `{name}`"
+        );
+        self
+    }
+
     pub fn related(mut self, span: SourceSpan, kind: RelatedKind, label: Option<String>) -> Self {
         self.related_spans.push(RelatedSpan { span, label, kind });
         self

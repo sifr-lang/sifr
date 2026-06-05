@@ -362,6 +362,81 @@ fn test_workspace_resolver_reports_unresolved_tried_paths() {
 }
 
 #[test]
+fn test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import() {
+    let unique = format!(
+        "sifr_workspace_bare_stdlib_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let dir = std::env::temp_dir().join(unique);
+    let entry_dir = dir.join("cases");
+    std::fs::create_dir_all(&entry_dir).expect("entry dir should be created");
+    std::fs::create_dir_all(dir.join("lib")).expect("lib should be created");
+    std::fs::write(entry_dir.join("main.sifr"), "from math import sqrt\n")
+        .expect("main should be written");
+
+    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib", "."]);
+    let errors = parse_import_closure_modules(
+        &resolver,
+        &BTreeSet::from(["main".to_string()]),
+        DiscoveryDiagnosticStyle::ModuleName,
+    )
+    .expect_err("bare stdlib import should fail");
+
+    assert_eq!(errors[0].code, DiagnosticCode::IMPORT_BARE_STDLIB.code());
+    assert_eq!(
+        errors[0].message,
+        "bare stdlib import 'math'; Sifr stdlib lives under 'sifr.*'"
+    );
+    assert_eq!(errors[0].args["bare_module"], "math".into());
+    assert_eq!(errors[0].args["suggested_module"], "sifr.math".into());
+    assert_eq!(errors[0].args["imported_names"], "sqrt".into());
+    assert_eq!(
+        errors[0].help.as_deref(),
+        Some("use 'from sifr.math import sqrt'")
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match() {
+    let unique = format!(
+        "sifr_workspace_bare_stdlib_user_wins_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let dir = std::env::temp_dir().join(unique);
+    let entry_dir = dir.join("cases");
+    std::fs::create_dir_all(&entry_dir).expect("entry dir should be created");
+    std::fs::create_dir_all(dir.join("lib")).expect("lib should be created");
+    std::fs::write(entry_dir.join("main.sifr"), "from math import sqrt\n")
+        .expect("main should be written");
+    std::fs::write(
+        dir.join("lib/math.sifr"),
+        "def sqrt(value: int) -> int:\n    return value\n",
+    )
+    .expect("math module should be written");
+
+    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib", "."]);
+    let parsed = parse_import_closure_modules(
+        &resolver,
+        &BTreeSet::from(["main".to_string()]),
+        DiscoveryDiagnosticStyle::ModuleName,
+    )
+    .expect("real user module should win over bare stdlib diagnostic");
+
+    assert!(parsed.contains_key("math"));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution() {
     let unique = format!(
         "sifr_workspace_stdlib_{}_{}",

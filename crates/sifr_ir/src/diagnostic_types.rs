@@ -1,11 +1,14 @@
 use ruff_text_size::TextRange;
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+use std::collections::BTreeMap;
 
 /// Structured diagnostics produced during HIR lowering.
 #[derive(Debug, Clone)]
 pub struct HirDiagnostic {
     pub code: Option<DiagnosticCode>,
     pub message: String,
+    pub args: BTreeMap<String, DiagnosticArg>,
+    pub help: Option<String>,
     pub primary_range: Option<TextRange>,
     pub line: Option<u32>,
     pub col: Option<u32>,

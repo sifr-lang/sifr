@@ -13,11 +13,11 @@ use mod_impl::lower_module_impl;
 use ruff_text_size::TextRange;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_ir::{FlowEffect, LoweringResult};
 use sifr_python_ast::Stmt;
 use sifr_type_system::{make_union, FunctionType, Type};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use workload_annotations::WorkloadKind;
 /// The lowering context that tracks state during AST->HIR conversion.
 pub(in crate::lower) struct LowerCtx {
@@ -183,10 +183,23 @@ impl LowerCtx {
         message: String,
         range: TextRange,
     ) -> ErrorTaint {
+        self.error_with_code_args_help_at(code, message, BTreeMap::new(), None, range)
+    }
+
+    pub(in crate::lower) fn error_with_code_args_help_at(
+        &mut self,
+        code: DiagnosticCode,
+        message: String,
+        args: BTreeMap<String, DiagnosticArg>,
+        help: Option<String>,
+        range: TextRange,
+    ) -> ErrorTaint {
         let taint = ErrorTaint::emitted();
         self.errors.push(HirDiagnostic {
             code: Some(code),
             message,
+            args,
+            help,
             primary_range: Some(range),
             line: None,
             col: None,

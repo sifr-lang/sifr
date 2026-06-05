@@ -3,11 +3,10 @@ use super::{
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
 use crate::module_signatures::ModuleSignature;
-use ruff_text_size::TextRange;
-use sifr_diagnostics::{
-    DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, RenderedDiagnostic, Severity,
-    SourceMap, SourceSpan,
+use crate::{
+    diagnostic_with_code, diagnostic_with_source_range, diagnostic_with_source_range_args_help,
 };
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
     ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
     RevealTypeDiagnostic,
@@ -125,6 +124,8 @@ pub(super) fn hir_diagnostic_to_rendered(
         .unwrap_or(DiagnosticCode::INTERNAL_COMPILER_PANIC);
     let uncoded = error.code.is_none();
     let primary_range = error.primary_range;
+    let structured_args = error.args;
+    let help = error.help;
     let message = match diagnostic_style {
         FrontendDiagnosticStyle::Bare => error.message,
         FrontendDiagnosticStyle::ModulePrefixed => {
@@ -139,50 +140,23 @@ pub(super) fn hir_diagnostic_to_rendered(
         message
     };
     if let (Some(context), Some(range)) = (source_context, primary_range) {
-        return diagnostic_with_source_range(
+        return diagnostic_with_source_range_args_help(
             code,
             context,
             range,
             "{message}",
-            &[("message", DiagnosticArg::String(message.clone()))],
+            BTreeMap::from([(
+                "message".to_string(),
+                DiagnosticArg::String(message.clone()),
+            )]),
+            structured_args,
+            help,
         );
     }
-    diagnostic_with_code(message, code)
-}
-
-pub(super) fn diagnostic_with_source_range(
-    code: DiagnosticCode,
-    source_context: FrontendSourceContext<'_>,
-    range: TextRange,
-    message_template: &'static str,
-    args: &[(&'static str, DiagnosticArg)],
-) -> RenderedDiagnostic {
-    let mut source_map = SourceMap::new();
-    let source_id = source_map.register_source(source_context.display_path, source_context.source);
-    let span = SourceSpan::new(source_id, range);
-    let mut builder = DiagnosticBuilder::source(code, code.declared_severity(), span)
-        .message_template(message_template);
-    for (name, value) in args {
-        builder = builder.arg(name, value.clone());
-    }
-    let diagnostic = builder.build();
-    let mut sink = DiagnosticSink::new();
-    if code.declared_severity() == Severity::Error {
-        let _ = sink.emit_error(diagnostic);
-    } else {
-        sink.emit(diagnostic);
-    }
-    match sifr_diagnostics::render::render_sink(&sink, &source_map) {
-        Ok(mut envelope) if envelope.diagnostics.len() == 1 => envelope.diagnostics.remove(0),
-        Ok(_) => diagnostic_with_code(
-            "internal compiler error: frontend diagnostic renderer emitted an unexpected diagnostic count",
-            DiagnosticCode::INTERNAL_COMPILER_PANIC,
-        ),
-        Err(error) => diagnostic_with_code(
-            format!("internal compiler error: invalid frontend diagnostic span: {error:?}"),
-            DiagnosticCode::INTERNAL_COMPILER_PANIC,
-        ),
-    }
+    let mut rendered = diagnostic_with_code(message, code);
+    rendered.args.extend(structured_args);
+    rendered.help = help;
+    rendered
 }
 
 pub fn reveal_type_diagnostics(
@@ -279,25 +253,6 @@ pub(super) fn rendered_spanless_diagnostic(
         message,
         message_template: message_template.to_string(),
         args: rendered_args,
-        url: code.docs_url(),
-        spans: Vec::new(),
-        children: Vec::new(),
-        help: None,
-        suggestions: Vec::new(),
-    }
-}
-
-pub(super) fn diagnostic_with_code(
-    message: impl Into<String>,
-    code: DiagnosticCode,
-) -> RenderedDiagnostic {
-    let message = message.into();
-    RenderedDiagnostic {
-        code: code.code().to_string(),
-        severity: code.declared_severity(),
-        message: message.clone(),
-        message_template: "{message}".to_string(),
-        args: BTreeMap::from([("message".to_string(), DiagnosticArg::String(message))]),
         url: code.docs_url(),
         spans: Vec::new(),
         children: Vec::new(),

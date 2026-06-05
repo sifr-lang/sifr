@@ -210,11 +210,23 @@ pub(in crate::lower) fn lower_module_impl(
             let module_name =
                 ctx.effective_import_module_name(module.as_ref(), import_from.level, externals);
             let is_absolute_import = import_from.level == 0;
+            let module_range = module.range();
             let names: Vec<String> = import_from
                 .names
                 .iter()
                 .map(|alias| alias.name.to_string())
                 .collect();
+            let imported_names = import_from
+                .names
+                .iter()
+                .map(|alias| {
+                    alias.asname.as_ref().map_or_else(
+                        || alias.name.to_string(),
+                        |asname| format!("{} as {asname}", alias.name),
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
             // Collect aliases: (original_name, local_alias)
             let aliases: Vec<(String, String)> = import_from
                 .names
@@ -465,6 +477,17 @@ pub(in crate::lower) fn lower_module_impl(
             let has_local_module =
                 import_resolution::external_module_exists(externals, &module_name);
             if !has_local_module {
+                if is_absolute_import {
+                    if let Some(stdlib_match) = sifr_stdlib::is_bare_stdlib_tail(&module_name) {
+                        import_diagnostics::bare_stdlib(
+                            &mut ctx,
+                            &stdlib_match,
+                            &imported_names,
+                            module_range,
+                        );
+                        continue;
+                    }
+                }
                 import_diagnostics::unknown_import_target(&mut ctx, &module_name, import_range);
                 continue;
             }
@@ -611,6 +634,15 @@ pub(in crate::lower) fn lower_module_impl(
         } else if let Stmt::Import(import_stmt) = stmt {
             for alias in &import_stmt.names {
                 let module_name = alias.name.to_string();
+                if let Some(stdlib_match) = sifr_stdlib::is_bare_stdlib_tail(&module_name) {
+                    import_diagnostics::bare_stdlib(
+                        &mut ctx,
+                        &stdlib_match,
+                        "",
+                        alias.name.range(),
+                    );
+                    continue;
+                }
                 import_diagnostics::unsupported_form(
                     &mut ctx,
                     format!("import {module_name}; use 'from {module_name} import <name>'")

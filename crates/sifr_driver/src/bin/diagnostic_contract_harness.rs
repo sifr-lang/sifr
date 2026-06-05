@@ -34,6 +34,17 @@ const PROJECT_FIXTURES: &[(&str, &str, &[&str])] = &[
         &["resolution_scope", "tried_paths"],
     ),
     (
+        "bare_stdlib_import_canonical",
+        "SIFR-IMPORT-0008",
+        &[
+            "bare_module",
+            "suggested_module",
+            "imported_names",
+            "resolution_scope",
+            "tried_paths",
+        ],
+    ),
+    (
         "workspace_ambiguous_import_canonical",
         "SIFR-IMPORT-0005",
         &["resolution_scope", "candidate_paths"],
@@ -42,6 +53,17 @@ const PROJECT_FIXTURES: &[(&str, &str, &[&str])] = &[
         "workspace_namespace_collision_canonical",
         "SIFR-IMPORT-0006",
         &["resolved_path", "parent_path"],
+    ),
+    (
+        "workspace_bare_stdlib_import",
+        "SIFR-IMPORT-0008",
+        &[
+            "bare_module",
+            "suggested_module",
+            "imported_names",
+            "resolution_scope",
+            "tried_paths",
+        ],
     ),
 ];
 
@@ -68,6 +90,19 @@ const PACKAGE_FIXTURES: &[(&str, &str, &[&str])] = &[
         &[
             "resolution_scope",
             "candidate_paths",
+            "written_module_path",
+            "package_import_origin",
+        ],
+    ),
+    (
+        "package_bare_stdlib_import_canonical",
+        "SIFR-IMPORT-0008",
+        &[
+            "bare_module",
+            "suggested_module",
+            "imported_names",
+            "resolution_scope",
+            "tried_paths",
             "written_module_path",
             "package_import_origin",
         ],

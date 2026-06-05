@@ -449,6 +449,40 @@ def main():\n    assert parse_json() == 1\n",
 }
 
 #[test]
+fn test_check_package_project_reclassifies_unresolved_bare_stdlib_import() {
+    let dir = mktemp_dir("package_bare_stdlib_import");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from math import sqrt\n\n\
+def main():\n    pass\n",
+    );
+    let graph = package_graph(&dir, &[&app], &[]);
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    let diagnostic = errors
+        .iter()
+        .find(|error| error.code == DiagnosticCode::IMPORT_BARE_STDLIB.code())
+        .unwrap_or_else(|| panic!("bare stdlib diagnostic should be emitted: {errors:?}"));
+    assert_eq!(
+        diagnostic.message,
+        "bare stdlib import 'math'; Sifr stdlib lives under 'sifr.*'"
+    );
+    assert_eq!(diagnostic.args["bare_module"], "math".into());
+    assert_eq!(diagnostic.args["suggested_module"], "sifr.math".into());
+    assert_eq!(diagnostic.args["imported_names"], "sqrt".into());
+    assert_eq!(
+        diagnostic.help.as_deref(),
+        Some("use 'from sifr.math import sqrt'")
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 fn test_check_package_project_rejects_transitive_dependency_import() {
     let dir = mktemp_dir("package_transitive_rejection");
     let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");

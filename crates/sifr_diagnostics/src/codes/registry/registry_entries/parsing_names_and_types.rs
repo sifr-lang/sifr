@@ -244,6 +244,21 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["cycle", "cycle_edges"]
         ),
     active_entry!(
+            "SIFR-IMPORT-0008",
+            "IMPORT",
+            "Bare CPython-style stdlib import attempt.",
+            Severity::Error,
+            "crates/sifr/tests/e2e/fail/bare_stdlib_from_math.sifr",
+            "bare stdlib import '{bare_module}'; Sifr stdlib lives under 'sifr.*'",
+            "sifr_lowering::lower / sifr_driver::project::discovery",
+            [
+                arg!("bare_module"),
+                json_arg!("suggested_module"),
+                json_arg!("imported_names")
+            ],
+            ["bare_module", "suggested_module", "imported_names"]
+        ),
+    active_entry!(
             "SIFR-TYPE-0002",
             "TYPE",
             "Expected and actual types are incompatible.",

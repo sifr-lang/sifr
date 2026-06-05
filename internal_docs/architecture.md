@@ -142,6 +142,32 @@ It is the single consolidated inventory for builtin parity status, core object-m
 
 Sifr intentionally diverges from CPython in several areas to achieve compile-time safety. This table documents each divergence, its rationale, and the milestone where it is introduced.
 
+### Standard Library Namespace Contract
+
+Sifr is Python-syntax and CPython-behavior-informed, but it is not Python-source-compatible. The standard library import contract is explicit:
+
+| Import root | Owner | Resolution |
+| --- | --- | --- |
+| `_sifr.*` | Compiler intrinsics | Embedded only; never filesystem or package-manager resolution. |
+| `sifr.*` | Sifr standard library | Embedded `sifr_stdlib::STDLIB_SOURCES`; never filesystem or package-manager resolution. |
+| top-level | User code and third-party packages | Workspace/package resolution. |
+
+Bare CPython stdlib roots such as `math`, `json`, `os`, `heapq`, and `collections` are not aliases for `sifr.*`. A real top-level user or package module named `math`, `json`, or similar wins normal resolution. If no real top-level module resolves and the written import root matches an embedded Sifr stdlib module tail, the compiler emits `SIFR-IMPORT-0008` with a suggestion to use `sifr.*`.
+
+Examples:
+
+```python
+from sifr.math import sqrt
+from sifr.collections import deque
+```
+
+Unsupported bare forms:
+
+```python
+from math import sqrt
+import collections
+```
+
 
 | Python Behavior                                        | Sifr Behavior                                                                                                        | Rationale                                                                                 | Milestone                                      |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------- |
