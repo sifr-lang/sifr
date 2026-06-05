@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-stdlib-ir-lowering-boundary-refactor.md](./ad-hoc-stdlib-ir-lowering-boundary-refactor.md)
 
-Status: in progress
+Status: complete
 
 ## Checklist
 
@@ -10,8 +10,8 @@ Status: in progress
 - [x] `milestone_stdlib_boundary_2`: Centralize Stdlib Feature And Dependency Manifest
 - [x] `milestone_ir_boundary_1`: Extract `sifr_ir` Data Crate
 - [x] `milestone_ir_boundary_2`: Rename Remainder To `sifr_lowering`
-- [ ] `milestone_ir_boundary_3`: Dependency Direction Guardrails
-- [ ] `milestone_ir_boundary_4`: Documentation And Phase Closeout
+- [x] `milestone_ir_boundary_3`: Dependency Direction Guardrails
+- [x] `milestone_ir_boundary_4`: Documentation And Phase Closeout
 
 ## Review Artifacts
 
@@ -25,6 +25,7 @@ Record planning and implementation reviews here.
 - M3 implementation review: `reviews/ad-hoc-stdlib-boundary-m3-review-2.md` -> `READY`; reviewer found no blockers and confirmed the `sifr_ir` data boundary, codegen/lint dependency direction, and retained HIR CFG/flow-graph construction match the M3 contract.
 - M4 implementation review: `reviews/ad-hoc-stdlib-boundary-m4-review-2.md` -> `READY`; reviewer found no blockers and confirmed the `sifr_hir` crate is retired, codegen/lint dependency direction stays on `sifr_ir`, and remaining old-name references are migration-plan history.
 - M5 implementation review: `reviews/ad-hoc-stdlib-boundary-m5-review-3.md` -> `READY`; reviewer confirmed the guardrail covers parser crate edges, production source references, direct normal dependency edges, generated dependency spec ownership, allowed downstream spec reads, and test-only codegen lowering helpers.
+- Final implementation review: `reviews/ad-hoc-stdlib-boundary-final-review-2.md` -> `READY`; reviewer confirmed all seven phase exit gates are satisfied, including the final crate set, retired `sifr_hir` workspace crate, centralized generated dependency policy, dependency-direction guardrails, docs/tracking updates, and full merge-gate validation.
 
 ## Validation Ledger
 
@@ -95,7 +96,17 @@ Record local validation for each milestone before opening the corresponding PR.
   - `cargo clippy --workspace -- -D warnings` -> PASS.
   - `git diff --check` -> PASS.
   - `scripts/run_all_tests.sh --profile create-pr` -> PASS (`target/validation_lane_reports/create-pr.latest.json`; wall time 78.63s, advisories: none).
-- M6: pending.
+- M6: local validation passed.
+  - `rg "sifr_hir|crates/sifr_hir" internal_docs docs issues scripts verification Cargo.toml Cargo.lock crates -g '*' | rg -v '^issues/archive/'` -> PASS; remaining references are the active migration contract and execution history only.
+  - `rg "sifr_lowering/src/hir_nodes.rs|crates/sifr_lowering/src/hir_nodes.rs|sifr_lowering/src/stdlib.rs|crates/sifr_lowering/src/stdlib.rs|sifr_lowering/src/lower.rs|crates/sifr_lowering/src/lower.rs|sifr_lowering continues to own HIR data|HIR \\(sifr_lowering\\)" internal_docs docs issues -g '*'` -> PASS; only the lowering guardrail's banned monolith path remains intentionally.
+  - `test ! -d crates/sifr_hir` -> PASS; old `crates/sifr_hir` directory absent.
+  - `cargo metadata --no-deps --format-version 1 | jq -r '.packages[].name' | rg '^sifr_(hir|ir|lowering|stdlib)$'` -> PASS; workspace contains `sifr_stdlib`, `sifr_ir`, and `sifr_lowering`, with no `sifr_hir` crate.
+  - `python3 scripts/check_file_size_guardrails.py` -> PASS.
+  - `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+  - `python3 scripts/check_source_crate_dependency_direction.py` -> PASS.
+  - `git diff --check` -> PASS.
+  - `scripts/run_all_tests.sh --profile create-pr` -> PASS on the final branch state (`target/validation_lane_reports/create-pr.latest.json`; wall time 135.27s, advisory: warm wall-time budget exceeded after cold e2e rebuild).
+  - `scripts/run_all_tests.sh` -> PASS (`target/validation_lane_reports/merge.latest.json`; wall time 574.22s, hardening variants 31 with 0 failures and 0 blocking failures; advisory: e2e group skew is high).
 
 ## Merged PRs
 
@@ -105,5 +116,5 @@ Record merged PR links here as each milestone lands.
 - M2: https://github.com/sifr-lang/sifr/pull/2285
 - M3: https://github.com/sifr-lang/sifr/pull/2286
 - M4: https://github.com/sifr-lang/sifr/pull/2287
-- M5: pending.
-- M6: pending.
+- M5: https://github.com/sifr-lang/sifr/pull/2288
+- M6: https://github.com/sifr-lang/sifr/pull/2289

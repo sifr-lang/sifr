@@ -20,14 +20,14 @@ status: completed
 
 ### Compiler Changes
 
-1. Rename current `sifr.*` registry to `_sifr.*` in [sifr_lowering/src/stdlib.rs](crates/sifr_lowering/src/stdlib.rs) -- mechanical rename of `get_stdlib_module()` match arms and `is_stdlib_module()` check
+1. Rename current `sifr.*` registry to `_sifr.*` in the compiler-host stdlib contract (`sifr_stdlib`) -- mechanical rename of intrinsic module/member metadata and public stdlib module checks
 2. Rename `emit_stdlib_call` to `emit_intrinsic_call` in [sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs)
 3. Split current 55 functions into initial intrinsic primitives across `_sifr.fs`, `_sifr.sys`, `_sifr.io`, `_sifr.time`, `_sifr.math`, `_sifr.crypto`, `_sifr.regex`, `_sifr.json`
 4. Add `lib/sifr/` directory with `.sifr` files embedded via `include_str!`
 5. Update driver ([sifr_driver/src/lib.rs](crates/sifr_driver/src/lib.rs)) to discover and compile embedded stdlib `.sifr` modules before user modules (two-phase compilation)
-6. Update `starts_with("sifr.")` check in [sifr_lowering/src/lower.rs](crates/sifr_lowering/src/lower.rs) to resolve stdlib `.sifr` files first, falling back to `_sifr.*` intrinsics
+6. Update lowering import resolution to resolve stdlib `.sifr` files first, falling back to `_sifr.*` intrinsics
 7. Update codegen to handle stdlib modules as regular Rust `mod`/`use` (not inline emit)
-8. Block user imports of `_sifr.*` in [sifr_lowering/src/lower.rs](crates/sifr_lowering/src/lower.rs) -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics). Trust boundary: the compiler distinguishes stdlib from user code by checking whether the source originated from the embedded `lib/sifr/` module set (via `include_str!`), not by filename convention.
+8. Block user imports of `_sifr.*` in lowering import resolution -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics). Trust boundary: the compiler distinguishes stdlib from user code by checking whether the source originated from the embedded `lib/sifr/` module set (via `sifr_stdlib` source inventory), not by filename convention.
 9. Proof-of-concept: `lib/sifr/test.sifr` (assert_eq, assert_ne, assert_true, assert_false are pure Sifr)
 
 ### Design Constraint: Safety Contract
@@ -344,7 +344,7 @@ Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `count
 
 ### Files to Change
 
-- `crates/sifr_lowering/src/stdlib.rs` — add 5 new intrinsic signatures to `intrinsic_collections()`
+- `crates/sifr_stdlib` — add 5 new intrinsic signatures to the collections intrinsic registry
 - `crates/sifr_codegen/src/lib.rs` — add codegen for 5 new `_sifr.collections` intrinsics
 - `lib/sifr/collections.sifr` — add `Counter` class + `from_list` factory function
 - `crates/sifr/tests/e2e/pass/stdlib_collections_counter.sifr` — basic Counter construction + method calls
