@@ -12,6 +12,7 @@ mod crypto_regex_uuid;
 mod io_json;
 mod math_test;
 mod platform_misc;
+mod sources;
 mod sys_fs;
 
 use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_time};
@@ -22,6 +23,7 @@ use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_logging,
     intrinsic_platform, intrinsic_toml,
 };
+pub use sources::{StdlibSource, STDLIB_SOURCES};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 
 /// An intrinsic module definition with its functions and constants.
@@ -81,4 +83,40 @@ pub fn is_intrinsic_module(module_name: &str) -> bool {
 /// Check if a module name is a user-facing stdlib module.
 pub fn is_stdlib_module(module_name: &str) -> bool {
     module_name.starts_with("sifr.")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{get_intrinsic_module, is_intrinsic_module, is_stdlib_module, STDLIB_SOURCES};
+
+    #[test]
+    fn known_intrinsic_module_has_signatures() {
+        let module = get_intrinsic_module("_sifr.io").expect("_sifr.io should be registered");
+
+        assert!(module.functions.contains_key("read_text"));
+        assert!(module.constants.is_empty());
+    }
+
+    #[test]
+    fn unknown_intrinsic_module_is_not_registered() {
+        assert!(get_intrinsic_module("_sifr.not_real").is_none());
+    }
+
+    #[test]
+    fn stdlib_source_inventory_contains_user_modules() {
+        let json = STDLIB_SOURCES
+            .iter()
+            .find(|source| source.module == "sifr.json")
+            .expect("sifr.json should be embedded in the stdlib inventory");
+
+        assert!(json.source.contains("from _sifr.json import"));
+    }
+
+    #[test]
+    fn module_classification_keeps_intrinsic_and_user_surfaces_separate() {
+        assert!(is_intrinsic_module("_sifr.io"));
+        assert!(!is_intrinsic_module("sifr.io"));
+        assert!(is_stdlib_module("sifr.io"));
+        assert!(!is_stdlib_module("_sifr.io"));
+    }
 }
