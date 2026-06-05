@@ -33,9 +33,16 @@ pub(crate) fn compile_source_with_metadata(
         sifr_driver::CompileResultFull::Success {
             rust_source,
             used_stdlib_modules,
-            required_crates,
+            required_features,
             ..
-        } => Ok((rust_source, used_stdlib_modules, required_crates)),
+        } => Ok((
+            rust_source,
+            used_stdlib_modules,
+            required_features
+                .into_iter()
+                .map(|feature| feature.id().to_string())
+                .collect(),
+        )),
         sifr_driver::CompileResultFull::Errors { errors } => {
             Err(errors.iter().map(|error| error.message.clone()).collect())
         }
@@ -57,12 +64,15 @@ pub(crate) fn compile_source_with_metadata_and_stats(
         sifr_driver::CompileResultFull::Success {
             rust_source,
             used_stdlib_modules,
-            required_crates,
+            required_features,
             lowering_stats,
         } => Ok((
             rust_source,
             used_stdlib_modules,
-            required_crates,
+            required_features
+                .into_iter()
+                .map(|feature| feature.id().to_string())
+                .collect(),
             lowering_stats,
         )),
         sifr_driver::CompileResultFull::Errors { errors } => {

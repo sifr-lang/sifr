@@ -43,13 +43,11 @@ impl RustEmitter {
                 .require(crate::RuntimeNeed::RandomModuleState);
         }
 
-        if let Some(required_crate) = lowered.required_crate {
-            self.intrinsic_registry_crates
-                .insert(required_crate.to_string());
+        if let Some(feature) = lowered.required_feature {
+            self.intrinsic_registry_features.insert(feature);
         }
-        for required_crate in lowered.additional_required_crates {
-            self.intrinsic_registry_crates
-                .insert((*required_crate).to_string());
+        for required_feature in lowered.additional_required_features {
+            self.intrinsic_registry_features.insert(*required_feature);
         }
     }
 }

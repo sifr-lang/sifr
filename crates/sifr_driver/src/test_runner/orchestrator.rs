@@ -12,6 +12,7 @@ use sifr_frontend::{
     compile_module_hir_with_source, FrontendDiagnosticStyle, FrontendSourceContext,
 };
 use sifr_hir::HirModule;
+use sifr_stdlib::StdlibFeature;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -21,7 +22,7 @@ pub(crate) struct GeneratedTestRunnerProject {
     pub(crate) support_rust_files: HashMap<String, String>,
     pub(crate) all_rust_code: String,
     pub(crate) all_stdlib_modules: HashSet<String>,
-    pub(crate) all_required_crates: HashSet<String>,
+    pub(crate) all_required_features: HashSet<StdlibFeature>,
 }
 
 pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<RenderedDiagnostic>> {
@@ -86,7 +87,7 @@ pub(crate) fn build_test_runner_project(
 
     let mut all_rust_code = String::new();
     let mut all_stdlib_modules = support_codegen.used_stdlib_modules;
-    let mut all_required_crates = support_codegen.required_crates;
+    let mut all_required_features = support_codegen.required_features;
 
     for (module_name, test_file) in test_files_by_module {
         let Some(parsed) = test_modules.get(module_name.as_str()) else {
@@ -141,7 +142,7 @@ pub(crate) fn build_test_runner_project(
         all_rust_code.push_str(&codegen_result.rust_source);
         all_rust_code.push('\n');
         all_stdlib_modules.extend(codegen_result.used_stdlib_modules);
-        all_required_crates.extend(codegen_result.required_crates);
+        all_required_features.extend(codegen_result.required_features);
     }
 
     Ok(GeneratedTestRunnerProject {
@@ -150,6 +151,6 @@ pub(crate) fn build_test_runner_project(
         support_rust_files: support_codegen.rust_files,
         all_rust_code,
         all_stdlib_modules,
-        all_required_crates,
+        all_required_features,
     })
 }

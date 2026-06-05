@@ -2,11 +2,11 @@
 
 Phase contract: [ad-hoc-stdlib-ir-lowering-boundary-refactor.md](./ad-hoc-stdlib-ir-lowering-boundary-refactor.md)
 
-Status: planned
+Status: in progress
 
 ## Checklist
 
-- [ ] `milestone_stdlib_boundary_1`: Create `sifr_stdlib` Contract Crate
+- [x] `milestone_stdlib_boundary_1`: Create `sifr_stdlib` Contract Crate
 - [ ] `milestone_stdlib_boundary_2`: Centralize Stdlib Feature And Dependency Manifest
 - [ ] `milestone_ir_boundary_1`: Extract `sifr_ir` Data Crate
 - [ ] `milestone_ir_boundary_2`: Rename Remainder To `sifr_lowering`
@@ -21,6 +21,7 @@ Record planning and implementation reviews here.
 - Follow-up planning review: `reviews/ad-hoc-stdlib-ir-lowering-boundary-refactor-review-pass-2.md` -> `CHANGES_REQUESTED`; aligned `sifr_stdlib` locked dependency rules with the guardrail forbidden set and added a direct-lowering dependency guard for `sifr_analysis`.
 - Final planning review: `reviews/ad-hoc-stdlib-ir-lowering-boundary-refactor-review-pass-3.md` -> `READY`; reviewer confirmed the contract is implementation-ready with precise crate ownership, acyclic dependency direction, enumerable exit gates, and milestone validation coverage.
 - M1 implementation review: `reviews/ad-hoc-stdlib-boundary-m1-review-1.md` -> `READY`; reviewer confirmed the `sifr_stdlib` contract crate owns intrinsic signatures and embedded source inventory, driver still owns bootstrap compilation, no `sifr_hir` stdlib shim remains, and dependency direction is clean.
+- M2 implementation review: `reviews/ad-hoc-stdlib-boundary-m2-review-4.md` -> `READY`; reviewer found no blockers and confirmed the stdlib feature/dependency manifest boundary is mergeable.
 
 ## Validation Ledger
 
@@ -36,7 +37,20 @@ Record local validation for each milestone before opening the corresponding PR.
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/import_intrinsic.sifr` -> expected `SIFR-IMPORT-0001` failure.
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr` -> PASS.
   - `scripts/run_all_tests.sh --profile create-pr` -> PASS (`target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded).
-- M2: pending.
+- M2: local validation passed.
+  - `cargo check -p sifr_stdlib` -> PASS.
+  - `cargo check -p sifr_codegen` -> PASS.
+  - `cargo check -p sifr_driver` -> PASS.
+  - `cargo test -p sifr_stdlib` -> PASS.
+  - `cargo test -p sifr_driver` -> PASS.
+  - `cargo test -p sifr_codegen generate_project_emits -- --nocapture` -> PASS.
+  - `cargo test -p sifr_codegen lowers_json_intrinsics_with_dependency_metadata -- --nocapture` -> PASS.
+  - `cargo test -p sifr_codegen lowers_random_intrinsics_via_registry -- --nocapture` -> PASS.
+  - `cargo test -p sifr --test e2e --no-run` -> PASS.
+  - `python3 scripts/check_file_size_guardrails.py` -> PASS.
+  - `scripts/run_all_tests.sh --profile create-pr` -> PASS (`target/validation_lane_reports/create-pr.latest.json`; wall time 77.93s, advisories: none).
+  - `scripts/check_codegen_binary_size.sh origin/main HEAD` -> PASS (`baseline_size_bytes=522640`, `candidate_size_bytes=522640`, `delta_bytes=0`).
+  - `cargo test -p sifr_codegen` -> FAILS with 54 pre-existing codegen/render expectation failures; verified representative failure on clean `origin/main` before M2 implementation. Focused M2 dependency/metadata tests above pass.
 - M3: pending.
 - M4: pending.
 - M5: pending.
@@ -46,7 +60,7 @@ Record local validation for each milestone before opening the corresponding PR.
 
 Record merged PR links here as each milestone lands.
 
-- M1: pending.
+- M1: https://github.com/sifr-lang/sifr/pull/2284
 - M2: pending.
 - M3: pending.
 - M4: pending.

@@ -54,7 +54,7 @@ pub(crate) use lib_support::{
 pub(crate) use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 pub(crate) use sifr_type_system::{ParamConvention, Type};
 pub(crate) use std::cell::{Cell, RefCell};
-pub(crate) use std::collections::{BTreeSet, HashMap, HashSet};
+pub(crate) use std::collections::{HashMap, HashSet};
 mod lower_expr;
 pub use lower_expr::*;
 mod lower_item;

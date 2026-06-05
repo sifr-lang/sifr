@@ -144,25 +144,25 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         rust_source,
         used_stdlib_modules: emitter.used_stdlib_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
-        required_crates: {
-            let mut crates = emitter.intrinsic_registry_crates;
+        required_features: {
+            let mut features = emitter.intrinsic_registry_features;
             if emitter.runtime_needs.bigint() || import_needs.runtime.numeric.needs_bigint {
-                crates.insert("num-bigint".to_string());
-                crates.insert("num-traits".to_string());
+                features.insert(sifr_stdlib::StdlibFeature::NumBigint);
+                features.insert(sifr_stdlib::StdlibFeature::NumTraits);
             }
             if import_needs.runtime.numeric.needs_decimal {
-                crates.insert("rust_decimal".to_string());
+                features.insert(sifr_stdlib::StdlibFeature::RustDecimal);
             }
             if import_needs.runtime.numeric.needs_bigdecimal {
-                crates.insert("bigdecimal".to_string());
+                features.insert(sifr_stdlib::StdlibFeature::BigDecimal);
             }
             if import_needs.runtime.needs_sifr_int {
-                crates.insert("sifr_runtime".to_string());
+                features.insert(sifr_stdlib::StdlibFeature::SifrRuntime);
             }
             if uses_task_sleep {
-                crates.insert("tokio".to_string());
+                features.insert(sifr_stdlib::StdlibFeature::Tokio);
             }
-            crates
+            features
         },
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,

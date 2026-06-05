@@ -17,7 +17,7 @@ pub(crate) fn execute_test_runner_project(
 ) -> Result<TestRunnerExecutionOutcome, Vec<RenderedDiagnostic>> {
     let cargo_toml = generate_test_runner_cargo_toml(
         &generated_project.all_stdlib_modules,
-        &generated_project.all_required_crates,
+        &generated_project.all_required_features,
     );
     let test_lib = compose_test_runner_lib(
         &generated_project.support_module_names,
@@ -171,16 +171,16 @@ fn test_runner_cache_key(
         .map(String::as_str)
         .collect();
     stdlib_modules.sort_unstable();
-    let mut required_crates: Vec<&str> = generated_project
-        .all_required_crates
+    let mut required_features: Vec<&str> = generated_project
+        .all_required_features
         .iter()
-        .map(String::as_str)
+        .map(|feature| feature.id())
         .collect();
-    required_crates.sort_unstable();
+    required_features.sort_unstable();
     format!(
         "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[stdlib]\n{}\n[crates]\n{}",
         generated_project.cache_scope.display(),
         stdlib_modules.join("\n"),
-        required_crates.join("\n")
+        required_features.join("\n")
     )
 }

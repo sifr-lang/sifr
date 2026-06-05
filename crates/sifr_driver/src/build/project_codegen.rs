@@ -4,13 +4,14 @@ use crate::project::{
 };
 use sifr_codegen::{generate_rust_multi_with_metadata, StdlibCode};
 use sifr_hir::HirModule;
+use sifr_stdlib::StdlibFeature;
 use std::collections::{BTreeMap, HashSet};
 
 pub(super) struct GeneratedBinaryProject {
     pub(super) main_rs: String,
     pub(super) support_modules: BTreeMap<String, String>,
     pub(super) used_stdlib_modules: HashSet<String>,
-    pub(super) required_crates: HashSet<String>,
+    pub(super) required_features: HashSet<StdlibFeature>,
 }
 
 impl GeneratedBinaryProject {
@@ -41,7 +42,7 @@ pub(super) fn generated_single_file_binary_project(
         main_rs: codegen_result.rust_source,
         support_modules: BTreeMap::new(),
         used_stdlib_modules: codegen_result.used_stdlib_modules,
-        required_crates: codegen_result.required_crates,
+        required_features: codegen_result.required_features,
     }
 }
 
@@ -83,6 +84,6 @@ pub(super) fn generated_project_binary_project(
         main_rs,
         support_modules,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
-        required_crates: codegen_result.required_crates,
+        required_features: codegen_result.required_features,
     })
 }

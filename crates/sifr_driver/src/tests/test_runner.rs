@@ -397,16 +397,16 @@ fn test_run_tests_frontend_type_errors_use_single_path_prefix() {
 }
 
 #[test]
-fn test_generate_test_runner_cargo_toml_includes_required_crates() {
+fn test_generate_test_runner_cargo_toml_includes_required_features() {
     let stdlib_modules = HashSet::new();
-    let required_crates = HashSet::from([
-        "regex".to_string(),
-        "rand".to_string(),
-        "rand_distr".to_string(),
-        "sifr_runtime".to_string(),
+    let required_features = HashSet::from([
+        sifr_stdlib::StdlibFeature::Regex,
+        sifr_stdlib::StdlibFeature::Rand,
+        sifr_stdlib::StdlibFeature::RandDistr,
+        sifr_stdlib::StdlibFeature::SifrRuntime,
     ]);
 
-    let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
+    let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_features);
     assert!(cargo_toml.contains("name = \"sifr_tests\""));
     assert!(cargo_toml.contains("regex = \"1.12.3\""));
     assert!(cargo_toml.contains("rand = \"0.10.1\""));
@@ -417,9 +417,9 @@ fn test_generate_test_runner_cargo_toml_includes_required_crates() {
 #[test]
 fn test_generate_test_runner_cargo_toml_preserves_stdlib_deps() {
     let stdlib_modules = HashSet::from(["sifr.json".to_string()]);
-    let required_crates = HashSet::new();
+    let required_features = HashSet::new();
 
-    let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
+    let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_features);
     assert!(cargo_toml
         .contains("serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"));
     assert!(cargo_toml.contains("serde = { version = \"1.0.228\", features = [\"derive\"] }"));
@@ -428,9 +428,9 @@ fn test_generate_test_runner_cargo_toml_preserves_stdlib_deps() {
 #[test]
 fn test_generate_test_runner_cargo_toml_preserves_tomllib_ordering_deps() {
     let stdlib_modules = HashSet::from(["sifr.tomllib".to_string()]);
-    let required_crates = HashSet::new();
+    let required_features = HashSet::new();
 
-    let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
+    let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_features);
     assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
 }
 

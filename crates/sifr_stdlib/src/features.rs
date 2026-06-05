@@ -1,0 +1,435 @@
+use std::collections::{BTreeSet, HashSet};
+use std::env;
+use std::path::{Path, PathBuf};
+
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum StdlibFeature {
+    Base64,
+    BigDecimal,
+    Blake2,
+    Chrono,
+    Flate2,
+    Md5,
+    NumBigint,
+    NumTraits,
+    Rand,
+    RandDistr,
+    Regex,
+    RustDecimal,
+    SerdeJson,
+    Sha1,
+    Sha2,
+    SifrRuntime,
+    Tokio,
+    Toml,
+    Uuid,
+    Zip,
+}
+
+impl StdlibFeature {
+    #[must_use]
+    pub const fn id(self) -> &'static str {
+        match self {
+            Self::Base64 => "base64",
+            Self::BigDecimal => "bigdecimal",
+            Self::Blake2 => "blake2",
+            Self::Chrono => "chrono",
+            Self::Flate2 => "flate2",
+            Self::Md5 => "md5",
+            Self::NumBigint => "num-bigint",
+            Self::NumTraits => "num-traits",
+            Self::Rand => "rand",
+            Self::RandDistr => "rand_distr",
+            Self::Regex => "regex",
+            Self::RustDecimal => "rust_decimal",
+            Self::SerdeJson => "serde_json",
+            Self::Sha1 => "sha1",
+            Self::Sha2 => "sha2",
+            Self::SifrRuntime => "sifr_runtime",
+            Self::Tokio => "tokio",
+            Self::Toml => "toml",
+            Self::Uuid => "uuid",
+            Self::Zip => "zip",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct GeneratedCargoDependency {
+    pub package: &'static str,
+    pub spec: &'static str,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct StdlibFeatureSpec {
+    pub feature: StdlibFeature,
+    pub cargo_dependencies: &'static [GeneratedCargoDependency],
+}
+
+const BASE64_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "base64",
+    spec: "base64 = \"0.22.1\"",
+}];
+const BIGDECIMAL_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "bigdecimal",
+    spec: "bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }",
+}];
+const BLAKE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "blake2",
+    spec: "blake2 = \"0.10.6\"",
+}];
+const CHRONO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "chrono",
+    spec: "chrono = \"0.4.44\"",
+}];
+const FLATE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "flate2",
+    spec: "flate2 = \"1.1.9\"",
+}];
+const MD5_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "md5",
+    spec: "md5 = \"0.8.0\"",
+}];
+const NUM_BIGINT_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "num-bigint",
+    spec: "num-bigint = \"0.4.6\"",
+}];
+const NUM_TRAITS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "num-traits",
+    spec: "num-traits = \"0.2.19\"",
+}];
+const RAND_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "rand",
+    spec: "rand = \"0.10.1\"",
+}];
+const RAND_DISTR_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "rand_distr",
+    spec: "rand_distr = \"0.6.0\"",
+}];
+const REGEX_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "regex",
+    spec: "regex = \"1.12.3\"",
+}];
+const RUST_DECIMAL_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "rust_decimal",
+    spec: "rust_decimal = { version = \"1.41.0\", features = [\"maths\", \"serde-with-str\"] }",
+}];
+const SERDE_JSON_DEPS: &[GeneratedCargoDependency] = &[
+    GeneratedCargoDependency {
+        package: "serde_json",
+        spec: "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }",
+    },
+    GeneratedCargoDependency {
+        package: "serde",
+        spec: "serde = { version = \"1.0.228\", features = [\"derive\"] }",
+    },
+];
+const SHA1_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "sha1",
+    spec: "sha1 = \"0.11.0\"",
+}];
+const SHA2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "sha2",
+    spec: "sha2 = \"0.11.0\"",
+}];
+const SIFR_RUNTIME_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "sifr_runtime",
+    spec: "sifr_runtime",
+}];
+const TOKIO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "tokio",
+    spec: "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"sync\", \"time\"] }",
+}];
+const TOML_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "toml",
+    spec: "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }",
+}];
+const UUID_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "uuid",
+    spec: "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }",
+}];
+const ZIP_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "zip",
+    spec: "zip = \"8.6.0\"",
+}];
+
+pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Base64,
+        cargo_dependencies: BASE64_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::BigDecimal,
+        cargo_dependencies: BIGDECIMAL_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Blake2,
+        cargo_dependencies: BLAKE2_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Chrono,
+        cargo_dependencies: CHRONO_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Flate2,
+        cargo_dependencies: FLATE2_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Md5,
+        cargo_dependencies: MD5_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::NumBigint,
+        cargo_dependencies: NUM_BIGINT_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::NumTraits,
+        cargo_dependencies: NUM_TRAITS_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Rand,
+        cargo_dependencies: RAND_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::RandDistr,
+        cargo_dependencies: RAND_DISTR_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Regex,
+        cargo_dependencies: REGEX_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::RustDecimal,
+        cargo_dependencies: RUST_DECIMAL_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::SerdeJson,
+        cargo_dependencies: SERDE_JSON_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Sha1,
+        cargo_dependencies: SHA1_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Sha2,
+        cargo_dependencies: SHA2_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::SifrRuntime,
+        cargo_dependencies: SIFR_RUNTIME_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Tokio,
+        cargo_dependencies: TOKIO_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Toml,
+        cargo_dependencies: TOML_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Uuid,
+        cargo_dependencies: UUID_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Zip,
+        cargo_dependencies: ZIP_DEPS,
+    },
+];
+
+#[must_use]
+pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
+    match name {
+        "base64" => Some(StdlibFeature::Base64),
+        "bigdecimal" => Some(StdlibFeature::BigDecimal),
+        "blake2" => Some(StdlibFeature::Blake2),
+        "chrono" => Some(StdlibFeature::Chrono),
+        "flate2" => Some(StdlibFeature::Flate2),
+        "md5" => Some(StdlibFeature::Md5),
+        "num-bigint" => Some(StdlibFeature::NumBigint),
+        "num-traits" => Some(StdlibFeature::NumTraits),
+        "rand" => Some(StdlibFeature::Rand),
+        "rand_distr" => Some(StdlibFeature::RandDistr),
+        "regex" => Some(StdlibFeature::Regex),
+        "rust_decimal" => Some(StdlibFeature::RustDecimal),
+        "serde_json" => Some(StdlibFeature::SerdeJson),
+        "sha1" => Some(StdlibFeature::Sha1),
+        "sha2" => Some(StdlibFeature::Sha2),
+        "sifr_runtime" | "sifr-runtime" => Some(StdlibFeature::SifrRuntime),
+        "tokio" => Some(StdlibFeature::Tokio),
+        "toml" => Some(StdlibFeature::Toml),
+        "uuid" => Some(StdlibFeature::Uuid),
+        "zip" => Some(StdlibFeature::Zip),
+        _ => None,
+    }
+}
+
+#[must_use]
+pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature] {
+    match module_name {
+        "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
+            &[StdlibFeature::SerdeJson]
+        }
+        "sifr.time" | "_sifr.time" => &[StdlibFeature::Chrono],
+        "sifr.random" | "_sifr.crypto" => &[StdlibFeature::Rand, StdlibFeature::RandDistr],
+        "sifr.uuid" | "_sifr.uuid" => &[StdlibFeature::Rand, StdlibFeature::Uuid],
+        "sifr.re" | "_sifr.regex" | "sifr.pathlib" => &[StdlibFeature::Regex],
+        "sifr.hash" | "sifr.hashlib" => &[
+            StdlibFeature::Sha2,
+            StdlibFeature::Md5,
+            StdlibFeature::Sha1,
+            StdlibFeature::Blake2,
+        ],
+        "sifr.encoding" | "sifr.base64" => &[StdlibFeature::Base64],
+        "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
+        "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
+        "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
+            &[StdlibFeature::Flate2, StdlibFeature::Zip]
+        }
+        "_bigint" => &[StdlibFeature::NumBigint, StdlibFeature::NumTraits],
+        _ => &[],
+    }
+}
+
+#[must_use]
+pub fn generated_cargo_dependencies(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> Vec<String> {
+    let mut deps = Vec::new();
+    let mut packages = BTreeSet::new();
+
+    for module_name in stdlib_modules
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>()
+    {
+        for feature in features_for_stdlib_module(module_name) {
+            push_feature_dependencies(&mut deps, &mut packages, *feature);
+        }
+    }
+
+    for feature in required_features.iter().copied().collect::<BTreeSet<_>>() {
+        push_feature_dependencies(&mut deps, &mut packages, feature);
+    }
+
+    deps
+}
+
+fn push_feature_dependencies(
+    deps: &mut Vec<String>,
+    packages: &mut BTreeSet<&'static str>,
+    feature: StdlibFeature,
+) {
+    if let Some(spec) = STDLIB_FEATURE_SPECS
+        .iter()
+        .find(|spec| spec.feature == feature)
+    {
+        for dependency in spec.cargo_dependencies {
+            if packages.insert(dependency.package) {
+                deps.push(render_dependency_spec(dependency));
+            }
+        }
+    }
+}
+
+fn render_dependency_spec(dependency: &GeneratedCargoDependency) -> String {
+    if dependency.package == "sifr_runtime" {
+        return sifr_runtime_dependency_spec();
+    }
+    dependency.spec.to_string()
+}
+
+fn sifr_runtime_dependency_spec() -> String {
+    let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
+    let escaped_path = runtime_path
+        .to_string_lossy()
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"");
+    format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
+}
+
+fn discover_sifr_runtime_path() -> Option<PathBuf> {
+    env::var_os("SIFR_RUNTIME_PATH")
+        .map(PathBuf::from)
+        .filter(|path| path.join("Cargo.toml").is_file())
+        .or_else(discover_sifr_runtime_path_from_current_dir)
+        .or_else(discover_sifr_runtime_path_from_current_exe)
+}
+
+fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
+    env::current_dir()
+        .ok()
+        .and_then(|dir| find_sifr_runtime_ancestor(&dir))
+}
+
+fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
+    env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+        .and_then(|dir| find_sifr_runtime_ancestor(&dir))
+}
+
+fn find_sifr_runtime_ancestor(start: &Path) -> Option<PathBuf> {
+    for ancestor in start.ancestors() {
+        let candidate = ancestor.join("crates").join("sifr_runtime");
+        if candidate.join("Cargo.toml").is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn compile_time_sifr_runtime_path() -> PathBuf {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    match manifest_dir.parent() {
+        Some(parent) => parent.join("sifr_runtime"),
+        None => manifest_dir.join("../sifr_runtime"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{generated_cargo_dependencies, StdlibFeature};
+    use std::collections::HashSet;
+
+    #[test]
+    fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
+        let stdlib_modules = HashSet::from([
+            "sifr.json".to_string(),
+            "_sifr.json".to_string(),
+            "sifr.random".to_string(),
+        ]);
+        let required_features = HashSet::from([StdlibFeature::SerdeJson, StdlibFeature::Rand]);
+
+        let deps = generated_cargo_dependencies(&stdlib_modules, &required_features);
+
+        assert_eq!(
+            deps,
+            vec![
+                "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }",
+                "serde = { version = \"1.0.228\", features = [\"derive\"] }",
+                "rand = \"0.10.1\"",
+                "rand_distr = \"0.6.0\"",
+            ]
+        );
+    }
+
+    #[test]
+    fn unknown_modules_and_empty_features_do_not_emit_dependencies() {
+        let stdlib_modules = HashSet::from(["sifr.io".to_string()]);
+        let required_features = HashSet::new();
+
+        assert!(generated_cargo_dependencies(&stdlib_modules, &required_features).is_empty());
+    }
+
+    #[test]
+    fn runtime_and_tokio_features_render_owned_dependency_specs() {
+        let deps = generated_cargo_dependencies(
+            &HashSet::new(),
+            &HashSet::from([StdlibFeature::SifrRuntime, StdlibFeature::Tokio]),
+        );
+
+        assert!(deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")));
+        assert!(deps.iter().any(|dep| dep.starts_with("tokio = ")));
+    }
+}
