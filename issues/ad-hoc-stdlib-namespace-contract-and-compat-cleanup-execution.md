@@ -69,6 +69,7 @@ Record local validation for each milestone before opening the corresponding PR.
   - `target/debug/sifr run demos/text_and_patterns/main.sifr`
   - `python3 scripts/run_stdlib_namespace_corpus_validation.py --scope demos --command run` passed with 272/272 runnable non-negative demo `main.sifr` entrypoints in 259.4s.
   - `python3 scripts/run_stdlib_namespace_corpus_validation.py --scope leetcode --command check` passed with 411/411 checked-in LeetCode `audits/leetcode/src/*.sifr` fixtures in 346.1s.
+  - `python3 scripts/run_stdlib_namespace_corpus_validation.py --scope leetcode --command run` passed with 411/411 checked-in LeetCode `audits/leetcode/src/*.sifr` fixtures in 387.3s.
   - `rg -n -P "(?<!sifr\\.)\\b(math|heapq|collections)\\.[A-Za-z_]" audits/leetcode/src demos crates/sifr/tests/e2e --glob '*.sifr'` returned only intentional negative e2e fixtures: `bare_stdlib_from_collections_abc.sifr` and `collections_defaultdict_constructor_rejected.sifr`.
   - `rg -n "\\b(defaultdict|Counter|deque)\\s*\\(" audits/leetcode/src demos crates/sifr/tests/e2e --glob '*.sifr'` returned explicit `sifr.collections` uses, local-class false positives, and intentional negative fixtures; no unclassified corpus compatibility users remain.
   - `cargo fmt --check`
