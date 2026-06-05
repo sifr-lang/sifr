@@ -57,7 +57,7 @@ def run_self_test() -> None:
     with tempfile.TemporaryDirectory(dir=REPO_ROOT / "target") as tmp:
         seed = Path(tmp) / "analysis_bypass.rs"
         seed.write_text(
-            "use sifr_hir::HirModule;\nfn bypass() { lower_module(&[]); }\n",
+            "use sifr_lowering::HirModule;\nfn bypass() { lower_module(&[]); }\n",
             encoding="utf-8",
         )
         found = violations([seed])

@@ -9,7 +9,7 @@ Unknown source module import target.
 | Code | `SIFR-IMPORT-0002` |
 | Family | `IMPORT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `unknown import target: '{module}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr` |
 | Declared args | `module (message+json)` |

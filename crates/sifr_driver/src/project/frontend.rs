@@ -10,8 +10,8 @@ use sifr_frontend::{
     collect_module_exports, compile_module_hir_with_source, reveal_type_diagnostics,
     warning_diagnostics, FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
 };
-use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
 use sifr_ir::FlowGraph;
+use sifr_lowering::{ExternalDefs, HirModule, LoweringResult};
 use sifr_python_ast::Stmt;
 use std::collections::HashMap;
 

@@ -9,7 +9,7 @@ Callable arity failure or expression is not callable.
 | Code | `SIFR-CALL-0005` |
 | Family | `CALL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `{callable} callable expects {expected_count} argument(s), got {actual_count} iterable(s)` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/map_callable_arity_mismatch.sifr` |
 | Declared args | `callable (message+json)`, `expected_count (message+json)`, `actual_count (message+json)` |

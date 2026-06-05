@@ -209,7 +209,7 @@ Every `std::io::ErrorKind` that Sifr's I/O intrinsics can produce is mapped to a
 - Update `is_assignable_to` (line ~533): a child class is assignable to its parent class. Walk up the `parent_class` chain. `FileNotFoundError` is assignable to `IOError`, which is assignable to `Error`
 - Update all `Type::Class { name, fields, methods }` construction sites across the codebase to include `parent_class: None` (or the appropriate parent). This is a mechanical but wide-reaching change — grep for `Type::Class {` across all crates
 
-#### 2. HIR: Register Error Subclasses and Additional Fields (`crates/sifr_hir/src/lower.rs`)
+#### 2. HIR: Register Error Subclasses and Additional Fields (`crates/sifr_lowering/src/lower.rs`)
 
 Extend the `builtin_error_classes` registration block (lines ~1376-1410). All error types keep `message: str` (inherited from `Error`). Some get additional fields:
 
@@ -229,13 +229,13 @@ Register parent relationships:
 
 Store the parent relationship in `Type::Class { parent_class: Some("IOError".to_string()), ... }`. Add all types to `ctx.error_types`.
 
-#### 3. HIR: Expand `is_error_class` for Transitive Inheritance (`crates/sifr_hir/src/lower.rs`)
+#### 3. HIR: Expand `is_error_class` for Transitive Inheritance (`crates/sifr_lowering/src/lower.rs`)
 
 - Currently `is_error_class` (line ~712) only checks `(Error)` as the base class
 - Expand to recognize any class whose base is itself in `ctx.error_types` — e.g., `class MyIOError(IOError)` should be recognized as an error class
 - This enables user-defined error subclasses in future milestones (not just built-in ones)
 
-#### 4. HIR: Exhaustiveness Checking with Inheritance (`crates/sifr_hir/src/lower.rs`)
+#### 4. HIR: Exhaustiveness Checking with Inheritance (`crates/sifr_lowering/src/lower.rs`)
 
 - Build an error hierarchy map during lowering: `error_hierarchy: HashMap<String, Vec<String>>` mapping parent -> list of known children
 - Update exhaustiveness checking (lines ~2091-2105):
@@ -381,7 +381,7 @@ Affected intrinsics: `read_text`, `write_text`, `read_lines`, `append_text`, `ge
   - When mixed with other error types (e.g., `IOError` + `JSONDecodeError`), the existing `_TryErr` enum pattern wraps the parent types as before — subclass dispatch happens inside the parent's match arm
 - For the single-error-type case (only `IOError` in the try body), the codegen generates a `match` on `IOError` variants directly
 
-#### 8. Stdlib Signatures: No Changes Required (`crates/sifr_hir/src/stdlib.rs`)
+#### 8. Stdlib Signatures: No Changes Required (`crates/sifr_lowering/src/stdlib.rs`)
 
 - Intrinsic return types stay as `Result[T, IOError]`, `Result[T, JSONDecodeError]`, etc. — no signature changes
 - Stdlib `.sifr` wrappers propagate `Result` unchanged

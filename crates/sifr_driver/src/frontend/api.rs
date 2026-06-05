@@ -2,7 +2,7 @@ use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_
 use crate::diagnostics::{CompileResult, CompileResultFull, RenderedDiagnostic};
 use crate::stdlib::StdlibCompiled;
 use sifr_frontend::{reveal_type_diagnostics, warning_diagnostics, FrontendSourceContext};
-use sifr_hir::LoweringResult;
+use sifr_lowering::LoweringResult;
 use sifr_python_ast::Stmt;
 
 pub(crate) struct FrontendCompiled {

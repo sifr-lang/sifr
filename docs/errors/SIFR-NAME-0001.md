@@ -9,7 +9,7 @@ Undefined variable.
 | Code | `SIFR-NAME-0001` |
 | Family | `NAME` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `undefined variable: '{name}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/undefined_var.sifr` |
 | Declared args | `name (message+json)` |

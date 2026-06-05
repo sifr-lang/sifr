@@ -9,8 +9,8 @@ Fixed-width integer literal or const expression is out of range.
 | Code | `SIFR-INT-0001` |
 | Family | `INT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::fixed_width_fitting` |
+| Owner | `sifr_lowering::lower::fixed_width_fitting` |
 | Message template | `integer value {value} does not fit target type {target_type}; valid range is {min_value}..={max_value}` |
-| Representative fixture | `crates/sifr_hir/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code` |
+| Representative fixture | `crates/sifr_lowering/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code` |
 | Declared args | `value (message+json)`, `target_type (message+json)`, `min_value (message+json)`, `max_value (message+json)` |
 | Dedupe args | `value`, `target_type`, `min_value`, `max_value` |

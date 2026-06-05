@@ -99,7 +99,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/undefined_var.sifr",
             "undefined variable: '{name}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("name")],
             ["name"]
         ),
@@ -110,7 +110,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/undefined_function.sifr",
             "undefined function: '{name}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("name")],
             ["name"]
         ),
@@ -121,7 +121,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/generic_class_missing_type_arg.sifr",
             "unknown type: {name}",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [arg!("name")],
             ["name"]
         ),
@@ -132,7 +132,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr",
             "module '{container}' has no member '{member}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("member"), arg!("container")],
             ["member", "container"]
         ),
@@ -143,7 +143,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/duplicate_function_definition.sifr",
             "duplicate function definition in module: '{name}'",
-            "sifr_hir::lower::module_function_registry",
+            "sifr_lowering::lower::module_function_registry",
             [arg!("name")],
             ["name"]
         ),
@@ -154,7 +154,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/annotated_variable_requires_initializer.sifr",
             "variable '{name}' must be initialized",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("name")],
             ["name"]
         ),
@@ -165,7 +165,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/stdlib_intrinsic_direct_import.sifr",
             "cannot import from '{module}' — _sifr.* modules are internal compiler intrinsics",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("module")],
             ["module"]
         ),
@@ -176,7 +176,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr",
             "unknown import target: '{module}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("module")],
             ["module"]
         ),
@@ -187,7 +187,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/unsupported_import_statement.sifr",
             "unsupported import form: {form}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("form")],
             ["form"]
         ),
@@ -196,9 +196,9 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "IMPORT",
             "Private module member import.",
             Severity::Error,
-            "crates/sifr_hir/src/lower/name_import_diagnostics_tests.rs",
+            "crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs",
             "cannot import private name '{name}' from module '{module}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("name"), arg!("module")],
             ["name", "module"]
         ),
@@ -250,7 +250,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/type_mismatch.sifr",
             "type mismatch: expected {expected}, got {actual}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("expected"), arg!("actual")],
             ["expected", "actual"]
         ),
@@ -261,7 +261,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr",
             "conditional branches have incompatible types: {then_type} and {else_type}",
-            "sifr_hir::lower::if_expression",
+            "sifr_lowering::lower::if_expression",
             [arg!("then_type"), arg!("else_type")],
             ["then_type", "else_type"]
         ),
@@ -272,7 +272,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/missing_type_annotation.sifr",
             "missing type annotation for {name}",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [arg!("name"), json_arg!("declaration_kind")],
             ["name", "declaration_kind"]
         ),
@@ -305,7 +305,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/invalid_type_annotation.sifr",
             "invalid type annotation for {annotation_kind}",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [arg!("annotation_kind")],
             ["annotation_kind"]
         ),
@@ -316,7 +316,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/container_literal_type_conflict.sifr",
             "container literal has conflicting {element_kind} types: {expected} and {actual}",
-            "sifr_hir::lower::container_literal_specialization",
+            "sifr_lowering::lower::container_literal_specialization",
             [arg!("element_kind"), arg!("expected"), arg!("actual")],
             ["element_kind", "expected", "actual"]
         ),
@@ -327,7 +327,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/tuple_unpack_shape_mismatch.sifr",
             "tuple unpacking: expected {expected_count} values, got {actual_count}",
-            "sifr_hir::lower::tuple_unpack",
+            "sifr_lowering::lower::tuple_unpack",
             [arg!("expected_count"), arg!("actual_count")],
             ["expected_count", "actual_count"]
         ),
@@ -338,7 +338,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/typevar_constraints_violation.sifr",
             "type '{actual}' does not satisfy constraints ({constraints}) required by type parameter '{type_param}'",
-            "sifr_hir::lower::expressions",
+            "sifr_lowering::lower::expressions",
             [arg!("actual"), arg!("constraints"), arg!("type_param")],
             ["actual", "constraints", "type_param"]
         ),
@@ -349,7 +349,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr",
             "function {function}: unsupported default argument expression for parameter {parameter}",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [arg!("function"), arg!("parameter")],
             ["function", "parameter"]
         ),
@@ -360,7 +360,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/unsupported_yield_expression.sifr",
             "unsupported expression form: {form}",
-            "sifr_hir::lower::expressions",
+            "sifr_lowering::lower::expressions",
             [arg!("form")],
             ["form"]
         ),
@@ -371,7 +371,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Warning,
             "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_arithmetic_overflow_as_structured_warning",
             "integer {operation} may overflow at runtime",
-            "sifr_hir::lower::arithmetic_warnings",
+            "sifr_lowering::lower::arithmetic_warnings",
             [arg!("operation")],
             ["operation"]
         ),
@@ -382,7 +382,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Note,
             "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note",
             "revealed type is {revealed_type}",
-            "sifr_hir::lower::builtin_calls",
+            "sifr_lowering::lower::builtin_calls",
             [arg!("revealed_type")],
             ["revealed_type"]
         ),
@@ -393,7 +393,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/async_no_suspend_rejected.sifr",
             "{message}",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [arg!("message")],
             ["message"]
         ),
@@ -404,7 +404,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/async_transitive_no_suspend_await_rejected.sifr",
             "{message}",
-            "sifr_hir::lower::async_await",
+            "sifr_lowering::lower::async_await",
             [arg!("message")],
             ["message"]
         ),
@@ -415,7 +415,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/blocking_io_direct_call_in_async_rejected.sifr",
             "{message}",
-            "sifr_hir::lower::workload_annotations",
+            "sifr_lowering::lower::workload_annotations",
             [arg!("message")],
             ["message"]
         ),
@@ -426,7 +426,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/cpu_heavy_direct_call_in_async_rejected.sifr",
             "{message}",
-            "sifr_hir::lower::workload_annotations",
+            "sifr_lowering::lower::workload_annotations",
             [arg!("message")],
             ["message"]
         ),
@@ -437,7 +437,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/spawn_blocking_unannotated_rejected.sifr",
             "{message}",
-            "sifr_hir::lower::workload_annotations",
+            "sifr_lowering::lower::workload_annotations",
             [arg!("message")],
             ["message"]
         ),
@@ -448,7 +448,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/blocking_io_on_async_def_rejected.sifr",
             "{message}",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [arg!("message")],
             ["message"]
         ),
@@ -459,7 +459,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr",
             "invalid Decimal literal: {literal}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("literal")],
             ["literal"]
         ),
@@ -470,7 +470,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/bigdecimal_invalid_literal_string.sifr",
             "invalid BigDecimal literal: {literal}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("literal")],
             ["literal"]
         ),
@@ -503,7 +503,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/decimal_constructor_float.sifr",
             "Decimal cannot be constructed from float value {value}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("value")],
             ["value"]
         ),
@@ -514,7 +514,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/bigdecimal_constructor_float.sifr",
             "BigDecimal cannot be constructed from float value {value}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("value")],
             ["value"]
         ),
@@ -525,7 +525,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/decimal_round_scale_out_of_range.sifr",
             "invalid Decimal scale {scale}",
-            "sifr_hir::lower::decimal_methods",
+            "sifr_lowering::lower::decimal_methods",
             [arg!("scale"), json_arg!("operation")],
             ["scale", "operation"]
         ),
@@ -536,7 +536,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/bigdecimal_quantize_negative_scale_context.sifr",
             "invalid BigDecimal {argument}: {value}",
-            "sifr_hir::lower::decimal_methods",
+            "sifr_lowering::lower::decimal_methods",
             [arg!("argument"), arg!("value"), json_arg!("operation")],
             ["argument", "value", "operation"]
         ),
@@ -545,9 +545,9 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "INT",
             "Fixed-width integer literal or const expression is out of range.",
             Severity::Error,
-            "crates/sifr_hir/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code",
+            "crates/sifr_lowering/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code",
             "integer value {value} does not fit target type {target_type}; valid range is {min_value}..={max_value}",
-            "sifr_hir::lower::fixed_width_fitting",
+            "sifr_lowering::lower::fixed_width_fitting",
             [
                 arg!("value"),
                 arg!("target_type"),
@@ -563,7 +563,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/reserved_int128_annotation.sifr",
             "reserved integer width name {name} is not supported yet",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [arg!("name")],
             ["name"]
         ),
@@ -572,9 +572,9 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "INT",
             "Compile-time integer evaluation budget exceeded.",
             Severity::Error,
-            "crates/sifr_hir/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code",
+            "crates/sifr_lowering/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code",
             "integer literal exceeds compile-time evaluation budget: {digits} decimal digits (max {max_digits})",
-            "sifr_hir::lower::integer_literal_diagnostics",
+            "sifr_lowering::lower::integer_literal_diagnostics",
             [arg!("digits"), arg!("max_digits")],
             ["digits", "max_digits"]
         ),
@@ -585,7 +585,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/exact_int_division_requires_handling.sifr",
             "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe",
-            "sifr_hir::lower::integer_failure_diagnostics",
+            "sifr_lowering::lower::integer_failure_diagnostics",
             [],
             []
         ),
@@ -618,7 +618,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Warning,
             "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning",
             "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [],
             []
         ),

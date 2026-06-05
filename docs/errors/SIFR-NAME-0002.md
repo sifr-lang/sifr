@@ -9,7 +9,7 @@ Undefined function or callable.
 | Code | `SIFR-NAME-0002` |
 | Family | `NAME` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `undefined function: '{name}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/undefined_function.sifr` |
 | Declared args | `name (message+json)` |

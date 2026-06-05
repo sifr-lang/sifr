@@ -9,7 +9,7 @@ Unreachable statement ignored during lowering.
 | Code | `SIFR-FLOW-0901` |
 | Family | `FLOW` |
 | Severity | Warning |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `unreachable statement ignored` |
 | Representative fixture | `crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_unreachable_statement_as_structured_warning` |
 | Declared args | n/a |

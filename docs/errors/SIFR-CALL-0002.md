@@ -9,7 +9,7 @@ Unexpected keyword argument.
 | Code | `SIFR-CALL-0002` |
 | Family | `CALL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `{callable} got an unexpected keyword argument '{keyword}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/sorted_unexpected_keyword.sifr` |
 | Declared args | `callable (message+json)`, `keyword (message+json)` |

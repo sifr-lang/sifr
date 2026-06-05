@@ -479,7 +479,7 @@
           "commands": [
             {
               "id": "m25_cfg_repeat",
-              "argv": ["cargo", "test", "-q", "-p", "sifr_hir", "cfg::tests::cfg_repeat_run_matrix_is_deterministic", "--", "--nocapture"],
+              "argv": ["cargo", "test", "-q", "-p", "sifr_lowering", "cfg::tests::cfg_repeat_run_matrix_is_deterministic", "--", "--nocapture"],
               "expected_exit": 0
             }
           ],

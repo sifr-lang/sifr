@@ -11,11 +11,11 @@ Primary files and areas:
 - `crates/sifr_type_system/src/infer.rs`: builtin type-name resolution, including `bigint` transition and fixed-width names.
 - `crates/sifr_type_system/src/check.rs`: arithmetic, comparisons, bool/integer separation, decimal/float mixing, fixed-width promotion.
 - `crates/sifr_type_system/src/union.rs`: deterministic ordering and equality for added integer variants.
-- `crates/sifr_hir/src/hir_nodes.rs`: HIR literal payloads and type references.
-- `crates/sifr_hir/src/lower/type_bounds.rs`: `Addable`, `Hashable`, and future output-typed numeric protocol handling.
-- `crates/sifr_hir/src/lower/expressions.rs`: constructors, casts, arithmetic lowering, range/index-related conversions.
-- `crates/sifr_hir/src/lower/statements.rs`: assignment fitting, implicit narrowing rejection, pattern literal checks.
-- `crates/sifr_hir/src/lower/decimal_methods.rs`: decimal/bigdecimal conversion contracts currently mentioning `bigint`.
+- `crates/sifr_lowering/src/hir_nodes.rs`: HIR literal payloads and type references.
+- `crates/sifr_lowering/src/lower/type_bounds.rs`: `Addable`, `Hashable`, and future output-typed numeric protocol handling.
+- `crates/sifr_lowering/src/lower/expressions.rs`: constructors, casts, arithmetic lowering, range/index-related conversions.
+- `crates/sifr_lowering/src/lower/statements.rs`: assignment fitting, implicit narrowing rejection, pattern literal checks.
+- `crates/sifr_lowering/src/lower/decimal_methods.rs`: decimal/bigdecimal conversion contracts currently mentioning `bigint`.
 
 Parser boundary work should avoid broad Ruff submodule churn unless necessary. The intended first step is a parser-driver or AST-to-HIR shim that preserves integer literal lexemes when parser-side numeric storage would be lossy.
 

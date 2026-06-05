@@ -9,7 +9,7 @@ Duplicate enum or class value, or invalid variant.
 | Code | `SIFR-CLASS-0003` |
 | Family | `CLASS` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::classes` |
+| Owner | `sifr_lowering::lower::classes` |
 | Message template | `enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/enum_duplicate_value.sifr` |
 | Declared args | `enum_name (message+json)`, `value (message+json)`, `existing_variant (message+json)`, `duplicate_variant (message+json)` |

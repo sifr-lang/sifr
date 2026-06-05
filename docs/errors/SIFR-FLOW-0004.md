@@ -9,7 +9,7 @@ Function may finish without returning a required value.
 | Code | `SIFR-FLOW-0004` |
 | Family | `FLOW` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `function '{function}' must return a value of type '{return_type}' on all control-flow paths` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/missing_return_value.sifr` |
 | Declared args | `function (message+json)`, `return_type (message+json)` |

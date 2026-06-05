@@ -9,8 +9,8 @@ Except arm type expression has an unsupported form.
 | Code | `SIFR-RESULT-0006` |
 | Family | `RESULT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `invalid except error type: {reason}` |
-| Representative fixture | `crates/sifr_hir/src/lower/statement_diagnostics_tests.rs` |
+| Representative fixture | `crates/sifr_lowering/src/lower/statement_diagnostics_tests.rs` |
 | Declared args | `reason (message+json)` |
 | Dedupe args | `reason` |

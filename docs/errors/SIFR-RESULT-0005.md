@@ -9,7 +9,7 @@ Try body error types are not fully covered by except arms.
 | Code | `SIFR-RESULT-0005` |
 | Family | `RESULT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `except arms do not cover all error types from try body: {uncovered}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/try_except_uncovered_error_types.sifr` |
 | Declared args | `uncovered (message+json)` |

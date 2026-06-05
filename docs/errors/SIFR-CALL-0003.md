@@ -9,7 +9,7 @@ Duplicate argument from positional and keyword overlap.
 | Code | `SIFR-CALL-0003` |
 | Family | `CALL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `{callable} got multiple values for argument '{argument}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/keyword_after_positional_error.sifr` |
 | Declared args | `callable (message+json)`, `argument (message+json)` |

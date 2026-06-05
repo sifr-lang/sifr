@@ -9,7 +9,7 @@ Unsupported expression form.
 | Code | `SIFR-TYPE-0012` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::expressions` |
+| Owner | `sifr_lowering::lower::expressions` |
 | Message template | `unsupported expression form: {form}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/unsupported_yield_expression.sifr` |
 | Declared args | `form (message+json)` |

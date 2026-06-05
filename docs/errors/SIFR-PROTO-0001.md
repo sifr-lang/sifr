@@ -9,7 +9,7 @@ Protocol bound or conformance failure.
 | Code | `SIFR-PROTO-0001` |
 | Family | `PROTO` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `type '{actual}' does not implement protocol '{protocol}' required by type parameter '{type_param}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/generic_bounds_not_satisfied.sifr` |
 | Declared args | `actual (message+json)`, `protocol (message+json)`, `type_param (message+json)` |

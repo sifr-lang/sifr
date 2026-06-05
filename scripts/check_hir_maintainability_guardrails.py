@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce Phase 20 anti-regrowth guardrails for HIR lowering and stdlib registry modules."""
+"""Enforce anti-regrowth guardrails for the lowering crate."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import List
 
 BANNED_MONOLITHS = [
-    "crates/sifr_hir/src/lower.rs",
-    "crates/sifr_hir/src/stdlib.rs",
+    "crates/sifr_lowering/src/lower.rs",
+    "crates/sifr_lowering/src/stdlib.rs",
 ]
 
 CHECKLIST_DOC = Path("internal_docs/hir_maintainability_guardrails.md")
@@ -28,7 +28,7 @@ def resolve_repo_root(script_path: Path) -> Path:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Enforce Phase 20 HIR maintainability guardrails."
+        description="Enforce lowering maintainability guardrails."
     )
     return parser.parse_args()
 
@@ -56,12 +56,12 @@ def main() -> int:
                 )
 
     if failures:
-        print("HIR maintainability guardrails: FAIL")
+        print("lowering maintainability guardrails: FAIL")
         for failure in failures:
             print(f"- {failure}")
         return 1
 
-    print("HIR maintainability guardrails: PASS")
+    print("lowering maintainability guardrails: PASS")
     return 0
 
 

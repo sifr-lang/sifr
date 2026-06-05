@@ -9,7 +9,7 @@ Wrong positional argument count.
 | Code | `SIFR-CALL-0001` |
 | Family | `CALL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `{callable} takes {quantifier} {expected_count} argument(s), got {actual_count}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr` |
 | Declared args | `callable (message+json)`, `quantifier (message+json)`, `expected_count (message+json)`, `actual_count (message+json)` |

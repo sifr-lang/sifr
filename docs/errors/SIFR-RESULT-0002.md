@@ -9,7 +9,7 @@ Invalid Result error type.
 | Code | `SIFR-RESULT-0002` |
 | Family | `RESULT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `invalid Result error type {error_type}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/error_str_not_allowed.sifr` |
 | Declared args | `error_type (message+json)` |

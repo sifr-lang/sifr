@@ -9,8 +9,8 @@ Compile-time integer evaluation budget exceeded.
 | Code | `SIFR-INT-0004` |
 | Family | `INT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::integer_literal_diagnostics` |
+| Owner | `sifr_lowering::lower::integer_literal_diagnostics` |
 | Message template | `integer literal exceeds compile-time evaluation budget: {digits} decimal digits (max {max_digits})` |
-| Representative fixture | `crates/sifr_hir/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code` |
+| Representative fixture | `crates/sifr_lowering/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code` |
 | Declared args | `digits (message+json)`, `max_digits (message+json)` |
 | Dedupe args | `digits`, `max_digits` |

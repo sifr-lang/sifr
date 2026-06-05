@@ -9,7 +9,7 @@ Integer division, modulo, or exponentiation requires handling a typed failure.
 | Code | `SIFR-INT-0005` |
 | Family | `INT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::integer_failure_diagnostics` |
+| Owner | `sifr_lowering::lower::integer_failure_diagnostics` |
 | Message template | `integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/exact_int_division_requires_handling.sifr` |
 | Declared args | n/a |

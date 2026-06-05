@@ -99,7 +99,7 @@ Lambda closures work (from `milestone_generics`), but `def` inside `def` is not 
 3. **Recursive inner functions** (e.g., `backtrack`, `dfs`, `helper` -- extremely common in LeetCode)
 4. **Nested function parameters**: require type annotations (consistent with Sifr's design)
 
-**Key files:** `crates/sifr_hir/src/lower.rs` (add nested function lowering in `lower_stmt`), `crates/sifr_codegen/src/lib.rs` (emit closures/inner fns), `crates/sifr_hir/src/scope.rs` (nested scope chains)
+**Key files:** `crates/sifr_lowering/src/lower.rs` (add nested function lowering in `lower_stmt`), `crates/sifr_codegen/src/lib.rs` (emit closures/inner fns), `crates/sifr_lowering/src/scope.rs` (nested scope chains)
 
 ### Definition of Done (milestone_nested_functions)
 
@@ -124,7 +124,7 @@ status: completed
 2. **Forward references in function parameter and return type annotations**
 3. **`__init__` parameter type resolution** when class is defined later in the file
 
-**Key files:** `crates/sifr_hir/src/lower.rs` (two-pass `lower_module` -- currently single-pass)
+**Key files:** `crates/sifr_lowering/src/lower.rs` (two-pass `lower_module` -- currently single-pass)
 
 ### Definition of Done (milestone_forward_refs)
 
@@ -150,7 +150,7 @@ status: completed
 3. **Comparison on union/optional types**: Allow `==`, `!=`, `<`, `>` between `T | None` and `T`.
 4. **`not collection` truthiness**: `not list_var` should emit `list_var.is_empty()` (15 LeetCode errors).
 
-**Key files:** `crates/sifr_type_system/src/narrow.rs`, `crates/sifr_hir/src/lower.rs`, `crates/sifr_type_system/src/check.rs`
+**Key files:** `crates/sifr_type_system/src/narrow.rs`, `crates/sifr_lowering/src/lower.rs`, `crates/sifr_type_system/src/check.rs`
 
 ### Definition of Done (milestone_narrowing_v3)
 
@@ -180,7 +180,7 @@ status: completed
 6. **`list + list` concatenation**: Support `+` operator for list types (29 LeetCode errors)
 7. **`abs()`, `sum()`, `min()`, `max()` on union types**: Extend builtins to handle optional arguments
 
-**Key files:** `crates/sifr_type_system/src/check.rs`, `crates/sifr_hir/src/lower.rs`, `crates/sifr_codegen/src/lib.rs`
+**Key files:** `crates/sifr_type_system/src/check.rs`, `crates/sifr_lowering/src/lower.rs`, `crates/sifr_codegen/src/lib.rs`
 
 ### Definition of Done (milestone_union_ops)
 
@@ -209,7 +209,7 @@ status: completed
 4. **Variable mutability**: Reassigned variables not emitted as `mut` (3 Rust failures in LeetCode)
 5. **Codegen type mismatches (i64 vs usize)**: 6 Rust failures from wrong integer types in indexing
 
-**Key files:** `crates/sifr_codegen/src/lib.rs`, `crates/sifr_hir/src/lower.rs`
+**Key files:** `crates/sifr_codegen/src/lib.rs`, `crates/sifr_lowering/src/lower.rs`
 
 ### Definition of Done (milestone_subscript_v2)
 
@@ -238,7 +238,7 @@ status: completed
 4. **Tuple unpacking in for loops**: `for i, v in enumerate(lst)` -- extend for-loop target to support all tuple destructuring patterns
 5. **Tuple unpacking in comprehensions**: `[v for i, v in enumerate(lst)]`
 
-**Key files:** `crates/sifr_hir/src/lower.rs`, `crates/sifr_codegen/src/lib.rs`
+**Key files:** `crates/sifr_lowering/src/lower.rs`, `crates/sifr_codegen/src/lib.rs`
 
 ### Definition of Done (milestone_comprehension_v2)
 
@@ -267,7 +267,7 @@ status: completed
 4. **`Callable[[int], int]]`**: Add callable type syntax for higher-order function parameters
 5. **Protocol as generic bound**: `def sort[T: Comparable](items: list[T])` -- use existing protocol infrastructure
 
-**Key files:** `crates/sifr_type_system/src/types.rs` (add `TypeVar`), `crates/sifr_hir/src/lower.rs` (generic resolution), `crates/sifr_codegen/src/lib.rs` (monomorphization or trait-based codegen)
+**Key files:** `crates/sifr_type_system/src/types.rs` (add `TypeVar`), `crates/sifr_lowering/src/lower.rs` (generic resolution), `crates/sifr_codegen/src/lib.rs` (monomorphization or trait-based codegen)
 
 ### Definition of Done (milestone_generics_impl)
 
@@ -302,7 +302,7 @@ status: completed
 10. **Stdlib gaps**: Add `sifr.math` trig (log, sin, cos, tan), fix `sifr.json` to accept non-str types, fix audit test files to use correct API names
 11. **Module-level constants**: Top-level `PI = 3.14` accessible from functions
 
-**Key files:** `crates/sifr_codegen/src/lib.rs`, `crates/sifr_hir/src/lower.rs`, `crates/sifr_hir/src/stdlib.rs`, audit test files
+**Key files:** `crates/sifr_codegen/src/lib.rs`, `crates/sifr_lowering/src/lower.rs`, `crates/sifr_lowering/src/stdlib.rs`, audit test files
 
 ### Definition of Done (milestone_phase_fixes)
 
@@ -360,7 +360,7 @@ Support `[x for row in matrix for x in row]` (multiple `for` clauses in a single
 
 ### 4. Stdlib Fixes
 
-All changes primarily in `crates/sifr_hir/src/stdlib.rs` (and codegen mappings where needed):
+All changes primarily in `crates/sifr_lowering/src/stdlib.rs` (and codegen mappings where needed):
 
 - **Math**: Add `log`, `sin`, `cos`, `tan`, `pow_val`, `min_val`, `max_val`, `round_val`; rename `fabs` -> `abs_val`
 - **IO**: Rename `write_file` -> `write_text`, `read_file` -> `read_text`, `file_exists` -> `exists`
@@ -377,7 +377,7 @@ Add `Set[T]` to the type system and collections stdlib, similar to how `list` an
 
 **Fixes:** `audits/stdlib/05_collections.sifr`
 
-**Key files:** `crates/sifr_hir/src/lower.rs`, `crates/sifr_hir/src/hir_nodes.rs`, `crates/sifr_hir/src/stdlib.rs`, `crates/sifr_codegen/src/lib.rs`, `crates/sifr_type_system/src/types.rs`
+**Key files:** `crates/sifr_lowering/src/lower.rs`, `crates/sifr_lowering/src/hir_nodes.rs`, `crates/sifr_lowering/src/stdlib.rs`, `crates/sifr_codegen/src/lib.rs`, `crates/sifr_type_system/src/types.rs`
 
 ### Definition of Done (milestone_audit_fixup)
 
@@ -402,19 +402,19 @@ status: completed
 
 Track moves through variable assignment (`s2 = s1`). When the RHS of an assignment is a `Name` expression referencing a Move-type variable, mark the source variable as moved. Applies to both `lower_assign()` (untyped assignment) and `lower_ann_assign()` (annotated assignment).
 
-**Key files:** `crates/sifr_hir/src/lower.rs` (lower_assign, lower_ann_assign)
+**Key files:** `crates/sifr_lowering/src/lower.rs` (lower_assign, lower_ann_assign)
 
 ### 2. Move-in-Loop Detection
 
 Detect outer-scope variables consumed inside loop bodies. Before lowering a loop body, snapshot the moved state. After lowering, check which outer-scope variables were newly moved -- these would be unavailable on subsequent iterations.
 
-**Key files:** `crates/sifr_hir/src/scope.rs` (save_moved_state, moved_since), `crates/sifr_hir/src/lower.rs` (lower_for, lower_while)
+**Key files:** `crates/sifr_lowering/src/scope.rs` (save_moved_state, moved_since), `crates/sifr_lowering/src/lower.rs` (lower_for, lower_while)
 
 ### 3. Conditional Move Tracking
 
 Save/restore/merge moved state across if/elif/else branches, matching the existing narrowing snapshot pattern. If a variable is moved in any branch, it is conservatively marked as moved after the if/else block.
 
-**Key files:** `crates/sifr_hir/src/lower.rs` (lower_if)
+**Key files:** `crates/sifr_lowering/src/lower.rs` (lower_if)
 
 ### 4. Set Display Codegen Fix
 

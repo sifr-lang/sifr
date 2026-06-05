@@ -9,7 +9,7 @@ Non-exhaustive match.
 | Code | `SIFR-MATCH-0001` |
 | Family | `MATCH` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `non-exhaustive match: enum {enum_name} has uncovered variants: {uncovered}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/enum_match_non_exhaustive.sifr` |
 | Declared args | `enum_name (message+json)`, `uncovered (message+json)` |

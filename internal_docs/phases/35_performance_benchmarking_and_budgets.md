@@ -79,9 +79,9 @@ The target owner for the canonical frontend API is `crates/sifr_frontend/`. Phas
 - stdlib bootstrap/cache plumbing
 - routing CLI modes through `sifr_frontend` without reimplementing frontend semantics
 
-`sifr_hir` continues to own HIR data structures, lowering internals, type checking internals, ownership analysis, and semantic diagnostics. Phase 35 must not move CLI-specific policy into `sifr_hir`.
+`sifr_lowering` continues to own HIR data structures, lowering internals, type checking internals, ownership analysis, and semantic diagnostics. Phase 35 must not move CLI-specific policy into `sifr_lowering`.
 
-`sifr_analysis` or `sifr_ide` is not implemented in Phase 35, but Phase 35 must leave an explicit extension boundary for it. Editor-oriented queries such as completion, hover, go-to-definition, references, document symbols, semantic tokens, and inlay hints belong above `sifr_frontend` and below `sifr_lsp`. They must consume `sifr_frontend` query results and approved HIR views; LSP handlers must not reach into `sifr_hir` directly for semantic answers.
+`sifr_analysis` or `sifr_ide` is not implemented in Phase 35, but Phase 35 must leave an explicit extension boundary for it. Editor-oriented queries such as completion, hover, go-to-definition, references, document symbols, semantic tokens, and inlay hints belong above `sifr_frontend` and below `sifr_lsp`. They must consume `sifr_frontend` query results and approved HIR views; LSP handlers must not reach into `sifr_lowering` directly for semantic answers.
 
 ## Frontend Migration Path
 
@@ -92,7 +92,7 @@ Phase 35 migrates from today's `sifr_driver/src/frontend/` functions to crate-ow
 3. During migration, `sifr_driver` may temporarily re-export or wrap `sifr_frontend` so callers can move incrementally, but the temporary facade must not own independent semantics.
 4. Update `sifr_driver` CLI/project/test flows to call `sifr_frontend` directly.
 5. Remove temporary `sifr_driver::frontend_query` shims and document any remaining raw `sifr_python_ast`/`sifr_python_parser` dependencies with owner and removal criteria.
-6. Add a split-brain guardrail in `scripts/run_all_tests.sh --profile create-pr` that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` internals. The guardrail must be structured so Phase 36 can extend it to tooling dependency checks without rewriting the core mechanism.
+6. Add a split-brain guardrail in `scripts/run_all_tests.sh --profile create-pr` that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_lowering` internals. The guardrail must be structured so Phase 36 can extend it to tooling dependency checks without rewriting the core mechanism.
 
 ## Shared Frontend API Contract
 
@@ -628,7 +628,7 @@ flowchart TD
   - Make compiler CLI modes consume the `sifr_frontend` analysis/query ownership model for `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows.
   - Remove temporary duplicate frontend semantics from `sifr_driver`.
   - Add `verification/performance/check_frontend_cache_contract.py` and Rust tests proving no split-brain frontend path remains.
-  - Add a reviewed split-brain guardrail. Prefer a code-level constraint when practical; otherwise use a focused script-level guardrail that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_frontend` and approved `sifr_hir` internals.
+  - Add a reviewed split-brain guardrail. Prefer a code-level constraint when practical; otherwise use a focused script-level guardrail that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_frontend` and approved `sifr_lowering` internals.
   - Document final architecture in `internal_docs/frontend_query_architecture.md` and `internal_docs/frontend_cache_invalidation.md`.
   - Document final syntax wrapper architecture in `internal_docs/syntax_architecture.md`.
 - Definition of done:
@@ -655,8 +655,8 @@ flowchart TD
   - `scripts/run_all_tests.sh --profile merge`
 - No benchmark, budget, waiver, or cache contract uses CI-only behavior.
 - No stale query result may be returned after source update.
-- No semantic diagnostics may be generated outside `sifr_frontend` plus approved `sifr_hir` internals.
-- Raw Ruff fork parser/AST dependencies outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` migration paths require documented owner and removal criteria.
+- No semantic diagnostics may be generated outside `sifr_frontend` plus approved `sifr_lowering` internals.
+- Raw Ruff fork parser/AST dependencies outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_lowering` migration paths require documented owner and removal criteria.
 - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
 - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
 - All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.

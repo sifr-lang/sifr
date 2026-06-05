@@ -9,7 +9,7 @@ Tuple or list unpacking shape mismatch.
 | Code | `SIFR-TYPE-0009` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::tuple_unpack` |
+| Owner | `sifr_lowering::lower::tuple_unpack` |
 | Message template | `tuple unpacking: expected {expected_count} values, got {actual_count}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/tuple_unpack_shape_mismatch.sifr` |
 | Declared args | `expected_count (message+json)`, `actual_count (message+json)` |

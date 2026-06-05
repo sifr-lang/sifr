@@ -9,7 +9,7 @@ Invalid nonlocal or nested-function flow.
 | Code | `SIFR-FLOW-0003` |
 | Family | `FLOW` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `recursive nested function '{function}' cannot mutate captured state with nonlocal yet` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr` |
 | Declared args | `function (message+json)` |

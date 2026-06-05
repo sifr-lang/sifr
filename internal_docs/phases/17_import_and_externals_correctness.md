@@ -53,7 +53,7 @@ status: done (2026-03-04, PR #815)
   - Local constants import successfully across modules.
 - Evidence:
   - Local-module constant exports are now registered in project externals (`collect_module_exports` in `crates/sifr_driver/src/lib.rs`).
-  - Local import resolution now treats constants as module-members (`externals.constants`) in `crates/sifr_hir/src/lower.rs`.
+  - Local import resolution now treats constants as module-members (`externals.constants`) in `crates/sifr_lowering/src/lower.rs`.
   - `run_tests` now builds support-module externals and lowers test modules via `lower_module_with_externals`, aligning with project compilation flow.
   - Generated test-runner crate source is now explicitly test-scoped via `compose_test_runner_lib` so non-test cargo builds do not emit unused-import/dead-code noise.
   - Test codegen now emits local-module `use crate::<module>::<name>` imports in test mode (`crates/sifr_codegen/src/entrypoints.rs`).

@@ -9,7 +9,7 @@ Invalid raise expression.
 | Code | `SIFR-RESULT-0003` |
 | Family | `RESULT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `invalid raise expression of type {actual}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/error_raise_str.sifr` |
 | Declared args | `actual (message+json)` |

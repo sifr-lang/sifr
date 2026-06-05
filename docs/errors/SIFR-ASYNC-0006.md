@@ -9,7 +9,7 @@ Synchronous workload annotation applied to async function.
 | Code | `SIFR-ASYNC-0006` |
 | Family | `ASYNC` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `{message}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/blocking_io_on_async_def_rejected.sifr` |
 | Declared args | `message (message+json)` |

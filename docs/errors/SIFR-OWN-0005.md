@@ -9,7 +9,7 @@ Immutable parameter is mutated.
 | Code | `SIFR-OWN-0005` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `cannot mutate through immutable parameter {binding}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/own_parameter_mutation_requires_mut.sifr` |
 | Declared args | `binding (message+json)` |

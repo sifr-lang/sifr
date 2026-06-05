@@ -9,7 +9,7 @@ Unsupported standard-library constructor, method, or surface.
 | Code | `SIFR-STDLIB-0001` |
 | Family | `STDLIB` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::builtin_calls` |
+| Owner | `sifr_lowering::lower::builtin_calls` |
 | Message template | `defaultdict() does not support keyword arguments` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr` |
 | Declared args | n/a |

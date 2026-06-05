@@ -17,7 +17,7 @@ status: active
 - dependency-first project lowering so imported module exports are available before importers are checked
 - canonical HIR compile helpers used by the driver for CLI, project, and test-runner frontend flows
 
-`sifr_frontend` consumes `sifr_syntax` for parsing and `sifr_hir` for lowering and semantic diagnostics. It does not invoke codegen, rustc, cargo, CLI policy, or build artifact creation.
+`sifr_frontend` consumes `sifr_syntax` for parsing and `sifr_lowering` for lowering and semantic diagnostics. It does not invoke codegen, rustc, cargo, CLI policy, or build artifact creation.
 
 TypeScript-Go architecture transfer M1 note: the `FrontendContext` API described
 here is the pre-session, process-local query facade. M3/M4 own re-expressing
@@ -104,7 +104,7 @@ The deleted driver migration shims were:
 - `crates/sifr_driver/src/frontend/parser_diagnostics.rs`
 - `crates/sifr_driver/src/project/exports.rs`
 
-`verification/performance/check_split_brain_guardrail.py` now has no driver/CLI migration allowlist. New parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_hir` internals fail the local validation lane.
+`verification/performance/check_split_brain_guardrail.py` now has no driver/CLI migration allowlist. New parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_lowering` internals fail the local validation lane.
 
 ## Extension Boundary
 

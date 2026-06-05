@@ -50,7 +50,7 @@ Add a `convention` field to the `Parameter` AST node.
 
 Add a `convention: ParamConvention` field to `HirParam`. In `lower_function`, propagate the convention from each AST `Parameter` to the corresponding `HirParam`. Default convention: `Borrow` for Move types, `Own` for Copy types (Copy types are always passed by value regardless).
 
-**Key files:** `crates/sifr_hir/src/hir_nodes.rs` (HirParam), `crates/sifr_hir/src/lower.rs` (lower_function)
+**Key files:** `crates/sifr_lowering/src/hir_nodes.rs` (HirParam), `crates/sifr_lowering/src/lower.rs` (lower_function)
 
 ### 4. HIR: Delete `borrows_args` and Update All Call Paths
 
@@ -69,7 +69,7 @@ Apply this convention-aware logic to **all call paths** in `lower.rs`:
 
 **Note:** Constructor calls do not need convention changes -- constructors always take ownership of their arguments. Method `self` receivers continue to use auto-inference (`&self`/`&mut self` from body analysis).
 
-**Key files:** `crates/sifr_hir/src/lower.rs` (function call lowering, callable_info path, lower_method_call)
+**Key files:** `crates/sifr_lowering/src/lower.rs` (function call lowering, callable_info path, lower_method_call)
 
 ### 5. Codegen: Extend `func_signatures`, Register Class Methods, Emit `&T` / `&mut T` / `T`
 
@@ -100,7 +100,7 @@ When a parameter is borrowed (`&T`), code inside the function body needs adjustm
 
 **Important:** The compiler does NOT silently emit `.clone()`. Per the Borrow and Lifetime Strategy contract, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: add `own` to the parameter, call `.clone()` explicitly, or restructure to avoid the escape.
 
-**Key files:** `crates/sifr_codegen/src/lib.rs`, `crates/sifr_hir/src/lower.rs` (escape detection)
+**Key files:** `crates/sifr_codegen/src/lib.rs`, `crates/sifr_lowering/src/lower.rs` (escape detection)
 
 ### Definition of Done (milestone_borrow_default)
 
@@ -138,7 +138,7 @@ Enforce exclusivity rules:
 - Cannot pass a variable as both `mut` and immutable borrow in the same call
 - Error: "cannot borrow `x` as mutable because it is already borrowed"
 
-**Key files:** `crates/sifr_hir/src/scope.rs` (VarInfo), `crates/sifr_hir/src/lower.rs` (function call lowering)
+**Key files:** `crates/sifr_lowering/src/scope.rs` (VarInfo), `crates/sifr_lowering/src/lower.rs` (function call lowering)
 
 ### 2. Error Messages
 
@@ -149,7 +149,7 @@ Add clear, actionable diagnostic messages:
 - "cannot return borrowed parameter 'x' -- use `own` or `.clone()`"
 - "cannot borrow 'x' as mutable because it is already borrowed"
 
-**Key files:** `crates/sifr_hir/src/lower.rs`, `crates/sifr_driver/src/lib.rs`
+**Key files:** `crates/sifr_lowering/src/lower.rs`, `crates/sifr_driver/src/lib.rs`
 
 ### 3. Update Borrowing Audit Tests
 
@@ -208,7 +208,7 @@ Add tests that verify conventions survive across module boundaries:
 - `sifr.collections` mutating functions (`set_add`, `set_remove`, `defaultdict_set`) get `mut` on their first parameter
 - `str.join(items)` codegen adjusted to borrow the list parameter instead of moving it
 
-**Key files:** `crates/sifr_hir/src/stdlib.rs`, `crates/sifr_codegen/src/lib.rs`
+**Key files:** `crates/sifr_lowering/src/stdlib.rs`, `crates/sifr_codegen/src/lib.rs`
 
 ### Concurrency Enablement
 

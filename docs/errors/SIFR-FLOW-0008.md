@@ -9,7 +9,7 @@ For-loop iteration form or source is invalid.
 | Code | `SIFR-FLOW-0008` |
 | Family | `FLOW` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `invalid for-loop iteration: {reason}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/for_loop_invalid_iterable.sifr` |
 | Declared args | `reason (message+json)` |

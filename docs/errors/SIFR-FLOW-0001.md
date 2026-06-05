@@ -9,7 +9,7 @@ Break outside a loop.
 | Code | `SIFR-FLOW-0001` |
 | Family | `FLOW` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `'break' outside of loop` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/break_outside_loop.sifr` |
 | Declared args | n/a |

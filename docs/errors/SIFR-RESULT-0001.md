@@ -9,7 +9,7 @@ Unused Result value.
 | Code | `SIFR-RESULT-0001` |
 | Family | `RESULT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `unused Result value` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/unused_result.sifr` |
 | Declared args | n/a |

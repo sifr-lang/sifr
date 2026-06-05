@@ -9,7 +9,7 @@ Match guard must be bool.
 | Code | `SIFR-MATCH-0002` |
 | Family | `MATCH` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `match guard must be a bool expression, got {actual}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/match_type_mismatch_guard.sifr` |
 | Declared args | `actual (message+json)` |

@@ -9,7 +9,7 @@ Duplicate function definition in a module.
 | Code | `SIFR-NAME-0005` |
 | Family | `NAME` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::module_function_registry` |
+| Owner | `sifr_lowering::lower::module_function_registry` |
 | Message template | `duplicate function definition in module: '{name}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/duplicate_function_definition.sifr` |
 | Declared args | `name (message+json)` |

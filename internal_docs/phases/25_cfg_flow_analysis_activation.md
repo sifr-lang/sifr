@@ -7,7 +7,7 @@ Activate CFG-backed control-flow analysis as the canonical source for correctnes
 - Phase 24
 
 ## Technical Context
-- Existing CFG implementation is defined in `crates/sifr_hir/src/cfg.rs` and exported via `crates/sifr_hir/src/lib.rs`.
+- Existing CFG implementation is defined in `crates/sifr_lowering/src/cfg.rs` and exported via `crates/sifr_lowering/src/lib.rs`.
 - Current gap: CFG exists as a module but is not yet the canonical control-flow truth source used across active frontend/codegen decisions.
 - Activation target for this phase:
   - Integrate CFG construction/consumption into normal analysis flow after HIR lowering contracts.

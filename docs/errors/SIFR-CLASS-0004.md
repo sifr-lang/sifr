@@ -9,7 +9,7 @@ Missing class field.
 | Code | `SIFR-CLASS-0004` |
 | Family | `CLASS` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::expressions` |
+| Owner | `sifr_lowering::lower::expressions` |
 | Message template | `type '{type_name}' has no field '{field}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/missing_field.sifr` |
 | Declared args | `type_name (message+json)`, `field (message+json)` |

@@ -1,6 +1,6 @@
 use super::support::parse_suite;
 use crate::{collect_project_hir_modules, compile_stdlib};
-use sifr_hir::{HirExpr, HirStmt};
+use sifr_lowering::{HirExpr, HirStmt};
 use std::collections::HashMap;
 
 #[test]

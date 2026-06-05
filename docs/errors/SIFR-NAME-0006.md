@@ -9,7 +9,7 @@ Variable declaration lacks a required initializer.
 | Code | `SIFR-NAME-0006` |
 | Family | `NAME` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `variable '{name}' must be initialized` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/annotated_variable_requires_initializer.sifr` |
 | Declared args | `name (message+json)` |

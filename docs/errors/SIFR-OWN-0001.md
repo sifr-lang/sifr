@@ -9,7 +9,7 @@ Use after move.
 | Code | `SIFR-OWN-0001` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `use of moved value {binding}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/use_after_move.sifr` |
 | Declared args | `binding (message+json)` |

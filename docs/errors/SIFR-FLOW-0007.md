@@ -9,7 +9,7 @@ Assignment target form is unsupported by HIR lowering.
 | Code | `SIFR-FLOW-0007` |
 | Family | `FLOW` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `invalid assignment target: {target}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/invalid_assignment_target_attribute_base.sifr` |
 | Declared args | `target (message+json)` |

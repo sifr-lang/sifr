@@ -12,7 +12,7 @@ use crate::{CacheKeyFingerprint, FrontendCacheEntryIdentity, FrontendReuseStats}
 #[cfg(test)]
 use sifr_diagnostics::RenderedDiagnostic;
 #[cfg(test)]
-use sifr_hir::LoweringResult;
+use sifr_lowering::LoweringResult;
 use sifr_syntax::ParsedModule;
 use std::sync::Arc;
 

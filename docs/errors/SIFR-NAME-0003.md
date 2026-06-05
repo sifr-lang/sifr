@@ -9,7 +9,7 @@ Unknown type or generic type name.
 | Code | `SIFR-NAME-0003` |
 | Family | `NAME` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `unknown type: {name}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/generic_class_missing_type_arg.sifr` |
 | Declared args | `name (message+json)` |

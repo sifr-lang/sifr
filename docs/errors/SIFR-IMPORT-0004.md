@@ -9,8 +9,8 @@ Private module member import.
 | Code | `SIFR-IMPORT-0004` |
 | Family | `IMPORT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `cannot import private name '{name}' from module '{module}'` |
-| Representative fixture | `crates/sifr_hir/src/lower/name_import_diagnostics_tests.rs` |
+| Representative fixture | `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs` |
 | Declared args | `name (message+json)`, `module (message+json)` |
 | Dedupe args | `name`, `module` |

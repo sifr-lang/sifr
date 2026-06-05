@@ -9,7 +9,7 @@ Borrowed parameter escapes by return or store.
 | Code | `SIFR-OWN-0003` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `borrowed parameter {binding} escapes` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/borrow_escape_return.sifr` |
 | Declared args | `binding (message+json)`, `escape_kind (json-only)` |

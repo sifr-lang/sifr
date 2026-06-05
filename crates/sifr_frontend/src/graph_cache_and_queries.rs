@@ -12,7 +12,7 @@ use super::{
 use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{module_signature, ModuleSignature};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
-use sifr_hir::{
+use sifr_lowering::{
     lower_module_with_externals_and_name, ExternalDefs, HirModule, LoweringResult,
     LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };

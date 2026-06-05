@@ -855,7 +855,7 @@ New approach: Walk the IR and identify `RustExpr::Clone(inner)` nodes where the 
 - `inner` is a literal (no clone needed — literals are always fresh values)
 - `inner` is a `Copy` type based on the Sifr type information (no clone needed — `i64`, `f64`, `bool`, `char`)
 
-**Explicitly out of scope for this phase:** "Used exactly once" analysis. Determining whether a value is used exactly once requires full dataflow/ownership analysis across the enclosing scope, which is a complex problem that belongs in `sifr_hir` as a proper ownership analysis pass (a future phase concern). This phase only removes clones that are provably unnecessary from local type information alone.
+**Explicitly out of scope for this phase:** "Used exactly once" analysis. Determining whether a value is used exactly once requires full dataflow/ownership analysis across the enclosing scope, which is a complex problem that belongs in `sifr_lowering` as a proper ownership analysis pass (a future phase concern). This phase only removes clones that are provably unnecessary from local type information alone.
 
 Remove unnecessary clones. This is a conservative pass — it only removes clones that are provably unnecessary, never adds them.
 
@@ -891,7 +891,7 @@ The following are **not** addressed in this phase:
 
 - **`Cargo.toml` structured representation.** The generated Rust code's `Cargo.toml` is currently built by string concatenation in the driver. Migrating this to a structured data model is deferred to the package management phase (Phase 18). However, the driver's fragile string-scanning hack for detecting which crates are needed **is** eliminated in this phase — the intrinsic registry declares crate dependencies as metadata, and the codegen returns a `HashSet<String>` of required crates alongside the generated code.
 
-- **HIR-level ownership analysis.** The root cause of many unnecessary `.clone()` calls is that the HIR does not track ownership/borrowing semantics. A proper ownership analysis pass in `sifr_hir` would allow the codegen to emit moves instead of clones in many cases. This is a future phase concern — this phase only removes clones that are trivially provable as unnecessary from type information alone.
+- **HIR-level ownership analysis.** The root cause of many unnecessary `.clone()` calls is that the HIR does not track ownership/borrowing semantics. A proper ownership analysis pass in `sifr_lowering` would allow the codegen to emit moves instead of clones in many cases. This is a future phase concern — this phase only removes clones that are trivially provable as unnecessary from type information alone.
 
 - **Full pattern AST for match arms.** Match arm patterns remain as `String` with a `bindings` annotation. A full structured pattern type is not justified by the current set of patterns Sifr generates.
 

@@ -9,7 +9,7 @@ Immutable bytes value is mutated.
 | Code | `SIFR-OWN-0007` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `bytes is immutable; subscript assignment is not supported` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/bytes_subscript_assignment_unsupported.sifr` |
 | Declared args | n/a |

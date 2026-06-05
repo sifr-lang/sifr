@@ -9,7 +9,7 @@ Decimal scale argument is invalid.
 | Code | `SIFR-DECIMAL-0007` |
 | Family | `DECIMAL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::decimal_methods` |
+| Owner | `sifr_lowering::lower::decimal_methods` |
 | Message template | `invalid Decimal scale {scale}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/decimal_round_scale_out_of_range.sifr` |
 | Declared args | `scale (message+json)`, `operation (json-only)` |

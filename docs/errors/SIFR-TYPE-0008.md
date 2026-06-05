@@ -9,7 +9,7 @@ Container literal elements, keys, or values have conflicting types.
 | Code | `SIFR-TYPE-0008` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::container_literal_specialization` |
+| Owner | `sifr_lowering::lower::container_literal_specialization` |
 | Message template | `container literal has conflicting {element_kind} types: {expected} and {actual}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/container_literal_type_conflict.sifr` |
 | Declared args | `element_kind (message+json)`, `expected (message+json)`, `actual (message+json)` |

@@ -9,7 +9,7 @@ Invalid or unsupported match pattern form.
 | Code | `SIFR-MATCH-0004` |
 | Family | `MATCH` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `invalid match pattern: {reason}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/match_tuple_pattern_requires_tuple_subject.sifr` |
 | Declared args | `reason (message+json)` |

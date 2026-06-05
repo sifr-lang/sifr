@@ -9,7 +9,7 @@ BigDecimal float construction or conversion is forbidden.
 | Code | `SIFR-DECIMAL-0006` |
 | Family | `DECIMAL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `BigDecimal cannot be constructed from float value {value}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/bigdecimal_constructor_float.sifr` |
 | Declared args | `value (message+json)` |

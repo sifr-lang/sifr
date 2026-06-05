@@ -1,5 +1,5 @@
 use sifr_codegen::StdlibCode;
-use sifr_hir::ExternalDefs;
+use sifr_lowering::ExternalDefs;
 
 #[derive(Clone)]
 pub(crate) struct StdlibCompiled {

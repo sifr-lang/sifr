@@ -8,7 +8,7 @@ use sifr_diagnostics::{
     DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, RenderedDiagnostic, Severity,
     SourceMap, SourceSpan,
 };
-use sifr_hir::{
+use sifr_lowering::{
     ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
     RevealTypeDiagnostic,
 };
