@@ -2,13 +2,13 @@
 
 Phase contract: [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md)
 
-Status: milestone_stdlib_namespace_2 ready for PR after reviewer approval and create-pr validation
+Status: milestone_stdlib_namespace_3 ready for parent PR after reviewer approval and local validation
 
 ## Checklist
 
 - [x] `milestone_stdlib_namespace_1`: Policy And Diagnostics
 - [x] `milestone_stdlib_namespace_2`: Atomic Compatibility Removal
-- [ ] `milestone_stdlib_namespace_3`: Corpus Adoption And Closeout
+- [x] `milestone_stdlib_namespace_3`: Corpus Adoption And Closeout
 
 ## Review Artifacts
 
@@ -29,6 +29,7 @@ Record planning and implementation reviews here.
 - M1 implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-m1-implementation-review-pass-2.md` -> `READY` with non-blocking cleanup items.
 - M1 implementation review pass 2: `reviews/ad-hoc-stdlib-namespace-m1-implementation-review-pass-3.md` -> `READY`; reviewer found no blocking M1 issues and confirmed `SIFR-IMPORT-0008` registry/docs, shared bare stdlib helper behavior, lowering args/help transport, project/package probe-then-reclassify behavior, `Stmt::Import` ownership, user-module priority, and required test/fixture coverage.
 - M2 implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-m2-implementation-review-pass-1.md` -> `READY`; reviewer found no blocking M2 contract issues and called out validation hygiene items for the PR gate and M3 closeout.
+- M3 implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-m3-implementation-review-pass-3.md` -> `READY`; reviewer found no correctness blockers in the corpus adoption, defaultdict string-key lowering, typed nested closure params, speculative string-cache rollback/init, or artifact-cache concurrent populate handling. Non-blocking notes to exclude generated pending-snapshot edits and commit/update the LeetCode submodule were handled before the parent PR.
 
 ## Validation Ledger
 
@@ -56,13 +57,31 @@ Record local validation for each milestone before opening the corresponding PR.
   - `python3 scripts/check_file_size_guardrails.py`
   - forbidden production-symbol scans for removed `__compat_sifr_(math|heapq|collections)_`, `__compat_defaultdict_*`, alias resolvers, and synthetic import state returned no hits.
   - `scripts/run_all_tests.sh --profile create-pr` passed on rerun. The first run hit transient cached e2e Rust temp-dir failures for `stdlib_json_consolidated` and `stdlib_tomllib`; both fixtures passed direct `cargo run -q -p sifr -- run ...`, and the rerun passed the full create-pr lane with 67/67 e2e pass fixtures.
-- M3: pending.
-  - Final authoritative gates pending.
+- M3: focused validation passed:
+  - `cargo build -q -p sifr`
+  - `cargo test -p sifr_codegen test_generate_rust_defaultdict_list_len_borrows_string_literal_key -- --nocapture`
+  - `cargo test -p sifr_codegen test_generate_rust_nested_string_function_closure_params_are_typed -- --nocapture`
+  - `cargo test -p sifr_codegen string_local_cache_decl_survives_speculative_if_lowering_rollback -- --nocapture`
+  - `cargo test -p sifr_driver pending_artifact_commit_treats_existing_final_dir_as_concurrent_populate -- --nocapture`
+  - `target/debug/sifr run demos/defaultdict/main.sifr`
+  - `target/debug/sifr run demos/nested_functions/main.sifr`
+  - `target/debug/sifr run demos/text_and_patterns/main.sifr`
+  - `python3 scripts/run_stdlib_namespace_corpus_validation.py --scope demos --command run` passed with 272/272 runnable non-negative demo `main.sifr` entrypoints in 259.4s.
+  - `python3 scripts/run_stdlib_namespace_corpus_validation.py --scope leetcode --command check` passed with 411/411 checked-in LeetCode `audits/leetcode/src/*.sifr` fixtures in 346.1s.
+  - `rg -n -P "(?<!sifr\\.)\\b(math|heapq|collections)\\.[A-Za-z_]" audits/leetcode/src demos crates/sifr/tests/e2e --glob '*.sifr'` returned only intentional negative e2e fixtures: `bare_stdlib_from_collections_abc.sifr` and `collections_defaultdict_constructor_rejected.sifr`.
+  - `rg -n "\\b(defaultdict|Counter|deque)\\s*\\(" audits/leetcode/src demos crates/sifr/tests/e2e --glob '*.sifr'` returned explicit `sifr.collections` uses, local-class false positives, and intentional negative fixtures; no unclassified corpus compatibility users remain.
+  - `cargo fmt --check`
+  - `cargo clippy --workspace -- -D warnings`
+  - `python3 scripts/check_hir_maintainability_guardrails.py`
+  - `python3 scripts/check_file_size_guardrails.py`
+  - `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 149.45s, 67/67 e2e pass fixtures, non-blocking warm wall-time advisory.
+  - `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 598.34s, 73/73 e2e pass fixtures, non-blocking group-skew advisory.
 
 ## Merged PRs
 
 Record merged PR links here as each milestone lands.
 
 - M1: https://github.com/sifr-lang/sifr/pull/2291
-- M2: pending.
-- M3: pending.
+- M2: https://github.com/sifr-lang/sifr/pull/2292
+- M3 corpus submodule: https://github.com/sifr-lang/leetcode/pull/38
+- M3 parent: https://github.com/sifr-lang/sifr/pull/2293

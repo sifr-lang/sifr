@@ -147,7 +147,12 @@ impl PendingCachedArtifact {
                     ..self.report.clone()
                 },
             }),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    std::io::ErrorKind::AlreadyExists | std::io::ErrorKind::DirectoryNotEmpty
+                ) =>
+            {
                 let _ = std::fs::remove_dir_all(&self.staging_root);
                 Ok(CachedArtifactEntry {
                     workspace_root: self.final_root.clone(),
@@ -341,4 +346,56 @@ fn deterministic_hash(value: &str) -> String {
         hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
     }
     format!("{hash:016x}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ArtifactCacheReport, PendingCachedArtifact};
+    use std::path::Path;
+
+    fn temp_dir(name: &str) -> std::path::PathBuf {
+        let unique = format!(
+            "sifr_artifact_cache_{name}_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&dir).expect("temp dir should be created");
+        dir
+    }
+
+    #[test]
+    fn pending_artifact_commit_treats_existing_final_dir_as_concurrent_populate() {
+        let root = temp_dir("concurrent_populate");
+        let staging_root = root.join("stage");
+        let final_root = root.join("final");
+        std::fs::create_dir_all(&staging_root).expect("staging should be created");
+        std::fs::create_dir_all(&final_root).expect("final should be created");
+        std::fs::write(final_root.join("winner"), b"ok").expect("winner file should be written");
+
+        let pending = PendingCachedArtifact {
+            final_root: final_root.clone(),
+            staging_root: staging_root.clone(),
+            report: ArtifactCacheReport {
+                namespace: "test".to_string(),
+                key: "key".to_string(),
+                workspace_root: staging_root,
+                cache_hit: false,
+                miss_reason: Some("not_found".to_string()),
+            },
+        };
+
+        let entry = pending.commit(&[]).expect("commit should use winner dir");
+        let report = entry.report();
+
+        assert!(report.cache_hit);
+        assert_eq!(report.workspace_root, final_root);
+        assert_eq!(report.miss_reason.as_deref(), Some("concurrent_populate"));
+        assert!(!root.join("stage").exists());
+
+        let _ = std::fs::remove_dir_all(Path::new(&root));
+    }
 }

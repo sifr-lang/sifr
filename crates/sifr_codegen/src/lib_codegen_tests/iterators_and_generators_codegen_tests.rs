@@ -267,6 +267,42 @@ fn test_generate_rust_defaultdict_int_augassign_uses_entry_default() {
 }
 
 #[test]
+fn test_generate_rust_defaultdict_list_len_borrows_string_literal_key() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef main():\n    groups = defaultdict(list)\n    groups[\"hit\"].append(\"hot\")\n    assert len(groups[\"hit\"]) == 1\n",
+    );
+
+    assert!(
+        rust_code.contains("groups.get(\"hit\").map_or"),
+        "{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("groups.get(\"hit\".to_string())"),
+        "{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("groups.get(&\"hit\".to_string())"),
+        "{rust_code}"
+    );
+}
+
+#[test]
+fn test_generate_rust_nested_string_function_closure_params_are_typed() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    def greet(name: str) -> str:\n        return \"Hello, \" + name\n    print(greet(\"Sifr\"))\n",
+    );
+
+    assert!(
+        rust_code.contains("let greet = |name: &String|"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("greet(&\"Sifr\".to_string())"),
+        "{rust_code}"
+    );
+}
+
+#[test]
 fn test_generate_rust_tuple_field_assignment_emits_mutable_self_receiver() {
     let rust_code = generate_rust_from_source(
         "class RunningBounds:\n    left: int\n    right: int\n\n    def __init__(self, left: int, right: int):\n        self.left = left\n        self.right = right\n\n    def rotate(self, next_value: int) -> None:\n        self.left, self.right = self.right, next_value\n",

@@ -32,7 +32,24 @@ impl RustEmitter {
             } else {
                 maybe_simple_lowered
             };
-            let (lowered_stmts, skip_rewrite) = if let Some(lowered_stmts) = maybe_simple_lowered {
+            let (lowered_stmts, skip_rewrite) = if let Some(mut lowered_stmts) =
+                maybe_simple_lowered
+            {
+                if let HirStmt::Let { name, ty, .. } = stmt {
+                    let effective_ty = if type_contains_any_or_unknown(ty) {
+                        self.local_binding_types
+                            .get(name)
+                            .cloned()
+                            .unwrap_or_else(|| ty.clone())
+                    } else {
+                        ty.clone()
+                    };
+                    if let Some(cache_stmt) =
+                        self.string_char_cache_init_stmt_for_local(name, &effective_ty)
+                    {
+                        lowered_stmts.push(cache_stmt);
+                    }
+                }
                 (lowered_stmts, false)
             } else if let HirStmt::TupleUnpack { targets, value } = stmt {
                 let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {

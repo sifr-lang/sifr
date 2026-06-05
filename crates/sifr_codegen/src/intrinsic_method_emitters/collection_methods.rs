@@ -107,6 +107,57 @@ impl RustEmitter {
                 }
             }
         }
+        if method == "len" && args.is_empty() {
+            if let HirExpr::Index {
+                object: index_object,
+                index,
+                ..
+            } = object
+            {
+                let effective_index_object_ty = self.effective_registry_expr_ty(index_object);
+                if let Type::Dict(_, value_ty) =
+                    crate::resolve_alias_type_for_plain_call(&effective_index_object_ty)
+                {
+                    if matches!(
+                        crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
+                        Type::List(_)
+                    ) {
+                        let lowered_object =
+                            self.try_lower_dict_indexed_list_mutation_object(index_object)?;
+                        let lowered_index = self.try_lower_registry_expr_strict(index)?;
+                        let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
+                        return Some(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(lowered_object),
+                                method: "get".to_string(),
+                                args: vec![key_arg],
+                            }),
+                            method: "map_or".to_string(),
+                            args: vec![
+                                RustExpr::Literal(crate::RustLiteral::Int(0)),
+                                RustExpr::Closure {
+                                    params: vec![crate::RustParam::Named {
+                                        name: "__sifr_bucket".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(RustExpr::Cast {
+                                        expr: Box::new(RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__sifr_bucket".to_string(),
+                                            )),
+                                            method: "len".to_string(),
+                                            args: vec![],
+                                        }),
+                                        ty: crate::RustType::I64,
+                                    }),
+                                    is_move: false,
+                                },
+                            ],
+                        });
+                    }
+                }
+            }
+        }
         let is_deque_data_field = self.is_deque_data_field(object);
         let object_expr = self.try_lower_registry_expr_strict(object)?;
         if method == "len"
