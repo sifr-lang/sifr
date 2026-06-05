@@ -9,7 +9,7 @@ Statement form is unsupported by HIR lowering.
 | Code | `SIFR-FLOW-0006` |
 | Family | `FLOW` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `unsupported statement form: {form}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/yield_without_value.sifr` |
 | Declared args | `form (message+json)` |

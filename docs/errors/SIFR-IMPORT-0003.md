@@ -9,7 +9,7 @@ Unsupported import statement form.
 | Code | `SIFR-IMPORT-0003` |
 | Family | `IMPORT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `unsupported import form: {form}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/unsupported_import_statement.sifr` |
 | Declared args | `form (message+json)` |

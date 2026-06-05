@@ -3,11 +3,11 @@ use crate::{
     generate_rust_multi_with_metadata, generate_rust_test, generate_rust_with_metadata,
     RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
 };
-use sifr_hir::lower_module;
 use sifr_ir::{
     HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFunction, HirImport, HirMatchArm,
     HirModule, HirParam, HirPattern, HirStmt, MethodKind,
 };
+use sifr_lowering::lower_module;
 use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;

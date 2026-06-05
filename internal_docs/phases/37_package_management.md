@@ -1068,7 +1068,7 @@ Boundary rules:
 
 - `crates/sifr` CLI parses command flags and renders output; it does not parse Cargo metadata ad hoc or walk Cargo caches directly.
 - `sifr_driver` consumes `PackageSourceMap` and package graph validation results; it does not call Cargo directly except through approved driver build paths.
-- `sifr_frontend` and `sifr_hir` consume immutable package-origin data only.
+- `sifr_frontend` and `sifr_lowering` consume immutable package-origin data only.
 - `crates/sifr_package::cargo::*` is the only subtree that shells out to Cargo or imports Cargo metadata crates.
 - no Cargo metadata crate type crosses the public `sifr_package` facade.
 - diagnostics are constructed as `sifr_diagnostics::SifrDiagnostic`; no parallel diagnostic renderer exists.

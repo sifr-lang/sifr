@@ -221,7 +221,7 @@ Validation:
 Definition of done:
 
 - No `crates/sifr_hir/src/stdlib` module remains.
-- `sifr_hir` or `sifr_lowering` no longer owns intrinsic signature definitions.
+- Neither `sifr_hir` nor `sifr_lowering` owns intrinsic signature definitions.
 - `sifr_stdlib` has no dependency on lowering, frontend, codegen, driver, package, analysis, LSP, or CLI crates.
 
 ### milestone_stdlib_boundary_2: Centralize Stdlib Feature And Dependency Manifest

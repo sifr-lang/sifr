@@ -9,7 +9,7 @@ Invalid iterator or reversible protocol signature.
 | Code | `SIFR-PROTO-0002` |
 | Family | `PROTO` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::classes` |
+| Owner | `sifr_lowering::lower::classes` |
 | Message template | `class '{type_name}' must return {expected}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/invalid_iter_signature.sifr` |
 | Declared args | `type_name (message+json)`, `expected (message+json)` |

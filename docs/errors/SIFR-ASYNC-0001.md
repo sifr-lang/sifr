@@ -9,7 +9,7 @@ Async function body has no real suspension effect.
 | Code | `SIFR-ASYNC-0001` |
 | Family | `ASYNC` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `{message}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/async_no_suspend_rejected.sifr` |
 | Declared args | `message (message+json)` |

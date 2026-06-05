@@ -9,7 +9,7 @@ If-expression or conditional branches have incompatible types.
 | Code | `SIFR-TYPE-0003` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::if_expression` |
+| Owner | `sifr_lowering::lower::if_expression` |
 | Message template | `conditional branches have incompatible types: {then_type} and {else_type}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr` |
 | Declared args | `then_type (message+json)`, `else_type (message+json)` |

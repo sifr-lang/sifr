@@ -9,7 +9,7 @@ Reserved integer width name used before support lands.
 | Code | `SIFR-INT-0003` |
 | Family | `INT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `reserved integer width name {name} is not supported yet` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/reserved_int128_annotation.sifr` |
 | Declared args | `name (message+json)` |

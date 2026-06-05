@@ -9,7 +9,7 @@ Integer arithmetic may overflow at runtime.
 | Code | `SIFR-TYPE-0901` |
 | Family | `TYPE` |
 | Severity | Warning |
-| Owner | `sifr_hir::lower::arithmetic_warnings` |
+| Owner | `sifr_lowering::lower::arithmetic_warnings` |
 | Message template | `integer {operation} may overflow at runtime` |
 | Representative fixture | `crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_arithmetic_overflow_as_structured_warning` |
 | Declared args | `operation (message+json)` |

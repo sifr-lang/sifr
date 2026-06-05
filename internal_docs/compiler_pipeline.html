@@ -516,7 +516,7 @@ const STEPS = [
     short: 'Typed + desugared IR',
     color: '#f778ba',
     bgColor: 'rgba(247,120,186,0.12)',
-    desc: `The <strong>HIR</strong> (<code>sifr_hir</code>) is a <em>typed</em> version of the AST where every node carries its resolved type and all syntactic sugar is desugared.
+    desc: `The <strong>HIR</strong> (<code>sifr_lowering</code>) is a <em>typed</em> version of the AST where every node carries its resolved type and all syntactic sugar is desugared.
     The compiler inserts <strong>auto-unwrap <code>?</code> nodes</strong> inside <code>try</code> blocks, wraps bare <code>return</code> values in <code>Ok(…)</code> for <code>Result</code>-returning functions, makes all borrows explicit, and resolves method dispatch.
     The HIR is the codegen's sole input — it never looks at the raw AST.`,
     paneTitle: 'HIR (pseudo-dump)',

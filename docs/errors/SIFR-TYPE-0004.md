@@ -9,7 +9,7 @@ A required type annotation is missing.
 | Code | `SIFR-TYPE-0004` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `missing type annotation for {name}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/missing_type_annotation.sifr` |
 | Declared args | `name (message+json)`, `declaration_kind (json-only)` |

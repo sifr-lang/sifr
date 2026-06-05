@@ -9,7 +9,7 @@ Moved value is reused across loop iterations.
 | Code | `SIFR-OWN-0004` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `moved value {binding} is reused across loop iterations` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/use_after_move_loop.sifr` |
 | Declared args | `binding (message+json)` |

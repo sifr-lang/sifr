@@ -9,7 +9,7 @@ Non-share-safe value is wrapped in sync.Shared.
 | Code | `SIFR-OWN-0012` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `Shared cannot publish {value} of type {type_name}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/shared_mut_without_lock_rejected.sifr` |
 | Declared args | `value (message+json)`, `type_name (message+json)`, `reason (json-only)` |

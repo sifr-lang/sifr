@@ -9,7 +9,7 @@ Unsupported class declaration.
 | Code | `SIFR-CLASS-0006` |
 | Family | `CLASS` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::classes` |
+| Owner | `sifr_lowering::lower::classes` |
 | Message template | `unsupported class declaration in '{class_name}': {detail}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/class_unsupported_field_default.sifr` |
 | Declared args | `class_name (message+json)`, `detail (message+json)` |

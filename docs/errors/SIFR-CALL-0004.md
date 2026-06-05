@@ -9,7 +9,7 @@ Missing required argument.
 | Code | `SIFR-CALL-0004` |
 | Family | `CALL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `{callable} missing required argument '{argument}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/missing_required_argument.sifr` |
 | Declared args | `callable (message+json)`, `argument (message+json)` |

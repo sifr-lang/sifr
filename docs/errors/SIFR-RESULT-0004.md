@@ -9,7 +9,7 @@ Except arm references an unknown error type.
 | Code | `SIFR-RESULT-0004` |
 | Family | `RESULT` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `unknown except error type '{error_type}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/unknown_except_error_type.sifr` |
 | Declared args | `error_type (message+json)` |

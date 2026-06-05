@@ -9,7 +9,7 @@ BigDecimal scale or context argument is invalid.
 | Code | `SIFR-DECIMAL-0008` |
 | Family | `DECIMAL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::decimal_methods` |
+| Owner | `sifr_lowering::lower::decimal_methods` |
 | Message template | `invalid BigDecimal {argument}: {value}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/bigdecimal_quantize_negative_scale_context.sifr` |
 | Declared args | `argument (message+json)`, `value (message+json)`, `operation (json-only)` |

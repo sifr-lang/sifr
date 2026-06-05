@@ -9,7 +9,7 @@ Invalid type annotation shape.
 | Code | `SIFR-TYPE-0007` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `invalid type annotation for {annotation_kind}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/invalid_type_annotation.sifr` |
 | Declared args | `annotation_kind (message+json)` |

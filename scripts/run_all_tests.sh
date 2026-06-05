@@ -114,7 +114,7 @@ timed_step() {
 }
 
 run_core_guardrails() {
-  echo "Running HIR maintainability guardrails"
+  echo "Running lowering maintainability guardrails"
   python3 "${SCRIPT_DIR}/check_hir_maintainability_guardrails.py"
 
   echo "Running file-size guardrails"
@@ -348,8 +348,8 @@ run_crate_tests() {
   echo "Running sifr_diagnostics tests"
   cargo test -p sifr_diagnostics
 
-  echo "Running sifr_hir tests"
-  cargo test -p sifr_hir -- --skip test_e2e_pass
+  echo "Running sifr_lowering tests"
+  cargo test -p sifr_lowering -- --skip test_e2e_pass
 
   echo "Running sifr_syntax tests"
   cargo test -p sifr_syntax

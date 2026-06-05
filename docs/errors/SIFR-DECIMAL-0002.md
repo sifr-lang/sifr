@@ -9,7 +9,7 @@ Invalid BigDecimal exact literal.
 | Code | `SIFR-DECIMAL-0002` |
 | Family | `DECIMAL` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `invalid BigDecimal literal: {literal}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/bigdecimal_invalid_literal_string.sifr` |
 | Declared args | `literal (message+json)` |

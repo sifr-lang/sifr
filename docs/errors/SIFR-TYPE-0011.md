@@ -9,7 +9,7 @@ Unsupported default argument expression.
 | Code | `SIFR-TYPE-0011` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `function {function}: unsupported default argument expression for parameter {parameter}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` |
 | Declared args | `function (message+json)`, `parameter (message+json)` |

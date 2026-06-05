@@ -9,7 +9,7 @@ Blocking I/O function called directly from async context.
 | Code | `SIFR-ASYNC-0003` |
 | Family | `ASYNC` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::workload_annotations` |
+| Owner | `sifr_lowering::lower::workload_annotations` |
 | Message template | `{message}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/blocking_io_direct_call_in_async_rejected.sifr` |
 | Declared args | `message (message+json)` |

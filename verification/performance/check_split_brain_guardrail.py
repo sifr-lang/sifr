@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 APPROVED_PREFIXES = {
     Path("crates/sifr_syntax/src"),
     Path("crates/sifr_frontend/src"),
-    Path("crates/sifr_hir/src"),
+    Path("crates/sifr_lowering/src"),
 }
 
 FORBIDDEN_PATTERNS = (

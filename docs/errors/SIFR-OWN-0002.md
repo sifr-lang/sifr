@@ -9,7 +9,7 @@ Same-call borrow conflict.
 | Code | `SIFR-OWN-0002` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `borrow conflict for {binding} in the same call` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/double_mut_borrow.sifr` |
 | Declared args | `binding (message+json)` |

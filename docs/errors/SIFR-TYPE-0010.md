@@ -9,7 +9,7 @@ TypeVar constraints are not satisfied by the inferred concrete type.
 | Code | `SIFR-TYPE-0010` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::expressions` |
+| Owner | `sifr_lowering::lower::expressions` |
 | Message template | `type '{actual}' does not satisfy constraints ({constraints}) required by type parameter '{type_param}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/typevar_constraints_violation.sifr` |
 | Declared args | `actual (message+json)`, `constraints (message+json)`, `type_param (message+json)` |

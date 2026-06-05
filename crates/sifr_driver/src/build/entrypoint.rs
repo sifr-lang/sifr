@@ -18,7 +18,7 @@ use crate::workspace::find_workspace_root;
 use sifr_codegen::generate_rust_with_stdlib;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
-use sifr_hir::LoweringResult;
+use sifr_ir::LoweringResult;
 use sifr_package::{PackageSourceMap, SifrPackageGraph, SifrPackageId};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};

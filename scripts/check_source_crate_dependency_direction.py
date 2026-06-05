@@ -20,7 +20,7 @@ FORBIDDEN_CRATES = {
     "sifr_lint",
     "sifr_format",
     "sifr_package",
-    "sifr_hir",
+    "sifr_lowering",
     "sifr_type_system",
     "sifr_codegen",
     "sifr_driver",

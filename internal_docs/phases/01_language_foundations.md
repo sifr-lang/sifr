@@ -28,7 +28,7 @@ This phase builds the core language from first principles: variables, functions,
 1. Fork ruff parser/AST crates into `crates/` with `sifr_` prefix; use git deps for infrastructure crates
 2. Strip the AST to milestone_core_language-relevant nodes only
 3. Build `sifr_type_system` -- Type enum, inference from initializers, checking binary ops / function calls
-4. Build `sifr_hir` -- Typed IR with name resolution and ownership tracking
+4. Build `sifr_lowering` -- Typed IR with name resolution and ownership tracking
 5. Build `sifr_codegen` -- Emit Rust source code, generate Cargo.toml + main.rs
 6. Build `sifr_driver` -- Orchestrate the pipeline with nice error diagnostics
 7. Build `sifr` CLI binary with clap
@@ -214,7 +214,7 @@ Key design decisions:
 - `Union` maps to Rust `enum` in codegen (auto-generated discriminated enum)
 - `Unknown` vs `Any`: `Any` disables type checking (escape hatch). `Unknown` accepts any value but requires narrowing before any operation -- it is the safe alternative. `Unknown` maps to `Box<dyn Any>` in Rust codegen but the compiler enforces narrowing at every use site.
 
-#### Control Flow Graph (new module: `sifr_hir/src/cfg.rs`)
+#### Control Flow Graph (new module: `sifr_lowering/src/cfg.rs`)
 
 **Inspired by TypeScript's binder** (see `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/binder.md`):
 
@@ -252,7 +252,7 @@ enum NarrowingCondition {
 }
 ```
 
-#### Scope Changes (update `sifr_hir/src/scope.rs`)
+#### Scope Changes (update `sifr_lowering/src/scope.rs`)
 
 The scope must track **narrowed types** per variable at each point in the control flow:
 
@@ -389,9 +389,9 @@ def main():
 - `crates/sifr_type_system/src/types.rs` -- extend `Type` enum
 - `crates/sifr_type_system/src/check.rs` -- type checking for unions
 - `crates/sifr_type_system/src/infer.rs` -- inference with unions/literals
-- `crates/sifr_hir/src/hir_nodes.rs` -- new HIR nodes for narrowing
-- `crates/sifr_hir/src/lower.rs` -- lowering with CFG and narrowing
-- `crates/sifr_hir/src/scope.rs` -- narrowed type tracking
+- `crates/sifr_lowering/src/hir_nodes.rs` -- new HIR nodes for narrowing
+- `crates/sifr_lowering/src/lower.rs` -- lowering with CFG and narrowing
+- `crates/sifr_lowering/src/scope.rs` -- narrowed type tracking
 - `crates/sifr_codegen/src/lib.rs` -- union -> enum codegen
 - `crates/sifr_driver/src/lib.rs` -- pipeline updates
 
@@ -400,7 +400,7 @@ def main():
 - `crates/sifr_type_system/src/narrow.rs` -- narrowing engine
 - `crates/sifr_type_system/src/union.rs` -- union construction, normalization, simplification
 - `crates/sifr_type_system/src/literal.rs` -- literal type handling, widening
-- `crates/sifr_hir/src/cfg.rs` -- control flow graph
+- `crates/sifr_lowering/src/cfg.rs` -- control flow graph
 - E2E test files in `crates/sifr/tests/e2e/pass/` and `fail/`
 
 ---

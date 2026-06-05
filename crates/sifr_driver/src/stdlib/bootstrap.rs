@@ -5,7 +5,7 @@ use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_hir::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
+use sifr_lowering::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
 use sifr_stdlib::STDLIB_SOURCES;
 use sifr_syntax::parse_module_raw;
 use sifr_type_system::{FunctionType, ParamConvention, Type};

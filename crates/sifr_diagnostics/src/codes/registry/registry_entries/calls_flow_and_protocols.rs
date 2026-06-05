@@ -11,7 +11,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr",
             "{callable} takes {quantifier} {expected_count} argument(s), got {actual_count}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [
                 arg!("callable"),
                 arg!("quantifier"),
@@ -27,7 +27,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/sorted_unexpected_keyword.sifr",
             "{callable} got an unexpected keyword argument '{keyword}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("callable"), arg!("keyword")],
             ["callable", "keyword"]
         ),
@@ -38,7 +38,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/keyword_after_positional_error.sifr",
             "{callable} got multiple values for argument '{argument}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("callable"), arg!("argument")],
             ["callable", "argument"]
         ),
@@ -49,7 +49,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/missing_required_argument.sifr",
             "{callable} missing required argument '{argument}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("callable"), arg!("argument")],
             ["callable", "argument"]
         ),
@@ -60,7 +60,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/map_callable_arity_mismatch.sifr",
             "{callable} callable expects {expected_count} argument(s), got {actual_count} iterable(s)",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [
                 arg!("callable"),
                 arg!("expected_count"),
@@ -75,7 +75,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/use_after_move.sifr",
             "use of moved value {binding}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("binding")],
             ["binding"]
         ),
@@ -86,7 +86,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/double_mut_borrow.sifr",
             "borrow conflict for {binding} in the same call",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("binding")],
             ["binding"]
         ),
@@ -97,7 +97,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/borrow_escape_return.sifr",
             "borrowed parameter {binding} escapes",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("binding"), json_arg!("escape_kind")],
             ["binding", "escape_kind"]
         ),
@@ -108,7 +108,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/use_after_move_loop.sifr",
             "moved value {binding} is reused across loop iterations",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("binding")],
             ["binding"]
         ),
@@ -119,7 +119,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/own_parameter_mutation_requires_mut.sifr",
             "cannot mutate through immutable parameter {binding}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("binding")],
             ["binding"]
         ),
@@ -130,7 +130,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/own_parameter_reassignment_requires_mut.sifr",
             "cannot reassign immutable parameter {binding}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("binding")],
             ["binding"]
         ),
@@ -141,7 +141,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/bytes_subscript_assignment_unsupported.sifr",
             "bytes is immutable; subscript assignment is not supported",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [],
             []
         ),
@@ -152,7 +152,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/bytes_augmented_subscript_assignment_unsupported.sifr",
             "bytes is immutable; augmented subscript assignment is not supported",
-            "sifr_hir::lower::aug_assign_lowering",
+            "sifr_lowering::lower::aug_assign_lowering",
             [],
             []
         ),
@@ -163,7 +163,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/borrow_across_await_rejected.sifr",
             "mutable borrow {binding} cannot cross await",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("binding")],
             ["binding"]
         ),
@@ -174,7 +174,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/spawn_non_send_field_rejected.sifr",
             "scope.spawn() cannot move {value} of type {type_name} across a task boundary",
-            "sifr_hir::lower::task_scope_calls",
+            "sifr_lowering::lower::task_scope_calls",
             [arg!("value"), arg!("type_name"), json_arg!("reason")],
             ["value", "type_name", "reason"]
         ),
@@ -185,7 +185,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/channel_non_send_element_rejected.sifr",
             "channel send cannot transfer {value} of type {type_name}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("value"), arg!("type_name"), json_arg!("reason")],
             ["value", "type_name", "reason"]
         ),
@@ -196,7 +196,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/shared_mut_without_lock_rejected.sifr",
             "Shared cannot publish {value} of type {type_name}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("value"), arg!("type_name"), json_arg!("reason")],
             ["value", "type_name", "reason"]
         ),
@@ -207,7 +207,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/break_outside_loop.sifr",
             "'break' outside of loop",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [],
             []
         ),
@@ -218,7 +218,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/continue_outside_loop.sifr",
             "'continue' outside of loop",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [],
             []
         ),
@@ -229,7 +229,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr",
             "recursive nested function '{function}' cannot mutate captured state with nonlocal yet",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("function")],
             ["function"]
         ),
@@ -240,7 +240,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/missing_return_value.sifr",
             "function '{function}' must return a value of type '{return_type}' on all control-flow paths",
-            "sifr_hir::lower::typing_and_functions",
+            "sifr_lowering::lower::typing_and_functions",
             [arg!("function"), arg!("return_type")],
             ["function", "return_type"]
         ),
@@ -251,7 +251,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/if_condition_numeric_truthiness.sifr",
             "{keyword} condition must be bool or collection/string truthiness, got '{actual}'",
-            "sifr_hir::lower::control_flow_conditions",
+            "sifr_lowering::lower::control_flow_conditions",
             [arg!("keyword"), arg!("actual")],
             ["keyword", "actual"]
         ),
@@ -262,7 +262,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/yield_without_value.sifr",
             "unsupported statement form: {form}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("form")],
             ["form"]
         ),
@@ -273,7 +273,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/invalid_assignment_target_attribute_base.sifr",
             "invalid assignment target: {target}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("target")],
             ["target"]
         ),
@@ -284,7 +284,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/for_loop_invalid_iterable.sifr",
             "invalid for-loop iteration: {reason}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("reason")],
             ["reason"]
         ),
@@ -295,7 +295,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Warning,
             "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_unreachable_statement_as_structured_warning",
             "unreachable statement ignored",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [],
             []
         ),
@@ -306,7 +306,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/enum_match_non_exhaustive.sifr",
             "non-exhaustive match: enum {enum_name} has uncovered variants: {uncovered}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("enum_name"), arg!("uncovered")],
             ["enum_name", "uncovered"]
         ),
@@ -317,7 +317,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/match_type_mismatch_guard.sifr",
             "match guard must be a bool expression, got {actual}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("actual")],
             ["actual"]
         ),
@@ -328,7 +328,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/match_invalid_field_name.sifr",
             "class {class_name} has no field {field}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("field"), arg!("class_name")],
             ["field", "class_name"]
         ),
@@ -339,7 +339,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/match_tuple_pattern_requires_tuple_subject.sifr",
             "invalid match pattern: {reason}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("reason")],
             ["reason"]
         ),
@@ -350,7 +350,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/generic_bounds_not_satisfied.sifr",
             "type '{actual}' does not implement protocol '{protocol}' required by type parameter '{type_param}'",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("actual"), arg!("protocol"), arg!("type_param")],
             ["actual", "protocol", "type_param"]
         ),
@@ -361,7 +361,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/invalid_iter_signature.sifr",
             "class '{type_name}' must return {expected}",
-            "sifr_hir::lower::classes",
+            "sifr_lowering::lower::classes",
             [arg!("type_name"), arg!("expected")],
             ["type_name", "expected"]
         ),
@@ -372,7 +372,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/with_non_context_manager.sifr",
             "type '{type_name}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("type_name")],
             ["type_name"]
         ),
@@ -383,7 +383,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/unhashable_dict_key.sifr",
             "hash() argument must be hashable, got '{type_name}'",
-            "sifr_hir::lower::expressions",
+            "sifr_lowering::lower::expressions",
             [arg!("type_name")],
             ["type_name"]
         ),
@@ -394,7 +394,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/auto_init_inheritance_missing_super.sifr",
             "class '{class_name}' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)",
-            "sifr_hir::lower::classes",
+            "sifr_lowering::lower::classes",
             [arg!("class_name")],
             ["class_name"]
         ),
@@ -405,7 +405,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/auto_init_required_after_default.sifr",
             "class '{class_name}': required field '{field}' declared after field with default value",
-            "sifr_hir::lower::classes",
+            "sifr_lowering::lower::classes",
             [arg!("class_name"), arg!("field")],
             ["class_name", "field"]
         ),
@@ -416,7 +416,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/enum_duplicate_value.sifr",
             "enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'",
-            "sifr_hir::lower::classes",
+            "sifr_lowering::lower::classes",
             [
                 arg!("enum_name"),
                 arg!("value"),
@@ -432,7 +432,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/missing_field.sifr",
             "type '{type_name}' has no field '{field}'",
-            "sifr_hir::lower::expressions",
+            "sifr_lowering::lower::expressions",
             [arg!("type_name"), arg!("field")],
             ["type_name", "field"]
         ),
@@ -443,7 +443,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/class_unknown_parent.sifr",
             "invalid base class for '{class_name}': {reason}",
-            "sifr_hir::lower::classes",
+            "sifr_lowering::lower::classes",
             [arg!("class_name"), arg!("reason")],
             ["class_name", "reason"]
         ),
@@ -454,7 +454,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/class_unsupported_field_default.sifr",
             "unsupported class declaration in '{class_name}': {detail}",
-            "sifr_hir::lower::classes",
+            "sifr_lowering::lower::classes",
             [arg!("class_name"), arg!("detail")],
             ["class_name", "detail"]
         ),
@@ -465,7 +465,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/unused_result.sifr",
             "unused Result value",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [],
             []
         ),
@@ -476,7 +476,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/error_str_not_allowed.sifr",
             "invalid Result error type {error_type}",
-            "sifr_hir::lower",
+            "sifr_lowering::lower",
             [arg!("error_type")],
             ["error_type"]
         ),
@@ -487,7 +487,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/error_raise_str.sifr",
             "invalid raise expression of type {actual}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("actual")],
             ["actual"]
         ),
@@ -498,7 +498,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/unknown_except_error_type.sifr",
             "unknown except error type '{error_type}'",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("error_type")],
             ["error_type"]
         ),
@@ -509,7 +509,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/try_except_uncovered_error_types.sifr",
             "except arms do not cover all error types from try body: {uncovered}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("uncovered")],
             ["uncovered"]
         ),
@@ -518,9 +518,9 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "RESULT",
             "Except arm type expression has an unsupported form.",
             Severity::Error,
-            "crates/sifr_hir/src/lower/statement_diagnostics_tests.rs",
+            "crates/sifr_lowering/src/lower/statement_diagnostics_tests.rs",
             "invalid except error type: {reason}",
-            "sifr_hir::lower::statements",
+            "sifr_lowering::lower::statements",
             [arg!("reason")],
             ["reason"]
         ),
@@ -531,7 +531,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             Severity::Error,
             "crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr",
             "defaultdict() does not support keyword arguments",
-            "sifr_hir::lower::builtin_calls",
+            "sifr_lowering::lower::builtin_calls",
             [],
             []
         ),

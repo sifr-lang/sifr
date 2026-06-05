@@ -16,7 +16,7 @@ status: done
 
 ### Compiler Changes
 
-#### 1. Auto-init detection and generation (sifr_hir)
+#### 1. Auto-init detection and generation (sifr_lowering)
 
 During HIR lowering, when a class has typed field declarations but no explicit `__init__` method:
 
@@ -91,7 +91,7 @@ status: done
 
 ### Compiler Changes
 
-#### 1. Generic class field and method substitution (sifr_hir + sifr_type_system)
+#### 1. Generic class field and method substitution (sifr_lowering + sifr_type_system)
 
 Currently, `class Stack[T]` parses and the type parameter is recorded, but when `Stack[int]` is instantiated, the `T` in field types and method signatures is not substituted with `int`. Fix this:
 
@@ -240,7 +240,7 @@ For reference, the existing parser infrastructure includes:
 - Verify that class patterns reference valid fields
 - Verify that capture variables don't shadow existing variables (or emit a warning)
 
-#### HIR (sifr_hir)
+#### HIR (sifr_lowering)
 
 - Lower `StmtMatch` to HIR match node
 - Each case arm becomes an HIR branch with narrowed type environment

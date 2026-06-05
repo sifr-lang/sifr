@@ -9,7 +9,7 @@ Invalid class base.
 | Code | `SIFR-CLASS-0005` |
 | Family | `CLASS` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::classes` |
+| Owner | `sifr_lowering::lower::classes` |
 | Message template | `invalid base class for '{class_name}': {reason}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/class_unknown_parent.sifr` |
 | Declared args | `class_name (message+json)`, `reason (message+json)` |

@@ -9,7 +9,7 @@ Non-sendable value is sent through a channel.
 | Code | `SIFR-OWN-0011` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `channel send cannot transfer {value} of type {type_name}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/channel_non_send_element_rejected.sifr` |
 | Declared args | `value (message+json)`, `type_name (message+json)`, `reason (json-only)` |

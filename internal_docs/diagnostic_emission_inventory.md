@@ -4,14 +4,14 @@ This inventory is the `milestone_diag_3` handoff into diagnostic registry popula
 
 Historical coverage snapshot from April 29, 2026:
 
-- `rg "ctx\\.error\\(" crates/sifr_hir/src -g '*.rs'` finds 489 raw HIR lowering emissions across 22 files.
+- `rg "ctx\\.error\\(" crates/sifr_lowering/src -g '*.rs'` finds 489 raw HIR lowering emissions across 22 files.
 - The legacy public `CompileError` abstraction and the custom driver `CompilerDiagnostic` transport have been deleted. Driver and CLI APIs now carry `sifr_diagnostics::RenderedDiagnostic` directly as the rendered diagnostic envelope until the residual driver renderer moves to `DiagnosticSink` directly.
 - `sifr_type_system::TypeError`, `TypeErrorKind`, and the residual `TypeCheckDiagnostic` adapter have been deleted. Operator helper failures return a direct `(DiagnosticCode, String)` pair, and HIR lowering records it through `error_with_code_at` without a code-less fallback.
 - `rg "# expect-error" crates/sifr/tests/e2e/fail crates/sifr/tests/e2e.rs -g '*.sifr' -g '*.rs'` finds 155 fail-fixture expectations plus harness parser samples.
 
 Closure snapshot from May 3, 2026:
 
-- `rg -n "ctx\\.error\\(" crates/sifr_hir/src -g '*.rs'` has no matches.
+- `rg -n "ctx\\.error\\(" crates/sifr_lowering/src -g '*.rs'` has no matches.
 - The raw `LowerCtx::error(String)` transport has been deleted; HIR user-facing diagnostics now use explicit diagnostic codes with primary ranges at emission sites.
 - `scripts/run_all_tests.sh --profile create-pr` passes with diagnostic schema, docs, coverage, baseline-hygiene, cancel-usage, and transport-cleanup guardrails enabled.
 
@@ -21,28 +21,28 @@ The table below is the original raw-HIR migration inventory. It is retained as p
 
 | File | Raw calls | Primary categories | Target families |
 | --- | ---: | --- | --- |
-| `crates/sifr_hir/src/lower/expressions.rs` | 205 | undefined names/functions, unsupported operators/calls, builtin and stdlib call validation, collection/method validation, comprehension/generator restrictions, tuple slicing, decimal constructor/method forwarding, protocol-style callable checks, unsupported expression/operator features | `NAME`, `TYPE`, `CALL`, `STDLIB`, `PROTO`, `DECIMAL`, `FLOW` |
-| `crates/sifr_hir/src/lower/statements.rs` | 61 | break/continue, raise/result rules, with/context-manager rules, match patterns and exhaustiveness, assignment shape, borrow/move assignment, for-loop target/iterable rules | `FLOW`, `RESULT`, `PROTO`, `MATCH`, `TYPE`, `OWN`, `CALL` |
-| `crates/sifr_hir/src/lower/builtin_calls.rs` | 55 | builtin call arity, argument type checks, constructor restrictions, exact numeric conversion checks | `CALL`, `TYPE`, `DECIMAL`, `STDLIB` |
-| `crates/sifr_hir/src/lower/typing_and_functions.rs` | 24 | unknown type names, invalid annotations, callable/result/dict/list annotation shape, TypeVar/generic arity and bounds, unsupported default argument expression | `NAME`, `TYPE`, `RESULT`, `PROTO`, `CALL` |
-| `crates/sifr_hir/src/lower/mod.rs` | 20 | TypeVar declarations, source-level import resolution, stdlib/intrinsic module member lookup, module lookup; workspace graph failures move to driver | `TYPE`, `IMPORT`, `NAME`, `STDLIB`; wrong-layer `WORKSPACE` moves to driver |
-| `crates/sifr_hir/src/lower/classes.rs` | 19 | class inheritance, constructor/field order, auto-init, enum duplicate values, field/method lookup, iterator/reversible protocol method shape | `CLASS`, `TYPE`, `NAME`, `PROTO` |
-| `crates/sifr_hir/src/lower/decimal_methods.rs` | 18 | decimal/bigdecimal round and quantize argument/type/context restrictions, decimal method arity, unknown decimal method | `DECIMAL`, `CALL`, `NAME` |
-| `crates/sifr_hir/src/lower/aug_assign_lowering.rs` | 17 | unsupported augmented assignment operators/targets, type-check forwarding, undefined assignment target, move/borrow forwarding | `TYPE`, `OWN`, `NAME` |
-| `crates/sifr_hir/src/lower/bytes_methods.rs` | 16 | bytes/str encode/decode method arity, type, and supported-encoding restrictions | `STDLIB`, `CALL`, `TYPE` |
-| `crates/sifr_hir/src/lower/method_call_args.rs` | 13 | method receiver/call arity, unexpected keywords, duplicate arguments, missing required arguments | `CALL`, `TYPE` |
-| `crates/sifr_hir/src/lower/tuple_unpack.rs` | 13 | tuple/list unpack arity and target restrictions | `TYPE`, `FLOW` |
-| `crates/sifr_hir/src/lower/container_literal_specialization.rs` | 11 | list/set/dict/tuple literal element type conflicts and type-check forwarding | `TYPE` |
-| `crates/sifr_hir/src/lower/subscript_type.rs` | 3 | tuple index bounds and non-indexable types | `TYPE` |
-| `crates/sifr_hir/src/lower/nonlocal_support.rs` | 3 | invalid nonlocal declarations and missing enclosing binding | `FLOW`, `NAME` |
-| `crates/sifr_hir/src/lower/min_max_validation.rs` | 2 | min/max argument validation | `CALL`, `TYPE` |
-| `crates/sifr_hir/src/lower/nested_function_inference.rs` | 2 | nested function inference conflict and unsupported recursive nonlocal behavior | `TYPE`, `FLOW` |
-| `crates/sifr_hir/src/lower/type_aliases.rs` | 2 | invalid alias target and recursive alias detection | `TYPE`, `NAME` |
-| `crates/sifr_hir/src/lower/binding_mutability.rs` | 1 | mutability rebinding conflict | `OWN` |
-| `crates/sifr_hir/src/lower/control_flow_conditions.rs` | 1 | boolean condition type requirement | `FLOW`, `TYPE` |
-| `crates/sifr_hir/src/lower/if_expression.rs` | 1 | if-expression branch type incompatibility | `TYPE` |
-| `crates/sifr_hir/src/lower/module_function_registry.rs` | 1 | missing module-level callable declaration | `NAME` |
-| `crates/sifr_hir/src/lower/mutating_methods.rs` | 1 | mutation of immutable receiver | `OWN` |
+| `crates/sifr_lowering/src/lower/expressions.rs` | 205 | undefined names/functions, unsupported operators/calls, builtin and stdlib call validation, collection/method validation, comprehension/generator restrictions, tuple slicing, decimal constructor/method forwarding, protocol-style callable checks, unsupported expression/operator features | `NAME`, `TYPE`, `CALL`, `STDLIB`, `PROTO`, `DECIMAL`, `FLOW` |
+| `crates/sifr_lowering/src/lower/statements.rs` | 61 | break/continue, raise/result rules, with/context-manager rules, match patterns and exhaustiveness, assignment shape, borrow/move assignment, for-loop target/iterable rules | `FLOW`, `RESULT`, `PROTO`, `MATCH`, `TYPE`, `OWN`, `CALL` |
+| `crates/sifr_lowering/src/lower/builtin_calls.rs` | 55 | builtin call arity, argument type checks, constructor restrictions, exact numeric conversion checks | `CALL`, `TYPE`, `DECIMAL`, `STDLIB` |
+| `crates/sifr_lowering/src/lower/typing_and_functions.rs` | 24 | unknown type names, invalid annotations, callable/result/dict/list annotation shape, TypeVar/generic arity and bounds, unsupported default argument expression | `NAME`, `TYPE`, `RESULT`, `PROTO`, `CALL` |
+| `crates/sifr_lowering/src/lower/mod.rs` | 20 | TypeVar declarations, source-level import resolution, stdlib/intrinsic module member lookup, module lookup; workspace graph failures move to driver | `TYPE`, `IMPORT`, `NAME`, `STDLIB`; wrong-layer `WORKSPACE` moves to driver |
+| `crates/sifr_lowering/src/lower/classes.rs` | 19 | class inheritance, constructor/field order, auto-init, enum duplicate values, field/method lookup, iterator/reversible protocol method shape | `CLASS`, `TYPE`, `NAME`, `PROTO` |
+| `crates/sifr_lowering/src/lower/decimal_methods.rs` | 18 | decimal/bigdecimal round and quantize argument/type/context restrictions, decimal method arity, unknown decimal method | `DECIMAL`, `CALL`, `NAME` |
+| `crates/sifr_lowering/src/lower/aug_assign_lowering.rs` | 17 | unsupported augmented assignment operators/targets, type-check forwarding, undefined assignment target, move/borrow forwarding | `TYPE`, `OWN`, `NAME` |
+| `crates/sifr_lowering/src/lower/bytes_methods.rs` | 16 | bytes/str encode/decode method arity, type, and supported-encoding restrictions | `STDLIB`, `CALL`, `TYPE` |
+| `crates/sifr_lowering/src/lower/method_call_args.rs` | 13 | method receiver/call arity, unexpected keywords, duplicate arguments, missing required arguments | `CALL`, `TYPE` |
+| `crates/sifr_lowering/src/lower/tuple_unpack.rs` | 13 | tuple/list unpack arity and target restrictions | `TYPE`, `FLOW` |
+| `crates/sifr_lowering/src/lower/container_literal_specialization.rs` | 11 | list/set/dict/tuple literal element type conflicts and type-check forwarding | `TYPE` |
+| `crates/sifr_lowering/src/lower/subscript_type.rs` | 3 | tuple index bounds and non-indexable types | `TYPE` |
+| `crates/sifr_lowering/src/lower/nonlocal_support.rs` | 3 | invalid nonlocal declarations and missing enclosing binding | `FLOW`, `NAME` |
+| `crates/sifr_lowering/src/lower/min_max_validation.rs` | 2 | min/max argument validation | `CALL`, `TYPE` |
+| `crates/sifr_lowering/src/lower/nested_function_inference.rs` | 2 | nested function inference conflict and unsupported recursive nonlocal behavior | `TYPE`, `FLOW` |
+| `crates/sifr_lowering/src/lower/type_aliases.rs` | 2 | invalid alias target and recursive alias detection | `TYPE`, `NAME` |
+| `crates/sifr_lowering/src/lower/binding_mutability.rs` | 1 | mutability rebinding conflict | `OWN` |
+| `crates/sifr_lowering/src/lower/control_flow_conditions.rs` | 1 | boolean condition type requirement | `FLOW`, `TYPE` |
+| `crates/sifr_lowering/src/lower/if_expression.rs` | 1 | if-expression branch type incompatibility | `TYPE` |
+| `crates/sifr_lowering/src/lower/module_function_registry.rs` | 1 | missing module-level callable declaration | `NAME` |
+| `crates/sifr_lowering/src/lower/mutating_methods.rs` | 1 | mutation of immutable receiver | `OWN` |
 
 Wrong-layer notes:
 
@@ -86,7 +86,7 @@ The public `CompileError` abstraction and the transitional `CompilerDiagnostic` 
 | Surface | Current construction count | Current code source | Target handling |
 | --- | ---: | --- | --- |
 | `crates/sifr_driver/src/diagnostics.rs` | 1 | `diagnostic_with_code` constructs the panic-boundary diagnostic as a canonical rendered diagnostic with active `SIFR-INTERNAL-0001` identity | Route already-structured diagnostics through shared renderer once `DiagnosticSink` is authoritative. |
-| `crates/sifr_driver/src/frontend/api.rs` | 1 | public driver frontend facade delegates parser/lowering/type-check diagnostics to `sifr_frontend` and codegen errors to the panic boundary | Keep semantics-bearing parse/lower/type-check diagnostic construction in `sifr_frontend`/`sifr_hir`; driver remains a facade plus codegen boundary. |
+| `crates/sifr_driver/src/frontend/api.rs` | 1 | public driver frontend facade delegates parser/lowering/type-check diagnostics to `sifr_frontend` and codegen errors to the panic boundary | Keep semantics-bearing parse/lower/type-check diagnostic construction in `sifr_frontend`/`sifr_lowering`; driver remains a facade plus codegen boundary. |
 | `crates/sifr_frontend/src/lib.rs` | 1 | frontend HIR diagnostics preserve the HIR-provided active code; uncoded lowering diagnostics are surfaced as internal compiler diagnostics | Preserve module/source span and direct HIR diagnostic identity. |
 | `crates/sifr_driver/src/project/discovery.rs` | 6 | workspace discovery and reachable parse failures | Keep workspace discovery in `WORKSPACE-*`; reachable source parse failures are `PARSE-*`. |
 | `crates/sifr_driver/src/project/compile_order.rs` | 1 | dependency cycle carries `SIFR-WORKSPACE-0104` | Keep workspace graph cycle diagnostics in the `WORKSPACE-*` family. |
@@ -271,7 +271,7 @@ Warnings and notes are part of the same diagnostic stream and cannot remain unco
 
 | Surface | Current sites | Current behavior | Target code / owner |
 | --- | ---: | --- | --- |
-| `ctx.warn(...)` arithmetic overflow risk | 5 in `lower/arithmetic_warnings.rs` | warning strings for int exponentiation, multiplication, and shift overflow risk | `SIFR-TYPE-0901` warning, owner `sifr_hir::lower::arithmetic_warnings` |
+| `ctx.warn(...)` arithmetic overflow risk | 5 in `lower/arithmetic_warnings.rs` | warning strings for int exponentiation, multiplication, and shift overflow risk | `SIFR-TYPE-0901` warning, owner `sifr_lowering::lower::arithmetic_warnings` |
 | `ctx.warn(...)` unreachable statement | 1 in `lower/statements.rs` | warning string when a statement after guaranteed exit is ignored | `SIFR-FLOW-0901` warning |
 | `ctx.warn(...)` exhaustive-return validation panic recovery | 1 in `lower/typing_and_functions.rs` | warning string after `catch_unwind` skips control-flow validation | wrong-layer internal boundary; route as `SIFR-INTERNAL-0001` or eliminate panic path rather than keeping a user warning |
 | `ctx.reveal_types` | `reveal_type(...)` in `lower/builtin_calls.rs`; guarded-index reveal propagation in `lower/guarded_index.rs` | note-like developer output currently stored as strings | `SIFR-TYPE-0902` note with `revealed_type` arg and recovery-cap participation |
@@ -291,8 +291,8 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-PARSE-0007` | empty or malformed declaration list syntax | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_malformed_declaration_list.sifr` |
 | `SIFR-PARSE-0008` | invalid match-pattern syntax | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_invalid_match_pattern.sifr` |
 | `SIFR-PARSE-0009` | unsupported parser syntax or interactive-only syntax | parser adapter / driver frontend | `crates/sifr/tests/e2e/fail/parser_unsupported_syntax.sifr` |
-| `SIFR-NAME-0001` | undefined variable | `sifr_hir::lower` name lookup | `crates/sifr/tests/e2e/fail/undefined_var.sifr` |
-| `SIFR-NAME-0002` | undefined function/callable | `sifr_hir::lower` call lowering | `crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr` |
+| `SIFR-NAME-0001` | undefined variable | `sifr_lowering::lower` name lookup | `crates/sifr/tests/e2e/fail/undefined_var.sifr` |
+| `SIFR-NAME-0002` | undefined function/callable | `sifr_lowering::lower` call lowering | `crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr` |
 | `SIFR-NAME-0003` | unknown type or generic type name | type annotation lowering | `crates/sifr/tests/e2e/fail/generic_class_missing_type_arg.sifr` |
 | `SIFR-NAME-0004` | module/member does not exist | import/member lookup | `crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr` |
 | `SIFR-IMPORT-0001` | forbidden `_sifr.*` intrinsic import | import lowering | `crates/sifr/tests/e2e/fail/import_intrinsic.sifr` |

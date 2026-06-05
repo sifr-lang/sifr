@@ -9,7 +9,7 @@ Temporary bigint transition alias used.
 | Code | `SIFR-INT-0011` |
 | Family | `INT` |
 | Severity | Warning |
-| Owner | `sifr_hir::lower::typing_and_functions` |
+| Owner | `sifr_lowering::lower::typing_and_functions` |
 | Message template | `bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values` |
 | Representative fixture | `crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning` |
 | Declared args | n/a |

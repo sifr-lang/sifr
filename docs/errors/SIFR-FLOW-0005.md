@@ -9,7 +9,7 @@ Control-flow condition has an unsupported type.
 | Code | `SIFR-FLOW-0005` |
 | Family | `FLOW` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::control_flow_conditions` |
+| Owner | `sifr_lowering::lower::control_flow_conditions` |
 | Message template | `{keyword} condition must be bool or collection/string truthiness, got '{actual}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/if_condition_numeric_truthiness.sifr` |
 | Declared args | `keyword (message+json)`, `actual (message+json)` |

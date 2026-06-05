@@ -9,7 +9,7 @@ Reveal the inferred static type of an expression.
 | Code | `SIFR-TYPE-0902` |
 | Family | `TYPE` |
 | Severity | Note |
-| Owner | `sifr_hir::lower::builtin_calls` |
+| Owner | `sifr_lowering::lower::builtin_calls` |
 | Message template | `revealed type is {revealed_type}` |
 | Representative fixture | `crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note` |
 | Declared args | `revealed_type (message+json)` |

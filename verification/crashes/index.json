@@ -7,7 +7,7 @@
       "owner": "phase_29_verification_hardening",
       "status": "unresolved",
       "root_cause_category": "cfg-invariant-panic-path",
-      "source_reference": "crates/sifr_hir/src/cfg.rs",
+      "source_reference": "crates/sifr_lowering/src/cfg.rs",
       "reproducer_fixture": "crates/sifr/tests/verification/crashes/CR-0001_cfg_invariant_minimized.sifr",
       "promotion_target_suite": "fixedbugs",
       "note": "Track HIR CFG invariant panic conversion into typed diagnostics. Promote to fixedbugs with minimized reproducer when resolved."

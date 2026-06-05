@@ -9,7 +9,7 @@ Immutable bytes value is mutated by augmented assignment.
 | Code | `SIFR-OWN-0008` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::aug_assign_lowering` |
+| Owner | `sifr_lowering::lower::aug_assign_lowering` |
 | Message template | `bytes is immutable; augmented subscript assignment is not supported` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/bytes_augmented_subscript_assignment_unsupported.sifr` |
 | Declared args | n/a |

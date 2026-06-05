@@ -17,7 +17,7 @@ prettyplease = "0.2.37"
 proc-macro2 = "1.0.106"
 
 [dev-dependencies]
-sifr_hir = { workspace = true }
+sifr_lowering = { workspace = true }
 sifr_python_parser = { workspace = true }
 insta = { workspace = true }
 

@@ -9,7 +9,7 @@ Awaited same-task coroutine has no real suspension effect.
 | Code | `SIFR-ASYNC-0002` |
 | Family | `ASYNC` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::async_await` |
+| Owner | `sifr_lowering::lower::async_await` |
 | Message template | `{message}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/async_transitive_no_suspend_await_rejected.sifr` |
 | Declared args | `message (message+json)` |

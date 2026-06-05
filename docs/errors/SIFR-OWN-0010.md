@@ -9,7 +9,7 @@ Non-sendable value crosses a spawned task boundary.
 | Code | `SIFR-OWN-0010` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::task_scope_calls` |
+| Owner | `sifr_lowering::lower::task_scope_calls` |
 | Message template | `scope.spawn() cannot move {value} of type {type_name} across a task boundary` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/spawn_non_send_field_rejected.sifr` |
 | Declared args | `value (message+json)`, `type_name (message+json)`, `reason (json-only)` |

@@ -9,7 +9,7 @@ Mutable borrow remains live across an await point.
 | Code | `SIFR-OWN-0009` |
 | Family | `OWN` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `mutable borrow {binding} cannot cross await` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/borrow_across_await_rejected.sifr` |
 | Declared args | `binding (message+json)` |

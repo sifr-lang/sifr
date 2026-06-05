@@ -11,7 +11,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{
     compile_module_hir_with_source, FrontendDiagnosticStyle, FrontendSourceContext,
 };
-use sifr_hir::HirModule;
+use sifr_lowering::HirModule;
 use sifr_stdlib::StdlibFeature;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};

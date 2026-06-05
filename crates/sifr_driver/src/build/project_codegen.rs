@@ -3,7 +3,7 @@ use crate::project::{
     assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path, ProjectLowering,
 };
 use sifr_codegen::{generate_rust_multi_with_metadata, StdlibCode};
-use sifr_hir::HirModule;
+use sifr_ir::HirModule;
 use sifr_stdlib::StdlibFeature;
 use std::collections::{BTreeMap, HashSet};
 

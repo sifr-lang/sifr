@@ -9,7 +9,7 @@ Expected and actual types are incompatible.
 | Code | `SIFR-TYPE-0002` |
 | Family | `TYPE` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `type mismatch: expected {expected}, got {actual}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/type_mismatch.sifr` |
 | Declared args | `expected (message+json)`, `actual (message+json)` |

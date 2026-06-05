@@ -53,7 +53,7 @@ def violations(paths: list[Path]) -> list[str]:
 def run_self_test() -> None:
     with tempfile.TemporaryDirectory(dir=REPO_ROOT / "target") as tmp:
         seed = Path(tmp) / "handler.rs"
-        seed.write_text("use sifr_hir::HirModule;\nfn handler() { lower_module(&[]); }\n", encoding="utf-8")
+        seed.write_text("use sifr_lowering::HirModule;\nfn handler() { lower_module(&[]); }\n", encoding="utf-8")
         found = violations([seed])
     if not found:
         raise SystemExit("LSP split-brain self-test failed: seeded direct HIR path passed")

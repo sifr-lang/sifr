@@ -4,7 +4,7 @@ use crate::{
     compile_stdlib, compute_module_compile_order, FrontendDiagnosticStyle,
 };
 use sifr_diagnostics::DiagnosticCode;
-use sifr_hir::{HirExpr, HirStmt};
+use sifr_lowering::{HirExpr, HirStmt};
 use sifr_type_system::Type;
 use std::collections::HashMap;
 

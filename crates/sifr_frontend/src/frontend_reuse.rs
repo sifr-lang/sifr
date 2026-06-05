@@ -1,6 +1,6 @@
 use crate::{CacheKeyFingerprint, ModuleAnalysisView, SourceFileView};
 use sifr_diagnostics::RenderedDiagnostic;
-use sifr_hir::LoweringResult;
+use sifr_lowering::LoweringResult;
 use sifr_syntax::ParsedModule;
 use std::collections::BTreeMap;
 use std::sync::Arc;

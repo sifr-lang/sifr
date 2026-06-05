@@ -9,7 +9,7 @@ Continue outside a loop.
 | Code | `SIFR-FLOW-0002` |
 | Family | `FLOW` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::statements` |
+| Owner | `sifr_lowering::lower::statements` |
 | Message template | `'continue' outside of loop` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/continue_outside_loop.sifr` |
 | Declared args | n/a |

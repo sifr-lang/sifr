@@ -9,7 +9,7 @@ Required field declared after a defaulted field.
 | Code | `SIFR-CLASS-0002` |
 | Family | `CLASS` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::classes` |
+| Owner | `sifr_lowering::lower::classes` |
 | Message template | `class '{class_name}': required field '{field}' declared after field with default value` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/auto_init_required_after_default.sifr` |
 | Declared args | `class_name (message+json)`, `field (message+json)` |

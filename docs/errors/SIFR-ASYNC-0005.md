@@ -9,7 +9,7 @@ Blocking offload target is not classified as blocking I/O or CPU-heavy work.
 | Code | `SIFR-ASYNC-0005` |
 | Family | `ASYNC` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::workload_annotations` |
+| Owner | `sifr_lowering::lower::workload_annotations` |
 | Message template | `{message}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/spawn_blocking_unannotated_rejected.sifr` |
 | Declared args | `message (message+json)` |

@@ -18,7 +18,7 @@ Wave: `wave_psp_a1`
 | surface | CPython family | state | local evidence | note |
 | --- | --- | --- | --- | --- |
 | `list()` / `list(iterable)` constructors | `test_list.py:15-24` | `adopted` | `crates/sifr/tests/e2e/pass/builtin_callables_and_constructors.sifr` | Empty and iterable-backed constructor entry works directly from Python-shaped source. |
-| `list(sequence=...)` keyword rejection | `test_list.py:51` | `adapted` | `crates/sifr_hir/src/lower/builtin_calls.rs` | CPython raises `TypeError`; Sifr rejects the unsupported keyword at compile time. |
+| `list(sequence=...)` keyword rejection | `test_list.py:51` | `adapted` | `crates/sifr_lowering/src/lower/builtin_calls.rs` | CPython raises `TypeError`; Sifr rejects the unsupported keyword at compile time. |
 | `tuple()` / `tuple(list literal)` / `tuple(str literal)` constructors | `test_tuple.py:30-38` | `adapted` | `crates/sifr/tests/e2e/pass/builtin_callables_and_constructors.sifr` | Literal-backed tuple construction is supported directly. |
 | `tuple(dynamic_iterable)` on list variables | `test_tuple.py:34-38` | `waived` | `crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr` | Sifr tuples are fixed-length typed values, so dynamic iterable-to-tuple conversion remains an explicit intentional difference for this wave. |
 | `dict()` / `dict(iterable_of_pairs)` / `dict(mapping, **keywords)` style entry | `test_dict.py:37`, `test_dict.py:382-389`, `test_dict.py:1118-1125`, `test_dict.py:1527-1540` | `adapted` | `crates/sifr/tests/e2e/pass/builtin_callables_and_constructors.sifr` | Iterable-of-pairs and keyword merges work; unpacked `**kwargs` remain out of scope for this wave. |

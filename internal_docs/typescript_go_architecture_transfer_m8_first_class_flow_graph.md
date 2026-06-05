@@ -10,7 +10,7 @@ state.
 
 ## Graph Model
 
-`sifr_hir::flow_graph` defines snapshot-scoped flow nodes, edges, and effects.
+`sifr_lowering::flow_graph` defines snapshot-scoped flow nodes, edges, and effects.
 Nodes represent entries, exits, statements, conditions, loops, joins, and
 unreachable statements. Effects cover definitions, assignments, narrowing,
 narrowing clears, moves, move resets, borrows, mutations, calls, exits, joins,
@@ -64,8 +64,8 @@ M8 focused validation so far:
 
 - `cargo fmt --check`
 - `git diff --check`
-- `cargo test -p sifr_hir flow_graph -- --nocapture`
-- `cargo test -p sifr_hir`
+- `cargo test -p sifr_lowering flow_graph -- --nocapture`
+- `cargo test -p sifr_lowering`
 - `cargo test -p sifr_driver`
 - `cargo test -p sifr_frontend -p sifr_analysis -p sifr_lsp`
 - `python3 scripts/check_file_size_guardrails.py`
@@ -80,8 +80,8 @@ M8 focused validation so far:
 - Claude reviewer pass 3 -> SATISFIED
   (`reviews/typescript-go-m8-first-class-flow-graph-review-pass-3.md`)
 - Loop-else follow-up validation: `cargo fmt --check`,
-  `cargo test -p sifr_hir flow_graph -- --nocapture`,
-  `cargo clippy -p sifr_hir -- -D warnings`
+  `cargo test -p sifr_lowering flow_graph -- --nocapture`,
+  `cargo clippy -p sifr_lowering -- -D warnings`
 - Claude reviewer loop-else follow-up pass 1 -> SATISFIED
   (`reviews/typescript-go-m8-loop-else-follow-up-review-pass-1.md`)
 - M8 closeout create-pr validation: `scripts/run_all_tests.sh --profile create-pr` ->
@@ -90,7 +90,7 @@ M8 focused validation so far:
 - Claude reviewer closeout pass 1 -> SATISFIED
   (`reviews/typescript-go-m8-closeout-review-pass-1.md`)
 - M8 loop-else follow-up: `cargo fmt --check`,
-  `cargo test -p sifr_hir flow_graph -- --nocapture`,
-  `cargo clippy -p sifr_hir -- -D warnings`
+  `cargo test -p sifr_lowering flow_graph -- --nocapture`,
+  `cargo clippy -p sifr_lowering -- -D warnings`
 - Claude reviewer loop-else follow-up pass 1 -> SATISFIED
   (`reviews/typescript-go-m8-loop-else-follow-up-review-pass-1.md`)

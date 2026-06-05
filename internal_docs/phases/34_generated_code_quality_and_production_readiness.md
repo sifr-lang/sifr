@@ -34,7 +34,7 @@ This file is the authoritative contract for Phase 34 until implementation create
 
 ## Architecture Ownership
 
-Generated-code quality is owned by `sifr_codegen` and orchestrated by `sifr_driver` / `sifr` tooling. Quality gates may inspect HIR-derived metadata, but they must not move generated-code policy into `sifr_hir` or the parser crates.
+Generated-code quality is owned by `sifr_codegen` and orchestrated by `sifr_driver` / `sifr` tooling. Quality gates may inspect HIR-derived metadata, but they must not move generated-code policy into `sifr_lowering` or the parser crates.
 
 The driver owns transient generated-Rust project creation, invocation ordering, and evidence collection. Codegen owns emitted source shape, deterministic ordering, and avoiding forbidden user-path constructs.
 

@@ -9,7 +9,7 @@ Hashable or comparable protocol is required.
 | Code | `SIFR-PROTO-0004` |
 | Family | `PROTO` |
 | Severity | Error |
-| Owner | `sifr_hir::lower::expressions` |
+| Owner | `sifr_lowering::lower::expressions` |
 | Message template | `hash() argument must be hashable, got '{type_name}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/unhashable_dict_key.sifr` |
 | Declared args | `type_name (message+json)` |

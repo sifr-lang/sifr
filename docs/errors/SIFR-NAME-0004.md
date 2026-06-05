@@ -9,7 +9,7 @@ Missing module or class member.
 | Code | `SIFR-NAME-0004` |
 | Family | `NAME` |
 | Severity | Error |
-| Owner | `sifr_hir::lower` |
+| Owner | `sifr_lowering::lower` |
 | Message template | `module '{container}' has no member '{member}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr` |
 | Declared args | `member (message+json)`, `container (message+json)` |
