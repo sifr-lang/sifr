@@ -58,6 +58,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-IMPORT-0005`](SIFR-IMPORT-0005.md) | Error | Ambiguous source module import target. |
 | [`SIFR-IMPORT-0006`](SIFR-IMPORT-0006.md) | Error | Source module namespace and file import collision. |
 | [`SIFR-IMPORT-0007`](SIFR-IMPORT-0007.md) | Error | Circular source module import graph. |
+| [`SIFR-IMPORT-0008`](SIFR-IMPORT-0008.md) | Error | Bare CPython-style stdlib import attempt. |
 | [`SIFR-TYPE-0002`](SIFR-TYPE-0002.md) | Error | Expected and actual types are incompatible. |
 | [`SIFR-TYPE-0003`](SIFR-TYPE-0003.md) | Error | If-expression or conditional branches have incompatible types. |
 | [`SIFR-TYPE-0004`](SIFR-TYPE-0004.md) | Error | A required type annotation is missing. |

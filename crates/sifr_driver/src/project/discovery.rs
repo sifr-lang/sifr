@@ -34,6 +34,8 @@ pub(crate) struct ResolvedModule {
 struct ImportDependency {
     module_name: String,
     range: TextRange,
+    imported_names: String,
+    is_absolute_import: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -402,6 +404,31 @@ pub(super) fn diagnostic_with_source_range(
     args: &[(&'static str, DiagnosticArg)],
     notes: &[String],
 ) -> RenderedDiagnostic {
+    diagnostic_with_source_range_help(
+        code,
+        display_path,
+        source,
+        range,
+        message_template,
+        args,
+        SourceDiagnosticExtras { notes, help: None },
+    )
+}
+
+pub(super) struct SourceDiagnosticExtras<'a> {
+    pub(super) notes: &'a [String],
+    pub(super) help: Option<String>,
+}
+
+pub(super) fn diagnostic_with_source_range_help(
+    code: DiagnosticCode,
+    display_path: &str,
+    source: &str,
+    range: TextRange,
+    message_template: &'static str,
+    args: &[(&'static str, DiagnosticArg)],
+    extras: SourceDiagnosticExtras<'_>,
+) -> RenderedDiagnostic {
     let mut source_map = SourceMap::new();
     let source_id = source_map.register_source(display_path, source);
     let span = match SourceSpan::new_validated(&source_map, source_id, range) {
@@ -418,8 +445,11 @@ pub(super) fn diagnostic_with_source_range(
     for (name, value) in args {
         builder = builder.arg(name, value.clone());
     }
-    for note in notes {
+    for note in extras.notes {
         builder = builder.child(ChildSeverity::Note, note.clone());
+    }
+    if let Some(help) = extras.help {
+        builder = builder.help(help);
     }
     let diagnostic = builder.build();
     let mut sink = DiagnosticSink::new();
@@ -435,6 +465,71 @@ pub(super) fn diagnostic_with_source_range(
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         ),
     }
+}
+
+pub(super) fn bare_stdlib_source_diagnostic(
+    stdlib_match: &sifr_stdlib::BareStdlibMatch,
+    imported_names: &str,
+    resolver: &ModuleResolver,
+    display_path: &str,
+    source: &str,
+    range: TextRange,
+    tried_paths: &[PathBuf],
+) -> RenderedDiagnostic {
+    let tried_paths_text = display_paths(tried_paths);
+    let args = [
+        (
+            "bare_module",
+            DiagnosticArg::String(stdlib_match.bare_module.clone()),
+        ),
+        (
+            "suggested_module",
+            DiagnosticArg::String(stdlib_match.suggested_module.clone()),
+        ),
+        (
+            "imported_names",
+            DiagnosticArg::String(imported_names.to_string()),
+        ),
+        (
+            "resolution_scope",
+            DiagnosticArg::String(resolution_scope(resolver)),
+        ),
+        ("tried_paths", DiagnosticArg::String(tried_paths_text)),
+    ];
+    let notes = path_notes("tried", tried_paths);
+    diagnostic_with_source_range_help(
+        DiagnosticCode::IMPORT_BARE_STDLIB,
+        display_path,
+        source,
+        range,
+        "bare stdlib import '{bare_module}'; Sifr stdlib lives under 'sifr.*'",
+        &args,
+        SourceDiagnosticExtras {
+            notes: &notes,
+            help: Some(bare_stdlib_help(stdlib_match, imported_names)),
+        },
+    )
+}
+
+pub(super) fn bare_stdlib_help(
+    stdlib_match: &sifr_stdlib::BareStdlibMatch,
+    imported_names: &str,
+) -> String {
+    let suggestion = if imported_names.is_empty() {
+        format!("use 'from {} import <name>'", stdlib_match.suggested_module)
+    } else {
+        format!(
+            "use 'from {} import {}'",
+            stdlib_match.suggested_module, imported_names
+        )
+    };
+    if stdlib_match.exact_embedded_module_exists {
+        return suggestion;
+    }
+    format!(
+        "{suggestion}; no embedded sifr.{} module exists",
+        stdlib_match.bare_module
+    )
 }
 
 fn display_paths(paths: &[PathBuf]) -> String {
@@ -552,6 +647,18 @@ fn collect_import_closure_module_dependencies(
             .or_insert_with(|| ImportDependency {
                 module_name: module.to_string(),
                 range: module.range(),
+                imported_names: import_from
+                    .names
+                    .iter()
+                    .map(|alias| {
+                        alias.asname.as_ref().map_or_else(
+                            || alias.name.to_string(),
+                            |asname| format!("{} as {asname}", alias.name),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                is_absolute_import: import_from.level == 0,
             });
     }
     dependencies
@@ -617,6 +724,21 @@ pub(crate) fn parse_import_closure_source_modules(
                     pending.insert(dependency.module_name);
                 }
                 Err(error) if resolver.has_workspace() => {
+                    if dependency.is_absolute_import {
+                        if let Some(stdlib_match) =
+                            sifr_stdlib::is_bare_stdlib_tail(&dependency.module_name)
+                        {
+                            return Err(vec![bare_stdlib_source_diagnostic(
+                                &stdlib_match,
+                                &dependency.imported_names,
+                                resolver,
+                                &path.display().to_string(),
+                                &source,
+                                dependency.range,
+                                &error.tried_paths,
+                            )]);
+                        }
+                    }
                     return Err(vec![error.to_source_diagnostic(
                         resolver,
                         &path.display().to_string(),

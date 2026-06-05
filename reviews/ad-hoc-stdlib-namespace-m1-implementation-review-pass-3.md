@@ -1,0 +1,14 @@
+I've reviewed all the M1-scope changes against `issues/ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md`.
+
+**Verdict: READY**
+
+Summary of what M1 delivers correctly:
+
+- **SIFR-IMPORT-0008 registry/docs**: `IMPORT_BARE_STDLIB` registered in `crates/sifr_diagnostics/src/codes/registry.rs:35,530`, registry entry with proper args/dedupe at `parsing_names_and_types.rs:246-258`, `docs/errors/SIFR-IMPORT-0008.md` generated, `internal_docs/diagnostic_codes.md:101` updated, namespace contract added to `internal_docs/architecture.md:145-167` and `docs/stdlib_imports.md`.
+- **Bare stdlib helper**: `is_bare_stdlib_tail` + `BareStdlibMatch` correctly implement exact-tail then root-fallback matching, reject `sifr.*`/`_*`/empty/`typing`/`enum`, derive from `STDLIB_SOURCES` (`crates/sifr_stdlib/src/lib.rs:103-148`).
+- **Lowering args/help transport**: `HirDiagnostic` gained `args: BTreeMap<String, DiagnosticArg>` and `help: Option<String>` (`crates/sifr_ir/src/diagnostic_types.rs:9-12`); `LowerCtx::error_with_code_args_help_at` is the single constructor and the prior helper delegates; `query_diagnostics.rs` threads structured args + help into rendered diagnostics; rendering helpers extracted into `query_diagnostic_rendering.rs`.
+- **Discovery reclassification (project)**: `parse_import_closure_source_modules` reclassifies after `Err(error) if resolver.has_workspace()` only when `dependency.is_absolute_import` and the written module matches a bare stdlib tail (`discovery.rs:719-734`); tried_paths preserved.
+- **Discovery reclassification (package)**: `package_import_source_diagnostic` performs the same probe-then-reclassify after package source-map resolution fails (`package_discovery.rs:173-184,225-277`), keeping `written_module_path` / `package_import_origin`.
+- **Stmt::Import ownership**: lowering replaces the unsupported-form diagnostic with `SIFR-IMPORT-0008` only when the module matches a bare stdlib tail; `sifr.*`/`_sifr.*`/user names still flow to unsupported-form (`mod_impl.rs:633-651`). `imported_names` is empty for `Stmt::Import`, matching the spec.
+- **Single-file `Stmt::ImportFrom` ownership**: lowering owns the diagnostic only after `!has_local_module && is_absolute_import` (`mod_impl.rs:476-490`), so real user modules win.
+- **Tests/fixtures**: e2e fail fixtures `bare_stdlib_from_math`, `bare_stdlib_import_math`, `bare_stdlib_import_math_alias`, `bare_stdlib_from_collections`, `bare_stdlib_from_collections_abc`. Lowering tests cover `ImportFrom`, alias preservation, `Stmt::Import`, and submodule root-fallback. Driver tests cover workspace reclassification and the user-module-wins precedence. Package test covers package-mode reclassification. Diagnostic contract harness registers all three new fixtures with the required arg sets. Verification manifest adds `workspace_bare_stdlib_import` with full human/json/compact baselines.

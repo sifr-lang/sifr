@@ -1,5 +1,7 @@
 use ruff_text_size::TextRange;
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+use sifr_stdlib::BareStdlibMatch;
+use std::collections::BTreeMap;
 
 use super::LowerCtx;
 
@@ -38,6 +40,58 @@ pub(in crate::lower) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: 
         format!("unsupported import form: {form}"),
         range,
     );
+}
+
+pub(in crate::lower) fn bare_stdlib(
+    ctx: &mut LowerCtx,
+    stdlib_match: &BareStdlibMatch,
+    imported_names: &str,
+    range: TextRange,
+) {
+    let mut args = BTreeMap::new();
+    args.insert(
+        "bare_module".to_string(),
+        DiagnosticArg::String(stdlib_match.bare_module.clone()),
+    );
+    args.insert(
+        "suggested_module".to_string(),
+        DiagnosticArg::String(stdlib_match.suggested_module.clone()),
+    );
+    args.insert(
+        "imported_names".to_string(),
+        DiagnosticArg::String(imported_names.to_string()),
+    );
+    ctx.error_with_code_args_help_at(
+        DiagnosticCode::IMPORT_BARE_STDLIB,
+        format!(
+            "bare stdlib import '{}'; Sifr stdlib lives under 'sifr.*'",
+            stdlib_match.bare_module
+        ),
+        args,
+        Some(bare_stdlib_help(stdlib_match, imported_names)),
+        range,
+    );
+}
+
+pub(in crate::lower) fn bare_stdlib_help(
+    stdlib_match: &BareStdlibMatch,
+    imported_names: &str,
+) -> String {
+    let suggestion = if imported_names.is_empty() {
+        format!("use 'from {} import <name>'", stdlib_match.suggested_module)
+    } else {
+        format!(
+            "use 'from {} import {}'",
+            stdlib_match.suggested_module, imported_names
+        )
+    };
+    if stdlib_match.exact_embedded_module_exists {
+        return suggestion;
+    }
+    format!(
+        "{suggestion}; no embedded sifr.{} module exists",
+        stdlib_match.bare_module
+    )
 }
 
 pub(in crate::lower) fn private_member(

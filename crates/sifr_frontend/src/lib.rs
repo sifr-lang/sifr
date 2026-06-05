@@ -13,6 +13,10 @@ mod graph_cache_and_queries;
 pub use graph_cache_and_queries::*;
 mod hir_views;
 mod module_signatures;
+mod query_diagnostic_rendering;
+pub(crate) use query_diagnostic_rendering::{
+    diagnostic_with_code, diagnostic_with_source_range, diagnostic_with_source_range_args_help,
+};
 mod query_diagnostics;
 pub use query_diagnostics::*;
 #[cfg(test)]

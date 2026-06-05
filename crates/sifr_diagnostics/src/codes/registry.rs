@@ -32,6 +32,7 @@ impl DiagnosticCode {
     pub const IMPORT_AMBIGUOUS_SOURCE_MODULE: Self = Self::new("SIFR-IMPORT-0005", Severity::Error);
     pub const IMPORT_NAMESPACE_COLLISION: Self = Self::new("SIFR-IMPORT-0006", Severity::Error);
     pub const IMPORT_CYCLE: Self = Self::new("SIFR-IMPORT-0007", Severity::Error);
+    pub const IMPORT_BARE_STDLIB: Self = Self::new("SIFR-IMPORT-0008", Severity::Error);
 
     pub const TYPE_MISMATCH: Self = Self::new("SIFR-TYPE-0002", Severity::Error);
     pub const TYPE_IF_BRANCH_MISMATCH: Self = Self::new("SIFR-TYPE-0003", Severity::Error);
@@ -526,6 +527,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::IMPORT_AMBIGUOUS_SOURCE_MODULE,
     DiagnosticCode::IMPORT_NAMESPACE_COLLISION,
     DiagnosticCode::IMPORT_CYCLE,
+    DiagnosticCode::IMPORT_BARE_STDLIB,
     DiagnosticCode::TYPE_MISMATCH,
     DiagnosticCode::TYPE_IF_BRANCH_MISMATCH,
     DiagnosticCode::TYPE_MISSING_ANNOTATION,

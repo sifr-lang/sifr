@@ -31,6 +31,16 @@ use platform_misc::{
 pub use sources::{StdlibSource, STDLIB_SOURCES};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 
+/// Match data for a bare CPython-style stdlib module name that should be
+/// imported through Sifr's `sifr.*` namespace instead.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BareStdlibMatch {
+    pub bare_module: String,
+    pub matched_tail: String,
+    pub suggested_module: String,
+    pub exact_embedded_module_exists: bool,
+}
+
 /// An intrinsic module definition with its functions and constants.
 pub struct IntrinsicModule {
     pub functions: HashMap<String, FunctionType>,
@@ -90,9 +100,57 @@ pub fn is_stdlib_module(module_name: &str) -> bool {
     module_name.starts_with("sifr.")
 }
 
+/// Returns bare-stdlib match data when `module_name` names the tail of an
+/// embedded `sifr.*` module, or starts with one.
+pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
+    if module_name.is_empty() || module_name.starts_with("sifr.") || module_name.starts_with('_') {
+        return None;
+    }
+    if embedded_stdlib_tail_exists(module_name) {
+        return Some(BareStdlibMatch {
+            bare_module: module_name.to_string(),
+            matched_tail: module_name.to_string(),
+            suggested_module: format!("sifr.{module_name}"),
+            exact_embedded_module_exists: true,
+        });
+    }
+    let root = module_name.split('.').next()?;
+    if !embedded_stdlib_tail_exists(root) {
+        return None;
+    }
+    let exact_suggestion = format!("sifr.{module_name}");
+    let exact_embedded_module_exists = embedded_stdlib_module_exists(&exact_suggestion);
+    let suggested_module = if exact_embedded_module_exists {
+        exact_suggestion
+    } else {
+        format!("sifr.{root}")
+    };
+    Some(BareStdlibMatch {
+        bare_module: module_name.to_string(),
+        matched_tail: root.to_string(),
+        suggested_module,
+        exact_embedded_module_exists,
+    })
+}
+
+fn embedded_stdlib_tail_exists(tail: &str) -> bool {
+    STDLIB_SOURCES
+        .iter()
+        .any(|source| source.module.strip_prefix("sifr.") == Some(tail))
+}
+
+fn embedded_stdlib_module_exists(module_name: &str) -> bool {
+    STDLIB_SOURCES
+        .iter()
+        .any(|source| source.module == module_name)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{get_intrinsic_module, is_intrinsic_module, is_stdlib_module, STDLIB_SOURCES};
+    use super::{
+        get_intrinsic_module, is_bare_stdlib_tail, is_intrinsic_module, is_stdlib_module,
+        STDLIB_SOURCES,
+    };
 
     #[test]
     fn known_intrinsic_module_has_signatures() {
@@ -123,5 +181,35 @@ mod tests {
         assert!(!is_intrinsic_module("sifr.io"));
         assert!(is_stdlib_module("sifr.io"));
         assert!(!is_stdlib_module("_sifr.io"));
+    }
+
+    #[test]
+    fn bare_stdlib_tail_matches_exact_embedded_module() {
+        let matched = is_bare_stdlib_tail("math").expect("math should match sifr.math");
+
+        assert_eq!(matched.bare_module, "math");
+        assert_eq!(matched.matched_tail, "math");
+        assert_eq!(matched.suggested_module, "sifr.math");
+        assert!(matched.exact_embedded_module_exists);
+    }
+
+    #[test]
+    fn bare_stdlib_tail_matches_root_fallback_for_missing_submodule() {
+        let matched =
+            is_bare_stdlib_tail("collections.abc").expect("collections root should match");
+
+        assert_eq!(matched.bare_module, "collections.abc");
+        assert_eq!(matched.matched_tail, "collections");
+        assert_eq!(matched.suggested_module, "sifr.collections");
+        assert!(!matched.exact_embedded_module_exists);
+    }
+
+    #[test]
+    fn bare_stdlib_tail_ignores_non_stdlib_and_reserved_roots() {
+        assert!(is_bare_stdlib_tail("user_math").is_none());
+        assert!(is_bare_stdlib_tail("sifr.math").is_none());
+        assert!(is_bare_stdlib_tail("_sifr.math").is_none());
+        assert!(is_bare_stdlib_tail("typing").is_none());
+        assert!(is_bare_stdlib_tail("enum").is_none());
     }
 }

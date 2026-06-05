@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{lower_module, lower_module_with_externals, ExternalDefs, HirDiagnostic};
 use ruff_text_size::{TextRange, TextSize};
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_python_parser::parse_module;
 
 fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
@@ -19,6 +19,13 @@ fn range_for(source: &str, needle: &str) -> TextRange {
         TextSize::new(start),
         TextSize::new(start + needle.len() as u32),
     )
+}
+
+fn string_arg<'a>(error: &'a HirDiagnostic, name: &str) -> Option<&'a str> {
+    match error.args.get(name) {
+        Some(DiagnosticArg::String(value)) => Some(value.as_str()),
+        _ => None,
+    }
 }
 
 #[test]
@@ -120,6 +127,69 @@ fn unknown_module_import_has_import_code() {
         error.message == "unknown import target: 'missing_module'"
             && error.code == Some(DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE)
             && error.primary_range == Some(range_for(source, "from missing_module import value"))
+    }));
+}
+
+#[test]
+fn bare_stdlib_import_from_has_targeted_import_code_and_args() {
+    let source = "from math import sqrt\n\ndef main():\n    pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.message == "bare stdlib import 'math'; Sifr stdlib lives under 'sifr.*'"
+            && error.code == Some(DiagnosticCode::IMPORT_BARE_STDLIB)
+            && error.primary_range == Some(range_for(source, "math"))
+            && string_arg(error, "bare_module") == Some("math")
+            && string_arg(error, "suggested_module") == Some("sifr.math")
+            && string_arg(error, "imported_names") == Some("sqrt")
+            && error.help.as_deref() == Some("use 'from sifr.math import sqrt'")
+    }));
+}
+
+#[test]
+fn bare_stdlib_import_from_alias_preserves_imported_names_arg() {
+    let source = "from math import sqrt as root\n\ndef main():\n    pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::IMPORT_BARE_STDLIB)
+            && string_arg(error, "bare_module") == Some("math")
+            && string_arg(error, "suggested_module") == Some("sifr.math")
+            && string_arg(error, "imported_names") == Some("sqrt as root")
+            && error.help.as_deref() == Some("use 'from sifr.math import sqrt as root'")
+    }));
+}
+
+#[test]
+fn bare_stdlib_import_statement_has_targeted_import_code() {
+    let source = "import math as m\n\ndef main():\n    pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.message == "bare stdlib import 'math'; Sifr stdlib lives under 'sifr.*'"
+            && error.code == Some(DiagnosticCode::IMPORT_BARE_STDLIB)
+            && error.primary_range == Some(range_for(source, "math"))
+            && string_arg(error, "bare_module") == Some("math")
+            && string_arg(error, "suggested_module") == Some("sifr.math")
+            && string_arg(error, "imported_names") == Some("")
+            && error.help.as_deref() == Some("use 'from sifr.math import <name>'")
+    }));
+}
+
+#[test]
+fn bare_stdlib_submodule_root_fallback_reports_unavailable_embedded_module() {
+    let source = "from collections.abc import Iterable\n\ndef main():\n    pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::IMPORT_BARE_STDLIB)
+            && string_arg(error, "bare_module") == Some("collections.abc")
+            && string_arg(error, "suggested_module") == Some("sifr.collections")
+            && string_arg(error, "imported_names") == Some("Iterable")
+            && error.help.as_deref()
+                == Some(
+                    "use 'from sifr.collections import Iterable'; no embedded sifr.collections.abc module exists",
+                )
     }));
 }
 

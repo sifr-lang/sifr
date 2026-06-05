@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md)
 
-Status: planning
+Status: milestone_stdlib_namespace_1 PR open after local validation and reviewer approval
 
 ## Checklist
 
@@ -26,12 +26,22 @@ Record planning and implementation reviews here.
 - Corpus review pass 1: `reviews/ad-hoc-stdlib-namespace-contract-corpus-review-pass-1.md` -> `READY`; reviewer confirmed the final corpus milestone is implementation-ready and covers all checked-in LeetCode fixtures, all runnable demos, and repeated discovery after implementation.
 - Final implementation-readiness pass 1: `reviews/ad-hoc-stdlib-namespace-contract-final-implementation-readiness-pass-1.md` -> `READY` with one non-blocking observation that `demos/collections_and_argparse/main.sifr` left a small `defaultdict(0)` judgment call.
 - Final implementation-readiness pass 2: `reviews/ad-hoc-stdlib-namespace-contract-final-implementation-readiness-pass-2.md` -> `READY`; reviewer confirmed the phase is implementation-ready with no hidden decisions after the phase explicitly chose the typed `defaultdict(int/list/set)` public contract and rejected preserving the older integer-default `defaultdict(0)` class-style API.
+- M1 implementation review pass 1: `reviews/ad-hoc-stdlib-namespace-m1-implementation-review-pass-2.md` -> `READY` with non-blocking cleanup items.
+- M1 implementation review pass 2: `reviews/ad-hoc-stdlib-namespace-m1-implementation-review-pass-3.md` -> `READY`; reviewer found no blocking M1 issues and confirmed `SIFR-IMPORT-0008` registry/docs, shared bare stdlib helper behavior, lowering args/help transport, project/package probe-then-reclassify behavior, `Stmt::Import` ownership, user-module priority, and required test/fixture coverage.
 
 ## Validation Ledger
 
 Record local validation for each milestone before opening the corresponding PR.
 
-- M1: pending.
+- M1: focused validation passed:
+  - `cargo test -p sifr_stdlib bare_stdlib_tail`
+  - `cargo test -p sifr_lowering bare_stdlib -- --nocapture`
+  - `cargo test -p sifr_driver bare_stdlib`
+  - `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture`
+  - `cargo run -q -p sifr_driver --bin diagnostic_contract_harness`
+  - `python3 scripts/run_verification_hardening.py --suite project`
+  - `scripts/run_all_tests.sh --profile create-pr`
+  - PR: https://github.com/sifr-lang/sifr/pull/2291
 - M2: pending.
 - M3: pending.
 

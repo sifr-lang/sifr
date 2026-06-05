@@ -1,0 +1,5 @@
+# expect-error[col=6]: SIFR-IMPORT-0008
+from math import sqrt
+
+def main():
+    pass

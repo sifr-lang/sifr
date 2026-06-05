@@ -1,0 +1,5 @@
+# expect-error[col=8]: SIFR-IMPORT-0008
+import math
+
+def main():
+    pass

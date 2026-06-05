@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-IMPORT-0008 crates/sifr/tests/verification/project/workspace_bare_stdlib_import/main.sifr:1:6 bare stdlib import 'math'; Sifr stdlib lives under 'sifr.*'

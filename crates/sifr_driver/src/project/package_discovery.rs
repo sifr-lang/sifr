@@ -1,5 +1,6 @@
 use super::discovery::{
-    diagnostic_with_source_range, discovery_label, DiscoveryDiagnosticStyle, ParsedProjectModule,
+    bare_stdlib_help, diagnostic_with_source_range, diagnostic_with_source_range_help,
+    discovery_label, DiscoveryDiagnosticStyle, ParsedProjectModule, SourceDiagnosticExtras,
 };
 use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::{Ranged as _, TextRange};
@@ -16,6 +17,8 @@ use std::path::Path;
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct PackageImportDependency {
     written_module_name: String,
+    imported_names: String,
+    is_absolute_import: bool,
     written_range: TextRange,
     resolved_import_path: DottedModulePath,
 }
@@ -167,6 +170,19 @@ fn package_import_source_diagnostic(
     ) {
         return package_import_diagnostic(error.clone());
     }
+    if dependency.is_absolute_import {
+        if let Some(stdlib_match) =
+            sifr_stdlib::is_bare_stdlib_tail(&dependency.written_module_name)
+        {
+            return package_bare_stdlib_source_diagnostic(
+                &stdlib_match,
+                dependency,
+                display_path,
+                source,
+                package_id,
+            );
+        }
+    }
     let resolved_path = dependency.resolved_import_path.0.clone();
     let args = [
         (
@@ -203,6 +219,63 @@ fn package_import_source_diagnostic(
         "unknown import target: '{module}'",
         &args,
         &notes,
+    )
+}
+
+fn package_bare_stdlib_source_diagnostic(
+    stdlib_match: &sifr_stdlib::BareStdlibMatch,
+    dependency: &PackageImportDependency,
+    display_path: &str,
+    source: &str,
+    package_id: &SifrPackageId,
+) -> RenderedDiagnostic {
+    let resolved_path = dependency.resolved_import_path.0.clone();
+    let args = [
+        (
+            "bare_module",
+            DiagnosticArg::String(stdlib_match.bare_module.clone()),
+        ),
+        (
+            "suggested_module",
+            DiagnosticArg::String(stdlib_match.suggested_module.clone()),
+        ),
+        (
+            "imported_names",
+            DiagnosticArg::String(dependency.imported_names.clone()),
+        ),
+        (
+            "resolution_scope",
+            DiagnosticArg::String("package".to_string()),
+        ),
+        ("tried_paths", DiagnosticArg::String(resolved_path.clone())),
+        (
+            "written_module_path",
+            DiagnosticArg::String(dependency.written_module_name.clone()),
+        ),
+        (
+            "resolved_package_import_path",
+            DiagnosticArg::String(resolved_path.clone()),
+        ),
+        (
+            "package_import_origin",
+            DiagnosticArg::String(format!("own_package:{}", package_id.0)),
+        ),
+    ];
+    let notes = vec![
+        format!("package import path: {resolved_path}"),
+        format!("package origin: own package {}", package_id.0),
+    ];
+    diagnostic_with_source_range_help(
+        DiagnosticCode::IMPORT_BARE_STDLIB,
+        display_path,
+        source,
+        dependency.written_range,
+        "bare stdlib import '{bare_module}'; Sifr stdlib lives under 'sifr.*'",
+        &args,
+        SourceDiagnosticExtras {
+            notes: &notes,
+            help: Some(bare_stdlib_help(stdlib_match, &dependency.imported_names)),
+        },
     )
 }
 
@@ -462,6 +535,18 @@ fn package_import_dependencies(
         deps.entry(resolved_import_path.clone())
             .or_insert_with(|| PackageImportDependency {
                 written_module_name: module.to_string(),
+                imported_names: import_from
+                    .names
+                    .iter()
+                    .map(|alias| {
+                        alias.asname.as_ref().map_or_else(
+                            || alias.name.to_string(),
+                            |asname| format!("{} as {asname}", alias.name),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                is_absolute_import: import_from.level == 0,
                 written_range: module.range(),
                 resolved_import_path,
             });
