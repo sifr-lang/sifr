@@ -259,11 +259,11 @@ Minimum suite kinds:
 - Full local suite:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Quick hardening gate:
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile create-pr`
 - Full hardening gate:
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile full`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile merge`
 - Stress/determinism gate:
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile stress`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile release`
 - Determinism recheck:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/check_e2e_report_determinism.sh`
 - Fuzz/property smoke runner:
@@ -271,11 +271,11 @@ Minimum suite kinds:
 - Milestone demos:
   - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
 - Baseline bless/accept command:
-  - `python3 /Users/yaseralnajjar/work/sifr/codebase/scripts/run_verification_hardening.py --profile full --bless`
+  - `python3 /Users/yaseralnajjar/work/sifr/codebase/scripts/run_verification_hardening.py --profile merge --bless`
 - Curated OSS gate runner:
-  - `python3 /Users/yaseralnajjar/work/sifr/codebase/scripts/run_verification_hardening.py --profile full --suite oss-curated`
+  - `python3 /Users/yaseralnajjar/work/sifr/codebase/scripts/run_verification_hardening.py --profile merge --suite oss-curated`
 - Sequential-vs-parallel equivalence check:
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/check_e2e_sequential_parallel_equivalence.sh --profile quick`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/check_e2e_sequential_parallel_equivalence.sh --profile merge`
 
 All suite kinds introduced in this phase must be invocable through the canonical local validation entrypoints and must emit structured machine-readable results.
 

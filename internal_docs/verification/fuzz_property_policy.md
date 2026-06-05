@@ -9,7 +9,7 @@ Canonical manifests:
 - `verification/fuzz_property/fuzz_smoke_manifest.json`
 
 Canonical runner:
-- `python3 scripts/run_verification_hardening.py --suite property --suite fuzz-smoke --profile full`
+- `python3 scripts/run_verification_hardening.py --suite property --suite fuzz-smoke --profile merge`
 
 Contracts:
 - deterministic seeds and deterministic mutation stream

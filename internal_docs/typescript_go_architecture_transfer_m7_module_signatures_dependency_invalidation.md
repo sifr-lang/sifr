@@ -78,6 +78,6 @@ M7 focused validation so far:
 - `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
 - `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
 - `cargo clippy --workspace -- -D warnings`
-- `scripts/run_all_tests.sh --profile quick` -> PASS, report
-  `target/validation_lane_reports/quick.latest.json`, wall time 254.29s,
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
+  `target/validation_lane_reports/create-pr.latest.json`, wall time 254.29s,
   advisory: group skew is high

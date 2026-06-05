@@ -33,11 +33,11 @@ Status: complete
 
 Record local validation for each milestone before opening the corresponding PR.
 
-- M1: distribution validation, focused Rust receipt/metadata tests, and quick/full local validation passed before merge.
-- M2: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, CLI dry-run smoke, file-size guardrail, `scripts/run_all_tests.sh --profile quick`, and full `scripts/run_all_tests.sh` passed before merge.
-- M3: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, file-size guardrail, non-dry-run CLI fake-installer smoke, and `scripts/run_all_tests.sh --profile quick` passed before merge.
-- M4: `bash -n` for new/updated shell scripts, M4 drift fixtures, explicit `schema_version=true` rejection probe, `scripts/run_distribution_validation.sh`, `cargo fmt --check`, file-size guardrail, and `scripts/run_all_tests.sh --profile quick` passed before merge.
-- M5: `cargo fmt --check`, file-size guardrail, self-update docs sanity grep, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, and `scripts/run_all_tests.sh --profile quick` passed before PR. Targeted generated-code rustfmt passed after an interrupted full run, then full `scripts/run_all_tests.sh` passed before merge with only wall-time/skew advisories.
+- M1: distribution validation, focused Rust receipt/metadata tests, and create-pr/merge local validation passed before merge.
+- M2: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, CLI dry-run smoke, file-size guardrail, `scripts/run_all_tests.sh --profile create-pr`, and `scripts/run_all_tests.sh --profile merge` passed before merge.
+- M3: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, file-size guardrail, non-dry-run CLI fake-installer smoke, and `scripts/run_all_tests.sh --profile create-pr` passed before merge.
+- M4: `bash -n` for new/updated shell scripts, M4 drift fixtures, explicit `schema_version=true` rejection probe, `scripts/run_distribution_validation.sh`, `cargo fmt --check`, file-size guardrail, and `scripts/run_all_tests.sh --profile create-pr` passed before merge.
+- M5: `cargo fmt --check`, file-size guardrail, self-update docs sanity grep, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr -- self_update`, `scripts/run_distribution_validation.sh`, and `scripts/run_all_tests.sh --profile create-pr` passed before PR. Targeted generated-code rustfmt passed after an interrupted broad run, then `scripts/run_all_tests.sh --profile merge` passed before merge with only wall-time/skew advisories.
 
 ## Merged PRs
 

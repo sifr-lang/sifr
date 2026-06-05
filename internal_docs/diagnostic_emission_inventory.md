@@ -13,7 +13,7 @@ Closure snapshot from May 3, 2026:
 
 - `rg -n "ctx\\.error\\(" crates/sifr_hir/src -g '*.rs'` has no matches.
 - The raw `LowerCtx::error(String)` transport has been deleted; HIR user-facing diagnostics now use explicit diagnostic codes with primary ranges at emission sites.
-- `scripts/run_all_tests.sh --profile quick` passes with diagnostic schema, docs, coverage, baseline-hygiene, cancel-usage, and transport-cleanup guardrails enabled.
+- `scripts/run_all_tests.sh --profile create-pr` passes with diagnostic schema, docs, coverage, baseline-hygiene, cancel-usage, and transport-cleanup guardrails enabled.
 
 ## HIR Lowering Surface
 

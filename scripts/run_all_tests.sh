@@ -13,25 +13,19 @@ Run local-first validation for the selected lane.
 
 Lanes:
   create-pr Fast local create-PR signal.
-  merge     Authoritative merge gate (default via `pr` alias).
+  merge     Authoritative merge gate (default).
   nightly Broad hardening and full-corpus signal.
   release Highest-confidence local qualification gate.
 
-Legacy aliases:
-  quick   Alias for `create-pr`
-  pr      Alias for `merge`
-  full    Alias for `merge`
-  stress  Alias for `release`
-
 Options:
-  --profile <create-pr|merge|nightly|release|quick|pr|full|stress>  Validation lane (default: pr)
+  --profile <create-pr|merge|nightly|release>  Validation lane (default: merge)
   --help                         Show this help
 
 Any remaining arguments are forwarded to scripts/run_e2e_pass.sh.
 EOF
 }
 
-PROFILE="${SIFR_TEST_PROFILE:-pr}"
+PROFILE="${SIFR_TEST_PROFILE:-merge}"
 FORWARD_ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -85,7 +79,7 @@ cd "${SCRIPT_DIR}/.."
 LANE_EXPORTS="$(python3 "${SCRIPT_DIR}/validation_lane.py" shell --profile "${PROFILE}")"
 eval "${LANE_EXPORTS}"
 
-PROFILE="${CANONICAL_PROFILE}"
+PROFILE="${RESOLVED_PROFILE}"
 
 echo "Running local-first validation"
 echo "  profile=${PROFILE}"

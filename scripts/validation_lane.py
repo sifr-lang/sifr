@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    for name in ("canonical-profile", "shell", "summary"):
+    for name in ("profile", "shell", "summary"):
         subparser = subparsers.add_parser(name)
         subparser.add_argument("--profile", required=True, help="Requested validation profile.")
 
@@ -37,14 +37,9 @@ def load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
-def load_lane_manifest(path: Path) -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
+def load_lane_manifest(path: Path) -> dict[str, dict[str, Any]]:
     payload = load_json(path)
-    aliases = payload.get("aliases", {})
     lanes = payload.get("lanes", [])
-    if not isinstance(aliases, dict) or not all(
-        isinstance(key, str) and isinstance(value, str) for key, value in aliases.items()
-    ):
-        raise SystemExit("invalid lane manifest: 'aliases' must be a string map")
     if not isinstance(lanes, list):
         raise SystemExit("invalid lane manifest: 'lanes' must be a list")
 
@@ -56,7 +51,7 @@ def load_lane_manifest(path: Path) -> tuple[dict[str, str], dict[str, dict[str, 
         if not isinstance(name, str) or not name:
             raise SystemExit("invalid lane manifest: each lane needs a string 'name'")
         lane_map[name] = lane
-    return aliases, lane_map
+    return lane_map
 
 
 def _raise_with_code(message: str, code: int) -> NoReturn:
@@ -64,12 +59,11 @@ def _raise_with_code(message: str, code: int) -> NoReturn:
     raise SystemExit(code)
 
 
-def canonicalize_profile(profile: str, aliases: dict[str, str], lanes: dict[str, dict[str, Any]]) -> str:
-    canonical = aliases.get(profile, profile)
-    if canonical not in lanes:
-        supported = ", ".join(sorted(set(lanes) | set(aliases)))
+def resolve_profile(profile: str, lanes: dict[str, dict[str, Any]]) -> str:
+    if profile not in lanes:
+        supported = ", ".join(sorted(lanes))
         _raise_with_code(f"unsupported profile: {profile} (supported: {supported})", 2)
-    return canonical
+    return profile
 
 
 def load_fixture_count(path: Path) -> int:
@@ -115,7 +109,7 @@ def emit_shell(profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
         fixture_manifest_abs = str(resolve_fixture_manifest_path(fixture_manifest))
 
     values = {
-        "CANONICAL_PROFILE": profile,
+        "RESOLVED_PROFILE": profile,
         "LANE_NAME": lane["name"],
         "LANE_DESCRIPTION": lane.get("description", ""),
         "WARM_TARGET_MINUTES": lane.get("warm_wall_time_target_minutes", ""),
@@ -152,7 +146,7 @@ def emit_shell(profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
         print(f"{key}={shell_quote(value)}")
 
 
-def emit_summary(requested_profile: str, canonical_profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
+def emit_summary(requested_profile: str, resolved_profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
     e2e = lane.get("e2e", {})
     fixture_manifest = e2e.get("fixture_manifest")
     fixture_count = "full-corpus"
@@ -169,7 +163,7 @@ def emit_summary(requested_profile: str, canonical_profile: str, lane: dict[str,
 
     print("Validation lane summary")
     print(f"  requested_profile={requested_profile}")
-    print(f"  canonical_profile={canonical_profile}")
+    print(f"  resolved_profile={resolved_profile}")
     print(f"  lane={lane['name']}")
     print(f"  description={lane.get('description', '')}")
     print(
@@ -207,19 +201,19 @@ def emit_summary(requested_profile: str, canonical_profile: str, lane: dict[str,
 def main() -> None:
     args = parse_args()
     manifest_path = Path(args.manifest).resolve()
-    aliases, lanes = load_lane_manifest(manifest_path)
+    lanes = load_lane_manifest(manifest_path)
     requested_profile = args.profile
-    canonical_profile = canonicalize_profile(requested_profile, aliases, lanes)
-    lane = lanes[canonical_profile]
+    resolved_profile = resolve_profile(requested_profile, lanes)
+    lane = lanes[resolved_profile]
 
-    if args.command == "canonical-profile":
-        print(canonical_profile)
+    if args.command == "profile":
+        print(resolved_profile)
         return
     if args.command == "shell":
-        emit_shell(canonical_profile, lane, manifest_path)
+        emit_shell(resolved_profile, lane, manifest_path)
         return
     if args.command == "summary":
-        emit_summary(requested_profile, canonical_profile, lane, manifest_path)
+        emit_summary(requested_profile, resolved_profile, lane, manifest_path)
         return
     raise SystemExit(f"unsupported command: {args.command}")
 

@@ -75,23 +75,21 @@ def load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
-def canonical_profile(profile: str, manifest_path: Path) -> tuple[str, dict[str, Any]]:
+def resolve_profile(profile: str, manifest_path: Path) -> tuple[str, dict[str, Any]]:
     payload = load_json(manifest_path)
-    aliases = payload.get("aliases", {})
     lanes = payload.get("lanes", [])
-    if not isinstance(aliases, dict) or not isinstance(lanes, list):
+    if not isinstance(lanes, list):
         raise SystemExit(f"invalid lane manifest: {manifest_path}")
     lane_map = {
         lane.get("name"): lane
         for lane in lanes
         if isinstance(lane, dict) and isinstance(lane.get("name"), str)
     }
-    canonical = aliases.get(profile, profile)
-    lane = lane_map.get(canonical)
+    lane = lane_map.get(profile)
     if not isinstance(lane, dict):
-        supported = sorted({*lane_map.keys(), *aliases.keys()})
+        supported = sorted(lane_map.keys())
         raise SystemExit(f"unsupported profile '{profile}' (supported: {', '.join(supported)})")
-    return canonical, lane
+    return profile, lane
 
 
 def parse_time_file(path: Path) -> dict[str, int | float]:
@@ -292,7 +290,7 @@ def parse_log(path: Path) -> dict[str, Any]:
 
 def summarize(args: argparse.Namespace) -> int:
     manifest_path = Path(args.manifest).resolve()
-    canonical, lane = canonical_profile(args.profile, manifest_path)
+    profile, lane = resolve_profile(args.profile, manifest_path)
     log_path = Path(args.log).resolve()
     time_path = Path(args.time_file).resolve()
 
@@ -330,12 +328,12 @@ def summarize(args: argparse.Namespace) -> int:
         largest_group = int(e2e_metrics.get("largest_group_fixtures", 0))
         median_group = int(e2e_metrics.get("median_group_fixtures", 0))
         group_skew_ratio = largest_group / max(median_group, 1) if largest_group > 0 else 0.0
-    advisories = build_advisories(canonical, warm_target_minutes, real_seconds, time_metrics, e2e_metrics)
+    advisories = build_advisories(profile, warm_target_minutes, real_seconds, time_metrics, e2e_metrics)
 
     payload = {
-        "profile": canonical,
+        "profile": profile,
         "requested_profile": args.profile,
-        "lane": lane.get("name", canonical),
+        "lane": lane.get("name", profile),
         "description": lane.get("description", ""),
         "budget": {
             "warm_wall_time_target_minutes": warm_target_minutes,
@@ -375,7 +373,7 @@ def summarize(args: argparse.Namespace) -> int:
         json_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     print("Validation lane report")
-    print(f"  profile={canonical}")
+    print(f"  profile={profile}")
     print(
         "  wall_time="
         f"{real_seconds:.2f}s "

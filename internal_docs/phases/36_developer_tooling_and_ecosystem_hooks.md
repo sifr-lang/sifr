@@ -713,8 +713,8 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - Run full parity, protocol, stress, analysis snapshot coherence, dependency-boundary, formatter, rule/suppression/exclusion, editor asset, VS Code package, completion quality, performance, and split-brain checks.
   - Audit implementation against `internal_docs/tooling_reuse_strategy.md`.
 - Definition of done:
-  - `scripts/run_all_tests.sh --profile quick` passes.
-  - `scripts/run_all_tests.sh --profile pr` passes.
+  - `scripts/run_all_tests.sh --profile create-pr` passes.
+  - `scripts/run_all_tests.sh --profile merge` passes.
   - Every required Phase 36 feature has positive and negative evidence.
   - Production validation evidence is recorded in the phase execution checklist issue.
   - No open deferrals remain inside the Phase 36 contract except package-registry intelligence after Phase 37 and release-governance publication mechanics after Phase 39.
@@ -729,10 +729,10 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
 
 ### Milestone quality checks
 - Local validation gates pass for each milestone before merge:
-  - `scripts/run_all_tests.sh --profile quick`
+  - `scripts/run_all_tests.sh --profile create-pr`
   - milestone-specific `verification/tooling/*.py` checks added by the milestone
 - The authoritative pre-PR gate passes before phase-closing PRs:
-  - `scripts/run_all_tests.sh --profile pr`
+  - `scripts/run_all_tests.sh --profile merge`
 - No tooling path uses CI-only behavior.
 - No LSP or extension code reimplements parser, lowering, type-check, ownership, semantic diagnostic logic, formatter logic, linter logic, or codegen logic.
 - No `sifr_lsp` or `sifr_analysis` production path depends on Python semantic/project/runtime authority from `ty_python_semantic`, Python module resolution in `ty_project`, Python environment discovery, Python diagnostic rules, or `ruff_server` semantic behavior.
@@ -773,7 +773,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
 
 ### CI Integration
 
-Tooling checks must run in `scripts/run_all_tests.sh --profile pr` under a clearly named "Developer Tooling Checks" step. Local validation and CI use the same commands. CI-only tooling behavior is not allowed.
+Tooling checks must run in `scripts/run_all_tests.sh --profile merge` under a clearly named "Developer Tooling Checks" step. Local validation and CI use the same commands. CI-only tooling behavior is not allowed.
 
 ## Exit criteria
 
@@ -796,10 +796,10 @@ Tooling checks must run in `scripts/run_all_tests.sh --profile pr` under a clear
 - `verification/tooling/check_formatter_contract.py` passes and fails on seeded formatting drift.
 - `verification/tooling/check_rule_suppression_contract.py` passes and fails on seeded rule/suppression/exclusion drift.
 - `verification/tooling/check_editor_assets.py`, `check_vscode_extension_contract.py`, and `check_vscode_extension.py` pass and fail on seeded extension/editor asset drift.
-- Main-repo quick/pr validation runs the VS Code extension contract check against the `editor_integrations/vscode` submodule, `SIFR_VSCODE_REPO`, or a sibling `../sifr-vscode` checkout; it fails with actionable setup instructions if Phase 36 extension validation is required and no extension checkout is available.
+- Main-repo create-pr/merge validation runs the VS Code extension contract check against the `editor_integrations/vscode` submodule, `SIFR_VSCODE_REPO`, or a sibling `../sifr-vscode` checkout; it fails with actionable setup instructions if Phase 36 extension validation is required and no extension checkout is available.
 - Completion quality fixtures pass configured ranking thresholds and fail on seeded regressions.
-- `scripts/run_all_tests.sh --profile quick` passes.
-- `scripts/run_all_tests.sh --profile pr` passes.
+- `scripts/run_all_tests.sh --profile create-pr` passes.
+- `scripts/run_all_tests.sh --profile merge` passes.
 - Phase 27 non-regression contract remains green.
 - Validation evidence is recorded in the phase execution checklist issue before merge.
 

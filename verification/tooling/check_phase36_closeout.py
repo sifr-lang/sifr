@@ -112,8 +112,8 @@ def validate_tracking_docs() -> list[str]:
         "check_analysis_snapshot_coherence.py",
         "check_completion_quality.py",
         "check_phase36_closeout.py",
-        "scripts/run_all_tests.sh --profile quick",
-        "scripts/run_all_tests.sh --profile pr",
+        "scripts/run_all_tests.sh --profile create-pr",
+        "scripts/run_all_tests.sh --profile merge",
     ]:
         if required not in tooling_text and required not in issue_text and required not in phase_text:
             failures.append(f"closeout docs missing required evidence marker: {required}")

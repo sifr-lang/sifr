@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "lane": "quick",
+  "lane": "create-pr",
   "fixture_names": [
     "hello_world",
     "if_else",

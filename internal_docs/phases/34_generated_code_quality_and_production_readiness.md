@@ -52,7 +52,7 @@ Required files:
 - `verification/generated_code_quality/generated_code_quality_determinism.sh` — verifies byte-stable repeated emission.
 - `verification/generated_code_quality/generated_code_quality_demos.sh` — runs required demo quality evidence checks.
 
-Scripts must be deterministic, local-first, and usable both directly and through `scripts/run_all_tests.sh --profile pr`.
+Scripts must be deterministic, local-first, and usable both directly and through `scripts/run_all_tests.sh --profile merge`.
 
 ## Generated Rust Compilation Pipeline
 
@@ -179,7 +179,7 @@ flowchart TD
   - Make required `demos/` runs part of phase quality gates.
   - Require milestone-level positive/negative validation plus demo evidence.
   - Add or update demo fixtures so generated-code quality is visible through normal user workflows.
-  - Integrate required demo checks into `scripts/run_all_tests.sh --profile pr`.
+  - Integrate required demo checks into `scripts/run_all_tests.sh --profile merge`.
 - Required demos:
   - `demos/codegen_output/main.sifr`
   - `demos/codegen_structural_passes/main.sifr`
@@ -204,10 +204,10 @@ flowchart TD
 
 ### Milestone quality checks
 - Local validation gates pass for each milestone before merge:
-  - `scripts/run_all_tests.sh --profile quick`
+  - `scripts/run_all_tests.sh --profile create-pr`
   - milestone-specific `verification/generated_code_quality/generated_code_quality_*.sh`
 - The authoritative pre-PR gate passes before phase-closing PRs:
-  - `scripts/run_all_tests.sh --profile pr`
+  - `scripts/run_all_tests.sh --profile merge`
 - Generated Rust compiles with `-D warnings` on defined corpus.
 - No data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths.
 - No emitted `todo!` / `unimplemented!` in production paths.
@@ -236,7 +236,7 @@ flowchart TD
 
 ### CI Integration
 
-Generated-code quality checks must run in `scripts/run_all_tests.sh --profile pr` under a clearly named "Generated Code Quality Checks" step. Local validation and CI use the same commands. CI-only generated-code quality behavior is not allowed.
+Generated-code quality checks must run in `scripts/run_all_tests.sh --profile merge` under a clearly named "Generated Code Quality Checks" step. Local validation and CI use the same commands. CI-only generated-code quality behavior is not allowed.
 
 ### Exit criteria
 - All milestone DoDs are satisfied.
@@ -250,7 +250,7 @@ Generated-code quality checks must run in `scripts/run_all_tests.sh --profile pr
   `-D warnings` and an explicit generated-code style-debt allowlist.
 - `verification/generated_code_quality/generated_code_quality_determinism.sh` passes.
 - `verification/generated_code_quality/generated_code_quality_demos.sh` passes.
-- `scripts/run_all_tests.sh --profile pr` passes.
+- `scripts/run_all_tests.sh --profile merge` passes.
 - Any waiver is explicit, time-bounded, owner-assigned, and issue-linked.
 
 ## Exit Gate
@@ -422,7 +422,7 @@ Repair evidence:
 - Required generated-code demo gate:
   `target/sifr_generated_code_quality/evidence/corpus-1778804298-40476.json`.
 - Local validation:
-  `scripts/run_all_tests.sh --profile quick` and `scripts/run_all_tests.sh`
+  `scripts/run_all_tests.sh --profile create-pr` and `scripts/run_all_tests.sh`
   passed on 2026-05-15.
 
 Positive-demo result:
@@ -468,9 +468,9 @@ Follow-up evidence:
   `target/sifr_generated_code_quality/evidence/determinism-1778850320-82439.json`,
   and `target/sifr_generated_code_quality/evidence/corpus-1778850957-90134.json`
   from the required demo quality gate.
-- Local validation: `scripts/run_all_tests.sh --profile quick` passed, and
-  `scripts/run_all_tests.sh` passed with PR-profile report
-  `target/validation_lane_reports/pr.latest.json` on 2026-05-15. The full
+- Local validation: `scripts/run_all_tests.sh --profile create-pr` passed, and
+  `scripts/run_all_tests.sh` passed with merge-profile report
+  `target/validation_lane_reports/merge.latest.json` on 2026-05-15. The full
   run exceeded the warm-time target but had zero blocking failures and zero
   hardening failures.
 - Remaining demo failures are expected negative demos, not positive

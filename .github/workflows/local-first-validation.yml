@@ -25,12 +25,12 @@ jobs:
   local-first-profiles:
     name: local-first-${{ matrix.profile }}
     runs-on: ubuntu-24.04
-    # PRs run only quick for fast feedback; full/stress run on push and manual workflows.
-    if: github.event_name != 'pull_request' || matrix.profile == 'quick'
+    # PRs run only create-pr for fast feedback; broader lanes run on push and manual workflows.
+    if: github.event_name != 'pull_request' || matrix.profile == 'create-pr'
     strategy:
       fail-fast: true
       matrix:
-        profile: [quick, full, stress]
+        profile: [create-pr, merge, release]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -49,8 +49,9 @@ jobs:
   deterministic-report-signature:
     name: deterministic-report-signature
     runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Verify deterministic report signature
-        run: bash scripts/check_e2e_report_determinism.sh --profile quick
+        run: bash scripts/check_e2e_report_determinism.sh --profile merge

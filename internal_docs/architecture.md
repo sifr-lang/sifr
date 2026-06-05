@@ -1223,12 +1223,10 @@ Note: `extract_expect_stdout` is retained for legacy runner compatibility only. 
 
 ```bash
 cargo test                                    # Run all tests (layers 1-3)
-./scripts/run_all_tests.sh --profile quick   # Fast local-first profile
-./scripts/run_all_tests.sh --profile pr      # Authoritative merge gate
+./scripts/run_all_tests.sh --profile create-pr # Fast local-first profile
+./scripts/run_all_tests.sh --profile merge   # Authoritative merge gate
 ./scripts/run_all_tests.sh --profile nightly # Broad nightly validation lane
 ./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification lane
-./scripts/run_all_tests.sh --profile full    # Legacy alias for `pr`
-./scripts/run_all_tests.sh --profile stress  # Legacy alias for `release`
 ./scripts/run_distribution_validation.sh     # Preview installer/artifact/release automation checks
 ./scripts/check_e2e_report_determinism.sh --profile release # Stable e2e report signature across reruns
 ./scripts/run_smoke_fuzz_property.sh         # Opt-in nightly smoke property/fuzz validation
@@ -1242,7 +1240,7 @@ cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, mi
 cargo bench                                   # Run benchmarks (layer 6, milestone_generics+)
 ```
 
-Validation-lane policy is defined in `verification/validation_lanes/manifest.json`. Representative `quick` and `pr` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions. Declarative contract-matrix coverage lives in `verification/validation_contracts/manifest.json` and is executed through `scripts/run_validation_contract_matrix.sh` plus the Rust-native `tests/validation_contracts.rs` harness.
+Validation-lane policy is defined in `verification/validation_lanes/manifest.json`. Representative `create-pr` and `merge` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions. Declarative contract-matrix coverage lives in `verification/validation_contracts/manifest.json` and is executed through `scripts/run_validation_contract_matrix.sh` plus the Rust-native `tests/validation_contracts.rs` harness.
 
 `scripts/run_all_tests.sh` also emits a per-lane runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-lane RSS regressions.
 

@@ -216,7 +216,7 @@ Validation:
 - focused import/stdin/stdout stdlib E2E fixtures that prove intrinsic signatures still resolve
 - `cargo tree -p sifr_stdlib --depth 5` checked against the forbidden dependency set from this phase
 - `cargo test -p sifr -- stdlib`
-- `scripts/run_all_tests.sh --profile quick`
+- `scripts/run_all_tests.sh --profile create-pr`
 
 Definition of done:
 
@@ -243,7 +243,7 @@ Validation:
 - `cargo test -p sifr_codegen`
 - `cargo test -p sifr_driver`
 - `scripts/check_codegen_binary_size.sh`
-- `scripts/run_all_tests.sh --profile quick`
+- `scripts/run_all_tests.sh --profile create-pr`
 
 Definition of done:
 
@@ -274,7 +274,7 @@ Validation:
 - `cargo test -p sifr_codegen`
 - `cargo test -p sifr_lint`
 - `scripts/check_hir_maintainability_guardrails.py`
-- `scripts/run_all_tests.sh --profile quick`
+- `scripts/run_all_tests.sh --profile create-pr`
 
 Definition of done:
 
@@ -302,7 +302,7 @@ Validation:
 - `cargo test -p sifr_lowering`
 - `cargo test -p sifr_frontend`
 - `scripts/check_hir_maintainability_guardrails.py` updated or replaced to enforce `sifr_lowering` decomposition
-- `scripts/run_all_tests.sh --profile quick`
+- `scripts/run_all_tests.sh --profile create-pr`
 
 Definition of done:
 
@@ -322,18 +322,18 @@ Scope:
   - `sifr_lint` does not directly depend on `sifr_lowering`.
   - `sifr_analysis` does not directly depend on `sifr_lowering`.
   - generated dependency specs are owned by `sifr_stdlib`.
-- Wire the guardrails into local quick validation.
+- Wire the guardrails into local create-pr validation.
 
 Validation:
 
 - new guardrail self-tests covering positive and negative dependency examples
-- `scripts/run_all_tests.sh --profile quick`
+- `scripts/run_all_tests.sh --profile create-pr`
 - `cargo fmt --check`
 - `cargo clippy --workspace -- -D warnings`
 
 Definition of done:
 
-- Dependency-direction rules are enforced locally and in CI-equivalent quick validation.
+- Dependency-direction rules are enforced locally and in CI-equivalent create-pr validation.
 - Future accidental `sifr_codegen -> sifr_lowering`, `sifr_lint -> sifr_lowering`, or `sifr_analysis -> sifr_lowering` dependencies fail before PR review.
 
 ### milestone_ir_boundary_4: Documentation And Phase Closeout
@@ -348,7 +348,7 @@ Scope:
 Validation:
 
 - docs grep for stale current-state crate names
-- `scripts/run_all_tests.sh --profile quick`
+- `scripts/run_all_tests.sh --profile create-pr`
 - file-size guardrail
 
 Definition of done:
@@ -364,7 +364,7 @@ Definition of done:
 - No user-triggerable panic paths may be introduced.
 - No data-dependent emitted `.unwrap()`, `.expect()`, or `panic!` may be introduced into user runtime paths.
 - Hand-maintained files touched by this phase must remain under the 900-line guardrail.
-- Every milestone must run `scripts/run_all_tests.sh --profile quick` before PR.
+- Every milestone must run `scripts/run_all_tests.sh --profile create-pr` before PR.
 - Full `scripts/run_all_tests.sh` is required before phase closeout.
 - Each milestone must include at least one positive validation and one negative validation for the boundary it claims.
 
@@ -376,5 +376,5 @@ The phase exits only when:
 - `sifr_hir` no longer exists as a workspace crate.
 - Generated Cargo dependency decisions are centralized in `sifr_stdlib`.
 - Codegen and lint consume `sifr_ir` without depending on lowering internals.
-- Dependency-direction guardrails are part of quick validation.
+- Dependency-direction guardrails are part of create-pr validation.
 - Architecture docs and execution checklist are updated.

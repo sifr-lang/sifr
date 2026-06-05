@@ -88,7 +88,7 @@ Observed shape:
 
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/iterator_pipeline_cloning.sifr` -> PASS
 - `cargo run -q -p sifr -- run demos/cloned_iterators/main.sifr` -> PASS
-- `scripts/run_all_tests.sh --profile quick` -> PASS
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS
 
 Residual items intentionally deferred to later waves:
 

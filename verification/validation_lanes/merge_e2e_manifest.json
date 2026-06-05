@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "lane": "pr",
+  "lane": "merge",
   "fixture_names": [
     "hello_world",
     "if_else",
