@@ -122,6 +122,7 @@ run_core_guardrails() {
 
   echo "Running source crate dependency-direction guardrail"
   python3 "${SCRIPT_DIR}/check_source_crate_dependency_direction.py"
+  python3 "${SCRIPT_DIR}/check_source_crate_dependency_direction.py" --self-test
 
   echo "Running TypeScript-Go architecture transfer M1 guardrails"
   python3 "${SCRIPT_DIR}/../verification/tooling/check_typescript_go_m1_guardrails.py"
