@@ -140,6 +140,57 @@ pub(crate) fn lowers_unicode_intrinsics_with_dependency_metadata() {
 }
 
 #[test]
+pub(crate) fn lowers_i18n_intrinsics_with_dependency_metadata() {
+    let canonical = lower_intrinsic("i18n_locale_canonicalize", &["locale".to_string()])
+        .expect("locale canonicalize should lower");
+    assert_eq!(
+        canonical.required_feature,
+        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+    );
+    assert!(canonical
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::IcuLocale));
+    assert!(canonical
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::IcuDatetime));
+    let canonical_rendered = render_expr(&canonical.expr);
+    assert!(canonical_rendered.contains("sifr_runtime::i18n::canonicalize_locale"));
+    assert!(canonical_rendered.contains("LocaleIdError"));
+
+    let formatted = lower_intrinsic(
+        "i18n_format_datetime",
+        &[
+            "locale".to_string(),
+            "style".to_string(),
+            "2025".to_string(),
+            "1".to_string(),
+            "15".to_string(),
+            "16".to_string(),
+            "9".to_string(),
+            "35".to_string(),
+        ],
+    )
+    .expect("date/time formatter should lower");
+    let formatted_rendered = render_expr(&formatted.expr);
+    assert!(formatted_rendered.contains("sifr_runtime::i18n::format_datetime"));
+    assert!(formatted_rendered.contains("FormatError"));
+
+    let plural = lower_intrinsic(
+        "i18n_plural_category",
+        &[
+            "locale".to_string(),
+            "rule_type".to_string(),
+            "value".to_string(),
+        ],
+    )
+    .expect("plural category should lower");
+    assert!(render_expr(&plural.expr).contains("PluralRulesError"));
+
+    let host = lower_intrinsic("i18n_host_locale", &[]).expect("host locale should lower");
+    assert_eq!(render_expr(&host.expr), "sifr_runtime::i18n::host_locale()");
+}
+
+#[test]
 pub(crate) fn lowers_env_intrinsics_via_registry() {
     let get = lower_intrinsic("env_get", &["key".to_string()]).expect("env_get should lower");
     assert!(render_expr(&get.expr).contains("std::env::var"));

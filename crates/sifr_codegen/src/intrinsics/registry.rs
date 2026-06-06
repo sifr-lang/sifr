@@ -12,6 +12,7 @@ mod gzip;
 mod hash;
 mod hashlib;
 mod html;
+mod i18n;
 mod io;
 mod json;
 mod logging;
@@ -85,6 +86,20 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
             StdlibFeature::UnicodeNames,
             StdlibFeature::UnicodeNormalization,
             StdlibFeature::UnicodeSegmentation,
+        ],
+        "i18n_locale_canonicalize"
+        | "i18n_locale_maximize"
+        | "i18n_locale_minimize"
+        | "i18n_host_locale"
+        | "i18n_format_number"
+        | "i18n_format_datetime"
+        | "i18n_plural_category"
+        | "i18n_collate" => &[
+            StdlibFeature::IcuCollator,
+            StdlibFeature::IcuDatetime,
+            StdlibFeature::IcuDecimal,
+            StdlibFeature::IcuLocale,
+            StdlibFeature::IcuPlurals,
         ],
         _ => &[],
     }
@@ -402,6 +417,38 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         ),
         "unicode_word_boundaries" => (
             unicode::lower_unicode_word_boundaries(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_locale_canonicalize" => (
+            i18n::lower_i18n_locale_canonicalize(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_locale_maximize" => (
+            i18n::lower_i18n_locale_maximize(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_locale_minimize" => (
+            i18n::lower_i18n_locale_minimize(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_host_locale" => (
+            i18n::lower_i18n_host_locale(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_format_number" => (
+            i18n::lower_i18n_format_number(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_format_datetime" => (
+            i18n::lower_i18n_format_datetime(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_plural_category" => (
+            i18n::lower_i18n_plural_category(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_collate" => (
+            i18n::lower_i18n_collate(args),
             Some(StdlibFeature::SifrRuntime),
         ),
         "encode_utf8" => (bytes::lower_encode_utf8(args), None),

@@ -71,6 +71,11 @@ bitflags = { version = "2.11.1" }
 bstr = { version = "1.12.1" }
 globset = { version = "0.4.18" }
 encoding_rs = { version = "0.8.35" }
+icu_collator = { version = "2.2.0" }
+icu_datetime = { version = "2.2.0" }
+icu_decimal = { version = "2.2.0" }
+icu_locale = { version = "2.2.0" }
+icu_plurals = { version = "2.2.0" }
 ignore = { version = "0.4.25" }
 insta = { version = "1.47.2" }
 is-macro = { version = "0.3.7" }

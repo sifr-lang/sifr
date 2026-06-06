@@ -1,6 +1,6 @@
 # Text/I18n Substrate Inventory
 
-Status: M0 baseline.
+Status: M3 in progress.
 
 Platform contract: [platform_contract.md](../platform/platform_contract.md)
 
@@ -92,7 +92,7 @@ Accepted static aliases are canonical labels plus WHATWG labels covered by `enco
 | Web encodings | `encoding_rs` | `0.8.35` | default `alloc`; no CJK fast legacy encode features in M1 | accepted for M1 |
 | Unicode normalization | `unicode-normalization` | `0.1.25` | default `std` | accepted for M2 |
 | Unicode segmentation | `unicode-segmentation` | `1.13.3` | default | accepted for M2.5; MSRV 1.85 is compatible with local Rust 1.94 |
-| Locale IDs | `icu_locale_core` | `2.2.0` | default off unless required by selected components; compiled data through component crates | accepted for M3 |
+| Locale IDs | `icu_locale` / `icu_locale_core` | `2.2.0` | default off unless required by selected components; compiled data through component crates | accepted for M3 |
 | Number formatting | `icu_decimal` + `icu_decimal_data` | `2.2.0` | `compiled_data` | accepted for M3 |
 | Date/time formatting | `icu_datetime` + data | `2.2.0` | `compiled_data`, `ixdtf` only if required by formatter input type | accepted for M3 |
 | Plural rules | `icu_plurals` + data | `2.2.0` | `compiled_data` | accepted for M3/M4 |

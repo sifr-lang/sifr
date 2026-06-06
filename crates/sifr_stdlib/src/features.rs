@@ -10,6 +10,11 @@ pub enum StdlibFeature {
     Chrono,
     EncodingRs,
     Flate2,
+    IcuCollator,
+    IcuDatetime,
+    IcuDecimal,
+    IcuLocale,
+    IcuPlurals,
     Md5,
     NumBigint,
     NumTraits,
@@ -40,6 +45,11 @@ impl StdlibFeature {
             Self::Chrono => "chrono",
             Self::EncodingRs => "encoding_rs",
             Self::Flate2 => "flate2",
+            Self::IcuCollator => "icu_collator",
+            Self::IcuDatetime => "icu_datetime",
+            Self::IcuDecimal => "icu_decimal",
+            Self::IcuLocale => "icu_locale",
+            Self::IcuPlurals => "icu_plurals",
             Self::Md5 => "md5",
             Self::NumBigint => "num-bigint",
             Self::NumTraits => "num-traits",
@@ -97,6 +107,26 @@ const ENCODING_RS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency
 const FLATE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "flate2",
     spec: "flate2 = \"1.1.9\"",
+}];
+const ICU_COLLATOR_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "icu_collator",
+    spec: "icu_collator = \"2.2.0\"",
+}];
+const ICU_DATETIME_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "icu_datetime",
+    spec: "icu_datetime = \"2.2.0\"",
+}];
+const ICU_DECIMAL_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "icu_decimal",
+    spec: "icu_decimal = \"2.2.0\"",
+}];
+const ICU_LOCALE_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "icu_locale",
+    spec: "icu_locale = \"2.2.0\"",
+}];
+const ICU_PLURALS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "icu_plurals",
+    spec: "icu_plurals = \"2.2.0\"",
 }];
 const MD5_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "md5",
@@ -203,6 +233,26 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: FLATE2_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::IcuCollator,
+        cargo_dependencies: ICU_COLLATOR_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::IcuDatetime,
+        cargo_dependencies: ICU_DATETIME_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::IcuDecimal,
+        cargo_dependencies: ICU_DECIMAL_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::IcuLocale,
+        cargo_dependencies: ICU_LOCALE_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::IcuPlurals,
+        cargo_dependencies: ICU_PLURALS_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Md5,
         cargo_dependencies: MD5_DEPS,
     },
@@ -285,6 +335,11 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "chrono" => Some(StdlibFeature::Chrono),
         "encoding_rs" | "encoding-rs" => Some(StdlibFeature::EncodingRs),
         "flate2" => Some(StdlibFeature::Flate2),
+        "icu_collator" | "icu-collator" => Some(StdlibFeature::IcuCollator),
+        "icu_datetime" | "icu-datetime" => Some(StdlibFeature::IcuDatetime),
+        "icu_decimal" | "icu-decimal" => Some(StdlibFeature::IcuDecimal),
+        "icu_locale" | "icu-locale" => Some(StdlibFeature::IcuLocale),
+        "icu_plurals" | "icu-plurals" => Some(StdlibFeature::IcuPlurals),
         "md5" => Some(StdlibFeature::Md5),
         "num-bigint" => Some(StdlibFeature::NumBigint),
         "num-traits" => Some(StdlibFeature::NumTraits),
@@ -334,6 +389,14 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::UnicodeNormalization,
             StdlibFeature::UnicodeSegmentation,
         ],
+        "sifr.i18n" | "_sifr.i18n" => &[
+            StdlibFeature::SifrRuntime,
+            StdlibFeature::IcuCollator,
+            StdlibFeature::IcuDatetime,
+            StdlibFeature::IcuDecimal,
+            StdlibFeature::IcuLocale,
+            StdlibFeature::IcuPlurals,
+        ],
         "sifr.base64" => &[StdlibFeature::Base64],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
@@ -352,7 +415,7 @@ pub fn generated_cargo_dependencies(
 ) -> Vec<String> {
     let mut deps = Vec::new();
     let mut packages = BTreeSet::new();
-    let runtime_unicode_enabled = needs_sifr_runtime_unicode(stdlib_modules, required_features);
+    let runtime_features = RuntimeFeatures::from_requirements(stdlib_modules, required_features);
 
     for module_name in stdlib_modules
         .iter()
@@ -360,15 +423,47 @@ pub fn generated_cargo_dependencies(
         .collect::<BTreeSet<_>>()
     {
         for feature in features_for_stdlib_module(module_name) {
-            push_feature_dependencies(&mut deps, &mut packages, *feature, runtime_unicode_enabled);
+            push_feature_dependencies(&mut deps, &mut packages, *feature, runtime_features);
         }
     }
 
     for feature in required_features.iter().copied().collect::<BTreeSet<_>>() {
-        push_feature_dependencies(&mut deps, &mut packages, feature, runtime_unicode_enabled);
+        push_feature_dependencies(&mut deps, &mut packages, feature, runtime_features);
     }
 
     deps
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct RuntimeFeatures {
+    i18n: bool,
+    unicode: bool,
+}
+
+impl RuntimeFeatures {
+    fn from_requirements(
+        stdlib_modules: &HashSet<String>,
+        required_features: &HashSet<StdlibFeature>,
+    ) -> Self {
+        Self {
+            i18n: needs_sifr_runtime_i18n(stdlib_modules, required_features),
+            unicode: needs_sifr_runtime_unicode(stdlib_modules, required_features),
+        }
+    }
+}
+
+fn needs_sifr_runtime_i18n(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> bool {
+    stdlib_modules
+        .iter()
+        .any(|module| matches!(module.as_str(), "sifr.i18n" | "_sifr.i18n"))
+        || required_features.contains(&StdlibFeature::IcuCollator)
+        || required_features.contains(&StdlibFeature::IcuDatetime)
+        || required_features.contains(&StdlibFeature::IcuDecimal)
+        || required_features.contains(&StdlibFeature::IcuLocale)
+        || required_features.contains(&StdlibFeature::IcuPlurals)
 }
 
 fn needs_sifr_runtime_unicode(
@@ -387,7 +482,7 @@ fn push_feature_dependencies(
     deps: &mut Vec<String>,
     packages: &mut BTreeSet<&'static str>,
     feature: StdlibFeature,
-    runtime_unicode_enabled: bool,
+    runtime_features: RuntimeFeatures,
 ) {
     if let Some(spec) = STDLIB_FEATURE_SPECS
         .iter()
@@ -395,7 +490,7 @@ fn push_feature_dependencies(
     {
         for dependency in spec.cargo_dependencies {
             if packages.insert(dependency.package) {
-                deps.push(render_dependency_spec(dependency, runtime_unicode_enabled));
+                deps.push(render_dependency_spec(dependency, runtime_features));
             }
         }
     }
@@ -403,25 +498,34 @@ fn push_feature_dependencies(
 
 fn render_dependency_spec(
     dependency: &GeneratedCargoDependency,
-    runtime_unicode_enabled: bool,
+    runtime_features: RuntimeFeatures,
 ) -> String {
     if dependency.package == "sifr_runtime" {
-        return sifr_runtime_dependency_spec(runtime_unicode_enabled);
+        return sifr_runtime_dependency_spec(runtime_features);
     }
     dependency.spec.to_string()
 }
 
-fn sifr_runtime_dependency_spec(unicode_enabled: bool) -> String {
+fn sifr_runtime_dependency_spec(runtime_features: RuntimeFeatures) -> String {
     let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
     let escaped_path = runtime_path
         .to_string_lossy()
         .replace('\\', "\\\\")
         .replace('"', "\\\"");
-    if unicode_enabled {
-        format!("sifr_runtime = {{ path = \"{escaped_path}\", features = [\"unicode\"] }}")
-    } else {
-        format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
+    let mut features = Vec::new();
+    if runtime_features.i18n {
+        features.push("\"i18n\"");
     }
+    if runtime_features.unicode {
+        features.push("\"unicode\"");
+    }
+    if features.is_empty() {
+        return format!("sifr_runtime = {{ path = \"{escaped_path}\" }}");
+    }
+    format!(
+        "sifr_runtime = {{ path = \"{escaped_path}\", features = [{}] }}",
+        features.join(", ")
+    )
 }
 
 fn discover_sifr_runtime_path() -> Option<PathBuf> {
@@ -543,5 +647,39 @@ mod tests {
             .iter()
             .any(|dep| dep.starts_with("sifr_runtime = ")
                 && dep.contains("features = [\"unicode\"]")));
+    }
+
+    #[test]
+    fn i18n_module_emits_runtime_and_icu_dependencies() {
+        let deps = generated_cargo_dependencies(
+            &HashSet::from(["sifr.i18n".to_string()]),
+            &HashSet::new(),
+        );
+
+        assert!(
+            deps.iter()
+                .any(|dep| dep.starts_with("sifr_runtime = ")
+                    && dep.contains("features = [\"i18n\"]"))
+        );
+        assert!(deps.contains(&"icu_collator = \"2.2.0\"".to_string()));
+        assert!(deps.contains(&"icu_datetime = \"2.2.0\"".to_string()));
+        assert!(deps.contains(&"icu_decimal = \"2.2.0\"".to_string()));
+        assert!(deps.contains(&"icu_locale = \"2.2.0\"".to_string()));
+        assert!(deps.contains(&"icu_plurals = \"2.2.0\"".to_string()));
+    }
+
+    #[test]
+    fn runtime_dependency_can_enable_unicode_and_i18n_together() {
+        let deps = generated_cargo_dependencies(
+            &HashSet::new(),
+            &HashSet::from([
+                StdlibFeature::SifrRuntime,
+                StdlibFeature::IcuLocale,
+                StdlibFeature::UnicodeNormalization,
+            ]),
+        );
+
+        assert!(deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")
+            && dep.contains("features = [\"i18n\", \"unicode\"]")));
     }
 }
