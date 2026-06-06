@@ -1,0 +1,21 @@
+**PASS**
+
+All three documents have sufficient decision clarity for implementation to proceed through M0. Here is my evidence:
+
+---
+
+**Text/i18n** (`ad-hoc-production-text-i18n-stdlib-parity.md`)
+
+The "Resolved M0 Decisions" table at the end of the document closes every material direction question before M0 starts: public API names (`sifr.encoding`, `sifr.unicode`, `sifr.io.open_text`, `sifr.i18n`), encoding tiers (Tier 0/1 required, Tier 2 deferred), crate stack (`encoding_rs`, `unicode-normalization`, `unicode-segmentation`, ICU4X, no Fluent), typed error handlers (exact lists with no dynamic names), surrogate policy (deferred/isolated), recovery value shapes (`DecodeOutcome`, `EncodeOutcome`), host locale discovery (read-only `host_locale()`, never a text-I/O default), and translation backend (`.mo` accepted, Fluent deferred). The Unicode data version decision is appropriately deferred to M0's crate-lock record rather than being open-ended — the policy (use crate-native version, any skew is a release blocker) is clear. The `.mo` parser being from-scratch is explicitly stated and consistent with the Rust-ecosystem-first rule (no adequate ecosystem crate for this surface). Nothing remaining is a product direction choice.
+
+**Concurrency/runtime** (`ad-hoc-production-concurrency-runtime-stdlib-parity.md`)
+
+The "Resolved Decisions" table closes every material choice: sendability/shareability model, stable task API surface, CPython adapter freeze (`sifr.asyncio` frozen as `adapter-later`), signal APIs (structured streams only, no `signal.signal`), diagnostics (`tracing`/`metrics`, no Python `warnings` filter parity), task/request context (M5 explicit `sifr.task.Context`, no implicit `contextvars`), typed IPC (`serde`/`postcard` after design gate), subprocess text mode (consumes text/i18n M1), full Rust ecosystem crate list with explicit rejections (no Flume, Signal Hook, Nix, Bincode), `JoinSet` drop-as-diagnostic rule, Rayon pool architecture (lazy default pool via `available_parallelism()`, configured via explicit `Pool(config)`), task context API shape (M1 reserves `ctx` parameter, M5 implements propagation), and `sifr.asyncio` veneer freeze. The `race`/`select` distinction appears in the stable API list without differentiated behavior prose, but "Record the public/native API boundary for `sifr.task`" is an explicit M0 deliverable — the gap falls squarely within M0's defined scope before M1 starts implementation.
+
+**Network/HTTP** (`ad-hoc-production-network-http-platform-substrate.md`)
+
+The "Resolved Planning Decisions For M0" and "Resolved ecosystem decisions" tables close all material choices: public namespaces (`sifr.net`, `sifr.tls`, `sifr.url`, `sifr.http`; `sifr.http.core` rejected), TLS crypto provider (`aws-lc-rs`), TLS roots (`rustls-platform-verifier` for production, `rcgen` for tests, `webpki-roots` not a fallback), DNS (`tokio::net::lookup_host`; `hickory-resolver` deferred), HTTP stack (`hyper`/`hyper-util`/`h2` only; `reqwest`, `axum`, `tower` full crate all excluded), service substrate (`tower-service` crate only, `Service` trait internal), UDP scope (constrained datagram in M1, advanced features deferred), stream I/O ownership model (`read_chunk`/`write`/`write_all` signatures), mTLS (M2 with `rcgen` fixtures), multipart deferred, upgrade hooks internal-test only, and OTel exporter bridge deferred. The text/i18n and concurrency/runtime dependency matrices provide exhaustive per-surface `blocked-on-*` states, eliminating any local fallback ambiguity. The `sifr.http` specific type names (e.g., `Request`, `Response`, `Method`) are not enumerated, but M0's "Define HTTP client/server substrate boundaries" deliverable is the correct and explicit place for that finalization before M1 starts.
+
+---
+
+**Cross-phase consistency** is clean: all three docs agree on the 1→2→3 phase order, the namespace contract prerequisite, the CPython reference tree path, the provider→consumer handoff points (text/i18n M1 unlocks concurrency M4 subprocess text mode and network M4 body decoding; concurrency M1 unlocks network cancellation; concurrency M5 unlocks network graceful shutdown), and the "no local substitutes" rule for each consumed provider substrate.

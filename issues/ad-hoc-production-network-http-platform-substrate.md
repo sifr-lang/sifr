@@ -36,7 +36,7 @@ The original broad planning scan also covered two important areas that are now t
 - [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md): Sifr-native concurrency/process/runtime substrate, including task, sync, process, offload, shutdown, diagnostics, and typed IPC foundations.
 - [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md): Sifr-native text/Unicode/encoding/i18n runtime substrate, including explicit text I/O, encoding, Unicode data, segmentation, locale IDs, formatting, and translation bundles.
 
-This phase may depend on those phases for optional text decoding, subprocess demos, or executor-backed serving, but it must not implement their module surfaces here.
+This phase consumes the completed text/i18n and concurrency/runtime provider contracts for URL text handling, body text decoding hooks, diagnostics, subprocess-backed demos, cancellation, timers, and executor-backed serving. It must not implement their module surfaces here.
 
 Recommended implementation order:
 
@@ -84,7 +84,7 @@ A module belongs in Sifr core only if it is production substrate or production d
 | `sifr.select` / `sifr.selectors` | internal readiness only | users should use async streams, not manual event loops |
 | `sifr.urllib.parse` | deferred adapter | stable URL utility is `sifr.url` |
 | `urllib.robotparser` | deferred/rejected | niche utility, not core platform substrate |
-| `http.cookiejar` | deferred | cookie persistence belongs in the HTTP client phase if needed |
+| `http.cookiejar` | deferred | cookie persistence belongs in a future HTTP client phase, not this substrate phase |
 | HTTP/3 / QUIC | deferred | revisit in a future transport phase after QUIC runtime strategy is designed |
 | CGI-style serving | rejected | legacy serving model |
 | `ThreadingMixIn` / `ForkingMixIn` | rejected | wrong abstraction and overlaps concurrency/runtime phases |
@@ -292,7 +292,7 @@ Parallel work is allowed only for pure parser work that does not consume unfinis
 
 ### Native Runtime First
 
-Implement the canonical runtime primitive first. Do not layer CPython-shaped public modules over it in this phase. Use production Rust ecosystem crates for protocol and transport machinery by default; do not hand-roll networking, TLS, DNS, URL, HTTP, HPACK, or observability infrastructure unless M0 records a concrete rejection finding for every suitable ecosystem option.
+Implement the canonical runtime primitive first. Do not layer CPython-shaped public modules over it in this phase. Use production Rust ecosystem crates for protocol and transport machinery; do not hand-roll networking, TLS, DNS, URL, HTTP, HPACK, or observability infrastructure in this phase. If the selected Rust ecosystem stack cannot satisfy a required surface, that surface is deferred with evidence instead of receiving a bespoke implementation.
 
 - Tokio remains the backing async runtime because the generated task runtime already depends on `tokio` and `sifr_stdlib::StdlibFeature::Tokio`.
 - Generated Cargo must use the resolved Tokio feature set: `macros`, `rt-multi-thread`, `sync`, `time`, `net`, and `io-util`.
@@ -323,7 +323,7 @@ Default ecosystem stack:
 | HTTP types and bodies | `http`, `http-body`, `http-body-util`, `bytes` | method/status/header/request/response/body abstractions |
 | HTTP/1 and HTTP/2 transport | `hyper`, `hyper-util`, `h2` | production HTTP transport, HTTP/2 state machine, flow control, multiplexing, protocol errors |
 | URL and percent encoding | `url`, `percent-encoding` | WHATWG/RFC URL parsing, building, and escaping |
-| Cookies | `cookie` | header-level cookie parsing; jar/persistence features remain out of scope unless the HTTP client phase accepts them |
+| Cookies | `cookie` | header-level cookie parsing; jar/persistence features remain out of scope for this substrate phase |
 | Middleware/service substrate | `tower-service` | internal service abstraction for Phase 41 handoff; no public `tower`, `Layer`, or tower utility types |
 | Observability | `tracing`, `metrics`; OpenTelemetry bridge deferred | spans, structured events, counters, histograms, exporter-neutral hooks without exporter dependencies |
 | Tests and conformance | `tokio-test`, `proptest`, `h2spec`/HTTP/2 conformance fixtures where available | deterministic async tests, parser/property tests, protocol conformance |
@@ -367,7 +367,7 @@ From-scratch implementation is allowed only for:
 - Sifr ownership/cancellation/resource-limit enforcement
 - small deterministic fixtures where no production behavior is exposed
 
-From-scratch protocol parsing, TLS verification, DNS resolution, URL parsing, HPACK, HTTP/2 state machines, or metrics/tracing backends are rejected unless M0 records that no suitable Rust ecosystem crate satisfies the safety, maintenance, and production requirements.
+From-scratch protocol parsing, TLS verification, DNS resolution, URL parsing, HPACK, HTTP/2 state machines, or metrics/tracing backends are rejected in this phase. If the selected Rust ecosystem stack cannot satisfy a required surface, that surface is deferred with evidence instead of receiving a bespoke implementation.
 
 ### Sifr-Native Network API Shape
 

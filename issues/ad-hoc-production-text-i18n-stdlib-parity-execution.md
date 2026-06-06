@@ -16,7 +16,7 @@ This ledger tracks:
 
 Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate-execution.md](./ad-hoc-production-network-http-platform-substrate-execution.md). Concurrency/runtime parity remains in [ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md](./ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md).
 
-Execution order: this is the first phase in the split production-stdlib sequence. Network/HTTP and concurrency/runtime work may proceed only for binary or ASCII/UTF-8-only slices before the relevant text/i18n gates are complete; their text-dependent surfaces consume this phase rather than inventing local fallbacks.
+Execution order: this is the first phase in the split production-stdlib sequence. Concurrency/runtime starts after this phase and consumes its text-dependent M1/M3 outputs; network/HTTP starts third and consumes this phase's M1/M2/M2.5/M3 outputs. Later phases must not invent local text, encoding, Unicode, locale, or fallback-decoder behavior.
 
 ## Milestone Checklist
 
@@ -106,6 +106,23 @@ Execution order: this is the first phase in the split production-stdlib sequence
   - Result: `PASS`; two editorial observations were remediated by aligning the public `sifr.unicode` property list with M2 scope and adding per-crate/e2e validation commands to the ledger baseline.
 - Phase-order clarification:
   - Result: accepted; this phase is first in the split production-stdlib sequence because both network/HTTP and concurrency/runtime depend on its text/encoding substrate.
+- Cross-phase implementation-readiness review:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-21-phase-order-readiness.md`
+  - Result: `FAIL`; network/runtime dependency matrix, network cancellation/shutdown provider wording, and legacy filename naming-note gaps were remediated across the split phase docs.
+- Cross-phase implementation-readiness follow-up:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-22-phase-order-readiness.md`
+  - Result: `PASS`; pass 21 remediations were verified, with one minor network state-vocabulary inconsistency remediated.
+- Final cross-phase implementation-readiness verification:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-23-final-readiness.md`
+  - Result: `PASS`; no material blockers, stale labels, or implementation-blocking contradictions remained.
+- Rust ecosystem-first clarification:
+  - Result: accepted; this phase now requires wrapping mature Rust text/Unicode/i18n crates where suitable, records preferred crate families, defers any required surface that the selected ecosystem stack cannot satisfy, and makes dependency decision records an M0 gate.
+- Cross-phase decision-closure review:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-24-decision-closure.md`
+  - Result: `PASS`; all material product/API/dependency decisions across text/i18n, concurrency/runtime, and network/HTTP were clear enough for implementation.
+- Final cross-phase decision delta review:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-25-final-delta.md`
+  - Result: `PASS`; final clarifications introduced no unmade or contradictory implementation decisions.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -126,7 +143,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - [x] Define `open(path)`/`open(path, mode="r")` without explicit `encoding=` as permanently `unsupported`/`intentional-diff` from CPython's locale-derived default; M3 documents this as the final intentional difference and does not unblock these forms. Static omissions get compile-time diagnostics; dynamic cases get typed unsupported-default-encoding errors.
 - [x] Make explicit text encodings permanently required for text-mode `open(...)`; locale preferred encoding APIs do not make implicit text opens legal.
 - [x] Require literal/static `open(...)` modes so the compiler can choose binary versus text handle types; dynamic/nonliteral mode strings get a compile-time diagnostic unless routed through a future typed helper API.
-- [x] Extend the explicit-encoding policy to text stream wrappers such as `io.TextIOWrapper`, or record `io.TextIOWrapper` as unsupported with CPython evidence.
+- [x] Record Python-shaped text stream wrappers such as `io.TextIOWrapper` as unsupported in this phase with CPython evidence; the production surface is `sifr.io.open_text(...)` and Sifr-native typed text readers/writers.
 - [x] Carve out `io.StringIO` as encoding-free native-string I/O; it must not inherit the codec-backed wrapper encoding requirement.
 - [x] Define typed/statically known encoding `errors=` handling for `str.encode`, `bytes.decode`, `open`, and text wrappers, with dynamic error-handler names unsupported because synchronized runtime lookup is not adopted in this phase.
 - [x] Require `io.StringIO(newline=...)` to either implement CPython-compatible newline semantics or reject unsupported newline parameters with diagnostics.
@@ -149,7 +166,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - [x] Clarify no-encoding text `open(...)` remains permanently unsupported after M3; M3 documents the intentional difference rather than unblocking locale-derived defaults.
 - [x] Add Rust `String`/`str`-compatible text invariants: normal Sifr strings are valid Unicode, arbitrary bytes stay bytes, and invalid Unicode recovery cannot be hidden inside ordinary strings.
 - [x] Replace CPython parity definition with support tiers: production substrate, production API, import/compatibility backend, host-limited, and rejected/deferred.
-- [x] Add demand-tiered encoding scope: Tier 0 required encodings, Tier 1 web/file compatibility, Tier 2 feature-gated CJK, Tier 3 deferred CPython-only/pseudo-codec/module-zoo parity.
+- [x] Add demand-tiered encoding scope: Tier 0 required encodings, Tier 1 web/file compatibility, Tier 2 CJK deferred to a separate issue with dependency/data-size/workload review, and Tier 3 rejected/deferred CPython-only/pseudo-codec/module-zoo parity.
 - [x] Add Unicode segmentation as a dedicated M2.5 milestone for grapheme and word boundaries.
 - [x] Reframe gettext as translation-bundle/backend import support, not the strategic global i18n API.
 

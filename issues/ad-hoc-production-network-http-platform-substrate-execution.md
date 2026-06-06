@@ -81,6 +81,12 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Final decision-readiness review:
   - `reviews/ad-hoc-production-network-http-substrate-review-pass-33-final-decision-readiness.md`
   - Result: `PASS`; no unmade decisions or contradictions remained. Cosmetic Tower/Tokio wording was tightened afterward.
+- Cross-phase decision-closure review:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-24-decision-closure.md`
+  - Result: `PASS`; all material product/API/dependency decisions across text/i18n, concurrency/runtime, and network/HTTP were clear enough for implementation.
+- Final cross-phase decision delta review:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-25-final-delta.md`
+  - Result: `PASS`; final cross-phase and no-bespoke-policy clarifications introduced no unmade or contradictory implementation decisions.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -101,7 +107,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Keep CPython scans as evidence mining, not parity backlog.
 - [x] Bring HTTP/2 into the production substrate and keep HTTP/3 / QUIC deferred with a revisit rule.
 - [x] Add Rust ecosystem-first dependency strategy for network, DNS, TLS, URL, HTTP/1, HTTP/2, cookies, observability, and tests.
-- [x] Require M0 dependency decision records before any from-scratch protocol/domain implementation.
+- [x] Require M0 dependency decision records for every accepted Rust ecosystem crate family; if the ecosystem stack cannot satisfy a required surface, defer that surface with evidence instead of hand-rolling protocol/domain infrastructure in this phase.
 - [x] Add M0 definition-of-done gate for dependency decision records across every Rust Ecosystem First crate family.
 - [x] Ensure conditional crates such as `x509-parser` receive the same dependency audit as baseline crates.
 - [x] Add a text/i18n dependency matrix for binary/ASCII-safe substrate versus features blocked on text/i18n M1, M2, M2.5, or M3.
