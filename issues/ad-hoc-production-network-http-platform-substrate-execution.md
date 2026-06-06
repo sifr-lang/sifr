@@ -9,8 +9,8 @@ Status: draft
 The original broad planning scan was split into three implementation phases:
 
 - This ledger tracks the production network/TLS/URL/HTTP substrate: `sifr.net`, `sifr.tls`, `sifr.url`, accepted `sifr.http` protocol/runtime primitives, typed errors, async suspension points, resource limits, observability hooks, and internal loopback harnesses.
-- [ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md](./ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md) tracks concurrency/process/runtime substrate.
-- [ad-hoc-production-text-i18n-stdlib-parity-execution.md](./ad-hoc-production-text-i18n-stdlib-parity-execution.md) tracks text/Unicode/encoding/i18n runtime substrate.
+- [ad-hoc-production-concurrency-runtime-platform-substrate-execution.md](./ad-hoc-production-concurrency-runtime-platform-substrate-execution.md) tracks concurrency/process/runtime substrate.
+- [ad-hoc-production-text-i18n-platform-substrate-execution.md](./ad-hoc-production-text-i18n-platform-substrate-execution.md) tracks text/Unicode/encoding/i18n runtime substrate.
 
 Execution order: this is the third phase in the split production-stdlib sequence. Text/i18n runs first, concurrency/runtime runs second, and network/HTTP consumes both provider phases. Network/HTTP implementation must not start early or close text-dependent/runtime-dependent surfaces without the relevant provider milestones recorded as complete.
 
@@ -173,27 +173,30 @@ Each milestone must record:
 - CPython source files scanned.
 - CPython docs files scanned.
 - CPython tests scanned.
-- Public APIs classified as production-public, production-substrate, internal-test, deferred, rejected, blocked, or host-limited.
+- Public APIs classified with shared terminal states and stability levels.
 - Rust ecosystem crates accepted/rejected with feature flags, public API leak checks, typed error mapping, panic/unsafe audit notes, and conformance evidence.
 - Any change to a resolved ecosystem decision must include a blocking implementation finding, replacement decision, and the same dependency audit fields.
 - Text/i18n dependency states recorded for URL, percent encoding, query/form, header, body, cookie, content-type/charset, certificate-display, diagnostics, observability, demos, Phase 41 handoff, and HTTP client handoff surfaces.
 - Concurrency/runtime dependency states recorded for async suspension points, server accept/dispatch/shutdown, blocking sync helpers, offload, signal-driven shutdown, and subprocess/process-pool-dependent demos.
-- CPython behavior mined into Sifr-native tests.
+- CPython behavior classified as `mined-as-substrate-fixture` when it becomes a Sifr-native test.
 - CPython behavior rejected as legacy, unsafe, toy, dynamic, descriptor-shaped, raw-event-loop, or non-product.
 - Sifr e2e pass/fail fixtures added.
 
 Evidence-family states:
 
-- `mined`
-- `blocked`
+- `mined-as-substrate-fixture`
+- `adapted-for-sifr-api`
+- `compat-adapter-deferred`
+- `blocked-on-phase-X`
 - `rejected`
 - `external-signal`
+- `waived-with-rationale`
 
 ## Decision Index
 
 No implementation decisions recorded yet.
 
-Every deferred/rejected/host-limited/internal-only decision must include:
+Every `deferred-to-phase-X`, `rejected`, `host-limited`, `internal-only`, or `unsupported-with-diagnostic` decision must include:
 
 - surface
 - terminal state

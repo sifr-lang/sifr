@@ -33,20 +33,22 @@ The cancellation, timeout, backpressure, shutdown, offload, and diagnostics item
 
 The original broad planning scan also covered two important areas that are now tracked as separate ad hoc phases:
 
-- [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md): Sifr-native concurrency/process/runtime substrate, including task, sync, process, offload, shutdown, diagnostics, and typed IPC foundations.
-- [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md): Sifr-native text/Unicode/encoding/i18n runtime substrate, including explicit text I/O, encoding, Unicode data, segmentation, locale IDs, formatting, and translation bundles.
+- [ad-hoc-production-concurrency-runtime-platform-substrate.md](./ad-hoc-production-concurrency-runtime-platform-substrate.md): Sifr-native concurrency/process/runtime substrate, including task, sync, process, offload, shutdown, diagnostics, and typed IPC foundations.
+- [ad-hoc-production-text-i18n-platform-substrate.md](./ad-hoc-production-text-i18n-platform-substrate.md): Sifr-native text/Unicode/encoding/i18n runtime substrate, including explicit text I/O, encoding, Unicode data, segmentation, locale IDs, formatting, and translation bundles.
 
 This phase consumes the completed text/i18n and concurrency/runtime provider contracts for URL text handling, body text decoding hooks, diagnostics, subprocess-backed demos, cancellation, timers, and executor-backed serving. It must not implement their module surfaces here.
 
 Recommended implementation order:
 
-1. [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md)
-2. [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md)
+1. [ad-hoc-production-text-i18n-platform-substrate.md](./ad-hoc-production-text-i18n-platform-substrate.md)
+2. [ad-hoc-production-concurrency-runtime-platform-substrate.md](./ad-hoc-production-concurrency-runtime-platform-substrate.md)
 3. This network/HTTP platform substrate phase
 
 This phase is third because production network/server work should consume both the shared text/encoding/Unicode substrate and the production task, cancellation, shutdown, offload, diagnostics, and process model.
 
 This phase also depends on [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md). Its namespace contract is assumed complete before these substrate milestones ship: Sifr stdlib remains publicly imported through `sifr.*`, and bare CPython stdlib names are not aliases.
+
+This phase also consumes the shared platform contract in [ad-hoc-production-stdlib-platform-contract.md](./ad-hoc-production-stdlib-platform-contract.md). Network M0 must use that contract's terminal states, stability levels, ownership/lifetime rules, cancellation/backpressure semantics, typed error nesting, observability fields, supported-host matrix, security/resource ownership table, and cross-phase golden fixture manifest.
 
 ## Product Boundary
 
@@ -68,7 +70,7 @@ A module belongs in Sifr core only if it is production substrate or production d
 | `sifr.tls` | `production-public` | primary TLS API, including client certificate authentication with deterministic fixtures |
 | `sifr.url` | `production-public` | typed URL API |
 | `sifr.http` protocol types | `production-substrate` | canonical request/response/header/status/body primitives; `sifr.http.core` is rejected as an extra stable namespace layer |
-| internal loopback harness | `internal-test` | never a public dev-server module |
+| internal loopback harness | `test-only-harness` | never a public dev-server module |
 | readiness primitives | `production-substrate` | internal or low-level only; no public manual event-loop model |
 
 ### Deferred Or Rejected Public Surfaces
@@ -77,15 +79,15 @@ A module belongs in Sifr core only if it is production substrate or production d
 | --- | --- | --- |
 | `sifr.http.server` | rejected as public API | toy/basic server shape; server product is Phase 41 |
 | `sifr.socketserver` | rejected | inheritance-heavy handler model conflicts with Sifr's static model |
-| `sifr.urllib.request` | deferred/rejected | old opener/handler architecture; production client deserves a modern API |
-| `sifr.http.client` | deferred | low-level client transport may exist internally; public API should be httpx-like |
-| `sifr.socket` | deferred | CPython descriptor-shaped API must not define Sifr networking |
-| `sifr.ssl` | deferred | TLS is exposed through `sifr.tls`, not `SSLContext` mimicry |
+| `sifr.urllib.request` | `deferred-to-http-client-phase` or `rejected` | old opener/handler architecture; production client deserves a modern API |
+| `sifr.http.client` | `deferred-to-http-client-phase` | low-level client transport may exist internally; public API should be httpx-like |
+| `sifr.socket` | `deferred-to-adapter-phase` | CPython descriptor-shaped API must not define Sifr networking |
+| `sifr.ssl` | `deferred-to-adapter-phase` | TLS is exposed through `sifr.tls`, not `SSLContext` mimicry |
 | `sifr.select` / `sifr.selectors` | internal readiness only | users should use async streams, not manual event loops |
-| `sifr.urllib.parse` | deferred adapter | stable URL utility is `sifr.url` |
-| `urllib.robotparser` | deferred/rejected | niche utility, not core platform substrate |
-| `http.cookiejar` | deferred | cookie persistence belongs in a future HTTP client phase, not this substrate phase |
-| HTTP/3 / QUIC | deferred | revisit in a future transport phase after QUIC runtime strategy is designed |
+| `sifr.urllib.parse` | `deferred-to-adapter-phase` | stable URL utility is `sifr.url` |
+| `urllib.robotparser` | `deferred-to-phase-X` or `rejected` | niche utility, not core platform substrate |
+| `http.cookiejar` | `deferred-to-http-client-phase` | cookie persistence belongs in a future HTTP client phase, not this substrate phase |
+| HTTP/3 / QUIC | `deferred-to-transport-phase` | revisit in a future transport phase after QUIC runtime strategy is designed |
 | CGI-style serving | rejected | legacy serving model |
 | `ThreadingMixIn` / `ForkingMixIn` | rejected | wrong abstraction and overlaps concurrency/runtime phases |
 | raw event-loop policies | rejected | Phase 32 keeps raw event loops out of the user model |
@@ -237,17 +239,21 @@ The implementation must scan these CPython files during M0 and before any milest
 
 Each reviewed CPython test family must end in exactly one state:
 
-- `mined`: behavior converted into a Sifr-native substrate test.
-- `blocked`: behavior depends on a split-out phase.
-- `rejected`: behavior belongs to a CPython-shaped, legacy, unsafe, or non-product surface.
+- `mined-as-substrate-fixture`: behavior converted into a Sifr-native substrate test.
+- `adapted-for-sifr-api`: behavior adapted to a Sifr-native API shape.
+- `compat-adapter-deferred`: behavior relevant only if a future compatibility adapter is approved.
+- `blocked-on-phase-X`: behavior depends on a split-out phase.
 - `external-signal`: test is retained only as non-blocking ecosystem signal because it depends on external network state.
+- `waived-with-rationale`: behavior is explicitly waived with rationale and reviewer sign-off.
+- `rejected`: behavior belongs to a CPython-shaped, legacy, unsafe, or non-product surface.
 
-Every proposed public surface must end in exactly one state:
+Every proposed public, substrate, internal, and test-only surface must use the shared terminal states and stability levels from [ad-hoc-production-stdlib-platform-contract.md](./ad-hoc-production-stdlib-platform-contract.md). Network-specific provider states are allowed only as refinements of shared `blocked-on-phase-X` and `deferred-to-phase-X` states:
 
 - `production-public`
 - `production-substrate`
-- `internal-test`
-- `deferred`
+- `internal-only`
+- `test-only-harness`
+- `deferred-to-phase-X`
 - `rejected`
 - `blocked-on-text-i18n-m1`
 - `blocked-on-concurrency-runtime-m1`
@@ -344,7 +350,7 @@ Resolved ecosystem decisions:
 | OpenTelemetry | OTel exporter/bridge crates are deferred to an observability/exporter phase. This phase emits `tracing` spans/events and `metrics` counters/histograms only. |
 | mTLS | M2 includes client certificate authentication configuration and deterministic `rcgen` client/server certificate fixtures. The API exposes configuration, verification outcomes, and typed errors, not raw rustls types. |
 | Multipart/form | Multipart parsing is rejected for this phase and deferred to Phase 41 or the production HTTP client phase. No `multipart` crate is accepted here. |
-| Upgrade hooks | HTTP upgrade hooks are `internal-test` only for transport validation. Public WebSocket, CONNECT tunneling, and upgrade APIs are deferred to product phases with concrete use cases. |
+| Upgrade hooks | HTTP upgrade hooks are `test-only-harness` only for transport validation. Public WebSocket, CONNECT tunneling, and upgrade APIs are deferred to product phases with concrete use cases. |
 | External CPython network tests | External-network CPython tests are never required for local validation. Localnet cases are converted to loopback where useful; true external tests remain `external-signal`. |
 
 M0 must produce a dependency decision record for every crate family above. Each decision must include:
@@ -425,7 +431,7 @@ Required substrate:
 - request/response size limits
 - malformed protocol typed errors
 - internal loopback client/server transport harness
-- upgrade hooks are internal-test only; public WebSocket, CONNECT tunneling, and upgrade APIs are deferred
+- upgrade hooks are `test-only-harness` only; public WebSocket, CONNECT tunneling, and upgrade APIs are deferred
 
 Server framework behavior such as routing, middleware, extractors, validation, generated docs, and deployment ergonomics belongs to Phase 41. Client behavior such as pooling, redirects, retries, auth, proxies, cookie persistence, JSON helpers, multipart, compression, and test transports belongs to the separate production HTTP client phase.
 
@@ -460,7 +466,7 @@ Implementation milestones cannot claim completion for a blocking family until it
 
 ### No Raw Event Loop As Public Model
 
-CPython `asyncio` tests may be mined for scheduling and transport edge cases, but Sifr must not make raw event loops, event-loop policies, callback transports/protocols, or public selector internals the primary API. Public APIs map to task, stream, TLS, and HTTP primitives.
+CPython `asyncio` tests may be classified as `mined-as-substrate-fixture` for scheduling and transport edge cases, but Sifr must not make raw event loops, event-loop policies, callback transports/protocols, or public selector internals the primary API. Public APIs map to task, stream, TLS, and HTTP primitives.
 
 ### Typed Errors Instead Of Exceptions
 
@@ -530,6 +536,7 @@ The following are not accepted as silent omissions. They must be explicitly clas
 Scope:
 
 - Define public, internal, deferred, rejected, blocked, and host-limited API surfaces.
+- Apply the shared platform contract from [ad-hoc-production-stdlib-platform-contract.md](./ad-hoc-production-stdlib-platform-contract.md), including terminal states, stability levels, host matrix rows, security/resource ownership, and cross-phase golden fixtures.
 - Remove CPython stdlib parity as a completion goal.
 - Define typed network/TLS/URL/HTTP error model.
 - Define async/blocking workload classifications and diagnostics.
@@ -545,7 +552,7 @@ Scope:
 - Define Phase 41 handoff contract.
 - Define the separate production HTTP client phase handoff contract.
 - Scan every CPython source/test/doc file listed in `Evidence Sources`.
-- Create evidence docs for sockets/readiness, TLS, URLs, and HTTP showing which behavior was mined, rejected, blocked, or retained as external signal.
+- Create evidence docs for sockets/readiness, TLS, URLs, and HTTP showing each behavior's shared CPython/evidence state.
 
 Validation:
 
@@ -557,7 +564,7 @@ Validation:
 
 Definition of done:
 
-- Every proposed surface is classified as `production-public`, `production-substrate`, `internal-test`, `deferred`, `rejected`, `blocked-on-text-i18n-m1`, `blocked-on-concurrency-runtime-m1`, `blocked-on-concurrency-runtime-m2`, `blocked-on-concurrency-runtime-m3`, `blocked-on-concurrency-runtime-m5`, `blocked-on-concurrency-runtime-m6`, or `host-limited`.
+- Every proposed surface is classified with a shared platform terminal state and stability level from [ad-hoc-production-stdlib-platform-contract.md](./ad-hoc-production-stdlib-platform-contract.md).
 - Every text-dependent surface is classified as `production-substrate`, `blocked-on-text-i18n-m1`, `blocked-on-text-i18n-m2`, `blocked-on-text-i18n-m2_5`, `blocked-on-text-i18n-m3`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
 - Every runtime-dependent surface is classified as `production-substrate`, `blocked-on-concurrency-runtime-m1`, `blocked-on-concurrency-runtime-m2`, `blocked-on-concurrency-runtime-m3`, `blocked-on-concurrency-runtime-m5`, `blocked-on-concurrency-runtime-m6`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
 - No module is accepted merely because CPython has it.
@@ -777,9 +784,9 @@ Scope:
 - Add panic-scan and emitted-code quality checks for network/TLS/URL/HTTP paths.
 - Update validation lane manifests with representative fixtures.
 - Close the inventory:
-  - every proposed surface has a terminal state
+- every proposed surface has a shared terminal state and stability level
   - every text/i18n-dependent and runtime-dependent surface has a provider milestone state
-  - every CPython evidence family has `mined`, `blocked`, `rejected`, or `external-signal` evidence
+  - every CPython evidence family has a shared evidence state
   - every rejection/defer decision has rationale and revisit rule
   - every host-limited surface records the supported host matrix
 - Run an external review loop on the final inventory and close any blocking finding before phase completion.
@@ -817,6 +824,11 @@ Create and keep current during implementation:
 - `verification/stdlib/network_http_substrate_inventory.json`
 - `verification/stdlib/network_http_cpython_evidence_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
+- `verification/platform/platform_contract.md`
+- `verification/platform/platform_contract.json`
+- `verification/platform/supported_host_matrix.md`
+- `verification/platform/golden/manifest.json`
+- `scripts/run_platform_golden.sh`
 
 The execution ledger must record:
 
@@ -824,10 +836,12 @@ The execution ledger must record:
 - per-milestone PR links
 - local validation commands and results
 - CPython source/test/doc files scanned
-- mined/blocked/rejected/external-signal CPython test families
-- final deferred/rejected/host-limited/internal-only decision index
+- mined-as-substrate-fixture/adapted-for-sifr-api/compat-adapter-deferred/blocked-on-phase-X/external-signal/waived-with-rationale/rejected CPython evidence families
+- final deferred-to-phase-X/rejected/host-limited/internal-only/unsupported-with-diagnostic decision index
 - text/i18n dependency state for every URL, header, body, cookie, certificate-display, observability, diagnostics, demo, Phase 41, and HTTP client handoff surface
 - concurrency/runtime dependency state for every cancellation, timeout, backpressure, blocking/offload, shutdown, diagnostics, task-context, executor/worker, process, Phase 41, and HTTP client handoff surface
+- cross-phase golden fixture entries and skip/pass status for network-owned contracts
+- security/resource ownership rows for network-owned concerns
 
 ## Quality Contract
 

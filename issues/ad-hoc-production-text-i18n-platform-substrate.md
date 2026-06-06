@@ -4,8 +4,6 @@ Status: draft
 Phase placement: first implementation phase in the split production-stdlib substrate sequence, after the stdlib boundary refactor and before the network/HTTP and concurrency/runtime phases consume text-dependent behavior.
 Phase owner: stdlib/runtime implementation with compiler import, file/text I/O, effect, async-workload, and codegen support
 
-Naming note: this filename uses the legacy `stdlib-parity` label. The phase goal is a Sifr-native text/Unicode/encoding/i18n runtime substrate, not CPython module parity.
-
 ## Objective
 
 Build the production-grade text, Unicode, encoding, and i18n substrate required by real Sifr programs and by later web, file I/O, subprocess, and framework phases.
@@ -33,10 +31,11 @@ CPython-shaped surfaces may be added later only as adapters over this substrate,
 ## Related Phases
 
 - Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md).
-- Concurrency/runtime substrate is tracked in [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md).
+- Concurrency/runtime substrate is tracked in [ad-hoc-production-concurrency-runtime-platform-substrate.md](./ad-hoc-production-concurrency-runtime-platform-substrate.md).
 - This phase is the first phase in the split production-stdlib sequence because it provides the shared encoding/text substrate needed by both the network/HTTP and concurrency/runtime phases.
 - This phase provides the encoding/text substrate needed by subprocess text mode, HTTP text decoding, file `open(..., encoding=...)`, warning formatting, locale-aware formatting, and translation demos.
 - This phase assumes [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md) is complete: Sifr stdlib remains publicly imported through `sifr.*`, and bare CPython stdlib names are not aliases.
+- This phase creates and consumes the shared platform contract in [ad-hoc-production-stdlib-platform-contract.md](./ad-hoc-production-stdlib-platform-contract.md). Text M0 must establish that contract's terminal states, stability levels, ownership/lifetime rules, cancellation/backpressure semantics, typed error nesting, observability fields, supported-host matrix, security/resource ownership table, and cross-phase golden fixture manifest before M1 opens.
 
 ## Cross-Phase Dependency Contract
 
@@ -54,7 +53,7 @@ This phase is first because both later phases consume the same text, encoding, U
 - Before M0 starts, run a binary file I/O smoke check covering binary `open`, read, write, seek/tell where supported, close/drop, error-on-use-after-close, and byte-preserving round trips. If it fails, M0 may record inventory only; `milestone_text_i18n_1` is blocked until the stdlib/runtime file-object owner fixes `sifr.io` in a prerequisite PR recorded in this phase's execution ledger. Text-mode code must not work around or duplicate broken binary I/O behavior.
 - This phase owns only text-mode integration through explicit text-reader/text-writer APIs and `open(..., encoding=..., errors=...)` lowering.
 - Text-mode `open(path)`, `open(path, mode="r")`, and any other text mode without an explicit `encoding=` are unsupported in this phase and remain unsupported after M3. Sifr requires explicit text encodings to preserve static behavior; M3 documents this as an intentional difference from CPython's locale-derived default.
-- Python-shaped text stream wrappers such as `io.TextIOWrapper(binary_stream, ...)` are not implemented in this phase. They are recorded as `unsupported` with CPython evidence; the production surface is `sifr.io.open_text(...)` and Sifr-native typed text readers/writers.
+- Python-shaped text stream wrappers such as `io.TextIOWrapper(binary_stream, ...)` are not implemented in this phase. They are recorded as `unsupported-with-diagnostic` with CPython evidence; the production surface is `sifr.io.open_text(...)` and Sifr-native typed text readers/writers.
 - In-memory text streams such as `io.StringIO` are encoding-free because they operate on native strings. This phase does not implement or modify `io.StringIO`; M0 only verifies that existing `StringIO` behavior is not incorrectly routed through encoding-backed text wrappers.
 - `open(...)` mode strings must be statically known for the compiler to choose binary versus text handle types. Nonliteral/dynamic mode strings are unsupported unless routed through a future typed helper API; this avoids false-positive encoding diagnostics for dynamic binary modes and avoids a handle type that depends on runtime string contents.
 - Statically visible text-mode opens without `encoding=` produce a compile-time diagnostic requiring `encoding=...`. Dynamic/nonliteral mode opens produce a compile-time diagnostic requiring a literal mode or typed helper. Sifr must not silently substitute UTF-8 for CPython's locale-derived default.
@@ -109,7 +108,7 @@ The Phase 32 async/workload model remains binding:
 | Host-limited | Depends on platform data or OS behavior | host preferred encoding queries, OS locale-name discovery |
 | Rejected/deferred | Too dynamic, global, legacy, or costly for this phase | `setlocale`, `codecs.register`, `gettext.install`, full `encodings.*` parity |
 
-Every reviewed CPython test family must end in exactly one state: `adopted-as-substrate-fixture`, `adapted-for-sifr-api`, `adapter-deferred`, `waived`, or `rejected`. Every reviewed public surface must end in exactly one state: `done`, `intentional-diff`, `unsupported`, `host-limited`, or `deferred-adapter`. The inventory state `open` is forbidden at phase exit.
+Authoritative terminal states, evidence states, and stability levels come from [ad-hoc-production-stdlib-platform-contract.md](./ad-hoc-production-stdlib-platform-contract.md). The inventory state `open` is forbidden at phase exit.
 
 ## No-Toy-Module Gate
 
@@ -191,7 +190,7 @@ The following are not production API centers in this phase:
 - `sifr.locale`
 - `sifr.gettext`
 
-If any Python-shaped module is implemented later, it must be a thin adapter over the Sifr-native substrate, recorded as `deferred-adapter`, and reviewed for static typing, ownership, no-global-state, and panic-free behavior. Bare CPython module imports such as `import codecs`, `import locale`, or `import gettext` are not aliases for `sifr.*`; they receive the namespace-contract diagnostic after normal user/package resolution fails.
+If any Python-shaped module is implemented later, it must be a thin adapter over the Sifr-native substrate, recorded as `compat-adapter` after acceptance or `deferred-to-adapter-phase` before acceptance, and reviewed for static typing, ownership, no-global-state, and panic-free behavior. Bare CPython module imports such as `import codecs`, `import locale`, or `import gettext` are not aliases for `sifr.*`; they receive the namespace-contract diagnostic after normal user/package resolution fails.
 
 ## Milestone Dependency Graph
 
@@ -223,7 +222,7 @@ Implement the canonical Sifr text primitive first. CPython-shaped modules are no
 
 - A private runtime registry owns encoding lookup, encoder/decoder construction, static aliases, and typed handler mapping.
 - `sifr.encoding`, `str.encode(...)`, `bytes.decode(...)`, `sifr.io.open_text(...)`, and `open(..., encoding=...)` must use the same registry to avoid dual semantics.
-- Registry mutation is not adopted in this phase. Dynamic codec lookup by name is supported only against the static registry.
+- Registry mutation is not accepted in this phase. Dynamic codec lookup by name is supported only against the static registry.
 - `codecs.register`, `codecs.unregister`, `codecs.register_error`, dynamic error-handler lookup, `codecs.open`, `EncodedFile`, `StreamReader`, `StreamWriter`, `StreamReaderWriter`, and full `CodecInfo` compatibility are not required phase outputs.
 
 ### Rust Ecosystem First
@@ -348,9 +347,11 @@ The following are not accepted as silent omissions. They must be explicitly reco
 Scope:
 
 - Add a machine-readable substrate inventory under `verification/stdlib/text_i18n_substrate_inventory.*`.
+- Create or update the shared platform contract artifacts: `verification/platform/platform_contract.md`, `verification/platform/platform_contract.json`, `verification/platform/supported_host_matrix.md`, `verification/platform/golden/manifest.json`, and `scripts/run_platform_golden.sh`.
+- Obtain an external review `PASS` on the shared platform contract before M1 opens.
 - Scan every source/test/doc file listed in `Source Of Truth`.
 - Extract public functions, classes, constants, methods, common keyword forms, current codec aliases, encoding module names, deprecation/legacy markers, and test-class/test-method names.
-- Classify each extracted CPython surface as `production-substrate`, `future-adapter`, `host-limited`, `rejected`, or `deferred`.
+- Classify each extracted CPython surface with the shared platform terminal states and stability levels.
 - Add Sifr-native fixture plans for:
   - `sifr_encoding_subset.sifr`
   - `sifr_text_io_subset.sifr`
@@ -360,6 +361,8 @@ Scope:
   - `sifr_i18n_translation_subset.sifr`
 - Add negative import-resolution tests for bare CPython stdlib import attempts and avoid positive tests for Python-shaped modules unless a later adapter phase accepts them.
 - Define Text versus Bytes invariants and the Rust lowering contract.
+- Map text/i18n security/resource concerns, including codec amplification, malformed byte sequences, malicious catalogs, locale discovery, and host-limited formatting, to the shared platform contract.
+- Add or update text-owned cross-phase golden fixtures in `verification/platform/golden/manifest.json`.
 - Record resolved implementation decisions:
   - public API names under `sifr.encoding`, `sifr.unicode`, `sifr.io`, and `sifr.i18n`
   - Unicode data version
@@ -373,13 +376,14 @@ Scope:
   - host-limited locale discovery matrix
   - diagnostic wording for explicit-encoding-required text `open(...)` and literal-mode-required `open(...)`
   - translation backend scope and `.mo` support decision
-- Assign each inventory entry one owner milestone and one terminal state.
+- Assign each inventory entry one owner milestone, one shared terminal state, and one stability level.
 
 Definition of done:
 
 - The backlog is derived from CPython sources/tests, Unicode/encoding/i18n standards, and selected Rust runtime crates rather than hand-written memory.
 - Every target capability has a first-pass surface matrix and fixture matrix.
 - Every CPython-shaped surface has a disposition and is not accidentally treated as required production API.
+- Shared platform contract artifacts exist and have an external review `PASS`.
 - Every accepted or rejected Rust ecosystem crate family has a checked-in dependency decision record before M1 starts.
 - M1-M5 implementation PRs, including M2.5, have concrete backlog entries rather than prose-only scope.
 
@@ -541,7 +545,7 @@ Definition of done:
 - Locale identifiers are parsed and canonicalized deterministically.
 - Number/date formatting, plural rules, and accepted collation behavior use explicit locale values and formatter objects.
 - Supported locale data and host assumptions are documented and tested.
-- Python `locale` process-global APIs are recorded as unsupported/deferred adapters, not production surfaces.
+- Python `locale` process-global APIs are recorded as `unsupported-with-diagnostic` or `deferred-to-adapter-phase`, not production surfaces.
 - Locale errors are typed and never panic.
 
 ### milestone_text_i18n_4: Translation Bundles
@@ -629,7 +633,7 @@ Validation:
 
 Definition of done:
 
-- Every production API and reference test family in the phase inventory is closed as `done`, `intentional-diff`, `unsupported`, `host-limited`, or `deferred-adapter`.
+- Every production API and reference test family in the phase inventory is closed with a shared platform terminal state and stability level.
 - No implementation-owned source file exceeds the 900-line guardrail.
 - No user-triggerable runtime panic path exists in the added stdlib/runtime surfaces.
 - No unsynchronized process-global mutation exists.
@@ -639,11 +643,16 @@ Definition of done:
 
 Create and keep current during implementation:
 
-- `issues/ad-hoc-production-text-i18n-stdlib-parity-execution.md`
+- `issues/ad-hoc-production-text-i18n-platform-substrate-execution.md`
 - `verification/stdlib/text_i18n_substrate_inventory.md`
 - `verification/stdlib/text_i18n_substrate_inventory.json`
 - `verification/stdlib/text_i18n_reference_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
+- `verification/platform/platform_contract.md`
+- `verification/platform/platform_contract.json`
+- `verification/platform/supported_host_matrix.md`
+- `verification/platform/golden/manifest.json`
+- `scripts/run_platform_golden.sh`
 
 The execution ledger must record:
 
@@ -652,8 +661,11 @@ The execution ledger must record:
 - local validation commands and results
 - CPython source/test files scanned
 - standards and Rust crates reviewed
-- adopted/adapted/waived/deferred/rejected reference test families
-- final unsupported/intentional-diff/host-limited/deferred-adapter index
+- shared platform terminal states and stability levels
+- shared platform golden fixture entries and skip/pass status for text-owned contracts
+- shared platform security/resource ownership rows for codec amplification, malformed byte sequences, catalogs, locale discovery, and formatting
+- mined-as-substrate-fixture/adapted-for-sifr-api/compat-adapter-deferred/blocked-on-phase-X/external-signal/waived-with-rationale/rejected reference test families
+- final unsupported-with-diagnostic/deferred-to-phase-X/host-limited/rejected index
 
 ## Quality Contract
 
@@ -671,7 +683,7 @@ M0 records evidence for these decisions; it does not reopen them without a new i
 
 | Decision area | Decision |
 | --- | --- |
-| Public API names | Production APIs are `sifr.encoding`, `sifr.unicode`, `sifr.io.open_text`, and `sifr.i18n`. Python-shaped modules remain `deferred-adapter`. |
+| Public API names | Production APIs are `sifr.encoding`, `sifr.unicode`, `sifr.io.open_text`, and `sifr.i18n`. Python-shaped modules remain `deferred-to-adapter-phase`. |
 | Encoding tiers | Tier 0 and Tier 1 are required exactly as defined in `Encoding Support Tiers`. Tier 2 encodings are deferred and may not be silently added during M1. |
 | Unicode data version | Use the Unicode data version shipped by the selected `unicode-normalization`, `unicode-segmentation`, generated tables, and ICU4X crates. M0 must record the exact version from the locked crate/data set; any version skew across normalization, properties, case mapping, segmentation, and i18n is a release blocker. |
 | Static aliases | Ship canonical labels plus WHATWG labels covered by `encoding_rs` for accepted encodings. Obscure CPython-only aliases are rejected unless they are also WHATWG labels. Unsupported registry mutation diagnostics name the static-registry policy and suggest canonical `sifr.encoding` APIs. |
