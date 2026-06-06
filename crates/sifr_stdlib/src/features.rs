@@ -23,6 +23,8 @@ pub enum StdlibFeature {
     SifrRuntime,
     Tokio,
     Toml,
+    UnicodeNames,
+    UnicodeNormalization,
     Uuid,
     Zip,
 }
@@ -50,6 +52,8 @@ impl StdlibFeature {
             Self::SifrRuntime => "sifr_runtime",
             Self::Tokio => "tokio",
             Self::Toml => "toml",
+            Self::UnicodeNames => "unicode_names2",
+            Self::UnicodeNormalization => "unicode-normalization",
             Self::Uuid => "uuid",
             Self::Zip => "zip",
         }
@@ -150,6 +154,14 @@ const TOML_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "toml",
     spec: "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }",
 }];
+const UNICODE_NAMES_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "unicode_names2",
+    spec: "unicode_names2 = \"3.1.0\"",
+}];
+const UNICODE_NORMALIZATION_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "unicode-normalization",
+    spec: "unicode-normalization = \"0.1.25\"",
+}];
 const UUID_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "uuid",
     spec: "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }",
@@ -237,6 +249,14 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: TOML_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::UnicodeNames,
+        cargo_dependencies: UNICODE_NAMES_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::UnicodeNormalization,
+        cargo_dependencies: UNICODE_NORMALIZATION_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Uuid,
         cargo_dependencies: UUID_DEPS,
     },
@@ -268,6 +288,10 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "sifr_runtime" | "sifr-runtime" => Some(StdlibFeature::SifrRuntime),
         "tokio" => Some(StdlibFeature::Tokio),
         "toml" => Some(StdlibFeature::Toml),
+        "unicode_names2" => Some(StdlibFeature::UnicodeNames),
+        "unicode-normalization" | "unicode_normalization" => {
+            Some(StdlibFeature::UnicodeNormalization)
+        }
         "uuid" => Some(StdlibFeature::Uuid),
         "zip" => Some(StdlibFeature::Zip),
         _ => None,
@@ -293,6 +317,11 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         "sifr.encoding" | "_sifr.encoding" => {
             &[StdlibFeature::EncodingRs, StdlibFeature::SifrRuntime]
         }
+        "sifr.unicode" | "_sifr.unicode" => &[
+            StdlibFeature::SifrRuntime,
+            StdlibFeature::UnicodeNames,
+            StdlibFeature::UnicodeNormalization,
+        ],
         "sifr.base64" => &[StdlibFeature::Base64],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
@@ -311,6 +340,7 @@ pub fn generated_cargo_dependencies(
 ) -> Vec<String> {
     let mut deps = Vec::new();
     let mut packages = BTreeSet::new();
+    let runtime_unicode_enabled = needs_sifr_runtime_unicode(stdlib_modules, required_features);
 
     for module_name in stdlib_modules
         .iter()
@@ -318,21 +348,33 @@ pub fn generated_cargo_dependencies(
         .collect::<BTreeSet<_>>()
     {
         for feature in features_for_stdlib_module(module_name) {
-            push_feature_dependencies(&mut deps, &mut packages, *feature);
+            push_feature_dependencies(&mut deps, &mut packages, *feature, runtime_unicode_enabled);
         }
     }
 
     for feature in required_features.iter().copied().collect::<BTreeSet<_>>() {
-        push_feature_dependencies(&mut deps, &mut packages, feature);
+        push_feature_dependencies(&mut deps, &mut packages, feature, runtime_unicode_enabled);
     }
 
     deps
+}
+
+fn needs_sifr_runtime_unicode(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> bool {
+    stdlib_modules
+        .iter()
+        .any(|module| matches!(module.as_str(), "sifr.unicode" | "_sifr.unicode"))
+        || required_features.contains(&StdlibFeature::UnicodeNames)
+        || required_features.contains(&StdlibFeature::UnicodeNormalization)
 }
 
 fn push_feature_dependencies(
     deps: &mut Vec<String>,
     packages: &mut BTreeSet<&'static str>,
     feature: StdlibFeature,
+    runtime_unicode_enabled: bool,
 ) {
     if let Some(spec) = STDLIB_FEATURE_SPECS
         .iter()
@@ -340,26 +382,33 @@ fn push_feature_dependencies(
     {
         for dependency in spec.cargo_dependencies {
             if packages.insert(dependency.package) {
-                deps.push(render_dependency_spec(dependency));
+                deps.push(render_dependency_spec(dependency, runtime_unicode_enabled));
             }
         }
     }
 }
 
-fn render_dependency_spec(dependency: &GeneratedCargoDependency) -> String {
+fn render_dependency_spec(
+    dependency: &GeneratedCargoDependency,
+    runtime_unicode_enabled: bool,
+) -> String {
     if dependency.package == "sifr_runtime" {
-        return sifr_runtime_dependency_spec();
+        return sifr_runtime_dependency_spec(runtime_unicode_enabled);
     }
     dependency.spec.to_string()
 }
 
-fn sifr_runtime_dependency_spec() -> String {
+fn sifr_runtime_dependency_spec(unicode_enabled: bool) -> String {
     let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
     let escaped_path = runtime_path
         .to_string_lossy()
         .replace('\\', "\\\\")
         .replace('"', "\\\"");
-    format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
+    if unicode_enabled {
+        format!("sifr_runtime = {{ path = \"{escaped_path}\", features = [\"unicode\"] }}")
+    } else {
+        format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
+    }
 }
 
 fn discover_sifr_runtime_path() -> Option<PathBuf> {
@@ -443,7 +492,41 @@ mod tests {
             &HashSet::from([StdlibFeature::SifrRuntime, StdlibFeature::Tokio]),
         );
 
-        assert!(deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")));
+        assert!(deps
+            .iter()
+            .any(|dep| dep.starts_with("sifr_runtime = ") && !dep.contains("features")));
         assert!(deps.iter().any(|dep| dep.starts_with("tokio = ")));
+    }
+
+    #[test]
+    fn unicode_module_emits_runtime_and_unicode_dependencies() {
+        let deps = generated_cargo_dependencies(
+            &HashSet::from(["sifr.unicode".to_string()]),
+            &HashSet::new(),
+        );
+
+        assert!(deps
+            .iter()
+            .any(|dep| dep.starts_with("sifr_runtime = ")
+                && dep.contains("features = [\"unicode\"]")));
+        assert!(deps.contains(&"unicode_names2 = \"3.1.0\"".to_string()));
+        assert!(deps.contains(&"unicode-normalization = \"0.1.25\"".to_string()));
+    }
+
+    #[test]
+    fn unicode_intrinsic_features_enable_runtime_unicode_feature() {
+        let deps = generated_cargo_dependencies(
+            &HashSet::new(),
+            &HashSet::from([
+                StdlibFeature::SifrRuntime,
+                StdlibFeature::UnicodeNames,
+                StdlibFeature::UnicodeNormalization,
+            ]),
+        );
+
+        assert!(deps
+            .iter()
+            .any(|dep| dep.starts_with("sifr_runtime = ")
+                && dep.contains("features = [\"unicode\"]")));
     }
 }

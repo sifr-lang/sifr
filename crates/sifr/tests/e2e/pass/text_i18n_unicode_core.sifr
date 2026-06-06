@@ -1,0 +1,177 @@
+from sifr.test import assert_bool_vector_eq
+from sifr.unicode import (
+    NFC,
+    NFD,
+    NFKC,
+    NFKD,
+    UnicodeDataError,
+    bidirectional,
+    case_fold,
+    category,
+    combining,
+    data_version,
+    decimal,
+    decomposition,
+    digit,
+    east_asian_width,
+    is_normalized,
+    lookup,
+    mirrored,
+    name,
+    normalize,
+    numeric_value,
+)
+
+
+def collect_unicode_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    actual.append(data_version() == "17.0.0")
+
+    try:
+        composed: str = normalize(NFC, "e\u0301")
+        decomposed: str = normalize(NFD, "\u00e9")
+        compatibility: str = normalize(NFKC, "\u2460")
+        compatibility_decomposed: str = normalize(NFKD, "\u212b")
+        composed_is_normalized: bool = is_normalized(NFC, composed)
+        decomposed_is_nfc: bool = is_normalized(NFC, decomposed)
+        actual.append(composed == "\u00e9")
+        actual.append(decomposed == "e\u0301")
+        actual.append(compatibility == "1")
+        actual.append(compatibility_decomposed == "A\u030a")
+        actual.append(composed_is_normalized)
+        actual.append(not decomposed_is_nfc)
+    except UnicodeDataError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        snowman_name: str = name("\u2603")
+        snowman_lookup: str = lookup("snowman")
+        letter_lookup: str = lookup("latin capital letter a")
+        actual.append(snowman_name == "SNOWMAN")
+        actual.append(snowman_lookup == "\u2603")
+        actual.append(letter_lookup == "A")
+    except UnicodeDataError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        category_a: str = category("A")
+        category_mark: str = category("\u0301")
+        category_unassigned: str = category("\ufffe")
+        bidi_a: str = bidirectional("A")
+        bidi_unassigned: str = bidirectional("\ufffe")
+        combining_mark: int = combining("\u0301")
+        width_hiragana: str = east_asian_width("\u3042")
+        paren_mirrored: bool = mirrored("(")
+        letter_mirrored: bool = mirrored("A")
+        angstrom_decomposition: str = decomposition("\u212b")
+        actual.append(category_a == "Lu")
+        actual.append(category_mark == "Mn")
+        actual.append(category_unassigned == "Cn")
+        actual.append(bidi_a == "L")
+        actual.append(bidi_unassigned == "")
+        actual.append(combining_mark == 230)
+        actual.append(width_hiragana == "W")
+        actual.append(paren_mirrored)
+        actual.append(not letter_mirrored)
+        actual.append(angstrom_decomposition == "00C5")
+    except UnicodeDataError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        arabic_decimal: int = decimal("\u0664")
+        superscript_digit: int = digit("\u00b2")
+        half: float = numeric_value("\u00bd")
+        actual.append(arabic_decimal == 4)
+        actual.append(superscript_digit == 2)
+        actual.append(half > 0.49 and half < 0.51)
+    except UnicodeDataError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    actual.append(case_fold("Stra\u00dfe \u0130") == "strasse i\u0307")
+
+    invalid_form_failed: bool = False
+    try:
+        _bad_form: str = normalize("BAD", "x")
+    except UnicodeDataError as e:
+        invalid_form_failed = len(e.message) > 0
+    actual.append(invalid_form_failed)
+
+    missing_name_failed: bool = False
+    try:
+        _private_name: str = name("\ue000")
+    except UnicodeDataError as e:
+        missing_name_failed = len(e.message) > 0
+    actual.append(missing_name_failed)
+
+    missing_numeric_failed: bool = False
+    try:
+        _letter_number: float = numeric_value("A")
+    except UnicodeDataError as e:
+        missing_numeric_failed = len(e.message) > 0
+    actual.append(missing_numeric_failed)
+
+    multi_scalar_failed: bool = False
+    try:
+        _category: str = category("AB")
+    except UnicodeDataError as e:
+        multi_scalar_failed = len(e.message) > 0
+    actual.append(multi_scalar_failed)
+
+    return actual
+
+
+def main():
+    expected: list[bool] = [
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    ]
+    assert_bool_vector_eq(collect_unicode_actual(), expected)

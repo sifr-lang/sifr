@@ -1,0 +1,126 @@
+# sifr.unicode — Unicode normalization, data, and case mapping
+from _sifr.unicode import (
+    unicode_bidirectional,
+    unicode_case_fold,
+    unicode_category,
+    unicode_combining,
+    unicode_data_version,
+    unicode_decimal,
+    unicode_decomposition,
+    unicode_digit,
+    unicode_east_asian_width,
+    unicode_is_normalized,
+    unicode_lookup,
+    unicode_mirrored,
+    unicode_name,
+    unicode_normalize,
+    unicode_numeric_value,
+)
+
+NFC: str = "NFC"
+NFD: str = "NFD"
+NFKC: str = "NFKC"
+NFKD: str = "NFKD"
+
+
+class UnicodeDataError(Error):
+    message: str
+
+
+def data_version() -> str:
+    return unicode_data_version()
+
+
+def normalize(form: str, text: str) -> Result[str, UnicodeDataError]:
+    try:
+        return unicode_normalize(form, text)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def is_normalized(form: str, text: str) -> Result[bool, UnicodeDataError]:
+    try:
+        return unicode_is_normalized(form, text)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def name(ch: str) -> Result[str, UnicodeDataError]:
+    try:
+        return unicode_name(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def lookup(character_name: str) -> Result[str, UnicodeDataError]:
+    try:
+        return unicode_lookup(character_name)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def category(ch: str) -> Result[str, UnicodeDataError]:
+    try:
+        return unicode_category(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def bidirectional(ch: str) -> Result[str, UnicodeDataError]:
+    try:
+        return unicode_bidirectional(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def combining(ch: str) -> Result[int, UnicodeDataError]:
+    try:
+        return unicode_combining(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def east_asian_width(ch: str) -> Result[str, UnicodeDataError]:
+    try:
+        return unicode_east_asian_width(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def mirrored(ch: str) -> Result[bool, UnicodeDataError]:
+    try:
+        return unicode_mirrored(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def decomposition(ch: str) -> Result[str, UnicodeDataError]:
+    try:
+        return unicode_decomposition(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def decimal(ch: str) -> Result[int, UnicodeDataError]:
+    try:
+        return unicode_decimal(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def digit(ch: str) -> Result[int, UnicodeDataError]:
+    try:
+        return unicode_digit(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def numeric_value(ch: str) -> Result[float, UnicodeDataError]:
+    try:
+        return unicode_numeric_value(ch)
+    except UnicodeDataError as e:
+        raise UnicodeDataError(e.message)
+
+
+def case_fold(text: str) -> str:
+    return unicode_case_fold(text)

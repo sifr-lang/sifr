@@ -98,6 +98,34 @@ pub(crate) fn lowers_json_intrinsics_with_dependency_metadata() {
 }
 
 #[test]
+pub(crate) fn lowers_unicode_intrinsics_with_dependency_metadata() {
+    let normalized = lower_intrinsic(
+        "unicode_normalize",
+        &["form".to_string(), "text".to_string()],
+    )
+    .expect("unicode_normalize should lower");
+    assert_eq!(
+        normalized.required_feature,
+        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+    );
+    assert!(normalized
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::UnicodeNames));
+    assert!(normalized
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::UnicodeNormalization));
+    let rendered = render_expr(&normalized.expr);
+    assert!(rendered.contains("sifr_runtime::unicode::normalize"));
+    assert!(rendered.contains("UnicodeDataError"));
+
+    let folded = lower_intrinsic("unicode_case_fold", &["text".to_string()]).expect("case fold");
+    assert_eq!(
+        render_expr(&folded.expr),
+        "sifr_runtime::unicode::case_fold(&text)"
+    );
+}
+
+#[test]
 pub(crate) fn lowers_env_intrinsics_via_registry() {
     let get = lower_intrinsic("env_get", &["key".to_string()]).expect("env_get should lower");
     assert!(render_expr(&get.expr).contains("std::env::var"));

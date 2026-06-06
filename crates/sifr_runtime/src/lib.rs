@@ -4,6 +4,10 @@
 pub mod encoding;
 mod int;
 pub mod json;
+#[cfg(feature = "unicode")]
+pub mod unicode;
+#[cfg(feature = "unicode")]
+mod unicode_data;
 
 pub use int::{
     IntegerParseError, IntegerRangeError, NormalizedIntegerHash, SifrInt,
