@@ -74,6 +74,11 @@
     "task_spawn_fallible_result",
     "cancellation_scope_timeout",
     "cancellation_nested_scopes",
-    "cancellation_error_type_surface"
+    "cancellation_error_type_surface",
+    "text_i18n_encoding_io",
+    "text_i18n_unicode_core",
+    "text_i18n_unicode_segmentation",
+    "text_i18n_locale_formatting",
+    "text_i18n_translation_bundles"
   ]
 }

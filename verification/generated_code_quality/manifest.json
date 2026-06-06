@@ -8,6 +8,7 @@
     {"id": "demo-004-dependency-manifest", "group": "demos-required", "source_path": "demos/dependency_manifest/main.sifr", "expected_command": "build", "evidence_category": "demo-manifest"},
     {"id": "demo-005-additional-modules", "group": "demos-required", "source_path": "demos/additional_modules/main.sifr", "expected_command": "build", "evidence_category": "demo-project"},
     {"id": "demo-006-async-generator-comprehension", "group": "demos-required", "source_path": "demos/async_generator_comprehension_demo/main.sifr", "expected_command": "build", "evidence_category": "demo-async"},
+    {"id": "demo-007-text-i18n", "group": "demos-required", "source_path": "demos/text_i18n/main.sifr", "expected_command": "build", "evidence_category": "text-i18n"},
 
     {"id": "e2e-001-async-for-stream-result", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/async_for_stream_result.sifr", "expected_command": "build", "evidence_category": "async-concurrency"},
     {"id": "e2e-002-await-without-live-borrow", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/await_without_live_borrow.sifr", "expected_command": "build", "evidence_category": "ownership-borrowing"},
@@ -59,6 +60,11 @@
     {"id": "e2e-048-recursive-linked-node", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/recursive_linked_node.sifr", "expected_command": "build", "evidence_category": "classes"},
     {"id": "e2e-049-runtime-file-basics", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/runtime_file_basics.sifr", "expected_command": "build", "evidence_category": "stdlib-io"},
     {"id": "e2e-050-scope-spawn-join", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/scope_spawn_join.sifr", "expected_command": "build", "evidence_category": "async-concurrency"},
+    {"id": "e2e-051-text-i18n-encoding-io", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr", "expected_command": "build", "evidence_category": "text-i18n-encoding"},
+    {"id": "e2e-052-text-i18n-unicode-core", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_unicode_core.sifr", "expected_command": "build", "evidence_category": "text-i18n-unicode"},
+    {"id": "e2e-053-text-i18n-unicode-segmentation", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_unicode_segmentation.sifr", "expected_command": "build", "evidence_category": "text-i18n-segmentation"},
+    {"id": "e2e-054-text-i18n-locale-formatting", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr", "expected_command": "build", "evidence_category": "text-i18n-locale"},
+    {"id": "e2e-055-text-i18n-translation-bundles", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_translation_bundles.sifr", "expected_command": "build", "evidence_category": "text-i18n-translation"},
 
     {"id": "multi-001-additional-modules", "group": "multi-module-projects", "source_path": "demos/additional_modules/main.sifr", "expected_command": "build", "evidence_category": "project-imports"},
     {"id": "multi-002-branch-paths", "group": "multi-module-projects", "source_path": "demos/branch_paths/main.sifr", "expected_command": "build", "evidence_category": "project-imports"},

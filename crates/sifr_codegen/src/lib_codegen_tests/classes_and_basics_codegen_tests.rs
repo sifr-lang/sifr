@@ -81,6 +81,47 @@ def main():\n\
 }
 
 #[test]
+fn test_class_to_string_method_does_not_emit_generated_allow() {
+    let module = HirModule {
+        functions: vec![],
+        classes: vec![HirClass {
+            name: "LocaleId".to_string(),
+            fields: vec![("value".to_string(), Type::Str)],
+            methods: vec![HirFunction {
+                name: "to_string".to_string(),
+                params: vec![],
+                return_type: Type::Str,
+                body: vec![HirStmt::Return {
+                    value: Some(HirExpr::StringLiteral("en-US".to_string())),
+                }],
+                is_async: false,
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            }],
+            is_hashable: false,
+            is_error_type: false,
+            kind: HirClassKind::Regular,
+            operator_impls: vec![],
+            newtype_inner: None,
+            implements_protocols: vec![],
+            parent_class: None,
+            type_params: vec![],
+            enum_variants: vec![],
+        }],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+    assert!(!rust_code.contains("#[allow(clippy::inherent_to_string_shadow_display)]"));
+    assert!(rust_code.contains("impl LocaleId"));
+    assert!(rust_code.contains("impl std::fmt::Display for LocaleId"));
+}
+
+#[test]
 fn test_non_option_local_widened_to_option_when_reassigned_none() {
     let rust_code = generate_rust_from_source(
         r#"class Payload:

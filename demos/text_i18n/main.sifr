@@ -1,0 +1,119 @@
+from sifr.encoding import ascii, decode, encode, latin1, replace_decode_handler
+from sifr.encoding import DecodeError, EncodeError
+from sifr.i18n import (
+    Bundle,
+    LocaleId,
+    NumberFormatter,
+    Translator,
+    bundle_from_mo_bytes,
+    translator,
+)
+from sifr.io import TextFileHandle, open_text
+from sifr.os import remove_file
+from sifr.test import assert_bool_vector_eq
+from sifr.unicode import NFC, category, graphemes, normalize, words
+from sifr.unicode import UnicodeDataError
+
+
+def primary_catalog_bytes() -> bytes:
+    return b'\xde\x12\x04\x95\x00\x00\x00\x00\x05\x00\x00\x00\x1c\x00\x00\x00D\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00l\x00\x00\x00\x05\x00\x00\x00\xc1\x00\x00\x00\t\x00\x00\x00\xcf\x00\x00\x00\n\x00\x00\x00\xe0\x00\x00\x00\x04\x00\x00\x00\xfc\x00\x00\x00S\x00\x00\x00m\x00\x00\x00\x07\x00\x00\x00\xc7\x00\x00\x00\x06\x00\x00\x00\xd9\x00\x00\x00\x10\x00\x00\x00\xeb\x00\x00\x00\x04\x00\x00\x00\x01\x01\x00\x00\x00Content-Type: text/plain; charset=latin-1\nPlural-Forms: nplurals=2; plural=n != 1;\n\x00hello\x00bonjour\x00menu\x04open\x00ouvrir\x00file\x00files\x00fichier\x00fichiers\x00cafe\x00caf\xe9\x00'
+
+
+def fallback_catalog_bytes() -> bytes:
+    return b'\xde\x12\x04\x95\x00\x00\x00\x00\x01\x00\x00\x00\x1c\x00\x00\x00$\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00,\x00\x00\x00\x07\x00\x00\x003\x00\x00\x00backup\x00secours\x00'
+
+
+def collect_demo_checks() -> list[bool]:
+    checks: list[bool] = []
+
+    # Non-UTF-8 byte/text boundaries are explicit.
+    try:
+        latin_bytes: bytes = encode("caf\u00e9", latin1())
+        checks.append(latin_bytes == b"caf\xe9")
+    except EncodeError as e:
+        _ = e.message
+        checks.append(False)
+
+    try:
+        latin_text: str = decode(b"caf\xe9", latin1())
+        checks.append(latin_text == "caf\u00e9")
+    except DecodeError as e:
+        _ = e.message
+        checks.append(False)
+
+    try:
+        recovered_text: str = decode(b"\xffA", ascii(), replace_decode_handler())
+        checks.append(recovered_text == "\ufffdA")
+    except DecodeError as e:
+        _ = e.message
+        checks.append(False)
+
+    # Text I/O uses the same explicit encoding substrate.
+    path: str = "/tmp/sifr_text_i18n_demo_latin1.txt"
+    try:
+        writer: TextFileHandle = open_text(path, "w", encoding=latin1())
+        _written: None = writer.write("caf\u00e9")
+        writer.close()
+        reader: TextFileHandle = open_text(path, "r", encoding=latin1())
+        text: str = reader.read()
+        reader.close()
+        _removed: None = remove_file(path)
+        checks.append(text == "caf\u00e9")
+    except IOError as e:
+        _ = e.message
+        checks.append(False)
+
+    # Unicode core and segmentation APIs use Unicode 17.0.0 data.
+    try:
+        composed: str = normalize(NFC, "e\u0301")
+        clusters: list[str] = graphemes("a\u0301b")
+        tokens: list[str] = words("Hi, \u03ba\u03cc\u03c3\u03bc\u03b5!")
+        letter_category: str = category("A")
+        checks.append(composed == "\u00e9")
+        checks.append(letter_category == "Lu")
+        checks.append(len(clusters) == 2)
+        checks.append(len(tokens) == 2)
+    except UnicodeDataError as e:
+        _ = e.message
+        checks.append(False)
+        checks.append(False)
+        checks.append(False)
+        checks.append(False)
+
+    # Locale-sensitive formatting is object-scoped.
+    try:
+        formatter: NumberFormatter = NumberFormatter(LocaleId("en-US"))
+        formatted: str = formatter.format("12345")
+        checks.append(len(formatted) > 0)
+    except Error as e:
+        _ = e.message
+        checks.append(False)
+
+    # Translation bundles use explicit fallbacks and plural lookup.
+    try:
+        primary: Bundle = bundle_from_mo_bytes(primary_catalog_bytes())
+        fallback: Bundle = bundle_from_mo_bytes(fallback_catalog_bytes())
+        tx: Translator = translator(primary).with_fallback(fallback)
+        hello: str = tx.translate("hello")
+        files: str = tx.translate_plural("file", "files", 2)
+        backup: str = tx.translate("backup")
+        checks.append(hello == "bonjour")
+        checks.append(files == "fichiers")
+        checks.append(backup == "secours")
+    except Error as e:
+        _ = e.message
+        checks.append(False)
+        checks.append(False)
+        checks.append(False)
+
+    return checks
+
+
+def main() -> None:
+    expected: list[bool] = [
+        True, True, True, True,
+        True, True, True, True,
+        True, True, True, True,
+    ]
+    actual: list[bool] = collect_demo_checks()
+    assert_bool_vector_eq(actual, expected)

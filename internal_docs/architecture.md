@@ -751,6 +751,42 @@ Sifr's `str` maps to Rust `String` (UTF-8). String indexing and length must be d
 - **Complexity documentation:** the compiler should emit a note when string indexing is used in a loop, suggesting `.chars()` iteration instead for performance.
 - **Global indexing contract:** all indexable types (`str`, `list`, `dict`) use safe indexing. `x[i]` returns `Option[T]`, never panics. This is enforced uniformly across the language.
 
+### 7.1 Text, Encoding, Unicode, And I18n Substrate
+
+Sifr's production text substrate is owned by `sifr.encoding`, `sifr.io`, `sifr.unicode`, and `sifr.i18n`.
+The focused closeout note lives in [text_i18n_architecture.md](./text_i18n_architecture.md).
+
+**Valid text invariant:**
+
+- `str` is always valid Unicode and lowers to Rust `String`/`str`.
+- Arbitrary payloads stay in `bytes` until an explicit decode boundary succeeds.
+- Invalid Unicode recovery cannot be hidden inside ordinary strings; recovery paths return typed outcomes or typed errors.
+
+**Encoding and text I/O boundaries:**
+
+- `sifr.encoding` uses a static registry for accepted Tier 0/Tier 1 encodings. Runtime registry mutation and dynamic codec lookup are unsupported.
+- `str.encode(...)`, `bytes.decode(...)`, `sifr.encoding.encode/decode`, and text-mode file I/O all lower through the same encoding substrate.
+- Text file I/O requires an explicit encoding. `open(path, "r")` and other text modes without `encoding=` are rejected; locale-derived default encodings are not part of the language.
+- Compiler-recognized `open(...)` mode values must be string literals so lowering can choose binary versus text handle types statically.
+
+**Unicode data and segmentation:**
+
+- Normalization, property lookup, names, numeric values, and case folding use checked-in generated Unicode 17.0.0 table artifacts and regeneration markers.
+- Grapheme and word segmentation use the Unicode 17.0.0-aligned `unicode-segmentation` substrate. Public APIs return owned strings and byte-index records; streaming segmentation is deferred.
+
+**Locale and i18n data:**
+
+- Locale identifiers are explicit `LocaleId` values. Object-scoped number, datetime, plural, and collation APIs use ICU4X compiled data behind Sifr-owned wrappers.
+- `host_locale()` is read-only and host-limited. It may observe environment locale identifiers, but it cannot mutate process state and cannot make implicit text encodings legal.
+- Process-global locale mutation, `gettext.install`, and global `_` binding are unsupported.
+
+**Translation catalogs:**
+
+- `Bundle`, `Message`, and `Translator` are the production translation API.
+- `.mo` files are a compatibility backend/import format. Catalog parsing validates byte layout, declared charset, context keys, plural metadata, and malformed paths through typed `CatalogError`.
+- `.mo` plural expressions are parsed by a constrained safe parser. Sifr never evaluates catalog metadata through a Python, Sifr, shell, or host expression engine.
+- Missing keys fall through explicit fallback chains and finally return the source singular/plural text; corrupt catalogs surface as typed translation errors.
+
 ### 8. Concurrency Safety
 
 Sifr must define which types can cross thread/task boundaries. Phase 32 planning follows `internal_docs/async_concurrency_model.md`; this section records the high-level contract that implementation milestones must preserve.

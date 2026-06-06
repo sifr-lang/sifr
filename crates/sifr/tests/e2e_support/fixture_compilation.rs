@@ -284,7 +284,22 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert("sha1 = \"0.11.0\"".to_string());
                 deps.insert("blake2 = \"0.10.6\"".to_string());
             }
-            "sifr.encoding" | "sifr.base64" => {
+            "sifr.encoding" | "_sifr.encoding" => {
+                deps.insert("encoding_rs = \"0.8.35\"".to_string());
+            }
+            "sifr.unicode" | "_sifr.unicode" => {
+                deps.insert("unicode_names2 = \"3.1.0\"".to_string());
+                deps.insert("unicode-normalization = \"0.1.25\"".to_string());
+                deps.insert("unicode-segmentation = \"1.13.3\"".to_string());
+            }
+            "sifr.i18n" | "_sifr.i18n" => {
+                deps.insert("icu_collator = \"2.2.0\"".to_string());
+                deps.insert("icu_datetime = \"2.2.0\"".to_string());
+                deps.insert("icu_decimal = \"2.2.0\"".to_string());
+                deps.insert("icu_locale = \"2.2.0\"".to_string());
+                deps.insert("icu_plurals = \"2.2.0\"".to_string());
+            }
+            "sifr.base64" => {
                 deps.insert("base64 = \"0.22.1\"".to_string());
             }
             "sifr.tomllib" | "_sifr.toml" => {
@@ -302,6 +317,20 @@ pub(crate) fn generate_cargo_toml(
             }
             _ => {}
         }
+    }
+
+    if stdlib_modules.iter().any(|module| {
+        matches!(
+            module.as_str(),
+            "sifr.encoding"
+                | "_sifr.encoding"
+                | "sifr.unicode"
+                | "_sifr.unicode"
+                | "sifr.i18n"
+                | "_sifr.i18n"
+        )
+    }) {
+        deps.insert(sifr_runtime_dependency_spec_for_modules(stdlib_modules));
     }
 
     for crate_name in required_crates {
@@ -375,7 +404,12 @@ pub(crate) fn generate_cargo_toml(
                 );
             }
             "sifr_runtime" | "sifr-runtime" => {
-                deps.insert(sifr_runtime_dependency_spec());
+                if !deps
+                    .iter()
+                    .any(|dependency| dependency.starts_with("sifr_runtime = "))
+                {
+                    deps.insert(sifr_runtime_dependency_spec());
+                }
             }
             "tokio" => {
                 deps.insert(tokio_dependency_spec());
@@ -400,12 +434,41 @@ pub(crate) fn generate_cargo_toml(
 }
 
 pub(crate) fn sifr_runtime_dependency_spec() -> String {
+    sifr_runtime_dependency_spec_with_features(&[])
+}
+
+fn sifr_runtime_dependency_spec_for_modules(stdlib_modules: &BTreeSet<String>) -> String {
+    let mut features = Vec::new();
+    if stdlib_modules
+        .iter()
+        .any(|module| matches!(module.as_str(), "sifr.i18n" | "_sifr.i18n"))
+    {
+        features.push("i18n");
+    }
+    if stdlib_modules
+        .iter()
+        .any(|module| matches!(module.as_str(), "sifr.unicode" | "_sifr.unicode"))
+    {
+        features.push("unicode");
+    }
+    sifr_runtime_dependency_spec_with_features(&features)
+}
+
+fn sifr_runtime_dependency_spec_with_features(features: &[&str]) -> String {
     let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
     let escaped_path = runtime_path
         .to_string_lossy()
         .replace('\\', "\\\\")
         .replace('"', "\\\"");
-    format!("sifr_runtime = {{ path = \"{escaped_path}\" }}")
+    if features.is_empty() {
+        return format!("sifr_runtime = {{ path = \"{escaped_path}\" }}");
+    }
+    let rendered_features = features
+        .iter()
+        .map(|feature| format!("\"{feature}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!("sifr_runtime = {{ path = \"{escaped_path}\", features = [{rendered_features}] }}")
 }
 
 pub(crate) fn tokio_dependency_spec() -> String {

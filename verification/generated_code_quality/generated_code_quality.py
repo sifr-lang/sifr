@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import functools
 import hashlib
 import json
 import os
@@ -21,6 +22,32 @@ GCQ_ROOT = REPO_ROOT / "verification" / "generated_code_quality"
 MANIFEST = GCQ_ROOT / "manifest.json"
 TARGET_ROOT = REPO_ROOT / "target" / "sifr_generated_code_quality"
 EVIDENCE_ROOT = TARGET_ROOT / "evidence"
+# Inputs that change generated Rust or its compile environment. Manifest metadata
+# remains part of per-entry selection, not producer cache invalidation.
+PRODUCER_FINGERPRINT_INPUTS = [
+    "Cargo.lock",
+    "Cargo.toml",
+    "crates/sifr/Cargo.toml",
+    "crates/sifr/src",
+    "crates/sifr_codegen/Cargo.toml",
+    "crates/sifr_codegen/src",
+    "crates/sifr_driver/Cargo.toml",
+    "crates/sifr_driver/src",
+    "crates/sifr_frontend/Cargo.toml",
+    "crates/sifr_frontend/src",
+    "crates/sifr_lowering/Cargo.toml",
+    "crates/sifr_lowering/src",
+    "crates/sifr_package/Cargo.toml",
+    "crates/sifr_package/src",
+    "crates/sifr_runtime/Cargo.toml",
+    "crates/sifr_runtime/src",
+    "crates/sifr_stdlib/Cargo.toml",
+    "crates/sifr_stdlib/src",
+    "crates/sifr_syntax/Cargo.toml",
+    "crates/sifr_syntax/src",
+    "verification/generated_code_quality/generated_code_quality.py",
+]
+PRODUCER_FINGERPRINT_EXTENSIONS = {".lock", ".py", ".rs", ".sifr", ".toml"}
 
 POSITIVE_GROUPS = {
     "demos-required",
@@ -91,6 +118,8 @@ GENERATED_CLIPPY_ARGS = [
     "clippy::assertions_on_constants",
     "-A",
     "clippy::identity_op",
+    "-A",
+    "clippy::inherent_to_string_shadow_display",
     "-A",
     "clippy::iter_cloned_collect",
     "-A",
@@ -324,8 +353,36 @@ def shared_artifact_root() -> Path | None:
     return (REPO_ROOT / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
 
 
+def producer_fingerprint_files() -> list[Path]:
+    files: list[Path] = []
+    for relative in PRODUCER_FINGERPRINT_INPUTS:
+        path = REPO_ROOT / relative
+        if path.is_file():
+            files.append(path)
+        elif path.is_dir():
+            files.extend(
+                candidate
+                for candidate in path.rglob("*")
+                if candidate.is_file() and candidate.suffix in PRODUCER_FINGERPRINT_EXTENSIONS
+            )
+    return sorted(files)
+
+
+@functools.cache
+def producer_fingerprint() -> str:
+    digest = hashlib.sha256()
+    for path in producer_fingerprint_files():
+        digest.update(path.relative_to(REPO_ROOT).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()[:16]
+
+
 def entry_cache_key(entry: Entry) -> str:
     digest = hashlib.sha256()
+    digest.update(producer_fingerprint().encode("utf-8"))
+    digest.update(b"\0")
     digest.update(entry.id.encode("utf-8"))
     digest.update(b"\0")
     digest.update(entry.source_path.encode("utf-8"))

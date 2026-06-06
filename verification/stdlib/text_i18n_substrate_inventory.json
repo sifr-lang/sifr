@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "m4-complete",
+  "status": "m5-complete",
   "platform_contract": "verification/platform/platform_contract.json",
   "cpython_checkout": {
     "path": "/Users/yaseralnajjar/work/sifr/cpython",
@@ -316,6 +316,32 @@
       "supply_chain_signal": "Unicode/ICU4X official project"
     }
   ],
+  "m5_closure_evidence": {
+    "public_docs": [
+      "docs/text_i18n.md",
+      "docs/stdlib_imports.md"
+    ],
+    "internal_docs": [
+      "internal_docs/architecture.md",
+      "internal_docs/text_i18n_architecture.md"
+    ],
+    "demos": [
+      "demos/text_i18n/main.sifr"
+    ],
+    "dependency_snapshots": [
+      "verification/stdlib/text_i18n_dependency_snapshots.json",
+      "crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_phase_combinations"
+    ],
+    "generated_code_quality": [
+      "verification/generated_code_quality/manifest.json"
+    ],
+    "validation_lane_manifests": [
+      "verification/validation_lanes/create_pr_e2e_manifest.json"
+    ],
+    "traceability": [
+      "verification/stdlib/text_i18n_m5_traceability.md"
+    ]
+  },
   "no_global_state_policy": {
     "codec_registry": "static immutable registry; no mutation API",
     "locale": "object-scoped LocaleId and formatters; no setlocale",
