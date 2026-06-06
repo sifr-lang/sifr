@@ -1,6 +1,6 @@
 # Text/I18n Substrate Inventory
 
-Status: M4 complete.
+Status: M5 complete; inventory classifications are terminal and final validation/review evidence is attached.
 
 Platform contract: [platform_contract.md](../platform/platform_contract.md)
 
@@ -135,3 +135,16 @@ Existing coverage also records in-memory `StringIO`/`BytesIO` seek/tell and use-
 | M3 | Add `LocaleId`, canonicalization, read-only `host_locale`, object-scoped number/date/plural/collation APIs using ICU4X compiled data. |
 | M4 | Add native translation bundle/translator API, `.mo` parser, safe plural-expression parser, fallbacks, contexts, plural lookup, missing-key fallback, and missing-path errors. |
 | M5 | Add public/internal docs, demos, dependency snapshots, panic scans, final inventory closure, final review, and full validation. |
+
+## M5 Closure Evidence
+
+| Requirement | Evidence |
+| --- | --- |
+| Public docs | `docs/text_i18n.md` documents `sifr.encoding`, `sifr.unicode`, explicit `sifr.io` text I/O, `sifr.i18n`, and Python-shaped differences. |
+| Internal architecture | `internal_docs/architecture.md` records the architecture contract, and `internal_docs/text_i18n_architecture.md` carries the focused substrate closeout note. |
+| Demos | `demos/text_i18n/main.sifr` covers non-UTF-8 encode/decode, explicit text open, normalization/properties, segmentation, locale formatting, and translation fallback/plurals. |
+| Dependency snapshots | `verification/stdlib/text_i18n_dependency_snapshots.json` records generated Cargo dependency snapshots for each text/i18n module and every pairwise/full module combination; `crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_phase_combinations` locks the same combinations in unit tests. |
+| Panic/emitted-code scans | `verification/generated_code_quality/manifest.json` includes `demos/text_i18n/main.sifr` plus representative encoding, Unicode, segmentation, locale, and translation e2e fixtures. |
+| Validation lanes | `verification/validation_lanes/create_pr_e2e_manifest.json` and `merge_e2e_manifest.json` include all M1-M4 text/i18n pass fixtures as representatives. |
+| External review | `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-1.md` returned `PASS`; no re-review required. |
+| Reference closure | `verification/stdlib/text_i18n_reference_matrix.md` maps CPython codecs, encodings, unicodedata, locale, and gettext families to terminal Sifr dispositions and fixtures. |

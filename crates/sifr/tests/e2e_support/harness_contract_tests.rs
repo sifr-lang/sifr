@@ -483,6 +483,36 @@ pub(crate) fn test_generate_cargo_toml_required_sifr_runtime_uses_path_dependenc
 }
 
 #[test]
+pub(crate) fn test_generate_cargo_toml_text_i18n_modules_enable_runtime_features() {
+    let unicode_modules = normalize_dependency_set(vec!["sifr.unicode".to_string()].into_iter());
+    let i18n_modules = normalize_dependency_set(vec!["sifr.i18n".to_string()].into_iter());
+    let combined_modules = normalize_dependency_set(
+        vec![
+            "sifr.encoding".to_string(),
+            "sifr.unicode".to_string(),
+            "sifr.i18n".to_string(),
+        ]
+        .into_iter(),
+    );
+    let required_crates = normalize_dependency_set(vec!["sifr_runtime".to_string()]);
+
+    let unicode_toml = generate_cargo_toml(&unicode_modules, &required_crates, "sifr_output");
+    assert!(unicode_toml.contains("sifr_runtime = { path = "));
+    assert!(unicode_toml.contains("features = [\"unicode\"]"));
+    assert!(unicode_toml.contains("unicode-segmentation = \"1.13.3\""));
+
+    let i18n_toml = generate_cargo_toml(&i18n_modules, &required_crates, "sifr_output");
+    assert!(i18n_toml.contains("sifr_runtime = { path = "));
+    assert!(i18n_toml.contains("features = [\"i18n\"]"));
+    assert!(i18n_toml.contains("icu_locale = \"2.2.0\""));
+
+    let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
+    assert!(combined_toml.contains("features = [\"i18n\", \"unicode\"]"));
+    assert!(combined_toml.contains("encoding_rs = \"0.8.35\""));
+    assert!(combined_toml.matches("sifr_runtime = ").count() == 1);
+}
+
+#[test]
 pub(crate) fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
     let stdlib_modules = BTreeSet::new();
     let required_crates = normalize_dependency_set(vec!["tokio".to_string()]);

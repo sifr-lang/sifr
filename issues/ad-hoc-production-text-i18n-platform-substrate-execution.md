@@ -210,6 +210,8 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M4 pass 1: `reviews/ad-hoc-production-text-i18n-m4-implementation-review-pass-1.md`; result `PASS` with non-blocking observations on error naming, catalog reparse cost, direct constructor validation, closeout checklist timing, Tier 1 charset coverage, and default plural parsing cost.
 - M4 pass 2: `reviews/ad-hoc-production-text-i18n-m4-implementation-review-pass-2.md`; result `PASS` with non-blocking observation that empty translation forms should be documented or treated as missing.
 - M4 pass 3: `reviews/ad-hoc-production-text-i18n-m4-implementation-review-pass-3.md`; result `PASS` after empty translation forms were changed to return `None` so explicit fallback chains can continue; no blockers and no re-review required.
+- M5 pass 1: `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-1.md`; result `PASS`, no blocking findings and no re-review required. Non-blocking metadata observations were remediated before opening the M5 PR.
+- M5 pass 2: `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-2.md`; result `PASS` after e2e batch harness feature-propagation remediation, no blockers and no re-review required.
 
 ## Validation Evidence
 
@@ -359,6 +361,23 @@ M4 focused validation on branch `text-i18n-m4-translation-bundles`:
 - `python3 scripts/check_hir_maintainability_guardrails.py` passed.
 - `python3 -m json.tool verification/stdlib/text_i18n_substrate_inventory.json >/dev/null` passed.
 - `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 254.78s, 67/67 e2e pass fixtures, platform golden 3 pass / 2 skipped, non-blocking warm wall-time and warm-cache advisories.
+
+M5 focused validation on branch `text-i18n-m5-production-gate`:
+
+- `cargo run -q -p sifr -- run demos/text_i18n/main.sifr` passed with twelve checks covering non-UTF-8 encode/decode, explicit text I/O, Unicode normalization/properties, segmentation, locale formatting, translation fallback, and plural behavior.
+- `cargo test -p sifr_stdlib text_i18n_feature_dependency_snapshots_cover_phase_combinations -- --nocapture` passed and locked generated Cargo dependency snapshots for encoding, Unicode, i18n, and combined Unicode+i18n runtime features.
+- `python3 -m json.tool` passed for `verification/stdlib/text_i18n_substrate_inventory.json`, `verification/stdlib/text_i18n_dependency_snapshots.json`, `verification/validation_lanes/create_pr_e2e_manifest.json`, `verification/validation_lanes/merge_e2e_manifest.json`, and `verification/generated_code_quality/manifest.json`.
+- `SIFR_GCQ_MAX_ENTRIES=7 python3 verification/generated_code_quality/generated_code_quality.py corpus --group demos-required --group e2e-pass-representative` passed; evidence `target/sifr_generated_code_quality/evidence/corpus-1780761279-23158.json`, including `demo-007-text-i18n`.
+- `python3 verification/generated_code_quality/generated_code_quality.py panic-scan --group e2e-pass-representative` passed; evidence `target/sifr_generated_code_quality/evidence/panic-scan-1780761568-63612.json`, including text/i18n entries `e2e-051` through `e2e-055`.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `cargo clippy --workspace -- -D warnings` passed.
+- `cargo test -p sifr_stdlib` passed with 16/16 tests.
+- `cargo test -p sifr -- stdlib` passed.
+- `scripts/run_e2e_pass.sh` passed with the merge manifest: 78/78 pass fixtures, cache hits 24/24.
+- `cargo test -p sifr test_generate_cargo_toml_text_i18n_modules_enable_runtime_features -- --nocapture` passed after e2e batch Cargo.toml generation was updated to enable `sifr_runtime` `unicode`/`i18n` features for grouped text/i18n fixtures.
+- `scripts/run_all_tests.sh --profile create-pr` passed after the harness remediation; report `target/validation_lane_reports/create-pr.latest.json`, wall time 195.01s, 72/72 e2e pass fixtures, platform golden 3 pass / 2 skipped, non-blocking warm wall-time and warm-cache advisories.
 
 ## CPython Scan Evidence
 

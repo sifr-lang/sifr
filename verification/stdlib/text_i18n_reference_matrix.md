@@ -28,9 +28,9 @@ Accepted or mined aliases include canonical labels and WHATWG-compatible names f
 
 | Planned fixture | Owner milestone | Source evidence |
 | --- | --- | --- |
-| `sifr_encoding_subset.sifr` | M1 | `test_codecs` UTF-8/ASCII/Latin-1/UTF-16/BOM/error-handler tests |
-| `sifr_text_io_subset.sifr` | M1 | `codecs.open` and `io` text boundary anti-requirements adapted to `sifr.io.open_text` |
-| `sifr_unicode_subset.sifr` | M2 | `test_unicodedata` property/name/normalization tests |
-| `sifr_unicode_segmentation_subset.sifr` | M2.5 | `GraphemeBreakTest` and Unicode UAX #29 examples |
-| `sifr_i18n_locale_formatting_subset.sifr` | M3 | `test_locale` deterministic formatting/collation families |
-| `sifr_i18n_translation_subset.sifr` | M4 | `test_gettext` `.mo`, plural, context, fallback, malformed catalog families |
+| `text_i18n_encoding_io.sifr` | M1 | `test_codecs` UTF-8/ASCII/Latin-1/UTF-16/BOM/error-handler tests and explicit text I/O anti-requirements adapted to `sifr.io.open_text`. |
+| `text_i18n_unicode_core.sifr` | M2 | `test_unicodedata` property/name/normalization tests. |
+| `text_i18n_unicode_segmentation.sifr` | M2.5 | Unicode UAX #29 grapheme/word examples; CPython has no dedicated stdlib segmentation API. |
+| `text_i18n_locale_formatting.sifr` | M3 | `test_locale` deterministic locale ID, formatting, plural, and collation families. |
+| `text_i18n_translation_bundles.sifr` | M4 | `test_gettext` `.mo`, plural, context, fallback, malformed catalog families. |
+| `demos/text_i18n/main.sifr` | M5 | End-to-end public demo spanning M1-M4 production APIs. |
