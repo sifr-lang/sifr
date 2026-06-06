@@ -123,6 +123,9 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - Final cross-phase decision delta review:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-25-final-delta.md`
   - Result: `PASS`; final clarifications introduced no unmade or contradictory implementation decisions.
+- Updated text/i18n product-boundary review:
+  - Source: `/Users/yaseralnajjar/.codex/attachments/d3be2da1-89ee-48a2-a601-d1d450934f21/pasted-text.txt`
+  - Result: mostly already remediated by the substrate rewrite; remaining useful refinements were added: explicit No-Toy-Module Gate, `SIFR_CPYTHON_CHECKOUT` source-tree variable, generated Unicode table marker/regeneration requirements, and constrained safe `.mo` plural-expression parsing.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -166,9 +169,13 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - [x] Clarify no-encoding text `open(...)` remains permanently unsupported after M3; M3 documents the intentional difference rather than unblocking locale-derived defaults.
 - [x] Add Rust `String`/`str`-compatible text invariants: normal Sifr strings are valid Unicode, arbitrary bytes stay bytes, and invalid Unicode recovery cannot be hidden inside ordinary strings.
 - [x] Replace CPython parity definition with support tiers: production substrate, production API, import/compatibility backend, host-limited, and rejected/deferred.
+- [x] Add No-Toy-Module Gate so public text/i18n modules cannot ship merely because CPython has them, a compatibility demo needs them, or a partial module is easy.
 - [x] Add demand-tiered encoding scope: Tier 0 required encodings, Tier 1 web/file compatibility, Tier 2 CJK deferred to a separate issue with dependency/data-size/workload review, and Tier 3 rejected/deferred CPython-only/pseudo-codec/module-zoo parity.
 - [x] Add Unicode segmentation as a dedicated M2.5 milestone for grapheme and word boundaries.
 - [x] Reframe gettext as translation-bundle/backend import support, not the strategic global i18n API.
+- [x] Require `.mo` plural expressions to use a constrained safe plural-expression parser rather than a general expression engine.
+- [x] Make generated Unicode tables require a generated-file marker and checked-in regeneration command.
+- [x] Use `SIFR_CPYTHON_CHECKOUT` as the portable CPython source-tree setting while recording the local planning checkout path.
 
 ## Implementation PRs
 

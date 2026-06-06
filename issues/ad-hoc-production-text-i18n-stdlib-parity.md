@@ -33,7 +33,7 @@ CPython-shaped surfaces may be added later only as adapters over this substrate,
 ## Related Phases
 
 - Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md).
-- Concurrency/runtime stdlib parity is tracked in [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md).
+- Concurrency/runtime substrate is tracked in [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md).
 - This phase is the first phase in the split production-stdlib sequence because it provides the shared encoding/text substrate needed by both the network/HTTP and concurrency/runtime phases.
 - This phase provides the encoding/text substrate needed by subprocess text mode, HTTP text decoding, file `open(..., encoding=...)`, warning formatting, locale-aware formatting, and translation demos.
 - This phase assumes [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md) is complete: Sifr stdlib remains publicly imported through `sifr.*`, and bare CPython stdlib names are not aliases.
@@ -62,7 +62,7 @@ This phase is first because both later phases consume the same text, encoding, U
 
 ## Source Of Truth
 
-The authoritative CPython source tree for reference scanning is:
+The authoritative CPython source tree for reference scanning is configured through `SIFR_CPYTHON_CHECKOUT`. For this planning run, that checkout is:
 
 - `/Users/yaseralnajjar/work/sifr/cpython`
 
@@ -74,7 +74,7 @@ The implementation must scan and classify these CPython files before each milest
 | Unicode data | `Doc/library/unicodedata.rst` | `Lib/test/test_unicodedata.py` | `Modules/unicodedata.c` |
 | locale/gettext | `Lib/locale.py`, `Lib/gettext.py`, `Doc/library/locale.rst`, `Doc/library/gettext.rst` | `Lib/test/test_locale.py`, `Lib/test/test_gettext.py` | `Modules/_localemodule.c` |
 
-Path note: CPython paths above are relative to `/Users/yaseralnajjar/work/sifr/cpython`.
+Path note: CPython paths above are relative to `SIFR_CPYTHON_CHECKOUT`; the local planning checkout is `/Users/yaseralnajjar/work/sifr/cpython`.
 
 Standards and Rust ecosystem candidates must also be reviewed before the affected milestone starts:
 
@@ -110,6 +110,25 @@ The Phase 32 async/workload model remains binding:
 | Rejected/deferred | Too dynamic, global, legacy, or costly for this phase | `setlocale`, `codecs.register`, `gettext.install`, full `encodings.*` parity |
 
 Every reviewed CPython test family must end in exactly one state: `adopted-as-substrate-fixture`, `adapted-for-sifr-api`, `adapter-deferred`, `waived`, or `rejected`. Every reviewed public surface must end in exactly one state: `done`, `intentional-diff`, `unsupported`, `host-limited`, or `deferred-adapter`. The inventory state `open` is forbidden at phase exit.
+
+## No-Toy-Module Gate
+
+A public text/i18n module may be added only if it satisfies at least one of:
+
+1. It is necessary production substrate.
+2. It is the recommended production developer API.
+3. It is a stable, broadly useful utility with low long-term maintenance cost.
+4. It is required by file I/O, subprocess text mode, HTTP text decoding, diagnostics, Phase 41, packaging, or localization work.
+
+The following are not sufficient reasons:
+
+- CPython has the module.
+- It helps a compatibility demo.
+- It is easy to partially implement.
+- It can be marked as basic and fixed later.
+- It mirrors an old dynamic/global API shape.
+
+Partial public modules are rejected unless they are explicitly unstable/internal and inaccessible as stable user APIs.
 
 ## Public API Policy
 
@@ -223,7 +242,7 @@ M0 must produce a dependency decision record for every crate family below. Each 
 | Translation catalog parsing | local audited `.mo` parser over the M1 encoding substrate | deterministic gettext catalog import as a backend format, not the primary i18n API. |
 | Modern message formatting | deferred | Fluent and ICU message-format backends are not implemented in this phase. The `sifr.i18n` bundle API leaves room for a later backend. |
 
-From-scratch encoding algorithms, Unicode normalization, segmentation, locale formatting, plural rules, collation, or message-format engines are rejected in this phase. If the selected Rust ecosystem stack cannot satisfy a required surface, that surface is deferred with evidence instead of receiving a bespoke implementation. Generated tables are allowed where the data is the product surface, but generation must be reproducible and reviewed.
+From-scratch encoding algorithms, Unicode normalization, segmentation, locale formatting, plural rules, collation, or message-format engines are rejected in this phase. If the selected Rust ecosystem stack cannot satisfy a required surface, that surface is deferred with evidence instead of receiving a bespoke implementation. Generated tables are allowed where the data is the product surface, but generation must be reproducible, reviewed, marked as generated, and paired with a checked-in regeneration command.
 
 ### Encoding Support Tiers
 
@@ -269,8 +288,8 @@ Strict incremental encode/decode failures return typed errors with no successful
 
 ### Unicode Data Versioning
 
-- M0 must record the Unicode data version and the CPython checkout version used for reference fixtures.
-- Generated Unicode tables must be reproducible, reviewed, and excluded from the hand-maintained 900-line guardrail where appropriate.
+- M0 must record the Unicode data version and the `SIFR_CPYTHON_CHECKOUT` commit used for reference fixtures.
+- Generated Unicode tables must be reproducible, reviewed, excluded from the hand-maintained 900-line guardrail where appropriate, marked with a generated-file header, and paired with a checked-in regeneration command.
 - Runtime APIs must expose the Unicode data version consistently with the table set used by the build.
 - Normalization, properties, case folding, and segmentation must either share the same Unicode version or explicitly record any version skew as a release blocker.
 
@@ -539,6 +558,7 @@ Scope:
   - typed arguments where supported by the chosen backend
 - Add `.mo` loader/importer as a compatibility backend.
 - Integrate `.mo` decoding with the M1 encoding substrate.
+- Parse `.mo` plural expressions with a constrained safe plural-expression parser; do not evaluate catalog plural metadata through a general Sifr, Python, shell, or host expression engine.
 - Reserve backend-neutral `Bundle`/`Translator` interfaces for future Fluent/ICU message-format support, but do not implement those backends in this phase.
 - Do not add `gettext.install` or global `_` mutation.
 
@@ -548,12 +568,13 @@ CPython tests to mine for fixture ideas and waiver evidence:
 
 Rust/runtime candidates:
 
-- `.mo` parser implemented in Sifr runtime/Rust
+- local audited `.mo` parser and constrained safe plural-expression parser implemented in Sifr runtime/Rust
 - no Fluent dependency in this phase
 
 Definition of done:
 
 - Translation parsing is deterministic and panic-free.
+- `.mo` plural expressions are parsed by the constrained safe plural-expression parser, reject unsupported constructs with typed catalog errors, and never invoke a general expression engine.
 - Plural forms, contexts, fallback chains, missing keys, and missing catalog paths have Sifr-native fixtures.
 - `.mo` support is documented as an import/backend format rather than the strategic i18n API.
 - Python-shaped `sifr.gettext` remains deferred unless a separate adapter decision is recorded.
@@ -659,5 +680,5 @@ M0 records evidence for these decisions; it does not reopen them without a new i
 | Surrogate behavior | `surrogateescape` and `surrogatepass` are rejected for normal `str` APIs in this phase. Byte-preserving text boundary types are deferred to a separate OS/path interop issue. |
 | Crate/data strategy | `encoding_rs`, `unicode-normalization`, `unicode-segmentation`, generated Unicode tables, and ICU4X components are the default stack. Fluent and ICU message-format engines are deferred. |
 | Host locale queries | The only host locale query in this phase is read-only `sifr.i18n.host_locale() -> Option[LocaleId]`, marked `host-limited`. It never supplies text I/O defaults. |
-| Translation backend | `.mo` loading is accepted as a compatibility backend behind `sifr.i18n.Bundle`/`Translator`. Fluent and ICU message-format backends are deferred; the API must not commit to either backend. |
+| Translation backend | `.mo` loading is accepted as a compatibility backend behind `sifr.i18n.Bundle`/`Translator`. `.mo` plural expressions use a constrained safe plural-expression parser, not a general expression engine. Fluent and ICU message-format backends are deferred; the API must not commit to either backend. |
 | Unsupported Python-shaped APIs | `setlocale`, `localeconv`, `strcoll`, `strxfrm`, `codecs.register`, `codecs.unregister`, `codecs.register_error`, `gettext.install`, global `_`, public `encodings.*`, and CPython C APIs receive unsupported/deferred diagnostics with CPython evidence and regression fixtures. |
