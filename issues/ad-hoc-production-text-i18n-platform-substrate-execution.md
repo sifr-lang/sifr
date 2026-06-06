@@ -189,7 +189,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M0: https://github.com/sifr-lang/sifr/pull/2297
 - M1: https://github.com/sifr-lang/sifr/pull/2298
 - M2: https://github.com/sifr-lang/sifr/pull/2299
-- M2.5: pending.
+- M2.5: https://github.com/sifr-lang/sifr/pull/2300
 - M3: pending.
 - M4: pending.
 - M5: pending.
