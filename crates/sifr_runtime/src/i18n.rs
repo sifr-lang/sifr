@@ -1,7 +1,10 @@
-//! ICU4X-backed locale identifiers, formatting, plural rules, and collation.
+//! ICU4X-backed locale identifiers, formatting, plural rules, collation, and
+//! translation catalog compatibility backends.
 
 use std::cmp::Ordering;
 use std::str::FromStr;
+
+mod translation;
 
 use icu_collator::{
     options::{CollatorOptions, Strength},
@@ -143,6 +146,51 @@ pub fn collate(locale: &str, strength: &str, left: &str, right: &str) -> Result<
     })
 }
 
+pub fn validate_mo_catalog(data: &[u8]) -> Result<String, String> {
+    translation::Catalog::parse(data).map(|_| "ok".to_string())
+}
+
+pub fn read_mo_catalog_file(path: &str) -> Result<Vec<u8>, String> {
+    let data = std::fs::read(path).map_err(|err| format!("failed to read .mo catalog: {err}"))?;
+    translation::Catalog::parse(&data)?;
+    Ok(data)
+}
+
+pub fn mo_lookup(data: &[u8], message_id: &str) -> Result<Option<String>, String> {
+    let catalog = translation::Catalog::parse(data)?;
+    Ok(catalog.lookup(None, message_id))
+}
+
+pub fn mo_lookup_context(
+    data: &[u8],
+    context: &str,
+    message_id: &str,
+) -> Result<Option<String>, String> {
+    let catalog = translation::Catalog::parse(data)?;
+    Ok(catalog.lookup(Some(context), message_id))
+}
+
+pub fn mo_lookup_plural(
+    data: &[u8],
+    singular: &str,
+    plural: &str,
+    count: i64,
+) -> Result<Option<String>, String> {
+    let catalog = translation::Catalog::parse(data)?;
+    catalog.lookup_plural(None, singular, plural, count)
+}
+
+pub fn mo_lookup_context_plural(
+    data: &[u8],
+    context: &str,
+    singular: &str,
+    plural: &str,
+    count: i64,
+) -> Result<Option<String>, String> {
+    let catalog = translation::Catalog::parse(data)?;
+    catalog.lookup_plural(Some(context), singular, plural, count)
+}
+
 fn parse_locale(locale: &str) -> Result<Locale, String> {
     Locale::try_from_str(locale)
         .map_err(|err| format!("invalid locale identifier '{locale}': {err}"))
@@ -184,8 +232,10 @@ fn category_label(category: PluralCategory) -> &'static str {
 mod tests {
     use super::{
         canonicalize_locale, collate, format_datetime, format_number, maximize_locale,
-        minimize_locale, plural_category,
+        minimize_locale, mo_lookup, mo_lookup_context, mo_lookup_context_plural, mo_lookup_plural,
+        plural_category, read_mo_catalog_file, validate_mo_catalog,
     };
+    use std::io::Write as _;
 
     #[test]
     fn locale_ids_are_canonicalized_and_expanded() {
@@ -235,5 +285,147 @@ mod tests {
                 .expect("English primary collation should compare")
                 < 0
         );
+    }
+
+    #[test]
+    fn mo_backend_is_exposed_through_runtime_api() {
+        let data = test_mo_bytes(
+            &[
+                (
+                    b"",
+                    b"Content-Type: text/plain; charset=utf-8\nPlural-Forms: nplurals=2; plural=n != 1;\n",
+                ),
+                (b"hello", b"bonjour"),
+                (b"menu\x04open", b"ouvrir"),
+                (b"file\x00files", b"fichier\x00fichiers"),
+            ],
+            false,
+        );
+
+        assert_eq!(validate_mo_catalog(&data).as_deref(), Ok("ok"));
+        assert_eq!(
+            mo_lookup(&data, "hello").expect("lookup").as_deref(),
+            Some("bonjour")
+        );
+        assert_eq!(
+            mo_lookup_context(&data, "menu", "open")
+                .expect("context lookup")
+                .as_deref(),
+            Some("ouvrir")
+        );
+        assert_eq!(
+            mo_lookup_plural(&data, "file", "files", 2)
+                .expect("plural lookup")
+                .as_deref(),
+            Some("fichiers")
+        );
+        assert_eq!(
+            mo_lookup_context_plural(&data, "missing", "file", "files", 2)
+                .expect("missing context plural"),
+            None
+        );
+    }
+
+    #[test]
+    fn mo_file_loader_reports_missing_paths() {
+        let missing = read_mo_catalog_file("/tmp/sifr_i18n_missing_catalog_for_test.mo")
+            .expect_err("missing catalog path should fail");
+        assert!(missing.contains("failed to read .mo catalog"));
+    }
+
+    #[test]
+    fn mo_file_loader_reads_and_validates_catalogs() {
+        let data = test_mo_bytes(&[(b"hello", b"bonjour")], false);
+        let path = std::env::temp_dir().join("sifr_i18n_runtime_catalog_test.mo");
+        let mut file = std::fs::File::create(&path).expect("create temp catalog");
+        file.write_all(&data).expect("write temp catalog");
+
+        let loaded = read_mo_catalog_file(path.to_str().expect("utf-8 temp path"))
+            .expect("catalog file should load");
+
+        assert_eq!(
+            mo_lookup(&loaded, "hello").expect("lookup").as_deref(),
+            Some("bonjour")
+        );
+        std::fs::remove_file(path).expect("remove temp catalog");
+    }
+
+    fn test_mo_bytes(entries: &[(&[u8], &[u8])], big_endian: bool) -> Vec<u8> {
+        let count = entries.len();
+        let original_table = 28usize;
+        let translated_table = original_table + count * 8;
+        let mut cursor = translated_table + count * 8;
+        let mut original_records = Vec::new();
+        let mut translated_records = Vec::new();
+        let mut payload = Vec::new();
+        for (original, translated) in entries {
+            original_records.push((*original, cursor));
+            payload.extend_from_slice(original);
+            payload.push(0);
+            cursor += original.len() + 1;
+            translated_records.push((*translated, cursor));
+            payload.extend_from_slice(translated);
+            payload.push(0);
+            cursor += translated.len() + 1;
+        }
+
+        let mut data = Vec::new();
+        if big_endian {
+            data.extend_from_slice(&[0x95, 0x04, 0x12, 0xDE]);
+        } else {
+            data.extend_from_slice(&[0xDE, 0x12, 0x04, 0x95]);
+        }
+        push_u32(&mut data, 0, big_endian);
+        push_u32(
+            &mut data,
+            u32::try_from(count).expect("test catalog entry count should fit u32"),
+            big_endian,
+        );
+        push_u32(
+            &mut data,
+            u32::try_from(original_table).expect("test original table offset should fit u32"),
+            big_endian,
+        );
+        push_u32(
+            &mut data,
+            u32::try_from(translated_table).expect("test translated table offset should fit u32"),
+            big_endian,
+        );
+        push_u32(&mut data, 0, big_endian);
+        push_u32(&mut data, 0, big_endian);
+        for (text, offset) in original_records {
+            push_u32(
+                &mut data,
+                u32::try_from(text.len()).expect("test original length should fit u32"),
+                big_endian,
+            );
+            push_u32(
+                &mut data,
+                u32::try_from(offset).expect("test original offset should fit u32"),
+                big_endian,
+            );
+        }
+        for (text, offset) in translated_records {
+            push_u32(
+                &mut data,
+                u32::try_from(text.len()).expect("test translation length should fit u32"),
+                big_endian,
+            );
+            push_u32(
+                &mut data,
+                u32::try_from(offset).expect("test translation offset should fit u32"),
+                big_endian,
+            );
+        }
+        data.extend_from_slice(&payload);
+        data
+    }
+
+    fn push_u32(data: &mut Vec<u8>, value: u32, big_endian: bool) {
+        if big_endian {
+            data.extend_from_slice(&value.to_be_bytes());
+        } else {
+            data.extend_from_slice(&value.to_le_bytes());
+        }
     }
 }

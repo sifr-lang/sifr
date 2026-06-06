@@ -7,6 +7,12 @@ from _sifr.i18n import (
     i18n_locale_canonicalize,
     i18n_locale_maximize,
     i18n_locale_minimize,
+    i18n_mo_load_file,
+    i18n_mo_lookup,
+    i18n_mo_lookup_context,
+    i18n_mo_lookup_context_plural,
+    i18n_mo_lookup_plural,
+    i18n_mo_validate,
     i18n_plural_category,
 )
 
@@ -32,6 +38,14 @@ class FormatError(Error):
 
 
 class PluralRulesError(Error):
+    message: str
+
+
+class CatalogError(Error):
+    message: str
+
+
+class TranslationError(Error):
     message: str
 
 
@@ -121,6 +135,151 @@ class Collator:
         return i18n_collate(self.locale.to_string(), self.strength, left, right)
 
 
+class Message:
+    message_id: str
+    context: str
+    has_context: bool
+    plural_id: str
+    has_plural: bool
+    count: int
+
+    def __init__(
+        self,
+        message_id: str,
+        context: str = "",
+        has_context: bool = False,
+        plural_id: str = "",
+        has_plural: bool = False,
+        count: int = 1,
+    ) -> None:
+        self.message_id = message_id + ""
+        self.context = context + ""
+        self.has_context = has_context
+        self.plural_id = plural_id + ""
+        self.has_plural = has_plural
+        self.count = count
+
+
+class Bundle:
+    _catalog: bytes
+
+    def __init__(self, catalog: bytes) -> None:
+        self._catalog = catalog
+
+    def lookup(self, message_id: str) -> Result[str | None, CatalogError]:
+        return i18n_mo_lookup(self._catalog, message_id)
+
+    def lookup_context(self, context: str, message_id: str) -> Result[str | None, CatalogError]:
+        return i18n_mo_lookup_context(self._catalog, context, message_id)
+
+    def lookup_plural(self, singular: str, plural: str, count: int) -> Result[str | None, CatalogError]:
+        return i18n_mo_lookup_plural(self._catalog, singular, plural, count)
+
+    def lookup_context_plural(
+        self, context: str, singular: str, plural: str, count: int
+    ) -> Result[str | None, CatalogError]:
+        return i18n_mo_lookup_context_plural(self._catalog, context, singular, plural, count)
+
+
+class Translator:
+    _primary: Bundle
+    _fallbacks: list[Bundle]
+
+    def __init__(self, bundle: Bundle) -> None:
+        self._primary = bundle
+        self._fallbacks = []
+
+    def with_fallback(self, bundle: Bundle) -> Translator:
+        next_translator: Translator = Translator(self._primary)
+        for existing in self._fallbacks:
+            next_translator._fallbacks.append(existing)
+        next_translator._fallbacks.append(bundle)
+        return next_translator
+
+    def translate(self, message_id: str) -> Result[str, TranslationError]:
+        try:
+            primary_found: str | None = self._primary.lookup(message_id)
+            if primary_found is not None:
+                return primary_found
+        except CatalogError as e:
+            raise TranslationError(e.message)
+        for bundle in self._fallbacks:
+            try:
+                found: str | None = bundle.lookup(message_id)
+                if found is not None:
+                    return found
+            except CatalogError as e:
+                raise TranslationError(e.message)
+        return message_id + ""
+
+    def translate_context(self, context: str, message_id: str) -> Result[str, TranslationError]:
+        try:
+            primary_found: str | None = self._primary.lookup_context(context, message_id)
+            if primary_found is not None:
+                return primary_found
+        except CatalogError as e:
+            raise TranslationError(e.message)
+        for bundle in self._fallbacks:
+            try:
+                found: str | None = bundle.lookup_context(context, message_id)
+                if found is not None:
+                    return found
+            except CatalogError as e:
+                raise TranslationError(e.message)
+        return message_id + ""
+
+    def translate_plural(self, singular: str, plural: str, count: int) -> Result[str, TranslationError]:
+        try:
+            primary_found: str | None = self._primary.lookup_plural(singular, plural, count)
+            if primary_found is not None:
+                return primary_found
+        except CatalogError as e:
+            raise TranslationError(e.message)
+        for bundle in self._fallbacks:
+            try:
+                found: str | None = bundle.lookup_plural(singular, plural, count)
+                if found is not None:
+                    return found
+            except CatalogError as e:
+                raise TranslationError(e.message)
+        if count == 1:
+            return singular + ""
+        return plural + ""
+
+    def translate_context_plural(
+        self, context: str, singular: str, plural: str, count: int
+    ) -> Result[str, TranslationError]:
+        try:
+            primary_found: str | None = self._primary.lookup_context_plural(context, singular, plural, count)
+            if primary_found is not None:
+                return primary_found
+        except CatalogError as e:
+            raise TranslationError(e.message)
+        for bundle in self._fallbacks:
+            try:
+                found: str | None = bundle.lookup_context_plural(context, singular, plural, count)
+                if found is not None:
+                    return found
+            except CatalogError as e:
+                raise TranslationError(e.message)
+        if count == 1:
+            return singular + ""
+        return plural + ""
+
+    def translate_message(self, message: Message) -> Result[str, TranslationError]:
+        if message.has_context and message.has_plural:
+            return self.translate_context_plural(
+                message.context,
+                message.message_id,
+                message.plural_id,
+                message.count,
+            )
+        if message.has_context:
+            return self.translate_context(message.context, message.message_id)
+        if message.has_plural:
+            return self.translate_plural(message.message_id, message.plural_id, message.count)
+        return self.translate(message.message_id)
+
 def parse_locale(value: str) -> Result[LocaleId, LocaleIdError]:
     try:
         canonical: str = i18n_locale_canonicalize(value)
@@ -162,3 +321,39 @@ def plural_rules(locale: LocaleId, rule_type: str = "cardinal") -> PluralRules:
 
 def collator(locale: LocaleId, strength: str = "default") -> Collator:
     return Collator(locale, strength)
+
+
+def message(message_id: str) -> Message:
+    return Message(message_id)
+
+
+def context_message(context: str, message_id: str) -> Message:
+    return Message(message_id, context, True)
+
+
+def plural_message(singular: str, plural: str, count: int) -> Message:
+    return Message(singular, "", False, plural, True, count)
+
+
+def context_plural_message(context: str, singular: str, plural: str, count: int) -> Message:
+    return Message(singular, context, True, plural, True, count)
+
+
+def bundle_from_mo_bytes(catalog: bytes) -> Result[Bundle, CatalogError]:
+    try:
+        _validated: str = i18n_mo_validate(catalog)
+        return Bundle(catalog)
+    except CatalogError as e:
+        raise CatalogError(e.message)
+
+
+def load_mo_file(path: str) -> Result[Bundle, CatalogError]:
+    try:
+        catalog: bytes = i18n_mo_load_file(path)
+        return Bundle(catalog)
+    except CatalogError as e:
+        raise CatalogError(e.message)
+
+
+def translator(bundle: Bundle) -> Translator:
+    return Translator(bundle)

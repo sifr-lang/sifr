@@ -188,6 +188,32 @@ pub(crate) fn lowers_i18n_intrinsics_with_dependency_metadata() {
 
     let host = lower_intrinsic("i18n_host_locale", &[]).expect("host locale should lower");
     assert_eq!(render_expr(&host.expr), "sifr_runtime::i18n::host_locale()");
+
+    let lookup = lower_intrinsic(
+        "i18n_mo_lookup_context_plural",
+        &[
+            "catalog".to_string(),
+            "context".to_string(),
+            "singular".to_string(),
+            "plural".to_string(),
+            "2".to_string(),
+        ],
+    )
+    .expect("catalog plural lookup should lower");
+    assert_eq!(
+        lookup.required_feature,
+        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+    );
+    assert!(lookup
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::IcuPlurals));
+    let lookup_rendered = render_expr(&lookup.expr);
+    assert!(lookup_rendered.contains("sifr_runtime::i18n::mo_lookup_context_plural"));
+    assert!(lookup_rendered.contains("CatalogError"));
+
+    let load_file =
+        lower_intrinsic("i18n_mo_load_file", &["path".to_string()]).expect("load should lower");
+    assert!(render_expr(&load_file.expr).contains("read_mo_catalog_file"));
 }
 
 #[test]

@@ -312,7 +312,7 @@ All fallible APIs must expose typed error results:
 - `FormatError`
 - `PluralRulesError`
 - `TranslationError`
-- `CatalogParseError`
+- `CatalogError`
 
 Names may align with known terminology where useful, but the operational contract is Sifr `Result`/`Option`, not exception-driven control flow.
 

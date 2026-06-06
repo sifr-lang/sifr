@@ -4,9 +4,10 @@ Milestone: `milestone_text_i18n_4`
 
 | Backlog item | Required fixture/evidence |
 | --- | --- |
-| `Bundle`, `Message`, `Translator` | Native lookup, fallback, missing-key, context, and plural fixtures. |
-| `.mo` loader | Little-endian/big-endian, declared charset, malformed magic/version/table fixtures mined from CPython. |
-| Safe plural parser | Supported operators, unsupported syntax rejection, no general expression engine. |
-| M1 substrate reuse | `.mo` declared encoding decoding routes through `sifr.encoding`; no local decoder. |
-| Unsupported gettext globals | Negative fixtures or inventory entries for `gettext.install`, global `_`, bind/textdomain mutation. |
-| Future backends | Fluent and ICU message-format backends deferred without API commitment. |
+| `Bundle`, `Message`, `Translator` | `crates/sifr/tests/e2e/pass/text_i18n_translation_bundles.sifr` covers direct lookup, `Message` lookup, explicit `translator(primary).with_fallback(fallback)` chains, missing-key fallback, context lookup, and plural lookup. |
+| `.mo` loader | `crates/sifr_runtime/src/i18n/translation.rs` unit tests cover little-endian catalogs, big-endian tables, declared `latin-1` charset, malformed magic, malformed string-table bounds through corrupt fixture construction, and unsupported plural syntax. |
+| Safe plural parser | Runtime parser accepts the constrained gettext/C-style subset (`n`, decimal integers, `!`, arithmetic, comparisons, `&&`, `||`, ternary) and rejects unsupported tokens such as `@`; it never calls a Sifr, Python, shell, host, or general expression engine. |
+| M1 substrate reuse | `.mo` declared charset decoding calls `sifr_runtime::encoding::decode_text(..., "strict")`; the Latin-1 catalog fixture decodes `caf\xe9` to `café` through that path. |
+| Missing catalog paths | `load_mo_file` maps `std::fs::read` failures into `CatalogError`; runtime and Sifr fixtures cover missing paths. |
+| Unsupported gettext globals | Inventory entries keep `gettext.install`, global `_`, `textdomain`, and `bindtextdomain` outside the production API; no `sifr.gettext` module or global mutation surface is added. |
+| Future backends | Fluent and ICU message-format backends remain deferred; `Bundle`/`Translator` expose backend-neutral lookup/fallback shape without committing to those formats. |

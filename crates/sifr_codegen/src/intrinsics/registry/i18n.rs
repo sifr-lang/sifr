@@ -147,3 +147,90 @@ pub(crate) fn lower_i18n_collate(args: &[RustExpr]) -> Option<RustExpr> {
         "FormatError",
     ))
 }
+
+pub(crate) fn lower_i18n_mo_validate(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(map_string_error(
+        runtime_call("validate_mo_catalog", vec![ref_arg(arg_expr(args, 0))]),
+        "CatalogError",
+    ))
+}
+
+pub(crate) fn lower_i18n_mo_load_file(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(map_string_error(
+        runtime_call("read_mo_catalog_file", vec![ref_arg(arg_expr(args, 0))]),
+        "CatalogError",
+    ))
+}
+
+pub(crate) fn lower_i18n_mo_lookup(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(map_string_error(
+        runtime_call(
+            "mo_lookup",
+            vec![ref_arg(arg_expr(args, 0)), ref_arg(arg_expr(args, 1))],
+        ),
+        "CatalogError",
+    ))
+}
+
+pub(crate) fn lower_i18n_mo_lookup_context(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 3 {
+        return None;
+    }
+    Some(map_string_error(
+        runtime_call(
+            "mo_lookup_context",
+            vec![
+                ref_arg(arg_expr(args, 0)),
+                ref_arg(arg_expr(args, 1)),
+                ref_arg(arg_expr(args, 2)),
+            ],
+        ),
+        "CatalogError",
+    ))
+}
+
+pub(crate) fn lower_i18n_mo_lookup_plural(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 4 {
+        return None;
+    }
+    Some(map_string_error(
+        runtime_call(
+            "mo_lookup_plural",
+            vec![
+                ref_arg(arg_expr(args, 0)),
+                ref_arg(arg_expr(args, 1)),
+                ref_arg(arg_expr(args, 2)),
+                arg_expr(args, 3),
+            ],
+        ),
+        "CatalogError",
+    ))
+}
+
+pub(crate) fn lower_i18n_mo_lookup_context_plural(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 5 {
+        return None;
+    }
+    Some(map_string_error(
+        runtime_call(
+            "mo_lookup_context_plural",
+            vec![
+                ref_arg(arg_expr(args, 0)),
+                ref_arg(arg_expr(args, 1)),
+                ref_arg(arg_expr(args, 2)),
+                ref_arg(arg_expr(args, 3)),
+                arg_expr(args, 4),
+            ],
+        ),
+        "CatalogError",
+    ))
+}
