@@ -1,6 +1,6 @@
 # Text/I18n Dependency Decisions
 
-Status: M3 in progress. Encoding versions were checked during M0/M1; Unicode core versions and generated Unicode 17.0.0 tables were locked during M2 on 2026-06-06; segmentation is aligned to Unicode 17.0.0 during M2.5. Locale IDs, formatting, plural rules, and collation use ICU4X 2.2 compiled data during M3.
+Status: M3 complete. Encoding versions were checked during M0/M1; Unicode core versions and generated Unicode 17.0.0 tables were locked during M2 on 2026-06-06; segmentation is aligned to Unicode 17.0.0 during M2.5. Locale IDs, formatting, plural rules, and collation use ICU4X 2.2 compiled data from M3 onward.
 
 | Family | Crate(s) | Sifr abstraction | Unicode/version alignment | Panic/unsafe audit | Typed error mapping | License/MSRV/binary/platform impact | Deterministic tests | Supply-chain signal |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

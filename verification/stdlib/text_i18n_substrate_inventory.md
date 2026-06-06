@@ -1,6 +1,6 @@
 # Text/I18n Substrate Inventory
 
-Status: M3 in progress.
+Status: M3 complete.
 
 Platform contract: [platform_contract.md](../platform/platform_contract.md)
 
