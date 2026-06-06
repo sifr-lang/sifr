@@ -77,9 +77,14 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "unicode_decimal"
         | "unicode_digit"
         | "unicode_numeric_value"
-        | "unicode_case_fold" => &[
+        | "unicode_case_fold"
+        | "unicode_graphemes"
+        | "unicode_grapheme_indices"
+        | "unicode_words"
+        | "unicode_word_boundaries" => &[
             StdlibFeature::UnicodeNames,
             StdlibFeature::UnicodeNormalization,
+            StdlibFeature::UnicodeSegmentation,
         ],
         _ => &[],
     }
@@ -381,6 +386,22 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         ),
         "unicode_case_fold" => (
             unicode::lower_unicode_case_fold(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "unicode_graphemes" => (
+            unicode::lower_unicode_graphemes(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "unicode_grapheme_indices" => (
+            unicode::lower_unicode_grapheme_indices(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "unicode_words" => (
+            unicode::lower_unicode_words(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "unicode_word_boundaries" => (
+            unicode::lower_unicode_word_boundaries(args),
             Some(StdlibFeature::SifrRuntime),
         ),
         "encode_utf8" => (bytes::lower_encode_utf8(args), None),

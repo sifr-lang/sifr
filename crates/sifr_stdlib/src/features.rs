@@ -25,6 +25,7 @@ pub enum StdlibFeature {
     Toml,
     UnicodeNames,
     UnicodeNormalization,
+    UnicodeSegmentation,
     Uuid,
     Zip,
 }
@@ -54,6 +55,7 @@ impl StdlibFeature {
             Self::Toml => "toml",
             Self::UnicodeNames => "unicode_names2",
             Self::UnicodeNormalization => "unicode-normalization",
+            Self::UnicodeSegmentation => "unicode-segmentation",
             Self::Uuid => "uuid",
             Self::Zip => "zip",
         }
@@ -162,6 +164,10 @@ const UNICODE_NORMALIZATION_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargo
     package: "unicode-normalization",
     spec: "unicode-normalization = \"0.1.25\"",
 }];
+const UNICODE_SEGMENTATION_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "unicode-segmentation",
+    spec: "unicode-segmentation = \"1.13.3\"",
+}];
 const UUID_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "uuid",
     spec: "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }",
@@ -257,6 +263,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: UNICODE_NORMALIZATION_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::UnicodeSegmentation,
+        cargo_dependencies: UNICODE_SEGMENTATION_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Uuid,
         cargo_dependencies: UUID_DEPS,
     },
@@ -292,6 +302,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "unicode-normalization" | "unicode_normalization" => {
             Some(StdlibFeature::UnicodeNormalization)
         }
+        "unicode-segmentation" | "unicode_segmentation" => Some(StdlibFeature::UnicodeSegmentation),
         "uuid" => Some(StdlibFeature::Uuid),
         "zip" => Some(StdlibFeature::Zip),
         _ => None,
@@ -321,6 +332,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::SifrRuntime,
             StdlibFeature::UnicodeNames,
             StdlibFeature::UnicodeNormalization,
+            StdlibFeature::UnicodeSegmentation,
         ],
         "sifr.base64" => &[StdlibFeature::Base64],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
@@ -368,6 +380,7 @@ fn needs_sifr_runtime_unicode(
         .any(|module| matches!(module.as_str(), "sifr.unicode" | "_sifr.unicode"))
         || required_features.contains(&StdlibFeature::UnicodeNames)
         || required_features.contains(&StdlibFeature::UnicodeNormalization)
+        || required_features.contains(&StdlibFeature::UnicodeSegmentation)
 }
 
 fn push_feature_dependencies(
@@ -511,6 +524,7 @@ mod tests {
                 && dep.contains("features = [\"unicode\"]")));
         assert!(deps.contains(&"unicode_names2 = \"3.1.0\"".to_string()));
         assert!(deps.contains(&"unicode-normalization = \"0.1.25\"".to_string()));
+        assert!(deps.contains(&"unicode-segmentation = \"1.13.3\"".to_string()));
     }
 
     #[test]
@@ -521,6 +535,7 @@ mod tests {
                 StdlibFeature::SifrRuntime,
                 StdlibFeature::UnicodeNames,
                 StdlibFeature::UnicodeNormalization,
+                StdlibFeature::UnicodeSegmentation,
             ]),
         );
 

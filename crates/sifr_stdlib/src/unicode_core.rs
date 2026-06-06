@@ -87,6 +87,34 @@ pub(super) fn intrinsic_unicode() -> IntrinsicModule {
         "unicode_case_fold".to_string(),
         FunctionType::all_borrow(vec![("text".to_string(), Type::Str)], Type::Str),
     );
+    functions.insert(
+        "unicode_graphemes".to_string(),
+        FunctionType::all_borrow(
+            vec![("text".to_string(), Type::Str)],
+            Type::List(Box::new(Type::Str)),
+        ),
+    );
+    functions.insert(
+        "unicode_grapheme_indices".to_string(),
+        FunctionType::all_borrow(
+            vec![("text".to_string(), Type::Str)],
+            Type::List(Box::new(Type::Tuple(vec![Type::Int, Type::Str]))),
+        ),
+    );
+    functions.insert(
+        "unicode_words".to_string(),
+        FunctionType::all_borrow(
+            vec![("text".to_string(), Type::Str)],
+            Type::List(Box::new(Type::Str)),
+        ),
+    );
+    functions.insert(
+        "unicode_word_boundaries".to_string(),
+        FunctionType::all_borrow(
+            vec![("text".to_string(), Type::Str)],
+            Type::List(Box::new(Type::Tuple(vec![Type::Int, Type::Int, Type::Str]))),
+        ),
+    );
 
     IntrinsicModule {
         functions,

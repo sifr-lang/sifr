@@ -114,6 +114,9 @@ pub(crate) fn lowers_unicode_intrinsics_with_dependency_metadata() {
     assert!(normalized
         .additional_required_features
         .contains(&sifr_stdlib::StdlibFeature::UnicodeNormalization));
+    assert!(normalized
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::UnicodeSegmentation));
     let rendered = render_expr(&normalized.expr);
     assert!(rendered.contains("sifr_runtime::unicode::normalize"));
     assert!(rendered.contains("UnicodeDataError"));
@@ -123,6 +126,17 @@ pub(crate) fn lowers_unicode_intrinsics_with_dependency_metadata() {
         render_expr(&folded.expr),
         "sifr_runtime::unicode::case_fold(&text)"
     );
+
+    let graphemes =
+        lower_intrinsic("unicode_graphemes", &["text".to_string()]).expect("graphemes lower");
+    assert_eq!(
+        graphemes.required_feature,
+        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+    );
+    assert!(graphemes
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::UnicodeSegmentation));
+    assert!(render_expr(&graphemes.expr).contains("sifr_runtime::unicode::graphemes"));
 }
 
 #[test]

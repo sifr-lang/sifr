@@ -93,6 +93,7 @@ unic-ucd-category = { version = "0.9" }
 unicode-ident = { version = "1.0.24" }
 unicode_names2 = { version = "3.1.0" }
 unicode-normalization = { version = "0.1.25" }
+unicode-segmentation = { version = "1.13.3" }
 url = { version = "2.5.7" }
 walkdir = { version = "2.5.0" }
 

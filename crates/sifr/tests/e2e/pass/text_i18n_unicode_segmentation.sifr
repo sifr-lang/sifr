@@ -1,0 +1,89 @@
+from sifr.test import assert_bool_vector_eq, assert_vector_eq
+from sifr.unicode import grapheme_indices, graphemes, word_boundaries, words
+
+
+def collect_segmentation_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    accent_graphemes: list[str] = graphemes("a\u0301b")
+    assert_vector_eq(accent_graphemes, ["a\u0301", "b"])
+
+    emoji_graphemes: list[str] = graphemes("\U0001f469\u200d\U0001f680!")
+    assert_vector_eq(emoji_graphemes, ["\U0001f469\u200d\U0001f680", "!"])
+
+    flag_graphemes: list[str] = graphemes("\U0001f1fa\U0001f1f8\U0001f1e8\U0001f1e6")
+    assert_vector_eq(flag_graphemes, ["\U0001f1fa\U0001f1f8", "\U0001f1e8\U0001f1e6"])
+
+    indexed: list[tuple[int, str]] = grapheme_indices("a\u0301b")
+    first: tuple[int, str] | None = indexed[0]
+    second: tuple[int, str] | None = indexed[1]
+    actual.append(first is not None)
+    actual.append(second is not None)
+    if first is not None:
+        actual.append(first[0] == 0)
+        actual.append(first[1] == "a\u0301")
+    else:
+        actual.append(False)
+        actual.append(False)
+    if second is not None:
+        actual.append(second[0] == 3)
+        actual.append(second[1] == "b")
+    else:
+        actual.append(False)
+        actual.append(False)
+
+    mixed_words: list[str] = words("Hi, κόσμε! 123")
+    assert_vector_eq(mixed_words, ["Hi", "κόσμε", "123"])
+
+    boundary_segments: list[tuple[int, int, str]] = word_boundaries("Hi, κόσμε!")
+    boundary_text: list[str] = []
+    i: int = 0
+    while i < len(boundary_segments):
+        segment: tuple[int, int, str] | None = boundary_segments[i]
+        if segment is not None:
+            boundary_text.append(segment[2])
+        i = i + 1
+    assert_vector_eq(boundary_text, ["Hi", ",", " ", "κόσμε", "!"])
+
+    first_boundary: tuple[int, int, str] | None = boundary_segments[0]
+    greek_boundary: tuple[int, int, str] | None = boundary_segments[3]
+    actual.append(first_boundary is not None)
+    actual.append(greek_boundary is not None)
+    if first_boundary is not None:
+        actual.append(first_boundary[0] == 0)
+        actual.append(first_boundary[1] == 2)
+        actual.append(first_boundary[2] == "Hi")
+    else:
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+    if greek_boundary is not None:
+        actual.append(greek_boundary[0] == 4)
+        actual.append(greek_boundary[1] == 14)
+        actual.append(greek_boundary[2] == "κόσμε")
+    else:
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    return actual
+
+
+def main():
+    expected: list[bool] = [
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    ]
+    assert_bool_vector_eq(collect_segmentation_actual(), expected)

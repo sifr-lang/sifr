@@ -22,7 +22,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 
 - [x] `milestone_text_i18n_0`: Product Boundary And Rust Lowering Contract
 - [x] `milestone_text_i18n_1`: Encoding And Explicit Text I/O
-- [ ] `milestone_text_i18n_2`: Unicode Core
+- [x] `milestone_text_i18n_2`: Unicode Core
 - [ ] `milestone_text_i18n_2_5`: Unicode Segmentation
 - [ ] `milestone_text_i18n_3`: Locale Identifiers And Locale-Sensitive Formatting
 - [ ] `milestone_text_i18n_4`: Translation Bundles
@@ -189,7 +189,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M0: https://github.com/sifr-lang/sifr/pull/2297
 - M1: https://github.com/sifr-lang/sifr/pull/2298
 - M2: https://github.com/sifr-lang/sifr/pull/2299
-- M2.5: pending.
+- M2.5: https://github.com/sifr-lang/sifr/pull/2300
 - M3: pending.
 - M4: pending.
 - M5: pending.
@@ -201,6 +201,8 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M1 pass 3: `reviews/ad-hoc-production-text-i18n-m1-implementation-review-pass-3.md`; result `PASS`, no blockers and no re-review required.
 - M2 pass 1: `reviews/ad-hoc-production-text-i18n-m2-implementation-review-pass-1.md`; result `PASS`, no blockers and no re-review required.
 - M2 pass 2: `reviews/ad-hoc-production-text-i18n-m2-implementation-review-pass-2.md`; result `PASS` after runtime Unicode feature-gating remediation, no blockers and no re-review required.
+- M2.5 pass 1: `reviews/ad-hoc-production-text-i18n-m25-implementation-review-pass-1.md`; result `PASS` with medium clippy observation on new offset casts.
+- M2.5 pass 2: `reviews/ad-hoc-production-text-i18n-m25-implementation-review-pass-2.md`; result `PASS` after checked/saturating offset conversion remediation, no blockers and no re-review required.
 
 ## Validation Evidence
 
@@ -265,6 +267,7 @@ M1 focused validation on branch `text-i18n-m1-encoding-io`:
 - `cargo fmt --check` passed.
 - `python3 scripts/check_file_size_guardrails.py` passed.
 - `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `cargo clippy -p sifr_runtime --features unicode -- -D warnings` reports only pre-existing generated-table `clippy::unreadable_literal` warnings in `crates/sifr_runtime/src/unicode_data/generated.rs`; the new segmentation offset `cast_possible_wrap` warnings from review pass 1 were remediated.
 - `scripts/run_all_tests.sh --profile create-pr` passed after runtime Unicode feature-gating remediation; report `target/validation_lane_reports/create-pr.latest.json`, wall time 256.41s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
 - `cargo test -p sifr_stdlib` passed.
 - `cargo test -p sifr -- stdlib` passed.
@@ -306,10 +309,22 @@ M2 focused validation on branch `text-i18n-m2-unicode-core`:
 - `cargo fmt --check` passed.
 - `python3 scripts/check_file_size_guardrails.py` passed.
 - `python3 scripts/check_hir_maintainability_guardrails.py` passed.
-- `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 242.95s, 67/67 e2e pass fixtures, non-blocking warm wall-time advisory.
+- `scripts/run_all_tests.sh --profile create-pr` passed after runtime Unicode feature-gating remediation; report `target/validation_lane_reports/create-pr.latest.json`, wall time 256.41s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
 - `scripts/run_all_tests.sh` initially failed in `performance_budget_checks` for `build-project-001-additional-modules` peak RSS (`390545408` bytes versus `342556672` threshold); root cause was unconditional compilation of generated Unicode data through `sifr_runtime`.
 - Post-remediation targeted performance check passed after feature-gating `sifr_runtime` Unicode support: `python3 verification/performance/run_benchmarks.py --case build-project-001-additional-modules --json-out target/performance/m2-unicode-runtime-feature-gate.budget.json && python3 verification/performance/check_budgets.py --results target/performance/m2-unicode-runtime-feature-gate.budget.json --allow-subset`; peak RSS `313999360` bytes.
 - `scripts/run_all_tests.sh` passed after remediation; report `target/validation_lane_reports/merge.latest.json`, wall time 605.19s, 73/73 e2e pass fixtures, hardening variants 34/34 with 0 failures, non-blocking group-skew advisory.
+
+M2.5 focused validation on branch `text-i18n-m25-segmentation`:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/text_i18n_unicode_segmentation.sifr` passed.
+- `cargo test -p sifr_runtime --features unicode unicode -- --nocapture` passed.
+- `cargo test -p sifr_stdlib features -- --nocapture` passed.
+- `cargo test -p sifr_codegen unicode -- --nocapture` passed.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 208.95s, 67/67 e2e pass fixtures, non-blocking warm wall-time advisory.
+- `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 628.34s, 73/73 e2e pass fixtures, hardening variants 34/34 with 0 failures, non-blocking warm-cache/group-skew advisories.
 
 ## CPython Scan Evidence
 
@@ -339,6 +354,14 @@ M2 scan evidence:
 - Production APIs classified as `production-public` / `stable-public-api`: `sifr.unicode.data_version`, `normalize`, `is_normalized`, `name`, `lookup`, `category`, `bidirectional`, `combining`, `east_asian_width`, `mirrored`, `decomposition`, `decimal`, `digit`, `numeric_value`, and `case_fold`.
 - Python-shaped surfaces classified as `deferred-to-adapter-phase`: `sifr.unicodedata` and bare `unicodedata`; the existing `crates/sifr/tests/e2e/fail/bare_cpython_unicodedata_import.sifr` fixture continues to enforce the namespace boundary.
 - Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_unicode_core.sifr`.
+
+M2.5 scan evidence:
+
+- CPython source/docs/tests scanned: `Doc/library/unicodedata.rst`, `Lib/test/test_unicodedata.py`, and `Modules/unicodedata.c` from `SIFR_CPYTHON_CHECKOUT=/Users/yaseralnajjar/work/sifr/cpython`; CPython stdlib exposes no dedicated UAX #29 grapheme/word segmentation API, so no Python-shaped segmentation alias is added.
+- Standards and Rust crate sources reviewed: Unicode Standard Annex #29 through `unicode-segmentation 1.13.3` crate docs/source; crate metadata `rust-version = "1.85.0"` and README changelog record Unicode 17.0.0 support in the 1.13.x line; runtime test asserts `unicode_segmentation::UNICODE_VERSION == (17, 0, 0)`.
+- Production APIs classified as `production-public` / `stable-public-api`: `sifr.unicode.graphemes`, `grapheme_indices`, `words`, and `word_boundaries`.
+- Python-shaped surfaces classified as `deferred-to-adapter-phase`: no bare CPython segmentation module or alias is introduced; streaming cursor segmentation and sentence boundaries are deferred.
+- Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_unicode_segmentation.sifr`.
 
 ## Waiver Index
 
