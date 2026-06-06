@@ -170,10 +170,13 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - Post-review structured runtime work verification:
   - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-4.md`
   - Result: `PASS`; `TaskGroup[E]`, `TaskHandle`, scope/group split, timeout evidence, Sifr-owned cancellation scope option, `CancelOutcome`, sync/async lock split, IPC frame families, shell effect behavior, and M0-justified `Barrier`/`Once` decisions were implementation-ready.
+- Final contract-level structured runtime review:
+  - Source: reviewer notes provided by the user on 2026-06-06.
+  - Result: accepted; post-M0 review fallback, observed `TaskGroup` failure semantics, `race`/`select` result containers, minimum `CancelOutcome` states, scoped process handle shape, IPC schema compatibility, `IpcSerializable` strictness, `sifr.subprocess` freeze status, async lock guard await rules, and offload error mapping were recorded in the phase contract.
 
 ## Pending Reviews
 
-- Post-M0 external review: run a dedicated external review after M0 inventory and before M1 implementation. M1 cannot start until this review has a `PASS` result recorded in `Planning Reviews`. If review output is unavailable for five working days after the review artifact is posted, the phase owner may proceed only by recording the attempted review, open questions, and a conservative self-review in this ledger.
+- Post-M0 external review: run a dedicated external review after M0 inventory and before M1 implementation. M1 cannot start until this review has a `PASS` result recorded in `Planning Reviews`, or until the five-working-day fallback review procedure is recorded with attempted review, open questions, conservative self-review, and no unresolved blocking questions.
 
 ## Planning Review Remediation Retained In This Phase
 

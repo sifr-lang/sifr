@@ -47,7 +47,7 @@ Every proposed API, test family, and CPython-derived surface must be assigned on
 | Tier | Meaning | Examples |
 | --- | --- | --- |
 | `production-substrate` | Required runtime foundation for real programs and later phases | scheduler, cancellation, channels, sync primitives, process runtime, signals |
-| `production-public` | Recommended Sifr API for user code | `sifr.task`, `sifr.sync`, `sifr.process`, `sifr.runtime`, `sifr.parallel`, `sifr.resource` |
+| `production-public` | Recommended Sifr API for user code | `sifr.task`, `sifr.sync`, `sifr.process`, `sifr.runtime`, `sifr.parallel`, `sifr.signal`, `sifr.resource` |
 | `internal-only` | Implementation detail only | Tokio runtime, Tokio process, Tokio sync, crossbeam/Rayon-like internals |
 | `compat-adapter` | Optional wrapper over production APIs after the substrate is complete and migration value is proven | selected `sifr.asyncio`, selected `sifr.subprocess`, selected `sifr.concurrent.futures` |
 | `deferred-to-phase-X` | Potential future production API requiring a separate named design gate | process workers, selected queue adapters, task context extensions |
@@ -97,7 +97,7 @@ Path note: CPython paths above are relative to `/Users/yaseralnajjar/work/sifr/c
 - `sifr.sync` channels are the canonical queue-like primitive, but the production channel/backpressure/sync surface is not yet closed for all worker/process use cases.
 - Current generated channel support proves the direction but is not production backpressure: it uses generated Rust state and yield loops for full/empty states. M2 replaces or hardens it with explicit bounded capacity, close, cancellation, and fairness behavior.
 - Current `sifr.threading.Thread` and `sifr.concurrent` surfaces are placeholders, not production execution primitives. This phase must not build user-visible concurrency around them.
-- `sifr.contextlib`, `sifr.warnings`, `sifr.signal`, `sifr.queue`, `sifr.concurrent.futures`, and `sifr.multiprocessing` are not production substrate surfaces. Their CPython shapes must be classified rather than assumed.
+- Current CPython-shaped `sifr.contextlib`, `sifr.warnings`, `sifr.queue`, `sifr.concurrent.futures`, and `sifr.multiprocessing` surfaces are not production substrate surfaces. CPython-shaped `sifr.signal` entries must be classified rather than assumed; structured signal streams are the accepted production direction.
 
 The Phase 32 async model remains binding. Source-of-truth references:
 
@@ -106,7 +106,7 @@ The Phase 32 async model remains binding. Source-of-truth references:
 - [internal_docs/phases/32_async_ecosystem.md](../internal_docs/phases/32_async_ecosystem.md)
 
 - Native async process, queue/channel, and synchronization APIs must be real suspension points.
-- Sync APIs that can block must be classified as `@blocking_io`.
+- Sync APIs that can block on I/O, process, channel, lock, or external runtime state must be classified as `@blocking_io` or a narrower workload/effect class.
 - CPU-heavy work must use the existing `@cpu_heavy`/offload model.
 - Direct calls to blocking sync APIs from `async def` remain compiler errors unless routed through native async APIs or explicit offload.
 - The compiler must not expose Tokio, event-loop objects, raw callback transports/protocols, or runtime internals as the normal user model.
@@ -169,6 +169,8 @@ The exact `spawn_blocking`, `spawn_cpu`, and `spawn_process` method signatures a
 
 `task.Scope` or `runtime.Scope` is the general owner for mixed runtime work. M0 chooses the public name and method placement. `TaskGroup[E]` is the fail-fast structured-concurrency policy for child work that shares one error type; individual handles may have different success types. Homogeneous result collections such as `join_all`, `race`, `select`, and `JoinSet[T, E]` require one result/error shape unless the user constructs an explicit sum/enum result type.
 
+Scoped offload inserted into `TaskGroup[E]` must map user errors plus runtime/offload failures into the group's error type or an accepted wrapper such as `WorkerError[E]`; M0 records the exact error shape. Scoped process spawning must preserve owned pipe access while binding child lifetime to the parent scope; M0 decides whether it returns `Child`, `TaskHandle[Status, SubprocessError]`, or a distinct `ProcessHandle`.
+
 `TaskHandle[T, E]` is the public affine observation handle name. `Task` may remain an internal type name or compatibility alias only if M0 records a concrete reason to expose both names.
 
 `sifr.task` is the canonical public namespace for scoped runtime work. Existing `sifr.asyncio` remains a frozen `compat-adapter` and must not be extended as the primary async API. `sifr.threading`, `sifr.concurrent.futures`, `sifr.subprocess`, and `sifr.multiprocessing` remain evidence/adapters, not the runtime spine.
@@ -194,6 +196,8 @@ Communication has three tiers:
 | Sifr-to-Sifr process workers | future `sifr.ipc.Connection[Req, Res, Err]` typed frames over process pipes or another approved transport |
 
 Typed IPC is required for future process workers, but it does not replace channels or process pipes. It sits above the process substrate and must define framing, versioning, cancellation messages, payload eligibility, malformed-message behavior, and backpressure.
+
+`IpcSerializable` is stricter than `Sendable`: file handles, pipes, lock guards, and channel endpoints may be sendable inside one process but are not IPC-serializable unless a later design explicitly supports them. IPC-serializable values start with primitives, strings, bytes, serializable lists/maps, and generated records/enums. Every IPC schema must have stable schema identity/hash and a compatibility policy: exact schema hash proceeds, compatible version range proceeds by negotiated version, and unknown or incompatible schema returns `Reject`/`UnsupportedSchema`.
 
 ## No-Toy-Concurrency Gate
 
@@ -264,7 +268,7 @@ From-scratch async runtimes, future combinators, channel implementations, lock/o
 
 ## Sendability And Shareability Contract
 
-Before raw task spawning, blocking offload, CPU offload, thread pools, process workers, or cross-boundary closure captures ship, Sifr must define a user-visible sendability/shareability model:
+Before scoped task spawning, blocking offload, CPU offload, thread pools, process workers, or cross-boundary closure captures ship, Sifr must define a user-visible sendability/shareability model:
 
 - `Send[T]`-equivalent eligibility for moving values across task/thread/process boundaries
 - `Sync[T]`/`Share[T]`-equivalent eligibility for shared references
@@ -282,7 +286,7 @@ Cancellation and failure semantics apply to every structured work kind, not only
 
 - cancellation is idempotent and produces typed evidence
 - timeout preserves the wrapped operation's normal typed outcome and adds typed timeout evidence as a distinct variant
-- `TaskGroup` child failure cancels siblings and aggregates observed failures
+- `TaskGroup` exit reports unhandled child failures plus cancellation/cleanup evidence; a child result explicitly awaited and handled by user code is observed and does not by itself fail group exit
 - `race`/`select` cancel losers and return typed loser-cancellation evidence
 - blocking offload has limited cancellation; cancellation evidence must say whether the work had already started or completed
 - CPU-heavy work must define whether cancellation is cooperative, boundary-only, or wait-for-completion, with typed evidence
@@ -298,6 +302,7 @@ All fallible APIs must expose typed error results:
 
 - `TaskError`, `TaskGroupError`, `Cancelled`, `TimedOut`
 - `CancelOutcome` for work that may already have started, completed, failed during cancellation, or resisted cancellation
+- Minimum `CancelOutcome` states are `Cancelled`, `AlreadyCompleted`, `AlreadyFailed`, `AlreadyStarted`, `CouldNotCancel`, `CancelFailed`, and `TimedOutDuringCancel`
 - `ChannelClosed`, `ChannelFull`, `ChannelEmpty`, `BackpressureError`
 - `SubprocessError`, `CalledProcessError`, `TimeoutExpired`, `PipeError`
 - `WorkerError`, `WorkerRuntimeError`, `OffloadError`
@@ -354,11 +359,14 @@ Scope:
 - Record the public/native API boundary for `sifr.task`, `sifr.sync`, `sifr.process`, `sifr.runtime`, `sifr.parallel`, `sifr.signal`, `sifr.resource`, and `sifr.ipc`.
 - Record the current implementation audit: internal task/coroutine/timeout/select/blocking types, `TaskScope`/`TaskGroup` lowering, generated task runtime preamble, generated channel runtime replacement, workload/offload diagnostics, current subprocess intrinsics, and placeholder compatibility surfaces.
 - Record the structured runtime work model, including whether scoped offload/process methods live on `TaskGroup`, `TaskScope`, `sifr.runtime`, or a combination that still enforces active-scope ownership.
+- Record whether scoped process spawn returns `Child`, `TaskHandle[Status, SubprocessError]`, or a distinct `ProcessHandle`; the accepted API must preserve owned pipe access while binding child lifetime to the parent scope.
 - Record sendability/shareability rules for task/thread/process captures.
 - Record the HIR/type-checker/codegen ownership plan for sendability/shareability enforcement and the exact diagnostics/fixtures required in M1, M2, M3, M4, and M6.
 - Use error-homogeneous task groups and homogeneous result collections: `TaskGroup[E]` may own child handles with different success types but one error type; `join_all`, `race`, `select`, and `JoinSet[T, E]` require one result/error shape unless users construct an explicit sum/enum type.
 - Use structured tasks only: stable public tasks are structured by default, handle drop before failure observation is diagnosed, and detached tasks are rejected in this phase.
-- Record `TaskGroup` versus `JoinSet`: `TaskGroup` is scoped structured concurrency with automatic cancellation on child failure; `JoinSet` is a dynamically-growable offload/task-result collection for collecting completed homogeneous work items without pretending to be a structured parent scope.
+- Record `TaskGroup` versus `JoinSet`: `TaskGroup` is scoped structured concurrency with automatic cancellation on unhandled child failure; `JoinSet` is a dynamically-growable offload/task-result collection for collecting completed homogeneous work items without pretending to be a structured parent scope.
+- Record `TaskGroup` observed/unobserved failure semantics, including whether an observed failure still triggers fail-fast sibling cancellation or only unhandled failures do.
+- Record `race` and `select` result containers as part of the M0 public API boundary artifact, not an implementation detail.
 - Record blocking/cpu-heavy effect rules.
 - Record cancellation/deadline/timeout semantics.
 - Record typed worker/task/process/signal/diagnostic error models.
@@ -388,13 +396,13 @@ Definition of done:
 - Every accepted or rejected Rust ecosystem crate family has a checked-in dependency decision record before M0 closes. Each record includes accepted crate, feature flags, Sifr wrapper boundary, cancellation/drop semantics, sendability/shareability mapping, typed error mapping, and panic/unsafe audit for user-controlled paths.
 - Pool-sizing policy for `sifr.parallel` is recorded in the execution ledger before M0 closes; M3 must not start until this entry exists.
 - Reviewer identity is recorded in the execution ledger.
-- Post-M0 external review is complete, has a `PASS` result, and is recorded in the planning reviews section of the execution ledger before M1 starts. If review output is unavailable for five working days after the review artifact is posted, the phase owner may proceed only by recording the attempted review, open questions, and a conservative self-review in the ledger.
+- Post-M0 external review is complete, has a `PASS` result, and is recorded in the planning reviews section of the execution ledger before M1 starts, or the five-working-day fallback review procedure is recorded with attempted review, open questions, conservative self-review, and no unresolved blocking questions.
 - Import-resolution tests for canonical `sifr.*` names pass, and negative-diagnostic tests for bare CPython stdlib import forms pass.
 - Sendability/shareability diagnostics have named representative fixtures assigned to the enforcing milestone.
 
 ### milestone_concurrency_runtime_1: Structured Async Runtime
 
-Entry gate: the post-M0 external review recorded in the execution ledger must have a `PASS` result.
+Entry gate: the post-M0 external review recorded in the execution ledger must have a `PASS` result, or the M0 fallback review procedure must be recorded after five working days with conservative self-review and no unresolved blocking questions.
 
 Scope:
 
@@ -410,11 +418,13 @@ Scope:
   - `cancel_scope`
   - `join_all`
   - `race`/`select`
-- `TaskGroup[E]` provides scoped fail-fast structured concurrency with automatic cancellation on child failure. It is error-homogeneous and result-heterogeneous through individual `TaskHandle[T, E]` values.
+- `TaskGroup[E]` provides scoped fail-fast structured concurrency with automatic cancellation under the M0-recorded failure policy. It is error-homogeneous and result-heterogeneous through individual `TaskHandle[T, E]` values.
+- A child failure explicitly awaited and handled by user code is observed and does not by itself fail `TaskGroup` exit. M0 records whether observed failures still trigger fail-fast sibling cancellation or only unhandled failures do.
 - M1 consolidates the existing `TaskScope`/`TaskGroup` lowering contract instead of adding a parallel task model: top-level detached spawn remains rejected, direct coroutine-call requirements are recorded or deliberately relaxed with tests, handle observation remains affine, and borrowed/non-send captures remain diagnostics.
 - `join_all`, `race`, and `select` require result-type unification or an explicit user sum/enum type; heterogeneous collections without an explicit sum are diagnostics.
 - `race` accepts a homogeneous collection of awaitables and returns the first completed typed outcome plus its collection index; it cancels every still-pending loser and returns typed cancellation evidence for losers.
 - `select` is the named-branch form for a statically known set of awaitable branches. It returns the winning branch tag plus the branch's typed outcome, requires branch result/error unification or an explicit user sum/enum type, cancels every still-pending loser, and returns typed cancellation evidence for losers.
+- M0 records concrete result containers for `race` and `select`, including winner identity, typed outcome, and loser cancellation evidence.
 - `timeout` wraps one awaited operation and returns the operation's normal typed outcome plus typed timeout evidence. Inner errors are preserved; timeout is a distinct error/evidence variant. `deadline` uses an absolute monotonic deadline; `cancel_scope` groups multiple child operations under a Sifr-owned cancellation scope if M0 accepts that public surface.
 - Stable public tasks are structured by default. Handle drop before completion/failure observation is a diagnostic, and detached tasks remain `deferred-to-phase-X` unless a future API requires an explicit failure sink.
 - Implement the first sendability/shareability compiler enforcement pass for task spawning:
@@ -443,7 +453,7 @@ Definition of done:
 - Task failures and cancellation produce typed evidence.
 - `spawn_scoped` and `TaskGroup` expose the reserved `ctx` parameter without changing runtime propagation before M5.
 - Sendability/shareability diagnostics for task-boundary captures pass representative fixtures.
-- `TaskGroup` aggregates child failures as `TaskGroupError[E]` containing all observed child errors.
+- `TaskGroup` exit reports `TaskGroupError[E]` for unhandled child failures plus sibling cancellation and cleanup evidence; explicitly handled child failures are not re-reported as group-exit failures.
 - CPython async task test families are classified as `mined-as-substrate-fixture`, `adapted-for-sifr-api`, or `waived-with-rationale` against the Sifr-native task model.
 - No raw Tokio/event-loop types leak.
 
@@ -468,8 +478,9 @@ Scope:
   - `Channel[T]`, `BoundedChannel[T]`, `UnboundedChannel[T]`, and `AsyncChannel[T]` reject non-send `T` where values can cross task/thread boundaries.
   - sync `Mutex[T]`/`RwLock[T]` guards cannot cross `await`.
   - accepted async lock guards have documented await restrictions and diagnostics.
+  - default rule: lock guards, including async lock guards, do not cross unrelated `await` points unless the API explicitly marks the guard await-safe; M0 records whether each accepted async guard is await-safe, await-forbidden, or lint-only.
   - `Semaphore`, `Event`, `Notify`, accepted `Barrier`, and accepted `Once` must not smuggle non-send captured state through waiters or callbacks.
-- Mark sync operations that can block as `@blocking_io` when used from async contexts.
+- Mark sync operations that can block on I/O, process, channel, lock, or external runtime state as `@blocking_io` or a narrower workload/effect class when used from async contexts.
 - Keep `sifr.queue` and `sifr.asyncio.Queue` as `deferred-to-adapter-phase`; no queue adapter is implemented in this phase.
 - Defer `PriorityQueue`, `LifoQueue`, `SimpleQueue`, and `task_done`/`join` accounting to a future adapter issue.
 
@@ -572,9 +583,10 @@ Scope:
   - env/cwd
   - explicit `@shell_exec` effect classification for shell subprocess usage, in addition to `@blocking_io`
   - scoped process supervision entry point accepted by M0, such as `scope.spawn_process(Command(...))` or an equivalent API that binds child lifetime to a parent scope
+- M0 must decide whether scoped process spawn returns `Child`, `TaskHandle[Status, SubprocessError]`, or a distinct `ProcessHandle`; the accepted shape must preserve owned stdin/stdout/stderr pipe access.
 - Implement binary pipe mode and own the subprocess text-mode disposition.
 - M4 owns subprocess text-mode integration by consuming text/i18n `milestone_text_i18n_1`; binary-only closure is not allowed.
-- Keep `sifr.subprocess` and `sifr.asyncio.subprocess` as `deferred-to-adapter-phase`; no subprocess adapter is implemented in this phase.
+- Keep existing `sifr.subprocess` and `sifr.asyncio.subprocess` frozen or marked compatibility-only; production behavior must not depend on them and they must not be extended in this phase.
 - `subprocess.getoutput` and `subprocess.getstatusoutput` remain unsupported as legacy shell-invocation helpers.
 
 CPython tests to mine:
@@ -667,6 +679,8 @@ Scope:
 - Define typed IPC as a communication substrate layered above M4 process pipes or another explicitly accepted transport. It does not replace same-process channels or raw process pipes.
 - Define future `ipc.Connection[Req, Res, Err]` semantics at the protocol level, including request IDs, result/error frames, cancellation frames, stream close, backpressure, versioning, and malformed-frame errors. Do not ship a public process worker pool in this phase.
 - Minimum frame families are bootstrap (`Hello`, `Ready`, `Reject`), work (`Run`, `Started`, `Completed`, `Failed`), control (`Cancel`, `Shutdown`, `Terminating`), health (`Heartbeat`, `WorkerStatus`), and protocol errors (`MalformedFrame`, `UnsupportedVersion`, `UnsupportedSchema`, `UnsupportedPayload`).
+- Every typed IPC schema has stable schema identity/hash and an evolution policy: exact hash proceeds, compatible version ranges negotiate a version, and unknown/incompatible schema returns `Reject` or `UnsupportedSchema`.
+- `IpcSerializable` is stricter than `Sendable`; file handles, pipes, lock guards, and channel endpoints are not process payloads unless explicitly accepted by a later IPC design.
 - Keep `ProcessPoolExecutor`, `multiprocessing.Process`, `multiprocessing.Queue`, `multiprocessing.Pipe`, and `multiprocessing.Pool` `deferred-to-adapter-phase`; M6 ships typed IPC foundations only, not Python-shaped process pools.
 - Reject fork/forkserver unless host-limited ownership evidence is recorded.
 - Reject shared-memory APIs until explicit ownership/unlink/drop rules are proven.
@@ -736,7 +750,7 @@ Scope:
   - every waiver has a revisit rule and regression fixture
   - every host-limited surface records the supported host matrix
 - Run an external review loop on the final inventory and close any blocking finding before phase completion.
-- External review owner is the runtime/stdlib phase owner plus the designated compiler/runtime reviewer recorded in the execution ledger. If review output is unavailable for five working days after the review artifact is posted, the phase owner may proceed only by recording the attempted review, open questions, and a conservative self-review in the ledger.
+- External review owner is the runtime/stdlib phase owner plus the designated compiler/runtime reviewer recorded in the execution ledger. Phase completion requires a `PASS` result or the five-working-day fallback review procedure recorded with attempted review, open questions, conservative self-review, and no unresolved blocking questions.
 
 Validation:
 
@@ -812,12 +826,12 @@ M0 records evidence for these decisions; it does not reopen them without a new i
 | --- | --- |
 | Structured runtime work | Sifr exposes scoped runtime work rather than separate Python-shaped async/threading/multiprocessing worlds. Async tasks, blocking offload, CPU offload, long-running child processes, and future typed workers are owned by scopes, return affine handles, and must be observed, cancelled-and-joined, or aggregated. Raw threads and raw process pools are not the public model. |
 | Sendability/shareability | A value is task/thread/process-sendable only when its full type graph is owned, has no non-send handles, has no borrowed capture that can outlive its lexical scope, and all contained types are marked sendable by Sifr. Shared references across tasks/threads require immutable data or explicit synchronization wrappers. Process-worker payloads additionally require typed IPC serialization. |
-| Stable task APIs | Stable production APIs are `TaskHandle`, `TaskGroup[E]`, `spawn_scoped`, `sleep`, `timeout`, `deadline`, `cancel_scope`, `join_all`, `race`, and `select`. `TaskHandle[T, E]` is the public affine observation handle. `TaskGroup[E]` is error-homogeneous and result-heterogeneous through individual handles. `race` is homogeneous collection competition returning index plus typed outcome; `select` is named-branch competition returning branch tag plus typed outcome. Raw runtimes, event loops, callback transports, detached tasks, and Tokio handles are not public. |
-| CPython-shaped adapters | No new CPython-shaped adapters are implemented in this phase. Existing `sifr.asyncio` remains frozen `compat-adapter`; `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, and `sifr.multiprocessing` remain `deferred-to-adapter-phase` until a later migration issue proves value over the native APIs. |
+| Stable task APIs | Stable production APIs are `TaskHandle`, `TaskGroup[E]`, `spawn_scoped`, `sleep`, `timeout`, `deadline`, `cancel_scope`, `join_all`, `race`, and `select`. `TaskHandle[T, E]` is the public affine observation handle. `TaskGroup[E]` is error-homogeneous and result-heterogeneous through individual handles. `race`/`select` result containers are M0 public API boundary artifacts. Raw runtimes, event loops, callback transports, detached tasks, and Tokio handles are not public. |
+| CPython-shaped adapters | No new CPython-shaped adapters are implemented in this phase. Existing `sifr.asyncio`, `sifr.subprocess`, and `sifr.asyncio.subprocess` may remain frozen compatibility-only surfaces; `sifr.queue`, `sifr.concurrent.futures`, and `sifr.multiprocessing` remain `deferred-to-adapter-phase` until a later migration issue proves value over the native APIs. |
 | Signal APIs | Safe deterministic APIs are structured signal/shutdown streams for supported host signals (`SIGINT`, `SIGTERM`, and Unix `SIGHUP` where available). `signal.signal`, arbitrary Python handlers, `pthread_sigmask`, and `signal.pause` are `unsupported-with-diagnostic` or `host-limited` evidence entries, not production APIs. |
 | Diagnostics and warnings | Runtime diagnostics use structured `tracing` spans/events plus `metrics` counters/histograms behind Sifr diagnostics types. No Python global `warnings` filter adapter ships in this phase. |
 | Task/request context | M5 implements explicit `sifr.task.Context` and `sifr.task.ContextKey[T]` with explicit propagation through task spawn and request handoff. There is no implicit dynamic task-local mutation or `contextvars` parity. |
-| Typed IPC serialization | M6 uses generated typed IPC schemas over `serde` plus `postcard` after sendability/shareability approval. Arbitrary pickle-like object transport is permanently rejected. |
+| Typed IPC serialization | M6 uses generated typed IPC schemas over `serde` plus `postcard` after sendability/shareability approval. `IpcSerializable` is stricter than `Sendable`, every schema has stable identity/hash plus compatibility policy, and arbitrary pickle-like object transport is permanently rejected. |
 | Subprocess text mode | Because text/i18n runs first, M4 implements subprocess `text=True`, `encoding=...`, and `errors=...` by consuming `sifr.encoding` and explicit text I/O from text/i18n M1. Binary-only subprocess closure is not allowed. |
 | Rust ecosystem | Use Tokio/Tokio Util, Futures Util, Crossbeam Channel, Tokio MPSC, std sync/Parking Lot/Once Cell/Scopeguard, Rayon, Tokio process/std process/Rustix, Tokio signal/Rustix, tracing/tracing-subscriber/metrics, thiserror, and Serde/Postcard as internal implementation tools. Do not use Flume, Signal Hook, Nix, or Bincode in this phase. Bespoke replacements for these crate families are not allowed; defer the affected surface instead. |
 | `JoinSet` drop | `JoinSet[T, E]` is a linear scoped resource. It must be consumed by `join_all()` or `cancel_all().await` before scope exit. Dropping a live/non-empty `JoinSet` is a compile-time diagnostic; `cancel_all()` returns `CancelOutcome` evidence for every pending item, including already-started/already-completed/could-not-cancel cases. |
@@ -827,5 +841,5 @@ M0 records evidence for these decisions; it does not reopen them without a new i
 | `Pool` instance API | Configured `Pool` objects expose `pool.map(items, fn)` and `pool.try_map(items, fn)` with the same result ordering and sendability rules as top-level `parallel.map`/`try_map`. `Pool` has no global shutdown call; active calls borrow the pool, and dropping an idle pool releases the private Rayon pool. |
 | Task context API shape | M1 reserves `ctx: Option[sifr.task.Context] = None` parameters on `spawn_scoped` and `TaskGroup` constructors. M1 type-checks and stores the parameter; M5 implements explicit propagation semantics without changing M1 API shape. |
 | Existing `sifr.asyncio` veneer | Existing `sifr.asyncio` veneer code is frozen as `compat-adapter`. M1 does not build on it, does not extend it, and does not remove already-supported veneer entry points. New task/process/queue APIs are implemented through `sifr.task`, `sifr.sync`, and `sifr.process`; bare `asyncio` imports still receive namespace-contract diagnostics. |
-| `race` and `select` loser evidence | `race` returns the winning value plus typed cancellation evidence for every loser awaitable. `select` returns the winning branch tag plus typed outcome and typed cancellation evidence for every loser awaitable. Concrete Sifr return-type signatures are recorded in the M0 public API boundary artifact before M1 starts. |
+| `race` and `select` loser evidence | `race` returns a container with winner index, typed outcome, and loser cancellation evidence. `select` returns a container with winner branch tag, typed outcome, and loser cancellation evidence. Concrete Sifr return-type signatures are recorded in the M0 public API boundary artifact before M1 starts. |
 | Shell subprocess effect | Shell subprocess usage is a distinct `@shell_exec` security effect. Sync shell APIs are also `@blocking_io` and are rejected in async contexts unless offloaded. Native async shell process APIs may run in async contexts only through explicit `shell=True` or `Command.shell(...)` and still carry `@shell_exec`. |

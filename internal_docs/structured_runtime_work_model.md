@@ -62,6 +62,8 @@ Threads and processes are execution substrates, not the public model. Users choo
 
 `task.Scope` or `runtime.Scope` is the general owner for mixed runtime work. M0 chooses the public name and method placement. `TaskGroup[E]` is the fail-fast structured-concurrency policy for child work that shares one error type. Individual child handles may have different success types. Homogeneous result collections such as `join_all`, `race`, `select`, and `JoinSet[T, E]` require one result/error shape unless the user constructs an explicit sum/enum result type.
 
+Scoped offload inserted into `TaskGroup[E]` maps user errors plus runtime/offload failures into the group's error type or an accepted wrapper such as `WorkerError[E]`. Scoped process spawn must preserve owned pipe access while binding child lifetime to the parent scope; M0 decides whether it returns `Child`, `TaskHandle[Status, SubprocessError]`, or a distinct `ProcessHandle`.
+
 `TaskHandle[T, E]` is the public affine observation handle name. `Task` may remain an internal type name or compatibility alias only if M0 records a concrete reason to expose both names.
 
 ## Existing Implementation Baseline
@@ -104,6 +106,8 @@ The implementation should formalize these concepts:
 - no unprotected shared mutable state
 - no borrowed capture that can outlive the lexical owner
 
+`IpcSerializable` is stricter than `Sendable`. A value can be safe to move inside one process but not safe to serialize across a process boundary. File handles, pipes, lock guards, and channel endpoints are not IPC-serializable unless a later design explicitly supports them. Initial IPC payloads are primitives, strings, bytes, serializable lists/maps, and generated records/enums.
+
 ## Communication Model
 
 Communication has separate tiers. Typed IPC is important, but it is not a substitute for channels or process pipes.
@@ -116,6 +120,8 @@ Communication has separate tiers. Typed IPC is important, but it is not a substi
 
 Typed IPC sits above an accepted process or transport substrate. It must define framing, versioning, request IDs, result/error frames, cancellation frames, stream close, malformed-frame errors, and backpressure. It is a prerequisite for future process workers and process pools, not a reason to ship process pools before the process substrate is ready.
 
+Every typed IPC schema has stable schema identity/hash and an explicit compatibility policy. Exact schema hash proceeds, compatible version ranges proceed by negotiated version, and unknown or incompatible schema returns `Reject` or `UnsupportedSchema`.
+
 ## Synchronization Model
 
 Synchronization APIs must say whether they are sync shared-state primitives or async coordination primitives.
@@ -126,13 +132,15 @@ Synchronization APIs must say whether they are sync shared-state primitives or a
 | async coordination primitives | `AsyncMutex[T]`, `AsyncRwLock[T]`, `Semaphore`, `Event`, `Notify`, `AsyncChannel[T]` | operations are real suspension points; guard await restrictions are documented and diagnosed |
 | optional first-pass primitives | `Barrier`, public `Once` | public only if M0 finds near-term production need; otherwise `internal-only` or `deferred-to-phase-X` |
 
+Default Sifr rule: lock guards, including async lock guards, do not cross unrelated `await` points unless the API explicitly marks the guard await-safe. M0 records whether each accepted async guard is await-safe, await-forbidden, or lint-only.
+
 ## Cancellation And Failure
 
 Cancellation applies consistently across work kinds:
 
 - cancellation is idempotent and produces typed evidence
 - timeouts preserve the wrapped operation's normal typed outcome and add typed timeout evidence as a distinct variant
-- `TaskGroup` child failure cancels siblings and aggregates observed failures
+- `TaskGroup` exit reports unhandled child failures plus cancellation/cleanup evidence; a child result explicitly awaited and handled by user code is observed and does not by itself fail group exit
 - `race` and `select` cancel losers and return loser-cancellation evidence
 - blocking work has limited cancellation evidence, including whether work had already started or completed
 - CPU-heavy work declares whether cancellation is cooperative, boundary-only, or wait-for-completion
@@ -141,6 +149,10 @@ Cancellation applies consistently across work kinds:
 - cleanup scopes run under cancellation and report cleanup failures without hiding the initiating failure
 
 Current task cancellation is mostly abort-based. The production phase must explicitly decide which abort-based behavior remains v1 semantics and whether a cooperative cancellation layer is introduced internally. Tokio or tokio-util token types must not leak publicly; a Sifr-owned `CancelScope` or cancellation handle may be exposed if the language model needs it.
+
+Minimum `CancelOutcome` states are `Cancelled`, `AlreadyCompleted`, `AlreadyFailed`, `AlreadyStarted`, `CouldNotCancel`, `CancelFailed`, and `TimedOutDuringCancel`.
+
+`race` and `select` return containers, not ad hoc tuples. `race` records winner index, typed outcome, and loser cancellation evidence. `select` records winner branch tag, typed outcome, and loser cancellation evidence. Concrete names and generic parameters are public API boundary decisions for M0.
 
 ## Process And Worker Policy
 
@@ -156,7 +168,7 @@ Current task cancellation is mostly abort-based. The production phase must expli
 
 Sync shell APIs are also `@blocking_io` and are rejected in async contexts unless explicitly offloaded. Native async process APIs may use shell execution in async contexts only through explicit `shell=True` or `Command.shell(...)`, and still carry the `@shell_exec` security effect.
 
-`sifr.subprocess` may later become an adapter over `sifr.process`, but it is not the substrate.
+Existing `sifr.subprocess` may remain frozen or compatibility-only, but production behavior must not depend on it and it must not be extended by this substrate phase.
 
 Typed process workers are future work after:
 
