@@ -17,7 +17,7 @@ This ledger tracks the Sifr-native production runtime substrate for:
 - `sifr.resource`: deterministic cleanup scopes
 - `sifr.ipc`: typed IPC foundation for future process workers
 
-CPython-shaped modules such as `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, `sifr.multiprocessing`, `sifr.contextlib`, and `sifr.warnings` are evidence sources or possible adapters, not the production completion target.
+CPython-shaped modules such as `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, `sifr.multiprocessing`, `sifr.contextlib`, and `sifr.warnings` are evidence sources or legacy implementation debt to remove/diagnose, not production targets or compatibility adapters.
 
 This ledger also records the structured runtime work decision: async tasks, blocking offload, CPU offload, long-running child processes, and future typed workers are all scoped work units with typed handles and typed observation/cancellation evidence. Threads and processes are execution substrates, not separate public concurrency worlds.
 
@@ -28,6 +28,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 ## Milestone Checklist
 
 - [ ] `milestone_concurrency_runtime_0`: Product Boundary And Rust Concurrency Contract
+- [ ] `milestone_concurrency_runtime_0a`: Legacy CPython-Shaped Surface Removal Gate
 - [ ] `milestone_concurrency_runtime_1`: Structured Async Runtime
 - [ ] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
 - [ ] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
@@ -173,6 +174,27 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - Final contract-level structured runtime review:
   - Source: reviewer notes provided by the user on 2026-06-06.
   - Result: accepted; post-M0 review fallback, observed `TaskGroup` failure semantics, `race`/`select` result containers, minimum `CancelOutcome` states, scoped process handle shape, IPC schema compatibility, `IpcSerializable` strictness, `sifr.subprocess` freeze status, async lock guard await rules, and offload error mapping were recorded in the phase contract.
+- Structured runtime work Claude follow-up:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-5.md`
+  - Result: `FAIL`; remaining `TaskGroup`/scope canonical owner, M1 sibling-cancellation DoD, process handle decision-register row, `sifr.subprocess` freeze wording, `select` call syntax, TaskGroup offload error binding, lock guard wording, no-public-Rust-types model wording, and `Task`/`BlockingTask` audit gaps were remediated.
+- Structured runtime work Claude follow-up:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-6.md`
+  - Result: `FAIL`; remaining `cancel_scope` stable-vs-optional contradiction was remediated, and non-blocking polish for supervised process examples, `spawn_scoped` orientation, and `race`/`select` loser evidence type was applied.
+- Structured runtime work Claude follow-up:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-7.md`
+  - Result: `FAIL`; remaining TaskGroup offload error binding versus `JoinSet.join_all()` wrapper alignment gap was remediated, and non-blocking polish for cancellation scope naming, process example pipe-access intent, and `JoinSet.join_all()` resolved-decision return type was applied.
+- Final structured runtime work Claude follow-up:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-8.md`
+  - Result: `PASS`; TaskGroup offload error binding and `JoinSet.join_all()` wrapper alignment were verified, with only non-blocking wording/ledger polish applied.
+- Final blocker-only Claude verification:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-9.md`
+  - Result: `PASS`; no material blockers, contradictions, stale state vocabulary, missing binding decisions, or ambiguous contracts remained.
+- No-subprocess-compatibility Claude review:
+  - `reviews/ad-hoc-production-concurrency-runtime-no-subprocess-compat-review-pass-1.md`
+  - Result: `PASS`; docs were clean under the no-backward-compatibility, no-CPython-adapter, `sifr.process`-only decision, with only non-blocking wording/waiver-index polish applied.
+- Final no-subprocess-compatibility Claude verification:
+  - `reviews/ad-hoc-production-concurrency-runtime-no-subprocess-compat-review-pass-2.md`
+  - Result: `PASS`; no backward-compatibility or CPython-shaped adapter commitment remained, and `sifr.subprocess` was verified as legacy implementation debt to remove, keep internal-test-only, or route to unsupported diagnostics.
 
 ## Pending Reviews
 
@@ -192,31 +214,31 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] Clarify that core scheduler/task helpers are native runtime infrastructure, not CPython module parity work.
 - [x] Assign private blocking/CPU offload substrate to this phase while keeping public `threading` module parity out of scope.
 - [x] Add explicit terminal expectations for `signal.getsignal`, `signal.pause`, and `pthread_sigmask`.
-- [x] Require M0 classification before any `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, or `sifr.multiprocessing` adapter claims production scope.
+- [x] Require M0 classification before any `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, or `sifr.multiprocessing` surface can remain visible; production scope is rejected for CPython-shaped adapters.
 - [x] Mark `contextvars` parity and implicit per-task context propagation out of scope.
 - [x] Add a Sifr-native task/request context planning item for tracing, deadlines, cancellation metadata, and web observability.
 - [x] Add sendability/shareability as a phase-wide gate before task/thread/process boundary captures.
 - [x] Preserve typed future/task cancellation and worker error propagation requirements as Sifr-native `sifr.task`/`sifr.runtime` behavior rather than `concurrent.futures` parity.
-- [x] Preserve homogeneous worker result/cancellation/deadline fixture requirements for any accepted future/offload adapter.
+- [x] Preserve homogeneous worker result/cancellation/deadline fixture requirements for accepted native offload APIs.
 - [x] Define `TaskGroup` child failure aggregation as typed aggregate evidence.
 - [x] Make typed IPC design explicitly owned by M6, with no unnamed external prerequisite for future process workers.
 - [x] Resolve `signal.pause()` to `unsupported-with-diagnostic` or `waived-with-rationale` in this phase with diagnostics and a future safe signal-handler or structured signal-stream revisit rule.
 - [x] Add external-review owner and five-working-day fallback rule.
 - [x] Pin subprocess text mode, warning text encoding, and text-open demos to text/i18n `milestone_text_i18n_1` completion.
-- [x] Add no-backward-compatibility policy: current adapters under canonical `sifr.*` imports only, no bare CPython stdlib aliases, no legacy aliases, no deprecated behavior, no pickle-style fallbacks, and no compatibility shims.
+- [x] Add no-backward-compatibility policy: no public CPython-shaped adapters, no bare CPython stdlib aliases, no legacy aliases, no deprecated behavior, no pickle-style fallbacks, and no compatibility shims.
 - [x] Align the phase with the stdlib namespace cleanup: `sifr.*` remains the permanent public stdlib namespace and bare CPython stdlib import attempts get namespace-contract diagnostics.
 - [x] Mark `subprocess.getoutput` and `subprocess.getstatusoutput` `unsupported-with-diagnostic` as legacy shell-invocation helpers.
 - [x] Add shared support states: `production-substrate`, `production-public`, `internal-only`, `compat-adapter`, `deferred-to-phase-X`, `unsupported-with-diagnostic`, `host-limited`, and `rejected`.
 - [x] Add no-toy-concurrency gate rejecting public partial modules that exist only because CPython has them.
 - [x] Demote `multiprocessing` and `ProcessPoolExecutor` from baseline CPU parallelism; Sifr uses typed offload and data parallelism for CPU work.
 - [x] Reject Python global `warnings` filter parity in this phase; use explicit structured diagnostics only.
-- [x] Add M0 gates for the resolved decision register, import-resolution tests, host matrix, workload database, task typing, detached-task policy, task context, adapter migration value, and reviewer designation.
+- [x] Add M0 gates for the resolved decision register, import-resolution tests, host matrix, workload database, task typing, detached-task policy, task context, rejected CPython-shaped surface disposition, and reviewer designation.
 - [x] Assign sendability/shareability compiler enforcement to M1 with M3/M4/M6 verification extensions.
 - [x] Resolve `TaskGroup`/`JoinSet` distinction: `TaskGroup` is scoped structured concurrency with failure cancellation; `JoinSet` is a dynamically-growable homogeneous completed-work collection.
 - [x] Resolve task collection typing: homogeneous by default, heterogeneous only with an explicit user sum/enum type.
 - [x] Resolve detached-task policy: stable public tasks are structured by default; handle drop before failure observation is a diagnostic; detached tasks are rejected in this phase.
 - [x] Assign subprocess text-mode ownership to M4 once text/i18n M1 is complete, or require explicit `milestone_concurrency_runtime_text_subprocess_integration` deferral.
-- [x] Require M0 cleanup classification for the existing `sifr.asyncio` compatibility veneer.
+- [x] Require M0 cleanup classification for existing `sifr.asyncio` veneer implementation debt.
 - [x] Require signal-to-host matrix and supported-host matrix recording before host-limited subprocess/signal adoption.
 - [x] Require typed IPC design approval to be recorded before serialization dependency selection.
 - [x] Add explicit M0 decision and DoD gate for `sifr.parallel` pool sizing.
@@ -228,7 +250,8 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] Resolve `JoinSet` drop, submission, observation, and cancellation semantics.
 - [x] Resolve configured `sifr.parallel.Pool` architecture and instance API.
 - [x] Reserve M1 task context API slots for M5 explicit propagation.
-- [x] Freeze existing `sifr.asyncio` veneer as `compat-adapter` and ensure new native APIs do not depend on it.
+- [x] Treat existing `sifr.asyncio` veneer as legacy implementation debt and ensure new native APIs do not depend on it.
+- [x] Add a dedicated post-M0/pre-M1 legacy CPython-shaped surface removal gate so `sifr.subprocess`, `sifr.asyncio` new APIs, `sifr.queue`, `sifr.concurrent.futures`, and `sifr.multiprocessing` cannot remain public adapters while production APIs are implemented.
 - [x] Resolve `JoinSet` result ordering and `JoinItemId` role.
 - [x] Clarify `parallel.map`/`Pool.map` async calling convention.
 - [x] Name shell subprocess usage as the `@shell_exec` security effect.
@@ -308,12 +331,13 @@ Pre-M0 phase-level decisions:
 | `sifr.process` | `production-public` | `production-public` | Native process supervision and owned pipes replace `subprocess` parity as the production model. | `Lib/test/test_subprocess.py`, `Lib/test/test_asyncio/test_subprocess.py` | M4 process traceability document |
 | `sifr.signal` / `sifr.resource` / diagnostics / context | `production-public` | `production-public` | Structured shutdown, cleanup, diagnostics, and explicit context are production ergonomics. `ContextError` and `DiagnosticError` are owned by this milestone. | `Lib/test/test_signal.py`, `Lib/test/test_contextlib.py`, `Lib/test/test_warnings/` | M5 ergonomics traceability document |
 | `sifr.ipc` | `production-substrate` | `production-substrate` | Typed IPC is the foundation for future supervised process workers. | `Lib/test/_test_multiprocessing.py`, `Lib/test/test_multiprocessing_spawn/` | M6 IPC design artifact |
-| `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, `sifr.multiprocessing` | `compat-adapter` / `deferred-to-adapter-phase` | `deferred-to-adapter-phase` | CPython-shaped modules remain evidence sources and later migration adapters only. | CPython module tests listed in phase source of truth | Negative import/adapter fixtures |
+| `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, `sifr.multiprocessing` | `rejected` / `unsupported-with-diagnostic` / `internal-only` | `rejected` / `unsupported-with-diagnostic` | CPython-shaped modules remain evidence sources only; existing implementations are removed, kept internal-test-only, or routed to diagnostics. | CPython module tests listed in phase source of truth | Negative import/removal fixtures |
+| legacy CPython-shaped surface removal gate | `production-substrate` | `production-substrate` | Public legacy surfaces must be removed, hidden, or diagnosed before production runtime/process APIs are implemented. | CPython module tests listed in phase source of truth | M0A removal/diagnostic traceability document |
 | Python global `warnings` filter model | `rejected` | `rejected` | Runtime diagnostics use tracing/metrics and typed Sifr diagnostics, not global Python warning filters. | `Lib/test/test_warnings/` | M5 warning-global rejection fixture |
 | Rust ecosystem choices | `internal-only` | `internal-only` | Use Tokio/Tokio Util, Futures Util, Crossbeam Channel, Tokio MPSC, std sync/Parking Lot/Once Cell/Scopeguard, Rayon, Tokio process/std process/Rustix, Tokio signal/Rustix, tracing/tracing-subscriber/metrics, thiserror, and Serde/Postcard. Do not use Flume, Signal Hook, Nix, Bincode, or bespoke replacements. | N/A | M0 dependency decision records |
 | `JoinSet` drop | `production-public` | `production-public` | Live/non-empty `JoinSet` values must be consumed by `join_all()` or `cancel_all().await`; unobserved drop is a compile-time diagnostic. | `Lib/test/test_concurrent_futures/` | M3 JoinSet drop diagnostic fixture |
 | Rayon pool architecture | `internal-only` | `internal-only` | Top-level `sifr.parallel` uses a private lazy default Rayon pool; configured parallelism uses explicit `Pool(config)` private Rayon pools. Rayon's global pool is never configured. | N/A | M3 pool architecture decision record |
-| Existing `sifr.asyncio` veneer | `compat-adapter` | `compat-adapter` | Existing supported veneer entry points remain frozen; M1 does not build on, extend, or remove them. New runtime APIs use `sifr.task`, `sifr.sync`, and `sifr.process`. | `Lib/test/test_asyncio/` | M1 veneer-free implementation fixture |
+| Existing `sifr.asyncio` veneer | `internal-only` / `unsupported-with-diagnostic` | `unsupported-with-diagnostic` | Existing veneer entry points are implementation debt; M1 does not build on or extend them, and M0 records removal, internal-test-only, or diagnostic disposition. New runtime APIs use `sifr.task`, `sifr.sync`, and `sifr.process`. | `Lib/test/test_asyncio/` | M1 veneer-free implementation fixture |
 | `JoinSet` result ordering | `production-public` | `production-public` | `join_all().await` returns results in submission order, `cancel_all().await` returns cancellation evidence in submission order, and `JoinItemId` is an opaque user-side correlation token with no query API. | `Lib/test/test_concurrent_futures/` | M3 JoinSet ordering fixture |
 | Shell subprocess effect | `production-substrate` | `production-substrate` | Shell subprocess usage is marked with `@shell_exec` in addition to `@blocking_io`; shell APIs require explicit shell selection and async/offload diagnostics. | `Lib/test/test_subprocess.py` | M4 shell effect fixture |
 
@@ -328,12 +352,12 @@ Every decision must include:
 
 ## Waiver Index
 
-This index is populated during M0 inventory. All non-goal, `deferred-to-phase-X`, `rejected`, `unsupported-with-diagnostic`, `waived-with-rationale`, and `host-limited` surfaces in the phase must have waiver/decision entries by M0 close.
+This index is intentionally partial before M0. M0 inventory populates the complete list, and all non-goal, `deferred-to-phase-X`, `rejected`, `unsupported-with-diagnostic`, `waived-with-rationale`, and `host-limited` surfaces in the phase must have waiver/decision entries by M0 close.
 
 | Surface | Terminal state | Rationale | Revisit rule | CPython evidence | Sifr regression fixture |
 | --- | --- | --- | --- | --- | --- |
 | `signal.pause` | `unsupported-with-diagnostic` | Safe arbitrary signal-handler wakeup is not accepted in this phase; production shutdown uses structured signal streams instead. | Revisit only in a future safe signal-handler or structured signal-stream expansion that proves deterministic cancellation/wakeup behavior across the supported host matrix. | `Lib/test/test_signal.py`, `Doc/library/signal.rst` | M5 must add a negative diagnostic fixture for static `sifr.signal.pause` use before closure. |
-| `sifr.asyncio` new APIs | `deferred-to-adapter-phase` | Existing veneer frozen; no new `sifr.asyncio` APIs ship in this phase. | Revisit only in a later migration-adapter issue that proves value over `sifr.task`/`sifr.sync`/`sifr.process`. | `Lib/test/test_asyncio/` | M1/M2/M4 fixtures prove native APIs do not depend on the veneer. |
+| `sifr.asyncio` new APIs | `rejected` | No new `sifr.asyncio` APIs ship in this phase. | Revisit only through a new Sifr-native API design; migration compatibility is not sufficient. | `Lib/test/test_asyncio/` | M1/M2/M4 fixtures prove native APIs do not depend on the veneer. |
 
 Every waiver must include:
 

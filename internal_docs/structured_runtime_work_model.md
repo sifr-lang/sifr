@@ -26,7 +26,7 @@ failures and cancellation are typed
 cross-boundary values must be safe
 ```
 
-Sifr does not expose separate Python-shaped concurrency worlds for `asyncio`, `threading`, `concurrent.futures`, `subprocess`, and `multiprocessing`. Those modules are evidence sources or future adapters. The production model is structured runtime work.
+Sifr does not expose separate Python-shaped concurrency worlds for `asyncio`, `threading`, `concurrent.futures`, `subprocess`, and `multiprocessing`. Those modules are evidence sources or legacy implementation debt to remove/diagnose, not future adapters. The production model is structured runtime work.
 
 ## Product Decision
 
@@ -39,7 +39,7 @@ async with task.TaskGroup[AppError]() as group:
     users = group.spawn(fetch_users())
     config = group.spawn_blocking(read_config)
     index = group.spawn_cpu(build_index)
-    child = group.spawn_process(process.Command("worker"))
+    child = group.spawn_process(process.Command("worker"))  # supervised; pipe access shape settled in M0
 
     users_result = await users
     config_result = await config
@@ -53,18 +53,18 @@ The exact method names are settled by the implementation phase. The semantic con
 | Work kind | Public model | Execution substrate |
 | --- | --- | --- |
 | async coroutine work | `sifr.task.TaskHandle`, `TaskGroup` | Tokio task internals hidden behind Sifr APIs |
-| blocking I/O offload | scoped `spawn_blocking` returning a blocking-work handle | Tokio blocking pool |
+| blocking I/O offload | scoped `spawn_blocking` returning a `BlockingTask`-like handle | Tokio blocking pool |
 | CPU-heavy offload | scoped `spawn_cpu`, `sifr.parallel`, `Pool` | private Rayon-backed pools |
 | long-running child process | `sifr.process.Child` plus scoped supervision | `tokio::process`, `std::process`, host process APIs |
 | future typed process worker | future worker handle over typed IPC | `sifr.process` plus `sifr.ipc` frames |
 
 Threads and processes are execution substrates, not the public model. Users choose the kind of work and boundary they need; Sifr provides the scope, typed handle, safe communication, and deterministic cancellation/failure behavior.
 
-`task.Scope` or `runtime.Scope` is the general owner for mixed runtime work. M0 chooses the public name and method placement. `TaskGroup[E]` is the fail-fast structured-concurrency policy for child work that shares one error type. Individual child handles may have different success types. Homogeneous result collections such as `join_all`, `race`, `select`, and `JoinSet[T, E]` require one result/error shape unless the user constructs an explicit sum/enum result type.
+`TaskGroup[E]` is the canonical owner for mixed runtime work under the fail-fast structured-concurrency policy. A distinct `task.Scope` or `runtime.Scope` type is introduced only if M0 identifies a concrete use case `TaskGroup[E]` cannot satisfy; M0 must record that finding before M1 starts. Individual child handles may have different success types. Homogeneous result collections such as `join_all`, `race`, `select`, and `JoinSet[T, E]` require one result/error shape unless the user constructs an explicit sum/enum result type.
 
 Scoped offload inserted into `TaskGroup[E]` maps user errors plus runtime/offload failures into the group's error type or an accepted wrapper such as `WorkerError[E]`. Scoped process spawn must preserve owned pipe access while binding child lifetime to the parent scope; M0 decides whether it returns `Child`, `TaskHandle[Status, SubprocessError]`, or a distinct `ProcessHandle`.
 
-`TaskHandle[T, E]` is the public affine observation handle name. `Task` may remain an internal type name or compatibility alias only if M0 records a concrete reason to expose both names.
+`TaskHandle[T, E]` is the public affine observation handle name. `Task` may remain an internal type name only; exposing both names as public aliases is rejected unless a new Sifr-native API design proves separate semantics.
 
 ## Existing Implementation Baseline
 
@@ -80,8 +80,8 @@ The current compiler/runtime already points toward this model:
 - blocking offload exists through `task.spawn_blocking(...)`
 - generated Rust currently supplies task runtime preambles when async/task features are used
 - generated channel support proves the direction but still needs production backpressure semantics
-- `sifr.asyncio` is a compatibility veneer, not the runtime model
-- `sifr.threading`, `sifr.concurrent`, and current `sifr.subprocess` are not mature production substrates
+- existing `sifr.asyncio` veneer code is legacy implementation debt, not the runtime model
+- `sifr.threading`, `sifr.concurrent`, and current `sifr.subprocess` are not production substrates and must resolve to removal, internal-test-only, or unsupported diagnostics
 
 The production phase should consolidate and harden these paths rather than create a second thread/process-centric runtime.
 
@@ -132,7 +132,7 @@ Synchronization APIs must say whether they are sync shared-state primitives or a
 | async coordination primitives | `AsyncMutex[T]`, `AsyncRwLock[T]`, `Semaphore`, `Event`, `Notify`, `AsyncChannel[T]` | operations are real suspension points; guard await restrictions are documented and diagnosed |
 | optional first-pass primitives | `Barrier`, public `Once` | public only if M0 finds near-term production need; otherwise `internal-only` or `deferred-to-phase-X` |
 
-Default Sifr rule: lock guards, including async lock guards, do not cross unrelated `await` points unless the API explicitly marks the guard await-safe. M0 records whether each accepted async guard is await-safe, await-forbidden, or lint-only.
+Default Sifr rule: sync lock guards cannot cross any `await`. Async lock guards may cross `await` only if the API explicitly marks the guard await-safe. M0 records whether each accepted async guard is await-safe, await-forbidden, or lint-only.
 
 ## Cancellation And Failure
 
@@ -148,11 +148,11 @@ Cancellation applies consistently across work kinds:
 - future IPC worker cancellation sends a typed cancel frame before process escalation when the protocol is still live
 - cleanup scopes run under cancellation and report cleanup failures without hiding the initiating failure
 
-Current task cancellation is mostly abort-based. The production phase must explicitly decide which abort-based behavior remains v1 semantics and whether a cooperative cancellation layer is introduced internally. Tokio or tokio-util token types must not leak publicly; a Sifr-owned `CancelScope` or cancellation handle may be exposed if the language model needs it.
+Current task cancellation is mostly abort-based. The production phase must explicitly decide which abort-based behavior remains v1 semantics and whether a cooperative cancellation layer is introduced internally. Tokio or tokio-util token types must not leak publicly; a Sifr-owned cancellation scope handle, named `CancelScope` or another M0-recorded name, is a settled stable API. M0 records its concrete public type name and Rust implementation boundary.
 
 Minimum `CancelOutcome` states are `Cancelled`, `AlreadyCompleted`, `AlreadyFailed`, `AlreadyStarted`, `CouldNotCancel`, `CancelFailed`, and `TimedOutDuringCancel`.
 
-`race` and `select` return containers, not ad hoc tuples. `race` records winner index, typed outcome, and loser cancellation evidence. `select` records winner branch tag, typed outcome, and loser cancellation evidence. Concrete names and generic parameters are public API boundary decisions for M0.
+`race` and `select` return containers, not ad hoc tuples. `race` records winner index, typed outcome, and loser cancellation evidence. `select` records winner branch tag, typed outcome, and loser cancellation evidence. Loser evidence is `list[CancelOutcome]` unless M0 records a stricter equivalent container. Concrete names and generic parameters are public API boundary decisions for M0.
 
 ## Process And Worker Policy
 
@@ -168,7 +168,7 @@ Minimum `CancelOutcome` states are `Cancelled`, `AlreadyCompleted`, `AlreadyFail
 
 Sync shell APIs are also `@blocking_io` and are rejected in async contexts unless explicitly offloaded. Native async process APIs may use shell execution in async contexts only through explicit `shell=True` or `Command.shell(...)`, and still carry the `@shell_exec` security effect.
 
-Existing `sifr.subprocess` may remain frozen or compatibility-only, but production behavior must not depend on it and it must not be extended by this substrate phase.
+Existing `sifr.subprocess` is legacy implementation debt. Production behavior must not depend on it, it must not be extended by this substrate phase, and M0 records whether it is removed, kept internal-test-only, or routed to unsupported diagnostics. `sifr.process` is the only accepted public process API.
 
 Typed process workers are future work after:
 
@@ -202,7 +202,7 @@ Production namespaces:
 - `sifr.resource`
 - `sifr.ipc`
 
-Compatibility or evidence-only namespaces:
+Rejected or evidence-only CPython-shaped namespaces:
 
 - `sifr.asyncio`
 - `sifr.threading`
@@ -210,7 +210,9 @@ Compatibility or evidence-only namespaces:
 - `sifr.subprocess`
 - `sifr.multiprocessing`
 
-Compatibility adapters must delegate to production APIs and must not introduce legacy global state, raw thread/process handles, detached work, pickle-like transport, event-loop objects, or unstructured failure handling.
+These names are not compatibility adapters and are not fallback paths. Existing implementations are removed, kept internal-test-only, or routed to unsupported diagnostics by the phase inventory.
+
+Public Sifr APIs must not expose Tokio, Futures, Rayon, Crossbeam, Parking Lot, tracing, serde, thiserror, or other Rust implementation crate types.
 
 ## Non-Goals
 
@@ -224,11 +226,11 @@ This model does not include:
 - implicit shared mutable memory
 - arbitrary pickle-like process transport
 - multiprocessing shared-memory surfaces without explicit ownership/drop/unlink rules
-- compatibility modules that become immediately obsolete after production APIs ship
+- CPython-shaped modules that are evidence-only and would be immediately superseded by production APIs
 
 ## Relationship To The Async Model
 
-[async_concurrency_model.md](./async_concurrency_model.md) remains the canonical contract for async syntax, task scopes, async cancellation, async context managers, async iteration, and `sifr.asyncio` veneer boundaries.
+[async_concurrency_model.md](./async_concurrency_model.md) remains the canonical contract for async syntax, task scopes, async cancellation, async context managers, and async iteration. Any existing `sifr.asyncio` veneer boundary is implementation debt to resolve during the phase inventory, not a production API promise.
 
 This document extends that contract to all runtime-owned work. If the two documents appear to conflict, the implementation phase must either:
 
