@@ -1,0 +1,164 @@
+# sifr.i18n — explicit locale identifiers and ICU-backed formatting
+from _sifr.i18n import (
+    i18n_collate,
+    i18n_format_datetime,
+    i18n_format_number,
+    i18n_host_locale,
+    i18n_locale_canonicalize,
+    i18n_locale_maximize,
+    i18n_locale_minimize,
+    i18n_plural_category,
+)
+
+DATETIME_SHORT: str = "short"
+DATETIME_MEDIUM: str = "medium"
+DATETIME_LONG: str = "long"
+
+PLURAL_CARDINAL: str = "cardinal"
+PLURAL_ORDINAL: str = "ordinal"
+
+COLLATION_DEFAULT: str = "default"
+COLLATION_PRIMARY: str = "primary"
+COLLATION_SECONDARY: str = "secondary"
+COLLATION_TERTIARY: str = "tertiary"
+
+
+class LocaleIdError(Error):
+    message: str
+
+
+class FormatError(Error):
+    message: str
+
+
+class PluralRulesError(Error):
+    message: str
+
+
+class LocaleId:
+    value: str
+
+    def __init__(self, value: str) -> None:
+        self.value = value + ""
+
+    def to_string(self) -> str:
+        return self.value + ""
+
+    def canonical(self) -> Result[LocaleId, LocaleIdError]:
+        try:
+            canonical: str = i18n_locale_canonicalize(self.value)
+            return LocaleId(canonical)
+        except LocaleIdError as e:
+            raise LocaleIdError(e.message)
+
+    def maximize(self) -> Result[LocaleId, LocaleIdError]:
+        try:
+            expanded: str = i18n_locale_maximize(self.value)
+            return LocaleId(expanded)
+        except LocaleIdError as e:
+            raise LocaleIdError(e.message)
+
+    def minimize(self) -> Result[LocaleId, LocaleIdError]:
+        try:
+            minimized: str = i18n_locale_minimize(self.value)
+            return LocaleId(minimized)
+        except LocaleIdError as e:
+            raise LocaleIdError(e.message)
+
+
+class NumberFormatter:
+    locale: LocaleId
+
+    def __init__(self, locale: LocaleId) -> None:
+        self.locale = locale
+
+    def format(self, value: str) -> Result[str, FormatError]:
+        return i18n_format_number(self.locale.to_string(), value)
+
+
+class DateTimeFormatter:
+    locale: LocaleId
+    style: str
+
+    def __init__(self, locale: LocaleId, style: str = "medium") -> None:
+        self.locale = locale
+        self.style = style + ""
+
+    def format_parts(self, year: int, month: int, day: int, hour: int, minute: int, second: int) -> Result[str, FormatError]:
+        return i18n_format_datetime(
+            self.locale.to_string(),
+            self.style,
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+        )
+
+
+class PluralRules:
+    locale: LocaleId
+    rule_type: str
+
+    def __init__(self, locale: LocaleId, rule_type: str = "cardinal") -> None:
+        self.locale = locale
+        self.rule_type = rule_type + ""
+
+    def category(self, value: str) -> Result[str, PluralRulesError]:
+        return i18n_plural_category(self.locale.to_string(), self.rule_type, value)
+
+
+class Collator:
+    locale: LocaleId
+    strength: str
+
+    def __init__(self, locale: LocaleId, strength: str = "default") -> None:
+        self.locale = locale
+        self.strength = strength + ""
+
+    def compare(self, left: str, right: str) -> Result[int, FormatError]:
+        return i18n_collate(self.locale.to_string(), self.strength, left, right)
+
+
+def parse_locale(value: str) -> Result[LocaleId, LocaleIdError]:
+    try:
+        canonical: str = i18n_locale_canonicalize(value)
+        return LocaleId(canonical)
+    except LocaleIdError as e:
+        raise LocaleIdError(e.message)
+
+
+def canonicalize_locale(value: str) -> Result[str, LocaleIdError]:
+    return i18n_locale_canonicalize(value)
+
+
+def maximize_locale(value: str) -> Result[str, LocaleIdError]:
+    return i18n_locale_maximize(value)
+
+
+def minimize_locale(value: str) -> Result[str, LocaleIdError]:
+    return i18n_locale_minimize(value)
+
+
+def host_locale() -> LocaleId | None:
+    raw: str | None = i18n_host_locale()
+    if raw is not None:
+        return LocaleId(raw)
+    return None
+
+
+def number_formatter(locale: LocaleId) -> NumberFormatter:
+    return NumberFormatter(locale)
+
+
+def datetime_formatter(locale: LocaleId, style: str = "medium") -> DateTimeFormatter:
+    return DateTimeFormatter(locale, style)
+
+
+def plural_rules(locale: LocaleId, rule_type: str = "cardinal") -> PluralRules:
+    return PluralRules(locale, rule_type)
+
+
+def collator(locale: LocaleId, strength: str = "default") -> Collator:
+    return Collator(locale, strength)

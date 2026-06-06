@@ -1,0 +1,124 @@
+from sifr.i18n import (
+    COLLATION_PRIMARY,
+    DATETIME_MEDIUM,
+    PLURAL_CARDINAL,
+    PLURAL_ORDINAL,
+    Collator,
+    DateTimeFormatter,
+    FormatError,
+    LocaleId,
+    LocaleIdError,
+    NumberFormatter,
+    PluralRules,
+    PluralRulesError,
+    host_locale,
+    maximize_locale,
+    minimize_locale,
+    parse_locale,
+)
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_i18n_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    try:
+        en: LocaleId = parse_locale("EN-US")
+        actual.append(en.to_string() == "en-US")
+        zh_max: str = maximize_locale("zh-CN")
+        zh_min: str = minimize_locale("zh-Hans-CN")
+        actual.append(zh_max == "zh-Hans-CN")
+        actual.append(zh_min == "zh")
+    except LocaleIdError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        numbers: NumberFormatter = NumberFormatter(LocaleId("bn"))
+        bangla: str = numbers.format("1000007")
+        actual.append(bangla == "\u09e7\u09e6,\u09e6\u09e6,\u09e6\u09e6\u09ed")
+
+        datetime: DateTimeFormatter = DateTimeFormatter(LocaleId("en-US"), DATETIME_MEDIUM)
+        formatted: str = datetime.format_parts(2025, 1, 15, 16, 9, 35)
+        actual.append(len(formatted) > 0)
+
+        spanish: Collator = Collator(LocaleId("es-u-co-trad"), COLLATION_PRIMARY)
+        english: Collator = Collator(LocaleId("en"), COLLATION_PRIMARY)
+        spanish_order: int = spanish.compare("pollo", "polvo")
+        english_order: int = english.compare("pollo", "polvo")
+        actual.append(spanish_order > 0)
+        actual.append(english_order < 0)
+    except FormatError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        cardinal: PluralRules = PluralRules(LocaleId("en"), PLURAL_CARDINAL)
+        ordinal: PluralRules = PluralRules(LocaleId("en"), PLURAL_ORDINAL)
+        cardinal_one: str = cardinal.category("1")
+        cardinal_other: str = cardinal.category("2")
+        ordinal_two: str = ordinal.category("2")
+        actual.append(cardinal_one == "one")
+        actual.append(cardinal_other == "other")
+        actual.append(ordinal_two == "two")
+    except PluralRulesError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    invalid_locale_failed: bool = False
+    try:
+        _bad_locale: LocaleId = parse_locale("not a locale")
+    except LocaleIdError as e:
+        invalid_locale_failed = len(e.message) > 0
+    actual.append(invalid_locale_failed)
+
+    invalid_number_failed: bool = False
+    try:
+        formatter: NumberFormatter = NumberFormatter(LocaleId("en"))
+        _bad_number: str = formatter.format("not-number")
+    except FormatError as e:
+        invalid_number_failed = len(e.message) > 0
+    actual.append(invalid_number_failed)
+
+    invalid_plural_failed: bool = False
+    try:
+        rules: PluralRules = PluralRules(LocaleId("en"), "bad")
+        _bad_plural: str = rules.category("1")
+    except PluralRulesError as e:
+        invalid_plural_failed = len(e.message) > 0
+    actual.append(invalid_plural_failed)
+
+    observed_host: LocaleId | None = host_locale()
+    if observed_host is not None:
+        actual.append(len(observed_host.to_string()) > 0)
+    else:
+        actual.append(True)
+
+    return actual
+
+
+def main():
+    expected: list[bool] = [
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    ]
+    assert_bool_vector_eq(collect_i18n_actual(), expected)

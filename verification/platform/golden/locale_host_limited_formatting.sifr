@@ -1,0 +1,21 @@
+from sifr.i18n import Collator, FormatError, LocaleId, NumberFormatter, host_locale
+
+
+def main():
+    formatter: NumberFormatter = NumberFormatter(LocaleId("bn"))
+    collator: Collator = Collator(LocaleId("en"), "primary")
+
+    try:
+        formatted: str = formatter.format("1000007")
+        ordering: int = collator.compare("pollo", "polvo")
+        assert formatted == "\u09e7\u09e6,\u09e6\u09e6,\u09e6\u09e6\u09ed"
+        assert ordering < 0
+    except FormatError as e:
+        _ = e.message
+        assert False
+
+    observed: LocaleId | None = host_locale()
+    if observed is not None:
+        assert len(observed.to_string()) > 0
+
+    print("platform-golden: pass")

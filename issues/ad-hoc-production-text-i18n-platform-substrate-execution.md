@@ -203,6 +203,10 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M2 pass 2: `reviews/ad-hoc-production-text-i18n-m2-implementation-review-pass-2.md`; result `PASS` after runtime Unicode feature-gating remediation, no blockers and no re-review required.
 - M2.5 pass 1: `reviews/ad-hoc-production-text-i18n-m25-implementation-review-pass-1.md`; result `PASS` with medium clippy observation on new offset casts.
 - M2.5 pass 2: `reviews/ad-hoc-production-text-i18n-m25-implementation-review-pass-2.md`; result `PASS` after checked/saturating offset conversion remediation, no blockers and no re-review required.
+- M3 pass 1: `reviews/ad-hoc-production-text-i18n-m3-implementation-review-pass-1.md`; result `PASS` with non-blocking optional-feature clippy and inventory-status observations.
+- M3 pass 2: `reviews/ad-hoc-production-text-i18n-m3-implementation-review-pass-2.md`; result `PASS` after optional-feature clippy and inventory-status remediation, no blockers and no re-review required.
+- M3 pass 3: `reviews/ad-hoc-production-text-i18n-m3-implementation-review-pass-3.md`; result `PASS` after unblocking the platform golden locale fixture, with one non-blocking manifest-label observation.
+- M3 pass 4: `reviews/ad-hoc-production-text-i18n-m3-implementation-review-pass-4.md`; result `PASS` after manifest `must_not_depend_on` cleanup, no blockers and no re-review required.
 
 ## Validation Evidence
 
@@ -326,6 +330,19 @@ M2.5 focused validation on branch `text-i18n-m25-segmentation`:
 - `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 208.95s, 67/67 e2e pass fixtures, non-blocking warm wall-time advisory.
 - `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 628.34s, 73/73 e2e pass fixtures, hardening variants 34/34 with 0 failures, non-blocking warm-cache/group-skew advisories.
 
+M3 focused validation on branch `text-i18n-m3-i18n-locale-formatting`:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr` passed.
+- `cargo test -p sifr_runtime --features i18n i18n -- --nocapture` passed.
+- `cargo test -p sifr_stdlib features -- --nocapture` passed.
+- `cargo test -p sifr_codegen i18n -- --nocapture` passed.
+- `cargo clippy -p sifr_runtime --features i18n --tests -- -D warnings` passed after the M3 review pass 1 optional-feature clippy observation.
+- `python3 -m json.tool verification/stdlib/text_i18n_substrate_inventory.json >/dev/null` passed.
+- `python3 -m json.tool verification/platform/golden/manifest.json >/dev/null` passed.
+- `scripts/run_platform_golden.sh` passed after unblocking `locale_host_limited_formatting.sifr`; summary 3 pass / 2 skipped.
+- `scripts/run_all_tests.sh --profile create-pr` passed after unblocking the M3 locale platform golden fixture; report `target/validation_lane_reports/create-pr.latest.json`, wall time 124.68s, 67/67 e2e pass fixtures, platform golden 3 pass / 2 skipped, non-blocking warm wall-time advisory.
+- `cargo fmt --check` passed.
+
 ## CPython Scan Evidence
 
 Each milestone must record:
@@ -362,6 +379,16 @@ M2.5 scan evidence:
 - Production APIs classified as `production-public` / `stable-public-api`: `sifr.unicode.graphemes`, `grapheme_indices`, `words`, and `word_boundaries`.
 - Python-shaped surfaces classified as `deferred-to-adapter-phase`: no bare CPython segmentation module or alias is introduced; streaming cursor segmentation and sentence boundaries are deferred.
 - Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_unicode_segmentation.sifr`.
+
+M3 scan evidence:
+
+- CPython source/docs/tests scanned: `Lib/locale.py`, `Doc/library/locale.rst`, `Lib/test/test_locale.py`, and `Modules/_localemodule.c` from `SIFR_CPYTHON_CHECKOUT=/Users/yaseralnajjar/work/sifr/cpython`.
+- Standards and Rust crate sources reviewed: ICU4X 2.2 crate docs/source for `icu_locale`, `icu_decimal`, `icu_datetime`, `icu_plurals`, and `icu_collator`; generated Cargo metadata locks these behind `sifr_runtime` feature `i18n`.
+- Production APIs classified as `production-public` / `stable-public-api`: `sifr.i18n.LocaleId`, `parse_locale`, `canonicalize_locale`, `maximize_locale`, `minimize_locale`, `NumberFormatter`, `DateTimeFormatter`, `PluralRules`, and `Collator`.
+- Host-limited API classified: `sifr.i18n.host_locale() -> LocaleId | None` is read-only, only observes host environment locale variables, and cannot provide text I/O defaults.
+- Python-shaped surfaces classified as `unsupported-with-diagnostic`, `rejected`, or `deferred-to-adapter-phase`: `locale.setlocale`, `localeconv`, `strcoll`, `strxfrm`, `format_string`, `currency`, and implicit preferred text encoding; `sifr.locale` remains deferred to an adapter phase, and bare `locale` imports remain unsupported.
+- Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr`; existing negative fixture `crates/sifr/tests/e2e/fail/bare_cpython_locale_import.sifr` continues to enforce the namespace boundary.
+- Platform golden fixture unblocked: `verification/platform/golden/locale_host_limited_formatting.sifr` now runs as an M3 contract fixture and verifies explicit locale formatting plus optional read-only host locale discovery.
 
 ## Waiver Index
 

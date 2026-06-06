@@ -8,6 +8,11 @@ license = { workspace = true }
 
 [dependencies]
 encoding_rs = { workspace = true }
+icu_collator = { workspace = true, optional = true }
+icu_datetime = { workspace = true, optional = true }
+icu_decimal = { workspace = true, optional = true }
+icu_locale = { workspace = true, optional = true }
+icu_plurals = { workspace = true, optional = true }
 num-bigint = { workspace = true }
 num-traits = { workspace = true }
 unicode-normalization = { workspace = true, optional = true }
@@ -16,6 +21,13 @@ unicode_names2 = { workspace = true, optional = true }
 
 [features]
 default = []
+i18n = [
+    "dep:icu_collator",
+    "dep:icu_datetime",
+    "dep:icu_decimal",
+    "dep:icu_locale",
+    "dep:icu_plurals",
+]
 unicode = ["dep:unicode-normalization", "dep:unicode-segmentation", "dep:unicode_names2"]
 
 [lints]

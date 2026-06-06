@@ -10,6 +10,7 @@ use std::collections::HashMap;
 mod collections_bytes_time;
 mod crypto_regex_uuid;
 mod features;
+mod i18n_core;
 mod io_json;
 mod math_test;
 mod platform_misc;
@@ -24,6 +25,7 @@ pub use features::{
     feature_for_codegen_requirement, features_for_stdlib_module, generated_cargo_dependencies,
     GeneratedCargoDependency, StdlibFeature, StdlibFeatureSpec, STDLIB_FEATURE_SPECS,
 };
+use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
 use math_test::{intrinsic_math, intrinsic_test};
 use platform_misc::{
@@ -81,6 +83,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.bytes" => Some(intrinsic_bytes()),
         "_sifr.encoding" => Some(intrinsic_encoding()),
         "_sifr.unicode" => Some(intrinsic_unicode()),
+        "_sifr.i18n" => Some(intrinsic_i18n()),
         "_sifr.time" => Some(intrinsic_time()),
         "_sifr.crypto" => Some(intrinsic_crypto()),
         "_sifr.regex" => Some(intrinsic_regex()),

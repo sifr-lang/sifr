@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "m0-baseline",
+  "status": "m3-in-progress",
   "platform_contract": "verification/platform/platform_contract.json",
   "cpython_checkout": {
     "path": "/Users/yaseralnajjar/work/sifr/cpython",
@@ -251,14 +251,14 @@
       "supply_chain_signal": "unicode-rs family"
     },
     {
-      "crate": "icu_locale_core",
+      "crate": "icu_locale / icu_locale_core",
       "version": "2.2.0",
       "license": "Unicode-3.0",
       "rust_version": "1.86",
       "owner_milestone": "milestone_text_i18n_3",
-      "sifr_abstraction": "sifr.i18n.LocaleId",
-      "unicode_alignment": "ICU4X 2.2 data family",
-      "panic_unsafe_audit": "M3 locale-string panic scan",
+      "sifr_abstraction": "sifr.i18n.LocaleId parser, canonicalizer, and likely-subtag helpers",
+      "unicode_alignment": "ICU4X 2.2 locale data family",
+      "panic_unsafe_audit": "M3 locale-string panic scan; user strings map to LocaleIdError",
       "typed_error_mapping": "LocaleIdError",
       "test_strategy": "Deterministic BCP47 parse/canonicalization fixtures",
       "supply_chain_signal": "Unicode/ICU4X official project"

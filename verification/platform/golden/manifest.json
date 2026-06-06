@@ -94,14 +94,13 @@
         "milestone_text_i18n_3"
       ],
       "must_not_depend_on": [
-        "implicit_text_open_default_encoding"
+        "milestone_text_i18n_1"
       ],
-      "blocked_until": [
-        "milestone_text_i18n_3"
-      ],
+      "blocked_until": [],
       "checks": [
         "explicit locale formatting",
-        "host-limited locale discovery"
+        "host-limited locale discovery",
+        "no implicit text-open default encoding"
       ]
     }
   ]

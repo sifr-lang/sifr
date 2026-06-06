@@ -2,6 +2,8 @@
 #![cfg_attr(test, allow(clippy::expect_used))]
 
 pub mod encoding;
+#[cfg(feature = "i18n")]
+pub mod i18n;
 mod int;
 pub mod json;
 #[cfg(feature = "unicode")]
