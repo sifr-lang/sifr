@@ -387,6 +387,15 @@ M5 focused validation on branch `text-i18n-m5-production-gate`:
 - `scripts/run_all_tests.sh --profile create-pr` passed after the generated-code-quality remediation; report `target/validation_lane_reports/create-pr.latest.json`, wall time 259.84s, 72/72 e2e pass fixtures, platform golden 3 pass / 2 skipped, non-blocking warm wall-time and warm-cache advisories.
 - `scripts/run_all_tests.sh` passed after the generated-code-quality remediation and retries of transient performance-budget timing checks; report `target/validation_lane_reports/merge.latest.json`, wall time 716.17s, 78/78 e2e pass fixtures, generated-code quality passed, platform golden 3 pass / 2 skipped, hardening variants 34/34 with 0 failures, non-blocking group-skew advisory.
 
+Final phase closeout validation on branch `text-i18n-final-closeout`:
+
+- `python3 -m json.tool verification/stdlib/text_i18n_substrate_inventory.json >/dev/null` and `python3 -m json.tool verification/stdlib/text_i18n_dependency_snapshots.json >/dev/null` passed after flipping closeout statuses to `phase-complete`.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `scripts/run_all_tests.sh --profile create-pr` initially surfaced a stale cached e2e batch failure for `text_i18n_encoding_io`; direct `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr` passed, the generated e2e cache entry for group `8a52cede5d1059ba` was cleared, and the rerun passed.
+- Final `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 175.66s, 72/72 e2e pass fixtures, report signature `e79bf470e4128536`, platform golden 3 pass / 2 skipped, and non-blocking warm wall-time advisory.
+
 ## CPython Scan Evidence
 
 Each milestone must record:
