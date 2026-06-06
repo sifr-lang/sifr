@@ -199,6 +199,8 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M1 pass 1: `reviews/ad-hoc-production-text-i18n-m1-implementation-review-pass-1.md`; result `FAIL`, blockers B1-B7 remediated.
 - M1 pass 2: `reviews/ad-hoc-production-text-i18n-m1-implementation-review-pass-2.md`; result `PASS` with closure preconditions C1/C2 and non-blocking N2 followed up.
 - M1 pass 3: `reviews/ad-hoc-production-text-i18n-m1-implementation-review-pass-3.md`; result `PASS`, no blockers and no re-review required.
+- M2 pass 1: `reviews/ad-hoc-production-text-i18n-m2-implementation-review-pass-1.md`; result `PASS`, no blockers and no re-review required.
+- M2 pass 2: `reviews/ad-hoc-production-text-i18n-m2-implementation-review-pass-2.md`; result `PASS` after runtime Unicode feature-gating remediation, no blockers and no re-review required.
 
 ## Validation Evidence
 
@@ -263,6 +265,7 @@ M1 focused validation on branch `text-i18n-m1-encoding-io`:
 - `cargo fmt --check` passed.
 - `python3 scripts/check_file_size_guardrails.py` passed.
 - `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `scripts/run_all_tests.sh --profile create-pr` passed after runtime Unicode feature-gating remediation; report `target/validation_lane_reports/create-pr.latest.json`, wall time 256.41s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
 - `cargo test -p sifr_stdlib` passed.
 - `cargo test -p sifr -- stdlib` passed.
 - `cargo clippy --workspace -- -D warnings` passed.
@@ -294,6 +297,20 @@ M1 post-review-remediation focused validation:
 - `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 183.44s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
 - `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 589.16s, 73/73 e2e pass fixtures, hardening variants 34/34 with 0 failures, non-blocking warm-cache/group-skew advisories.
 
+M2 focused validation on branch `text-i18n-m2-unicode-core`:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/text_i18n_unicode_core.sifr` passed.
+- `cargo test -p sifr_runtime --features unicode unicode -- --nocapture` passed.
+- `cargo test -p sifr_stdlib features -- --nocapture` passed.
+- `cargo test -p sifr_codegen unicode -- --nocapture` passed.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 242.95s, 67/67 e2e pass fixtures, non-blocking warm wall-time advisory.
+- `scripts/run_all_tests.sh` initially failed in `performance_budget_checks` for `build-project-001-additional-modules` peak RSS (`390545408` bytes versus `342556672` threshold); root cause was unconditional compilation of generated Unicode data through `sifr_runtime`.
+- Post-remediation targeted performance check passed after feature-gating `sifr_runtime` Unicode support: `python3 verification/performance/run_benchmarks.py --case build-project-001-additional-modules --json-out target/performance/m2-unicode-runtime-feature-gate.budget.json && python3 verification/performance/check_budgets.py --results target/performance/m2-unicode-runtime-feature-gate.budget.json --allow-subset`; peak RSS `313999360` bytes.
+- `scripts/run_all_tests.sh` passed after remediation; report `target/validation_lane_reports/merge.latest.json`, wall time 605.19s, 73/73 e2e pass fixtures, hardening variants 34/34 with 0 failures, non-blocking group-skew advisory.
+
 ## CPython Scan Evidence
 
 Each milestone must record:
@@ -314,6 +331,14 @@ M1 scan evidence:
 - Production APIs classified as `production-public` / `stable-public-api`: `sifr.encoding.Encoding`, `DecodeError`, `EncodeError`, typed handlers, `DecodeOutcome`, `EncodeOutcome`, `Decoder`, `Encoder`, `sifr.io.open_text`, and compiler-special `open(..., encoding=..., errors=...)` over the same substrate.
 - Python-shaped surfaces classified as `unsupported-with-diagnostic` or `deferred-to-adapter-phase`: `io.TextIOWrapper`, public `codecs` registry mutation, dynamic codec/error-handler registration, public `encodings.*` module parity, Tier 2 CJK codecs, text-to-text codecs, and bytes-to-bytes pseudo-codecs.
 - Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_textiowrapper_unsupported.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_open_without_encoding.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_mode.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_dynamic_errors_handler.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_errors_handler.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_decode_encode_only_handler.sifr`, and `crates/sifr/tests/e2e/fail/text_i18n_codecs_register_unsupported.sifr`. The prior UTF-8-only negative fixture was removed because `str.encode("latin-1")` is supported by M1.
+
+M2 scan evidence:
+
+- CPython source/docs/tests scanned: `Doc/library/unicodedata.rst`, `Lib/test/test_unicodedata.py`, and `Modules/unicodedata.c` from `SIFR_CPYTHON_CHECKOUT=/Users/yaseralnajjar/work/sifr/cpython`.
+- Standards and Rust crate sources reviewed: Unicode 17.0.0 UCD files `UnicodeData.txt`, `EastAsianWidth.txt`, and `CaseFolding.txt` through `scripts/generate_unicode_tables.py`; `unicode-normalization 0.1.25` source exposing `UNICODE_VERSION = (17, 0, 0)`; `unicode_names2 3.1.0` source/docs for Unicode 17.0 names and lookup.
+- Production APIs classified as `production-public` / `stable-public-api`: `sifr.unicode.data_version`, `normalize`, `is_normalized`, `name`, `lookup`, `category`, `bidirectional`, `combining`, `east_asian_width`, `mirrored`, `decomposition`, `decimal`, `digit`, `numeric_value`, and `case_fold`.
+- Python-shaped surfaces classified as `deferred-to-adapter-phase`: `sifr.unicodedata` and bare `unicodedata`; the existing `crates/sifr/tests/e2e/fail/bare_cpython_unicodedata_import.sifr` fixture continues to enforce the namespace boundary.
+- Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_unicode_core.sifr`.
 
 ## Waiver Index
 
