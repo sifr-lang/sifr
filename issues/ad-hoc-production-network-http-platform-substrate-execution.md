@@ -42,6 +42,22 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Source: user-provided reviewer notes on avoiding toy compatibility modules and keeping only production substrate / production developer experience.
   - Result: `sifr.net`, `sifr.tls`, `sifr.url`, accepted `sifr.http` substrate, typed errors, async streams, blocking-I/O diagnostics, observability hooks, and internal loopback harnesses remain in scope.
   - Result: CPython-shaped public modules are no longer accepted as the phase's success criteria.
+- Rust ecosystem strategy review:
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-23-ecosystem.md`
+  - Result: `PASS`; crate stack, from-scratch rejection policy, M0 dependency decision records, no-fallback policy, and execution ledger alignment were accepted.
+- Rust ecosystem final review:
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-24-ecosystem-final.md`
+  - Result: `FAIL`; M0 dependency records were not in the milestone definition of done, and conditional crates such as `x509-parser` could bypass the audit requirement. Both findings were remediated.
+- Text/i18n dependency discovery:
+  - Result: complete; network/HTTP text-dependent surfaces were discovered and classified across URL parsing/building, percent encoding, query/form behavior, headers, bodies, cookies, TLS certificate display, diagnostics, observability, demos, Phase 41 handoff, and HTTP client handoff.
+- Text/i18n dependency review:
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-26-text-dependency.md`
+  - Result: `PASS`; the dependency matrix, M1/M2/M2.5/M3 blockers, no-local-decoding rule, binary substrate readiness, and ledger alignment were accepted.
+- Text/i18n dependency final reviews:
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-27-text-dependency-final.md`
+  - Result: `PASS`; final cross-phase decisions and ledger state were accepted.
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-28-text-dependency-handoff.md`
+  - Result: `PASS`; explicit Phase 41 and HTTP client handoff rows introduced no contradictions and completed the dependency matrix.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -61,6 +77,12 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Add explicit Phase 41 handoff and separate production HTTP client handoff.
 - [x] Keep CPython scans as evidence mining, not parity backlog.
 - [x] Bring HTTP/2 into the production substrate and keep HTTP/3 / QUIC deferred with a revisit rule.
+- [x] Add Rust ecosystem-first dependency strategy for network, DNS, TLS, URL, HTTP/1, HTTP/2, cookies, observability, and tests.
+- [x] Require M0 dependency decision records before any from-scratch protocol/domain implementation.
+- [x] Add M0 definition-of-done gate for dependency decision records across every Rust Ecosystem First crate family.
+- [x] Ensure conditional crates such as `x509-parser` receive the same dependency audit as baseline crates.
+- [x] Add a text/i18n dependency matrix for binary/ASCII-safe substrate versus features blocked on text/i18n M1, M2, M2.5, or M3.
+- [x] Require network/HTTP consumers to call `sifr.encoding`, `sifr.unicode`, `sifr.io`, or `sifr.i18n` rather than adding local encoding, Unicode, locale, or fallback-decoder behavior.
 - [x] Make stream I/O buffer ownership/lifetime semantics an M0 gate before M1 implementation.
 - [x] Add mTLS/client certificate authentication as an M0/M2 TLS classification item.
 
@@ -111,6 +133,8 @@ Each milestone must record:
 - CPython docs files scanned.
 - CPython tests scanned.
 - Public APIs classified as production-public, production-substrate, internal-test, deferred, rejected, blocked, or host-limited.
+- Rust ecosystem crates accepted/rejected with feature flags, public API leak checks, typed error mapping, panic/unsafe audit notes, and conformance evidence.
+- Text/i18n dependency states recorded for URL, header, body, cookie, certificate-display, diagnostics, observability, demos, Phase 41 handoff, and HTTP client handoff surfaces.
 - CPython behavior mined into Sifr-native tests.
 - CPython behavior rejected as legacy, unsafe, toy, dynamic, descriptor-shaped, raw-event-loop, or non-product.
 - Sifr e2e pass/fail fixtures added.

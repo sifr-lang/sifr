@@ -134,12 +134,49 @@ If the answer is no, the API is internal, deferred, or rejected.
 
 The split phases are not an implied ship order. Each phase may implement and test its self-contained binary/runtime subset independently, but cross-phase consumer features are blocked until their provider phase is complete:
 
-- Text/i18n is a hard prerequisite for non-UTF-8 HTTP body decoding, URL percent-encoding variants that require codec lookup, file/text handlers, and any network demo that depends on `open(..., encoding=...)`.
-- The precise unblock point for those text-dependent network features is completion of text/i18n `milestone_text_i18n_1: Codecs Registry, Encodings, And Text I/O Integration`; this phase records those features as `blocked-on-text-i18n-m1` until that milestone is closed.
+- Text/i18n is a hard prerequisite for non-UTF-8 HTTP body decoding, URL percent-encoding variants that require codec lookup, Unicode/IDNA host canonicalization if M0 cannot align it with the text Unicode version, file/text handlers, text-heavy demos, and any network demo that depends on `open(..., encoding=...)`.
+- The precise unblock point for encoding-dependent network features is completion of text/i18n `milestone_text_i18n_1: Encoding And Explicit Text I/O`; this phase records those features as `blocked-on-text-i18n-m1` until that milestone is closed.
+- Unicode-data-dependent network features wait for text/i18n `milestone_text_i18n_2: Unicode Core` or `milestone_text_i18n_2_5: Unicode Segmentation` when they require Unicode normalization, case folding, IDNA behavior, display boundaries, or user-visible Unicode property decisions.
+- Locale-sensitive network logging, formatting, or diagnostics wait for text/i18n `milestone_text_i18n_3: Locale Identifiers And Locale-Sensitive Formatting`; this phase must not introduce locale-derived defaults.
 - Concurrency/runtime is a hard prerequisite for executor-backed serving APIs. This phase does not implement public thread, executor, queue, process, warning, or signal modules.
 - Async scheduler/task primitives are prior runtime infrastructure owned by the existing async model. This phase consumes that runtime and adds only network-specific stream, TLS, and HTTP suspension points.
 - Phase 41 consumes this phase for server framework routing, middleware, lifecycle/shutdown, typed extractors, validation, error mapping, and operational hooks.
 - A separate production HTTP client phase consumes this phase for connection pooling, redirects, retry policy, auth, cookies, proxies, streaming upload/download, JSON helpers, multipart, compression, test transports, and sync/async product design.
+
+### Text/I18n Dependency Decisions
+
+This phase is allowed to ship binary and protocol-correct network substrate before the text/i18n phase. It must not implement local encoding fallbacks, duplicate codec registries, or silently coerce bytes into UTF-8 text to avoid the dependency.
+
+| Network/HTTP surface | Status before text/i18n M1 | Text/i18n dependency | Decision |
+| --- | --- | --- | --- |
+| TCP, UDP if accepted, DNS socket transport, TLS handshakes, HTTP/1.1 and HTTP/2 framing | `production-substrate` | none | Protocol bytes and transport state are independent of text decoding. |
+| HTTP request/response bodies | binary streaming only | M1 for charset decoding | Bodies are `Bytes`/stream values in this phase. `body.text(...)`, charset-aware decoding, and text body previews are blocked on M1. |
+| HTTP headers | validated protocol representation | M1 only for non-ASCII/user-text conversion | Header names use HTTP token/ASCII validation. Header values remain typed protocol values or byte/ASCII-safe values; decoding arbitrary header bytes to Sifr text is blocked on M1. |
+| `Content-Type` and `charset` parameters | parse ASCII parameter names/labels only | M1 for actual charset decoding | This phase may parse and preserve charset labels, but must not decode payloads locally. Unsupported labels remain typed errors or blocked records. |
+| URL parsing/building | ASCII, already-valid Sifr text, UTF-8 percent behavior where no codec lookup is required | M1 for non-UTF-8 encoding labels; M2 for Unicode/IDNA alignment if needed | `sifr.url` may parse/build typed URLs over valid Sifr strings and bytes. Non-UTF-8 `encoding=` behavior and codec-label lookup are blocked on M1. Unicode host canonicalization/IDNA must either use a text/i18n-approved Unicode version or remain `blocked-on-text-i18n-m2`. |
+| Percent encoding/decoding | byte/ASCII/UTF-8 safe operations | M1 for named encodings and error handlers | Percent helpers that take raw bytes are allowed. Helpers that accept `encoding=` or `errors=` must call the text substrate after M1. |
+| Query/form helpers | byte/ASCII/UTF-8 safe parsing only | M1 for non-UTF-8 form decoding | `application/x-www-form-urlencoded` charset variants, dynamic `encoding=`, and text error handlers are blocked on M1. Multipart/form parsing is reserved for the future HTTP client/framework phases unless M0 accepts substrate-only parsing. |
+| Cookie header parsing | header-level syntax only | M1 for percent-decoded/user-text values | Cookie names/values may remain typed header strings/bytes. Percent-decoded or non-UTF-8 cookie text is blocked on M1. Cookie persistence remains outside this phase. |
+| TLS certificate verification | allowed | none | Verification is owned by `rustls`/TLS substrate and does not need text/i18n. |
+| TLS certificate field inspection/display | typed raw/DER or ASCII-safe fields only | M1/M2 for decoded display names and Unicode normalization | User-visible certificate subject/issuer/SAN display must not invent local string decoding. M2 gates Unicode normalization/IDNA-sensitive display behavior. |
+| Error messages and diagnostics | static ASCII diagnostic templates with typed evidence | M1/M3 for decoded remote text or locale-sensitive formatting | Errors carry typed bytes/labels/status evidence. No locale-sensitive formatting or decoded body/header snippets before the provider milestones. |
+| Observability hooks | structured events with typed fields | M1 for decoded previews; M3 for locale-sensitive formatting | Trace/metric labels use stable ASCII keys and typed values. Body/header previews that decode text are blocked on M1. |
+| Demos and fixtures | binary loopback and ASCII/UTF-8-only demos | M1 for `open(..., encoding=...)` or non-UTF-8 demos | Demos must not require text-mode file I/O or local codec workarounds before M1. |
+| Phase 41 web framework handoff | binary request/response pipeline, routing substrate, and typed protocol metadata | M1 for text body/extractor decoding; M2 for Unicode path/host normalization if accepted; M3 for locale-sensitive formatting | Framework extractors such as text bodies, decoded forms, JSON text helpers, and decoded path/query values must consume text/i18n provider APIs. Binary routing and protocol metadata can proceed on this substrate. |
+| Production HTTP client handoff | pooling, timeouts, retries, TLS, redirects over typed URLs, binary streaming | M1 for text response helpers, charset decoding, form helpers, and decoded cookie/header values; M2 for Unicode/IDNA alignment; M3 for locale-sensitive diagnostics | Client features must not add local charset detection/decoding or duplicate URL Unicode behavior. Text helpers wait for the text/i18n provider. |
+
+M0 must add these decisions to the inventory and assign every text-dependent surface one of:
+
+- `production-substrate`
+- `blocked-on-text-i18n-m1`
+- `blocked-on-text-i18n-m2`
+- `blocked-on-text-i18n-m2_5`
+- `blocked-on-text-i18n-m3`
+- `deferred-to-http-client-phase`
+- `deferred-to-phase-41`
+- `rejected`
+
+When a text-dependent feature is unblocked, it must call `sifr.encoding`, `sifr.unicode`, `sifr.io`, or `sifr.i18n` from the text/i18n phase. It must not introduce a second registry, handler table, locale default, Unicode table, or fallback decoder.
 
 ## Evidence Sources
 
@@ -208,7 +245,7 @@ Parallel work is allowed only for pure parser work that does not consume unfinis
 
 ### Native Runtime First
 
-Implement the canonical runtime primitive first. Do not layer CPython-shaped public modules over it in this phase.
+Implement the canonical runtime primitive first. Do not layer CPython-shaped public modules over it in this phase. Use production Rust ecosystem crates for protocol and transport machinery by default; do not hand-roll networking, TLS, DNS, URL, HTTP, HPACK, or observability infrastructure unless M0 records a concrete rejection finding for every suitable ecosystem option.
 
 - Tokio remains the backing async runtime because the generated task runtime already depends on `tokio` and `sifr_stdlib::StdlibFeature::Tokio`.
 - M0 must expand the Tokio dependency feature plan from the current task/sync/time set to the concrete features needed for `tokio::net` and `tokio::io`.
@@ -219,6 +256,50 @@ Implement the canonical runtime primitive first. Do not layer CPython-shaped pub
 - `sifr.http` protocol/runtime internals own request/response transport, headers, body streaming, parser/encoder limits, connection reuse, and HTTP protocol errors.
 
 The exact internal module names may change during implementation, but the boundary must exist: public Sifr-native modules must not duplicate target-runtime logic, and internal protocol/test harnesses must not leak as stable user API.
+
+### Rust Ecosystem First
+
+This phase builds a Sifr platform, not a new Rust networking stack. The implementation should wrap and constrain mature Rust crates, then add Sifr-specific type surfaces, ownership semantics, diagnostics, and panic-free error mapping.
+
+Default ecosystem stack:
+
+| Area | Preferred crates | Role |
+| --- | --- | --- |
+| Async runtime and I/O | `tokio`, `tokio-util`, `bytes` | task runtime, TCP/UDP, timers, cancellation, async read/write traits, buffer primitives |
+| Socket options | `socket2` | low-level options only when Tokio/std do not expose required production behavior |
+| DNS | `tokio::net::lookup_host` and/or `hickory-resolver` | system resolver integration and async DNS when M0 accepts its semantics |
+| TLS | `rustls`, `tokio-rustls`, `rustls-platform-verifier`, `webpki-roots`, `rustls-pemfile` | TLS config, async streams, certificate verification, roots, PEM parsing |
+| Certificate inspection | `x509-parser` (conditional) | raw certificate field access only if M0/M2 accepts a production need; must pass malformed-DER, oversized-field, and hostile-chain panic/unsafe audit before merge |
+| Test certificates | `rcgen` | deterministic local CA/self-signed fixtures only |
+| HTTP types and bodies | `http`, `http-body`, `http-body-util`, `bytes` | method/status/header/request/response/body abstractions |
+| HTTP/1 and HTTP/2 transport | `hyper`, `hyper-util`, `h2` | production HTTP transport, HTTP/2 state machine, flow control, multiplexing, protocol errors |
+| URL and percent encoding | `url`, `percent-encoding` | WHATWG/RFC URL parsing, building, and escaping |
+| Cookies | `cookie` | header-level cookie parsing; jar/persistence features remain out of scope unless the HTTP client phase accepts them |
+| Middleware/service substrate | `tower` | optional internal service abstraction when Phase 41 handoff needs composable request/response plumbing |
+| Observability | `tracing`, `metrics`, optional OpenTelemetry bridge crates | spans, structured events, counters, histograms, exporter-neutral hooks |
+| Tests and conformance | `tokio-test`, `proptest`, `h2spec`/HTTP/2 conformance fixtures where available | deterministic async tests, parser/property tests, protocol conformance |
+
+M0 must produce a dependency decision record for every crate family above. Each decision must include:
+
+- accepted crate and feature flags, or explicit rejection rationale
+- the exact Sifr abstraction that hides the crate from public APIs
+- panic/unsafe audit notes for user-controlled data paths
+- typed error mapping into Sifr error variants
+- license, MSRV, binary-size, platform, and build-feature impact
+- deterministic local test strategy
+- conformance evidence for protocol crates
+- supply-chain ownership/maintenance signal
+
+No public API may expose `tokio`, `hyper`, `h2`, `rustls`, `url`, `tower`, `tracing`, or other crate-specific types directly. The only stable user-facing contract is Sifr's typed API.
+
+From-scratch implementation is allowed only for:
+
+- thin Sifr wrappers/adapters around accepted crates
+- compiler diagnostics and workload classifications
+- Sifr ownership/cancellation/resource-limit enforcement
+- small deterministic fixtures where no production behavior is exposed
+
+From-scratch protocol parsing, TLS verification, DNS resolution, URL parsing, HPACK, HTTP/2 state machines, or metrics/tracing backends are rejected unless M0 records that no suitable Rust ecosystem crate satisfies the safety, maintenance, and production requirements.
 
 ### Sifr-Native Network API Shape
 
@@ -385,9 +466,12 @@ Scope:
 - Define typed network/TLS/URL/HTTP error model.
 - Define async/blocking workload classifications and diagnostics.
 - Define runtime dependency features and approved Rust crates.
+- Define the Rust ecosystem dependency stack and feature flags for network, DNS, TLS, URL, HTTP/1, HTTP/2, cookies, observability, and tests.
+- Record explicit rejection rationale before implementing any protocol/domain component from scratch.
 - Define HTTP client/server substrate boundaries.
 - Define protocol version scope, including HTTP/1.1, HTTP/2, and explicit HTTP/3 deferral entries.
 - Define buffer ownership and API pattern for stream I/O before M1 backlog entries are finalized.
+- Define the complete text/i18n dependency inventory for URL, headers, bodies, cookies, certificate display, observability, diagnostics, demos, Phase 41 handoff, and HTTP client handoff.
 - Define Phase 41 handoff contract.
 - Define the separate production HTTP client phase handoff contract.
 - Scan every CPython source/test/doc file listed in `Evidence Sources`.
@@ -404,7 +488,9 @@ Validation:
 Definition of done:
 
 - Every proposed surface is classified as `production-public`, `production-substrate`, `internal-test`, `deferred`, `rejected`, `blocked-on-text-i18n-m1`, `blocked-on-concurrency-runtime`, or `host-limited`.
+- Every text-dependent surface is classified as `production-substrate`, `blocked-on-text-i18n-m1`, `blocked-on-text-i18n-m2`, `blocked-on-text-i18n-m2_5`, `blocked-on-text-i18n-m3`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
 - No module is accepted merely because CPython has it.
+- Dependency decision records are present and checked in for every crate family in the Rust Ecosystem First table, covering accepted crate and feature flags, Sifr abstraction that hides the crate from public APIs, panic/unsafe audit for user-controlled data paths, typed error mapping into Sifr variants, license/MSRV/binary-size/platform impact, deterministic local test strategy, conformance evidence for protocol crates, and supply-chain/maintenance signal.
 - Stream I/O ownership, lifetime, cancellation, and partial read/write semantics are decided before M1 starts.
 - M1-M5 implementation PRs have concrete backlog entries rather than prose-only scope.
 
@@ -436,11 +522,13 @@ CPython evidence to mine:
 - `Lib/test/test_asyncio/test_sock_lowlevel.py`
 - `Lib/test/test_asyncio/test_selector_events.py`
 
-Rust/runtime candidates:
+Rust/runtime stack:
 
 - `tokio::net`
 - `tokio::io`
+- `tokio-util` and `bytes` when M0 accepts their buffer/framing role
 - `socket2` only if low-level socket option coverage is accepted by M0
+- `hickory-resolver` only if M0 accepts in-process async DNS semantics over or alongside system resolver behavior
 
 Definition of done:
 
@@ -472,11 +560,13 @@ CPython evidence to mine:
 - `Lib/test/test_asyncio/test_ssl.py`
 - `Lib/test/test_asyncio/test_sslproto.py`
 
-Rust/runtime candidates:
+Rust/runtime stack:
 
 - `rustls`
 - `tokio-rustls`
-- `webpki-roots` or platform-native roots, selected explicitly
+- `rustls-platform-verifier` and/or `webpki-roots`, selected explicitly
+- `rustls-pemfile`
+- `rcgen` for deterministic local certificate fixtures
 - `x509-parser` only if certificate inspection requires it
 
 Definition of done:
@@ -503,6 +593,8 @@ Scope:
 - Implement small cookie header parsing required by real HTTP request/response handling.
 - Keep cookie persistence and jar policy out of this phase.
 - Record non-UTF-8 codec-dependent behavior as `blocked-on-text-i18n-m1`; do not duplicate codec registry behavior locally.
+- Record Unicode/IDNA host behavior as `production-substrate` only if M0 proves the selected URL crate's Unicode version and behavior align with text/i18n M2; otherwise keep Unicode host canonicalization `blocked-on-text-i18n-m2` and allow only ASCII/already-punycode host behavior before M2.
+- Record query/form/cookie text decoding behavior with the Text/I18n Dependency Decisions matrix.
 
 CPython evidence to mine:
 
@@ -512,11 +604,12 @@ CPython evidence to mine:
 - `Lib/test/test_http_cookies.py`
 - `Lib/test/test_http_cookiejar.py` for rejection/defer evidence around persistence
 
-Rust/runtime candidates:
+Rust/runtime stack:
 
 - `url`
 - `percent-encoding`
 - `http` header/status/method types if accepted by M0
+- `cookie` for header-level cookie parsing only
 
 Definition of done:
 
@@ -524,6 +617,7 @@ Definition of done:
 - Invalid input returns typed errors.
 - Parser behavior needed by the HTTP substrate, Phase 41, and the HTTP client phase is covered.
 - Non-UTF-8 codec behavior is blocked on text/i18n rather than reimplemented.
+- Unicode/IDNA behavior is either aligned with text/i18n M2 or blocked on text/i18n M2 with regression fixtures for ASCII and already-punycode host behavior.
 - Cookie persistence is not exposed as a partial core API.
 
 ### milestone_network_http_4: HTTP Core Transport
@@ -542,6 +636,7 @@ Scope:
 - Implement async server accept/dispatch/shutdown substrate over M1 async streams and M2 async TLS for HTTPS.
 - Keep Phase 41 routing/middleware/extractors out of this phase.
 - Keep production HTTP client features out of this phase except for the internal transport needed to validate the protocol.
+- Keep text body decoding, decoded header/body previews, locale-sensitive diagnostics, JSON helpers, multipart/form helpers, and charset-aware client/framework helpers blocked on their provider phases according to the Text/I18n Dependency Decisions matrix.
 
 CPython evidence to mine:
 
@@ -552,12 +647,16 @@ CPython evidence to mine:
 - `Lib/test/test_urllibnet.py` and `Lib/test/test_urllib2net.py` as external-network, non-blocking signal unless converted to loopback
 - HTTP/2 and HPACK protocol conformance cases selected during M0
 
-Rust/runtime candidates:
+Rust/runtime stack:
 
 - `http`
-- `httparse` or `h1` parser crate selected by M0
+- `http-body`
+- `http-body-util`
+- `bytes`
+- `hyper`
+- `hyper-util`
 - `h2`
-- `hyper` / `hyper-util` only if M0 accepts the dependency and confirms no public API leak
+- `tower` only if M0 accepts it as internal handoff substrate for Phase 41
 - avoid pulling a web framework into the substrate
 
 Definition of done:
@@ -566,6 +665,7 @@ Definition of done:
 - HTTPS transport works through M2 TLS, including ALPN selection for HTTP/2.
 - Malformed HTTP tests produce typed protocol errors.
 - Body streaming and HTTP/2 multiplexing work without unbounded buffering.
+- HTTP transport stores and forwards binary bodies and typed protocol metadata without local text decoding fallbacks.
 - No `http.server`, `socketserver`, or handler-subclass public API is added.
 
 ### milestone_network_http_5: Integration, Documentation, And Production Handoff
@@ -578,6 +678,7 @@ Scope:
   - `sifr.url`
   - public HTTP protocol/substrate types that M0 accepts
   - rejected/deferred CPython-shaped surfaces and why they are not recommended APIs
+  - text/i18n dependency decisions and blocked surface states
 - Update internal architecture docs for:
   - runtime networking/TLS/HTTP boundaries
   - stdlib feature/dependency manifest
@@ -618,6 +719,7 @@ Definition of done:
 - Every proposed surface and CPython evidence family in the phase inventory is closed.
 - Phase 41 can build routing, middleware, lifecycle, request/response pipeline, typed extractors, validation, and production hooks on the substrate.
 - The production HTTP client phase can build pooling, timeouts, redirects, retries, auth, cookies, proxies, and streaming on the substrate.
+- Text/i18n consumers have no duplicated codec registry, Unicode table, locale default, or local fallback decoder in the network substrate.
 - Rejected toy/compatibility modules have explicit rationale.
 - No implementation-owned source file exceeds the 900-line guardrail.
 - No user-triggerable runtime panic path exists in the added stdlib/runtime surfaces.
@@ -641,16 +743,19 @@ The execution ledger must record:
 - CPython source/test/doc files scanned
 - mined/blocked/rejected/external-signal CPython test families
 - final deferred/rejected/host-limited/internal-only decision index
+- text/i18n dependency state for every URL, header, body, cookie, certificate-display, observability, diagnostics, demo, Phase 41, and HTTP client handoff surface
 
 ## Quality Contract
 
 - Solve root causes rather than adding workaround wrappers.
 - No CPython stdlib parity objective, backward-compatibility shim, legacy alias, deprecated behavior, bridge alias, migration path, or fallback path may survive phase exit.
 - No direct Tokio/runtime types may leak into public Sifr APIs.
+- No local encoding registry, local Unicode data table, locale-derived default encoding, fallback decoder, or duplicate text error-handler table may be introduced in this phase.
 - No data-dependent emitted `.unwrap()`, `.expect()`, or `panic!` is allowed in user runtime paths.
 - Every added blocking sync function must be classified in the stdlib workload database.
 - Every added async function must have a real suspension summary.
 - Every added external crate dependency must be represented by a stable `StdlibFeature` in `sifr_stdlib`.
+- Any external crate accepted during M1-M4 implementation that was not in the M0 Rust Ecosystem First table must complete the same dependency decision record in the PR that first introduces the dependency.
 - Every public module added to embedded stdlib sources must have canonical `sifr.*` import-resolution tests, type-check tests, e2e pass tests, and negative diagnostics for unsupported bare CPython import forms.
 - Every public network/web API must pass the No-Toy-Module Gate and Maintenance Burden Test.
 
