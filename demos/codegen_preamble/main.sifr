@@ -12,7 +12,7 @@ def main():
     path: str = "/tmp/sifr_m14_preamble_demo.txt"
     try:
         _: None = write_text(path, "m14 preamble")
-        f = open(path, "r")
+        f = open(path, "r", encoding="utf-8")
         text: str = f.read()
         f.close()
         print("file = " + text)
@@ -25,4 +25,3 @@ def main():
     log.set_level(20)
     log.info("preamble logging alive")
     print("preamble demo complete")
-

@@ -1,0 +1,7 @@
+# expect-error[col=21]: SIFR-NAME-0004
+
+from sifr.io import TextIOWrapper
+
+
+def main() -> None:
+    _ = TextIOWrapper

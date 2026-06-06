@@ -5,6 +5,39 @@ use crate::model::Severity;
 
 pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
+        "SIFR-IO-0801",
+        "IO",
+        "Text-mode open requires an explicit encoding.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/text_i18n_open_without_encoding.sifr",
+        "text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings",
+        "sifr_lowering::lower::expressions::call_shadowable_builtins",
+        [],
+        []
+    ),
+    active_entry!(
+        "SIFR-IO-0802",
+        "IO",
+        "Open mode must be statically known.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_mode.sifr",
+        "open mode must be a string literal so Sifr can choose a binary or text handle type",
+        "sifr_lowering::lower::expressions::call_shadowable_builtins",
+        [],
+        []
+    ),
+    active_entry!(
+        "SIFR-ENCODING-0803",
+        "ENCODING",
+        "Encoding error handler must be statically known.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/text_i18n_dynamic_errors_handler.sifr",
+        "encoding error handlers must be statically known typed values",
+        "sifr_lowering::lower::bytes_methods",
+        [],
+        []
+    ),
+    active_entry!(
             "SIFR-WORKSPACE-0001",
             "WORKSPACE",
             "Malformed workspace manifest.",

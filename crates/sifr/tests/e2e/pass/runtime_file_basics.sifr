@@ -1,5 +1,5 @@
 # Reference: phase_psp_runtime_0_architecture_lock
-from sifr.io import write_text, read_text, exists
+from sifr.io import write_text, read_text, read_lines, exists
 from sifr.os import remove_file, rmdir
 from sifr.tempfile import mkstemp, mkdtemp
 from sifr.zipfile import ZipFile
@@ -36,12 +36,8 @@ def main() -> None:
 
     try:
         _w_text: None = write_text(text_path, "one\ntwo")
-        reader = open(text_path, "r")
-        first: str | None = reader.readline()
-        second: str | None = reader.readline()
-        third: str | None = reader.readline()
-        reader.close()
-        text_io_ok = str(first) == "one" and str(second) == "two" and third is None
+        lines: list[str] = read_lines(text_path)
+        text_io_ok = len(lines) == 2 and lines[0] == "one" and lines[1] == "two"
 
         wb = open(text_path, "wb")
         _wb: None = wb.write_bytes(b"runtime")

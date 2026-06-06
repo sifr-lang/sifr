@@ -1,6 +1,6 @@
 # Reference: m30_1e
 # Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
-from sifr.io import read_text, write_text, exists, append_text
+from sifr.io import read_text, write_text, exists, append_text, read_lines
 from sifr.test import assert_bool_vector_eq
 
 
@@ -28,19 +28,15 @@ def collect_open_actual() -> list[bool]:
     eof_ok: bool = False
     missing_rejected: bool = False
     try:
-        f = open(path, "r")
-        first: str | None = f.readline()
-        second: str | None = f.readline()
-        third: str | None = f.readline()
-        f.close()
-        first_ok = str(first) == "hello"
-        second_ok = str(second) == "world"
-        eof_ok = third is None
+        lines: list[str] = read_lines(path)
+        first_ok = len(lines) >= 1 and lines[0] == "hello"
+        second_ok = len(lines) >= 2 and lines[1] == "world"
+        eof_ok = len(lines) == 2
     except IOError as e:
         _ = str(e.message)
 
     try:
-        _ = open("/tmp/sifr_m30_1e_io_demo_missing.txt", "r")
+        _ = open("/tmp/sifr_m30_1e_io_demo_missing.txt", "r", encoding="utf-8")
     except IOError as e:
         _ = str(e.message)
         missing_rejected = True

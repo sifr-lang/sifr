@@ -1,0 +1,10 @@
+# expect-error[col=33]: SIFR-ENCODING-0803
+
+
+def choose_errors() -> str:
+    return "replace"
+
+
+def main() -> None:
+    errors: str = choose_errors()
+    _ = b"\xff".decode("utf-8", errors)

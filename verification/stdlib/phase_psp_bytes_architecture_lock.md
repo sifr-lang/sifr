@@ -24,7 +24,7 @@ Lock one canonical binary carrier (`bytes`), one explicit text/binary boundary, 
 | `memoryview` object-model parity | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_memoryview_unsupported.sifr` |
 | CPython buffer protocol / bytes-like duck typing | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_buffer_protocol_unsupported.sifr` |
 | Implicit `str` <-> binary coercions | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_implicit_str_bytes_coercion_unsupported.sifr` |
-| Non-UTF-8 codec families | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_non_utf8_codec_unsupported.sifr` |
+| Non-UTF-8 codec families | `moved-to-text-i18n-m1` | `crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr` |
 | `bytes`/`bytearray` subclass ecosystems | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_bytes_subclass_unsupported.sifr` |
 
 ## Parser/AST Scope Lock (Pre-existing Support)
@@ -55,5 +55,4 @@ Lock one canonical binary carrier (`bytes`), one explicit text/binary boundary, 
   - `crates/sifr/tests/e2e/fail/bytes_memoryview_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/bytes_buffer_protocol_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/bytes_implicit_str_bytes_coercion_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/bytes_non_utf8_codec_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/bytes_bytes_subclass_unsupported.sifr`

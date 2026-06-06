@@ -1,0 +1,5 @@
+# expect-error[col=36]: SIFR-ENCODING-0803
+
+
+def main() -> None:
+    _ = b"&#9731;".decode("ascii", "xmlcharrefreplace")

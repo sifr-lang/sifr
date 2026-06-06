@@ -26,7 +26,7 @@ def main():
     # --- open() built-in: text write + read ---
     path: str = "/tmp/sifr_demo_remediation.txt"
     try:
-        f = open(path, "w")
+        f = open(path, "w", encoding="utf-8")
         _: None = f.write("hello from open()\n")
         _2: None = f.write("second line\n")
         f.close()
@@ -38,7 +38,7 @@ def main():
     # --- open() with context manager ---
     path2: str = "/tmp/sifr_demo_ctx.txt"
     try:
-        with open(path2, "w") as fw:
+        with open(path2, "w", encoding="utf-8") as fw:
             _3: None = fw.write("context manager works")
         result: str = read_text(path2)
         print("context manager ok = " + str(result == "context manager works"))
@@ -47,7 +47,7 @@ def main():
 
     # --- open() read mode ---
     try:
-        fr = open(path, "r")
+        fr = open(path, "r", encoding="utf-8")
         content2: str = fr.read()
         fr.close()
         print("open read ok = " + str(len(content2) > 0))

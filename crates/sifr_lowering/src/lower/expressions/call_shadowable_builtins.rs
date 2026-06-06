@@ -2,6 +2,83 @@ use super::{
     expression_diagnostics, lower_any_all_call, lower_expr, lower_filter_call, lower_map_call, str,
     CallLowering, ExprCall, FunctionType, HirExpr, LowerCtx, Ranged, Type,
 };
+use sifr_diagnostics::DiagnosticCode;
+use sifr_python_ast::Expr;
+
+fn string_literal_value(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::StringLiteral(literal) => Some(literal.value.to_str().to_string()),
+        _ => None,
+    }
+}
+
+fn open_mode_expr(call: &ExprCall, n_args: usize) -> Option<&Expr> {
+    if n_args >= 2 {
+        return call.arguments.args.get(1);
+    }
+    call.arguments
+        .keywords
+        .iter()
+        .find(|k| k.arg.as_deref() == Some("mode"))
+        .map(|kw| &kw.value)
+}
+
+fn is_binary_open_mode(mode: &str) -> bool {
+    mode.contains('b')
+}
+
+fn report_open_text_requires_encoding(ctx: &mut LowerCtx, range: ruff_text_size::TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::IO_TEXT_OPEN_REQUIRES_ENCODING,
+        "text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings"
+            .to_string(),
+        range,
+    );
+}
+
+fn report_open_mode_requires_literal(ctx: &mut LowerCtx, range: ruff_text_size::TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::IO_OPEN_MODE_REQUIRES_LITERAL,
+        "open mode must be a string literal so Sifr can choose a binary or text handle type"
+            .to_string(),
+        range,
+    );
+}
+
+fn report_static_encoding_handler_required(ctx: &mut LowerCtx, range: ruff_text_size::TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::ENCODING_HANDLER_REQUIRES_STATIC_VALUE,
+        "encoding error handlers must be statically known typed values".to_string(),
+        range,
+    );
+}
+
+fn is_decode_handler_label(label: &str) -> bool {
+    matches!(
+        label,
+        "strict" | "replace" | "ignore" | "backslashreplace" | "backslash-replace"
+    )
+}
+
+fn is_encode_handler_label(label: &str) -> bool {
+    matches!(
+        label,
+        "strict"
+            | "replace"
+            | "ignore"
+            | "backslashreplace"
+            | "backslash-replace"
+            | "xmlcharrefreplace"
+            | "xml-char-ref-replace"
+            | "namereplace"
+            | "name-replace"
+    )
+}
+
+fn is_open_write_mode(mode: &str) -> bool {
+    mode == "w" || mode == "wt" || mode == "a" || mode == "at"
+}
+
 pub(super) fn lower_shadowable_builtin_call(
     func_name: &str,
     call: &ExprCall,
@@ -25,7 +102,28 @@ pub(super) fn lower_shadowable_builtin_call(
     }
     if func_name == "open" {
         let n_args = call.arguments.args.len();
-        let _n_kwargs = call.arguments.keywords.len();
+        let mode_expr = open_mode_expr(call, n_args);
+        let mode_literal = match mode_expr {
+            Some(expr) => {
+                if let Some(value) = string_literal_value(expr) {
+                    value
+                } else {
+                    report_open_mode_requires_literal(ctx, expr.range());
+                    return None;
+                }
+            }
+            None => "r".to_string(),
+        };
+        let encoding_kw = call
+            .arguments
+            .keywords
+            .iter()
+            .find(|k| k.arg.as_deref() == Some("encoding"));
+        let errors_kw = call
+            .arguments
+            .keywords
+            .iter()
+            .find(|k| k.arg.as_deref() == Some("errors"));
         let path_arg = if n_args >= 1 {
             lower_expr(&call.arguments.args[0], ctx)?
         } else {
@@ -48,6 +146,109 @@ pub(super) fn lower_shadowable_builtin_call(
         } else {
             HirExpr::StringLiteral("r".to_string())
         };
+        if let Some(encoding_keyword) = encoding_kw {
+            let encoding_arg = lower_expr(&encoding_keyword.value, ctx)?;
+            if encoding_arg.ty() != &Type::Str {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "open() encoding must be 'str', got '{}'",
+                        encoding_arg.ty().display_name()
+                    ),
+                    encoding_keyword.value.range(),
+                );
+                return None;
+            }
+            let errors_arg = if let Some(keyword) = errors_kw {
+                let Some(handler_label) = string_literal_value(&keyword.value) else {
+                    report_static_encoding_handler_required(ctx, keyword.value.range());
+                    return None;
+                };
+                let handler_allowed = if is_open_write_mode(mode_literal.as_str()) {
+                    is_encode_handler_label(handler_label.as_str())
+                } else {
+                    is_decode_handler_label(handler_label.as_str())
+                };
+                if !handler_allowed {
+                    report_static_encoding_handler_required(ctx, keyword.value.range());
+                    return None;
+                }
+                let lowered = lower_expr(&keyword.value, ctx)?;
+                if lowered.ty() != &Type::Str {
+                    expression_diagnostics::type_mismatch(
+                        ctx,
+                        format!(
+                            "open() errors must be 'str', got '{}'",
+                            lowered.ty().display_name()
+                        ),
+                        keyword.value.range(),
+                    );
+                    return None;
+                }
+                lowered
+            } else {
+                HirExpr::StringLiteral("strict".to_string())
+            };
+            let io_err_ty = Type::Class {
+                name: "IOError".to_string(),
+                fields: vec![("message".to_string(), Type::Str)],
+                methods: vec![],
+                parent_class: None,
+            };
+            let text_handle_ty = Type::Class {
+                name: "TextFileHandle".to_string(),
+                fields: vec![],
+                methods: vec![
+                    (
+                        "read".to_string(),
+                        FunctionType::all_borrow(
+                            vec![],
+                            Type::Result(Box::new(Type::Str), Box::new(io_err_ty.clone())),
+                        ),
+                    ),
+                    (
+                        "write".to_string(),
+                        FunctionType::all_borrow(
+                            vec![("text".to_string(), Type::Str)],
+                            Type::Result(Box::new(Type::None), Box::new(io_err_ty.clone())),
+                        ),
+                    ),
+                    (
+                        "close".to_string(),
+                        FunctionType::all_borrow(vec![], Type::None),
+                    ),
+                    (
+                        "__enter__".to_string(),
+                        FunctionType::all_borrow(
+                            vec![],
+                            Type::Class {
+                                name: "TextFileHandle".to_string(),
+                                fields: vec![],
+                                methods: vec![],
+                                parent_class: None,
+                            },
+                        ),
+                    ),
+                    (
+                        "__exit__".to_string(),
+                        FunctionType::all_borrow(vec![], Type::None),
+                    ),
+                ],
+                parent_class: None,
+            };
+            ctx.class_types
+                .insert("TextFileHandle".to_string(), text_handle_ty.clone());
+            ctx.try_block_error_types.insert("IOError".to_string());
+            return Some(CallLowering::Lowered(HirExpr::Call {
+                func: "builtin_open_text".to_string(),
+                args: vec![path_arg, mode_arg, encoding_arg, errors_arg],
+                ty: text_handle_ty,
+            }));
+        }
+        if !is_binary_open_mode(mode_literal.as_str()) {
+            report_open_text_requires_encoding(ctx, call.func.range());
+            return None;
+        }
         // Return type: FileHandle (raises IOError on failure — used in try/except blocks)
         // FileHandle methods are defined in io.sifr; register them here for type checking.
         let io_err_ty = Type::Class {

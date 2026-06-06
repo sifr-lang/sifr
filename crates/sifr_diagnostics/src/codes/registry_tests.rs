@@ -148,8 +148,8 @@ fn families_by_name() -> BTreeMap<&'static str, &'static super::DiagnosticFamily
 
 fn assert_family_name(name: &str) {
     assert!(
-        (3..=12).contains(&name.len()),
-        "family name {name} must be 3-12 ASCII letters"
+        (2..=12).contains(&name.len()),
+        "family name {name} must be 2-12 ASCII letters"
     );
     assert!(
         name.bytes().all(|byte| byte.is_ascii_uppercase()),

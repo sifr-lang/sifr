@@ -1,0 +1,5 @@
+# expect-error[col=9]: SIFR-IO-0801
+
+
+def main() -> None:
+    _ = open("/tmp/sifr_text_i18n_open_without_encoding.txt", "r")

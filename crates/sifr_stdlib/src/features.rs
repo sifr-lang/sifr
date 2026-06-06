@@ -8,6 +8,7 @@ pub enum StdlibFeature {
     BigDecimal,
     Blake2,
     Chrono,
+    EncodingRs,
     Flate2,
     Md5,
     NumBigint,
@@ -34,6 +35,7 @@ impl StdlibFeature {
             Self::BigDecimal => "bigdecimal",
             Self::Blake2 => "blake2",
             Self::Chrono => "chrono",
+            Self::EncodingRs => "encoding_rs",
             Self::Flate2 => "flate2",
             Self::Md5 => "md5",
             Self::NumBigint => "num-bigint",
@@ -81,6 +83,10 @@ const BLAKE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
 const CHRONO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "chrono",
     spec: "chrono = \"0.4.44\"",
+}];
+const ENCODING_RS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "encoding_rs",
+    spec: "encoding_rs = \"0.8.35\"",
 }];
 const FLATE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "flate2",
@@ -171,6 +177,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: CHRONO_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::EncodingRs,
+        cargo_dependencies: ENCODING_RS_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Flate2,
         cargo_dependencies: FLATE2_DEPS,
     },
@@ -243,6 +253,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "bigdecimal" => Some(StdlibFeature::BigDecimal),
         "blake2" => Some(StdlibFeature::Blake2),
         "chrono" => Some(StdlibFeature::Chrono),
+        "encoding_rs" | "encoding-rs" => Some(StdlibFeature::EncodingRs),
         "flate2" => Some(StdlibFeature::Flate2),
         "md5" => Some(StdlibFeature::Md5),
         "num-bigint" => Some(StdlibFeature::NumBigint),
@@ -279,7 +290,10 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::Sha1,
             StdlibFeature::Blake2,
         ],
-        "sifr.encoding" | "sifr.base64" => &[StdlibFeature::Base64],
+        "sifr.encoding" | "_sifr.encoding" => {
+            &[StdlibFeature::EncodingRs, StdlibFeature::SifrRuntime]
+        }
+        "sifr.base64" => &[StdlibFeature::Base64],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
         "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {

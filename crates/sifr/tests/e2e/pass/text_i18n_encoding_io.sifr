@@ -1,0 +1,240 @@
+from sifr.encoding import (
+    Encoding,
+    DecodeError,
+    EncodeError,
+    DecodeOutcome,
+    EncodeOutcome,
+    Decoder,
+    Encoder,
+    ascii,
+    encoding,
+    latin1,
+    utf8_sig,
+    utf16_le,
+    windows1252,
+    decode,
+    decode_outcome,
+    encode,
+    encode_outcome,
+    replace_decode_handler,
+    xmlcharref_replace_encode_handler,
+)
+from sifr.io import open_text
+from sifr.io import TextFileHandle
+from sifr.os import remove_file
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_encoding_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    latin: Encoding = latin1()
+    try:
+        latin_bytes: bytes = encode("caf\u00e9", latin)
+        actual.append(latin_bytes == b"caf\xe9")
+    except EncodeError as e:
+        _ = e.message
+        actual.append(False)
+
+    try:
+        latin_text: str = decode(b"caf\xe9", latin)
+        actual.append(latin_text == "caf\u00e9")
+    except DecodeError as e:
+        _ = e.message
+        actual.append(False)
+
+    try:
+        recovered: DecodeOutcome = decode_outcome(b"\xffA", ascii(), replace_decode_handler())
+        actual.append(recovered.get_text() == "\ufffdA")
+        actual.append(len(recovered.get_recoveries()) == 1)
+    except DecodeError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        encoded: EncodeOutcome = encode_outcome("snowman \u2603", ascii(), xmlcharref_replace_encode_handler())
+        actual.append(encoded.get_data() == b"snowman &#9731;")
+        actual.append(len(encoded.get_recoveries()) == 1)
+    except EncodeError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        sig_data: bytes = encode("bom", utf8_sig())
+        sig_text: str = decode(sig_data, utf8_sig())
+        actual.append(sig_data == b"\xef\xbb\xbfbom")
+        actual.append(sig_text == "bom")
+    except Error as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        utf16_data: bytes = encode("Hi", utf16_le())
+        utf16_text: str = decode(utf16_data, utf16_le())
+        actual.append(utf16_data == b"H\x00i\x00")
+        actual.append(utf16_text == "Hi")
+    except Error as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        cp_text: str = decode(b"\x80", windows1252())
+        cp_label: str = encoding("cp1252").canonical_label()
+        utf8_label: str = encoding("utf_8").canonical_label()
+        latin_alias_label: str = encoding("iso8859-1").canonical_label()
+        actual.append(cp_text == "\u20ac")
+        actual.append(cp_label == "windows-1252")
+        actual.append(utf8_label == "utf-8")
+        actual.append(latin_alias_label == "latin-1")
+    except Error as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        method_encoded: bytes = "snowman \u2603".encode("ascii", "xmlcharrefreplace")
+        method_decoded: str = b"\xffA".decode("ascii", "replace")
+        actual.append(method_encoded == b"snowman &#9731;")
+        actual.append(method_decoded == "\ufffdA")
+    except ParseError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+
+    decoder = Decoder(ascii())
+    first_text_ok: bool = False
+    try:
+        first: DecodeOutcome = decoder.decode(b"A", final=True)
+        first_text_ok = first.get_text() == "A"
+    except DecodeError as e:
+        _ = e.message
+    exhausted_decode: bool = False
+    try:
+        _again: DecodeOutcome = decoder.decode(b"B")
+    except DecodeError as e:
+        exhausted_decode = len(e.message) > 0
+    actual.append(first_text_ok and exhausted_decode)
+
+    split_decoder = Decoder(encoding("utf-8"))
+    split_first_ok: bool = False
+    split_second_ok: bool = False
+    split_exhausted: bool = False
+    dynamic_final: bool = len(actual) > 0
+    try:
+        split_first: DecodeOutcome = split_decoder.decode(b"\xc3", final=False)
+        split_second: DecodeOutcome = split_decoder.decode(b"\xa9", final=dynamic_final)
+        split_first_ok = split_first.get_text() == ""
+        split_second_ok = split_second.get_text() == "\u00e9"
+    except DecodeError as e:
+        _ = e.message
+    try:
+        _split_again: DecodeOutcome = split_decoder.decode(b"!")
+    except DecodeError as e:
+        split_exhausted = len(e.message) > 0
+    actual.append(split_first_ok and split_second_ok and split_exhausted)
+
+    encoder = Encoder(ascii())
+    first_encoded_ok: bool = False
+    try:
+        first_encoded: EncodeOutcome = encoder.encode("A", final=True)
+        first_encoded_text: str = decode(first_encoded.get_data(), ascii())
+        first_encoded_ok = first_encoded_text == "A"
+    except Error as e:
+        _ = e.message
+    exhausted_encode: bool = False
+    try:
+        _encoded_again: EncodeOutcome = encoder.encode("B")
+    except EncodeError as e:
+        exhausted_encode = len(e.message) > 0
+    actual.append(first_encoded_ok and exhausted_encode)
+
+    dynamic_encoder = Encoder(ascii())
+    dynamic_encoded_ok: bool = False
+    dynamic_encode_exhausted: bool = False
+    finish_encode: bool = len(actual) > 0
+    try:
+        dynamic_encoded: EncodeOutcome = dynamic_encoder.encode("Z", final=finish_encode)
+        dynamic_encoded_ok = dynamic_encoded.get_data() == b"Z"
+    except EncodeError as e:
+        _ = e.message
+    try:
+        _dynamic_again: EncodeOutcome = dynamic_encoder.encode("!")
+    except EncodeError as e:
+        dynamic_encode_exhausted = len(e.message) > 0
+    actual.append(dynamic_encoded_ok and dynamic_encode_exhausted)
+
+    return actual
+
+
+def collect_text_io_actual() -> list[bool]:
+    actual: list[bool] = []
+    path: str = "/tmp/sifr_text_i18n_encoding_io_latin1.txt"
+    builtin_path: str = "/tmp/sifr_text_i18n_builtin_open_latin1.txt"
+    ascii_path: str = "/tmp/sifr_text_i18n_builtin_open_ascii_xml.txt"
+    roundtrip_ok: bool = False
+    builtin_roundtrip_ok: bool = False
+    encode_only_write_ok: bool = False
+    cleanup_ok: bool = False
+    try:
+        writer: TextFileHandle = open_text(path, "w", encoding=latin1())
+        _w: None = writer.write("caf\u00e9")
+        writer.close()
+
+        reader: TextFileHandle = open_text(path, "r", encoding=latin1())
+        text: str = reader.read()
+        reader.close()
+        roundtrip_ok = text == "caf\u00e9"
+
+        builtin_writer: TextFileHandle = open(builtin_path, "w", encoding="latin-1", errors="strict")
+        _bw: None = builtin_writer.write("caf\u00e9")
+        builtin_writer.close()
+
+        builtin_reader: TextFileHandle = open(builtin_path, "r", encoding="latin-1", errors="strict")
+        builtin_text: str = builtin_reader.read()
+        builtin_reader.close()
+        builtin_roundtrip_ok = builtin_text == "caf\u00e9"
+
+        ascii_writer: TextFileHandle = open(ascii_path, "w", encoding="ascii", errors="xmlcharrefreplace")
+        _aw: None = ascii_writer.write("snowman \u2603")
+        ascii_writer.close()
+        ascii_reader = open(ascii_path, "rb")
+        ascii_payload: bytes = ascii_reader.read_bytes()
+        ascii_reader.close()
+        encode_only_write_ok = ascii_payload == b"snowman &#9731;"
+
+        _rm: None = remove_file(path)
+        _rm_builtin: None = remove_file(builtin_path)
+        _rm_ascii: None = remove_file(ascii_path)
+        cleanup_ok = True
+    except IOError as e:
+        _ = str(e.message)
+
+    actual.append(roundtrip_ok)
+    actual.append(builtin_roundtrip_ok)
+    actual.append(encode_only_write_ok)
+    actual.append(cleanup_ok)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]) -> None:
+    for value in values:
+        target.append(value)
+
+
+def main() -> None:
+    actual: list[bool] = []
+    append_all(actual, collect_encoding_actual())
+    append_all(actual, collect_text_io_actual())
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True, True, True, True, True
+    ]
+    assert_bool_vector_eq(actual, expected)

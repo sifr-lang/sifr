@@ -4,7 +4,7 @@ from sifr.io import read_text
 def main():
     path: str = "/tmp/sifr_open_ctx_test.txt"
     try:
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             _: None = f.write("hello from context")
         content: str = read_text(path)
         assert str("content = " + content) == 'content = hello from context'

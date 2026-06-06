@@ -4,7 +4,7 @@ from sifr.io import read_text
 def main():
     path: str = "/tmp/sifr_open_write_test.txt"
     try:
-        f = open(path, "w")
+        f = open(path, "w", encoding="utf-8")
         _: None = f.write("test content")
         f.close()
         content: str = read_text(path)

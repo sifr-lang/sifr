@@ -1,0 +1,283 @@
+# sifr.encoding — explicit byte/text encoding substrate
+from _sifr.encoding import (
+    encoding_is_supported,
+    encoding_canonical_label,
+    encoding_decode_text,
+    encoding_decode_recoveries,
+    encoding_decode_outcome,
+    encoding_decode_incremental_outcome,
+    encoding_decode_incremental_pending,
+    encoding_encode_bytes,
+    encoding_encode_recoveries,
+    encoding_encode_outcome,
+)
+
+ENCODING_UTF8: str = "utf-8"
+ENCODING_UTF8_SIG: str = "utf-8-sig"
+ENCODING_ASCII: str = "ascii"
+ENCODING_LATIN1: str = "latin-1"
+ENCODING_UTF16_LE: str = "utf-16-le"
+ENCODING_UTF16_BE: str = "utf-16-be"
+ENCODING_WINDOWS_1250: str = "windows-1250"
+ENCODING_WINDOWS_1251: str = "windows-1251"
+ENCODING_WINDOWS_1252: str = "windows-1252"
+ENCODING_WINDOWS_1253: str = "windows-1253"
+ENCODING_WINDOWS_1254: str = "windows-1254"
+ENCODING_WINDOWS_1255: str = "windows-1255"
+ENCODING_WINDOWS_1256: str = "windows-1256"
+ENCODING_WINDOWS_1257: str = "windows-1257"
+ENCODING_WINDOWS_1258: str = "windows-1258"
+
+DECODE_ERRORS_STRICT: str = "strict"
+DECODE_ERRORS_REPLACE: str = "replace"
+DECODE_ERRORS_IGNORE: str = "ignore"
+DECODE_ERRORS_BACKSLASH_REPLACE: str = "backslashreplace"
+
+ENCODE_ERRORS_STRICT: str = "strict"
+ENCODE_ERRORS_REPLACE: str = "replace"
+ENCODE_ERRORS_IGNORE: str = "ignore"
+ENCODE_ERRORS_BACKSLASH_REPLACE: str = "backslashreplace"
+ENCODE_ERRORS_XMLCHARREF_REPLACE: str = "xmlcharrefreplace"
+ENCODE_ERRORS_NAME_REPLACE: str = "namereplace"
+
+
+class DecodeError(Error):
+    message: str
+
+
+class EncodeError(Error):
+    message: str
+
+
+class Encoding:
+    label: str
+
+    def __init__(self, label: str) -> None:
+        self.label = label + ""
+
+    def canonical_label(self) -> Result[str, DecodeError]:
+        return encoding_canonical_label(self.label)
+
+    def is_supported(self) -> bool:
+        return encoding_is_supported(self.label)
+
+
+class DecodeErrorHandler:
+    name: str
+
+    def __init__(self, name: str) -> None:
+        self.name = name + ""
+
+
+class EncodeErrorHandler:
+    name: str
+
+    def __init__(self, name: str) -> None:
+        self.name = name + ""
+
+
+class DecodeOutcome:
+    text: str
+    recoveries: list[str]
+
+    def __init__(self, text: str, recoveries: list[str]) -> None:
+        self.text = text + ""
+        self.recoveries = recoveries
+
+    def get_text(self) -> str:
+        return self.text + ""
+
+    def get_recoveries(self) -> list[str]:
+        return self.recoveries
+
+
+class EncodeOutcome:
+    data: bytes
+    recoveries: list[str]
+
+    def __init__(self, data: bytes, recoveries: list[str]) -> None:
+        self.data = data
+        self.recoveries = recoveries
+
+    def get_data(self) -> bytes:
+        return self.data
+
+    def get_recoveries(self) -> list[str]:
+        return self.recoveries
+
+
+def encoding(label: str) -> Encoding:
+    return Encoding(label)
+
+
+def utf8() -> Encoding:
+    return Encoding(ENCODING_UTF8)
+
+
+def utf8_sig() -> Encoding:
+    return Encoding(ENCODING_UTF8_SIG)
+
+
+def ascii() -> Encoding:
+    return Encoding(ENCODING_ASCII)
+
+
+def latin1() -> Encoding:
+    return Encoding(ENCODING_LATIN1)
+
+
+def utf16_le() -> Encoding:
+    return Encoding(ENCODING_UTF16_LE)
+
+
+def utf16_be() -> Encoding:
+    return Encoding(ENCODING_UTF16_BE)
+
+
+def windows1252() -> Encoding:
+    return Encoding(ENCODING_WINDOWS_1252)
+
+
+def strict_decode_handler() -> DecodeErrorHandler:
+    return DecodeErrorHandler(DECODE_ERRORS_STRICT)
+
+
+def replace_decode_handler() -> DecodeErrorHandler:
+    return DecodeErrorHandler(DECODE_ERRORS_REPLACE)
+
+
+def ignore_decode_handler() -> DecodeErrorHandler:
+    return DecodeErrorHandler(DECODE_ERRORS_IGNORE)
+
+
+def backslash_replace_decode_handler() -> DecodeErrorHandler:
+    return DecodeErrorHandler(DECODE_ERRORS_BACKSLASH_REPLACE)
+
+
+def strict_encode_handler() -> EncodeErrorHandler:
+    return EncodeErrorHandler(ENCODE_ERRORS_STRICT)
+
+
+def replace_encode_handler() -> EncodeErrorHandler:
+    return EncodeErrorHandler(ENCODE_ERRORS_REPLACE)
+
+
+def ignore_encode_handler() -> EncodeErrorHandler:
+    return EncodeErrorHandler(ENCODE_ERRORS_IGNORE)
+
+
+def backslash_replace_encode_handler() -> EncodeErrorHandler:
+    return EncodeErrorHandler(ENCODE_ERRORS_BACKSLASH_REPLACE)
+
+
+def xmlcharref_replace_encode_handler() -> EncodeErrorHandler:
+    return EncodeErrorHandler(ENCODE_ERRORS_XMLCHARREF_REPLACE)
+
+
+def name_replace_encode_handler() -> EncodeErrorHandler:
+    return EncodeErrorHandler(ENCODE_ERRORS_NAME_REPLACE)
+
+
+def _decode_handler_name(errors: DecodeErrorHandler | None) -> str:
+    if errors is not None:
+        return errors.name + ""
+    return DECODE_ERRORS_STRICT
+
+
+def _encode_handler_name(errors: EncodeErrorHandler | None) -> str:
+    if errors is not None:
+        return errors.name + ""
+    return ENCODE_ERRORS_STRICT
+
+
+def _decode_handler_or_strict(errors: DecodeErrorHandler | None) -> DecodeErrorHandler:
+    if errors is not None:
+        return DecodeErrorHandler(errors.name + "")
+    return strict_decode_handler()
+
+
+def _encode_handler_or_strict(errors: EncodeErrorHandler | None) -> EncodeErrorHandler:
+    if errors is not None:
+        return EncodeErrorHandler(errors.name + "")
+    return strict_encode_handler()
+
+
+def decode_outcome(data: bytes, enc: Encoding, errors: DecodeErrorHandler | None = None) -> Result[DecodeOutcome, DecodeError]:
+    handler_name: str = _decode_handler_name(errors)
+    try:
+        return encoding_decode_outcome(data, enc.label, handler_name)
+    except DecodeError as e:
+        raise DecodeError(e.message)
+
+
+def decode(data: bytes, enc: Encoding, errors: DecodeErrorHandler | None = None) -> Result[str, DecodeError]:
+    try:
+        outcome: DecodeOutcome = decode_outcome(data, enc, errors)
+        return outcome.get_text()
+    except DecodeError as e:
+        raise DecodeError(e.message)
+
+
+def encode_outcome(text: str, enc: Encoding, errors: EncodeErrorHandler | None = None) -> Result[EncodeOutcome, EncodeError]:
+    handler_name: str = _encode_handler_name(errors)
+    try:
+        return encoding_encode_outcome(text, enc.label, handler_name)
+    except EncodeError as e:
+        raise EncodeError(e.message)
+
+
+def encode(text: str, enc: Encoding, errors: EncodeErrorHandler | None = None) -> Result[bytes, EncodeError]:
+    try:
+        outcome: EncodeOutcome = encode_outcome(text, enc, errors)
+        return outcome.get_data()
+    except EncodeError as e:
+        raise EncodeError(e.message)
+
+
+class Decoder:
+    _encoding: Encoding
+    _errors: DecodeErrorHandler
+    _exhausted: bool
+    _pending: bytes
+
+    def __init__(self, enc: Encoding, errors: DecodeErrorHandler | None = None) -> None:
+        self._encoding = enc
+        self._errors = _decode_handler_or_strict(errors)
+        self._exhausted = False
+        self._pending = b""
+
+    def decode(self, data: bytes, final: bool = False) -> Result[DecodeOutcome, DecodeError]:
+        if self._exhausted:
+            raise DecodeError("decoder is exhausted")
+        try:
+            outcome: DecodeOutcome = encoding_decode_incremental_outcome(data, self._pending, self._encoding.label, self._errors.name, final)
+            next_pending: bytes = encoding_decode_incremental_pending(data, self._pending, self._encoding.label, final)
+            self._pending = next_pending
+            if final:
+                self._pending = b""
+                self._exhausted = True
+            return outcome
+        except DecodeError as e:
+            raise DecodeError(e.message)
+
+
+class Encoder:
+    _encoding: Encoding
+    _errors: EncodeErrorHandler
+    _exhausted: bool
+
+    def __init__(self, enc: Encoding, errors: EncodeErrorHandler | None = None) -> None:
+        self._encoding = enc
+        self._errors = _encode_handler_or_strict(errors)
+        self._exhausted = False
+
+    def encode(self, text: str, final: bool = False) -> Result[EncodeOutcome, EncodeError]:
+        if self._exhausted:
+            raise EncodeError("encoder is exhausted")
+        try:
+            outcome: EncodeOutcome = encode_outcome(text, self._encoding, self._errors)
+            if final:
+                self._exhausted = True
+            return outcome
+        except EncodeError as e:
+            raise EncodeError(e.message)

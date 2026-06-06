@@ -313,6 +313,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     infra_skip_types.insert("__io_err".to_string());
     let mut all_needed: Vec<String> = Vec::new();
+    let mut transitive_dependency_modules: HashSet<String> = HashSet::new();
     let mut stdlib_needs_file_handles = false;
     let mut stdlib_provides_file_handle_struct = false;
     for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
@@ -320,6 +321,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             for dep in deps.iter().collect::<BTreeSet<_>>() {
                 if dep.starts_with("sifr.") && !all_needed.contains(dep) {
                     all_needed.push(dep.clone());
+                }
+                if dep.starts_with("sifr.") {
+                    transitive_dependency_modules.insert(dep.clone());
                 }
             }
         }
@@ -341,7 +345,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                             .filter(|name| !intrinsic_set.is_some_and(|iset| iset.contains(*name)))
                             .cloned()
                             .collect();
-                        if pure_sifr_imports.is_empty() {
+                        if transitive_dependency_modules.contains(module_name) {
+                            rust_code.clone()
+                        } else if pure_sifr_imports.is_empty() {
                             String::new()
                         } else {
                             let mut expanded_imports = pure_sifr_imports.clone();

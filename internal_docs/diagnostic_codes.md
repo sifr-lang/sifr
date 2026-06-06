@@ -24,6 +24,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
 | `DECIMAL` | `SIFR-DECIMAL-0000` | Decimal literal and fixed-point arithmetic diagnostics. |
 | `INT` | `SIFR-INT-0000` | Exact and fixed-width integer model diagnostics. |
+| `IO` | `SIFR-IO-0000` | File and stream text/binary boundary diagnostics. |
+| `ENCODING` | `SIFR-ENCODING-0000` | Text encoding and error-handler diagnostics. |
 | `CALL` | `SIFR-CALL-0000` | Function, method, constructor, and overload call diagnostics. |
 | `OWN` | `SIFR-OWN-0000` | Ownership, borrow, move, and lifetime diagnostics. |
 | `FLOW` | `SIFR-FLOW-0000` | Control-flow, reachability, and narrowing diagnostics. |
@@ -51,6 +53,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-ASYNC-0000` | `ASYNC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0000` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-IO-0000` | `IO` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-ENCODING-0000` | `ENCODING` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0002` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0008` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0009` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -182,6 +186,9 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-STDLIB-0001` | `STDLIB` | Active | Error | `docs/errors/SIFR-STDLIB-0001.md` | `crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr` | `sifr_lowering::lower::builtin_calls` | `defaultdict() does not support keyword arguments` | n/a | n/a | n/a | false |
 | `SIFR-STDLIB-0003` | `STDLIB` | Active | Error | `docs/errors/SIFR-STDLIB-0003.md` | `crates/sifr_driver/src/tests/stdlib_exports.rs` | `sifr_driver::stdlib::bootstrap` | `embedded standard library bootstrap failed during {operation}` | `operation (message+json)` | `operation` | n/a | false |
 | `SIFR-STDLIB-0004` | `STDLIB` | Active | Error | `docs/errors/SIFR-STDLIB-0004.md` | `crates/sifr_driver/src/tests/project_build_check.rs` | `sifr_driver::stdlib::cache` | `standard-library cache failed during {operation}` | `operation (message+json)` | `operation` | n/a | false |
+| `SIFR-IO-0801` | `IO` | Active | Error | `docs/errors/SIFR-IO-0801.md` | `crates/sifr/tests/e2e/fail/text_i18n_open_without_encoding.sifr` | `sifr_lowering::lower::expressions::call_shadowable_builtins` | `text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings` | n/a | n/a | n/a | false |
+| `SIFR-IO-0802` | `IO` | Active | Error | `docs/errors/SIFR-IO-0802.md` | `crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_mode.sifr` | `sifr_lowering::lower::expressions::call_shadowable_builtins` | `open mode must be a string literal so Sifr can choose a binary or text handle type` | n/a | n/a | n/a | false |
+| `SIFR-ENCODING-0803` | `ENCODING` | Active | Error | `docs/errors/SIFR-ENCODING-0803.md` | `crates/sifr/tests/e2e/fail/text_i18n_dynamic_errors_handler.sifr` | `sifr_lowering::lower::bytes_methods` | `encoding error handlers must be statically known typed values` | n/a | n/a | n/a | false |
 | `SIFR-WORKSPACE-0001` | `WORKSPACE` | Active | Error | `docs/errors/SIFR-WORKSPACE-0001.md` | `crates/sifr/tests/verification/project/workspace_malformed_manifest` | `sifr_driver::workspace` | `could not parse workspace manifest at {path}: {reason}` | `path (message+json)`, `reason (message+json)` | `path`, `reason` | n/a | false |
 | `SIFR-WORKSPACE-0002` | `WORKSPACE` | Active | Error | `docs/errors/SIFR-WORKSPACE-0002.md` | `crates/sifr_driver/src/tests/discovery_and_workspace.rs` | `sifr_driver::workspace` | `source root {path} escapes the workspace root` | `path (message+json)` | `path` | n/a | false |
 | `SIFR-WORKSPACE-0003` | `WORKSPACE` | Active | Error | `docs/errors/SIFR-WORKSPACE-0003.md` | `crates/sifr_driver/src/tests/discovery_and_workspace.rs` | `sifr_driver::workspace` | `source root {path} is not a directory` | `path (message+json)` | `path` | n/a | false |

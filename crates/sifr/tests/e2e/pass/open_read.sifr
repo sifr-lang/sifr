@@ -5,7 +5,7 @@ def main():
     path: str = "/tmp/sifr_open_read_test.txt"
     try:
         _: None = write_text(path, "hello world")
-        f = open(path, "r")
+        f = open(path, "r", encoding="utf-8")
         content: str = f.read()
         f.close()
         assert str("content = " + content) == 'content = hello world'

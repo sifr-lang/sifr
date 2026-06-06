@@ -1,0 +1,7 @@
+# expect-error[col=6]: SIFR-IMPORT-0008
+
+from codecs import register
+
+
+def main() -> None:
+    _ = register

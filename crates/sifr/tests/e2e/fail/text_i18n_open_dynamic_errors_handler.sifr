@@ -1,0 +1,10 @@
+# expect-error[col=91]: SIFR-ENCODING-0803
+
+
+def choose_errors() -> str:
+    return "replace"
+
+
+def main() -> None:
+    errors: str = choose_errors()
+    _ = open("/tmp/sifr_text_i18n_open_dynamic_errors.txt", "r", encoding="utf-8", errors=errors)
