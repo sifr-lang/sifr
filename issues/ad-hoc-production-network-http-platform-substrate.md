@@ -16,7 +16,7 @@ The required output is:
 - UDP support only where near-term production workloads justify it
 - DNS/address resolution
 - TLS client/server streams with safe verification defaults
-- HTTP/1.1 client/server transport substrate
+- HTTP/1.1 and HTTP/2 client/server transport substrate
 - typed URL, header, and small cookie-header parsing primitives
 - streaming request/response bodies
 - cancellation, timeouts, backpressure, graceful shutdown, and resource limits
@@ -75,8 +75,7 @@ A module belongs in Sifr core only if it is production substrate or production d
 | `sifr.urllib.parse` | deferred adapter | stable URL utility is `sifr.url` |
 | `urllib.robotparser` | deferred/rejected | niche utility, not core platform substrate |
 | `http.cookiejar` | deferred | cookie persistence belongs in the HTTP client phase if needed |
-| HTTP/2 | deferred | revisit after HTTP/1.1 substrate, Phase 41, HTTP client baseline, and ALPN negotiation evidence are stable |
-| HTTP/3 / QUIC | deferred | revisit in a future transport phase after HTTP/2 and QUIC runtime strategy are designed |
+| HTTP/3 / QUIC | deferred | revisit in a future transport phase after QUIC runtime strategy is designed |
 | CGI-style serving | rejected | legacy serving model |
 | `ThreadingMixIn` / `ForkingMixIn` | rejected | wrong abstraction and overlaps concurrency/runtime phases |
 | raw event-loop policies | rejected | Phase 32 keeps raw event loops out of the user model |
@@ -154,7 +153,7 @@ The implementation must scan these CPython files during M0 and before any milest
 | --- | --- | --- | --- |
 | sockets/readiness | `Lib/socket.py`, `Lib/selectors.py`, `Doc/library/socket.rst`, `Doc/library/selectors.rst`, `Doc/library/select.rst` | `Lib/test/test_socket.py`, `Lib/test/test_select.py`, `Lib/test/test_selectors.py`, `Lib/test/test_asyncio/test_streams.py`, `Lib/test/test_asyncio/test_server.py`, `Lib/test/test_asyncio/test_sock_lowlevel.py`, `Lib/test/test_asyncio/test_selector_events.py` | `Modules/socketmodule.c`, `Modules/selectmodule.c`, `Modules/clinic/socketmodule.c.h`, `Modules/clinic/selectmodule.c.h` |
 | TLS | `Lib/ssl.py`, `Doc/library/ssl.rst` | `Lib/test/test_ssl.py`, `Lib/test/test_asyncio/test_ssl.py`, `Lib/test/test_asyncio/test_sslproto.py` | `Modules/_ssl.c`, `Modules/_ssl/*`, `Modules/clinic/_ssl.c.h` |
-| HTTP and URLs | `Lib/http/*.py`, `Lib/urllib/*.py`, `Lib/socketserver.py`, `Doc/library/http*.rst`, `Doc/library/urllib*.rst`, `Doc/library/socketserver.rst` | `Lib/test/test_httplib.py`, `Lib/test/test_httpservers.py`, `Lib/test/test_http_cookies.py`, `Lib/test/test_http_cookiejar.py`, `Lib/test/test_socketserver.py`, `Lib/test/test_urllib.py`, `Lib/test/test_urllib2.py`, `Lib/test/test_urllib2_localnet.py`, `Lib/test/test_urllib_response.py`, `Lib/test/test_urllibnet.py`, `Lib/test/test_urllib2net.py` | Rust HTTP/TLS/runtime crates selected by this phase |
+| HTTP and URLs | `Lib/http/*.py`, `Lib/urllib/*.py`, `Lib/socketserver.py`, `Doc/library/http*.rst`, `Doc/library/urllib*.rst`, `Doc/library/socketserver.rst`, HTTP/2 and HPACK protocol specs | `Lib/test/test_httplib.py`, `Lib/test/test_httpservers.py`, `Lib/test/test_http_cookies.py`, `Lib/test/test_http_cookiejar.py`, `Lib/test/test_socketserver.py`, `Lib/test/test_urllib.py`, `Lib/test/test_urllib2.py`, `Lib/test/test_urllib2_localnet.py`, `Lib/test/test_urllib_response.py`, `Lib/test/test_urllibnet.py`, `Lib/test/test_urllib2net.py` | Rust HTTP/TLS/runtime crates selected by this phase |
 
 Each reviewed CPython test family must end in exactly one state:
 
@@ -265,12 +264,15 @@ This phase builds HTTP transport substrate, not the final public web framework o
 Required substrate:
 
 - HTTP/1.1 parser/encoder
+- HTTP/2 frame codec, HPACK header compression, stream state machine, SETTINGS negotiation, flow control, PING, RST_STREAM, and GOAWAY handling
 - typed request/response model
 - method, status, version, header, and body types
 - streaming request and response bodies
 - content-length validation
 - chunked transfer handling
 - keep-alive and connection lifecycle
+- multiplexed HTTP/2 request/response body streams with backpressure and cancellation
+- ALPN-driven protocol selection for TLS connections
 - request/response size limits
 - malformed protocol typed errors
 - internal loopback client/server transport harness
@@ -363,7 +365,7 @@ The following are not accepted as silent omissions. They must be explicitly clas
 - CPython refcount/finalizer behavior
 - dynamic monkeypatching of module globals
 - raw event-loop policy mutation
-- HTTP/2 and HTTP/3 as this phase's implemented protocol versions; both are deferred with revisit rules
+- HTTP/3 / QUIC as this phase's implemented protocol version; it is deferred with a revisit rule
 - callback transport/protocol APIs as the primary Sifr model
 - descriptor aliasing APIs such as `detach`, `fromfd`, and `dup` as public Sifr behavior
 - `socketserver.ThreadingMixIn` and `socketserver.ForkingMixIn`
@@ -384,7 +386,7 @@ Scope:
 - Define async/blocking workload classifications and diagnostics.
 - Define runtime dependency features and approved Rust crates.
 - Define HTTP client/server substrate boundaries.
-- Define protocol version scope, including explicit HTTP/2 and HTTP/3 deferral entries.
+- Define protocol version scope, including HTTP/1.1, HTTP/2, and explicit HTTP/3 deferral entries.
 - Define buffer ownership and API pattern for stream I/O before M1 backlog entries are finalized.
 - Define Phase 41 handoff contract.
 - Define the separate production HTTP client phase handoff contract.
@@ -548,20 +550,22 @@ CPython evidence to mine:
 - `Lib/test/test_socketserver.py`
 - `Lib/test/test_urllib2_localnet.py`
 - `Lib/test/test_urllibnet.py` and `Lib/test/test_urllib2net.py` as external-network, non-blocking signal unless converted to loopback
+- HTTP/2 and HPACK protocol conformance cases selected during M0
 
 Rust/runtime candidates:
 
 - `http`
 - `httparse` or `h1` parser crate selected by M0
+- `h2`
 - `hyper` / `hyper-util` only if M0 accepts the dependency and confirms no public API leak
 - avoid pulling a web framework into the substrate
 
 Definition of done:
 
-- Loopback client/server transport tests pass without external network.
-- HTTPS transport works through M2 TLS.
+- HTTP/1.1 and HTTP/2 loopback client/server transport tests pass without external network.
+- HTTPS transport works through M2 TLS, including ALPN selection for HTTP/2.
 - Malformed HTTP tests produce typed protocol errors.
-- Body streaming works without unbounded buffering.
+- Body streaming and HTTP/2 multiplexing work without unbounded buffering.
 - No `http.server`, `socketserver`, or handler-subclass public API is added.
 
 ### milestone_network_http_5: Integration, Documentation, And Production Handoff

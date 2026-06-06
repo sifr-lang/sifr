@@ -60,7 +60,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Reject/defer public `sifr.http.server`, `sifr.socketserver`, `sifr.urllib.request`, `sifr.http.client`, `sifr.select`, `sifr.selectors`, and CPython descriptor-shaped socket/TLS APIs in this phase.
 - [x] Add explicit Phase 41 handoff and separate production HTTP client handoff.
 - [x] Keep CPython scans as evidence mining, not parity backlog.
-- [x] Classify HTTP/2 and HTTP/3 as deferred future protocol work with revisit rules.
+- [x] Bring HTTP/2 into the production substrate and keep HTTP/3 / QUIC deferred with a revisit rule.
 - [x] Make stream I/O buffer ownership/lifetime semantics an M0 gate before M1 implementation.
 - [x] Add mTLS/client certificate authentication as an M0/M2 TLS classification item.
 
