@@ -11,11 +11,12 @@ encoding_rs = { workspace = true }
 num-bigint = { workspace = true }
 num-traits = { workspace = true }
 unicode-normalization = { workspace = true, optional = true }
+unicode-segmentation = { workspace = true, optional = true }
 unicode_names2 = { workspace = true, optional = true }
 
 [features]
 default = []
-unicode = ["dep:unicode-normalization", "dep:unicode_names2"]
+unicode = ["dep:unicode-normalization", "dep:unicode-segmentation", "dep:unicode_names2"]
 
 [lints]
 workspace = true

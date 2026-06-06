@@ -133,3 +133,37 @@ pub(crate) fn lower_unicode_case_fold(args: &[RustExpr]) -> Option<RustExpr> {
     }
     Some(runtime_call("case_fold", vec![ref_arg(arg_expr(args, 0))]))
 }
+
+pub(crate) fn lower_unicode_graphemes(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(runtime_call("graphemes", vec![ref_arg(arg_expr(args, 0))]))
+}
+
+pub(crate) fn lower_unicode_grapheme_indices(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(runtime_call(
+        "grapheme_indices",
+        vec![ref_arg(arg_expr(args, 0))],
+    ))
+}
+
+pub(crate) fn lower_unicode_words(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(runtime_call("words", vec![ref_arg(arg_expr(args, 0))]))
+}
+
+pub(crate) fn lower_unicode_word_boundaries(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(runtime_call(
+        "word_boundaries",
+        vec![ref_arg(arg_expr(args, 0))],
+    ))
+}

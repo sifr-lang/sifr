@@ -9,12 +9,16 @@ from _sifr.unicode import (
     unicode_decomposition,
     unicode_digit,
     unicode_east_asian_width,
+    unicode_grapheme_indices,
+    unicode_graphemes,
     unicode_is_normalized,
     unicode_lookup,
     unicode_mirrored,
     unicode_name,
     unicode_normalize,
     unicode_numeric_value,
+    unicode_word_boundaries,
+    unicode_words,
 )
 
 NFC: str = "NFC"
@@ -124,3 +128,19 @@ def numeric_value(ch: str) -> Result[float, UnicodeDataError]:
 
 def case_fold(text: str) -> str:
     return unicode_case_fold(text)
+
+
+def graphemes(text: str) -> list[str]:
+    return unicode_graphemes(text)
+
+
+def grapheme_indices(text: str) -> list[tuple[int, str]]:
+    return unicode_grapheme_indices(text)
+
+
+def words(text: str) -> list[str]:
+    return unicode_words(text)
+
+
+def word_boundaries(text: str) -> list[tuple[int, int, str]]:
+    return unicode_word_boundaries(text)

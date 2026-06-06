@@ -1,6 +1,7 @@
 //! Unicode normalization, data, and case mapping helpers for generated code.
 
 use unicode_normalization::{is_nfc, is_nfd, is_nfkc, is_nfkd, UnicodeNormalization};
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::unicode_data;
 
@@ -128,6 +129,40 @@ pub fn case_fold(text: &str) -> String {
     folded
 }
 
+#[must_use]
+pub fn graphemes(text: &str) -> Vec<String> {
+    text.graphemes(true).map(str::to_string).collect()
+}
+
+#[must_use]
+pub fn grapheme_indices(text: &str) -> Vec<(i64, String)> {
+    text.grapheme_indices(true)
+        .map(|(start, grapheme)| (usize_to_i64_saturating(start), grapheme.to_string()))
+        .collect()
+}
+
+#[must_use]
+pub fn words(text: &str) -> Vec<String> {
+    text.unicode_words().map(str::to_string).collect()
+}
+
+#[must_use]
+pub fn word_boundaries(text: &str) -> Vec<(i64, i64, String)> {
+    text.split_word_bound_indices()
+        .map(|(start, segment)| {
+            (
+                usize_to_i64_saturating(start),
+                usize_to_i64_saturating(start.saturating_add(segment.len())),
+                segment.to_string(),
+            )
+        })
+        .collect()
+}
+
+fn usize_to_i64_saturating(value: usize) -> i64 {
+    i64::try_from(value).unwrap_or(i64::MAX)
+}
+
 fn canonical_form(form: &str) -> Result<&'static str, String> {
     match form {
         "NFC" | "nfc" => Ok("NFC"),
@@ -193,13 +228,14 @@ fn parse_numeric(value: &str) -> Option<f64> {
 #[cfg(test)]
 mod tests {
     use super::{
-        case_fold, category, data_version, decomposition, east_asian_width, lookup, name,
-        normalize, numeric_value,
+        case_fold, category, data_version, decomposition, east_asian_width, grapheme_indices,
+        graphemes, lookup, name, normalize, numeric_value, word_boundaries, words,
     };
 
     #[test]
     fn exposes_unicode_17_data_version() {
         assert_eq!(data_version(), "17.0.0");
+        assert_eq!(unicode_segmentation::UNICODE_VERSION, (17, 0, 0));
     }
 
     #[test]
@@ -212,5 +248,15 @@ mod tests {
         assert_eq!(decomposition("\u{212B}").unwrap(), "00C5");
         assert_eq!(numeric_value("\u{00BD}").unwrap(), 0.5);
         assert_eq!(case_fold("Stra\u{DF}e \u{130}"), "strasse i\u{307}");
+        assert_eq!(
+            graphemes("a\u{301}\u{1F469}\u{200D}\u{1F680}"),
+            vec!["a\u{301}", "\u{1F469}\u{200D}\u{1F680}"]
+        );
+        assert_eq!(
+            grapheme_indices("a\u{301}b"),
+            vec![(0, "a\u{301}".to_string()), (3, "b".to_string())]
+        );
+        assert_eq!(words("Hi, κόσμε!").as_slice(), ["Hi", "κόσμε"]);
+        assert_eq!(word_boundaries("Hi, κόσμε!")[0], (0, 2, "Hi".to_string()));
     }
 }
