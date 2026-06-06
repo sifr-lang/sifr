@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Production Text, Unicode, Encoding, And I18n Runtime
 
-Status: draft
+Status: complete
 Phase placement: first implementation phase in the split production-stdlib substrate sequence, after the stdlib boundary refactor and before the network/HTTP and concurrency/runtime phases consume text-dependent behavior.
 Phase owner: stdlib/runtime implementation with compiler import, file/text I/O, effect, async-workload, and codegen support
 

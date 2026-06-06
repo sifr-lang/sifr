@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-text-i18n-platform-substrate.md](./ad-hoc-production-text-i18n-platform-substrate.md)
 
-Status: draft
+Status: complete
 
 ## Scope Split
 
@@ -189,9 +189,9 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M0: https://github.com/sifr-lang/sifr/pull/2297
 - M1: https://github.com/sifr-lang/sifr/pull/2298
 - M2: https://github.com/sifr-lang/sifr/pull/2299
-- M2.5: https://github.com/sifr-lang/sifr/pull/2300
-- M3: https://github.com/sifr-lang/sifr/pull/2302
-- M4: https://github.com/sifr-lang/sifr/pull/2304
+- M2.5: https://github.com/sifr-lang/sifr/pull/2300; closeout/remediation: https://github.com/sifr-lang/sifr/pull/2301
+- M3: https://github.com/sifr-lang/sifr/pull/2302; closeout/remediation: https://github.com/sifr-lang/sifr/pull/2303
+- M4: https://github.com/sifr-lang/sifr/pull/2304; closeout/remediation: https://github.com/sifr-lang/sifr/pull/2305
 - M5: https://github.com/sifr-lang/sifr/pull/2306
 
 ## Implementation Reviews
@@ -213,6 +213,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M5 pass 1: `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-1.md`; result `PASS`, no blocking findings and no re-review required. Non-blocking metadata observations were remediated before opening the M5 PR.
 - M5 pass 2: `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-2.md`; result `PASS` after e2e batch harness feature-propagation remediation, no blockers and no re-review required.
 - M5 pass 3: `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-3.md`; result `PASS` after generated-code quality producer-fingerprint and generated-clippy allowlist remediation, no blockers and no re-review required.
+- Final full implementation review pass 1: `reviews/ad-hoc-production-text-i18n-final-implementation-review-pass-1.md`; result `PASS`, no blockers and no re-review required.
 
 ## Validation Evidence
 
