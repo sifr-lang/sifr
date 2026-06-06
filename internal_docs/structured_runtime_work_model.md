@@ -62,6 +62,8 @@ Threads and processes are execution substrates, not the public model. Users choo
 
 `TaskGroup[E]` is the canonical owner for mixed runtime work under the fail-fast structured-concurrency policy. A distinct `task.Scope` or `runtime.Scope` type is introduced only if M0 identifies a concrete use case `TaskGroup[E]` cannot satisfy; M0 must record that finding before M1 starts. Individual child handles may have different success types. Homogeneous result collections such as `join_all`, `race`, `select`, and `JoinSet[T, E]` require one result/error shape unless the user constructs an explicit sum/enum result type.
 
+M0 must test the `TaskGroup[E]`-only owner model against shutdown, child process supervision with pipe-pump tasks, mixed blocking/async workloads, and CPU cancellation. Non-fail-fast ownership requires an explicit `task.Scope` or `runtime.Scope`.
+
 Scoped offload inserted into `TaskGroup[E]` maps user errors plus runtime/offload failures into the group's error type or an accepted wrapper such as `WorkerError[E]`. Scoped process spawn must preserve owned pipe access while binding child lifetime to the parent scope; M0 decides whether it returns `Child`, `TaskHandle[Status, SubprocessError]`, or a distinct `ProcessHandle`.
 
 `TaskHandle[T, E]` is the public affine observation handle name. `Task` may remain an internal type name only; exposing both names as public aliases is rejected unless a new Sifr-native API design proves separate semantics.
@@ -122,6 +124,8 @@ Typed IPC sits above an accepted process or transport substrate. It must define 
 
 Every typed IPC schema has stable schema identity/hash and an explicit compatibility policy. Exact schema hash proceeds, compatible version ranges proceed by negotiated version, and unknown or incompatible schema returns `Reject` or `UnsupportedSchema`.
 
+IPC compatibility is generated from Sifr IPC schema definitions, not inferred dynamically from arbitrary runtime values.
+
 ## Synchronization Model
 
 Synchronization APIs must say whether they are sync shared-state primitives or async coordination primitives.
@@ -134,13 +138,15 @@ Synchronization APIs must say whether they are sync shared-state primitives or a
 
 Default Sifr rule: sync lock guards cannot cross any `await`. Async lock guards may cross `await` only if the API explicitly marks the guard await-safe. M0 records whether each accepted async guard is await-safe, await-forbidden, or lint-only.
 
+Semaphore permits are guard-like resources. M0 records whether permits may cross `await`, are await-forbidden, or are lint-only.
+
 ## Cancellation And Failure
 
 Cancellation applies consistently across work kinds:
 
 - cancellation is idempotent and produces typed evidence
 - timeouts preserve the wrapped operation's normal typed outcome and add typed timeout evidence as a distinct variant
-- `TaskGroup` exit reports unhandled child failures plus cancellation/cleanup evidence; a child result explicitly awaited and handled by user code is observed and does not by itself fail group exit
+- `TaskGroup` exit reports unhandled child failures plus cancellation/cleanup evidence; a child result explicitly awaited and statically handled under the M0 proof is observed and does not by itself fail group exit
 - `race` and `select` cancel losers and return loser-cancellation evidence
 - blocking work has limited cancellation evidence, including whether work had already started or completed
 - CPU-heavy work declares whether cancellation is cooperative, boundary-only, or wait-for-completion
@@ -149,6 +155,8 @@ Cancellation applies consistently across work kinds:
 - cleanup scopes run under cancellation and report cleanup failures without hiding the initiating failure
 
 Current task cancellation is mostly abort-based. The production phase must explicitly decide which abort-based behavior remains v1 semantics and whether a cooperative cancellation layer is introduced internally. Tokio or tokio-util token types must not leak publicly; a Sifr-owned cancellation scope handle, named `CancelScope` or another M0-recorded name, is a settled stable API. M0 records its concrete public type name and Rust implementation boundary.
+
+M0 defines static handled-failure proof for `TaskHandle` observation. It distinguishes awaited-and-ignored, awaited-and-assigned-but-uninspected, exhaustively matched, propagated with `?`, converted into another error, and explicit intentional discard if accepted.
 
 Minimum `CancelOutcome` states are `Cancelled`, `AlreadyCompleted`, `AlreadyFailed`, `AlreadyStarted`, `CouldNotCancel`, `CancelFailed`, and `TimedOutDuringCancel`.
 
@@ -169,6 +177,8 @@ Minimum `CancelOutcome` states are `Cancelled`, `AlreadyCompleted`, `AlreadyFail
 Sync shell APIs are also `@blocking_io` and are rejected in async contexts unless explicitly offloaded. Native async process APIs may use shell execution in async contexts only through explicit `shell=True` or `Command.shell(...)`, and still carry the `@shell_exec` security effect.
 
 Existing `sifr.subprocess` is legacy implementation debt. Production behavior must not depend on it, it must not be extended by this substrate phase, and M0 records whether it is removed, kept internal-test-only, or routed to unsupported diagnostics. `sifr.process` is the only accepted public process API.
+
+Process supervision distinguishes expected exit from unexpected exit. Normal exit, nonzero exit, signal termination, timeout, and parent cancellation map to success, typed error, or cancellation evidence.
 
 Typed process workers are future work after:
 

@@ -32,7 +32,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [ ] `milestone_concurrency_runtime_1`: Structured Async Runtime
 - [ ] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
 - [ ] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
-- [ ] `milestone_concurrency_runtime_4`: Process And Subprocess Runtime
+- [ ] `milestone_concurrency_runtime_4`: Process Runtime
 - [ ] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
 - [ ] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
 - [ ] `milestone_concurrency_runtime_7`: Integration, Documentation, And Production Gate
@@ -252,6 +252,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] Reserve M1 task context API slots for M5 explicit propagation.
 - [x] Treat existing `sifr.asyncio` veneer as legacy implementation debt and ensure new native APIs do not depend on it.
 - [x] Add a dedicated post-M0/pre-M1 legacy CPython-shaped surface removal gate so `sifr.subprocess`, `sifr.asyncio` new APIs, `sifr.queue`, `sifr.concurrent.futures`, and `sifr.multiprocessing` cannot remain public adapters while production APIs are implemented.
+- [x] Tighten final implementation-readiness contract: M6 rejects Python-shaped process pools, M0 defines static handled-failure proof, M0a is included in implementation backlog scope, M0 tests the TaskGroup-only owner model, M0a updates async model docs if needed, M2 owns semaphore permit await policy, M4 owns expected/unexpected process-exit semantics, and M6 IPC compatibility is schema-generated.
 - [x] Resolve `JoinSet` result ordering and `JoinItemId` role.
 - [x] Clarify `parallel.map`/`Pool.map` async calling convention.
 - [x] Name shell subprocess usage as the `@shell_exec` security effect.
