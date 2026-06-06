@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "m3-complete",
+  "status": "m4-in-progress",
   "platform_contract": "verification/platform/platform_contract.json",
   "cpython_checkout": {
     "path": "/Users/yaseralnajjar/work/sifr/cpython",

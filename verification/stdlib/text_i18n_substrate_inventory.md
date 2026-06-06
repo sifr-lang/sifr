@@ -1,6 +1,6 @@
 # Text/I18n Substrate Inventory
 
-Status: M3 complete.
+Status: M4 in progress.
 
 Platform contract: [platform_contract.md](../platform/platform_contract.md)
 
@@ -133,5 +133,5 @@ Existing coverage also records in-memory `StringIO`/`BytesIO` seek/tell and use-
 | M2 | Add Unicode normalization, property tables, names/lookup, numeric APIs, case folding, and Unicode data version exposure. |
 | M2.5 | Add grapheme and word segmentation iterators/boundaries using `unicode-segmentation`. |
 | M3 | Add `LocaleId`, canonicalization, read-only `host_locale`, object-scoped number/date/plural/collation APIs using ICU4X compiled data. |
-| M4 | Add native translation bundle/translator API, `.mo` parser, safe plural-expression parser, fallbacks, contexts, and plural lookup. |
+| M4 | Add native translation bundle/translator API, `.mo` parser, safe plural-expression parser, fallbacks, contexts, plural lookup, missing-key fallback, and missing-path errors. |
 | M5 | Add public/internal docs, demos, dependency snapshots, panic scans, final inventory closure, final review, and full validation. |

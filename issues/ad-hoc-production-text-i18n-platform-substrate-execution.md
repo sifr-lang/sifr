@@ -207,6 +207,9 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M3 pass 2: `reviews/ad-hoc-production-text-i18n-m3-implementation-review-pass-2.md`; result `PASS` after optional-feature clippy and inventory-status remediation, no blockers and no re-review required.
 - M3 pass 3: `reviews/ad-hoc-production-text-i18n-m3-implementation-review-pass-3.md`; result `PASS` after unblocking the platform golden locale fixture, with one non-blocking manifest-label observation.
 - M3 pass 4: `reviews/ad-hoc-production-text-i18n-m3-implementation-review-pass-4.md`; result `PASS` after manifest `must_not_depend_on` cleanup, no blockers and no re-review required.
+- M4 pass 1: `reviews/ad-hoc-production-text-i18n-m4-implementation-review-pass-1.md`; result `PASS` with non-blocking observations on error naming, catalog reparse cost, direct constructor validation, closeout checklist timing, Tier 1 charset coverage, and default plural parsing cost.
+- M4 pass 2: `reviews/ad-hoc-production-text-i18n-m4-implementation-review-pass-2.md`; result `PASS` with non-blocking observation that empty translation forms should be documented or treated as missing.
+- M4 pass 3: `reviews/ad-hoc-production-text-i18n-m4-implementation-review-pass-3.md`; result `PASS` after empty translation forms were changed to return `None` so explicit fallback chains can continue; no blockers and no re-review required.
 
 ## Validation Evidence
 
@@ -343,6 +346,20 @@ M3 focused validation on branch `text-i18n-m3-i18n-locale-formatting`:
 - `scripts/run_all_tests.sh --profile create-pr` passed after unblocking the M3 locale platform golden fixture; report `target/validation_lane_reports/create-pr.latest.json`, wall time 124.68s, 67/67 e2e pass fixtures, platform golden 3 pass / 2 skipped, non-blocking warm wall-time advisory.
 - `cargo fmt --check` passed.
 
+M4 focused validation on branch `text-i18n-m4-translation-bundles`:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/text_i18n_translation_bundles.sifr` passed.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr` passed.
+- `cargo test -p sifr_runtime --features i18n i18n -- --nocapture` passed with 12 i18n runtime tests, including `.mo` parsing, big-endian tables, declared `latin-1` charset, context/plural lookup, malformed plural syntax, and missing file paths.
+- `cargo test -p sifr_stdlib i18n -- --nocapture` passed.
+- `cargo test -p sifr_codegen i18n -- --nocapture` passed.
+- `cargo clippy -p sifr_runtime --features i18n --tests -- -D warnings` passed.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `python3 -m json.tool verification/stdlib/text_i18n_substrate_inventory.json >/dev/null` passed.
+- `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 254.78s, 67/67 e2e pass fixtures, platform golden 3 pass / 2 skipped, non-blocking warm wall-time and warm-cache advisories.
+
 ## CPython Scan Evidence
 
 Each milestone must record:
@@ -389,6 +406,15 @@ M3 scan evidence:
 - Python-shaped surfaces classified as `unsupported-with-diagnostic`, `rejected`, or `deferred-to-adapter-phase`: `locale.setlocale`, `localeconv`, `strcoll`, `strxfrm`, `format_string`, `currency`, and implicit preferred text encoding; `sifr.locale` remains deferred to an adapter phase, and bare `locale` imports remain unsupported.
 - Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr`; existing negative fixture `crates/sifr/tests/e2e/fail/bare_cpython_locale_import.sifr` continues to enforce the namespace boundary.
 - Platform golden fixture unblocked: `verification/platform/golden/locale_host_limited_formatting.sifr` now runs as an M3 contract fixture and verifies explicit locale formatting plus optional read-only host locale discovery.
+
+M4 scan evidence:
+
+- CPython source/docs/tests scanned: `Lib/gettext.py`, `Doc/library/gettext.rst`, and `Lib/test/test_gettext.py` from `SIFR_CPYTHON_CHECKOUT=/Users/yaseralnajjar/work/sifr/cpython`.
+- CPython fixture families mined: `.mo` magic/version/table corruption, big-endian catalogs, declared charset metadata, contexts, plural forms, fallback behavior, and unsupported global install/domain mutation.
+- Production APIs classified as `production-public` / `stable-public-api`: `sifr.i18n.Bundle`, `Message`, `Translator`, `bundle_from_mo_bytes`, `load_mo_file`, and explicit translator fallback chains.
+- Compatibility backend classified: `.mo` catalog loading is accepted as a backend/import format behind native `Bundle`/`Translator`; Fluent and ICU message-format backends remain deferred.
+- Python-shaped surfaces classified as `unsupported-with-diagnostic` or `deferred-to-adapter-phase`: `gettext.install`, global `_`, `textdomain`, `bindtextdomain`, module-global domain lookup functions, and public `sifr.gettext`; bare `gettext` imports remain unsupported by the namespace-contract fixture.
+- Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_translation_bundles.sifr`; existing negative fixture `crates/sifr/tests/e2e/fail/bare_cpython_gettext_import.sifr` continues to enforce the namespace boundary.
 
 ## Waiver Index
 

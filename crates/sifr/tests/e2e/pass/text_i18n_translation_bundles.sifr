@@ -1,0 +1,117 @@
+from sifr.i18n import (
+    Bundle,
+    CatalogError,
+    Message,
+    Translator,
+    TranslationError,
+    bundle_from_mo_bytes,
+    context_message,
+    context_plural_message,
+    load_mo_file,
+    message,
+    plural_message,
+    translator,
+)
+from sifr.os import remove_file
+from sifr.test import assert_bool_vector_eq
+
+
+def primary_catalog_bytes() -> bytes:
+    return b'\xde\x12\x04\x95\x00\x00\x00\x00\x05\x00\x00\x00\x1c\x00\x00\x00D\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00l\x00\x00\x00\x05\x00\x00\x00\xc1\x00\x00\x00\t\x00\x00\x00\xcf\x00\x00\x00\n\x00\x00\x00\xe0\x00\x00\x00\x04\x00\x00\x00\xfc\x00\x00\x00S\x00\x00\x00m\x00\x00\x00\x07\x00\x00\x00\xc7\x00\x00\x00\x06\x00\x00\x00\xd9\x00\x00\x00\x10\x00\x00\x00\xeb\x00\x00\x00\x04\x00\x00\x00\x01\x01\x00\x00\x00Content-Type: text/plain; charset=latin-1\nPlural-Forms: nplurals=2; plural=n != 1;\n\x00hello\x00bonjour\x00menu\x04open\x00ouvrir\x00file\x00files\x00fichier\x00fichiers\x00cafe\x00caf\xe9\x00'
+
+
+def fallback_catalog_bytes() -> bytes:
+    return b'\xde\x12\x04\x95\x00\x00\x00\x00\x01\x00\x00\x00\x1c\x00\x00\x00$\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00,\x00\x00\x00\x07\x00\x00\x003\x00\x00\x00backup\x00secours\x00'
+
+
+def bad_plural_catalog_bytes() -> bytes:
+    return b'\xde\x12\x04\x95\x00\x00\x00\x00\x01\x00\x00\x00\x1c\x00\x00\x00$\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00P\x00\x00\x00-\x00\x00\x00\x00Content-Type: text/plain; charset=utf-8\nPlural-Forms: nplurals=2; plural=n @ 2;\n\x00'
+
+
+def collect_translation_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
+        primary: Bundle = Bundle(primary_catalog_bytes())
+        fallback: Bundle = Bundle(fallback_catalog_bytes())
+        tx: Translator = translator(primary).with_fallback(fallback)
+
+        hello: str = tx.translate("hello")
+        open_text: str = tx.translate_context("menu", "open")
+        one_file: str = tx.translate_plural("file", "files", 1)
+        many_files: str = tx.translate_plural("file", "files", 2)
+        cafe: str = tx.translate("cafe")
+        backup: str = tx.translate("backup")
+        missing: str = tx.translate("missing")
+        missing_plural: str = tx.translate_plural("box", "boxes", 2)
+        actual.append(hello == "bonjour")
+        actual.append(open_text == "ouvrir")
+        actual.append(one_file == "fichier")
+        actual.append(many_files == "fichiers")
+        actual.append(cafe == "caf\u00e9")
+        actual.append(backup == "secours")
+        actual.append(missing == "missing")
+        actual.append(missing_plural == "boxes")
+
+        plain: Message = message("hello")
+        contextual: Message = context_message("menu", "open")
+        plural: Message = plural_message("file", "files", 2)
+        contextual_plural: Message = context_plural_message("menu", "missing", "missing plural", 2)
+        plain_text: str = tx.translate_message(plain)
+        contextual_text: str = tx.translate_message(contextual)
+        plural_text: str = tx.translate_message(plural)
+        contextual_plural_text: str = tx.translate_message(contextual_plural)
+        actual.append(plain_text == "bonjour")
+        actual.append(contextual_text == "ouvrir")
+        actual.append(plural_text == "fichiers")
+        actual.append(contextual_plural_text == "missing plural")
+
+        primary_only: Translator = translator(primary)
+        primary_only_backup: str = primary_only.translate("backup")
+        actual.append(primary_only_backup == "backup")
+    except TranslationError as e:
+        _ = e.message
+        actual.append(False)
+
+    malformed_rejected: bool = False
+    try:
+        _bad: Bundle = bundle_from_mo_bytes(bad_plural_catalog_bytes())
+    except CatalogError as e:
+        malformed_rejected = len(e.message) > 0
+    actual.append(malformed_rejected)
+
+    missing_path_rejected: bool = False
+    try:
+        _missing: Bundle = load_mo_file("/tmp/sifr_text_i18n_missing_catalog.mo")
+    except CatalogError as e:
+        missing_path_rejected = len(e.message) > 0
+    actual.append(missing_path_rejected)
+
+    path: str = "/tmp/sifr_text_i18n_translation_bundle.mo"
+    file_loaded: bool = False
+    cleanup_ok: bool = False
+    try:
+        writer = open(path, "wb")
+        _w: None = writer.write_bytes(primary_catalog_bytes())
+        writer.close()
+        loaded: Bundle = load_mo_file(path)
+        _ = loaded
+        file_loaded = True
+        _rm: None = remove_file(path)
+        cleanup_ok = True
+    except Error as e:
+        _ = e.message
+    actual.append(file_loaded)
+    actual.append(cleanup_ok)
+
+    return actual
+
+
+def main() -> None:
+    expected: list[bool] = [
+        True, True, True, True,
+        True, True, True, True,
+        True, True, True, True,
+        True, True, True, True,
+        True,
+    ]
+    assert_bool_vector_eq(collect_translation_actual(), expected)

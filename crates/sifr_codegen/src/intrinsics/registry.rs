@@ -94,7 +94,13 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "i18n_format_number"
         | "i18n_format_datetime"
         | "i18n_plural_category"
-        | "i18n_collate" => &[
+        | "i18n_collate"
+        | "i18n_mo_validate"
+        | "i18n_mo_load_file"
+        | "i18n_mo_lookup"
+        | "i18n_mo_lookup_context"
+        | "i18n_mo_lookup_plural"
+        | "i18n_mo_lookup_context_plural" => &[
             StdlibFeature::IcuCollator,
             StdlibFeature::IcuDatetime,
             StdlibFeature::IcuDecimal,
@@ -449,6 +455,30 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         ),
         "i18n_collate" => (
             i18n::lower_i18n_collate(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_mo_validate" => (
+            i18n::lower_i18n_mo_validate(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_mo_load_file" => (
+            i18n::lower_i18n_mo_load_file(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_mo_lookup" => (
+            i18n::lower_i18n_mo_lookup(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_mo_lookup_context" => (
+            i18n::lower_i18n_mo_lookup_context(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_mo_lookup_plural" => (
+            i18n::lower_i18n_mo_lookup_plural(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "i18n_mo_lookup_context_plural" => (
+            i18n::lower_i18n_mo_lookup_context_plural(args),
             Some(StdlibFeature::SifrRuntime),
         ),
         "encode_utf8" => (bytes::lower_encode_utf8(args), None),

@@ -73,6 +73,66 @@ pub(super) fn intrinsic_i18n() -> IntrinsicModule {
             result_ty(Type::Int, "FormatError"),
         ),
     );
+    functions.insert(
+        "i18n_mo_validate".to_string(),
+        FunctionType::all_borrow(
+            vec![("catalog".to_string(), Type::Bytes)],
+            result_ty(Type::Str, "CatalogError"),
+        ),
+    );
+    functions.insert(
+        "i18n_mo_load_file".to_string(),
+        FunctionType::all_borrow(
+            vec![("path".to_string(), Type::Str)],
+            result_ty(Type::Bytes, "CatalogError"),
+        ),
+    );
+    functions.insert(
+        "i18n_mo_lookup".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("catalog".to_string(), Type::Bytes),
+                ("message_id".to_string(), Type::Str),
+            ],
+            result_ty(Type::Union(vec![Type::Str, Type::None]), "CatalogError"),
+        ),
+    );
+    functions.insert(
+        "i18n_mo_lookup_context".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("catalog".to_string(), Type::Bytes),
+                ("context".to_string(), Type::Str),
+                ("message_id".to_string(), Type::Str),
+            ],
+            result_ty(Type::Union(vec![Type::Str, Type::None]), "CatalogError"),
+        ),
+    );
+    functions.insert(
+        "i18n_mo_lookup_plural".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("catalog".to_string(), Type::Bytes),
+                ("singular".to_string(), Type::Str),
+                ("plural".to_string(), Type::Str),
+                ("count".to_string(), Type::Int),
+            ],
+            result_ty(Type::Union(vec![Type::Str, Type::None]), "CatalogError"),
+        ),
+    );
+    functions.insert(
+        "i18n_mo_lookup_context_plural".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("catalog".to_string(), Type::Bytes),
+                ("context".to_string(), Type::Str),
+                ("singular".to_string(), Type::Str),
+                ("plural".to_string(), Type::Str),
+                ("count".to_string(), Type::Int),
+            ],
+            result_ty(Type::Union(vec![Type::Str, Type::None]), "CatalogError"),
+        ),
+    );
 
     IntrinsicModule {
         functions,
