@@ -23,7 +23,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - [x] `milestone_text_i18n_0`: Product Boundary And Rust Lowering Contract
 - [x] `milestone_text_i18n_1`: Encoding And Explicit Text I/O
 - [x] `milestone_text_i18n_2`: Unicode Core
-- [ ] `milestone_text_i18n_2_5`: Unicode Segmentation
+- [x] `milestone_text_i18n_2_5`: Unicode Segmentation
 - [ ] `milestone_text_i18n_3`: Locale Identifiers And Locale-Sensitive Formatting
 - [ ] `milestone_text_i18n_4`: Translation Bundles
 - [ ] `milestone_text_i18n_5`: Integration, Documentation, And Production Gate
