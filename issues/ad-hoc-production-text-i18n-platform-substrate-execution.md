@@ -212,6 +212,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M4 pass 3: `reviews/ad-hoc-production-text-i18n-m4-implementation-review-pass-3.md`; result `PASS` after empty translation forms were changed to return `None` so explicit fallback chains can continue; no blockers and no re-review required.
 - M5 pass 1: `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-1.md`; result `PASS`, no blocking findings and no re-review required. Non-blocking metadata observations were remediated before opening the M5 PR.
 - M5 pass 2: `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-2.md`; result `PASS` after e2e batch harness feature-propagation remediation, no blockers and no re-review required.
+- M5 pass 3: `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-3.md`; result `PASS` after generated-code quality producer-fingerprint and generated-clippy allowlist remediation, no blockers and no re-review required.
 
 ## Validation Evidence
 
@@ -378,6 +379,15 @@ M5 focused validation on branch `text-i18n-m5-production-gate`:
 - `scripts/run_e2e_pass.sh` passed with the merge manifest: 78/78 pass fixtures, cache hits 24/24.
 - `cargo test -p sifr test_generate_cargo_toml_text_i18n_modules_enable_runtime_features -- --nocapture` passed after e2e batch Cargo.toml generation was updated to enable `sifr_runtime` `unicode`/`i18n` features for grouped text/i18n fixtures.
 - `scripts/run_all_tests.sh --profile create-pr` passed after the harness remediation; report `target/validation_lane_reports/create-pr.latest.json`, wall time 195.01s, 72/72 e2e pass fixtures, platform golden 3 pass / 2 skipped, non-blocking warm wall-time and warm-cache advisories.
+- Merge-gate generated-code quality remediation: removed the generated `#[allow(clippy::inherent_to_string_shadow_display)]` attribute from class emission, kept generated-code clippy handling as a command-line allow, and added compiler/stdlib/runtime producer fingerprinting to generated-code quality shared cache keys so codegen edits invalidate cached artifacts.
+- `cargo test -p sifr_codegen test_class_to_string_method_does_not_emit_generated_allow -- --nocapture` passed.
+- `SIFR_GCQ_SHARED_ROOT=target/sifr_generated_code_quality/merge.shared python3 verification/generated_code_quality/generated_code_quality.py panic-scan --group demos-required` passed; evidence `target/sifr_generated_code_quality/evidence/panic-scan-1780766261-2423.json`.
+- `SIFR_GCQ_SHARED_ROOT=target/sifr_generated_code_quality/merge.shared python3 verification/generated_code_quality/generated_code_quality.py clippy --group demos-required` passed; evidence `target/sifr_generated_code_quality/evidence/clippy-1780766775-36124.json`.
+- `scripts/run_all_tests.sh` passed after generated-code quality remediation; report `target/validation_lane_reports/merge.latest.json`, wall time 716.17s, 78/78 e2e pass fixtures, generated-code quality passed, platform golden 3 pass / 2 skipped, hardening variants 34/34 with 0 failures, non-blocking group-skew advisory.
+- `cargo test -p sifr_codegen test_class_to_string_method_does_not_emit_generated_allow -- --nocapture` passed and locks the decision that generated Sifr classes do not emit item-local `#[allow(...)]` attributes for inherent `to_string` plus generated `Display`.
+- `SIFR_GCQ_MAX_ENTRIES=7 python3 verification/generated_code_quality/generated_code_quality.py clippy --group demos-required --group e2e-pass-representative` passed after generated-code-quality cache keys were tied to the compiler/runtime producer fingerprint and generated clippy accepted inherent `to_string` plus generated `Display` as an allowed Sifr class-lowering pattern; evidence `target/sifr_generated_code_quality/evidence/clippy-1780767555-1547.json`. The seven-entry cap selected the `demos-required` entries, including `demo-007-text-i18n`; the full merge gate below covers the uncapped representative manifest.
+- `scripts/run_all_tests.sh --profile create-pr` passed after the generated-code-quality remediation; report `target/validation_lane_reports/create-pr.latest.json`, wall time 259.84s, 72/72 e2e pass fixtures, platform golden 3 pass / 2 skipped, non-blocking warm wall-time and warm-cache advisories.
+- `scripts/run_all_tests.sh` passed after the generated-code-quality remediation and a retry of transient performance-budget timing checks; report `target/validation_lane_reports/merge.latest.json`, wall time 793.37s, 78/78 e2e pass fixtures, hardening variants 34/34 with 0 failures, non-blocking warm-cache/group-skew advisories.
 
 ## CPython Scan Evidence
 

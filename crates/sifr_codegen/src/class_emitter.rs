@@ -327,6 +327,8 @@ impl RustEmitter {
             .fields
             .iter()
             .any(|(_, ty)| matches!(ty, Type::Callable(..)));
+        let has_auto_display =
+            !class.fields.is_empty() && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
         let derives = if has_callable_field {
             Vec::new()
         } else if has_custom_eq {
@@ -371,7 +373,6 @@ impl RustEmitter {
             impl_items.push(self.lower_class_method_item(method, class, module_public));
         }
         self.current_class_name = saved_class_name;
-
         self.body_items.push(RustItem::Impl {
             target: Self::class_impl_target(class),
             type_params: Self::class_impl_type_params(class),
@@ -426,9 +427,7 @@ impl RustEmitter {
                     }],
                 });
             }
-        } else if !class.fields.is_empty()
-            && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty))
-        {
+        } else if has_auto_display {
             self.body_items
                 .push(self.build_display_impl_for_auto_fields(class));
         }
