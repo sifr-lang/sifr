@@ -1,4 +1,4 @@
-# Ad Hoc Phase Execution: Production Concurrency And Runtime Stdlib Parity
+# Ad Hoc Phase Execution: Production Concurrency, Process, And Runtime Substrate
 
 Phase contract: [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md)
 
@@ -6,24 +6,31 @@ Status: draft
 
 ## Scope Split
 
-This ledger tracks:
+This ledger tracks the Sifr-native production runtime substrate for:
 
-- `queue`, `asyncio.Queue`
-- `subprocess`, `asyncio.subprocess`
-- `concurrent.futures`, `multiprocessing`
-- `contextlib`, `warnings`, `signal`
+- `sifr.task`: structured tasks, deadlines, cancellation, typed task failures
+- `sifr.sync`: channels, async channels, synchronization, backpressure
+- `sifr.runtime`: blocking and CPU offload boundaries
+- `sifr.parallel`: data-parallel CPU work
+- `sifr.process`: subprocesses, async processes, owned pipes, supervision
+- `sifr.signal`: structured shutdown and signal streams
+- `sifr.resource`: deterministic cleanup scopes
+- `sifr.ipc`: typed IPC foundation for future process workers
+
+CPython-shaped modules such as `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, `sifr.multiprocessing`, `sifr.contextlib`, and `sifr.warnings` are evidence sources or possible adapters, not the production completion target.
 
 Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate-execution.md](./ad-hoc-production-network-http-platform-substrate-execution.md). Text and internationalization parity remains in [ad-hoc-production-text-i18n-stdlib-parity-execution.md](./ad-hoc-production-text-i18n-stdlib-parity-execution.md).
 
 ## Milestone Checklist
 
-- [ ] `milestone_concurrency_runtime_0`: CPython Inventory, Error Mapping, And Effect Classification
-- [ ] `milestone_concurrency_runtime_1`: Asyncio Core, Queue, And Async Queue Parity
-- [ ] `milestone_concurrency_runtime_2`: Subprocess, Popen, Async Subprocess, And Signals
-- [ ] `milestone_concurrency_runtime_3`: Concurrent Futures And Thread Executors
-- [ ] `milestone_concurrency_runtime_4`: Typed IPC, Process Pools, And Multiprocessing
-- [ ] `milestone_concurrency_runtime_5`: Contextlib, Warnings, And Runtime Ergonomics
-- [ ] `milestone_concurrency_runtime_6`: Integration, Documentation, And Production Gate
+- [ ] `milestone_concurrency_runtime_0`: Product Boundary And Rust Concurrency Contract
+- [ ] `milestone_concurrency_runtime_1`: Structured Async Runtime
+- [ ] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
+- [ ] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
+- [ ] `milestone_concurrency_runtime_4`: Process And Subprocess Runtime
+- [ ] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
+- [ ] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
+- [ ] `milestone_concurrency_runtime_7`: Integration, Documentation, And Production Gate
 
 ## Planning Reviews
 
@@ -80,10 +87,10 @@ Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platf
   - Result: `FAIL`; remaining TLS wrap failure-state, `signal.pause`, and text-i18n dependency milestone gaps were remediated.
 - Final split-phase Claude follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-16-constrained.md`
-  - Result: `PASS`; no material implementation-blocking gaps remained.
+  - Result: `PASS`; no material implementation-blocking gaps remained for the previous CPython-shaped split.
 - Final implementation-readiness scan:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-17-final-readiness.md`
-  - Result: `PASS`; all three phases were implementation-ready, with one editorial ledger-title mismatch remediated in this ledger.
+  - Result: `PASS`; all three previous split phases were implementation-ready, with one editorial ledger-title mismatch remediated.
 - No-legacy readiness scans:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-18-no-legacy-readiness.md`
   - Result: `FAIL`; text/i18n stale dynamic-handler and implicit-open wording were remediated.
@@ -92,7 +99,10 @@ Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platf
 - Namespace consistency scan:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-20-sifr-namespace-readiness.md`
   - Result: `PASS`; all three phase docs consistently use canonical `sifr.*` stdlib imports and reject bare CPython stdlib aliases.
-- Required follow-up: run a dedicated external review after M0 inventory and before M1 implementation, because this phase is now independently scoped.
+- Current substrate reframing review:
+  - Source: reviewer thoughts provided by the user in `/Users/yaseralnajjar/.codex/attachments/e5616ec2-7eb9-4106-b2e0-723a513a8993/pasted-text.txt`.
+  - Result: accepted direction; phase reframed from CPython stdlib parity to Sifr production concurrency/runtime substrate.
+- Required follow-up: run a dedicated external review after M0 inventory and before M1 implementation, because this phase is now independently scoped around native runtime APIs.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -100,61 +110,32 @@ Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platf
 - [x] Narrow unsafe signal handler registration to `unsupported` for this phase.
 - [x] Add milestone dependency graph.
 - [x] Add shared concurrency/runtime error mapping requirement.
-- [x] Expand `concurrent.futures`, multiprocessing, warnings, and global-state requirements.
-- [x] Name Tokio as the backing async runtime for this phase and require concrete feature expansion in M0.
-- [x] Tie `multiprocessing.Pool` to the same typed IPC gate as `ProcessPoolExecutor`.
-- [x] Clarify that class-based context managers are independent APIs, not fallback implementations for generator decorators.
-- [x] Mark `contextmanager` and `asynccontextmanager` unsupported in this phase, with a revisit rule for a future CPython-compatible generator semantics phase.
+- [x] Name Tokio as the backing async runtime for internal lowering and require concrete feature expansion in M0.
+- [x] Tie any future process-pool API to the same typed IPC gate.
+- [x] Clarify that class-based cleanup/context APIs are independent production APIs, not fallback implementations for generator decorators.
+- [x] Mark `contextmanager` and `asynccontextmanager` unsupported in this phase, with a revisit rule for a future generator semantics phase.
 - [x] Add explicit cross-phase dependency contract for text/i18n and network/web consumers.
-- [x] Clarify that core `asyncio` scheduler/task helpers are prior async-model infrastructure and this phase owns only `asyncio.Queue`/`asyncio.subprocess` compatibility additions.
-- [x] Assign private thread-pool substrate for `ThreadPoolExecutor` to this phase while keeping public `threading` module parity out of scope.
+- [x] Clarify that core scheduler/task helpers are native runtime infrastructure, not CPython module parity work.
+- [x] Assign private blocking/CPU offload substrate to this phase while keeping public `threading` module parity out of scope.
 - [x] Add explicit terminal expectations for `signal.getsignal`, `signal.pause`, and `pthread_sigmask`.
-- [x] Assign the `asyncio` task/wait/timeout/synchronization parity closure audit consumed by queues/subprocesses to `milestone_concurrency_runtime_1`.
-- [x] Add concrete `ThreadPoolExecutor` behavior dispositions for `max_workers`, `submit`, `map`, `shutdown(cancel_futures)`, `thread_name_prefix`, `initializer`, `initargs`, and public worker-thread inspection.
-- [x] Require M1's asyncio closure audit to finish before `asyncio.Queue` or `asyncio.subprocess` fixtures are marked conformant.
-- [x] Mark `ThreadPoolExecutor` `initializer`/`initargs` unsupported until Sifr has a formal user-visible cross-thread callable sendability contract.
-- [x] Add rationale that `TaskGroup` maps to Sifr's fixed structured-concurrency executor without exposing event-loop policies or callback transports.
-- [x] Mark `contextvars` parity and implicit per-task context propagation out of scope, with M1 fixtures proving unsupported context propagation is diagnosed or waived rather than silently ignored.
-- [x] Add ThreadPoolExecutor worker error propagation contract: worker failures return typed `ExecutorError` evidence and never panic or disappear.
-- [x] Mark all `contextvars` usage unsupported in this phase, including single-task reads/writes and cross-task propagation.
-- [x] Add `Future.cancel` and cancelled futures as a distinct typed terminal state.
-- [x] Replace ambiguous worker failure wording with a compiler contract: worker callables must type-check as `Callable[..., T]` or `Callable[..., Result[T, E]]`; other user-visible fallible paths are compile-time errors and runtime boundary failures become typed `ExecutorError::WorkerRuntime`.
-- [x] Specify `Executor.map` as an ordered iterator of typed item results for homogeneous callable result types.
-- [x] Add typed timeout terminal state for `Future.result(timeout=...)`.
-- [x] Specify `shutdown(cancel_futures=True)` marks pending futures with the same cancelled terminal state as `Future.cancel`.
-- [x] Restrict `wait` and `as_completed` to homogeneous future collections unless users define an explicit sum type.
-- [x] Add typed `Future.cancel()` return outcome for cancelled versus already-running futures.
-- [x] Add typed timeout behavior for `Executor.map(..., timeout=...)` and `as_completed(..., timeout=...)`.
-- [x] Define `wait(return_when=FIRST_EXCEPTION)` as first future with typed worker failure `Err(_)`.
-- [x] Mark `threading.local` unsupported in this phase with diagnostics.
-- [x] Add `Future.cancel()` `AlreadyDone` outcome.
-- [x] Specify `wait(return_when=FIRST_EXCEPTION)` returns the full `(done, not_done)` partition.
-- [x] Specify `Executor.map(..., timeout=...)` uses one absolute deadline from map-call time, not a per-item timeout reset.
-- [x] Specify `as_completed(..., timeout=...)` uses one absolute deadline from call time, not a per-yield timeout reset.
-- [x] Specify `wait(return_when=FIRST_EXCEPTION)` falls back to `ALL_COMPLETED` semantics when no worker failure occurs.
-- [x] Specify `shutdown(cancel_futures=True)` routes pending futures through the same typed `Cancelled` outcome path as `Future.cancel`.
-- [x] Specify `as_completed(..., timeout=...)` partial-result ownership: previously yielded futures remain valid, timeout is terminal, pending futures remain live/cancellable.
-- [x] Define `FIRST_EXCEPTION` trigger as ordinary typed `Result::Err` worker outcomes plus executor/runtime worker failures.
-- [x] Specify `shutdown(cancel_futures=True)` cancels only pending not-yet-started futures; running futures continue to typed completion.
-- [x] Specify `as_completed` borrows or clones observation handles and does not consume caller-owned future handles.
-- [x] Define `not_done` futures from `wait(FIRST_EXCEPTION)` as still scheduled; caller is responsible for cancellation or executor shutdown.
-- [x] Specify `shutdown(wait=True)` stores running-future results before returning and `shutdown(wait=False)` keeps result channels alive for future observation.
-- [x] Specify `wait()` borrows or clones observation handles and returns valid `done`/`not_done` views without consuming caller-owned futures.
-- [x] Define future result observation as `Result[T, FutureError[E]]` or equivalent with dedicated `Cancelled`, `TimedOut`, `Worker(E)`, and `WorkerRuntime` variants.
-- [x] Specify `gather()` borrows or clones task/future observation handles and does not consume caller-owned cancellation handles.
-- [x] Define `gather(return_exceptions=True)` as per-element typed results and `gather(return_exceptions=False)` as Sifr structured typed aggregate/cancellation behavior rather than exceptions.
-- [x] Specify `as_completed()` yields typed completed-future results, reports timeout as a terminal typed error, and leaves pending futures live/cancellable through original handles.
-- [x] Define `TaskGroup` child failure aggregation as `TaskGroupError[E]` or equivalent containing all observed child `FutureError[E]` values.
-- [x] Add binary pass/fail criteria for the M1 asyncio closure audit and make failed audit items block M1/M2 conformance claims.
-- [x] Convert `contextmanager` and `asynccontextmanager` from vague generator-phase blockers into formal unsupported/waived surfaces with a future-generator-semantics revisit rule.
-- [x] Make typed IPC design explicitly owned by M4, with no unnamed external prerequisite for `ProcessPoolExecutor` or `multiprocessing.Pool`.
-- [x] Replace the conditional `signal.pause()` adoption path with an explicit unsupported/waived terminal state for this phase.
+- [x] Require M0 classification before any `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, or `sifr.multiprocessing` adapter claims production scope.
+- [x] Mark `contextvars` parity and implicit per-task context propagation out of scope.
+- [x] Add a Sifr-native task/request context planning item for tracing, deadlines, cancellation metadata, and web observability.
+- [x] Add sendability/shareability as a phase-wide gate before task/thread/process boundary captures.
+- [x] Preserve typed future/task cancellation and worker error propagation requirements as Sifr-native `sifr.task`/`sifr.runtime` behavior rather than `concurrent.futures` parity.
+- [x] Preserve homogeneous worker result/cancellation/deadline fixture requirements for any accepted future/offload adapter.
+- [x] Define `TaskGroup` child failure aggregation as typed aggregate evidence.
+- [x] Make typed IPC design explicitly owned by M6, with no unnamed external prerequisite for future process workers.
 - [x] Resolve `signal.pause()` to unsupported/waived in this phase with diagnostics and a future safe signal-handler or structured signal-stream revisit rule.
 - [x] Add external-review owner and five-working-day fallback rule.
 - [x] Pin subprocess text mode, warning text encoding, and text-open demos to text/i18n `milestone_text_i18n_1` completion.
-- [x] Add no-backward-compatibility policy: current-CPython API shape under canonical `sifr.*` imports only, no bare CPython stdlib aliases, no legacy aliases, no deprecated behavior, no pickle-style fallbacks, and no compatibility shims; only inventory-recorded current adapters with Sifr-safe semantics are allowed.
+- [x] Add no-backward-compatibility policy: current adapters under canonical `sifr.*` imports only, no bare CPython stdlib aliases, no legacy aliases, no deprecated behavior, no pickle-style fallbacks, and no compatibility shims.
 - [x] Align the phase with the stdlib namespace cleanup: `sifr.*` remains the permanent public stdlib namespace and bare CPython stdlib import attempts get namespace-contract diagnostics.
-- [x] Mark `subprocess.getoutput` and `subprocess.getstatusoutput` unsupported as legacy shell-invocation helpers; typed `run(..., shell=...)` remains the explicit shell path where allowed.
+- [x] Mark `subprocess.getoutput` and `subprocess.getstatusoutput` unsupported as legacy shell-invocation helpers.
+- [x] Add support tiers: production substrate, production public API, internal runtime adapter, compatibility adapter, deferred, and rejected.
+- [x] Add no-toy-concurrency gate rejecting public partial modules that exist only because CPython has them.
+- [x] Demote `multiprocessing` and `ProcessPoolExecutor` from baseline CPU parallelism; Sifr uses typed offload and data parallelism for CPU work.
+- [x] Shrink `warnings` from Python global filter parity to explicit structured diagnostics unless M0 proves a narrow adapter is justified.
 
 ## Implementation PRs
 
@@ -165,6 +146,7 @@ Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platf
 - M4: pending.
 - M5: pending.
 - M6: pending.
+- M7: pending.
 
 ## Validation Evidence
 
@@ -192,9 +174,32 @@ Each milestone must record:
 - CPython source files scanned.
 - CPython docs files scanned.
 - CPython tests scanned.
-- Public APIs adopted, adapted, waived.
+- Public APIs adopted, adapted, waived, adapter-later, deferred, or rejected.
 - Unsupported/intentional-diff/host-limited surfaces.
 - Sifr e2e pass/fail fixtures added.
+
+## Required Tracking Artifacts
+
+Create and keep current during implementation:
+
+- `issues/ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md`
+- `verification/stdlib/concurrency_runtime_substrate_inventory.md`
+- `verification/stdlib/concurrency_runtime_substrate_inventory.json`
+- `verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md`
+- one traceability document per milestone domain under `verification/stdlib/`
+
+## API Tier Decision Index
+
+No decisions recorded yet.
+
+Every decision must include:
+
+- surface
+- support tier: `production-substrate`, `production-public`, `internal-runtime`, `adapter-later`, `deferred`, or `rejected`
+- terminal state
+- rationale
+- CPython evidence, when applicable
+- Sifr fixture or design artifact
 
 ## Waiver Index
 
@@ -203,7 +208,7 @@ No waivers recorded yet.
 Every waiver must include:
 
 - surface
-- terminal state: `intentional-diff`, `unsupported`, or `host-limited`
+- terminal state: `intentional-diff`, `unsupported`, `host-limited`, `deferred`, or `rejected`
 - rationale
 - revisit rule
 - CPython evidence

@@ -1,4 +1,4 @@
-# Ad Hoc Phase Execution: Production Text And Internationalization Stdlib Parity
+# Ad Hoc Phase Execution: Production Text, Unicode, Encoding, And I18n Runtime
 
 Phase contract: [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md)
 
@@ -8,20 +8,24 @@ Status: draft
 
 This ledger tracks:
 
-- `codecs`, `encodings`
-- `unicodedata`
-- `locale`
-- `gettext`
+- `sifr.encoding`
+- `sifr.unicode`
+- `sifr.io` explicit text I/O
+- `sifr.i18n`
+- CPython-shaped text/i18n surfaces only as reference material, waiver evidence, or deferred adapters
 
 Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate-execution.md](./ad-hoc-production-network-http-platform-substrate-execution.md). Concurrency/runtime parity remains in [ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md](./ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md).
 
+Execution order: this is the first phase in the split production-stdlib sequence. Network/HTTP and concurrency/runtime work may proceed only for binary or ASCII/UTF-8-only slices before the relevant text/i18n gates are complete; their text-dependent surfaces consume this phase rather than inventing local fallbacks.
+
 ## Milestone Checklist
 
-- [ ] `milestone_text_i18n_0`: CPython Inventory, Error Mapping, And Registry Design
-- [ ] `milestone_text_i18n_1`: Codecs Registry, Encodings, And Text I/O Integration
-- [ ] `milestone_text_i18n_2`: Unicode Data And Normalization
-- [ ] `milestone_text_i18n_3`: Locale
-- [ ] `milestone_text_i18n_4`: Gettext
+- [ ] `milestone_text_i18n_0`: Product Boundary And Rust Lowering Contract
+- [ ] `milestone_text_i18n_1`: Encoding And Explicit Text I/O
+- [ ] `milestone_text_i18n_2`: Unicode Core
+- [ ] `milestone_text_i18n_2_5`: Unicode Segmentation
+- [ ] `milestone_text_i18n_3`: Locale Identifiers And Locale-Sensitive Formatting
+- [ ] `milestone_text_i18n_4`: Translation Bundles
 - [ ] `milestone_text_i18n_5`: Integration, Documentation, And Production Gate
 
 ## Planning Reviews
@@ -93,20 +97,30 @@ Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platf
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-20-sifr-namespace-readiness.md`
   - Result: `PASS`; all three phase docs consistently use canonical `sifr.*` stdlib imports and reject bare CPython stdlib aliases.
 - Required follow-up: run a dedicated external review after M0 inventory and before M1 implementation, because this phase is now independently scoped.
+- Reviewer-driven substrate pivot:
+  - Result: accepted; the phase is now defined as production text/Unicode/encoding/i18n runtime substrate, not CPython stdlib parity.
+  - Public production API center: `sifr.encoding`, `sifr.unicode`, `sifr.io`, and `sifr.i18n`.
+  - CPython-shaped surfaces (`sifr.codecs`, `sifr.encodings`, `sifr.unicodedata`, `sifr.locale`, `sifr.gettext`) are reference/deferred-adapter surfaces unless a later review explicitly accepts them over the native substrate.
+- Text/i18n substrate review:
+  - `reviews/ad-hoc-production-text-i18n-substrate-review-pass-1.md`
+  - Result: `PASS`; two editorial observations were remediated by aligning the public `sifr.unicode` property list with M2 scope and adding per-crate/e2e validation commands to the ledger baseline.
+- Phase-order clarification:
+  - Result: accepted; this phase is first in the split production-stdlib sequence because both network/HTTP and concurrency/runtime depend on its text/encoding substrate.
 
 ## Planning Review Remediation Retained In This Phase
 
-- [x] Add text/i18n CPython source, docs, tests, and native backing scope.
-- [x] Add shared text/i18n error mapping requirement.
-- [x] Add codec registry mutation policy as an M0 decision.
+- [x] Add text/i18n CPython source, docs, tests, and native backing scope as reference material rather than product API scope.
+- [x] Add shared text/i18n typed error mapping requirement.
+- [x] Add static encoding registry and unsupported mutation policy as an M0 decision.
 - [x] Add Unicode data version and generated-table strategy as M0 decisions.
-- [x] Add locale process-global synchronization as an M0 decision.
-- [x] Add gettext global-installation policy as an M0 decision.
-- [x] Require `str.encode(...)`, `bytes.decode(...)`, and `open(..., encoding=...)` to use the same codec registry.
-- [x] Require global-state mutation to be synchronized, waived, or host-limited with tests.
+- [x] Reject process-global locale mutation as a production API; use typed locale IDs and object-based i18n formatters.
+- [x] Add gettext/global-installation policy as unsupported; explicit translation bundles are the supported path.
+- [x] Require `str.encode(...)`, `bytes.decode(...)`, and `open(..., encoding=...)` to use the same encoding substrate.
+- [x] Require global-state mutation to be rejected, waived, or host-limited with tests rather than synchronized into the recommended model.
 - [x] Add explicit provider contract for network/web and concurrency/runtime text consumers.
+- [x] Clarify implementation order: text/i18n runs first, and network/runtime text-dependent surfaces consume its M1/M3 gates rather than shipping local encoding or locale fallbacks.
 - [x] Clarify that binary-mode file I/O is prior infrastructure and this phase owns only text-mode `open(..., encoding=..., errors=...)` integration.
-- [x] Clarify locale state is process-scoped and threaded/process-pool code must serialize locale-sensitive operations through this phase's locale lock or record host-limited/intentional-diff behavior.
+- [x] Clarify Python-style locale state is not the production model; threaded/process-pool code must use explicit locale values and formatter objects, while host locale discovery remains read-only and host-limited.
 - [x] Name binary file I/O as prior runtime/file-object parity and current `sifr.io` infrastructure, with M0 verification before text-mode `open(..., encoding=..., errors=...)`.
 - [x] Make binary file I/O verification a hard prerequisite: failures block `milestone_text_i18n_1` and are fixed in the existing `sifr.io`/runtime file-object surface rather than worked around in text-mode code.
 - [x] Define `open(path)`/`open(path, mode="r")` without explicit `encoding=` as permanently `unsupported`/`intentional-diff` from CPython's locale-derived default; M3 documents this as the final intentional difference and does not unblock these forms. Static omissions get compile-time diagnostics; dynamic cases get typed unsupported-default-encoding errors.
@@ -114,7 +128,7 @@ Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platf
 - [x] Require literal/static `open(...)` modes so the compiler can choose binary versus text handle types; dynamic/nonliteral mode strings get a compile-time diagnostic unless routed through a future typed helper API.
 - [x] Extend the explicit-encoding policy to text stream wrappers such as `io.TextIOWrapper`, or record `io.TextIOWrapper` as unsupported with CPython evidence.
 - [x] Carve out `io.StringIO` as encoding-free native-string I/O; it must not inherit the codec-backed wrapper encoding requirement.
-- [x] Define typed/statically known codec `errors=` handling for `str.encode`, `bytes.decode`, `open`, and text wrappers, with dynamic error-handler names unsupported because synchronized runtime lookup is not adopted in this phase.
+- [x] Define typed/statically known encoding `errors=` handling for `str.encode`, `bytes.decode`, `open`, and text wrappers, with dynamic error-handler names unsupported because synchronized runtime lookup is not adopted in this phase.
 - [x] Require `io.StringIO(newline=...)` to either implement CPython-compatible newline semantics or reject unsupported newline parameters with diagnostics.
 - [x] Require encode/decode context validation for codec error handlers, including rejecting encode-only handlers such as `xmlcharrefreplace` on decode call sites.
 - [x] Add explicit codec error-handler applicability classes: encode-only, bidirectional, and codec-limited bidirectional, preserving `backslashreplace` as valid for both encode and decode.
@@ -123,22 +137,28 @@ Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platf
 - [x] Define incremental encoder/decoder finalization as transitioning to exhausted state, with typed exhausted errors on subsequent encode/decode calls.
 - [x] Define incremental strict errors as typed failures with no partial success value, and recoverable non-strict errors as typed success outcomes carrying both produced output and recovery diagnostics.
 - [x] Resolve the registry mutation fork to a static registry in this phase, with `codecs.register`/`codecs.unregister` unsupported or intentional-diff.
-- [x] Resolve locale mutation to a process-global lock for adopted APIs, with locale names/host behavior recorded as host-limited where needed.
-- [x] Resolve `gettext.install` global mutation to unsupported/waived in this phase, with explicit translation objects as the supported path.
+- [x] Resolve locale mutation by rejecting `setlocale`-style process-global behavior as the production path; use explicit locale values and formatter objects.
+- [x] Resolve `gettext.install` global mutation to unsupported/waived in this phase, with explicit translation bundles and translators as the supported path.
 - [x] Define incremental encoder/decoder ownership as unique mutable linear state, not hidden shared mutation.
 - [x] Add pre-M0 binary file I/O smoke criteria and `sifr.io` owner for prerequisite fixes.
 - [x] Add external-review owner and five-working-day fallback rule.
 - [x] Define `milestone_text_i18n_1` as the reciprocal unblock point for network/web non-UTF-8 URL/HTTP text behavior and concurrency/runtime subprocess/warning text behavior, with locale-sensitive formatting still additionally blocked on M3.
-- [x] Add no-backward-compatibility policy: current-CPython API shape under canonical `sifr.*` imports only, no bare CPython stdlib aliases, no legacy aliases, no deprecated behavior, no implicit locale-default text behavior, and no compatibility shims; only inventory-recorded current adapters with Sifr-safe semantics are allowed.
+- [x] Add no-backward-compatibility policy: no bare CPython stdlib aliases, no legacy aliases, no deprecated behavior, no implicit locale-default text behavior, and no compatibility shims; only separately reviewed adapters over Sifr-native APIs are allowed.
 - [x] Align the phase with the stdlib namespace cleanup: `sifr.*` remains the permanent public stdlib namespace and bare CPython stdlib import attempts get namespace-contract diagnostics.
 - [x] Remove stale dynamic error-handler lookup wording; dynamic handler names remain unsupported in this phase.
 - [x] Clarify no-encoding text `open(...)` remains permanently unsupported after M3; M3 documents the intentional difference rather than unblocking locale-derived defaults.
+- [x] Add Rust `String`/`str`-compatible text invariants: normal Sifr strings are valid Unicode, arbitrary bytes stay bytes, and invalid Unicode recovery cannot be hidden inside ordinary strings.
+- [x] Replace CPython parity definition with support tiers: production substrate, production API, import/compatibility backend, host-limited, and rejected/deferred.
+- [x] Add demand-tiered encoding scope: Tier 0 required encodings, Tier 1 web/file compatibility, Tier 2 feature-gated CJK, Tier 3 deferred CPython-only/pseudo-codec/module-zoo parity.
+- [x] Add Unicode segmentation as a dedicated M2.5 milestone for grapheme and word boundaries.
+- [x] Reframe gettext as translation-bundle/backend import support, not the strategic global i18n API.
 
 ## Implementation PRs
 
 - M0: pending.
 - M1: pending.
 - M2: pending.
+- M2.5: pending.
 - M3: pending.
 - M4: pending.
 - M5: pending.
@@ -153,6 +173,9 @@ Required baseline commands:
 cargo fmt --check
 cargo clippy --workspace -- -D warnings
 python3 scripts/check_hir_maintainability_guardrails.py
+cargo test -p sifr_stdlib
+cargo test -p sifr -- stdlib
+scripts/run_e2e_pass.sh
 scripts/run_all_tests.sh --profile create-pr
 ```
 
@@ -169,8 +192,10 @@ Each milestone must record:
 - CPython source files scanned.
 - CPython docs files scanned.
 - CPython tests scanned.
-- Public APIs adopted, adapted, waived.
-- Unsupported/intentional-diff/host-limited surfaces.
+- Standards and Rust crate sources reviewed.
+- Production APIs adopted.
+- Python-shaped surfaces adapted, waived, rejected, or deferred as adapters.
+- Unsupported/intentional-diff/host-limited/deferred-adapter surfaces.
 - Sifr e2e pass/fail fixtures added.
 
 ## Waiver Index
