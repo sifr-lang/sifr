@@ -1,24 +1,31 @@
-# Ad Hoc Phase: Production Network And Web Stdlib Parity
+# Ad Hoc Phase: Production Network and HTTP Platform Substrate
 
 Status: draft
-Phase placement: ad hoc expansion phase after the stdlib boundary refactor and before any stable GA claim that Sifr is production-ready for networked programs.
-Phase owner: stdlib/runtime implementation with compiler import, effect, and codegen support
+Phase placement: ad hoc expansion phase after the stdlib boundary refactor and before Phase 41 can claim production readiness for networked programs.
+Phase owner: runtime/networking implementation with compiler import, effect, and codegen support
 
 ## Objective
 
-Close the production stdlib gaps that prevent Sifr from supporting common networked Python-shaped programs:
+Build the production-grade network, TLS, URL, and HTTP substrate required for real Sifr networked programs, Phase 41's FastAPI-like web framework, and a later httpx-like production HTTP client.
 
-- networking and readiness: `socket`, `select`, `selectors`
-- TLS: `ssl`
-- URL and HTTP: `urllib.*`, `http.*`, `socketserver`
+This phase does not attempt CPython networking/web stdlib parity. CPython is an evidence source for edge cases, protocol behavior, and explicit rejection decisions; it is not the product shape.
 
-This phase is complete when each target surface has either:
+The required output is:
 
-- current-CPython-shaped source parity with Sifr-safe semantics,
-- a native Sifr async/runtime implementation that backs that compatibility surface,
-- or an explicit, tested waiver with rationale, revisit rule, and CPython test-family evidence.
+- Sifr-native async TCP networking
+- UDP support only where near-term production workloads justify it
+- DNS/address resolution
+- TLS client/server streams with safe verification defaults
+- HTTP/1.1 client/server transport substrate
+- typed URL, header, and small cookie-header parsing primitives
+- streaming request/response bodies
+- cancellation, timeouts, backpressure, graceful shutdown, and resource limits
+- typed network/TLS/HTTP errors
+- compiler diagnostics for blocking I/O in async contexts
+- production observability hooks for connection, TLS, and HTTP lifecycle events
+- internal loopback test infrastructure to validate the substrate without external network dependency
 
-This phase does not add backward-compatibility or legacy support. Parity means the current supported CPython stdlib API shape and behavior adapted under Sifr's canonical `sifr.*` namespace with Sifr's static, typed, ownership-safe model. Bare CPython stdlib imports, historical aliases, deprecated APIs, compatibility shims, and hidden bridge names are not implemented; they receive diagnostics or waivers.
+CPython-shaped modules such as `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib.request`, `sifr.http.client`, `sifr.http.server`, and `sifr.socketserver` are not product goals for this phase.
 
 ## Split-Out Phases
 
@@ -29,104 +36,247 @@ The original broad planning scan also covered two important areas that are now t
 
 This phase may depend on those phases for optional text decoding, subprocess demos, or executor-backed serving, but it must not implement their module surfaces here.
 
-This phase also depends on [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md). Its namespace contract is assumed complete before these stdlib parity milestones ship: Sifr stdlib remains publicly imported through `sifr.*`, and bare CPython stdlib names are not aliases.
+This phase also depends on [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md). Its namespace contract is assumed complete before these substrate milestones ship: Sifr stdlib remains publicly imported through `sifr.*`, and bare CPython stdlib names are not aliases.
+
+## Product Boundary
+
+A module belongs in Sifr core only if it is production substrate or production developer experience.
+
+| Layer | Decision | Public? | Rationale |
+| --- | --- | --- | --- |
+| Runtime substrate | build now | mostly public low-level API plus private intrinsics | required for all clients, servers, and framework work |
+| Protocol substrate | build now | partly public | HTTP/TLS/URL correctness is shared foundation |
+| Production HTTP client API | reserve separate phase | public later | httpx-like client behavior is a product surface, not stdlib parity |
+| Production server framework | Phase 41 | public later | routing, middleware, extractors, lifecycle, and ops hooks belong there |
+| CPython-shaped networking modules | reject/defer | no | maintenance burden without strategic production value |
+
+### Public Surfaces Built Now
+
+| Surface | Classification | Notes |
+| --- | --- | --- |
+| `sifr.net` | `production-public` | primary low-level network API |
+| `sifr.tls` | `production-public` | primary TLS API, including optional client certificate authentication when M0 confirms deterministic fixtures and backend support |
+| `sifr.url` | `production-public` | typed URL API |
+| `sifr.http` protocol types | `production-substrate` | request/response/header/status/body primitives; final path may be `sifr.http.core` if review prefers a narrower public boundary |
+| internal loopback harness | `internal-test` | never a public dev-server module |
+| readiness primitives | `production-substrate` | internal or low-level only; no public manual event-loop model |
+
+### Deferred Or Rejected Public Surfaces
+
+| Surface | Decision | Reason |
+| --- | --- | --- |
+| `sifr.http.server` | rejected as public API | toy/basic server shape; server product is Phase 41 |
+| `sifr.socketserver` | rejected | inheritance-heavy handler model conflicts with Sifr's static model |
+| `sifr.urllib.request` | deferred/rejected | old opener/handler architecture; production client deserves a modern API |
+| `sifr.http.client` | deferred | low-level client transport may exist internally; public API should be httpx-like |
+| `sifr.socket` | deferred | CPython descriptor-shaped API must not define Sifr networking |
+| `sifr.ssl` | deferred | TLS is exposed through `sifr.tls`, not `SSLContext` mimicry |
+| `sifr.select` / `sifr.selectors` | internal readiness only | users should use async streams, not manual event loops |
+| `sifr.urllib.parse` | deferred adapter | stable URL utility is `sifr.url` |
+| `urllib.robotparser` | deferred/rejected | niche utility, not core platform substrate |
+| `http.cookiejar` | deferred | cookie persistence belongs in the HTTP client phase if needed |
+| HTTP/2 | deferred | revisit after HTTP/1.1 substrate, Phase 41, HTTP client baseline, and ALPN negotiation evidence are stable |
+| HTTP/3 / QUIC | deferred | revisit in a future transport phase after HTTP/2 and QUIC runtime strategy are designed |
+| CGI-style serving | rejected | legacy serving model |
+| `ThreadingMixIn` / `ForkingMixIn` | rejected | wrong abstraction and overlaps concurrency/runtime phases |
+| raw event-loop policies | rejected | Phase 32 keeps raw event loops out of the user model |
+
+## Compatibility Policy
+
+CPython-shaped networking modules are not part of the production baseline.
+
+They may be considered later only when all of the following are true:
+
+1. The Sifr-native production API already exists.
+2. There is evidence of real migration demand.
+3. The adapter delegates to production primitives.
+4. The adapter does not expose legacy, dynamic, blocking, descriptor-aliasing, or unsafe semantics as recommended API.
+5. The adapter does not increase maintenance burden disproportionate to usage.
+
+Until then, these surfaces are deferred or unsupported. This phase must not add compatibility shims, fallback paths, bridge aliases, legacy aliases, deprecated behavior, or partial public modules.
+
+Bare CPython imports such as `from socket import socket`, `import ssl`, and `from urllib.parse import urlparse` remain unsupported by the namespace contract unless a normal user/package module resolves first. The production imports for this phase are Sifr-native forms such as `from sifr.net import connect_tcp`, `from sifr.tls import TlsClientConfig`, and `from sifr.url import Url`.
+
+## No-Toy-Module Gate
+
+A public module must not be added unless it satisfies at least one of:
+
+1. It is necessary production substrate.
+2. It is the recommended production developer API.
+3. It is a stable, broadly useful utility with low long-term maintenance cost.
+4. It is required for Phase 41 or the production HTTP client phase.
+
+The following are not sufficient reasons:
+
+- CPython has the module.
+- It helps a small compatibility demo.
+- It is useful for local experiments only.
+- It is easy to implement partially.
+- It can be marked as basic and fixed later.
+
+Partial public modules are rejected unless they are explicitly unstable/internal and inaccessible as stable user API.
+
+## Maintenance Burden Test
+
+For every public network/web API, answer:
+
+- Would a production team reasonably use this directly?
+- Will this still be a recommended API after Phase 41 and the production HTTP client phase?
+- Does it compose with typed errors, async, ownership, and cancellation?
+- Does it avoid global mutable process state?
+- Does it avoid dynamic monkeypatching, subclass tricks, descriptor aliasing, and raw event-loop policies?
+- Can it be documented as safe by default?
+- Can it be tested deterministically without external network dependency?
+- Is it worth supporting for years?
+
+If the answer is no, the API is internal, deferred, or rejected.
 
 ## Cross-Phase Dependency Contract
 
-The three split phases are not an implied ship order. Each phase may implement and test its self-contained binary/runtime subset independently, but cross-phase consumer features are blocked until their provider phase is complete:
+The split phases are not an implied ship order. Each phase may implement and test its self-contained binary/runtime subset independently, but cross-phase consumer features are blocked until their provider phase is complete:
 
-- Text/i18n is a hard prerequisite for non-UTF-8 HTTP body decoding, file/text handlers that require codec lookup, and any network demo that depends on `open(..., encoding=...)`.
-- The precise unblock point for those text-dependent network features is completion of text/i18n `milestone_text_i18n_1: Codecs Registry, Encodings, And Text I/O Integration`; M0/M3 network inventory entries must record those surfaces as `blocked-on-text-i18n-m1` until that milestone is closed.
-- Concurrency/runtime is a hard prerequisite for executor-backed server APIs. This phase does not implement public thread, executor, queue, process, warning, or signal modules.
-- Async scheduler/task primitives are prior runtime infrastructure owned by the existing async model. This phase owns only network-specific compatibility additions such as `asyncio.open_connection` and `asyncio.start_server`.
-- Binary socket, TLS, URL parsing, cookie parsing, and loopback HTTP tests can ship before the text/i18n phase as long as they do not duplicate the codec registry.
+- Text/i18n is a hard prerequisite for non-UTF-8 HTTP body decoding, URL percent-encoding variants that require codec lookup, file/text handlers, and any network demo that depends on `open(..., encoding=...)`.
+- The precise unblock point for those text-dependent network features is completion of text/i18n `milestone_text_i18n_1: Codecs Registry, Encodings, And Text I/O Integration`; this phase records those features as `blocked-on-text-i18n-m1` until that milestone is closed.
+- Concurrency/runtime is a hard prerequisite for executor-backed serving APIs. This phase does not implement public thread, executor, queue, process, warning, or signal modules.
+- Async scheduler/task primitives are prior runtime infrastructure owned by the existing async model. This phase consumes that runtime and adds only network-specific stream, TLS, and HTTP suspension points.
+- Phase 41 consumes this phase for server framework routing, middleware, lifecycle/shutdown, typed extractors, validation, error mapping, and operational hooks.
+- A separate production HTTP client phase consumes this phase for connection pooling, redirects, retry policy, auth, cookies, proxies, streaming upload/download, JSON helpers, multipart, compression, test transports, and sync/async product design.
 
-## Source Of Truth
+## Evidence Sources
 
-The authoritative CPython source tree for this phase is:
+The authoritative CPython source tree for evidence scans is:
 
 - `/Users/yaseralnajjar/work/sifr/cpython`
 
-The implementation must scan and classify these CPython files before each milestone implementation PR:
+The implementation must scan these CPython files during M0 and before any milestone that reuses their behavior. The scan is used to find protocol edge cases, platform caveats, test fixture ideas, deprecated/legacy traps, and explicit rejection evidence. It is not a parity backlog.
 
-| Domain | CPython library sources | CPython test sources | Native backing sources |
+| Domain | CPython library/docs sources | CPython test sources | Native backing evidence |
 | --- | --- | --- | --- |
-| sockets/selectors | `Lib/socket.py`, `Lib/selectors.py`, `Doc/library/socket.rst`, `Doc/library/selectors.rst`, `Doc/library/select.rst` | `Lib/test/test_socket.py`, `Lib/test/test_select.py`, `Lib/test/test_selectors.py`, `Lib/test/test_asyncio/test_streams.py`, `Lib/test/test_asyncio/test_server.py`, `Lib/test/test_asyncio/test_sock_lowlevel.py`, `Lib/test/test_asyncio/test_selector_events.py` | `Modules/socketmodule.c`, `Modules/selectmodule.c`, `Modules/clinic/socketmodule.c.h`, `Modules/clinic/selectmodule.c.h` |
+| sockets/readiness | `Lib/socket.py`, `Lib/selectors.py`, `Doc/library/socket.rst`, `Doc/library/selectors.rst`, `Doc/library/select.rst` | `Lib/test/test_socket.py`, `Lib/test/test_select.py`, `Lib/test/test_selectors.py`, `Lib/test/test_asyncio/test_streams.py`, `Lib/test/test_asyncio/test_server.py`, `Lib/test/test_asyncio/test_sock_lowlevel.py`, `Lib/test/test_asyncio/test_selector_events.py` | `Modules/socketmodule.c`, `Modules/selectmodule.c`, `Modules/clinic/socketmodule.c.h`, `Modules/clinic/selectmodule.c.h` |
 | TLS | `Lib/ssl.py`, `Doc/library/ssl.rst` | `Lib/test/test_ssl.py`, `Lib/test/test_asyncio/test_ssl.py`, `Lib/test/test_asyncio/test_sslproto.py` | `Modules/_ssl.c`, `Modules/_ssl/*`, `Modules/clinic/_ssl.c.h` |
-| HTTP and URLs | `Lib/http/*.py`, `Lib/urllib/*.py`, `Lib/socketserver.py`, `Doc/library/http*.rst`, `Doc/library/urllib*.rst`, `Doc/library/socketserver.rst` | `Lib/test/test_httplib.py`, `Lib/test/test_httpservers.py`, `Lib/test/test_http_cookies.py`, `Lib/test/test_http_cookiejar.py`, `Lib/test/test_socketserver.py`, `Lib/test/test_urllib.py`, `Lib/test/test_urllib2.py`, `Lib/test/test_urllib2_localnet.py`, `Lib/test/test_urllib_response.py`, `Lib/test/test_urllibnet.py`, `Lib/test/test_urllib2net.py` | stdlib Python sources plus Rust HTTP/TLS/runtime crates selected by this phase |
+| HTTP and URLs | `Lib/http/*.py`, `Lib/urllib/*.py`, `Lib/socketserver.py`, `Doc/library/http*.rst`, `Doc/library/urllib*.rst`, `Doc/library/socketserver.rst` | `Lib/test/test_httplib.py`, `Lib/test/test_httpservers.py`, `Lib/test/test_http_cookies.py`, `Lib/test/test_http_cookiejar.py`, `Lib/test/test_socketserver.py`, `Lib/test/test_urllib.py`, `Lib/test/test_urllib2.py`, `Lib/test/test_urllib2_localnet.py`, `Lib/test/test_urllib_response.py`, `Lib/test/test_urllibnet.py`, `Lib/test/test_urllib2net.py` | Rust HTTP/TLS/runtime crates selected by this phase |
 
-Path note: CPython paths above are relative to `/Users/yaseralnajjar/work/sifr/cpython`.
+Each reviewed CPython test family must end in exactly one state:
+
+- `mined`: behavior converted into a Sifr-native substrate test.
+- `blocked`: behavior depends on a split-out phase.
+- `rejected`: behavior belongs to a CPython-shaped, legacy, unsafe, or non-product surface.
+- `external-signal`: test is retained only as non-blocking ecosystem signal because it depends on external network state.
+
+Every proposed public surface must end in exactly one state:
+
+- `production-public`
+- `production-substrate`
+- `internal-test`
+- `deferred`
+- `rejected`
+- `blocked-on-text-i18n-m1`
+- `blocked-on-concurrency-runtime`
+- `host-limited`
+
+`open` is allowed during implementation only and is forbidden at phase exit.
 
 ## Current Sifr Baseline
 
 Current Sifr stdlib support is intentionally curated under `lib/sifr/*.sifr`. Relevant existing surfaces:
 
-- `sifr.asyncio` is a compatibility veneer over the canonical task model, but intentionally omits raw event loops, public selectors, subprocesses, process pools, and transport/protocol APIs.
+- `sifr.asyncio` is a veneer over the canonical task model, but intentionally omits raw event loops, public selectors, subprocesses, process pools, and transport/protocol APIs.
 - `sifr.io` has file handles and in-memory stream wrappers, but no socket streams.
-- `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib`, `sifr.socketserver`, and public `sifr.http` modules are not present as production stdlib surfaces.
-- `sifr.asyncio` already owns the core scheduler/task veneer (`run`, `create_task`, `gather`, `sleep`, timeout helpers). This phase consumes that runtime and adds only network stream compatibility entry points.
+- `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib`, `sifr.socketserver`, and public web-server modules are not present as production surfaces and should remain absent in this phase.
+- `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http` protocol/runtime boundaries need to be created or confirmed during M0.
 
 The Phase 32 async model remains binding:
 
 - Native async I/O APIs must be real suspension points.
 - Sync network APIs that can block must be classified as `@blocking_io`.
 - Direct calls to blocking sync APIs from `async def` remain compiler errors unless routed through native async APIs or explicit offload.
-- The compiler must not expose Tokio, event-loop objects, or raw callback-first APIs as the normal user model.
-
-## Parity Definition
-
-This phase targets current CPython-shaped interfaces under the canonical `sifr.*` namespace, not legacy compatibility layers or bare CPython import compatibility.
-
-For each module in scope:
-
-1. Support canonical Sifr stdlib imports for the CPython-shaped surface (`from sifr.socket import socket`, `from sifr.urllib.parse import urlparse`, etc.).
-2. Do not add bare CPython module-name imports as aliases for `sifr.*`. Bare forms such as `from socket import socket` or `from urllib.parse import urlparse` should receive the namespace-contract diagnostic once normal user/package resolution fails.
-3. Match CPython function/class names, constructor forms, constants, and common keyword arguments where compatible with Sifr's static type system.
-4. Adapt CPython exception behavior into Sifr-safe `Result[T, E]`, `Option[T]`, or compile-time diagnostics.
-5. Keep host-specific behavior explicitly marked `host-limited`.
-6. Keep CPython implementation-detail, deprecated, and historical compatibility behavior waived rather than reimplemented blindly.
-
-Every reviewed CPython test family must end in exactly one state:
-
-- `adopted`: direct Sifr equivalent added.
-- `adapted`: behavior preserved with Sifr `Result`/`Option`, ownership, async, or host-limited adaptation.
-- `waived`: explicit unsupported/intentional-diff/host-limited rationale recorded.
-
-Every public surface must end in exactly one state:
-
-- `done`
-- `intentional-diff`
-- `unsupported`
-- `host-limited`
-
-`open` is allowed during implementation only and is forbidden at phase exit.
+- The compiler must not expose Tokio, event-loop objects, callback transports/protocols, or raw selector internals as the normal user model.
 
 ## Milestone Dependency Graph
 
 Implementation PRs must follow this dependency order unless the execution ledger records an explicit split that preserves the same prerequisites:
 
-1. `milestone_network_web_0` first. No implementation milestone starts until the inventory, CPython test matrix, import plan, and shared error mapping are checked in.
-2. `milestone_network_web_1` before network-dependent HTTP/TLS/server work. Socket readiness and async streams are the substrate for TLS and HTTP.
-3. `milestone_network_web_2` before HTTPS client/server support in `milestone_network_web_3`. M3 may start URL parsing and plain HTTP work after M1, but HTTPS and async HTTPS wait for M2 `AsyncTlsStream`.
-4. `milestone_network_web_4` last, after every target surface and CPython test family in this phase is closed as `done`, `intentional-diff`, `unsupported`, or `host-limited`.
+1. `milestone_network_http_0` first. No implementation milestone starts until public/internal/deferred/rejected surface classification, error taxonomy, runtime dependency plan, workload classifications, and Phase 41 handoff contract are checked in.
+2. `milestone_network_http_1` before TLS and HTTP transport. Async streams are the substrate for TLS and HTTP.
+3. `milestone_network_http_2` before HTTPS transport. Plain HTTP parser work may start after M1, but HTTPS waits for M2 `AsyncTlsStream`.
+4. `milestone_network_http_3` before M4 HTTP integration where URL/header/cookie parsing is consumed.
+5. `milestone_network_http_4` before M5 handoff.
+6. `milestone_network_http_5` last, after every proposed surface and CPython evidence family in this phase is closed.
 
 Parallel work is allowed only for pure parser work that does not consume unfinished runtime substrate.
 
 ## Architecture Principles
 
-### Native Runtime First, Compatibility Second
+### Native Runtime First
 
-Implement the canonical runtime primitive first, then layer CPython-shaped modules over it.
+Implement the canonical runtime primitive first. Do not layer CPython-shaped public modules over it in this phase.
 
-- Tokio remains the backing async runtime for this phase because the generated task runtime already depends on `tokio` and `sifr_stdlib::StdlibFeature::Tokio`.
+- Tokio remains the backing async runtime because the generated task runtime already depends on `tokio` and `sifr_stdlib::StdlibFeature::Tokio`.
 - M0 must expand the Tokio dependency feature plan from the current task/sync/time set to the concrete features needed for `tokio::net` and `tokio::io`.
 - No `async-std`, custom event-loop runtime, or public Tokio type is introduced without a separate architecture issue.
-- `sifr.net` / private intrinsics own TCP/UDP/socket readiness.
-- `sifr.tls` / private intrinsics own TLS handshakes and certificate verification.
-- `sifr.http` / private intrinsics own request/response transport.
-- CPython-shaped canonical Sifr modules (`sifr.socket`, `sifr.ssl`, `sifr.urllib.request`, `sifr.http.client`, `sifr.http.server`, `sifr.socketserver`) delegate to those primitives.
+- `sifr.net` owns TCP, UDP if accepted, DNS/address resolution, stream readiness, timeouts, cancellation, backpressure, shutdown, and connection lifecycle.
+- `sifr.tls` owns TLS configuration, handshakes, certificate verification, SNI, ALPN, wrapped streams, and TLS errors.
+- `sifr.url` owns URL parsing/building, percent encoding, query handling, and authority/host/port validation.
+- `sifr.http` protocol/runtime internals own request/response transport, headers, body streaming, parser/encoder limits, connection reuse, and HTTP protocol errors.
 
-The exact internal module names may change during implementation, but the public stdlib namespace remains `sifr.*` and the boundary must exist: public modules must not duplicate target-runtime logic.
+The exact internal module names may change during implementation, but the boundary must exist: public Sifr-native modules must not duplicate target-runtime logic, and internal protocol/test harnesses must not leak as stable user API.
+
+### Sifr-Native Network API Shape
+
+M0 must finalize exact names, but the target shape is Sifr-native and typed:
+
+- `async connect_tcp(address, *, timeout=None, local_addr=None) -> Result[TcpStream, NetError]`
+- `async listen_tcp(address, *, backlog=None, reuse_addr=false) -> Result[TcpListener, NetError]`
+- `async TcpListener.accept() -> Result[(TcpStream, SocketAddr), NetError]`
+- `async TcpStream.read(buffer) -> Result[usize, NetError]`
+- `async TcpStream.write(bytes) -> Result[usize, NetError]`
+- `async TcpStream.close() -> Result[None, NetError]`
+- `UdpSocket` support only if M0 accepts concrete production workloads and deterministic tests.
+
+The API must expose local/remote address inspection, graceful shutdown, resource-limit controls, and deterministic cancellation semantics. It must not expose descriptor aliasing, monkeypatchable globals, or public raw event-loop policies.
+
+The `read(buffer)` shape above is illustrative, not accepted design. M0 must choose the stream I/O ownership model before M1 starts:
+
+- mutable-borrow buffer reads,
+- owned-buffer reads such as `read(max_bytes) -> Result[Bytes, NetError]`,
+- async iterator / chunk stream reads,
+- or a deliberately combined model with explicit ownership and lifetime rules.
+
+The decision must cover generated Rust lifetimes, cancellation safety, partial read/write behavior, backpressure, TLS wrapping, HTTP body streaming, and panic-free handling of zero-length and too-large buffers.
+
+### TLS API Shape
+
+M0 must finalize exact names, but the target shape is:
+
+- `TlsClientConfig` and `TlsServerConfig`
+- safe default certificate verification
+- root strategy selected explicitly for production binaries and deterministic local tests
+- SNI and ALPN support
+- optional client certificate authentication when M0 accepts deterministic fixtures and backend support
+- async TLS client and server streams over `TcpStream`
+- typed certificate and TLS errors preserving underlying network evidence
+
+No CPython-shaped `SSLContext` or `SSLSocket` is exposed in this phase. If a future adapter is accepted, it must consume/move underlying stream handles and delegate to `sifr.tls`.
+
+### HTTP Substrate Shape
+
+This phase builds HTTP transport substrate, not the final public web framework or HTTP client product.
+
+Required substrate:
+
+- HTTP/1.1 parser/encoder
+- typed request/response model
+- method, status, version, header, and body types
+- streaming request and response bodies
+- content-length validation
+- chunked transfer handling
+- keep-alive and connection lifecycle
+- request/response size limits
+- malformed protocol typed errors
+- internal loopback client/server transport harness
+- upgrade hooks may be reserved but not exposed as a partial public API unless production use is defined
+
+Server framework behavior such as routing, middleware, extractors, validation, generated docs, and deployment ergonomics belongs to Phase 41. Client behavior such as pooling, redirects, retries, auth, proxies, cookie persistence, JSON helpers, multipart, compression, and test transports belongs to the separate production HTTP client phase.
 
 ### Async Counterpart Rule
 
@@ -139,161 +289,142 @@ Any blocking production API added in this phase must have one of:
 Required native async counterparts:
 
 - TCP connect/listen/accept/read/write/close
-- TLS connect/accept/handshake/read/write/close
-- HTTP client request/response body streaming
-- HTTP server accept/request dispatch/shutdown
+- DNS/address resolution where the operation can block
+- TLS client/server handshake/read/write/close
+- HTTP request/response body streaming
+- HTTP server accept/dispatch/shutdown substrate
 
 M0 must add every network/web API to the stdlib workload database. The first table must include at least:
 
 | API family | Classification | Async-context behavior |
 | --- | --- | --- |
-| `socket.connect`, `accept`, `recv`, `recv_into`, `send`, `sendall`, `sendto`, `recvfrom`, DNS helpers, `create_connection`, `create_server` | sync `@blocking_io` | compile-time diagnostic suggesting native async network APIs or explicit offload |
-| `select.select`, selector `select`, blocking readiness waits | sync `@blocking_io` | compile-time diagnostic suggesting async readiness/stream APIs or explicit offload |
-| `ssl.SSLContext.wrap_socket`, sync TLS handshake/read/write/shutdown | sync `@blocking_io` | compile-time diagnostic suggesting async TLS APIs or explicit offload |
-| `urllib.request.urlopen`, `http.client` request/response body operations, `http.server`/`socketserver` serve loops | sync `@blocking_io` | compile-time diagnostic suggesting native async HTTP/server APIs or explicit offload |
-| `asyncio.open_connection`, `asyncio.start_server`, async TLS, and async HTTP APIs | async-native | legal suspension points |
-| pure URL parsing, percent-encoding, cookies, robotparser parsing | pure, or `@cpu_heavy` if M0 finds size-dependent paths | legal unless the exact path is marked `@cpu_heavy` |
+| `sifr.net` async TCP, DNS, and readiness operations | async-native | legal suspension points |
+| `sifr.tls` async handshake/read/write/shutdown | async-native | legal suspension points |
+| `sifr.http` async transport and streaming body operations | async-native | legal suspension points |
+| accepted sync network/TLS/HTTP helpers | sync `@blocking_io` | compile-time diagnostic suggesting native async APIs or explicit offload |
+| pure URL, header, and cookie-header parsing | pure, or `@cpu_heavy` if M0 finds size-dependent paths | legal unless the exact path is marked `@cpu_heavy` |
+| rejected CPython-shaped blocking APIs | unsupported/deferred | namespace or unsupported-surface diagnostic |
 
-Implementation milestones cannot claim CPython conformance for a blocking family until its workload entries and async diagnostics are checked in.
+Implementation milestones cannot claim completion for a blocking family until its workload entries and async diagnostics are checked in.
 
 ### No Raw Event Loop As Public Model
 
-CPython `asyncio` tests must be mined for behavior, but Sifr must not make raw event loops, event-loop policies, callback transports/protocols, or public selector internals the primary API. Compatibility functions should map to `task`, `sync`, stream, and network primitives.
-
-### Server Handler Model Without Python Inheritance
-
-`socketserver` and `http.server` handler classes rely on CPython subclass dispatch. Sifr must not emulate dynamic class inheritance. M0 must choose and document one static handler abstraction before M3 implementation starts:
-
-- preferred: generated trait-based handlers with statically typed `handle`, `setup`, and `finish` hooks for `BaseRequestHandler`/`BaseHTTPRequestHandler`-shaped source
-- allowed adaptation: enum or closure callback dispatch when CPython subclassing cannot be represented safely
-- unsupported forms: monkeypatching handler methods, dynamic attribute lookup, or inheritance patterns that cannot lower to a known trait/callback shape
-
-M3 fixtures must prove `HTTPServer(..., Handler)` and `socketserver.TCPServer(..., Handler)` route requests through the selected abstraction and must mark unsupported subclass forms with diagnostics.
+CPython `asyncio` tests may be mined for scheduling and transport edge cases, but Sifr must not make raw event loops, event-loop policies, callback transports/protocols, or public selector internals the primary API. Public APIs map to task, stream, TLS, and HTTP primitives.
 
 ### Typed Errors Instead Of Exceptions
 
 All fallible APIs must expose typed error results:
 
-- `SocketError`, `AddressError`, `TimeoutError`, `ConnectionError`
-- `SSLError`, `CertificateError`
-- `HTTPError`, `URLError`, `CookieError`
+- `NetError`
+- `DnsError`
+- `ConnectError`
+- `TimeoutError`
+- `TlsError`
+- `CertificateError`
+- `HttpError`
+- `ProtocolError`
+- `HeaderError`
+- `BodyError`
+- `TooLargeError`
+- `CancelledError`
 
-Names may align with CPython where possible, but the operational contract is Sifr `Result`/`Option`, not exception-driven control flow.
+`milestone_network_http_0` must add a shared error mapping document before M1 implementation:
 
-`milestone_network_web_0` must add a shared error mapping document before M1 implementation:
-
-- map CPython `OSError`/`errno` families into stable Sifr variants used by sockets, TLS, selectors, and HTTP
-- define which current CPython exception class names remain importable from canonical `sifr.*` modules as typed error constructors for parity; historical aliases are not imported for backward compatibility
+- map CPython `OSError`/`errno`, TLS, URL, and HTTP error evidence into stable Sifr variants
+- define a concrete typed error hierarchy before M1 starts
 - add cross-module regression tests proving equivalent failures use the same Sifr error family
-- define a concrete typed error hierarchy before M1 starts:
-  - `SocketError` is the base network transport error and carries address, timeout, readiness, descriptor, and platform/errno variants
-  - `TlsError`/`SSLError` wraps TLS handshake, verification, certificate, ALPN, and wrapped-stream failures and preserves the underlying `SocketError` when transport is the root cause
-  - `HttpError`/`URLError` wraps invalid URL, unsupported encoding, connection, redirect, bad status line, incomplete read, remote disconnect, proxy, cookie, and robotparser failures and preserves nested socket/TLS error evidence
-  - modern exception names such as `ssl.SSLError`, `urllib.error.URLError`, and `http.client.HTTPException` map to typed constructors, never exception-only control flow; legacy aliases such as `socket.error` are unsupported
+- preserve nested evidence when higher layers fail because of lower layers, for example `HttpError::Tls(TlsError::Transport(NetError))`
+- reject exception-only control flow and legacy aliases
 
 ### Panic-Free Runtime Contract
 
-No user-triggerable runtime panics are allowed. Generated Rust for these APIs must not contain data-dependent `.unwrap()`, `.expect()`, or `panic!` on user-controlled network, TLS, URL, cookie, or HTTP data.
+No user-triggerable runtime panics are allowed. Generated Rust for these APIs must not contain data-dependent `.unwrap()`, `.expect()`, or `panic!` on user-controlled network, TLS, URL, cookie, header, or HTTP data.
+
+### Production Observability Hooks
+
+The substrate must expose enough structured hooks for Phase 41 and the HTTP client phase:
+
+- request IDs where HTTP transport creates request/response contexts
+- structured access-log events for internal transport harnesses and Phase 41 consumers
+- trace spans for DNS, connect, TLS handshake, request write, response read, and server dispatch
+- timeout and cancellation classification
+- connection lifecycle events
+- TLS handshake diagnostics without leaking secrets
+- HTTP status/error metrics hooks
+- graceful shutdown visibility
+
+The hooks must be deterministic, typed, and optional. They must not require global mutable state.
 
 ## Non-Goals And Permanent Boundaries
 
-The following are not accepted as silent omissions. They must be either implemented or explicitly waived with tests:
+The following are not accepted as silent omissions. They must be explicitly classified in M0 and either rejected, deferred, blocked, host-limited, or internal-only:
 
-- platform-specific constants and address families not available on the host
+- public `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib.*`, `sifr.http.client`, `sifr.http.server`, or `sifr.socketserver`
 - CPython refcount/finalizer behavior
 - dynamic monkeypatching of module globals
 - raw event-loop policy mutation
+- HTTP/2 and HTTP/3 as this phase's implemented protocol versions; both are deferred with revisit rules
 - callback transport/protocol APIs as the primary Sifr model
-- `socketserver.ThreadingMixIn` and `socketserver.ForkingMixIn`; both are unsupported in this phase
-- `http.server.ThreadingHTTPServer`; unsupported in this phase
+- descriptor aliasing APIs such as `detach`, `fromfd`, and `dup` as public Sifr behavior
+- `socketserver.ThreadingMixIn` and `socketserver.ForkingMixIn`
+- `http.server.ThreadingHTTPServer`
+- `CGIHTTPRequestHandler`-style behavior
+- public compatibility web servers or local toy HTTP fixtures
 - process, queue, signal, warning, locale, codec, Unicode, or gettext APIs; those belong to the split-out phases
 
 ## Milestones
 
-### milestone_network_web_0: CPython Inventory And Harness Lock
+### milestone_network_http_0: Product Boundary And Architecture
 
 Scope:
 
-- Add a machine-readable parity inventory under `verification/stdlib/network_web_parity_inventory.*`.
-- Scan every source/test/doc file listed in `Source Of Truth`.
-- Extract public functions, classes, constants, methods, common keyword forms, deprecation/legacy markers, and test-class/test-method names.
-- Create module-level CPython traceability docs for sockets/selectors, TLS, and HTTP/URL domains.
-- Add CPython-derived e2e fixtures:
-  - `cpython_socket_subset.sifr`
-  - `cpython_socketserver_subset.sifr`
-  - `cpython_ssl_subset.sifr`
-  - `cpython_selectors_subset.sifr`
-  - `cpython_urllib_parse_subset.sifr`
-  - `cpython_urllib_response_subset.sifr`
-  - `cpython_http_client_subset.sifr`
-  - `cpython_http_server_subset.sifr`
-- Add import-resolution tests for canonical `sifr.*` module names and negative diagnostics for bare CPython stdlib import attempts.
-- Add shared error mapping for all network/web target domains.
-- Add the concrete network/TLS/HTTP typed error hierarchy required by `Typed Errors Instead Of Exceptions`.
-- Add workload classifications and async-context diagnostics for socket, select/selectors, TLS, HTTP client/server, and URL/cookie/parser APIs.
-- Decide the `socketserver`/`http.server` handler abstraction used to adapt CPython subclass dispatch.
-- Assign each inventory entry one owner milestone and one terminal state. Duplicate ownership is forbidden unless the entry is explicitly shared infrastructure.
-- Assign every deprecated, historical, or legacy-only entry the terminal state `unsupported` or `intentional-diff`. M0 may implement only current, non-deprecated target CPython surfaces that remain elegant under Sifr semantics.
+- Define public, internal, deferred, rejected, blocked, and host-limited API surfaces.
+- Remove CPython stdlib parity as a completion goal.
+- Define typed network/TLS/URL/HTTP error model.
+- Define async/blocking workload classifications and diagnostics.
+- Define runtime dependency features and approved Rust crates.
+- Define HTTP client/server substrate boundaries.
+- Define protocol version scope, including explicit HTTP/2 and HTTP/3 deferral entries.
+- Define buffer ownership and API pattern for stream I/O before M1 backlog entries are finalized.
+- Define Phase 41 handoff contract.
+- Define the separate production HTTP client phase handoff contract.
+- Scan every CPython source/test/doc file listed in `Evidence Sources`.
+- Create evidence docs for sockets/readiness, TLS, URLs, and HTTP showing which behavior was mined, rejected, blocked, or retained as external signal.
 
 Validation:
 
-- inventory generator/test proves no target module lacks a surface state
+- classification artifact proves no proposed public/internal/deferred/rejected surface lacks a state
+- evidence scan proves every listed CPython test family was reviewed
 - `cargo test -p sifr_stdlib`
 - `cargo test -p sifr -- stdlib`
 - `scripts/run_all_tests.sh --profile create-pr`
 
 Definition of done:
 
-- The implementation backlog is derived from CPython source/tests, not hand-written memory.
-- Every target module has a first-pass surface matrix and CPython test-family matrix.
-- Canonical `sifr.*` module imports are explicitly planned and regression-tested.
-- M1-M4 implementation PRs have concrete backlog entries rather than prose-only scope.
+- Every proposed surface is classified as `production-public`, `production-substrate`, `internal-test`, `deferred`, `rejected`, `blocked-on-text-i18n-m1`, `blocked-on-concurrency-runtime`, or `host-limited`.
+- No module is accepted merely because CPython has it.
+- Stream I/O ownership, lifetime, cancellation, and partial read/write semantics are decided before M1 starts.
+- M1-M5 implementation PRs have concrete backlog entries rather than prose-only scope.
 
-### milestone_network_web_1: Socket, Select, Selectors, And Async Network Streams
+### milestone_network_http_1: Async Network Runtime
 
 Scope:
 
-- Add `sifr.socket`, `sifr.select`, and `sifr.selectors` CPython-shaped modules. Do not add bare CPython stdlib import aliases.
-- Implement TCP IPv4/IPv6 client/server basics:
-  - `socket.socket`
-  - `socketpair`
-  - `fromfd`, `dup`, `close`
-  - `bind`, `listen`, `accept`
-  - `connect`, `connect_ex`
-  - `send`, `sendall`, `recv`, `recv_into` where compatible with Sifr bytes/buffer model
-  - `shutdown`, `close`
-  - `detach` only if ownership semantics are safe; otherwise explicit waiver
-  - `settimeout`, `gettimeout`, `setblocking`
-  - `getdefaulttimeout`, `setdefaulttimeout`
-  - `getsockname`, `getpeername`
-  - `family`, `type`
-  - `create_connection`, `create_server`
-  - `getaddrinfo`, `getnameinfo`, `gethostname`, `getfqdn`
-  - `gethostbyname`, `gethostbyaddr`, `getservbyname`, `getservbyport`, `getprotobyname`
-  - `inet_aton`, `inet_ntoa`, `inet_pton`, `inet_ntop`
-  - address-family, socket-type, protocol, message, shutdown, and option constants discovered from `Modules/socketmodule.c`
-- Classify low-level descriptor APIs:
-  - `detach`/`fromfd`/`dup` are adopted only if ownership transfer is statically safe.
-  - If a raw descriptor would allow double-close or aliasing, the API is `intentional-diff` with a CPython test adaptation.
-  - Host-only constants are `host-limited` with generated inventory evidence.
-- Implement UDP basics:
-  - `sendto`, `recvfrom`
-  - address tuple adaptation with typed address structs where needed
-- Implement selector readiness APIs as compatibility over runtime readiness:
-  - `EVENT_READ`, `EVENT_WRITE`
-  - `SelectorKey`
-  - `DefaultSelector`
-  - `SelectSelector`
-  - `BaseSelector.register`, `unregister`, `modify`, `select`, `close`, `get_key`, `get_map`
-- Add native async network streams:
-  - `asyncio.open_connection` compatibility over canonical Sifr streams
-  - `asyncio.start_server` compatibility over canonical Sifr streams
-  - async connect, accept loop, read/write, and close
-  - async iteration over incoming bytes/lines where appropriate
-- Mark sync socket APIs as `@blocking_io`.
-- Ensure async code gets diagnostics suggesting native async network APIs instead of direct sync calls.
+- Implement `sifr.net` as the primary low-level networking API.
+- Add TCP client/server streams:
+  - async connect
+  - async listen
+  - async accept
+  - async read/write
+  - close and graceful shutdown
+  - local/remote address inspection
+- Add DNS/address resolution with typed errors and deterministic timeout behavior.
+- Add cancellation, backpressure, and resource limits.
+- Add UDP only if M0 records near-term production use and deterministic loopback tests.
+- Add internal readiness primitives without exposing public selector/event-loop APIs.
+- Mark accepted sync helpers as `@blocking_io`; reject direct calls from async contexts.
 
-CPython tests to mine:
+CPython evidence to mine:
 
 - `Lib/test/test_socket.py`
 - `Lib/test/test_select.py`
@@ -305,57 +436,35 @@ CPython tests to mine:
 
 Rust/runtime candidates:
 
-- `std::net` for sync compatibility
-- `tokio::net` for async network operations
-- `socket2` if low-level socket option coverage requires it
+- `tokio::net`
+- `tokio::io`
+- `socket2` only if low-level socket option coverage is accepted by M0
 
 Definition of done:
 
-- TCP/UDP loopback tests pass deterministically without external network dependency.
-- Timeout and nonblocking behavior is typed, deterministic, and panic-free.
-- Async network APIs are real `AsyncIo` suspension points.
-- Selector compatibility is implemented or explicitly waived per platform.
+- TCP loopback tests pass deterministically without external network dependency.
+- UDP loopback tests pass if UDP is accepted.
+- Timeout and cancellation behavior is deterministic, typed, and panic-free.
+- Blocking sync paths are rejected from async contexts.
+- No public API leaks Tokio, raw descriptors, selectors, or event-loop internals.
 
-### milestone_network_web_2: TLS And SSL
+### milestone_network_http_2: TLS Runtime
 
 Scope:
 
-- Add `ssl` CPython-shaped module and any native TLS helper module needed.
-- Implement:
-  - protocol/version constants and `TLSVersion`
-  - `Purpose`
-  - `SSLContext`
-  - `create_default_context`
-  - `get_default_verify_paths`
-  - `cert_time_to_seconds`
-  - `DER_cert_to_PEM_cert`
-  - `PEM_cert_to_DER_cert`
-  - `get_server_certificate`
-  - `SSLContext.load_verify_locations`
-  - `SSLContext.load_default_certs`
-  - `SSLContext.wrap_socket`
-  - `SSLContext.set_alpn_protocols` where the selected Rust TLS backend supports it
-  - `SSLSocket` read/write/recv/send/shutdown/unwrap/selected_alpn_protocol/cipher/version
-- Add async TLS:
-  - canonical `AsyncTlsStream`-style runtime primitive over the M1 async stream type
-  - `asyncio.open_connection(..., ssl=...)` compatibility over that primitive
-  - `asyncio.start_server(..., ssl=...)` compatibility over that primitive
-  - async client handshake
-  - async server handshake
-  - async read/write/close
-  - certificate verification failures as typed `SSLError`/`CertificateError`
-- Do not expose CPython's event-loop-driven `SSLWantReadError`/`SSLWantWriteError` retry model as the public Sifr async API. Mine those tests for readiness and retry behavior, then adapt them to real suspension points.
-- `SSLContext.wrap_socket` is sync-only in this phase. Async TLS uses the canonical async stream constructor/API added by M2, not an overloaded `wrap_socket`.
-- Mark sync TLS socket operations as `@blocking_io`.
-- Preserve safe ownership around wrapped sockets:
-  - `SSLContext.wrap_socket(sock, ...)` consumes/moves the plain socket handle and returns `Result[SSLSocket, SSLError]`
-  - after a successful wrap, the original plain socket variable is invalid and cannot be used, closed, detached, or aliased independently
-  - failed wrapping returns `Err(TlsWrapError { socket_state, error })` or equivalent; `socket_state` is either `Recovered(Socket)` when the underlying descriptor remains usable or `Closed` when the backend consumed/closed it during failure
-  - the original plain socket variable is invalid on both success and failure; on failure, the only way to recover a usable plain socket is through `TlsWrapError.socket_state`
-  - transport-root failures preserve nested `SocketError` inside the TLS error evidence
-  - `SSLSocket.unwrap()` consumes the TLS handle and returns the underlying plain socket only after a successful TLS shutdown; failure returns typed error evidence without leaving two mutable handles alive
+- Implement `sifr.tls` as the primary TLS API.
+- Add `TlsClientConfig` and `TlsServerConfig`.
+- Add safe default certificate verification.
+- Add deterministic root strategy for local tests and production binaries.
+- Add SNI and ALPN.
+- Add optional client certificate authentication or record a concrete deferral with deterministic revisit criteria if M0 rejects it.
+- Add async TLS client streams.
+- Add async TLS server streams.
+- Add typed TLS and certificate errors.
+- Preserve nested network evidence inside TLS errors.
+- Reject CPython-shaped `SSLContext`, `SSLSocket`, and readiness retry errors as public surfaces.
 
-CPython tests to mine:
+CPython evidence to mine:
 
 - `Lib/test/test_ssl.py`
 - `Lib/test/test_asyncio/test_ssl.py`
@@ -371,126 +480,122 @@ Rust/runtime candidates:
 Definition of done:
 
 - Local self-signed and CA-backed handshake fixtures are deterministic.
-- Host-network certificate tests are either disabled by default or recorded as non-blocking ecosystem signal.
-- TLS verification errors are typed and never panic.
+- HTTPS-ready TLS loopback tests pass.
+- Invalid certificate tests produce typed errors.
+- Safe verification is default.
+- TLS verification failures never panic and never silently downgrade verification.
 
-### milestone_network_web_3: URL Parsing, HTTP Client, HTTP Server, Cookies, And Robots
+### milestone_network_http_3: URL, Header, And Cookie Primitives
 
 Scope:
 
-- Add `urllib.parse`, `urllib.request`, `urllib.response`, `urllib.error`, `urllib.robotparser`.
-- Add `http`, `http.client`, `http.server`, `http.cookies`, `http.cookiejar`.
-- Add `socketserver` as the HTTP server substrate:
-  - `BaseServer`
-  - `TCPServer`
-  - `UDPServer` only if UDP service ownership can be tested deterministically
-  - `ThreadingMixIn` is `unsupported` in this phase; equivalent concurrent serving uses Sifr task/spawn APIs or explicit executor APIs after the concurrency/runtime phase
-  - `ForkingMixIn` is `unsupported` in this phase because fork semantics are owned by the concurrency/runtime phase and are host-limited even there
-  - `BaseRequestHandler`, `StreamRequestHandler`, `DatagramRequestHandler`
-- Implement URL parsing and quoting:
-  - `urlparse`, `urlsplit`, `urlunparse`, `urlunsplit`, `urljoin`, `urldefrag`
-  - `quote`, `quote_plus`, `quote_from_bytes`
-  - `unquote`, `unquote_plus`, `unquote_to_bytes`
-  - `urlencode`
-  - `parse_qs`, `parse_qsl`
-  - `ParseResult`, `SplitResult`, byte variants where compatible
-  - percent-encoding and URL quoting use byte/ASCII and UTF-8-compatible behavior in this phase only
-  - non-ASCII/non-UTF-8 forms such as `quote(value, encoding="latin-1")` are `blocked-on-text-i18n-m1` until text/i18n `milestone_text_i18n_1` ships the codec registry, core encodings, and typed codec errors; they must not be reimplemented locally
-  - before `milestone_text_i18n_1`, statically visible non-UTF-8 `encoding=` arguments produce a compile-time unsupported-codec diagnostic; dynamic non-UTF-8 encoding values return a typed `UnsupportedEncodingError`/`URLError` result, never silent UTF-8 coercion or panic
-- Implement HTTP client:
-  - `HTTPConnection`, `HTTPSConnection`
-  - `HTTPResponse`
-  - `request`, `getresponse`, `close`, `set_tunnel`
-  - headers and body reading
-  - typed errors for invalid URL, bad status line, incomplete read, remote disconnect, timeout
-- Implement higher-level URL request basics:
-  - `Request`
-  - `urlopen`
-  - `build_opener` minimal supported handler matrix
-  - redirects
-  - proxy environment support only if deterministic and documented
-  - file/data handlers only if Sifr path/bytes semantics are compatible
-- Implement HTTP server basics:
-  - `HTTPServer`
-  - `ThreadingHTTPServer` is `unsupported` in this phase
-  - `BaseHTTPRequestHandler`
-  - `SimpleHTTPRequestHandler`
-  - graceful shutdown
-- Implement cookies:
-  - `Morsel`
-  - `SimpleCookie`
-  - `Cookie`
-  - `CookieJar`
-  - `DefaultCookiePolicy`
-  - file-backed cookie jars only if safe file I/O support is sufficient
-- Implement `RobotFileParser` and pure parser helpers.
-- Add native async HTTP APIs with concrete entry points:
-  - `sifr.http.async_request` or final equivalent canonical API for one-shot requests
-  - async request builder with streaming request body support
-  - async response object with streaming body reads
-  - async server accept/dispatch/shutdown over M1 async streams and M2 async TLS for HTTPS
-  - `urllib.request.urlopen` remains sync `@blocking_io`; any async compatibility wrapper must have a distinct async name and real suspension behavior
-  - no raw event-loop, callback transport, or selector object is exposed as the user-facing HTTP API
+- Implement `sifr.url` as a typed URL API:
+  - `Url`
+  - `UrlQuery`
+  - parse/build APIs
+  - percent encode/decode
+  - path normalization helpers
+  - authority/host/port parsing
+  - query parsing/building
+- Implement HTTP header representation and validation primitives.
+- Implement small cookie header parsing required by real HTTP request/response handling.
+- Keep cookie persistence and jar policy out of this phase.
+- Record non-UTF-8 codec-dependent behavior as `blocked-on-text-i18n-m1`; do not duplicate codec registry behavior locally.
 
-CPython tests to mine:
+CPython evidence to mine:
 
-- `Lib/test/test_httplib.py`
-- `Lib/test/test_httpservers.py`
-- `Lib/test/test_http_cookies.py`
-- `Lib/test/test_http_cookiejar.py`
-- `Lib/test/test_socketserver.py`
 - `Lib/test/test_urllib.py`
 - `Lib/test/test_urllib2.py`
-- `Lib/test/test_urllib2_localnet.py`
 - `Lib/test/test_urllib_response.py`
-- `Lib/test/test_urllibnet.py` and `Lib/test/test_urllib2net.py` as external-network, non-blocking signal unless converted to loopback
+- `Lib/test/test_http_cookies.py`
+- `Lib/test/test_http_cookiejar.py` for rejection/defer evidence around persistence
 
 Rust/runtime candidates:
 
 - `url`
 - `percent-encoding`
-- `http`
-- `hyper`
-- `hyper-util`
-- `reqwest` only if its API/dependency size is accepted by review
-- `tower`/`axum` only if server milestone needs them; avoid pulling a web framework into stdlib unless justified
+- `http` header/status/method types if accepted by M0
 
 Definition of done:
 
-- URL parsing has CPython-derived edge-case fixtures.
-- URL parsing fixtures include an explicit split between byte/ASCII/UTF-8 behavior owned here and non-UTF-8 codec behavior blocked on the text/i18n phase.
-- HTTP client/server loopback tests require no external network.
-- Async HTTP operations are real suspension points.
-- Cookies and robotparser are pure or panic-free parser code with CPython-derived tests.
+- URL parsing has CPython-derived and RFC-derived edge-case fixtures.
+- Invalid input returns typed errors.
+- Parser behavior needed by the HTTP substrate, Phase 41, and the HTTP client phase is covered.
+- Non-UTF-8 codec behavior is blocked on text/i18n rather than reimplemented.
+- Cookie persistence is not exposed as a partial core API.
 
-### milestone_network_web_4: Integration, Documentation, And Production Gate
+### milestone_network_http_4: HTTP Core Transport
 
 Scope:
 
-- Update public docs for every new module and major intentional divergence:
-  - `socket`, `select`, `selectors`, `socketserver`
-  - `ssl`
-  - `urllib.parse`, `urllib.request`, `urllib.response`, `urllib.error`, `urllib.robotparser`
-  - `http`, `http.client`, `http.server`, `http.cookies`, `http.cookiejar`
+- Implement HTTP/1.1 parser/encoder.
+- Implement typed request/response model.
+- Implement method, status, version, headers, and body types.
+- Implement body streaming without unbounded buffering.
+- Implement content-length and chunked transfer handling.
+- Implement keep-alive and connection lifecycle.
+- Implement request/response limits.
+- Implement malformed protocol typed errors.
+- Implement internal loopback client/server transport harness.
+- Implement async server accept/dispatch/shutdown substrate over M1 async streams and M2 async TLS for HTTPS.
+- Keep Phase 41 routing/middleware/extractors out of this phase.
+- Keep production HTTP client features out of this phase except for the internal transport needed to validate the protocol.
+
+CPython evidence to mine:
+
+- `Lib/test/test_httplib.py`
+- `Lib/test/test_httpservers.py`
+- `Lib/test/test_socketserver.py`
+- `Lib/test/test_urllib2_localnet.py`
+- `Lib/test/test_urllibnet.py` and `Lib/test/test_urllib2net.py` as external-network, non-blocking signal unless converted to loopback
+
+Rust/runtime candidates:
+
+- `http`
+- `httparse` or `h1` parser crate selected by M0
+- `hyper` / `hyper-util` only if M0 accepts the dependency and confirms no public API leak
+- avoid pulling a web framework into the substrate
+
+Definition of done:
+
+- Loopback client/server transport tests pass without external network.
+- HTTPS transport works through M2 TLS.
+- Malformed HTTP tests produce typed protocol errors.
+- Body streaming works without unbounded buffering.
+- No `http.server`, `socketserver`, or handler-subclass public API is added.
+
+### milestone_network_http_5: Integration, Documentation, And Production Handoff
+
+Scope:
+
+- Update public docs for:
+  - `sifr.net`
+  - `sifr.tls`
+  - `sifr.url`
+  - public HTTP protocol/substrate types that M0 accepts
+  - rejected/deferred CPython-shaped surfaces and why they are not recommended APIs
 - Update internal architecture docs for:
   - runtime networking/TLS/HTTP boundaries
   - stdlib feature/dependency manifest
   - async counterpart policy
   - host-limited platform behavior
+  - observability hooks
+  - Phase 41 handoff contract
+  - production HTTP client phase handoff contract
 - Add demos:
   - TCP echo server/client
   - TLS client/server loopback
-  - HTTP client/server loopback
+  - HTTP transport loopback
 - Add generated Cargo dependency snapshots for all new feature combinations.
-- Add panic-scan and emitted-code quality checks for network/TLS/HTTP paths.
+- Add panic-scan and emitted-code quality checks for network/TLS/URL/HTTP paths.
 - Update validation lane manifests with representative fixtures.
 - Close the inventory:
-  - every public surface has a terminal state
-  - every CPython test family has `adopted`, `adapted`, or `waived` evidence
-  - every waiver has a revisit rule and regression fixture
+  - every proposed surface has a terminal state
+  - every CPython evidence family has `mined`, `blocked`, `rejected`, or `external-signal` evidence
+  - every rejection/defer decision has rationale and revisit rule
   - every host-limited surface records the supported host matrix
 - Run an external review loop on the final inventory and close any blocking finding before phase completion.
-- External review owner is the stdlib phase owner plus the designated compiler/runtime reviewer recorded in the execution ledger. If review output is unavailable for five working days after the review artifact is posted, the phase owner may proceed only by recording the attempted review, open questions, and a conservative self-review in the ledger.
+- External review owner is the runtime/networking phase owner plus the designated compiler/runtime reviewer recorded in the execution ledger. If review output is unavailable for five working days after the review artifact is posted, the phase owner may proceed only by recording the attempted review, open questions, and a conservative self-review in the ledger.
 
 Validation:
 
@@ -506,7 +611,10 @@ Validation:
 
 Definition of done:
 
-- Every module surface and CPython test family in the phase inventory is closed as `done`, `intentional-diff`, `unsupported`, or `host-limited`.
+- Every proposed surface and CPython evidence family in the phase inventory is closed.
+- Phase 41 can build routing, middleware, lifecycle, request/response pipeline, typed extractors, validation, and production hooks on the substrate.
+- The production HTTP client phase can build pooling, timeouts, redirects, retries, auth, cookies, proxies, and streaming on the substrate.
+- Rejected toy/compatibility modules have explicit rationale.
 - No implementation-owned source file exceeds the 900-line guardrail.
 - No user-triggerable runtime panic path exists in the added stdlib/runtime surfaces.
 - Async and sync APIs follow the Phase 32 workload and cancellation model.
@@ -516,9 +624,9 @@ Definition of done:
 Create and keep current during implementation:
 
 - `issues/ad-hoc-production-stdlib-platform-parity-execution.md`
-- `verification/stdlib/network_web_parity_inventory.md`
-- `verification/stdlib/network_web_parity_inventory.json`
-- `verification/stdlib/network_web_parity_cpython_test_matrix.md`
+- `verification/stdlib/network_http_substrate_inventory.md`
+- `verification/stdlib/network_http_substrate_inventory.json`
+- `verification/stdlib/network_http_cpython_evidence_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
 
 The execution ledger must record:
@@ -526,27 +634,28 @@ The execution ledger must record:
 - planning/review artifacts
 - per-milestone PR links
 - local validation commands and results
-- CPython source/test files scanned
-- adopted/adapted/waived CPython test families
-- final unsupported/intentional-diff/host-limited waiver index
+- CPython source/test/doc files scanned
+- mined/blocked/rejected/external-signal CPython test families
+- final deferred/rejected/host-limited/internal-only decision index
 
 ## Quality Contract
 
 - Solve root causes rather than adding workaround wrappers.
-- No backward-compatibility shims, legacy aliases, deprecated behavior, or fallback paths may survive phase exit. Deliberate current-CPython adapters are allowed only when recorded in the inventory with Sifr-safe semantics and tests.
+- No CPython stdlib parity objective, backward-compatibility shim, legacy alias, deprecated behavior, bridge alias, migration path, or fallback path may survive phase exit.
 - No direct Tokio/runtime types may leak into public Sifr APIs.
 - No data-dependent emitted `.unwrap()`, `.expect()`, or `panic!` is allowed in user runtime paths.
 - Every added blocking sync function must be classified in the stdlib workload database.
 - Every added async function must have a real suspension summary.
 - Every added external crate dependency must be represented by a stable `StdlibFeature` in `sifr_stdlib`.
-- Every module added to embedded stdlib sources must have canonical `sifr.*` import-resolution tests, type-check tests, e2e pass tests, and negative diagnostics for unsupported bare CPython import forms.
+- Every public module added to embedded stdlib sources must have canonical `sifr.*` import-resolution tests, type-check tests, e2e pass tests, and negative diagnostics for unsupported bare CPython import forms.
+- Every public network/web API must pass the No-Toy-Module Gate and Maintenance Burden Test.
 
-## Open Planning Questions To Resolve In `milestone_network_web_0`
+## Open Planning Questions To Resolve In `milestone_network_http_0`
 
-1. Which `sifr.*` module paths exactly host the CPython-shaped API surfaces, and which private `_sifr.*`/runtime modules remain internal implementation details?
+1. Which exact `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http` paths are public, and which private runtime modules remain internal implementation details?
 2. Which Rust TLS root strategy is acceptable for deterministic local tests and production binaries?
-3. Which HTTP client/server dependency stack meets binary-size, safety, and maintenance goals?
-4. Which host-specific socket/select constants are shipped, waived, or host-limited?
+3. Which HTTP transport dependency stack meets binary-size, safety, and maintenance goals without importing a web framework into substrate code?
+4. Which host-specific socket/readiness constants or behaviors are needed internally, waived, or host-limited?
 5. Which external-network CPython tests are converted to loopback fixtures versus retained as non-blocking ecosystem signal?
-
-These questions must be answered in the phase execution ledger before implementing the affected milestone.
+6. Does UDP enter M1 based on concrete near-term production workloads, or remain deferred?
+7. Which public HTTP protocol types, if any, remain stable substrate API before Phase 41 and the HTTP client phase?
