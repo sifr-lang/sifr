@@ -8,7 +8,7 @@ Status: draft
 
 This ledger tracks the Sifr-native production runtime substrate for:
 
-- `sifr.task`: structured tasks, deadlines, cancellation, typed task failures
+- `sifr.task`: structured scopes/tasks, deadlines, cancellation, typed task failures, and affine task observation handles
 - `sifr.sync`: channels, async channels, synchronization, backpressure
 - `sifr.runtime`: blocking and CPU offload boundaries
 - `sifr.parallel`: data-parallel CPU work
@@ -18,6 +18,8 @@ This ledger tracks the Sifr-native production runtime substrate for:
 - `sifr.ipc`: typed IPC foundation for future process workers
 
 CPython-shaped modules such as `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, `sifr.multiprocessing`, `sifr.contextlib`, and `sifr.warnings` are evidence sources or possible adapters, not the production completion target.
+
+This ledger also records the structured runtime work decision: async tasks, blocking offload, CPU offload, long-running child processes, and future typed workers are all scoped work units with typed handles and typed observation/cancellation evidence. Threads and processes are execution substrates, not separate public concurrency worlds.
 
 Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate-execution.md](./ad-hoc-production-network-http-platform-substrate-execution.md). Text/Unicode/encoding/i18n runtime substrate remains in [ad-hoc-production-text-i18n-platform-substrate-execution.md](./ad-hoc-production-text-i18n-platform-substrate-execution.md).
 
@@ -156,6 +158,18 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - Final post-polish verification:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-decision-completeness-pass-6.md`
   - Result: `PASS`; no blockers, non-blocking polish, stale pending-review labels, Python legacy leakage, missing Rust ecosystem decisions, or cross-document contradictions remained.
+- Structured runtime work review:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-1.md`
+  - Result: `FAIL`; reviewer reported boundary-table, M4/M6 IPC placement, and M1/M2 DoD concerns. Local source verification showed the findings were review-packet artifacts rather than source defects.
+- Structured runtime work follow-up:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-2.md`
+  - Result: `PASS`; exact source snippets verified one process-boundary row, M4-only subprocess tests, M6-owned IPC design, and separate M1/M2 definitions of done.
+- Final structured runtime work verification:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-3.md`
+  - Result: `PASS`; no blocker remained. The structured work model, milestone boundaries, and M0 implementation-audit decisions were implementation-ready.
+- Post-review structured runtime work verification:
+  - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-4.md`
+  - Result: `PASS`; `TaskGroup[E]`, `TaskHandle`, scope/group split, timeout evidence, Sifr-owned cancellation scope option, `CancelOutcome`, sync/async lock split, IPC frame families, shell effect behavior, and M0-justified `Barrier`/`Once` decisions were implementation-ready.
 
 ## Pending Reviews
 
@@ -216,6 +230,9 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] Clarify `parallel.map`/`Pool.map` async calling convention.
 - [x] Name shell subprocess usage as the `@shell_exec` security effect.
 - [x] Resolve `race` versus `select`: `race` is homogeneous collection competition returning index plus typed outcome, while `select` is named-branch competition returning branch tag plus typed outcome; both cancel losers with typed evidence.
+- [x] Add structured runtime work model: scopes own async tasks, blocking offload, CPU offload, supervised child processes, and future typed process workers; raw threads/process pools are not public runtime worlds.
+- [x] Record current implementation reality as M0 input: existing `TaskScope`/`TaskGroup` lowering, affine task/blocking handles, abort-based cancellation, generated task preamble, primitive generated channels, placeholder threading/concurrent surfaces, and sync shell-style subprocess intrinsics.
+- [x] Separate boundary and communication models: send/share gates, same-process channels, process pipes, and typed IPC frames have distinct contracts.
 
 ## Implementation PRs
 
@@ -267,7 +284,7 @@ Create and keep current during implementation:
 - `verification/stdlib/concurrency_runtime_substrate_inventory.json`
 - `verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md`
 - `verification/stdlib/concurrency_runtime_workload_database.md`
-- `verification/stdlib/concurrency_runtime_supported_host_matrix.md`
+- `verification/platform/supported_host_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
 
 ## Review Ownership
@@ -281,20 +298,21 @@ Pre-M0 phase-level decisions:
 
 | Surface | Support tier | Terminal state | Rationale | CPython evidence | Sifr fixture or design artifact |
 | --- | --- | --- | --- | --- | --- |
-| `sifr.task` | `production-public` | `done-through-M1` | Structured task API is the recommended async model. | `Lib/test/test_asyncio/test_tasks.py`, `Lib/test/test_asyncio/test_taskgroups.py` | M1 task traceability document |
-| `sifr.sync` | `production-public` | `done-through-M2` | Channels and synchronization are the recommended queue/backpressure model. | `Lib/test/test_queue.py`, `Lib/test/test_asyncio/test_queues.py`, `Lib/test/test_asyncio/test_locks.py` | M2 sync traceability document |
-| `sifr.runtime` / `sifr.parallel` | `production-public` | `done-through-M3` | Explicit blocking and CPU offload replace executor parity as the production model. | `Lib/test/test_concurrent_futures/` | M3 offload traceability document |
-| `sifr.process` | `production-public` | `done-through-M4` | Native process supervision and owned pipes replace `subprocess` parity as the production model. | `Lib/test/test_subprocess.py`, `Lib/test/test_asyncio/test_subprocess.py` | M4 process traceability document |
-| `sifr.signal` / `sifr.resource` / diagnostics / context | `production-public` | `done-through-M5` | Structured shutdown, cleanup, diagnostics, and explicit context are production ergonomics. `ContextError` and `DiagnosticError` are owned by this milestone. | `Lib/test/test_signal.py`, `Lib/test/test_contextlib.py`, `Lib/test/test_warnings/` | M5 ergonomics traceability document |
-| `sifr.ipc` | `production-substrate` | `done-through-M6` | Typed IPC is the foundation for future supervised process workers. | `Lib/test/_test_multiprocessing.py`, `Lib/test/test_multiprocessing_spawn/` | M6 IPC design artifact |
-| `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, `sifr.multiprocessing` | `compat-adapter` / `deferred-to-adapter-phase` | `not-implemented-this-phase` | CPython-shaped modules remain evidence sources and later migration adapters only. | CPython module tests listed in phase source of truth | Negative import/adapter fixtures |
+| structured runtime work model | `production-substrate` | `production-substrate` | Scopes own async, blocking, CPU, process, and future worker work units; handles are affine and outcomes are typed. | `Lib/test/test_asyncio/test_taskgroups.py`, `Lib/test/test_concurrent_futures/`, multiprocessing evidence | M0 structured-work design artifact |
+| `sifr.task` | `production-public` | `production-public` | Structured task API is the recommended async model. | `Lib/test/test_asyncio/test_tasks.py`, `Lib/test/test_asyncio/test_taskgroups.py` | M1 task traceability document |
+| `sifr.sync` | `production-public` | `production-public` | Channels and synchronization are the recommended queue/backpressure model. | `Lib/test/test_queue.py`, `Lib/test/test_asyncio/test_queues.py`, `Lib/test/test_asyncio/test_locks.py` | M2 sync traceability document |
+| `sifr.runtime` / `sifr.parallel` | `production-public` | `production-public` | Explicit blocking and CPU offload replace executor parity as the production model. | `Lib/test/test_concurrent_futures/` | M3 offload traceability document |
+| `sifr.process` | `production-public` | `production-public` | Native process supervision and owned pipes replace `subprocess` parity as the production model. | `Lib/test/test_subprocess.py`, `Lib/test/test_asyncio/test_subprocess.py` | M4 process traceability document |
+| `sifr.signal` / `sifr.resource` / diagnostics / context | `production-public` | `production-public` | Structured shutdown, cleanup, diagnostics, and explicit context are production ergonomics. `ContextError` and `DiagnosticError` are owned by this milestone. | `Lib/test/test_signal.py`, `Lib/test/test_contextlib.py`, `Lib/test/test_warnings/` | M5 ergonomics traceability document |
+| `sifr.ipc` | `production-substrate` | `production-substrate` | Typed IPC is the foundation for future supervised process workers. | `Lib/test/_test_multiprocessing.py`, `Lib/test/test_multiprocessing_spawn/` | M6 IPC design artifact |
+| `sifr.asyncio`, `sifr.queue`, `sifr.subprocess`, `sifr.concurrent.futures`, `sifr.multiprocessing` | `compat-adapter` / `deferred-to-adapter-phase` | `deferred-to-adapter-phase` | CPython-shaped modules remain evidence sources and later migration adapters only. | CPython module tests listed in phase source of truth | Negative import/adapter fixtures |
 | Python global `warnings` filter model | `rejected` | `rejected` | Runtime diagnostics use tracing/metrics and typed Sifr diagnostics, not global Python warning filters. | `Lib/test/test_warnings/` | M5 warning-global rejection fixture |
-| Rust ecosystem choices | `internal-only` | `accepted` | Use Tokio/Tokio Util, Futures Util, Crossbeam Channel, Tokio MPSC, std sync/Parking Lot/Once Cell/Scopeguard, Rayon, Tokio process/std process/Rustix, Tokio signal/Rustix, tracing/tracing-subscriber/metrics, thiserror, and Serde/Postcard. Do not use Flume, Signal Hook, Nix, Bincode, or bespoke replacements. | N/A | M0 dependency decision records |
-| `JoinSet` drop | `production-public` | `done-through-M3` | Live/non-empty `JoinSet` values must be consumed by `join_all()` or `cancel_all().await`; unobserved drop is a compile-time diagnostic. | `Lib/test/test_concurrent_futures/` | M3 JoinSet drop diagnostic fixture |
-| Rayon pool architecture | `internal-only` | `accepted` | Top-level `sifr.parallel` uses a private lazy default Rayon pool; configured parallelism uses explicit `Pool(config)` private Rayon pools. Rayon's global pool is never configured. | N/A | M3 pool architecture decision record |
-| Existing `sifr.asyncio` veneer | `compat-adapter` | `frozen-this-phase` | Existing supported veneer entry points remain frozen; M1 does not build on, extend, or remove them. New runtime APIs use `sifr.task`, `sifr.sync`, and `sifr.process`. | `Lib/test/test_asyncio/` | M1 veneer-free implementation fixture |
-| `JoinSet` result ordering | `production-public` | `done-through-M3` | `join_all().await` returns results in submission order, `cancel_all().await` returns cancellation evidence in submission order, and `JoinItemId` is an opaque user-side correlation token with no query API. | `Lib/test/test_concurrent_futures/` | M3 JoinSet ordering fixture |
-| Shell subprocess effect | `production-substrate` | `done-through-M4` | Shell subprocess usage is marked with `@shell_exec` in addition to `@blocking_io`; shell APIs require explicit shell selection and async/offload diagnostics. | `Lib/test/test_subprocess.py` | M4 shell effect fixture |
+| Rust ecosystem choices | `internal-only` | `internal-only` | Use Tokio/Tokio Util, Futures Util, Crossbeam Channel, Tokio MPSC, std sync/Parking Lot/Once Cell/Scopeguard, Rayon, Tokio process/std process/Rustix, Tokio signal/Rustix, tracing/tracing-subscriber/metrics, thiserror, and Serde/Postcard. Do not use Flume, Signal Hook, Nix, Bincode, or bespoke replacements. | N/A | M0 dependency decision records |
+| `JoinSet` drop | `production-public` | `production-public` | Live/non-empty `JoinSet` values must be consumed by `join_all()` or `cancel_all().await`; unobserved drop is a compile-time diagnostic. | `Lib/test/test_concurrent_futures/` | M3 JoinSet drop diagnostic fixture |
+| Rayon pool architecture | `internal-only` | `internal-only` | Top-level `sifr.parallel` uses a private lazy default Rayon pool; configured parallelism uses explicit `Pool(config)` private Rayon pools. Rayon's global pool is never configured. | N/A | M3 pool architecture decision record |
+| Existing `sifr.asyncio` veneer | `compat-adapter` | `compat-adapter` | Existing supported veneer entry points remain frozen; M1 does not build on, extend, or remove them. New runtime APIs use `sifr.task`, `sifr.sync`, and `sifr.process`. | `Lib/test/test_asyncio/` | M1 veneer-free implementation fixture |
+| `JoinSet` result ordering | `production-public` | `production-public` | `join_all().await` returns results in submission order, `cancel_all().await` returns cancellation evidence in submission order, and `JoinItemId` is an opaque user-side correlation token with no query API. | `Lib/test/test_concurrent_futures/` | M3 JoinSet ordering fixture |
+| Shell subprocess effect | `production-substrate` | `production-substrate` | Shell subprocess usage is marked with `@shell_exec` in addition to `@blocking_io`; shell APIs require explicit shell selection and async/offload diagnostics. | `Lib/test/test_subprocess.py` | M4 shell effect fixture |
 
 Every decision must include:
 
