@@ -186,7 +186,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 
 ## Implementation PRs
 
-- M0: branch `text-i18n-m0-platform-contract`; PR pending review.
+- M0: https://github.com/sifr-lang/sifr/pull/2297
 - M1: pending.
 - M2: pending.
 - M2.5: pending.
