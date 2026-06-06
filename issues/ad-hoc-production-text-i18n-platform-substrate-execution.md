@@ -26,7 +26,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - [x] `milestone_text_i18n_2_5`: Unicode Segmentation
 - [x] `milestone_text_i18n_3`: Locale Identifiers And Locale-Sensitive Formatting
 - [x] `milestone_text_i18n_4`: Translation Bundles
-- [ ] `milestone_text_i18n_5`: Integration, Documentation, And Production Gate
+- [x] `milestone_text_i18n_5`: Integration, Documentation, And Production Gate
 
 ## Planning Reviews
 
@@ -192,7 +192,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M2.5: https://github.com/sifr-lang/sifr/pull/2300
 - M3: https://github.com/sifr-lang/sifr/pull/2302
 - M4: https://github.com/sifr-lang/sifr/pull/2304
-- M5: pending.
+- M5: https://github.com/sifr-lang/sifr/pull/2306
 
 ## Implementation Reviews
 
