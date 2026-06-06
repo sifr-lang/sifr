@@ -9,8 +9,10 @@ Status: draft
 The original broad planning scan was split into three implementation phases:
 
 - This ledger tracks the production network/TLS/URL/HTTP substrate: `sifr.net`, `sifr.tls`, `sifr.url`, accepted `sifr.http` protocol/runtime primitives, typed errors, async suspension points, resource limits, observability hooks, and internal loopback harnesses.
-- [ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md](./ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md) tracks queues, subprocess/process pools/multiprocessing, and runtime ergonomics.
-- [ad-hoc-production-text-i18n-stdlib-parity-execution.md](./ad-hoc-production-text-i18n-stdlib-parity-execution.md) tracks text and internationalization.
+- [ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md](./ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md) tracks concurrency/process/runtime substrate.
+- [ad-hoc-production-text-i18n-stdlib-parity-execution.md](./ad-hoc-production-text-i18n-stdlib-parity-execution.md) tracks text/Unicode/encoding/i18n runtime substrate.
+
+Execution order: this is the third phase in the split production-stdlib sequence. Text/i18n runs first, concurrency/runtime runs second, and network/HTTP consumes both provider phases. M0 design, dependency selection, and binary/protocol-only prototypes may happen earlier, but production network/HTTP implementation must not close text-dependent or runtime-dependent surfaces until the relevant provider gates are complete.
 
 CPython-shaped public networking/web modules are no longer this phase's objective. `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib.request`, `sifr.http.client`, `sifr.http.server`, and `sifr.socketserver` are deferred or rejected unless a later product phase proves migration demand and delegates to the Sifr-native substrate.
 
@@ -58,6 +60,18 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Result: `PASS`; final cross-phase decisions and ledger state were accepted.
   - `reviews/ad-hoc-production-network-http-substrate-review-pass-28-text-dependency-handoff.md`
   - Result: `PASS`; explicit Phase 41 and HTTP client handoff rows introduced no contradictions and completed the dependency matrix.
+- Cross-phase implementation-readiness review:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-21-phase-order-readiness.md`
+  - Result: `FAIL`; missing concurrency/runtime dependency matrix, local cancellation/shutdown ownership ambiguity, and legacy filename naming-note gaps were remediated.
+- Cross-phase implementation-readiness follow-up:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-22-phase-order-readiness.md`
+  - Result: `PASS`; pass 21 remediations were verified, with one minor state-vocabulary inconsistency remediated.
+- Final cross-phase implementation-readiness verification:
+  - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-23-final-readiness.md`
+  - Result: `PASS`; no material blockers, stale labels, or implementation-blocking contradictions remained.
+- Final implementation-readiness review:
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-29-final-readiness.md`
+  - Result: `PASS`; HTTP/2 conformance DoD coverage, concurrency/runtime dependency classification, M3/M4 header ownership, and reviewer tracking were tightened after review.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -82,9 +96,13 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Add M0 definition-of-done gate for dependency decision records across every Rust Ecosystem First crate family.
 - [x] Ensure conditional crates such as `x509-parser` receive the same dependency audit as baseline crates.
 - [x] Add a text/i18n dependency matrix for binary/ASCII-safe substrate versus features blocked on text/i18n M1, M2, M2.5, or M3.
+- [x] Add a concurrency/runtime dependency matrix for features blocked on task/cancellation M1, sync/backpressure M2, offload M3, shutdown/diagnostics M5, and IPC/process-worker M6.
 - [x] Require network/HTTP consumers to call `sifr.encoding`, `sifr.unicode`, `sifr.io`, or `sifr.i18n` rather than adding local encoding, Unicode, locale, or fallback-decoder behavior.
+- [x] Require network/HTTP consumers to call the concurrency/runtime provider substrate rather than adding local cancellation, timeout, shutdown, offload, executor, task-context, diagnostics, queue/channel, process/worker, or IPC substitutes.
 - [x] Make stream I/O buffer ownership/lifetime semantics an M0 gate before M1 implementation.
 - [x] Add mTLS/client certificate authentication as an M0/M2 TLS classification item.
+- [x] Require HTTP/2 loopback coverage for SETTINGS negotiation, RST_STREAM cancellation, GOAWAY graceful shutdown, and HPACK correctness edge cases selected in the M0 conformance inventory.
+- [x] Make M3 the owner of canonical URL/header/cookie primitives and M4 the consumer to prevent duplicate HTTP representations.
 
 ## Implementation PRs
 
@@ -125,6 +143,12 @@ M0 must create and keep current:
 
 Opening the M0 implementation PR is blocked until the artifact locations and schemas are present in that PR.
 
+## Review Ownership
+
+- Phase owner: runtime/networking implementation owner.
+- Designated compiler/runtime reviewer: assign in the M0 implementation PR before the first implementation milestone is marked complete.
+- External/final review fallback: M5 may use the five-working-day fallback rule only after this ledger records the reviewer assignment, posted review artifact, attempted follow-ups, open questions, and conservative self-review.
+
 ## CPython Evidence Scan
 
 Each milestone must record:
@@ -134,7 +158,8 @@ Each milestone must record:
 - CPython tests scanned.
 - Public APIs classified as production-public, production-substrate, internal-test, deferred, rejected, blocked, or host-limited.
 - Rust ecosystem crates accepted/rejected with feature flags, public API leak checks, typed error mapping, panic/unsafe audit notes, and conformance evidence.
-- Text/i18n dependency states recorded for URL, header, body, cookie, certificate-display, diagnostics, observability, demos, Phase 41 handoff, and HTTP client handoff surfaces.
+- Text/i18n dependency states recorded for URL, percent encoding, query/form, header, body, cookie, content-type/charset, certificate-display, diagnostics, observability, demos, Phase 41 handoff, and HTTP client handoff surfaces.
+- Concurrency/runtime dependency states recorded for async suspension points, server accept/dispatch/shutdown, blocking sync helpers, offload, signal-driven shutdown, and subprocess/process-pool-dependent demos.
 - CPython behavior mined into Sifr-native tests.
 - CPython behavior rejected as legacy, unsafe, toy, dynamic, descriptor-shaped, raw-event-loop, or non-product.
 - Sifr e2e pass/fail fixtures added.

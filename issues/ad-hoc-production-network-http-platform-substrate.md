@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Production Network and HTTP Platform Substrate
 
 Status: draft
-Phase placement: ad hoc expansion phase after the stdlib boundary refactor and before Phase 41 can claim production readiness for networked programs.
+Phase placement: third implementation phase in the split production-stdlib substrate sequence, after the text/Unicode/encoding/i18n runtime phase and the concurrency/process/runtime substrate phase, and before Phase 41 can claim production readiness for networked programs.
 Phase owner: runtime/networking implementation with compiler import, effect, and codegen support
 
 ## Objective
@@ -27,6 +27,8 @@ The required output is:
 
 CPython-shaped modules such as `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib.request`, `sifr.http.client`, `sifr.http.server`, and `sifr.socketserver` are not product goals for this phase.
 
+The cancellation, timeout, backpressure, shutdown, offload, and diagnostics items above are network-layer applications of the concurrency/runtime provider phase. This phase consumes those primitives and must not introduce its own cancellation token model, shutdown coordinator, offload pool, or diagnostics routing system.
+
 ## Split-Out Phases
 
 The original broad planning scan also covered two important areas that are now tracked as separate ad hoc phases:
@@ -35,6 +37,14 @@ The original broad planning scan also covered two important areas that are now t
 - [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md): `codecs`, `encodings`, `unicodedata`, `locale`, `gettext`
 
 This phase may depend on those phases for optional text decoding, subprocess demos, or executor-backed serving, but it must not implement their module surfaces here.
+
+Recommended implementation order:
+
+1. [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md)
+2. [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md)
+3. This network/HTTP platform substrate phase
+
+This phase is third because production network/server work should consume both the shared text/encoding/Unicode substrate and the production task, cancellation, shutdown, offload, diagnostics, and process model.
 
 This phase also depends on [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md). Its namespace contract is assumed complete before these substrate milestones ship: Sifr stdlib remains publicly imported through `sifr.*`, and bare CPython stdlib names are not aliases.
 
@@ -132,7 +142,13 @@ If the answer is no, the API is internal, deferred, or rejected.
 
 ## Cross-Phase Dependency Contract
 
-The split phases are not an implied ship order. Each phase may implement and test its self-contained binary/runtime subset independently, but cross-phase consumer features are blocked until their provider phase is complete:
+The split phase order is explicit:
+
+1. Text/Unicode/encoding/i18n runtime.
+2. Concurrency/process/runtime substrate.
+3. Network/HTTP platform substrate.
+
+This phase runs third. M0 design, dependency selection, and binary/protocol-only prototypes may happen earlier, but production network/HTTP implementation must not close text-dependent or runtime-dependent surfaces until the provider milestones below are complete:
 
 - Text/i18n is a hard prerequisite for non-UTF-8 HTTP body decoding, URL percent-encoding variants that require codec lookup, Unicode/IDNA host canonicalization if M0 cannot align it with the text Unicode version, file/text handlers, text-heavy demos, and any network demo that depends on `open(..., encoding=...)`.
 - The precise unblock point for encoding-dependent network features is completion of text/i18n `milestone_text_i18n_1: Encoding And Explicit Text I/O`; this phase records those features as `blocked-on-text-i18n-m1` until that milestone is closed.
@@ -145,7 +161,7 @@ The split phases are not an implied ship order. Each phase may implement and tes
 
 ### Text/I18n Dependency Decisions
 
-This phase is allowed to ship binary and protocol-correct network substrate before the text/i18n phase. It must not implement local encoding fallbacks, duplicate codec registries, or silently coerce bytes into UTF-8 text to avoid the dependency.
+Before the text/i18n phase gates close, this phase may only keep binary/protocol-only preparatory work or prototypes. Production text-dependent network behavior must not ship early, and this phase must not implement local encoding fallbacks, duplicate codec registries, or silently coerce bytes into UTF-8 text to avoid the dependency.
 
 | Network/HTTP surface | Status before text/i18n M1 | Text/i18n dependency | Decision |
 | --- | --- | --- | --- |
@@ -178,6 +194,33 @@ M0 must add these decisions to the inventory and assign every text-dependent sur
 
 When a text-dependent feature is unblocked, it must call `sifr.encoding`, `sifr.unicode`, `sifr.io`, or `sifr.i18n` from the text/i18n phase. It must not introduce a second registry, handler table, locale default, Unicode table, or fallback decoder.
 
+### Concurrency/Runtime Dependency Decisions
+
+Before the concurrency/runtime phase gates close, this phase may only keep design work, dependency selection, and binary/protocol-only prototypes for runtime-dependent behavior. Production network/runtime behavior must not ship early, and this phase must not implement local cancellation, timeout, shutdown, offload, diagnostics, process, executor, or queue substitutes.
+
+| Network/HTTP surface | Status before concurrency/runtime gate | Concurrency/runtime dependency | Decision |
+| --- | --- | --- | --- |
+| TCP/TLS/HTTP cancellation and timeout handling | `blocked-on-concurrency-runtime-m1` | `sifr.task` cancellation/deadline model | Network operations apply the provider task cancellation/deadline model. This phase must not introduce a parallel cancellation token or timeout coordinator. |
+| Stream backpressure and task-aware suspension | `blocked-on-concurrency-runtime-m1` or `blocked-on-concurrency-runtime-m2` as classified in M0 | structured task and synchronization/backpressure semantics | Async streams must compose with provider task cancellation and accepted backpressure primitives. Local queue/channel substitutes are forbidden. |
+| Sync network helpers that can block, including sync DNS/connect if accepted | `blocked-on-concurrency-runtime-m3` | `sifr.runtime.spawn_blocking` and workload/effect diagnostics | Blocking helpers must use the provider offload substrate and stdlib workload database. This phase must not introduce a local thread pool or blocking executor. |
+| Graceful connection/server shutdown | `blocked-on-concurrency-runtime-m5` | structured shutdown and signal stream model | Servers must consume the provider shutdown/signal substrate. This phase must not introduce a local shutdown coordinator. |
+| Network observability and diagnostic routing | `blocked-on-concurrency-runtime-m5` | structured runtime diagnostics and task/request context model | Network lifecycle events must compose with the provider diagnostics/context model. This phase must not introduce a separate diagnostic routing system. |
+| Executor-backed serving, worker handoff, or process-backed network helpers | `blocked-on-concurrency-runtime-m3` or `blocked-on-concurrency-runtime-m6` as classified in M0 | offload and typed IPC/process-worker gates | Executor/process-backed features remain blocked or deferred until the provider offload and IPC gates are complete. No local worker pool is allowed. |
+
+M0 must add these decisions to the inventory and assign every runtime-dependent surface one of:
+
+- `production-substrate`
+- `blocked-on-concurrency-runtime-m1`
+- `blocked-on-concurrency-runtime-m2`
+- `blocked-on-concurrency-runtime-m3`
+- `blocked-on-concurrency-runtime-m5`
+- `blocked-on-concurrency-runtime-m6`
+- `deferred-to-http-client-phase`
+- `deferred-to-phase-41`
+- `rejected`
+
+When a runtime-dependent feature is unblocked, it must call the task, sync, runtime, process, signal, diagnostics, or IPC substrate from the concurrency/runtime phase. It must not introduce a second cancellation model, deadline coordinator, shutdown manager, offload pool, local executor, queue/channel primitive, task context, diagnostics bus, or IPC mechanism.
+
 ## Evidence Sources
 
 The authoritative CPython source tree for evidence scans is:
@@ -207,7 +250,11 @@ Every proposed public surface must end in exactly one state:
 - `deferred`
 - `rejected`
 - `blocked-on-text-i18n-m1`
-- `blocked-on-concurrency-runtime`
+- `blocked-on-concurrency-runtime-m1`
+- `blocked-on-concurrency-runtime-m2`
+- `blocked-on-concurrency-runtime-m3`
+- `blocked-on-concurrency-runtime-m5`
+- `blocked-on-concurrency-runtime-m6`
 - `host-limited`
 
 `open` is allowed during implementation only and is forbidden at phase exit.
@@ -235,7 +282,7 @@ Implementation PRs must follow this dependency order unless the execution ledger
 1. `milestone_network_http_0` first. No implementation milestone starts until public/internal/deferred/rejected surface classification, error taxonomy, runtime dependency plan, workload classifications, and Phase 41 handoff contract are checked in.
 2. `milestone_network_http_1` before TLS and HTTP transport. Async streams are the substrate for TLS and HTTP.
 3. `milestone_network_http_2` before HTTPS transport. Plain HTTP parser work may start after M1, but HTTPS waits for M2 `AsyncTlsStream`.
-4. `milestone_network_http_3` before M4 HTTP integration where URL/header/cookie parsing is consumed.
+4. `milestone_network_http_3` before M4 HTTP integration where URL/header/cookie parsing is consumed. M3 owns canonical URL, header, and cookie-header primitives; M4 consumes them and must not define parallel representations.
 5. `milestone_network_http_4` before M5 handoff.
 6. `milestone_network_http_5` last, after every proposed surface and CPython evidence family in this phase is closed.
 
@@ -250,10 +297,12 @@ Implement the canonical runtime primitive first. Do not layer CPython-shaped pub
 - Tokio remains the backing async runtime because the generated task runtime already depends on `tokio` and `sifr_stdlib::StdlibFeature::Tokio`.
 - M0 must expand the Tokio dependency feature plan from the current task/sync/time set to the concrete features needed for `tokio::net` and `tokio::io`.
 - No `async-std`, custom event-loop runtime, or public Tokio type is introduced without a separate architecture issue.
-- `sifr.net` owns TCP, UDP if accepted, DNS/address resolution, stream readiness, timeouts, cancellation, backpressure, shutdown, and connection lifecycle.
+- `sifr.net` owns TCP, UDP if accepted, DNS/address resolution, stream readiness, connection lifecycle, and network-facing application of provider timeout, cancellation, backpressure, and shutdown semantics.
 - `sifr.tls` owns TLS configuration, handshakes, certificate verification, SNI, ALPN, wrapped streams, and TLS errors.
 - `sifr.url` owns URL parsing/building, percent encoding, query handling, and authority/host/port validation.
 - `sifr.http` protocol/runtime internals own request/response transport, headers, body streaming, parser/encoder limits, connection reuse, and HTTP protocol errors.
+
+`sifr.net` cancellation and timeout semantics are network-layer applications of the `sifr.task` cancellation and deadline model from `milestone_concurrency_runtime_1`; this phase does not implement its own cancellation primitive. `sifr.net` graceful shutdown consumes the signal/shutdown substrate from `milestone_concurrency_runtime_5`; this phase does not implement its own shutdown coordinator.
 
 The exact internal module names may change during implementation, but the boundary must exist: public Sifr-native modules must not duplicate target-runtime logic, and internal protocol/test harnesses must not leak as stable user API.
 
@@ -472,6 +521,7 @@ Scope:
 - Define protocol version scope, including HTTP/1.1, HTTP/2, and explicit HTTP/3 deferral entries.
 - Define buffer ownership and API pattern for stream I/O before M1 backlog entries are finalized.
 - Define the complete text/i18n dependency inventory for URL, headers, bodies, cookies, certificate display, observability, diagnostics, demos, Phase 41 handoff, and HTTP client handoff.
+- Define the complete concurrency/runtime dependency inventory for cancellation, deadlines, backpressure, blocking/offload, shutdown, diagnostics, task context, worker/process handoff, Phase 41 handoff, and HTTP client handoff.
 - Define Phase 41 handoff contract.
 - Define the separate production HTTP client phase handoff contract.
 - Scan every CPython source/test/doc file listed in `Evidence Sources`.
@@ -487,8 +537,9 @@ Validation:
 
 Definition of done:
 
-- Every proposed surface is classified as `production-public`, `production-substrate`, `internal-test`, `deferred`, `rejected`, `blocked-on-text-i18n-m1`, `blocked-on-concurrency-runtime`, or `host-limited`.
+- Every proposed surface is classified as `production-public`, `production-substrate`, `internal-test`, `deferred`, `rejected`, `blocked-on-text-i18n-m1`, `blocked-on-concurrency-runtime-m1`, `blocked-on-concurrency-runtime-m2`, `blocked-on-concurrency-runtime-m3`, `blocked-on-concurrency-runtime-m5`, `blocked-on-concurrency-runtime-m6`, or `host-limited`.
 - Every text-dependent surface is classified as `production-substrate`, `blocked-on-text-i18n-m1`, `blocked-on-text-i18n-m2`, `blocked-on-text-i18n-m2_5`, `blocked-on-text-i18n-m3`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
+- Every runtime-dependent surface is classified as `production-substrate`, `blocked-on-concurrency-runtime-m1`, `blocked-on-concurrency-runtime-m2`, `blocked-on-concurrency-runtime-m3`, `blocked-on-concurrency-runtime-m5`, `blocked-on-concurrency-runtime-m6`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
 - No module is accepted merely because CPython has it.
 - Dependency decision records are present and checked in for every crate family in the Rust Ecosystem First table, covering accepted crate and feature flags, Sifr abstraction that hides the crate from public APIs, panic/unsafe audit for user-controlled data paths, typed error mapping into Sifr variants, license/MSRV/binary-size/platform impact, deterministic local test strategy, conformance evidence for protocol crates, and supply-chain/maintenance signal.
 - Stream I/O ownership, lifetime, cancellation, and partial read/write semantics are decided before M1 starts.
@@ -590,6 +641,7 @@ Scope:
   - authority/host/port parsing
   - query parsing/building
 - Implement HTTP header representation and validation primitives.
+- Own the canonical header primitives consumed by M4 HTTP transport; M4 must not define duplicate header-name, header-value, or cookie-header representations.
 - Implement small cookie header parsing required by real HTTP request/response handling.
 - Keep cookie persistence and jar policy out of this phase.
 - Record non-UTF-8 codec-dependent behavior as `blocked-on-text-i18n-m1`; do not duplicate codec registry behavior locally.
@@ -626,7 +678,7 @@ Scope:
 
 - Implement HTTP/1.1 parser/encoder.
 - Implement typed request/response model.
-- Implement method, status, version, headers, and body types.
+- Implement method, status, version, and body types while consuming the M3 URL/header/cookie primitives.
 - Implement body streaming without unbounded buffering.
 - Implement content-length and chunked transfer handling.
 - Implement keep-alive and connection lifecycle.
@@ -665,6 +717,7 @@ Definition of done:
 - HTTPS transport works through M2 TLS, including ALPN selection for HTTP/2.
 - Malformed HTTP tests produce typed protocol errors.
 - Body streaming and HTTP/2 multiplexing work without unbounded buffering.
+- HTTP/2 protocol-level behaviors selected in the M0 conformance inventory, including SETTINGS negotiation, RST_STREAM stream cancellation, GOAWAY graceful shutdown, and HPACK correctness edge cases, have loopback test coverage.
 - HTTP transport stores and forwards binary bodies and typed protocol metadata without local text decoding fallbacks.
 - No `http.server`, `socketserver`, or handler-subclass public API is added.
 
@@ -679,8 +732,10 @@ Scope:
   - public HTTP protocol/substrate types that M0 accepts
   - rejected/deferred CPython-shaped surfaces and why they are not recommended APIs
   - text/i18n dependency decisions and blocked surface states
+  - concurrency/runtime dependency decisions and blocked surface states
 - Update internal architecture docs for:
   - runtime networking/TLS/HTTP boundaries
+  - provider consumption for task cancellation, deadlines, shutdown, offload, diagnostics, and process/worker handoff
   - stdlib feature/dependency manifest
   - async counterpart policy
   - host-limited platform behavior
@@ -696,6 +751,7 @@ Scope:
 - Update validation lane manifests with representative fixtures.
 - Close the inventory:
   - every proposed surface has a terminal state
+  - every text/i18n-dependent and runtime-dependent surface has a provider milestone state
   - every CPython evidence family has `mined`, `blocked`, `rejected`, or `external-signal` evidence
   - every rejection/defer decision has rationale and revisit rule
   - every host-limited surface records the supported host matrix
@@ -744,6 +800,7 @@ The execution ledger must record:
 - mined/blocked/rejected/external-signal CPython test families
 - final deferred/rejected/host-limited/internal-only decision index
 - text/i18n dependency state for every URL, header, body, cookie, certificate-display, observability, diagnostics, demo, Phase 41, and HTTP client handoff surface
+- concurrency/runtime dependency state for every cancellation, timeout, backpressure, blocking/offload, shutdown, diagnostics, task-context, executor/worker, process, Phase 41, and HTTP client handoff surface
 
 ## Quality Contract
 
@@ -751,6 +808,7 @@ The execution ledger must record:
 - No CPython stdlib parity objective, backward-compatibility shim, legacy alias, deprecated behavior, bridge alias, migration path, or fallback path may survive phase exit.
 - No direct Tokio/runtime types may leak into public Sifr APIs.
 - No local encoding registry, local Unicode data table, locale-derived default encoding, fallback decoder, or duplicate text error-handler table may be introduced in this phase.
+- No local cancellation token model, timeout/deadline coordinator, shutdown manager, offload pool, executor, queue/channel primitive, task context, process/worker pool, IPC mechanism, or diagnostic routing system may be introduced in this phase; these must consume the concurrency/runtime provider substrate.
 - No data-dependent emitted `.unwrap()`, `.expect()`, or `panic!` is allowed in user runtime paths.
 - Every added blocking sync function must be classified in the stdlib workload database.
 - Every added async function must have a real suspension summary.
