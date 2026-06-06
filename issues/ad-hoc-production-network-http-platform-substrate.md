@@ -33,8 +33,8 @@ The cancellation, timeout, backpressure, shutdown, offload, and diagnostics item
 
 The original broad planning scan also covered two important areas that are now tracked as separate ad hoc phases:
 
-- [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md): `queue`, `subprocess`, `asyncio.subprocess`, `concurrent.futures`, `multiprocessing`, `contextlib`, `warnings`, `signal`
-- [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md): `codecs`, `encodings`, `unicodedata`, `locale`, `gettext`
+- [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md): Sifr-native concurrency/process/runtime substrate, including task, sync, process, offload, shutdown, diagnostics, and typed IPC foundations.
+- [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md): Sifr-native text/Unicode/encoding/i18n runtime substrate, including explicit text I/O, encoding, Unicode data, segmentation, locale IDs, formatting, and translation bundles.
 
 This phase may depend on those phases for optional text decoding, subprocess demos, or executor-backed serving, but it must not implement their module surfaces here.
 
@@ -64,10 +64,10 @@ A module belongs in Sifr core only if it is production substrate or production d
 
 | Surface | Classification | Notes |
 | --- | --- | --- |
-| `sifr.net` | `production-public` | primary low-level network API |
-| `sifr.tls` | `production-public` | primary TLS API, including optional client certificate authentication when M0 confirms deterministic fixtures and backend support |
+| `sifr.net` | `production-public` | primary low-level network API, including TCP and the constrained UDP surface defined below |
+| `sifr.tls` | `production-public` | primary TLS API, including client certificate authentication with deterministic fixtures |
 | `sifr.url` | `production-public` | typed URL API |
-| `sifr.http` protocol types | `production-substrate` | request/response/header/status/body primitives; final path may be `sifr.http.core` if review prefers a narrower public boundary |
+| `sifr.http` protocol types | `production-substrate` | canonical request/response/header/status/body primitives; `sifr.http.core` is rejected as an extra stable namespace layer |
 | internal loopback harness | `internal-test` | never a public dev-server module |
 | readiness primitives | `production-substrate` | internal or low-level only; no public manual event-loop model |
 
@@ -148,9 +148,9 @@ The split phase order is explicit:
 2. Concurrency/process/runtime substrate.
 3. Network/HTTP platform substrate.
 
-This phase runs third. M0 design, dependency selection, and binary/protocol-only prototypes may happen earlier, but production network/HTTP implementation must not close text-dependent or runtime-dependent surfaces until the provider milestones below are complete:
+This phase runs third, after the text/i18n and concurrency/runtime provider phases. The dependency states below describe which completed provider milestone each network/HTTP surface consumes; they are not permission to start network/HTTP implementation out of order.
 
-- Text/i18n is a hard prerequisite for non-UTF-8 HTTP body decoding, URL percent-encoding variants that require codec lookup, Unicode/IDNA host canonicalization if M0 cannot align it with the text Unicode version, file/text handlers, text-heavy demos, and any network demo that depends on `open(..., encoding=...)`.
+- Text/i18n is a hard prerequisite for non-UTF-8 HTTP body decoding, URL percent-encoding variants that require codec lookup, Unicode/IDNA host canonicalization, file/text handlers, text-heavy demos, and any network demo that depends on `open(..., encoding=...)`.
 - The precise unblock point for encoding-dependent network features is completion of text/i18n `milestone_text_i18n_1: Encoding And Explicit Text I/O`; this phase records those features as `blocked-on-text-i18n-m1` until that milestone is closed.
 - Unicode-data-dependent network features wait for text/i18n `milestone_text_i18n_2: Unicode Core` or `milestone_text_i18n_2_5: Unicode Segmentation` when they require Unicode normalization, case folding, IDNA behavior, display boundaries, or user-visible Unicode property decisions.
 - Locale-sensitive network logging, formatting, or diagnostics wait for text/i18n `milestone_text_i18n_3: Locale Identifiers And Locale-Sensitive Formatting`; this phase must not introduce locale-derived defaults.
@@ -161,24 +161,24 @@ This phase runs third. M0 design, dependency selection, and binary/protocol-only
 
 ### Text/I18n Dependency Decisions
 
-Before the text/i18n phase gates close, this phase may only keep binary/protocol-only preparatory work or prototypes. Production text-dependent network behavior must not ship early, and this phase must not implement local encoding fallbacks, duplicate codec registries, or silently coerce bytes into UTF-8 text to avoid the dependency.
+This matrix records how network/HTTP consumes the completed text/i18n provider phase. It must not be used to justify local encoding fallbacks, duplicate codec registries, or silent byte-to-UTF-8 coercion.
 
-| Network/HTTP surface | Status before text/i18n M1 | Text/i18n dependency | Decision |
+| Network/HTTP surface | Text/i18n state | Text/i18n dependency | Decision |
 | --- | --- | --- | --- |
-| TCP, UDP if accepted, DNS socket transport, TLS handshakes, HTTP/1.1 and HTTP/2 framing | `production-substrate` | none | Protocol bytes and transport state are independent of text decoding. |
-| HTTP request/response bodies | binary streaming only | M1 for charset decoding | Bodies are `Bytes`/stream values in this phase. `body.text(...)`, charset-aware decoding, and text body previews are blocked on M1. |
-| HTTP headers | validated protocol representation | M1 only for non-ASCII/user-text conversion | Header names use HTTP token/ASCII validation. Header values remain typed protocol values or byte/ASCII-safe values; decoding arbitrary header bytes to Sifr text is blocked on M1. |
+| TCP, constrained UDP, DNS socket transport, TLS handshakes, HTTP/1.1 and HTTP/2 framing | `production-substrate` | none | Protocol bytes and transport state are independent of text decoding. |
+| HTTP request/response bodies | `blocked-on-text-i18n-m1` for text helpers | M1 for charset decoding | Bodies are `Bytes`/stream values at the protocol layer. `body.text(...)`, charset-aware decoding, and text body previews consume M1. |
+| HTTP headers | `blocked-on-text-i18n-m1` for non-ASCII/user-text conversion | M1 only for non-ASCII/user-text conversion | Header names use HTTP token/ASCII validation. Header values remain typed protocol values or byte/ASCII-safe values; decoding arbitrary header bytes to Sifr text consumes M1. |
 | `Content-Type` and `charset` parameters | parse ASCII parameter names/labels only | M1 for actual charset decoding | This phase may parse and preserve charset labels, but must not decode payloads locally. Unsupported labels remain typed errors or blocked records. |
-| URL parsing/building | ASCII, already-valid Sifr text, UTF-8 percent behavior where no codec lookup is required | M1 for non-UTF-8 encoding labels; M2 for Unicode/IDNA alignment if needed | `sifr.url` may parse/build typed URLs over valid Sifr strings and bytes. Non-UTF-8 `encoding=` behavior and codec-label lookup are blocked on M1. Unicode host canonicalization/IDNA must either use a text/i18n-approved Unicode version or remain `blocked-on-text-i18n-m2`. |
+| URL parsing/building | ASCII and already-valid Sifr text are `production-substrate`; non-UTF-8 and Unicode host behavior are provider-gated | M1 for non-UTF-8 encoding labels; M2 for Unicode/IDNA alignment | `sifr.url` parses/builds typed URLs over valid Sifr strings and bytes. Non-UTF-8 `encoding=` behavior and codec-label lookup consume M1. Unicode host canonicalization/IDNA consumes the text/i18n-approved Unicode version from M2. |
 | Percent encoding/decoding | byte/ASCII/UTF-8 safe operations | M1 for named encodings and error handlers | Percent helpers that take raw bytes are allowed. Helpers that accept `encoding=` or `errors=` must call the text substrate after M1. |
-| Query/form helpers | byte/ASCII/UTF-8 safe parsing only | M1 for non-UTF-8 form decoding | `application/x-www-form-urlencoded` charset variants, dynamic `encoding=`, and text error handlers are blocked on M1. Multipart/form parsing is reserved for the future HTTP client/framework phases unless M0 accepts substrate-only parsing. |
+| Query/form helpers | byte/ASCII/UTF-8 safe parsing only | M1 for non-UTF-8 form decoding | `application/x-www-form-urlencoded` charset variants, dynamic `encoding=`, and text error handlers are blocked on M1. Multipart/form parsing is rejected for this phase and deferred to the future HTTP client/framework phases. |
 | Cookie header parsing | header-level syntax only | M1 for percent-decoded/user-text values | Cookie names/values may remain typed header strings/bytes. Percent-decoded or non-UTF-8 cookie text is blocked on M1. Cookie persistence remains outside this phase. |
 | TLS certificate verification | allowed | none | Verification is owned by `rustls`/TLS substrate and does not need text/i18n. |
 | TLS certificate field inspection/display | typed raw/DER or ASCII-safe fields only | M1/M2 for decoded display names and Unicode normalization | User-visible certificate subject/issuer/SAN display must not invent local string decoding. M2 gates Unicode normalization/IDNA-sensitive display behavior. |
 | Error messages and diagnostics | static ASCII diagnostic templates with typed evidence | M1/M3 for decoded remote text or locale-sensitive formatting | Errors carry typed bytes/labels/status evidence. No locale-sensitive formatting or decoded body/header snippets before the provider milestones. |
 | Observability hooks | structured events with typed fields | M1 for decoded previews; M3 for locale-sensitive formatting | Trace/metric labels use stable ASCII keys and typed values. Body/header previews that decode text are blocked on M1. |
-| Demos and fixtures | binary loopback and ASCII/UTF-8-only demos | M1 for `open(..., encoding=...)` or non-UTF-8 demos | Demos must not require text-mode file I/O or local codec workarounds before M1. |
-| Phase 41 web framework handoff | binary request/response pipeline, routing substrate, and typed protocol metadata | M1 for text body/extractor decoding; M2 for Unicode path/host normalization if accepted; M3 for locale-sensitive formatting | Framework extractors such as text bodies, decoded forms, JSON text helpers, and decoded path/query values must consume text/i18n provider APIs. Binary routing and protocol metadata can proceed on this substrate. |
+| Demos and fixtures | `blocked-on-text-i18n-m1` for text-mode file I/O or non-UTF-8 demos | M1 for `open(..., encoding=...)` or non-UTF-8 demos | Demos that need text-mode file I/O or non-UTF-8 behavior consume M1 and must not use local codec workarounds. |
+| Phase 41 web framework handoff | provider-state-specific | M1 for text body/extractor decoding; M2 for Unicode path/host normalization; M3 for locale-sensitive formatting | Framework extractors such as text bodies, decoded forms, JSON text helpers, and decoded path/query values must consume text/i18n provider APIs. |
 | Production HTTP client handoff | pooling, timeouts, retries, TLS, redirects over typed URLs, binary streaming | M1 for text response helpers, charset decoding, form helpers, and decoded cookie/header values; M2 for Unicode/IDNA alignment; M3 for locale-sensitive diagnostics | Client features must not add local charset detection/decoding or duplicate URL Unicode behavior. Text helpers wait for the text/i18n provider. |
 
 M0 must add these decisions to the inventory and assign every text-dependent surface one of:
@@ -196,13 +196,13 @@ When a text-dependent feature is unblocked, it must call `sifr.encoding`, `sifr.
 
 ### Concurrency/Runtime Dependency Decisions
 
-Before the concurrency/runtime phase gates close, this phase may only keep design work, dependency selection, and binary/protocol-only prototypes for runtime-dependent behavior. Production network/runtime behavior must not ship early, and this phase must not implement local cancellation, timeout, shutdown, offload, diagnostics, process, executor, or queue substitutes.
+This matrix records how network/HTTP consumes the completed concurrency/runtime provider phase. It must not be used to justify local cancellation, timeout, shutdown, offload, diagnostics, process, executor, queue, task-context, or IPC substitutes.
 
-| Network/HTTP surface | Status before concurrency/runtime gate | Concurrency/runtime dependency | Decision |
+| Network/HTTP surface | Concurrency/runtime state | Concurrency/runtime dependency | Decision |
 | --- | --- | --- | --- |
 | TCP/TLS/HTTP cancellation and timeout handling | `blocked-on-concurrency-runtime-m1` | `sifr.task` cancellation/deadline model | Network operations apply the provider task cancellation/deadline model. This phase must not introduce a parallel cancellation token or timeout coordinator. |
 | Stream backpressure and task-aware suspension | `blocked-on-concurrency-runtime-m1` or `blocked-on-concurrency-runtime-m2` as classified in M0 | structured task and synchronization/backpressure semantics | Async streams must compose with provider task cancellation and accepted backpressure primitives. Local queue/channel substitutes are forbidden. |
-| Sync network helpers that can block, including sync DNS/connect if accepted | `blocked-on-concurrency-runtime-m3` | `sifr.runtime.spawn_blocking` and workload/effect diagnostics | Blocking helpers must use the provider offload substrate and stdlib workload database. This phase must not introduce a local thread pool or blocking executor. |
+| Sync network helpers that can block, including sync DNS/connect helpers | `blocked-on-concurrency-runtime-m3` | `sifr.runtime.spawn_blocking` and workload/effect diagnostics | Blocking helpers must use the provider offload substrate and stdlib workload database. This phase must not introduce a local thread pool or blocking executor. |
 | Graceful connection/server shutdown | `blocked-on-concurrency-runtime-m5` | structured shutdown and signal stream model | Servers must consume the provider shutdown/signal substrate. This phase must not introduce a local shutdown coordinator. |
 | Network observability and diagnostic routing | `blocked-on-concurrency-runtime-m5` | structured runtime diagnostics and task/request context model | Network lifecycle events must compose with the provider diagnostics/context model. This phase must not introduce a separate diagnostic routing system. |
 | Executor-backed serving, worker handoff, or process-backed network helpers | `blocked-on-concurrency-runtime-m3` or `blocked-on-concurrency-runtime-m6` as classified in M0 | offload and typed IPC/process-worker gates | Executor/process-backed features remain blocked or deferred until the provider offload and IPC gates are complete. No local worker pool is allowed. |
@@ -295,9 +295,9 @@ Parallel work is allowed only for pure parser work that does not consume unfinis
 Implement the canonical runtime primitive first. Do not layer CPython-shaped public modules over it in this phase. Use production Rust ecosystem crates for protocol and transport machinery by default; do not hand-roll networking, TLS, DNS, URL, HTTP, HPACK, or observability infrastructure unless M0 records a concrete rejection finding for every suitable ecosystem option.
 
 - Tokio remains the backing async runtime because the generated task runtime already depends on `tokio` and `sifr_stdlib::StdlibFeature::Tokio`.
-- M0 must expand the Tokio dependency feature plan from the current task/sync/time set to the concrete features needed for `tokio::net` and `tokio::io`.
+- Generated Cargo must use the resolved Tokio feature set: `macros`, `rt-multi-thread`, `sync`, `time`, `net`, and `io-util`.
 - No `async-std`, custom event-loop runtime, or public Tokio type is introduced without a separate architecture issue.
-- `sifr.net` owns TCP, UDP if accepted, DNS/address resolution, stream readiness, connection lifecycle, and network-facing application of provider timeout, cancellation, backpressure, and shutdown semantics.
+- `sifr.net` owns TCP, constrained UDP, DNS/address resolution, stream readiness, connection lifecycle, and network-facing application of provider timeout, cancellation, backpressure, and shutdown semantics.
 - `sifr.tls` owns TLS configuration, handshakes, certificate verification, SNI, ALPN, wrapped streams, and TLS errors.
 - `sifr.url` owns URL parsing/building, percent encoding, query handling, and authority/host/port validation.
 - `sifr.http` protocol/runtime internals own request/response transport, headers, body streaming, parser/encoder limits, connection reuse, and HTTP protocol errors.
@@ -316,17 +316,36 @@ Default ecosystem stack:
 | --- | --- | --- |
 | Async runtime and I/O | `tokio`, `tokio-util`, `bytes` | task runtime, TCP/UDP, timers, cancellation, async read/write traits, buffer primitives |
 | Socket options | `socket2` | low-level options only when Tokio/std do not expose required production behavior |
-| DNS | `tokio::net::lookup_host` and/or `hickory-resolver` | system resolver integration and async DNS when M0 accepts its semantics |
-| TLS | `rustls`, `tokio-rustls`, `rustls-platform-verifier`, `webpki-roots`, `rustls-pemfile` | TLS config, async streams, certificate verification, roots, PEM parsing |
-| Certificate inspection | `x509-parser` (conditional) | raw certificate field access only if M0/M2 accepts a production need; must pass malformed-DER, oversized-field, and hostile-chain panic/unsafe audit before merge |
+| DNS | `tokio::net::lookup_host`, with `hickory-resolver` reserved for explicit resolver APIs | system resolver integration for connect/listen address resolution; in-process resolver only for typed DNS APIs accepted later |
+| TLS | `rustls`, `tokio-rustls`, `rustls-platform-verifier`, `rustls-pemfile` | TLS config, async streams, certificate verification, platform roots, PEM parsing |
+| Certificate inspection | deferred; `x509-parser` only in a future certificate-inspection phase | no public subject/issuer/SAN display parser in this phase; certificate errors carry typed verification evidence and raw DER fingerprints only |
 | Test certificates | `rcgen` | deterministic local CA/self-signed fixtures only |
 | HTTP types and bodies | `http`, `http-body`, `http-body-util`, `bytes` | method/status/header/request/response/body abstractions |
 | HTTP/1 and HTTP/2 transport | `hyper`, `hyper-util`, `h2` | production HTTP transport, HTTP/2 state machine, flow control, multiplexing, protocol errors |
 | URL and percent encoding | `url`, `percent-encoding` | WHATWG/RFC URL parsing, building, and escaping |
 | Cookies | `cookie` | header-level cookie parsing; jar/persistence features remain out of scope unless the HTTP client phase accepts them |
-| Middleware/service substrate | `tower` | optional internal service abstraction when Phase 41 handoff needs composable request/response plumbing |
-| Observability | `tracing`, `metrics`, optional OpenTelemetry bridge crates | spans, structured events, counters, histograms, exporter-neutral hooks |
+| Middleware/service substrate | `tower-service` | internal service abstraction for Phase 41 handoff; no public `tower`, `Layer`, or tower utility types |
+| Observability | `tracing`, `metrics`; OpenTelemetry bridge deferred | spans, structured events, counters, histograms, exporter-neutral hooks without exporter dependencies |
 | Tests and conformance | `tokio-test`, `proptest`, `h2spec`/HTTP/2 conformance fixtures where available | deterministic async tests, parser/property tests, protocol conformance |
+
+Resolved ecosystem decisions:
+
+| Decision area | Decision |
+| --- | --- |
+| Tokio features | Generated Cargo uses explicit features only: `macros`, `rt-multi-thread`, `sync`, `time`, `net`, and `io-util`. `tokio/full` is rejected for production builds and may not be used to hide missing feature decisions. |
+| Rustls crypto provider | Use rustls's default `aws-lc-rs` provider for production TLS. `ring`, custom providers, and OpenSSL/native-tls are out of scope unless a future platform issue records a concrete blocker. |
+| TLS roots | Production client verification uses `rustls-platform-verifier`. Deterministic tests use explicit in-memory `RootCertStore` values built from `rcgen` fixtures. `webpki-roots` is not a fallback in this phase. |
+| DNS | TCP connect and address resolution use `tokio::net::lookup_host` to respect host resolver configuration. `hickory-resolver` is deferred to an explicit `sifr.net.resolve_*` API if future requirements need record lookups, custom resolver config, or deterministic in-process DNS tests. |
+| Stream I/O ownership | Streams use owned-buffer reads: `read_chunk(max_bytes) -> Result[Option[bytes], NetError]`, where `None` means EOF. Writes provide `write(data) -> Result[int, NetError]` and `write_all(data) -> Result[None, NetError]`. |
+| UDP | M1 includes a constrained `UdpSocket` with `bind`, `send_to`, `recv_from`, `connect`, `send`, `recv`, `local_addr`, and `close`. Broadcast, multicast, raw sockets, packet options, and platform-specific socket constants are deferred or host-limited. |
+| Socket options | `socket2` is accepted for `SO_REUSEADDR`, host-limited `SO_REUSEPORT`, `TCP_NODELAY`, `SO_KEEPALIVE`, and `IPV6_V6ONLY` when Tokio/std do not expose deterministic behavior. Other options are not public. |
+| HTTP stack | `hyper`, `hyper-util`, and `h2` are the only accepted HTTP/1.1 and HTTP/2 transport stack. `reqwest`, `axum`, `warp`, `actix-web`, and `tower-http` are not substrate dependencies. |
+| Service substrate | Use the `tower-service` crate only, not the full `tower` crate. The `Service` trait is internal. No `tower::Layer`, tower utility modules, or extra Tower features are pulled. Public Sifr APIs expose Sifr request/response and middleware concepts, not Tower traits. |
+| OpenTelemetry | OTel exporter/bridge crates are deferred to an observability/exporter phase. This phase emits `tracing` spans/events and `metrics` counters/histograms only. |
+| mTLS | M2 includes client certificate authentication configuration and deterministic `rcgen` client/server certificate fixtures. The API exposes configuration, verification outcomes, and typed errors, not raw rustls types. |
+| Multipart/form | Multipart parsing is rejected for this phase and deferred to Phase 41 or the production HTTP client phase. No `multipart` crate is accepted here. |
+| Upgrade hooks | HTTP upgrade hooks are `internal-test` only for transport validation. Public WebSocket, CONNECT tunneling, and upgrade APIs are deferred to product phases with concrete use cases. |
+| External CPython network tests | External-network CPython tests are never required for local validation. Localnet cases are converted to loopback where useful; true external tests remain `external-signal`. |
 
 M0 must produce a dependency decision record for every crate family above. Each decision must include:
 
@@ -352,36 +371,36 @@ From-scratch protocol parsing, TLS verification, DNS resolution, URL parsing, HP
 
 ### Sifr-Native Network API Shape
 
-M0 must finalize exact names, but the target shape is Sifr-native and typed:
+The accepted public shape is Sifr-native and typed:
 
 - `async connect_tcp(address, *, timeout=None, local_addr=None) -> Result[TcpStream, NetError]`
 - `async listen_tcp(address, *, backlog=None, reuse_addr=false) -> Result[TcpListener, NetError]`
 - `async TcpListener.accept() -> Result[(TcpStream, SocketAddr), NetError]`
-- `async TcpStream.read(buffer) -> Result[usize, NetError]`
-- `async TcpStream.write(bytes) -> Result[usize, NetError]`
+- `async TcpStream.read_chunk(max_bytes) -> Result[Option[bytes], NetError]`
+- `async TcpStream.write(data) -> Result[int, NetError]`
+- `async TcpStream.write_all(data) -> Result[None, NetError]`
 - `async TcpStream.close() -> Result[None, NetError]`
-- `UdpSocket` support only if M0 accepts concrete production workloads and deterministic tests.
+- `UdpSocket` constrained datagram support as defined in the resolved ecosystem decisions.
 
 The API must expose local/remote address inspection, graceful shutdown, resource-limit controls, and deterministic cancellation semantics. It must not expose descriptor aliasing, monkeypatchable globals, or public raw event-loop policies.
 
-The `read(buffer)` shape above is illustrative, not accepted design. M0 must choose the stream I/O ownership model before M1 starts:
+The accepted stream ownership model is owned-buffer I/O:
 
-- mutable-borrow buffer reads,
-- owned-buffer reads such as `read(max_bytes) -> Result[Bytes, NetError]`,
-- async iterator / chunk stream reads,
-- or a deliberately combined model with explicit ownership and lifetime rules.
+- `read_chunk(max_bytes) -> Result[Option[bytes], NetError]`; `None` means EOF.
+- `write(data) -> Result[int, NetError]`; returns the number of bytes accepted by the underlying stream.
+- `write_all(data) -> Result[None, NetError]`; retries partial writes until completion or typed failure.
 
-The decision must cover generated Rust lifetimes, cancellation safety, partial read/write behavior, backpressure, TLS wrapping, HTTP body streaming, and panic-free handling of zero-length and too-large buffers.
+`max_bytes` must be positive and within the configured resource limit. Zero-length and too-large reads return typed errors. Cancellation of `write_all` is cancellation-safe for memory safety but may have written a prefix to the peer; this must be documented and surfaced through typed cancellation evidence rather than hidden retries.
 
 ### TLS API Shape
 
-M0 must finalize exact names, but the target shape is:
+The accepted public shape is:
 
 - `TlsClientConfig` and `TlsServerConfig`
 - safe default certificate verification
-- root strategy selected explicitly for production binaries and deterministic local tests
+- production root strategy through `rustls-platform-verifier`; deterministic tests through explicit `rcgen` roots
 - SNI and ALPN support
-- optional client certificate authentication when M0 accepts deterministic fixtures and backend support
+- client certificate authentication with deterministic `rcgen` client/server fixtures
 - async TLS client and server streams over `TcpStream`
 - typed certificate and TLS errors preserving underlying network evidence
 
@@ -406,7 +425,7 @@ Required substrate:
 - request/response size limits
 - malformed protocol typed errors
 - internal loopback client/server transport harness
-- upgrade hooks may be reserved but not exposed as a partial public API unless production use is defined
+- upgrade hooks are internal-test only; public WebSocket, CONNECT tunneling, and upgrade APIs are deferred
 
 Server framework behavior such as routing, middleware, extractors, validation, generated docs, and deployment ergonomics belongs to Phase 41. Client behavior such as pooling, redirects, retries, auth, proxies, cookie persistence, JSON helpers, multipart, compression, and test transports belongs to the separate production HTTP client phase.
 
@@ -434,7 +453,7 @@ M0 must add every network/web API to the stdlib workload database. The first tab
 | `sifr.tls` async handshake/read/write/shutdown | async-native | legal suspension points |
 | `sifr.http` async transport and streaming body operations | async-native | legal suspension points |
 | accepted sync network/TLS/HTTP helpers | sync `@blocking_io` | compile-time diagnostic suggesting native async APIs or explicit offload |
-| pure URL, header, and cookie-header parsing | pure, or `@cpu_heavy` if M0 finds size-dependent paths | legal unless the exact path is marked `@cpu_heavy` |
+| pure URL, header, and cookie-header parsing under configured size limits | pure | legal in async contexts; over-limit inputs return typed errors instead of becoming hidden CPU-heavy work |
 | rejected CPython-shaped blocking APIs | unsupported/deferred | namespace or unsupported-surface diagnostic |
 
 Implementation milestones cannot claim completion for a blocking family until its workload entries and async diagnostics are checked in.
@@ -516,6 +535,7 @@ Scope:
 - Define async/blocking workload classifications and diagnostics.
 - Define runtime dependency features and approved Rust crates.
 - Define the Rust ecosystem dependency stack and feature flags for network, DNS, TLS, URL, HTTP/1, HTTP/2, cookies, observability, and tests.
+- Use the resolved ecosystem decisions in this phase as the starting point; M0 may only change one by recording a blocking implementation finding and a replacement decision with the same audit fields.
 - Record explicit rejection rationale before implementing any protocol/domain component from scratch.
 - Define HTTP client/server substrate boundaries.
 - Define protocol version scope, including HTTP/1.1, HTTP/2, and explicit HTTP/3 deferral entries.
@@ -559,7 +579,13 @@ Scope:
   - local/remote address inspection
 - Add DNS/address resolution with typed errors and deterministic timeout behavior.
 - Add cancellation, backpressure, and resource limits.
-- Add UDP only if M0 records near-term production use and deterministic loopback tests.
+- Add constrained UDP datagram support:
+  - bind/connect
+  - send/send_to
+  - recv/recv_from
+  - close
+  - local address inspection
+  - deterministic loopback tests
 - Add internal readiness primitives without exposing public selector/event-loop APIs.
 - Mark accepted sync helpers as `@blocking_io`; reject direct calls from async contexts.
 
@@ -577,14 +603,14 @@ Rust/runtime stack:
 
 - `tokio::net`
 - `tokio::io`
-- `tokio-util` and `bytes` when M0 accepts their buffer/framing role
-- `socket2` only if low-level socket option coverage is accepted by M0
-- `hickory-resolver` only if M0 accepts in-process async DNS semantics over or alongside system resolver behavior
+- `tokio-util` and `bytes`
+- `socket2` for the accepted socket options listed in the resolved ecosystem decisions
+- `tokio::net::lookup_host`; `hickory-resolver` remains deferred for explicit DNS record APIs
 
 Definition of done:
 
 - TCP loopback tests pass deterministically without external network dependency.
-- UDP loopback tests pass if UDP is accepted.
+- UDP loopback tests pass for the constrained datagram surface.
 - Timeout and cancellation behavior is deterministic, typed, and panic-free.
 - Blocking sync paths are rejected from async contexts.
 - No public API leaks Tokio, raw descriptors, selectors, or event-loop internals.
@@ -598,7 +624,7 @@ Scope:
 - Add safe default certificate verification.
 - Add deterministic root strategy for local tests and production binaries.
 - Add SNI and ALPN.
-- Add optional client certificate authentication or record a concrete deferral with deterministic revisit criteria if M0 rejects it.
+- Add client certificate authentication with deterministic fixtures.
 - Add async TLS client streams.
 - Add async TLS server streams.
 - Add typed TLS and certificate errors.
@@ -615,15 +641,16 @@ Rust/runtime stack:
 
 - `rustls`
 - `tokio-rustls`
-- `rustls-platform-verifier` and/or `webpki-roots`, selected explicitly
+- `rustls-platform-verifier` for production client verification
 - `rustls-pemfile`
 - `rcgen` for deterministic local certificate fixtures
-- `x509-parser` only if certificate inspection requires it
+- no `x509-parser` in this phase
 
 Definition of done:
 
 - Local self-signed and CA-backed handshake fixtures are deterministic.
 - HTTPS-ready TLS loopback tests pass.
+- Client certificate authentication loopback tests pass with `rcgen`-generated client and server certificate fixtures; mTLS handshake rejection and typed `CertificateError` are covered.
 - Invalid certificate tests produce typed errors.
 - Safe verification is default.
 - TLS verification failures never panic and never silently downgrade verification.
@@ -645,7 +672,7 @@ Scope:
 - Implement small cookie header parsing required by real HTTP request/response handling.
 - Keep cookie persistence and jar policy out of this phase.
 - Record non-UTF-8 codec-dependent behavior as `blocked-on-text-i18n-m1`; do not duplicate codec registry behavior locally.
-- Record Unicode/IDNA host behavior as `production-substrate` only if M0 proves the selected URL crate's Unicode version and behavior align with text/i18n M2; otherwise keep Unicode host canonicalization `blocked-on-text-i18n-m2` and allow only ASCII/already-punycode host behavior before M2.
+- Keep Unicode/IDNA host canonicalization `blocked-on-text-i18n-m2`; M3 accepts ASCII and already-punycode host behavior only until the text/i18n provider defines Unicode alignment.
 - Record query/form/cookie text decoding behavior with the Text/I18n Dependency Decisions matrix.
 
 CPython evidence to mine:
@@ -660,7 +687,7 @@ Rust/runtime stack:
 
 - `url`
 - `percent-encoding`
-- `http` header/status/method types if accepted by M0
+- `http` header/status/method types
 - `cookie` for header-level cookie parsing only
 
 Definition of done:
@@ -708,7 +735,7 @@ Rust/runtime stack:
 - `hyper`
 - `hyper-util`
 - `h2`
-- `tower` only if M0 accepts it as internal handoff substrate for Phase 41
+- `tower-service` crate internally for Phase 41 handoff
 - avoid pulling a web framework into the substrate
 
 Definition of done:
@@ -729,7 +756,7 @@ Scope:
   - `sifr.net`
   - `sifr.tls`
   - `sifr.url`
-  - public HTTP protocol/substrate types that M0 accepts
+  - public HTTP protocol/substrate types under `sifr.http`
   - rejected/deferred CPython-shaped surfaces and why they are not recommended APIs
   - text/i18n dependency decisions and blocked surface states
   - concurrency/runtime dependency decisions and blocked surface states
@@ -817,12 +844,14 @@ The execution ledger must record:
 - Every public module added to embedded stdlib sources must have canonical `sifr.*` import-resolution tests, type-check tests, e2e pass tests, and negative diagnostics for unsupported bare CPython import forms.
 - Every public network/web API must pass the No-Toy-Module Gate and Maintenance Burden Test.
 
-## Open Planning Questions To Resolve In `milestone_network_http_0`
+## Resolved Planning Decisions For M0
 
-1. Which exact `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http` paths are public, and which private runtime modules remain internal implementation details?
-2. Which Rust TLS root strategy is acceptable for deterministic local tests and production binaries?
-3. Which HTTP transport dependency stack meets binary-size, safety, and maintenance goals without importing a web framework into substrate code?
-4. Which host-specific socket/readiness constants or behaviors are needed internally, waived, or host-limited?
-5. Which external-network CPython tests are converted to loopback fixtures versus retained as non-blocking ecosystem signal?
-6. Does UDP enter M1 based on concrete near-term production workloads, or remain deferred?
-7. Which public HTTP protocol types, if any, remain stable substrate API before Phase 41 and the HTTP client phase?
+M0 validates these decisions and records dependency audit evidence; it does not reopen them without a concrete blocking finding.
+
+1. Public paths are `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; `_sifr.*` and Rust modules remain implementation details.
+2. Production TLS verification uses `rustls-platform-verifier`; deterministic tests use explicit `rcgen` roots.
+3. HTTP transport uses `hyper`, `hyper-util`, and `h2`; no web framework or high-level client crate enters this substrate.
+4. Host-specific socket options are limited to the socket2 list above and recorded as portable or host-limited.
+5. External-network CPython tests are `external-signal`; useful localnet behavior is converted to loopback.
+6. UDP is accepted in M1 as a constrained datagram API; advanced datagram features are deferred or host-limited.
+7. Stable HTTP substrate types live under `sifr.http`; public client/server products remain future phases.

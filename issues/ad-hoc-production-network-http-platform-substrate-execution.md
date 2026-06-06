@@ -12,7 +12,7 @@ The original broad planning scan was split into three implementation phases:
 - [ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md](./ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md) tracks concurrency/process/runtime substrate.
 - [ad-hoc-production-text-i18n-stdlib-parity-execution.md](./ad-hoc-production-text-i18n-stdlib-parity-execution.md) tracks text/Unicode/encoding/i18n runtime substrate.
 
-Execution order: this is the third phase in the split production-stdlib sequence. Text/i18n runs first, concurrency/runtime runs second, and network/HTTP consumes both provider phases. M0 design, dependency selection, and binary/protocol-only prototypes may happen earlier, but production network/HTTP implementation must not close text-dependent or runtime-dependent surfaces until the relevant provider gates are complete.
+Execution order: this is the third phase in the split production-stdlib sequence. Text/i18n runs first, concurrency/runtime runs second, and network/HTTP consumes both provider phases. Network/HTTP implementation must not start early or close text-dependent/runtime-dependent surfaces without the relevant provider milestones recorded as complete.
 
 CPython-shaped public networking/web modules are no longer this phase's objective. `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib.request`, `sifr.http.client`, `sifr.http.server`, and `sifr.socketserver` are deferred or rejected unless a later product phase proves migration demand and delegates to the Sifr-native substrate.
 
@@ -72,6 +72,15 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Final implementation-readiness review:
   - `reviews/ad-hoc-production-network-http-substrate-review-pass-29-final-readiness.md`
   - Result: `PASS`; HTTP/2 conformance DoD coverage, concurrency/runtime dependency classification, M3/M4 header ownership, and reviewer tracking were tightened after review.
+- Unmade-decision discovery review:
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-31-unmade-decisions-discovery.md`
+  - Result: `FAIL`; 14 unresolved decisions were found across rustls provider/roots, DNS, stream ownership, `sifr.http` path, UDP, Tower, OpenTelemetry, `x509-parser`, `socket2`, mTLS, multipart, upgrade hooks, and Tokio features. The phase doc now records fixed decisions for each.
+- Decision remediation review:
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-32-decisions-remediation.md`
+  - Result: `FAIL`; all 14 decisions were resolved, but `tower-service` crate identity and the M2 mTLS definition-of-done gate needed tightening. Both findings were remediated.
+- Final decision-readiness review:
+  - `reviews/ad-hoc-production-network-http-substrate-review-pass-33-final-decision-readiness.md`
+  - Result: `PASS`; no unmade decisions or contradictions remained. Cosmetic Tower/Tokio wording was tightened afterward.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -103,6 +112,8 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Add mTLS/client certificate authentication as an M0/M2 TLS classification item.
 - [x] Require HTTP/2 loopback coverage for SETTINGS negotiation, RST_STREAM cancellation, GOAWAY graceful shutdown, and HPACK correctness edge cases selected in the M0 conformance inventory.
 - [x] Make M3 the owner of canonical URL/header/cookie primitives and M4 the consumer to prevent duplicate HTTP representations.
+- [x] Resolve ecosystem and API decisions before M0: Tokio feature set, rustls `aws-lc-rs`, `rustls-platform-verifier`, `tokio::net::lookup_host`, owned-buffer stream I/O, constrained UDP, `socket2` option set, `sifr.http` path, internal Tower service shape, OTel deferral, mTLS inclusion, multipart deferral, internal-only upgrade hooks, and external CPython test handling.
+- [x] Pin the service handoff crate to `tower-service` only and add an M2 DoD gate for mTLS loopback success/rejection.
 
 ## Implementation PRs
 
@@ -158,6 +169,7 @@ Each milestone must record:
 - CPython tests scanned.
 - Public APIs classified as production-public, production-substrate, internal-test, deferred, rejected, blocked, or host-limited.
 - Rust ecosystem crates accepted/rejected with feature flags, public API leak checks, typed error mapping, panic/unsafe audit notes, and conformance evidence.
+- Any change to a resolved ecosystem decision must include a blocking implementation finding, replacement decision, and the same dependency audit fields.
 - Text/i18n dependency states recorded for URL, percent encoding, query/form, header, body, cookie, content-type/charset, certificate-display, diagnostics, observability, demos, Phase 41 handoff, and HTTP client handoff surfaces.
 - Concurrency/runtime dependency states recorded for async suspension points, server accept/dispatch/shutdown, blocking sync helpers, offload, signal-driven shutdown, and subprocess/process-pool-dependent demos.
 - CPython behavior mined into Sifr-native tests.
