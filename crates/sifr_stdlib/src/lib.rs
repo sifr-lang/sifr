@@ -15,6 +15,7 @@ mod math_test;
 mod platform_misc;
 mod sources;
 mod sys_fs;
+mod text_encoding;
 
 use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_time};
 use crypto_regex_uuid::{intrinsic_crypto, intrinsic_regex, intrinsic_uuid};
@@ -30,6 +31,7 @@ use platform_misc::{
 };
 pub use sources::{StdlibSource, STDLIB_SOURCES};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
+use text_encoding::intrinsic_encoding;
 
 /// Match data for a bare CPython-style stdlib module name that should be
 /// imported through Sifr's `sifr.*` namespace instead.
@@ -75,6 +77,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.test" => Some(intrinsic_test()),
         "_sifr.collections" => Some(intrinsic_collections()),
         "_sifr.bytes" => Some(intrinsic_bytes()),
+        "_sifr.encoding" => Some(intrinsic_encoding()),
         "_sifr.time" => Some(intrinsic_time()),
         "_sifr.crypto" => Some(intrinsic_crypto()),
         "_sifr.regex" => Some(intrinsic_regex()),

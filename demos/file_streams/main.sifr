@@ -1,6 +1,6 @@
 # Reference: ad_hoc_runtime_wave0
 # Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
-from sifr.io import write_text, read_text, exists
+from sifr.io import write_text, read_text, read_lines, exists
 from sifr.os import remove_file
 
 
@@ -12,13 +12,8 @@ def main():
 
     try:
         _w: None = write_text(path, "alpha\nbeta")
-        fh = open(path, "r")
-        first: str | None = fh.readline()
-        second: str | None = fh.readline()
-        third: str | None = fh.readline()
-        fh.close()
-
-        text_ok = str(first) == "alpha" and str(second) == "beta" and third is None
+        lines: list[str] = read_lines(path)
+        text_ok = len(lines) == 2 and lines[0] == "alpha" and lines[1] == "beta"
 
         wb = open(path, "wb")
         _bw: None = wb.write_bytes(b"raw-bytes")

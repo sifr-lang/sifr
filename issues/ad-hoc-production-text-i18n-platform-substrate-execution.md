@@ -20,7 +20,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 
 ## Milestone Checklist
 
-- [ ] `milestone_text_i18n_0`: Product Boundary And Rust Lowering Contract
+- [x] `milestone_text_i18n_0`: Product Boundary And Rust Lowering Contract
 - [ ] `milestone_text_i18n_1`: Encoding And Explicit Text I/O
 - [ ] `milestone_text_i18n_2`: Unicode Core
 - [ ] `milestone_text_i18n_2_5`: Unicode Segmentation
@@ -194,6 +194,12 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - M4: pending.
 - M5: pending.
 
+## Implementation Reviews
+
+- M1 pass 1: `reviews/ad-hoc-production-text-i18n-m1-implementation-review-pass-1.md`; result `FAIL`, blockers B1-B7 remediated.
+- M1 pass 2: `reviews/ad-hoc-production-text-i18n-m1-implementation-review-pass-2.md`; result `PASS` with closure preconditions C1/C2 and non-blocking N2 followed up.
+- M1 pass 3: `reviews/ad-hoc-production-text-i18n-m1-implementation-review-pass-3.md`; result `PASS`, no blockers and no re-review required.
+
 ## Validation Evidence
 
 Record local validation for each milestone before opening its PR.
@@ -243,6 +249,51 @@ M0 post-review-remediation focused validation:
 - `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 167.66s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
 - `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 689.72s, 73/73 e2e pass fixtures, non-blocking group-skew advisory.
 
+M1 focused validation on branch `text-i18n-m1-encoding-io`:
+
+- `cargo check -p sifr_runtime` passed.
+- `cargo test -p sifr_stdlib intrinsic -- --nocapture` passed.
+- `cargo check -p sifr_codegen` passed.
+- `cargo check -p sifr_lowering` passed.
+- `cargo test -p sifr_lowering bytes -- --nocapture` passed.
+- `cargo test -p sifr_stdlib features -- --nocapture` passed.
+- `cargo test -p sifr_codegen registry_core -- --nocapture` passed.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr` passed.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` passed for 375 fail fixtures; observed the same two existing fail-corpus internal-compiler-error panic messages printed by the harness.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `cargo test -p sifr_stdlib` passed.
+- `cargo test -p sifr -- stdlib` passed.
+- `cargo clippy --workspace -- -D warnings` passed.
+- `scripts/run_e2e_pass.sh --profile create-pr` passed with 67/67 pass fixtures.
+- `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 184.25s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
+
+M1 post-review-remediation focused validation:
+
+- `cargo test -p sifr_diagnostics codes -- --nocapture` passed.
+- `cargo check -p sifr_codegen` passed.
+- `cargo check -p sifr_lowering` passed.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr` passed.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` passed for 381 fail fixtures; observed the same two existing fail-corpus internal-compiler-error panic messages printed by the harness.
+- `scripts/run_e2e_pass.sh --profile create-pr` passed with 67/67 pass fixtures.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `cargo clippy --workspace -- -D warnings` passed.
+- `cargo test -p sifr_stdlib` passed.
+- `cargo test -p sifr -- stdlib` passed.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_readline.sifr` passed after fixing optional list-index narrowing in the updated explicit-I/O fixture.
+- `cargo test -p sifr --test e2e test_emit_pass_fixtures_do_not_include_unwrap_or_expect -- --nocapture` passed.
+- `cargo test -p sifr_codegen builtin_open_text_roots_text_handle_support -- --nocapture` passed after rooting compiler-special text-open stdlib dependencies.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_read.sifr` passed.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_write.sifr` passed.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr` passed.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_logging_consolidated.sifr` passed.
+- `scripts/run_e2e_pass.sh --profile merge` passed with 73/73 pass fixtures.
+- `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 183.44s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
+- `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 589.16s, 73/73 e2e pass fixtures, hardening variants 34/34 with 0 failures, non-blocking warm-cache/group-skew advisories.
+
 ## CPython Scan Evidence
 
 Each milestone must record:
@@ -255,6 +306,14 @@ Each milestone must record:
 - Python-shaped surfaces classified as `adapted-for-sifr-api`, `waived-with-rationale`, `rejected`, or `deferred-to-adapter-phase`.
 - `unsupported-with-diagnostic`, `waived-with-rationale`, `host-limited`, and `deferred-to-adapter-phase` surfaces.
 - Sifr e2e pass/fail fixtures added.
+
+M1 scan evidence:
+
+- CPython source/docs/tests scanned: `Lib/codecs.py`, `Lib/encodings/*.py`, `Lib/encodings/aliases.py`, `Doc/library/codecs.rst`, `Lib/test/test_codecs.py`, `Lib/test/test_capi/test_codecs.py`, `Modules/_codecsmodule.c`, and `Modules/cjkcodecs/*` from `SIFR_CPYTHON_CHECKOUT=/Users/yaseralnajjar/work/sifr/cpython`.
+- Standards and Rust crate sources reviewed: WHATWG-compatible label behavior through `encoding_rs 0.8.35` crate metadata and docs; Rust `String`/`str` valid UTF-8 invariants; M0 Tier 0/Tier 1 alias table in `verification/stdlib/text_i18n_substrate_inventory.md`.
+- Production APIs classified as `production-public` / `stable-public-api`: `sifr.encoding.Encoding`, `DecodeError`, `EncodeError`, typed handlers, `DecodeOutcome`, `EncodeOutcome`, `Decoder`, `Encoder`, `sifr.io.open_text`, and compiler-special `open(..., encoding=..., errors=...)` over the same substrate.
+- Python-shaped surfaces classified as `unsupported-with-diagnostic` or `deferred-to-adapter-phase`: `io.TextIOWrapper`, public `codecs` registry mutation, dynamic codec/error-handler registration, public `encodings.*` module parity, Tier 2 CJK codecs, text-to-text codecs, and bytes-to-bytes pseudo-codecs.
+- Sifr fixtures added: `crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_textiowrapper_unsupported.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_open_without_encoding.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_mode.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_dynamic_errors_handler.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_errors_handler.sifr`, `crates/sifr/tests/e2e/fail/text_i18n_decode_encode_only_handler.sifr`, and `crates/sifr/tests/e2e/fail/text_i18n_codecs_register_unsupported.sifr`. The prior UTF-8-only negative fixture was removed because `str.encode("latin-1")` is supported by M1.
 
 ## Waiver Index
 

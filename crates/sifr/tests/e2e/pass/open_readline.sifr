@@ -1,19 +1,17 @@
 
-from sifr.io import write_text
+from sifr.io import read_lines, write_text
 
 def main():
     path: str = "/tmp/sifr_open_readline_test.txt"
     try:
         _: None = write_text(path, "first line\nsecond line\n")
-        f = open(path, "r")
-        line1: str | None = f.readline()
+        lines: list[str] = read_lines(path)
+        line1: str | None = lines[0]
+        line2: str | None = lines[1]
         if line1 is not None:
             assert str("line1 = " + line1) == 'line1 = first line'
-        line2: str | None = f.readline()
         if line2 is not None:
             assert str("line2 = " + line2) == 'line2 = second line'
-        line3: str | None = f.readline()
-        assert str("eof = " + str(line3 is None)) == 'eof = true'
-        f.close()
+        assert str("line-count = " + str(len(lines))) == 'line-count = 2'
     except IOError as e:
         _ = str("error: " + e.message)

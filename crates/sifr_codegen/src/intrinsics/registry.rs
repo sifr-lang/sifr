@@ -5,6 +5,7 @@ mod calendar;
 mod collections;
 mod datetime;
 mod digest_format;
+mod encoding;
 mod env;
 mod file_handles;
 mod gzip;
@@ -15,6 +16,7 @@ mod io;
 mod json;
 mod logging;
 mod math;
+mod open_text_handles;
 mod os;
 mod pathlib;
 mod platform;
@@ -46,6 +48,20 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "json_dumps_value_exact"
         | "json_dumps_value_web"
         | "json_dumps_value_string_ints" => &[StdlibFeature::SifrRuntime],
+        "encoding_is_supported"
+        | "encoding_canonical_label"
+        | "encoding_decode_text"
+        | "encoding_decode_recoveries"
+        | "encoding_decode_outcome"
+        | "encoding_decode_incremental_outcome"
+        | "encoding_decode_incremental_pending"
+        | "encoding_encode_bytes"
+        | "encoding_encode_recoveries"
+        | "encoding_encode_outcome"
+        | "str_encode_utf8_result"
+        | "str_encode_utf8_result_with_encoding"
+        | "decode_utf8"
+        | "decode_utf8_with_encoding" => &[StdlibFeature::EncodingRs],
         _ => &[],
     }
 }
@@ -162,6 +178,7 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "gettempdir" => (io::lower_gettempdir(args), None),
         "makedirs" => (io::lower_makedirs(args), None),
         "builtin_open" => (file_handles::lower_builtin_open(args), None),
+        "builtin_open_text" => (open_text_handles::lower_builtin_open_text(args), None),
         "open_file" => (file_handles::lower_open_file(args), None),
         "file_read" => (file_handles::lower_file_read(args), None),
         "file_write" => (file_handles::lower_file_write(args), None),
@@ -247,14 +264,63 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             collections::lower_defaultdict_set(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "encode_utf8" => (bytes::lower_encode_utf8(args), None),
-        "str_encode_utf8_result" => (bytes::lower_str_encode_utf8_result(args), None),
-        "str_encode_utf8_result_with_encoding" => (
-            bytes::lower_str_encode_utf8_result_with_encoding(args),
-            None,
+        "encoding_is_supported" => (
+            encoding::lower_encoding_is_supported(args),
+            Some(StdlibFeature::SifrRuntime),
         ),
-        "decode_utf8" => (bytes::lower_decode_utf8(args), None),
-        "decode_utf8_with_encoding" => (bytes::lower_decode_utf8_with_encoding(args), None),
+        "encoding_canonical_label" => (
+            encoding::lower_encoding_canonical_label(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encoding_decode_text" => (
+            encoding::lower_encoding_decode_text(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encoding_decode_recoveries" => (
+            encoding::lower_encoding_decode_recoveries(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encoding_decode_outcome" => (
+            encoding::lower_encoding_decode_outcome(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encoding_decode_incremental_outcome" => (
+            encoding::lower_encoding_decode_incremental_outcome(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encoding_decode_incremental_pending" => (
+            encoding::lower_encoding_decode_incremental_pending(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encoding_encode_bytes" => (
+            encoding::lower_encoding_encode_bytes(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encoding_encode_recoveries" => (
+            encoding::lower_encoding_encode_recoveries(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encoding_encode_outcome" => (
+            encoding::lower_encoding_encode_outcome(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "encode_utf8" => (bytes::lower_encode_utf8(args), None),
+        "str_encode_utf8_result" => (
+            encoding::lower_str_encode_result(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "str_encode_utf8_result_with_encoding" => (
+            encoding::lower_str_encode_result(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "decode_utf8" => (
+            encoding::lower_bytes_decode_result(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
+        "decode_utf8_with_encoding" => (
+            encoding::lower_bytes_decode_result(args),
+            Some(StdlibFeature::SifrRuntime),
+        ),
         "bytes_to_hex" => (bytes::lower_bytes_to_hex(args), None),
         "bytes_to_hex_strict" => (bytes::lower_bytes_to_hex_strict(args), None),
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),

@@ -41,5 +41,6 @@ Scope: architecture lock for first-class `bytes` and binary-surface foundation
   - `crates/sifr/tests/e2e/fail/bytes_memoryview_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/bytes_buffer_protocol_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/bytes_implicit_str_bytes_coercion_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/bytes_non_utf8_codec_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/bytes_bytes_subclass_unsupported.sifr`
+
+M1 update: non-UTF-8 codec labels moved from unsupported bytes-scope behavior to the production text/i18n encoding substrate. Coverage now lives in `crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr`.

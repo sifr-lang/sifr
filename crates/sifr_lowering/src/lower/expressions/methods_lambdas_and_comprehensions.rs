@@ -198,9 +198,7 @@ pub(in crate::lower) fn lower_method_call(
         } else {
             "str_encode_utf8_result_with_encoding"
         };
-        if let Some(encoding) = args.first().cloned() {
-            intrinsic_args.push(encoding);
-        }
+        intrinsic_args.extend(args.iter().cloned());
         return Some(HirExpr::Call {
             func: intrinsic_name.to_string(),
             args: intrinsic_args,
@@ -214,9 +212,7 @@ pub(in crate::lower) fn lower_method_call(
         } else {
             "decode_utf8_with_encoding"
         };
-        if let Some(encoding) = args.first().cloned() {
-            intrinsic_args.push(encoding);
-        }
+        intrinsic_args.extend(args.iter().cloned());
         return Some(HirExpr::Call {
             func: intrinsic_name.to_string(),
             args: intrinsic_args,

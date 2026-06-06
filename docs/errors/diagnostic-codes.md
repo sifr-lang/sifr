@@ -17,6 +17,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
 | `DECIMAL` | `SIFR-DECIMAL-0000` | Decimal literal and fixed-point arithmetic diagnostics. |
 | `INT` | `SIFR-INT-0000` | Exact and fixed-width integer model diagnostics. |
+| `IO` | `SIFR-IO-0000` | File and stream text/binary boundary diagnostics. |
+| `ENCODING` | `SIFR-ENCODING-0000` | Text encoding and error-handler diagnostics. |
 | `CALL` | `SIFR-CALL-0000` | Function, method, constructor, and overload call diagnostics. |
 | `OWN` | `SIFR-OWN-0000` | Ownership, borrow, move, and lifetime diagnostics. |
 | `FLOW` | `SIFR-FLOW-0000` | Control-flow, reachability, and narrowing diagnostics. |
@@ -142,6 +144,9 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-STDLIB-0001`](SIFR-STDLIB-0001.md) | Error | Unsupported standard-library constructor, method, or surface. |
 | [`SIFR-STDLIB-0003`](SIFR-STDLIB-0003.md) | Error | Embedded standard-library bootstrap failure. |
 | [`SIFR-STDLIB-0004`](SIFR-STDLIB-0004.md) | Error | Standard-library cache build or reuse failure. |
+| [`SIFR-IO-0801`](SIFR-IO-0801.md) | Error | Text-mode open requires an explicit encoding. |
+| [`SIFR-IO-0802`](SIFR-IO-0802.md) | Error | Open mode must be statically known. |
+| [`SIFR-ENCODING-0803`](SIFR-ENCODING-0803.md) | Error | Encoding error handler must be statically known. |
 | [`SIFR-WORKSPACE-0001`](SIFR-WORKSPACE-0001.md) | Error | Malformed workspace manifest. |
 | [`SIFR-WORKSPACE-0002`](SIFR-WORKSPACE-0002.md) | Error | Workspace source root escapes the workspace root. |
 | [`SIFR-WORKSPACE-0003`](SIFR-WORKSPACE-0003.md) | Error | Workspace source root is not a directory. |
@@ -213,6 +218,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-ASYNC-0000` | `ASYNC` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INT-0000` | `INT` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-IO-0000` | `IO` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-ENCODING-0000` | `ENCODING` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INT-0002` | `INT` | Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets. |
 | `SIFR-INT-0008` | `INT` | Reserved for fixed-width array, tensor, or dataframe arithmetic without an explicit overflow policy. |
 | `SIFR-INT-0009` | `INT` | Reserved for JSON or web-safe integer serialization policy failures. |

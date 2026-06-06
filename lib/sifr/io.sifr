@@ -2,6 +2,18 @@
 # Provides open(), open_binary(), file handle classes, and in-memory stream wrappers.
 from _sifr.fs import open_file, file_read, file_write, file_readline, file_readlines, file_close, file_read_bytes, file_write_bytes
 from _sifr.fs import read_text, write_text, exists, read_lines, append_text
+from sifr.encoding import (
+    Encoding,
+    DecodeError,
+    DecodeErrorHandler,
+    EncodeError,
+    EncodeErrorHandler,
+    decode,
+    encode,
+    utf8,
+    strict_decode_handler,
+    strict_encode_handler,
+)
 
 
 def _closed_stream_error() -> str:
@@ -224,6 +236,130 @@ class BinaryFileHandle:
         self.close()
 
 
+def _text_binary_mode(mode: str) -> Result[str, IOError]:
+    if "b" in mode:
+        raise IOError("open_text requires a text mode without 'b'")
+    if mode == "r" or mode == "rt":
+        return "rb"
+    if mode == "w" or mode == "wt":
+        return "wb"
+    if mode == "a" or mode == "at":
+        return "ab"
+    raise IOError("invalid text mode: " + mode)
+
+
+def _text_encoding_or_default(enc: Encoding | None) -> Encoding:
+    if enc is not None:
+        return Encoding(enc.label + "")
+    return Encoding("utf-8")
+
+
+def _decode_errors_or_default(errors: DecodeErrorHandler | None) -> DecodeErrorHandler:
+    if errors is not None:
+        return DecodeErrorHandler(errors.name + "")
+    return strict_decode_handler()
+
+
+def _encode_errors_from_decode_errors(errors: DecodeErrorHandler) -> EncodeErrorHandler:
+    return EncodeErrorHandler(errors.name + "")
+
+
+class TextFileHandle:
+    _binary: BinaryFileHandle
+    _encoding: Encoding
+    _decode_errors: DecodeErrorHandler
+    _encode_errors: EncodeErrorHandler
+
+    def __init__(self, binary: BinaryFileHandle, enc: Encoding, decode_errors: DecodeErrorHandler, encode_errors: EncodeErrorHandler) -> None:
+        self._binary = binary
+        self._encoding = enc
+        self._decode_errors = decode_errors
+        self._encode_errors = encode_errors
+
+    def close(self) -> None:
+        self._binary.close()
+
+    def closed(self) -> bool:
+        return self._binary.closed()
+
+    def flush(self) -> Result[None, IOError]:
+        return self._binary.flush()
+
+    def read(self) -> Result[str, IOError]:
+        try:
+            data: bytes = self._binary.read_bytes()
+            text: str = decode(data, self._encoding, self._decode_errors)
+            return text
+        except IOError as e:
+            raise IOError(e.message)
+        except DecodeError as e:
+            raise IOError("text decode failed: " + e.message)
+
+    def write(self, text: str) -> Result[None, IOError]:
+        try:
+            data: bytes = encode(text, self._encoding, self._encode_errors)
+            result: None = self._binary.write_bytes(data)
+            return result
+        except EncodeError as e:
+            raise IOError("text encode failed: " + e.message)
+        except IOError as e:
+            raise IOError(e.message)
+
+    def readline(self) -> Result[str | None, IOError]:
+        raise IOError("TextFileHandle.readline is deferred; use read().split(\"\\n\")")
+
+    def readlines(self) -> Result[list[str], IOError]:
+        raise IOError("TextFileHandle.readlines is deferred; use read().split(\"\\n\")")
+
+    def readable(self) -> bool:
+        return self._binary.readable()
+
+    def writable(self) -> bool:
+        return self._binary.writable()
+
+    def seekable(self) -> bool:
+        return self._binary.seekable()
+
+    def __enter__(self) -> TextFileHandle:
+        return self
+
+    def __exit__(self) -> None:
+        self.close()
+
+
+class TextReader:
+    _closed: bool
+
+    def __init__(self) -> None:
+        self._closed = False
+
+    def read(self) -> Result[str, IOError]:
+        raise IOError("TextReader direct construction is unsupported; use open_text")
+
+    def readline(self) -> Result[str | None, IOError]:
+        raise IOError("TextReader.readline is deferred; use read().split(\"\\n\")")
+
+    def readlines(self) -> Result[list[str], IOError]:
+        raise IOError("TextReader.readlines is deferred; use read().split(\"\\n\")")
+
+    def close(self) -> None:
+        self._closed = True
+
+
+class TextWriter:
+    _closed: bool
+
+    def __init__(self) -> None:
+        self._closed = False
+
+    def write(self, text: str) -> Result[None, IOError]:
+        _ = text
+        raise IOError("TextWriter direct construction is unsupported; use open_text")
+
+    def close(self) -> None:
+        self._closed = True
+
+
 class StringIO:
     _buffer: str
     _cursor: int
@@ -427,5 +563,17 @@ def open_binary(path: str, mode: str = "rb") -> Result[BinaryFileHandle, IOError
     try:
         handle: int = open_file(path, mode)
         return BinaryFileHandle(handle, mode)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def open_text(path: str, mode: str = "r", encoding: Encoding | None = None, errors: DecodeErrorHandler | None = None) -> Result[TextFileHandle, IOError]:
+    try:
+        binary_mode: str = _text_binary_mode(mode)
+        text_encoding: Encoding = _text_encoding_or_default(encoding)
+        decode_errors: DecodeErrorHandler = _decode_errors_or_default(errors)
+        encode_errors: EncodeErrorHandler = _encode_errors_from_decode_errors(decode_errors)
+        binary: BinaryFileHandle = open_binary(path, binary_mode)
+        return TextFileHandle(binary, text_encoding, decode_errors, encode_errors)
     except IOError as e:
         raise IOError(e.message)

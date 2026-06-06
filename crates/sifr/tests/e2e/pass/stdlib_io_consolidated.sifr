@@ -48,13 +48,8 @@ def collect_open_actual() -> list[bool]:
     cleanup_ok: bool = False
     try:
         _w: None = write_text(text_path, "a\nb\nc")
-        f = open(text_path, "r")
-        first: str | None = f.readline()
-        second: str | None = f.readline()
-        third: str | None = f.readline()
-        fourth: str | None = f.readline()
-        f.close()
-        open_lines_ok = str(first) == "a" and str(second) == "b" and str(third) == "c" and fourth is None
+        opened_lines: list[str] = read_lines(text_path)
+        open_lines_ok = len(opened_lines) == 3 and opened_lines[0] == "a" and opened_lines[1] == "b" and opened_lines[2] == "c"
 
         bw = open(binary_path, "wb")
         _wb: None = bw.write_bytes(b"abc")
@@ -67,13 +62,13 @@ def collect_open_actual() -> list[bool]:
         _ = str(e.message)
 
     try:
-        _missing = open("/tmp/sifr_stdlib_io_consolidated_missing.txt", "r")
+        _missing = open("/tmp/sifr_stdlib_io_consolidated_missing.txt", "r", encoding="utf-8")
     except IOError as e:
         _ = str(e.message)
         missing_open_rejected = True
 
     try:
-        _bad = open(text_path, "q")
+        _bad = open(text_path, "q", encoding="utf-8")
     except IOError as e:
         _ = str(e.message)
         invalid_mode_rejected = True

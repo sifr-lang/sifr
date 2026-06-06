@@ -1,5 +1,5 @@
 # Reference: phase_psp_d1_filesystem_paths_archives
-from sifr.io import open, read_text, write_text, exists
+from sifr.io import read_lines, read_text, write_text, exists
 from sifr.pathlib import Path
 from sifr.glob import glob
 from sifr.shutil import copy, move_file, rmtree, which, disk_usage
@@ -27,9 +27,8 @@ def collect_io_path_glob_actual() -> list[bool]:
         _w1: None = write_text(path, "line1\nline2")
         _w2: None = write_text(sub_path, "sub")
 
-        with open(path, "r") as handle:
-            lines: list[str] = handle.readlines()
-            write_read_ok = len(lines) == 2 and lines[0] == "line1" and lines[1] == "line2"
+        lines: list[str] = read_lines(path)
+        write_read_ok = len(lines) == 2 and lines[0] == "line1" and lines[1] == "line2"
 
         p: Path = Path(path)
         path_meta_ok = p.exists() and p.is_file() and p.suffix() == ".txt" and p.stem() == "alpha"

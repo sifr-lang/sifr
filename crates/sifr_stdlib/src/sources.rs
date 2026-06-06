@@ -19,6 +19,10 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
         source: include_str!("../../../lib/sifr/bytes.sifr"),
     },
     StdlibSource {
+        module: "sifr.encoding",
+        source: include_str!("../../../lib/sifr/encoding.sifr"),
+    },
+    StdlibSource {
         module: "sifr.base64",
         source: include_str!("../../../lib/sifr/base64.sifr"),
     },

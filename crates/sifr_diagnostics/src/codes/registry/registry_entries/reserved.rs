@@ -11,6 +11,8 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-ASYNC-0000", "ASYNC"),
     reserved_family_base("SIFR-DECIMAL-0000", "DECIMAL"),
     reserved_family_base("SIFR-INT-0000", "INT"),
+    reserved_family_base("SIFR-IO-0000", "IO"),
+    reserved_family_base("SIFR-ENCODING-0000", "ENCODING"),
     reserved_code(
             "SIFR-INT-0002",
             "INT",

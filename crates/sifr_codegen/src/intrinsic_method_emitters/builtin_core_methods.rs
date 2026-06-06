@@ -15,6 +15,7 @@ impl RustEmitter {
         if matches!(
             func,
             "builtin_open"
+                | "builtin_open_text"
                 | "open_file"
                 | "file_read"
                 | "file_write"
@@ -28,6 +29,17 @@ impl RustEmitter {
         }
         if func == "builtin_open" {
             self.used_stdlib_modules.insert("io".to_string());
+        }
+        if func == "builtin_open_text" {
+            self.used_stdlib_modules.insert("sifr.io".to_string());
+            self.imported_stdlib_names
+                .entry("sifr.io".to_string())
+                .or_default()
+                .extend(
+                    ["BinaryFileHandle", "TextFileHandle"]
+                        .into_iter()
+                        .map(str::to_string),
+                );
         }
         if matches!(func, "set_global_level" | "get_global_level") {
             self.runtime_needs.require(crate::RuntimeNeed::LoggingState);
@@ -360,6 +372,32 @@ impl RustEmitter {
             }
             _ => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn builtin_open_text_roots_text_handle_support() {
+        let mut emitter = RustEmitter::new();
+        let lowered = intrinsics::LoweredIntrinsic {
+            expr: RustExpr::Ident("__value".to_string()),
+            required_feature: None,
+            additional_required_features: &[],
+        };
+
+        emitter.apply_intrinsic_registry_side_effects("builtin_open_text", &lowered);
+
+        assert!(emitter.runtime_needs.file_handles());
+        assert!(emitter.used_stdlib_modules.contains("sifr.io"));
+        let io_roots = emitter
+            .imported_stdlib_names
+            .get("sifr.io")
+            .expect("sifr.io roots");
+        assert!(io_roots.contains("BinaryFileHandle"));
+        assert!(io_roots.contains("TextFileHandle"));
     }
 }
 

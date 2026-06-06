@@ -81,6 +81,12 @@ impl DiagnosticCode {
     pub const INT_BOOL_INTEGER_COMPARISON: Self = Self::new("SIFR-INT-0007", Severity::Error);
     pub const INT_BIGINT_TRANSITION_ALIAS: Self = Self::new("SIFR-INT-0011", Severity::Warning);
 
+    pub const IO_TEXT_OPEN_REQUIRES_ENCODING: Self = Self::new("SIFR-IO-0801", Severity::Error);
+    pub const IO_OPEN_MODE_REQUIRES_LITERAL: Self = Self::new("SIFR-IO-0802", Severity::Error);
+
+    pub const ENCODING_HANDLER_REQUIRES_STATIC_VALUE: Self =
+        Self::new("SIFR-ENCODING-0803", Severity::Error);
+
     pub const CALL_WRONG_POSITIONAL_COUNT: Self = Self::new("SIFR-CALL-0001", Severity::Error);
     pub const CALL_UNEXPECTED_KEYWORD: Self = Self::new("SIFR-CALL-0002", Severity::Error);
     pub const CALL_DUPLICATE_ARGUMENT: Self = Self::new("SIFR-CALL-0003", Severity::Error);
@@ -389,6 +395,16 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-INT-0000",
     },
     DiagnosticFamily {
+        name: "IO",
+        summary: "File and stream text/binary boundary diagnostics.",
+        reserved_base: "SIFR-IO-0000",
+    },
+    DiagnosticFamily {
+        name: "ENCODING",
+        summary: "Text encoding and error-handler diagnostics.",
+        reserved_base: "SIFR-ENCODING-0000",
+    },
+    DiagnosticFamily {
         name: "CALL",
         summary: "Function, method, constructor, and overload call diagnostics.",
         reserved_base: "SIFR-CALL-0000",
@@ -562,6 +578,9 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING,
     DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
     DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
+    DiagnosticCode::IO_TEXT_OPEN_REQUIRES_ENCODING,
+    DiagnosticCode::IO_OPEN_MODE_REQUIRES_LITERAL,
+    DiagnosticCode::ENCODING_HANDLER_REQUIRES_STATIC_VALUE,
     DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
     DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
     DiagnosticCode::CALL_DUPLICATE_ARGUMENT,

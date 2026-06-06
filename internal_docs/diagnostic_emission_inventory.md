@@ -179,7 +179,6 @@ bytes_from_hex_non_string.sifr
 bytes_from_ints_non_int_list.sifr
 bytes_implicit_str_bytes_coercion_unsupported.sifr
 bytes_memoryview_unsupported.sifr
-bytes_non_utf8_codec_unsupported.sifr
 bytes_read_bytes_not_list.sifr
 bytes_subscript_assignment_unsupported.sifr
 bytes_write_bytes_rejects_int_list.sifr

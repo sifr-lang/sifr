@@ -1,6 +1,7 @@
 //! Runtime support shared by generated Sifr projects.
 #![cfg_attr(test, allow(clippy::expect_used))]
 
+pub mod encoding;
 mod int;
 pub mod json;
 

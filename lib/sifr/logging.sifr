@@ -1,6 +1,7 @@
 # sifr.logging — Deterministic single-process logging
 from _sifr.logging import set_global_level, get_global_level
-from sifr.io import FileHandle, open
+from sifr.encoding import utf8
+from sifr.io import TextFileHandle, open_text
 
 # Log level constants (CPython-compatible)
 DEBUG: int = 10
@@ -159,7 +160,7 @@ class FileHandler:
             return
         line: str = self._formatter.format(level, name, msg) + "\n"
         try:
-            fh: FileHandle = open(self._path, "a")
+            fh: TextFileHandle = open_text(self._path, "a", encoding=utf8())
             try:
                 _: None = fh.write(line)
             except IOError as e2:
@@ -268,7 +269,7 @@ class Logger:
             if self._handler_allows(level_num) and self._handler_path != "":
                 line: str = self._handler_line(level, msg) + "\n"
                 try:
-                    fh: FileHandle = open(self._handler_path, "a")
+                    fh: TextFileHandle = open_text(self._handler_path, "a", encoding=utf8())
                     try:
                         _: None = fh.write(line)
                     except IOError as e2:
@@ -282,7 +283,7 @@ class Logger:
         print(line)
         if self._log_path != "":
             try:
-                fh: FileHandle = open(self._log_path, "a")
+                fh: TextFileHandle = open_text(self._log_path, "a", encoding=utf8())
                 try:
                     _: None = fh.write(line + "\n")
                 except IOError as e2:
