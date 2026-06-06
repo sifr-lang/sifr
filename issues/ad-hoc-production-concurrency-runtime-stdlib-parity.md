@@ -24,7 +24,7 @@ This phase does not add backward-compatibility or legacy support. Parity means t
 
 ## Related Phases
 
-- Network/web stdlib parity remains in [ad-hoc-production-stdlib-platform-parity.md](./ad-hoc-production-stdlib-platform-parity.md).
+- Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md).
 - Text and internationalization parity is tracked in [ad-hoc-production-text-i18n-stdlib-parity.md](./ad-hoc-production-text-i18n-stdlib-parity.md).
 - Subprocess `text=True`, `encoding=...`, `errors=...`, locale-aware formatting, and warning text encoding depend on text/i18n `milestone_text_i18n_1: Codecs Registry, Encodings, And Text I/O Integration`. Until that milestone closes, this phase implements binary pipe semantics and records text-mode APIs as `blocked-on-text-i18n-m1`/adapted.
 - This phase assumes [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md) is complete: Sifr stdlib remains publicly imported through `sifr.*`, and bare CPython stdlib names are not aliases.

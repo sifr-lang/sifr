@@ -13,7 +13,7 @@ This ledger tracks:
 - `locale`
 - `gettext`
 
-Network/web parity remains in [ad-hoc-production-stdlib-platform-parity-execution.md](./ad-hoc-production-stdlib-platform-parity-execution.md). Concurrency/runtime parity remains in [ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md](./ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md).
+Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate-execution.md](./ad-hoc-production-network-http-platform-substrate-execution.md). Concurrency/runtime parity remains in [ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md](./ad-hoc-production-concurrency-runtime-stdlib-parity-execution.md).
 
 ## Milestone Checklist
 

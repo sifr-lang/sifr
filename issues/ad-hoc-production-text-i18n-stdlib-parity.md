@@ -23,7 +23,7 @@ This phase does not add backward-compatibility or legacy support. Parity means t
 
 ## Related Phases
 
-- Network/web stdlib parity remains in [ad-hoc-production-stdlib-platform-parity.md](./ad-hoc-production-stdlib-platform-parity.md).
+- Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md).
 - Concurrency/runtime stdlib parity is tracked in [ad-hoc-production-concurrency-runtime-stdlib-parity.md](./ad-hoc-production-concurrency-runtime-stdlib-parity.md).
 - This phase provides the codec/text substrate needed by subprocess text mode, HTTP text decoding, file `open(..., encoding=...)`, warning formatting, locale-aware formatting, and gettext demos.
 - This phase assumes [ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md](./ad-hoc-stdlib-namespace-contract-and-compat-cleanup.md) is complete: Sifr stdlib remains publicly imported through `sifr.*`, and bare CPython stdlib names are not aliases.

@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution: Production Network and HTTP Platform Substrate
 
-Phase contract: [ad-hoc-production-stdlib-platform-parity.md](./ad-hoc-production-stdlib-platform-parity.md)
+Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
 Status: draft
 

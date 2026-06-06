@@ -623,7 +623,7 @@ Definition of done:
 
 Create and keep current during implementation:
 
-- `issues/ad-hoc-production-stdlib-platform-parity-execution.md`
+- `issues/ad-hoc-production-network-http-platform-substrate-execution.md`
 - `verification/stdlib/network_http_substrate_inventory.md`
 - `verification/stdlib/network_http_substrate_inventory.json`
 - `verification/stdlib/network_http_cpython_evidence_matrix.md`

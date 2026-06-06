@@ -13,7 +13,7 @@ This ledger tracks:
 - `concurrent.futures`, `multiprocessing`
 - `contextlib`, `warnings`, `signal`
 
-Network/web parity remains in [ad-hoc-production-stdlib-platform-parity-execution.md](./ad-hoc-production-stdlib-platform-parity-execution.md). Text and internationalization parity remains in [ad-hoc-production-text-i18n-stdlib-parity-execution.md](./ad-hoc-production-text-i18n-stdlib-parity-execution.md).
+Network/HTTP platform substrate remains in [ad-hoc-production-network-http-platform-substrate-execution.md](./ad-hoc-production-network-http-platform-substrate-execution.md). Text and internationalization parity remains in [ad-hoc-production-text-i18n-stdlib-parity-execution.md](./ad-hoc-production-text-i18n-stdlib-parity-execution.md).
 
 ## Milestone Checklist
 

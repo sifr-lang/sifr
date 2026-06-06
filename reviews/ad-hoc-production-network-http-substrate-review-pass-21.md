@@ -4,7 +4,7 @@
 
 ## Finding 1 — HTTP/2 and HTTP/3 Never Classified (Blocking)
 
-**File/section:** `ad-hoc-production-stdlib-platform-parity.md`, "Non-Goals And Permanent Boundaries" and "Deferred Or Rejected Public Surfaces" table
+**File/section:** `ad-hoc-production-network-http-platform-substrate.md`, "Non-Goals And Permanent Boundaries" and "Deferred Or Rejected Public Surfaces" table
 
 HTTP/2 and HTTP/3 do not appear anywhere in either document. The phase builds H/1.1 substrate that Phase 41 and the HTTP client phase will build on, but there is no terminal state for H/2 or H/3 — no `deferred`, no `future-phase`, no `rejected`. Without a classification:
 
@@ -18,7 +18,7 @@ HTTP/2 and HTTP/3 do not appear anywhere in either document. The phase builds H/
 
 ## Finding 2 — Buffer Ownership Semantics Missing from M0 Deliverables (Blocking for M1)
 
-**File/section:** `ad-hoc-production-stdlib-platform-parity.md`, "milestone_network_http_0" scope and "Sifr-Native Network API Shape"
+**File/section:** `ad-hoc-production-network-http-platform-substrate.md`, "milestone_network_http_0" scope and "Sifr-Native Network API Shape"
 
 The tentative API shape shows:
 
@@ -37,7 +37,7 @@ M0's DOD requires "concrete backlog entries" for M1-M5. An M1 backlog entry that
 
 ## Finding 3 — Required Tracking Artifacts Not Referenced in Execution Ledger (M0 DOD Gap)
 
-**File/section:** `ad-hoc-production-stdlib-platform-parity-execution.md` (no corresponding section)
+**File/section:** `ad-hoc-production-network-http-platform-substrate-execution.md` (no corresponding section)
 
 The phase doc's "Required Tracking Artifacts" section mandates creation and ongoing maintenance of:
 
@@ -54,7 +54,7 @@ The execution ledger has no reference to these artifacts. Its CPython Evidence S
 
 ## Finding 4 — mTLS / Client Certificate Auth Not Addressed (Minor)
 
-**File/section:** `ad-hoc-production-stdlib-platform-parity.md`, "TLS API Shape" and `milestone_network_http_2` scope
+**File/section:** `ad-hoc-production-network-http-platform-substrate.md`, "TLS API Shape" and `milestone_network_http_2` scope
 
 `TlsServerConfig` is defined but mutual TLS (client certificate authentication) has no classification. Production microservice deployments commonly use mTLS for service identity. The M2 DOD does not require a decision on whether `TlsServerConfig` accepts client certificate validation. This is not a blocker for Phase 41's initial scope, but the M0 classification artifact should include it with a terminal state (`production-substrate`, `deferred`, or `rejected`) so M2 has a clear boundary.
 
