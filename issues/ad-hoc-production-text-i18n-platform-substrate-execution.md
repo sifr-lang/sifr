@@ -21,7 +21,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 ## Milestone Checklist
 
 - [x] `milestone_text_i18n_0`: Product Boundary And Rust Lowering Contract
-- [ ] `milestone_text_i18n_1`: Encoding And Explicit Text I/O
+- [x] `milestone_text_i18n_1`: Encoding And Explicit Text I/O
 - [ ] `milestone_text_i18n_2`: Unicode Core
 - [ ] `milestone_text_i18n_2_5`: Unicode Segmentation
 - [ ] `milestone_text_i18n_3`: Locale Identifiers And Locale-Sensitive Formatting
@@ -187,7 +187,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 ## Implementation PRs
 
 - M0: https://github.com/sifr-lang/sifr/pull/2297
-- M1: pending.
+- M1: https://github.com/sifr-lang/sifr/pull/2298
 - M2: pending.
 - M2.5: pending.
 - M3: pending.
