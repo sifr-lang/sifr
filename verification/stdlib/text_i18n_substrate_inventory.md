@@ -1,6 +1,6 @@
 # Text/I18n Substrate Inventory
 
-Status: M5 complete; inventory classifications are terminal and final validation/review evidence is attached.
+Status: phase complete; inventory classifications are terminal and final validation/review evidence is attached.
 
 Platform contract: [platform_contract.md](../platform/platform_contract.md)
 
@@ -146,5 +146,5 @@ Existing coverage also records in-memory `StringIO`/`BytesIO` seek/tell and use-
 | Dependency snapshots | `verification/stdlib/text_i18n_dependency_snapshots.json` records generated Cargo dependency snapshots for each text/i18n module and every pairwise/full module combination; `crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_phase_combinations` locks the same combinations in unit tests. |
 | Panic/emitted-code scans | `verification/generated_code_quality/manifest.json` includes `demos/text_i18n/main.sifr` plus representative encoding, Unicode, segmentation, locale, and translation e2e fixtures. |
 | Validation lanes | `verification/validation_lanes/create_pr_e2e_manifest.json` and `merge_e2e_manifest.json` include all M1-M4 text/i18n pass fixtures as representatives. |
-| External review | `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-1.md` returned `PASS`; no re-review required. |
+| External review | `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-1.md`, `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-2.md`, `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-3.md`, and `reviews/ad-hoc-production-text-i18n-final-implementation-review-pass-1.md` returned `PASS`; no re-review required. |
 | Reference closure | `verification/stdlib/text_i18n_reference_matrix.md` maps CPython codecs, encodings, unicodedata, locale, and gettext families to terminal Sifr dispositions and fixtures. |
