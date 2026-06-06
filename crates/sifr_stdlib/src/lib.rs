@@ -106,6 +106,15 @@ pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
     if module_name.is_empty() || module_name.starts_with("sifr.") || module_name.starts_with('_') {
         return None;
     }
+    if let Some(suggested_module) = cpython_stdlib_reserved_suggestion(module_name) {
+        let matched_tail = module_name.split('.').next().unwrap_or(module_name);
+        return Some(BareStdlibMatch {
+            bare_module: module_name.to_string(),
+            matched_tail: matched_tail.to_string(),
+            suggested_module: suggested_module.to_string(),
+            exact_embedded_module_exists: true,
+        });
+    }
     if embedded_stdlib_tail_exists(module_name) {
         return Some(BareStdlibMatch {
             bare_module: module_name.to_string(),
@@ -131,6 +140,16 @@ pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
         suggested_module,
         exact_embedded_module_exists,
     })
+}
+
+fn cpython_stdlib_reserved_suggestion(module_name: &str) -> Option<&'static str> {
+    let root = module_name.split('.').next().unwrap_or(module_name);
+    match root {
+        "codecs" | "encodings" => Some("sifr.encoding"),
+        "unicodedata" => Some("sifr.unicode"),
+        "locale" | "gettext" => Some("sifr.i18n"),
+        _ => None,
+    }
 }
 
 fn embedded_stdlib_tail_exists(tail: &str) -> bool {
@@ -202,6 +221,26 @@ mod tests {
         assert_eq!(matched.matched_tail, "collections");
         assert_eq!(matched.suggested_module, "sifr.collections");
         assert!(!matched.exact_embedded_module_exists);
+    }
+
+    #[test]
+    fn bare_stdlib_tail_matches_reserved_text_i18n_cpython_roots() {
+        let codecs = is_bare_stdlib_tail("codecs").expect("codecs should be reserved");
+        let encodings_utf8 =
+            is_bare_stdlib_tail("encodings.utf_8").expect("encodings should be reserved");
+        let unicodedata =
+            is_bare_stdlib_tail("unicodedata").expect("unicodedata should be reserved");
+        let gettext = is_bare_stdlib_tail("gettext").expect("gettext should be reserved");
+
+        assert_eq!(codecs.suggested_module, "sifr.encoding");
+        assert_eq!(encodings_utf8.bare_module, "encodings.utf_8");
+        assert_eq!(encodings_utf8.matched_tail, "encodings");
+        assert_eq!(encodings_utf8.suggested_module, "sifr.encoding");
+        assert_eq!(unicodedata.suggested_module, "sifr.unicode");
+        assert_eq!(gettext.suggested_module, "sifr.i18n");
+        assert!(codecs.exact_embedded_module_exists);
+        assert!(unicodedata.exact_embedded_module_exists);
+        assert!(gettext.exact_embedded_module_exists);
     }
 
     #[test]

@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "status": "active",
+  "owner_phases": [
+    "text-i18n",
+    "concurrency-runtime",
+    "network-http"
+  ],
+  "terminal_states": [
+    "production-public",
+    "production-substrate",
+    "compat-adapter",
+    "internal-only",
+    "test-only-harness",
+    "deferred-to-phase-X",
+    "blocked-on-phase-X",
+    "host-limited",
+    "unsupported-with-diagnostic",
+    "rejected"
+  ],
+  "evidence_states": [
+    "mined-as-substrate-fixture",
+    "adapted-for-sifr-api",
+    "compat-adapter-deferred",
+    "blocked-on-phase-X",
+    "external-signal",
+    "waived-with-rationale",
+    "rejected"
+  ],
+  "stability_levels": [
+    "stable-public-api",
+    "stable-production-substrate",
+    "unstable-internal-substrate",
+    "compiler-known-intrinsic",
+    "compatibility-adapter",
+    "test-only-harness"
+  ],
+  "observability_fields": [
+    "sifr.phase",
+    "sifr.operation",
+    "sifr.correlation_id",
+    "sifr.task_id",
+    "sifr.resource_id",
+    "sifr.host",
+    "sifr.error.kind",
+    "sifr.error.cause",
+    "sifr.blocked_on",
+    "sifr.duration_ms"
+  ],
+  "policies": {
+    "no_unsynchronized_process_global_mutation": {
+      "state": "required",
+      "enforced_by": [
+        "static codec registry",
+        "unsupported codecs.register/codecs.unregister/codecs.register_error diagnostics",
+        "unsupported locale.setlocale diagnostics",
+        "object-scoped LocaleId formatters",
+        "unsupported gettext.install/global underscore diagnostics",
+        "explicit encoding required for text I/O"
+      ]
+    }
+  },
+  "security_ownership": {
+    "codec_amplification": "text-i18n",
+    "malformed_byte_sequences": "text-i18n",
+    "malicious_mo_catalogs": "text-i18n",
+    "plural_expression_parser": "text-i18n",
+    "locale_discovery": "text-i18n",
+    "host_limited_formatting": "text-i18n",
+    "subprocess_resource_limits": "concurrency-runtime",
+    "ipc_payload_size": "concurrency-runtime",
+    "cancellation_storms": "concurrency-runtime",
+    "http_parser_dos": "network-http",
+    "tls_verification": "network-http",
+    "http_flow_control": "network-http",
+    "log_redaction": "shared"
+  }
+}

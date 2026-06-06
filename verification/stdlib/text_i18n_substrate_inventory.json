@@ -1,0 +1,336 @@
+{
+  "schema_version": 1,
+  "status": "m0-baseline",
+  "platform_contract": "verification/platform/platform_contract.json",
+  "cpython_checkout": {
+    "path": "/Users/yaseralnajjar/work/sifr/cpython",
+    "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6"
+  },
+  "production_surfaces": [
+    {
+      "surface": "sifr.encoding",
+      "owner_milestone": "milestone_text_i18n_1",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api"
+    },
+    {
+      "surface": "sifr.io.open_text",
+      "owner_milestone": "milestone_text_i18n_1",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api"
+    },
+    {
+      "surface": "open(..., encoding=..., errors=...)",
+      "owner_milestone": "milestone_text_i18n_1",
+      "terminal_state": "production-public",
+      "stability": "compiler-known-intrinsic"
+    },
+    {
+      "surface": "sifr.unicode",
+      "owner_milestone": "milestone_text_i18n_2",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api"
+    },
+    {
+      "surface": "sifr.unicode segmentation",
+      "owner_milestone": "milestone_text_i18n_2_5",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api"
+    },
+    {
+      "surface": "sifr.i18n locale formatting",
+      "owner_milestone": "milestone_text_i18n_3",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api"
+    },
+    {
+      "surface": "sifr.i18n translation bundles",
+      "owner_milestone": "milestone_text_i18n_4",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api"
+    }
+  ],
+  "unsupported_python_shaped_surfaces": [
+    {
+      "surface": "sifr.codecs",
+      "terminal_state": "deferred-to-phase-adapter",
+      "stability": "compatibility-adapter",
+      "suggestion": "sifr.encoding",
+      "cpython_evidence": ["Lib/codecs.py", "Lib/test/test_codecs.py"]
+    },
+    {
+      "surface": "sifr.encodings",
+      "terminal_state": "deferred-to-phase-adapter",
+      "stability": "compatibility-adapter",
+      "suggestion": "sifr.encoding",
+      "cpython_evidence": ["Lib/encodings/*.py", "Lib/encodings/aliases.py"]
+    },
+    {
+      "surface": "sifr.unicodedata",
+      "terminal_state": "deferred-to-phase-adapter",
+      "stability": "compatibility-adapter",
+      "suggestion": "sifr.unicode",
+      "cpython_evidence": ["Doc/library/unicodedata.rst", "Lib/test/test_unicodedata.py"]
+    },
+    {
+      "surface": "sifr.locale",
+      "terminal_state": "deferred-to-phase-adapter",
+      "stability": "compatibility-adapter",
+      "suggestion": "sifr.i18n",
+      "cpython_evidence": ["Lib/locale.py", "Lib/test/test_locale.py"]
+    },
+    {
+      "surface": "sifr.gettext",
+      "terminal_state": "deferred-to-phase-adapter",
+      "stability": "compatibility-adapter",
+      "suggestion": "sifr.i18n",
+      "cpython_evidence": ["Lib/gettext.py", "Lib/test/test_gettext.py"]
+    },
+    {
+      "surface": "bare codecs/encodings/unicodedata/locale/gettext imports",
+      "terminal_state": "unsupported-with-diagnostic",
+      "stability": "compiler-known-intrinsic",
+      "diagnostic": "SIFR-IMPORT-0008",
+      "fixtures": [
+        "crates/sifr/tests/e2e/fail/bare_cpython_text_i18n_imports.sifr",
+        "crates/sifr/tests/e2e/fail/bare_cpython_encodings_import.sifr",
+        "crates/sifr/tests/e2e/fail/bare_cpython_dotted_codecs_import.sifr",
+        "crates/sifr/tests/e2e/fail/bare_cpython_unicodedata_import.sifr",
+        "crates/sifr/tests/e2e/fail/bare_cpython_locale_import.sifr",
+        "crates/sifr/tests/e2e/fail/bare_cpython_gettext_import.sifr"
+      ]
+    },
+    {
+      "surface": "codecs.register/codecs.unregister/codecs.register_error",
+      "terminal_state": "unsupported-with-diagnostic",
+      "stability": "compiler-known-intrinsic",
+      "cpython_evidence": ["Lib/codecs.py", "Lib/test/test_codecs.py::CodecsModuleTest"],
+      "revisit_rule": "Only a future adapter phase may revisit registry mutation, and only over the static Sifr registry without process-global mutation."
+    },
+    {
+      "surface": "public encodings.* module parity",
+      "terminal_state": "deferred-to-phase-adapter",
+      "stability": "compatibility-adapter",
+      "cpython_evidence": ["Lib/encodings/*.py", "Lib/encodings/aliases.py"],
+      "revisit_rule": "Future adapter phase only; Tier 2/CJK requires separate dependency/data-size issue."
+    },
+    {
+      "surface": "CPython codec C APIs",
+      "terminal_state": "rejected",
+      "stability": "test-only-harness",
+      "cpython_evidence": ["Lib/test/test_capi/test_codecs.py", "Modules/_codecsmodule.c"],
+      "revisit_rule": "No CPython extension C ABI in this phase."
+    },
+    {
+      "surface": "locale.setlocale/localeconv/strcoll/strxfrm",
+      "terminal_state": "unsupported-with-diagnostic",
+      "stability": "compiler-known-intrinsic",
+      "cpython_evidence": ["Lib/locale.py", "Lib/test/test_locale.py"],
+      "revisit_rule": "Object-scoped LocaleId APIs are production; process-global locale mutation remains unsupported."
+    },
+    {
+      "surface": "implicit locale preferred text encoding",
+      "terminal_state": "rejected",
+      "stability": "compiler-known-intrinsic",
+      "cpython_evidence": ["Lib/locale.py", "Lib/test/test_locale.py::TestMiscellaneous"],
+      "revisit_rule": "No implicit text encoding defaults; explicit encoding remains required."
+    },
+    {
+      "surface": "gettext.install/global underscore/textdomain mutation",
+      "terminal_state": "unsupported-with-diagnostic",
+      "stability": "compiler-known-intrinsic",
+      "cpython_evidence": ["Lib/gettext.py", "Lib/test/test_gettext.py"],
+      "revisit_rule": "Native Bundle/Translator is production; global mutation remains unsupported."
+    }
+  ],
+  "accepted_aliases": [
+    {"encoding": "Utf8", "tier": 0, "labels": ["utf-8", "utf8", "utf_8", "u8"]},
+    {"encoding": "Utf8Sig", "tier": 0, "labels": ["utf-8-sig", "utf8-sig", "utf_8_sig", "utf8_sig"]},
+    {"encoding": "Ascii", "tier": 0, "labels": ["ascii", "us-ascii", "us_ascii"]},
+    {"encoding": "Latin1", "tier": 0, "labels": ["latin-1", "latin1", "latin_1", "iso-8859-1", "iso8859-1"]},
+    {"encoding": "Utf16Le", "tier": 0, "labels": ["utf-16-le", "utf16le", "utf_16_le", "utf-16le"]},
+    {"encoding": "Utf16Be", "tier": 0, "labels": ["utf-16-be", "utf16be", "utf_16_be", "utf-16be"]},
+    {"encoding": "Windows1250", "tier": 1, "labels": ["windows-1250", "windows_1250", "cp1250"]},
+    {"encoding": "Windows1251", "tier": 1, "labels": ["windows-1251", "windows_1251", "cp1251"]},
+    {"encoding": "Windows1252", "tier": 1, "labels": ["windows-1252", "windows_1252", "cp1252"]},
+    {"encoding": "Windows1253", "tier": 1, "labels": ["windows-1253", "windows_1253", "cp1253"]},
+    {"encoding": "Windows1254", "tier": 1, "labels": ["windows-1254", "windows_1254", "cp1254"]},
+    {"encoding": "Windows1255", "tier": 1, "labels": ["windows-1255", "windows_1255", "cp1255"]},
+    {"encoding": "Windows1256", "tier": 1, "labels": ["windows-1256", "windows_1256", "cp1256"]},
+    {"encoding": "Windows1257", "tier": 1, "labels": ["windows-1257", "windows_1257", "cp1257"]},
+    {"encoding": "Windows1258", "tier": 1, "labels": ["windows-1258", "windows_1258", "cp1258"]}
+  ],
+  "reserved_diagnostics": [
+    {
+      "code": "SIFR-IO-0801",
+      "condition": "text-mode open without explicit encoding",
+      "message": "text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings",
+      "help": "add encoding=Encoding.Utf8 or call sifr.io.open_text(path, encoding=...)"
+    },
+    {
+      "code": "SIFR-IO-0802",
+      "condition": "dynamic open mode string",
+      "message": "open mode must be a string literal so Sifr can choose a binary or text handle type",
+      "help": "use a literal mode or a future typed helper API"
+    },
+    {
+      "code": "SIFR-ENCODING-0803",
+      "condition": "dynamic errors handler string",
+      "message": "encoding error handlers must be statically known typed values",
+      "help": "use DecodeErrorHandler.* or EncodeErrorHandler.*"
+    }
+  ],
+  "encoding_tiers": {
+    "tier0_required": [
+      "utf-8",
+      "utf-8-sig",
+      "ascii",
+      "latin-1",
+      "utf-16-le",
+      "utf-16-be"
+    ],
+    "tier1_required": [
+      "windows-1252",
+      "selected windows-125x WHATWG labels covered by encoding_rs"
+    ],
+    "tier2_deferred": [
+      "utf-32-le",
+      "utf-32-be",
+      "Shift_JIS",
+      "EUC-JP",
+      "GBK",
+      "GB18030",
+      "Big5",
+      "EUC-KR"
+    ],
+    "tier3_rejected_or_deferred": [
+      "CPython-only aliases",
+      "text-to-text codecs",
+      "bytes-to-bytes pseudo-codecs",
+      "public encodings.* parity"
+    ]
+  },
+  "dependencies": [
+    {
+      "crate": "encoding_rs",
+      "version": "0.8.35",
+      "license": "(Apache-2.0 OR MIT) AND BSD-3-Clause",
+      "rust_version": "1.36",
+      "owner_milestone": "milestone_text_i18n_1",
+      "sifr_abstraction": "sifr.encoding static registry and Encoder/Decoder wrappers",
+      "unicode_alignment": "WHATWG encoding data; not a Sifr Unicode table source",
+      "panic_unsafe_audit": "M1 scans wrappers and emitted code for user-byte-dependent unwrap/expect/panic",
+      "typed_error_mapping": "DecodeError, EncodeError, EncodeOutcome, DecodeOutcome",
+      "test_strategy": "Tier 0/Tier 1 alias, BOM, malformed byte, incremental, and handler fixtures",
+      "supply_chain_signal": "Gecko-oriented WHATWG-compatible Rust crate"
+    },
+    {
+      "crate": "unicode-normalization",
+      "version": "0.1.25",
+      "license": "MIT OR Apache-2.0",
+      "rust_version": "1.36",
+      "owner_milestone": "milestone_text_i18n_2",
+      "sifr_abstraction": "sifr.unicode.normalize/is_normalized",
+      "unicode_alignment": "M2 records exact crate data version; skew blocks release",
+      "panic_unsafe_audit": "M2 wrapper and generated table panic scan",
+      "typed_error_mapping": "UnicodeDataError",
+      "test_strategy": "CPython/Unicode normalization fixtures",
+      "supply_chain_signal": "unicode-rs family"
+    },
+    {
+      "crate": "unicode-segmentation",
+      "version": "1.13.3",
+      "license": "MIT OR Apache-2.0",
+      "rust_version": "1.85.0",
+      "owner_milestone": "milestone_text_i18n_2_5",
+      "sifr_abstraction": "sifr.unicode grapheme/word iterators and boundaries",
+      "unicode_alignment": "M2.5 records crate data version; skew with M2 blocks release",
+      "panic_unsafe_audit": "Boundary-safe slicing and emitted-code panic scan",
+      "typed_error_mapping": "UnicodeDataError for construction/table failures if any",
+      "test_strategy": "Combining mark, emoji, regional indicator, whitespace, punctuation fixtures",
+      "supply_chain_signal": "unicode-rs family"
+    },
+    {
+      "crate": "icu_locale_core",
+      "version": "2.2.0",
+      "license": "Unicode-3.0",
+      "rust_version": "1.86",
+      "owner_milestone": "milestone_text_i18n_3",
+      "sifr_abstraction": "sifr.i18n.LocaleId",
+      "unicode_alignment": "ICU4X 2.2 data family",
+      "panic_unsafe_audit": "M3 locale-string panic scan",
+      "typed_error_mapping": "LocaleIdError",
+      "test_strategy": "Deterministic BCP47 parse/canonicalization fixtures",
+      "supply_chain_signal": "Unicode/ICU4X official project"
+    },
+    {
+      "crate": "icu_decimal",
+      "version": "2.2.0",
+      "license": "Unicode-3.0",
+      "rust_version": "1.86",
+      "owner_milestone": "milestone_text_i18n_3",
+      "sifr_abstraction": "sifr.i18n.NumberFormatter",
+      "unicode_alignment": "ICU4X 2.2 compiled data",
+      "panic_unsafe_audit": "M3 formatter construction/value panic scan",
+      "typed_error_mapping": "FormatError",
+      "test_strategy": "Stable-locale number formatting fixtures",
+      "supply_chain_signal": "Unicode/ICU4X official project"
+    },
+    {
+      "crate": "icu_datetime",
+      "version": "2.2.0",
+      "license": "Unicode-3.0",
+      "rust_version": "1.86",
+      "owner_milestone": "milestone_text_i18n_3",
+      "sifr_abstraction": "sifr.i18n.DateTimeFormatter",
+      "unicode_alignment": "ICU4X 2.2 compiled data",
+      "panic_unsafe_audit": "M3 formatter construction/input panic scan",
+      "typed_error_mapping": "FormatError",
+      "test_strategy": "Fixed date/time fixtures across selected locales",
+      "supply_chain_signal": "Unicode/ICU4X official project"
+    },
+    {
+      "crate": "icu_plurals",
+      "version": "2.2.0",
+      "license": "Unicode-3.0",
+      "rust_version": "1.86",
+      "owner_milestone": "milestone_text_i18n_3",
+      "sifr_abstraction": "sifr.i18n.PluralRules and translation plural lookup",
+      "unicode_alignment": "ICU4X 2.2 compiled data",
+      "panic_unsafe_audit": "M3/M4 plural selection panic scan",
+      "typed_error_mapping": "PluralRulesError, TranslationError",
+      "test_strategy": "CLDR plural category and catalog plural fixtures",
+      "supply_chain_signal": "Unicode/ICU4X official project"
+    },
+    {
+      "crate": "icu_collator",
+      "version": "2.2.0",
+      "license": "Unicode-3.0",
+      "rust_version": "1.86",
+      "owner_milestone": "milestone_text_i18n_3",
+      "sifr_abstraction": "sifr.i18n.Collator",
+      "unicode_alignment": "ICU4X 2.2 compiled data",
+      "panic_unsafe_audit": "M3 comparator construction/string panic scan",
+      "typed_error_mapping": "FormatError or dedicated collation construction error",
+      "test_strategy": "Locale-specific deterministic ordering fixtures",
+      "supply_chain_signal": "Unicode/ICU4X official project"
+    }
+  ],
+  "no_global_state_policy": {
+    "codec_registry": "static immutable registry; no mutation API",
+    "locale": "object-scoped LocaleId and formatters; no setlocale",
+    "gettext": "explicit Bundle/Translator; no install/global underscore",
+    "text_io": "explicit encoding required; host locale never supplies defaults"
+  },
+  "binary_file_io_prerequisite": {
+    "status": "pass-with-file-seek-tell-unsupported",
+    "commands": [
+      "cargo run -q -p sifr -- run demos/binary_files/main.sifr",
+      "cargo run -q -p sifr -- run demos/bytes_file_io/main.sifr"
+    ],
+    "notes": [
+      "File-handle binary read/write/close/drop and byte-preserving round trips passed.",
+      "Seek/tell is supported for in-memory streams and remains explicitly unsupported for current file handles."
+    ]
+  }
+}

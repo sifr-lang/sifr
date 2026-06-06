@@ -396,6 +396,11 @@ run_validation_contract_suites() {
   fi
 }
 
+run_platform_golden_suite() {
+  echo "Running platform golden fixtures"
+  bash "${SCRIPT_DIR}/run_platform_golden.sh"
+}
+
 run_e2e_pass_suite() {
   echo "Running e2e pass suite"
   E2E_ARGS=(
@@ -458,6 +463,8 @@ fi
 timed_step crate_tests run_crate_tests
 
 timed_step validation_contract_matrix run_validation_contract_suites
+
+timed_step platform_golden run_platform_golden_suite
 
 timed_step e2e_pass_suite run_e2e_pass_suite
 

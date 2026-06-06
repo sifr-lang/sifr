@@ -1,0 +1,5 @@
+from codecs import open
+
+
+def main():
+    pass

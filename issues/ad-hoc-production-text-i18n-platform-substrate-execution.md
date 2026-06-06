@@ -126,6 +126,13 @@ Execution order: this is the first phase in the split production-stdlib sequence
 - Updated text/i18n product-boundary review:
   - Source: `/Users/yaseralnajjar/.codex/attachments/d3be2da1-89ee-48a2-a601-d1d450934f21/pasted-text.txt`
   - Result: mostly already remediated by the substrate rewrite; remaining useful refinements were added: explicit No-Toy-Module Gate, `SIFR_CPYTHON_CHECKOUT` source-tree variable, generated Unicode table marker/regeneration requirements, and constrained safe `.mo` plural-expression parsing.
+- M0 implementation review pass 1:
+  - `reviews/ad-hoc-production-text-i18n-m0-implementation-review-pass-1.md`
+  - Result: `FAIL`; blockers covered missing `encodings`/`locale`/dotted CPython import fixtures, missing itemized unsupported Python-shaped classifications, incomplete dependency decision fields, missing exact Tier 0/Tier 1 alias table, missing reserved `open(...)` diagnostic wording, missing no-global-state policy evidence, and missing platform-contract review PASS.
+  - Remediation: added the missing e2e fail fixtures, dotted reserved-root diagnostic matching, itemized unsupported-surface rows in inventory, exact alias table, reserved diagnostic codes/messages, detailed dependency decision records, and shared no-global-state policy.
+- M0 implementation review pass 2:
+  - `reviews/ad-hoc-production-text-i18n-m0-implementation-review-pass-2.md`
+  - Result: `PASS`; pass 1 blockers were verified as remediated. Non-blocking observations were recorded for future golden stub timing, diagnostic substring coupling, deferred-state naming, JSON first-party `.mo` parser shape, and review-artifact cross-linking.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -179,7 +186,7 @@ Execution order: this is the first phase in the split production-stdlib sequence
 
 ## Implementation PRs
 
-- M0: pending.
+- M0: https://github.com/sifr-lang/sifr/pull/2297
 - M1: pending.
 - M2: pending.
 - M2.5: pending.
@@ -208,6 +215,33 @@ Required merge-gate command before milestone closure:
 ```bash
 scripts/run_all_tests.sh
 ```
+
+M0 focused validation on branch `text-i18n-m0-platform-contract`:
+
+- `cargo run -q -p sifr -- run demos/binary_files/main.sifr` passed.
+- `cargo run -q -p sifr -- run demos/bytes_file_io/main.sifr` passed.
+- `cargo test -p sifr_stdlib bare_stdlib_tail -- --nocapture` passed.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` passed for 372 fail fixtures; observed two existing fail-corpus internal-compiler-error panic messages printed by the harness.
+- `scripts/run_platform_golden.sh` passed with 2 pass / 3 skipped blocked entries.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+
+M0 post-review-remediation focused validation:
+
+- `cargo test -p sifr_stdlib bare_stdlib_tail -- --nocapture` passed.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` passed for 375 fail fixtures; observed the same two existing fail-corpus internal-compiler-error panic messages printed by the harness.
+- `python3 -m json.tool` passed for `verification/platform/platform_contract.json`, `verification/platform/golden/manifest.json`, and `verification/stdlib/text_i18n_substrate_inventory.json`.
+- `scripts/run_platform_golden.sh` passed with 2 pass / 3 skipped blocked entries.
+- `cargo fmt --check` passed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- `python3 scripts/check_file_size_guardrails.py` passed.
+- `cargo clippy --workspace -- -D warnings` passed.
+- `cargo test -p sifr_stdlib` passed.
+- `cargo test -p sifr -- stdlib` passed.
+- `scripts/run_e2e_pass.sh --profile create-pr` passed with 67/67 pass fixtures.
+- `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 167.66s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
+- `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 689.72s, 73/73 e2e pass fixtures, non-blocking group-skew advisory.
 
 ## CPython Scan Evidence
 

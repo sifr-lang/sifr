@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "closed_milestones_env": "SIFR_PLATFORM_CLOSED_MILESTONES",
+  "entries": [
+    {
+      "program": "binary_file_io_contract.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/binary_file_io_contract.sifr",
+      "expected_exit": 0,
+      "expected_stdout_contains": [
+        "platform-golden: binary-file-io pass"
+      ],
+      "expected_diagnostic_contains": [],
+      "depends_on": [],
+      "must_not_depend_on": [
+        "milestone_text_i18n_1"
+      ],
+      "blocked_until": [],
+      "checks": [
+        "binary open",
+        "byte-preserving round trip",
+        "explicit close/drop"
+      ]
+    },
+    {
+      "program": "unsupported_cpython_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_imports.sifr",
+      "expected_exit": 1,
+      "expected_stdout_contains": [],
+      "expected_diagnostic_contains": [
+        "SIFR-IMPORT-0008",
+        "sifr.encoding"
+      ],
+      "depends_on": [
+        "milestone_text_i18n_0"
+      ],
+      "must_not_depend_on": [],
+      "blocked_until": [],
+      "checks": [
+        "bare CPython text import diagnostic",
+        "Sifr-native namespace suggestion"
+      ]
+    },
+    {
+      "program": "http_body_text_after_text_i18n.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/http_body_text_after_text_i18n.sifr",
+      "expected_exit": 0,
+      "expected_stdout_contains": [
+        "platform-golden: pass"
+      ],
+      "expected_diagnostic_contains": [],
+      "depends_on": [
+        "milestone_text_i18n_1",
+        "milestone_network_http_1"
+      ],
+      "must_not_depend_on": [],
+      "blocked_until": [
+        "milestone_text_i18n_1",
+        "milestone_network_http_1"
+      ],
+      "checks": [
+        "HTTP body text decoding consumes text/i18n substrate"
+      ]
+    },
+    {
+      "program": "subprocess_text_explicit_encoding.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/subprocess_text_explicit_encoding.sifr",
+      "expected_exit": 0,
+      "expected_stdout_contains": [
+        "platform-golden: pass"
+      ],
+      "expected_diagnostic_contains": [],
+      "depends_on": [
+        "milestone_text_i18n_1",
+        "milestone_concurrency_runtime_4"
+      ],
+      "must_not_depend_on": [],
+      "blocked_until": [
+        "milestone_text_i18n_1",
+        "milestone_concurrency_runtime_4"
+      ],
+      "checks": [
+        "subprocess text mode consumes explicit encoding substrate"
+      ]
+    },
+    {
+      "program": "locale_host_limited_formatting.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/locale_host_limited_formatting.sifr",
+      "expected_exit": 0,
+      "expected_stdout_contains": [
+        "platform-golden: pass"
+      ],
+      "expected_diagnostic_contains": [],
+      "depends_on": [
+        "milestone_text_i18n_3"
+      ],
+      "must_not_depend_on": [
+        "implicit_text_open_default_encoding"
+      ],
+      "blocked_until": [
+        "milestone_text_i18n_3"
+      ],
+      "checks": [
+        "explicit locale formatting",
+        "host-limited locale discovery"
+      ]
+    }
+  ]
+}
