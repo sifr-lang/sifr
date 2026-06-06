@@ -241,6 +241,7 @@ M0 post-review-remediation focused validation:
 - `cargo test -p sifr -- stdlib` passed.
 - `scripts/run_e2e_pass.sh --profile create-pr` passed with 67/67 pass fixtures.
 - `scripts/run_all_tests.sh --profile create-pr` passed; report `target/validation_lane_reports/create-pr.latest.json`, wall time 167.66s, 67/67 e2e pass fixtures, non-blocking warm wall-time/cache advisories.
+- `scripts/run_all_tests.sh` passed; report `target/validation_lane_reports/merge.latest.json`, wall time 689.72s, 73/73 e2e pass fixtures, non-blocking group-skew advisory.
 
 ## CPython Scan Evidence
 
