@@ -32,6 +32,7 @@ impl Type {
             Type::TimeoutResult(_) => "TimeoutResult".to_string(),
             Type::Select2(_, _) => "Select2".to_string(),
             Type::BlockingTask(_, _) => "BlockingTask".to_string(),
+            Type::JoinSet(_, _) => "JoinSet".to_string(),
             Type::Awaitable(_) => "Awaitable".to_string(),
             Type::AsyncIterator(_, _) => "AsyncIterator".to_string(),
             Type::AsyncGenerator(_, _) => "AsyncGenerator".to_string(),
@@ -396,6 +397,7 @@ impl Type {
                 | Type::TaskResult(ok, err)
                 | Type::Select2(ok, err)
                 | Type::BlockingTask(ok, err)
+                | Type::JoinSet(ok, err)
                 | Type::AsyncIterator(ok, err)
                 | Type::AsyncGenerator(ok, err) => contains_any(ok) || contains_any(err),
                 Type::Failure(err) => contains_any(err),
@@ -570,6 +572,7 @@ impl Type {
             | (Self::TaskResult(ok_a, err_a), Self::TaskResult(ok_b, err_b))
             | (Self::Select2(ok_a, err_a), Self::Select2(ok_b, err_b))
             | (Self::BlockingTask(ok_a, err_a), Self::BlockingTask(ok_b, err_b))
+            | (Self::JoinSet(ok_a, err_a), Self::JoinSet(ok_b, err_b))
             | (Self::AsyncIterator(ok_a, err_a), Self::AsyncIterator(ok_b, err_b))
             | (Self::AsyncGenerator(ok_a, err_a), Self::AsyncGenerator(ok_b, err_b)) => {
                 ok_a.is_assignable_to(ok_b) && err_a.is_assignable_to(err_b)

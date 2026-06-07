@@ -2,6 +2,7 @@ use super::async_generator_advances::finish_async_generator_advance_for_expr;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::ownership_diagnostics;
+use super::task_join_set_calls::consume_awaited_join_set_terminal;
 use super::task_scope_calls::{mark_task_handle_observed, sync_guard_type_label};
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
@@ -65,6 +66,7 @@ pub(in crate::lower) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) 
             ctx.mark_moved_with_flow(name);
         }
     }
+    consume_awaited_join_set_terminal(&value, ctx);
     finish_async_generator_advance_for_expr(ctx, &value);
 
     Some(HirExpr::Await {

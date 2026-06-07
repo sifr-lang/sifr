@@ -33,6 +33,8 @@ pub enum Type {
     Select2(Box<Type>, Box<Type>),
     /// Explicit blocking-offload observer handle.
     BlockingTask(Box<Type>, Box<Type>),
+    /// Dynamically-growable homogeneous task collection.
+    JoinSet(Box<Type>, Box<Type>),
     /// Structural awaitability protocol.
     Awaitable(Box<Type>),
     /// Structural async iteration protocol.

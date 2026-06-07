@@ -1,0 +1,24 @@
+from sifr.parallel import WorkerError
+
+
+class LocalFailure(Error):
+    message: str
+
+
+@cpu_heavy
+def first_value() -> Result[int, LocalFailure]:
+    return 1
+
+
+@cpu_heavy
+def second_value() -> Result[int, LocalFailure]:
+    return 2
+
+
+async def main() -> Result[None, ScopeFailure]:
+    joins = task.JoinSet[int, WorkerError]()
+    first_id = joins.spawn_cpu(first_value)
+    second_id = joins.spawn_cpu(second_value)
+    results = await joins.join_all()
+    assert str(results) == "[Ok(1), Ok(2)]"
+    return None

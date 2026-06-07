@@ -179,6 +179,7 @@ impl Type {
             | Self::TimeoutResult(_)
             | Self::Select2(_, _)
             | Self::BlockingTask(_, _)
+            | Self::JoinSet(_, _)
             | Self::Awaitable(_)
             | Self::AsyncIterator(_, _)
             | Self::AsyncGenerator(_, _)
@@ -276,6 +277,8 @@ impl Type {
                 }
             }
             Self::Unknown => "Unknown".to_string(),
+            Self::Class { name, .. } if name == "JoinItemId" => "JoinItemId".to_string(),
+            Self::Class { name, .. } if name == "CancelOutcome" => "CancelOutcome".to_string(),
             Self::Class { name, .. } => name.clone(),
             Self::Result(ok, err) => {
                 format!("Result[{}, {}]", ok.display_name(), err.display_name())
@@ -315,6 +318,9 @@ impl Type {
                     ok.display_name(),
                     err.display_name()
                 )
+            }
+            Self::JoinSet(ok, err) => {
+                format!("JoinSet[{}, {}]", ok.display_name(), err.display_name())
             }
             Self::Awaitable(result) => format!("Awaitable[{}]", result.display_name()),
             Self::AsyncIterator(item, err) => {
@@ -411,17 +417,24 @@ impl Type {
                     err.rust_type()
                 )
             }
-            Self::Task(ok, err) => format!("Task<{}, {}>", ok.rust_type(), err.rust_type()),
+            Self::Task(ok, err) => format!("__SifrTask<{}, {}>", ok.rust_type(), err.rust_type()),
             Self::TaskResult(ok, err) => {
-                format!("TaskResult<{}, {}>", ok.rust_type(), err.rust_type())
+                format!("__SifrTaskResult<{}, {}>", ok.rust_type(), err.rust_type())
             }
-            Self::Failure(err) => format!("Failure<{}>", err.rust_type()),
-            Self::TimeoutResult(err) => format!("TimeoutResult<{}>", err.rust_type()),
+            Self::Failure(err) => format!("__SifrFailure<{}>", err.rust_type()),
+            Self::TimeoutResult(err) => format!("__SifrTimeoutResult<{}>", err.rust_type()),
             Self::Select2(first, second) => {
                 format!("Select2<{}, {}>", first.rust_type(), second.rust_type())
             }
             Self::BlockingTask(ok, err) => {
-                format!("BlockingTask<{}, {}>", ok.rust_type(), err.rust_type())
+                format!(
+                    "__SifrBlockingTask<{}, {}>",
+                    ok.rust_type(),
+                    err.rust_type()
+                )
+            }
+            Self::JoinSet(ok, err) => {
+                format!("__SifrJoinSet<{}, {}>", ok.rust_type(), err.rust_type())
             }
             Self::Awaitable(result) => format!(
                 "std::pin::Pin<Box<dyn std::future::Future<Output = {}>>>",

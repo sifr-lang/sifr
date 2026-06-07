@@ -38,6 +38,10 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) task_group_error_types: HashMap<String, Type>,
     /// In-scope task handle binding -> owning `TaskGroup` binding.
     pub(in crate::lower) task_handle_group_owners: HashMap<String, String>,
+    /// JoinSet bindings that have accepted at least one handle and must be consumed.
+    pub(in crate::lower) live_join_set_bindings: std::collections::HashSet<String>,
+    /// Awaitable bindings produced by JoinSet terminal calls, mapped to their JoinSet owner.
+    pub(in crate::lower) join_set_terminal_awaitables: HashMap<String, String>,
     /// `TaskGroup` bindings that are no longer proven Open after observing a child handle.
     pub(in crate::lower) task_groups_not_proven_open: std::collections::HashSet<String>,
     /// Nesting depth of active structured task owners while lowering a function body.
@@ -130,6 +134,8 @@ impl LowerCtx {
             scope: Scope::new(),
             task_group_error_types: HashMap::new(),
             task_handle_group_owners: HashMap::new(),
+            live_join_set_bindings: std::collections::HashSet::new(),
+            join_set_terminal_awaitables: HashMap::new(),
             task_groups_not_proven_open: std::collections::HashSet::new(),
             active_task_owner_depth: 0,
             active_task_owner_bindings: Vec::new(),
@@ -328,6 +334,10 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
         Type::Set(elem) => Type::Set(Box::new(substitute_type_vars(elem, bindings))),
         Type::Iterable(elem) => Type::Iterable(Box::new(substitute_type_vars(elem, bindings))),
         Type::Iterator(elem) => Type::Iterator(Box::new(substitute_type_vars(elem, bindings))),
+        Type::JoinSet(ok, err) => Type::JoinSet(
+            Box::new(substitute_type_vars(ok, bindings)),
+            Box::new(substitute_type_vars(err, bindings)),
+        ),
         Type::Dict(k, v) => Type::Dict(
             Box::new(substitute_type_vars(k, bindings)),
             Box::new(substitute_type_vars(v, bindings)),

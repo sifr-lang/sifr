@@ -1,0 +1,21 @@
+from sifr.parallel import WorkerError
+
+
+class LocalFailure(Error):
+    message: str
+
+
+@cpu_heavy
+def work_item() -> Result[int, LocalFailure]:
+    total: int = 0
+    for value in range(200):
+        total = total + value
+    return total
+
+
+async def main() -> Result[None, ScopeFailure]:
+    joins = task.JoinSet[int, WorkerError]()
+    item_id = joins.spawn_cpu(work_item)
+    outcomes = await joins.cancel_all()
+    assert len(outcomes) == 1
+    return None

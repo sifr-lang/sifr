@@ -250,6 +250,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M0/M0a/post-M0 reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`, and `reviews/ad-hoc-production-concurrency-runtime-post-m0-external-review-pass-1.md`. M1 may start.
 - M1 structured-async implementation reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`, and `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`. M1 is ready to PR/merge.
 - M2 sync/channel implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m2-sync-review-pass-1.md`. M2 is locally validated and ready to PR/merge.
+- M3 JoinSet implementation review is pending for the current wave after focused local validation.
 
 ## M1 Implementation Ledger
 
@@ -404,6 +405,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M2: https://github.com/sifr-lang/sifr/pull/2315
 - M3 first wave: https://github.com/sifr-lang/sifr/pull/2316
 - M3 `task.spawn_cpu` wave: https://github.com/sifr-lang/sifr/pull/2318
+- M3 `JoinSet` wave: pending.
 - M3: pending.
 - M4: pending.
 - M5: pending.
@@ -459,6 +461,34 @@ M3 `task.spawn_cpu` wave targeted local validation:
 M3 `task.spawn_cpu` wave review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m3-spawn-cpu-review-pass-2.md`: `PASS`; reviewer verified async-only `@cpu_heavy` validation, rejection of blocking-I/O and unannotated workers, `BlockingTask[T, WorkerRuntimeError]` / `BlockingTask[T, WorkerError]` result shapes, typed worker panic and Rayon pool construction evidence, Rayon/Tokio feature gating, sendability checks, no `sifr.parallel` regression from shared worker-error extraction, and honest remaining-M3 traceability. Non-blocking follow-ups were retained for global panic-hook cleanup, OS thread creation failure handling if the bridge changes, and minor emitted-error redundancy.
+
+M3 `JoinSet` wave targeted local validation:
+
+- `cargo check -p sifr_lowering -p sifr_codegen -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/join_set_spawn_cpu_join_all_ordered.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/join_set_add_task_join_all.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/join_set_cancel_all_evidence.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/join_set_cancel_all_task_cancelled.sifr` -> PASS; proves `cancel_all()` aborts an added task and reports `Cancelled` evidence instead of merely counting outcomes.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/join_set_spawn_blocking.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/join_set_bound_terminal_await.sifr` -> PASS; verifies a `pending = joins.join_all(); results = await pending` terminal await consumes the live set.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/join_set_unconsumed_rejected.sifr` -> expected fail with `SIFR-OWN-0001`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/join_set_terminal_must_be_awaited_rejected.sifr` -> expected fail with `SIFR-OWN-0001`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/join_set_reassign_live_rejected.sifr` -> expected fail with `SIFR-OWN-0001`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/join_set_spawn_cpu_worker_error_required.sifr` -> expected fail with `SIFR-TYPE-0002`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/join_set_add_type_mismatch_rejected.sifr` -> expected fail with `SIFR-TYPE-0002`.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/join_set_spawn_blocking.sifr | rg -n "rayon|__sifr_spawn_cpu|ThreadPoolBuilder|__sifr_with_silent_join_set_panic_hook"` -> no matches; non-CPU JoinSet usage emits no Rayon references.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/join_set_spawn_cpu_join_all_ordered.sifr | rg -n "rayon|__sifr_spawn_cpu|ThreadPoolBuilder"` -> PASS; CPU JoinSet usage emits the expected CPU bridge and Rayon references.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail suite reported 409 fail tests completed.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2147 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; platform golden reported pass=5, skip=2; create-pr e2e pass suite reported 85 passed, 0 failed, cache_hits=20/23; advisory: warm wall-time budget exceeded.
+
+M3 `JoinSet` wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-1.md`: `CHANGES_REQUESTED`; reviewer flagged union sort key uniqueness, live JoinSet rebinding, added-task cancellation, generic type-var collection/inference, deterministic diagnostics, bound terminal awaitables, cancel evidence strength, finished-cancelled outcome mapping, and non-CPU Rayon feature leakage. The current wave remediated those blockers with JoinSet generic arms, deterministic live-set diagnostics, rebinding rejection, pending-terminal awaitable tracking, underlying abort-handle preservation, stronger cancel fixtures, `Cancelled` outcome mapping, and a split CPU-only JoinSet preamble.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-2.md`: `PASS`; reviewer verified all ten pass-1 blockers were remediated, re-ran `cargo test -p sifr -- --skip test_e2e_pass`, the six JoinSet pass fixtures, and non-CPU JoinSet emit gating. Non-blocking follow-ups remain for Sifr-owned diagnostics after binding a terminal awaitable, future sort-key uniqueness polish, and optional retirement/strengthening of the older length-only cancel evidence fixture now superseded by `join_set_cancel_all_task_cancelled.sifr`.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`: `PASS`; independent retry review confirmed the same blocker closure and PR readiness.
 
 M0 targeted local validation:
 

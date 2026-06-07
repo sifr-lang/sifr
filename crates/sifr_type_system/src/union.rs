@@ -205,18 +205,19 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::TimeoutResult(_) => (22, String::new()),
         Type::Select2(_, _) => (23, String::new()),
         Type::BlockingTask(_, _) => (24, String::new()),
-        Type::Awaitable(_) => (25, String::new()),
-        Type::AsyncIterator(_, _) => (26, String::new()),
-        Type::AsyncGenerator(_, _) => (27, String::new()),
-        Type::Unknown => (28, String::new()),
-        Type::Any => (28, String::new()),
-        Type::Never => (28, String::new()),
-        Type::Union(_) => (29, String::new()),
-        Type::Intersection(_) => (30, String::new()),
+        Type::JoinSet(_, _) => (25, String::new()),
+        Type::Awaitable(_) => (26, String::new()),
+        Type::AsyncIterator(_, _) => (27, String::new()),
+        Type::AsyncGenerator(_, _) => (28, String::new()),
+        Type::Unknown => (29, String::new()),
+        Type::Any => (29, String::new()),
+        Type::Never => (29, String::new()),
+        Type::Union(_) => (30, String::new()),
+        Type::Intersection(_) => (31, String::new()),
         Type::Alias {
             name, type_args, ..
         } => (
-            30,
+            31,
             if type_args.is_empty() {
                 name.clone()
             } else {

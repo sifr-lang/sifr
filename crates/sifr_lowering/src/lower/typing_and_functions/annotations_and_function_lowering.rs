@@ -160,8 +160,8 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                     let err_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::Failure(Box::new(err_ty))
                 }
-                "Coroutine" | "Task" | "TaskResult" | "Select2" | "BlockingTask" | "Future"
-                | "AsyncIterator" | "AsyncGenerator" => {
+                "Coroutine" | "Task" | "TaskResult" | "Select2" | "BlockingTask" | "JoinSet"
+                | "Future" | "AsyncIterator" | "AsyncGenerator" => {
                     let Expr::Tuple(tuple) = sub.slice.as_ref() else {
                         invalid_type_annotation(
                             ctx,
@@ -187,6 +187,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         "Task" => Type::Task(Box::new(ok_ty), Box::new(err_ty)),
                         "TaskResult" => Type::TaskResult(Box::new(ok_ty), Box::new(err_ty)),
                         "Select2" => Type::Select2(Box::new(ok_ty), Box::new(err_ty)),
+                        "JoinSet" => Type::JoinSet(Box::new(ok_ty), Box::new(err_ty)),
                         "BlockingTask" | "Future" => {
                             Type::BlockingTask(Box::new(ok_ty), Box::new(err_ty))
                         }
@@ -588,9 +589,15 @@ pub(in crate::lower) fn lower_function(
     let previous_return_type = ctx
         .current_function_return_type
         .replace(ft.return_type.as_ref().clone());
+    let previous_live_join_sets = std::mem::take(&mut ctx.live_join_set_bindings);
+    let previous_join_set_terminal_awaitables =
+        std::mem::take(&mut ctx.join_set_terminal_awaitables);
     ctx.current_function_is_async = effective_is_async;
     ctx.current_function_is_async_generator = is_async_generator;
     let body = lower_stmts(&func.body, &ft, ctx);
+    reject_live_join_sets_at_function_exit(func, ctx);
+    ctx.live_join_set_bindings = previous_live_join_sets;
+    ctx.join_set_terminal_awaitables = previous_join_set_terminal_awaitables;
     ctx.current_function_is_async = previous_async;
     ctx.current_function_is_async_generator = previous_async_generator;
     ctx.current_function_return_type = previous_return_type;
@@ -684,6 +691,27 @@ pub(in crate::lower) fn lower_function(
         decorators,
         type_params,
     })
+}
+
+fn reject_live_join_sets_at_function_exit(func: &StmtFunctionDef, ctx: &mut LowerCtx) {
+    let mut live_sets = ctx
+        .live_join_set_bindings
+        .iter()
+        .filter(|name| !ctx.scope.is_moved(name))
+        .cloned()
+        .collect::<Vec<_>>();
+    live_sets.sort();
+    for name in live_sets {
+        ctx.error_with_code_at(
+            DiagnosticCode::OWN_USE_AFTER_MOVE,
+            format!(
+                "JoinSet binding '{name}' accepted task handles and must be consumed with await {name}.join_all() or await {name}.cancel_all() before function exit"
+            ),
+            func.name.range(),
+        );
+    }
+    ctx.live_join_set_bindings.clear();
+    ctx.join_set_terminal_awaitables.clear();
 }
 
 pub(super) fn requires_exhaustive_return_annotation(

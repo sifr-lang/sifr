@@ -165,6 +165,7 @@ pub(crate) fn should_force_mutable_binding(ty: &Type) -> bool {
         ty,
         Type::Alias { name: alias_name, .. } if alias_name.starts_with("__sifr_defaultdict_")
     ) || matches!(ty.resolve_alias(), Type::Iterator(_))
+        || matches!(ty.resolve_alias(), Type::JoinSet(_, _))
         || class_has_next_protocol(ty)
         || class_has_recursive_option_field(ty)
 }

@@ -1,0 +1,15 @@
+# expect-error: SIFR-TYPE-0002
+class LocalFailure(Error):
+    message: str
+
+
+@cpu_heavy
+def work_item() -> Result[int, LocalFailure]:
+    return 7
+
+
+async def main() -> Result[None, ScopeFailure]:
+    joins = task.JoinSet[int, LocalFailure]()
+    item_id = joins.spawn_cpu(work_item)
+    outcomes = await joins.join_all()
+    return None

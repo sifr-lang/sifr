@@ -1,0 +1,19 @@
+# expect-error: SIFR-OWN-0001
+from sifr.parallel import WorkerError
+
+
+class LocalFailure(Error):
+    message: str
+
+
+@cpu_heavy
+def work_item() -> Result[int, LocalFailure]:
+    return 7
+
+
+async def main() -> Result[None, ScopeFailure]:
+    joins = task.JoinSet[int, WorkerError]()
+    item_id = joins.spawn_cpu(work_item)
+    pending = joins.join_all()
+    await task.sleep(0.0)
+    return None

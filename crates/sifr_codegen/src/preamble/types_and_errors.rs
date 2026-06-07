@@ -46,6 +46,13 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 task_error_type_to_rust_type(err),
             ],
         },
+        Type::JoinSet(ok, err) => RustType::Generic {
+            base: "__SifrJoinSet".to_string(),
+            params: vec![
+                sifr_type_to_rust_type(ok),
+                task_error_type_to_rust_type(err),
+            ],
+        },
         Type::TaskResult(ok, err) => RustType::Generic {
             base: "__SifrTaskResult".to_string(),
             params: vec![
