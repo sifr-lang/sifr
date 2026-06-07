@@ -229,11 +229,14 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M0a legacy-surface Claude follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`
   - Result: `PASS`; public legacy modules were verified unreachable, `SIFR-IMPORT-0009` replacement diagnostics were verified, native task lowering was verified free of `sifr.asyncio` compatibility paths, demos/manifests/goldens were clean, validation evidence was recorded, and no blocker remained.
+- M0a final legacy-surface Claude confirmation:
+  - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`
+  - Result: `PASS`; pass-1 blockers remained remediated in the current working tree, create-pr validation artifacts were verified with `70 passed`, `0 failed` e2e pass coverage and platform golden `pass=5`, `skip=2`, and the implementation was confirmed ready for the M0a PR.
 
 ## Pending Reviews
 
 - Post-M0 external review: run a dedicated external review after M0 inventory and before M1 implementation. M1 cannot start until this review has a `PASS` result recorded in `Planning Reviews`, or until the five-working-day fallback review procedure is recorded with attempted review, open questions, conservative self-review, and no unresolved blocking questions.
-- M0/M0a implementation reviews: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md` and `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`. M1 remains blocked until the M0a PR is merged.
+- M0/M0a implementation reviews: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`, and `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`. M1 remains blocked until the M0a PR is merged and the post-M0 external-review gate above is satisfied.
 
 ## Planning Review Remediation Retained In This Phase
 
