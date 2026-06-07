@@ -401,7 +401,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M0: https://github.com/sifr-lang/sifr/pull/2310
 - M0a: https://github.com/sifr-lang/sifr/pull/2311
 - M1: https://github.com/sifr-lang/sifr/pull/2313
-- M2: pending.
+- M2: https://github.com/sifr-lang/sifr/pull/2315
 - M3: pending.
 - M4: pending.
 - M5: pending.
