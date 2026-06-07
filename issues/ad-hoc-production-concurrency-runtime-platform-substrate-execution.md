@@ -251,6 +251,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M1 structured-async implementation reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`, and `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`. M1 is ready to PR/merge.
 - M2 sync/channel implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m2-sync-review-pass-1.md`. M2 is locally validated and ready to PR/merge.
 - M3 JoinSet implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-2.md` and `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`; PR #2320 is merged.
+- M3 scoped owner offload implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-scoped-offload-review-pass-1.md`; PR #2323 is merged.
 
 ## M1 Implementation Ledger
 
@@ -406,6 +407,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3 first wave: https://github.com/sifr-lang/sifr/pull/2316
 - M3 `task.spawn_cpu` wave: https://github.com/sifr-lang/sifr/pull/2318
 - M3 `JoinSet` wave: https://github.com/sifr-lang/sifr/pull/2320
+- M3 scoped owner offload wave: https://github.com/sifr-lang/sifr/pull/2323
 - M3: pending.
 - M4: pending.
 - M5: pending.
@@ -499,10 +501,15 @@ M3 scoped owner offload wave targeted local validation:
 - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/task_group_spawn_blocking_error_mismatch_rejected.sifr` -> expected fail with `SIFR-TYPE-0002`.
 - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/task_scope_spawn_blocking.sifr | rg -n "rayon|__sifr_scope_spawn_cpu|__sifr_with_silent_scope_cpu_panic_hook"` -> no matches; scoped blocking-only usage emits no Rayon references.
 - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/task_group_spawn_cpu.sifr | rg -n "rayon|__sifr_scope_spawn_cpu|__sifr_with_silent_scope_cpu_panic_hook"` -> PASS; scoped CPU usage emits the expected CPU bridge and Rayon references.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2155 files checked, 900-line limit.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; platform golden reported pass=5, skip=2; create-pr e2e pass suite reported 88 passed, 0 failed, cache_hits=20/23; advisory: warm wall-time budget exceeded.
 
 M3 scoped owner offload wave review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m3-scoped-offload-review-pass-1.md`: `PASS`; reviewer independently re-ran the three pass fixtures, the two fail fixtures, generated Cargo/Rust dependency gating checks for scoped blocking and scoped CPU usage, and verified scoped `Task[T, E]` observation semantics, TaskGroup open/error-homogeneity reuse, typed CPU worker failure mapping, manifests, traceability, and docs. Non-blocking follow-ups remain for receiver-specific diagnostic wording, optional runtime-emission split polish, validator return-shape cleanup, symmetric fixture expansion, and user-facing cancellation wording for already-started blocking work.
+- PR #2323 merged at `2768218fa27118d0c6b7f6d019002a7309eeb0d7`.
 - `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`: `PASS`; independent retry review confirmed the same blocker closure and PR readiness.
 
 M0 targeted local validation:
