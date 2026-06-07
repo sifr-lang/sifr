@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_3`
 
-Status: M3 implementation waves active; scoped owner offload wave merged in PR #2323.
+Status: M3 implementation waves active; default parallel pool closure merged in PR #2326.
 
 ## Production Surface Traceability
 
