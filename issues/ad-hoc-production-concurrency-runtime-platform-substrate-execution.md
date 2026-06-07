@@ -252,6 +252,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M2 sync/channel implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m2-sync-review-pass-1.md`. M2 is locally validated and ready to PR/merge.
 - M3 JoinSet implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-2.md` and `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`; PR #2320 is merged.
 - M3 scoped owner offload implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-scoped-offload-review-pass-1.md`; PR #2323 is merged.
+- M3 default parallel pool closure review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-default-pool-review-pass-1.md`; PR #2326 is merged.
 
 ## M1 Implementation Ledger
 
@@ -408,6 +409,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3 `task.spawn_cpu` wave: https://github.com/sifr-lang/sifr/pull/2318
 - M3 `JoinSet` wave: https://github.com/sifr-lang/sifr/pull/2320
 - M3 scoped owner offload wave: https://github.com/sifr-lang/sifr/pull/2323
+- M3 default parallel pool closure: https://github.com/sifr-lang/sifr/pull/2326
 - M3: pending.
 - M4: pending.
 - M5: pending.
@@ -527,6 +529,7 @@ M3 default parallel pool closure targeted local validation:
 M3 default parallel pool closure review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m3-default-pool-review-pass-1.md`: `PASS`; reviewer verified top-level `parallel.map`/`try_map` now use one private process-local `OnceLock` Rayon pool, typed default-pool construction failures remain `WorkerRuntimeError`/`WorkerError`, configured `Pool(config)` semantics remain unchanged, manifests and traceability are honest, and no Rayon global pool mutation is introduced. Non-blocking traceability wording for cached construction failure was applied before PR validation.
+- PR #2326 merged at `69f7a06ad12948dcd071de21c991c650ae062672`.
 
 M0 targeted local validation:
 
