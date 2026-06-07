@@ -22,6 +22,7 @@ use super::{
     lower_unshadowed_builtin_call, CallLowering,
 };
 use crate::hir_nodes::HirExpr;
+use crate::lower::parallel_calls;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
@@ -332,6 +333,10 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
         }
     }
 
+    if let Some(result) = parallel_calls::lower_parallel_imported_call(&func_name, call, ctx) {
+        return result;
+    }
+
     let builtin_is_shadowed =
         ctx.scope.lookup(&func_name).is_some() || ctx.functions.contains_key(&func_name);
 
@@ -343,10 +348,12 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
         }
     }
 
-    match lower_shadowable_builtin_call(&func_name, call, ctx) {
-        Some(CallLowering::Lowered(expr)) => return Some(expr),
-        Some(CallLowering::NoMatch) => {}
-        None => return None,
+    if !builtin_is_shadowed {
+        match lower_shadowable_builtin_call(&func_name, call, ctx) {
+            Some(CallLowering::Lowered(expr)) => return Some(expr),
+            Some(CallLowering::NoMatch) => {}
+            None => return None,
+        }
     }
 
     lower_regular_call(func_name, call, ctx)

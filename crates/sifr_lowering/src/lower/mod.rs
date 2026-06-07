@@ -92,6 +92,7 @@ mod own_mut_param_tests;
 #[cfg(test)]
 mod own_mut_semantics_tests;
 mod ownership_diagnostics;
+mod parallel_calls;
 mod protocol_diagnostics;
 mod result_diagnostics;
 #[cfg(test)]

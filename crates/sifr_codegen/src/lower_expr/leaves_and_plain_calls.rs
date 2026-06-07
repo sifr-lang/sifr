@@ -600,6 +600,34 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
             args: vec![try_lower_leaf_or_name_expr(worker)?],
         });
     }
+    if func == "__sifr_parallel_map" || func == "__sifr_parallel_try_map" {
+        let [items, worker] = args else {
+            return None;
+        };
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Ident(func.to_string())),
+            args: vec![
+                try_lower_leaf_or_name_expr(items)?,
+                try_lower_leaf_or_name_expr(worker)?,
+            ],
+        });
+    }
+    if func == "__sifr_pool_map" || func == "__sifr_pool_try_map" {
+        let [pool, items, worker] = args else {
+            return None;
+        };
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Ident(func.to_string())),
+            args: vec![
+                RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(try_lower_leaf_or_name_expr(pool)?),
+                },
+                try_lower_leaf_or_name_expr(items)?,
+                try_lower_leaf_or_name_expr(worker)?,
+            ],
+        });
+    }
     if func == "anext" {
         let [iterator] = args else {
             return None;

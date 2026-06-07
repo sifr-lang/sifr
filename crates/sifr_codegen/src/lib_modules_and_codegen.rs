@@ -7,8 +7,9 @@ use super::{
     build_timeout_result_type_items, module_uses_async_exit_cause_type,
     module_uses_async_generator_type, module_uses_cancellation_error_type,
     module_uses_failure_type, module_uses_task_scope, module_uses_task_sleep,
-    module_uses_timeout_result_type, replace_sync_channel_runtime_items, sifr_type_to_rust_type,
-    sync_channel_runtime_needed, Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
+    module_uses_timeout_result_type, replace_parallel_runtime_items,
+    replace_sync_channel_runtime_items, sifr_type_to_rust_type, sync_channel_runtime_needed,
+    Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
 };
 use crate::error_refs::collect_referenced_builtin_error_classes;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
@@ -366,6 +367,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                 if module_name == "sifr.sync" && sync_channel_runtime_needed(&filtered) {
                     filtered = replace_sync_channel_runtime_items(&filtered);
                 }
+                if module_name == "sifr.parallel" {
+                    filtered = replace_parallel_runtime_items(&filtered);
+                }
                 if !filtered.trim().is_empty() {
                     let prepared = collect_and_strip_shared_prelude(&filtered);
                     stdlib_needs_file_handles |=
@@ -554,7 +558,6 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if uses_task_scope {
         preamble_items.extend(build_task_scope_items());
     }
-
     let mut assembled_body_items: Vec<RustItem> = Vec::new();
     if !emitter.enum_items.is_empty() {
         assembled_body_items.extend(emitter.enum_items.clone());
@@ -720,6 +723,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                 || stdlib_preamble.contains("tokio::")
             {
                 features.insert(StdlibFeature::Tokio);
+            }
+            if stdlib_preamble.contains("rayon::") {
+                features.insert(StdlibFeature::Rayon);
             }
             features
         },

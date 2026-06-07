@@ -412,6 +412,30 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 
 Record local validation for each milestone before opening its PR.
 
+M3 first-wave targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo check -p sifr_lowering -p sifr_codegen -p sifr_stdlib` -> PASS.
+- `cargo clippy --workspace -- -D warnings` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2126 files checked, 900-line limit.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_map_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_try_map_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_pool_map_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_map_worker_panic_typed.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_try_map_user_error_typed.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/parallel_map_async_direct_rejected.sifr` -> expected fail with `SIFR-ASYNC-0004`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/parallel_map_non_send_item_rejected.sifr` -> expected fail with `SIFR-TYPE-0002`.
+- `SIFR_E2E_PROFILE=create-pr SIFR_E2E_MANIFEST=verification/validation_lanes/create_pr_e2e_manifest.json SIFR_E2E_DISABLE_CACHE=1 cargo test -p sifr --test e2e parallel_ -- --nocapture` -> PASS; verified the five new parallel pass fixtures as a grouped batch after adding the grouped-test Rayon dependency path.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`76 passed`, `0 failed`, `cache_hits=20/21`).
+
+M3 first-wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m3-parallel-design-review-pass-1.md`: `FAIL`; reviewer blocked `std::process::abort()`, missing typed pool/worker runtime failure channels, and unwrapped Rayon worker panic behavior. The implementation was remediated by changing `parallel.map`/`Pool.map` to `Result[..., WorkerRuntimeError]`, changing `parallel.try_map`/`Pool.try_map` to `Result[..., WorkerError]`, deleting the abort path, and wrapping Rayon worker calls in typed catch boundaries.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-parallel-design-review-pass-2.md`: `PASS`; reviewer verified the pass-1 blockers are closed and accepted the first-wave boundary, with non-blocking follow-ups retained for later M3 work.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-parallel-review-pass-2.md`: `PASS`; reviewer verified typed pool-construction errors, typed worker panic conversion, result-shaped `sifr.parallel`/`Pool` APIs, validation fixtures, manifest entries, and traceability. Non-blocking follow-ups were recorded for global panic-hook suppression, future `WorkerError[E]`, and lazy private default pool shutdown design.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-parallel-review-pass-3.md`: `PASS`; reviewer verified the post-pass-2 grouped e2e Rayon dependency fix, confirmed it does not hide a runtime feature-gating issue, re-verified typed pool/worker failure handling, sendability/type diagnostics, validation manifests, traceability, and PR readiness.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.
@@ -521,7 +545,7 @@ M0 phase-level decisions:
 | Python global `warnings` filter model | `rejected` | `rejected` | Runtime diagnostics use tracing/metrics and typed Sifr diagnostics, not global Python warning filters. | `Lib/test/test_warnings/` | M5 warning-global rejection fixture |
 | Rust ecosystem choices | `internal-only` | `internal-only` | Use `internal_docs/dependency_policy.md` plus the locked Rust Ecosystem Decisions table from the phase doc. Ring 2 generated-runtime core covers Tokio with `current_thread`, Tokio Util, conditional Futures Util, Tokio `sync`, Tokio process/std process, Tokio signal, and tracing. Ring 3 feature-gated substrate covers Crossbeam Channel if sync cross-thread channels remain public, std sync/OnceLock, Rayon, Rustix only after a documented std/Tokio gap with host-matrix fixtures, metrics after M5 metric schema approval, and conditional thiserror. Ring 4 typed-IPC-only covers Serde/Postcard. Reject Flume, async-channel, futures-channel, direct Parking Lot, new Once Cell, Scopeguard, production tracing-subscriber, IPC Serde JSON, Bincode, Signal Hook, Nix, direct Mio/Bytes/DashMap, runtime Anyhow/Eyre, and bespoke replacements. | N/A | Dependency policy plus phase-doc decision table plus M0 ledger verification |
 | `JoinSet` drop | `production-public` | `production-public` | Live/non-empty `JoinSet` values must be consumed by `join_all()` or `cancel_all().await`; unobserved drop is a compile-time diagnostic. | `Lib/test/test_concurrent_futures/` | M3 JoinSet drop diagnostic fixture |
-| Rayon pool architecture | `internal-only` | `internal-only` | Top-level `sifr.parallel` uses a private lazy default Rayon pool; configured parallelism uses explicit `Pool(config)` private Rayon pools. Rayon's global pool is never configured. | N/A | M3 pool architecture decision record |
+| Rayon pool architecture | `internal-only` | `internal-only` | Top-level `sifr.parallel` uses a private pool sized from `available_parallelism()` without configuring Rayon's global pool; configured parallelism uses explicit `Pool(config)` private Rayon pools. M3 traceability records the remaining lazy-default shutdown design gap before milestone closure. | N/A | M3 pool architecture decision record |
 | Existing `sifr.asyncio` veneer | `internal-only` / `unsupported-with-diagnostic` | `unsupported-with-diagnostic` | Existing veneer entry points are implementation debt; M1 does not build on or extend them, and M0 records removal, internal-test-only, or diagnostic disposition. New runtime APIs use `sifr.task`, `sifr.sync`, and `sifr.process`. | `Lib/test/test_asyncio/` | M1 veneer-free implementation fixture |
 | `JoinSet` result ordering | `production-public` | `production-public` | `join_all().await` returns results in submission order, `cancel_all().await` returns cancellation evidence in submission order, and `JoinItemId` is an opaque user-side correlation token with no query API. | `Lib/test/test_concurrent_futures/` | M3 JoinSet ordering fixture |
 | Shell subprocess effect | `production-substrate` | `production-substrate` | Shell subprocess usage is marked with `@shell_exec` in addition to `@blocking_io`; shell APIs require explicit shell selection and async/offload diagnostics. | `Lib/test/test_subprocess.py` | M4 shell effect fixture |

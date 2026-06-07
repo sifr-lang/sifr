@@ -1,0 +1,18 @@
+from sifr.parallel import WorkerError, try_map
+
+
+class MapError(Error):
+    pass
+
+
+def stringify(value: int) -> Result[str, MapError]:
+    if value < 0:
+        raise MapError()
+    return str(value)
+
+
+def main() -> Result[None, WorkerError]:
+    values: list[int] = [4, 5]
+    mapped: Result[list[str], WorkerError] = try_map(values, stringify)
+    assert str(mapped) == "Ok([\"4\", \"5\"])"
+    return None

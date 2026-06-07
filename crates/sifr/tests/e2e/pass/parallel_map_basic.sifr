@@ -1,0 +1,12 @@
+from sifr.parallel import WorkerRuntimeError, map
+
+
+def double(value: int) -> int:
+    return value * 2
+
+
+def main() -> None:
+    values: list[int] = [1, 2, 3]
+    doubled: Result[list[int], WorkerRuntimeError] = map(values, double)
+    assert str(doubled) == "Ok([2, 4, 6])"
+    return None

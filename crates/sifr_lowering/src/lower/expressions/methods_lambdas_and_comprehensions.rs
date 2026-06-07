@@ -15,6 +15,7 @@ use super::{
     ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
     DEFAULTDICT_SET_ALIAS,
 };
+use crate::lower::parallel_calls;
 pub(in crate::lower) fn lower_method_call(
     attr: &ExprAttribute,
     call: &ExprCall,
@@ -93,6 +94,11 @@ pub(in crate::lower) fn lower_method_call(
         call,
         ctx,
     ) {
+        return result;
+    }
+    if let Some(result) =
+        parallel_calls::lower_parallel_pool_method_call(&object, &method_name, call, ctx)
+    {
         return result;
     }
     if tsc::is_task_scope_type(object.ty()) && method_name == "spawn" {

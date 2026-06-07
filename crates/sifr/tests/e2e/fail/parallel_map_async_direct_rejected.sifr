@@ -1,0 +1,14 @@
+# expect-error: SIFR-ASYNC-0004
+from sifr.parallel import map
+
+
+def double(value: int) -> int:
+    return value * 2
+
+
+async def main() -> None:
+    values: list[int] = [1]
+    doubled: list[int] = map(values, double)
+    await task.sleep(0.0)
+    assert doubled[0] == 2
+    return None

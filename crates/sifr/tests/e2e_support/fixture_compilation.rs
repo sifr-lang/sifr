@@ -302,6 +302,9 @@ pub(crate) fn generate_cargo_toml(
             "sifr.base64" => {
                 deps.insert("base64 = \"0.22.1\"".to_string());
             }
+            "sifr.parallel" => {
+                deps.insert("rayon = \"1.12.0\"".to_string());
+            }
             "sifr.tomllib" | "_sifr.toml" => {
                 deps.insert(
                     "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string(),
@@ -402,6 +405,9 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert(
                     "bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }".to_string(),
                 );
+            }
+            "rayon" => {
+                deps.insert("rayon = \"1.12.0\"".to_string());
             }
             "sifr_runtime" | "sifr-runtime" => {
                 if !deps
