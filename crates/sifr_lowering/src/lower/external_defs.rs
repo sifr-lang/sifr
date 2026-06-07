@@ -30,6 +30,9 @@ pub struct ExternalDefs {
     /// Map of `module_name` -> (`callable_name` -> vararg parameter index)
     pub function_varargs:
         std::collections::HashMap<String, std::collections::HashMap<String, usize>>,
+    /// Map of `module_name` -> (`callable_name` -> workload label)
+    pub function_workloads:
+        std::collections::HashMap<String, std::collections::HashMap<String, String>>,
     /// Map of `module_name` -> (`callable_name` -> default argument expressions by parameter index)
     pub function_defaults:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<(usize, HirExpr)>>>,

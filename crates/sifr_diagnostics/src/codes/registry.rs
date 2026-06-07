@@ -59,6 +59,7 @@ impl DiagnosticCode {
         Self::new("SIFR-ASYNC-0005", Severity::Error);
     pub const ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF: Self =
         Self::new("SIFR-ASYNC-0006", Severity::Error);
+    pub const ASYNC_DIRECT_SHELL_EXEC_CALL: Self = Self::new("SIFR-ASYNC-0007", Severity::Error);
 
     pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
     pub const DECIMAL_BIGDECIMAL_INVALID_LITERAL: Self =
@@ -566,6 +567,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::ASYNC_DIRECT_CPU_HEAVY_CALL,
     DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
     DiagnosticCode::ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF,
+    DiagnosticCode::ASYNC_DIRECT_SHELL_EXEC_CALL,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_FLOAT_MIXED,

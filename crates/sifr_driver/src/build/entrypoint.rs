@@ -335,6 +335,7 @@ impl RootedEntrypointPlan {
             flow_graph,
             function_defaults: std::collections::HashMap::new(),
             function_varargs: std::collections::HashMap::new(),
+            function_workloads: std::collections::HashMap::new(),
             constant_integer_values: std::collections::HashMap::new(),
             reveal_types: main_diag.reveal_types,
             warnings: main_diag.warnings,

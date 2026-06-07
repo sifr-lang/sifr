@@ -285,6 +285,7 @@ pub fn collect_module_exports(
     let mut const_integer_value_exports = HashMap::new();
     let mut default_exports = HashMap::new();
     let mut vararg_exports = HashMap::new();
+    let mut workload_exports = HashMap::new();
 
     for func in &module.functions {
         if should_export_callable(module_name, &func.name) {
@@ -302,6 +303,9 @@ pub fn collect_module_exports(
             );
             if let Some(vararg_index) = lowering_result.function_varargs.get(&func.name) {
                 vararg_exports.insert(func.name.clone(), *vararg_index);
+            }
+            if let Some(label) = lowering_result.function_workloads.get(&func.name) {
+                workload_exports.insert(func.name.clone(), label.clone());
             }
         }
     }
@@ -395,6 +399,13 @@ pub fn collect_module_exports(
                     {
                         vararg_exports.insert(local_name.clone(), *vararg_index);
                     }
+                    if let Some(label) = external_defs
+                        .function_workloads
+                        .get(&import.module)
+                        .and_then(|module_workloads| module_workloads.get(name))
+                    {
+                        workload_exports.insert(local_name.clone(), label.clone());
+                    }
                     if let Some(type_vars) = external_defs
                         .generic_functions
                         .get(&import.module)
@@ -460,6 +471,11 @@ pub fn collect_module_exports(
         external_defs
             .function_varargs
             .insert(module_name.to_string(), vararg_exports);
+    }
+    if !workload_exports.is_empty() {
+        external_defs
+            .function_workloads
+            .insert(module_name.to_string(), workload_exports);
     }
     external_defs
         .constants

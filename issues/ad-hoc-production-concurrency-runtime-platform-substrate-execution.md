@@ -413,7 +413,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3 default parallel pool closure: https://github.com/sifr-lang/sifr/pull/2326
 - M3 closeout: https://github.com/sifr-lang/sifr/pull/2325
 - M3: complete.
-- M4: pending.
+- M4 sync process foundation: local implementation in progress; PR pending.
+- M4: in progress.
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -583,6 +584,25 @@ M3 closeout wave review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-4.md`: `PASS`; final post-PR-#2326 reviewer verified the branch preserves the canonical lazy default pool fixture and default-pool implementation, removes the duplicate closeout fixture, routes all five CPU/Rayon surfaces through the shared worker panic-hook guard, and is ready to force-push and merge with no strict M3 closure blockers.
 - PR #2325 merged at `9edf51988475ce6711bb42e79b01e96c8e34e9b5`; M3 is closed.
 
+M4 sync process foundation targeted local validation:
+
+- `cargo check -p sifr_stdlib -p sifr_codegen -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_sync_output_text.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_sync_bytes_env_cwd_stdin.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_shell_exec_output.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/process_blocking_direct_async_rejected.sifr` -> expected FAIL with `SIFR-ASYNC-0003`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/process_shell_exec_direct_async_rejected.sifr` -> expected FAIL with `SIFR-ASYNC-0007`.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_sync_output_text.sifr | rg "std::process::Command|process_output_text|subprocess|sh|split_once|Stdio::piped"` -> PASS; emitted ordinary process path uses `std::process::Command`, env splitting, and piped stdio, with no legacy subprocess helper.
+- `cargo fmt --check` -> PASS after formatting the new M4 Rust modules.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2163 files checked, 900-line limit.
+- `python3 scripts/check_diagnostic_docs_sync.py` -> PASS after generating `SIFR-ASYNC-0007` docs.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 413 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`92 passed`, `0 failed`, `cache_hits=23/25`).
+
+M4 sync process foundation review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-sync-process-review-pass-1.md`: `PASS`; reviewer verified ordinary argv APIs lower to `std::process::Command` without shell or legacy subprocess helpers, shell APIs are explicit and classified with `SIFR-ASYNC-0007`, env/cwd/stdin/output/text behavior is typed without data-dependent panics, imported workload metadata covers stdlib imports and local re-exports, traceability honestly preserves remaining M4 process lifecycle work, and the wave is ready to PR. Non-blocking follow-ups were recorded for stdin setter semantics, deletion of unused legacy `_sifr.sys.subprocess_*` intrinsic paths, future stdlib re-export workload metadata, and later signal/timeout/cancellation/text-mode completion.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.
@@ -666,6 +686,8 @@ Create and keep current during implementation:
 - `verification/stdlib/concurrency_runtime_m0a_legacy_surface_traceability.md`
 - `verification/stdlib/concurrency_runtime_m1_traceability.md`
 - `verification/stdlib/concurrency_runtime_m2_sync_traceability.md`
+- `verification/stdlib/concurrency_runtime_m3_offload_traceability.md`
+- `verification/stdlib/concurrency_runtime_m4_process_traceability.md`
 - `verification/platform/supported_host_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
 

@@ -81,6 +81,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-ASYNC-0004`](SIFR-ASYNC-0004.md) | Error | CPU-heavy function called directly from async context. |
 | [`SIFR-ASYNC-0005`](SIFR-ASYNC-0005.md) | Error | Blocking offload target is not classified as blocking I/O or CPU-heavy work. |
 | [`SIFR-ASYNC-0006`](SIFR-ASYNC-0006.md) | Error | Synchronous workload annotation applied to async function. |
+| [`SIFR-ASYNC-0007`](SIFR-ASYNC-0007.md) | Error | Shell execution function called directly from async context. |
 | [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
 | [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.md) | Error | Invalid BigDecimal exact literal. |
 | [`SIFR-DECIMAL-0003`](SIFR-DECIMAL-0003.md) | Error | Float mixed with a decimal numeric type. |

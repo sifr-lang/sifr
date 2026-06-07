@@ -1,0 +1,21 @@
+from sifr.process import Command, output_text, run, ProcessError, Status, TextOutput
+
+
+def main():
+    try:
+        cmd: Command = Command("printf")
+        cmd.arg("m4-process")
+
+        text: TextOutput = output_text(cmd, "utf-8")
+        assert text.stdout == "m4-process"
+        assert text.stderr == ""
+        assert text.status.success
+        assert text.status.kind == "success"
+        assert text.encoding == "utf-8"
+
+        nonzero: Command = Command("false")
+        status: Status = run(nonzero)
+        assert not status.success
+        assert status.kind == "nonzero"
+    except ProcessError as e:
+        assert e.message == ""

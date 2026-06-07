@@ -1,0 +1,9 @@
+# expect-error: SIFR-ASYNC-0003
+from sifr.process import Command, output_text
+
+
+async def main():
+    cmd: Command = Command("printf")
+    cmd.arg("blocked")
+    _ = output_text(cmd)
+    await task.sleep(0.0)

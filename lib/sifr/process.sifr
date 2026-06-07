@@ -1,0 +1,202 @@
+# sifr.process — Native process execution and status surfaces
+from _sifr.process import (
+    process_run,
+    process_output,
+    process_output_text,
+    process_shell_run,
+    process_shell_output,
+    process_shell_output_text,
+)
+
+
+class ProcessError(Error):
+    message: str
+
+
+class Stdio:
+    mode: str
+
+    def __init__(self, mode: str):
+        self.mode = mode
+
+
+PIPE: Stdio = Stdio("pipe")
+INHERIT: Stdio = Stdio("inherit")
+NULL: Stdio = Stdio("null")
+
+
+class Status:
+    code: int
+    success: bool
+    signal: int | None
+    timed_out: bool
+    cancelled: bool
+    kind: str
+
+    def __init__(self, code: int, kind: str):
+        self.code = code
+        self.success = code == 0
+        self.signal = None
+        self.timed_out = False
+        self.cancelled = False
+        self.kind = kind
+
+    def exited(self) -> bool:
+        return self.signal is None and not self.timed_out and not self.cancelled
+
+
+class Output:
+    stdout: bytes
+    stderr: bytes
+    status: Status
+
+    def __init__(self, stdout: bytes, stderr: bytes, status: Status):
+        self.stdout = stdout
+        self.stderr = stderr
+        self.status = status
+
+
+class TextOutput:
+    stdout: str
+    stderr: str
+    status: Status
+    encoding: str
+
+    def __init__(self, stdout: str, stderr: str, status: Status, encoding: str):
+        self.stdout = stdout
+        self.stderr = stderr
+        self.status = status
+        self.encoding = encoding
+
+
+class Command:
+    program: str
+    arguments: list[str]
+    env_vars: list[str]
+    working_dir: str
+    has_working_dir: bool
+    stdin_data: bytes
+    has_stdin_data: bool
+
+    def __init__(self, program: str):
+        self.program = program
+        self.arguments = []
+        self.env_vars = []
+        self.working_dir = ""
+        self.has_working_dir = False
+        self.stdin_data = b""
+        self.has_stdin_data = False
+
+    def arg(self, value: str) -> None:
+        self.arguments.append(value)
+
+    def args(self, values: list[str]) -> None:
+        for value in values:
+            self.arguments.append(value)
+
+    def set_env(self, key: str, value: str) -> None:
+        self.env_vars.append(key + "=" + value)
+
+    def cwd(self, path: str) -> None:
+        self.working_dir = path + ""
+        self.has_working_dir = True
+
+    def stdin_bytes(self, data: bytes) -> None:
+        self.stdin_data = self.stdin_data + data
+        self.has_stdin_data = True
+
+
+def _status(code: int) -> Status:
+    if code == 0:
+        return Status(code, "success")
+    return Status(code, "nonzero")
+
+
+@blocking_io
+def run(command: Command) -> Result[Status, ProcessError]:
+    try:
+        code: int = process_run(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+        )
+        return _status(code)
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+def output(command: Command) -> Result[Output, ProcessError]:
+    try:
+        raw: tuple[bytes, bytes, int] = process_output(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_data,
+            command.has_stdin_data,
+        )
+        return Output(raw[0], raw[1], _status(raw[2]))
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+def output_text(command: Command, encoding: str = "utf-8") -> Result[TextOutput, ProcessError]:
+    try:
+        raw: tuple[str, str, int] = process_output_text(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_data,
+            command.has_stdin_data,
+            encoding,
+        )
+        return TextOutput(raw[0], raw[1], _status(raw[2]), encoding)
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+@shell_exec
+def run_shell(script: str) -> Result[Status, ProcessError]:
+    try:
+        code: int = process_shell_run(script)
+        return _status(code)
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+@shell_exec
+def output_shell(script: str, stdin: bytes | None = None) -> Result[Output, ProcessError]:
+    try:
+        if stdin is None:
+            raw: tuple[bytes, bytes, int] = process_shell_output(script, b"", False)
+            return Output(raw[0], raw[1], _status(raw[2]))
+        raw: tuple[bytes, bytes, int] = process_shell_output(script, stdin, True)
+        return Output(raw[0], raw[1], _status(raw[2]))
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+@shell_exec
+def output_shell_text(
+    script: str,
+    stdin: bytes | None = None,
+    encoding: str = "utf-8",
+) -> Result[TextOutput, ProcessError]:
+    try:
+        if stdin is None:
+            raw: tuple[str, str, int] = process_shell_output_text(script, b"", False, encoding)
+            return TextOutput(raw[0], raw[1], _status(raw[2]), encoding)
+        raw: tuple[str, str, int] = process_shell_output_text(script, stdin, True, encoding)
+        return TextOutput(raw[0], raw[1], _status(raw[2]), encoding)
+    except ProcessError as e:
+        raise e

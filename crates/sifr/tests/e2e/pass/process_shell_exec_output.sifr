@@ -1,0 +1,16 @@
+from sifr.process import ProcessError, TextOutput, output_shell_text, run_shell, Status
+
+
+def main():
+    try:
+        out: TextOutput = output_shell_text("printf shell-ok", None, "utf-8")
+        assert out.stdout == "shell-ok"
+        assert out.stderr == ""
+        assert out.status.success
+
+        status: Status = run_shell("exit 3")
+        assert not status.success
+        assert status.code == 3
+        assert status.kind == "nonzero"
+    except ProcessError as e:
+        assert e.message == ""

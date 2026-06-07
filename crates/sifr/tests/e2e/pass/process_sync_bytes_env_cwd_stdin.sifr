@@ -1,0 +1,42 @@
+from sifr.process import Command, Output, ProcessError, Status, TextOutput, output, output_text, run
+from sifr.io import write_text
+from sifr.tempfile import mktemp_path
+
+
+def main():
+    try:
+        stdin_cmd: Command = Command("cat")
+        stdin_cmd.stdin_bytes(b"pipe-bytes")
+        bytes_out: Output = output(stdin_cmd)
+        assert bytes_out.stdout == b"pipe-bytes"
+        assert bytes_out.stderr == b""
+        assert bytes_out.status.success
+
+        env_cmd: Command = Command("sh")
+        env_cmd.args(["-c", "printf \"$SIFR_M4_PROCESS_ENV\""])
+        env_cmd.set_env("SIFR_M4_PROCESS_ENV", "env-ok")
+        env_out: TextOutput = output_text(env_cmd)
+        assert env_out.stdout == "env-ok"
+
+        cwd_path: str = mktemp_path("sifr_m4_process_cwd_")
+        marker_path: str = cwd_path + "/marker.txt"
+        _mkdir: Command = Command("mkdir")
+        _mkdir.arg(cwd_path)
+        mkdir_status: Status = run(_mkdir)
+        assert mkdir_status.success
+        _write: None = write_text(marker_path, "cwd-ok")
+
+        cwd_cmd: Command = Command("cat")
+        cwd_cmd.arg("marker.txt")
+        cwd_cmd.cwd(cwd_path)
+        cwd_out: TextOutput = output_text(cwd_cmd)
+        assert cwd_out.stdout == "cwd-ok"
+
+        cleanup: Command = Command("rm")
+        cleanup.args(["-rf", cwd_path])
+        cleanup_status: Status = run(cleanup)
+        assert cleanup_status.success
+    except ProcessError as e:
+        assert e.message == ""
+    except IOError as e:
+        assert e.message == ""

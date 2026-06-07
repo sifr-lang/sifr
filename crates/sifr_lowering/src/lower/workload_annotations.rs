@@ -7,13 +7,24 @@ use sifr_python_ast::{Expr, StmtFunctionDef};
 pub(in crate::lower) enum WorkloadKind {
     BlockingIo,
     CpuHeavy,
+    ShellExec,
 }
 
 impl WorkloadKind {
+    pub(in crate::lower) fn from_label(label: &str) -> Option<Self> {
+        match label {
+            "blocking_io" => Some(Self::BlockingIo),
+            "cpu_heavy" => Some(Self::CpuHeavy),
+            "shell_exec" => Some(Self::ShellExec),
+            _ => None,
+        }
+    }
+
     pub(in crate::lower) fn label(self) -> &'static str {
         match self {
             Self::BlockingIo => "blocking_io",
             Self::CpuHeavy => "cpu_heavy",
+            Self::ShellExec => "shell_exec",
         }
     }
 
@@ -21,6 +32,9 @@ impl WorkloadKind {
         match self {
             Self::BlockingIo => "use an async API or task.spawn_blocking",
             Self::CpuHeavy => "use task.spawn_cpu",
+            Self::ShellExec => {
+                "use an async process API or task.spawn_blocking around explicit shell work"
+            }
         }
     }
 
@@ -28,6 +42,7 @@ impl WorkloadKind {
         match self {
             Self::BlockingIo => DiagnosticCode::ASYNC_DIRECT_BLOCKING_IO_CALL,
             Self::CpuHeavy => DiagnosticCode::ASYNC_DIRECT_CPU_HEAVY_CALL,
+            Self::ShellExec => DiagnosticCode::ASYNC_DIRECT_SHELL_EXEC_CALL,
         }
     }
 }
@@ -43,6 +58,7 @@ pub(in crate::lower) fn annotation_with_range<'a>(
         let kind = match name.id.as_str() {
             "blocking_io" => WorkloadKind::BlockingIo,
             "cpu_heavy" => WorkloadKind::CpuHeavy,
+            "shell_exec" => WorkloadKind::ShellExec,
             _ => continue,
         };
         workload = Some((kind, decorator.expression.range()));
@@ -108,7 +124,7 @@ pub(in crate::lower) fn reject_unclassified_offload_target(
         ctx.error_with_code_at(
             DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
             format!(
-                "{api_name} target must be a named sync function classified as @blocking_io, @cpu_heavy, or known blocking external work"
+                "{api_name} target must be a named sync function classified as @blocking_io, @cpu_heavy, @shell_exec, or known blocking external work"
             ),
             target.range(),
         );
@@ -122,7 +138,7 @@ pub(in crate::lower) fn reject_unclassified_offload_target(
     ctx.error_with_code_at(
         DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
         format!(
-            "{api_name} target '{function}' is not classified as @blocking_io, @cpu_heavy, or known blocking external work; call it directly or annotate it if it is genuinely blocking or expensive"
+            "{api_name} target '{function}' is not classified as @blocking_io, @cpu_heavy, @shell_exec, or known blocking external work; call it directly or annotate it if it is genuinely blocking or expensive"
         ),
         target.range(),
     );
