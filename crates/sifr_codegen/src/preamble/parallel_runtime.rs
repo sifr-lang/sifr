@@ -119,17 +119,6 @@ fn __sifr_default_parallel_pool() -> Result<&'static rayon::ThreadPool, WorkerRu
     }
 }
 
-fn __sifr_with_silent_parallel_panic_hook<T, F: FnOnce() -> T>(body: F) -> T {
-    let previous_hook = std::panic::take_hook();
-    std::panic::set_hook(Box::new(|_| {}));
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(body));
-    std::panic::set_hook(previous_hook);
-    match result {
-        Ok(value) => value,
-        Err(payload) => std::panic::resume_unwind(payload),
-    }
-}
-
 fn __sifr_parallel_map<T: Send, U: Send, F: Fn(T) -> U + Send + Sync>(
     items: Vec<T>,
     worker: F,
@@ -137,7 +126,7 @@ fn __sifr_parallel_map<T: Send, U: Send, F: Fn(T) -> U + Send + Sync>(
     use rayon::prelude::{IntoParallelIterator, ParallelIterator};
     let pool = __sifr_default_parallel_pool()?;
     return pool.install(|| {
-        __sifr_with_silent_parallel_panic_hook(|| {
+        __sifr_with_silent_worker_panic_hook(|| {
             items
                 .into_par_iter()
                 .map(|item| {
@@ -159,7 +148,7 @@ where
     use rayon::prelude::{IntoParallelIterator, ParallelIterator};
     let pool = __sifr_default_parallel_pool().map_err(__sifr_worker_error_from_runtime)?;
     return pool.install(|| {
-        __sifr_with_silent_parallel_panic_hook(|| {
+        __sifr_with_silent_worker_panic_hook(|| {
             items
                 .into_par_iter()
                 .map(|item| {
@@ -191,7 +180,7 @@ fn __sifr_pool_map<T: Send, U: Send, F: Fn(T) -> U + Send + Sync>(
         }
     };
     return worker_pool.install(|| {
-        __sifr_with_silent_parallel_panic_hook(|| {
+        __sifr_with_silent_worker_panic_hook(|| {
             items
                 .into_par_iter()
                 .map(|item| {
@@ -223,7 +212,7 @@ where
         }
     };
     return worker_pool.install(|| {
-        __sifr_with_silent_parallel_panic_hook(|| {
+        __sifr_with_silent_worker_panic_hook(|| {
             items
                 .into_par_iter()
                 .map(|item| {

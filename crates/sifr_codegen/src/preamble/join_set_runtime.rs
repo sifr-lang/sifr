@@ -340,30 +340,6 @@ pub fn build_join_set_items() -> Vec<RustItem> {
 
 pub fn build_join_set_cpu_items() -> Vec<RustItem> {
     vec![
-        RustItem::Fn {
-            name: "__sifr_with_silent_join_set_panic_hook".to_string(),
-            visibility: Visibility::Private,
-            type_params: vec![
-                crate::RustTypeParam {
-                    name: "T".to_string(),
-                    bounds: vec![],
-                },
-                crate::RustTypeParam {
-                    name: "F".to_string(),
-                    bounds: vec!["FnOnce() -> T".to_string()],
-                },
-            ],
-            params: vec![RustParam::Named {
-                name: "body".to_string(),
-                ty: RustType::Named("F".to_string()),
-            }],
-            ret: Some(RustType::Named("T".to_string())),
-            body: vec![RustStmt::Expr(RustExpr::Ident(
-                "let previous_hook = std::panic::take_hook();\n        std::panic::set_hook(Box::new(|_| {}));\n        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(body));\n        std::panic::set_hook(previous_hook);\n        return match result {\n            Ok(value) => value,\n            Err(payload) => std::panic::resume_unwind(payload),\n        }"
-                    .to_string(),
-            ))],
-            is_async: false,
-        },
         RustItem::Impl {
             target: "__SifrJoinSet<T, WorkerError>".to_string(),
             type_params: vec![crate::RustTypeParam {
@@ -401,7 +377,7 @@ pub fn build_join_set_cpu_items() -> Vec<RustItem> {
                 ],
                 ret: Some(RustType::Named("JoinItemId".to_string())),
                 body: vec![RustStmt::Expr(RustExpr::Ident(
-                    "let id = self.__sifr_next_id();\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_join_set_panic_hook(|| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(Err(error)) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"{}\", error)))),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        let abort_handle = Some(handle.abort_handle());\n        self.entries.push(__SifrJoinEntry { id, handle, abort_handle });\n        return id"
+                    "let id = self.__sifr_next_id();\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_worker_panic_hook(|| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(Err(error)) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"{}\", error)))),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        let abort_handle = Some(handle.abort_handle());\n        self.entries.push(__SifrJoinEntry { id, handle, abort_handle });\n        return id"
                         .to_string(),
                 ))],
                 is_async: false,
