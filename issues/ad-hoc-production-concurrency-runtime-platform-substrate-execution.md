@@ -415,6 +415,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3: complete.
 - M4 sync process foundation: https://github.com/sifr-lang/sifr/pull/2331
 - M4 sync child wait: https://github.com/sifr-lang/sifr/pull/2334
+- M4 timeout status evidence: https://github.com/sifr-lang/sifr/pull/2336
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -644,6 +645,7 @@ M4 timeout status evidence wave review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-1.md`: `CHANGES_REQUESTED`; reviewer found a user-triggerable panic for positive finite timeout values too large for `Duration::from_secs_f64`. The wave was remediated by switching generated timeout conversion to checked `Duration::try_from_secs_f64`, adding an overflow `ProcessError` regression fixture, and tightening traceability.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-2.md`: `PASS`; reviewer verified the pass-1 overflow blocker was fixed and noted a non-blocking theoretical host-clock overflow band in `Instant + Duration`.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-3.md`: `PASS`; reviewer verified the additional `Instant::checked_add(...).ok_or_else(ProcessError)?` hardening closes the host-clock deadline overflow path and no timeout-path data-dependent panic blocker remains.
+- Merged as PR #2336: https://github.com/sifr-lang/sifr/pull/2336
 
 M0 targeted local validation:
 
