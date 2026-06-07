@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::offload_worker_captures::validate_offload_worker_captures;
 use super::task_scope_calls::{
     enforce_task_group_error_type, enforce_task_group_is_open, is_task_group_type,
     is_task_scope_type, non_send_reason,
@@ -128,6 +129,7 @@ fn validate_sync_worker(call: &ExprCall, ctx: &mut LowerCtx, api_name: &str) -> 
         return None;
     }
     let worker = lower_expr(&call.arguments.args[0], ctx)?;
+    validate_offload_worker_captures(api_name, &worker, call.arguments.args[0].range(), ctx)?;
     let Type::Function(ft) = worker.ty().resolve_alias() else {
         expression_diagnostics::type_mismatch(
             ctx,

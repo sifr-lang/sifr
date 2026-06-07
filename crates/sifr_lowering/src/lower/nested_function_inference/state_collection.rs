@@ -1,3 +1,4 @@
+use super::capture_collection::collect_nested_function_captures;
 use super::{
     analyze_assign, infer_expr_type, merge_env_types, refine_name_with_binary_context, str,
     type_contains_unknown_or_any, unify_function_return, unify_name_binding, unify_types,
@@ -16,6 +17,7 @@ const MAX_INFERENCE_PASSES: usize = 8;
 pub(in crate::lower) struct NestedFunctionInference {
     pub(in crate::lower) function_types: HashMap<String, FunctionType>,
     pub(in crate::lower) binding_hints: HashMap<String, Type>,
+    pub(in crate::lower) function_captures: HashMap<String, Vec<(String, Type)>>,
 }
 
 #[derive(Clone)]
@@ -122,6 +124,7 @@ pub(in crate::lower) fn infer_nested_function_types(
         return NestedFunctionInference {
             function_types: HashMap::new(),
             binding_hints: env.vars,
+            function_captures: HashMap::new(),
         };
     }
 
@@ -144,10 +147,12 @@ pub(in crate::lower) fn infer_nested_function_types(
         call_return_origins: HashMap::new(),
     };
     analyze_block(stmts, &mut env, &mut states, None, ctx);
+    let function_captures = collect_nested_function_captures(stmts, &env, &states);
 
     NestedFunctionInference {
         function_types: finalize_nested_function_types(&mut states, ctx),
         binding_hints: env.vars,
+        function_captures,
     }
 }
 

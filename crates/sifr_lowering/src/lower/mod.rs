@@ -87,6 +87,7 @@ mod nested_function_tests;
 mod nonempty_method_narrowing;
 mod nonlocal_support;
 mod numeric_sentinels;
+mod offload_worker_captures;
 #[cfg(test)]
 mod own_mut_param_tests;
 #[cfg(test)]
