@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_3`
 
-Status: Complete; M3 closeout merged in PR #2325.
+Status: Complete; M3 closeout merged in PR #2325 and capture-sendability closure merged in PR #2329.
 
 ## Production Surface Traceability
 
