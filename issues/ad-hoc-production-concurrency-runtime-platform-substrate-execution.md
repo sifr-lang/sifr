@@ -413,7 +413,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3 default parallel pool closure: https://github.com/sifr-lang/sifr/pull/2326
 - M3 closeout: https://github.com/sifr-lang/sifr/pull/2325
 - M3: complete.
-- M4 sync process foundation: local implementation in progress; PR pending.
+- M4 sync process foundation: https://github.com/sifr-lang/sifr/pull/2331
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -602,6 +602,7 @@ M4 sync process foundation targeted local validation:
 M4 sync process foundation review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-sync-process-review-pass-1.md`: `PASS`; reviewer verified ordinary argv APIs lower to `std::process::Command` without shell or legacy subprocess helpers, shell APIs are explicit and classified with `SIFR-ASYNC-0007`, env/cwd/stdin/output/text behavior is typed without data-dependent panics, imported workload metadata covers stdlib imports and local re-exports, traceability honestly preserves remaining M4 process lifecycle work, and the wave is ready to PR. Non-blocking follow-ups were recorded for stdin setter semantics, deletion of unused legacy `_sifr.sys.subprocess_*` intrinsic paths, future stdlib re-export workload metadata, and later signal/timeout/cancellation/text-mode completion.
+- PR #2331 merged at `b473c763ae3e92d614e7799af956bafcf4d60cb8`.
 
 M0 targeted local validation:
 
