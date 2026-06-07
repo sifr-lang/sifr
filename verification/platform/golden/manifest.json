@@ -65,10 +65,13 @@
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
-        "unsupported",
+        "SIFR-IMPORT-0009",
         "sifr.task",
         "sifr.process",
-        "sifr.runtime"
+        "sifr.runtime",
+        "sifr.sync",
+        "sifr.ipc",
+        "sifr.resource"
       ],
       "depends_on": [
         "milestone_concurrency_runtime_0a"
@@ -78,9 +81,7 @@
         "sifr.subprocess",
         "sifr.concurrent"
       ],
-      "blocked_until": [
-        "milestone_concurrency_runtime_0a"
-      ],
+      "blocked_until": [],
       "checks": [
         "legacy CPython-shaped Sifr runtime surfaces removed or diagnosed before M1"
       ]

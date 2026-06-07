@@ -1,15 +1,14 @@
 # Reference: milestone_new_modules
 # Source issue: revised_phase_roadmap_698c629c.md
 # milestone_new_modules_demo.sifr
-# Demonstrates all new modules added in milestone_new_modules:
-# operator, calendar, html, sys, subprocess, configparser, gzip, zipfile
+# Demonstrates selected modules added in milestone_new_modules:
+# operator, calendar, html, sys, configparser, gzip, zipfile
 
 
 from sifr.operator import add, sub, mul, floordiv, mod_val, neg, lt, eq, itemgetter
 from sifr.calendar import isleap, weekday, monthrange
 from sifr.html import escape, unescape
 from sifr.sys import version, maxsize
-from sifr.subprocess import run, CompletedProcess
 from sifr.configparser import ConfigParser, ParsingError
 from sifr.gzip import compress, decompress
 from sifr.zipfile import ZipFile
@@ -51,14 +50,6 @@ def demo_sys() -> None:
     print("version = " + version())
     ms: int = maxsize()
     print("maxsize > 0 = " + str(ms > 0))
-
-def demo_subprocess() -> None:
-    print("=== subprocess ===")
-    try:
-        result: CompletedProcess = run("echo hello")
-        print("echo hello = " + result.stdout)
-    except IOError as e:
-        print("error: " + e.message)
 
 def demo_configparser() -> None:
     print("=== configparser ===")
@@ -112,7 +103,6 @@ def main():
     demo_calendar()
     demo_html()
     demo_sys()
-    demo_subprocess()
     demo_configparser()
     demo_gzip()
     demo_zipfile()

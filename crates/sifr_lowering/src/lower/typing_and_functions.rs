@@ -1,4 +1,3 @@
-use super::asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
 use super::function_flow::{collect_yield_types, infer_function_return_type};

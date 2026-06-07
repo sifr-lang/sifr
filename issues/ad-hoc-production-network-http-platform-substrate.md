@@ -79,14 +79,14 @@ A module belongs in Sifr core only if it is production substrate or production d
 | --- | --- | --- |
 | `sifr.http.server` | rejected as public API | toy/basic server shape; server product is Phase 41 |
 | `sifr.socketserver` | rejected | inheritance-heavy handler model conflicts with Sifr's static model |
-| `sifr.urllib.request` | `deferred-to-http-client-phase` or `rejected` | old opener/handler architecture; production client deserves a modern API |
-| `sifr.http.client` | `deferred-to-http-client-phase` | low-level client transport may exist internally; public API should be httpx-like |
-| `sifr.socket` | `deferred-to-adapter-phase` | CPython descriptor-shaped API must not define Sifr networking |
-| `sifr.ssl` | `deferred-to-adapter-phase` | TLS is exposed through `sifr.tls`, not `SSLContext` mimicry |
+| `sifr.urllib.request` | `rejected` or `unsupported-with-diagnostic` | old opener/handler architecture; future client work must be Sifr-native and httpx-like |
+| `sifr.http.client` | `rejected` or `unsupported-with-diagnostic` | CPython-shaped low-level client API is not the product; future public client phase owns a modern Sifr API |
+| `sifr.socket` | `rejected` or `unsupported-with-diagnostic` | CPython descriptor-shaped API must not define Sifr networking |
+| `sifr.ssl` | `rejected` or `unsupported-with-diagnostic` | TLS is exposed through `sifr.tls`, not `SSLContext` mimicry |
 | `sifr.select` / `sifr.selectors` | internal readiness only | users should use async streams, not manual event loops |
-| `sifr.urllib.parse` | `deferred-to-adapter-phase` | stable URL utility is `sifr.url` |
-| `urllib.robotparser` | `deferred-to-phase-X` or `rejected` | niche utility, not core platform substrate |
-| `http.cookiejar` | `deferred-to-http-client-phase` | cookie persistence belongs in a future HTTP client phase, not this substrate phase |
+| `sifr.urllib.parse` | `rejected` or `unsupported-with-diagnostic` | stable URL utility is `sifr.url` |
+| `urllib.robotparser` | rejected | niche CPython utility, not core platform substrate |
+| `http.cookiejar` | rejected as CPython-shaped core API | a future Sifr-native HTTP client may own cookie persistence if product requirements justify it |
 | HTTP/3 / QUIC | `deferred-to-transport-phase` | revisit in a future transport phase after QUIC runtime strategy is designed |
 | CGI-style serving | rejected | legacy serving model |
 | `ThreadingMixIn` / `ForkingMixIn` | rejected | wrong abstraction and overlaps concurrency/runtime phases |
@@ -96,15 +96,16 @@ A module belongs in Sifr core only if it is production substrate or production d
 
 CPython-shaped networking modules are not part of the production baseline.
 
-They may be considered later only when all of the following are true:
+This phase does not reserve a compatibility-adapter track for Python-shaped networking/web modules. CPython-shaped modules are evidence only and must resolve to one of:
 
-1. The Sifr-native production API already exists.
-2. There is evidence of real migration demand.
-3. The adapter delegates to production primitives.
-4. The adapter does not expose legacy, dynamic, blocking, descriptor-aliasing, or unsafe semantics as recommended API.
-5. The adapter does not increase maintenance burden disproportionate to usage.
+- `rejected`
+- `unsupported-with-diagnostic`
+- `internal-only` for implementation evidence
+- `test-only-harness` for deterministic local fixtures
 
-Until then, these surfaces are deferred or unsupported. This phase must not add compatibility shims, fallback paths, bridge aliases, legacy aliases, deprecated behavior, or partial public modules.
+Future product work may add Sifr-native APIs, such as a modern HTTP client, cookie persistence, WebSocket support, CONNECT tunneling, or QUIC transport, but it must not reuse CPython module shape as the default product boundary.
+
+This phase must not add compatibility shims, fallback paths, bridge aliases, legacy aliases, deprecated behavior, migration paths, or partial public modules.
 
 Bare CPython imports such as `from socket import socket`, `import ssl`, and `from urllib.parse import urlparse` remain unsupported by the namespace contract unless a normal user/package module resolves first. The production imports for this phase are Sifr-native forms such as `from sifr.net import connect_tcp`, `from sifr.tls import TlsClientConfig`, and `from sifr.url import Url`.
 
@@ -241,7 +242,7 @@ Each reviewed CPython test family must end in exactly one state:
 
 - `mined-as-substrate-fixture`: behavior converted into a Sifr-native substrate test.
 - `adapted-for-sifr-api`: behavior adapted to a Sifr-native API shape.
-- `compat-adapter-deferred`: behavior relevant only if a future compatibility adapter is approved.
+- `compat-adapter-deferred`: shared platform state intentionally unused by this phase; CPython-shaped networking adapters are not accepted product targets.
 - `blocked-on-phase-X`: behavior depends on a split-out phase.
 - `external-signal`: test is retained only as non-blocking ecosystem signal because it depends on external network state.
 - `waived-with-rationale`: behavior is explicitly waived with rationale and reviewer sign-off.
@@ -255,6 +256,7 @@ Every proposed public, substrate, internal, and test-only surface must use the s
 - `test-only-harness`
 - `deferred-to-phase-X`
 - `rejected`
+- `unsupported-with-diagnostic`
 - `blocked-on-text-i18n-m1`
 - `blocked-on-concurrency-runtime-m1`
 - `blocked-on-concurrency-runtime-m2`
@@ -301,7 +303,7 @@ Parallel work is allowed only for pure parser work that does not consume unfinis
 Implement the canonical runtime primitive first. Do not layer CPython-shaped public modules over it in this phase. Use production Rust ecosystem crates for protocol and transport machinery; do not hand-roll networking, TLS, DNS, URL, HTTP, HPACK, or observability infrastructure in this phase. If the selected Rust ecosystem stack cannot satisfy a required surface, that surface is deferred with evidence instead of receiving a bespoke implementation.
 
 - Tokio remains the backing async runtime because the generated task runtime already depends on `tokio` and `sifr_stdlib::StdlibFeature::Tokio`.
-- Generated Cargo must use the resolved Tokio feature set: `macros`, `rt-multi-thread`, `sync`, `time`, `net`, and `io-util`.
+- Generated Cargo must use the resolved Tokio feature set for this network feature: `macros`, `rt`, `sync`, `time`, `net`, and `io-util`.
 - No `async-std`, custom event-loop runtime, or public Tokio type is introduced without a separate architecture issue.
 - `sifr.net` owns TCP, constrained UDP, DNS/address resolution, stream readiness, connection lifecycle, and network-facing application of provider timeout, cancellation, backpressure, and shutdown semantics.
 - `sifr.tls` owns TLS configuration, handshakes, certificate verification, SNI, ALPN, wrapped streams, and TLS errors.
@@ -312,48 +314,88 @@ Implement the canonical runtime primitive first. Do not layer CPython-shaped pub
 
 The exact internal module names may change during implementation, but the boundary must exist: public Sifr-native modules must not duplicate target-runtime logic, and internal protocol/test harnesses must not leak as stable user API.
 
-### Rust Ecosystem First
+### Rust Ecosystem Decisions
 
-This phase builds a Sifr platform, not a new Rust networking stack. The implementation should wrap and constrain mature Rust crates, then add Sifr-specific type surfaces, ownership semantics, diagnostics, and panic-free error mapping.
+This phase follows [Dependency Policy](../internal_docs/dependency_policy.md). It builds a Sifr network/TLS/URL/HTTP platform, not a new async runtime, socket library, DNS resolver, TLS stack, URL parser, HTTP parser, HPACK implementation, HTTP/2 state machine, web framework, HTTP client, or observability backend.
 
-Default ecosystem stack:
+The crate choices below are locked inputs to implementation. M1-M5 implementation PRs must not perform crate-family discovery, swap in adjacent crates, add broad feature flags, or introduce bespoke replacements. Changing an accepted, conditional, or rejected dependency decision requires a new issue or explicit phase amendment before implementation work starts.
 
-| Area | Preferred crates | Role |
+Dependency rings for this phase:
+
+- Ring 2 generated-runtime core: Tokio, Tokio Util, direct `bytes`, and `tracing`, each activated only by the Sifr feature that needs it.
+- Ring 3 stdlib feature-gated substrate: targeted `socket2` and conditional `metrics`.
+- Ring 4 feature-specific protocol/data substrate: URL, percent-encoding, TLS, HTTP, HTTP/2, cookie-header, and service-abstraction crates.
+- Ring 5 dev/test/demo only: local async/protocol/property/certificate fixtures.
+- Ring 6 rejected direct dependencies: listed below.
+
+#### Locked Dependencies By Ring
+
+| Ring | Capability | Crate decision | Version and feature plan | Milestone | Binding notes |
+| --- | --- | --- | --- | --- | --- |
+| Ring 2 | async runtime, TCP/UDP, timers, async I/O, async sync, generated entrypoints | `tokio` | keep workspace `tokio = 1.52.3`; expand generated-runtime features only to `macros`, `rt`, `sync`, `time`, `net`, and `io-util`; do not enable `full`, `rt-multi-thread`, `process`, `signal`, `fs`, `parking_lot`, or `tokio_unstable` for this network feature | M1-M5 | Network APIs consume the concurrency/runtime provider for task lifetime, cancellation, deadlines, shutdown, diagnostics, process, and signal semantics. This phase adds network suspension points and socket I/O only; it does not choose a new runtime topology or expose Tokio handles. |
+| Ring 2 | Tokio cancellation/I/O helpers | `tokio-util` | add `tokio-util = 0.7.18` with `default-features = false`; enable `rt`, `io-util`, and `time` only if M1/M4 needs accepted helpers; do not enable `full`, `net`, `codec`, `compat`, or `join-map` | M1, M4 | Used only behind Sifr-owned stream/cancellation internals. Tokio Util token, codec, and compatibility types are never public. If Tokio plus Sifr wrappers suffice, M0 may keep this dependency conditional and unused. |
+| Ring 2 | owned byte buffers and HTTP body chunks | `bytes` | add `bytes = 1.11.1` with default features only for generated/runtime crates that implement network or HTTP bodies | M1, M4 | `bytes::Bytes` may be used internally to avoid copies and support backpressure. Public Sifr APIs expose `bytes` values as Sifr-owned byte buffers, never Rust crate types. This is the narrow production need that overrides the general no-direct-`bytes` default in the dependency policy. |
+| Ring 2 | structured spans and events | `tracing` | add `tracing = 0.1.44` with `default-features = false`, feature `std`; do not enable `attributes` | M1-M5 | Emits DNS/connect/TLS/HTTP lifecycle spans and events behind Sifr observability hooks. Applications/tests choose subscribers; no subscriber, recorder, or tracing type leaks. |
+| Ring 3 | socket options not exposed by Tokio/std | `socket2` | add `socket2 = 0.6.4` only where M1 proves Tokio/std cannot expose required behavior; do not enable `all` | M1 | Limited to `SO_REUSEADDR`, host-limited `SO_REUSEPORT`, `TCP_NODELAY`, `SO_KEEPALIVE`, and `IPV6_V6ONLY`. Every host-limited option needs a supported-host matrix row and fixture. Other options are not public. |
+| Ring 3 | metrics facade | `metrics` | add `metrics = 0.24.6` only after M0/M5 records metric names, label/cardinality policy, emission points, redaction policy, and deterministic tests | M5 | Optional facade only. No exporter, global recorder setup, or metrics crate type appears in public APIs. If the concrete schema is not approved, metrics remain deferred while tracing events still ship. |
+| Ring 4 | URL parsing/building | `url` | update/use workspace `url = 2.5.8`; default `std` only; do not enable `serde` or `expose_internals` | M3 | Backing for `sifr.url` over valid Sifr text and bytes. Unicode/IDNA decisions still consume the text/i18n provider; crate behavior is wrapped into Sifr-owned typed errors and no crate type leaks. |
+| Ring 4 | percent encoding | `percent-encoding` | add `percent-encoding = 2.3.2` with default `std` only | M3 | Used for byte/ASCII-safe percent helpers and URL internals. Named encodings and error handlers still call the text/i18n provider after M1. |
+| Ring 4 | TLS core | `rustls` | add `rustls = 0.23.35` with default provider `aws_lc_rs`; no custom provider, `ring`, FIPS, compression, or zlib/brotli features in this phase | M2 | Owns TLS protocol machinery internally. Sifr exposes `TlsClientConfig`, `TlsServerConfig`, typed verification outcomes, and typed errors only. |
+| Ring 4 | async TLS streams | `tokio-rustls` | add `tokio-rustls = 0.26.4`; default `aws_lc_rs` provider; do not enable `ring`, `fips`, `early-data`, compression, or zlib/brotli features | M2 | Wraps accepted Rustls streams over Sifr/Tokio TCP internals. Early data and compression are out of scope. |
+| Ring 4 | platform certificate verification | `rustls-platform-verifier` | add `rustls-platform-verifier = 0.7.0` with default features disabled unless platform support proves a required feature; do not enable debug/cert logging features in production builds | M2 | Production client verification uses host platform roots. Deterministic tests use explicit in-memory roots from `rcgen` fixtures; `webpki-roots` is not a fallback. |
+| Ring 4 | PEM parsing | `rustls-pemfile` | add `rustls-pemfile = 2.2.0` with default `std` only | M2 | Parses user-supplied PEM cert/key material into Sifr-owned TLS config errors. No generic certificate display parser is accepted. |
+| Ring 4 | HTTP request/response types | `http` | add `http = 1.4.1` with default `std` only | M3, M4 | Backs method/status/header/request/response representations internally. Sifr owns validation, typed errors, and public type names. |
+| Ring 4 | HTTP streaming body trait | `http-body` | add `http-body = 1.0.1` | M4 | Internal body substrate only. Public Sifr body streams remain Sifr-owned and cancellation-aware. |
+| Ring 4 | HTTP body adapters | `http-body-util` | add `http-body-util = 0.1.3` with `default-features = false`; enable `channel` only if M4 proves it is needed for bounded body tests; never enable `full` | M4 | Used for narrow body adapters/fixtures, not as public body API. |
+| Ring 4 | HTTP/1.1 and HTTP/2 transport | `hyper` | add `hyper = 1.10.1` with `default-features = false`, features `http1`, `http2`, `client`, `server`, and `tracing`; do not enable `full`, `ffi`, `capi`, or `nightly` | M4 | The only accepted HTTP transport stack with `h2`. Internal client/server transport exists for protocol validation and future handoff, not as `sifr.http.client` or `sifr.http.server`. |
+| Ring 4 | Tokio adapters and server utilities for Hyper | `hyper-util` | add `hyper-util = 0.1.20` with `default-features = false`, features `tokio`, `http1`, `http2`, `server`, `server-auto`, `server-graceful`, and `service` only if M4 needs each one; do not enable `full`, `client-legacy`, `client-pool`, `client-proxy`, or `client-proxy-system` | M4 | Supports internal transport/server harness and Phase 41 handoff. Pooling, legacy clients, proxy handling, and system proxy discovery belong to the future HTTP client phase. |
+| Ring 4 | HTTP/2 state machine and flow control | `h2` | add `h2 = 0.4.14` with default features only as required by Hyper or direct HTTP/2 fixtures | M4 | HTTP/2 SETTINGS, HPACK, flow control, RST_STREAM, PING, GOAWAY, and multiplexing are crate-backed. Sifr maps protocol errors into typed `HttpError`/`ProtocolError`. |
+| Ring 4 | cookie header parsing | `cookie` | add `cookie = 0.18.1` with `default-features = false`; enable no signed/private/secure/jar-related features | M3 | Header-level parse/build only. Cookie persistence, signed/private jars, key management, and percent-decoded user text are not substrate features. |
+| Ring 4 | service abstraction for Phase 41 handoff | `tower-service` | add `tower-service = 0.3.3` only; do not add the full `tower` crate | M4, M5 | `Service` may be used internally to shape transport/framework handoff. Public Sifr APIs expose Sifr request/response and middleware concepts, not Tower traits. |
+| Ring 5 | async runtime tests | `tokio-test` | add `tokio-test = 0.4.5` as dev/test only | M1-M5 | Deterministic async tests only; never a generated production dependency. |
+| Ring 5 | parser/property tests | `proptest` | add `proptest = 1.11.0` as dev/test only | M3, M4 | URL/header/cookie/HTTP parser property tests and shrinkable regression fixtures. |
+| Ring 5 | deterministic certificates | `rcgen` | add `rcgen = 0.14.8` as dev/test only; use `aws_lc_rs` or default fixture crypto consistently with the TLS test plan; do not enable `x509-parser` | M2 | Local CA, server, and client certificates for TLS/mTLS loopback tests. Production binaries do not depend on `rcgen`. |
+| Ring 5 | local observability tests and demos | `tracing-subscriber` | dev/test/demo only if fixtures need a subscriber | M5 | Runtime emits events; tests/demos may subscribe. No production substrate dependency. |
+
+#### Rejected Direct Dependencies And Features
+
+| Dependency or feature | Decision | Reason |
 | --- | --- | --- |
-| Async runtime and I/O | `tokio`, `tokio-util`, `bytes` | task runtime, TCP/UDP, timers, cancellation, async read/write traits, buffer primitives |
-| Socket options | `socket2` | low-level options only when Tokio/std do not expose required production behavior |
-| DNS | `tokio::net::lookup_host`, with `hickory-resolver` reserved for explicit resolver APIs | system resolver integration for connect/listen address resolution; in-process resolver only for typed DNS APIs accepted later |
-| TLS | `rustls`, `tokio-rustls`, `rustls-platform-verifier`, `rustls-pemfile` | TLS config, async streams, certificate verification, platform roots, PEM parsing |
-| Certificate inspection | deferred; `x509-parser` only in a future certificate-inspection phase | no public subject/issuer/SAN display parser in this phase; certificate errors carry typed verification evidence and raw DER fingerprints only |
-| Test certificates | `rcgen` | deterministic local CA/self-signed fixtures only |
-| HTTP types and bodies | `http`, `http-body`, `http-body-util`, `bytes` | method/status/header/request/response/body abstractions |
-| HTTP/1 and HTTP/2 transport | `hyper`, `hyper-util`, `h2` | production HTTP transport, HTTP/2 state machine, flow control, multiplexing, protocol errors |
-| URL and percent encoding | `url`, `percent-encoding` | WHATWG/RFC URL parsing, building, and escaping |
-| Cookies | `cookie` | header-level cookie parsing; jar/persistence features remain out of scope for this substrate phase |
-| Middleware/service substrate | `tower-service` | internal service abstraction for Phase 41 handoff; no public `tower`, `Layer`, or tower utility types |
-| Observability | `tracing`, `metrics`; OpenTelemetry bridge deferred | spans, structured events, counters, histograms, exporter-neutral hooks without exporter dependencies |
-| Tests and conformance | `tokio-test`, `proptest`, `h2spec`/HTTP/2 conformance fixtures where available | deterministic async tests, parser/property tests, protocol conformance |
+| `tokio/full`, Tokio `rt-multi-thread`, Tokio `process`, Tokio `signal`, Tokio `fs`, Tokio `parking_lot`, `tokio_unstable` | rejected for this network feature | The concurrency/runtime provider owns runtime topology, process, signal, and offload behavior. Network adds async socket/TLS/HTTP suspension points only. |
+| `async-std`, `smol`, custom event-loop runtimes, direct `mio` | rejected | Sifr already uses Tokio and rejects public raw event-loop models. |
+| `hickory-resolver` | deferred | TCP connect/address resolution uses `tokio::net::lookup_host`. In-process DNS records/custom resolver config require a separate Sifr-native resolver issue. |
+| OpenSSL, `native-tls`, `openssl`, `ring` as selected provider, custom Rustls providers | rejected | TLS is Rustls with default `aws_lc_rs` provider and platform verification unless a future platform issue records a blocker. |
+| `webpki-roots` fallback | rejected | Production verification uses platform roots; deterministic tests use explicit in-memory roots. No silent fallback root store. |
+| `x509-parser` | deferred | Public certificate subject/issuer/SAN display is not in this phase. Errors carry typed verification evidence and raw DER fingerprints only. |
+| `reqwest`, `ureq`, `isahc`, `surf` | rejected | High-level HTTP clients belong to a future Sifr-native HTTP client phase. |
+| `axum`, `warp`, `actix-web`, `rocket`, `tower-http` | rejected | Server framework behavior belongs to Phase 41; this phase provides substrate only. |
+| Hyper/Hyper-Util `full`, `client-legacy`, `client-pool`, `client-proxy`, `client-proxy-system`, `ffi`, `capi`, `nightly` | rejected | These add policy, compatibility, proxy, pool, FFI, or unstable surfaces outside the substrate boundary. |
+| `tower`, `tower-layer`, Tower utility stacks | rejected | Only `tower-service` is accepted internally; no Tower middleware/product API leaks. |
+| multipart crates such as `multer` or `multipart` | rejected for this phase | Multipart parsing belongs to Phase 41 or the production HTTP client phase. |
+| WebSocket crates such as `tokio-tungstenite` and `tungstenite` | deferred | Upgrade/WebSocket product APIs need a separate phase with security and backpressure decisions. |
+| HTTP/3/QUIC crates such as `quinn`, `h3`, and `h3-quinn` | deferred | HTTP/3 transport strategy is explicitly out of scope. |
+| `cookie` signed/private/secure/jar features | rejected for this phase | Cookie persistence, signing, encryption, and key management belong to future product phases if justified. |
+| OpenTelemetry exporter/bridge crates | deferred | This phase emits `tracing` and optional `metrics` only; exporters are an observability phase decision. |
 
-Resolved ecosystem decisions:
+#### Resolved Ecosystem Behavior Decisions
 
 | Decision area | Decision |
 | --- | --- |
-| Tokio features | Generated Cargo uses explicit features only: `macros`, `rt-multi-thread`, `sync`, `time`, `net`, and `io-util`. `tokio/full` is rejected for production builds and may not be used to hide missing feature decisions. |
-| Rustls crypto provider | Use rustls's default `aws-lc-rs` provider for production TLS. `ring`, custom providers, and OpenSSL/native-tls are out of scope unless a future platform issue records a concrete blocker. |
-| TLS roots | Production client verification uses `rustls-platform-verifier`. Deterministic tests use explicit in-memory `RootCertStore` values built from `rcgen` fixtures. `webpki-roots` is not a fallback in this phase. |
-| DNS | TCP connect and address resolution use `tokio::net::lookup_host` to respect host resolver configuration. `hickory-resolver` is deferred to an explicit `sifr.net.resolve_*` API if future requirements need record lookups, custom resolver config, or deterministic in-process DNS tests. |
+| Runtime feature boundary | Network-generated Cargo features may add Tokio `net`/`io-util`/`sync`/`time`, but they do not add a new executor topology. Any future multi-thread runtime choice is owned by the concurrency/runtime provider or a separate runtime issue. |
+| DNS | TCP connect and address resolution use `tokio::net::lookup_host` to respect host resolver configuration. Deterministic tests use loopback literals and host-matrix fixtures; custom record lookup is deferred. |
+| TLS roots | Production client verification uses `rustls-platform-verifier`. Deterministic tests use explicit in-memory `RootCertStore` values built from `rcgen` fixtures. `webpki-roots` is not a fallback. |
+| Rustls crypto provider | Use Rustls 0.23's default `aws_lc_rs` provider. Compression, early data, FIPS, custom provider, and `ring` provider choices are out of scope unless a future platform issue records a concrete blocker. |
 | Stream I/O ownership | Streams use owned-buffer reads: `read_chunk(max_bytes) -> Result[Option[bytes], NetError]`, where `None` means EOF. Writes provide `write(data) -> Result[int, NetError]` and `write_all(data) -> Result[None, NetError]`. |
 | UDP | M1 includes a constrained `UdpSocket` with `bind`, `send_to`, `recv_from`, `connect`, `send`, `recv`, `local_addr`, and `close`. Broadcast, multicast, raw sockets, packet options, and platform-specific socket constants are deferred or host-limited. |
-| Socket options | `socket2` is accepted for `SO_REUSEADDR`, host-limited `SO_REUSEPORT`, `TCP_NODELAY`, `SO_KEEPALIVE`, and `IPV6_V6ONLY` when Tokio/std do not expose deterministic behavior. Other options are not public. |
-| HTTP stack | `hyper`, `hyper-util`, and `h2` are the only accepted HTTP/1.1 and HTTP/2 transport stack. `reqwest`, `axum`, `warp`, `actix-web`, and `tower-http` are not substrate dependencies. |
-| Service substrate | Use the `tower-service` crate only, not the full `tower` crate. The `Service` trait is internal. No `tower::Layer`, tower utility modules, or extra Tower features are pulled. Public Sifr APIs expose Sifr request/response and middleware concepts, not Tower traits. |
-| OpenTelemetry | OTel exporter/bridge crates are deferred to an observability/exporter phase. This phase emits `tracing` spans/events and `metrics` counters/histograms only. |
-| mTLS | M2 includes client certificate authentication configuration and deterministic `rcgen` client/server certificate fixtures. The API exposes configuration, verification outcomes, and typed errors, not raw rustls types. |
-| Multipart/form | Multipart parsing is rejected for this phase and deferred to Phase 41 or the production HTTP client phase. No `multipart` crate is accepted here. |
+| HTTP stack | `hyper`, `hyper-util`, and `h2` are the only accepted HTTP/1.1 and HTTP/2 transport stack. Policy features such as pools, redirects, retries, auth, proxies, compression, cookies-as-storage, and test transports belong to the future HTTP client phase. |
+| Service substrate | Use `tower-service` only, not `tower`. The trait is internal and may be hidden behind generated adapters. Public Sifr APIs expose Sifr request/response and middleware concepts. |
+| Observability | Emit `tracing` spans/events and optional `metrics` counters/histograms after schema approval. No global subscriber/recorder setup, exporter bridge, or OpenTelemetry dependency is accepted here. |
+| mTLS | M2 includes client certificate authentication configuration and deterministic `rcgen` client/server certificate fixtures. The API exposes configuration, verification outcomes, and typed errors, not raw Rustls types. |
+| Multipart/form | Multipart parsing is rejected for this phase and deferred to Phase 41 or the production HTTP client phase. No multipart crate is accepted. |
 | Upgrade hooks | HTTP upgrade hooks are `test-only-harness` only for transport validation. Public WebSocket, CONNECT tunneling, and upgrade APIs are deferred to product phases with concrete use cases. |
 | External CPython network tests | External-network CPython tests are never required for local validation. Localnet cases are converted to loopback where useful; true external tests remain `external-signal`. |
 
-M0 must produce a dependency decision record for every crate family above. Each decision must include:
+M0 must verify this table as the dependency decision record. Verification means confirming current versions, workspace feature availability, public API hiding boundary, and rejected-crate no-use checks; it does not reopen crate-family discovery. Each accepted or conditional decision must include:
 
 - accepted crate and feature flags, or explicit rejection rationale
 - the exact Sifr abstraction that hides the crate from public APIs
@@ -410,7 +452,7 @@ The accepted public shape is:
 - async TLS client and server streams over `TcpStream`
 - typed certificate and TLS errors preserving underlying network evidence
 
-No CPython-shaped `SSLContext` or `SSLSocket` is exposed in this phase. If a future adapter is accepted, it must consume/move underlying stream handles and delegate to `sifr.tls`.
+No CPython-shaped `SSLContext` or `SSLSocket` is exposed in this phase. References to those shapes are rejected or routed to unsupported diagnostics with `sifr.tls` replacement guidance.
 
 ### HTTP Substrate Shape
 
@@ -512,6 +554,26 @@ The substrate must expose enough structured hooks for Phase 41 and the HTTP clie
 
 The hooks must be deterministic, typed, and optional. They must not require global mutable state.
 
+### Security And Resource Model
+
+Network/HTTP M0 must record concrete security and resource decisions for the surfaces this phase owns. These decisions are implementation inputs, not later discovery tasks.
+
+| Concern | Phase decision |
+| --- | --- |
+| TLS verification defaults | Verification is on by default for clients. Disabling verification, custom trust anchors, certificate pinning, and mTLS identity mapping require explicit typed config and must be visible in diagnostics/observability without leaking secrets. Silent downgrade on verification failure is rejected. |
+| Root store strategy | Production client verification uses platform roots through `rustls-platform-verifier`. Tests use explicit `rcgen` roots. No `webpki-roots`, local file, environment, or best-effort fallback root store is accepted in this phase. |
+| Request smuggling and header normalization | Header parsing must define canonical validation for names, obs-fold rejection, duplicate header policy, whitespace normalization, `Content-Length` disagreement handling, and `Content-Length` plus chunked conflict handling before M4 starts. |
+| HTTP/2 abuse | M4 must define SETTINGS limits, max concurrent streams, flow-control window defaults, max frame/body buffering, PING handling, RST_STREAM cancellation mapping, GOAWAY graceful shutdown mapping, and malformed-frame typed errors. |
+| Body and header size limits | Every parser/body reader has explicit configured limits. Unbounded buffering is rejected unless an API name explicitly collects and M0 records a size cap and typed `TooLargeError`. |
+| Timeouts and cancellation | Connect, accept, read, write, TLS handshake, TLS shutdown, HTTP request write, response read, and HTTP/2 stream cancellation map to the provider timeout/cancellation model and preserve partial-progress evidence. |
+| URL and authority security | Userinfo redaction, host/port validation, path normalization semantics, percent-decoding boundaries, and IDNA/Unicode blocking states are recorded before `sifr.url` becomes public. |
+| Cookie security | This phase parses cookie headers only. Persistence, signing, private/encrypted cookies, SameSite policy, key management, and browser-like cookie rules are rejected here or deferred to product phases. |
+| Compression and decompression bombs | Compression is not implemented in this substrate phase. Future client/framework compression must own bomb limits and hooks; this phase only exposes body streaming limits needed by those phases. |
+| Logging and tracing redaction | URLs with credentials, query values classified as sensitive, headers, cookies, bodies, certificate fields, peer addresses where configured, and TLS material must have redaction rules before observability hooks ship. |
+| External network dependency | Validation uses loopback and deterministic fixtures only. External CPython/network tests remain `external-signal` and cannot gate local validation. |
+
+M0 must add these rows to the shared security/resource ownership artifacts and create backlog entries for any missing diagnostic, limit, fixture, or typed error needed by M1-M5.
+
 ## Non-Goals And Permanent Boundaries
 
 The following are not accepted as silent omissions. They must be explicitly classified in M0 and either rejected, deferred, blocked, host-limited, or internal-only:
@@ -551,6 +613,7 @@ Scope:
 - Define the complete concurrency/runtime dependency inventory for cancellation, deadlines, backpressure, blocking/offload, shutdown, diagnostics, task context, worker/process handoff, Phase 41 handoff, and HTTP client handoff.
 - Define Phase 41 handoff contract.
 - Define the separate production HTTP client phase handoff contract.
+- Define the network-owned security/resource model for TLS verification, root stores, request smuggling, header normalization, HTTP/2 abuse, body/header limits, URL authority validation, cookie-header security, redaction, and external-network test policy.
 - Scan every CPython source/test/doc file listed in `Evidence Sources`.
 - Create evidence docs for sockets/readiness, TLS, URLs, and HTTP showing each behavior's shared CPython/evidence state.
 
@@ -568,7 +631,8 @@ Definition of done:
 - Every text-dependent surface is classified as `production-substrate`, `blocked-on-text-i18n-m1`, `blocked-on-text-i18n-m2`, `blocked-on-text-i18n-m2_5`, `blocked-on-text-i18n-m3`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
 - Every runtime-dependent surface is classified as `production-substrate`, `blocked-on-concurrency-runtime-m1`, `blocked-on-concurrency-runtime-m2`, `blocked-on-concurrency-runtime-m3`, `blocked-on-concurrency-runtime-m5`, `blocked-on-concurrency-runtime-m6`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
 - No module is accepted merely because CPython has it.
-- Dependency decision records are present and checked in for every crate family in the Rust Ecosystem First table, covering accepted crate and feature flags, Sifr abstraction that hides the crate from public APIs, panic/unsafe audit for user-controlled data paths, typed error mapping into Sifr variants, license/MSRV/binary-size/platform impact, deterministic local test strategy, conformance evidence for protocol crates, and supply-chain/maintenance signal.
+- Dependency decision records are present and checked in for every crate family in the Rust Ecosystem Decisions table, covering accepted crate and feature flags, Sifr abstraction that hides the crate from public APIs, panic/unsafe audit for user-controlled data paths, typed error mapping into Sifr variants, license/MSRV/binary-size/platform impact, deterministic local test strategy, conformance evidence for protocol crates, and supply-chain/maintenance signal.
+- Security/resource rows are checked into the shared platform artifacts with concrete limits, redaction rules, typed errors, and deterministic fixtures for every network-owned concern.
 - Stream I/O ownership, lifetime, cancellation, and partial read/write semantics are decided before M1 starts.
 - M1-M5 implementation PRs have concrete backlog entries rather than prose-only scope.
 
@@ -836,7 +900,7 @@ The execution ledger must record:
 - per-milestone PR links
 - local validation commands and results
 - CPython source/test/doc files scanned
-- mined-as-substrate-fixture/adapted-for-sifr-api/compat-adapter-deferred/blocked-on-phase-X/external-signal/waived-with-rationale/rejected CPython evidence families
+- mined-as-substrate-fixture/adapted-for-sifr-api/blocked-on-phase-X/external-signal/waived-with-rationale/rejected CPython evidence families; `compat-adapter-deferred` is recorded only as a shared vocabulary state intentionally unused by this phase
 - final deferred-to-phase-X/rejected/host-limited/internal-only/unsupported-with-diagnostic decision index
 - text/i18n dependency state for every URL, header, body, cookie, certificate-display, observability, diagnostics, demo, Phase 41, and HTTP client handoff surface
 - concurrency/runtime dependency state for every cancellation, timeout, backpressure, blocking/offload, shutdown, diagnostics, task-context, executor/worker, process, Phase 41, and HTTP client handoff surface
@@ -854,7 +918,7 @@ The execution ledger must record:
 - Every added blocking sync function must be classified in the stdlib workload database.
 - Every added async function must have a real suspension summary.
 - Every added external crate dependency must be represented by a stable `StdlibFeature` in `sifr_stdlib`.
-- Any external crate accepted during M1-M4 implementation that was not in the M0 Rust Ecosystem First table must complete the same dependency decision record in the PR that first introduces the dependency.
+- Any external crate or broad feature flag not listed in the M0 Rust Ecosystem Decisions table requires a new issue or explicit phase amendment before implementation; implementation PRs must not perform crate-family discovery.
 - Every public module added to embedded stdlib sources must have canonical `sifr.*` import-resolution tests, type-check tests, e2e pass tests, and negative diagnostics for unsupported bare CPython import forms.
 - Every public network/web API must pass the No-Toy-Module Gate and Maintenance Burden Test.
 

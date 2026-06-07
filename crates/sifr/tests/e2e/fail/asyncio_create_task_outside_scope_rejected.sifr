@@ -1,12 +1,2 @@
+# expect-error: SIFR-IMPORT-0009
 from sifr.asyncio import create_task
-
-
-async def worker() -> int:
-    return 41
-
-
-async def main() -> None:
-    handle = create_task(worker())
-    return None
-
-# EXPECT_ERROR: [type] asyncio.create_task() requires exactly one active task scope; use it inside async with task.scope() or task.TaskGroup()

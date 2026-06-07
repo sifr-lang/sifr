@@ -73,26 +73,6 @@ fn missing_stdlib_member_has_name_code() {
 }
 
 #[test]
-fn deferred_stdlib_member_has_name_code() {
-    let source = "from sifr.asyncio import get_event_loop_policy\n\ndef main():\n    pass\n";
-    let parsed = parse_module(source).expect("parse failed");
-    let mut externals = ExternalDefs::default();
-    externals
-        .functions
-        .insert("sifr.asyncio".to_string(), HashMap::new());
-    let errors = match lower_module_with_externals(parsed.suite(), &externals) {
-        Ok(_) => panic!("expected lowering error"),
-        Err(errors) => errors,
-    };
-
-    assert!(errors.iter().any(|error| {
-        error.message == "'sifr.asyncio.get_event_loop_policy' is intentionally deferred: event loop policies are deferred; Sifr exposes structured task scopes instead"
-            && error.code == Some(DiagnosticCode::NAME_MISSING_MODULE_MEMBER)
-            && error.primary_range == Some(range_for(source, "get_event_loop_policy"))
-    }));
-}
-
-#[test]
 fn deferred_stdlib_module_has_import_code() {
     let source = "from sifr.contextvars import ContextVar\n\ndef main():\n    pass\n";
     let errors = lower_errors(source);
@@ -102,6 +82,23 @@ fn deferred_stdlib_module_has_import_code() {
             == "module 'sifr.contextvars' is intentionally deferred: context-local state is deferred; pass task state explicitly"
             && error.code == Some(DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE)
             && error.primary_range == Some(range_for(source, "from sifr.contextvars import ContextVar"))
+    }));
+}
+
+#[test]
+fn unsupported_legacy_stdlib_module_has_import_code_and_replacement_args() {
+    let source = "from sifr.asyncio import sleep\n\ndef main():\n    pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.message == "legacy stdlib module 'sifr.asyncio' is unsupported; use 'sifr.task'"
+            && error.code == Some(DiagnosticCode::IMPORT_UNSUPPORTED_LEGACY_STDLIB)
+            && error.primary_range == Some(range_for(source, "from sifr.asyncio import sleep"))
+            && string_arg(error, "legacy_module") == Some("sifr.asyncio")
+            && string_arg(error, "suggested_module") == Some("sifr.task")
+            && string_arg(error, "imported_names") == Some("sleep")
+            && string_arg(error, "reason")
+                == Some("structured tasks are exposed through the native task model")
     }));
 }
 

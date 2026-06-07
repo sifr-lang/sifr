@@ -1,10 +1,3 @@
-from sifr.concurrent import ThreadPoolExecutor
-from sifr.threading import Condition
-from sifr.threading import Event
-from sifr.threading import Lock
-from sifr.threading import Thread
-
-
 @cpu_heavy
 def compute_score() -> int:
     total: int = 0
@@ -24,56 +17,17 @@ def double_counter() -> int:
     return value * 2
 
 
-def read_lock_value() -> int:
-    lock: Lock[int] = Lock(42)
-    guard = lock.acquire()
-    value: int = guard.get()
-    lock.release()
-    return value
-
-
-def condition_value() -> int:
-    condition: Condition[int] = Condition(9)
-    guard = condition.acquire()
-    value: int = guard.get()
-    condition.notify()
-    condition.notify_all()
-    condition.release()
-    return value
-
-
 async def main() -> Result[None, ScopeFailure]:
     score_handle = task.spawn_blocking(compute_score)
     score_result = await score_handle.join()
     assert str(score_result) == "Ok(21)"
 
-    executor: ThreadPoolExecutor = ThreadPoolExecutor()
-    counter_handle = executor.submit(double_counter)
-    counter_result = await counter_handle
+    counter_handle = task.spawn_blocking(double_counter)
+    counter_result = await counter_handle.join()
     assert str(counter_result) == "Ok(42)"
 
     cancelled_handle = task.spawn_blocking(compute_score)
     cancelled_handle.cancel()
     cancelled_result = await cancelled_handle.cancel_and_join()
-
-    thread: Thread = Thread()
-    thread.start()
-    assert thread.is_alive()
-    thread.join()
-    assert not thread.is_alive()
-
-    event: Event = Event()
-    event.set()
-    assert event.is_set()
-    event.clear()
-    await event.wait()
-
-    guarded_value: int = read_lock_value()
-    assert guarded_value == 42
-
-    protected_value: int = condition_value()
-    waiting_condition: Condition[int] = Condition(protected_value)
-    await waiting_condition.wait()
-    assert protected_value == 9
 
     return None

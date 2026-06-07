@@ -1,0 +1,2 @@
+# expect-error: SIFR-IMPORT-0009
+from sifr.concurrent.futures import ThreadPoolExecutor

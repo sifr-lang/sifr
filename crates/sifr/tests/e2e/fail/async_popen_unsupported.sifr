@@ -1,6 +1,2 @@
-# Reference: phase_psp_runtime_0_async_popen_unsupported
+# expect-error: SIFR-IMPORT-0009
 from sifr.subprocess import Popen
-
-
-def main() -> None:
-    _ = Popen

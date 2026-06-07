@@ -1,12 +1,12 @@
 use super::{
     async_effects, collect_class_type, collect_function_defaults, collect_type_alias_decls,
-    collect_type_vars, extract_function_type, function_body_contains_yield,
-    function_uses_asyncio_run_entrypoint, import_diagnostics, import_resolution, imported_defaults,
-    imports, integer_literal_diagnostics, lower_class, lower_function, module_constants_lowering,
-    module_function_registry, name_diagnostics, parse_typevar_bound_expr,
-    parse_typevar_declaration_specs, predeclare_type_aliases, register_builtins,
-    resolve_imports_early, resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs,
-    FunctionType, HirDiagnostic, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
+    collect_type_vars, extract_function_type, function_body_contains_yield, import_diagnostics,
+    import_resolution, imported_defaults, imports, integer_literal_diagnostics, lower_class,
+    lower_function, module_constants_lowering, module_function_registry, name_diagnostics,
+    parse_typevar_bound_expr, parse_typevar_declaration_specs, predeclare_type_aliases,
+    register_builtins, resolve_imports_early, resolve_type_aliases, str, workload_annotations,
+    Expr, ExternalDefs, FunctionType, HirDiagnostic, HirImport, HirModule, LowerCtx, Ranged, Stmt,
+    TextRange, Type,
 };
 use sifr_ir::LoweringResult;
 /// Internal implementation of module lowering.
@@ -157,11 +157,9 @@ pub(in crate::lower) fn lower_module_impl(
             }
 
             collect_function_defaults(&mut ctx, &function_name, func);
-            let effective_is_async =
-                func.is_async || function_uses_asyncio_run_entrypoint(func, &ctx);
-            if effective_is_async && function_body_contains_yield(&func.body) {
+            if func.is_async && function_body_contains_yield(&func.body) {
                 ctx.async_generator_functions.insert(function_name.clone());
-            } else if effective_is_async {
+            } else if func.is_async {
                 ctx.async_functions.insert(function_name.clone());
             }
             if let Some(workload) =
@@ -475,7 +473,12 @@ pub(in crate::lower) fn lower_module_impl(
                     });
                     continue;
                 }
-                imports::report_unknown_stdlib_module(&mut ctx, &module_name, import_range);
+                imports::report_unknown_stdlib_module(
+                    &mut ctx,
+                    &module_name,
+                    &imported_names,
+                    import_range,
+                );
                 continue;
             }
 

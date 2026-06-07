@@ -1,175 +1,587 @@
+// src/main.rs
+use sifr_runtime::SifrInt;
+
 use std::sync::Mutex;
 
-// --- stdlib: sifr.subprocess ---
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct CompletedProcess {
-    returncode: i64,
-    stdout: String,
-    stderr: String,
-}
-impl CompletedProcess {
-    fn new(returncode: i64, stdout: String, stderr: String) -> Self {
-        return Self {
-            returncode: returncode,
-            stdout: stdout,
-            stderr: stderr,
+// --- stdlib: sifr.env ---
+fn getenv(key: &String, default_value: &String) -> String {
+    let val: Option<String> = {
+        let __k = key;
+        if __k.is_empty() || (__k.contains('=') || __k.as_bytes().contains(&0)) {
+            None
+        } else {
+            std::env::var(__k).ok()
+        }
+    };
+    let Some(mut val) = val else {
+        return {
+            let mut __sifr_concat: String = String::with_capacity(
+                default_value.len() + 0usize,
+            );
+            __sifr_concat.push_str((default_value).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
         };
-    }
+    };
+    val
 }
-impl std::fmt::Display for CompletedProcess {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
-            f, "CompletedProcess(returncode={}, stdout={}, stderr={})", self.returncode,
-            self.stdout, self.stderr
-        );
-    }
+fn setenv(key: &String, value: &String) {
+    {
+        let __k = key;
+        let __v = value;
+        if !__k.is_empty()
+            && (!__k.contains('=')
+                && (!__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0)))
+        {
+            std::env::set_var(__k, __v);
+        }
+    };
 }
-fn _nonzero_exit_error(cmd: &String, returncode: i64) -> String {
-    return format!(
-        "{}{}{}{}", "command returned non-zero exit status ".to_string(), format!("{}",
-        returncode), ": ".to_string(), cmd
-    );
-}
-fn run(cmd: &String) -> Result<CompletedProcess, IOError> {
-    let __sifr_try_res: Result<Result<CompletedProcess, IOError>, IOError> = (|| {
-        let result: Vec<String> = ({
-            let __output = std::process::Command::new("sh".to_string())
-                .arg("-c".to_string())
-                .arg(&cmd)
-                .output()
-                .map_err(__io_err)?;
-            let __stdout = String::from_utf8_lossy(&__output.stdout).to_string();
-            let __stderr = String::from_utf8_lossy(&__output.stderr).to_string();
-            let __returncode = __output.status.code().unwrap_or(-1).to_string();
-            Ok(vec![__stdout, __stderr, __returncode])
-        })?;
-        let mut stdout: String = "".to_string();
-        let mut stderr: String = "".to_string();
-        let mut rc_str: String = "".to_string();
-        let mut rc: i64 = 0 as i64;
-        for (i, value) in Box::new(
-            (result)
-                .iter()
-                .cloned()
-                .enumerate()
-                .map(|__pair| ((__pair.0 as i64) + 0, __pair.1)),
-        ) {
-            if i == (0 as i64) {
-                stdout = format!("{}{}", value, "".to_string());
-            }
-            if i == (1 as i64) {
-                stderr = format!("{}{}", value, "".to_string());
-            }
-            if i == (2 as i64) {
-                rc_str = format!("{}{}", value, "".to_string());
-            }
+fn unsetenv(key: &String) {
+    {
+        let __k = key;
+        if !__k.is_empty() && (!__k.contains('=') && !__k.as_bytes().contains(&0)) {
+            std::env::remove_var(__k);
         }
-        if rc_str != "".to_string() {
-            let __sifr_try_res: Result<(), ParseError> = (|| {
-                let parsed: i64 = (rc_str)
-                    .parse::<i64>()
-                    .map_err(|e| ParseError {
-                        message: e.to_string(),
-                    })?;
-                rc = parsed;
-                return Ok(());
-            })();
-            if let Err(__sifr_try_err) = __sifr_try_res {
-                let e = __sifr_try_err.clone();
-                let _: String = e.message;
-                rc = -(1 as i64);
-            }
-        }
-        return Ok(Ok(CompletedProcess::new(rc, stdout, stderr)));
-        unreachable!("sifr try/except return capture fell through");
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
-        }
-    }
-}
-fn check_call(cmd: &String) -> Result<i64, IOError> {
-    let __sifr_try_res: Result<Result<i64, IOError>, IOError> = (|| {
-        let result: CompletedProcess = run(cmd)?;
-        if result.returncode != (0 as i64) {
-            return Err(IOError::new(_nonzero_exit_error(cmd, result.returncode)));
-        }
-        return Ok(Ok(result.returncode));
-        unreachable!("sifr try/except return capture fell through");
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
-        }
-    }
-}
-fn check_output(cmd: &String) -> Result<String, IOError> {
-    let __sifr_try_res: Result<Result<String, IOError>, IOError> = (|| {
-        let result: CompletedProcess = run(cmd)?;
-        if result.returncode != (0 as i64) {
-            return Err(IOError::new(_nonzero_exit_error(cmd, result.returncode)));
-        }
-        return Ok(Ok(result.stdout));
-        unreachable!("sifr try/except return capture fell through");
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
-        }
-    }
-}
-fn run_with_input(cmd: &String, stdin_data: &String) -> Result<String, IOError> {
-    return {
-        let mut __child = std::process::Command::new("sh".to_string())
-            .arg("-c".to_string())
-            .arg(&cmd)
-            .stdin(std::process::Stdio::piped())
-            .stdout(std::process::Stdio::piped())
-            .spawn()
-            .map_err(__io_err)?;
-        if let Some(mut stdin) = __child.stdin.take() {
-            std::io::Write::write_all(&mut stdin, stdin_data.as_bytes())
-                .map_err(__io_err)?;
-        }
-        let __output = __child.wait_with_output().map_err(__io_err)?;
-        Ok(String::from_utf8_lossy(&__output.stdout).trim().to_string())
     };
 }
 
-// --- stdlib: sifr.platform ---
-fn system() -> String {
-    return if cfg!(target_os = "windows") {
-        "Windows".to_string().to_string()
-    } else {
-        if cfg!(target_os = "macos") {
-            "Darwin".to_string().to_string()
-        } else {
-            if cfg!(target_os = "linux") {
-                "Linux".to_string().to_string()
-            } else {
-                std::env::consts::OS.to_string()
+// --- stdlib: sifr.encoding ---
+fn __const_ENCODING_UTF8() -> String {
+    "utf-8".to_string().to_string()
+}
+fn __const_ENCODING_UTF8_SIG() -> String {
+    "utf-8-sig".to_string().to_string()
+}
+fn __const_ENCODING_ASCII() -> String {
+    "ascii".to_string().to_string()
+}
+fn __const_ENCODING_LATIN1() -> String {
+    "latin-1".to_string().to_string()
+}
+fn __const_ENCODING_UTF16_LE() -> String {
+    "utf-16-le".to_string().to_string()
+}
+fn __const_ENCODING_UTF16_BE() -> String {
+    "utf-16-be".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1250() -> String {
+    "windows-1250".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1251() -> String {
+    "windows-1251".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1252() -> String {
+    "windows-1252".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1253() -> String {
+    "windows-1253".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1254() -> String {
+    "windows-1254".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1255() -> String {
+    "windows-1255".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1256() -> String {
+    "windows-1256".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1257() -> String {
+    "windows-1257".to_string().to_string()
+}
+fn __const_ENCODING_WINDOWS_1258() -> String {
+    "windows-1258".to_string().to_string()
+}
+fn __const_DECODE_ERRORS_STRICT() -> String {
+    "strict".to_string().to_string()
+}
+fn __const_DECODE_ERRORS_REPLACE() -> String {
+    "replace".to_string().to_string()
+}
+fn __const_DECODE_ERRORS_IGNORE() -> String {
+    "ignore".to_string().to_string()
+}
+fn __const_DECODE_ERRORS_BACKSLASH_REPLACE() -> String {
+    "backslashreplace".to_string().to_string()
+}
+fn __const_ENCODE_ERRORS_STRICT() -> String {
+    "strict".to_string().to_string()
+}
+fn __const_ENCODE_ERRORS_REPLACE() -> String {
+    "replace".to_string().to_string()
+}
+fn __const_ENCODE_ERRORS_IGNORE() -> String {
+    "ignore".to_string().to_string()
+}
+fn __const_ENCODE_ERRORS_BACKSLASH_REPLACE() -> String {
+    "backslashreplace".to_string().to_string()
+}
+fn __const_ENCODE_ERRORS_XMLCHARREF_REPLACE() -> String {
+    "xmlcharrefreplace".to_string().to_string()
+}
+fn __const_ENCODE_ERRORS_NAME_REPLACE() -> String {
+    "namereplace".to_string().to_string()
+}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct DecodeError {
+    message: String,
+}
+impl DecodeError {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+impl std::fmt::Display for DecodeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+impl std::error::Error for DecodeError {}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct EncodeError {
+    message: String,
+}
+impl EncodeError {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+impl std::fmt::Display for EncodeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+impl std::error::Error for EncodeError {}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct Encoding {
+    label: String,
+}
+impl Encoding {
+    fn new(label: String) -> Self {
+        Self {
+            label: {
+                let mut __sifr_concat: String = String::with_capacity(
+                    label.len() + 0usize,
+                );
+                __sifr_concat.push_str((label).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            },
+        }
+    }
+    fn canonical_label(&self) -> Result<String, DecodeError> {
+        sifr_runtime::encoding::canonical_label(&self.label.clone())
+            .map_err(|__message| DecodeError { message: __message })
+    }
+    fn is_supported(&self) -> bool {
+        sifr_runtime::encoding::is_supported_encoding(&self.label.clone())
+    }
+}
+impl std::fmt::Display for Encoding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Encoding(label={})", self.label)
+    }
+}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct DecodeErrorHandler {
+    name: String,
+}
+impl DecodeErrorHandler {
+    fn new(name: String) -> Self {
+        Self {
+            name: {
+                let mut __sifr_concat: String = String::with_capacity(
+                    name.len() + 0usize,
+                );
+                __sifr_concat.push_str((name).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            },
+        }
+    }
+}
+impl std::fmt::Display for DecodeErrorHandler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "DecodeErrorHandler(name={})", self.name)
+    }
+}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct EncodeErrorHandler {
+    name: String,
+}
+impl EncodeErrorHandler {
+    fn new(name: String) -> Self {
+        Self {
+            name: {
+                let mut __sifr_concat: String = String::with_capacity(
+                    name.len() + 0usize,
+                );
+                __sifr_concat.push_str((name).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            },
+        }
+    }
+}
+impl std::fmt::Display for EncodeErrorHandler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "EncodeErrorHandler(name={})", self.name)
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+struct DecodeOutcome {
+    text: String,
+    recoveries: Vec<String>,
+}
+impl DecodeOutcome {
+    fn new(text: String, recoveries: Vec<String>) -> Self {
+        Self {
+            text: {
+                let mut __sifr_concat: String = String::with_capacity(
+                    text.len() + 0usize,
+                );
+                __sifr_concat.push_str((text).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            },
+            recoveries,
+        }
+    }
+    fn get_text(&self) -> String {
+        {
+            let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
+            __sifr_concat.push_str((self.text.clone()).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        }
+    }
+    fn get_recoveries(&self) -> Vec<String> {
+        self.recoveries.clone()
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+struct EncodeOutcome {
+    data: Vec<u8>,
+    recoveries: Vec<String>,
+}
+impl EncodeOutcome {
+    fn new(data: Vec<u8>, recoveries: Vec<String>) -> Self {
+        Self { data, recoveries }
+    }
+    fn get_data(&self) -> Vec<u8> {
+        self.data.clone()
+    }
+    fn get_recoveries(&self) -> Vec<String> {
+        self.recoveries.clone()
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+struct Decoder {
+    _encoding: Encoding,
+    _errors: DecodeErrorHandler,
+    _exhausted: bool,
+    _pending: Vec<u8>,
+}
+impl Decoder {
+    fn new(enc: Encoding, errors: Option<DecodeErrorHandler>) -> Self {
+        Self {
+            _encoding: enc,
+            _errors: _decode_handler_or_strict(&errors),
+            _exhausted: false,
+            _pending: vec![],
+        }
+    }
+    fn decode(
+        &mut self,
+        data: &Vec<u8>,
+        r#final: bool,
+    ) -> Result<DecodeOutcome, DecodeError> {
+        if self._exhausted {
+            return Err(DecodeError::new("decoder is exhausted".to_string()));
+        }
+        let __sifr_try_res: Result<Result<DecodeOutcome, DecodeError>, DecodeError> = (||
+        {
+            let outcome: DecodeOutcome = sifr_runtime::encoding::incremental_decode_with_recoveries(
+                    &data,
+                    &self._pending.clone(),
+                    &self._encoding.clone().label,
+                    &self._errors.clone().name,
+                    r#final,
+                )
+                .map(|__parts| DecodeOutcome {
+                    text: __parts.0,
+                    recoveries: __parts.1,
+                })
+                .map_err(|__message| DecodeError { message: __message })?;
+            let next_pending: Vec<u8> = sifr_runtime::encoding::incremental_decode_pending(
+                    &data,
+                    &self._pending.clone(),
+                    &self._encoding.clone().label,
+                    r#final,
+                )
+                .map_err(|__message| DecodeError { message: __message })?;
+            self._pending = next_pending;
+            if r#final {
+                self._pending = vec![];
+                self._exhausted = true;
+            }
+            return Ok(Ok(outcome));
+            unreachable!("sifr try/except return capture fell through");
+        })();
+        match __sifr_try_res {
+            Ok(__sifr_ret_val) => {
+                return __sifr_ret_val;
+            }
+            Err(__sifr_try_err) => {
+                let e = __sifr_try_err.clone();
+                return Err(DecodeError::new(e.message));
             }
         }
-    };
+    }
 }
-fn machine() -> String {
-    return std::env::consts::ARCH.to_string();
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct Encoder {
+    _encoding: Encoding,
+    _errors: EncodeErrorHandler,
+    _exhausted: bool,
 }
-fn processor() -> String {
-    return std::env::consts::ARCH.to_string();
+impl Encoder {
+    fn new(enc: Encoding, errors: Option<EncodeErrorHandler>) -> Self {
+        Self {
+            _encoding: enc,
+            _errors: _encode_handler_or_strict(&errors),
+            _exhausted: false,
+        }
+    }
+    fn encode(
+        &mut self,
+        text: &String,
+        r#final: bool,
+    ) -> Result<EncodeOutcome, EncodeError> {
+        if self._exhausted {
+            return Err(EncodeError::new("encoder is exhausted".to_string()));
+        }
+        let __sifr_try_res: Result<Result<EncodeOutcome, EncodeError>, EncodeError> = (||
+        {
+            let outcome: EncodeOutcome = encode_outcome(
+                text,
+                &self._encoding,
+                &Some((self._errors.clone()).clone()),
+            )?;
+            if r#final {
+                self._exhausted = true;
+            }
+            return Ok(Ok(outcome));
+            unreachable!("sifr try/except return capture fell through");
+        })();
+        match __sifr_try_res {
+            Ok(__sifr_ret_val) => {
+                return __sifr_ret_val;
+            }
+            Err(__sifr_try_err) => {
+                let e = __sifr_try_err.clone();
+                return Err(EncodeError::new(e.message));
+            }
+        }
+    }
+}
+impl std::fmt::Display for Encoder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f, "Encoder(_encoding={}, _errors={}, _exhausted={})", self._encoding, self
+            ._errors, self._exhausted
+        )
+    }
+}
+fn encoding(label: &String) -> Encoding {
+    Encoding::new((label).clone())
+}
+fn utf8() -> Encoding {
+    Encoding::new(__const_ENCODING_UTF8())
+}
+fn utf8_sig() -> Encoding {
+    Encoding::new(__const_ENCODING_UTF8_SIG())
+}
+fn ascii() -> Encoding {
+    Encoding::new(__const_ENCODING_ASCII())
+}
+fn latin1() -> Encoding {
+    Encoding::new(__const_ENCODING_LATIN1())
+}
+fn utf16_le() -> Encoding {
+    Encoding::new(__const_ENCODING_UTF16_LE())
+}
+fn utf16_be() -> Encoding {
+    Encoding::new(__const_ENCODING_UTF16_BE())
+}
+fn windows1252() -> Encoding {
+    Encoding::new(__const_ENCODING_WINDOWS_1252())
+}
+fn strict_decode_handler() -> DecodeErrorHandler {
+    DecodeErrorHandler::new(__const_DECODE_ERRORS_STRICT())
+}
+fn replace_decode_handler() -> DecodeErrorHandler {
+    DecodeErrorHandler::new(__const_DECODE_ERRORS_REPLACE())
+}
+fn ignore_decode_handler() -> DecodeErrorHandler {
+    DecodeErrorHandler::new(__const_DECODE_ERRORS_IGNORE())
+}
+fn backslash_replace_decode_handler() -> DecodeErrorHandler {
+    DecodeErrorHandler::new(__const_DECODE_ERRORS_BACKSLASH_REPLACE())
+}
+fn strict_encode_handler() -> EncodeErrorHandler {
+    EncodeErrorHandler::new(__const_ENCODE_ERRORS_STRICT())
+}
+fn replace_encode_handler() -> EncodeErrorHandler {
+    EncodeErrorHandler::new(__const_ENCODE_ERRORS_REPLACE())
+}
+fn ignore_encode_handler() -> EncodeErrorHandler {
+    EncodeErrorHandler::new(__const_ENCODE_ERRORS_IGNORE())
+}
+fn backslash_replace_encode_handler() -> EncodeErrorHandler {
+    EncodeErrorHandler::new(__const_ENCODE_ERRORS_BACKSLASH_REPLACE())
+}
+fn xmlcharref_replace_encode_handler() -> EncodeErrorHandler {
+    EncodeErrorHandler::new(__const_ENCODE_ERRORS_XMLCHARREF_REPLACE())
+}
+fn name_replace_encode_handler() -> EncodeErrorHandler {
+    EncodeErrorHandler::new(__const_ENCODE_ERRORS_NAME_REPLACE())
+}
+fn _decode_handler_name(errors: &Option<DecodeErrorHandler>) -> String {
+    if let Some(errors) = errors.as_ref() {
+        return {
+            let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
+            __sifr_concat.push_str((errors.name).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+    }
+    __const_DECODE_ERRORS_STRICT()
+}
+fn _encode_handler_name(errors: &Option<EncodeErrorHandler>) -> String {
+    if let Some(errors) = errors.as_ref() {
+        return {
+            let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
+            __sifr_concat.push_str((errors.name).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+    }
+    __const_ENCODE_ERRORS_STRICT()
+}
+fn _decode_handler_or_strict(errors: &Option<DecodeErrorHandler>) -> DecodeErrorHandler {
+    if let Some(errors) = errors.as_ref() {
+        return DecodeErrorHandler::new(format!("{}{}", errors.name, ""));
+    }
+    strict_decode_handler()
+}
+fn _encode_handler_or_strict(errors: &Option<EncodeErrorHandler>) -> EncodeErrorHandler {
+    if let Some(errors) = errors.as_ref() {
+        return EncodeErrorHandler::new(format!("{}{}", errors.name, ""));
+    }
+    strict_encode_handler()
+}
+fn decode_outcome(
+    data: &Vec<u8>,
+    enc: &Encoding,
+    errors: &Option<DecodeErrorHandler>,
+) -> Result<DecodeOutcome, DecodeError> {
+    let handler_name: String = _decode_handler_name(errors);
+    let __sifr_try_res: Result<Result<DecodeOutcome, DecodeError>, DecodeError> = (|| {
+        return Ok(
+            sifr_runtime::encoding::decode_with_recoveries(
+                    &data,
+                    &enc.label,
+                    &handler_name,
+                )
+                .map(|__parts| DecodeOutcome {
+                    text: __parts.0,
+                    recoveries: __parts.1,
+                })
+                .map_err(|__message| DecodeError { message: __message }),
+        );
+        unreachable!("sifr try/except return capture fell through");
+    })();
+    match __sifr_try_res {
+        Ok(__sifr_ret_val) => {
+            return __sifr_ret_val;
+        }
+        Err(__sifr_try_err) => {
+            let e = __sifr_try_err.clone();
+            return Err(DecodeError::new(e.message));
+        }
+    }
+}
+fn decode(
+    data: &Vec<u8>,
+    enc: &Encoding,
+    errors: &Option<DecodeErrorHandler>,
+) -> Result<String, DecodeError> {
+    let __sifr_try_res: Result<Result<String, DecodeError>, DecodeError> = (|| {
+        let mut outcome: DecodeOutcome = decode_outcome(data, enc, errors)?;
+        return Ok(Ok(outcome.get_text()));
+        unreachable!("sifr try/except return capture fell through");
+    })();
+    match __sifr_try_res {
+        Ok(__sifr_ret_val) => {
+            return __sifr_ret_val;
+        }
+        Err(__sifr_try_err) => {
+            let e = __sifr_try_err.clone();
+            return Err(DecodeError::new(e.message));
+        }
+    }
+}
+fn encode_outcome(
+    text: &String,
+    enc: &Encoding,
+    errors: &Option<EncodeErrorHandler>,
+) -> Result<EncodeOutcome, EncodeError> {
+    let handler_name: String = _encode_handler_name(errors);
+    let __sifr_try_res: Result<Result<EncodeOutcome, EncodeError>, EncodeError> = (|| {
+        return Ok(
+            sifr_runtime::encoding::encode_with_recoveries(
+                    &text,
+                    &enc.label,
+                    &handler_name,
+                )
+                .map(|__parts| EncodeOutcome {
+                    data: __parts.0,
+                    recoveries: __parts.1,
+                })
+                .map_err(|__message| EncodeError { message: __message }),
+        );
+        unreachable!("sifr try/except return capture fell through");
+    })();
+    match __sifr_try_res {
+        Ok(__sifr_ret_val) => {
+            return __sifr_ret_val;
+        }
+        Err(__sifr_try_err) => {
+            let e = __sifr_try_err.clone();
+            return Err(EncodeError::new(e.message));
+        }
+    }
+}
+fn encode(
+    text: &String,
+    enc: &Encoding,
+    errors: &Option<EncodeErrorHandler>,
+) -> Result<Vec<u8>, EncodeError> {
+    let __sifr_try_res: Result<Result<Vec<u8>, EncodeError>, EncodeError> = (|| {
+        let mut outcome: EncodeOutcome = encode_outcome(text, enc, errors)?;
+        return Ok(Ok(outcome.get_data()));
+        unreachable!("sifr try/except return capture fell through");
+    })();
+    match __sifr_try_res {
+        Ok(__sifr_ret_val) => {
+            return __sifr_ret_val;
+        }
+        Err(__sifr_try_err) => {
+            let e = __sifr_try_err.clone();
+            return Err(EncodeError::new(e.message));
+        }
+    }
 }
 
 // --- stdlib: sifr.io ---
@@ -179,41 +591,41 @@ struct IOBase {
 }
 impl IOBase {
     fn new() -> Self {
-        return Self { _closed: false };
+        Self { _closed: false }
     }
     fn close(&mut self) {
         self._closed = true;
     }
     fn closed(&self) -> bool {
-        return self._closed;
+        self._closed
     }
     fn flush(&self) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        return Ok(());
+        Ok(())
     }
     fn seek(&self, offset: i64, whence: i64) -> Result<i64, IOError> {
-        let _: i64 = offset;
-        let _: i64 = whence;
-        return Err(IOError::new(_unsupported_seek_tell_error()));
+        let _ = offset;
+        let _ = whence;
+        Err(IOError::new(_unsupported_seek_tell_error()))
     }
     fn tell(&self) -> Result<i64, IOError> {
-        return Err(IOError::new(_unsupported_seek_tell_error()));
+        Err(IOError::new(_unsupported_seek_tell_error()))
     }
     fn readable(&self) -> bool {
-        return false;
+        false
     }
     fn writable(&self) -> bool {
-        return false;
+        false
     }
     fn seekable(&self) -> bool {
-        return false;
+        false
     }
 }
 impl std::fmt::Display for IOBase {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "IOBase(_closed={})", self._closed);
+        write!(f, "IOBase(_closed={})", self._closed)
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -234,11 +646,11 @@ struct FileHandle {
 }
 impl FileHandle {
     fn new(handle: i64, mode: String) -> Self {
-        return Self {
+        Self {
             _handle: handle,
             _mode: mode,
             _closed: false,
-        };
+        }
     }
     fn close(&mut self) {
         if self._closed {
@@ -255,13 +667,13 @@ impl FileHandle {
         self._closed = true;
     }
     fn closed(&self) -> bool {
-        return self._closed;
+        self._closed
     }
     fn flush(&self) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        return Ok(());
+        Ok(())
     }
     fn read(&self) -> Result<String, IOError> {
         if self._closed {
@@ -270,7 +682,7 @@ impl FileHandle {
         if !(self.readable()) {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        return (|| {
+        (|| {
             let __hid = self._handle;
             let mut __handles = __SIFR_FILE_HANDLES
                 .lock()
@@ -288,7 +700,7 @@ impl FileHandle {
                     });
                 }
             }
-        })();
+        })()
     }
     fn write(&self, data: &String) -> Result<(), IOError> {
         if self._closed {
@@ -297,7 +709,7 @@ impl FileHandle {
         if !(self.writable()) {
             return Err(IOError::new("stream is not writable".to_string()));
         }
-        return (|| {
+        (|| {
             let __hid = self._handle;
             let mut __handles = __SIFR_FILE_HANDLES
                 .lock()
@@ -315,7 +727,7 @@ impl FileHandle {
                     });
                 }
             }
-        })();
+        })()
     }
     fn readline(&self) -> Result<Option<String>, IOError> {
         if self._closed {
@@ -324,7 +736,7 @@ impl FileHandle {
         if !(self.readable()) {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        return (|| {
+        (|| {
             let __hid = self._handle;
             let mut __handles = __SIFR_FILE_HANDLES
                 .lock()
@@ -352,7 +764,7 @@ impl FileHandle {
                     });
                 }
             }
-        })();
+        })()
     }
     fn readlines(&self) -> Result<Vec<String>, IOError> {
         if self._closed {
@@ -361,7 +773,7 @@ impl FileHandle {
         if !(self.readable()) {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        return (|| {
+        (|| {
             let __hid = self._handle;
             let mut __handles = __SIFR_FILE_HANDLES
                 .lock()
@@ -395,7 +807,7 @@ impl FileHandle {
                     });
                 }
             }
-        })();
+        })()
     }
     fn read_bytes(&self) -> Result<Vec<u8>, IOError> {
         if self._closed {
@@ -404,7 +816,7 @@ impl FileHandle {
         if !(self.readable()) {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        return (|| {
+        (|| {
             let __hid = self._handle;
             let mut __handles = __SIFR_FILE_HANDLES
                 .lock()
@@ -422,7 +834,7 @@ impl FileHandle {
                     });
                 }
             }
-        })();
+        })()
     }
     fn write_bytes(&self, data: &Vec<u8>) -> Result<(), IOError> {
         if self._closed {
@@ -431,7 +843,7 @@ impl FileHandle {
         if !(self.writable()) {
             return Err(IOError::new("stream is not writable".to_string()));
         }
-        return (|| {
+        (|| {
             let __hid = self._handle;
             let mut __handles = __SIFR_FILE_HANDLES
                 .lock()
@@ -448,27 +860,27 @@ impl FileHandle {
                     });
                 }
             }
-        })();
+        })()
     }
     fn seek(&self, offset: i64, whence: i64) -> Result<i64, IOError> {
-        let _: i64 = offset;
-        let _: i64 = whence;
-        return Err(IOError::new(_unsupported_seek_tell_error()));
+        let _ = offset;
+        let _ = whence;
+        Err(IOError::new(_unsupported_seek_tell_error()))
     }
     fn tell(&self) -> Result<i64, IOError> {
-        return Err(IOError::new(_unsupported_seek_tell_error()));
+        Err(IOError::new(_unsupported_seek_tell_error()))
     }
     fn readable(&self) -> bool {
-        return _mode_is_readable(&self._mode.clone());
+        _mode_is_readable(&self._mode)
     }
     fn writable(&self) -> bool {
-        return _mode_is_writable(&self._mode.clone());
+        _mode_is_writable(&self._mode)
     }
     fn seekable(&self) -> bool {
-        return false;
+        false
     }
     fn __enter__(&self) -> FileHandle {
-        return self.clone();
+        self.clone()
     }
     fn __exit__(&mut self) {
         self.close();
@@ -476,10 +888,10 @@ impl FileHandle {
 }
 impl std::fmt::Display for FileHandle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
+        write!(
             f, "FileHandle(_handle={}, _mode={}, _closed={})", self._handle, self._mode,
             self._closed
-        );
+        )
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -490,11 +902,11 @@ struct BinaryFileHandle {
 }
 impl BinaryFileHandle {
     fn new(handle: i64, mode: String) -> Self {
-        return Self {
+        Self {
             _handle: handle,
             _mode: mode,
             _closed: false,
-        };
+        }
     }
     fn close(&mut self) {
         if self._closed {
@@ -511,23 +923,23 @@ impl BinaryFileHandle {
         self._closed = true;
     }
     fn closed(&self) -> bool {
-        return self._closed;
+        self._closed
     }
     fn flush(&self) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        return Ok(());
+        Ok(())
     }
     fn read_bytes(&self, size: Option<i64>) -> Result<Vec<u8>, IOError> {
-        let _: Option<i64> = size;
+        let _ = size;
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
         if !(self.readable()) {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        return (|| {
+        (|| {
             let __hid = self._handle;
             let mut __handles = __SIFR_FILE_HANDLES
                 .lock()
@@ -545,7 +957,7 @@ impl BinaryFileHandle {
                     });
                 }
             }
-        })();
+        })()
     }
     fn write_bytes(&self, data: &Vec<u8>) -> Result<(), IOError> {
         if self._closed {
@@ -554,7 +966,7 @@ impl BinaryFileHandle {
         if !(self.writable()) {
             return Err(IOError::new("stream is not writable".to_string()));
         }
-        return (|| {
+        (|| {
             let __hid = self._handle;
             let mut __handles = __SIFR_FILE_HANDLES
                 .lock()
@@ -571,27 +983,27 @@ impl BinaryFileHandle {
                     });
                 }
             }
-        })();
+        })()
     }
     fn seek(&self, offset: i64, whence: i64) -> Result<i64, IOError> {
-        let _: i64 = offset;
-        let _: i64 = whence;
-        return Err(IOError::new(_unsupported_seek_tell_error()));
+        let _ = offset;
+        let _ = whence;
+        Err(IOError::new(_unsupported_seek_tell_error()))
     }
     fn tell(&self) -> Result<i64, IOError> {
-        return Err(IOError::new(_unsupported_seek_tell_error()));
+        Err(IOError::new(_unsupported_seek_tell_error()))
     }
     fn readable(&self) -> bool {
-        return _mode_is_readable(&self._mode.clone());
+        _mode_is_readable(&self._mode)
     }
     fn writable(&self) -> bool {
-        return _mode_is_writable(&self._mode.clone());
+        _mode_is_writable(&self._mode)
     }
     fn seekable(&self) -> bool {
-        return false;
+        false
     }
     fn __enter__(&self) -> BinaryFileHandle {
-        return self.clone();
+        self.clone()
     }
     fn __exit__(&mut self) {
         self.close();
@@ -599,10 +1011,190 @@ impl BinaryFileHandle {
 }
 impl std::fmt::Display for BinaryFileHandle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
+        write!(
             f, "BinaryFileHandle(_handle={}, _mode={}, _closed={})", self._handle, self
             ._mode, self._closed
-        );
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct TextFileHandle {
+    _binary: BinaryFileHandle,
+    _encoding: Encoding,
+    _decode_errors: DecodeErrorHandler,
+    _encode_errors: EncodeErrorHandler,
+}
+impl TextFileHandle {
+    fn new(
+        binary: BinaryFileHandle,
+        enc: Encoding,
+        decode_errors: DecodeErrorHandler,
+        encode_errors: EncodeErrorHandler,
+    ) -> Self {
+        Self {
+            _binary: binary,
+            _encoding: enc,
+            _decode_errors: decode_errors,
+            _encode_errors: encode_errors,
+        }
+    }
+    fn close(&mut self) {
+        self._binary.clone().close();
+    }
+    fn closed(&mut self) -> bool {
+        self._binary.clone().closed()
+    }
+    fn flush(&mut self) -> Result<(), IOError> {
+        self._binary.clone().flush()
+    }
+    fn read(&mut self) -> Result<String, IOError> {
+        let __sifr_try_res: Result<Result<String, IOError>, IOError> = (|| {
+            let data: Vec<u8> = self._binary.clone().read_bytes(None)?;
+            let text: String = (decode(
+                &data,
+                &self._encoding,
+                &Some((self._decode_errors.clone()).clone()),
+            ))
+                .map_err(|__e| IOError::new(__e.to_string()))?;
+            return Ok(Ok(text));
+            unreachable!("sifr try/except return capture fell through");
+        })();
+        match __sifr_try_res {
+            Ok(__sifr_ret_val) => {
+                return __sifr_ret_val;
+            }
+            Err(__sifr_try_err) => {
+                let e = __sifr_try_err.clone();
+                return Err(IOError::new(e.message));
+            }
+        }
+    }
+    fn write(&mut self, text: &String) -> Result<(), IOError> {
+        let __sifr_try_res: Result<Result<(), IOError>, IOError> = (|| {
+            let data: Vec<u8> = (encode(
+                text,
+                &self._encoding,
+                &Some((self._encode_errors.clone()).clone()),
+            ))
+                .map_err(|__e| IOError::new(__e.to_string()))?;
+            let result: () = self._binary.clone().write_bytes(&data)?;
+            return Ok(Ok(result));
+            unreachable!("sifr try/except return capture fell through");
+        })();
+        match __sifr_try_res {
+            Ok(__sifr_ret_val) => {
+                return __sifr_ret_val;
+            }
+            Err(__sifr_try_err) => {
+                let e = __sifr_try_err.clone();
+                return Err(IOError::new(e.message));
+            }
+        }
+    }
+    fn readline(&self) -> Result<Option<String>, IOError> {
+        Err(
+            IOError::new(
+                "TextFileHandle.readline is deferred; use read().split(\"\\n\")"
+                    .to_string(),
+            ),
+        )
+    }
+    fn readlines(&self) -> Result<Vec<String>, IOError> {
+        Err(
+            IOError::new(
+                "TextFileHandle.readlines is deferred; use read().split(\"\\n\")"
+                    .to_string(),
+            ),
+        )
+    }
+    fn readable(&mut self) -> bool {
+        self._binary.clone().readable()
+    }
+    fn writable(&mut self) -> bool {
+        self._binary.clone().writable()
+    }
+    fn seekable(&mut self) -> bool {
+        self._binary.clone().seekable()
+    }
+    fn __enter__(&self) -> TextFileHandle {
+        self.clone()
+    }
+    fn __exit__(&mut self) {
+        self.close();
+    }
+}
+impl std::fmt::Display for TextFileHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "TextFileHandle(_binary={}, _encoding={:?}, _decode_errors={:?}, _encode_errors={:?})",
+            self._binary, self._encoding, self._decode_errors, self._encode_errors
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct TextReader {
+    _closed: bool,
+}
+impl TextReader {
+    fn new() -> Self {
+        Self { _closed: false }
+    }
+    fn read(&self) -> Result<String, IOError> {
+        Err(
+            IOError::new(
+                "TextReader direct construction is unsupported; use open_text"
+                    .to_string(),
+            ),
+        )
+    }
+    fn readline(&self) -> Result<Option<String>, IOError> {
+        Err(
+            IOError::new(
+                "TextReader.readline is deferred; use read().split(\"\\n\")".to_string(),
+            ),
+        )
+    }
+    fn readlines(&self) -> Result<Vec<String>, IOError> {
+        Err(
+            IOError::new(
+                "TextReader.readlines is deferred; use read().split(\"\\n\")".to_string(),
+            ),
+        )
+    }
+    fn close(&mut self) {
+        self._closed = true;
+    }
+}
+impl std::fmt::Display for TextReader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TextReader(_closed={})", self._closed)
+    }
+}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct TextWriter {
+    _closed: bool,
+}
+impl TextWriter {
+    fn new() -> Self {
+        Self { _closed: false }
+    }
+    fn write(&self, text: &String) -> Result<(), IOError> {
+        let _ = (text).clone();
+        Err(
+            IOError::new(
+                "TextWriter direct construction is unsupported; use open_text"
+                    .to_string(),
+            ),
+        )
+    }
+    fn close(&mut self) {
+        self._closed = true;
+    }
+}
+impl std::fmt::Display for TextWriter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TextWriter(_closed={})", self._closed)
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -613,23 +1205,30 @@ struct StringIO {
 }
 impl StringIO {
     fn new(initial: String) -> Self {
-        return Self {
-            _buffer: format!("{}{}", initial, "".to_string()),
-            _cursor: 0 as i64,
+        Self {
+            _buffer: {
+                let mut __sifr_concat: String = String::with_capacity(
+                    initial.len() + 0usize,
+                );
+                __sifr_concat.push_str((initial).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            },
+            _cursor: 0_i64,
             _closed: false,
-        };
+        }
     }
     fn close(&mut self) {
         self._closed = true;
     }
     fn closed(&self) -> bool {
-        return self._closed;
+        self._closed
     }
     fn flush(&self) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        return Ok(());
+        Ok(())
     }
     fn read(&mut self, size: Option<i64>) -> Result<String, IOError> {
         if self._closed {
@@ -637,60 +1236,105 @@ impl StringIO {
         }
         let start: i64 = self._cursor;
         let mut end: i64 = self._buffer.clone().chars().count() as i64;
-        if let Some(size) = size {
+        if let Some(mut size) = size {
             let maybe_size: i64 = size;
-            if maybe_size >= (0 as i64) {
+            if maybe_size >= (0_i64) {
                 let requested: i64 = start + maybe_size;
                 if requested < end {
                     end = requested;
                 }
             }
         }
-        let piece: String = String::from_iter(
-            (self._buffer.clone())
-                .chars()
-                .skip((start).max(0) as usize)
-                .take(((end).max(0) - (start).max(0)).max(0) as usize),
-        );
+        let piece: String = {
+            let _slice_src = &self._buffer.clone();
+            let _slice_len_i64 = _slice_src.chars().count() as i64;
+            let _slice_start_i64 = if start < 0 {
+                (_slice_len_i64 + start).max(0)
+            } else {
+                start.min(_slice_len_i64)
+            };
+            let _slice_stop_i64 = if end < 0 {
+                (_slice_len_i64 + end).max(0)
+            } else {
+                end.min(_slice_len_i64)
+            };
+            String::from_iter(
+                _slice_src
+                    .chars()
+                    .skip(_slice_start_i64 as usize)
+                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize),
+            )
+        };
         self._cursor = end;
-        return Ok(piece);
+        Ok(piece)
     }
     fn write(&mut self, data: &String) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        let left: String = String::from_iter(
-            (self._buffer.clone())
-                .chars()
-                .skip(0 as usize)
-                .take(((self._cursor).max(0) - 0).max(0) as usize),
-        );
+        let left: String = {
+            let _slice_src = &self._buffer.clone();
+            let _slice_len_i64 = _slice_src.chars().count() as i64;
+            let _slice_start_i64 = 0;
+            let _slice_stop_i64 = if self._cursor < 0 {
+                (_slice_len_i64 + self._cursor).max(0)
+            } else {
+                self._cursor.min(_slice_len_i64)
+            };
+            String::from_iter(
+                _slice_src
+                    .chars()
+                    .skip(_slice_start_i64 as usize)
+                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize),
+            )
+        };
         let tail_start: i64 = self._cursor + (data.chars().count() as i64);
         let mut right: String = "".to_string();
-        if tail_start < (self._buffer.clone().chars().count() as i64) {
-            right = String::from_iter(
-                (self._buffer.clone()).chars().skip((tail_start).max(0) as usize),
-            );
+        if (tail_start < (self._buffer.clone().chars().count() as i64)) {
+            right = {
+                let _slice_src = &self._buffer.clone();
+                let _slice_len_i64 = _slice_src.chars().count() as i64;
+                let _slice_start_i64 = if tail_start < 0 {
+                    (_slice_len_i64 + tail_start).max(0)
+                } else {
+                    tail_start.min(_slice_len_i64)
+                };
+                let _slice_stop_i64 = _slice_len_i64;
+                String::from_iter(
+                    _slice_src
+                        .chars()
+                        .skip(_slice_start_i64 as usize)
+                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize),
+                )
+            };
         }
-        self._buffer = format!("{}{}{}", left, data, right);
-        self._cursor = self._cursor + (data.chars().count() as i64);
-        return Ok(());
+        self._buffer = {
+            let mut __sifr_concat: String = String::with_capacity(
+                (left.len() + data.len()) + right.len(),
+            );
+            __sifr_concat.push_str((left).as_str());
+            __sifr_concat.push_str((data).as_str());
+            __sifr_concat.push_str((right).as_str());
+            __sifr_concat
+        };
+        self._cursor += data.chars().count() as i64;
+        Ok(())
     }
     fn getvalue(&self) -> String {
-        return self._buffer.clone();
+        self._buffer.clone()
     }
     fn seek(&mut self, offset: i64, whence: i64) -> Result<i64, IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        let mut origin: i64 = 0 as i64;
-        if whence == (0 as i64) {
-            origin = 0 as i64;
+        let mut origin: i64 = 0_i64;
+        if whence == (0_i64) {
+            origin = 0_i64;
         } else {
-            if whence == (1 as i64) {
+            if whence == (1_i64) {
                 origin = self._cursor;
             } else {
-                if whence == (2 as i64) {
+                if whence == (2_i64) {
                     origin = self._buffer.clone().chars().count() as i64;
                 } else {
                     return Err(IOError::new(_invalid_whence_error(whence)));
@@ -698,7 +1342,7 @@ impl StringIO {
             }
         }
         let mut next_pos: i64 = origin + offset;
-        if next_pos < (0 as i64) {
+        if next_pos < (0_i64) {
             return Err(IOError::new(_negative_seek_error(next_pos)));
         }
         let end: i64 = self._buffer.clone().chars().count() as i64;
@@ -706,30 +1350,30 @@ impl StringIO {
             next_pos = end;
         }
         self._cursor = next_pos;
-        return Ok(self._cursor);
+        Ok(self._cursor)
     }
     fn tell(&self) -> Result<i64, IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        return Ok(self._cursor);
+        Ok(self._cursor)
     }
     fn readable(&self) -> bool {
-        return !(self._closed);
+        !(self._closed)
     }
     fn writable(&self) -> bool {
-        return !(self._closed);
+        !(self._closed)
     }
     fn seekable(&self) -> bool {
-        return !(self._closed);
+        !(self._closed)
     }
 }
 impl std::fmt::Display for StringIO {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
+        write!(
             f, "StringIO(_buffer={}, _cursor={}, _closed={})", self._buffer, self
             ._cursor, self._closed
-        );
+        )
     }
 }
 #[derive(Debug, Clone, PartialEq)]
@@ -740,23 +1384,23 @@ struct BytesIO {
 }
 impl BytesIO {
     fn new(initial: Vec<u8>) -> Self {
-        return Self {
+        Self {
             _buffer: initial.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>(),
-            _cursor: 0 as i64,
+            _cursor: 0_i64,
             _closed: false,
-        };
+        }
     }
     fn close(&mut self) {
         self._closed = true;
     }
     fn closed(&self) -> bool {
-        return self._closed;
+        self._closed
     }
     fn flush(&self) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        return Ok(());
+        Ok(())
     }
     fn _slice_to_bytes(&self, values: &Vec<i64>) -> Result<Vec<u8>, IOError> {
         let __sifr_try_res: Result<Result<Vec<u8>, IOError>, ValueError> = (|| {
@@ -773,7 +1417,7 @@ impl BytesIO {
                     }
                     __out.push(*__pair.1 as u8);
                 }
-                Ok(__out)
+                Ok::<Vec<u8>, ValueError>(__out)
             })?;
             return Ok(Ok(built));
             unreachable!("sifr try/except return capture fell through");
@@ -793,25 +1437,39 @@ impl BytesIO {
             return Err(IOError::new(_closed_stream_error()));
         }
         let start: i64 = self._cursor;
-        let mut end: i64 = self._buffer.clone().len() as i64;
-        if let Some(size) = size {
+        let mut end: i64 = self._buffer.len() as i64;
+        if let Some(mut size) = size {
             let maybe_size: i64 = size;
-            if maybe_size >= (0 as i64) {
+            if maybe_size >= (0_i64) {
                 let requested: i64 = start + maybe_size;
                 if requested < end {
                     end = requested;
                 }
             }
         }
-        let chunk: Vec<i64> = Vec::from_iter(
-            (self._buffer.clone())
-                .iter()
-                .skip((start).max(0) as usize)
-                .take(((end).max(0) - (start).max(0)).max(0) as usize)
-                .cloned(),
-        );
+        let chunk: Vec<i64> = {
+            let _slice_src = &self._buffer.clone();
+            let _slice_len_i64 = _slice_src.len() as i64;
+            let _slice_start_i64 = if start < 0 {
+                (_slice_len_i64 + start).max(0)
+            } else {
+                start.min(_slice_len_i64)
+            };
+            let _slice_stop_i64 = if end < 0 {
+                (_slice_len_i64 + end).max(0)
+            } else {
+                end.min(_slice_len_i64)
+            };
+            Vec::from_iter(
+                _slice_src
+                    .iter()
+                    .skip(_slice_start_i64 as usize)
+                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                    .cloned(),
+            )
+        };
         self._cursor = end;
-        return self._slice_to_bytes(&chunk);
+        self._slice_to_bytes(&chunk)
     }
     fn write_bytes(&mut self, data: &Vec<u8>) -> Result<(), IOError> {
         if self._closed {
@@ -821,14 +1479,14 @@ impl BytesIO {
             .iter()
             .map(|__byte| *__byte as i64)
             .collect::<Vec<i64>>();
-        let mut i: i64 = 0 as i64;
-        while i < (values.len() as i64) {
+        let mut i: i64 = 0_i64;
+        while (i < (values.len() as i64)) {
             let maybe_value: Option<i64> = Some(values[i as usize]);
-            let Some(maybe_value) = maybe_value else {
+            let Some(mut maybe_value) = maybe_value else {
                 return Err(IOError::new("bytes write invariant violation".to_string()));
             };
             let idx: i64 = self._cursor + i;
-            if idx < (self._buffer.clone().len() as i64) {
+            if (idx < (self._buffer.len() as i64)) {
                 {
                     let __idx_raw = idx;
                     let __idx_norm = if __idx_raw < 0 {
@@ -845,79 +1503,126 @@ impl BytesIO {
             } else {
                 self._buffer.push(maybe_value);
             }
-            i = i + (1 as i64);
+            i += 1_i64;
         }
-        self._cursor = self._cursor + (values.len() as i64);
-        return Ok(());
+        self._cursor += values.len() as i64;
+        Ok(())
     }
     fn getvalue(&self) -> Result<Vec<u8>, IOError> {
-        return self._slice_to_bytes(&self._buffer.clone());
+        self._slice_to_bytes(&self._buffer.clone())
     }
     fn seek(&mut self, offset: i64, whence: i64) -> Result<i64, IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        let mut origin: i64 = 0 as i64;
-        if whence == (0 as i64) {
-            origin = 0 as i64;
+        let mut origin: i64 = 0_i64;
+        if whence == (0_i64) {
+            origin = 0_i64;
         } else {
-            if whence == (1 as i64) {
+            if whence == (1_i64) {
                 origin = self._cursor;
             } else {
-                if whence == (2 as i64) {
-                    origin = self._buffer.clone().len() as i64;
+                if whence == (2_i64) {
+                    origin = self._buffer.len() as i64;
                 } else {
                     return Err(IOError::new(_invalid_whence_error(whence)));
                 }
             }
         }
         let mut next_pos: i64 = origin + offset;
-        if next_pos < (0 as i64) {
+        if next_pos < (0_i64) {
             return Err(IOError::new(_negative_seek_error(next_pos)));
         }
-        let end: i64 = self._buffer.clone().len() as i64;
+        let end: i64 = self._buffer.len() as i64;
         if next_pos > end {
             next_pos = end;
         }
         self._cursor = next_pos;
-        return Ok(self._cursor);
+        Ok(self._cursor)
     }
     fn tell(&self) -> Result<i64, IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        return Ok(self._cursor);
+        Ok(self._cursor)
     }
     fn readable(&self) -> bool {
-        return !(self._closed);
+        !(self._closed)
     }
     fn writable(&self) -> bool {
-        return !(self._closed);
+        !(self._closed)
     }
     fn seekable(&self) -> bool {
-        return !(self._closed);
+        !(self._closed)
     }
 }
 fn _closed_stream_error() -> String {
-    return "I/O operation on closed stream".to_string();
+    "I/O operation on closed stream".to_string()
 }
 fn _invalid_whence_error(whence: i64) -> String {
-    return format!("{}{}", "invalid whence: ".to_string(), format!("{}", whence));
+    {
+        let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
+        __sifr_concat.push_str("invalid whence: ");
+        __sifr_concat.push_str((format!("{}", whence)).as_str());
+        __sifr_concat
+    }
 }
 fn _negative_seek_error(offset: i64) -> String {
-    return format!(
-        "{}{}", "negative seek position: ".to_string(), format!("{}", offset)
-    );
+    {
+        let mut __sifr_concat: String = String::with_capacity(24usize + 0usize);
+        __sifr_concat.push_str("negative seek position: ");
+        __sifr_concat.push_str((format!("{}", offset)).as_str());
+        __sifr_concat
+    }
 }
 fn _unsupported_seek_tell_error() -> String {
-    return "seek/tell is unsupported for this stream".to_string();
+    "seek/tell is unsupported for this stream".to_string()
 }
 fn _mode_is_readable(mode: &String) -> bool {
-    return mode.contains(&"r".to_string()) || mode.contains(&"+".to_string());
+    mode.contains(&"r".to_string()) || mode.contains(&"+".to_string())
 }
 fn _mode_is_writable(mode: &String) -> bool {
-    return (mode.contains(&"w".to_string()) || mode.contains(&"a".to_string()))
-        || mode.contains(&"+".to_string());
+    (mode.contains(&"w".to_string()) || mode.contains(&"a".to_string()))
+        || mode.contains(&"+".to_string())
+}
+fn _text_binary_mode(mode: &String) -> Result<String, IOError> {
+    if mode.contains(&"b".to_string()) {
+        return Err(
+            IOError::new("open_text requires a text mode without \'b\'".to_string()),
+        );
+    }
+    if ((mode).as_str() == "r") || ((mode).as_str() == "rt") {
+        return Ok("rb".to_string());
+    }
+    if ((mode).as_str() == "w") || ((mode).as_str() == "wt") {
+        return Ok("wb".to_string());
+    }
+    if ((mode).as_str() == "a") || ((mode).as_str() == "at") {
+        return Ok("ab".to_string());
+    }
+    Err(
+        IOError::new({
+            let mut __sifr_concat: String = String::with_capacity(19usize + mode.len());
+            __sifr_concat.push_str("invalid text mode: ");
+            __sifr_concat.push_str((mode).as_str());
+            __sifr_concat
+        }),
+    )
+}
+fn _text_encoding_or_default(enc: &Option<Encoding>) -> Encoding {
+    if let Some(enc) = enc.as_ref() {
+        return Encoding::new(format!("{}{}", enc.label, ""));
+    }
+    Encoding::new("utf-8".to_string())
+}
+fn _decode_errors_or_default(errors: &Option<DecodeErrorHandler>) -> DecodeErrorHandler {
+    if let Some(errors) = errors.as_ref() {
+        return DecodeErrorHandler::new(format!("{}{}", errors.name, ""));
+    }
+    strict_decode_handler()
+}
+fn _encode_errors_from_decode_errors(errors: &DecodeErrorHandler) -> EncodeErrorHandler {
+    EncodeErrorHandler::new(format!("{}{}", errors.name, ""))
 }
 fn open(path: &String, mode: &String) -> Result<FileHandle, IOError> {
     let __sifr_try_res: Result<Result<FileHandle, IOError>, IOError> = (|| {
@@ -1102,36 +1807,65 @@ fn open_binary(path: &String, mode: &String) -> Result<BinaryFileHandle, IOError
         }
     }
 }
+fn open_text(
+    path: &String,
+    mode: &String,
+    encoding: &Option<Encoding>,
+    errors: &Option<DecodeErrorHandler>,
+) -> Result<TextFileHandle, IOError> {
+    let __sifr_try_res: Result<Result<TextFileHandle, IOError>, IOError> = (|| {
+        let binary_mode: String = _text_binary_mode(mode)?;
+        let text_encoding: Encoding = _text_encoding_or_default(encoding);
+        let decode_errors: DecodeErrorHandler = _decode_errors_or_default(errors);
+        let encode_errors: EncodeErrorHandler = _encode_errors_from_decode_errors(
+            &decode_errors,
+        );
+        let binary: BinaryFileHandle = open_binary(path, &binary_mode)?;
+        return Ok(
+            Ok(TextFileHandle::new(binary, text_encoding, decode_errors, encode_errors)),
+        );
+        unreachable!("sifr try/except return capture fell through");
+    })();
+    match __sifr_try_res {
+        Ok(__sifr_ret_val) => {
+            return __sifr_ret_val;
+        }
+        Err(__sifr_try_err) => {
+            let e = __sifr_try_err.clone();
+            return Err(IOError::new(e.message));
+        }
+    }
+}
 
 // --- stdlib: sifr.logging ---
-const DEBUG: i64 = 10 as i64;
-const INFO: i64 = 20 as i64;
-const WARNING: i64 = 30 as i64;
-const ERROR: i64 = 40 as i64;
-const CRITICAL: i64 = 50 as i64;
-const NOTSET: i64 = 0 as i64;
+const DEBUG: i64 = 10_i64;
+const INFO: i64 = 20_i64;
+const WARNING: i64 = 30_i64;
+const ERROR: i64 = 40_i64;
+const CRITICAL: i64 = 50_i64;
+const NOTSET: i64 = 0_i64;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Formatter {
     _fmt: String,
 }
 impl Formatter {
     fn new(fmt: String) -> Self {
-        return Self { _fmt: fmt };
+        Self { _fmt: fmt }
     }
     fn template(&self) -> String {
-        return self._fmt.clone();
+        self._fmt.clone()
     }
     fn format(&self, level: &String, name: &String, msg: &String) -> String {
         let mut result: String = self._fmt.clone();
-        result = result.replace(&"%(levelname)s".to_string(), &level);
-        result = result.replace(&"%(name)s".to_string(), &name);
-        result = result.replace(&"%(message)s".to_string(), &msg);
-        return result;
+        result = result.replace("%(levelname)s", &level);
+        result = result.replace("%(name)s", &name);
+        result = result.replace("%(message)s", &msg);
+        result
     }
 }
 impl std::fmt::Display for Formatter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Formatter(_fmt={})", self._fmt);
+        write!(f, "Formatter(_fmt={})", self._fmt)
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1141,28 +1875,28 @@ struct StreamHandler {
 }
 impl StreamHandler {
     fn new(level: i64) -> Self {
-        return Self {
+        Self {
             _level: level,
             _formatter: Formatter::new("%(levelname)s:%(name)s:%(message)s".to_string()),
-        };
+        }
     }
     fn set_level(&mut self, level: i64) {
         self._level = level;
     }
     fn level(&self) -> i64 {
-        return self._level;
+        self._level
     }
     fn set_formatter(&mut self, fmt: &Formatter) {
-        self._formatter = Formatter::new(format!("{}{}", fmt._fmt, "".to_string()));
+        self._formatter = Formatter::new(format!("{}{}", fmt._fmt, ""));
     }
     fn format_template(&mut self) -> String {
-        return self._formatter.clone().template();
+        self._formatter.clone().template()
     }
     fn _allows(&self, level_num: i64) -> bool {
-        if self._level == NOTSET {
+        if (self._level == NOTSET) {
             return true;
         }
-        return level_num >= self._level;
+        (level_num >= self._level)
     }
     fn emit(&mut self, level: &String, name: &String, msg: &String) {
         let level_num: i64 = _level_name_to_num(level);
@@ -1175,9 +1909,9 @@ impl StreamHandler {
 }
 impl std::fmt::Display for StreamHandler {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
+        write!(
             f, "StreamHandler(_level={}, _formatter={})", self._level, self._formatter
-        );
+        )
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1188,162 +1922,82 @@ struct FileHandler {
 }
 impl FileHandler {
     fn new(path: String, level: i64) -> Self {
-        return Self {
-            _path: format!("{}{}", path, "".to_string()),
+        Self {
+            _path: {
+                let mut __sifr_concat: String = String::with_capacity(
+                    path.len() + 0usize,
+                );
+                __sifr_concat.push_str((path).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            },
             _level: level,
             _formatter: Formatter::new("%(levelname)s:%(name)s:%(message)s".to_string()),
-        };
+        }
     }
     fn path(&self) -> String {
-        return self._path.clone();
+        self._path.clone()
     }
     fn set_level(&mut self, level: i64) {
         self._level = level;
     }
     fn level(&self) -> i64 {
-        return self._level;
+        self._level
     }
     fn set_formatter(&mut self, fmt: &Formatter) {
-        self._formatter = Formatter::new(format!("{}{}", fmt._fmt, "".to_string()));
+        self._formatter = Formatter::new(format!("{}{}", fmt._fmt, ""));
     }
     fn format_template(&mut self) -> String {
-        return self._formatter.clone().template();
+        self._formatter.clone().template()
     }
     fn _allows(&self, level_num: i64) -> bool {
-        if self._level == NOTSET {
+        if (self._level == NOTSET) {
             return true;
         }
-        return level_num >= self._level;
+        (level_num >= self._level)
     }
     fn emit(&mut self, level: &String, name: &String, msg: &String) {
         let level_num: i64 = _level_name_to_num(level);
         if !(self._allows(level_num)) {
             return;
         }
-        let line: String = format!(
-            "{}{}", self._formatter.clone().format(level, name, msg), "\n".to_string()
-        );
+        let line: String = {
+            let mut __sifr_concat: String = String::with_capacity(0usize + 1usize);
+            __sifr_concat
+                .push_str((self._formatter.clone().format(level, name, msg)).as_str());
+            __sifr_concat.push('\n');
+            __sifr_concat
+        };
         let __sifr_try_res: Result<(), IOError> = (|| {
-            let mut fh: FileHandle = (|| {
-                let __path = self._path.clone().to_string();
-                let __mode = "a".to_string().to_string();
-                let __handle_id = __sifr_next_file_handle_id();
-                match __mode.as_str() {
-                    "r" | "rt" => {
-                        let __f = std::fs::File::open(__path.as_str())
-                            .map_err(__io_err)?;
-                        let __reader = std::io::BufReader::new(__f);
-                        __SIFR_FILE_HANDLES
-                            .lock()
-                            .unwrap_or_else(|__err| __err.into_inner())
-                            .insert(__handle_id, SifrFileHandle::TextRead(__reader));
-                        return Ok(FileHandle {
-                            _handle: __handle_id,
-                            _mode: __mode.to_string(),
-                        });
-                    }
-                    "w" | "wt" => {
-                        let __f = std::fs::File::create(__path.as_str())
-                            .map_err(__io_err)?;
-                        let __writer = std::io::BufWriter::new(__f);
-                        __SIFR_FILE_HANDLES
-                            .lock()
-                            .unwrap_or_else(|__err| __err.into_inner())
-                            .insert(__handle_id, SifrFileHandle::TextWrite(__writer));
-                        return Ok(FileHandle {
-                            _handle: __handle_id,
-                            _mode: __mode.to_string(),
-                        });
-                    }
-                    "a" | "at" => {
-                        let __f = std::fs::OpenOptions::new()
-                            .append(true)
-                            .create(true)
-                            .open(__path.as_str())
-                            .map_err(__io_err)?;
-                        let __writer = std::io::BufWriter::new(__f);
-                        __SIFR_FILE_HANDLES
-                            .lock()
-                            .unwrap_or_else(|__err| __err.into_inner())
-                            .insert(__handle_id, SifrFileHandle::TextWrite(__writer));
-                        return Ok(FileHandle {
-                            _handle: __handle_id,
-                            _mode: __mode.to_string(),
-                        });
-                    }
-                    "rb" => {
-                        let __f = std::fs::File::open(__path.as_str())
-                            .map_err(__io_err)?;
-                        let __reader = std::io::BufReader::new(__f);
-                        __SIFR_FILE_HANDLES
-                            .lock()
-                            .unwrap_or_else(|__err| __err.into_inner())
-                            .insert(__handle_id, SifrFileHandle::BinaryRead(__reader));
-                        return Ok(FileHandle {
-                            _handle: __handle_id,
-                            _mode: __mode.to_string(),
-                        });
-                    }
-                    "wb" => {
-                        let __f = std::fs::File::create(__path.as_str())
-                            .map_err(__io_err)?;
-                        let __writer = std::io::BufWriter::new(__f);
-                        __SIFR_FILE_HANDLES
-                            .lock()
-                            .unwrap_or_else(|__err| __err.into_inner())
-                            .insert(__handle_id, SifrFileHandle::BinaryWrite(__writer));
-                        return Ok(FileHandle {
-                            _handle: __handle_id,
-                            _mode: __mode.to_string(),
-                        });
-                    }
-                    "ab" => {
-                        let __f = std::fs::OpenOptions::new()
-                            .append(true)
-                            .create(true)
-                            .open(__path.as_str())
-                            .map_err(__io_err)?;
-                        let __writer = std::io::BufWriter::new(__f);
-                        __SIFR_FILE_HANDLES
-                            .lock()
-                            .unwrap_or_else(|__err| __err.into_inner())
-                            .insert(__handle_id, SifrFileHandle::BinaryWrite(__writer));
-                        return Ok(FileHandle {
-                            _handle: __handle_id,
-                            _mode: __mode.to_string(),
-                        });
-                    }
-                    _ => {
-                        return Err(IOError {
-                            message: format!("invalid mode: {}", __mode),
-                            kind: "Other".to_string(),
-                        });
-                    }
-                }
-            })()?;
+            let mut fh: TextFileHandle = open_text(
+                &self._path,
+                &"a".to_string(),
+                &Some((utf8()).clone()),
+                &None,
+            )?;
             let __sifr_try_res: Result<(), IOError> = (|| {
-                let _: () = fh.write(&line)?;
-                return Ok(());
+                let _ = fh.write(&line)?;
+                Ok(())
             })();
             if let Err(__sifr_try_err) = __sifr_try_res {
                 let e2 = __sifr_try_err.clone();
-                let _: String = e2.message;
+                let _ = e2.message;
             }
             fh.close();
-            return Ok(());
+            Ok(())
         })();
         if let Err(__sifr_try_err) = __sifr_try_res {
             let e = __sifr_try_err.clone();
-            let _: String = e.message;
+            let _ = e.message;
         }
     }
 }
 impl std::fmt::Display for FileHandler {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
+        write!(
             f, "FileHandler(_path={}, _level={}, _formatter={})", self._path, self
             ._level, self._formatter
-        );
+        )
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1353,34 +2007,32 @@ struct NullHandler {
 }
 impl NullHandler {
     fn new(level: i64) -> Self {
-        return Self {
+        Self {
             _level: level,
             _formatter: Formatter::new("%(levelname)s:%(name)s:%(message)s".to_string()),
-        };
+        }
     }
     fn set_level(&mut self, level: i64) {
         self._level = level;
     }
     fn level(&self) -> i64 {
-        return self._level;
+        self._level
     }
     fn set_formatter(&mut self, fmt: &Formatter) {
-        self._formatter = Formatter::new(format!("{}{}", fmt._fmt, "".to_string()));
+        self._formatter = Formatter::new(format!("{}{}", fmt._fmt, ""));
     }
     fn format_template(&mut self) -> String {
-        return self._formatter.clone().template();
+        self._formatter.clone().template()
     }
     fn emit(&self, level: &String, name: &String, msg: &String) {
-        let _: String = (level).clone();
-        let _: String = (name).clone();
-        let _: String = (msg).clone();
+        let _ = (level).clone();
+        let _ = (name).clone();
+        let _ = (msg).clone();
     }
 }
 impl std::fmt::Display for NullHandler {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
-            f, "NullHandler(_level={}, _formatter={})", self._level, self._formatter
-        );
+        write!(f, "NullHandler(_level={}, _formatter={})", self._level, self._formatter)
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1395,7 +2047,7 @@ struct Logger {
 }
 impl Logger {
     fn new(name: String, level: i64) -> Self {
-        return Self {
+        Self {
             _name: name,
             _level: level,
             _log_path: "".to_string(),
@@ -1403,13 +2055,18 @@ impl Logger {
             _handler_path: "".to_string(),
             _handler_level: NOTSET,
             _handler_fmt: "%(levelname)s:%(name)s:%(message)s".to_string(),
-        };
+        }
     }
     fn set_level(&mut self, level: i64) {
         self._level = level;
     }
     fn set_file(&mut self, path: &String) {
-        self._log_path = format!("{}{}", path, "".to_string());
+        self._log_path = {
+            let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
+            __sifr_concat.push_str((path).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
     }
     fn add_handler(&mut self, handler: &FileHandler) {
         self._handler_kind = "file".to_string();
@@ -1436,269 +2093,108 @@ impl Logger {
         self._handler_fmt = "%(levelname)s:%(name)s:%(message)s".to_string();
     }
     fn _handler_allows(&self, level_num: i64) -> bool {
-        if self._handler_level == NOTSET {
+        if (self._handler_level == NOTSET) {
             return true;
         }
-        return level_num >= self._handler_level;
+        (level_num >= self._handler_level)
     }
     fn _handler_line(&self, level: &String, msg: &String) -> String {
         let mut formatter: Formatter = Formatter::new(self._handler_fmt.clone());
-        return formatter.format(level, &self._name.clone(), msg);
+        formatter.format(level, &self._name.clone(), msg)
     }
     fn _emit(&self, level: &String, level_num: i64, msg: &String) {
-        if self._level > level_num {
+        if (self._level > level_num) {
             return;
         }
-        if self._handler_kind.clone() == "null".to_string() {
+        if (self._handler_kind.clone() == "null") {
             return;
         }
-        if self._handler_kind.clone() == "stream".to_string() {
+        if (self._handler_kind.clone() == "stream") {
             if self._handler_allows(level_num) {
                 println!("{}", self._handler_line(level, msg));
             }
             return;
         }
-        if self._handler_kind.clone() == "file".to_string() {
-            if ((self._handler_allows(level_num))
-                && (self._handler_path.clone() != "".to_string()))
-            {
-                let line: String = format!(
-                    "{}{}", self._handler_line(level, msg), "\n".to_string()
-                );
+        if (self._handler_kind.clone() == "file") {
+            if self._handler_allows(level_num) && (self._handler_path.clone() != "") {
+                let line: String = {
+                    let mut __sifr_concat: String = String::with_capacity(
+                        0usize + 1usize,
+                    );
+                    __sifr_concat.push_str((self._handler_line(level, msg)).as_str());
+                    __sifr_concat.push('\n');
+                    __sifr_concat
+                };
                 let __sifr_try_res: Result<(), IOError> = (|| {
-                    let mut fh: FileHandle = (|| {
-                        let __path = self._handler_path.clone().to_string();
-                        let __mode = "a".to_string().to_string();
-                        let __handle_id = __sifr_next_file_handle_id();
-                        match __mode.as_str() {
-                            "r" | "rt" => {
-                                let __f = std::fs::File::open(__path.as_str())
-                                    .map_err(__io_err)?;
-                                let __reader = std::io::BufReader::new(__f);
-                                __SIFR_FILE_HANDLES
-                                    .lock()
-                                    .unwrap_or_else(|__err| __err.into_inner())
-                                    .insert(__handle_id, SifrFileHandle::TextRead(__reader));
-                                return Ok(FileHandle {
-                                    _handle: __handle_id,
-                                    _mode: __mode.to_string(),
-                                });
-                            }
-                            "w" | "wt" => {
-                                let __f = std::fs::File::create(__path.as_str())
-                                    .map_err(__io_err)?;
-                                let __writer = std::io::BufWriter::new(__f);
-                                __SIFR_FILE_HANDLES
-                                    .lock()
-                                    .unwrap_or_else(|__err| __err.into_inner())
-                                    .insert(__handle_id, SifrFileHandle::TextWrite(__writer));
-                                return Ok(FileHandle {
-                                    _handle: __handle_id,
-                                    _mode: __mode.to_string(),
-                                });
-                            }
-                            "a" | "at" => {
-                                let __f = std::fs::OpenOptions::new()
-                                    .append(true)
-                                    .create(true)
-                                    .open(__path.as_str())
-                                    .map_err(__io_err)?;
-                                let __writer = std::io::BufWriter::new(__f);
-                                __SIFR_FILE_HANDLES
-                                    .lock()
-                                    .unwrap_or_else(|__err| __err.into_inner())
-                                    .insert(__handle_id, SifrFileHandle::TextWrite(__writer));
-                                return Ok(FileHandle {
-                                    _handle: __handle_id,
-                                    _mode: __mode.to_string(),
-                                });
-                            }
-                            "rb" => {
-                                let __f = std::fs::File::open(__path.as_str())
-                                    .map_err(__io_err)?;
-                                let __reader = std::io::BufReader::new(__f);
-                                __SIFR_FILE_HANDLES
-                                    .lock()
-                                    .unwrap_or_else(|__err| __err.into_inner())
-                                    .insert(__handle_id, SifrFileHandle::BinaryRead(__reader));
-                                return Ok(FileHandle {
-                                    _handle: __handle_id,
-                                    _mode: __mode.to_string(),
-                                });
-                            }
-                            "wb" => {
-                                let __f = std::fs::File::create(__path.as_str())
-                                    .map_err(__io_err)?;
-                                let __writer = std::io::BufWriter::new(__f);
-                                __SIFR_FILE_HANDLES
-                                    .lock()
-                                    .unwrap_or_else(|__err| __err.into_inner())
-                                    .insert(__handle_id, SifrFileHandle::BinaryWrite(__writer));
-                                return Ok(FileHandle {
-                                    _handle: __handle_id,
-                                    _mode: __mode.to_string(),
-                                });
-                            }
-                            "ab" => {
-                                let __f = std::fs::OpenOptions::new()
-                                    .append(true)
-                                    .create(true)
-                                    .open(__path.as_str())
-                                    .map_err(__io_err)?;
-                                let __writer = std::io::BufWriter::new(__f);
-                                __SIFR_FILE_HANDLES
-                                    .lock()
-                                    .unwrap_or_else(|__err| __err.into_inner())
-                                    .insert(__handle_id, SifrFileHandle::BinaryWrite(__writer));
-                                return Ok(FileHandle {
-                                    _handle: __handle_id,
-                                    _mode: __mode.to_string(),
-                                });
-                            }
-                            _ => {
-                                return Err(IOError {
-                                    message: format!("invalid mode: {}", __mode),
-                                    kind: "Other".to_string(),
-                                });
-                            }
-                        }
-                    })()?;
+                    let mut fh: TextFileHandle = open_text(
+                        &self._handler_path,
+                        &"a".to_string(),
+                        &Some((utf8()).clone()),
+                        &None,
+                    )?;
                     let __sifr_try_res: Result<(), IOError> = (|| {
-                        let _: () = fh.write(&line)?;
-                        return Ok(());
+                        let _ = fh.write(&line)?;
+                        Ok(())
                     })();
                     if let Err(__sifr_try_err) = __sifr_try_res {
                         let e2 = __sifr_try_err.clone();
-                        let _: String = e2.message;
+                        let _ = e2.message;
                     }
                     fh.close();
-                    return Ok(());
+                    Ok(())
                 })();
                 if let Err(__sifr_try_err) = __sifr_try_res {
                     let e = __sifr_try_err.clone();
-                    let _: String = e.message;
+                    let _ = e.message;
                 }
             }
             return;
         }
-        let line: String = format!(
-            "{}{}{}{}{}{}", "[".to_string(), level, "] ".to_string(), self._name.clone(),
-            ": ".to_string(), msg
-        );
+        let line: String = {
+            let mut __sifr_concat: String = String::with_capacity(
+                ((((1usize + level.len()) + 2usize) + 0usize) + 2usize) + msg.len(),
+            );
+            __sifr_concat.push('[');
+            __sifr_concat.push_str((level).as_str());
+            __sifr_concat.push_str("] ");
+            __sifr_concat.push_str((self._name.clone()).as_str());
+            __sifr_concat.push_str(": ");
+            __sifr_concat.push_str((msg).as_str());
+            __sifr_concat
+        };
         println!("{}", line);
-        if self._log_path.clone() != "".to_string() {
+        if (self._log_path.clone() != "") {
             let __sifr_try_res: Result<(), IOError> = (|| {
-                let mut fh: FileHandle = (|| {
-                    let __path = self._log_path.clone().to_string();
-                    let __mode = "a".to_string().to_string();
-                    let __handle_id = __sifr_next_file_handle_id();
-                    match __mode.as_str() {
-                        "r" | "rt" => {
-                            let __f = std::fs::File::open(__path.as_str())
-                                .map_err(__io_err)?;
-                            let __reader = std::io::BufReader::new(__f);
-                            __SIFR_FILE_HANDLES
-                                .lock()
-                                .unwrap_or_else(|__err| __err.into_inner())
-                                .insert(__handle_id, SifrFileHandle::TextRead(__reader));
-                            return Ok(FileHandle {
-                                _handle: __handle_id,
-                                _mode: __mode.to_string(),
-                            });
-                        }
-                        "w" | "wt" => {
-                            let __f = std::fs::File::create(__path.as_str())
-                                .map_err(__io_err)?;
-                            let __writer = std::io::BufWriter::new(__f);
-                            __SIFR_FILE_HANDLES
-                                .lock()
-                                .unwrap_or_else(|__err| __err.into_inner())
-                                .insert(__handle_id, SifrFileHandle::TextWrite(__writer));
-                            return Ok(FileHandle {
-                                _handle: __handle_id,
-                                _mode: __mode.to_string(),
-                            });
-                        }
-                        "a" | "at" => {
-                            let __f = std::fs::OpenOptions::new()
-                                .append(true)
-                                .create(true)
-                                .open(__path.as_str())
-                                .map_err(__io_err)?;
-                            let __writer = std::io::BufWriter::new(__f);
-                            __SIFR_FILE_HANDLES
-                                .lock()
-                                .unwrap_or_else(|__err| __err.into_inner())
-                                .insert(__handle_id, SifrFileHandle::TextWrite(__writer));
-                            return Ok(FileHandle {
-                                _handle: __handle_id,
-                                _mode: __mode.to_string(),
-                            });
-                        }
-                        "rb" => {
-                            let __f = std::fs::File::open(__path.as_str())
-                                .map_err(__io_err)?;
-                            let __reader = std::io::BufReader::new(__f);
-                            __SIFR_FILE_HANDLES
-                                .lock()
-                                .unwrap_or_else(|__err| __err.into_inner())
-                                .insert(__handle_id, SifrFileHandle::BinaryRead(__reader));
-                            return Ok(FileHandle {
-                                _handle: __handle_id,
-                                _mode: __mode.to_string(),
-                            });
-                        }
-                        "wb" => {
-                            let __f = std::fs::File::create(__path.as_str())
-                                .map_err(__io_err)?;
-                            let __writer = std::io::BufWriter::new(__f);
-                            __SIFR_FILE_HANDLES
-                                .lock()
-                                .unwrap_or_else(|__err| __err.into_inner())
-                                .insert(__handle_id, SifrFileHandle::BinaryWrite(__writer));
-                            return Ok(FileHandle {
-                                _handle: __handle_id,
-                                _mode: __mode.to_string(),
-                            });
-                        }
-                        "ab" => {
-                            let __f = std::fs::OpenOptions::new()
-                                .append(true)
-                                .create(true)
-                                .open(__path.as_str())
-                                .map_err(__io_err)?;
-                            let __writer = std::io::BufWriter::new(__f);
-                            __SIFR_FILE_HANDLES
-                                .lock()
-                                .unwrap_or_else(|__err| __err.into_inner())
-                                .insert(__handle_id, SifrFileHandle::BinaryWrite(__writer));
-                            return Ok(FileHandle {
-                                _handle: __handle_id,
-                                _mode: __mode.to_string(),
-                            });
-                        }
-                        _ => {
-                            return Err(IOError {
-                                message: format!("invalid mode: {}", __mode),
-                                kind: "Other".to_string(),
-                            });
-                        }
-                    }
-                })()?;
+                let mut fh: TextFileHandle = open_text(
+                    &self._log_path,
+                    &"a".to_string(),
+                    &Some((utf8()).clone()),
+                    &None,
+                )?;
                 let __sifr_try_res: Result<(), IOError> = (|| {
-                    let _: () = fh.write(&format!("{}{}", line, "\n".to_string()))?;
-                    return Ok(());
+                    let _ = fh
+                        .write(
+                            &({
+                                let mut __sifr_concat: String = String::with_capacity(
+                                    line.len() + 1usize,
+                                );
+                                __sifr_concat.push_str((line).as_str());
+                                __sifr_concat.push('\n');
+                                __sifr_concat
+                            }),
+                        )?;
+                    Ok(())
                 })();
                 if let Err(__sifr_try_err) = __sifr_try_res {
                     let e2 = __sifr_try_err.clone();
-                    let _: String = e2.message;
+                    let _ = e2.message;
                 }
                 fh.close();
-                return Ok(());
+                Ok(())
             })();
             if let Err(__sifr_try_err) = __sifr_try_res {
                 let e = __sifr_try_err.clone();
-                let _: String = e.message;
+                let _ = e.message;
             }
         }
     }
@@ -1720,137 +2216,124 @@ impl Logger {
 }
 impl std::fmt::Display for Logger {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
+        write!(
             f,
             "Logger(_name={}, _level={}, _log_path={}, _handler_kind={}, _handler_path={}, _handler_level={}, _handler_fmt={})",
             self._name, self._level, self._log_path, self._handler_kind, self
             ._handler_path, self._handler_level, self._handler_fmt
-        );
+        )
     }
 }
 fn _level_name_to_num(level: &String) -> i64 {
-    if level.clone() == "DEBUG".to_string() {
+    if (level).as_str() == "DEBUG" {
         return DEBUG;
     }
-    if level.clone() == "INFO".to_string() {
+    if (level).as_str() == "INFO" {
         return INFO;
     }
-    if level.clone() == "WARNING".to_string() {
+    if (level).as_str() == "WARNING" {
         return WARNING;
     }
-    if level.clone() == "ERROR".to_string() {
+    if (level).as_str() == "ERROR" {
         return ERROR;
     }
-    if level.clone() == "CRITICAL".to_string() {
+    if (level).as_str() == "CRITICAL" {
         return CRITICAL;
     }
-    return NOTSET;
+    NOTSET
 }
 fn getLogger(name: &String) -> Logger {
     let level: i64 = *__SIFR_GLOBAL_LOG_LEVEL
         .lock()
         .unwrap_or_else(|__err| __err.into_inner());
-    return Logger::new((name).clone(), level);
+    Logger::new((name).clone(), level)
+}
+
+// --- stdlib: sifr.platform ---
+fn system() -> String {
+    if cfg!(target_os = "windows") {
+        "Windows".to_string().to_string()
+    } else {
+        if cfg!(target_os = "macos") {
+            "Darwin".to_string().to_string()
+        } else {
+            if cfg!(target_os = "linux") {
+                "Linux".to_string().to_string()
+            } else {
+                std::env::consts::OS.to_string()
+            }
+        }
+    }
+}
+fn machine() -> String {
+    std::env::consts::ARCH.to_string()
+}
+fn processor() -> String {
+    std::env::consts::ARCH.to_string()
 }
 
 // --- stdlib: sifr.sys ---
 fn argv() -> Vec<String> {
-    return std::env::args().collect::<Vec<String>>();
+    std::env::args().collect::<Vec<String>>()
 }
 fn version() -> String {
-    return "sifr 0.1.0".to_string();
+    "sifr 0.1.0".to_string()
 }
 fn platform() -> String {
-    return std::env::consts::OS.to_string();
-}
-
-// --- stdlib: sifr.env ---
-fn getenv(key: &String, default_value: &String) -> String {
-    let val: Option<String> = {
-        let __k = key;
-        if __k.is_empty() || (__k.contains('=') || __k.as_bytes().contains(&0)) {
-            None
-        } else {
-            std::env::var(__k).ok()
-        }
-    };
-    let Some(val) = val else {
-        return format!("{}{}", default_value, "".to_string());
-    };
-    return val;
-}
-fn setenv(key: &String, value: &String) {
-    {
-        let __k = key;
-        let __v = value;
-        if !__k.is_empty()
-            && (!__k.contains('=')
-                && (!__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0)))
-        {
-            std::env::set_var(__k, __v);
-        }
-    };
-}
-fn unsetenv(key: &String) {
-    {
-        let __k = key;
-        if !__k.is_empty() && (!__k.contains('=') && !__k.as_bytes().contains(&0)) {
-            std::env::remove_var(__k);
-        }
-    };
+    std::env::consts::OS.to_string()
 }
 
 // --- stdlib: sifr.time ---
 fn time() -> f64 {
-    return std::time::SystemTime::now()
+    std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
-        .as_secs_f64();
+        .as_secs_f64()
 }
 fn strftime(fmt: &String, epoch: f64) -> String {
-    return {
+    {
         let secs = epoch as i64;
         let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap_or_default();
         dt.format(&fmt).to_string()
-    };
+    }
 }
 
 // --- stdlib: sifr.timeit ---
 fn _elapsed_non_negative(start: f64, end: f64) -> f64 {
     let elapsed: f64 = end - start;
-    if elapsed < (0.0 as f64) {
-        return 0.0 as f64;
+    if elapsed < (0.0_f64) {
+        return 0.0_f64;
     }
-    return elapsed;
+    elapsed
 }
 fn timeit(stmt: impl Fn(), number: i64) -> f64 {
     let start: f64 = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs_f64();
-    let mut i: i64 = 0 as i64;
+    let mut i: i64 = 0_i64;
     while i < number {
         stmt();
-        i = i + (1 as i64);
+        i += 1_i64;
     }
     let end: f64 = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs_f64();
-    return _elapsed_non_negative(start, end);
+    _elapsed_non_negative(start, end)
 }
 fn repeat(stmt: impl Fn(), count: i64, number: i64) -> Vec<f64> {
     let mut results: Vec<f64> = vec![];
-    let mut r: i64 = 0 as i64;
+    let mut r: i64 = 0_i64;
     while r < count {
         let start: f64 = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs_f64();
-        let mut i: i64 = 0 as i64;
+        let mut i: i64 = 0_i64;
         while i < number {
             stmt();
-            i = i + (1 as i64);
+            i += 1_i64;
         }
         let end: f64 = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -1858,9 +2341,9 @@ fn repeat(stmt: impl Fn(), count: i64, number: i64) -> Vec<f64> {
             .as_secs_f64();
         let elapsed: f64 = _elapsed_non_negative(start, end);
         results.push(elapsed);
-        r = r + (1 as i64);
+        r += 1_i64;
     }
-    return results;
+    results
 }
 
 #[derive(Debug, Clone)]
@@ -1871,13 +2354,13 @@ struct IOError {
 
 impl IOError {
     fn new(message: String) -> Self {
-        return Self { message: message, kind: "Other".to_string() };
+        Self { message, kind: "Other".to_string() }
     }
 }
 
 impl std::fmt::Display for IOError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+        std::fmt::Display::fmt(&self.message, f)
     }
 }
 
@@ -1887,7 +2370,27 @@ impl std::error::Error for IOError {
 fn __io_err(e: std::io::Error) -> IOError {
     let msg = e.to_string();
     let kind = if e.kind() == std::io::ErrorKind::NotFound { "FileNotFound".to_string() } else { if e.kind() == std::io::ErrorKind::PermissionDenied { "PermissionDenied".to_string() } else { if e.kind() == std::io::ErrorKind::AlreadyExists { "FileExists".to_string() } else { "Other".to_string() } } };
-    return IOError { message: msg, kind: kind };
+    IOError { message: msg, kind }
+}
+
+#[derive(Debug, Clone)]
+struct Error {
+    message: String,
+}
+
+impl Error {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl std::error::Error for Error {
 }
 
 #[derive(Debug, Clone)]
@@ -1897,13 +2400,13 @@ struct ParseError {
 
 impl ParseError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+        std::fmt::Display::fmt(&self.message, f)
     }
 }
 
@@ -1917,13 +2420,13 @@ struct ValueError {
 
 impl ValueError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
 impl std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+        std::fmt::Display::fmt(&self.message, f)
     }
 }
 
@@ -1939,17 +2442,60 @@ struct JSONDecodeError {
 
 impl JSONDecodeError {
     fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
+        Self { message, line: 0, column: 0 }
     }
 }
 
 impl std::fmt::Display for JSONDecodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+        std::fmt::Display::fmt(&self.message, f)
     }
 }
 
 impl std::error::Error for JSONDecodeError {
+}
+
+#[derive(Debug, Clone)]
+struct JsonIntegerRangeError {
+    message: String,
+    path: String,
+    profile: String,
+}
+
+impl JsonIntegerRangeError {
+    fn new(message: String) -> Self {
+        Self { message, path: String::new(), profile: String::new() }
+    }
+}
+
+impl std::fmt::Display for JsonIntegerRangeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl std::error::Error for JsonIntegerRangeError {
+}
+
+#[derive(Debug, Clone)]
+struct JsonLimitError {
+    message: String,
+    limit: i64,
+}
+
+impl JsonLimitError {
+    fn new(message: String) -> Self {
+        Self { message, limit: 0 }
+    }
+}
+
+impl std::fmt::Display for JsonLimitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl std::error::Error for JsonLimitError {
 }
 
 #[derive(Debug, Clone)]
@@ -1961,13 +2507,13 @@ struct TOMLDecodeError {
 
 impl TOMLDecodeError {
     fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
+        Self { message, line: 0, column: 0 }
     }
 }
 
 impl std::fmt::Display for TOMLDecodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+        std::fmt::Display::fmt(&self.message, f)
     }
 }
 
@@ -1982,17 +2528,117 @@ struct RegexError {
 
 impl RegexError {
     fn new(message: String) -> Self {
-        return Self { message: message, detail: String::new() };
+        Self { message, detail: String::new() }
     }
 }
 
 impl std::fmt::Display for RegexError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+        std::fmt::Display::fmt(&self.message, f)
     }
 }
 
 impl std::error::Error for RegexError {
+}
+
+#[derive(Debug, Clone)]
+struct TimeoutError {
+    message: String,
+}
+
+impl TimeoutError {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl std::fmt::Display for TimeoutError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl std::error::Error for TimeoutError {
+}
+
+#[derive(Debug, Clone)]
+struct ScopeFailure {
+    message: String,
+}
+
+impl ScopeFailure {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl std::fmt::Display for ScopeFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl std::error::Error for ScopeFailure {
+}
+
+impl From<IOError> for Error {
+    fn from(err: IOError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<ParseError> for Error {
+    fn from(err: ParseError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<ValueError> for Error {
+    fn from(err: ValueError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<JSONDecodeError> for Error {
+    fn from(err: JSONDecodeError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<JsonIntegerRangeError> for Error {
+    fn from(err: JsonIntegerRangeError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<JsonLimitError> for Error {
+    fn from(err: JsonLimitError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<TOMLDecodeError> for Error {
+    fn from(err: TOMLDecodeError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<RegexError> for Error {
+    fn from(err: RegexError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<TimeoutError> for Error {
+    fn from(err: TimeoutError) -> Self {
+        Self::new(err.message)
+    }
+}
+
+impl From<ScopeFailure> for Error {
+    fn from(err: ScopeFailure) -> Self {
+        Self::new(err.message)
+    }
 }
 
 enum SifrFileHandle {
@@ -2007,17 +2653,17 @@ static __SIFR_FILE_HANDLES: std::sync::LazyLock<std::sync::Mutex<std::collection
 static __SIFR_NEXT_FILE_HANDLE_ID: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(1);
 
 fn __sifr_next_file_handle_id() -> i64 {
-    return __SIFR_NEXT_FILE_HANDLE_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    __SIFR_NEXT_FILE_HANDLE_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
 }
 
 static __SIFR_GLOBAL_LOG_LEVEL: std::sync::LazyLock<std::sync::Mutex<i64>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(20));
 
 fn workload() {
-    let mut i: i64 = 0 as i64;
-    let mut total: i64 = 0 as i64;
-    while i < (100 as i64) {
-        total = total + i;
-        i = i + (1 as i64);
+    let mut i: i64 = 0_i64;
+    let mut total: i64 = 0_i64;
+    while i < (100_i64) {
+        total += i;
+        i += 1_i64;
     }
 }
 
@@ -2029,44 +2675,99 @@ fn main() {
     Ok(String::from_utf8_lossy(&__output.stdout).trim().to_string())
 })?;
     let cwd: String = std::env::current_dir().map(|p| p.to_string_lossy().to_string()).map_err(__io_err)?;
-    println!("{}", format!("{}{}", "os.run_command = ".to_string(), shell_out));
-    println!("{}", format!("{}{}", "os.getcwd len > 0 = ".to_string(), format!("{}", (cwd.chars().count() as i64) > (0 as i64))));
-    return Ok(());
+    let mut __sifr_chars_cwd: Vec<char> = cwd.chars().collect::<Vec<char>>();
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(17usize + shell_out.len());
+    __sifr_concat.push_str("os.run_command = ");
+    __sifr_concat.push_str((shell_out).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
+    __sifr_concat.push_str("os.getcwd len > 0 = ");
+    __sifr_concat.push_str((format!("{}", (cwd.chars().count() as i64) > (0_i64))).as_str());
+    __sifr_concat
+});
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", format!("{}{}", "os error: ".to_string(), e.message));
+        println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(10usize + 0usize);
+    __sifr_concat.push_str("os error: ");
+    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat
+});
     }
     setenv(&"SIFR_WAVE_D2_DEMO".to_string(), &"ok".to_string());
-    println!("{}", format!("{}{}", "env getenv = ".to_string(), getenv(&"SIFR_WAVE_D2_DEMO".to_string(), &"fallback".to_string())));
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
+    __sifr_concat.push_str("env getenv = ");
+    __sifr_concat.push_str((getenv(&"SIFR_WAVE_D2_DEMO".to_string(), &"fallback".to_string())).as_str());
+    __sifr_concat
+});
     unsetenv(&"SIFR_WAVE_D2_DEMO".to_string());
-    println!("{}", format!("{}{}", "sys.argv len = ".to_string(), format!("{}", argv().len() as i64)));
-    println!("{}", format!("{}{}", "sys.version = ".to_string(), version()));
-    println!("{}", format!("{}{}", "sys.platform = ".to_string(), platform()));
-    let __sifr_try_res: Result<(), IOError> = (|| {
-    let cp: CompletedProcess = run(&"echo subprocess_demo".to_string())?;
-    println!("{}", format!("{}{}", "subprocess.run rc = ".to_string(), format!("{}", cp.returncode)));
-    println!("{}", format!("{}{}", "subprocess.run stdout = ".to_string(), cp.stdout.trim().to_string()));
-    let echoed: String = run_with_input(&"cat".to_string(), &"stdin_demo".to_string())?;
-    println!("{}", format!("{}{}", "subprocess.run_with_input = ".to_string(), echoed));
-    let checked_rc: i64 = check_call(&"echo subprocess_check_call_demo".to_string())?;
-    let checked_out: String = check_output(&"echo subprocess_check_output_demo".to_string())?;
-    println!("{}", format!("{}{}", "subprocess.check_call rc = ".to_string(), format!("{}", checked_rc)));
-    println!("{}", format!("{}{}", "subprocess.check_output = ".to_string(), checked_out.trim().to_string()));
-    return Ok(());
-})();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        println!("{}", format!("{}{}", "subprocess error: ".to_string(), e.message));
-    }
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(15usize + 0usize);
+    __sifr_concat.push_str("sys.argv len = ");
+    __sifr_concat.push_str((format!("{}", argv().len() as i64)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
+    __sifr_concat.push_str("sys.version = ");
+    __sifr_concat.push_str((version()).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(15usize + 0usize);
+    __sifr_concat.push_str("sys.platform = ");
+    __sifr_concat.push_str((platform()).as_str());
+    __sifr_concat
+});
     let mut logger: Logger = getLogger(&"wave_psp_d2_demo".to_string());
     logger.set_level(INFO);
     logger.info(&"logging demo line".to_string());
-    println!("{}", format!("{}{}", "platform.system = ".to_string(), system()));
-    println!("{}", format!("{}{}", "platform.machine = ".to_string(), machine()));
-    println!("{}", format!("{}{}", "platform.processor = ".to_string(), processor()));
-    println!("{}", format!("{}{}", "time.time > 0 = ".to_string(), format!("{}", time() > (0.0 as f64))));
-    println!("{}", format!("{}{}", "time.strftime epoch0 = ".to_string(), strftime(&"%Y-%m-%d %H:%M:%S".to_string(), 0.0 as f64)));
-    println!("{}", format!("{}{}", "timeit.timeit = ".to_string(), format!("{}", timeit(workload, 5 as i64))));
-    println!("{}", format!("{}{}", "timeit.repeat count = ".to_string(), format!("{}", repeat(workload, 3 as i64, 4 as i64).len() as i64)));
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
+    __sifr_concat.push_str("platform.system = ");
+    __sifr_concat.push_str((system()).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(19usize + 0usize);
+    __sifr_concat.push_str("platform.machine = ");
+    __sifr_concat.push_str((machine()).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(21usize + 0usize);
+    __sifr_concat.push_str("platform.processor = ");
+    __sifr_concat.push_str((processor()).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
+    __sifr_concat.push_str("time.time > 0 = ");
+    __sifr_concat.push_str((format!("{}", time() > (0.0_f64))).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(23usize + 0usize);
+    __sifr_concat.push_str("time.strftime epoch0 = ");
+    __sifr_concat.push_str((strftime(&"%Y-%m-%d %H:%M:%S".to_string(), 0.0_f64)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
+    __sifr_concat.push_str("timeit.timeit = ");
+    __sifr_concat.push_str((format!("{}", timeit(workload, 5_i64))).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(22usize + 0usize);
+    __sifr_concat.push_str("timeit.repeat count = ");
+    __sifr_concat.push_str((format!("{}", repeat(workload, 3_i64, 4_i64).len() as i64)).as_str());
+    __sifr_concat
+});
 }

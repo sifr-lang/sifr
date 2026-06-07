@@ -761,13 +761,11 @@ status: completed
 - `spawn_blocking_cpu_heavy_allowed.sifr`
 - `spawn_blocking_known_stdlib_blocking_allowed.sifr`
 - `blocking_task_cancel_join.sifr`
-- `thread_pool_executor_basic.sifr`
-- `threading_compat_basic.sifr`
+- compatibility fixtures for `sifr.concurrent` and `sifr.threading` were removed by `milestone_concurrency_runtime_0a`
 
 **Negative validation:**
 
 - `spawn_blocking_non_send_rejected.sifr`
-- `thread_pool_executor_non_send_rejected.sifr`
 
 **Demo:**
 

@@ -235,7 +235,7 @@ statistics_mean_non_float_list.sifr
 statistics_normaldist_unsupported.sifr
 str_replace_invalid_count.sifr
 stringio_read_bytes_unsupported.sifr
-subprocess_non_string_cmd.sifr
+legacy_sifr_subprocess_removed.sifr
 sys_exit_non_int_code.sifr
 system_random_state_unsupported.sifr
 timeit_non_callable_stmt.sifr

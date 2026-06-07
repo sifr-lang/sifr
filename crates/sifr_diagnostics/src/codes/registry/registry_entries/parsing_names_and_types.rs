@@ -259,6 +259,22 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["bare_module", "suggested_module", "imported_names"]
         ),
     active_entry!(
+            "SIFR-IMPORT-0009",
+            "IMPORT",
+            "Unsupported legacy Sifr stdlib module import.",
+            Severity::Error,
+            "crates/sifr/tests/e2e/fail/legacy_sifr_asyncio_removed.sifr",
+            "legacy stdlib module '{legacy_module}' is unsupported; use '{suggested_module}'",
+            "sifr_lowering::lower",
+            [
+                arg!("legacy_module"),
+                arg!("suggested_module"),
+                json_arg!("imported_names"),
+                json_arg!("reason")
+            ],
+            ["legacy_module", "suggested_module", "imported_names", "reason"]
+        ),
+    active_entry!(
             "SIFR-TYPE-0002",
             "TYPE",
             "Expected and actual types are incompatible.",

@@ -81,9 +81,9 @@ The primary model does not include:
 
 ### One Canonical Model
 
-Sifr should have one main async story: `async def`, `await`, `sifr.task`, and `sifr.sync`.
+Sifr has one public async story: `async def`, `await`, `sifr.task`, and `sifr.sync`.
 
-`sifr.asyncio` can exist later as a compatibility veneer, but it must be implemented on top of the canonical model. It must not define the model.
+`sifr.asyncio` is not a public compatibility veneer. It was removed by the production concurrency/runtime substrate gate; code must import the native `sifr.task` and `sifr.sync` APIs directly.
 
 ### Structured Concurrency First
 
@@ -114,9 +114,9 @@ Required surfaces:
 - `@blocking_io` for sync functions that perform synchronous I/O such as file, network, database, pipe, or blocking timer waits
 - `@cpu_heavy` for sync functions expected to be CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing
 - `task.spawn_blocking(...)`
-- `sifr.concurrent.ThreadPoolExecutor`
+- accepted `sifr.parallel` APIs for CPU parallelism
 
-These annotations are declaration-site workload facts for synchronous functions, not scheduling commands and not async effects. Calling a known `@blocking_io` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a known `@cpu_heavy` function from async code should suggest `spawn_blocking` or a thread-pool executor. The compiler must not silently rewrite either call into a task or thread.
+These annotations are declaration-site workload facts for synchronous functions, not scheduling commands and not async effects. Calling a known `@blocking_io` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a known `@cpu_heavy` function from async code should suggest `task.spawn_blocking` or accepted `sifr.parallel` APIs. The compiler must not silently rewrite either call into a task or thread.
 
 Deferred surfaces:
 
@@ -546,7 +546,7 @@ Timeout behavior:
 - cancelling the outer scope while timeout is running cancels the inner task unconditionally
 - cleanup failures after timeout cancellation become secondary evidence on the timeout failure
 
-`task.timeout(duration)` is the async context-manager form used for inline blocks and compatibility with `sifr.asyncio.timeout(duration)`. It is a compiler-recognized cancellation scope, not an ordinary user-defined context manager. The compiler lowers the block into a same-task cancellation scope using internal delimited cancellation: deadline expiry sets an internal cancellation flag, cooperative await points observe it, and cleanup runs normally before scope exit completes.
+`task.timeout(duration)` is the async context-manager form used for inline blocks. It is a compiler-recognized cancellation scope, not an ordinary user-defined context manager. The compiler lowers the block into a same-task cancellation scope using internal delimited cancellation: deadline expiry sets an internal cancellation flag, cooperative await points observe it, and cleanup runs normally before scope exit completes.
 
 Timeout context blocks do not introduce a spawn boundary and can access surrounding locals naturally. `await` and `try await` inside the block follow the normal same-task rules. If code inside the block spawns child tasks, those children follow the ordinary `scope.spawn` task-boundary rules. Nested timeout context blocks are allowed and compose as inner-first cancellation.
 
@@ -620,7 +620,7 @@ Async tasks are for waiting and cooperative scheduling. CPU-bound work and block
 `@blocking_io` and `@cpu_heavy` are declaration-site workload classification annotations for synchronous functions. They never imply automatic task or thread scheduling.
 
 - `@blocking_io`: the sync function performs I/O that can block an OS thread, such as file read/write, network I/O, database calls, pipe operations, or blocking timer waits. Calling a known `@blocking_io` function from an `async def` body is an error in the sealed async model: use an async API if available, or wrap the call with `spawn_blocking`.
-- `@cpu_heavy`: the sync function is CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing. Calling a known `@cpu_heavy` function from an `async def` body is an error in the sealed async model: use `spawn_blocking` or a `ThreadPoolExecutor` to avoid starving the runtime.
+- `@cpu_heavy`: the sync function is CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing. Calling a known `@cpu_heavy` function from an `async def` body is an error in the sealed async model: use `task.spawn_blocking` or the accepted `sifr.parallel` APIs to avoid starving the runtime.
 
 The stdlib maintains a built-in annotation database for stdlib functions. User code can annotate sync declarations with `@blocking_io` or `@cpu_heavy`. Unannotated user functions are assumed to be cheap compute and do not warn by default; this avoids making every short helper look like a scheduler problem. External/FFI calls are treated conservatively as potentially blocking in async contexts unless a future FFI contract classifies them more precisely.
 
@@ -642,20 +642,20 @@ Async functions must be async for a real reason. The compiler tracks an internal
 
 `await` remains valid only for awaitable values. Awaiting a non-awaitable value, including the result of a sync function call, is a hard error. In addition, awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend` is rejected because the callee is async in shape only.
 
-`@blocking_io` and `@cpu_heavy` do not create async effects and do not make sync functions awaitable. They are sync workload facts. Applying either annotation to `async def` is an error; async APIs receive suspension summaries such as `AsyncIo`, not sync workload annotations. Calling a known `@blocking_io` or `@cpu_heavy` function directly from an `async def` body is an error in the sealed async model. Users must choose a native async API, `task.spawn_blocking`, or `sifr.concurrent.ThreadPoolExecutor`.
+`@blocking_io` and `@cpu_heavy` do not create async effects and do not make sync functions awaitable. They are sync workload facts. Applying either annotation to `async def` is an error; async APIs receive suspension summaries such as `AsyncIo`, not sync workload annotations. Calling a known `@blocking_io` or `@cpu_heavy` function directly from an `async def` body is an error in the sealed async model. Users must choose a native async API, `task.spawn_blocking`, or accepted `sifr.parallel` APIs.
 
-`task.spawn_blocking(fn)` and `ThreadPoolExecutor.submit(fn)` require classified sync work. The target function must be annotated `@blocking_io` or `@cpu_heavy`, known by the stdlib annotation database as blocking or CPU-heavy, or known by an external/FFI contract as blocking or CPU-heavy. Unannotated cheap sync helpers are rejected as offload targets; the diagnostic should say to call them directly, or annotate the declaration if it is genuinely blocking or expensive.
+`task.spawn_blocking(fn)` requires classified sync work. The target function must be annotated `@blocking_io` or `@cpu_heavy`, known by the stdlib annotation database as blocking or CPU-heavy, or known by an external/FFI contract as blocking or CPU-heavy. Unannotated cheap sync helpers are rejected as offload targets; the diagnostic should say to call them directly, or annotate the declaration if it is genuinely blocking or expensive.
 
 `spawn_blocking` on `@blocking_io` work is valid and should not warn by default. A later informational diagnostic may suggest a specific native async replacement only when the compiler knows one.
 
-`task.spawn_blocking` and `sifr.concurrent.ThreadPoolExecutor` provide explicit offload:
+`task.spawn_blocking` provides explicit blocking-work offload:
 
 ```sifr
 task.spawn_blocking(fn: Fn() -> Result[T, E]) -> BlockingTask[T, E]
 ```
 
 - blocking work returns typed results
-- cancelling `task.spawn_blocking` or thread-pool work requests cancellation and drops/abandons the handle result
+- cancelling `task.spawn_blocking` work requests cancellation and drops/abandons the handle result
 - the first model does not forcibly abort a running OS thread
 - already-running blocking work may continue to completion, but its result is discarded after cancellation
 - `spawn_blocking` requires owned, sendable, static captures
@@ -666,7 +666,7 @@ task.spawn_blocking(fn: Fn() -> Result[T, E]) -> BlockingTask[T, E]
 
 **`BlockingTask` lifecycle:** `BlockingTask` handles are affine. `join()` and `cancel_and_join()` consume them. Dropping a `BlockingTask` handle abandons observation but does not stop already-running OS work. Blocking work requires owned/sendable/static captures precisely because it may outlive the async scope after abandonment. Scope exit requests cancellation/abandonment for unresolved blocking work created inside the scope but does not guarantee OS-thread interruption.
 
-`sifr.threading` is a compatibility coordination veneer over the native model, not a second way to schedule CPU-bound work. `threading.Lock`, `threading.Event`, and `threading.Condition` keep the familiar names for code that can map cleanly to Sifr-native synchronization. `threading.Thread` is a lifecycle surface only in v1; users should choose `task.spawn_blocking` or `sifr.concurrent.ThreadPoolExecutor` for actual blocking or CPU-heavy offload.
+`sifr.threading` and `sifr.concurrent` are not public compatibility veneers. Coordination uses native `sifr.sync` primitives, blocking work uses `task.spawn_blocking`, and CPU parallelism uses accepted `sifr.parallel` APIs.
 
 ## Async Resource Protocols
 
@@ -778,25 +778,20 @@ loop:
             break
 ```
 
-## Compatibility Veneers
+## Removed Compatibility Veneers
 
-Compatibility layers wrap the canonical model; they do not define a second async model.
+CPython-shaped compatibility layers are removed or diagnosed. The native replacement table is a migration aid, not an importable adapter contract.
 
-| Compatibility API | Canonical Sifr equivalent | Intentional divergence |
-| --- | --- | --- |
-| `sifr.asyncio.run(fn)` | compatibility shim over direct async entrypoint bootstrap | not needed for new Sifr code; no public event loop is exposed |
-| `sifr.asyncio.create_task(fn)` | `scope.spawn(fn)` inside an explicit task scope | invalid outside a scope; does not create ambient orphan tasks |
-| `sifr.asyncio.gather(*tasks)` | `sifr.task.gather(*tasks)` | fail-fast by default; collect-all behavior is deferred |
-| `sifr.asyncio.TaskGroup` | `sifr.task.TaskGroup` | follows Sifr `TaskResult`/`ScopeFailure` semantics |
-| `sifr.asyncio.sleep(delay)` | `sifr.task.sleep(delay)` | no event-loop parameter |
-| `sifr.asyncio.wait_for(task, timeout)` | `sifr.task.timeout(task, timeout)` | accepts task handles, not arbitrary awaitables, in the first model |
-| `sifr.asyncio.timeout(duration)` | `sifr.task.timeout(duration)` context-manager form | implemented through structured scope cancellation |
-| `sifr.asyncio.Queue` | `sifr.sync.Channel` / `sifr.sync.bounded_channel` | no `task_done`/`join` queue accounting in the first model |
-| `asyncio.Event` / `threading.Event` | `sifr.sync.Notify` or `sync.Shared[bool] + Notify` | `Notify` is edge-triggered; level-triggered Event behavior needs explicit state |
-| `threading.Condition` | `sifr.sync.Notify` plus `sifr.sync.Lock` | predicate discipline is explicit; not a transparent alias |
-| `sifr.concurrent.Future` | compatibility wrapper over task/blocking handles | not a pure alias; blocking work has different cancellation/lifetime behavior |
+| Removed legacy module | Native Sifr direction |
+| --- | --- |
+| `sifr.asyncio` | `sifr.task` and `sifr.sync` |
+| `sifr.concurrent` / `sifr.concurrent.futures` | `sifr.runtime` and `sifr.parallel` |
+| `sifr.threading` | `sifr.sync`, `sifr.runtime`, and scoped offload |
+| `sifr.queue` | `sifr.sync` |
+| `sifr.subprocess` | `sifr.process` |
+| `sifr.multiprocessing` | future `sifr.ipc` design gates |
 
-Unsupported compatibility surfaces are intentionally absent or diagnosed: raw event loops, loop policies, transports/protocols, public selectors, `contextvars`, multiprocessing, process pools, subprocess, signals, and raw callback-first APIs.
+Unsupported compatibility surfaces are intentionally absent or diagnosed: raw event loops, loop policies, transports/protocols, public selectors, `contextvars`, process pools, signals shaped like CPython handlers, and raw callback-first APIs.
 
 ## Diagnostics Contract
 
@@ -820,7 +815,7 @@ Diagnostic families cover:
 - cancellation misuse
 - timeout scope failure not handled by surrounding error type
 - `@blocking_io`, `@cpu_heavy`, or potentially blocking FFI call in async context
-- unclassified functions passed to `spawn_blocking` or `ThreadPoolExecutor.submit`
+- unclassified functions passed to `spawn_blocking`
 
 New diagnostic codes for the ad hoc async effect seal (`SIFR-ASYNC-*`):
 
@@ -855,14 +850,14 @@ These decisions are part of the first async/concurrency model:
 8. Channels use explicit sender/receiver endpoints. Send and receive are async operations; receive returns `Result[T, ClosedError]` with no second closed state.
 9. Lock guards must not cross `await` points.
 10. Spawned tasks require sendable task boundaries. Local, non-send task sets are deferred.
-11. Compatibility veneers must not introduce a second runtime model.
+11. CPython-shaped compatibility veneers must not be publicly importable.
 12. Public selectors, `contextvars`, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
 13. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
 14. `@blocking_io` and `@cpu_heavy` are declaration-site workload classification annotations for sync functions. They power diagnostics and offload validation but never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
 15. Async functions must have a real suspension effect. `async def` with no suspension is rejected unless an explicit reviewed protocol-conformance escape hatch applies.
 16. Awaiting a same-task coroutine with no transitive suspension effect is rejected.
 17. Direct `@blocking_io` or `@cpu_heavy` sync calls from async code are errors in the sealed model; cheap unannotated sync helper calls remain allowed.
-18. `task.spawn_blocking` and `ThreadPoolExecutor.submit` require classified `@blocking_io`, `@cpu_heavy`, stdlib-known, or external-contract-known blocking/CPU-heavy work.
+18. `task.spawn_blocking` requires classified `@blocking_io`, `@cpu_heavy`, stdlib-known, or external-contract-known blocking/CPU-heavy work.
 19. Subprocess and signal APIs require a later model amendment.
 20. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; graceful shutdown uses structured scope cancellation and explicit channels.
 21. `async def` with `yield` creates `AsyncGenerator[T, E]`, not `Coroutine[AsyncGenerator[T, E], E]`.

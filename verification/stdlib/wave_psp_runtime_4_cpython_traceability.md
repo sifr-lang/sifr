@@ -1,38 +1,13 @@
 # wave_psp_runtime_4 CPython Traceability Matrix
 
-Wave: `wave_psp_runtime_4`  
-Scope: synchronous `subprocess` boundary cleanup and governance closure
+Wave: `wave_psp_runtime_4`
 
-## CPython Harvest Inputs
+Status: superseded by `milestone_concurrency_runtime_0a`.
 
-- `Lib/test/test_subprocess.py` (sync run/check helpers, output capture behavior, constants, error handling)
+The previous `sifr.subprocess` compatibility fixtures from this wave were removed when the production concurrency/runtime substrate rejected public CPython-shaped process adapters. Historical CPython subprocess evidence is retained in `verification/stdlib/concurrency_runtime_substrate_inventory.*`; public process work now belongs to the native `sifr.process` milestone.
 
-## Adopt / Adapt / Waive (Wave 4)
+Current anchors:
 
-| CPython family | Sifr surface direction | State | Local anchor |
-| --- | --- | --- | --- |
-| sync command execution (`run`, `CompletedProcess`, `stdout/stderr/returncode`) | preserve deterministic sync process execution with typed `CompletedProcess` return surface | `adapted` | `crates/sifr/tests/e2e/pass/subprocess_sync.sifr`, `crates/sifr/tests/e2e/pass/cpython_subprocess_subset.sifr` |
-| sync helper APIs (`check_call`, `check_output`) | ship explicit non-zero-exit rejection as typed `IOError` while preserving panic-free behavior | `adapted` | `crates/sifr/tests/e2e/pass/subprocess_sync.sifr`, `crates/sifr/tests/e2e/pass/stdlib_subprocess.sifr` |
-| subprocess constants (`PIPE`, `STDOUT`, `DEVNULL`) | ship stable constants for sync option-matrix parity anchors | `adapted` | `crates/sifr/tests/e2e/pass/subprocess_sync.sifr`, `demos/subprocess/main.sifr` |
-| non-string command inputs | keep compile-time type rejection for process command boundaries | `adapted` | `crates/sifr/tests/e2e/fail/subprocess_non_string_cmd.sifr` |
-| async lifecycle/process orchestration (`Popen`, signal/process-group controls, full option matrix) | keep explicitly unsupported and outside this phase | `unsupported` | `crates/sifr/tests/e2e/fail/async_popen_unsupported.sifr` |
-
-## Explicit Waivers / Boundaries (Wave 4)
-
-- Async `subprocess.Popen` lifecycle and full process orchestration remain explicitly unsupported.
-- `check_call` and `check_output` are intentionally typed wrappers over sync `run` semantics and raise `IOError` on non-zero exit status.
-- The subprocess surface remains command-string based (no full CPython argv/list invocation matrix in this phase).
-
-## Local Fixture Anchors (Wave 4)
-
-- Positive fixture:
-  - `crates/sifr/tests/e2e/pass/subprocess_sync.sifr`
-- Demo:
-  - `demos/subprocess/main.sifr`
-- Consolidated/CPython regressions:
-  - `crates/sifr/tests/e2e/pass/cpython_subprocess_subset.sifr`
-  - `crates/sifr/tests/e2e/pass/stdlib_subprocess.sifr`
-  - `crates/sifr/tests/e2e/pass/process_runtime_and_platform.sifr`
-- Negative fixtures:
-  - `crates/sifr/tests/e2e/fail/subprocess_non_string_cmd.sifr`
-  - `crates/sifr/tests/e2e/fail/async_popen_unsupported.sifr`
+- Legacy public-module removal: `verification/platform/golden/legacy_sifr_runtime_surfaces_removed.sifr`
+- Negative import fixtures: `crates/sifr/tests/e2e/fail/legacy_sifr_subprocess_removed.sifr` and `crates/sifr/tests/e2e/fail/async_popen_unsupported.sifr`
+- Native future owner: `milestone_concurrency_runtime_4`

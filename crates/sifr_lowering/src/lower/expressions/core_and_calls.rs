@@ -11,7 +11,7 @@ use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_true_sequence_guards,
 };
 use super::subscript_type::resolve_subscript_result_type;
-use super::task_calls::{lower_asyncio_compat_call, lower_task_module_call, TaskCallLowering};
+use super::task_calls::{lower_task_module_call, TaskCallLowering};
 pub(in crate::lower) use super::tuple_unpack::{
     lower_star_unpack_assign, lower_tuple_unpack_assign,
 };
@@ -307,11 +307,6 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
         );
         return None;
     };
-    match lower_asyncio_compat_call(&func_name, call, ctx) {
-        TaskCallLowering::Lowered(expr) => return Some(expr),
-        TaskCallLowering::Rejected => return None,
-        TaskCallLowering::NoMatch => {}
-    }
     if ctx.explicit_defaultdict_bindings.contains(&func_name)
         && ctx.scope.lookup(&func_name).is_none()
     {

@@ -13,7 +13,6 @@ mod async_for;
 mod async_generator_advances;
 mod async_generator_methods;
 mod async_with;
-mod asyncio_run_entrypoint;
 mod attribute_access;
 mod aug_assign_lowering;
 mod binding_mutability;
@@ -125,7 +124,6 @@ mod typing_and_functions;
 mod warning_helpers;
 mod workload_annotations;
 
-use asyncio_run_entrypoint::function_uses_asyncio_run_entrypoint;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
 pub(in crate::lower) use diagnostic_types::{
