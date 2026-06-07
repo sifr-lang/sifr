@@ -302,7 +302,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 ## Implementation PRs
 
 - M0: https://github.com/sifr-lang/sifr/pull/2310
-- M0a: local implementation prepared; PR pending.
+- M0a: https://github.com/sifr-lang/sifr/pull/2311
 - M1: pending.
 - M2: pending.
 - M3: pending.
