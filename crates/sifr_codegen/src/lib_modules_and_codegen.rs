@@ -5,7 +5,7 @@ use super::{
     build_file_handle_infra_items, build_file_handle_struct_items, build_io_error_items,
     build_join_set_cpu_items, build_join_set_items, build_logging_items,
     build_random_module_state_items, build_task_scope_cpu_offload_items, build_task_scope_items,
-    build_task_scope_offload_items, build_timeout_result_type_items,
+    build_task_scope_offload_items, build_timeout_result_type_items, build_worker_panic_hook_items,
     module_uses_async_exit_cause_type, module_uses_async_generator_type,
     module_uses_cancellation_error_type, module_uses_failure_type, module_uses_join_set,
     module_uses_join_set_spawn_cpu, module_uses_spawn_cpu, module_uses_task_scope,
@@ -413,6 +413,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let uses_task_scope_offload = module_uses_task_scope_offload(module);
     let uses_task_scope_spawn_cpu = module_uses_task_scope_spawn_cpu(module);
     let uses_spawn_cpu = module_uses_spawn_cpu(module);
+    let uses_worker_panic_hook = uses_spawn_cpu
+        || uses_join_set_spawn_cpu
+        || uses_task_scope_spawn_cpu
+        || stdlib_preamble.contains("__sifr_with_silent_worker_panic_hook");
     let uses_failure_type = module_uses_failure_type(module);
     let uses_cancellation_error_type = module_uses_cancellation_error_type(module);
     let uses_async_exit_cause_type = module_uses_async_exit_cause_type(module);
@@ -580,6 +584,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     if uses_join_set {
         preamble_items.extend(build_join_set_items());
+    }
+    if uses_worker_panic_hook {
+        preamble_items.extend(build_worker_panic_hook_items());
     }
     if uses_join_set_spawn_cpu {
         preamble_items.extend(build_join_set_cpu_items());

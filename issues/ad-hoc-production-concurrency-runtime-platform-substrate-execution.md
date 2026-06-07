@@ -31,7 +31,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] `milestone_concurrency_runtime_0a`: Legacy CPython-Shaped Surface Removal Gate
 - [x] `milestone_concurrency_runtime_1`: Structured Async Runtime
 - [x] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
-- [ ] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
+- [x] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
 - [ ] `milestone_concurrency_runtime_4`: Process Runtime
 - [ ] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
 - [ ] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
@@ -253,6 +253,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M3 JoinSet implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-2.md` and `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`; PR #2320 is merged.
 - M3 scoped owner offload implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-scoped-offload-review-pass-1.md`; PR #2323 is merged.
 - M3 default parallel pool closure review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-default-pool-review-pass-1.md`; PR #2326 is merged.
+- M3 closeout implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-4.md`; PR #2325 is merged and no strict M3 closure blockers remain.
 
 ## M1 Implementation Ledger
 
@@ -410,7 +411,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3 `JoinSet` wave: https://github.com/sifr-lang/sifr/pull/2320
 - M3 scoped owner offload wave: https://github.com/sifr-lang/sifr/pull/2323
 - M3 default parallel pool closure: https://github.com/sifr-lang/sifr/pull/2326
-- M3: pending.
+- M3 closeout: https://github.com/sifr-lang/sifr/pull/2325
+- M3: complete.
 - M4: pending.
 - M5: pending.
 - M6: pending.
@@ -542,11 +544,43 @@ M3 worker capture-sendability closure targeted local validation:
 - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/spawn_blocking_non_send_capture_rejected.sifr` -> expected fail with `SIFR-OWN-0010`.
 - `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail suite reported 415 fail tests completed.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; platform golden reported pass=5, skip=2; create-pr e2e pass suite reported 89 passed, 0 failed, cache_hits=23/23; advisory: warm wall-time budget exceeded.
+- Post-`origin/main` merge rerun: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; platform golden reported pass=5, skip=2; create-pr e2e pass suite reported 89 passed, 0 failed, cache_hits=20/23; advisories: warm wall-time budget exceeded and warm-cache hit rate below advisory target.
 
 M3 worker capture-sendability closure review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m3-capture-sendability-review-pass-1.md`: `PASS`; reviewer verified capture-summary scoping, non-send capture diagnostics, sendable nested-capture deferral, unchanged top-level worker behavior, worker-boundary coverage, and honest docs. Non-blocking feedback requested symmetric `task.spawn_blocking()` validator coverage and fixture.
 - `reviews/ad-hoc-production-concurrency-runtime-m3-capture-sendability-review-pass-2.md`: `PASS`; reviewer verified the `task.spawn_blocking()` symmetry fix, `spawn_blocking_non_send_capture_rejected` fixture, unchanged capture-summary scoping, full named-worker boundary coverage, and no docs overclaim.
+
+M3 closeout wave targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr --quiet` -> PASS after initializing the Ruff submodule in the auxiliary clean worktree.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_map_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_default_pool_reused.sifr` -> PASS after rebasing over PR #2326; two top-level `sifr.parallel.map` calls in one process exercise generated default-pool reuse.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_try_map_user_error_typed.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_map_worker_panic_typed.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_pool_map_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/parallel_map_basic.sifr | rg -n "OnceLock|__SIFR_DEFAULT_PARALLEL_POOL|__sifr_default_parallel_pool|__SIFR_WORKER_PANIC_HOOK_LOCK"` -> PASS; top-level `sifr.parallel` now emits a lazy private default pool and shared serialized hook-suppression guard.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2156 files checked, 900-line limit after rebasing over the scoped owner offload wave.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo check -p sifr_lowering -p sifr_codegen -p sifr --quiet` -> PASS after shared hook and clippy remediation.
+- `cargo clippy --workspace -- -D warnings` -> PASS after fixing `JoinSet` doc comments, borrowing JoinSet type parameters in lowering helpers, and sharing one generated worker panic-hook guard across `sifr.parallel`, `task.spawn_cpu`, and `JoinSet.spawn_cpu`.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/parallel_map_basic.sifr | rg -n "OnceLock|__SIFR_DEFAULT_PARALLEL_POOL|__sifr_default_parallel_pool|__SIFR_WORKER_PANIC_HOOK_LOCK|__sifr_with_silent_worker_panic_hook|__sifr_with_silent_parallel_panic_hook|__sifr_with_silent_cpu_panic_hook|__sifr_with_silent_join_set_panic_hook"` -> PASS; emitted code contains the lazy default pool and shared worker hook guard and no old per-surface hook helpers.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/spawn_cpu_worker_panic_typed.sifr | rg -n "__SIFR_WORKER_PANIC_HOOK_LOCK|__sifr_with_silent_worker_panic_hook|__sifr_with_silent_cpu_panic_hook"` -> PASS; emitted CPU offload code uses the shared hook guard and no old CPU-only helper.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/task_group_spawn_cpu.sifr | rg -n "__SIFR_WORKER_PANIC_HOOK_LOCK|__sifr_with_silent_worker_panic_hook|__sifr_with_silent_scope_cpu_panic_hook"` -> PASS after rebasing over PR #2323; emitted scoped owner CPU offload code uses the shared hook guard and no old scoped CPU-only helper.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/join_set_spawn_cpu_join_all_ordered.sifr | rg -n "__SIFR_WORKER_PANIC_HOOK_LOCK|__sifr_with_silent_worker_panic_hook|__sifr_with_silent_join_set_panic_hook"` -> PASS; emitted JoinSet CPU code uses the shared hook guard and no old JoinSet-only helper.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/spawn_cpu_worker_panic_typed.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/task_group_spawn_cpu.sifr` -> PASS after rebasing over PR #2323.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/join_set_spawn_cpu_join_all_ordered.sifr` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS after rebasing over the scoped owner offload and default parallel pool closure waves; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`89 passed`, `0 failed`, `cache_hits=21/23`).
+
+M3 closeout wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-1.md`: `CHANGES_REQUESTED`; reviewer found missing full baseline validation, inherited clippy failures, a cross-surface panic-hook race because only `sifr.parallel` used the new mutex, and doc precision gaps. The current wave remediates those blockers with full workspace clippy, create-pr validation, borrowed JoinSet type parameters/doc-comment fixes, one shared generated worker panic-hook guard used by `sifr.parallel`, configured `Pool` work, scoped owner CPU offload, `task.spawn_cpu`, and `JoinSet.spawn_cpu`, a two-call default-pool reuse fixture, and explicit documentation of cached default-pool construction failures and serialized configured-Pool hook suppression.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-2.md`: `PASS`; reviewer verified all pass-1 blockers and low-severity findings were remediated, re-ran workspace clippy, confirmed the refreshed create-pr report (`86 passed`, `0 failed`, platform golden `pass=5`, `skip=2`, no advisories), and confirmed no strict M3 closure blockers remain after this closeout PR merges and the ledger is updated.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-3.md`: `PASS`; post-rebase reviewer verified the PR #2323 scoped owner CPU offload surface is folded into the shared worker panic-hook guard, re-checked emission predicates and ordering, confirmed post-rebase validation (`89 passed`, `0 failed`, platform golden `pass=5`, `skip=2`), and confirmed no strict M3 closure blockers remain after this PR and the final ledger update merge.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-4.md`: `PASS`; final post-PR-#2326 reviewer verified the branch preserves the canonical lazy default pool fixture and default-pool implementation, removes the duplicate closeout fixture, routes all five CPU/Rayon surfaces through the shared worker panic-hook guard, and is ready to force-push and merge with no strict M3 closure blockers.
+- PR #2325 merged at `9edf51988475ce6711bb42e79b01e96c8e34e9b5`; M3 is closed.
 
 M0 targeted local validation:
 
@@ -657,7 +691,7 @@ M0 phase-level decisions:
 | Python global `warnings` filter model | `rejected` | `rejected` | Runtime diagnostics use tracing/metrics and typed Sifr diagnostics, not global Python warning filters. | `Lib/test/test_warnings/` | M5 warning-global rejection fixture |
 | Rust ecosystem choices | `internal-only` | `internal-only` | Use `internal_docs/dependency_policy.md` plus the locked Rust Ecosystem Decisions table from the phase doc. Ring 2 generated-runtime core covers Tokio with `current_thread`, Tokio Util, conditional Futures Util, Tokio `sync`, Tokio process/std process, Tokio signal, and tracing. Ring 3 feature-gated substrate covers Crossbeam Channel if sync cross-thread channels remain public, std sync/OnceLock, Rayon, Rustix only after a documented std/Tokio gap with host-matrix fixtures, metrics after M5 metric schema approval, and conditional thiserror. Ring 4 typed-IPC-only covers Serde/Postcard. Reject Flume, async-channel, futures-channel, direct Parking Lot, new Once Cell, Scopeguard, production tracing-subscriber, IPC Serde JSON, Bincode, Signal Hook, Nix, direct Mio/Bytes/DashMap, runtime Anyhow/Eyre, and bespoke replacements. | N/A | Dependency policy plus phase-doc decision table plus M0 ledger verification |
 | `JoinSet` drop | `production-public` | `production-public` | Live/non-empty `JoinSet` values must be consumed by `join_all()` or `cancel_all().await`; unobserved drop is a compile-time diagnostic. | `Lib/test/test_concurrent_futures/` | M3 JoinSet drop diagnostic fixture |
-| Rayon pool architecture | `internal-only` | `internal-only` | Top-level `sifr.parallel` uses a private pool sized from `available_parallelism()` without configuring Rayon's global pool; configured parallelism uses explicit `Pool(config)` private Rayon pools. M3 traceability records the remaining lazy-default shutdown design gap before milestone closure. | N/A | M3 pool architecture decision record |
+| Rayon pool architecture | `internal-only` | `internal-only` | Top-level `sifr.parallel` uses a lazy private default pool sized from `available_parallelism()` without configuring Rayon's global pool; configured parallelism uses explicit `Pool(config)` private Rayon pools. A first default-pool construction failure is cached as a typed runtime error for the process lifetime. There is no mutable public shutdown or reconfiguration API; process teardown releases the private default pool. | N/A | M3 pool architecture decision record |
 | Existing `sifr.asyncio` veneer | `internal-only` / `unsupported-with-diagnostic` | `unsupported-with-diagnostic` | Existing veneer entry points are implementation debt; M1 does not build on or extend them, and M0 records removal, internal-test-only, or diagnostic disposition. New runtime APIs use `sifr.task`, `sifr.sync`, and `sifr.process`. | `Lib/test/test_asyncio/` | M1 veneer-free implementation fixture |
 | `JoinSet` result ordering | `production-public` | `production-public` | `join_all().await` returns results in submission order, `cancel_all().await` returns cancellation evidence in submission order, and `JoinItemId` is an opaque user-side correlation token with no query API. | `Lib/test/test_concurrent_futures/` | M3 JoinSet ordering fixture |
 | Shell subprocess effect | `production-substrate` | `production-substrate` | Shell subprocess usage is marked with `@shell_exec` in addition to `@blocking_io`; shell APIs require explicit shell selection and async/offload diagnostics. | `Lib/test/test_subprocess.py` | M4 shell effect fixture |

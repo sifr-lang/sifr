@@ -71,11 +71,12 @@ pub(in crate::lower) fn lower_join_set_method_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<Option<HirExpr>> {
-    let Type::JoinSet(ok_ty, err_ty) = object.ty().resolve_alias() else {
+    let join_set_ty = object.ty().resolve_alias().clone();
+    let Type::JoinSet(ok_ty, err_ty) = join_set_ty else {
         return None;
     };
-    let ok_ty = ok_ty.as_ref().clone();
-    let err_ty = err_ty.as_ref().clone();
+    let ok_ty = ok_ty.as_ref();
+    let err_ty = err_ty.as_ref();
     match method_name {
         "add" => Some(lower_join_set_add(object, call, ctx, ok_ty, err_ty)),
         "spawn_blocking" => Some(lower_join_set_spawn_blocking(
@@ -88,8 +89,8 @@ pub(in crate::lower) fn lower_join_set_method_call(
             ctx,
             "__sifr_join_all",
             Type::Awaitable(Box::new(Type::List(Box::new(Type::TaskResult(
-                Box::new(ok_ty),
-                Box::new(err_ty),
+                Box::new(ok_ty.clone()),
+                Box::new(err_ty.clone()),
             ))))),
         )),
         "cancel_all" => Some(lower_join_set_terminal(
@@ -132,20 +133,20 @@ fn lower_join_set_add(
     object: HirExpr,
     call: &ExprCall,
     ctx: &mut LowerCtx,
-    ok_ty: Type,
-    err_ty: Type,
+    ok_ty: &Type,
+    err_ty: &Type,
 ) -> Option<HirExpr> {
     validate_no_keywords(call, ctx, "JoinSet.add()")?;
     validate_exact_arg_count(call, ctx, "JoinSet.add()", 1)?;
     let handle = lower_expr(&call.arguments.args[0], ctx)?;
     let method = match handle.ty().resolve_alias() {
         Type::Task(handle_ok, handle_err)
-            if handle_ok.is_assignable_to(&ok_ty) && handle_err.is_assignable_to(&err_ty) =>
+            if handle_ok.is_assignable_to(ok_ty) && handle_err.is_assignable_to(err_ty) =>
         {
             "__sifr_add_task"
         }
         Type::BlockingTask(handle_ok, handle_err)
-            if handle_ok.is_assignable_to(&ok_ty) && handle_err.is_assignable_to(&err_ty) =>
+            if handle_ok.is_assignable_to(ok_ty) && handle_err.is_assignable_to(err_ty) =>
         {
             "__sifr_add_blocking_task"
         }
@@ -188,8 +189,8 @@ fn lower_join_set_spawn_blocking(
     object: HirExpr,
     call: &ExprCall,
     ctx: &mut LowerCtx,
-    ok_ty: Type,
-    err_ty: Type,
+    ok_ty: &Type,
+    err_ty: &Type,
 ) -> Option<HirExpr> {
     let worker = validate_worker(call, ctx, "JoinSet.spawn_blocking()")?;
     if super::workload_annotations::reject_unclassified_offload_target(
@@ -201,8 +202,8 @@ fn lower_join_set_spawn_blocking(
     }
     validate_worker_result_type(
         &worker,
-        &ok_ty,
-        &err_ty,
+        ok_ty,
+        err_ty,
         call,
         ctx,
         "JoinSet.spawn_blocking()",
@@ -220,8 +221,8 @@ fn lower_join_set_spawn_cpu(
     object: HirExpr,
     call: &ExprCall,
     ctx: &mut LowerCtx,
-    ok_ty: Type,
-    err_ty: Type,
+    ok_ty: &Type,
+    err_ty: &Type,
 ) -> Option<HirExpr> {
     let worker = validate_worker(call, ctx, "JoinSet.spawn_cpu()")?;
     if super::workload_annotations::reject_offload_target_without_kind(
@@ -233,7 +234,7 @@ fn lower_join_set_spawn_cpu(
         return None;
     }
     let worker_error = worker_error_type("WorkerError", ctx);
-    if !worker_error.is_assignable_to(&err_ty) || !err_ty.is_assignable_to(&worker_error) {
+    if !worker_error.is_assignable_to(err_ty) || !err_ty.is_assignable_to(&worker_error) {
         expression_diagnostics::type_mismatch(
             ctx,
             format!(
@@ -245,7 +246,7 @@ fn lower_join_set_spawn_cpu(
         );
         return None;
     }
-    validate_worker_result_ok_type(&worker, &ok_ty, call, ctx, "JoinSet.spawn_cpu()")?;
+    validate_worker_result_ok_type(&worker, ok_ty, call, ctx, "JoinSet.spawn_cpu()")?;
     if let Type::Function(ft) = worker.ty().resolve_alias() {
         if let Type::Result(_, worker_err) = ft.return_type.resolve_alias() {
             if let Some(reason) = non_send_reason(worker_err) {

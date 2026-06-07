@@ -38,9 +38,9 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) task_group_error_types: HashMap<String, Type>,
     /// In-scope task handle binding -> owning `TaskGroup` binding.
     pub(in crate::lower) task_handle_group_owners: HashMap<String, String>,
-    /// JoinSet bindings that have accepted at least one handle and must be consumed.
+    /// `JoinSet` bindings that have accepted at least one handle and must be consumed.
     pub(in crate::lower) live_join_set_bindings: std::collections::HashSet<String>,
-    /// Awaitable bindings produced by JoinSet terminal calls, mapped to their JoinSet owner.
+    /// Awaitable bindings produced by `JoinSet` terminal calls, mapped to their `JoinSet` owner.
     pub(in crate::lower) join_set_terminal_awaitables: HashMap<String, String>,
     /// `TaskGroup` bindings that are no longer proven Open after observing a child handle.
     pub(in crate::lower) task_groups_not_proven_open: std::collections::HashSet<String>,
