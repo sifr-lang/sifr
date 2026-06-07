@@ -1,0 +1,10 @@
+# expect-error: SIFR-ASYNC-0005
+@blocking_io
+def read_blocking() -> int:
+    return 41
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_cpu(read_blocking)
+    await task.sleep(0.0)
+    return None

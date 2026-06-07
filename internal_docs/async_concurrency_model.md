@@ -116,7 +116,7 @@ Required surfaces:
 - `task.spawn_blocking(...)`
 - accepted `sifr.parallel` APIs for CPU parallelism
 
-These annotations are declaration-site workload facts for synchronous functions, not scheduling commands and not async effects. Calling a known `@blocking_io` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a known `@cpu_heavy` function from async code should suggest `task.spawn_blocking` or accepted `sifr.parallel` APIs. The compiler must not silently rewrite either call into a task or thread.
+These annotations are declaration-site workload facts for synchronous functions, not scheduling commands and not async effects. Calling a known `@blocking_io` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a known `@cpu_heavy` function from async code should suggest `task.spawn_cpu` or accepted `sifr.parallel` APIs. The compiler must not silently rewrite either call into a task or thread.
 
 Deferred surfaces:
 
@@ -627,7 +627,7 @@ Async tasks are for waiting and cooperative scheduling. CPU-bound work and block
 `@blocking_io` and `@cpu_heavy` are declaration-site workload classification annotations for synchronous functions. They never imply automatic task or thread scheduling.
 
 - `@blocking_io`: the sync function performs I/O that can block an OS thread, such as file read/write, network I/O, database calls, pipe operations, or blocking timer waits. Calling a known `@blocking_io` function from an `async def` body is an error in the sealed async model: use an async API if available, or wrap the call with `spawn_blocking`.
-- `@cpu_heavy`: the sync function is CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing. Calling a known `@cpu_heavy` function from an `async def` body is an error in the sealed async model: use `task.spawn_blocking` or the accepted `sifr.parallel` APIs to avoid starving the runtime.
+- `@cpu_heavy`: the sync function is CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing. Calling a known `@cpu_heavy` function from an `async def` body is an error in the sealed async model: use `task.spawn_cpu` or the accepted `sifr.parallel` APIs to avoid starving the runtime.
 
 The stdlib maintains a built-in annotation database for stdlib functions. User code can annotate sync declarations with `@blocking_io` or `@cpu_heavy`. Unannotated user functions are assumed to be cheap compute and do not warn by default; this avoids making every short helper look like a scheduler problem. External/FFI calls are treated conservatively as potentially blocking in async contexts unless a future FFI contract classifies them more precisely.
 
@@ -649,7 +649,7 @@ Async functions must be async for a real reason. The compiler tracks an internal
 
 `await` remains valid only for awaitable values. Awaiting a non-awaitable value, including the result of a sync function call, is a hard error. In addition, awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend` is rejected because the callee is async in shape only.
 
-`@blocking_io` and `@cpu_heavy` do not create async effects and do not make sync functions awaitable. They are sync workload facts. Applying either annotation to `async def` is an error; async APIs receive suspension summaries such as `AsyncIo`, not sync workload annotations. Calling a known `@blocking_io` or `@cpu_heavy` function directly from an `async def` body is an error in the sealed async model. Users must choose a native async API, `task.spawn_blocking`, or accepted `sifr.parallel` APIs.
+`@blocking_io` and `@cpu_heavy` do not create async effects and do not make sync functions awaitable. They are sync workload facts. Applying either annotation to `async def` is an error; async APIs receive suspension summaries such as `AsyncIo`, not sync workload annotations. Calling a known `@blocking_io` or `@cpu_heavy` function directly from an `async def` body is an error in the sealed async model. Users must choose a native async API, `task.spawn_blocking`, `task.spawn_cpu`, or accepted `sifr.parallel` APIs.
 
 `task.spawn_blocking(fn)` requires classified sync work. The target function must be annotated `@blocking_io` or `@cpu_heavy`, known by the stdlib annotation database as blocking or CPU-heavy, or known by an external/FFI contract as blocking or CPU-heavy. Unannotated cheap sync helpers are rejected as offload targets; the diagnostic should say to call them directly, or annotate the declaration if it is genuinely blocking or expensive.
 

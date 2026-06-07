@@ -591,7 +591,11 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
             ],
         });
     }
-    if func == "__sifr_spawn_blocking_infallible" || func == "__sifr_spawn_blocking_result" {
+    if func == "__sifr_spawn_blocking_infallible"
+        || func == "__sifr_spawn_blocking_result"
+        || func == "__sifr_spawn_cpu_infallible"
+        || func == "__sifr_spawn_cpu_result"
+    {
         let [worker] = args else {
             return None;
         };

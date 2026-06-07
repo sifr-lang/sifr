@@ -1,0 +1,14 @@
+# expect-error: SIFR-TYPE-0002
+class LocalCell(NonSend):
+    pass
+
+
+@cpu_heavy
+def build_cell() -> LocalCell:
+    return LocalCell()
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_cpu(build_cell)
+    await task.sleep(0.0)
+    return None

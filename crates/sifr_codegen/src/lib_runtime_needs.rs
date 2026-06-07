@@ -650,7 +650,7 @@ pub(crate) fn module_uses_task_scope(module: &HirModule) -> bool {
         )
     }
     fn expr_uses_task_scope_runtime(expr: &HirExpr) -> bool {
-        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_gather" || func == "__sifr_task_race" || func == "__sifr_task_select" || func == "__sifr_spawn_blocking_infallible" || func == "__sifr_spawn_blocking_result")
+        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_task_gather" || func == "__sifr_task_race" || func == "__sifr_task_select" || func == "__sifr_spawn_blocking_infallible" || func == "__sifr_spawn_blocking_result" || func == "__sifr_spawn_cpu_infallible" || func == "__sifr_spawn_cpu_result")
     }
 
     for func in &module.functions {
@@ -692,6 +692,60 @@ pub(crate) fn module_uses_task_scope(module: &HirModule) -> bool {
             };
             let mut on_expr = |expr: &HirExpr| {
                 if expr_uses_task_scope_runtime(expr) {
+                    TraversalControl::Stop
+                } else {
+                    TraversalControl::Continue
+                }
+            };
+            if matches!(
+                traversal::walk_stmts_until(
+                    &method.body,
+                    TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                    &mut on_stmt,
+                    &mut on_expr
+                ),
+                TraversalControl::Stop
+            ) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+pub(crate) fn module_uses_spawn_cpu(module: &HirModule) -> bool {
+    fn expr_uses_spawn_cpu_runtime(expr: &HirExpr) -> bool {
+        matches!(expr, HirExpr::Call { func, .. } if func == "__sifr_spawn_cpu_infallible" || func == "__sifr_spawn_cpu_result")
+    }
+
+    for func in &module.functions {
+        let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+        let mut on_expr = |expr: &HirExpr| {
+            if expr_uses_spawn_cpu_runtime(expr) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        if matches!(
+            traversal::walk_stmts_until(
+                &func.body,
+                TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                &mut on_stmt,
+                &mut on_expr
+            ),
+            TraversalControl::Stop
+        ) {
+            return true;
+        }
+    }
+
+    for class in &module.classes {
+        for method in &class.methods {
+            let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+            let mut on_expr = |expr: &HirExpr| {
+                if expr_uses_spawn_cpu_runtime(expr) {
                     TraversalControl::Stop
                 } else {
                     TraversalControl::Continue
