@@ -232,11 +232,13 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M0a final legacy-surface Claude confirmation:
   - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`
   - Result: `PASS`; pass-1 blockers remained remediated in the current working tree, create-pr validation artifacts were verified with `70 passed`, `0 failed` e2e pass coverage and platform golden `pass=5`, `skip=2`, and the implementation was confirmed ready for the M0a PR.
+- Post-M0 external review gate:
+  - `reviews/ad-hoc-production-concurrency-runtime-post-m0-external-review-pass-1.md`
+  - Result: `PASS`; M0 substrate inventory, CPython scan evidence, workload database, platform contract, dependency decisions, M0a legacy surface removal, validation evidence, and M1 entry gates were verified. M1 may start.
 
 ## Pending Reviews
 
-- Post-M0 external review: run a dedicated external review after M0 inventory and before M1 implementation. M1 cannot start until this review has a `PASS` result recorded in `Planning Reviews`, or until the five-working-day fallback review procedure is recorded with attempted review, open questions, conservative self-review, and no unresolved blocking questions.
-- M0/M0a implementation reviews: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`, and `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`. M1 remains blocked until the M0a PR is merged and the post-M0 external-review gate above is satisfied.
+- M0/M0a/post-M0 reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`, and `reviews/ad-hoc-production-concurrency-runtime-post-m0-external-review-pass-1.md`. M1 may start.
 
 ## Planning Review Remediation Retained In This Phase
 
