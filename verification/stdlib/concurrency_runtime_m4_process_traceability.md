@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_4`
 
-Status: In progress; sync process foundation merged in PR #2331, sync child wait merged in PR #2334, and timeout status evidence merged in PR #2336. Sync child kill support is implemented in the current M4 follow-up wave.
+Status: In progress; sync process foundation merged in PR #2331, sync child wait merged in PR #2334, timeout status evidence merged in PR #2336, and sync child kill support merged in PR #2337.
 
 ## Production Surface Traceability
 
