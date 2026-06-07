@@ -2,7 +2,7 @@ use super::async_generator_advances::finish_async_generator_advance_for_expr;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::ownership_diagnostics;
-use super::task_scope_calls::{is_lock_guard_type, mark_task_handle_observed};
+use super::task_scope_calls::{mark_task_handle_observed, sync_guard_type_label};
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
@@ -20,8 +20,8 @@ pub(in crate::lower) fn lower_await(await_expr: &ExprAwait, ctx: &mut LowerCtx) 
     }
 
     for (name, ty) in ctx.scope.active_bindings() {
-        if is_lock_guard_type(&ty) {
-            ownership_diagnostics::lock_guard_across_await(ctx, &name, await_expr.range());
+        if let Some(label) = sync_guard_type_label(&ty) {
+            ownership_diagnostics::sync_guard_across_await(ctx, &name, label, await_expr.range());
         }
     }
 

@@ -347,8 +347,8 @@ fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<St
             parent_class,
             ..
         } => {
-            if is_lock_guard_type_name(name) {
-                return Some(format!("`{}` is a lock guard", public_type_name(name)));
+            if let Some(label) = sync_guard_type_label_by_name(name) {
+                return Some(format!("`{}` is a {label}", public_type_name(name)));
             }
             if class_has_non_send_marker(name, parent_class.as_deref()) {
                 return Some(format!("`{name}` inherits the `NonSend` marker"));
@@ -398,18 +398,20 @@ fn class_has_non_send_marker(name: &str, parent_chain: Option<&str>) -> bool {
         || parent_chain.is_some_and(|parents| parents.split('|').any(|parent| parent == "NonSend"))
 }
 
-pub(in crate::lower) fn is_lock_guard_type(ty: &Type) -> bool {
+pub(in crate::lower) fn sync_guard_type_label(ty: &Type) -> Option<&'static str> {
     let Type::Class { name, .. } = ty.resolve_alias() else {
-        return false;
+        return None;
     };
-    is_lock_guard_type_name(name)
+    sync_guard_type_label_by_name(name)
 }
 
-fn is_lock_guard_type_name(name: &str) -> bool {
+fn sync_guard_type_label_by_name(name: &str) -> Option<&'static str> {
     matches!(
         public_type_name(name),
         "LockGuard" | "RwLockReadGuard" | "RwLockWriteGuard"
     )
+    .then_some("lock guard")
+    .or_else(|| (public_type_name(name) == "SemaphorePermit").then_some("semaphore permit"))
 }
 
 fn is_share_safe_sync_wrapper(name: &str) -> bool {

@@ -160,7 +160,7 @@
     {
       "decision": "lock/permit await policy",
       "evidence": "Prevents hidden shared mutable state while allowing normal async semaphore critical sections.",
-      "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in M2 unless a specific guard is marked await-safe. Owned semaphore permits may cross await; borrowed permits may not."
+      "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in M2 unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns."
     },
     {
       "decision": "Barrier and Once",

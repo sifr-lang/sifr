@@ -587,7 +587,7 @@ The compiler does not silently turn local state into shared state. Shared memory
 - types with their own synchronization may satisfy `ShareSafe`
 - `Shared[Cell[int]]` and `Shared[list[MutableThing]]` are rejected
 
-`sync.Lock[T]` and `sync.RwLock[T]` provide explicit mutable sharing. They use synchronous Rust mutex primitives in the first model. Acquiring one in async code may block the current runtime worker under contention, so they are permitted only for short, low-contention critical sections. Channels are preferred for async coordination. A distinct `sync.AsyncLock[T]` is deferred.
+`sync.Lock[T]` and `sync.RwLock[T]` provide explicit mutable sharing. They use synchronous Rust mutex primitives in the first model. Acquiring one in async code may block the current runtime worker under contention, so they are permitted only for short, low-contention critical sections. Channels are preferred for async coordination. Distinct `sync.AsyncMutex[T]` and `sync.AsyncRwLock[T]` surfaces are deferred until a later milestone records await-safe guard semantics.
 
 Lock guard rules:
 
@@ -609,6 +609,7 @@ Channels are the canonical queue-like concurrency primitive:
 - cancellation while blocked on send is exactly-once: the value is either not enqueued and dropped, or enqueued exactly once
 - cancellation while blocked on receive is exactly-once: if a receive is cancelled before `Ok(value)` is returned to user code, the message remains available to another receive or is otherwise not lost. Once `Ok(value)` has been returned, ownership has transferred to the receiver task.
 - bounded channels apply async backpressure when full
+- generated channel runtime uses explicit wakeups for sender capacity, receiver availability, close, and endpoint-drop events; sender and receiver wait loops register `Notify` interest before state checks and do not use polling/yield loops for backpressure
 
 **Channel endpoint lifetime rules:**
 - Dropping the last sender closes the channel after buffered messages drain.
@@ -617,7 +618,7 @@ Channels are the canonical queue-like concurrency primitive:
 - Buffered messages remain receivable after close.
 - Messages are received in channel enqueue order (FIFO).
 
-`sync.Semaphore` and `sync.Notify` cover common coordination patterns. `Notify` is edge-triggered; level-triggered event behavior requires explicit state such as `sync.Shared[bool] + Notify`.
+`sync.Semaphore` and `sync.Notify` cover common coordination patterns. `SemaphorePermit` is a guard-like resource: a live permit at an `await` point is a compile-time error, and permits cannot be returned from a function. `Notify` is edge-triggered; level-triggered `Event` behavior requires explicit state such as `sync.Shared[bool] + Notify` in the first model. Public `Barrier` is deferred and public `Once` remains internal-only unless a later phase records a production need.
 
 ## Blocking And Thread Offload
 

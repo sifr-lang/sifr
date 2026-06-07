@@ -7,7 +7,7 @@ use crate::hir_nodes::{HirExpr, HirStmt};
 
 use super::expressions::lower_expr;
 use super::ownership_diagnostics;
-use super::task_scope_calls::is_lock_guard_type;
+use super::task_scope_calls::sync_guard_type_label;
 use super::LowerCtx;
 
 pub(in crate::lower) fn lower_return(
@@ -66,8 +66,10 @@ pub(in crate::lower) fn lower_return(
                 ownership_diagnostics::borrowed_parameter_return_escape(ctx, name, val.range());
             }
         }
-        if !ctx.allow_intrinsic_imports && is_lock_guard_type(&expr_ty) {
-            ownership_diagnostics::lock_guard_return_escape(ctx, val.range());
+        if !ctx.allow_intrinsic_imports {
+            if let Some(label) = sync_guard_type_label(&expr_ty) {
+                ownership_diagnostics::sync_guard_return_escape(ctx, label, val.range());
+            }
         }
 
         if let Type::Result(ref ok_ty, _) = *func_type.return_type {

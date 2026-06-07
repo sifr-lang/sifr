@@ -83,11 +83,14 @@ pub(in crate::lower) fn borrowed_parameter_return_escape(
     );
 }
 
-pub(in crate::lower) fn lock_guard_return_escape(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn sync_guard_return_escape(
+    ctx: &mut LowerCtx,
+    label: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
-        "cannot return lock guard: lock guards cannot escape their local critical section"
-            .to_string(),
+        format!("cannot return {label}: synchronization guards cannot escape their local critical section"),
         range,
     );
 }
@@ -175,10 +178,15 @@ pub(in crate::lower) fn mutable_borrow_across_yield(
     );
 }
 
-pub(in crate::lower) fn lock_guard_across_await(ctx: &mut LowerCtx, name: &str, range: TextRange) {
+pub(in crate::lower) fn sync_guard_across_await(
+    ctx: &mut LowerCtx,
+    name: &str,
+    label: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::OWN_BORROW_ACROSS_AWAIT,
-        format!("lock guard `{name}` cannot cross await; release the guard before awaiting"),
+        format!("{label} `{name}` cannot cross await; release the guard before awaiting"),
         range,
     );
 }

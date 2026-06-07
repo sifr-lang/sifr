@@ -384,6 +384,20 @@ pub(super) fn test_lock_guard_across_await_rejected() {
 }
 
 #[test]
+pub(super) fn test_semaphore_permit_across_await_rejected() {
+    let source = "class SemaphorePermit:\n    pass\n\nasync def main() -> None:\n    permit: SemaphorePermit = SemaphorePermit()\n    await task.sleep(0.0)\n    return None\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("semaphore permit `permit` cannot cross await")
+            && e.code == Some(DiagnosticCode::OWN_BORROW_ACROSS_AWAIT)
+            && e.primary_range == Some(range_for(source, "await task.sleep(0.0)"))
+    }));
+}
+
+#[test]
 pub(super) fn test_lock_guard_return_escape_rejected() {
     let source = "class LockGuard[T]:\n    pass\n\ndef make_guard() -> LockGuard[int]:\n    guard: LockGuard[int] = LockGuard()\n    return guard\n";
     let result = lower_source(source);
@@ -393,6 +407,19 @@ pub(super) fn test_lock_guard_return_escape_rejected() {
         e.message.contains("cannot return lock guard")
             && e.code == Some(DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES)
             && e.primary_range == Some(range_for_after(source, "return ", "guard"))
+    }));
+}
+
+#[test]
+pub(super) fn test_semaphore_permit_return_escape_rejected() {
+    let source = "class SemaphorePermit:\n    pass\n\ndef make_permit() -> SemaphorePermit:\n    permit: SemaphorePermit = SemaphorePermit()\n    return permit\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message.contains("cannot return semaphore permit")
+            && e.code == Some(DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES)
+            && e.primary_range == Some(range_for_after(source, "return ", "permit"))
     }));
 }
 

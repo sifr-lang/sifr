@@ -1,0 +1,7 @@
+from sifr.sync import SemaphorePermit
+
+
+async def main() -> None:
+    permit: SemaphorePermit = SemaphorePermit()
+    await task.sleep(0.0)
+    return None
