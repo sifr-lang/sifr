@@ -1,0 +1,31 @@
+from sifr.process import Child, Command, Output, ProcessError, Status, output, run, spawn, wait
+
+
+def signal_command() -> Command:
+    command: Command = Command("sh")
+    command.arg("-c")
+    command.arg("kill -TERM $$")
+    return command
+
+
+def assert_sigterm_status(status: Status) -> None:
+    assert not status.success
+    assert status.kind == "signal"
+    assert status.signal == 15
+    assert status.exited() == False
+    assert not status.timed_out
+
+
+def main():
+    try:
+        run_status: Status = run(signal_command())
+        assert_sigterm_status(run_status)
+
+        output_result: Output = output(signal_command())
+        assert_sigterm_status(output_result.status)
+
+        child: Child = spawn(signal_command())
+        wait_status: Status = wait(child)
+        assert_sigterm_status(wait_status)
+    except ProcessError as e:
+        assert False

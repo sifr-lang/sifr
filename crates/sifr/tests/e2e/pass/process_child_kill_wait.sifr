@@ -15,7 +15,7 @@ def main():
         _killed: None = kill(child)
         status: Status = wait(child)
         actual.append(not status.success)
-        actual.append(status.kind == "nonzero")
+        actual.append(status.kind == "signal")
 
         method_child: Child = spawn(sleeping_command())
         _method_killed: None = method_child.kill()

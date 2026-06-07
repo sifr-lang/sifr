@@ -416,6 +416,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync process foundation: https://github.com/sifr-lang/sifr/pull/2331
 - M4 sync child wait: https://github.com/sifr-lang/sifr/pull/2334
 - M4 timeout status evidence: https://github.com/sifr-lang/sifr/pull/2336
+- M4 sync child kill: https://github.com/sifr-lang/sifr/pull/2337
+- M4 signal status evidence: pending PR.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -665,6 +667,25 @@ M4 sync child kill review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-child-kill-review-pass-1.md`: `PASS`; reviewer verified the wave is an honest sync forceful-kill slice, `process_kill` returns typed `ProcessError` for closed/unknown handles without data-dependent panics, kill preserves the child handle for later `wait`, top-level `kill(child)` triggers `SIFR-ASYNC-0003`, process-child runtime gating remains intact, and docs do not overclaim graceful termination, timeout escalation, structured cancellation, or signal evidence. Non-blocking feedback was applied before PR by changing the fixture from `sh -c "sleep 5"` to direct `sleep 30`, documenting that kill targets only the immediate child handle, and tracking method-form `@blocking_io` enforcement for `Child.wait()` / `Child.kill()` as later compiler work.
 - Merged as PR #2337: https://github.com/sifr-lang/sifr/pull/2337 (`2c6addfc2d67cc3fca15aa88d3e3956218fd106d`).
+
+M4 signal status evidence targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_signal_status.sifr` -> PASS; Unix `SIGTERM` exits are surfaced as `Status(kind="signal", signal=15)`.
+- Existing process regressions `process_sync_output_text`, `process_spawn_wait_status`, `process_timeout_status`, and `process_child_kill_wait` -> PASS after updating killed-child observation to expect signal status on Unix.
+- Expected async diagnostics `process_blocking_direct_async_rejected`, `process_shell_timeout_direct_async_rejected`, and `process_kill_direct_async_rejected` -> expected FAIL with `SIFR-ASYNC-0003` / `SIFR-ASYNC-0007` / `SIFR-ASYNC-0003`.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_sync_output_text.sifr | rg "__sifr_process_exit_signal|ExitStatusExt|__SIFR_PROCESS_CHILDREN"` -> PASS; ordinary process status users emit the signal helper without the child-handle table.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_spawn_wait_status.sifr | rg "__sifr_process_exit_signal|__SIFR_PROCESS_CHILDREN|__sifr_next_process_child_id"` -> PASS; spawn/wait users emit both the signal helper and private child-handle table.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2177 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 420 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`166.98s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`96 passed`, `0 failed`, `cache_hits=21/25`, `report_signature=f84374f7aa32a96e`).
+
+M4 signal status evidence review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-signal-status-review-pass-1.md`: `PASS`; reviewer verified tuple-shaped raw exit status is coherent across stdlib typing, lowering, and Sifr wrappers; Unix signal exits surface as `Status(kind="signal", signal=N, success=False)` while timeout evidence retains precedence; the cfg-gated `__sifr_process_exit_signal` helper is portable by inspection; ordinary process APIs emit the status helper without the child table; manifests, traceability, supported-host matrix, and execution ledger are honest about Unix-only signal evidence and remaining M4 process lifecycle work. Non-blocking follow-ups were applied by adding the omitted child-kill PR link and documenting that `signal` carries the meaningful status when `kind == "signal"`.
 
 M0 targeted local validation:
 
