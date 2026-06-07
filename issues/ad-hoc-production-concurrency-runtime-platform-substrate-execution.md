@@ -583,6 +583,22 @@ M3 closeout wave review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-4.md`: `PASS`; final post-PR-#2326 reviewer verified the branch preserves the canonical lazy default pool fixture and default-pool implementation, removes the duplicate closeout fixture, routes all five CPU/Rayon surfaces through the shared worker panic-hook guard, and is ready to force-push and merge with no strict M3 closure blockers.
 - PR #2325 merged at `9edf51988475ce6711bb42e79b01e96c8e34e9b5`; M3 is closed.
 
+M4 native sync process first-wave targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo check -p sifr_stdlib -p sifr_codegen` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_sync_output_status.sifr` -> PASS.
+- `cargo test -p sifr_codegen lowers_process_intrinsics_via_registry -- --nocapture` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2165 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`90 passed`, `0 failed`, `cache_hits=7/24`, `report_signature=47d408939555ab52`).
+
+M4 native sync process first-wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-process-sync-review-pass-1.md`: `PASS`; reviewer verified the first-wave `sifr.process` surface does not reintroduce `sifr.subprocess` compatibility, binary stdout/stderr plus `Status` is a defensible M4 boundary, process startup errors remain typed `ProcessError`, shell execution is explicit, and fixtures/manifests are sufficient for the narrow slice. Non-blocking follow-ups were recorded for structured-IR lowerer cleanup, signal-status modeling, shell argument semantics, and broader fixture coverage.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-process-sync-review-pass-2.md`: `PASS`; reviewer verified inert `Stdio`/`PIPE`/`INHERIT`/`NULL` were removed from the first wave, shell command arguments are forwarded rather than silently ignored, focused validation reran, and no new blocker exists before create-pr validation.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

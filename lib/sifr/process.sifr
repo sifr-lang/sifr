@@ -1,0 +1,75 @@
+# sifr.process — Native process execution and binary output.
+from _sifr.process import process_output
+
+
+class ProcessError(Error):
+    message: str
+
+
+class Status:
+    code: int
+
+    def __init__(self, code: int) -> None:
+        self.code = code
+
+    def success(self) -> bool:
+        return self.code == 0
+
+    def __str__(self) -> str:
+        return "Status(" + str(self.code) + ")"
+
+
+class Output:
+    stdout: bytes
+    stderr: bytes
+    status: Status
+
+    def __init__(self, stdout: bytes, stderr: bytes, status: Status) -> None:
+        self.stdout = stdout
+        self.stderr = stderr
+        self.status = status
+
+
+class Command:
+    program: str
+    args: list[str]
+    cwd: str | None
+    shell: bool
+
+    def __init__(self, program: str, args: list[str], cwd: str | None, shell: bool) -> None:
+        self.program = program
+        self.args = args
+        self.cwd = cwd
+        self.shell = shell
+
+    def arg(self, value: str) -> Command:
+        next_args: list[str] = self.args
+        next_args.append(value)
+        return Command(self.program, next_args, self.cwd, self.shell)
+
+    def current_dir(self, cwd: str) -> Command:
+        return Command(self.program, self.args, cwd, self.shell)
+
+
+def command(program: str) -> Command:
+    return Command(program, [], None, False)
+
+
+def shell(command_line: str) -> Command:
+    return Command(command_line, [], None, True)
+
+
+def output(own cmd: Command) -> Result[Output, ProcessError]:
+    try:
+        raw: tuple[bytes, bytes, int] = process_output(cmd.program, cmd.args, cmd.cwd, cmd.shell)
+        return Output(raw[0], raw[1], Status(raw[2]))
+    except ProcessError as e:
+        raise e
+
+
+def run(own cmd: Command) -> Result[Status, ProcessError]:
+    try:
+        out: Output = output(cmd)
+        return out.status
+    except ProcessError as e:
+        raise e

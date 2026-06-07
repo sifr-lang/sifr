@@ -113,6 +113,28 @@ pub(crate) fn lowers_subprocess_intrinsics_via_registry() {
 }
 
 #[test]
+pub(crate) fn lowers_process_intrinsics_via_registry() {
+    let output = lower_intrinsic(
+        "process_output",
+        &[
+            "program".to_string(),
+            "args".to_string(),
+            "cwd".to_string(),
+            "shell".to_string(),
+        ],
+    )
+    .expect("process_output");
+    let rendered = render_expr(&output.expr);
+    assert!(rendered.contains("std::process::Command::new(&__program)"));
+    assert!(rendered.contains("__cmd.args(&__args)"));
+    assert!(rendered.contains("std::process::Command::new(\"sh\")"));
+    assert!(rendered.contains("std::process::Command::new(\"cmd\")"));
+    assert!(rendered.contains("ProcessError::new(__err.to_string())"));
+    assert!(rendered.contains("__output.stdout"));
+    assert!(rendered.contains("__output.stderr"));
+}
+
+#[test]
 pub(crate) fn lowers_html_intrinsics_via_registry() {
     let esc = lower_intrinsic("html_escape", &["s".to_string()]).expect("html_escape");
     assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\")"));

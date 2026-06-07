@@ -21,6 +21,7 @@ mod open_text_handles;
 mod os;
 mod pathlib;
 mod platform;
+mod process;
 mod random;
 mod re;
 mod subprocess;
@@ -571,6 +572,7 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "platform_release" => (platform::lower_platform_release(args), None),
         "platform_version" => (platform::lower_platform_version(args), None),
         "platform_processor" => (platform::lower_platform_processor(args), None),
+        "process_output" => (process::lower_process_output(args), None),
         "uuid4" => (uuid::lower_uuid4(args), Some(StdlibFeature::Rand)),
         "uuid3_text" => (uuid::lower_uuid3(args), Some(StdlibFeature::Uuid)),
         "uuid5_text" => (uuid::lower_uuid5(args), Some(StdlibFeature::Uuid)),

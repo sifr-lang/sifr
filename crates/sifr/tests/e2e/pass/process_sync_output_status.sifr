@@ -1,0 +1,36 @@
+from sifr.bytes import decode_utf8
+from sifr.process import Command, Output, ProcessError, Status, command, output, run, shell
+
+
+def text(data: bytes) -> str:
+    try:
+        decoded: str = decode_utf8(data)
+        return decoded
+    except ParseError as e:
+        return e.message
+
+
+def main():
+    native_cmd: Command = command("printf").arg("native-ok")
+    try:
+        native_out: Output = output(native_cmd)
+        assert native_out.status.success()
+        assert native_out.status.code == 0
+        assert text(native_out.stdout) == "native-ok"
+        assert len(native_out.stderr) == 0
+    except ProcessError as e:
+        assert str(e.message) == "process output should succeed"
+
+    shell_cmd: Command = shell("printf shell-ok")
+    try:
+        shell_out: Output = output(shell_cmd)
+        assert shell_out.status.success()
+        assert text(shell_out.stdout) == "shell-ok"
+    except ProcessError as e:
+        assert str(e.message) == "shell output should succeed"
+
+    try:
+        status: Status = run(command("printf").arg(""))
+        assert status.success()
+    except ProcessError as e:
+        assert str(e.message) == "process run should succeed"
