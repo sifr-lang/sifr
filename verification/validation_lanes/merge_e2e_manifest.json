@@ -96,6 +96,7 @@
     "parallel_try_map_basic",
     "parallel_try_map_user_error_typed",
     "parallel_pool_map_basic",
+    "parallel_default_pool_reused",
     "text_i18n_encoding_io",
     "text_i18n_unicode_core",
     "text_i18n_unicode_segmentation",

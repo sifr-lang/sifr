@@ -81,6 +81,7 @@
     "parallel_try_map_basic",
     "parallel_try_map_user_error_typed",
     "parallel_pool_map_basic",
+    "parallel_default_pool_reused",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",

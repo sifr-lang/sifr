@@ -96,6 +96,10 @@ fn __sifr_default_parallel_worker_count() -> usize {
         .map_or(1usize, std::num::NonZeroUsize::get);
 }
 
+static __SIFR_DEFAULT_PARALLEL_POOL: std::sync::OnceLock<
+    Result<rayon::ThreadPool, WorkerRuntimeError>,
+> = std::sync::OnceLock::new();
+
 fn __sifr_build_parallel_pool(workers: usize) -> Result<rayon::ThreadPool, WorkerRuntimeError> {
     match rayon::ThreadPoolBuilder::new().num_threads(workers).build() {
         Ok(pool) => Ok(pool),
@@ -103,6 +107,15 @@ fn __sifr_build_parallel_pool(workers: usize) -> Result<rayon::ThreadPool, Worke
             "parallel worker pool could not start: {}",
             error
         ))),
+    }
+}
+
+fn __sifr_default_parallel_pool() -> Result<&'static rayon::ThreadPool, WorkerRuntimeError> {
+    match __SIFR_DEFAULT_PARALLEL_POOL
+        .get_or_init(|| __sifr_build_parallel_pool(__sifr_default_parallel_worker_count()))
+    {
+        Ok(pool) => Ok(pool),
+        Err(error) => Err(error.clone()),
     }
 }
 
@@ -122,7 +135,7 @@ fn __sifr_parallel_map<T: Send, U: Send, F: Fn(T) -> U + Send + Sync>(
     worker: F,
 ) -> Result<Vec<U>, WorkerRuntimeError> {
     use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-    let pool = __sifr_build_parallel_pool(__sifr_default_parallel_worker_count())?;
+    let pool = __sifr_default_parallel_pool()?;
     return pool.install(|| {
         __sifr_with_silent_parallel_panic_hook(|| {
             items
@@ -144,8 +157,7 @@ where
     E: std::fmt::Display,
 {
     use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-    let pool = __sifr_build_parallel_pool(__sifr_default_parallel_worker_count())
-        .map_err(__sifr_worker_error_from_runtime)?;
+    let pool = __sifr_default_parallel_pool().map_err(__sifr_worker_error_from_runtime)?;
     return pool.install(|| {
         __sifr_with_silent_parallel_panic_hook(|| {
             items
