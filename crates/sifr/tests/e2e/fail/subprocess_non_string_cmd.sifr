@@ -1,7 +1,0 @@
-# Reference: phase_psp_d2_subprocess_non_string_cmd
-from sifr.subprocess import run
-
-
-def main():
-    result = run(123)
-    _ = result

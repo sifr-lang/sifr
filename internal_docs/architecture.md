@@ -819,7 +819,7 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - `milestone_async_1`: add async HIR/type substrate (`Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, `await`, async calls).
 - `milestone_async_4`: implement Send/Sync and borrow-boundary checking at spawn boundaries.
 - `milestone_async_5`: provide `sifr.sync.Shared`, `Lock`, `RwLock`, and `Channel` for explicit cross-task sharing.
-- `milestone_async_6` (completed): provide workload annotations and async-context diagnostics, explicit blocking offload through `task.spawn_blocking` and `sifr.concurrent.ThreadPoolExecutor`, `BlockingTask[T, E]` result-abandonment cancellation semantics, and the `sifr.threading` compatibility coordination surface.
+- `milestone_async_6` (completed): provide workload annotations and async-context diagnostics, explicit blocking offload through `task.spawn_blocking`, and `BlockingTask[T, E]` result-abandonment cancellation semantics. The later production concurrency/runtime substrate removed public `sifr.concurrent` and `sifr.threading` compatibility surfaces in favor of native `sifr.task`, `sifr.sync`, `sifr.runtime`, and `sifr.parallel` APIs.
 - `milestone_async_7a`: implement user-defined async context managers, `AsyncIterator[T, E]`, and `async for` over protocol-conforming streams.
 - `milestone_async_7b`: implement `AsyncGenerator[T, E]`, async generator lifecycle/cleanup, and list/set/dict async comprehensions.
 

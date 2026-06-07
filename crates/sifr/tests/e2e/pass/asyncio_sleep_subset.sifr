@@ -1,6 +1,0 @@
-from sifr.asyncio import sleep
-
-
-async def main() -> None:
-    await sleep(0.0)
-    return None

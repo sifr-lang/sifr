@@ -1,21 +1,16 @@
 # Reference: ad_hoc_runtime_wave4
 # Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
-from sifr.subprocess import run, check_call, check_output, CompletedProcess
-from sifr.subprocess import PIPE, STDOUT, DEVNULL
+from sifr.os import run_command
 
 
 def main() -> None:
     demo_ok: bool = False
 
     try:
-        cp: CompletedProcess = run("echo runtime_wave4_demo")
-        rc: int = check_call("echo runtime_wave4_demo_call")
-        out: str = check_output("echo runtime_wave4_demo_output")
-
-        constants_ok: bool = PIPE == -1 and STDOUT == -2 and DEVNULL == -3
-        demo_ok = cp.returncode == 0 and cp.stdout.strip() == "runtime_wave4_demo" and rc == 0 and out.strip() == "runtime_wave4_demo_output" and constants_ok
+        out: str = run_command("echo runtime_wave4_demo")
+        demo_ok = out == "runtime_wave4_demo"
     except IOError as e:
         _ = e.message
 
     assert demo_ok
-    print("ad_hoc_runtime_wave4_subprocess_sync_boundary_governance_demo: ok")
+    print("ad_hoc_runtime_wave4_legacy_subprocess_removed_demo: ok")

@@ -11,19 +11,23 @@ pub(in crate::lower) fn report_missing_stdlib_member(
     member: &str,
     range: TextRange,
 ) {
-    if let Some(reason) = deferred_member_reason(module, member) {
-        name_diagnostics::deferred_compat_member(ctx, module, member, reason, range);
-    } else {
-        name_diagnostics::missing_member(ctx, module, member, range);
-    }
+    name_diagnostics::missing_member(ctx, module, member, range);
 }
 
 pub(in crate::lower) fn report_unknown_stdlib_module(
     ctx: &mut LowerCtx,
     module: &str,
+    imported_names: &str,
     range: TextRange,
 ) {
-    if let Some(reason) = deferred_module_reason(module) {
+    if let Some(legacy_module) = sifr_stdlib::unsupported_legacy_stdlib_module(module) {
+        import_diagnostics::unsupported_legacy_stdlib_module(
+            ctx,
+            &legacy_module,
+            imported_names,
+            range,
+        );
+    } else if let Some(reason) = deferred_module_reason(module) {
         import_diagnostics::deferred_compat_module(ctx, module, reason, range);
     } else {
         import_diagnostics::unknown_import_target(ctx, module, range);
@@ -32,25 +36,16 @@ pub(in crate::lower) fn report_unknown_stdlib_module(
 
 fn deferred_module_reason(module: &str) -> Option<&'static str> {
     match module {
+        "sifr.contextlib" => Some(
+            "contextlib compatibility is rejected; use deterministic `sifr.resource` scopes instead",
+        ),
+        "sifr.warnings" => Some(
+            "Python global warning filters are rejected; use typed Sifr diagnostics and runtime observability instead",
+        ),
         "sifr.selectors" => {
             Some("public selectors APIs are deferred; compose tasks and channels instead")
         }
         "sifr.contextvars" => Some("context-local state is deferred; pass task state explicitly"),
-        _ => None,
-    }
-}
-
-fn deferred_member_reason(module: &str, member: &str) -> Option<&'static str> {
-    match (module, member) {
-        ("sifr.asyncio", "get_event_loop_policy" | "set_event_loop_policy") => {
-            Some("event loop policies are deferred; Sifr exposes structured task scopes instead")
-        }
-        ("sifr.asyncio", "BaseTransport" | "BaseProtocol" | "Protocol") => Some(
-            "transport/protocol callback APIs are deferred; compose async tasks and channels instead",
-        ),
-        ("sifr.concurrent", "ProcessPoolExecutor") => {
-            Some("process pools are blocked on the Phase 40 typed IPC and serialization contract")
-        }
         _ => None,
     }
 }
@@ -99,18 +94,6 @@ pub(in crate::lower) fn resolve_imports_early(
 
             // Only resolve from externals (stdlib and local modules)
             let module_key = module_name.clone();
-            if module_key == "sifr.asyncio" {
-                for name in &names {
-                    match name.as_str() {
-                        "sleep" | "wait_for" | "gather" | "timeout" | "TaskGroup"
-                        | "create_task" | "run" => {
-                            ctx.asyncio_compat_imports
-                                .insert(local_name_for(name), name.clone());
-                        }
-                        _ => {}
-                    }
-                }
-            }
             if let Some(module_classes) = externals.classes.get(&module_key) {
                 for name in &names {
                     let local = local_name_for(name);

@@ -1,6 +1,2 @@
-# expect-error: SIFR-NAME-0004
+# expect-error: SIFR-IMPORT-0009
 from sifr.concurrent import ProcessPoolExecutor
-
-
-def main() -> None:
-    pass

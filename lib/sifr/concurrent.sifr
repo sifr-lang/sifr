@@ -1,9 +1,0 @@
-# sifr.concurrent — explicit blocking offload compatibility surfaces
-
-class ThreadPoolExecutor:
-    pass
-
-
-class Future[T, E]:
-    _value: T
-    _error: E

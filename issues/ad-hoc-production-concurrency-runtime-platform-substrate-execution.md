@@ -28,7 +28,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 ## Milestone Checklist
 
 - [x] `milestone_concurrency_runtime_0`: Product Boundary And Rust Concurrency Contract
-- [ ] `milestone_concurrency_runtime_0a`: Legacy CPython-Shaped Surface Removal Gate
+- [x] `milestone_concurrency_runtime_0a`: Legacy CPython-Shaped Surface Removal Gate
 - [ ] `milestone_concurrency_runtime_1`: Structured Async Runtime
 - [ ] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
 - [ ] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
@@ -223,11 +223,20 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M0 implementation Claude review:
   - `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`
   - Result: `PASS`; CPython scan, inventory, evidence matrix, workload database, platform contract, host matrix, golden manifest entries, native namespace diagnostics, and M0/M0a gates met M0 requirements. Non-blocking polish for `sifr.contextlib`/`sifr.warnings` disposition and warnings diagnostic steering was applied.
+- M0a legacy-surface Claude review:
+  - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-1.md`
+  - Result: `FAIL`; local validation recording, duplicate legacy-import fail fixtures, empty review artifact, and dead `sifr.asyncio` veneer lowering blockers were remediated.
+- M0a legacy-surface Claude follow-up:
+  - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`
+  - Result: `PASS`; public legacy modules were verified unreachable, `SIFR-IMPORT-0009` replacement diagnostics were verified, native task lowering was verified free of `sifr.asyncio` compatibility paths, demos/manifests/goldens were clean, validation evidence was recorded, and no blocker remained.
+- M0a final legacy-surface Claude confirmation:
+  - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`
+  - Result: `PASS`; pass-1 blockers remained remediated in the current working tree, create-pr validation artifacts were verified with `70 passed`, `0 failed` e2e pass coverage and platform golden `pass=5`, `skip=2`, and the implementation was confirmed ready for the M0a PR.
 
 ## Pending Reviews
 
 - Post-M0 external review: run a dedicated external review after M0 inventory and before M1 implementation. M1 cannot start until this review has a `PASS` result recorded in `Planning Reviews`, or until the five-working-day fallback review procedure is recorded with attempted review, open questions, conservative self-review, and no unresolved blocking questions.
-- M0 implementation review: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`. M1 remains blocked until M0a completion.
+- M0/M0a implementation reviews: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`, and `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`. M1 remains blocked until the M0a PR is merged and the post-M0 external-review gate above is satisfied.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -293,6 +302,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 ## Implementation PRs
 
 - M0: https://github.com/sifr-lang/sifr/pull/2310
+- M0a: https://github.com/sifr-lang/sifr/pull/2311
 - M1: pending.
 - M2: pending.
 - M3: pending.
@@ -314,6 +324,16 @@ M0 targeted local validation:
 - `bash scripts/run_platform_golden.sh` -> PASS; 4 passed, 3 skipped, including the blocked M0a legacy-surface gate.
 - `cargo test -p sifr test_e2e_fail` -> PASS.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; warm wall-time advisory only. During this run, expired performance waivers from 2026-06-06 were removed after `verification/performance/check_budgets.py` passed with an empty waiver set.
+
+M0a targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo clippy --workspace -- -D warnings` -> PASS.
+- `cargo test -p sifr_stdlib legacy_concurrency_runtime_modules_are_not_embedded_public_sources` -> PASS.
+- `cargo test -p sifr_lowering unsupported_legacy_stdlib_module_has_import_code_and_replacement_args` -> PASS.
+- `cargo test -p sifr_driver --lib` -> PASS; 140 tests.
+- `cargo test -p sifr test_e2e_fail` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`70 passed`, `0 failed`).
 
 Required baseline commands:
 
@@ -360,6 +380,7 @@ Create and keep current during implementation:
 - `verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md`
 - `verification/stdlib/concurrency_runtime_workload_database.md`
 - `verification/stdlib/concurrency_runtime_m0_traceability.md`
+- `verification/stdlib/concurrency_runtime_m0a_legacy_surface_traceability.md`
 - `verification/platform/supported_host_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
 

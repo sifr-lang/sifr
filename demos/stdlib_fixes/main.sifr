@@ -4,7 +4,6 @@
 # Demonstrates Phase 12 gap closures:
 # - open() built-in with FileHandle (text + binary modes, context manager)
 # - datetime.time, datetime.timezone, datetime.now() returning object
-# - subprocess.CompletedProcess structured result
 # - pathlib.Path.glob / rglob
 # - re flags (IGNORECASE, MULTILINE, DOTALL)
 # - os constants, random.choice, time wrappers
@@ -14,7 +13,6 @@
 
 from sifr.io import read_text, write_text
 from sifr.datetime import time, timezone, now
-from sifr.subprocess import run, CompletedProcess
 from sifr.pathlib import Path
 from sifr.re import compile_flags, search_flags, IGNORECASE, MULTILINE
 from sifr.os import getcwd
@@ -68,14 +66,6 @@ def main():
     dt = now()
     iso: str = dt.isoformat()
     print("now isoformat ok = " + str(len(iso) > 0))
-
-    # --- subprocess.CompletedProcess ---
-    try:
-        result2: CompletedProcess = run("echo hello_subprocess")
-        print("subprocess returncode = " + str(result2.returncode))
-        print("subprocess stdout ok = " + str(len(result2.stdout) > 0))
-    except IOError as e:
-        print("subprocess error: " + e.message)
 
     # --- pathlib.Path.glob ---
     tmp: Path = Path("/tmp")

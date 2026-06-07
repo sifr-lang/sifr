@@ -1,6 +1,6 @@
 use ruff_text_size::TextRange;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
-use sifr_stdlib::BareStdlibMatch;
+use sifr_stdlib::{BareStdlibMatch, LegacyStdlibModule};
 use std::collections::BTreeMap;
 
 use super::LowerCtx;
@@ -34,12 +34,68 @@ pub(in crate::lower) fn deferred_compat_module(
     );
 }
 
+pub(in crate::lower) fn unsupported_legacy_stdlib_module(
+    ctx: &mut LowerCtx,
+    legacy_module: &LegacyStdlibModule,
+    imported_names: &str,
+    range: TextRange,
+) {
+    let mut args = BTreeMap::new();
+    args.insert(
+        "legacy_module".to_string(),
+        DiagnosticArg::String(legacy_module.legacy_module.to_string()),
+    );
+    args.insert(
+        "suggested_module".to_string(),
+        DiagnosticArg::String(legacy_module.suggested_module.to_string()),
+    );
+    args.insert(
+        "imported_names".to_string(),
+        DiagnosticArg::String(imported_names.to_string()),
+    );
+    args.insert(
+        "reason".to_string(),
+        DiagnosticArg::String(legacy_module.reason.to_string()),
+    );
+    ctx.error_with_code_args_help_at(
+        DiagnosticCode::IMPORT_UNSUPPORTED_LEGACY_STDLIB,
+        format!(
+            "legacy stdlib module '{}' is unsupported; use '{}'",
+            legacy_module.legacy_module, legacy_module.suggested_module
+        ),
+        args,
+        Some(unsupported_legacy_stdlib_help(
+            legacy_module,
+            imported_names,
+        )),
+        range,
+    );
+}
+
 pub(in crate::lower) fn unsupported_form(ctx: &mut LowerCtx, form: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::IMPORT_UNSUPPORTED_FORM,
         format!("unsupported import form: {form}"),
         range,
     );
+}
+
+fn unsupported_legacy_stdlib_help(
+    legacy_module: &LegacyStdlibModule,
+    imported_names: &str,
+) -> String {
+    let import_hint = if imported_names.is_empty() {
+        format!(
+            "use 'from {} import <name>'",
+            legacy_module.suggested_module
+        )
+    } else {
+        format!(
+            "use 'from {} import {}'",
+            legacy_module.suggested_module, imported_names
+        )
+    };
+    format!("{import_hint}; {}", legacy_module.reason)
 }
 
 pub(in crate::lower) fn bare_stdlib(

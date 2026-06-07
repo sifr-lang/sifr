@@ -47,6 +47,15 @@ pub struct BareStdlibMatch {
     pub exact_embedded_module_exists: bool,
 }
 
+/// Match data for a CPython-shaped `sifr.*` module that is no longer a public
+/// compatibility adapter.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct LegacyStdlibModule {
+    pub legacy_module: &'static str,
+    pub suggested_module: &'static str,
+    pub reason: &'static str,
+}
+
 /// An intrinsic module definition with its functions and constants.
 pub struct IntrinsicModule {
     pub functions: HashMap<String, FunctionType>,
@@ -121,7 +130,7 @@ pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
             bare_module: module_name.to_string(),
             matched_tail: matched_tail.to_string(),
             suggested_module: suggested_module.to_string(),
-            exact_embedded_module_exists: true,
+            exact_embedded_module_exists: embedded_stdlib_module_exists(suggested_module),
         });
     }
     if embedded_stdlib_tail_exists(module_name) {
@@ -149,6 +158,69 @@ pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
         suggested_module,
         exact_embedded_module_exists,
     })
+}
+
+/// Returns legacy-module match data for CPython-shaped Sifr stdlib names that
+/// are intentionally not public adapters.
+pub fn unsupported_legacy_stdlib_module(module_name: &str) -> Option<LegacyStdlibModule> {
+    let canonical = match module_name {
+        "sifr.asyncio" => "sifr.asyncio",
+        "sifr.concurrent" | "sifr.concurrent.futures" => "sifr.concurrent",
+        "sifr.contextlib" => "sifr.contextlib",
+        "sifr.multiprocessing" => "sifr.multiprocessing",
+        "sifr.queue" => "sifr.queue",
+        "sifr.subprocess" => "sifr.subprocess",
+        "sifr.threading" => "sifr.threading",
+        "sifr.warnings" => "sifr.warnings",
+        _ => return None,
+    };
+    legacy_stdlib_module_info(canonical)
+}
+
+fn legacy_stdlib_module_info(module_name: &str) -> Option<LegacyStdlibModule> {
+    match module_name {
+        "sifr.asyncio" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.asyncio",
+            suggested_module: "sifr.task",
+            reason: "structured tasks are exposed through the native task model",
+        }),
+        "sifr.concurrent" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.concurrent",
+            suggested_module: "sifr.runtime",
+            reason: "executor-style offload is replaced by scoped runtime and parallel work APIs",
+        }),
+        "sifr.contextlib" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.contextlib",
+            suggested_module: "sifr.resource",
+            reason: "cleanup uses deterministic Sifr resource scopes, not contextlib adapters",
+        }),
+        "sifr.multiprocessing" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.multiprocessing",
+            suggested_module: "sifr.ipc",
+            reason: "process workers require the typed IPC design gate",
+        }),
+        "sifr.queue" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.queue",
+            suggested_module: "sifr.sync",
+            reason: "queue-like communication uses native bounded channels and synchronization",
+        }),
+        "sifr.subprocess" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.subprocess",
+            suggested_module: "sifr.process",
+            reason: "process management is owned by the native process API",
+        }),
+        "sifr.threading" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.threading",
+            suggested_module: "sifr.runtime",
+            reason: "threads are an internal substrate for scoped offload, not a public module",
+        }),
+        "sifr.warnings" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.warnings",
+            suggested_module: "sifr.runtime",
+            reason: "Python global warning filters are replaced by typed diagnostics and runtime observability",
+        }),
+        _ => None,
+    }
 }
 
 fn cpython_stdlib_reserved_suggestion(module_name: &str) -> Option<&'static str> {
@@ -188,7 +260,7 @@ fn embedded_stdlib_module_exists(module_name: &str) -> bool {
 mod tests {
     use super::{
         get_intrinsic_module, is_bare_stdlib_tail, is_intrinsic_module, is_stdlib_module,
-        STDLIB_SOURCES,
+        unsupported_legacy_stdlib_module, STDLIB_SOURCES,
     };
 
     #[test]
@@ -285,6 +357,33 @@ mod tests {
         assert_eq!(signal.suggested_module, "sifr.signal");
         assert_eq!(contextlib.suggested_module, "sifr.resource");
         assert_eq!(warnings.suggested_module, "sifr.runtime");
+    }
+
+    #[test]
+    fn legacy_concurrency_runtime_modules_are_not_embedded_public_sources() {
+        let legacy_modules = [
+            ("sifr.asyncio", "sifr.task"),
+            ("sifr.queue", "sifr.sync"),
+            ("sifr.subprocess", "sifr.process"),
+            ("sifr.concurrent", "sifr.runtime"),
+            ("sifr.concurrent.futures", "sifr.runtime"),
+            ("sifr.contextlib", "sifr.resource"),
+            ("sifr.multiprocessing", "sifr.ipc"),
+            ("sifr.threading", "sifr.runtime"),
+            ("sifr.warnings", "sifr.runtime"),
+        ];
+
+        for (legacy, suggested) in legacy_modules {
+            let matched =
+                unsupported_legacy_stdlib_module(legacy).expect("legacy module should be rejected");
+            assert_eq!(matched.suggested_module, suggested);
+            assert!(
+                !STDLIB_SOURCES
+                    .iter()
+                    .any(|source| source.module == matched.legacy_module),
+                "{legacy} must not be embedded as a public stdlib source"
+            );
+        }
     }
 
     #[test]

@@ -1,7 +1,0 @@
-from sifr.asyncio import timeout
-
-
-async def main() -> Result[None, TimeoutError]:
-    async with timeout(1.0):
-        await task.sleep(0.0)
-    return None

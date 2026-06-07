@@ -57,24 +57,6 @@ fn async_task_call_name(expr: &Expr) -> Option<(&str, &sifr_python_ast::ExprCall
     }
 }
 
-fn async_compat_call_name<'a>(
-    expr: &'a Expr,
-    ctx: &LowerCtx,
-) -> Option<(&'static str, &'a sifr_python_ast::ExprCall)> {
-    let Expr::Call(call) = expr else {
-        return None;
-    };
-    let Expr::Name(name) = call.func.as_ref() else {
-        return None;
-    };
-    let member = ctx.asyncio_compat_imports.get(name.id.as_str())?;
-    match member.as_str() {
-        "TaskGroup" => Some(("TaskGroup", call)),
-        "timeout" => Some(("timeout", call)),
-        _ => None,
-    }
-}
-
 fn timeout_error_type() -> Type {
     Type::Class {
         name: "TimeoutError".to_string(),
@@ -756,8 +738,7 @@ pub(in crate::lower) fn lower_async_with(
     }
 
     let item = &with_stmt.items[0];
-    let task_call = async_task_call_name(&item.context_expr)
-        .or_else(|| async_compat_call_name(&item.context_expr, ctx));
+    let task_call = async_task_call_name(&item.context_expr);
     let Some((task_fn, call)) = task_call else {
         return lower_user_async_with(with_stmt, item, func_type, ctx);
     };

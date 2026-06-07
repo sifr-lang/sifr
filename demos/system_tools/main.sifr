@@ -3,7 +3,6 @@
 from sifr.os import run_command, getcwd
 from sifr.env import getenv, setenv, unsetenv
 from sifr.sys import argv, version, platform
-from sifr.subprocess import run, run_with_input, check_call, check_output, CompletedProcess
 from sifr.logging import getLogger, INFO, Logger
 from sifr.platform import system, machine, processor
 from sifr.time import time, strftime
@@ -34,19 +33,6 @@ def main():
     print("sys.argv len = " + str(len(argv())))
     print("sys.version = " + version())
     print("sys.platform = " + platform())
-
-    try:
-        cp: CompletedProcess = run("echo subprocess_demo")
-        print("subprocess.run rc = " + str(cp.returncode))
-        print("subprocess.run stdout = " + cp.stdout.strip())
-        echoed: str = run_with_input("cat", "stdin_demo")
-        print("subprocess.run_with_input = " + echoed)
-        checked_rc: int = check_call("echo subprocess_check_call_demo")
-        checked_out: str = check_output("echo subprocess_check_output_demo")
-        print("subprocess.check_call rc = " + str(checked_rc))
-        print("subprocess.check_output = " + checked_out.strip())
-    except IOError as e:
-        print("subprocess error: " + e.message)
 
     logger: Logger = getLogger("wave_psp_d2_demo")
     logger.set_level(INFO)

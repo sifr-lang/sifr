@@ -14,7 +14,7 @@ The original broad planning scan was split into three implementation phases:
 
 Execution order: this is the third phase in the split production-stdlib sequence. Text/i18n runs first, concurrency/runtime runs second, and network/HTTP consumes both provider phases. Network/HTTP implementation must not start early or close text-dependent/runtime-dependent surfaces without the relevant provider milestones recorded as complete.
 
-CPython-shaped public networking/web modules are no longer this phase's objective. `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib.request`, `sifr.http.client`, `sifr.http.server`, and `sifr.socketserver` are deferred or rejected unless a later product phase proves migration demand and delegates to the Sifr-native substrate.
+CPython-shaped public networking/web modules are no longer this phase's objective or a future adapter track. `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib.request`, `sifr.urllib.parse`, `sifr.http.client`, `sifr.http.server`, and `sifr.socketserver` are evidence only and must resolve to `rejected`, `unsupported-with-diagnostic`, `internal-only`, or `test-only-harness`.
 
 ## Milestone Checklist
 
@@ -87,6 +87,10 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Final cross-phase decision delta review:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-25-final-delta.md`
   - Result: `PASS`; final cross-phase and no-bespoke-policy clarifications introduced no unmade or contradictory implementation decisions.
+- Clean-language and dependency-ring review:
+  - Source: local review after the concurrency/runtime substrate cleanup and dependency-policy creation.
+  - Result: phase doc tightened to remove the future CPython-shaped adapter path, classify Python-shaped network/web modules as rejected or unsupported diagnostics, replace the flat Rust ecosystem table with dependency-ring decisions, reject implementation-time crate-family discovery, align Tokio features with the concurrency/runtime provider boundary, and add a network-owned security/resource model.
+  - Claude review attempt: `reviews/ad-hoc-production-network-http-platform-substrate-review-pass-1.md` was started but produced no content and was removed; no external review result was retained for this pass.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -102,13 +106,13 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Keep namespace cleanup alignment: public imports remain under `sifr.*`, and bare CPython stdlib names are not aliases.
 - [x] Replace CPython stdlib parity with production substrate as the completion goal.
 - [x] Add No-Toy-Module Gate and Maintenance Burden Test.
-- [x] Reject/defer public `sifr.http.server`, `sifr.socketserver`, `sifr.urllib.request`, `sifr.http.client`, `sifr.select`, `sifr.selectors`, and CPython descriptor-shaped socket/TLS APIs in this phase.
+- [x] Reject or route to unsupported diagnostics public `sifr.http.server`, `sifr.socketserver`, `sifr.urllib.request`, `sifr.urllib.parse`, `sifr.http.client`, `sifr.select`, `sifr.selectors`, and CPython descriptor-shaped socket/TLS APIs in this phase.
 - [x] Add explicit Phase 41 handoff and separate production HTTP client handoff.
 - [x] Keep CPython scans as evidence mining, not parity backlog.
 - [x] Bring HTTP/2 into the production substrate and keep HTTP/3 / QUIC deferred with a revisit rule.
-- [x] Add Rust ecosystem-first dependency strategy for network, DNS, TLS, URL, HTTP/1, HTTP/2, cookies, observability, and tests.
-- [x] Require M0 dependency decision records for every accepted Rust ecosystem crate family; if the ecosystem stack cannot satisfy a required surface, defer that surface with evidence instead of hand-rolling protocol/domain infrastructure in this phase.
-- [x] Add M0 definition-of-done gate for dependency decision records across every Rust Ecosystem First crate family.
+- [x] Add dependency-ring decisions for network, DNS, TLS, URL, HTTP/1, HTTP/2, cookies, observability, and tests using `internal_docs/dependency_policy.md`.
+- [x] Require M0 to verify the locked Rust Ecosystem Decisions table; if the ecosystem stack cannot satisfy a required surface, defer that surface with evidence instead of hand-rolling protocol/domain infrastructure in this phase.
+- [x] Add M0 definition-of-done gate for dependency decision records across every Rust Ecosystem Decisions crate family.
 - [x] Ensure conditional crates such as `x509-parser` receive the same dependency audit as baseline crates.
 - [x] Add a text/i18n dependency matrix for binary/ASCII-safe substrate versus features blocked on text/i18n M1, M2, M2.5, or M3.
 - [x] Add a concurrency/runtime dependency matrix for features blocked on task/cancellation M1, sync/backpressure M2, offload M3, shutdown/diagnostics M5, and IPC/process-worker M6.
@@ -120,6 +124,8 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Make M3 the owner of canonical URL/header/cookie primitives and M4 the consumer to prevent duplicate HTTP representations.
 - [x] Resolve ecosystem and API decisions before M0: Tokio feature set, rustls `aws-lc-rs`, `rustls-platform-verifier`, `tokio::net::lookup_host`, owned-buffer stream I/O, constrained UDP, `socket2` option set, `sifr.http` path, internal Tower service shape, OTel deferral, mTLS inclusion, multipart deferral, internal-only upgrade hooks, and external CPython test handling.
 - [x] Pin the service handoff crate to `tower-service` only and add an M2 DoD gate for mTLS loopback success/rejection.
+- [x] Lock clean-language policy for networking: no backward-compatibility shim, migration path, bridge alias, fallback path, or CPython-shaped adapter track survives this phase.
+- [x] Add network-owned security/resource rows for TLS defaults, root stores, request smuggling, header normalization, HTTP/2 abuse, size limits, URL authority security, cookie-header scope, compression deferral, redaction, and external-network test policy.
 
 ## Implementation PRs
 
@@ -186,7 +192,7 @@ Evidence-family states:
 
 - `mined-as-substrate-fixture`
 - `adapted-for-sifr-api`
-- `compat-adapter-deferred`
+- `compat-adapter-deferred` (shared vocabulary only; intentionally unused by this phase)
 - `blocked-on-phase-X`
 - `rejected`
 - `external-signal`

@@ -32,20 +32,6 @@ pub(in crate::lower) fn missing_member(
     );
 }
 
-pub(in crate::lower) fn deferred_compat_member(
-    ctx: &mut LowerCtx,
-    container: &str,
-    member: &str,
-    reason: &str,
-    range: TextRange,
-) {
-    ctx.error_with_code_at(
-        DiagnosticCode::NAME_MISSING_MODULE_MEMBER,
-        format!("'{container}.{member}' is intentionally deferred: {reason}"),
-        range,
-    );
-}
-
 pub(in crate::lower) fn uninitialized_variable(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::NAME_UNINITIALIZED_VARIABLE,

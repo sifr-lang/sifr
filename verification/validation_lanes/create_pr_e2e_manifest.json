@@ -33,8 +33,6 @@
     "spawn_blocking_cpu_heavy_allowed",
     "spawn_blocking_known_stdlib_blocking_allowed",
     "blocking_task_cancel_join",
-    "thread_pool_executor_basic",
-    "threading_compat_basic",
     "async_with_basic",
     "async_with_nested_cleanup_order",
     "async_with_return_cleanup",

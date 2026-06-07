@@ -75,18 +75,6 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
         source: include_str!("../../../lib/sifr/sync.sifr"),
     },
     StdlibSource {
-        module: "sifr.threading",
-        source: include_str!("../../../lib/sifr/threading.sifr"),
-    },
-    StdlibSource {
-        module: "sifr.concurrent",
-        source: include_str!("../../../lib/sifr/concurrent.sifr"),
-    },
-    StdlibSource {
-        module: "sifr.asyncio",
-        source: include_str!("../../../lib/sifr/asyncio.sifr"),
-    },
-    StdlibSource {
         module: "sifr.string",
         source: include_str!("../../../lib/sifr/string.sifr"),
     },
@@ -189,10 +177,6 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
     StdlibSource {
         module: "sifr.sys",
         source: include_str!("../../../lib/sifr/sys.sifr"),
-    },
-    StdlibSource {
-        module: "sifr.subprocess",
-        source: include_str!("../../../lib/sifr/subprocess.sifr"),
     },
     StdlibSource {
         module: "sifr.gzip",
