@@ -222,7 +222,9 @@ Rejected or evidence-only CPython-shaped namespaces:
 
 These names are not compatibility adapters and are not fallback paths. Existing implementations are removed, kept internal-test-only, or routed to unsupported diagnostics by the phase inventory.
 
-Public Sifr APIs must not expose Tokio, Futures, Rayon, Crossbeam, Parking Lot, tracing, serde, thiserror, or other Rust implementation crate types.
+Public Sifr APIs must not expose Tokio, Futures, Rayon, Crossbeam, Rustix, tracing, metrics, serde, postcard, thiserror, or other Rust implementation crate types.
+
+The accepted Rust implementation crate set is locked in [ad-hoc-production-concurrency-runtime-platform-substrate.md](../issues/ad-hoc-production-concurrency-runtime-platform-substrate.md#rust-ecosystem-decisions). This model document does not reopen dependency choices; implementation uses that phase table and changes it only through an explicit issue/phase amendment before implementation work starts.
 
 ## Non-Goals
 
