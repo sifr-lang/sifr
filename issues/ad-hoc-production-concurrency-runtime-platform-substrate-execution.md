@@ -31,7 +31,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] `milestone_concurrency_runtime_0a`: Legacy CPython-Shaped Surface Removal Gate
 - [x] `milestone_concurrency_runtime_1`: Structured Async Runtime
 - [x] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
-- [ ] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
+- [x] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
 - [ ] `milestone_concurrency_runtime_4`: Process Runtime
 - [ ] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
 - [ ] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
@@ -253,7 +253,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M3 JoinSet implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-2.md` and `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`; PR #2320 is merged.
 - M3 scoped owner offload implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-scoped-offload-review-pass-1.md`; PR #2323 is merged.
 - M3 default parallel pool closure review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-default-pool-review-pass-1.md`; PR #2326 is merged.
-- M3 closeout implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-4.md`; reviewer confirmed no strict M3 closure blockers remain after the closeout PR and final ledger update merge.
+- M3 closeout implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-4.md`; PR #2325 is merged and no strict M3 closure blockers remain.
 
 ## M1 Implementation Ledger
 
@@ -411,7 +411,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3 `JoinSet` wave: https://github.com/sifr-lang/sifr/pull/2320
 - M3 scoped owner offload wave: https://github.com/sifr-lang/sifr/pull/2323
 - M3 default parallel pool closure: https://github.com/sifr-lang/sifr/pull/2326
-- M3: pending.
+- M3 closeout: https://github.com/sifr-lang/sifr/pull/2325
+- M3: complete.
 - M4: pending.
 - M5: pending.
 - M6: pending.
@@ -561,6 +562,7 @@ M3 closeout wave review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-2.md`: `PASS`; reviewer verified all pass-1 blockers and low-severity findings were remediated, re-ran workspace clippy, confirmed the refreshed create-pr report (`86 passed`, `0 failed`, platform golden `pass=5`, `skip=2`, no advisories), and confirmed no strict M3 closure blockers remain after this closeout PR merges and the ledger is updated.
 - `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-3.md`: `PASS`; post-rebase reviewer verified the PR #2323 scoped owner CPU offload surface is folded into the shared worker panic-hook guard, re-checked emission predicates and ordering, confirmed post-rebase validation (`89 passed`, `0 failed`, platform golden `pass=5`, `skip=2`), and confirmed no strict M3 closure blockers remain after this PR and the final ledger update merge.
 - `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-4.md`: `PASS`; final post-PR-#2326 reviewer verified the branch preserves the canonical lazy default pool fixture and default-pool implementation, removes the duplicate closeout fixture, routes all five CPU/Rayon surfaces through the shared worker panic-hook guard, and is ready to force-push and merge with no strict M3 closure blockers.
+- PR #2325 merged at `9edf51988475ce6711bb42e79b01e96c8e34e9b5`; M3 is closed.
 
 M0 targeted local validation:
 

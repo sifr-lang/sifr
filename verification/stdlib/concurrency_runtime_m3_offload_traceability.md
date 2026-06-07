@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_3`
 
-Status: M3 closeout wave active after the merged default parallel pool closure wave.
+Status: Complete; M3 closeout merged in PR #2325.
 
 ## Production Surface Traceability
 
