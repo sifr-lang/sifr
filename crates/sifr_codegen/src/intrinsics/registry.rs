@@ -597,6 +597,8 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "subprocess_run_with_input" => (subprocess::lower_subprocess_run_with_input(args), None),
         "subprocess_run_structured" => (subprocess::lower_subprocess_run_structured(args), None),
         "process_run" => (process::lower_process_run(args), None),
+        "process_spawn" => (process::lower_process_spawn(args), None),
+        "process_wait" => (process::lower_process_wait(args), None),
         "process_output" => (process::lower_process_output(args), None),
         "process_output_text" => (process::lower_process_output_text(args), None),
         "process_output_timeout" => (process::lower_process_output_timeout(args), None),

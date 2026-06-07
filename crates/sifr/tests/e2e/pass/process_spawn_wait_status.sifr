@@ -1,0 +1,35 @@
+from sifr.process import Child, Command, ProcessError, Status, spawn, wait
+
+
+def main():
+    actual: list[bool] = []
+    command: Command = Command("sh")
+    command.args(["-c", "exit 7"])
+
+    try:
+        child: Child = spawn(command)
+        status: Status = wait(child)
+        actual.append(status.code == 7)
+        actual.append(not status.success)
+        actual.append(status.kind == "nonzero")
+
+        try:
+            second: Status = wait(child)
+            actual.append(second.success)
+        except ProcessError as e:
+            actual.append("closed or unknown" in e.message)
+
+        ok_command: Command = Command("true")
+        method_child: Child = spawn(ok_command)
+        method_status: Status = method_child.wait()
+        actual.append(method_status.success)
+
+        try:
+            method_second: Status = method_child.wait()
+            actual.append(method_second.success)
+        except ProcessError as e:
+            actual.append("already been waited" in e.message)
+    except ProcessError as e:
+        actual.append(False)
+
+    assert actual == [True, True, True, True, True, True]

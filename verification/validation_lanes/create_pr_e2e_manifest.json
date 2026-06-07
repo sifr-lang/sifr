@@ -86,6 +86,7 @@
     "process_sync_bytes_env_cwd_stdin",
     "process_shell_exec_output",
     "process_timeout_status",
+    "process_spawn_wait_status",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",

@@ -414,6 +414,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3 closeout: https://github.com/sifr-lang/sifr/pull/2325
 - M3: complete.
 - M4 sync process foundation: https://github.com/sifr-lang/sifr/pull/2331
+- M4 sync child wait: https://github.com/sifr-lang/sifr/pull/2334
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -604,6 +605,26 @@ M4 sync process foundation review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-sync-process-review-pass-1.md`: `PASS`; reviewer verified ordinary argv APIs lower to `std::process::Command` without shell or legacy subprocess helpers, shell APIs are explicit and classified with `SIFR-ASYNC-0007`, env/cwd/stdin/output/text behavior is typed without data-dependent panics, imported workload metadata covers stdlib imports and local re-exports, traceability honestly preserves remaining M4 process lifecycle work, and the wave is ready to PR. Non-blocking follow-ups were recorded for stdin setter semantics, deletion of unused legacy `_sifr.sys.subprocess_*` intrinsic paths, future stdlib re-export workload metadata, and later signal/timeout/cancellation/text-mode completion.
 - PR #2331 merged at `b473c763ae3e92d614e7799af956bafcf4d60cb8`.
 
+M4 sync child wait targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_wait_status.sifr` -> PASS.
+- Existing sync process regressions: `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, and `process_spawn_wait_status` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/process_wait_direct_async_rejected.sifr` -> expected FAIL with `SIFR-ASYNC-0003`.
+- Existing process async-diagnostic regressions: `process_blocking_direct_async_rejected`, `process_shell_exec_direct_async_rejected`, and `process_wait_direct_async_rejected` -> expected FAIL with `SIFR-ASYNC-0003` / `SIFR-ASYNC-0007` / `SIFR-ASYNC-0003`.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_spawn_wait_status.sifr | rg "__SIFR_PROCESS_CHILDREN|__sifr_next_process_child_id|std::process::Child|process_spawn|process_wait|std::process::Command"` -> PASS; emitted spawn/wait path includes the private process-child table and `std::process::Command`.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_sync_output_text.sifr | rg "__SIFR_PROCESS_CHILDREN|__sifr_next_process_child_id|std::process::Child"` -> expected no matches; ordinary output path does not emit child-handle runtime state.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2172 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 418 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`93 passed`, `0 failed`, `cache_hits=24/25`).
+
+M4 sync child wait review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-child-wait-review-pass-1.md`: `PASS`; reviewer verified the wave is sync-only and does not overclaim pipes/async process support, process-child runtime state is gated to spawn/wait users, `process_wait` is one-shot and typed without data-dependent panics, top-level `wait(child)` triggers imported `@blocking_io` direct-async diagnostics, top-level/method wait asymmetry is safe for this wave, and traceability preserves remaining lifecycle work. Non-blocking follow-ups were recorded for unified wait-observation wording, explicit unwaited-child leak/drop cleanup documentation, possible tighter `Child`-only import preamble gating, and legacy `_sifr.sys.subprocess_*` cleanup.
+- PR #2334 merged at `314e7f9ff7b300f7a333655fa2ad3ed756b29442`.
+
 M4 timeout status evidence wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
@@ -616,6 +637,7 @@ M4 timeout status evidence wave targeted local validation:
 - `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
 - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_timeout_status.sifr | rg "try_wait|kill\\(\\)|try_from_secs_f64|checked_add|is_finite|__timed_out"` -> PASS; emitted timeout paths guard invalid timeout values, use checked duration conversion and checked host-clock deadline construction for out-of-range values, poll with `try_wait`, kill timed-out children, and return typed timeout evidence.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`93 passed`, `0 failed`, `cache_hits=22/25`, `report_signature=91dc84a36565dad4`).
+- Post-`origin/main` merge rerun: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`94 passed`, `0 failed`, `cache_hits=24/25`, `report_signature=e656d8db94f60742`).
 
 M4 timeout status evidence wave review loop:
 

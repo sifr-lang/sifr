@@ -25,6 +25,7 @@ struct StdlibIrFile {
 pub(crate) struct SharedPreludeNeeds {
     pub(crate) collections: SharedPreludeCollectionNeeds,
     pub(crate) file_handles: SharedPreludeFileHandleNeeds,
+    pub(crate) process_children: SharedPreludeProcessChildNeeds,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -38,6 +39,11 @@ pub(crate) struct SharedPreludeCollectionNeeds {
 pub(crate) struct SharedPreludeFileHandleNeeds {
     pub(crate) needs_file_handles: bool,
     pub(crate) provides_file_handle_struct: bool,
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub(crate) struct SharedPreludeProcessChildNeeds {
+    pub(crate) needs_process_children: bool,
 }
 
 pub(crate) struct PreparedStdlibModule {
@@ -261,6 +267,12 @@ pub(super) fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
             {
                 shared_needs.file_handles.needs_file_handles = true;
             }
+            Item::Static(item_static)
+                if item_static.ident == "__SIFR_PROCESS_CHILDREN"
+                    || item_static.ident == "__SIFR_NEXT_PROCESS_CHILD_ID" =>
+            {
+                shared_needs.process_children.needs_process_children = true;
+            }
             _ => {}
         }
     }
@@ -285,6 +297,11 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
                 || code.contains("__sifr_next_file_handle_id"),
             provides_file_handle_struct: code.contains("struct FileHandle"),
         },
+        process_children: SharedPreludeProcessChildNeeds {
+            needs_process_children: code.contains("__SIFR_PROCESS_CHILDREN")
+                || code.contains("__SIFR_NEXT_PROCESS_CHILD_ID")
+                || code.contains("__sifr_next_process_child_id"),
+        },
     }
 }
 
@@ -306,6 +323,11 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 | "__sifr_next_file_handle_id" => {
                     self.shared_needs.file_handles.needs_file_handles = true;
                 }
+                "__SIFR_PROCESS_CHILDREN"
+                | "__SIFR_NEXT_PROCESS_CHILD_ID"
+                | "__sifr_next_process_child_id" => {
+                    self.shared_needs.process_children.needs_process_children = true;
+                }
                 _ => {}
             }
         }
@@ -320,9 +342,14 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
         Item::Static(item_static) => {
             item_static.ident == "__SIFR_FILE_HANDLES"
                 || item_static.ident == "__SIFR_NEXT_FILE_HANDLE_ID"
+                || item_static.ident == "__SIFR_PROCESS_CHILDREN"
+                || item_static.ident == "__SIFR_NEXT_PROCESS_CHILD_ID"
                 || item_static.ident == "__SIFR_GLOBAL_LOG_LEVEL"
         }
-        Item::Fn(item_fn) => item_fn.sig.ident == "__sifr_next_file_handle_id",
+        Item::Fn(item_fn) => {
+            item_fn.sig.ident == "__sifr_next_file_handle_id"
+                || item_fn.sig.ident == "__sifr_next_process_child_id"
+        }
         _ => false,
     }
 }

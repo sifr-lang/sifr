@@ -2,18 +2,19 @@
 
 Milestone: `milestone_concurrency_runtime_4`
 
-Status: In progress; sync process foundation wave reviewed and merged in PR #2331.
+Status: In progress; sync process foundation merged in PR #2331 and sync child wait merged in PR #2334.
 
 ## Production Surface Traceability
 
 | Surface | M4 evidence | Notes |
 | --- | --- | --- |
 | `sifr.process.Command` | `process_sync_output_text`; `process_sync_bytes_env_cwd_stdin` | Native argv command builder with ordered arguments, explicit env entries, cwd selection, and owned stdin byte payload capture. This is the production `sifr.process` path and does not use `sifr.subprocess` or legacy shell-shaped helpers. |
-| `sifr.process.Status` | `process_sync_output_text`; `process_shell_exec_output`; `process_timeout_status` | Sync status evidence distinguishes normal success from nonzero exit through `success`, `code`, and `kind`. Timeout status evidence sets `kind == "timeout"` and `timed_out == True`; signal and cancellation fields remain open for later lifecycle waves. |
+| `sifr.process.Status` | `process_sync_output_text`; `process_shell_exec_output`; `process_spawn_wait_status`; `process_timeout_status` | Sync status evidence distinguishes normal success from nonzero exit through `success`, `code`, and `kind`. Child wait reuses the same status evidence for one-shot sync observation. Timeout status evidence sets `kind == "timeout"` and `timed_out == True`; signal and cancellation fields remain open for later lifecycle waves. |
 | `sifr.process.Output` / `TextOutput` | `process_sync_output_text`; `process_sync_bytes_env_cwd_stdin`; `process_shell_exec_output` | Byte output captures stdout/stderr as `bytes`; text output requires an explicit encoding argument and currently accepts UTF-8/UTF8 through the text/i18n substrate boundary. Non-UTF-8 text-process policy remains open for the full M4 text-mode closeout. |
 | `sifr.process.Stdio` constants | Public `PIPE`, `INHERIT`, `NULL` definitions | Constants reserve the production namespace for the later owned pipe/spawn wave. Pipe ownership APIs are not claimed complete by this foundation wave. |
 | Sync `run`, `output`, `output_text` | `process_sync_output_text`; `process_sync_bytes_env_cwd_stdin`; `process_blocking_direct_async_rejected` | Sync process APIs are `@blocking_io`, return typed `Result[..., ProcessError]`, and direct async calls are rejected through imported stdlib workload metadata. |
 | Sync `run_timeout`, `output_timeout` | `process_timeout_status` | Timeout APIs kill and reap timed-out children, return typed `Status` evidence instead of panicking, and reject invalid negative, non-finite, or out-of-range timeout values through `ProcessError`. |
+| Sync `spawn`, `wait`, `Child.wait` | `process_spawn_wait_status`; `process_wait_direct_async_rejected` | Sync child lifecycle stores `std::process::Child` behind a private generated handle table. `wait(child)` and `Child.wait()` are one-shot observation paths; top-level `wait(child)` is `@blocking_io` and direct async calls are rejected. Owned pipe access, async wait, termination, timeout, and scoped supervision remain later M4 work. |
 | Sync `run_shell`, `output_shell`, `output_shell_text` | `process_shell_exec_output`; `process_shell_exec_direct_async_rejected` | Shell execution is explicit and classified as `@shell_exec` in addition to source-level `@blocking_io`; direct async calls use `SIFR-ASYNC-0007`. |
 | Sync `output_shell_timeout` | `process_timeout_status`; `process_shell_timeout_direct_async_rejected` | Shell timeout execution preserves the explicit shell-exec effect and timeout status evidence. |
 | Imported workload metadata | `process_blocking_direct_async_rejected`; `process_shell_exec_direct_async_rejected` | Lowering exports workload labels from stdlib/project modules and reimports them for user modules, so stdlib process APIs participate in the existing direct-async/offload diagnostic model. |
@@ -30,19 +31,20 @@ Status: In progress; sync process foundation wave reviewed and merged in PR #233
 
 | Lane | Representative entries |
 | --- | --- |
-| Create PR | `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_timeout_status` |
-| Merge | `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_timeout_status` |
-| Fail suite | `process_blocking_direct_async_rejected`, `process_shell_exec_direct_async_rejected`, `process_shell_timeout_direct_async_rejected`, existing `legacy_sifr_subprocess_removed`, existing `async_popen_unsupported`, existing `bare_cpython_subprocess_import` |
+| Create PR | `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_spawn_wait_status`, `process_timeout_status` |
+| Merge | `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_spawn_wait_status`, `process_timeout_status` |
+| Fail suite | `process_blocking_direct_async_rejected`, `process_shell_exec_direct_async_rejected`, `process_wait_direct_async_rejected`, `process_shell_timeout_direct_async_rejected`, existing `legacy_sifr_subprocess_removed`, existing `async_popen_unsupported`, existing `bare_cpython_subprocess_import` |
 
 ## Follow-up Boundaries
 
 Intentional remaining M4 work after this foundation wave:
 
-- Production `spawn`, `Child`, `wait`, `PipeReader`, `PipeWriter`, owned stdout/stderr/stdin pipe lifecycle, double-close/use-after-close diagnostics, and handle sendability/shareability checks.
+- `PipeReader`, `PipeWriter`, owned stdout/stderr/stdin pipe lifecycle, double-close/use-after-close diagnostics, and handle sendability/shareability checks beyond the one-shot sync `Child.wait()` state.
 - Native async spawn/wait/communicate and cancellation-safe process observation.
 - `terminate`, explicit `kill`, signal termination evidence, parent cancellation evidence, and supported-host matrix updates for process termination behavior.
 - Scoped process supervision entry point accepted by M0: `TaskGroup.spawn_process` returns a distinct `ProcessHandle` preserving pipe access.
 - Full subprocess text mode closeout beyond UTF-8-only text output, consuming the text/i18n M1 evidence explicitly.
+- Dropping an unwaited sync `Child` keeps the private `std::process::Child` table entry for the process lifetime and may leave host child reaping to a later lifecycle wave; termination, timeout, cancellation, and drop cleanup semantics remain M4 follow-up work.
 - Decide whether repeated `Command.stdin_bytes(...)` calls append or replace payload data when the spawn/pipe wave finalizes stdin ownership semantics.
 - Delete the unused legacy `_sifr.sys.subprocess_*` intrinsic registry paths once no test or diagnostic still needs them as M4 cleanup.
 - If a future stdlib module re-exports a workload-annotated callable, mirror project-module re-export workload metadata in stdlib bootstrap export collection before relying on that shape.

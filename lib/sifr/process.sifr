@@ -1,6 +1,8 @@
 # sifr.process — Native process execution and status surfaces
 from _sifr.process import (
     process_run,
+    process_spawn,
+    process_wait,
     process_output,
     process_output_text,
     process_output_timeout,
@@ -56,6 +58,26 @@ class Output:
         self.stdout = stdout
         self.stderr = stderr
         self.status = status
+
+
+class Child:
+    _handle: int
+    _waited: bool
+
+    def __init__(self, handle: int):
+        self._handle = handle
+        self._waited = False
+
+    @blocking_io
+    def wait(self) -> Result[Status, ProcessError]:
+        if self._waited:
+            raise ProcessError("process child has already been waited")
+        self._waited = True
+        try:
+            code: int = process_wait(self._handle)
+            return _status(code)
+        except ProcessError as e:
+            raise e
 
 
 class TextOutput:
@@ -121,6 +143,30 @@ def _status_from(code: int, timed_out: bool) -> Status:
         status.timed_out = True
         return status
     return _status(code)
+
+
+@blocking_io
+def spawn(command: Command) -> Result[Child, ProcessError]:
+    try:
+        handle: int = process_spawn(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+        )
+        return Child(handle)
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+def wait(child: Child) -> Result[Status, ProcessError]:
+    try:
+        code: int = process_wait(child._handle)
+        return _status(code)
+    except ProcessError as e:
+        raise e
 
 
 @blocking_io
