@@ -512,6 +512,22 @@ M3 scoped owner offload wave review loop:
 - PR #2323 merged at `2768218fa27118d0c6b7f6d019002a7309eeb0d7`.
 - `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`: `PASS`; independent retry review confirmed the same blocker closure and PR readiness.
 
+M3 default parallel pool closure targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_default_pool_reused.sifr` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/parallel_default_pool_reused.sifr | rg -n "OnceLock|__SIFR_DEFAULT_PARALLEL_POOL|__sifr_default_parallel_pool|__sifr_build_parallel_pool\\(__sifr_default_parallel_worker_count"` -> PASS; emitted Rust uses the process-local `OnceLock` default pool path and no top-level fresh default-pool build call remains.
+- `cargo check -p sifr_codegen` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2156 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_map_basic.sifr`, `parallel_try_map_basic.sifr`, and `parallel_pool_map_basic.sifr` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; platform golden reported pass=5, skip=2; create-pr e2e pass suite reported 89 passed, 0 failed, cache_hits=19/23; advisory: warm wall-time budget exceeded.
+
+M3 default parallel pool closure review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m3-default-pool-review-pass-1.md`: `PASS`; reviewer verified top-level `parallel.map`/`try_map` now use one private process-local `OnceLock` Rayon pool, typed default-pool construction failures remain `WorkerRuntimeError`/`WorkerError`, configured `Pool(config)` semantics remain unchanged, manifests and traceability are honest, and no Rayon global pool mutation is introduced. Non-blocking traceability wording for cached construction failure was applied before PR validation.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

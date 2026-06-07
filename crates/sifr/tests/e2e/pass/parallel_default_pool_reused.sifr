@@ -1,0 +1,25 @@
+from sifr.parallel import WorkerError, WorkerRuntimeError, map, try_map
+
+
+class OddValue(Error):
+    message: str
+
+
+def double(value: int) -> int:
+    return value * 2
+
+
+def require_even(value: int) -> Result[int, OddValue]:
+    if value == 3:
+        raise OddValue("odd value")
+    return value
+
+
+def main() -> None:
+    first_values: list[int] = [1, 2]
+    second_values: list[int] = [2, 3]
+    doubled: Result[list[int], WorkerRuntimeError] = map(first_values, double)
+    checked: Result[list[int], WorkerError] = try_map(second_values, require_even)
+    assert str(doubled) == "Ok([2, 4])"
+    assert str(checked).find("odd value") is not None
+    return None
