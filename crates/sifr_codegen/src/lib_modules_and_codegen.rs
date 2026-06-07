@@ -4,11 +4,13 @@ use super::{
     build_error_into_error_impl, build_error_type_items, build_failure_type_items,
     build_file_handle_infra_items, build_file_handle_struct_items, build_io_error_items,
     build_join_set_cpu_items, build_join_set_items, build_logging_items,
-    build_random_module_state_items, build_task_scope_items, build_timeout_result_type_items,
+    build_random_module_state_items, build_task_scope_cpu_offload_items, build_task_scope_items,
+    build_task_scope_offload_items, build_timeout_result_type_items,
     module_uses_async_exit_cause_type, module_uses_async_generator_type,
     module_uses_cancellation_error_type, module_uses_failure_type, module_uses_join_set,
     module_uses_join_set_spawn_cpu, module_uses_spawn_cpu, module_uses_task_scope,
-    module_uses_task_sleep, module_uses_timeout_result_type, replace_parallel_runtime_items,
+    module_uses_task_scope_offload, module_uses_task_scope_spawn_cpu, module_uses_task_sleep,
+    module_uses_timeout_result_type, replace_parallel_runtime_items,
     replace_sync_channel_runtime_items, sifr_type_to_rust_type, sync_channel_runtime_needed,
     Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
 };
@@ -408,6 +410,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let uses_task_scope = module_uses_task_scope(module);
     let uses_join_set = module_uses_join_set(module);
     let uses_join_set_spawn_cpu = module_uses_join_set_spawn_cpu(module);
+    let uses_task_scope_offload = module_uses_task_scope_offload(module);
+    let uses_task_scope_spawn_cpu = module_uses_task_scope_spawn_cpu(module);
     let uses_spawn_cpu = module_uses_spawn_cpu(module);
     let uses_failure_type = module_uses_failure_type(module);
     let uses_cancellation_error_type = module_uses_cancellation_error_type(module);
@@ -427,7 +431,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if uses_async_generator_type {
         referenced_error_classes.insert("GeneratorCloseError".to_string());
     }
-    if uses_spawn_cpu || uses_join_set_spawn_cpu {
+    if uses_spawn_cpu || uses_join_set_spawn_cpu || uses_task_scope_spawn_cpu {
         referenced_error_classes.insert("WorkerRuntimeError".to_string());
         referenced_error_classes.insert("WorkerError".to_string());
     }
@@ -567,6 +571,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     if uses_task_scope || uses_join_set {
         preamble_items.extend(build_task_scope_items());
+    }
+    if uses_task_scope_offload {
+        preamble_items.extend(build_task_scope_offload_items());
+    }
+    if uses_task_scope_spawn_cpu {
+        preamble_items.extend(build_task_scope_cpu_offload_items());
     }
     if uses_join_set {
         preamble_items.extend(build_join_set_items());
@@ -747,7 +757,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             if stdlib_preamble.contains("rayon::") {
                 features.insert(StdlibFeature::Rayon);
             }
-            if uses_spawn_cpu || module_uses_join_set_spawn_cpu(module) {
+            if uses_spawn_cpu
+                || module_uses_join_set_spawn_cpu(module)
+                || module_uses_task_scope_spawn_cpu(module)
+            {
                 features.insert(StdlibFeature::Rayon);
             }
             features

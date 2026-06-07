@@ -597,6 +597,7 @@ Scope:
 - A live/non-empty `JoinSet` must be consumed by `join_all().await` or `cancel_all().await` before scope exit. Dropping it without explicit observation is a compile-time diagnostic.
 - `JoinItemId` is only an opaque user-side correlation token; no `JoinSet` API accepts it as input.
 - `Pool` has no mutable global shutdown or reconfiguration API. Top-level calls use the private default pool. Configured `Pool` instances are scoped values; active `map`/`try_map` calls borrow the pool, and dropping an idle `Pool` releases its private Rayon pool.
+- Scoped owner offload methods (`scope.spawn_blocking`, `group.spawn_blocking`, `scope.spawn_cpu`, and `group.spawn_cpu`) return scoped `Task[T, E]` handles rather than module-level `BlockingTask[T, E]` handles. The scope/group registers the offloaded worker as owned child work while the caller observes the result through the existing affine task handle.
 - Separate async tasks, blocking I/O offload, CPU-heavy parallel work, and long-running supervised processes.
 - Blocking and CPU offload are structured work. Module-level offload helpers must either require an active scope or return linear handles whose observation cannot be silently dropped.
 - Enforce blocking-in-async diagnostics.

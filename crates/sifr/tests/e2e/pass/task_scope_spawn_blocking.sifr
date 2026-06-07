@@ -1,0 +1,11 @@
+@blocking_io
+def read_blocking() -> int:
+    return 41
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn_blocking(read_blocking)
+        result = await handle
+        assert str(result) == "Ok(41)"
+    return None

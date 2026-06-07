@@ -116,6 +116,7 @@ mod task_handle_calls;
 mod task_join_set_calls;
 mod task_owner_scope_state;
 mod task_scope_calls;
+mod task_scope_offload_calls;
 mod tuple_unpack;
 #[cfg(test)]
 mod type_alias_tests;

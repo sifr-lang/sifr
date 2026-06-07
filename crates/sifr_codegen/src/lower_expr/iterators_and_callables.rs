@@ -366,8 +366,15 @@ pub(super) fn try_lower_simple_method_call_expr(
     method: &str,
     args: &[HirExpr],
 ) -> Option<RustExpr> {
-    if (method == "__sifr_spawn_infallible" || method == "__sifr_spawn_result")
-        && matches!(resolve_alias_type(object.ty()), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
+    if (matches!(
+        method,
+        "__sifr_spawn_infallible"
+            | "__sifr_spawn_result"
+            | "__sifr_scope_spawn_blocking_infallible"
+            | "__sifr_scope_spawn_blocking_result"
+            | "__sifr_scope_spawn_cpu_infallible"
+            | "__sifr_scope_spawn_cpu_result"
+    )) && matches!(resolve_alias_type(object.ty()), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
     {
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
         let lowered_args = args

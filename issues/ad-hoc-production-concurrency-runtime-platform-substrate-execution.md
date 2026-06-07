@@ -488,6 +488,21 @@ M3 `JoinSet` wave review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-1.md`: `CHANGES_REQUESTED`; reviewer flagged union sort key uniqueness, live JoinSet rebinding, added-task cancellation, generic type-var collection/inference, deterministic diagnostics, bound terminal awaitables, cancel evidence strength, finished-cancelled outcome mapping, and non-CPU Rayon feature leakage. The current wave remediated those blockers with JoinSet generic arms, deterministic live-set diagnostics, rebinding rejection, pending-terminal awaitable tracking, underlying abort-handle preservation, stronger cancel fixtures, `Cancelled` outcome mapping, and a split CPU-only JoinSet preamble.
 - `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-2.md`: `PASS`; reviewer verified all ten pass-1 blockers were remediated, re-ran `cargo test -p sifr -- --skip test_e2e_pass`, the six JoinSet pass fixtures, and non-CPU JoinSet emit gating. Non-blocking follow-ups remain for Sifr-owned diagnostics after binding a terminal awaitable, future sort-key uniqueness polish, and optional retirement/strengthening of the older length-only cancel evidence fixture now superseded by `join_set_cancel_all_task_cancelled.sifr`.
+
+M3 scoped owner offload wave targeted local validation:
+
+- `cargo check -p sifr_lowering -p sifr_codegen` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/task_scope_spawn_blocking.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/task_group_spawn_cpu.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/task_group_spawn_cpu_user_error.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/task_scope_spawn_cpu_unannotated_rejected.sifr` -> expected fail with `SIFR-ASYNC-0005`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/task_group_spawn_blocking_error_mismatch_rejected.sifr` -> expected fail with `SIFR-TYPE-0002`.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/task_scope_spawn_blocking.sifr | rg -n "rayon|__sifr_scope_spawn_cpu|__sifr_with_silent_scope_cpu_panic_hook"` -> no matches; scoped blocking-only usage emits no Rayon references.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/task_group_spawn_cpu.sifr | rg -n "rayon|__sifr_scope_spawn_cpu|__sifr_with_silent_scope_cpu_panic_hook"` -> PASS; scoped CPU usage emits the expected CPU bridge and Rayon references.
+
+M3 scoped owner offload wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m3-scoped-offload-review-pass-1.md`: `PASS`; reviewer independently re-ran the three pass fixtures, the two fail fixtures, generated Cargo/Rust dependency gating checks for scoped blocking and scoped CPU usage, and verified scoped `Task[T, E]` observation semantics, TaskGroup open/error-homogeneity reuse, typed CPU worker failure mapping, manifests, traceability, and docs. Non-blocking follow-ups remain for receiver-specific diagnostic wording, optional runtime-emission split polish, validator return-shape cleanup, symmetric fixture expansion, and user-facing cancellation wording for already-started blocking work.
 - `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`: `PASS`; independent retry review confirmed the same blocker closure and PR readiness.
 
 M0 targeted local validation:

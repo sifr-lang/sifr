@@ -56,6 +56,8 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     let uses_task_scope = super::module_uses_task_scope(module);
     let uses_join_set = super::module_uses_join_set(module);
     let uses_join_set_spawn_cpu = super::module_uses_join_set_spawn_cpu(module);
+    let uses_task_scope_offload = super::module_uses_task_scope_offload(module);
+    let uses_task_scope_spawn_cpu = super::module_uses_task_scope_spawn_cpu(module);
     if uses_task_scope || uses_join_set || super::module_uses_failure_type(module) {
         emitted_items.extend(super::build_failure_type_items());
     }
@@ -67,6 +69,12 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     }
     if uses_task_scope || uses_join_set {
         emitted_items.extend(super::build_task_scope_items());
+    }
+    if uses_task_scope_offload {
+        emitted_items.extend(super::build_task_scope_offload_items());
+    }
+    if uses_task_scope_spawn_cpu {
+        emitted_items.extend(super::build_task_scope_cpu_offload_items());
     }
     if uses_join_set {
         emitted_items.extend(super::build_join_set_items());

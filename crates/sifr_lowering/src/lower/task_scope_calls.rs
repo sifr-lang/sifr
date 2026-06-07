@@ -13,7 +13,7 @@ pub(in crate::lower) fn is_task_scope_type(ty: &Type) -> bool {
     matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
 }
 
-fn is_task_group_type(ty: &Type) -> bool {
+pub(in crate::lower) fn is_task_group_type(ty: &Type) -> bool {
     matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskGroup")
 }
 
@@ -429,7 +429,15 @@ pub(in crate::lower) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String>
     let HirExpr::MethodCall { object, method, .. } = expr else {
         return None;
     };
-    if method != "__sifr_spawn_infallible" && method != "__sifr_spawn_result" {
+    if !matches!(
+        method.as_str(),
+        "__sifr_spawn_infallible"
+            | "__sifr_spawn_result"
+            | "__sifr_scope_spawn_blocking_infallible"
+            | "__sifr_scope_spawn_blocking_result"
+            | "__sifr_scope_spawn_cpu_infallible"
+            | "__sifr_scope_spawn_cpu_result"
+    ) {
         return None;
     }
     let HirExpr::Name { name, ty } = object.as_ref() else {
@@ -444,7 +452,11 @@ pub(in crate::lower) fn mark_task_handle_observed(name: &str, ctx: &mut LowerCtx
     }
 }
 
-fn enforce_task_group_is_open(object: &HirExpr, call: &ExprCall, ctx: &mut LowerCtx) -> Option<()> {
+pub(in crate::lower) fn enforce_task_group_is_open(
+    object: &HirExpr,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<()> {
     let HirExpr::Name { name, .. } = object else {
         return Some(());
     };
@@ -461,7 +473,7 @@ fn enforce_task_group_is_open(object: &HirExpr, call: &ExprCall, ctx: &mut Lower
     None
 }
 
-fn enforce_task_group_error_type(
+pub(in crate::lower) fn enforce_task_group_error_type(
     object: &HirExpr,
     task_err_ty: &Type,
     call: &ExprCall,

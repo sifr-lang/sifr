@@ -1,0 +1,15 @@
+class LocalFailure(Error):
+    message: str
+
+
+@cpu_heavy
+def reject_value() -> Result[int, LocalFailure]:
+    raise LocalFailure("scoped cpu rejected value")
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.TaskGroup() as group:
+        handle = group.spawn_cpu(reject_value)
+        result = await handle
+        assert str(result).find("scoped cpu rejected value") is not None
+    return None

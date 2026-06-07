@@ -1,0 +1,16 @@
+# expect-error: SIFR-TYPE-0002
+@blocking_io
+def read_value() -> Result[int, ValueError]:
+    raise ValueError("value")
+
+
+@blocking_io
+def read_io() -> Result[int, IOError]:
+    raise IOError("io")
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.TaskGroup() as group:
+        first = group.spawn_blocking(read_value)
+        second = group.spawn_blocking(read_io)
+    return None
