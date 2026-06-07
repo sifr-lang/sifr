@@ -12,7 +12,7 @@ Status: M3 active; implementation milestones update validation evidence as APIs 
 | sifr.sync.Mutex/RwLock sync lock | M2 | @blocking_io-equivalent sync wait | lock direct async diagnostic fixture |
 | sifr.sync.AsyncMutex/AsyncRwLock/Semaphore/Event | M2 | async-suspension | async sync primitive fixtures |
 | sifr.runtime.spawn_blocking | M3 | @blocking_io offload boundary | spawn_blocking typed WorkerError fixture |
-| sifr.runtime.spawn_cpu | M3 | @cpu_heavy offload boundary | spawn_cpu typed WorkerError fixture |
+| sifr.task.spawn_cpu | M3 | @cpu_heavy offload boundary with typed runtime/worker evidence | `spawn_cpu_basic`, `spawn_cpu_user_error_typed`, `spawn_cpu_worker_panic_typed`, `spawn_cpu_unannotated_rejected`, `spawn_cpu_blocking_io_rejected`, `spawn_cpu_non_send_rejected` |
 | sifr.parallel.map/try_map | M3 | @cpu_heavy synchronous, typed worker-runtime boundary | `parallel_map_basic`, `parallel_try_map_basic`, `parallel_map_worker_panic_typed`, `parallel_try_map_user_error_typed`, async direct-call diagnostic fixture |
 | sifr.process.run/output/wait sync | M4 | @blocking_io plus optional @shell_exec | process blocking-in-async and shell-effect fixtures |
 | sifr.process async spawn/wait/communicate | M4 | async-suspension plus optional @shell_exec | async process loopback fixture |

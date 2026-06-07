@@ -20,46 +20,6 @@ pub(crate) fn replace_parallel_runtime_items(rust_code: &str) -> String {
 
 pub(crate) fn parallel_runtime_rust_code() -> &'static str {
     r#"
-#[derive(Debug, Clone)]
-struct WorkerRuntimeError {
-    message: String,
-}
-
-impl WorkerRuntimeError {
-    fn new(message: String) -> Self {
-        return Self { message };
-    }
-}
-
-impl std::fmt::Display for WorkerRuntimeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for WorkerRuntimeError {
-}
-
-#[derive(Debug, Clone)]
-struct WorkerError {
-    message: String,
-}
-
-impl WorkerError {
-    fn new(message: String) -> Self {
-        return Self { message };
-    }
-}
-
-impl std::fmt::Display for WorkerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for WorkerError {
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct PoolConfig {
     workers: i64,

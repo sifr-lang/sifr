@@ -1,0 +1,11 @@
+@cpu_heavy
+def panic_value() -> int:
+    assert False
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_cpu(panic_value)
+    result = await handle
+    assert str(result).find("cpu worker panicked") is not None
+    return None

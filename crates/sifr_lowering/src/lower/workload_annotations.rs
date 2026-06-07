@@ -20,7 +20,7 @@ impl WorkloadKind {
     pub(in crate::lower) fn suggestion(self) -> &'static str {
         match self {
             Self::BlockingIo => "use an async API or task.spawn_blocking",
-            Self::CpuHeavy => "use task.spawn_blocking or ThreadPoolExecutor",
+            Self::CpuHeavy => "use task.spawn_cpu",
         }
     }
 
@@ -127,6 +127,55 @@ pub(in crate::lower) fn reject_unclassified_offload_target(
         target.range(),
     );
     true
+}
+
+pub(in crate::lower) fn reject_offload_target_without_kind(
+    ctx: &mut LowerCtx,
+    target: &Expr,
+    api_name: &str,
+    expected: WorkloadKind,
+) -> bool {
+    let Some(function) = target_name(target) else {
+        ctx.error_with_code_at(
+            DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
+            format!(
+                "{api_name} target must be a named sync function classified as @{}",
+                expected.label()
+            ),
+            target.range(),
+        );
+        return true;
+    };
+    let actual = ctx
+        .function_workload_annotations
+        .get(function)
+        .copied()
+        .or_else(|| known_stdlib_offload_target(function));
+    let Some(actual) = actual else {
+        ctx.error_with_code_at(
+            DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
+            format!(
+                "{api_name} target '{function}' is not classified as @{}; annotate it if it is genuinely {} work",
+                expected.label(),
+                expected.label()
+            ),
+            target.range(),
+        );
+        return true;
+    };
+    if actual != expected {
+        ctx.error_with_code_at(
+            DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
+            format!(
+                "{api_name} target '{function}' is classified as @{}, expected @{}",
+                actual.label(),
+                expected.label()
+            ),
+            target.range(),
+        );
+        return true;
+    }
+    false
 }
 
 fn target_name(target: &Expr) -> Option<&str> {

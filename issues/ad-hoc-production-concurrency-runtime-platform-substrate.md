@@ -577,7 +577,8 @@ Scope:
 
 - Add or close the production `sifr.runtime` and `sifr.parallel` offload surface:
   - `spawn_blocking`
-  - `spawn_cpu`
+  - `task.spawn_cpu(fn: Callable[[], T]) -> BlockingTask[T, WorkerRuntimeError]`
+  - `task.spawn_cpu(fn: Callable[[], Result[T, E]]) -> BlockingTask[T, WorkerError]`
   - scoped offload methods on the accepted scope/group API where M0 places them
   - `JoinSet[T, E]` dynamically-growable collection for homogeneous completed work items
   - `JoinSet.spawn_blocking(fn: Callable[[], Result[T, E]]) -> JoinItemId`
@@ -603,7 +604,7 @@ Scope:
 - `parallel.map`, `parallel.try_map`, `Pool.map`, and `Pool.try_map` are synchronous CPU-heavy blocking calls; in async contexts they must be wrapped in `spawn_cpu`, and direct calls trigger the CPU-heavy diagnostic.
 - Require sendable owned items and sendable closure captures for `parallel.map`/`try_map`; non-send items or captures are compile-time diagnostics.
 - Use a lazily initialized private default `rayon::ThreadPool` built via `rayon::ThreadPoolBuilder` and `available_parallelism()`. Configured parallelism uses explicit `Pool(config)` objects backed by private Rayon pools. Do not configure Rayon's global pool.
-- Map task, worker, foreign/runtime boundary, and panic-like runtime failures into typed evidence. In M3's first implementation wave, `WorkerError` is the public non-generic worker wrapper used by `parallel.try_map` and `Pool.try_map`; `JoinSet`/scoped offload keep the stricter `WorkerError[E]` target if the type system can carry the user error parameter without erasing it.
+- Map task, worker, foreign/runtime boundary, and panic-like runtime failures into typed evidence. In M3's first implementation waves, `WorkerError` is the public non-generic worker wrapper used by `parallel.try_map`, `Pool.try_map`, and fallible `task.spawn_cpu`; infallible `task.spawn_cpu` uses `WorkerRuntimeError`. `JoinSet`/scoped owner offload keep the stricter `WorkerError[E]` target if the type system can carry the user error parameter without erasing it.
 - Use CPython `concurrent.futures` as evidence for future/cancellation/deadline edge cases, not as the production API.
 - Mark `sifr.concurrent.futures`, `Future.result(timeout=...)`, `Executor.map`, `as_completed`, and `ThreadPoolExecutor` as `rejected` or `unsupported-with-diagnostic` unless a future Sifr-native API proves production value over `sifr.runtime`, `sifr.parallel`, and `JoinSet`.
 
@@ -908,6 +909,7 @@ M0 records evidence for these decisions; it does not reopen them without a new i
 | `JoinSet` submission API | `JoinSet[T, E]` accepts homogeneous work through `spawn_blocking(fn) -> JoinItemId`, `spawn_cpu(fn) -> JoinItemId`, and `add(handle: TaskHandle[T, E]) -> JoinItemId`. `add` consumes the handle so results have one observer. `join_all().await -> list[Result[T, WorkerError[E]]]` and `cancel_all().await -> list[CancelOutcome]` consume the set. |
 | `JoinSet` result ordering and `JoinItemId` role | `join_all().await` returns results in submission order. `cancel_all().await` returns cancellation evidence in submission order. `JoinItemId` is an opaque user-side correlation token with no further `JoinSet` API; callers use it to index their own submission records, not to query the set. |
 | `Pool` instance API | Configured `Pool` objects expose `pool.map(items, fn) -> Result[list[U], WorkerRuntimeError]` and `pool.try_map(items, fn) -> Result[list[U], WorkerError]` with the same result ordering and sendability rules as top-level `parallel.map`/`try_map`. `Pool` has no global shutdown call; active calls borrow the pool, and dropping an idle pool releases the private Rayon pool. |
+| `task.spawn_cpu` handle API | Module-level `task.spawn_cpu` is valid only inside async functions, requires a named zero-argument sync worker classified as `@cpu_heavy`, returns an affine `BlockingTask` handle, and uses private Rayon pools. Infallible workers produce `BlockingTask[T, WorkerRuntimeError]`; fallible workers produce `BlockingTask[T, WorkerError]` with user errors formatted as typed worker evidence until `WorkerError[E]` lands. |
 | Task context API shape | M1 reserves `ctx: Option[sifr.task.Context] = None` parameters on `spawn_scoped` and `TaskGroup` constructors. M1 type-checks and stores the parameter; M5 implements explicit propagation semantics without changing M1 API shape. |
 | Existing `sifr.asyncio` veneer | Existing `sifr.asyncio` veneer code is legacy implementation debt, not a compatibility commitment. M1 does not build on it or extend it; M0 records removal, internal-test-only, or unsupported-diagnostic disposition for existing veneer entry points. New task/process/queue APIs are implemented through `sifr.task`, `sifr.sync`, and `sifr.process`; bare `asyncio` imports still receive namespace-contract diagnostics. |
 | `race` and `select` loser evidence | `race` returns a container with winner index, typed outcome, and loser cancellation evidence. `select` returns a container with winner branch tag, typed outcome, and loser cancellation evidence. Loser evidence is `list[CancelOutcome]` unless M0 records a stricter equivalent container. Concrete Sifr return-type signatures are recorded in the M0 public API boundary artifact before M1 starts. |

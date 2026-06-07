@@ -3,6 +3,7 @@ use super::expressions::lower_expr;
 use super::task_scope_calls::lower_task_scope_spawn_from_object_allowing_reserved_ctx;
 use super::task_scope_calls::mark_task_handle_observed;
 use super::task_scope_calls::non_send_reason;
+use super::workload_annotations::WorkloadKind;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
@@ -35,6 +36,7 @@ pub(in crate::lower) fn lower_task_module_call(
         "select" => lower_task_select_call(call, ctx),
         "spawn_scoped" => lower_task_spawn_scoped_call(call, ctx),
         "spawn_blocking" => lower_task_spawn_blocking_call(call, ctx),
+        "spawn_cpu" => lower_task_spawn_cpu_call(call, ctx),
         "spawn" => {
             expression_diagnostics::type_mismatch(
                 ctx,
@@ -90,6 +92,121 @@ fn lower_task_spawn_scoped_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCall
         Some(expr) => TaskCallLowering::Lowered(expr),
         None => TaskCallLowering::Rejected,
     }
+}
+
+fn lower_task_spawn_cpu_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {
+    if !ctx.current_function_is_async {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "task.spawn_cpu() is only valid inside async functions".to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if !call.arguments.keywords.is_empty() {
+        expression_diagnostics::call_unexpected_keyword(
+            ctx,
+            "task.spawn_cpu() does not accept keyword arguments".to_string(),
+            first_call_keyword_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if call.arguments.args.len() != 1 {
+        expression_diagnostics::call_wrong_positional_count(
+            ctx,
+            "task.spawn_cpu() takes exactly one sync function argument".to_string(),
+            call_arity_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+
+    let worker = lower_expr(&call.arguments.args[0], ctx);
+    let Some(worker) = worker else {
+        return TaskCallLowering::Rejected;
+    };
+    let Type::Function(ft) = worker.ty().resolve_alias() else {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "task.spawn_cpu() requires a sync function argument, got '{}'",
+                worker.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    if !ft.params.is_empty() {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            "task.spawn_cpu() v1 requires a zero-argument function; wrap owned inputs in a dedicated helper before offloading".to_string(),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if super::workload_annotations::reject_offload_target_without_kind(
+        ctx,
+        &call.arguments.args[0],
+        "task.spawn_cpu()",
+        WorkloadKind::CpuHeavy,
+    ) {
+        return TaskCallLowering::Rejected;
+    }
+
+    let (ok_ty, err_ty, result_func) = match ft.return_type.resolve_alias() {
+        Type::Result(ok, err) => (
+            ok.as_ref().clone(),
+            err.as_ref().clone(),
+            "__sifr_spawn_cpu_result",
+        ),
+        other => (other.clone(), Type::Never, "__sifr_spawn_cpu_infallible"),
+    };
+    if let Some(reason) = non_send_reason(&ok_ty) {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "task.spawn_cpu() cannot return non-send value type '{}': {reason}",
+                ok_ty.display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if !matches!(err_ty.resolve_alias(), Type::Never) {
+        if let Some(reason) = non_send_reason(&err_ty) {
+            expression_diagnostics::type_mismatch(
+                ctx,
+                format!(
+                    "task.spawn_cpu() cannot return non-send error type '{}': {reason}",
+                    err_ty.display_name()
+                ),
+                call.arguments.args[0].range(),
+            );
+            return TaskCallLowering::Rejected;
+        }
+    }
+
+    let task_error_ty = if matches!(err_ty.resolve_alias(), Type::Never) {
+        worker_error_type("WorkerRuntimeError", ctx)
+    } else {
+        worker_error_type("WorkerError", ctx)
+    };
+    TaskCallLowering::Lowered(HirExpr::Call {
+        func: result_func.to_string(),
+        args: vec![worker],
+        ty: Type::BlockingTask(Box::new(ok_ty), Box::new(task_error_ty)),
+    })
+}
+
+fn worker_error_type(name: &str, ctx: &LowerCtx) -> Type {
+    ctx.class_types
+        .get(name)
+        .cloned()
+        .unwrap_or_else(|| Type::Class {
+            name: name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        })
 }
 
 fn lower_task_spawn_blocking_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {

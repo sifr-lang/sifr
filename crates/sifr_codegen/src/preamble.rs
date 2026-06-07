@@ -6,6 +6,8 @@ mod types_and_errors;
 pub use types_and_errors::*;
 mod task_runtime;
 pub use task_runtime::*;
+mod cpu_offload_runtime;
+pub use cpu_offload_runtime::*;
 mod parallel_runtime;
 pub(crate) use parallel_runtime::*;
 mod io_logging_random;

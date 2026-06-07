@@ -437,6 +437,28 @@ M3 first-wave review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m3-parallel-review-pass-2.md`: `PASS`; reviewer verified typed pool-construction errors, typed worker panic conversion, result-shaped `sifr.parallel`/`Pool` APIs, validation fixtures, manifest entries, and traceability. Non-blocking follow-ups were recorded for global panic-hook suppression, future `WorkerError[E]`, and lazy private default pool shutdown design.
 - `reviews/ad-hoc-production-concurrency-runtime-m3-parallel-review-pass-3.md`: `PASS`; reviewer verified the post-pass-2 grouped e2e Rayon dependency fix, confirmed it does not hide a runtime feature-gating issue, re-verified typed pool/worker failure handling, sendability/type diagnostics, validation manifests, traceability, and PR readiness.
 
+M3 `task.spawn_cpu` wave targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo check -p sifr_lowering -p sifr_codegen -p sifr_stdlib -p sifr` -> PASS.
+- `cargo clippy --workspace -- -D warnings` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2134 files checked, 900-line limit.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/spawn_cpu_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/spawn_cpu_user_error_typed.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/spawn_cpu_worker_panic_typed.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_map_basic.sifr` -> PASS after shared worker-error preamble extraction.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/parallel_try_map_user_error_typed.sifr` -> PASS after shared worker-error preamble extraction.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/spawn_cpu_unannotated_rejected.sifr` -> expected fail with `SIFR-ASYNC-0005`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/spawn_cpu_blocking_io_rejected.sifr` -> expected fail with `SIFR-ASYNC-0005`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/spawn_cpu_non_send_rejected.sifr` -> expected fail with `SIFR-TYPE-0002`.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail suite reported 404 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`79 passed`, `0 failed`, `cache_hits=22/22`).
+
+M3 `task.spawn_cpu` wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m3-spawn-cpu-review-pass-2.md`: `PASS`; reviewer verified async-only `@cpu_heavy` validation, rejection of blocking-I/O and unannotated workers, `BlockingTask[T, WorkerRuntimeError]` / `BlockingTask[T, WorkerError]` result shapes, typed worker panic and Rayon pool construction evidence, Rayon/Tokio feature gating, sendability checks, no `sifr.parallel` regression from shared worker-error extraction, and honest remaining-M3 traceability. Non-blocking follow-ups were retained for global panic-hook cleanup, OS thread creation failure handling if the bridge changes, and minor emitted-error redundancy.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.
