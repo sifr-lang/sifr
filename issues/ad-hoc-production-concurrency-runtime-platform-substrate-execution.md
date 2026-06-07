@@ -250,7 +250,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M0/M0a/post-M0 reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`, and `reviews/ad-hoc-production-concurrency-runtime-post-m0-external-review-pass-1.md`. M1 may start.
 - M1 structured-async implementation reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`, and `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`. M1 is ready to PR/merge.
 - M2 sync/channel implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m2-sync-review-pass-1.md`. M2 is locally validated and ready to PR/merge.
-- M3 JoinSet implementation review is pending for the current wave after focused local validation.
+- M3 JoinSet implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-2.md` and `reviews/ad-hoc-production-concurrency-runtime-m3-joinset-review-pass-3.md`; PR #2320 is merged.
 
 ## M1 Implementation Ledger
 
@@ -405,7 +405,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M2: https://github.com/sifr-lang/sifr/pull/2315
 - M3 first wave: https://github.com/sifr-lang/sifr/pull/2316
 - M3 `task.spawn_cpu` wave: https://github.com/sifr-lang/sifr/pull/2318
-- M3 `JoinSet` wave: pending.
+- M3 `JoinSet` wave: https://github.com/sifr-lang/sifr/pull/2320
 - M3: pending.
 - M4: pending.
 - M5: pending.
