@@ -40,6 +40,10 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) task_handle_group_owners: HashMap<String, String>,
     /// `TaskGroup` bindings that are no longer proven Open after observing a child handle.
     pub(in crate::lower) task_groups_not_proven_open: std::collections::HashSet<String>,
+    /// Nesting depth of active structured task owners while lowering a function body.
+    pub(in crate::lower) active_task_owner_depth: usize,
+    /// Active structured task owner bindings available to module-level scoped helpers.
+    pub(in crate::lower) active_task_owner_bindings: Vec<(String, Type)>,
     /// Collected diagnostics that stop successful lowering.
     pub(in crate::lower) errors: Vec<HirDiagnostic>,
     /// Proof for the latest emitted lowering diagnostic.
@@ -125,6 +129,8 @@ impl LowerCtx {
             task_group_error_types: HashMap::new(),
             task_handle_group_owners: HashMap::new(),
             task_groups_not_proven_open: std::collections::HashSet::new(),
+            active_task_owner_depth: 0,
+            active_task_owner_bindings: Vec::new(),
             errors: Vec::new(),
             last_error_taint: None,
             loop_depth: 0,

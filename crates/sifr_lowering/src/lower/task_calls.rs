@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::task_scope_calls::lower_task_scope_spawn_from_object_allowing_reserved_ctx;
 use super::task_scope_calls::mark_task_handle_observed;
 use super::task_scope_calls::non_send_reason;
 use super::LowerCtx;
@@ -32,6 +33,7 @@ pub(in crate::lower) fn lower_task_module_call(
         "gather" => lower_task_gather_call(call, ctx),
         "race" => lower_task_race_call(call, ctx),
         "select" => lower_task_select_call(call, ctx),
+        "spawn_scoped" => lower_task_spawn_scoped_call(call, ctx),
         "spawn_blocking" => lower_task_spawn_blocking_call(call, ctx),
         "spawn" => {
             expression_diagnostics::type_mismatch(
@@ -42,6 +44,51 @@ pub(in crate::lower) fn lower_task_module_call(
             TaskCallLowering::Rejected
         }
         _ => TaskCallLowering::NoMatch,
+    }
+}
+
+fn lower_task_spawn_scoped_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering {
+    if !ctx.current_function_is_async {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "task.spawn_scoped() is only valid inside async functions".to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if ctx.active_task_owner_depth == 0 {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "task.spawn_scoped() requires an active structured task owner; use it inside async with task.TaskGroup() as group"
+                .to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    if call.arguments.args.len() != 1 {
+        expression_diagnostics::call_wrong_positional_count(
+            ctx,
+            "task.spawn_scoped() takes exactly one coroutine argument".to_string(),
+            call_arity_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    let Some((owner_name, owner_ty)) = ctx.active_task_owner_bindings.last().cloned() else {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "task.spawn_scoped() requires a named active task owner; use async with task.TaskGroup() as group"
+                .to_string(),
+            call.range(),
+        );
+        return TaskCallLowering::Rejected;
+    };
+    let owner = HirExpr::Name {
+        name: owner_name,
+        ty: owner_ty,
+    };
+    match lower_task_scope_spawn_from_object_allowing_reserved_ctx(owner, call, ctx) {
+        Some(expr) => TaskCallLowering::Lowered(expr),
+        None => TaskCallLowering::Rejected,
     }
 }
 
@@ -220,50 +267,79 @@ fn lower_task_select_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLoweri
         );
         return TaskCallLowering::Rejected;
     }
-    if !call.arguments.keywords.is_empty() {
-        expression_diagnostics::call_unexpected_keyword(
-            ctx,
-            "task.select() does not accept keyword arguments".to_string(),
-            first_call_keyword_range(call),
-        );
-        return TaskCallLowering::Rejected;
-    }
-    if call.arguments.args.len() != 2 {
+    if !call.arguments.args.is_empty() {
         expression_diagnostics::call_wrong_positional_count(
             ctx,
-            "task.select() takes exactly two task handles".to_string(),
+            "task.select() takes named task branches, for example task.select(first=a, second=b)"
+                .to_string(),
             call_arity_range(call),
         );
         return TaskCallLowering::Rejected;
     }
+    if call.arguments.keywords.len() != 2 {
+        expression_diagnostics::call_wrong_positional_count(
+            ctx,
+            "task.select() takes exactly two named task branches".to_string(),
+            call_arity_range(call),
+        );
+        return TaskCallLowering::Rejected;
+    }
+    for keyword in &call.arguments.keywords {
+        if keyword.arg.is_none() {
+            expression_diagnostics::call_unexpected_keyword(
+                ctx,
+                "task.select() does not support unpacked keyword branches".to_string(),
+                keyword.range,
+            );
+            return TaskCallLowering::Rejected;
+        }
+    }
+    let first_keyword = &call.arguments.keywords[0];
+    let second_keyword = &call.arguments.keywords[1];
+    if first_keyword.arg == second_keyword.arg {
+        expression_diagnostics::call_unexpected_keyword(
+            ctx,
+            "task.select() branch names must be unique".to_string(),
+            second_keyword.range,
+        );
+        return TaskCallLowering::Rejected;
+    }
 
-    let Some(first) = lower_expr(&call.arguments.args[0], ctx) else {
+    let Some(first) = lower_expr(&first_keyword.value, ctx) else {
         return TaskCallLowering::Rejected;
     };
     let Type::Task(first_ok_ty, first_err_ty) = first.ty().resolve_alias() else {
         expression_diagnostics::type_mismatch(
             ctx,
             format!(
-                "task.select() first argument must be a task handle, got '{}'",
+                "task.select() branch '{}' must be a task handle, got '{}'",
+                first_keyword
+                    .arg
+                    .as_ref()
+                    .map_or("<unpacked>", |name| name.as_str()),
                 first.ty().display_name()
             ),
-            call.arguments.args[0].range(),
+            first_keyword.value.range(),
         );
         return TaskCallLowering::Rejected;
     };
     let (first_ok_ty, first_err_ty) = (first_ok_ty.clone(), first_err_ty.clone());
 
-    let Some(second) = lower_expr(&call.arguments.args[1], ctx) else {
+    let Some(second) = lower_expr(&second_keyword.value, ctx) else {
         return TaskCallLowering::Rejected;
     };
     let Type::Task(second_ok_ty, second_err_ty) = second.ty().resolve_alias() else {
         expression_diagnostics::type_mismatch(
             ctx,
             format!(
-                "task.select() second argument must be a task handle, got '{}'",
+                "task.select() branch '{}' must be a task handle, got '{}'",
+                second_keyword
+                    .arg
+                    .as_ref()
+                    .map_or("<unpacked>", |name| name.as_str()),
                 second.ty().display_name()
             ),
-            call.arguments.args[1].range(),
+            second_keyword.value.range(),
         );
         return TaskCallLowering::Rejected;
     };

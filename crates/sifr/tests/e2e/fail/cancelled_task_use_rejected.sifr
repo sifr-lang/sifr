@@ -13,6 +13,6 @@ async def main() -> Result[None, ScopeFailure]:
     async with task.scope() as scope:
         first = scope.spawn(fast())
         second = scope.spawn(slow())
-        selected = await task.select(first, second)
+        selected = await task.select(first=first, second=second)
         late = await second
     return None

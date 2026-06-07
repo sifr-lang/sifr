@@ -235,10 +235,58 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - Post-M0 external review gate:
   - `reviews/ad-hoc-production-concurrency-runtime-post-m0-external-review-pass-1.md`
   - Result: `PASS`; M0 substrate inventory, CPython scan evidence, workload database, platform contract, dependency decisions, M0a legacy surface removal, validation evidence, and M1 entry gates were verified. M1 may start.
+- M1 structured-async implementation Claude review:
+  - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`
+  - Result: `PASS`; M1 structured task APIs, reserved `ctx` slots, named `select`, and shared spawn enforcement were verified. Non-blocking polish for arbitrary select-branch signature wording, `async_with.rs` decomposition, and sequential same-name task-owner cleanup was applied.
+- M1 structured-async implementation Claude review:
+  - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`
+  - Result: `PASS`; `TaskGroup(ctx=None)`, `task.spawn_scoped(..., ctx=None)`, named-branch `task.select(first=..., second=...)`, existing task-boundary enforcement, traceability, manifests, and create-pr validation evidence were verified. Non-blocking demo/select and `spawn_scoped` model-doc polish was applied.
+- M1 final post-polish Claude follow-up:
+  - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`
+  - Result: `PASS`; demo select syntax, `spawn_scoped` and placeholder select docs, `task_owner_scope_state` extraction, same-name `TaskGroup` cleanup tests, line-cap status, ledger, traceability, and post-polish validation were verified. Reviewer is satisfied and M1 is ready to PR/merge.
 
 ## Pending Reviews
 
 - M0/M0a/post-M0 reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`, and `reviews/ad-hoc-production-concurrency-runtime-post-m0-external-review-pass-1.md`. M1 may start.
+- M1 structured-async implementation reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`, and `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`. M1 is ready to PR/merge.
+
+## M1 Implementation Ledger
+
+Current M1 wave: structured task API public-shape closure.
+
+- Reserved context shape:
+  - `task.TaskGroup(ctx=None)` lowers and rejects non-`None` context values until M5 context propagation.
+  - `task.spawn_scoped(..., ctx=None)` lowers through the active named structured owner and rejects non-`None` context values until M5.
+- Scoped spawn proof:
+  - `task.spawn_scoped` requires an active structured task owner and a named `async with task.TaskGroup() as group` / `task.scope() as scope` owner.
+  - The helper reuses `scope.spawn` / `TaskGroup.spawn` task-boundary checks for direct coroutine calls, borrowed captures, non-send captures, homogeneous `TaskGroup` error typing, and affine handles.
+- Named select syntax:
+  - `task.select(first=..., second=...)` is the accepted M1 call shape.
+  - Positional `task.select(a, b)` is rejected.
+- Traceability:
+  - `verification/stdlib/concurrency_runtime_m1_traceability.md`
+- Local validation before M1 review:
+  - `cargo fmt --check`: pass.
+  - `cargo clippy --workspace -- -D warnings`: pass.
+  - `cargo test -p sifr_lowering task_runtime_m1 -- --nocapture`: pass, 10 passed.
+  - `cargo test -p sifr_codegen task_select -- --nocapture`: pass, 2 passed.
+  - `cargo test -p sifr test_e2e_fail -- --nocapture`: pass.
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/task_spawn_scoped_named_owner.sifr`: pass.
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/task_spawn_scoped_without_owner_rejected.sifr`: expected fail with `SIFR-TYPE-0002`.
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/task_select_first_completion.sifr`: pass.
+  - `scripts/run_e2e_pass.sh --profile create-pr`: pass; create-pr e2e reported 71 passed, 0 failed.
+  - `python3 scripts/check_hir_maintainability_guardrails.py`: pass.
+  - `python3 scripts/check_file_size_guardrails.py`: pass, 2115 files under the 900-line limit.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass; create-pr e2e reported 71 passed, 0 failed; platform golden reported pass=5, skip=2; advisory: warm wall-time budget exceeded.
+- Review-polish validation:
+  - `cargo fmt --check`: pass.
+  - `cargo test -p sifr_lowering task_runtime_m1 -- --nocapture`: pass, 10 passed.
+  - `python3 scripts/check_file_size_guardrails.py`: pass, 2115 files under the 900-line limit.
+  - `cargo run -q -p sifr -- check demos/structured_concurrency_demo/main.sifr`: pass.
+- M1 review loop:
+  - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`: `PASS`; non-blocking select signature wording, async-with decomposition, and sequential same-name task-owner cleanup polish was applied.
+  - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`: `PASS`; non-blocking demo/select and `spawn_scoped` model-doc polish was applied.
+  - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`: `PASS`; reviewer verified the post-polish tree and is satisfied.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -337,6 +385,21 @@ M0a targeted local validation:
 - `cargo test -p sifr test_e2e_fail` -> PASS.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`70 passed`, `0 failed`).
 
+M1 targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo clippy --workspace -- -D warnings` -> PASS.
+- `cargo test -p sifr_lowering task_runtime_m1 -- --nocapture` -> PASS.
+- `cargo test -p sifr_codegen task_select -- --nocapture` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/task_spawn_scoped_named_owner.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/task_spawn_scoped_without_owner_rejected.sifr` -> expected FAIL with `SIFR-TYPE-0002` for missing active structured task owner.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/task_select_first_completion.sifr` -> PASS.
+- `scripts/run_e2e_pass.sh --profile create-pr` -> PASS; create-pr pass suite covered 71 fixtures with 71 passed and 0 failed.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2114 files checked, 900-line limit.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`71 passed`, `0 failed`).
+
 Required baseline commands:
 
 ```bash
@@ -383,6 +446,7 @@ Create and keep current during implementation:
 - `verification/stdlib/concurrency_runtime_workload_database.md`
 - `verification/stdlib/concurrency_runtime_m0_traceability.md`
 - `verification/stdlib/concurrency_runtime_m0a_legacy_surface_traceability.md`
+- `verification/stdlib/concurrency_runtime_m1_traceability.md`
 - `verification/platform/supported_host_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
 

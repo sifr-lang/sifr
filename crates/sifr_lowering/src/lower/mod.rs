@@ -110,7 +110,9 @@ mod statement_diagnostics_tests;
 mod statements;
 mod subscript_type;
 mod task_calls;
+mod task_context_keywords;
 mod task_handle_calls;
+mod task_owner_scope_state;
 mod task_scope_calls;
 mod tuple_unpack;
 #[cfg(test)]

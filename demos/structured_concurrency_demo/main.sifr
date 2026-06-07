@@ -49,7 +49,10 @@ async def main() -> Result[None, Error]:
 
     # Select consumes both handles and cancels the losing child.
     async with task.scope() as scope:
-        selected = await task.select(scope.spawn(fast()), scope.spawn(slow_writes_marker()))
+        selected = await task.select(
+            first=scope.spawn(fast()),
+            second=scope.spawn(slow_writes_marker()),
+        )
 
     # TaskGroup observes the failing child and cancels unfinished siblings at exit.
     async with task.TaskGroup() as group:
