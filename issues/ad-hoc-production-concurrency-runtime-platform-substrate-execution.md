@@ -29,7 +29,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 
 - [x] `milestone_concurrency_runtime_0`: Product Boundary And Rust Concurrency Contract
 - [x] `milestone_concurrency_runtime_0a`: Legacy CPython-Shaped Surface Removal Gate
-- [ ] `milestone_concurrency_runtime_1`: Structured Async Runtime
+- [x] `milestone_concurrency_runtime_1`: Structured Async Runtime
 - [ ] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
 - [ ] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
 - [ ] `milestone_concurrency_runtime_4`: Process Runtime
@@ -280,9 +280,11 @@ Current M1 wave: structured task API public-shape closure.
   - `scripts/run_all_tests.sh --profile create-pr`: pass; create-pr e2e reported 71 passed, 0 failed; platform golden reported pass=5, skip=2; advisory: warm wall-time budget exceeded.
 - Review-polish validation:
   - `cargo fmt --check`: pass.
+  - `cargo clippy --workspace -- -D warnings`: pass.
   - `cargo test -p sifr_lowering task_runtime_m1 -- --nocapture`: pass, 10 passed.
   - `python3 scripts/check_file_size_guardrails.py`: pass, 2115 files under the 900-line limit.
   - `cargo run -q -p sifr -- check demos/structured_concurrency_demo/main.sifr`: pass.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass; create-pr e2e reported 71 passed, 0 failed; platform golden reported pass=5, skip=2; advisory: warm wall-time budget exceeded.
 - M1 review loop:
   - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`: `PASS`; non-blocking select signature wording, async-with decomposition, and sequential same-name task-owner cleanup polish was applied.
   - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`: `PASS`; non-blocking demo/select and `spawn_scoped` model-doc polish was applied.
@@ -353,7 +355,7 @@ Current M1 wave: structured task API public-shape closure.
 
 - M0: https://github.com/sifr-lang/sifr/pull/2310
 - M0a: https://github.com/sifr-lang/sifr/pull/2311
-- M1: pending.
+- M1: https://github.com/sifr-lang/sifr/pull/2313
 - M2: pending.
 - M3: pending.
 - M4: pending.
