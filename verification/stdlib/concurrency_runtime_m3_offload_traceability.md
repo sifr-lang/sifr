@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_3`
 
-Status: M3 implementation waves active; scoped owner offload wave reviewed.
+Status: M3 implementation waves active; scoped owner offload wave merged in PR #2323.
 
 ## Production Surface Traceability
 
@@ -34,7 +34,7 @@ Status: M3 implementation waves active; scoped owner offload wave reviewed.
 
 ## Open Follow-up Boundaries
 
-This first wave does not close all of M3. Remaining M3 work before milestone closure:
+Remaining M3 work before milestone closure:
 
 - Full `WorkerError[E]` typing for homogeneous offload collections if the type system can preserve the user error parameter without nominal erasure.
 - Closure capture sendability diagnostics beyond item/output/error sendability.
