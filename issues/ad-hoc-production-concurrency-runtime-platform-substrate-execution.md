@@ -292,7 +292,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 
 ## Implementation PRs
 
-- M0: implementation, local validation, and Claude review complete; PR pending.
+- M0: https://github.com/sifr-lang/sifr/pull/2310
 - M1: pending.
 - M2: pending.
 - M3: pending.
