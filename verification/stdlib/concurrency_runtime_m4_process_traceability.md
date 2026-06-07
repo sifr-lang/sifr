@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_4`
 
-Status: In progress; sync process foundation wave implemented locally and reviewed; pending PR and merge.
+Status: In progress; sync process foundation wave reviewed and merged in PR #2331.
 
 ## Production Surface Traceability
 
