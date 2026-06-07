@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-concurrency-runtime-platform-substrate.md](./ad-hoc-production-concurrency-runtime-platform-substrate.md)
 
-Status: draft
+Status: active
 
 ## Scope Split
 
@@ -27,7 +27,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 
 ## Milestone Checklist
 
-- [ ] `milestone_concurrency_runtime_0`: Product Boundary And Rust Concurrency Contract
+- [x] `milestone_concurrency_runtime_0`: Product Boundary And Rust Concurrency Contract
 - [ ] `milestone_concurrency_runtime_0a`: Legacy CPython-Shaped Surface Removal Gate
 - [ ] `milestone_concurrency_runtime_1`: Structured Async Runtime
 - [ ] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
@@ -220,10 +220,14 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - Final no-subprocess-compatibility Claude verification:
   - `reviews/ad-hoc-production-concurrency-runtime-no-subprocess-compat-review-pass-2.md`
   - Result: `PASS`; no backward-compatibility or CPython-shaped adapter commitment remained, and `sifr.subprocess` was verified as legacy implementation debt to remove, keep internal-test-only, or route to unsupported diagnostics.
+- M0 implementation Claude review:
+  - `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`
+  - Result: `PASS`; CPython scan, inventory, evidence matrix, workload database, platform contract, host matrix, golden manifest entries, native namespace diagnostics, and M0/M0a gates met M0 requirements. Non-blocking polish for `sifr.contextlib`/`sifr.warnings` disposition and warnings diagnostic steering was applied.
 
 ## Pending Reviews
 
 - Post-M0 external review: run a dedicated external review after M0 inventory and before M1 implementation. M1 cannot start until this review has a `PASS` result recorded in `Planning Reviews`, or until the five-working-day fallback review procedure is recorded with attempted review, open questions, conservative self-review, and no unresolved blocking questions.
+- M0 implementation review: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`. M1 remains blocked until M0a completion.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -288,7 +292,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 
 ## Implementation PRs
 
-- M0: pending.
+- M0: implementation, local validation, and Claude review complete; PR pending.
 - M1: pending.
 - M2: pending.
 - M3: pending.
@@ -300,6 +304,16 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 ## Validation Evidence
 
 Record local validation for each milestone before opening its PR.
+
+M0 targeted local validation:
+
+- `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.
+- `python3 -m json.tool verification/platform/platform_contract.json`, `verification/platform/golden/manifest.json`, and `verification/stdlib/concurrency_runtime_substrate_inventory.json` -> PASS.
+- `cargo test -p sifr_stdlib bare_stdlib_tail_matches_reserved_concurrency_runtime_roots` -> PASS.
+- `cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_concurrency_imports.sifr` -> expected FAIL with `SIFR-IMPORT-0008` and `sifr.runtime`.
+- `bash scripts/run_platform_golden.sh` -> PASS; 4 passed, 3 skipped, including the blocked M0a legacy-surface gate.
+- `cargo test -p sifr test_e2e_fail` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; warm wall-time advisory only. During this run, expired performance waivers from 2026-06-06 were removed after `verification/performance/check_budgets.py` passed with an empty waiver set.
 
 Required baseline commands:
 
@@ -327,6 +341,15 @@ Each milestone must record:
 - `unsupported-with-diagnostic`, `waived-with-rationale`, `host-limited`, `deferred-to-phase-X`, and `rejected` surfaces.
 - Sifr e2e pass/fail fixtures added.
 
+M0 CPython scan evidence:
+
+- CPython checkout: `/Users/yaseralnajjar/work/sifr/cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
+- Scanner: `scripts/generate_concurrency_runtime_inventory.py`.
+- Output artifacts: `verification/stdlib/concurrency_runtime_substrate_inventory.md`, `verification/stdlib/concurrency_runtime_substrate_inventory.json`, `verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md`, `verification/stdlib/concurrency_runtime_workload_database.md`, and `verification/stdlib/concurrency_runtime_m0_traceability.md`.
+- Source/test/doc files scanned: 135 total entries from the exact phase source-of-truth patterns.
+- Extracted signal summary: context/warnings/signal 17 files, 139 public functions, 84 classes, 328 methods, 92 constants, 294 test methods; queue/concurrency 111 files, 431 public functions, 317 classes, 1365 methods, 110 constants, 695 test methods; subprocess/process 7 files, 119 public functions, 20 classes, 315 methods, 33 constants, 291 test methods.
+- Negative bare CPython import fixtures added for `asyncio`, `queue`, `subprocess`, `concurrent.futures`, `multiprocessing`, `signal`, `contextlib`, `warnings`, and `threading`.
+
 ## Required Tracking Artifacts
 
 Create and keep current during implementation:
@@ -336,17 +359,18 @@ Create and keep current during implementation:
 - `verification/stdlib/concurrency_runtime_substrate_inventory.json`
 - `verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md`
 - `verification/stdlib/concurrency_runtime_workload_database.md`
+- `verification/stdlib/concurrency_runtime_m0_traceability.md`
 - `verification/platform/supported_host_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
 
 ## Review Ownership
 
-- Designated compiler/runtime reviewer role: compiler/runtime reviewer assigned by the phase owner in M0; M1 cannot start until the reviewer identity is recorded here.
+- Designated compiler/runtime reviewer role: Claude Opus reviewer invoked through `.cursor/skills/talk-to-claude-opus` for M0 implementation review; phase owner remains runtime/stdlib implementation owner. M1 cannot start until post-M0 review returns `PASS` and M0a is complete.
 - Typed IPC design approval process: M6 requires a named design artifact reviewed by the phase owner and designated compiler/runtime reviewer, then recorded here before any serialization crate is selected.
 
 ## API Tier Decision Index
 
-Pre-M0 phase-level decisions:
+M0 phase-level decisions:
 
 | Surface | Support tier | Terminal state | Rationale | CPython evidence | Sifr fixture or design artifact |
 | --- | --- | --- | --- | --- | --- |
@@ -378,7 +402,7 @@ Every decision must include:
 
 ## Waiver Index
 
-This index is intentionally partial before M0. M0 inventory populates the complete list, and all non-goal, `deferred-to-phase-X`, `rejected`, `unsupported-with-diagnostic`, `waived-with-rationale`, and `host-limited` surfaces in the phase must have waiver/decision entries by M0 close.
+The M0 generated inventory is the authoritative complete classification set for CPython-derived evidence and public/native boundary decisions. This hand-maintained index records milestone-level waivers and representative non-goal decisions that need explicit future revisit rules.
 
 | Surface | Terminal state | Rationale | Revisit rule | CPython evidence | Sifr regression fixture |
 | --- | --- | --- | --- | --- | --- |

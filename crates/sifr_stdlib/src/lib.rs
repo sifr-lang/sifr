@@ -154,6 +154,17 @@ pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
 fn cpython_stdlib_reserved_suggestion(module_name: &str) -> Option<&'static str> {
     let root = module_name.split('.').next().unwrap_or(module_name);
     match root {
+        "asyncio" => Some("sifr.task"),
+        "queue" => Some("sifr.sync"),
+        "subprocess" => Some("sifr.process"),
+        "concurrent" => Some("sifr.runtime"),
+        "multiprocessing" => Some("sifr.ipc"),
+        "threading" => Some("sifr.runtime"),
+        "signal" => Some("sifr.signal"),
+        "contextlib" => Some("sifr.resource"),
+        // Python warnings global filters are rejected; runtime diagnostics are
+        // the nearest Sifr-native destination until the M5 diagnostics surface lands.
+        "warnings" => Some("sifr.runtime"),
         "codecs" | "encodings" => Some("sifr.encoding"),
         "unicodedata" => Some("sifr.unicode"),
         "locale" | "gettext" => Some("sifr.i18n"),
@@ -250,6 +261,30 @@ mod tests {
         assert!(codecs.exact_embedded_module_exists);
         assert!(unicodedata.exact_embedded_module_exists);
         assert!(gettext.exact_embedded_module_exists);
+    }
+
+    #[test]
+    fn bare_stdlib_tail_matches_reserved_concurrency_runtime_roots() {
+        let asyncio = is_bare_stdlib_tail("asyncio").expect("asyncio should be reserved");
+        let queue = is_bare_stdlib_tail("queue").expect("queue should be reserved");
+        let subprocess = is_bare_stdlib_tail("subprocess").expect("subprocess should be reserved");
+        let concurrent_futures =
+            is_bare_stdlib_tail("concurrent.futures").expect("concurrent should be reserved");
+        let multiprocessing =
+            is_bare_stdlib_tail("multiprocessing").expect("multiprocessing should be reserved");
+        let signal = is_bare_stdlib_tail("signal").expect("signal should be reserved");
+        let contextlib = is_bare_stdlib_tail("contextlib").expect("contextlib should be reserved");
+        let warnings = is_bare_stdlib_tail("warnings").expect("warnings should be reserved");
+
+        assert_eq!(asyncio.suggested_module, "sifr.task");
+        assert_eq!(queue.suggested_module, "sifr.sync");
+        assert_eq!(subprocess.suggested_module, "sifr.process");
+        assert_eq!(concurrent_futures.bare_module, "concurrent.futures");
+        assert_eq!(concurrent_futures.suggested_module, "sifr.runtime");
+        assert_eq!(multiprocessing.suggested_module, "sifr.ipc");
+        assert_eq!(signal.suggested_module, "sifr.signal");
+        assert_eq!(contextlib.suggested_module, "sifr.resource");
+        assert_eq!(warnings.suggested_module, "sifr.runtime");
     }
 
     #[test]
