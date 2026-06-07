@@ -414,6 +414,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M3 closeout: https://github.com/sifr-lang/sifr/pull/2325
 - M3: complete.
 - M4 sync process foundation: https://github.com/sifr-lang/sifr/pull/2331
+- M4 sync child wait: https://github.com/sifr-lang/sifr/pull/2334
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -622,6 +623,7 @@ M4 sync child wait targeted local validation:
 M4 sync child wait review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-child-wait-review-pass-1.md`: `PASS`; reviewer verified the wave is sync-only and does not overclaim pipes/async process support, process-child runtime state is gated to spawn/wait users, `process_wait` is one-shot and typed without data-dependent panics, top-level `wait(child)` triggers imported `@blocking_io` direct-async diagnostics, top-level/method wait asymmetry is safe for this wave, and traceability preserves remaining lifecycle work. Non-blocking follow-ups were recorded for unified wait-observation wording, explicit unwaited-child leak/drop cleanup documentation, possible tighter `Child`-only import preamble gating, and legacy `_sifr.sys.subprocess_*` cleanup.
+- PR #2334 merged at `314e7f9ff7b300f7a333655fa2ad3ed756b29442`.
 
 M0 targeted local validation:
 

@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_4`
 
-Status: In progress; sync process foundation wave reviewed and merged in PR #2331.
+Status: In progress; sync process foundation merged in PR #2331 and sync child wait merged in PR #2334.
 
 ## Production Surface Traceability
 
