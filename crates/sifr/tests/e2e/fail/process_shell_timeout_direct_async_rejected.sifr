@@ -1,0 +1,7 @@
+# expect-error: SIFR-ASYNC-0007
+from sifr.process import output_shell_timeout
+
+
+async def main():
+    _ = output_shell_timeout("printf blocked", 1.0)
+    await task.sleep(0.0)

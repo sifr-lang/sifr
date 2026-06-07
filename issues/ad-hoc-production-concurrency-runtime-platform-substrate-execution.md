@@ -604,6 +604,25 @@ M4 sync process foundation review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-sync-process-review-pass-1.md`: `PASS`; reviewer verified ordinary argv APIs lower to `std::process::Command` without shell or legacy subprocess helpers, shell APIs are explicit and classified with `SIFR-ASYNC-0007`, env/cwd/stdin/output/text behavior is typed without data-dependent panics, imported workload metadata covers stdlib imports and local re-exports, traceability honestly preserves remaining M4 process lifecycle work, and the wave is ready to PR. Non-blocking follow-ups were recorded for stdin setter semantics, deletion of unused legacy `_sifr.sys.subprocess_*` intrinsic paths, future stdlib re-export workload metadata, and later signal/timeout/cancellation/text-mode completion.
 - PR #2331 merged at `b473c763ae3e92d614e7799af956bafcf4d60cb8`.
 
+M4 timeout status evidence wave targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo check -p sifr_stdlib -p sifr_codegen -p sifr --quiet` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo test -p sifr_codegen lowers_process_timeout_intrinsics_via_registry -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_timeout_status.sifr` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 418 fail tests completed.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2171 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_timeout_status.sifr | rg "try_wait|kill\\(\\)|try_from_secs_f64|checked_add|is_finite|__timed_out"` -> PASS; emitted timeout paths guard invalid timeout values, use checked duration conversion and checked host-clock deadline construction for out-of-range values, poll with `try_wait`, kill timed-out children, and return typed timeout evidence.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`93 passed`, `0 failed`, `cache_hits=22/25`, `report_signature=91dc84a36565dad4`).
+
+M4 timeout status evidence wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-1.md`: `CHANGES_REQUESTED`; reviewer found a user-triggerable panic for positive finite timeout values too large for `Duration::from_secs_f64`. The wave was remediated by switching generated timeout conversion to checked `Duration::try_from_secs_f64`, adding an overflow `ProcessError` regression fixture, and tightening traceability.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-2.md`: `PASS`; reviewer verified the pass-1 overflow blocker was fixed and noted a non-blocking theoretical host-clock overflow band in `Instant + Duration`.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-3.md`: `PASS`; reviewer verified the additional `Instant::checked_add(...).ok_or_else(ProcessError)?` hardening closes the host-clock deadline overflow path and no timeout-path data-dependent panic blocker remains.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

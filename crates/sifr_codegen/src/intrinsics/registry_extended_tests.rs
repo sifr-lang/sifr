@@ -113,6 +113,49 @@ pub(crate) fn lowers_subprocess_intrinsics_via_registry() {
 }
 
 #[test]
+pub(crate) fn lowers_process_timeout_intrinsics_via_registry() {
+    let output_timeout = lower_intrinsic(
+        "process_output_timeout",
+        &[
+            "program".to_string(),
+            "args".to_string(),
+            "env".to_string(),
+            "cwd".to_string(),
+            "has_cwd".to_string(),
+            "stdin".to_string(),
+            "has_stdin".to_string(),
+            "timeout".to_string(),
+        ],
+    )
+    .expect("process_output_timeout");
+    let rendered = render_expr(&output_timeout.expr);
+    assert!(rendered.contains("std::process::Command::new(&program)"));
+    assert!(rendered.contains("__timeout_seconds.is_finite()"));
+    assert!(rendered.contains("std::time::Instant::now()"));
+    assert!(rendered.contains("std::time::Duration::try_from_secs_f64(__timeout_seconds)"));
+    assert!(rendered.contains(".checked_add("));
+    assert!(rendered.contains("process timeout is too large for this host clock"));
+    assert!(rendered.contains("__child.try_wait()"));
+    assert!(rendered.contains("__child.kill()"));
+    assert!(rendered.contains("(__output.stdout, __output.stderr, __status_code, __timed_out)"));
+
+    let shell_timeout = lower_intrinsic(
+        "process_shell_output_timeout",
+        &[
+            "script".to_string(),
+            "stdin".to_string(),
+            "has_stdin".to_string(),
+            "timeout".to_string(),
+        ],
+    )
+    .expect("process_shell_output_timeout");
+    let shell_rendered = render_expr(&shell_timeout.expr);
+    assert!(shell_rendered.contains("std::process::Command::new(\"sh\".to_string())"));
+    assert!(shell_rendered.contains("__cmd.arg(\"-c\".to_string())"));
+    assert!(shell_rendered.contains("__child.kill()"));
+}
+
+#[test]
 pub(crate) fn lowers_html_intrinsics_via_registry() {
     let esc = lower_intrinsic("html_escape", &["s".to_string()]).expect("html_escape");
     assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\")"));

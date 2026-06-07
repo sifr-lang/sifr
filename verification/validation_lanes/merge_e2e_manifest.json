@@ -100,6 +100,7 @@
     "process_sync_output_text",
     "process_sync_bytes_env_cwd_stdin",
     "process_shell_exec_output",
+    "process_timeout_status",
     "text_i18n_encoding_io",
     "text_i18n_unicode_core",
     "text_i18n_unicode_segmentation",

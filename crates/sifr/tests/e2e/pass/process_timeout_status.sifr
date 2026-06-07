@@ -1,0 +1,43 @@
+from sifr.process import Command, Output, ProcessError, Status, output_shell_timeout, output_timeout, run_timeout
+
+
+def main():
+    try:
+        fast_cmd: Command = Command("sh")
+        fast_cmd.args(["-c", "printf fast-ok"])
+        fast_out: Output = output_timeout(fast_cmd, 2.0)
+        assert fast_out.stdout == b"fast-ok"
+        assert fast_out.status.success
+        assert fast_out.status.kind == "success"
+        assert not fast_out.status.timed_out
+
+        slow_cmd: Command = Command("sh")
+        slow_cmd.args(["-c", "sleep 1; printf late"])
+        timed_out: Output = output_timeout(slow_cmd, 0.01)
+        assert timed_out.status.timed_out
+        assert timed_out.status.kind == "timeout"
+        assert not timed_out.status.success
+
+        run_cmd: Command = Command("sh")
+        run_cmd.args(["-c", "sleep 1"])
+        run_status: Status = run_timeout(run_cmd, 0.01)
+        assert run_status.timed_out
+        assert run_status.kind == "timeout"
+
+        shell_out: Output = output_shell_timeout("sleep 1; printf late", 0.01)
+        assert shell_out.status.timed_out
+        assert shell_out.status.kind == "timeout"
+
+        try:
+            _invalid: Output = output_timeout(fast_cmd, -1.0)
+            assert False
+        except ProcessError as invalid:
+            assert len(invalid.message) > 0
+
+        try:
+            _overflow: Output = output_timeout(fast_cmd, 1e30)
+            assert False
+        except ProcessError as overflow:
+            assert len(overflow.message) > 0
+    except ProcessError as e:
+        assert e.message == ""
