@@ -647,6 +647,24 @@ M4 timeout status evidence wave review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-3.md`: `PASS`; reviewer verified the additional `Instant::checked_add(...).ok_or_else(ProcessError)?` hardening closes the host-clock deadline overflow path and no timeout-path data-dependent panic blocker remains.
 - Merged as PR #2336: https://github.com/sifr-lang/sifr/pull/2336
 
+M4 sync child kill targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_child_kill_wait.sifr` -> PASS.
+- Existing process pass regressions: `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_spawn_wait_status`, and `process_child_kill_wait` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/process_kill_direct_async_rejected.sifr` -> expected FAIL with `SIFR-ASYNC-0003`.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2174 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 419 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`129.98s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`94 passed`, `0 failed`, `cache_hits=22/25`).
+- Post-`origin/main` rebase rerun over the timeout status evidence wave: `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet`, `process_child_kill_wait`, `process_timeout_status`, expected `process_kill_direct_async_rejected` `SIFR-ASYNC-0003`, `cargo fmt --check`, file-size guardrails (`2176` files), HIR guardrails, and `cargo test -p sifr test_e2e_fail -- --nocapture` (`420` fail tests) -> PASS.
+- Post-`origin/main` rebase rerun: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`152.56s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`95 passed`, `0 failed`, `cache_hits=24/25`, `report_signature=d8d730bd5475756c`).
+
+M4 sync child kill review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-child-kill-review-pass-1.md`: `PASS`; reviewer verified the wave is an honest sync forceful-kill slice, `process_kill` returns typed `ProcessError` for closed/unknown handles without data-dependent panics, kill preserves the child handle for later `wait`, top-level `kill(child)` triggers `SIFR-ASYNC-0003`, process-child runtime gating remains intact, and docs do not overclaim graceful termination, timeout escalation, structured cancellation, or signal evidence. Non-blocking feedback was applied before PR by changing the fixture from `sh -c "sleep 5"` to direct `sleep 30`, documenting that kill targets only the immediate child handle, and tracking method-form `@blocking_io` enforcement for `Child.wait()` / `Child.kill()` as later compiler work.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

@@ -1,0 +1,33 @@
+from sifr.process import Child, Command, ProcessError, Status, kill, spawn, wait
+
+
+def sleeping_command() -> Command:
+    command: Command = Command("sleep")
+    command.arg("30")
+    return command
+
+
+def main():
+    actual: list[bool] = []
+
+    try:
+        child: Child = spawn(sleeping_command())
+        _killed: None = kill(child)
+        status: Status = wait(child)
+        actual.append(not status.success)
+        actual.append(status.kind == "nonzero")
+
+        method_child: Child = spawn(sleeping_command())
+        _method_killed: None = method_child.kill()
+        method_status: Status = method_child.wait()
+        actual.append(not method_status.success)
+
+        try:
+            _after_wait_kill: None = kill(child)
+            actual.append(False)
+        except ProcessError as e:
+            actual.append("closed or unknown" in e.message)
+    except ProcessError as e:
+        actual.append(False)
+
+    assert actual == [True, True, True, True]

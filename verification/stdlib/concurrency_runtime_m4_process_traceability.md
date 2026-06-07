@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_4`
 
-Status: In progress; sync process foundation merged in PR #2331, sync child wait merged in PR #2334, and timeout status evidence merged in PR #2336.
+Status: In progress; sync process foundation merged in PR #2331, sync child wait merged in PR #2334, and timeout status evidence merged in PR #2336. Sync child kill support is implemented in the current M4 follow-up wave.
 
 ## Production Surface Traceability
 
@@ -15,6 +15,7 @@ Status: In progress; sync process foundation merged in PR #2331, sync child wait
 | Sync `run`, `output`, `output_text` | `process_sync_output_text`; `process_sync_bytes_env_cwd_stdin`; `process_blocking_direct_async_rejected` | Sync process APIs are `@blocking_io`, return typed `Result[..., ProcessError]`, and direct async calls are rejected through imported stdlib workload metadata. |
 | Sync `run_timeout`, `output_timeout` | `process_timeout_status` | Timeout APIs kill and reap timed-out children, return typed `Status` evidence instead of panicking, and reject invalid negative, non-finite, or out-of-range timeout values through `ProcessError`. |
 | Sync `spawn`, `wait`, `Child.wait` | `process_spawn_wait_status`; `process_wait_direct_async_rejected` | Sync child lifecycle stores `std::process::Child` behind a private generated handle table. `wait(child)` and `Child.wait()` are one-shot observation paths; top-level `wait(child)` is `@blocking_io` and direct async calls are rejected. Owned pipe access, async wait, termination, timeout, and scoped supervision remain later M4 work. |
+| Sync `kill`, `Child.kill` | `process_child_kill_wait`; `process_kill_direct_async_rejected` | Sync kill requests forceful immediate-child termination through `std::process::Child::kill`; it does not provide process-group or descendant supervision. Callers must still observe the final status with `wait`. Top-level `kill(child)` is `@blocking_io` and direct async calls are rejected. Graceful `terminate`, timeout escalation, structured cancellation, and host-specific signal evidence remain later M4 work. |
 | Sync `run_shell`, `output_shell`, `output_shell_text` | `process_shell_exec_output`; `process_shell_exec_direct_async_rejected` | Shell execution is explicit and classified as `@shell_exec` in addition to source-level `@blocking_io`; direct async calls use `SIFR-ASYNC-0007`. |
 | Sync `output_shell_timeout` | `process_timeout_status`; `process_shell_timeout_direct_async_rejected` | Shell timeout execution preserves the explicit shell-exec effect and timeout status evidence. |
 | Imported workload metadata | `process_blocking_direct_async_rejected`; `process_shell_exec_direct_async_rejected` | Lowering exports workload labels from stdlib/project modules and reimports them for user modules, so stdlib process APIs participate in the existing direct-async/offload diagnostic model. |
@@ -31,9 +32,9 @@ Status: In progress; sync process foundation merged in PR #2331, sync child wait
 
 | Lane | Representative entries |
 | --- | --- |
-| Create PR | `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_spawn_wait_status`, `process_timeout_status` |
-| Merge | `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_spawn_wait_status`, `process_timeout_status` |
-| Fail suite | `process_blocking_direct_async_rejected`, `process_shell_exec_direct_async_rejected`, `process_wait_direct_async_rejected`, `process_shell_timeout_direct_async_rejected`, existing `legacy_sifr_subprocess_removed`, existing `async_popen_unsupported`, existing `bare_cpython_subprocess_import` |
+| Create PR | `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_spawn_wait_status`, `process_timeout_status`, `process_child_kill_wait` |
+| Merge | `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_shell_exec_output`, `process_spawn_wait_status`, `process_timeout_status`, `process_child_kill_wait` |
+| Fail suite | `process_blocking_direct_async_rejected`, `process_shell_exec_direct_async_rejected`, `process_wait_direct_async_rejected`, `process_shell_timeout_direct_async_rejected`, `process_kill_direct_async_rejected`, existing `legacy_sifr_subprocess_removed`, existing `async_popen_unsupported`, existing `bare_cpython_subprocess_import` |
 
 ## Follow-up Boundaries
 
@@ -41,8 +42,9 @@ Intentional remaining M4 work after this foundation wave:
 
 - `PipeReader`, `PipeWriter`, owned stdout/stderr/stdin pipe lifecycle, double-close/use-after-close diagnostics, and handle sendability/shareability checks beyond the one-shot sync `Child.wait()` state.
 - Native async spawn/wait/communicate and cancellation-safe process observation.
-- `terminate`, explicit `kill`, signal termination evidence, parent cancellation evidence, and supported-host matrix updates for process termination behavior.
+- Graceful `terminate`, termination escalation, signal termination evidence, parent cancellation evidence, and supported-host matrix updates for process termination behavior.
 - Scoped process supervision entry point accepted by M0: `TaskGroup.spawn_process` returns a distinct `ProcessHandle` preserving pipe access.
+- Method-form `@blocking_io` enforcement for `Child.wait()` / `Child.kill()` direct async calls remains a compiler follow-up; this wave verifies top-level `wait(child)` / `kill(child)` imported workload diagnostics.
 - Full subprocess text mode closeout beyond UTF-8-only text output, consuming the text/i18n M1 evidence explicitly.
 - Dropping an unwaited sync `Child` keeps the private `std::process::Child` table entry for the process lifetime and may leave host child reaping to a later lifecycle wave; termination, timeout, cancellation, and drop cleanup semantics remain M4 follow-up work.
 - Decide whether repeated `Command.stdin_bytes(...)` calls append or replace payload data when the spawn/pipe wave finalizes stdin ownership semantics.

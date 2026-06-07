@@ -106,6 +106,14 @@ fn next_child_handle_id_expr() -> RustExpr {
     }
 }
 
+fn missing_child_error_expr() -> RustExpr {
+    process_error_expr(RustExpr::FormatMacro {
+        name: "format".to_string(),
+        format_str: "process child handle is closed or unknown: {}".to_string(),
+        args: vec![RustExpr::Ident("__handle".to_string())],
+    })
+}
+
 fn command_new(program: RustExpr) -> RustExpr {
     path_call(&["std", "process", "Command", "new"], vec![program])
 }
@@ -633,11 +641,6 @@ pub(crate) fn lower_process_wait(args: &[RustExpr]) -> Option<RustExpr> {
         return None;
     }
     let handle_expr = arg_expr(args, 0);
-    let missing_child_error = process_error_expr(RustExpr::FormatMacro {
-        name: "format".to_string(),
-        format_str: "process child handle is closed or unknown: {}".to_string(),
-        args: vec![RustExpr::Ident("__handle".to_string())],
-    });
     let stmts = vec![
         RustStmt::Let {
             mutable: false,
@@ -675,7 +678,7 @@ pub(crate) fn lower_process_wait(args: &[RustExpr]) -> Option<RustExpr> {
                 method: "ok_or_else".to_string(),
                 args: vec![RustExpr::Closure {
                     params: vec![],
-                    body: Box::new(missing_child_error),
+                    body: Box::new(missing_child_error_expr()),
                     is_move: false,
                 }],
             })),
@@ -696,6 +699,58 @@ pub(crate) fn lower_process_wait(args: &[RustExpr]) -> Option<RustExpr> {
         expr: Some(Box::new(ok_expr(status_code(RustExpr::Ident(
             "__status".to_string(),
         ))))),
+    })
+}
+
+pub(crate) fn lower_process_kill(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    let stmts = vec![
+        RustStmt::Let {
+            mutable: false,
+            name: "__handle".to_string(),
+            ty: None,
+            value: arg_expr(args, 0),
+        },
+        RustStmt::Let {
+            mutable: true,
+            name: "__children".to_string(),
+            ty: None,
+            value: process_child_handles_lock_expr(),
+        },
+        RustStmt::Let {
+            mutable: true,
+            name: "__child".to_string(),
+            ty: None,
+            value: RustExpr::Try(Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__children".to_string())),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__handle".to_string())),
+                    }],
+                }),
+                method: "ok_or_else".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(missing_child_error_expr()),
+                    is_move: false,
+                }],
+            })),
+        },
+        RustStmt::Expr(RustExpr::Try(Box::new(process_map_err(
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__child".to_string())),
+                method: "kill".to_string(),
+                args: vec![],
+            },
+        )))),
+    ];
+    Some(RustExpr::Block {
+        stmts,
+        expr: Some(Box::new(ok_expr(RustExpr::Literal(RustLiteral::Unit)))),
     })
 }
 

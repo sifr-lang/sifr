@@ -2,6 +2,7 @@
 from _sifr.process import (
     process_run,
     process_spawn,
+    process_kill,
     process_wait,
     process_output,
     process_output_text,
@@ -67,6 +68,10 @@ class Child:
     def __init__(self, handle: int):
         self._handle = handle
         self._waited = False
+
+    @blocking_io
+    def kill(self) -> Result[None, ProcessError]:
+        return process_kill(self._handle)
 
     @blocking_io
     def wait(self) -> Result[Status, ProcessError]:
@@ -158,6 +163,11 @@ def spawn(command: Command) -> Result[Child, ProcessError]:
         return Child(handle)
     except ProcessError as e:
         raise e
+
+
+@blocking_io
+def kill(child: Child) -> Result[None, ProcessError]:
+    return process_kill(child._handle)
 
 
 @blocking_io
