@@ -41,6 +41,51 @@
       ]
     },
     {
+      "program": "unsupported_cpython_concurrency_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_concurrency_imports.sifr",
+      "expected_exit": 1,
+      "expected_stdout_contains": [],
+      "expected_diagnostic_contains": [
+        "SIFR-IMPORT-0008",
+        "sifr.runtime"
+      ],
+      "depends_on": [
+        "milestone_concurrency_runtime_0"
+      ],
+      "must_not_depend_on": [],
+      "blocked_until": [],
+      "checks": [
+        "bare CPython concurrency import diagnostics",
+        "Sifr-native runtime namespace suggestions"
+      ]
+    },
+    {
+      "program": "legacy_sifr_runtime_surfaces_removed.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/legacy_sifr_runtime_surfaces_removed.sifr",
+      "expected_exit": 1,
+      "expected_stdout_contains": [],
+      "expected_diagnostic_contains": [
+        "unsupported",
+        "sifr.task",
+        "sifr.process",
+        "sifr.runtime"
+      ],
+      "depends_on": [
+        "milestone_concurrency_runtime_0a"
+      ],
+      "must_not_depend_on": [
+        "sifr.asyncio",
+        "sifr.subprocess",
+        "sifr.concurrent"
+      ],
+      "blocked_until": [
+        "milestone_concurrency_runtime_0a"
+      ],
+      "checks": [
+        "legacy CPython-shaped Sifr runtime surfaces removed or diagnosed before M1"
+      ]
+    },
+    {
       "program": "http_body_text_after_text_i18n.sifr",
       "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/http_body_text_after_text_i18n.sifr",
       "expected_exit": 0,

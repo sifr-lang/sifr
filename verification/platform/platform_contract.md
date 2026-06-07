@@ -34,10 +34,13 @@ Stable or semi-stable surfaces must also declare one stability level: `stable-pu
 | TCP streams, TLS streams, HTTP body streams, subprocess pipes, and text streams | Linear resources with explicit close/shutdown/drop behavior; double-close and use-after-close are diagnostics or typed errors. |
 | Incremental codecs | Unique mutable state; no concurrent aliasing or hidden shared mutation. |
 | Executor futures and task handles | Must be observed, joined, cancelled, or explicitly consumed; unobserved failure is diagnosed. |
+| Task, thread, process, and IPC boundary captures | Must satisfy the owning phase's sendability/shareability or IPC-serializability rules before codegen. |
 
 ## No Global State
 
 Production platform APIs must not introduce unsynchronized process-global mutation. Text/i18n enforces a static codec registry, rejects `codecs.register` / `codecs.unregister` / `codecs.register_error`, rejects process-global `locale.setlocale`, rejects `gettext.install` and global `_` injection, and forbids locale-derived implicit text I/O defaults. Locale-sensitive behavior is object-scoped through explicit `LocaleId` and formatter values.
+
+Concurrency/runtime rejects public event-loop policy mutation, raw thread/process-pool globals, Python `warnings` global filter parity, and mutable global Rayon/Tokio runtime configuration. Runtime work is scoped, observed, and typed through Sifr-owned handles.
 
 ## Cancellation, Backpressure, And Errors
 
@@ -61,6 +64,8 @@ Redaction is required for URLs with credentials, headers, cookies, request/respo
 | Subprocess resource limits and `@shell_exec` security surface | concurrency/runtime |
 | IPC payload size and panic-free malformed-message handling | concurrency/runtime |
 | Cancellation storms, task explosion, queue bounds, and offload capacity | concurrency/runtime |
+| Sendability/shareability across task, thread, process, and IPC boundaries | concurrency/runtime |
+| Structured signal shutdown and process termination escalation | concurrency/runtime |
 | Buffer/body size limits, parser DoS input, HTTP flow control, TLS verification, headers, and smuggling | network/HTTP |
 | Log redaction for URLs, headers, bodies, cookies, certificates, subprocess commands, env, and catalogs | shared contract with owning phase-specific fields |
 

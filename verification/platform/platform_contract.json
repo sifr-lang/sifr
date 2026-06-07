@@ -56,7 +56,20 @@
         "unsupported locale.setlocale diagnostics",
         "object-scoped LocaleId formatters",
         "unsupported gettext.install/global underscore diagnostics",
-        "explicit encoding required for text I/O"
+        "explicit encoding required for text I/O",
+        "unsupported event-loop policy mutation diagnostics",
+        "unsupported Python warnings global filter diagnostics",
+        "no mutable global Rayon pool configuration"
+      ]
+    },
+    "structured_runtime_work": {
+      "state": "required",
+      "enforced_by": [
+        "scoped TaskGroup ownership",
+        "affine TaskHandle observation",
+        "JoinSet join_all/cancel_all consumption",
+        "typed cancellation evidence",
+        "sendability/shareability diagnostics"
       ]
     }
   },
@@ -68,8 +81,15 @@
     "locale_discovery": "text-i18n",
     "host_limited_formatting": "text-i18n",
     "subprocess_resource_limits": "concurrency-runtime",
+    "shell_exec_effect": "concurrency-runtime",
     "ipc_payload_size": "concurrency-runtime",
+    "ipc_malformed_frames": "concurrency-runtime",
     "cancellation_storms": "concurrency-runtime",
+    "task_explosion": "concurrency-runtime",
+    "queue_bounds": "concurrency-runtime",
+    "offload_capacity": "concurrency-runtime",
+    "sendability_shareability": "concurrency-runtime",
+    "structured_signal_shutdown": "concurrency-runtime",
     "http_parser_dos": "network-http",
     "tls_verification": "network-http",
     "http_flow_control": "network-http",
