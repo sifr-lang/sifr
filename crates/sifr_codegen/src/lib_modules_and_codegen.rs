@@ -3,7 +3,7 @@ use super::{
     build_async_generator_type_items, build_cancellation_error_type_items, build_cpu_offload_items,
     build_error_into_error_impl, build_error_type_items, build_failure_type_items,
     build_file_handle_infra_items, build_file_handle_struct_items, build_io_error_items,
-    build_join_set_cpu_items, build_join_set_items, build_logging_items,
+    build_join_set_cpu_items, build_join_set_items, build_logging_items, build_process_child_items,
     build_random_module_state_items, build_task_scope_cpu_offload_items, build_task_scope_items,
     build_task_scope_offload_items, build_timeout_result_type_items, build_worker_panic_hook_items,
     module_uses_async_exit_cause_type, module_uses_async_generator_type,
@@ -321,6 +321,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut all_needed: Vec<String> = Vec::new();
     let mut transitive_dependency_modules: HashSet<String> = HashSet::new();
     let mut stdlib_needs_file_handles = false;
+    let mut stdlib_needs_process_children = false;
     let mut stdlib_provides_file_handle_struct = false;
     for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
@@ -379,6 +380,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     let prepared = collect_and_strip_shared_prelude(&filtered);
                     stdlib_needs_file_handles |=
                         prepared.shared_needs.file_handles.needs_file_handles;
+                    stdlib_needs_process_children |= prepared
+                        .shared_needs
+                        .process_children
+                        .needs_process_children;
                     stdlib_provides_file_handle_struct |= prepared
                         .shared_needs
                         .file_handles
@@ -401,6 +406,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
 
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
     let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
+    let needs_process_children = stdlib_needs_process_children;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
         || emitter.runtime_needs.logging_state();
@@ -565,6 +571,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             preamble_items.extend(build_file_handle_struct_items());
         }
     }
+    if needs_process_children {
+        preamble_items.extend(build_process_child_items());
+    }
 
     // Emit global log level state if logging module is used.
     if needs_logging {
@@ -624,6 +633,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let needs_sifr_int =
         body_import_needs.runtime.needs_sifr_int || stdlib_import_needs.runtime.needs_sifr_int;
     let needs_mutex = needs_file_handles
+        || needs_process_children
         || needs_logging
         || needs_random_module_state
         || body_import_needs.runtime.needs_mutex

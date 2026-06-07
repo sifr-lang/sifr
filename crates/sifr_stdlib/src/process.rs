@@ -30,6 +30,26 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "process_spawn".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("program".to_string(), Type::Str),
+                ("args".to_string(), args_ty.clone()),
+                ("env".to_string(), env_ty.clone()),
+                ("cwd".to_string(), Type::Str),
+                ("has_cwd".to_string(), Type::Bool),
+            ],
+            result_ty(Type::Int, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_wait".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::Int, "ProcessError"),
+        ),
+    );
+    functions.insert(
         "process_output".to_string(),
         FunctionType::all_borrow(
             vec![
