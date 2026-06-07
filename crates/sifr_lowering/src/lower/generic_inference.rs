@@ -71,6 +71,7 @@ pub(in crate::lower) fn infer_type_var_bindings(
         | (Type::TaskResult(p_ok, p_err), Type::TaskResult(a_ok, a_err))
         | (Type::Select2(p_ok, p_err), Type::Select2(a_ok, a_err))
         | (Type::BlockingTask(p_ok, p_err), Type::BlockingTask(a_ok, a_err))
+        | (Type::JoinSet(p_ok, p_err), Type::JoinSet(a_ok, a_err))
         | (Type::AsyncIterator(p_ok, p_err), Type::AsyncIterator(a_ok, a_err))
         | (Type::AsyncGenerator(p_ok, p_err), Type::AsyncGenerator(a_ok, a_err)) => {
             infer_type_var_bindings(p_ok, a_ok, bindings);

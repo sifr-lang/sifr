@@ -34,6 +34,7 @@ pub(in crate::lower) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
         | Type::TaskResult(ok, err)
         | Type::Select2(ok, err)
         | Type::BlockingTask(ok, err)
+        | Type::JoinSet(ok, err)
         | Type::AsyncIterator(ok, err)
         | Type::AsyncGenerator(ok, err) => {
             collect_type_vars(ok, vars);

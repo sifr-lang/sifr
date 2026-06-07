@@ -103,6 +103,11 @@ impl RustEmitter {
                 self.rust_type_with_generics(ok),
                 self.rust_generator_error_type_with_generics(err)
             ),
+            Type::JoinSet(ok, err) => format!(
+                "__SifrJoinSet<{}, {}>",
+                self.rust_type_with_generics(ok),
+                self.rust_generator_error_type_with_generics(err)
+            ),
             Type::TaskResult(ok, err) => format!(
                 "__SifrTaskResult<{}, {}>",
                 self.rust_type_with_generics(ok),

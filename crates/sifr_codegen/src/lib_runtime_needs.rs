@@ -420,6 +420,7 @@ pub(crate) fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool 
         | Type::TaskResult(key, value)
         | Type::Select2(key, value)
         | Type::BlockingTask(key, value)
+        | Type::JoinSet(key, value)
         | Type::AsyncIterator(key, value)
         | Type::AsyncGenerator(key, value) => {
             type_contains_by(key, predicate) || type_contains_by(value, predicate)
@@ -746,6 +747,72 @@ pub(crate) fn module_uses_spawn_cpu(module: &HirModule) -> bool {
             let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
             let mut on_expr = |expr: &HirExpr| {
                 if expr_uses_spawn_cpu_runtime(expr) {
+                    TraversalControl::Stop
+                } else {
+                    TraversalControl::Continue
+                }
+            };
+            if matches!(
+                traversal::walk_stmts_until(
+                    &method.body,
+                    TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                    &mut on_stmt,
+                    &mut on_expr
+                ),
+                TraversalControl::Stop
+            ) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+pub(crate) fn module_uses_join_set(module: &HirModule) -> bool {
+    fn expr_uses_join_set_runtime(expr: &HirExpr) -> bool {
+        match expr {
+            HirExpr::Call { func, .. } => func == "__sifr_join_set_new",
+            HirExpr::MethodCall { method, .. } => matches!(
+                method.as_str(),
+                "__sifr_add_task"
+                    | "__sifr_add_blocking_task"
+                    | "__sifr_spawn_blocking"
+                    | "__sifr_spawn_cpu"
+                    | "__sifr_join_all"
+                    | "__sifr_cancel_all"
+            ),
+            _ => false,
+        }
+    }
+
+    for func in &module.functions {
+        let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+        let mut on_expr = |expr: &HirExpr| {
+            if expr_uses_join_set_runtime(expr) {
+                TraversalControl::Stop
+            } else {
+                TraversalControl::Continue
+            }
+        };
+        if matches!(
+            traversal::walk_stmts_until(
+                &func.body,
+                TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                &mut on_stmt,
+                &mut on_expr
+            ),
+            TraversalControl::Stop
+        ) {
+            return true;
+        }
+    }
+
+    for class in &module.classes {
+        for method in &class.methods {
+            let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+            let mut on_expr = |expr: &HirExpr| {
+                if expr_uses_join_set_runtime(expr) {
                     TraversalControl::Stop
                 } else {
                     TraversalControl::Continue

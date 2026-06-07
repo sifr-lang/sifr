@@ -54,19 +54,27 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         emitted_items.extend(emitter.enum_items.clone());
     }
     let uses_task_scope = super::module_uses_task_scope(module);
-    if uses_task_scope || super::module_uses_failure_type(module) {
+    let uses_join_set = super::module_uses_join_set(module);
+    let uses_join_set_spawn_cpu = super::module_uses_join_set_spawn_cpu(module);
+    if uses_task_scope || uses_join_set || super::module_uses_failure_type(module) {
         emitted_items.extend(super::build_failure_type_items());
     }
-    if uses_task_scope || super::module_uses_cancellation_error_type(module) {
+    if uses_task_scope || uses_join_set || super::module_uses_cancellation_error_type(module) {
         emitted_items.extend(super::build_cancellation_error_type_items());
     }
     if super::module_uses_async_exit_cause_type(module) {
         emitted_items.extend(super::build_async_exit_cause_type_items());
     }
-    if uses_task_scope {
+    if uses_task_scope || uses_join_set {
         emitted_items.extend(super::build_task_scope_items());
     }
-    if super::module_uses_timeout_result_type(module) && !uses_task_scope {
+    if uses_join_set {
+        emitted_items.extend(super::build_join_set_items());
+    }
+    if uses_join_set_spawn_cpu {
+        emitted_items.extend(super::build_join_set_cpu_items());
+    }
+    if super::module_uses_timeout_result_type(module) && !uses_task_scope && !uses_join_set {
         emitted_items.extend(super::build_timeout_result_type_items());
     }
     if !emitter.body_items.is_empty() {

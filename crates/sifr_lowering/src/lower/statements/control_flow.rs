@@ -20,6 +20,7 @@ use super::{
     NarrowingCondition, Ranged, StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtWhile, TextRange,
     Type,
 };
+use crate::lower::task_join_set_calls::record_join_set_terminal_awaitable;
 pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
         statement_diagnostics::invalid_assignment_target(
@@ -323,9 +324,20 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
                 assign.value.range(),
             );
         }
+        if ctx.live_join_set_bindings.contains(&name) && !ctx.scope.is_moved(&name) {
+            ctx.error_with_code_at(
+                DiagnosticCode::OWN_USE_AFTER_MOVE,
+                format!(
+                    "cannot reassign live JoinSet binding '{name}' before consuming it with await {name}.join_all() or await {name}.cancel_all()"
+                ),
+                name_range,
+            );
+        }
         // Reset moved state on reassignment
         ctx.reset_moved_with_flow(&name);
         ctx.task_handle_group_owners.remove(&name);
+        ctx.live_join_set_bindings.remove(&name);
+        record_join_set_terminal_awaitable(&name, &value, ctx);
         record_async_generator_advance_binding(ctx, &name, &value);
         invalidate_rebound_binding_facts(ctx, &name);
         if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
@@ -364,6 +376,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         {
             record_const_integer_binding(ctx, &name, &value);
         }
+        record_join_set_terminal_awaitable(&name, &value, ctx);
         record_async_generator_advance_binding(ctx, &name, &value);
         if let Some(group_name) = task_group_spawn_owner(&value) {
             ctx.task_handle_group_owners

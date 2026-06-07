@@ -1,0 +1,20 @@
+from sifr.parallel import WorkerError
+
+
+class LocalFailure(Error):
+    message: str
+
+
+@cpu_heavy
+def work_item() -> Result[int, LocalFailure]:
+    return 11
+
+
+async def main() -> Result[None, ScopeFailure]:
+    joins = task.JoinSet[int, WorkerError]()
+    item_id = joins.spawn_cpu(work_item)
+    pending = joins.join_all()
+    results = await pending
+    assert str(item_id) == "0"
+    assert str(results) == "[Ok(11)]"
+    return None

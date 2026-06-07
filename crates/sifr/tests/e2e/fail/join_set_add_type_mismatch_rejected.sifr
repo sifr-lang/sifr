@@ -1,0 +1,16 @@
+# expect-error: SIFR-TYPE-0002
+from sifr.parallel import WorkerError
+
+
+async def worker() -> Result[str, WorkerError]:
+    await task.sleep(0.0)
+    return "bad"
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        joins = task.JoinSet[int, WorkerError]()
+        item_id = joins.add(handle)
+        results = await joins.join_all()
+    return None

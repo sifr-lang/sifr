@@ -95,6 +95,7 @@ fn collect_type_error_refs(
         | Type::TaskResult(key, value)
         | Type::Select2(key, value)
         | Type::BlockingTask(key, value)
+        | Type::JoinSet(key, value)
         | Type::AsyncIterator(key, value)
         | Type::AsyncGenerator(key, value) => {
             collect_type_error_refs(key, referenced, builtin_error_classes);

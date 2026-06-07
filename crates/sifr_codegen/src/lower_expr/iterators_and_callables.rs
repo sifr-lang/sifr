@@ -438,6 +438,21 @@ pub(super) fn try_lower_simple_method_call_expr(
             args: lowered_args,
         });
     }
+    if matches!(method, "__sifr_join_all" | "__sifr_cancel_all")
+        && matches!(resolve_alias_type(object.ty()), Type::JoinSet(_, _))
+        && args.is_empty()
+    {
+        let lowered_object = try_lower_leaf_or_name_expr(object)?;
+        let terminal_call = RustExpr::MethodCall {
+            receiver: Box::new(lowered_object),
+            method: method.to_string(),
+            args: vec![],
+        };
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Box".to_string(), "pin".to_string()])),
+            args: vec![terminal_call],
+        });
+    }
     // Method-call lowering is ownership- and type-convention-sensitive.
     // Keep it on the structured emitter path where binding context is available.
     None

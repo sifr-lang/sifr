@@ -100,6 +100,25 @@ impl RustEmitter {
         if let Some(coerced) = crate::fixed_width_literal_expr_for_target(target_ty, value) {
             return Ok(coerced);
         }
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(target_ty),
+            Type::Awaitable(_)
+        ) && matches!(
+            crate::resolve_alias_type_for_plain_call(value_ty),
+            Type::Awaitable(_)
+        ) && matches!(
+            value,
+            HirExpr::MethodCall { method, .. }
+                if method == "__sifr_join_all" || method == "__sifr_cancel_all"
+        ) {
+            return Ok(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "Box".to_string(),
+                    "pin".to_string(),
+                ])),
+                args: vec![lowered_value],
+            });
+        }
         Ok(Self::wrap_option_local_value_for_ir(
             target_ty,
             value,
@@ -165,6 +184,7 @@ impl RustEmitter {
             | Type::TimeoutResult(_)
             | Type::Select2(_, _)
             | Type::BlockingTask(_, _)
+            | Type::JoinSet(_, _)
             | Type::Awaitable(_)
             | Type::AsyncIterator(_, _)
             | Type::AsyncGenerator(_, _)

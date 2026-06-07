@@ -1,0 +1,16 @@
+from sifr.parallel import WorkerError
+
+
+async def worker() -> Result[int, WorkerError]:
+    await task.sleep(0.0)
+    return 41
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        joins = task.JoinSet[int, WorkerError]()
+        item_id = joins.add(handle)
+        results = await joins.join_all()
+        assert str(results) == "[Ok(41)]"
+    return None

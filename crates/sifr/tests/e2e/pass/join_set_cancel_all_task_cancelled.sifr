@@ -1,0 +1,16 @@
+from sifr.parallel import WorkerError
+
+
+async def slow_worker() -> Result[int, WorkerError]:
+    await task.sleep(10.0)
+    return 9
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(slow_worker())
+        joins = task.JoinSet[int, WorkerError]()
+        item_id = joins.add(handle)
+        outcomes = await joins.cancel_all()
+        assert str(outcomes) == "[Cancelled]"
+    return None

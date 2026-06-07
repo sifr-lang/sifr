@@ -23,6 +23,9 @@ use super::{
 };
 use crate::hir_nodes::HirExpr;
 use crate::lower::parallel_calls;
+use crate::lower::task_join_set_calls::{
+    lower_task_join_set_constructor, JoinSetConstructorLowering,
+};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
@@ -287,6 +290,15 @@ pub(super) fn call_arity_range(call: &ExprCall) -> TextRange {
 }
 
 pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if let Expr::Subscript(subscript) = call.func.as_ref() {
+        match lower_task_join_set_constructor(subscript, call, ctx) {
+            JoinSetConstructorLowering::Lowered(expr) => {
+                return Some(expr);
+            }
+            JoinSetConstructorLowering::Rejected => return None,
+            JoinSetConstructorLowering::NoMatch => {}
+        }
+    }
     if let Expr::Attribute(attr) = call.func.as_ref() {
         if let Some(factory_call) = lower_bytes_type_factory_call(attr, call, ctx) {
             return Some(factory_call);

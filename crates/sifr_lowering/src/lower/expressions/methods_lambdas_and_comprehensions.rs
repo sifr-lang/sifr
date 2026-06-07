@@ -15,7 +15,7 @@ use super::{
     ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
     DEFAULTDICT_SET_ALIAS,
 };
-use crate::lower::parallel_calls;
+use crate::lower::{parallel_calls, task_join_set_calls};
 pub(in crate::lower) fn lower_method_call(
     attr: &ExprAttribute,
     call: &ExprCall,
@@ -98,6 +98,11 @@ pub(in crate::lower) fn lower_method_call(
     }
     if let Some(result) =
         parallel_calls::lower_parallel_pool_method_call(&object, &method_name, call, ctx)
+    {
+        return result;
+    }
+    if let Some(result) =
+        task_join_set_calls::lower_join_set_method_call(object.clone(), &method_name, call, ctx)
     {
         return result;
     }

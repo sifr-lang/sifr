@@ -591,6 +591,15 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
             ],
         });
     }
+    if func == "__sifr_join_set_new" {
+        if !args.is_empty() {
+            return None;
+        }
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Ident(func.to_string())),
+            args: vec![],
+        });
+    }
     if func == "__sifr_spawn_blocking_infallible"
         || func == "__sifr_spawn_blocking_result"
         || func == "__sifr_spawn_cpu_infallible"

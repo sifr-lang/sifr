@@ -1,0 +1,19 @@
+@cpu_heavy
+def first() -> Result[int, ValueError]:
+    return 3
+
+
+@cpu_heavy
+def second() -> Result[int, ValueError]:
+    return 4
+
+
+async def main() -> Result[None, ScopeFailure]:
+    joins = task.JoinSet[int, ValueError]()
+    first_id = joins.spawn_blocking(first)
+    second_id = joins.spawn_blocking(second)
+    results = await joins.join_all()
+    assert str(first_id) == "0"
+    assert str(second_id) == "1"
+    assert str(results) == "[Ok(3), Ok(4)]"
+    return None
