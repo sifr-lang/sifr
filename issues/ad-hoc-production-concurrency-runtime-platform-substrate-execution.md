@@ -30,7 +30,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] `milestone_concurrency_runtime_0`: Product Boundary And Rust Concurrency Contract
 - [x] `milestone_concurrency_runtime_0a`: Legacy CPython-Shaped Surface Removal Gate
 - [x] `milestone_concurrency_runtime_1`: Structured Async Runtime
-- [ ] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
+- [x] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
 - [ ] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
 - [ ] `milestone_concurrency_runtime_4`: Process Runtime
 - [ ] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
@@ -249,6 +249,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 
 - M0/M0a/post-M0 reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`, `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`, and `reviews/ad-hoc-production-concurrency-runtime-post-m0-external-review-pass-1.md`. M1 may start.
 - M1 structured-async implementation reviews are complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`, `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`, and `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`. M1 is ready to PR/merge.
+- M2 sync/channel implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m2-sync-review-pass-1.md`. M2 is locally validated and ready to PR/merge.
 
 ## M1 Implementation Ledger
 
@@ -290,6 +291,49 @@ Current M1 wave: structured task API public-shape closure.
   - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`: `PASS`; non-blocking select signature wording, async-with decomposition, and sequential same-name task-owner cleanup polish was applied.
   - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`: `PASS`; non-blocking demo/select and `spawn_scoped` model-doc polish was applied.
   - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`: `PASS`; reviewer verified the post-polish tree and is satisfied.
+
+## M2 Implementation Ledger
+
+Current M2 wave: synchronization, channels, and backpressure closure.
+
+- Channel runtime hardening:
+  - Generated `sifr.sync` channel runtime now uses explicit `tokio::sync::Notify` wakeups for sender capacity, receiver availability, close, and endpoint-drop events instead of full/empty yield-loop polling.
+  - Sender and receiver wait loops enable their `Notified` future before checking channel state, preserving Tokio's documented no-lost-wake pattern for multi-waiter backpressure.
+  - Existing sender/receiver close, FIFO, bounded backpressure, cancellation, async iteration, and drop semantics remain on the Sifr-owned public endpoint API.
+- Synchronization guard policy:
+  - `SemaphorePermit` is classified as a guard-like resource.
+  - Live semaphore permits cannot cross `await` and cannot escape through return values.
+  - Sync `Lock`/`RwLock` guard diagnostics remain intact.
+- Surface disposition:
+  - `Notify` is the accepted edge-triggered event primitive in M2.
+  - Level-triggered `Event` behavior uses explicit state plus `Notify` in the first model.
+  - `sync.AsyncMutex[T]`, `sync.AsyncRwLock[T]`, public `Barrier`, public `Once`, and Python-shaped queue accounting remain deferred/internal-only as recorded in the M2 traceability artifact.
+- Traceability:
+  - `verification/stdlib/concurrency_runtime_m2_sync_traceability.md`
+  - `verification/stdlib/concurrency_runtime_substrate_inventory.md`
+  - `verification/stdlib/concurrency_runtime_substrate_inventory.json`
+  - `internal_docs/async_concurrency_model.md`
+- Focused local validation before M2 review:
+  - `cargo fmt --check`: pass.
+  - `cargo clippy --workspace -- -D warnings`: pass.
+  - `python3 scripts/check_file_size_guardrails.py`: pass, 2117 files under the 900-line limit.
+  - `python3 scripts/check_hir_maintainability_guardrails.py`: pass.
+  - `python3 -m json.tool verification/stdlib/concurrency_runtime_substrate_inventory.json`: pass.
+  - `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json`: pass.
+  - `cargo test -p sifr_lowering semaphore_permit -- --nocapture`: pass, 2 passed.
+  - `cargo test -p sifr_lowering lock_guard -- --nocapture`: pass, 3 passed.
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/channel_backpressure.sifr`: pass.
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/channel_cancel_receive_no_loss.sifr`: pass.
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/notify_basic.sifr`: pass.
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/semaphore_basic.sifr`: pass.
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/semaphore_permit_across_await_rejected.sifr`: expected fail with `SIFR-OWN-0009`.
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/semaphore_permit_escape_rejected.sifr`: expected fail with `SIFR-OWN-0003`.
+  - `cargo test -p sifr -- test_e2e_fail -- --nocapture`: pass; fail harness completed 399 fail fixtures.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass; report `target/validation_lane_reports/create-pr.latest.json`; platform golden reported pass=5, skip=2; create-pr e2e pass suite reported 71 passed, 0 failed; advisory: warm wall-time budget exceeded.
+- M2 review loop:
+  - `reviews/ad-hoc-production-concurrency-runtime-m2-sync-review-pass-1.md`: `PASS`; channel Notify wakeups, semaphore permit guard diagnostics, surface disposition, sendability/shareability coverage, traceability, host matrix, inventory, merge manifest, and validation evidence were verified.
+  - `reviews/ad-hoc-production-concurrency-runtime-m2-sync-review-pass-2.md`: `NOT PASS`; technical implementation was verified, but reviewer required housekeeping so empty scratch artifacts and unrelated network/http work would not contaminate the M2 PR.
+  - `reviews/ad-hoc-production-concurrency-runtime-m2-sync-review-pass-3.md`: `PASS`; staged M2 diff was verified after housekeeping, including `Notified::enable()` no-lost-wake behavior and the unstaged network/http work exclusion.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -450,6 +494,7 @@ Create and keep current during implementation:
 - `verification/stdlib/concurrency_runtime_m0_traceability.md`
 - `verification/stdlib/concurrency_runtime_m0a_legacy_surface_traceability.md`
 - `verification/stdlib/concurrency_runtime_m1_traceability.md`
+- `verification/stdlib/concurrency_runtime_m2_sync_traceability.md`
 - `verification/platform/supported_host_matrix.md`
 - one traceability document per milestone domain under `verification/stdlib/`
 

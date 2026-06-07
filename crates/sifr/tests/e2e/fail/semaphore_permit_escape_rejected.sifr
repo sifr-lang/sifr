@@ -1,0 +1,11 @@
+from sifr.sync import SemaphorePermit
+
+
+def make_permit() -> SemaphorePermit:
+    permit: SemaphorePermit = SemaphorePermit()
+    return permit
+
+
+def main() -> None:
+    permit: SemaphorePermit = make_permit()
+    return None
