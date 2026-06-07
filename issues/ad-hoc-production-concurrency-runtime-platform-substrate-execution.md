@@ -664,6 +664,7 @@ M4 sync child kill targeted local validation:
 M4 sync child kill review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-child-kill-review-pass-1.md`: `PASS`; reviewer verified the wave is an honest sync forceful-kill slice, `process_kill` returns typed `ProcessError` for closed/unknown handles without data-dependent panics, kill preserves the child handle for later `wait`, top-level `kill(child)` triggers `SIFR-ASYNC-0003`, process-child runtime gating remains intact, and docs do not overclaim graceful termination, timeout escalation, structured cancellation, or signal evidence. Non-blocking feedback was applied before PR by changing the fixture from `sh -c "sleep 5"` to direct `sleep 30`, documenting that kill targets only the immediate child handle, and tracking method-form `@blocking_io` enforcement for `Child.wait()` / `Child.kill()` as later compiler work.
+- Merged as PR #2337: https://github.com/sifr-lang/sifr/pull/2337 (`2c6addfc2d67cc3fca15aa88d3e3956218fd106d`).
 
 M0 targeted local validation:
 
