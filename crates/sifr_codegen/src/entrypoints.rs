@@ -58,6 +58,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     let uses_join_set_spawn_cpu = super::module_uses_join_set_spawn_cpu(module);
     let uses_task_scope_offload = super::module_uses_task_scope_offload(module);
     let uses_task_scope_spawn_cpu = super::module_uses_task_scope_spawn_cpu(module);
+    let uses_spawn_cpu = super::module_uses_spawn_cpu(module);
     if uses_task_scope || uses_join_set || super::module_uses_failure_type(module) {
         emitted_items.extend(super::build_failure_type_items());
     }
@@ -79,8 +80,14 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if uses_join_set {
         emitted_items.extend(super::build_join_set_items());
     }
+    if uses_join_set_spawn_cpu || uses_spawn_cpu || uses_task_scope_spawn_cpu {
+        emitted_items.extend(super::build_worker_panic_hook_items());
+    }
     if uses_join_set_spawn_cpu {
         emitted_items.extend(super::build_join_set_cpu_items());
+    }
+    if uses_spawn_cpu {
+        emitted_items.extend(super::build_cpu_offload_items());
     }
     if super::module_uses_timeout_result_type(module) && !uses_task_scope && !uses_join_set {
         emitted_items.extend(super::build_timeout_result_type_items());
