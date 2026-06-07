@@ -1,0 +1,16 @@
+# expect-error: SIFR-OWN-0010
+class LocalCell(NonSend):
+    pass
+
+
+async def main() -> Result[None, ScopeFailure]:
+    cell: LocalCell = LocalCell()
+
+    @blocking_io
+    def use_cell() -> int:
+        assert cell is not None
+        return 1
+
+    handle = task.spawn_blocking(use_cell)
+    await task.sleep(0.0)
+    return None

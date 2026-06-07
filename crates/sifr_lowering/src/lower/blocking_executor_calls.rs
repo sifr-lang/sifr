@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::offload_worker_captures::validate_offload_worker_captures;
 use super::task_scope_calls::non_send_reason;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
@@ -42,6 +43,16 @@ pub(in crate::lower) fn lower_thread_pool_submit_call(
     }
 
     let worker = lower_expr(&call.arguments.args[0], ctx)?;
+    if validate_offload_worker_captures(
+        "ThreadPoolExecutor.submit()",
+        &worker,
+        call.arguments.args[0].range(),
+        ctx,
+    )
+    .is_none()
+    {
+        return Some(None);
+    }
     let Type::Function(ft) = worker.ty().resolve_alias() else {
         expression_diagnostics::type_mismatch(
             ctx,

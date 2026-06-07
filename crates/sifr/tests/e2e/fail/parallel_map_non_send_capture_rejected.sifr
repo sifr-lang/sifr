@@ -1,0 +1,19 @@
+# expect-error: SIFR-OWN-0010
+from sifr.parallel import WorkerRuntimeError, map
+
+
+class LocalCell(NonSend):
+    pass
+
+
+def main() -> None:
+    cell: LocalCell = LocalCell()
+
+    def use_cell(value: int) -> int:
+        assert cell is not None
+        return value
+
+    values: list[int] = [1]
+    result: Result[list[int], WorkerRuntimeError] = map(values, use_cell)
+    assert str(result) is not None
+    return None

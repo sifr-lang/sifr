@@ -101,6 +101,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) explicit_defaultdict_bindings: HashSet<String>,
     pub(in crate::lower) parallel_map_bindings: HashSet<String>,
     pub(in crate::lower) parallel_try_map_bindings: HashSet<String>,
+    /// Nested local function captures observed while lowering the current statement block.
+    pub(in crate::lower) nested_function_captures: HashMap<String, Vec<(String, Type)>>,
     pub(in crate::lower) sequence_guards: Vec<SequenceGuard>,
     pub(in crate::lower) len_aliases: Vec<LenAliasFact>,
     pub(in crate::lower) sequence_pointers: Vec<SequencePointerFact>,
@@ -167,6 +169,7 @@ impl LowerCtx {
             explicit_defaultdict_bindings: HashSet::new(),
             parallel_map_bindings: HashSet::new(),
             parallel_try_map_bindings: HashSet::new(),
+            nested_function_captures: HashMap::new(),
             sequence_guards: Vec::new(),
             len_aliases: Vec::new(),
             sequence_pointers: Vec::new(),

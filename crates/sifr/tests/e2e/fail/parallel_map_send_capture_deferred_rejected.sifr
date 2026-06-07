@@ -1,0 +1,14 @@
+# expect-error: SIFR-TYPE-0002
+from sifr.parallel import WorkerRuntimeError, map
+
+
+def main() -> None:
+    factor: int = 2
+
+    def scale(value: int) -> int:
+        return value * factor
+
+    values: list[int] = [1]
+    result: Result[list[int], WorkerRuntimeError] = map(values, scale)
+    assert str(result) is not None
+    return None

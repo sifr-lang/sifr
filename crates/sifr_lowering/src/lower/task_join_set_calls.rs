@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::offload_worker_captures::validate_offload_worker_captures;
 use super::task_scope_calls::{mark_task_handle_observed, non_send_reason};
 use super::typing_and_functions::resolve_annotation_expr;
 use super::workload_annotations::WorkloadKind;
@@ -290,6 +291,7 @@ fn validate_worker(call: &ExprCall, ctx: &mut LowerCtx, api_name: &str) -> Optio
     validate_no_keywords(call, ctx, api_name)?;
     validate_exact_arg_count(call, ctx, api_name, 1)?;
     let worker = lower_expr(&call.arguments.args[0], ctx)?;
+    validate_offload_worker_captures(api_name, &worker, call.arguments.args[0].range(), ctx)?;
     let Type::Function(ft) = worker.ty().resolve_alias() else {
         expression_diagnostics::type_mismatch(
             ctx,

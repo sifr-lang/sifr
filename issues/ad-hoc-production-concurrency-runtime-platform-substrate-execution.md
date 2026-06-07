@@ -531,6 +531,23 @@ M3 default parallel pool closure review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m3-default-pool-review-pass-1.md`: `PASS`; reviewer verified top-level `parallel.map`/`try_map` now use one private process-local `OnceLock` Rayon pool, typed default-pool construction failures remain `WorkerRuntimeError`/`WorkerError`, configured `Pool(config)` semantics remain unchanged, manifests and traceability are honest, and no Rayon global pool mutation is introduced. Non-blocking traceability wording for cached construction failure was applied before PR validation.
 - PR #2326 merged at `69f7a06ad12948dcd071de21c991c650ae062672`.
 
+M3 worker capture-sendability closure targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo check -p sifr_lowering` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2162 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr_lowering nested_function -- --nocapture` -> PASS; 18 passed.
+- `cargo test -p sifr_lowering ownership_and_async -- --nocapture` -> PASS; 58 passed, 1 ignored.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/spawn_blocking_non_send_capture_rejected.sifr` -> expected fail with `SIFR-OWN-0010`.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail suite reported 415 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; platform golden reported pass=5, skip=2; create-pr e2e pass suite reported 89 passed, 0 failed, cache_hits=23/23; advisory: warm wall-time budget exceeded.
+
+M3 worker capture-sendability closure review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m3-capture-sendability-review-pass-1.md`: `PASS`; reviewer verified capture-summary scoping, non-send capture diagnostics, sendable nested-capture deferral, unchanged top-level worker behavior, worker-boundary coverage, and honest docs. Non-blocking feedback requested symmetric `task.spawn_blocking()` validator coverage and fixture.
+- `reviews/ad-hoc-production-concurrency-runtime-m3-capture-sendability-review-pass-2.md`: `PASS`; reviewer verified the `task.spawn_blocking()` symmetry fix, `spawn_blocking_non_send_capture_rejected` fixture, unchanged capture-summary scoping, full named-worker boundary coverage, and no docs overclaim.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

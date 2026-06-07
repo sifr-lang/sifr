@@ -107,6 +107,8 @@ pub(in crate::lower) fn lower_stmts(
         .push(nested_inference.binding_hints.clone());
     ctx.push_empty_collection_hint_adoption(can_adopt_empty_collection_hints);
     predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
+    let previous_nested_captures =
+        push_nested_function_captures(&nested_inference.function_captures, ctx);
 
     let mut result = Vec::new();
     for stmt in stmts {
@@ -158,7 +160,37 @@ pub(in crate::lower) fn lower_stmts(
     }
     let _ = ctx.inferred_binding_hints.pop();
     ctx.pop_empty_collection_hint_adoption();
+    restore_nested_function_captures(previous_nested_captures, ctx);
     result
+}
+
+fn push_nested_function_captures(
+    captures: &std::collections::HashMap<String, Vec<(String, Type)>>,
+    ctx: &mut LowerCtx,
+) -> Vec<(String, Option<Vec<(String, Type)>>)> {
+    captures
+        .iter()
+        .map(|(name, function_captures)| {
+            (
+                name.clone(),
+                ctx.nested_function_captures
+                    .insert(name.clone(), function_captures.clone()),
+            )
+        })
+        .collect()
+}
+
+fn restore_nested_function_captures(
+    previous: Vec<(String, Option<Vec<(String, Type)>>)>,
+    ctx: &mut LowerCtx,
+) {
+    for (name, captures) in previous {
+        if let Some(captures) = captures {
+            ctx.nested_function_captures.insert(name, captures);
+        } else {
+            ctx.nested_function_captures.remove(&name);
+        }
+    }
 }
 pub(super) fn predeclare_nested_function_symbols(
     stmts: &[Stmt],

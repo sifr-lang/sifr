@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::offload_worker_captures::validate_offload_worker_captures;
 use super::task_scope_calls::lower_task_scope_spawn_from_object_allowing_reserved_ctx;
 use super::task_scope_calls::mark_task_handle_observed;
 use super::task_scope_calls::non_send_reason;
@@ -124,6 +125,16 @@ fn lower_task_spawn_cpu_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLow
     let Some(worker) = worker else {
         return TaskCallLowering::Rejected;
     };
+    if validate_offload_worker_captures(
+        "task.spawn_cpu()",
+        &worker,
+        call.arguments.args[0].range(),
+        ctx,
+    )
+    .is_none()
+    {
+        return TaskCallLowering::Rejected;
+    }
     let Type::Function(ft) = worker.ty().resolve_alias() else {
         expression_diagnostics::type_mismatch(
             ctx,
@@ -239,6 +250,16 @@ fn lower_task_spawn_blocking_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCa
     let Some(worker) = worker else {
         return TaskCallLowering::Rejected;
     };
+    if validate_offload_worker_captures(
+        "task.spawn_blocking()",
+        &worker,
+        call.arguments.args[0].range(),
+        ctx,
+    )
+    .is_none()
+    {
+        return TaskCallLowering::Rejected;
+    }
     let Type::Function(ft) = worker.ty().resolve_alias() else {
         expression_diagnostics::type_mismatch(
             ctx,

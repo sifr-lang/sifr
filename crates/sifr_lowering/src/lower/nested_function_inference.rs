@@ -11,3 +11,4 @@ use expression_inference::{
     analyze_assign, infer_expr_type, merge_env_types, refine_name_with_binary_context,
     type_contains_unknown_or_any, unify_function_return, unify_name_binding, unify_types,
 };
+mod capture_collection;

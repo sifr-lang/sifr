@@ -1,5 +1,6 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
+use super::offload_worker_captures::validate_offload_worker_captures;
 use super::task_scope_calls::non_send_reason;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
@@ -156,6 +157,7 @@ fn validate_parallel_map_like_call(
     }
 
     let worker = lower_expr(&call.arguments.args[1], ctx)?;
+    validate_offload_worker_captures(api_name, &worker, call.arguments.args[1].range(), ctx)?;
     let Type::Function(ft) = worker.ty().resolve_alias() else {
         expression_diagnostics::type_mismatch(
             ctx,
