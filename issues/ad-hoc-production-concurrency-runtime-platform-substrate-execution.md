@@ -625,6 +625,26 @@ M4 sync child wait review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-child-wait-review-pass-1.md`: `PASS`; reviewer verified the wave is sync-only and does not overclaim pipes/async process support, process-child runtime state is gated to spawn/wait users, `process_wait` is one-shot and typed without data-dependent panics, top-level `wait(child)` triggers imported `@blocking_io` direct-async diagnostics, top-level/method wait asymmetry is safe for this wave, and traceability preserves remaining lifecycle work. Non-blocking follow-ups were recorded for unified wait-observation wording, explicit unwaited-child leak/drop cleanup documentation, possible tighter `Child`-only import preamble gating, and legacy `_sifr.sys.subprocess_*` cleanup.
 - PR #2334 merged at `314e7f9ff7b300f7a333655fa2ad3ed756b29442`.
 
+M4 timeout status evidence wave targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo check -p sifr_stdlib -p sifr_codegen -p sifr --quiet` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo test -p sifr_codegen lowers_process_timeout_intrinsics_via_registry -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_timeout_status.sifr` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 418 fail tests completed.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2171 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_timeout_status.sifr | rg "try_wait|kill\\(\\)|try_from_secs_f64|checked_add|is_finite|__timed_out"` -> PASS; emitted timeout paths guard invalid timeout values, use checked duration conversion and checked host-clock deadline construction for out-of-range values, poll with `try_wait`, kill timed-out children, and return typed timeout evidence.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`93 passed`, `0 failed`, `cache_hits=22/25`, `report_signature=91dc84a36565dad4`).
+- Post-`origin/main` merge rerun: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`94 passed`, `0 failed`, `cache_hits=24/25`, `report_signature=e656d8db94f60742`).
+
+M4 timeout status evidence wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-1.md`: `CHANGES_REQUESTED`; reviewer found a user-triggerable panic for positive finite timeout values too large for `Duration::from_secs_f64`. The wave was remediated by switching generated timeout conversion to checked `Duration::try_from_secs_f64`, adding an overflow `ProcessError` regression fixture, and tightening traceability.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-2.md`: `PASS`; reviewer verified the pass-1 overflow blocker was fixed and noted a non-blocking theoretical host-clock overflow band in `Instant + Duration`.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-3.md`: `PASS`; reviewer verified the additional `Instant::checked_add(...).ok_or_else(ProcessError)?` hardening closes the host-clock deadline overflow path and no timeout-path data-dependent panic blocker remains.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

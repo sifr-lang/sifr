@@ -6,6 +6,10 @@ fn process_bytes_output_tuple() -> Type {
     Type::Tuple(vec![Type::Bytes, Type::Bytes, Type::Int])
 }
 
+fn process_bytes_timeout_output_tuple() -> Type {
+    Type::Tuple(vec![Type::Bytes, Type::Bytes, Type::Int, Type::Bool])
+}
+
 fn process_text_output_tuple() -> Type {
     Type::Tuple(vec![Type::Str, Type::Str, Type::Int])
 }
@@ -69,8 +73,8 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         FunctionType::all_borrow(
             vec![
                 ("program".to_string(), Type::Str),
-                ("args".to_string(), args_ty),
-                ("env".to_string(), env_ty),
+                ("args".to_string(), args_ty.clone()),
+                ("env".to_string(), env_ty.clone()),
                 ("cwd".to_string(), Type::Str),
                 ("has_cwd".to_string(), Type::Bool),
                 ("stdin".to_string(), Type::Bytes),
@@ -78,6 +82,22 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("encoding".to_string(), Type::Str),
             ],
             result_ty(process_text_output_tuple(), "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_output_timeout".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("program".to_string(), Type::Str),
+                ("args".to_string(), args_ty.clone()),
+                ("env".to_string(), env_ty.clone()),
+                ("cwd".to_string(), Type::Str),
+                ("has_cwd".to_string(), Type::Bool),
+                ("stdin".to_string(), Type::Bytes),
+                ("has_stdin".to_string(), Type::Bool),
+                ("timeout_seconds".to_string(), Type::Float),
+            ],
+            result_ty(process_bytes_timeout_output_tuple(), "ProcessError"),
         ),
     );
     functions.insert(
@@ -108,6 +128,18 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("encoding".to_string(), Type::Str),
             ],
             result_ty(process_text_output_tuple(), "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_shell_output_timeout".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("script".to_string(), Type::Str),
+                ("stdin".to_string(), Type::Bytes),
+                ("has_stdin".to_string(), Type::Bool),
+                ("timeout_seconds".to_string(), Type::Float),
+            ],
+            result_ty(process_bytes_timeout_output_tuple(), "ProcessError"),
         ),
     );
 

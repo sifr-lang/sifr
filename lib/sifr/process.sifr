@@ -5,9 +5,11 @@ from _sifr.process import (
     process_wait,
     process_output,
     process_output_text,
+    process_output_timeout,
     process_shell_run,
     process_shell_output,
     process_shell_output_text,
+    process_shell_output_timeout,
 )
 
 
@@ -134,6 +136,15 @@ def _status(code: int) -> Status:
     return Status(code, "nonzero")
 
 
+def _status_from(code: int, timed_out: bool) -> Status:
+    if timed_out:
+        status: Status = Status(code, "timeout")
+        status.success = False
+        status.timed_out = True
+        return status
+    return _status(code)
+
+
 @blocking_io
 def spawn(command: Command) -> Result[Child, ProcessError]:
     try:
@@ -174,6 +185,24 @@ def run(command: Command) -> Result[Status, ProcessError]:
 
 
 @blocking_io
+def run_timeout(command: Command, seconds: float) -> Result[Status, ProcessError]:
+    try:
+        raw: tuple[bytes, bytes, int, bool] = process_output_timeout(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_data,
+            command.has_stdin_data,
+            seconds,
+        )
+        return _status_from(raw[2], raw[3])
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
 def output(command: Command) -> Result[Output, ProcessError]:
     try:
         raw: tuple[bytes, bytes, int] = process_output(
@@ -186,6 +215,24 @@ def output(command: Command) -> Result[Output, ProcessError]:
             command.has_stdin_data,
         )
         return Output(raw[0], raw[1], _status(raw[2]))
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+def output_timeout(command: Command, seconds: float) -> Result[Output, ProcessError]:
+    try:
+        raw: tuple[bytes, bytes, int, bool] = process_output_timeout(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_data,
+            command.has_stdin_data,
+            seconds,
+        )
+        return Output(raw[0], raw[1], _status_from(raw[2], raw[3]))
     except ProcessError as e:
         raise e
 
@@ -227,6 +274,33 @@ def output_shell(script: str, stdin: bytes | None = None) -> Result[Output, Proc
             return Output(raw[0], raw[1], _status(raw[2]))
         raw: tuple[bytes, bytes, int] = process_shell_output(script, stdin, True)
         return Output(raw[0], raw[1], _status(raw[2]))
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+@shell_exec
+def output_shell_timeout(
+    script: str,
+    seconds: float,
+    stdin: bytes | None = None,
+) -> Result[Output, ProcessError]:
+    try:
+        if stdin is None:
+            raw: tuple[bytes, bytes, int, bool] = process_shell_output_timeout(
+                script,
+                b"",
+                False,
+                seconds,
+            )
+            return Output(raw[0], raw[1], _status_from(raw[2], raw[3]))
+        raw: tuple[bytes, bytes, int, bool] = process_shell_output_timeout(
+            script,
+            stdin,
+            True,
+            seconds,
+        )
+        return Output(raw[0], raw[1], _status_from(raw[2], raw[3]))
     except ProcessError as e:
         raise e
 
