@@ -1,0 +1,18 @@
+from sifr.parallel import WorkerError, try_map
+
+
+class MapError(Error):
+    message: str
+
+
+def reject_negative(value: int) -> Result[int, MapError]:
+    if value < 0:
+        raise MapError("negative item")
+    return value
+
+
+def main() -> None:
+    values: list[int] = [1, -1, 2]
+    result: Result[list[int], WorkerError] = try_map(values, reject_negative)
+    assert str(result).find("negative item") is not None
+    return None

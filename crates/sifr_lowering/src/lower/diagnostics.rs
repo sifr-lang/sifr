@@ -39,8 +39,38 @@ pub(in crate::lower) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty {
         Type::Class { name, .. } => ctx.error_types.contains(name),
         Type::TimeoutResult(inner) => is_valid_error_type(inner, ctx),
+        Type::TypeVar(name) => typevar_is_error_bounded(name, ctx),
         _ => false,
     }
+}
+
+fn typevar_is_error_bounded(name: &str, ctx: &LowerCtx) -> bool {
+    let Some(specs) = ctx.declared_type_var_bounds.get(name) else {
+        return false;
+    };
+    let mut constraints = Vec::new();
+    for spec in specs {
+        if let Some(constraint_name) = super::decode_typevar_constraint(spec) {
+            constraints.push(constraint_name);
+            continue;
+        }
+        if spec == "Error" {
+            return true;
+        }
+        if ctx
+            .class_types
+            .get(spec)
+            .is_some_and(|ty| is_valid_error_type(ty, ctx))
+        {
+            return true;
+        }
+    }
+    !constraints.is_empty()
+        && constraints.iter().all(|constraint_name| {
+            ctx.class_types
+                .get(*constraint_name)
+                .is_some_and(|ty| is_valid_error_type(ty, ctx))
+        })
 }
 
 /// Format a type name for use in error messages.

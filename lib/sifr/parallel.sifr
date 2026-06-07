@@ -1,0 +1,46 @@
+from typing import Callable
+
+T = TypeVar("T")
+U = TypeVar("U")
+
+
+class WorkerRuntimeError(Error):
+    message: str
+
+
+class WorkerError(Error):
+    message: str
+
+
+class PoolConfig:
+    workers: int
+
+    def __init__(self, workers: int):
+        self.workers = workers
+
+
+class Pool:
+    _config: PoolConfig
+
+    def __init__(self, config: PoolConfig):
+        self._config = config
+
+    def map(self, own items: list[T], func: Callable[[T], U]) -> Result[list[U], WorkerRuntimeError]:
+        return map(items, func)
+
+    def try_map(self, own items: list[T], func: Callable[[T], Result[U, Error]]) -> Result[list[U], WorkerError]:
+        return try_map(items, func)
+
+
+def map(own items: list[T], func: Callable[[T], U]) -> Result[list[U], WorkerRuntimeError]:
+    # Replaced by the Rayon runtime during codegen.
+    out: list[U] = []
+    for item in items:
+        out.append(func(item))
+    return out
+
+
+def try_map(own items: list[T], func: Callable[[T], Result[U, Error]]) -> Result[list[U], WorkerError]:
+    # Replaced by the Rayon runtime during codegen.
+    out: list[U] = []
+    return out

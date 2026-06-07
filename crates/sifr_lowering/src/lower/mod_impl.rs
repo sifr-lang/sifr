@@ -117,7 +117,9 @@ pub(in crate::lower) fn lower_module_impl(
                 }
             }
 
+            let previous_owner = ctx.current_owner.replace(function_name.clone());
             let ft = extract_function_type(func, &mut ctx);
+            ctx.current_owner = previous_owner;
             // Track which type variables this function uses (makes it generic)
             let mut func_type_vars = Vec::new();
             for (_, ty, _) in &ft.params {
@@ -316,6 +318,17 @@ pub(in crate::lower) fn lower_module_impl(
                         if stdlib_module_key == "sifr.collections" && name == "defaultdict" {
                             ctx.explicit_defaultdict_bindings.insert(local.clone());
                             found = true;
+                        }
+                        if stdlib_module_key == "sifr.parallel" {
+                            match name.as_str() {
+                                "map" => {
+                                    ctx.parallel_map_bindings.insert(local.clone());
+                                }
+                                "try_map" => {
+                                    ctx.parallel_try_map_bindings.insert(local.clone());
+                                }
+                                _ => {}
+                            }
                         }
                         // Check functions
                         if !found {

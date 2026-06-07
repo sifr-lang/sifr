@@ -20,6 +20,7 @@ pub enum StdlibFeature {
     NumTraits,
     Rand,
     RandDistr,
+    Rayon,
     Regex,
     RustDecimal,
     SerdeJson,
@@ -55,6 +56,7 @@ impl StdlibFeature {
             Self::NumTraits => "num-traits",
             Self::Rand => "rand",
             Self::RandDistr => "rand_distr",
+            Self::Rayon => "rayon",
             Self::Regex => "regex",
             Self::RustDecimal => "rust_decimal",
             Self::SerdeJson => "serde_json",
@@ -147,6 +149,10 @@ const RAND_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
 const RAND_DISTR_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "rand_distr",
     spec: "rand_distr = \"0.6.0\"",
+}];
+const RAYON_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "rayon",
+    spec: "rayon = \"1.12.0\"",
 }];
 const REGEX_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "regex",
@@ -273,6 +279,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: RAND_DISTR_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Rayon,
+        cargo_dependencies: RAYON_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Regex,
         cargo_dependencies: REGEX_DEPS,
     },
@@ -345,6 +355,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "num-traits" => Some(StdlibFeature::NumTraits),
         "rand" => Some(StdlibFeature::Rand),
         "rand_distr" => Some(StdlibFeature::RandDistr),
+        "rayon" => Some(StdlibFeature::Rayon),
         "regex" => Some(StdlibFeature::Regex),
         "rust_decimal" => Some(StdlibFeature::RustDecimal),
         "serde_json" => Some(StdlibFeature::SerdeJson),
@@ -398,6 +409,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::IcuPlurals,
         ],
         "sifr.base64" => &[StdlibFeature::Base64],
+        "sifr.parallel" => &[StdlibFeature::Rayon],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
         "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {

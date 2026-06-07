@@ -1,0 +1,17 @@
+# expect-error: SIFR-TYPE-0002
+from sifr.parallel import map
+
+
+class LocalCell(NonSend):
+    pass
+
+
+def keep(own cell: LocalCell) -> LocalCell:
+    return cell
+
+
+def main() -> None:
+    cells: list[LocalCell] = [LocalCell()]
+    kept: list[LocalCell] = map(cells, keep)
+    assert kept is not None
+    return None

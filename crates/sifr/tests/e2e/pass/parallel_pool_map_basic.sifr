@@ -1,0 +1,13 @@
+from sifr.parallel import Pool, PoolConfig, WorkerRuntimeError
+
+
+def triple(value: int) -> int:
+    return value * 3
+
+
+def main() -> None:
+    pool: Pool = Pool(PoolConfig(2))
+    values: list[int] = [2, 3]
+    tripled: Result[list[int], WorkerRuntimeError] = pool.map(values, triple)
+    assert str(tripled) == "Ok([6, 9])"
+    return None

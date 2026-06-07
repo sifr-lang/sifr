@@ -1,0 +1,13 @@
+from sifr.parallel import WorkerRuntimeError, map
+
+
+def reject_negative(value: int) -> int:
+    assert value >= 0
+    return value
+
+
+def main() -> None:
+    values: list[int] = [1, -1, 2]
+    result: Result[list[int], WorkerRuntimeError] = map(values, reject_negative)
+    assert str(result).find("parallel worker panicked") is not None
+    return None

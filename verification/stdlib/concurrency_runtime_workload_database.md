@@ -1,6 +1,6 @@
 # Concurrency Runtime Workload Database
 
-Status: M0 active; implementation milestones must update validation evidence as APIs land.
+Status: M3 active; implementation milestones update validation evidence as APIs land.
 
 | API | Owner | Workload/effect classification | Validation |
 | --- | --- | --- | --- |
@@ -13,7 +13,7 @@ Status: M0 active; implementation milestones must update validation evidence as 
 | sifr.sync.AsyncMutex/AsyncRwLock/Semaphore/Event | M2 | async-suspension | async sync primitive fixtures |
 | sifr.runtime.spawn_blocking | M3 | @blocking_io offload boundary | spawn_blocking typed WorkerError fixture |
 | sifr.runtime.spawn_cpu | M3 | @cpu_heavy offload boundary | spawn_cpu typed WorkerError fixture |
-| sifr.parallel.map/try_map | M3 | @cpu_heavy synchronous | async direct-call diagnostic fixture |
+| sifr.parallel.map/try_map | M3 | @cpu_heavy synchronous, typed worker-runtime boundary | `parallel_map_basic`, `parallel_try_map_basic`, `parallel_map_worker_panic_typed`, `parallel_try_map_user_error_typed`, async direct-call diagnostic fixture |
 | sifr.process.run/output/wait sync | M4 | @blocking_io plus optional @shell_exec | process blocking-in-async and shell-effect fixtures |
 | sifr.process async spawn/wait/communicate | M4 | async-suspension plus optional @shell_exec | async process loopback fixture |
 | sifr.signal.shutdown_stream/ctrl_c/terminate | M5 | async-suspension host-limited | signal host matrix fixture |

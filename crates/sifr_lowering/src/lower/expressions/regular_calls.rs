@@ -7,11 +7,16 @@ use super::{
     type_satisfies_bound, type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap,
     HirExpr, LowerCtx, OwnershipKind, ParamConvention, Ranged, Type,
 };
+use crate::lower::parallel_calls;
 pub(super) fn lower_regular_call(
     func_name: String,
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
+    if let Some(result) = parallel_calls::lower_parallel_imported_call(&func_name, call, ctx) {
+        return result;
+    }
+
     // Check if this is a Callable-typed variable being called
     let callable_info = ctx.scope.lookup(&func_name).and_then(|info| {
         if let Type::Callable(ref param_types, ref conventions, ref ret_type) = info.ty {
