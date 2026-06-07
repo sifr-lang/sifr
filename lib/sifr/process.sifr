@@ -3,6 +3,7 @@ from _sifr.process import (
     process_run,
     process_spawn,
     process_wait,
+    process_kill,
     process_output,
     process_output_text,
     process_output_timeout,
@@ -37,12 +38,19 @@ class Status:
     cancelled: bool
     kind: str
 
-    def __init__(self, code: int, kind: str):
+    def __init__(
+        self,
+        code: int,
+        kind: str,
+        signal: int | None = None,
+        timed_out: bool = False,
+        cancelled: bool = False,
+    ):
         self.code = code
         self.success = code == 0
-        self.signal = None
-        self.timed_out = False
-        self.cancelled = False
+        self.signal = signal
+        self.timed_out = timed_out
+        self.cancelled = cancelled
         self.kind = kind
 
     def exited(self) -> bool:
@@ -76,6 +84,17 @@ class Child:
         try:
             code: int = process_wait(self._handle)
             return _status(code)
+        except ProcessError as e:
+            raise e
+
+    @blocking_io
+    def kill(self) -> Result[Status, ProcessError]:
+        if self._waited:
+            raise ProcessError("process child has already been waited")
+        self._waited = True
+        try:
+            raw: tuple[int, int] = process_kill(self._handle)
+            return _signal_status(raw[0], raw[1])
         except ProcessError as e:
             raise e
 
@@ -145,6 +164,12 @@ def _status_from(code: int, timed_out: bool) -> Status:
     return _status(code)
 
 
+def _signal_status(code: int, signal: int) -> Status:
+    status: Status = Status(code, "signal", signal)
+    status.success = False
+    return status
+
+
 @blocking_io
 def spawn(command: Command) -> Result[Child, ProcessError]:
     try:
@@ -161,10 +186,25 @@ def spawn(command: Command) -> Result[Child, ProcessError]:
 
 
 @blocking_io
-def wait(child: Child) -> Result[Status, ProcessError]:
+def wait(mut child: Child) -> Result[Status, ProcessError]:
+    if child._waited:
+        raise ProcessError("process child has already been waited")
+    child._waited = True
     try:
         code: int = process_wait(child._handle)
         return _status(code)
+    except ProcessError as e:
+        raise e
+
+
+@blocking_io
+def kill(mut child: Child) -> Result[Status, ProcessError]:
+    if child._waited:
+        raise ProcessError("process child has already been waited")
+    child._waited = True
+    try:
+        raw: tuple[int, int] = process_kill(child._handle)
+        return _signal_status(raw[0], raw[1])
     except ProcessError as e:
         raise e
 

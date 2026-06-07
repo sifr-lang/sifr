@@ -1,0 +1,38 @@
+from sifr.process import Child, Command, ProcessError, Status, kill, spawn
+
+
+def main():
+    actual: list[bool] = []
+
+    try:
+        command: Command = Command("sleep")
+        command.arg("5")
+        child: Child = spawn(command)
+        status: Status = kill(child)
+        actual.append(not status.success)
+        actual.append(status.kind == "signal")
+        actual.append(status.signal is not None)
+        actual.append(not status.exited())
+
+        try:
+            waited: Status = child.wait()
+            actual.append(waited.success)
+        except ProcessError as e:
+            actual.append("already been waited" in e.message)
+
+        method_command: Command = Command("sleep")
+        method_command.arg("5")
+        method_child: Child = spawn(method_command)
+        method_status: Status = method_child.kill()
+        actual.append(method_status.kind == "signal")
+        actual.append(method_status.signal is not None)
+
+        try:
+            second_kill: Status = kill(method_child)
+            actual.append(second_kill.success)
+        except ProcessError as e:
+            actual.append("already been waited" in e.message)
+    except ProcessError as e:
+        actual.append(False)
+
+    assert actual == [True, True, True, True, True, True, True, True]

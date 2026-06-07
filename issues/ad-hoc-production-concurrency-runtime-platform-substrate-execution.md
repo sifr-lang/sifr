@@ -647,6 +647,31 @@ M4 timeout status evidence wave review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-status-review-pass-3.md`: `PASS`; reviewer verified the additional `Instant::checked_add(...).ok_or_else(ProcessError)?` hardening closes the host-clock deadline overflow path and no timeout-path data-dependent panic blocker remains.
 - Merged as PR #2336: https://github.com/sifr-lang/sifr/pull/2336
 
+M4 child kill evidence wave implementation:
+
+- Added sync `kill(child)` and `Child.kill()` as one-shot forced child termination/observation paths over the existing generated child-handle table.
+- `process_kill` removes the child handle before calling Rust `Child::kill()` and then reaps with `wait()`, returning `(status_code, signal)` to `sifr.process.Status`.
+- `Status.kind == "signal"` and `Status.signal is not None` now represent forced child kill evidence; graceful `terminate`, async process cancellation, and scoped supervision remain follow-up M4 work.
+- Added positive coverage in `process_child_kill_status` and direct-async rejection coverage in `process_kill_direct_async_rejected`; the create-pr and merge e2e manifests include `process_child_kill_status`.
+
+M4 child kill evidence wave targeted local validation:
+
+- `cargo fmt --check && cargo check -p sifr_stdlib -p sifr_codegen -p sifr --quiet` -> PASS.
+- `cargo test -p sifr_codegen lowers_process_kill_intrinsic_via_registry -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_child_kill_status.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_wait_status.sifr` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 420 fail tests completed.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2176 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_child_kill_status.sifr | rg "cfg\\(unix\\)|cfg\\(not\\(unix\\)\\)|__child\\.kill\\(\\)|__child\\.wait\\(\\)|__children\\.remove|kind.*signal|already been waited"` -> PASS; emitted forced-kill paths remove the child handle, kill and reap the child, and use platform-gated signal extraction with a non-Unix `-1` sentinel.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`95 passed`, `0 failed`, `cache_hits=23/25`, `report_signature=d8d730bd5475756c`).
+
+M4 child kill evidence wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-child-kill-review-pass-1.md`: `CHANGES_REQUESTED`; reviewer found the initial generated signal extraction unconditionally referenced `std::os::unix`, which would not compile on non-Unix hosts.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-child-kill-review-pass-2.md`: `PASS`; reviewer verified the `#[cfg(unix)]` / `#[cfg(not(unix))]` generated signal branch closes the host-portability blocker and no remaining child-kill blocker remains.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

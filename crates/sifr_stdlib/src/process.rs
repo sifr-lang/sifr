@@ -10,6 +10,10 @@ fn process_bytes_timeout_output_tuple() -> Type {
     Type::Tuple(vec![Type::Bytes, Type::Bytes, Type::Int, Type::Bool])
 }
 
+fn process_status_signal_tuple() -> Type {
+    Type::Tuple(vec![Type::Int, Type::Int])
+}
+
 fn process_text_output_tuple() -> Type {
     Type::Tuple(vec![Type::Str, Type::Str, Type::Int])
 }
@@ -51,6 +55,13 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],
             result_ty(Type::Int, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_kill".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(process_status_signal_tuple(), "ProcessError"),
         ),
     );
     functions.insert(

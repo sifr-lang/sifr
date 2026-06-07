@@ -1,0 +1,8 @@
+# expect-error: SIFR-ASYNC-0003
+from sifr.process import Child, Status, kill
+
+
+async def stop(child: Child):
+    status: Status = kill(child)
+    await task.sleep(0.0)
+    return status

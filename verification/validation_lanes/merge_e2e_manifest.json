@@ -100,6 +100,7 @@
     "process_sync_output_text",
     "process_sync_bytes_env_cwd_stdin",
     "process_shell_exec_output",
+    "process_child_kill_status",
     "process_timeout_status",
     "process_spawn_wait_status",
     "text_i18n_encoding_io",

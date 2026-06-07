@@ -17,7 +17,7 @@ def main():
             second: Status = wait(child)
             actual.append(second.success)
         except ProcessError as e:
-            actual.append("closed or unknown" in e.message)
+            actual.append("already been waited" in e.message)
 
         ok_command: Command = Command("true")
         method_child: Child = spawn(ok_command)
