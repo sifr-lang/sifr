@@ -2,7 +2,7 @@ use ruff_text_size::TextRange;
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, Type};
 
-use super::imported_defaults::import_callable_vararg;
+use super::imported_defaults::{import_callable_vararg, import_callable_workload};
 use super::{import_diagnostics, name_diagnostics, ExternalDefs, LowerCtx};
 
 pub(in crate::lower) fn report_missing_stdlib_member(
@@ -145,6 +145,16 @@ pub(in crate::lower) fn resolve_imports_early(
                             import_callable_vararg(
                                 ctx,
                                 module_varargs,
+                                name,
+                                &local_name_for(name),
+                            );
+                        }
+                        if let Some(module_workloads) =
+                            externals.function_workloads.get(&module_key)
+                        {
+                            import_callable_workload(
+                                ctx,
+                                module_workloads,
                                 name,
                                 &local_name_for(name),
                             );

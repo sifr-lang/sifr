@@ -484,6 +484,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["message"]
         ),
     active_entry!(
+            "SIFR-ASYNC-0007",
+            "ASYNC",
+            "Shell execution function called directly from async context.",
+            Severity::Error,
+            "crates/sifr/tests/e2e/fail/process_shell_exec_direct_async_rejected.sifr",
+            "{message}",
+            "sifr_lowering::lower::workload_annotations",
+            [arg!("message")],
+            ["message"]
+        ),
+    active_entry!(
             "SIFR-DECIMAL-0001",
             "DECIMAL",
             "Invalid Decimal exact literal.",

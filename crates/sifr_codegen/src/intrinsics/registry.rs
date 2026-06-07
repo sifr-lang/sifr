@@ -21,6 +21,7 @@ mod open_text_handles;
 mod os;
 mod pathlib;
 mod platform;
+mod process;
 mod random;
 mod re;
 mod subprocess;
@@ -595,6 +596,12 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "subprocess_run" => (subprocess::lower_subprocess_run(args), None),
         "subprocess_run_with_input" => (subprocess::lower_subprocess_run_with_input(args), None),
         "subprocess_run_structured" => (subprocess::lower_subprocess_run_structured(args), None),
+        "process_run" => (process::lower_process_run(args), None),
+        "process_output" => (process::lower_process_output(args), None),
+        "process_output_text" => (process::lower_process_output_text(args), None),
+        "process_shell_run" => (process::lower_process_shell_run(args), None),
+        "process_shell_output" => (process::lower_process_shell_output(args), None),
+        "process_shell_output_text" => (process::lower_process_shell_output_text(args), None),
         "html_escape" => (html::lower_html_escape(args), None),
         "html_unescape" => (html::lower_html_unescape(args), None),
         "calendar_isleap" => (calendar::lower_calendar_isleap(args), None),

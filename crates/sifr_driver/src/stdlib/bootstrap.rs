@@ -88,6 +88,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
         let mut class_type_param_exports = HashMap::new();
         let mut default_exports = HashMap::new();
         let mut vararg_exports = HashMap::new();
+        let mut workload_exports = HashMap::new();
 
         for func in &result.module.functions {
             if should_export_callable(module_name, &func.name) {
@@ -97,6 +98,9 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 );
                 if let Some(vararg_index) = result.function_varargs.get(&func.name) {
                     vararg_exports.insert(func.name.clone(), *vararg_index);
+                }
+                if let Some(label) = result.function_workloads.get(&func.name) {
+                    workload_exports.insert(func.name.clone(), label.clone());
                 }
             }
         }
@@ -336,6 +340,11 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
             stdlib_defs
                 .function_varargs
                 .insert((*module_name).to_string(), vararg_exports);
+        }
+        if !workload_exports.is_empty() {
+            stdlib_defs
+                .function_workloads
+                .insert((*module_name).to_string(), workload_exports);
         }
         if !const_exports.is_empty() {
             stdlib_defs

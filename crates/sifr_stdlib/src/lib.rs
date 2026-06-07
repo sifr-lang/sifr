@@ -14,6 +14,7 @@ mod i18n_core;
 mod io_json;
 mod math_test;
 mod platform_misc;
+mod process;
 mod sources;
 mod sys_fs;
 mod text_encoding;
@@ -32,6 +33,7 @@ use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_logging,
     intrinsic_platform, intrinsic_toml,
 };
+use process::intrinsic_process;
 pub use sources::{StdlibSource, STDLIB_SOURCES};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 use text_encoding::intrinsic_encoding;
@@ -98,6 +100,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.regex" => Some(intrinsic_regex()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.platform" => Some(intrinsic_platform()),
+        "_sifr.process" => Some(intrinsic_process()),
         "_sifr.toml" => Some(intrinsic_toml()),
         "_sifr.datetime" => Some(intrinsic_datetime()),
         "_sifr.html" => Some(intrinsic_html()),

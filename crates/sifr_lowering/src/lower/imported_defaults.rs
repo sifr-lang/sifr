@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::hir_nodes::HirExpr;
 
+use super::workload_annotations::WorkloadKind;
 use super::LowerCtx;
 
 pub(in crate::lower) fn import_callable_defaults(
@@ -25,6 +26,21 @@ pub(in crate::lower) fn import_callable_vararg(
     if let Some(vararg_index) = module_varargs.get(external_name) {
         ctx.vararg_functions
             .insert(local_name.to_string(), *vararg_index);
+    }
+}
+
+pub(in crate::lower) fn import_callable_workload(
+    ctx: &mut LowerCtx,
+    module_workloads: &HashMap<String, String>,
+    external_name: &str,
+    local_name: &str,
+) {
+    let Some(label) = module_workloads.get(external_name) else {
+        return;
+    };
+    if let Some(workload) = WorkloadKind::from_label(label) {
+        ctx.function_workload_annotations
+            .insert(local_name.to_string(), workload);
     }
 }
 

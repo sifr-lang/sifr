@@ -355,6 +355,16 @@ pub(in crate::lower) fn lower_module_impl(
                                             &local,
                                         );
                                     }
+                                    if let Some(module_workloads) =
+                                        externals.function_workloads.get(&stdlib_module_key)
+                                    {
+                                        imported_defaults::import_callable_workload(
+                                            &mut ctx,
+                                            module_workloads,
+                                            name,
+                                            &local,
+                                        );
+                                    }
                                     found = true;
                                     // Import generic function info and bounds
                                     if let Some(module_gf) =
@@ -550,6 +560,16 @@ pub(in crate::lower) fn lower_module_impl(
                                 &local,
                             );
                         }
+                        if let Some(module_workloads) =
+                            externals.function_workloads.get(&module_name)
+                        {
+                            imported_defaults::import_callable_workload(
+                                &mut ctx,
+                                module_workloads,
+                                name,
+                                &local,
+                            );
+                        }
                         found = true;
                     }
                 }
@@ -712,6 +732,11 @@ pub(in crate::lower) fn lower_module_impl(
             flow_graph,
             function_defaults: ctx.function_defaults.clone(),
             function_varargs: ctx.vararg_functions.clone(),
+            function_workloads: ctx
+                .function_workload_annotations
+                .iter()
+                .map(|(name, workload)| (name.clone(), workload.label().to_string()))
+                .collect(),
             constant_integer_values: ctx.const_integer_values.clone(),
             reveal_types: ctx.reveal_types,
             warnings: ctx.warnings,
