@@ -65,6 +65,7 @@
     "cpython_math_semantic_corrections_subset",
     "task_scope_unobserved_child_waits",
     "task_group_basic",
+    "task_spawn_scoped_named_owner",
     "task_gather_ordered",
     "task_handle_collection_consumed",
     "task_race_cancels_losers",

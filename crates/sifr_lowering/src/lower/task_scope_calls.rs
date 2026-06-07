@@ -1,6 +1,7 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::ownership_diagnostics;
+use super::task_context_keywords::validate_reserved_task_context_keyword;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
@@ -30,26 +31,37 @@ pub(in crate::lower) fn lower_task_scope_spawn_from_object(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
+    lower_task_scope_spawn_from_object_impl(object, call, ctx, "scope.spawn()", false)
+}
+
+pub(in crate::lower) fn lower_task_scope_spawn_from_object_allowing_reserved_ctx(
+    object: HirExpr,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    lower_task_scope_spawn_from_object_impl(object, call, ctx, "task.spawn_scoped()", true)
+}
+
+fn lower_task_scope_spawn_from_object_impl(
+    object: HirExpr,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+    callable_name: &str,
+    allow_reserved_ctx: bool,
+) -> Option<HirExpr> {
     if !ctx.current_function_is_async {
         expression_diagnostics::type_mismatch(
             ctx,
-            "scope.spawn() is only valid inside async functions".to_string(),
+            format!("{callable_name} is only valid inside async functions"),
             call.range(),
         );
         return None;
     }
-    if !call.arguments.keywords.is_empty() {
-        expression_diagnostics::call_unexpected_keyword(
-            ctx,
-            "scope.spawn() does not accept keyword arguments".to_string(),
-            first_call_keyword_range(call),
-        );
-        return None;
-    }
+    validate_spawn_keywords(call, ctx, callable_name, allow_reserved_ctx)?;
     if call.arguments.args.len() != 1 {
         expression_diagnostics::call_wrong_positional_count(
             ctx,
-            "scope.spawn() takes exactly one coroutine argument".to_string(),
+            format!("{callable_name} takes exactly one coroutine argument"),
             call_arity_range(call),
         );
         return None;
@@ -60,7 +72,7 @@ pub(in crate::lower) fn lower_task_scope_spawn_from_object(
         expression_diagnostics::type_mismatch(
             ctx,
             format!(
-                "scope.spawn() requires a coroutine argument, got '{}'",
+                "{callable_name} requires a coroutine argument, got '{}'",
                 coroutine.ty().display_name()
             ),
             call.arguments.args[0].range(),
@@ -76,7 +88,7 @@ pub(in crate::lower) fn lower_task_scope_spawn_from_object(
     let HirExpr::Call { args, .. } = &coroutine else {
         expression_diagnostics::type_mismatch(
             ctx,
-            "scope.spawn() requires a direct coroutine call in v1".to_string(),
+            format!("{callable_name} requires a direct coroutine call in v1"),
             call.arguments.args[0].range(),
         );
         return None;
@@ -85,7 +97,7 @@ pub(in crate::lower) fn lower_task_scope_spawn_from_object(
         expression_diagnostics::type_mismatch(
             ctx,
             format!(
-                "scope.spawn() cannot move borrowed parameter '{name}' across a task boundary; pass an owned value or clone it before spawning"
+                "{callable_name} cannot move borrowed parameter '{name}' across a task boundary; pass an owned value or clone it before spawning"
             ),
             call.arguments.args[0].range(),
         );
@@ -112,6 +124,26 @@ pub(in crate::lower) fn lower_task_scope_spawn_from_object(
         args: vec![coroutine],
         ty: Type::Task(task_ok_ty, task_err_ty),
     })
+}
+
+fn validate_spawn_keywords(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+    callable_name: &str,
+    allow_reserved_ctx: bool,
+) -> Option<()> {
+    if call.arguments.keywords.is_empty() {
+        return Some(());
+    }
+    if !allow_reserved_ctx {
+        expression_diagnostics::call_unexpected_keyword(
+            ctx,
+            format!("{callable_name} does not accept keyword arguments"),
+            first_call_keyword_range(call),
+        );
+        return None;
+    }
+    validate_reserved_task_context_keyword(ctx, call, callable_name)
 }
 
 fn borrowed_task_boundary_argument(args: &[HirExpr], ctx: &LowerCtx) -> Option<String> {

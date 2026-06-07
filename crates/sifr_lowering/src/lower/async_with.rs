@@ -1,30 +1,16 @@
 use super::expressions::lower_expr;
 use super::statement_diagnostics;
 use super::statements::lower_stmts;
+use super::task_context_keywords::validate_reserved_task_context_keyword;
+use super::task_owner_scope_state::{
+    enter_task_owner_scope, exit_task_owner_scope, task_group_type, task_scope_type,
+};
 use super::LowerCtx;
 use crate::hir_nodes::{HirAsyncWithKind, HirStmt};
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, StmtWith};
 use sifr_type_system::{FunctionType, Type};
-
-fn task_scope_type() -> Type {
-    Type::Class {
-        name: "TaskScope".to_string(),
-        fields: vec![],
-        methods: vec![],
-        parent_class: None,
-    }
-}
-
-fn task_group_type() -> Type {
-    Type::Class {
-        name: "TaskGroup".to_string(),
-        fields: vec![],
-        methods: vec![],
-        parent_class: None,
-    }
-}
 
 fn simple_with_target_name(optional_vars: Option<&Expr>, ctx: &mut LowerCtx) -> Option<String> {
     let vars = optional_vars?;
@@ -743,18 +729,17 @@ pub(in crate::lower) fn lower_async_with(
         return lower_user_async_with(with_stmt, item, func_type, ctx);
     };
 
-    if !call.arguments.keywords.is_empty() {
-        ctx.error_with_code_at(
-            DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
-            format!("task.{task_fn}() does not accept keyword arguments"),
-            call.arguments.keywords[0].range(),
-        );
-        return None;
-    }
-
     ctx.with_pushed_scope(|ctx| {
         let (kind, target) = match task_fn {
             "scope" => {
+                if !call.arguments.keywords.is_empty() {
+                    ctx.error_with_code_at(
+                        DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+                        "task.scope() does not accept keyword arguments".to_string(),
+                        call.arguments.keywords[0].range(),
+                    );
+                    return None;
+                }
                 if !call.arguments.args.is_empty() {
                     ctx.error_with_code_at(
                         DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
@@ -770,10 +755,11 @@ pub(in crate::lower) fn lower_async_with(
                 (HirAsyncWithKind::TaskScope, target)
             }
             "TaskGroup" => {
+                validate_reserved_task_context_keyword(ctx, call, "task.TaskGroup()")?;
                 if !call.arguments.args.is_empty() {
                     ctx.error_with_code_at(
                         DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
-                        "task.TaskGroup() takes no arguments in v1".to_string(),
+                        "task.TaskGroup() takes no positional arguments".to_string(),
                         item.context_expr.range(),
                     );
                     return None;
@@ -785,6 +771,14 @@ pub(in crate::lower) fn lower_async_with(
                 (HirAsyncWithKind::TaskGroup, target)
             }
             "timeout" => {
+                if !call.arguments.keywords.is_empty() {
+                    ctx.error_with_code_at(
+                        DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+                        "task.timeout() does not accept keyword arguments".to_string(),
+                        call.arguments.keywords[0].range(),
+                    );
+                    return None;
+                }
                 if call.arguments.args.len() != 1 {
                     ctx.error_with_code_at(
                         DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
@@ -827,7 +821,9 @@ pub(in crate::lower) fn lower_async_with(
                 return None;
             }
         };
+        let task_owner_snapshot = enter_task_owner_scope(ctx, &kind, target.as_ref());
         let body = lower_stmts(&with_stmt.body, func_type, ctx);
+        exit_task_owner_scope(ctx, task_owner_snapshot);
         if matches!(kind, HirAsyncWithKind::TaskTimeout { .. })
             && body.iter().any(stmt_contains_await)
             && !return_type_accepts_timeout_error(&func_type.return_type)

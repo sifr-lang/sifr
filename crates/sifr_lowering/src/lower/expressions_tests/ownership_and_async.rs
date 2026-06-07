@@ -465,7 +465,7 @@ pub(super) fn test_failure_annotation_resolves_in_function_signature() {
 
 #[test]
 pub(super) fn test_task_select_consumes_handle_bindings() {
-    let source = "async def first() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def second() -> str:\n    await task.sleep(0.0)\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        one = scope.spawn(first())\n        two = scope.spawn(second())\n        selected = await task.select(one, two)\n        late = await one\n    return None\n";
+    let source = "async def first() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def second() -> str:\n    await task.sleep(0.0)\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        one = scope.spawn(first())\n        two = scope.spawn(second())\n        selected = await task.select(one=one, two=two)\n        late = await one\n    return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();

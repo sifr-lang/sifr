@@ -1,0 +1,11 @@
+# expect-error: SIFR-TYPE-0002
+
+async def worker() -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    await task.sleep(0.0)
+    handle = task.spawn_scoped(worker())
+    return None

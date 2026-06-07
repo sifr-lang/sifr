@@ -31,7 +31,7 @@ async def main() -> Result[None, ScopeFailure]:
     async with task.scope() as scope:
         first = scope.spawn(fast_int())
         second = scope.spawn(slow_string_writes_marker())
-        _selected = await task.select(first, second)
+        _selected = await task.select(first=first, second=second)
 
     assert not exists(path)
     return None

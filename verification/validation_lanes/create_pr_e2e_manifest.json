@@ -23,6 +23,7 @@
     "nested_function_recursive_capture",
     "spawn_owned_send_value",
     "spawn_owned_move_value",
+    "task_spawn_scoped_named_owner",
     "spawn_capture_immutable_shared_ok",
     "await_without_live_borrow",
     "task_gather_cleanup_error_secondary",

@@ -187,7 +187,7 @@ fn test_task_select_lowers_to_private_select_helper() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> str:\n    await task.sleep(1.0)\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first_handle, second_handle)\n    return None\n",
+                "async def first() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def second() -> str:\n    await task.sleep(1.0)\n    return \"two\"\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first=first_handle, second=second_handle)\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -226,7 +226,7 @@ fn test_task_select_fallible_tasks_preserves_distinct_error_parameters() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def first() -> Result[int, ValueError]:\n    raise ValueError(\"first\")\n\nasync def second() -> Result[str, IOError]:\n    raise IOError(\"second\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first_handle, second_handle)\n    return None\n",
+                "async def first() -> Result[int, ValueError]:\n    await task.sleep(0.0)\n    raise ValueError(\"first\")\n\nasync def second() -> Result[str, IOError]:\n    await task.sleep(0.0)\n    raise IOError(\"second\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        first_handle = scope.spawn(first())\n        second_handle = scope.spawn(second())\n        result = await task.select(first=first_handle, second=second_handle)\n    return None\n",
             )
             .expect("parse failed")
             .suite(),

@@ -95,8 +95,8 @@ Default APIs should prefer:
 - `task.TaskGroup`
 - `scope.spawn(...)`: canonical task creation; all spawned tasks are children of a scope
 - `task.gather(*handles)`: wait for multiple task handles, preserving input ordering
-- `task.select(a, b)`: binary heterogeneous first-completion semantics; losers are cancelled by default
-- `task.race(handles)`: homogeneous first-completion over a list that discards winner identity; losers are cancelled by default
+- `task.select(first=a, second=b)`: binary named-branch first-completion semantics; losers are cancelled by default
+- `task.race(handles)`: homogeneous first-completion over a list that returns winner evidence; losers are cancelled by default
 
 Default APIs should not encourage:
 
@@ -365,9 +365,11 @@ async def Task[T, E].cancel_and_join(self) -> TaskResult[T, E]
 Task composition APIs consume the task handles passed to them. Consumed handles are no longer usable by the caller.
 
 ```sifr
+task.spawn_scoped[T, E](coro: Coroutine[T, E], *, ctx: Option[task.Context] = None) -> Task[T, E]
+
 task.gather(handles: list[Task[T, E]]) -> TaskResult[list[T], E]
 
-task.select[A, EA, B, EB](a: Task[A, EA], b: Task[B, EB]) -> Select2[TaskResult[A, EA], TaskResult[B, EB]]
+task.select[A, EA, B, EB](*, branch_a: Task[A, EA], branch_b: Task[B, EB]) -> Select2[TaskResult[A, EA], TaskResult[B, EB]]
 
 enum Select2[A, B]:
     First(A)
@@ -377,6 +379,8 @@ task.race(handles: list[Task[T, E]]) -> TaskResult[T, E]
 
 task.timeout(handle: Task[T, E], duration: Duration) -> TaskResult[T, TimeoutResult[E]]
 ```
+
+`branch_a` and `branch_b` are signature placeholders. Source code supplies concrete unique keyword labels, such as `task.select(first=fast, second=slow)`, and the current binary result container maps the first supplied branch to `Select2.First` and the second supplied branch to `Select2.Second`.
 
 Timeout translates cancellation caused by the deadline into `TaskResult.Err(Failure[TimeoutResult.Timeout(TimeoutError)])`. If the child fails before the deadline, the result is `TaskResult.Err(Failure[TimeoutResult.Inner(E)])`. If the child was already externally cancelled before the deadline wins, the result remains `Cancelled(Failure[CancellationError])`. If the deadline and inner completion become ready in the same scheduler tick, inner completion wins.
 
@@ -524,6 +528,8 @@ General tracked-collection proof is not part of the first model. Handles may be 
 `task.select` and `task.race` are first-completion APIs:
 
 - they consume input handles
+- `task.select` uses named keyword branches so branch identity is visible at the call site; the current binary runtime container maps declaration order to `Select2.First` and `Select2.Second`
+- `task.race` operates on a homogeneous collection and owns winner/cancellation evidence for the collection
 - losing tasks are cancelled by default
 - loser handles cannot be awaited or joined after the selection API owns them
 - if multiple tasks complete in the same scheduler tick, input order breaks ties deterministically

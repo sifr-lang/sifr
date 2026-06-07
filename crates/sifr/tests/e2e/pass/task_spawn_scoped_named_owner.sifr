@@ -1,0 +1,10 @@
+async def worker() -> int:
+    await task.sleep(0.0)
+    return 41
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.TaskGroup(ctx=None) as group:
+        handle = task.spawn_scoped(worker(), ctx=None)
+        result = await handle
+    return None
