@@ -418,7 +418,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 timeout status evidence: https://github.com/sifr-lang/sifr/pull/2336
 - M4 sync child kill: https://github.com/sifr-lang/sifr/pull/2337
 - M4 signal status evidence: https://github.com/sifr-lang/sifr/pull/2341
-- M4 async process run/output loopback: pending PR.
+- M4 async process run/output loopback: https://github.com/sifr-lang/sifr/pull/2345
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -734,6 +734,7 @@ M4 async process run/output targeted local validation:
 M4 async process run/output review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-process-review-pass-1.md`: `PASS`; reviewer verified the wave is scoped to async argv run/output loopback, public APIs consume `Command` and return typed awaitables, generated futures own cloned command fields, Tokio `process` is wired through generated projects and grouped e2e harnesses, stdin bytes are rejected with a typed owned-pipe deferral error, sync process paths and child-table gating are not regressed, and traceability/host matrix/manifests do not overclaim spawn/wait/communicate, pipes, timeout, cancellation, shell async APIs, scoped supervision, or Windows support.
+- Merged as PR #2345: https://github.com/sifr-lang/sifr/pull/2345 (`8fce5ab17ab993903937d1be8588285606d61c84`).
 
 M0 targeted local validation:
 
