@@ -309,7 +309,11 @@ pub(crate) fn build_process_async_items(
     });
     run_timeout_body.extend(process_async_command_setup());
     run_timeout_body.push(RustStmt::Expr(RustExpr::Ident(
-        "let mut __child = __cmd.spawn().map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+        "#[cfg(unix)]
+        {
+            __cmd.process_group(0);
+        }
+        let mut __child = __cmd.spawn().map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
         return tokio::select! {
             biased;
             __waited = __child.wait() => {
@@ -320,7 +324,36 @@ pub(crate) fn build_process_async_items(
                 ))
             }
             _ = tokio::time::sleep(__duration) => {
-                __child.kill().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                #[cfg(unix)]
+                {
+                    if let Some(__pid) = __child.id() {
+                        let __pgid = format!(\"-{}\", __pid);
+                        let _ = tokio::process::Command::new(\"kill\")
+                            .arg(\"-TERM\")
+                            .arg(&__pgid)
+                            .stdout(std::process::Stdio::null())
+                            .stderr(std::process::Stdio::null())
+                            .status()
+                            .await
+                            .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                        let _ = tokio::process::Command::new(\"kill\")
+                            .arg(\"-KILL\")
+                            .arg(&__pgid)
+                            .stdout(std::process::Stdio::null())
+                            .stderr(std::process::Stdio::null())
+                            .status()
+                            .await
+                            .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                    } else {
+                        __child.kill().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                    }
+                }
+                #[cfg(not(unix))]
+                {
+                    __child.kill().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                }
+                let _ = __child.wait().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
                 let mut __timeout_status = Status::new(-1, \"timeout\".to_string());
                 __timeout_status.success = false;
                 __timeout_status.timed_out = true;
@@ -426,6 +459,10 @@ pub(crate) fn build_process_async_items(
     output_timeout_body.extend(process_async_command_setup());
     output_timeout_body.push(RustStmt::Expr(RustExpr::Ident(
         "use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        #[cfg(unix)]
+        {
+            __cmd.process_group(0);
+        }
         __cmd.stdout(std::process::Stdio::piped());
         __cmd.stderr(std::process::Stdio::piped());
         if has_stdin {
@@ -474,7 +511,35 @@ pub(crate) fn build_process_async_items(
                 ))
             }
             _ = tokio::time::sleep(__duration) => {
-                __child.kill().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                #[cfg(unix)]
+                {
+                    if let Some(__pid) = __child.id() {
+                        let __pgid = format!(\"-{}\", __pid);
+                        let _ = tokio::process::Command::new(\"kill\")
+                            .arg(\"-TERM\")
+                            .arg(&__pgid)
+                            .stdout(std::process::Stdio::null())
+                            .stderr(std::process::Stdio::null())
+                            .status()
+                            .await
+                            .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                        let _ = tokio::process::Command::new(\"kill\")
+                            .arg(\"-KILL\")
+                            .arg(&__pgid)
+                            .stdout(std::process::Stdio::null())
+                            .stderr(std::process::Stdio::null())
+                            .status()
+                            .await
+                            .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                    } else {
+                        __child.kill().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                    }
+                }
+                #[cfg(not(unix))]
+                {
+                    __child.kill().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                }
                 let _ = __child.wait().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
                 let mut __timeout_status = Status::new(-1, \"timeout\".to_string());
                 __timeout_status.success = false;
