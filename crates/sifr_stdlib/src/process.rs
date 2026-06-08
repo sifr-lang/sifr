@@ -319,6 +319,20 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "process_async_kill".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            Type::Awaitable(Box::new(result_ty(Type::None, "ProcessError"))),
+        ),
+    );
+    functions.insert(
+        "process_async_terminate".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            Type::Awaitable(Box::new(result_ty(Type::None, "ProcessError"))),
+        ),
+    );
+    functions.insert(
         "process_shell_run".to_string(),
         FunctionType::all_borrow(
             vec![("script".to_string(), Type::Str)],

@@ -18,6 +18,8 @@ from _sifr.process import (
     process_async_run_timeout,
     process_async_spawn,
     process_async_wait,
+    process_async_kill,
+    process_async_terminate,
     process_async_output,
     process_async_output_timeout,
     process_shell_run,
@@ -169,6 +171,12 @@ class AsyncChild:
 
     def __init__(self, handle: int):
         self._handle = handle
+
+    def kill(self) -> Awaitable[Result[None, ProcessError]]:
+        return process_async_kill(self._handle)
+
+    def terminate(self) -> Awaitable[Result[None, ProcessError]]:
+        return process_async_terminate(self._handle)
 
     def wait(self) -> Awaitable[Result[Status, ProcessError]]:
         return process_async_wait(self._handle)

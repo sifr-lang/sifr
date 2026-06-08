@@ -398,6 +398,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         prepared.shared_needs.process_async.needs_spawn;
                     stdlib_needs_process_async.needs_wait |=
                         prepared.shared_needs.process_async.needs_wait;
+                    stdlib_needs_process_async.needs_kill |=
+                        prepared.shared_needs.process_async.needs_kill;
+                    stdlib_needs_process_async.needs_terminate |=
+                        prepared.shared_needs.process_async.needs_terminate;
                     stdlib_needs_process_children |= prepared
                         .shared_needs
                         .process_children
@@ -429,7 +433,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         || stdlib_needs_process_async.needs_output
         || stdlib_needs_process_async.needs_output_timeout
         || stdlib_needs_process_async.needs_spawn
-        || stdlib_needs_process_async.needs_wait;
+        || stdlib_needs_process_async.needs_wait
+        || stdlib_needs_process_async.needs_kill
+        || stdlib_needs_process_async.needs_terminate;
     let needs_process_status = stdlib_needs_process_status || needs_process_async;
     let needs_process_children = stdlib_needs_process_children;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
@@ -607,6 +613,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             stdlib_needs_process_async.needs_output_timeout,
             stdlib_needs_process_async.needs_spawn,
             stdlib_needs_process_async.needs_wait,
+            stdlib_needs_process_async.needs_kill,
+            stdlib_needs_process_async.needs_terminate,
         ));
     }
     if needs_process_children {

@@ -243,8 +243,13 @@ fn process_async_wait_params() -> Vec<RustParam> {
     }]
 }
 
-fn process_async_child_table_items(needs_spawn: bool, needs_wait: bool) -> Vec<RustItem> {
-    if !needs_spawn && !needs_wait {
+fn process_async_child_table_items(
+    needs_spawn: bool,
+    needs_wait: bool,
+    needs_kill: bool,
+    needs_terminate: bool,
+) -> Vec<RustItem> {
+    if !needs_spawn && !needs_wait && !needs_kill && !needs_terminate {
         return Vec::new();
     }
     let mut items = vec![RustItem::Static {
@@ -337,6 +342,8 @@ pub(crate) fn build_process_async_items(
     needs_output_timeout: bool,
     needs_spawn: bool,
     needs_wait: bool,
+    needs_kill: bool,
+    needs_terminate: bool,
 ) -> Vec<RustItem> {
     let mut run_body = vec![process_async_stdin_mode_guard()];
     run_body.extend(process_async_command_setup());
@@ -619,6 +626,49 @@ pub(crate) fn build_process_async_items(
             .to_string(),
     ))];
 
+    let kill_body = vec![RustStmt::Expr(RustExpr::Ident(
+        "{
+            let mut __children = __SIFR_PROCESS_ASYNC_CHILDREN.lock().unwrap_or_else(|__err| __err.into_inner());
+            let __child = __children.get_mut(&handle).ok_or_else(|| ProcessError {
+                message: format!(\"async process child handle {} is closed or unknown\", handle),
+            })?;
+            __child.start_kill().map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+        }
+        return Ok(());"
+            .to_string(),
+    ))];
+
+    let terminate_body = vec![RustStmt::Expr(RustExpr::Ident(
+        "#[cfg(unix)]
+        {
+            let __pid = {
+                let mut __children = __SIFR_PROCESS_ASYNC_CHILDREN.lock().unwrap_or_else(|__err| __err.into_inner());
+                let __child = __children.get_mut(&handle).ok_or_else(|| ProcessError {
+                    message: format!(\"async process child handle {} is closed or unknown\", handle),
+                })?;
+                __child.id().ok_or_else(|| ProcessError {
+                    message: format!(\"async process child handle {} has no running process id\", handle),
+                })?.to_string()
+            };
+            let __status = tokio::process::Command::new(\"kill\")
+                .arg(\"-TERM\")
+                .arg(&__pid)
+                .status()
+                .await
+                .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+            if !__status.success() {
+                return Err(ProcessError { message: format!(\"async process terminate failed with status: {}\", __status) });
+            }
+            return Ok(());
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = handle;
+            return Err(ProcessError { message: \"async process terminate is unsupported on this host; use async_kill for forceful termination\".to_string() });
+        }"
+            .to_string(),
+    ))];
+
     let mut items = vec![RustItem::Fn {
         name: "__sifr_process_status_from_exit".to_string(),
         visibility: Visibility::Private,
@@ -725,7 +775,12 @@ pub(crate) fn build_process_async_items(
         is_async: false,
     }];
 
-    items.extend(process_async_child_table_items(needs_spawn, needs_wait));
+    items.extend(process_async_child_table_items(
+        needs_spawn,
+        needs_wait,
+        needs_kill,
+        needs_terminate,
+    ));
 
     if needs_run {
         items.push(RustItem::Fn {
@@ -790,6 +845,28 @@ pub(crate) fn build_process_async_items(
             params: process_async_wait_params(),
             ret: Some(process_async_ret("Status")),
             body: wait_body,
+            is_async: true,
+        });
+    }
+    if needs_kill {
+        items.push(RustItem::Fn {
+            name: "__sifr_process_async_kill".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: process_async_wait_params(),
+            ret: Some(process_async_ret("()")),
+            body: kill_body,
+            is_async: true,
+        });
+    }
+    if needs_terminate {
+        items.push(RustItem::Fn {
+            name: "__sifr_process_async_terminate".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: process_async_wait_params(),
+            ret: Some(process_async_ret("()")),
+            body: terminate_body,
             is_async: true,
         });
     }
