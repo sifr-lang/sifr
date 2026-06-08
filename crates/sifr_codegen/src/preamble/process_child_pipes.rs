@@ -358,6 +358,77 @@ pub(super) fn process_pipe_read_all_item() -> RustItem {
     }
 }
 
+pub(super) fn process_pipe_read_item() -> RustItem {
+    RustItem::Fn {
+        name: "__sifr_process_pipe_read".to_string(),
+        visibility: Visibility::Private,
+        type_params: vec![],
+        params: vec![
+            RustParam::Named {
+                name: "handle".to_string(),
+                ty: RustType::I64,
+            },
+            RustParam::Named {
+                name: "max_bytes".to_string(),
+                ty: RustType::I64,
+            },
+        ],
+        ret: Some(RustType::Named("Result<Vec<u8>, ProcessError>".to_string())),
+        body: vec![RustStmt::Expr(RustExpr::Ident(
+            "if max_bytes <= 0 {
+            return Err(ProcessError { message: \"process pipe read size must be positive\".to_string() });
+        }
+        if max_bytes > 1048576 {
+            return Err(ProcessError { message: \"process pipe read size exceeds 1048576 bytes\".to_string() });
+        }
+        let __handle = handle;
+        let mut __buffer = vec![0u8; max_bytes as usize];
+        let __read = {
+            let mut __pipes = __SIFR_PROCESS_PIPE_READERS.lock().unwrap_or_else(|__err| __err.into_inner());
+            let __pipe = __pipes.get_mut(&__handle).ok_or_else(|| ProcessError {
+                message: format!(\"process pipe reader handle is closed or unknown: {}\", __handle),
+            })?;
+            std::io::Read::read(__pipe.as_mut(), __buffer.as_mut_slice())
+                .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?
+        };
+        __buffer.truncate(__read);
+        if __read == 0 {
+            let mut __pipes = __SIFR_PROCESS_PIPE_READERS.lock().unwrap_or_else(|__err| __err.into_inner());
+            let _ = __pipes.remove(&__handle);
+        }
+        return Ok(__buffer);"
+                .to_string(),
+        ))],
+        is_async: false,
+    }
+}
+
+pub(super) fn process_pipe_reader_close_item() -> RustItem {
+    RustItem::Fn {
+        name: "__sifr_process_pipe_reader_close".to_string(),
+        visibility: Visibility::Private,
+        type_params: vec![],
+        params: vec![RustParam::Named {
+            name: "handle".to_string(),
+            ty: RustType::I64,
+        }],
+        ret: Some(RustType::Named("Result<(), ProcessError>".to_string())),
+        body: vec![RustStmt::Expr(RustExpr::Ident(
+            "let __handle = handle;
+        let __removed = {
+            let mut __pipes = __SIFR_PROCESS_PIPE_READERS.lock().unwrap_or_else(|__err| __err.into_inner());
+            __pipes.remove(&__handle)
+        };
+        __removed.ok_or_else(|| ProcessError {
+            message: format!(\"process pipe reader handle is closed or unknown: {}\", __handle),
+        })?;
+        return Ok(());"
+                .to_string(),
+        ))],
+        is_async: false,
+    }
+}
+
 pub(super) fn process_pipe_write_all_item() -> RustItem {
     RustItem::Fn {
         name: "__sifr_process_pipe_write_all".to_string(),

@@ -109,6 +109,7 @@
     "process_async_spawn_wait",
     "process_spawn_wait_status",
     "process_spawn_pipe_readers",
+    "process_pipe_reader_streaming",
     "process_spawn_pipe_writer",
     "process_child_kill_wait",
     "process_child_terminate_wait",

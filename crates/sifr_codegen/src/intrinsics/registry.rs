@@ -604,6 +604,8 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "process_child_stdout" => (process_pipes::lower_process_child_stdout(args), None),
         "process_child_stderr" => (process_pipes::lower_process_child_stderr(args), None),
         "process_pipe_read_all" => (process_pipes::lower_process_pipe_read_all(args), None),
+        "process_pipe_read" => (process_pipes::lower_process_pipe_read(args), None),
+        "process_pipe_reader_close" => (process_pipes::lower_process_pipe_reader_close(args), None),
         "process_pipe_write_all" => (process_pipes::lower_process_pipe_write_all(args), None),
         "process_pipe_close" => (process_pipes::lower_process_pipe_close(args), None),
         "process_output" => (process::lower_process_output(args), None),
