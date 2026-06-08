@@ -891,6 +891,14 @@ M5 closeout classification review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-closeout-review-pass-2.md`: `PASS`; reviewer verified that M5 completion is valid after merged work through PR #2433/#2434, non-Unix signal delivery is not overclaimed, signal codegen tests pin both Unix and non-Unix branches for `terminate()` and `shutdown_stream().next()`, cleanup scope wording is honest, M5 artifacts are consistent, and M6/M7 remain pending. The reviewer noted overlapping cleanup wording in open PR #2430 as merge-sequence context, not a blocker for this closeout.
 
+M5 closeout classification merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2435
+- Merge commit: `a87cb2f279530f7d245f1601252e32f782b70297`
+- Merged at: `2026-06-08T22:36:25Z`
+- Scope: M5 completion classification, signal codegen cfg-branch evidence, non-Unix host-limited signal delivery boundary, cleanup-scope support classification, closeout validation evidence, and reviewer artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
