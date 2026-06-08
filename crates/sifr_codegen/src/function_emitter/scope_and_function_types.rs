@@ -733,7 +733,9 @@ impl RustEmitter {
             .iter()
             .map(|tp| {
                 let extra = Self::extra_bounds_for_type_param(tp, &func.body);
-                let base = if needs_hash_eq {
+                let base = if Self::is_nullcontext_value_forwarder(func) {
+                    "Clone + 'static"
+                } else if needs_hash_eq {
                     "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static"
                 } else {
                     "Clone + std::fmt::Display + PartialOrd + 'static"
@@ -744,6 +746,28 @@ impl RustEmitter {
                 }
             })
             .collect()
+    }
+
+    fn is_nullcontext_value_forwarder(func: &HirFunction) -> bool {
+        if func.name != "nullcontext" || func.type_params.is_empty() {
+            return false;
+        }
+        if !matches!(&func.return_type, Type::Class { name, .. } if name == "NullContext") {
+            return false;
+        }
+        let [HirStmt::Return {
+            value:
+                Some(crate::HirExpr::ConstructorCall {
+                    class_name, args, ..
+                }),
+        }] = func.body.as_slice()
+        else {
+            return false;
+        };
+        class_name == "NullContext"
+            && args
+                .iter()
+                .all(|arg| matches!(arg, crate::HirExpr::Name { name, .. } if func.params.iter().any(|param| param.name == *name)))
     }
 
     pub(crate) fn lower_function_param_type(

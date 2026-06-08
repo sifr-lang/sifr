@@ -40,6 +40,12 @@ impl RustEmitter {
                 lowered_arg = registry_iterable_to_vec_expr(self, arg)?;
             }
 
+            if matches!(arg, HirExpr::NoneLiteral)
+                && matches!(resolved_param, Type::None | Type::TypeVar(_))
+            {
+                lowered_arg = RustExpr::Literal(crate::RustLiteral::Unit);
+            }
+
             if let Type::Union(members) = resolved_param {
                 if !crate::helpers::is_option_type(resolved_param)
                     && !matches!(

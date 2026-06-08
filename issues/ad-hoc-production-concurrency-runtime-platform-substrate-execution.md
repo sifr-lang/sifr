@@ -445,6 +445,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 signal value-model foundation: in progress.
 - M5 warnings global-filter rejection: in progress.
 - M5 resource nullcontext foundation: in progress.
+- M5 resource value-carrying nullcontext: in progress.
 - M6: pending.
 - M7: pending.
 
@@ -630,6 +631,29 @@ M5 resource nullcontext foundation merge ledger:
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-ledger-review-pass-1.md`: `FAIL`; reviewer found the top-level M5 status block had been promoted from `in progress.` to the PR URL, inconsistent with the accepted M5 foundation-slice ledger convention. The status line was restored before the second review pass.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-ledger-review-pass-2.md`: `PASS`; reviewer verified the status-block convention fix, PR #2409 merge commit/date, validation metrics and advisories, lane-step coverage, and no overclaim beyond the no-value `nullcontext()` slice.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-ledger-review-pass-3.md`: `PASS`; reviewer verified the final create-pr rerun metrics, single advisory, status-block convention, review-loop bullets, branch scope, and no overclaim beyond the no-value `nullcontext()` slice.
+
+M5 resource value-carrying nullcontext implementation:
+
+- Extended `sifr.resource.NullContext` to `NullContext[T]` with a carried `value: T`.
+- Kept `nullcontext()` available through a default `None` argument and added `nullcontext(value)` support so the `with` binding receives the carried value type.
+- Updated generated synchronous `with` guards to render concrete generic context-manager types, preventing bare generic guard fields such as `NullContext` when the source expression has type `NullContext[int]`.
+- Added narrow generated-code handling for `None` literals passed to Sifr `None` or generic type parameters so `nullcontext()` lowers to unit instead of Rust `Option`.
+- Relaxed generated bounds for `NullContext[T]` and `nullcontext[T]` to the actual `Clone` requirement.
+- Updated `resource_nullcontext_basic` to cover no-value, integer, and string payload forms.
+- Updated M5 shutdown traceability, supported-host matrix, and substrate inventory docs to mark no-value and value-carrying generic `nullcontext(...)` as supported while leaving cleanup stacks, owned closing helpers, async cleanup, cancellation cleanup ordering, and task context propagation as M5 follow-up work.
+
+M5 resource value-carrying nullcontext targeted local validation:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/resource_nullcontext_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/resource_nullcontext_basic.sifr` -> PASS; emitted guards included `NullContext<()>`, `NullContext<i64>`, and `NullContext<String>`.
+- `cargo check -p sifr_codegen` -> PASS.
+- `cargo check -p sifr_lowering -p sifr_codegen -p sifr_driver` -> PASS.
+- `cargo fmt --check`, touched-file `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`196.47s`, warm target `<=2m`) and warm-cache hit rate below advisory target (`85%`, target `>=90%`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`119 passed`, `0 failed`, `cache_hits=28/33`, `report_signature=0df4819d3daf7aa4`).
+
+M5 resource value-carrying nullcontext review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-nullcontext-value-review-pass-1.md`: `PASS`; reviewer verified the generic `NullContext[T]` source surface, no-value and value-carrying `nullcontext(...)` behavior, generated guards with `NullContext<()>`, `NullContext<i64>`, and `NullContext<String>`, no generated user-path panic/fallback/runtime leak, narrow `None`-to-unit lowering for `Type::None`/`TypeVar` without changing `Option` parameters, scoped synchronous `with` guard codegen, and docs honesty for cleanup-stack/async-cleanup follow-ups.
 
 M5 signal `strsignal` value-helper implementation:
 
