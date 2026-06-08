@@ -123,6 +123,7 @@
     "process_child_kill_wait",
     "process_child_terminate_wait",
     "signal_value_model_basic",
+    "resource_nullcontext_basic",
     "text_i18n_encoding_io",
     "text_i18n_unicode_core",
     "text_i18n_unicode_segmentation",
