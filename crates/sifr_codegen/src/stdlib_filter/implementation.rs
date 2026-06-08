@@ -319,6 +319,7 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
                 || code.contains("__SIFR_NEXT_PROCESS_CHILD_ID")
                 || code.contains("__sifr_next_process_child_id")
                 || code.contains("__sifr_process_spawn")
+                || code.contains("__sifr_process_terminate")
                 || code.contains("__sifr_process_child_stdin")
                 || code.contains("__sifr_process_child_stdout")
                 || code.contains("__sifr_process_child_stderr")
@@ -363,6 +364,7 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 | "__SIFR_NEXT_PROCESS_CHILD_ID"
                 | "__sifr_next_process_child_id"
                 | "__sifr_process_spawn"
+                | "__sifr_process_terminate"
                 | "__sifr_process_child_stdin"
                 | "__sifr_process_child_stdout"
                 | "__sifr_process_child_stderr"
@@ -411,6 +413,7 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
             item_fn.sig.ident == "__sifr_next_file_handle_id"
                 || item_fn.sig.ident == "__sifr_next_process_child_id"
                 || item_fn.sig.ident == "__sifr_process_spawn"
+                || item_fn.sig.ident == "__sifr_process_terminate"
                 || item_fn.sig.ident == "__sifr_process_child_stdin"
                 || item_fn.sig.ident == "__sifr_process_child_stdout"
                 || item_fn.sig.ident == "__sifr_process_child_stderr"

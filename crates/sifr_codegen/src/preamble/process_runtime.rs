@@ -404,6 +404,133 @@ fn process_spawn_item() -> RustItem {
     }
 }
 
+fn process_terminate_item_unix() -> RustItem {
+    RustItem::Fn {
+        name: "__sifr_process_terminate".to_string(),
+        visibility: Visibility::Private,
+        type_params: vec![],
+        params: vec![RustParam::Named {
+            name: "__handle".to_string(),
+            ty: RustType::I64,
+        }],
+        ret: Some(RustType::Named("Result<(), ProcessError>".to_string())),
+        body: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "__children".to_string(),
+                ty: None,
+                value: process_child_handles_lock_expr(),
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__child".to_string(),
+                ty: None,
+                value: RustExpr::Try(Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__children".to_string())),
+                        method: "get_mut".to_string(),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident("__handle".to_string())),
+                        }],
+                    }),
+                    method: "ok_or_else".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![],
+                        body: Box::new(process_handle_error(
+                            "process child handle is closed or unknown: {}",
+                        )),
+                        is_move: false,
+                    }],
+                })),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__pid".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__child".to_string())),
+                        method: "id".to_string(),
+                        args: vec![],
+                    }),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__status".to_string(),
+                ty: None,
+                value: RustExpr::Try(Box::new(process_map_err(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "std".to_string(),
+                                    "process".to_string(),
+                                    "Command".to_string(),
+                                    "new".to_string(),
+                                ])),
+                                args: vec![RustExpr::Literal(RustLiteral::Str("kill".to_string()))],
+                            }),
+                            method: "arg".to_string(),
+                            args: vec![RustExpr::Literal(RustLiteral::Str("-TERM".to_string()))],
+                        }),
+                        method: "arg".to_string(),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident("__pid".to_string())),
+                        }],
+                    }),
+                    method: "status".to_string(),
+                    args: vec![],
+                }))),
+            },
+            RustStmt::If {
+                cond: RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__status".to_string())),
+                        method: "success".to_string(),
+                        args: vec![],
+                    }),
+                },
+                then_body: vec![RustStmt::Return(Some(err_expr(process_error_expr(
+                    RustExpr::FormatMacro {
+                        name: "format".to_string(),
+                        format_str: "process terminate failed with status: {}".to_string(),
+                        args: vec![RustExpr::Ident("__status".to_string())],
+                    },
+                ))))],
+                else_body: None,
+            },
+            RustStmt::Return(Some(ok_expr(RustExpr::Literal(RustLiteral::Unit)))),
+        ],
+        is_async: false,
+    }
+}
+
+fn process_terminate_item_not_unix() -> RustItem {
+    RustItem::Fn {
+        name: "__sifr_process_terminate".to_string(),
+        visibility: Visibility::Private,
+        type_params: vec![],
+        params: vec![RustParam::Named {
+            name: "_handle".to_string(),
+            ty: RustType::I64,
+        }],
+        ret: Some(RustType::Named("Result<(), ProcessError>".to_string())),
+        body: vec![RustStmt::Return(Some(err_expr(process_error_expr(
+            RustExpr::Literal(RustLiteral::Str(
+                "process terminate is unsupported on this host; use kill for forceful termination"
+                    .to_string(),
+            )),
+        ))))],
+        is_async: false,
+    }
+}
+
 pub(crate) fn build_process_child_items() -> Vec<RustItem> {
     vec![
         RustItem::Static {
@@ -558,6 +685,10 @@ pub(crate) fn build_process_child_items() -> Vec<RustItem> {
         },
         process_stdio_from_mode_item(),
         process_spawn_item(),
+        RustItem::Attr("#[cfg(unix)]".to_string()),
+        process_terminate_item_unix(),
+        RustItem::Attr("#[cfg(not(unix))]".to_string()),
+        process_terminate_item_not_unix(),
         process_child_pipe_writer_item("__sifr_process_child_stdin", "stdin"),
         process_child_pipe_item("__sifr_process_child_stdout", "stdout"),
         process_child_pipe_item("__sifr_process_child_stderr", "stderr"),

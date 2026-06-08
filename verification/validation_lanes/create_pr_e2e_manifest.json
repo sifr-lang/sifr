@@ -94,6 +94,7 @@
     "process_spawn_pipe_readers",
     "process_spawn_pipe_writer",
     "process_child_kill_wait",
+    "process_child_terminate_wait",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",

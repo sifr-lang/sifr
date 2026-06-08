@@ -23,6 +23,7 @@ mod pathlib;
 mod platform;
 mod process;
 mod process_async;
+mod process_child_lifecycle;
 mod process_pipes;
 mod random;
 mod re;
@@ -595,9 +596,10 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "sys_platform" => (sys::lower_sys_platform(args), None),
         "sys_maxsize" => (sys::lower_sys_maxsize(args), None),
         "process_run" => (process::lower_process_run(args), None),
-        "process_spawn" => (process::lower_process_spawn(args), None),
-        "process_kill" => (process::lower_process_kill(args), None),
-        "process_wait" => (process::lower_process_wait(args), None),
+        "process_spawn" => (process_child_lifecycle::lower_process_spawn(args), None),
+        "process_kill" => (process_child_lifecycle::lower_process_kill(args), None),
+        "process_terminate" => (process_child_lifecycle::lower_process_terminate(args), None),
+        "process_wait" => (process_child_lifecycle::lower_process_wait(args), None),
         "process_child_stdin" => (process_pipes::lower_process_child_stdin(args), None),
         "process_child_stdout" => (process_pipes::lower_process_child_stdout(args), None),
         "process_child_stderr" => (process_pipes::lower_process_child_stderr(args), None),
