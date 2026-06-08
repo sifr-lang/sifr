@@ -424,6 +424,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync stdin pipe writer: https://github.com/sifr-lang/sifr/pull/2357
 - M4 async process output timeout: https://github.com/sifr-lang/sifr/pull/2362
 - M4 async stdin-byte communicate: https://github.com/sifr-lang/sifr/pull/2365
+- M4 sync process terminate: https://github.com/sifr-lang/sifr/pull/2367
 - M4 async process spawn/wait: in progress.
 - M4: in progress.
 - M5: pending.
@@ -974,11 +975,44 @@ M4 async process spawn/wait targeted local validation:
 - `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
 - `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; 423 fail tests completed.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS after post-review cleanup; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`282.19s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=22/26`, `report_signature=5e93ca9f74a9781c`).
+- Post-`origin/main` merge rerun after preserving PR #2367 sync terminate evidence: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`225.06s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`103 passed`, `0 failed`, `cache_hits=25/27`, `report_signature=2593463768412da4`).
 
 M4 async process spawn/wait review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-1.md`: `PASS`; reviewer verified the narrow async child lifecycle wave, inherited-stdio-only spawn scope, typed `stdin_bytes` and stdio-mode deferrals, one-shot table-backed async wait without a mutex guard across await, generated-helper gating, honest traceability/host-matrix/manifests, and no user-triggerable panic path. Non-blocking notes covered the then-unused `AsyncChild._waited` field, dead shared-prelude collector branches mirroring sync spawn/wait, signal-status coverage remaining sync-only, the async process runtime file nearing the guardrail, and possible stdout/stderr deferral fixture coverage.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-2.md`: `PASS`; reviewer confirmed the unused `AsyncChild._waited` field was removed from the public class and stdlib type metadata, the added `stdout(Stdio("pipe"))` typed deferral assertion is correct, refreshed create-pr validation evidence matches the tree, and no new blockers or scope/documentation mismatches were introduced.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-3.md`: `CHANGES_REQUESTED`; post-`origin/main` merge reviewer verified the branch preserved PR #2367 sync terminate evidence and the pass-2 async spawn/wait implementation, but found a duplicate `M4 async process spawn/wait: in progress` line in the implementation PR list.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-4.md`: `PASS`; reviewer confirmed the duplicate PR-list entry was collapsed to a single in-progress spawn/wait row after PR #2367, conflict markers remained absent, `git diff --check` stayed clean, and no new blocker was introduced.
+
+M4 sync process terminate implementation:
+
+- CPython scan evidence: inspected `/Users/yaseralnajjar/work/sifr/cpython/Lib/subprocess.py`, `Doc/library/subprocess.rst`, `Lib/test/test_subprocess.py`, `Lib/asyncio/subprocess.py`, and `Lib/test/test_asyncio/test_subprocess.py` for `Popen.terminate`, `Process.terminate`, `SIGTERM`, and terminate tests. CPython maps POSIX terminate to `SIGTERM`, while Windows has a distinct terminate/status behavior; this Sifr wave implements Unix SIGTERM evidence and keeps Windows host-limited.
+- Added public `sifr.process.terminate(child)` and `Child.terminate()` as `@blocking_io` sync lifecycle APIs returning typed `Result[None, ProcessError]`.
+- Added `_sifr.process.process_terminate` metadata and a focused child-lifecycle lowerer module so existing process lowering stays below the 900-line file-size guardrail while preserving `spawn`, `wait`, and `kill` behavior.
+- Added a generated `__sifr_process_terminate` child-table helper. On Unix it requests SIGTERM for the immediate child handle and preserves the handle for later `wait`; on non-Unix it returns a typed unsupported `ProcessError` until host-specific termination/status mapping is fixture-backed.
+- Added `process_child_terminate_wait`, top-level and method-form async rejection fixtures, create-pr/merge manifest entries, M4 traceability updates, and a supported-host matrix row for sync graceful terminate.
+
+M4 sync process terminate targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo fmt` and `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2192 files checked, 900-line limit. The child-lifecycle lowerer split keeps `crates/sifr_codegen/src/intrinsics/registry/process.rs` at 692 lines.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_child_terminate_wait.sifr` -> PASS; top-level and method-form terminate request Unix SIGTERM and preserve wait observation.
+- Expected async diagnostics `process_terminate_direct_async_rejected` and `process_child_terminate_method_direct_async_rejected` -> expected FAIL with `SIFR-ASYNC-0003`.
+- Adjacent process regressions `process_child_kill_wait`, `process_spawn_wait_status`, and `process_signal_status` -> PASS.
+- Emission check for `process_child_terminate_wait` -> PASS; emitted Rust includes `__sifr_process_terminate`, cfg-gated Unix/non-Unix helpers, host `kill` invocation with `-TERM`, and typed non-Unix unsupported `ProcessError`.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 425 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`404.86s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=23/27`, `report_signature=5e93ca9f74a9781c`).
+- Post-`origin/main` rebase rerun after the async stdin-byte communicate ledger merge: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`606.36s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=26/27`, `report_signature=5e93ca9f74a9781c`).
+
+M4 sync process terminate review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-process-terminate-review-pass-1.md`: `PASS`; reviewer verified the public top-level and method-form APIs, `_sifr.process.process_terminate` metadata, child-lifecycle lowerer split, generated cfg-gated `__sifr_process_terminate` helper, child-table handle preservation for later `wait`, typed non-Unix unsupported `ProcessError`, prelude filtering, fixtures, manifests, host matrix, traceability, and file-size guardrails. Non-blocking follow-ups remain for narrowing the child-table mutex hold around the host signal request and replacing the host `kill` command with a reviewed Rust host-signal dependency or shim in a later lifecycle hardening wave.
+- Merged as PR #2367 (`3db5c05e923c2a414a18992cb919923088600bbb`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`625.99s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=25/27`, `report_signature=5e93ca9f74a9781c`).
 
 M0 targeted local validation:
 
