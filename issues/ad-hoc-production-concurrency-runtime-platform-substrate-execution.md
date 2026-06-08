@@ -899,11 +899,13 @@ M4 async output timeout targeted local validation:
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_output_timeout.sifr` -> PASS; async output timeout returns typed success output, timeout `Output` evidence with empty stdout/stderr, invalid-timeout errors, and owned-pipe deferral for stdin bytes / non-inherit stdin modes.
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS.
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_timeout.sifr` -> PASS.
-- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`513.27s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=23/26`, `report_signature=9212e77abfa82acc`).
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS after merging current `origin/main`; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`1026.02s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=20/26`, `report_signature=9212e77abfa82acc`).
 
 M4 async output timeout review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-output-timeout-review-pass-1.md`: `PASS`; reviewer verified stdlib signature and lowering arity/order, private generated Tokio helper behavior, typed invalid-timeout and timeout `Output` evidence, stdin-bytes owned-pipe deferral, helper gating through `SharedPreludeProcessAsyncNeeds`, manifest and traceability updates, and focused fixture replay. Non-blocking notes retained the intentional `kill_on_drop(true)` limitation until async owned-pipe/communicate work and warned to keep unrelated network-phase dirty files out of the PR.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-output-timeout-review-pass-2.md`: `FAIL`; post-`origin/main` merge reviewer found the code, manifests, traceability, and stdin-mode integration correct, but blocked on stale validation metrics in this ledger.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-output-timeout-review-pass-3.md`: `PASS`; reviewer verified the ledger now records the post-merge create-pr run accurately (`1026.02s`, `cache_hits=20/26`, `101 passed`, `0 failed`, `report_signature=9212e77abfa82acc`) and no blocker remains.
 
 M0 targeted local validation:
 
