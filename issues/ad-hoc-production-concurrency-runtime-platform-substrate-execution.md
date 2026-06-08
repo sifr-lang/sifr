@@ -428,7 +428,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process spawn/wait: https://github.com/sifr-lang/sifr/pull/2369
 - M4 method-form async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2372
 - M4 async process runtime split: https://github.com/sifr-lang/sifr/pull/2375
-- M4 sync PipeReader streaming reads: in progress.
+- M4 sync PipeReader streaming reads: https://github.com/sifr-lang/sifr/pull/2377
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1015,6 +1015,8 @@ M4 sync PipeReader streaming reads targeted local validation:
 M4 sync PipeReader streaming reads review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-reader-streaming-review-pass-1.md`: `PASS`; reviewer verified the public `PipeReader.read(max_bytes)` / `PipeReader.close()` surface preserves typed `ProcessError`, stdlib metadata/lowerers/registry/helper signatures agree, bounded reads validate positive sizes and cap one read at 1 MiB, partial reads preserve the private reader handle, EOF and explicit close remove it, prelude filtering emits sync pipe state without async child state, fixture/manifests/traceability/host matrix/ledger are honest about async pipes/sendability/supervision/text-mode deferrals, and file-size guardrails remain under 900 lines. Non-blocking follow-ups were recorded for PR hygiene around unrelated network/http files, future structured helper construction cleanup, later lock-scope hardening before concurrent sync readers matter, and optional direct-async rejection fixture coverage.
+- Merged as PR #2377 (`8a5aa80e6d738bb2e2e21639b250321c9bb1a621`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`866.58s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`105 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=d08ce200366c588c`).
 
 M4 method-form async child kill/terminate implementation:
 
