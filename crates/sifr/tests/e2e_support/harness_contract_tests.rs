@@ -519,7 +519,7 @@ pub(crate) fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
 
     let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
     assert!(cargo_toml.contains(
-        "tokio = { version = \"1.52.3\", features = [\"macros\", \"process\", \"rt\", \"sync\", \"time\"] }"
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"sync\", \"time\"] }"
     ));
 }
 
