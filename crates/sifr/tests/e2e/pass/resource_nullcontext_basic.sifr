@@ -2,9 +2,13 @@ from sifr.resource import NullContext, nullcontext
 
 
 def main():
-    ctx: NullContext = nullcontext()
-    with ctx as value:
-        assert value == None
+    empty: NullContext[None] = nullcontext()
+    with empty as empty_value:
+        assert empty_value == None
 
-    with nullcontext() as second:
-        assert second == None
+    ctx: NullContext[int] = nullcontext(41)
+    with ctx as value:
+        assert value == 41
+
+    with nullcontext("ready") as second:
+        assert second == "ready"

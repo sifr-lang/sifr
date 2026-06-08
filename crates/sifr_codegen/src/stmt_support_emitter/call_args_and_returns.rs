@@ -49,6 +49,12 @@ impl RustEmitter {
                     || self.mut_borrowed_params.contains(name)
                     || ty.rust_type().starts_with('&'));
 
+            if matches!(hir_arg, HirExpr::NoneLiteral)
+                && matches!(resolved_param, Type::None | Type::TypeVar(_))
+            {
+                lowered_arg = crate::RustExpr::Literal(crate::RustLiteral::Unit);
+            }
+
             if crate::helpers::is_option_type(resolved_param) {
                 let is_recursive_ctor_param = ctor_class_name
                     .and_then(|class_name| {

@@ -23,10 +23,10 @@ impl RustEmitter {
                 format!("_{var}")
             };
             let class_name = if *has_cm {
-                let Type::Class { name, .. } = value.ty() else {
+                if !matches!(value.ty(), Type::Class { .. }) {
                     return Ok(None);
-                };
-                Some(name.clone())
+                }
+                Some(self.rust_type_with_generics(value.ty()))
             } else {
                 None
             };

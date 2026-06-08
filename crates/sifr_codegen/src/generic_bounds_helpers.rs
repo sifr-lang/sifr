@@ -51,6 +51,9 @@ impl RustEmitter {
         if class.name == "deque" {
             return "Clone + PartialEq".to_string();
         }
+        if class.name == "NullContext" {
+            return "Clone".to_string();
+        }
         if Self::class_needs_hash_eq(class) {
             "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq".to_string()
         } else {
