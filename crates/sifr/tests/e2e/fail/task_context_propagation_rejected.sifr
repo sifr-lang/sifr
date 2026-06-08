@@ -1,0 +1,15 @@
+# expect-error: SIFR-TYPE-0002
+from sifr.task import Context
+
+
+async def worker() -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    ctx: Context = Context()
+    async with task.TaskGroup(ctx=ctx) as group:
+        handle = group.spawn(worker())
+        result = await handle
+    return None
