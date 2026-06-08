@@ -11,6 +11,7 @@ from _sifr.process import (
     process_output_text,
     process_output_timeout,
     process_async_run,
+    process_async_run_timeout,
     process_async_output,
     process_shell_run,
     process_shell_output,
@@ -332,6 +333,17 @@ def async_run(own command: Command) -> Awaitable[Result[Status, ProcessError]]:
         command.env_vars,
         command.working_dir,
         command.has_working_dir,
+    )
+
+
+def async_run_timeout(own command: Command, seconds: float) -> Awaitable[Result[Status, ProcessError]]:
+    return process_async_run_timeout(
+        command.program,
+        command.arguments,
+        command.env_vars,
+        command.working_dir,
+        command.has_working_dir,
+        seconds,
     )
 
 
