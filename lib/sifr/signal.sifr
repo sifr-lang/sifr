@@ -1,0 +1,25 @@
+# sifr.signal - Structured signal identifiers and shutdown surfaces
+
+
+class SignalError(Error):
+    message: str
+
+
+class Signal:
+    name: str
+    number: int
+
+    def __init__(self, name: str, number: int):
+        self.name = name
+        self.number = number
+
+    def __str__(self) -> str:
+        return self.name
+
+
+def sigint() -> Signal:
+    return Signal("SIGINT", 2)
+
+
+def sigterm() -> Signal:
+    return Signal("SIGTERM", 15)

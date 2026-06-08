@@ -1,0 +1,16 @@
+from sifr.signal import Signal, sigint, sigterm
+
+
+def main():
+    interrupt: Signal = sigint()
+    terminate: Signal = sigterm()
+    actual: list[bool] = []
+
+    actual.append(interrupt.name == "SIGINT")
+    actual.append(interrupt.number == 2)
+    actual.append(str(interrupt) == "SIGINT")
+    actual.append(terminate.name == "SIGTERM")
+    actual.append(terminate.number == 15)
+    actual.append(str(terminate) == "SIGTERM")
+
+    assert actual == [True, True, True, True, True, True]
