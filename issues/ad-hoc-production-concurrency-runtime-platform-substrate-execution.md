@@ -440,7 +440,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 timeout process-group cleanup: https://github.com/sifr-lang/sifr/pull/2396
 - M4 sync child drop cleanup: https://github.com/sifr-lang/sifr/pull/2398
 - M4 scoped parent cancellation evidence: https://github.com/sifr-lang/sifr/pull/2400
-- M4 closeout: in progress.
+- M4 closeout: https://github.com/sifr-lang/sifr/pull/2403
+- M4: complete.
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -540,6 +541,11 @@ M4 closeout classification review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-closeout-audit-pass-1.md`: `PASS`; reviewer verified all blocking M4 DoD items have merged runtime and test evidence on macOS/Linux, and identified stale docs-only status/classification wording to remediate before closeout.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-closeout-review-pass-1.md`: `PASS`; reviewer verified the docs-only closeout diff correctly closes M4, removes stale pending lifecycle wording from active M4 surfaces, keeps non-Unix/Windows semantics host-limited, records validation evidence, and leaves M5 as the next pending entry.
+
+M4 closeout classification merge ledger:
+
+- Merged as PR #2403 (`3f4512625a3eec3206276b8e96bd7bf915f0b172`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`123.41s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`114 passed`, `0 failed`, `cache_hits=28/30`, `report_signature=b11e218d104a7820`).
 
 M3 first-wave targeted local validation:
 
