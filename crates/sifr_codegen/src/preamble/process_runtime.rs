@@ -2,7 +2,10 @@
 
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Visibility};
 
-use super::process_child_pipes::{process_child_pipe_item, process_pipe_read_all_item};
+use super::process_child_pipes::{
+    process_child_pipe_item, process_child_pipe_writer_item, process_pipe_close_item,
+    process_pipe_read_all_item, process_pipe_write_all_item,
+};
 
 pub(crate) fn build_process_status_items() -> Vec<RustItem> {
     vec![
@@ -303,6 +306,16 @@ fn process_spawn_item() -> RustItem {
     body.extend([
         RustStmt::Expr(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
+            method: "stdin".to_string(),
+            args: vec![RustExpr::Try(Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "__sifr_process_stdio_from_mode".to_string()
+                ])),
+                args: vec![RustExpr::Ident("stdin_mode".to_string())],
+            }))],
+        }),
+        RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
             method: "stdout".to_string(),
             args: vec![RustExpr::Try(Box::new(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
@@ -371,6 +384,10 @@ fn process_spawn_item() -> RustItem {
             RustParam::Named {
                 name: "has_cwd".to_string(),
                 ty: RustType::Bool,
+            },
+            RustParam::Named {
+                name: "stdin_mode".to_string(),
+                ty: string_ty(),
             },
             RustParam::Named {
                 name: "stdout_mode".to_string(),
@@ -464,6 +481,43 @@ pub(crate) fn build_process_child_items() -> Vec<RustItem> {
             },
         },
         RustItem::Static {
+            name: "__SIFR_PROCESS_PIPE_WRITERS".to_string(),
+            visibility: Visibility::Private,
+            ty: RustType::Named(
+                "std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<i64, Box<dyn std::io::Write + Send>>>>"
+                    .to_string(),
+            ),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "sync".to_string(),
+                    "LazyLock".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "std".to_string(),
+                            "sync".to_string(),
+                            "Mutex".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "std".to_string(),
+                                "collections".to_string(),
+                                "HashMap".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![],
+                        }],
+                    }),
+                    is_move: false,
+                }],
+            },
+        },
+        RustItem::Static {
             name: "__SIFR_NEXT_PROCESS_CHILD_ID".to_string(),
             visibility: Visibility::Private,
             ty: RustType::Named("std::sync::atomic::AtomicI64".to_string()),
@@ -504,8 +558,11 @@ pub(crate) fn build_process_child_items() -> Vec<RustItem> {
         },
         process_stdio_from_mode_item(),
         process_spawn_item(),
+        process_child_pipe_writer_item("__sifr_process_child_stdin", "stdin"),
         process_child_pipe_item("__sifr_process_child_stdout", "stdout"),
         process_child_pipe_item("__sifr_process_child_stderr", "stderr"),
         process_pipe_read_all_item(),
+        process_pipe_write_all_item(),
+        process_pipe_close_item(),
     ]
 }

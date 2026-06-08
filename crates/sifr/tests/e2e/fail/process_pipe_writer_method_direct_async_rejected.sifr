@@ -1,0 +1,8 @@
+# expect-error: SIFR-ASYNC-0003
+from sifr.process import PipeWriter
+
+
+async def main() -> None:
+    stdin: PipeWriter = PipeWriter(0)
+    _ = stdin.write_all(b"blocked")
+    await task.sleep(0.0)

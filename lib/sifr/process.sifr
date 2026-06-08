@@ -4,9 +4,12 @@ from _sifr.process import (
     process_spawn,
     process_kill,
     process_wait,
+    process_child_stdin,
     process_child_stdout,
     process_child_stderr,
     process_pipe_read_all,
+    process_pipe_write_all,
+    process_pipe_close,
     process_output,
     process_output_text,
     process_output_timeout,
@@ -83,6 +86,28 @@ class PipeReader:
         return process_pipe_read_all(self._handle)
 
 
+class PipeWriter:
+    _handle: int
+    _closed: bool
+
+    def __init__(self, handle: int):
+        self._handle = handle
+        self._closed = False
+
+    @blocking_io
+    def write_all(self, data: bytes) -> Result[None, ProcessError]:
+        if self._closed:
+            raise ProcessError("process pipe writer is already closed")
+        return process_pipe_write_all(self._handle, data)
+
+    @blocking_io
+    def close(self) -> Result[None, ProcessError]:
+        if self._closed:
+            raise ProcessError("process pipe writer is already closed")
+        self._closed = True
+        return process_pipe_close(self._handle)
+
+
 class Child:
     _handle: int
     _waited: bool
@@ -122,6 +147,14 @@ class Child:
         except ProcessError as e:
             raise e
 
+    @blocking_io
+    def stdin(self) -> Result[PipeWriter, ProcessError]:
+        try:
+            handle: int = process_child_stdin(self._handle)
+            return PipeWriter(handle)
+        except ProcessError as e:
+            raise e
+
 
 class TextOutput:
     stdout: str
@@ -144,6 +177,7 @@ class Command:
     has_working_dir: bool
     stdin_data: bytes
     has_stdin_data: bool
+    stdin_mode: str
     stdout_mode: str
     stderr_mode: str
 
@@ -155,6 +189,7 @@ class Command:
         self.has_working_dir = False
         self.stdin_data = b""
         self.has_stdin_data = False
+        self.stdin_mode = "inherit"
         self.stdout_mode = "inherit"
         self.stderr_mode = "inherit"
 
@@ -175,6 +210,9 @@ class Command:
     def stdin_bytes(self, data: bytes) -> None:
         self.stdin_data = self.stdin_data + data
         self.has_stdin_data = True
+
+    def stdin(self, mode: Stdio) -> None:
+        self.stdin_mode = mode.mode + ""
 
     def stdout(self, mode: Stdio) -> None:
         self.stdout_mode = mode.mode + ""
@@ -218,6 +256,7 @@ def spawn(command: Command) -> Result[Child, ProcessError]:
             command.env_vars,
             command.working_dir,
             command.has_working_dir,
+            command.stdin_mode,
             command.stdout_mode,
             command.stderr_mode,
         )
