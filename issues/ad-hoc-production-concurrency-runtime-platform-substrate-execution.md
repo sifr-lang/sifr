@@ -417,7 +417,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync child wait: https://github.com/sifr-lang/sifr/pull/2334
 - M4 timeout status evidence: https://github.com/sifr-lang/sifr/pull/2336
 - M4 sync child kill: https://github.com/sifr-lang/sifr/pull/2337
-- M4 signal status evidence: pending PR.
+- M4 signal status evidence: https://github.com/sifr-lang/sifr/pull/2341
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -686,6 +686,7 @@ M4 signal status evidence targeted local validation:
 M4 signal status evidence review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-signal-status-review-pass-1.md`: `PASS`; reviewer verified tuple-shaped raw exit status is coherent across stdlib typing, lowering, and Sifr wrappers; Unix signal exits surface as `Status(kind="signal", signal=N, success=False)` while timeout evidence retains precedence; the cfg-gated `__sifr_process_exit_signal` helper is portable by inspection; ordinary process APIs emit the status helper without the child table; manifests, traceability, supported-host matrix, and execution ledger are honest about Unix-only signal evidence and remaining M4 process lifecycle work. Non-blocking follow-ups were applied by adding the omitted child-kill PR link and documenting that `signal` carries the meaningful status when `kind == "signal"`.
+- Merged as PR #2341: https://github.com/sifr-lang/sifr/pull/2341 (`56b3aadeb65b63fc589c2530b0c02031b0e9596a7`).
 
 M0 targeted local validation:
 
