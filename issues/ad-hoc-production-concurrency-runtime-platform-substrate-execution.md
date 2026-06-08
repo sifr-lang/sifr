@@ -437,7 +437,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async shell process APIs: https://github.com/sifr-lang/sifr/pull/2393
 - M4 scoped process supervision: https://github.com/sifr-lang/sifr/pull/2392
 - M4 timeout process-group cleanup: https://github.com/sifr-lang/sifr/pull/2396
-- M4 sync child drop cleanup: in progress.
+- M4 sync child drop cleanup: https://github.com/sifr-lang/sifr/pull/2398
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -489,6 +489,15 @@ M4 sync child drop cleanup targeted local validation:
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_scoped_spawn_handle.sifr` -> PASS.
 - Emission check for `process_spawn_wait_status` -> PASS; emitted Rust shows `sifr.process` resource wrappers derive `Debug` only and `Child` has an `impl Drop` that removes unwaited handles from `__SIFR_PROCESS_CHILDREN`.
 - Post-`origin/main` rebase rerun after the scoped process supervision and timeout process-group cleanup merges: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`131.14s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`113 passed`, `0 failed`, `cache_hits=30/30`, `report_signature=5cbbb189c83d1068`).
+
+M4 sync child drop cleanup review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-sync-child-drop-cleanup-review-pass-1.md`: `PASS`; reviewer verified the module-scoped resource derive suppression, generated sync `Child` drop cleanup, non-clone process handle wrappers, targeted codegen coverage, traceability/host matrix honesty, and no file-size or panic-safety blockers. Non-blocking follow-ups were kept out of the implementation scope for top-level wait `_waited` bookkeeping and future async handle/table cleanup.
+
+M4 sync child drop cleanup merge ledger:
+
+- Merged as PR #2398 (`f84f854a84f08d7d2c39ab66d200ac1d53b15039`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; no advisories (`118.68s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`113 passed`, `0 failed`, `cache_hits=30/30`, `report_signature=5cbbb189c83d1068`).
 
 M3 first-wave targeted local validation:
 
