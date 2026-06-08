@@ -594,6 +594,12 @@ M5 warnings global-filter rejection review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-warnings-filter-review-pass-1.md`: `PASS`; reviewer verified the `filterwarnings` fixture pins the legacy `sifr.warnings` rejection path, the traceability artifact closes only warning-filter parity while keeping diagnostics/tracing runtime work open, the ledger keeps M5 in progress, and the validation evidence is accurate.
 
+M5 warnings global-filter rejection merge ledger:
+
+- Merged as PR #2407 (`58813d6edb620abd3bd6f1461d616fa67bff86f4`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`160.63s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`115 passed`, `0 failed`, `cache_hits=27/31`, `report_signature=fa75f7f525acd21c`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-warnings-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2407 merge commit, validation metrics, advisory wording, lane-step coverage, and in-progress M5 scope for this docs-only merge-ledger PR.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
