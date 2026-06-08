@@ -620,6 +620,7 @@ M5 signal stream shape and lowering merge ledger:
 
 - Merged as PR #2418 (`abdd8674b9a51dc88260782283b6f47c4c7791ff`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`571.40s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`120 passed`, `0 failed`, `cache_hits=34/34`, `report_signature=293aaf3695dc42f8`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-ledger-review-pass-2.md`: `PASS`; reviewer verified PR #2418 metadata, merge SHA/date, final validation metrics and advisory wording, review artifact references, branch hygiene, and no overclaim beyond stream shape/lowering.
 
 M5 warnings global-filter rejection implementation:
 
