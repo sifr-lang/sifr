@@ -454,6 +454,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 signal stream Unix delivery harness: https://github.com/sifr-lang/sifr/pull/2426
 - M5 structured runtime diagnostics: https://github.com/sifr-lang/sifr/pull/2428
 - M5 explicit task context propagation: https://github.com/sifr-lang/sifr/pull/2431
+- M5 runtime diagnostic metrics policy: https://github.com/sifr-lang/sifr/pull/2433
 - M6: pending.
 - M7: pending.
 
@@ -838,6 +839,37 @@ M5 explicit task context propagation merge ledger:
 - Merged at: `2026-06-08T21:28:58Z`.
 - Scope: explicit `sifr.task.Context` propagation for `TaskGroup(ctx=...)` and `task.spawn_scoped(..., ctx=...)`, `current_context()` intrinsic/runtime support, fixtures, lane manifests, review artifact, and M5 traceability updates.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS.
+
+M5 runtime diagnostic metrics policy implementation:
+
+- Added `metrics = "0.24.6"` as a stable `StdlibFeature::Metrics` generated dependency for `sifr.runtime`, `_sifr.runtime`, and explicit required-crate inference.
+- Extended `_sifr.runtime.runtime_emit_diagnostic(...)` dependency metadata so generated diagnostic code requires both `metrics` and `tracing`.
+- Emitted fixed-schema metrics counters beside the existing `tracing::event!` calls: `sifr.runtime.diagnostic.emitted` for accepted diagnostic levels and `sifr.runtime.diagnostic.rejected` before returning `DiagnosticError` for unsupported levels.
+- Kept metric labels low-cardinality and redacted: accepted emissions use only `surface="runtime"` plus fixed `level` values, rejected emissions use only `surface="runtime"` plus `reason="unsupported_level"`, and no diagnostic target, diagnostic name, diagnostic message, or rejected level text is used as a label.
+- Updated grouped e2e and fixture generated Cargo.toml dependency inference so generated Rust containing `metrics::` receives the locked metrics facade dependency.
+- Updated M5 shutdown traceability, supported-host matrix, and phase dependency notes with concrete metric names, label/cardinality policy, redaction policy, emission points, deterministic tests, and duration-histogram deferral.
+
+M5 runtime diagnostic metrics policy targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_codegen runtime_diagnostic -- --nocapture` -> PASS.
+- `cargo test -p sifr_codegen runtime_module_dependency_metadata_includes_observability_facades -- --nocapture` -> PASS.
+- `cargo test -p sifr --test e2e test_generate_cargo_toml_runtime_diagnostics_use_locked_observability_specs -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/runtime_diagnostics_tracing.sifr` -> PASS.
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2246 files` and the `900` line limit.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`467.90s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`123 passed`, `0 failed`, `cache_hits=0/36`, `report_signature=4a74179bcdf2ba0c`).
+
+M5 runtime diagnostic metrics policy review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-metrics-policy-review-pass-1.md`: `PASS`; reviewer verified the stable metrics feature/dependency wiring, `runtime_emit_diagnostic` tracing+metrics requirements, accepted/rejected counter emission points, low-cardinality/redacted labels, grouped fixture dependency inference, deterministic tests, and honest histogram deferral.
+
+M5 runtime diagnostic metrics policy merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2433
+- Merge commit: `a13950d34a70313100f35a2a5f5240d713a5c3d9`
+- Merged at: `2026-06-08T21:56:31Z`
+- Scope: fixed-schema runtime diagnostic metrics counters, generated metrics dependency metadata, fixture dependency inference, review artifact, M5 traceability, supported-host matrix, and phase dependency policy updates.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
 M5 signal `strsignal` value-helper implementation:
 
