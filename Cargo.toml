@@ -94,6 +94,7 @@ serde_test = { version = "1.0.177" }
 static_assertions = { version = "1.1.0" }
 toml = { version = "1.1.2" }
 tokio = { version = "1.52.3", features = ["macros", "rt", "time"] }
+tracing = { version = "0.1.44", default-features = false, features = ["std"] }
 unic-ucd-category = { version = "0.9" }
 unicode-ident = { version = "1.0.24" }
 unicode_names2 = { version = "3.1.0" }

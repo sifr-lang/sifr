@@ -29,6 +29,7 @@ pub enum StdlibFeature {
     SifrRuntime,
     Tokio,
     Toml,
+    Tracing,
     UnicodeNames,
     UnicodeNormalization,
     UnicodeSegmentation,
@@ -65,6 +66,7 @@ impl StdlibFeature {
             Self::SifrRuntime => "sifr_runtime",
             Self::Tokio => "tokio",
             Self::Toml => "toml",
+            Self::Tracing => "tracing",
             Self::UnicodeNames => "unicode_names2",
             Self::UnicodeNormalization => "unicode-normalization",
             Self::UnicodeSegmentation => "unicode-segmentation",
@@ -192,6 +194,10 @@ const TOML_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "toml",
     spec: "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }",
 }];
+const TRACING_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "tracing",
+    spec: "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }",
+}];
 const UNICODE_NAMES_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "unicode_names2",
     spec: "unicode_names2 = \"3.1.0\"",
@@ -315,6 +321,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: TOML_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Tracing,
+        cargo_dependencies: TRACING_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::UnicodeNames,
         cargo_dependencies: UNICODE_NAMES_DEPS,
     },
@@ -364,6 +374,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "sifr_runtime" | "sifr-runtime" => Some(StdlibFeature::SifrRuntime),
         "tokio" => Some(StdlibFeature::Tokio),
         "toml" => Some(StdlibFeature::Toml),
+        "tracing" => Some(StdlibFeature::Tracing),
         "unicode_names2" => Some(StdlibFeature::UnicodeNames),
         "unicode-normalization" | "unicode_normalization" => {
             Some(StdlibFeature::UnicodeNormalization)
@@ -410,6 +421,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         ],
         "sifr.base64" => &[StdlibFeature::Base64],
         "sifr.parallel" => &[StdlibFeature::Rayon],
+        "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Tracing],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
         "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {

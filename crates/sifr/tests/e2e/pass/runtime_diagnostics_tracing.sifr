@@ -1,0 +1,41 @@
+from sifr.runtime import (
+    DEBUG,
+    DiagnosticError,
+    DiagnosticEvent,
+    DiagnosticLevel,
+    ERROR,
+    INFO,
+    TRACE,
+    WARN,
+    diagnostic_event,
+    emit_diagnostic,
+)
+
+
+def emit(level: DiagnosticLevel, name: str) -> Result[None, DiagnosticError]:
+    event: DiagnosticEvent = diagnostic_event(
+        level,
+        "sifr.runtime.test",
+        name,
+        "structured diagnostic",
+    )
+    return emit_diagnostic(event)
+
+
+def main() -> None:
+    try:
+        _: None = emit(TRACE, "trace_event")
+        _: None = emit(DEBUG, "debug_event")
+        _: None = emit(INFO, "info_event")
+        _: None = emit(WARN, "warn_event")
+        _: None = emit(ERROR, "error_event")
+    except DiagnosticError as e:
+        assert e.message == ""
+
+    invalid: DiagnosticLevel = DiagnosticLevel("verbose")
+    failed: bool = False
+    try:
+        _: None = emit(invalid, "invalid_event")
+    except DiagnosticError as e2:
+        failed = e2.message == "unsupported diagnostic level: verbose"
+    assert failed

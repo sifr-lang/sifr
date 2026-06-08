@@ -523,6 +523,21 @@ pub(crate) fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
     ));
 }
 
+#[test]
+pub(crate) fn test_generate_cargo_toml_runtime_diagnostics_use_locked_tracing_spec() {
+    let runtime_modules = normalize_dependency_set(vec!["sifr.runtime".to_string()].into_iter());
+    let no_required_crates = BTreeSet::new();
+    let from_module = generate_cargo_toml(&runtime_modules, &no_required_crates, "sifr_output");
+    let tracing_spec =
+        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }";
+    assert!(from_module.contains(tracing_spec));
+
+    let no_modules = BTreeSet::new();
+    let required_crates = normalize_dependency_set(vec!["tracing".to_string()]);
+    let from_required_crate = generate_cargo_toml(&no_modules, &required_crates, "sifr_output");
+    assert!(from_required_crate.contains(tracing_spec));
+}
+
 pub(crate) fn sample_cache_entry(
     group: &BatchGroup,
     toolchain: &ToolchainInfo,

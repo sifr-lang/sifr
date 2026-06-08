@@ -98,6 +98,57 @@ pub(crate) fn lowers_json_intrinsics_with_dependency_metadata() {
 }
 
 #[test]
+pub(crate) fn lowers_runtime_diagnostic_intrinsic_with_tracing_metadata() {
+    let lowered = lower_intrinsic(
+        "runtime_emit_diagnostic",
+        &[
+            "level".to_string(),
+            "target".to_string(),
+            "name".to_string(),
+            "message".to_string(),
+        ],
+    )
+    .expect("runtime_emit_diagnostic should lower");
+
+    assert_eq!(lowered.required_feature, None);
+    assert!(lowered
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::Tracing));
+    let rendered = render_expr(&lowered.expr);
+    assert!(rendered.contains("tracing::event!"));
+    assert!(rendered.contains("target: \"sifr.runtime\""));
+    assert!(rendered.contains("diagnostic_target = __sifr_diagnostic_target"));
+    assert!(rendered.contains("tracing::Level::INFO"));
+    assert!(rendered.contains("DiagnosticError::new"));
+    assert!(rendered.contains("unsupported diagnostic level"));
+}
+
+#[test]
+pub(crate) fn runtime_diagnostic_intrinsic_rejects_wrong_arity() {
+    assert!(lower_intrinsic(
+        "runtime_emit_diagnostic",
+        &["level".to_string(), "target".to_string()],
+    )
+    .is_none());
+}
+
+#[test]
+pub(crate) fn runtime_module_dependency_metadata_includes_tracing_only() {
+    let deps = sifr_stdlib::generated_cargo_dependencies(
+        &std::collections::HashSet::from(["sifr.runtime".to_string()]),
+        &std::collections::HashSet::new(),
+    );
+
+    assert_eq!(
+        deps,
+        vec![
+            "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+                .to_string()
+        ]
+    );
+}
+
+#[test]
 pub(crate) fn lowers_unicode_intrinsics_with_dependency_metadata() {
     let normalized = lower_intrinsic(
         "unicode_normalize",
