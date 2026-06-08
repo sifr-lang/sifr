@@ -709,6 +709,8 @@ M4 legacy subprocess intrinsic cleanup targeted local validation:
 M4 legacy subprocess intrinsic cleanup review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-legacy-subprocess-intrinsic-cleanup-review-pass-1.md`: `PASS`; reviewer verified the cleanup is surgical, no live consumer of the removed private intrinsic names remains outside negative guards and historical notes, public `sifr.subprocess` / bare `subprocess` diagnostics still point to `sifr.process`, production `process_*` dispatch is untouched, and the full create-pr gate passed. Non-blocking note: keep unrelated network-phase files out of this PR.
+- Merged as PR #2344: https://github.com/sifr-lang/sifr/pull/2344 (`6f4c0fe56cc7c9f7348bf73a0d8c6349df99b9b8`).
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`340.13s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`96 passed`, `0 failed`, `cache_hits=25/25`, `report_signature=f84374f7aa32a96e`).
 
 M0 targeted local validation:
 
