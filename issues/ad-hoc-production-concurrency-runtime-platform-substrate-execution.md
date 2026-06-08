@@ -442,7 +442,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 scoped parent cancellation evidence: https://github.com/sifr-lang/sifr/pull/2400
 - M4 closeout: https://github.com/sifr-lang/sifr/pull/2403
 - M4: complete.
-- M5: pending.
+- M5 signal value-model foundation: in progress.
 - M6: pending.
 - M7: pending.
 
@@ -546,6 +546,29 @@ M4 closeout classification merge ledger:
 
 - Merged as PR #2403 (`3f4512625a3eec3206276b8e96bd7bf915f0b172`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`123.41s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`114 passed`, `0 failed`, `cache_hits=28/30`, `report_signature=b11e218d104a7820`).
+
+M5 signal value-model foundation implementation:
+
+- Added the first `sifr.signal` embedded stdlib module with `Signal`, `SignalError`, and portable `sigint()` / `sigterm()` value helpers.
+- Added `signal_value_model_basic` pass coverage and create-pr/merge manifest entries.
+- Added unsupported signal API import diagnostics for `pause`, arbitrary handler registration through `signal`, `getsignal`, `raise_signal`, and `pthread_sigmask`.
+- Added the M5 shutdown traceability artifact with signal host matrix, signal follow-up boundaries, and cleanup/context/diagnostics follow-up slots.
+- Updated the supported-host matrix to mark the signal value model supported on macOS/Linux/Windows while keeping structured signal streams in-progress and Windows delivery semantics host-limited.
+
+M5 signal value-model foundation targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo test -p sifr_stdlib stdlib_source_inventory_contains_user_modules -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_value_model_basic.sifr` -> PASS.
+- New signal unsupported fixtures `signal_pause_unsupported`, `signal_handler_registration_unsupported`, `signal_getsignal_unsupported`, `signal_raise_signal_unsupported`, and `signal_pthread_sigmask_host_limited` -> expected `SIFR-NAME-0004`.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail suite reported `439 fail tests completed`.
+- `cargo fmt --check` and `git diff --check` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`195.32s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`115 passed`, `0 failed`, `cache_hits=22/31`, `report_signature=fa75f7f525acd21c`).
+
+M5 signal value-model foundation review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-foundation-review-pass-1.md`: `PASS`; reviewer verified the embedded `sifr.signal` registration, `Signal`/`sigint()`/`sigterm()` value-model coverage, unsupported CPython-style signal API missing-member diagnostics, manifest entries, host-matrix scope, and validation evidence. Non-blocking follow-ups requested clearer `SignalError`, `pthread_sigmask`, and Windows-by-inspection wording.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-foundation-review-pass-2.md`: `PASS`; reviewer verified the docs-only follow-up wording does not overclaim implementation, keeps structured streams/constants/signal delivery as follow-up, and accurately describes the current missing-member diagnostics.
 
 M3 first-wave targeted local validation:
 

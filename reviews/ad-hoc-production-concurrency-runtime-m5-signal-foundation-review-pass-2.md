@@ -1,0 +1,13 @@
+RESULT: PASS
+
+**Verification of post-review doc edits**
+
+All three non-blocking follow-ups from pass-1 were addressed by docs-only edits that match the unchanged implementation.
+
+1. **`SignalError` reserved-symbol clarification** — `verification/stdlib/concurrency_runtime_m5_shutdown_traceability.md:12` now records: *"`sifr.signal.SignalError` | foundation symbol | Reserved for later structured shutdown stream and diagnostic surfaces; this wave does not raise it."* Accurate: `lib/sifr/signal.sifr:4-5` defines `class SignalError(Error)` with a `message: str` field but no fixture imports or constructs it. The note does not claim the type is used; it explicitly states this wave does not raise it.
+
+2. **`pthread_sigmask` host-limited explanation** — `verification/stdlib/concurrency_runtime_m5_shutdown_traceability.md:46` now states: *"`pthread_sigmask` is grouped with unsupported signal APIs in the current fixture set because no safe mask-mutation surface exists; it remains host-limited for any future explicitly designed Unix-only API."* Accurate: matches the fail-fixture set (the five `signal_*` negative fixtures all use the same `SIFR-NAME-0004` missing-member mechanism because `lib/sifr/signal.sifr` does not export `pthread_sigmask`), and the doc honestly distinguishes the current fixture posture from the future Unix-only mask-surface possibility without claiming either exists today.
+
+3. **Windows by-inspection clarification on the value-model row** — `verification/platform/supported_host_matrix.md:34` now reads: *"Windows support is by inspection of host-independent `.sifr` code only; this does not claim signal-stream subscription, importable module constants, signal delivery, or arbitrary handler support."* Accurate: `lib/sifr/signal.sifr:20-25` constructs `Signal("SIGINT", 2)` and `Signal("SIGTERM", 15)` with literal data and no platform-conditional code or host signal calls, so the by-inspection claim is defensible and the disclaimer correctly carves out the surfaces that *are* host-dependent.
+
+**No overclaiming detected.** The umbrella row `verification/platform/supported_host_matrix.md:33` ("Signals and structured shutdown streams") remains `in-progress`/`in-progress`/`host-limited`, the traceability doc still marks `ctrl_c`/`terminate`/`shutdown_stream`/`strsignal`/`SIGINT`/`SIGTERM` constants as planned follow-up, and the implementation surface in `lib/sifr/signal.sifr` exactly matches what the docs describe — `Signal`, `SignalError`, `sigint()`, `sigterm()`, nothing more. Unsupported CPython-like signal APIs remain absent from the module, preserving the static `SIFR-NAME-0004` diagnostics. Docs-only edits introduce no implementation drift.

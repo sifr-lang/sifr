@@ -1,0 +1,6 @@
+# expect-error[col=25]: SIFR-NAME-0004
+from sifr.signal import signal
+
+
+def main():
+    pass
