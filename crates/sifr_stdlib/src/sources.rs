@@ -95,6 +95,10 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
         source: include_str!("../../../lib/sifr/signal.sifr"),
     },
     StdlibSource {
+        module: "sifr.runtime",
+        source: include_str!("../../../lib/sifr/runtime.sifr"),
+    },
+    StdlibSource {
         module: "sifr.string",
         source: include_str!("../../../lib/sifr/string.sifr"),
     },

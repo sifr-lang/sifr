@@ -15,6 +15,7 @@ mod io_json;
 mod math_test;
 mod platform_misc;
 mod process;
+mod runtime;
 mod signal;
 mod sources;
 mod sys_fs;
@@ -35,6 +36,7 @@ use platform_misc::{
     intrinsic_platform, intrinsic_toml,
 };
 use process::intrinsic_process;
+use runtime::intrinsic_runtime;
 use signal::intrinsic_signal;
 pub use sources::{StdlibSource, STDLIB_SOURCES};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
@@ -104,6 +106,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.process" => Some(intrinsic_process()),
         "_sifr.signal" => Some(intrinsic_signal()),
+        "_sifr.runtime" => Some(intrinsic_runtime()),
         "_sifr.toml" => Some(intrinsic_toml()),
         "_sifr.datetime" => Some(intrinsic_datetime()),
         "_sifr.html" => Some(intrinsic_html()),
@@ -240,8 +243,8 @@ fn cpython_stdlib_reserved_suggestion(module_name: &str) -> Option<&'static str>
         "threading" => Some("sifr.runtime"),
         "signal" => Some("sifr.signal"),
         "contextlib" => Some("sifr.resource"),
-        // Python warnings global filters are rejected; runtime diagnostics are
-        // the nearest Sifr-native destination until the M5 diagnostics surface lands.
+        // Python warnings global filters are rejected; structured diagnostics
+        // are emitted through Sifr's native runtime observability surface.
         "warnings" => Some("sifr.runtime"),
         "codecs" | "encodings" => Some("sifr.encoding"),
         "unicodedata" => Some("sifr.unicode"),

@@ -27,6 +27,7 @@ mod process_child_lifecycle;
 mod process_pipes;
 mod random;
 mod re;
+mod runtime;
 mod signal;
 mod sys;
 mod test;
@@ -70,6 +71,7 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "decode_utf8_with_encoding"
         | "process_output_text"
         | "process_shell_output_text" => &[StdlibFeature::EncodingRs],
+        "runtime_emit_diagnostic" => &[StdlibFeature::Tracing],
         "unicode_data_version"
         | "unicode_normalize"
         | "unicode_is_normalized"
@@ -710,6 +712,7 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             signal::lower_signal_shutdown(args),
             Some(StdlibFeature::Tokio),
         ),
+        "runtime_emit_diagnostic" => (runtime::lower_runtime_emit_diagnostic(args), None),
         "html_escape" => (html::lower_html_escape(args), None),
         "html_unescape" => (html::lower_html_unescape(args), None),
         "calendar_isleap" => (calendar::lower_calendar_isleap(args), None),

@@ -454,6 +454,9 @@ pub(crate) fn infer_dependencies(
     if rust_source.contains("bigdecimal::") || rust_source.contains("use bigdecimal") {
         crates.insert("bigdecimal".to_string());
     }
+    if rust_source.contains("tracing::") || rust_source.contains("use tracing") {
+        crates.insert("tracing".to_string());
+    }
 
     (modules, crates)
 }

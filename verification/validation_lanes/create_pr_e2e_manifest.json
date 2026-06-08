@@ -114,6 +114,7 @@
     "signal_stream_shape_strsignal",
     "signal_stream_delivery_unix",
     "resource_nullcontext_basic",
+    "runtime_diagnostics_tracing",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",

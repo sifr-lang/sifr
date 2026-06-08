@@ -1,0 +1,60 @@
+# sifr.runtime - Structured runtime diagnostics and observability values
+from _sifr.runtime import runtime_emit_diagnostic
+
+
+class DiagnosticError(Error):
+    message: str
+
+
+class DiagnosticLevel:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class DiagnosticEvent:
+    level: DiagnosticLevel
+    target: str
+    name: str
+    message: str
+
+    def __init__(
+        self,
+        level: DiagnosticLevel,
+        target: str,
+        name: str,
+        message: str,
+    ):
+        self.level = level
+        self.target = target
+        self.name = name
+        self.message = message
+
+
+TRACE: DiagnosticLevel = DiagnosticLevel("trace")
+DEBUG: DiagnosticLevel = DiagnosticLevel("debug")
+INFO: DiagnosticLevel = DiagnosticLevel("info")
+WARN: DiagnosticLevel = DiagnosticLevel("warn")
+ERROR: DiagnosticLevel = DiagnosticLevel("error")
+
+
+def diagnostic_event(
+    level: DiagnosticLevel,
+    target: str,
+    name: str,
+    message: str,
+) -> DiagnosticEvent:
+    return DiagnosticEvent(level, target, name, message)
+
+
+def emit_diagnostic(event: DiagnosticEvent) -> Result[None, DiagnosticError]:
+    return runtime_emit_diagnostic(
+        event.level.name,
+        event.target,
+        event.name,
+        event.message,
+    )

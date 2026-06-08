@@ -305,6 +305,12 @@ pub(crate) fn generate_cargo_toml(
             "sifr.parallel" => {
                 deps.insert("rayon = \"1.12.0\"".to_string());
             }
+            "sifr.runtime" | "_sifr.runtime" => {
+                deps.insert(
+                    "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+                        .to_string(),
+                );
+            }
             "sifr.tomllib" | "_sifr.toml" => {
                 deps.insert(
                     "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string(),
@@ -419,6 +425,12 @@ pub(crate) fn generate_cargo_toml(
             }
             "tokio" => {
                 deps.insert(tokio_dependency_spec());
+            }
+            "tracing" => {
+                deps.insert(
+                    "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+                        .to_string(),
+                );
             }
             _ => {}
         }
