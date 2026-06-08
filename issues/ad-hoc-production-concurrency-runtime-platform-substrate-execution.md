@@ -456,6 +456,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 explicit task context propagation: https://github.com/sifr-lang/sifr/pull/2431
 - M5 runtime diagnostic metrics policy: https://github.com/sifr-lang/sifr/pull/2433
 - M5: complete.
+- M6 typed IPC design gate: in progress.
 - M6: pending.
 - M7: pending.
 
@@ -898,6 +899,24 @@ M5 closeout classification merge ledger:
 - Merged at: `2026-06-08T22:36:25Z`
 - Scope: M5 completion classification, signal codegen cfg-branch evidence, non-Unix host-limited signal delivery boundary, cleanup-scope support classification, closeout validation evidence, and reviewer artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC design gate implementation:
+
+- Added `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` as the named M6 design approval artifact required before serialization dependency wiring or process-worker implementation.
+- Defined typed IPC as a Sifr-owned production substrate layered above M4 process pipes, with `sifr.process` retaining process lifecycle, termination, timeout, and supervision ownership.
+- Recorded the initial wire format, schema identity/hash policy, compatible-version negotiation, bootstrap/work/control/health/protocol-error frame families, bounded in-flight backpressure, cancellation/close behavior, malformed-frame handling, payload eligibility, CPython-shaped API classifications, observability redaction policy, and implementation wave order.
+- Updated the supported-host matrix to reference the design artifact while keeping runtime implementation and host evidence blocked on M6 follow-up work.
+- This PR intentionally does not add Serde/Postcard dependency wiring or public process-worker APIs; dependency wiring is allowed only after this design artifact is reviewed and recorded.
+
+M6 typed IPC design gate targeted local validation:
+
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2246 files` and the `900` line limit.
+- `wc -l verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` -> `232` lines.
+
+M6 typed IPC design gate review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-design-review-pass-1.md`: `PASS`; reviewer verified the named design artifact is sufficient for the M6 entry gate, covers typed payload eligibility, serialization format, schema/version negotiation, process-pipe layering, bootstrap, result/error frames, cancellation, backpressure, close, malformed-frame behavior, CPython-shaped API classification, and makes no implementation-support, dependency-wiring, or process-worker pool overclaim.
 
 M5 signal `strsignal` value-helper implementation:
 
