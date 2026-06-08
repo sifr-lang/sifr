@@ -99,6 +99,43 @@ pub(super) fn process_async_child_table_items(
                 is_move: false,
             }],
         },
+    },
+    RustItem::Static {
+        name: "__SIFR_PROCESS_ASYNC_CHILD_OBSERVED".to_string(),
+        visibility: Visibility::Private,
+        ty: RustType::Named(
+            "std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<i64, std::sync::Arc<std::sync::atomic::AtomicBool>>>>"
+                .to_string(),
+        ),
+        value: RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "sync".to_string(),
+                "LazyLock".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![RustExpr::Closure {
+                params: vec![],
+                body: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "sync".to_string(),
+                        "Mutex".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "std".to_string(),
+                            "collections".to_string(),
+                            "HashMap".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![],
+                    }],
+                }),
+                is_move: false,
+            }],
+        },
     }];
 
     if needs_spawn {
@@ -512,6 +549,27 @@ pub(super) fn process_async_wait_body() -> Vec<RustStmt> {
             __status.code().unwrap_or(-1) as i64,
             __sifr_process_exit_signal(&__status),
         ));"
+            .to_string(),
+    ))]
+}
+
+pub(super) fn process_handle_wait_body() -> Vec<RustStmt> {
+    vec![RustStmt::Expr(RustExpr::Ident(
+        "{
+            let __observed = {
+                let __observed_children = __SIFR_PROCESS_ASYNC_CHILD_OBSERVED.lock().unwrap_or_else(|__err| __err.into_inner());
+                __observed_children.get(&handle).cloned()
+            };
+            if let Some(__observed) = __observed {
+                __observed.store(true, std::sync::atomic::Ordering::SeqCst);
+            }
+        }
+        let __result = __sifr_process_async_wait(handle).await;
+        {
+            let mut __observed_children = __SIFR_PROCESS_ASYNC_CHILD_OBSERVED.lock().unwrap_or_else(|__err| __err.into_inner());
+            __observed_children.remove(&handle);
+        }
+        return __result;"
             .to_string(),
     ))]
 }

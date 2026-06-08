@@ -12,20 +12,9 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                         "tokio::sync::oneshot::Receiver<__SifrTaskResult<T, E>>".to_string(),
                     ))),
                 ),
-                (
-                    "abort_handle".to_string(),
-                    RustType::Named("tokio::task::AbortHandle".to_string()),
-                ),
-                (
-                    "observed".to_string(),
-                    RustType::Named(
-                        "std::sync::Arc<std::sync::atomic::AtomicBool>".to_string(),
-                    ),
-                ),
-                (
-                    "_error".to_string(),
-                    RustType::Named("std::marker::PhantomData<E>".to_string()),
-                ),
+                ("abort_handle".to_string(), RustType::Named("tokio::task::AbortHandle".to_string())),
+                ("observed".to_string(), RustType::Named("std::sync::Arc<std::sync::atomic::AtomicBool>".to_string())),
+                ("_error".to_string(), RustType::Named("std::marker::PhantomData<E>".to_string())),
             ],
         },
         RustItem::Struct {
@@ -39,16 +28,8 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                         "tokio::task::JoinHandle<__SifrTaskResult<T, E>>".to_string(),
                     ))),
                 ),
-                (
-                    "observed".to_string(),
-                    RustType::Named(
-                        "std::sync::Arc<std::sync::atomic::AtomicBool>".to_string(),
-                    ),
-                ),
-                (
-                    "_error".to_string(),
-                    RustType::Named("std::marker::PhantomData<E>".to_string()),
-                ),
+                ("observed".to_string(), RustType::Named("std::sync::Arc<std::sync::atomic::AtomicBool>".to_string())),
+                ("_error".to_string(), RustType::Named("std::marker::PhantomData<E>".to_string())),
             ],
         },
         RustItem::Struct {
@@ -56,18 +37,10 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
             visibility: Visibility::Private,
             derives: vec![],
             fields: vec![
-                (
-                    "handle".to_string(),
-                    RustType::Named(
-                        "tokio::task::JoinHandle<__SifrScopeChildOutcome>".to_string(),
-                    ),
-                ),
-                (
-                    "observed".to_string(),
-                    RustType::Named(
-                        "std::sync::Arc<std::sync::atomic::AtomicBool>".to_string(),
-                    ),
-                ),
+                ("handle".to_string(), RustType::Named("tokio::task::JoinHandle<__SifrScopeChildOutcome>".to_string())),
+                ("observed".to_string(), RustType::Named("std::sync::Arc<std::sync::atomic::AtomicBool>".to_string())),
+                ("start_on_join".to_string(), RustType::Named("Option<tokio::sync::oneshot::Sender<()>>".to_string())),
+                ("stop_on_fail_fast".to_string(), RustType::Named("Option<Box<dyn FnOnce() + Send + 'static>>".to_string())),
             ],
         },
         RustItem::Enum {
@@ -489,6 +462,8 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                                         "observed".to_string(),
                                         RustExpr::Ident("child_observed".to_string()),
                                     ),
+                                    ("start_on_join".to_string(), RustExpr::Ident("None".to_string())),
+                                    ("stop_on_fail_fast".to_string(), RustExpr::Ident("None".to_string())),
                                 ],
                             }],
                         }),
@@ -615,6 +590,8 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                                         "observed".to_string(),
                                         RustExpr::Ident("child_observed".to_string()),
                                     ),
+                                    ("start_on_join".to_string(), RustExpr::Ident("None".to_string())),
+                                    ("stop_on_fail_fast".to_string(), RustExpr::Ident("None".to_string())),
                                 ],
                             }],
                         }),
@@ -661,8 +638,16 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
             let mut policy_cancelling = false;
             let mut abort_handles = Vec::with_capacity(self.children.len());
             let mut join_set = tokio::task::JoinSet::new();
-            for child in self.children.drain(..) {
-                abort_handles.push(child.handle.abort_handle());
+            let mut stop_on_fail_fast = Vec::new();
+            for mut child in self.children.drain(..) {
+                if let Some(start) = child.start_on_join.take() {
+                    let _ = start.send(());
+                }
+                if let Some(stop_child) = child.stop_on_fail_fast.take() {
+                    stop_on_fail_fast.push(stop_child);
+                } else {
+                    abort_handles.push(child.handle.abort_handle());
+                }
                 join_set.spawn(async move {
                     let observed = child.observed.load(std::sync::atomic::Ordering::SeqCst);
                     (observed, child.handle.await)
@@ -700,6 +685,9 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 }
                 if group_failure_seen && !policy_cancelling {
                     policy_cancelling = true;
+                    while let Some(stop_child) = stop_on_fail_fast.pop() {
+                        stop_child();
+                    }
                     for abort_handle in &abort_handles {
                         abort_handle.abort();
                     }
@@ -711,7 +699,10 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
             return Ok(());
         }
         let mut failure: Option<ScopeFailure> = None;
-        while let Some(child) = self.children.pop() {
+        while let Some(mut child) = self.children.pop() {
+            if let Some(start) = child.start_on_join.take() {
+                let _ = start.send(());
+            }
             let observed = child.observed.load(std::sync::atomic::Ordering::SeqCst);
             match child.handle.await {
                 Ok(__SifrScopeChildOutcome::Ok) => {}

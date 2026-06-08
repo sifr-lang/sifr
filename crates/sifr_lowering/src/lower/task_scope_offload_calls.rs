@@ -24,6 +24,7 @@ pub(in crate::lower) fn lower_task_scope_offload_method_call(
     match method_name {
         "spawn_blocking" => Some(lower_scope_spawn_blocking(object, call, ctx)),
         "spawn_cpu" => Some(lower_scope_spawn_cpu(object, call, ctx)),
+        "spawn_process" => Some(lower_scope_spawn_process(object, call, ctx)),
         _ => None,
     }
 }
@@ -101,6 +102,85 @@ fn lower_scope_spawn_cpu(object: HirExpr, call: &ExprCall, ctx: &mut LowerCtx) -
         args: vec![worker],
         ty: Type::Task(Box::new(ok_ty), Box::new(task_err_ty)),
     })
+}
+
+fn lower_scope_spawn_process(
+    object: HirExpr,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    if !ctx.current_function_is_async {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            "scope.spawn_process() is only valid inside async functions".to_string(),
+            call.range(),
+        );
+        return None;
+    }
+    if !call.arguments.keywords.is_empty() {
+        expression_diagnostics::call_unexpected_keyword(
+            ctx,
+            "scope.spawn_process() does not accept keyword arguments".to_string(),
+            first_call_keyword_range(call),
+        );
+        return None;
+    }
+    if call.arguments.args.len() != 1 {
+        expression_diagnostics::call_wrong_positional_count(
+            ctx,
+            "scope.spawn_process() takes exactly one Command argument".to_string(),
+            call_arity_range(call),
+        );
+        return None;
+    }
+    let command = lower_expr(&call.arguments.args[0], ctx)?;
+    if !matches!(command.ty().resolve_alias(), Type::Class { name, .. } if name == "Command") {
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "scope.spawn_process() requires a Command argument, got '{}'",
+                command.ty().display_name()
+            ),
+            call.arguments.args[0].range(),
+        );
+        return None;
+    }
+    if is_task_group_type(object.ty()) {
+        enforce_task_group_is_open(&object, call, ctx)?;
+    }
+    Some(HirExpr::MethodCall {
+        object: Box::new(object),
+        method: "__sifr_scope_spawn_process".to_string(),
+        args: vec![command],
+        ty: Type::Result(
+            Box::new(process_class_type("ProcessHandle", ctx)),
+            Box::new(process_error_type(ctx)),
+        ),
+    })
+}
+
+fn process_class_type(name: &str, ctx: &LowerCtx) -> Type {
+    ctx.class_types
+        .get(name)
+        .cloned()
+        .unwrap_or_else(|| Type::Class {
+            name: name.to_string(),
+            fields: vec![("_handle".to_string(), Type::Int)],
+            methods: Vec::new(),
+            parent_class: None,
+        })
+}
+
+fn process_error_type(ctx: &LowerCtx) -> Type {
+    ctx.class_types
+        .get("ProcessError")
+        .cloned()
+        .unwrap_or_else(|| Type::Class {
+            name: "ProcessError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        })
 }
 
 fn validate_sync_worker(call: &ExprCall, ctx: &mut LowerCtx, api_name: &str) -> Option<HirExpr> {

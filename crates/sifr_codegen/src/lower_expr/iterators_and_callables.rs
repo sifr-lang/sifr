@@ -374,6 +374,7 @@ pub(super) fn try_lower_simple_method_call_expr(
             | "__sifr_scope_spawn_blocking_result"
             | "__sifr_scope_spawn_cpu_infallible"
             | "__sifr_scope_spawn_cpu_result"
+            | "__sifr_scope_spawn_process"
     )) && matches!(resolve_alias_type(object.ty()), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
     {
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
