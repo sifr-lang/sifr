@@ -1,4 +1,6 @@
-## Review: M4 async wait cancel-safe - **PASS**
+RESULT: PASS
+
+## Review: M4 async wait cancel-safe
 
 **Correctness (`process_async_child_runtime.rs:478-517`)**
 - Lock is scoped to inner blocks; `await` on `__child.wait()` is held only via `&mut` through the guard, never under a `MutexGuard`. [ok]

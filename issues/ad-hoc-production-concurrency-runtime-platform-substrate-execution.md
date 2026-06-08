@@ -442,6 +442,11 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 
 Record local validation for each milestone before opening its PR.
 
+M4 async wait cancellation-safe observation merge ledger:
+
+- Merged as PR #2386 (`d54d2c11497e54ca5db3061d8e026ee2afb09154`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`134.60s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`108 passed`, `0 failed`, `cache_hits=26/27`, `report_signature=df97adcd1a958b0c`).
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
