@@ -160,11 +160,18 @@ fn duration_from_millis(millis: i64) -> RustExpr {
     )
 }
 
-fn command_status_code(output_ident: &str) -> RustExpr {
-    status_code(RustExpr::Field {
+fn command_status_tuple(output_ident: &str) -> RustExpr {
+    status_tuple(RustExpr::Field {
         expr: Box::new(RustExpr::Ident(output_ident.to_string())),
         field: "status".to_string(),
     })
+}
+
+fn status_tuple(status_expr: RustExpr) -> RustExpr {
+    RustExpr::Tuple(vec![
+        status_code(status_expr.clone()),
+        status_signal(status_expr),
+    ])
 }
 
 fn status_code(status_expr: RustExpr) -> RustExpr {
@@ -180,6 +187,16 @@ fn status_code(status_expr: RustExpr) -> RustExpr {
         }),
         ty: RustType::I64,
     }
+}
+
+fn status_signal(status_expr: RustExpr) -> RustExpr {
+    path_call(
+        &["__sifr_process_exit_signal"],
+        vec![RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(status_expr),
+        }],
+    )
 }
 
 fn normal_command_setup(args: &[RustExpr]) -> Vec<RustStmt> {
@@ -356,7 +373,7 @@ fn output_tuple_expr() -> RustExpr {
             expr: Box::new(RustExpr::Ident("__output".to_string())),
             field: "stderr".to_string(),
         },
-        command_status_code("__output"),
+        command_status_tuple("__output"),
     ])
 }
 
@@ -370,7 +387,7 @@ fn output_timeout_tuple_expr() -> RustExpr {
             expr: Box::new(RustExpr::Ident("__output".to_string())),
             field: "stderr".to_string(),
         },
-        RustExpr::Ident("__status_code".to_string()),
+        command_status_tuple("__output"),
         RustExpr::Ident("__timed_out".to_string()),
     ])
 }
@@ -412,7 +429,7 @@ fn output_text_tuple_expr() -> RustExpr {
         expr: Some(Box::new(RustExpr::Tuple(vec![
             RustExpr::Ident("__stdout".to_string()),
             RustExpr::Ident("__stderr".to_string()),
-            command_status_code("__output"),
+            command_status_tuple("__output"),
         ]))),
     }
 }
@@ -517,12 +534,6 @@ fn timeout_poll_stmts() -> Vec<RustStmt> {
         },
         RustStmt::Let {
             mutable: true,
-            name: "__status_code".to_string(),
-            ty: Some(RustType::I64),
-            value: RustExpr::Literal(RustLiteral::Int(-1)),
-        },
-        RustStmt::Let {
-            mutable: true,
             name: "__timed_out".to_string(),
             ty: Some(RustType::Bool),
             value: bool_lit(false),
@@ -530,19 +541,13 @@ fn timeout_poll_stmts() -> Vec<RustStmt> {
         RustStmt::Loop {
             body: vec![
                 RustStmt::IfLet {
-                    pattern: "Some(__status)".to_string(),
+                    pattern: "Some(_)".to_string(),
                     expr: RustExpr::Try(Box::new(process_map_err(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Ident("__child".to_string())),
                         method: "try_wait".to_string(),
                         args: vec![],
                     }))),
-                    then_body: vec![
-                        RustStmt::Assign {
-                            target: RustExpr::Ident("__status_code".to_string()),
-                            value: status_code(RustExpr::Ident("__status".to_string())),
-                        },
-                        RustStmt::Break,
-                    ],
+                    then_body: vec![RustStmt::Break],
                     else_body: None,
                 },
                 RustStmt::If {
@@ -593,7 +598,7 @@ pub(crate) fn lower_process_run(args: &[RustExpr]) -> Option<RustExpr> {
     });
     Some(RustExpr::Block {
         stmts,
-        expr: Some(Box::new(ok_expr(status_code(RustExpr::Ident(
+        expr: Some(Box::new(ok_expr(status_tuple(RustExpr::Ident(
             "__status".to_string(),
         ))))),
     })
@@ -696,7 +701,7 @@ pub(crate) fn lower_process_wait(args: &[RustExpr]) -> Option<RustExpr> {
     ];
     Some(RustExpr::Block {
         stmts,
-        expr: Some(Box::new(ok_expr(status_code(RustExpr::Ident(
+        expr: Some(Box::new(ok_expr(status_tuple(RustExpr::Ident(
             "__status".to_string(),
         ))))),
     })
@@ -819,7 +824,7 @@ pub(crate) fn lower_process_shell_run(args: &[RustExpr]) -> Option<RustExpr> {
     });
     Some(RustExpr::Block {
         stmts,
-        expr: Some(Box::new(ok_expr(status_code(RustExpr::Ident(
+        expr: Some(Box::new(ok_expr(status_tuple(RustExpr::Ident(
             "__status".to_string(),
         ))))),
     })

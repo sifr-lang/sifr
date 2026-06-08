@@ -25,6 +25,7 @@ struct StdlibIrFile {
 pub(crate) struct SharedPreludeNeeds {
     pub(crate) collections: SharedPreludeCollectionNeeds,
     pub(crate) file_handles: SharedPreludeFileHandleNeeds,
+    pub(crate) process_status: SharedPreludeProcessStatusNeeds,
     pub(crate) process_children: SharedPreludeProcessChildNeeds,
 }
 
@@ -39,6 +40,11 @@ pub(crate) struct SharedPreludeCollectionNeeds {
 pub(crate) struct SharedPreludeFileHandleNeeds {
     pub(crate) needs_file_handles: bool,
     pub(crate) provides_file_handle_struct: bool,
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub(crate) struct SharedPreludeProcessStatusNeeds {
+    pub(crate) needs_process_status: bool,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -302,6 +308,9 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
                 || code.contains("__SIFR_NEXT_PROCESS_CHILD_ID")
                 || code.contains("__sifr_next_process_child_id"),
         },
+        process_status: SharedPreludeProcessStatusNeeds {
+            needs_process_status: code.contains("__sifr_process_exit_signal"),
+        },
     }
 }
 
@@ -328,6 +337,9 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 | "__sifr_next_process_child_id" => {
                     self.shared_needs.process_children.needs_process_children = true;
                 }
+                "__sifr_process_exit_signal" => {
+                    self.shared_needs.process_status.needs_process_status = true;
+                }
                 _ => {}
             }
         }
@@ -349,6 +361,7 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
         Item::Fn(item_fn) => {
             item_fn.sig.ident == "__sifr_next_file_handle_id"
                 || item_fn.sig.ident == "__sifr_next_process_child_id"
+                || item_fn.sig.ident == "__sifr_process_exit_signal"
         }
         _ => false,
     }

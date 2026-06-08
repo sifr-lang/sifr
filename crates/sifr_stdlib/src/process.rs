@@ -3,15 +3,24 @@ use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
 fn process_bytes_output_tuple() -> Type {
-    Type::Tuple(vec![Type::Bytes, Type::Bytes, Type::Int])
+    Type::Tuple(vec![Type::Bytes, Type::Bytes, process_status_tuple()])
 }
 
 fn process_bytes_timeout_output_tuple() -> Type {
-    Type::Tuple(vec![Type::Bytes, Type::Bytes, Type::Int, Type::Bool])
+    Type::Tuple(vec![
+        Type::Bytes,
+        Type::Bytes,
+        process_status_tuple(),
+        Type::Bool,
+    ])
 }
 
 fn process_text_output_tuple() -> Type {
-    Type::Tuple(vec![Type::Str, Type::Str, Type::Int])
+    Type::Tuple(vec![Type::Str, Type::Str, process_status_tuple()])
+}
+
+fn process_status_tuple() -> Type {
+    Type::Tuple(vec![Type::Int, Type::Union(vec![Type::Int, Type::None])])
 }
 
 /// _sifr.process — Native process execution intrinsics.
@@ -30,7 +39,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("cwd".to_string(), Type::Str),
                 ("has_cwd".to_string(), Type::Bool),
             ],
-            result_ty(Type::Int, "ProcessError"),
+            result_ty(process_status_tuple(), "ProcessError"),
         ),
     );
     functions.insert(
@@ -50,7 +59,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         "process_wait".to_string(),
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::Int, "ProcessError"),
+            result_ty(process_status_tuple(), "ProcessError"),
         ),
     );
     functions.insert(
@@ -111,7 +120,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         "process_shell_run".to_string(),
         FunctionType::all_borrow(
             vec![("script".to_string(), Type::Str)],
-            result_ty(Type::Int, "ProcessError"),
+            result_ty(process_status_tuple(), "ProcessError"),
         ),
     );
     functions.insert(
