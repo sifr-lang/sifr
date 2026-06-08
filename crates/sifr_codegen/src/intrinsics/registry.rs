@@ -22,6 +22,7 @@ mod os;
 mod pathlib;
 mod platform;
 mod process;
+mod process_async;
 mod random;
 mod re;
 mod sys;
@@ -599,6 +600,14 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "process_output" => (process::lower_process_output(args), None),
         "process_output_text" => (process::lower_process_output_text(args), None),
         "process_output_timeout" => (process::lower_process_output_timeout(args), None),
+        "process_async_run" => (
+            process_async::lower_process_async_run(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_output" => (
+            process_async::lower_process_async_output(args),
+            Some(StdlibFeature::Tokio),
+        ),
         "process_shell_run" => (process::lower_process_shell_run(args), None),
         "process_shell_output" => (process::lower_process_shell_output(args), None),
         "process_shell_output_text" => (process::lower_process_shell_output_text(args), None),

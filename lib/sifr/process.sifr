@@ -7,6 +7,8 @@ from _sifr.process import (
     process_output,
     process_output_text,
     process_output_timeout,
+    process_async_run,
+    process_async_output,
     process_shell_run,
     process_shell_output,
     process_shell_output_text,
@@ -274,6 +276,27 @@ def output_text(command: Command, encoding: str = "utf-8") -> Result[TextOutput,
         return TextOutput(raw[0], raw[1], _status_from_exit(raw[2]), encoding)
     except ProcessError as e:
         raise e
+
+
+def async_run(own command: Command) -> Awaitable[Result[Status, ProcessError]]:
+    return process_async_run(
+        command.program,
+        command.arguments,
+        command.env_vars,
+        command.working_dir,
+        command.has_working_dir,
+    )
+
+
+def async_output(own command: Command) -> Awaitable[Result[Output, ProcessError]]:
+    return process_async_output(
+        command.program,
+        command.arguments,
+        command.env_vars,
+        command.working_dir,
+        command.has_working_dir,
+        command.has_stdin_data,
+    )
 
 
 @blocking_io
