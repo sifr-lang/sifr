@@ -678,6 +678,12 @@ M5 task context value-model foundation review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m5-task-context-foundation-review-pass-1.md`: `FAIL`; reviewer could not verify the untracked new `sifr.task` source or pass/fail fixture contents from the initial patch packet.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-task-context-foundation-review-pass-2.md`: `PASS`; reviewer verified the `sifr.task` value model, typed `ContextKey[T]` default marker, pass/fail fixture boundary, create-pr/merge manifest entries, in-progress propagation/request-handoff status, no `contextvars` overclaim, and recorded local validation evidence.
 
+M5 task context value-model foundation merge ledger:
+
+- Merged as PR #2414 (`521ffced5834ca56802237105e8e57de947f8fcd`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`294.95s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`118 passed`, `0 failed`, `cache_hits=21/33`, `report_signature=8826f5b3144352b0`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-task-context-foundation-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2414 merge commit/date, validation metrics and advisories, docs-only scope, and no overclaim that non-`None` task context propagation is complete.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
