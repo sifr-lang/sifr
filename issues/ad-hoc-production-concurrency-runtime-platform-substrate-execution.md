@@ -33,7 +33,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
 - [x] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
 - [x] `milestone_concurrency_runtime_4`: Process Runtime
-- [ ] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
+- [x] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
 - [ ] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
 - [ ] `milestone_concurrency_runtime_7`: Integration, Documentation, And Production Gate
 
@@ -455,6 +455,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 structured runtime diagnostics: https://github.com/sifr-lang/sifr/pull/2428
 - M5 explicit task context propagation: https://github.com/sifr-lang/sifr/pull/2431
 - M5 runtime diagnostic metrics policy: https://github.com/sifr-lang/sifr/pull/2433
+- M5: complete.
 - M6: pending.
 - M7: pending.
 
@@ -870,6 +871,25 @@ M5 runtime diagnostic metrics policy merge ledger:
 - Merged at: `2026-06-08T21:56:31Z`
 - Scope: fixed-schema runtime diagnostic metrics counters, generated metrics dependency metadata, fixture dependency inference, review artifact, M5 traceability, supported-host matrix, and phase dependency policy updates.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M5 closeout classification implementation:
+
+- Marked `milestone_concurrency_runtime_5` complete in this ledger after the diagnostics metrics policy wave merged.
+- Strengthened `lowers_signal_intrinsics_via_registry` so the codegen unit test explicitly pins both `#[cfg(unix)]` and `#[cfg(not(unix))]` branches for `terminate()` and `shutdown_stream().next()`.
+- Closed M5 shutdown traceability with non-Unix signal delivery classified as future host-limited evidence instead of a local M5 blocker; future support must run on a non-Unix host and deliver a real host console-control event before the host matrix can mark it supported.
+- Updated the supported-host matrix so deterministic cleanup scopes are closed for accepted `nullcontext(...)` coverage and unsupported cleanup-stack/owned-closing diagnostics, with no accepted cleanup-stack surface remaining pending in M5.
+
+M5 closeout classification targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_codegen lowers_signal_intrinsics_via_registry -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_stream_delivery_unix.sifr` -> PASS.
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2246 files` and the `900` line limit.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`745.69s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`123 passed`, `0 failed`, `cache_hits=0/36`, `report_signature=4a74179bcdf2ba0c`).
+
+M5 closeout classification review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-closeout-review-pass-2.md`: `PASS`; reviewer verified that M5 completion is valid after merged work through PR #2433/#2434, non-Unix signal delivery is not overclaimed, signal codegen tests pin both Unix and non-Unix branches for `terminate()` and `shutdown_stream().next()`, cleanup scope wording is honest, M5 artifacts are consistent, and M6/M7 remain pending. The reviewer noted overlapping cleanup wording in open PR #2430 as merge-sequence context, not a blocker for this closeout.
 
 M5 signal `strsignal` value-helper implementation:
 

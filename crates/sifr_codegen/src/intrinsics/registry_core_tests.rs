@@ -345,6 +345,8 @@ pub(crate) fn lowers_signal_intrinsics_via_registry() {
         Some(sifr_stdlib::StdlibFeature::Tokio)
     );
     let terminate_rendered = render_expr(&terminate.expr);
+    assert!(terminate_rendered.contains("#[cfg(unix)]"));
+    assert!(terminate_rendered.contains("#[cfg(not(unix))]"));
     assert!(terminate_rendered.contains("SignalKind::terminate"));
     assert!(terminate_rendered.contains("SIGTERM is unsupported"));
 
@@ -354,6 +356,8 @@ pub(crate) fn lowers_signal_intrinsics_via_registry() {
         Some(sifr_stdlib::StdlibFeature::Tokio)
     );
     let shutdown_rendered = render_expr(&shutdown.expr);
+    assert!(shutdown_rendered.contains("#[cfg(unix)]"));
+    assert!(shutdown_rendered.contains("#[cfg(not(unix))]"));
     assert!(shutdown_rendered.contains("tokio::select!"));
     assert!(shutdown_rendered.contains("tokio::signal::ctrl_c().await"));
 }
