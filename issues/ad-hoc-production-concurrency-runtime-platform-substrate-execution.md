@@ -426,7 +426,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async stdin-byte communicate: https://github.com/sifr-lang/sifr/pull/2365
 - M4 sync process terminate: https://github.com/sifr-lang/sifr/pull/2367
 - M4 async process spawn/wait: https://github.com/sifr-lang/sifr/pull/2369
-- M4 method-form async child kill/terminate: in progress.
+- M4 method-form async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2372
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1012,6 +1012,8 @@ M4 method-form async child kill/terminate targeted local validation:
 M4 method-form async child kill/terminate review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-child-kill-terminate-review-pass-1.md`: `PASS`; reviewer verified method-form `AsyncChild.kill()` / `AsyncChild.terminate()` surface, typed awaitable private intrinsics, non-consuming `start_kill()` behavior, Unix-only async SIGTERM with typed non-Unix fallback, wait removal before await, helper gating for non-`AsyncChild` async run/output users, fixture/manifests/docs/host matrix honesty, and file-size guardrail compliance.
+- Merged as PR #2372 (`b634ee26e6115158cea08740b347237ae094a86b`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`247.52s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`104 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=c0cb8434172d790c`).
 
 M4 sync process terminate implementation:
 
