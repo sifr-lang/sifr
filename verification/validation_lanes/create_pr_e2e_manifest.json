@@ -87,6 +87,7 @@
     "process_shell_exec_output",
     "process_timeout_status",
     "process_signal_status",
+    "process_async_run_output",
     "process_spawn_wait_status",
     "process_child_kill_wait",
     "stdlib_json_consolidated",

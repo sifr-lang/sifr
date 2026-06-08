@@ -26,6 +26,7 @@ pub(crate) struct SharedPreludeNeeds {
     pub(crate) collections: SharedPreludeCollectionNeeds,
     pub(crate) file_handles: SharedPreludeFileHandleNeeds,
     pub(crate) process_status: SharedPreludeProcessStatusNeeds,
+    pub(crate) process_async: SharedPreludeProcessAsyncNeeds,
     pub(crate) process_children: SharedPreludeProcessChildNeeds,
 }
 
@@ -45,6 +46,11 @@ pub(crate) struct SharedPreludeFileHandleNeeds {
 #[derive(Debug, Default, Clone, Copy)]
 pub(crate) struct SharedPreludeProcessStatusNeeds {
     pub(crate) needs_process_status: bool,
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub(crate) struct SharedPreludeProcessAsyncNeeds {
+    pub(crate) needs_process_async: bool,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -311,6 +317,10 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
         process_status: SharedPreludeProcessStatusNeeds {
             needs_process_status: code.contains("__sifr_process_exit_signal"),
         },
+        process_async: SharedPreludeProcessAsyncNeeds {
+            needs_process_async: code.contains("__sifr_process_async_run")
+                || code.contains("__sifr_process_async_output"),
+        },
     }
 }
 
@@ -340,6 +350,9 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 "__sifr_process_exit_signal" => {
                     self.shared_needs.process_status.needs_process_status = true;
                 }
+                "__sifr_process_async_run" | "__sifr_process_async_output" => {
+                    self.shared_needs.process_async.needs_process_async = true;
+                }
                 _ => {}
             }
         }
@@ -362,6 +375,8 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
             item_fn.sig.ident == "__sifr_next_file_handle_id"
                 || item_fn.sig.ident == "__sifr_next_process_child_id"
                 || item_fn.sig.ident == "__sifr_process_exit_signal"
+                || item_fn.sig.ident == "__sifr_process_async_run"
+                || item_fn.sig.ident == "__sifr_process_async_output"
         }
         _ => false,
     }

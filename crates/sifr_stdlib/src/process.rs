@@ -23,6 +23,54 @@ fn process_status_tuple() -> Type {
     Type::Tuple(vec![Type::Int, Type::Union(vec![Type::Int, Type::None])])
 }
 
+fn process_status_result() -> Type {
+    result_ty(process_status_tuple(), "ProcessError")
+}
+
+fn process_bytes_output_result() -> Type {
+    result_ty(process_bytes_output_tuple(), "ProcessError")
+}
+
+fn process_status_class() -> Type {
+    Type::Class {
+        name: "Status".to_string(),
+        fields: vec![
+            ("code".to_string(), Type::Int),
+            ("success".to_string(), Type::Bool),
+            (
+                "signal".to_string(),
+                Type::Union(vec![Type::Int, Type::None]),
+            ),
+            ("timed_out".to_string(), Type::Bool),
+            ("cancelled".to_string(), Type::Bool),
+            ("kind".to_string(), Type::Str),
+        ],
+        methods: vec![],
+        parent_class: None,
+    }
+}
+
+fn process_output_class() -> Type {
+    Type::Class {
+        name: "Output".to_string(),
+        fields: vec![
+            ("stdout".to_string(), Type::Bytes),
+            ("stderr".to_string(), Type::Bytes),
+            ("status".to_string(), process_status_class()),
+        ],
+        methods: vec![],
+        parent_class: None,
+    }
+}
+
+fn process_status_object_result() -> Type {
+    result_ty(process_status_class(), "ProcessError")
+}
+
+fn process_output_object_result() -> Type {
+    result_ty(process_output_class(), "ProcessError")
+}
+
 /// _sifr.process — Native process execution intrinsics.
 pub(super) fn intrinsic_process() -> IntrinsicModule {
     let mut functions = HashMap::new();
@@ -39,7 +87,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("cwd".to_string(), Type::Str),
                 ("has_cwd".to_string(), Type::Bool),
             ],
-            result_ty(process_status_tuple(), "ProcessError"),
+            process_status_result(),
         ),
     );
     functions.insert(
@@ -59,7 +107,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         "process_wait".to_string(),
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],
-            result_ty(process_status_tuple(), "ProcessError"),
+            process_status_result(),
         ),
     );
     functions.insert(
@@ -81,7 +129,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("stdin".to_string(), Type::Bytes),
                 ("has_stdin".to_string(), Type::Bool),
             ],
-            result_ty(process_bytes_output_tuple(), "ProcessError"),
+            process_bytes_output_result(),
         ),
     );
     functions.insert(
@@ -117,10 +165,37 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "process_async_run".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("program".to_string(), Type::Str),
+                ("args".to_string(), Type::List(Box::new(Type::Str))),
+                ("env".to_string(), Type::List(Box::new(Type::Str))),
+                ("cwd".to_string(), Type::Str),
+                ("has_cwd".to_string(), Type::Bool),
+            ],
+            Type::Awaitable(Box::new(process_status_object_result())),
+        ),
+    );
+    functions.insert(
+        "process_async_output".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("program".to_string(), Type::Str),
+                ("args".to_string(), Type::List(Box::new(Type::Str))),
+                ("env".to_string(), Type::List(Box::new(Type::Str))),
+                ("cwd".to_string(), Type::Str),
+                ("has_cwd".to_string(), Type::Bool),
+                ("has_stdin".to_string(), Type::Bool),
+            ],
+            Type::Awaitable(Box::new(process_output_object_result())),
+        ),
+    );
+    functions.insert(
         "process_shell_run".to_string(),
         FunctionType::all_borrow(
             vec![("script".to_string(), Type::Str)],
-            result_ty(process_status_tuple(), "ProcessError"),
+            process_status_result(),
         ),
     );
     functions.insert(

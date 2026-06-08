@@ -162,7 +162,7 @@ fn test_generate_project_emits_tokio_dependency_when_required() {
     );
 
     assert!(cargo_toml.contains(
-        "tokio = { version = \"1.52.3\", features = [\"macros\", \"rt\", \"sync\", \"time\"] }"
+        "tokio = { version = \"1.52.3\", features = [\"macros\", \"process\", \"rt\", \"sync\", \"time\"] }"
     ));
 }
 
