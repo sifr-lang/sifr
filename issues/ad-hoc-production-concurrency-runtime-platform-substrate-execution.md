@@ -655,6 +655,12 @@ M5 resource value-carrying nullcontext review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-nullcontext-value-review-pass-1.md`: `PASS`; reviewer verified the generic `NullContext[T]` source surface, no-value and value-carrying `nullcontext(...)` behavior, generated guards with `NullContext<()>`, `NullContext<i64>`, and `NullContext<String>`, no generated user-path panic/fallback/runtime leak, narrow `None`-to-unit lowering for `Type::None`/`TypeVar` without changing `Option` parameters, scoped synchronous `with` guard codegen, and docs honesty for cleanup-stack/async-cleanup follow-ups.
 
+M5 resource value-carrying nullcontext merge ledger:
+
+- Merged as PR #2419 (`4c67a99ecdba74d4d8693b1643b9c98a9e823de7`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`142.67s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`119 passed`, `0 failed`, `cache_hits=33/33`, `report_signature=0df4819d3daf7aa4`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-nullcontext-value-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2419, merge SHA/date, validation metrics and single advisory, status-block convention, cache-hit advisory removal after the fully warm rerun, and no overclaim beyond no-value plus value-carrying generic `nullcontext(...)`.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
