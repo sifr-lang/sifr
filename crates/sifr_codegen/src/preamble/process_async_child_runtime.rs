@@ -477,13 +477,37 @@ pub(super) fn process_async_pipe_close_item() -> RustItem {
 
 pub(super) fn process_async_wait_body() -> Vec<RustStmt> {
     vec![RustStmt::Expr(RustExpr::Ident(
-        "let mut __child = {
+        "struct __SifrAsyncChildWaitGuard {
+            handle: i64,
+            child: Option<tokio::process::Child>,
+        }
+        impl Drop for __SifrAsyncChildWaitGuard {
+            fn drop(&mut self) {
+                if let Some(__child) = self.child.take() {
+                    let mut __children = __SIFR_PROCESS_ASYNC_CHILDREN.lock().unwrap_or_else(|__err| __err.into_inner());
+                    __children.insert(self.handle, __child);
+                }
+            }
+        }
+        let __child = {
             let mut __children = __SIFR_PROCESS_ASYNC_CHILDREN.lock().unwrap_or_else(|__err| __err.into_inner());
             __children.remove(&handle).ok_or_else(|| ProcessError {
                 message: format!(\"async process child handle {} is closed or unknown\", handle),
             })?
         };
-        let __status = __child.wait().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+        let mut __guard = __SifrAsyncChildWaitGuard {
+            handle,
+            child: Some(__child),
+        };
+        let __status = match __guard.child.as_mut() {
+            Some(__child) => __child.wait().await.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?,
+            None => {
+                return Err(ProcessError {
+                    message: format!(\"async process child handle {} is closed or unknown\", handle),
+                });
+            }
+        };
+        let _ = __guard.child.take();
         return Ok(__sifr_process_status_from_exit(
             __status.code().unwrap_or(-1) as i64,
             __sifr_process_exit_signal(&__status),

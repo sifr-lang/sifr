@@ -432,6 +432,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 top-level async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2378
 - M4 async owned process pipes: https://github.com/sifr-lang/sifr/pull/2381
 - M4 process handle boundary diagnostics: https://github.com/sifr-lang/sifr/pull/2382
+- M4 async wait cancellation-safe observation: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
