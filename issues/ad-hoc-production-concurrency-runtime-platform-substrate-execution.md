@@ -570,6 +570,12 @@ M5 signal value-model foundation review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-foundation-review-pass-1.md`: `PASS`; reviewer verified the embedded `sifr.signal` registration, `Signal`/`sigint()`/`sigterm()` value-model coverage, unsupported CPython-style signal API missing-member diagnostics, manifest entries, host-matrix scope, and validation evidence. Non-blocking follow-ups requested clearer `SignalError`, `pthread_sigmask`, and Windows-by-inspection wording.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-foundation-review-pass-2.md`: `PASS`; reviewer verified the docs-only follow-up wording does not overclaim implementation, keeps structured streams/constants/signal delivery as follow-up, and accurately describes the current missing-member diagnostics.
 
+M5 signal value-model foundation merge ledger:
+
+- Merged as PR #2405 (`98d858f0057e3bab9cab74a1d90e45f3c278566b`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`231.98s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`115 passed`, `0 failed`, `cache_hits=23/31`, `report_signature=fa75f7f525acd21c`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2405 merge commit, foundation-only scope wording, validation metrics, advisory wording, guardrails, and lane-step coverage for this docs-only merge-ledger PR.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
