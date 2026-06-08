@@ -392,6 +392,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         prepared.shared_needs.process_async.needs_run_timeout;
                     stdlib_needs_process_async.needs_output |=
                         prepared.shared_needs.process_async.needs_output;
+                    stdlib_needs_process_async.needs_output_timeout |=
+                        prepared.shared_needs.process_async.needs_output_timeout;
                     stdlib_needs_process_children |= prepared
                         .shared_needs
                         .process_children
@@ -420,7 +422,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
     let needs_process_async = stdlib_needs_process_async.needs_run
         || stdlib_needs_process_async.needs_run_timeout
-        || stdlib_needs_process_async.needs_output;
+        || stdlib_needs_process_async.needs_output
+        || stdlib_needs_process_async.needs_output_timeout;
     let needs_process_status = stdlib_needs_process_status || needs_process_async;
     let needs_process_children = stdlib_needs_process_children;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
@@ -595,6 +598,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             stdlib_needs_process_async.needs_run,
             stdlib_needs_process_async.needs_run_timeout,
             stdlib_needs_process_async.needs_output,
+            stdlib_needs_process_async.needs_output_timeout,
         ));
     }
     if needs_process_children {

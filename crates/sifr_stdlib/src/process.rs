@@ -254,6 +254,21 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "process_async_output_timeout".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("program".to_string(), Type::Str),
+                ("args".to_string(), Type::List(Box::new(Type::Str))),
+                ("env".to_string(), Type::List(Box::new(Type::Str))),
+                ("cwd".to_string(), Type::Str),
+                ("has_cwd".to_string(), Type::Bool),
+                ("has_stdin".to_string(), Type::Bool),
+                ("timeout_seconds".to_string(), Type::Float),
+            ],
+            Type::Awaitable(Box::new(process_output_object_result())),
+        ),
+    );
+    functions.insert(
         "process_shell_run".to_string(),
         FunctionType::all_borrow(
             vec![("script".to_string(), Type::Str)],

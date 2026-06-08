@@ -422,6 +422,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync stdout/stderr pipe readers: https://github.com/sifr-lang/sifr/pull/2352
 - M4 async process run timeout: https://github.com/sifr-lang/sifr/pull/2354
 - M4 sync stdin pipe writer: https://github.com/sifr-lang/sifr/pull/2357
+- M4 async output timeout: in review.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -858,6 +859,21 @@ M4 sync stdin pipe writer review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-writer-review-pass-1.md`: `PASS`; reviewer verified typed `PipeWriter.write_all`/`close` behavior, one-shot child stdin extraction, repeated writes before close, spawn stdio mode arity/order across all layers, no generated runtime panic path, symmetric preamble gating, file-size guardrail compliance, honest docs/manifests, and accepted the table-wide writer mutex during sync blocking writes as non-blocking for this slice.
 - Merged as PR #2357: https://github.com/sifr-lang/sifr/pull/2357 (`81eb29e671c8ac0b79928f4825c1daaf6bcfbf7a`).
+
+M4 async output timeout targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2188 files checked, 900-line limit.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_output_timeout.sifr` -> PASS; async output timeout returns typed success output, timeout `Output` evidence with empty stdout/stderr, invalid-timeout errors, and the existing owned-pipe deferral for stdin bytes.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_timeout.sifr` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`513.27s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=23/26`, `report_signature=9212e77abfa82acc`).
+
+M4 async output timeout review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-output-timeout-review-pass-1.md`: `PASS`; reviewer verified stdlib signature and lowering arity/order, private generated Tokio helper behavior, typed invalid-timeout and timeout `Output` evidence, stdin-bytes owned-pipe deferral, helper gating through `SharedPreludeProcessAsyncNeeds`, manifest and traceability updates, and focused fixture replay. Non-blocking notes retained the intentional `kill_on_drop(true)` limitation until async owned-pipe/communicate work and warned to keep unrelated network-phase dirty files out of the PR.
 
 M0 targeted local validation:
 

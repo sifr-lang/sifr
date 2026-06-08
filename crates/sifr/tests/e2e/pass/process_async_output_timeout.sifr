@@ -1,0 +1,39 @@
+from sifr.process import Command, Output, ProcessError, async_output_timeout
+
+
+async def main() -> None:
+    try:
+        fast: Command = Command("sh")
+        fast.args(["-c", "printf async-fast; printf async-err >&2"])
+        fast_out: Output = await async_output_timeout(fast, 2.0)
+        assert fast_out.stdout == b"async-fast"
+        assert fast_out.stderr == b"async-err"
+        assert fast_out.status.success
+        assert fast_out.status.kind == "success"
+        assert not fast_out.status.timed_out
+
+        slow: Command = Command("sh")
+        slow.args(["-c", "sleep 1; printf late"])
+        timed_out: Output = await async_output_timeout(slow, 0.01)
+        assert timed_out.stdout == b""
+        assert timed_out.stderr == b""
+        assert timed_out.status.timed_out
+        assert timed_out.status.kind == "timeout"
+        assert not timed_out.status.success
+
+        invalid: Command = Command("true")
+        try:
+            _invalid: Output = await async_output_timeout(invalid, -1.0)
+            assert False
+        except ProcessError as e:
+            assert len(e.message) > 0
+
+        stdin_cmd: Command = Command("cat")
+        stdin_cmd.stdin_bytes(b"deferred")
+        try:
+            _stdin: Output = await async_output_timeout(stdin_cmd, 2.0)
+            assert False
+        except ProcessError as e:
+            assert "owned pipe" in e.message
+    except ProcessError as e:
+        assert e.message == ""
