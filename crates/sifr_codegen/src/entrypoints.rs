@@ -70,6 +70,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     }
     if uses_task_scope || uses_join_set {
         emitted_items.extend(super::build_task_scope_items());
+        emitted_items.extend(super::build_task_context_scope_extension_items(true));
     }
     if uses_task_scope_offload {
         emitted_items.extend(super::build_task_scope_offload_items());

@@ -369,7 +369,9 @@ pub(super) fn try_lower_simple_method_call_expr(
     if (matches!(
         method,
         "__sifr_spawn_infallible"
+            | "__sifr_spawn_infallible_with_context"
             | "__sifr_spawn_result"
+            | "__sifr_spawn_result_with_context"
             | "__sifr_scope_spawn_blocking_infallible"
             | "__sifr_scope_spawn_blocking_result"
             | "__sifr_scope_spawn_cpu_infallible"

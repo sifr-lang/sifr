@@ -1,4 +1,7 @@
-use super::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
+use super::{
+    task_context_label_capture_stmt, task_context_label_field, RustExpr, RustItem, RustParam,
+    RustStmt, RustType, Visibility,
+};
 pub fn build_task_scope_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
@@ -311,6 +314,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     RustType::Vec(Box::new(RustType::Named("__SifrScopeChild".to_string()))),
                 ),
                 ("fail_fast".to_string(), RustType::Bool),
+                task_context_label_field(),
             ],
         },
         RustItem::Impl {
@@ -341,6 +345,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                                 "fail_fast".to_string(),
                                 RustExpr::Literal(crate::RustLiteral::Bool(false)),
                             ),
+                            ("context_label".to_string(), RustExpr::Ident("None".to_string())),
                         ],
                     }))],
                     is_async: false,
@@ -368,6 +373,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                                 "fail_fast".to_string(),
                                 RustExpr::Literal(crate::RustLiteral::Bool(true)),
                             ),
+                            ("context_label".to_string(), RustExpr::Ident("None".to_string())),
                         ],
                     }))],
                     is_async: false,
@@ -429,12 +435,13 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                                 "std::sync::Arc::clone(&observed)".to_string(),
                             ),
                         },
+                        task_context_label_capture_stmt(),
                         RustStmt::Let {
                             mutable: false,
                             name: "child".to_string(),
                             ty: None,
                             value: RustExpr::Ident(
-                                "tokio::spawn(async move { let result = future.await; let _ = sender.send(__SifrTaskResult::Ok(result)); __SifrScopeChildOutcome::Ok })"
+                                "tokio::spawn(async move { match child_context_label { Some(__sifr_context_label) => __SIFR_TASK_CONTEXT_LABEL.scope(__sifr_context_label, async move { let result = future.await; let _ = sender.send(__SifrTaskResult::Ok(result)); __SifrScopeChildOutcome::Ok }).await, None => { let result = future.await; let _ = sender.send(__SifrTaskResult::Ok(result)); __SifrScopeChildOutcome::Ok } } })"
                                     .to_string(),
                             ),
                         },
@@ -557,12 +564,13 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                                 "std::sync::Arc::clone(&observed)".to_string(),
                             ),
                         },
+                        task_context_label_capture_stmt(),
                         RustStmt::Let {
                             mutable: false,
                             name: "child".to_string(),
                             ty: None,
                             value: RustExpr::Ident(
-                                "tokio::spawn(async move { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled(_) => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome })"
+                                "tokio::spawn(async move { match child_context_label { Some(__sifr_context_label) => __SIFR_TASK_CONTEXT_LABEL.scope(__sifr_context_label, async move { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled(_) => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome }).await, None => { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled(_) => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome } } })"
                                     .to_string(),
                             ),
                         },

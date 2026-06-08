@@ -1,7 +1,7 @@
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::ownership_diagnostics;
-use super::task_context_keywords::validate_reserved_task_context_keyword;
+use super::task_context_keywords::lower_task_context_keyword;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
@@ -57,7 +57,7 @@ fn lower_task_scope_spawn_from_object_impl(
         );
         return None;
     }
-    validate_spawn_keywords(call, ctx, callable_name, allow_reserved_ctx)?;
+    let explicit_context = validate_spawn_keywords(call, ctx, callable_name, allow_reserved_ctx)?;
     if call.arguments.args.len() != 1 {
         expression_diagnostics::call_wrong_positional_count(
             ctx,
@@ -116,12 +116,20 @@ fn lower_task_scope_spawn_from_object_impl(
 
     Some(HirExpr::MethodCall {
         object: Box::new(object),
-        method: if matches!(task_err_ty.resolve_alias(), Type::Never) {
-            "__sifr_spawn_infallible".to_string()
-        } else {
-            "__sifr_spawn_result".to_string()
+        method: match (
+            matches!(task_err_ty.resolve_alias(), Type::Never),
+            explicit_context.is_some(),
+        ) {
+            (true, true) => "__sifr_spawn_infallible_with_context".to_string(),
+            (true, false) => "__sifr_spawn_infallible".to_string(),
+            (false, true) => "__sifr_spawn_result_with_context".to_string(),
+            (false, false) => "__sifr_spawn_result".to_string(),
         },
-        args: vec![coroutine],
+        args: if let Some(context) = explicit_context {
+            vec![context, coroutine]
+        } else {
+            vec![coroutine]
+        },
         ty: Type::Task(task_ok_ty, task_err_ty),
     })
 }
@@ -131,9 +139,9 @@ fn validate_spawn_keywords(
     ctx: &mut LowerCtx,
     callable_name: &str,
     allow_reserved_ctx: bool,
-) -> Option<()> {
+) -> Option<Option<HirExpr>> {
     if call.arguments.keywords.is_empty() {
-        return Some(());
+        return Some(None);
     }
     if !allow_reserved_ctx {
         expression_diagnostics::call_unexpected_keyword(
@@ -143,7 +151,7 @@ fn validate_spawn_keywords(
         );
         return None;
     }
-    validate_reserved_task_context_keyword(ctx, call, callable_name)
+    lower_task_context_keyword(ctx, call, callable_name)
 }
 
 fn borrowed_task_boundary_argument(args: &[HirExpr], ctx: &LowerCtx) -> Option<String> {
@@ -451,7 +459,9 @@ pub(in crate::lower) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String>
     if !matches!(
         method.as_str(),
         "__sifr_spawn_infallible"
+            | "__sifr_spawn_infallible_with_context"
             | "__sifr_spawn_result"
+            | "__sifr_spawn_result_with_context"
             | "__sifr_scope_spawn_blocking_infallible"
             | "__sifr_scope_spawn_blocking_result"
             | "__sifr_scope_spawn_cpu_infallible"

@@ -340,7 +340,13 @@ pub(super) fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), Codegen
                 sifr_ir::HirAsyncWithKind::UserDefined { context, .. } => {
                     validate_expr_lowering_shape(context)?;
                 }
-                sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup => {}
+                sifr_ir::HirAsyncWithKind::TaskGroup {
+                    context: Some(context),
+                } => {
+                    validate_expr_lowering_shape(context)?;
+                }
+                sifr_ir::HirAsyncWithKind::TaskScope
+                | sifr_ir::HirAsyncWithKind::TaskGroup { context: None } => {}
             }
             validate_stmt_block_lowering_shape(body)
         }

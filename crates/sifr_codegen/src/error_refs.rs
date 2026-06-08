@@ -296,7 +296,14 @@ fn collect_stmt_error_refs(
                     sifr_ir::HirAsyncWithKind::UserDefined { context, .. } => {
                         collect_expr_error_refs(context, referenced, builtin_error_classes);
                     }
-                    sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup => {
+                    sifr_ir::HirAsyncWithKind::TaskGroup {
+                        context: Some(context),
+                    } => {
+                        referenced.insert("ScopeFailure".to_string());
+                        collect_expr_error_refs(context, referenced, builtin_error_classes);
+                    }
+                    sifr_ir::HirAsyncWithKind::TaskScope
+                    | sifr_ir::HirAsyncWithKind::TaskGroup { context: None } => {
                         referenced.insert("ScopeFailure".to_string());
                     }
                 }

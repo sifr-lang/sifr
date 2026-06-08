@@ -30,6 +30,7 @@ mod re;
 mod runtime;
 mod signal;
 mod sys;
+mod task;
 mod test;
 mod time;
 mod toml;
@@ -713,6 +714,10 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             Some(StdlibFeature::Tokio),
         ),
         "runtime_emit_diagnostic" => (runtime::lower_runtime_emit_diagnostic(args), None),
+        "task_current_context" => (
+            task::lower_task_current_context(args),
+            Some(StdlibFeature::Tokio),
+        ),
         "html_escape" => (html::lower_html_escape(args), None),
         "html_unescape" => (html::lower_html_unescape(args), None),
         "calendar_isleap" => (calendar::lower_calendar_isleap(args), None),

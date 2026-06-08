@@ -5,6 +5,7 @@ use super::{
     build_file_handle_infra_items, build_file_handle_struct_items, build_io_error_items,
     build_join_set_cpu_items, build_join_set_items, build_logging_items, build_process_async_items,
     build_process_child_items, build_process_status_items, build_random_module_state_items,
+    build_task_context_scope_extension_items, build_task_current_context_items,
     build_task_scope_cpu_offload_items, build_task_scope_items, build_task_scope_offload_items,
     build_task_scope_process_items, build_timeout_result_type_items, build_worker_panic_hook_items,
     module_uses_async_exit_cause_type, module_uses_async_generator_type,
@@ -462,6 +463,10 @@ pub fn generate_rust_with_stdlib_for_module(
     // Emit built-in error class struct definitions for referenced error types.
     let uses_task_scope = module_uses_task_scope(module);
     let uses_join_set = module_uses_join_set(module);
+    let stdlib_emits_task_context = stdlib_preamble.contains("__sifr_task_current_context")
+        || stdlib_preamble.contains("__SIFR_TASK_CONTEXT_LABEL");
+    let uses_task_current_context = emitter.intrinsic_functions.contains("task_current_context")
+        && !stdlib_preamble.contains("__sifr_task_current_context");
     let uses_join_set_spawn_cpu = module_uses_join_set_spawn_cpu(module);
     let uses_task_scope_offload = module_uses_task_scope_offload(module);
     let uses_task_scope_spawn_cpu = module_uses_task_scope_spawn_cpu(module);
@@ -650,6 +655,14 @@ pub fn generate_rust_with_stdlib_for_module(
     }
     if uses_task_scope || uses_join_set {
         preamble_items.extend(build_task_scope_items());
+        preamble_items.extend(build_task_context_scope_extension_items(
+            !stdlib_emits_task_context,
+        ));
+    }
+    if uses_task_current_context {
+        preamble_items.extend(build_task_current_context_items(
+            !(uses_task_scope || uses_join_set),
+        ));
     }
     if uses_task_scope_offload {
         preamble_items.extend(build_task_scope_offload_items());

@@ -1,4 +1,5 @@
 use super::*;
+use crate::HirAsyncWithKind;
 
 #[test]
 fn test_task_group_accepts_reserved_none_context() {
@@ -11,15 +12,35 @@ fn test_task_group_accepts_reserved_none_context() {
 }
 
 #[test]
-fn test_task_group_rejects_non_none_context_until_m5() {
+fn test_task_group_accepts_sifr_context() {
+    let source = "class Context:\n    name: str\n\n    def __init__(self, name: str):\n        self.name = name\n\nasync def main() -> Result[None, ScopeFailure]:\n    ctx: Context = Context(\"request\")\n    async with task.TaskGroup(ctx=ctx) as group:\n        pass\n    return None\n";
+    let module = lower_source(source).expect("TaskGroup ctx=Context should lower");
+    let main = module
+        .functions
+        .iter()
+        .find(|function| function.name == "main")
+        .expect("main should exist");
+    let HirStmt::AsyncWith { kind, .. } = &main.body[1] else {
+        panic!("expected task group async with");
+    };
+    assert!(matches!(
+        kind,
+        HirAsyncWithKind::TaskGroup {
+            context: Some(HirExpr::Name { name, .. })
+        } if name == "ctx"
+    ));
+}
+
+#[test]
+fn test_task_group_rejects_invalid_context_type() {
     let source = "class Context:\n    pass\n\nasync def main() -> Result[None, ScopeFailure]:\n    ctx: Context = Context()\n    async with task.TaskGroup(ctx=ctx) as group:\n        return None\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
-        e.message.contains(
-            "task.TaskGroup() ctx must be None until sifr.task.Context propagation lands in M5",
-        ) && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+        e.message
+            .contains("task.TaskGroup() ctx must be sifr.task.Context or None")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
     }));
 }
 
@@ -69,16 +90,26 @@ fn test_task_spawn_scoped_rejects_without_active_owner() {
 }
 
 #[test]
-fn test_task_spawn_scoped_rejects_non_none_context_until_m5() {
-    let source = "class Context:\n    pass\n\nasync def worker() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def main() -> Result[None, ScopeFailure]:\n    ctx: Context = Context()\n    async with task.TaskGroup() as group:\n        handle = task.spawn_scoped(worker(), ctx=ctx)\n    return None\n";
-    let result = lower_source(source);
-    assert!(result.is_err());
-    let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| {
-        e.message.contains(
-            "task.spawn_scoped() ctx must be None until sifr.task.Context propagation lands in M5",
-        ) && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
-    }));
+fn test_task_spawn_scoped_lowers_with_sifr_context() {
+    let source = "class Context:\n    name: str\n\n    def __init__(self, name: str):\n        self.name = name\n\nasync def worker() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def main() -> Result[None, ScopeFailure]:\n    ctx: Context = Context(\"request\")\n    async with task.TaskGroup() as group:\n        handle = task.spawn_scoped(worker(), ctx=ctx)\n    return None\n";
+    let module = lower_source(source).expect("spawn_scoped ctx=Context should lower");
+    let main = module
+        .functions
+        .iter()
+        .find(|function| function.name == "main")
+        .expect("main should exist");
+    let HirStmt::AsyncWith { body, .. } = &main.body[1] else {
+        panic!("expected task group async with");
+    };
+    let HirStmt::Let { value, .. } = &body[0] else {
+        panic!("expected handle assignment");
+    };
+    let HirExpr::MethodCall { method, args, .. } = value else {
+        panic!("expected spawn_scoped to lower as owner method call");
+    };
+    assert_eq!(method, "__sifr_spawn_infallible_with_context");
+    assert_eq!(args.len(), 2);
+    assert!(matches!(&args[0], HirExpr::Name { name, .. } if name == "ctx"));
 }
 
 #[test]

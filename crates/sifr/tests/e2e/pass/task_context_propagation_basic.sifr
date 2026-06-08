@@ -1,0 +1,25 @@
+from sifr.task import Context, current_context
+
+
+async def expect_context(own expected: str) -> int:
+    await task.sleep(0.0)
+    actual: str = str(current_context())
+    assert actual == expected
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    default_value: str = str(current_context())
+    assert default_value == "Context"
+
+    group_ctx: Context = Context("group")
+    async with task.TaskGroup(ctx=group_ctx) as group:
+        inherited = group.spawn(expect_context("group"))
+        override_ctx: Context = Context("override")
+        overridden = task.spawn_scoped(expect_context("override"), ctx=override_ctx)
+
+        await inherited
+        await overridden
+
+    assert str(current_context()) == "Context"
+    return None

@@ -67,6 +67,7 @@
     "task_group_basic",
     "task_spawn_scoped_named_owner",
     "task_context_value_model_basic",
+    "task_context_propagation_basic",
     "task_gather_ordered",
     "task_handle_collection_consumed",
     "task_race_cancels_losers",

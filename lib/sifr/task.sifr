@@ -1,9 +1,16 @@
 # sifr.task - Structured task context value model
 
+from _sifr.task import task_current_context
+
 
 class Context:
+    name: str
+
+    def __init__(self, name: str = "Context"):
+        self.name = name
+
     def __str__(self) -> str:
-        return "Context"
+        return self.name
 
 
 class ContextKey[T]:
@@ -17,3 +24,7 @@ class ContextKey[T]:
 
 def empty_context() -> Context:
     return Context()
+
+
+def current_context() -> Context:
+    return task_current_context()

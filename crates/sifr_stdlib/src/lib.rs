@@ -19,6 +19,7 @@ mod runtime;
 mod signal;
 mod sources;
 mod sys_fs;
+mod task;
 mod text_encoding;
 mod unicode_core;
 
@@ -40,6 +41,7 @@ use runtime::intrinsic_runtime;
 use signal::intrinsic_signal;
 pub use sources::{StdlibSource, STDLIB_SOURCES};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
+use task::intrinsic_task;
 use text_encoding::intrinsic_encoding;
 use unicode_core::intrinsic_unicode;
 
@@ -107,6 +109,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.process" => Some(intrinsic_process()),
         "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.runtime" => Some(intrinsic_runtime()),
+        "_sifr.task" => Some(intrinsic_task()),
         "_sifr.toml" => Some(intrinsic_toml()),
         "_sifr.datetime" => Some(intrinsic_datetime()),
         "_sifr.html" => Some(intrinsic_html()),
