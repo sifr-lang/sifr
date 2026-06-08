@@ -1,0 +1,13 @@
+# expect-error[col=30]: SIFR-OWN-0010
+from sifr.process import Child
+
+
+async def worker(own child: Child) -> int:
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    child: Child = Child(0)
+    async with task.scope() as scope:
+        handle = scope.spawn(worker(child))
+    return None

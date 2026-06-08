@@ -296,6 +296,12 @@ fn non_share_safe_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Opt
             if is_share_safe_sync_wrapper(name) {
                 return None;
             }
+            if let Some(label) = process_owned_handle_type_label_by_name(name) {
+                return Some(format!(
+                    "`{}` is a {label} and must stay in its owning task",
+                    public_type_name(name)
+                ));
+            }
             if class_has_non_send_marker(name, parent_class.as_deref()) {
                 return Some(format!("`{name}` inherits the `NonSend` marker"));
             }
@@ -349,6 +355,12 @@ fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<St
         } => {
             if let Some(label) = sync_guard_type_label_by_name(name) {
                 return Some(format!("`{}` is a {label}", public_type_name(name)));
+            }
+            if let Some(label) = process_owned_handle_type_label_by_name(name) {
+                return Some(format!(
+                    "`{}` is a {label} and must stay in its owning task",
+                    public_type_name(name)
+                ));
             }
             if class_has_non_send_marker(name, parent_class.as_deref()) {
                 return Some(format!("`{name}` inherits the `NonSend` marker"));
@@ -421,8 +433,20 @@ fn is_share_safe_sync_wrapper(name: &str) -> bool {
     )
 }
 
+fn process_owned_handle_type_label_by_name(name: &str) -> Option<&'static str> {
+    match public_type_name(name) {
+        "Child" | "AsyncChild" => Some("process child handle"),
+        "PipeReader" | "PipeWriter" | "AsyncPipeReader" | "AsyncPipeWriter" => {
+            Some("process pipe handle")
+        }
+        _ => None,
+    }
+}
+
 pub(in crate::lower) fn public_type_name(name: &str) -> &str {
-    name.strip_prefix("__compat_sifr_sync_").unwrap_or(name)
+    name.strip_prefix("__compat_sifr_sync_")
+        .or_else(|| name.strip_prefix("__compat_sifr_process_"))
+        .unwrap_or(name)
 }
 
 pub(in crate::lower) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {

@@ -431,6 +431,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync PipeReader streaming reads: https://github.com/sifr-lang/sifr/pull/2377
 - M4 top-level async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2378
 - M4 async owned process pipes: https://github.com/sifr-lang/sifr/pull/2381
+- M4 process handle boundary diagnostics: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1117,6 +1118,23 @@ M4 async owned process pipes review loop:
 - Merged as PR #2381 (`a3ecf108720c73f31b7ae6c7067fd9bbdbbb82b4`) on 2026-06-08.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-owned-pipes-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2381 merge record, merge SHA/date, create-pr validation evidence, implementation PR list, and traceability wording around `async_spawn(...)` public async pipe I/O versus one-shot async output pipe-mode deferrals.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`212.71s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`107 passed`, `0 failed`, `cache_hits=23/27`, `report_signature=640c40bcdf03a864`).
+
+M4 process handle boundary diagnostics implementation:
+
+- Classified `Child`, `AsyncChild`, `PipeReader`, `PipeWriter`, `AsyncPipeReader`, and `AsyncPipeWriter` as process-owned handles in the existing send/share boundary checker.
+- Reused the established ownership diagnostics so process handles cannot be moved into `scope.spawn(...)`, sent through channels, or published through `Shared(...)` until a later scoped process supervision API defines safe transfer semantics.
+- Added fail fixtures for sync child task-boundary, async child task-boundary, channel-send, and shared-value process handle rejection.
+
+M4 process handle boundary diagnostics targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `cargo check -p sifr_lowering -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo test -p sifr_lowering ownership_and_async -- --nocapture` -> PASS; validates existing ownership/task-boundary unit coverage (`58 passed`, `1 ignored`).
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; validates 429 fail fixtures including `process_child_handle_task_boundary_rejected`, `process_handle_task_boundary_rejected`, `process_handle_channel_send_rejected`, and `process_handle_shared_rejected`.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2202 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-process-handle-boundaries-review-pass-1.md`: `PASS`; reviewer verified the exact process-handle classification list, safe process data classes remain allowed, task/channel/shared boundary paths all use the same classifier, and fixture coverage spans child/pipe, sync/async, and all three boundary entry points.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`189.33s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`107 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=640c40bcdf03a864`).
 
 M4 sync process terminate implementation:
 

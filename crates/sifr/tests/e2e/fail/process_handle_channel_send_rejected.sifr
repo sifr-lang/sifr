@@ -1,0 +1,10 @@
+# expect-error[col=30]: SIFR-OWN-0011
+from sifr.process import PipeReader
+from sifr.sync import Channel, ChannelSender, ClosedError
+
+
+async def main() -> Result[None, ClosedError]:
+    sender: ChannelSender[PipeReader] = ChannelSender(Channel([], -1))
+    reader: PipeReader = PipeReader(0)
+    sent = await sender.send(reader)
+    return None

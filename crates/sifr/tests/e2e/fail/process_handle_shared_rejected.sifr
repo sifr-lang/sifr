@@ -1,0 +1,8 @@
+# expect-error[col=46]: SIFR-OWN-0012
+from sifr.process import AsyncPipeReader
+from sifr.sync import Shared
+
+
+def main() -> None:
+    reader: AsyncPipeReader = AsyncPipeReader(0)
+    shared: Shared[AsyncPipeReader] = Shared(reader)
