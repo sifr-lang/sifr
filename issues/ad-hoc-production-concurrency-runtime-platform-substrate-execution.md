@@ -688,6 +688,28 @@ M4 signal status evidence review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-signal-status-review-pass-1.md`: `PASS`; reviewer verified tuple-shaped raw exit status is coherent across stdlib typing, lowering, and Sifr wrappers; Unix signal exits surface as `Status(kind="signal", signal=N, success=False)` while timeout evidence retains precedence; the cfg-gated `__sifr_process_exit_signal` helper is portable by inspection; ordinary process APIs emit the status helper without the child table; manifests, traceability, supported-host matrix, and execution ledger are honest about Unix-only signal evidence and remaining M4 process lifecycle work. Non-blocking follow-ups were applied by adding the omitted child-kill PR link and documenting that `signal` carries the meaningful status when `kind == "signal"`.
 - Merged as PR #2341: https://github.com/sifr-lang/sifr/pull/2341 (`56b3aadeb65b63fc589c2530b0c02031b0e9596a7`).
 
+M4 legacy subprocess intrinsic cleanup implementation:
+
+- Removed the unused `_sifr.sys.subprocess_run`, `_sifr.sys.subprocess_run_with_input`, and `_sifr.sys.subprocess_run_structured` intrinsic signatures now that production process behavior is routed through `sifr.process`.
+- Deleted the matching codegen registry dispatch arms and legacy shell-shaped lowerer module, so no generated code path can bypass the production `sifr.process` process/status model through the old private intrinsic names.
+- Added stdlib and codegen negative guards proving the deleted private intrinsic names are neither registered nor lowered.
+- Updated M4 process traceability by closing the legacy `_sifr.sys.subprocess_*` cleanup follow-up; public `sifr.subprocess` and bare `subprocess` diagnostics remain intact as namespace-contract behavior.
+
+M4 legacy subprocess intrinsic cleanup targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_stdlib legacy_subprocess_intrinsics_are_not_registered -- --nocapture` -> PASS.
+- `cargo test -p sifr_codegen legacy_subprocess_intrinsics_are_not_lowered -- --nocapture` -> PASS.
+- `cargo check -p sifr_stdlib -p sifr_codegen -p sifr --quiet` -> PASS.
+- Process regressions `process_sync_output_text` and `process_signal_status` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2176 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`868.13s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`96 passed`, `0 failed`, `cache_hits=7/25`, `report_signature=f84374f7aa32a96e`).
+
+M4 legacy subprocess intrinsic cleanup review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-legacy-subprocess-intrinsic-cleanup-review-pass-1.md`: `PASS`; reviewer verified the cleanup is surgical, no live consumer of the removed private intrinsic names remains outside negative guards and historical notes, public `sifr.subprocess` / bare `subprocess` diagnostics still point to `sifr.process`, production `process_*` dispatch is untouched, and the full create-pr gate passed. Non-blocking note: keep unrelated network-phase files out of this PR.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

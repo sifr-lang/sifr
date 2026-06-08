@@ -390,6 +390,22 @@ mod tests {
     }
 
     #[test]
+    fn legacy_subprocess_intrinsics_are_not_registered() {
+        let sys = get_intrinsic_module("_sifr.sys").expect("_sifr.sys should exist");
+
+        for removed in [
+            "subprocess_run",
+            "subprocess_run_with_input",
+            "subprocess_run_structured",
+        ] {
+            assert!(
+                !sys.functions.contains_key(removed),
+                "{removed} must stay removed; use _sifr.process intrinsics instead"
+            );
+        }
+    }
+
+    #[test]
     fn bare_stdlib_tail_ignores_non_stdlib_and_reserved_roots() {
         assert!(is_bare_stdlib_tail("user_math").is_none());
         assert!(is_bare_stdlib_tail("sifr.math").is_none());

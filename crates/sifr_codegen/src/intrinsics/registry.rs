@@ -24,7 +24,6 @@ mod platform;
 mod process;
 mod random;
 mod re;
-mod subprocess;
 mod sys;
 mod test;
 mod time;
@@ -593,9 +592,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "sys_version" => (sys::lower_sys_version(args), None),
         "sys_platform" => (sys::lower_sys_platform(args), None),
         "sys_maxsize" => (sys::lower_sys_maxsize(args), None),
-        "subprocess_run" => (subprocess::lower_subprocess_run(args), None),
-        "subprocess_run_with_input" => (subprocess::lower_subprocess_run_with_input(args), None),
-        "subprocess_run_structured" => (subprocess::lower_subprocess_run_structured(args), None),
         "process_run" => (process::lower_process_run(args), None),
         "process_spawn" => (process::lower_process_spawn(args), None),
         "process_kill" => (process::lower_process_kill(args), None),
