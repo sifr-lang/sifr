@@ -277,7 +277,7 @@
       "terminal_state": "production-public"
     },
     {
-      "notes": "Structured streams for supported signals; arbitrary signal.signal handlers are unsupported.",
+      "notes": "Portable Signal, SIGINT, SIGTERM, and strsignal value-model evidence is importable; structured streams remain M5 work and arbitrary signal.signal handlers are unsupported.",
       "owner_milestone": "milestone_concurrency_runtime_5",
       "stability": "stable-public-api",
       "support_tier": "production-public",

@@ -8,7 +8,7 @@ use super::simple_expr::{
     integer_binop_source, lower_integer_const_expr_simple, negate_simple_expr,
 };
 use super::typing_and_functions::resolve_annotation_expr;
-use super::{fixed_width_fitting, LowerCtx};
+use super::{expressions::lower_expr, fixed_width_fitting, LowerCtx};
 
 pub(in crate::lower) fn collect_module_constants(
     stmts: &[Stmt],
@@ -36,36 +36,50 @@ fn collect_annotated_constant(
     let Some(ref value_expr) = ann.value else {
         return;
     };
-    let Some(mut hir_value) = lower_module_integer_const_expr(value_expr, ctx) else {
-        return;
-    };
-
     let var_name = name.id.to_string();
     let ty = resolve_annotation_expr(&ann.annotation, ctx);
-    let error_count_before_initializer = ctx.error_count();
-    if let Some(folded_value) = fixed_width_fitting::validate_annotated_constant_initializer(
-        ctx,
-        &ty,
-        &hir_value,
-        value_expr.range(),
-    ) {
-        hir_value = folded_value;
-    }
-    if ctx.error_count() == error_count_before_initializer {
-        let remembered_value = fixed_width_fitting::remember_module_const_integer(
-            ctx,
-            &var_name,
-            &hir_value,
-            value_expr.range(),
-        );
-        if let Some(folded) =
-            oversized_int_module_constant_literal_for_codegen(&ty, remembered_value.as_ref())
-        {
-            hir_value = folded;
-        }
-    }
+    let Some(hir_value) = lower_annotated_module_constant_expr(value_expr, ctx, &var_name, &ty)
+    else {
+        return;
+    };
     ctx.scope.define(var_name.clone(), ty.clone());
     constants.push((var_name, ty, hir_value));
+}
+
+fn lower_annotated_module_constant_expr(
+    value_expr: &Expr,
+    ctx: &mut LowerCtx,
+    var_name: &str,
+    ty: &Type,
+) -> Option<HirExpr> {
+    if let Some(mut hir_value) = lower_module_integer_const_expr(value_expr, ctx) {
+        let error_count_before_initializer = ctx.error_count();
+        if let Some(folded_value) = fixed_width_fitting::validate_annotated_constant_initializer(
+            ctx,
+            ty,
+            &hir_value,
+            value_expr.range(),
+        ) {
+            hir_value = folded_value;
+        }
+        if ctx.error_count() == error_count_before_initializer {
+            let remembered_value = fixed_width_fitting::remember_module_const_integer(
+                ctx,
+                var_name,
+                &hir_value,
+                value_expr.range(),
+            );
+            if let Some(folded) =
+                oversized_int_module_constant_literal_for_codegen(ty, remembered_value.as_ref())
+            {
+                hir_value = folded;
+            }
+        }
+        return Some(hir_value);
+    }
+
+    let hir_value = lower_expr(value_expr, ctx)?;
+    matches!(hir_value, HirExpr::ConstructorCall { .. }).then_some(hir_value)
 }
 
 fn collect_bare_constant(

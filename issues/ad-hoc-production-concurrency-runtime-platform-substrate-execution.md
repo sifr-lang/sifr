@@ -684,6 +684,25 @@ M5 task context value-model foundation merge ledger:
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`294.95s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`118 passed`, `0 failed`, `cache_hits=21/33`, `report_signature=8826f5b3144352b0`).
 - `reviews/ad-hoc-production-concurrency-runtime-m5-task-context-foundation-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2414 merge commit/date, validation metrics and advisories, docs-only scope, and no overclaim that non-`None` task context propagation is complete.
 
+M5 signal constants implementation:
+
+- Added portable module-level `sifr.signal.SIGINT` and `sifr.signal.SIGTERM` values backed by annotated object-valued stdlib module constants.
+- Extended annotated module-constant lowering to record constructor-call constants and extended module-constant codegen to emit non-primitive constants through private factory functions using the existing expression lowering path.
+- Added `signal_constants_basic` pass coverage and create-pr/merge manifest entries.
+- Updated M5 shutdown traceability, supported-host matrix, and substrate inventory to mark portable constants supported while keeping structured signal streams, Unix-only constants, and delivery semantics in progress or host-limited.
+
+M5 signal constants targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json`, `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json`, and `python3 -m json.tool verification/stdlib/concurrency_runtime_substrate_inventory.json` -> PASS.
+- `cargo check -p sifr_lowering -p sifr_codegen -p sifr_driver` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_constants_basic.sifr` -> PASS.
+- `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`216.65s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`119 passed`, `0 failed`, `cache_hits=31/33`, `report_signature=0df4819d3daf7aa4`).
+
+M5 signal constants review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-constants-review-pass-1.md`: `PASS`; reviewer verified the constructor-only object constant lowering, private factory codegen, portable `SIGINT`/`SIGTERM` value-model scope, ownership-aware fixture, symmetric manifests, no stream/delivery overclaim, and recorded validation metrics.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.

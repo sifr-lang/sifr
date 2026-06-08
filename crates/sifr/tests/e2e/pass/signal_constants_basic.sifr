@@ -1,0 +1,13 @@
+from sifr.signal import SIGINT, SIGTERM, Signal, strsignal
+
+
+def main():
+    interrupt: Signal = SIGINT
+    terminate: Signal = SIGTERM
+
+    assert interrupt.name == "SIGINT"
+    assert interrupt.number == 2
+    assert strsignal(interrupt) == "SIGINT"
+    assert terminate.name == "SIGTERM"
+    assert terminate.number == 15
+    assert strsignal(terminate) == "SIGTERM"
