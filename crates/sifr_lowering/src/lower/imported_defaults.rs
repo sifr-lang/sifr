@@ -75,3 +75,23 @@ pub(in crate::lower) fn import_class_method_varargs(
         }
     }
 }
+
+pub(in crate::lower) fn import_class_method_workloads(
+    ctx: &mut LowerCtx,
+    module_workloads: &HashMap<String, String>,
+    external_name: &str,
+    local_name: &str,
+) {
+    import_callable_workload(ctx, module_workloads, external_name, local_name);
+    let method_prefix = format!("{external_name}.");
+    for (workload_name, label) in module_workloads {
+        if let Some(suffix) = workload_name.strip_prefix(&method_prefix) {
+            if let Some(workload) = WorkloadKind::from_label(label) {
+                ctx.function_workload_annotations
+                    .insert(format!("{local_name}.{suffix}"), workload);
+                ctx.function_workload_annotations
+                    .insert(format!("{external_name}.{suffix}"), workload);
+            }
+        }
+    }
+}

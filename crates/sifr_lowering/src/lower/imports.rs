@@ -112,6 +112,16 @@ pub(in crate::lower) fn resolve_imports_early(
                             if externals.error_types.contains(name) {
                                 ctx.error_types.insert(local.clone());
                             }
+                            if let Some(module_workloads) =
+                                externals.function_workloads.get(&module_key)
+                            {
+                                super::imported_defaults::import_class_method_workloads(
+                                    ctx,
+                                    module_workloads,
+                                    name,
+                                    &local,
+                                );
+                            }
                             // Register constructor
                             if let Type::Class {
                                 fields, methods, ..

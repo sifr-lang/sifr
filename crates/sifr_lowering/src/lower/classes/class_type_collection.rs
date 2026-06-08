@@ -16,6 +16,7 @@ use super::protocol_diagnostics;
 use super::simple_expr::lower_expr_simple;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{parse_typevar_bound_expr, LowerCtx};
+use crate::lower::workload_annotations;
 
 pub(super) fn class_method_signature<'a>(
     methods: &'a [(String, FunctionType)],
@@ -647,6 +648,12 @@ pub(in crate::lower) fn collect_class_type(
                     if !defaults.is_empty() {
                         ctx.function_defaults
                             .insert(format!("{class_name}.{method_name}"), defaults);
+                    }
+                    if let Some(workload) =
+                        workload_annotations::annotation_for_decorators(func.decorator_list.iter())
+                    {
+                        ctx.function_workload_annotations
+                            .insert(format!("{class_name}.{method_name}"), workload);
                     }
                     methods.push((
                         method_name,

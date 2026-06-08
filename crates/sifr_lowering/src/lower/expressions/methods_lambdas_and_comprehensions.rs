@@ -123,6 +123,12 @@ pub(in crate::lower) fn lower_method_call(
         }
     }
     let object_ty_for_args = canonicalize_class_surface_type(object.ty().resolve_alias());
+    super::workload_annotations::reject_async_direct_method_call(
+        ctx,
+        &object_ty_for_args,
+        &method_name,
+        attr.attr.range(),
+    );
     let args = match &object_ty_for_args {
         Type::Class { name, methods, .. } => {
             if let Some((_, ft)) = methods
