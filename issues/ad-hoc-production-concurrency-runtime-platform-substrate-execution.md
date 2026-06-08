@@ -419,7 +419,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync child kill: https://github.com/sifr-lang/sifr/pull/2337
 - M4 signal status evidence: https://github.com/sifr-lang/sifr/pull/2341
 - M4 async process run/output loopback: https://github.com/sifr-lang/sifr/pull/2345
-- M4 sync stdout/stderr pipe readers: pending PR.
+- M4 sync stdout/stderr pipe readers: https://github.com/sifr-lang/sifr/pull/2352
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -809,6 +809,8 @@ M4 sync stdout/stderr pipe readers review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-readers-review-pass-2.md`: `PASS`; post-rebase reviewer verified the branch preserved PR #2348 stdin append semantics, kept the pipe-reader wave after that evidence without conflict markers or stale claims, revalidated the original sync-only pipe-reader invariants, reproduced targeted checks, confirmed the post-rebase create-pr report (`98 passed`, `0 failed`, platform golden `pass=5`, `skip=2`, `report_signature=559a90cf856fe902`), and found no blocking correctness, generated-code-safety, lifecycle, panic-freedom, gating, validation, or documentation issues.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-readers-review-pass-3.md`: `CHANGES_REQUESTED`; post-PR #2350 reviewer revalidated the original pipe-reader invariants but found the branch was still behind PR #2351 and would drop the method-form diagnostics merge-link and merge-ledger validation lines. The next revision rebases onto current `origin/main` and preserves those method diagnostics evidence lines before the pipe-reader block.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-readers-review-pass-4.md`: `PASS`; final reviewer verified the pass-3 blocker was fixed by preserving the PR #2350 merge-link and merge-ledger validation from PR #2351 before the pipe-reader block, rechecked traceability for both method-form diagnostics fixtures plus `process_spawn_pipe_readers`, confirmed the sync-only pipe-reader implementation and typed-error/panic-freedom invariants, confirmed helper gating and documentation boundaries, and verified the latest create-pr evidence (`98 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=559a90cf856fe902`).
+- Merged as PR #2352: https://github.com/sifr-lang/sifr/pull/2352 (`cdd33ba0fd0469f65a0f4f26bf5fdcf8555e2bfd`).
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`160.57s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`98 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=559a90cf856fe902`).
 
 M0 targeted local validation:
 
