@@ -885,6 +885,8 @@ M4 stdin guardrails targeted local validation:
 M4 stdin guardrails review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-stdin-guardrails-review-pass-1.md`: `PASS`; reviewer verified sync `spawn(...)` now rejects `stdin_bytes(...)` before spawning, async run/output/timeout thread `stdin_mode` through public wrappers, stdlib metadata, lowerers, and generated helper signatures in the correct order, all async helpers return typed owned-pipe deferral errors for non-inherit stdin modes, fixtures cover the new guardrails, docs do not overclaim future async pipe/communicate work, file-size guardrails remain under 900 lines, and the create-pr lane evidence is sufficient.
+- Merged as PR #2359: https://github.com/sifr-lang/sifr/pull/2359 (`408368be330fd0399ba6eeaf6cb060661a1104c8`).
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`214.95s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`100 passed`, `0 failed`, `cache_hits=24/26`, `report_signature=458ad42c8c1b262c`).
 
 M0 targeted local validation:
 
