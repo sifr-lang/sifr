@@ -438,6 +438,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 scoped process supervision: https://github.com/sifr-lang/sifr/pull/2392
 - M4 timeout process-group cleanup: https://github.com/sifr-lang/sifr/pull/2396
 - M4 sync child drop cleanup: https://github.com/sifr-lang/sifr/pull/2398
+- M4 scoped parent cancellation evidence: in progress.
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -498,6 +499,23 @@ M4 sync child drop cleanup merge ledger:
 
 - Merged as PR #2398 (`f84f854a84f08d7d2c39ab66d200ac1d53b15039`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; no advisories (`118.68s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`113 passed`, `0 failed`, `cache_hits=30/30`, `report_signature=5cbbb189c83d1068`).
+
+M4 scoped parent cancellation evidence implementation:
+
+- Added `process_scoped_parent_cancel`, a focused `TaskGroup.spawn_process(...)` fixture that triggers sibling failure and verifies the scoped process is stopped before it can write a delayed marker after parent cancellation.
+- Added `process_scoped_parent_cancel` to create-pr and merge validation manifests.
+- Updated M4 process traceability and supported-host matrix to close the parent-cancellation evidence follow-up while preserving non-Unix termination/status follow-ups.
+
+M4 scoped parent cancellation evidence targeted local validation:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_scoped_parent_cancel.sifr` -> PASS.
+- Adjacent regressions `process_scoped_spawn_handle` and `process_timeout_group_cleanup` -> PASS.
+- `cargo fmt --check`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`853.32s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`114 passed`, `0 failed`, `cache_hits=0/30`, `report_signature=b11e218d104a7820`).
+
+M4 scoped parent cancellation evidence review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-parent-cancel-review-pass-3.md`: `PASS`; reviewer verified the focused fixture deterministically fails on cancellation leaks, cleans marker files, mirrors existing scoped-process cancellation patterns, keeps manifest ordering coherent, removes only parent-cancellation evidence from remaining M4 work, preserves non-Unix status/termination follow-ups, adds an honest timeout process-group cleanup host-matrix row, and excludes unrelated network/HTTP dirty files from the intended scope.
 
 M3 first-wave targeted local validation:
 

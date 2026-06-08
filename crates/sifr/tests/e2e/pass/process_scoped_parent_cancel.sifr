@@ -1,0 +1,51 @@
+from sifr.io import exists
+from sifr.os import getpid, remove_file
+from sifr.process import Command, ProcessHandle
+
+
+def shell_command(script: str) -> Command:
+    command: Command = Command("sh")
+    command.arg("-c")
+    command.arg(script)
+    return command
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_process_scoped_parent_cancel_" + str(getpid()) + ".txt"
+
+
+async def fail_parent_scope() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("parent scope cancels process sibling")
+
+
+async def main() -> Result[None, Error]:
+    path: str = marker_path()
+    actual: list[bool] = []
+
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    try:
+        async with task.TaskGroup() as group:
+            leaking_command: Command = shell_command("sleep 1; printf leaked > " + path)
+            _process: ProcessHandle = group.spawn_process(leaking_command)
+            failing = group.spawn(fail_parent_scope())
+            _result = await failing
+
+        await task.sleep(1.20)
+        actual.append(not exists(path))
+    except Error as e:
+        actual.append(False)
+
+    if exists(path):
+        try:
+            _removed: None = remove_file(path)
+        except IOError as e:
+            _remove_message: str = str(e.message)
+
+    assert actual == [True]
+    return None
