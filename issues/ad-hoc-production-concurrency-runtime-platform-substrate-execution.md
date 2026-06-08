@@ -444,6 +444,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4: complete.
 - M5 signal value-model foundation: in progress.
 - M5 warnings global-filter rejection: in progress.
+- M5 resource nullcontext foundation: in progress.
 - M6: pending.
 - M7: pending.
 
@@ -599,6 +600,28 @@ M5 warnings global-filter rejection merge ledger:
 - Merged as PR #2407 (`58813d6edb620abd3bd6f1461d616fa67bff86f4`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`160.63s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`115 passed`, `0 failed`, `cache_hits=27/31`, `report_signature=fa75f7f525acd21c`).
 - `reviews/ad-hoc-production-concurrency-runtime-m5-warnings-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2407 merge commit, validation metrics, advisory wording, lane-step coverage, and in-progress M5 scope for this docs-only merge-ledger PR.
+
+M5 resource nullcontext foundation implementation:
+
+- Added the embedded `sifr.resource` module with `NullContext` and no-value `nullcontext()`.
+- Added `resource_nullcontext_basic` pass coverage and create-pr/merge manifest entries.
+- Added unsupported `sifr.resource` import diagnostics for `redirect_stdout`, `redirect_stderr`, `chdir`, `suppress`, `contextmanager`, and `asynccontextmanager`.
+- Updated the M5 shutdown traceability artifact and supported-host matrix to mark no-value no-op `nullcontext()` as supported while leaving value-carrying generic nullcontext, cleanup stacks, owned closing helpers, cancellation cleanup reports, and async cleanup as M5 follow-up work.
+
+M5 resource nullcontext foundation targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo test -p sifr_stdlib stdlib_source_inventory_contains_user_modules -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/resource_nullcontext_basic.sifr` -> PASS.
+- New resource unsupported fixtures `resource_redirect_stdout_unsupported`, `resource_redirect_stderr_unsupported`, `resource_chdir_unsupported`, `resource_suppress_unsupported`, `resource_contextmanager_unsupported`, and `resource_asynccontextmanager_unsupported` -> expected `SIFR-NAME-0004`.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail suite reported `446 fail tests completed`.
+- `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`204.80s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`116 passed`, `0 failed`, `cache_hits=31/32`, `report_signature=6dd646fdf4fc2cb4`).
+
+M5 resource nullcontext foundation review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-nullcontext-review-pass-1.md`: `PASS`; reviewer verified `sifr.resource` registration, no-value `nullcontext()` with the synchronous `with` protocol, missing-member diagnostics for rejected CPython contextlib helpers, manifest entries, traceability and supported-host matrix honesty, and validation evidence. Non-blocking feedback requested removing the premature unexercised `ResourceError` symbol.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-nullcontext-review-pass-2.md`: `PASS`; reviewer verified the `ResourceError` cleanup, final validation metrics, and absence of overclaims for `ResourceError`, `ExitStack`, `AsyncExitStack`, `closing`/`aclosing`, generic value-carrying nullcontext, or async cleanup.
 
 M3 first-wave targeted local validation:
 

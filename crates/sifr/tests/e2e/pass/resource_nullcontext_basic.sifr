@@ -1,0 +1,10 @@
+from sifr.resource import NullContext, nullcontext
+
+
+def main():
+    ctx: NullContext = nullcontext()
+    with ctx as value:
+        assert value == None
+
+    with nullcontext() as second:
+        assert second == None

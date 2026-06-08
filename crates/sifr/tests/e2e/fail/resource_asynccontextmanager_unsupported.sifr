@@ -1,0 +1,6 @@
+# expect-error[col=27]: SIFR-NAME-0004
+from sifr.resource import asynccontextmanager
+
+
+def main():
+    pass

@@ -1,0 +1,13 @@
+# sifr.resource - Deterministic cleanup helpers
+
+
+class NullContext:
+    def __enter__(self) -> None:
+        return None
+
+    def __exit__(self) -> None:
+        pass
+
+
+def nullcontext() -> NullContext:
+    return NullContext()
