@@ -491,13 +491,32 @@ fn timeout_poll_stmts() -> Vec<RustStmt> {
                         right: Box::new(RustExpr::Ident("__deadline".to_string())),
                     },
                     then_body: vec![
-                        RustStmt::Expr(RustExpr::Try(Box::new(process_map_err(
-                            RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("__child".to_string())),
-                                method: "kill".to_string(),
-                                args: vec![],
-                            },
-                        )))),
+                        RustStmt::Expr(RustExpr::Ident(
+                            "#[cfg(unix)]
+                            {
+                                let __pgid = format!(\"-{}\", __child.id());
+                                let _ = std::process::Command::new(\"kill\")
+                                    .arg(\"-TERM\")
+                                    .arg(&__pgid)
+                                    .stdout(std::process::Stdio::null())
+                                    .stderr(std::process::Stdio::null())
+                                    .status()
+                                    .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                                std::thread::sleep(std::time::Duration::from_millis(50));
+                                let _ = std::process::Command::new(\"kill\")
+                                    .arg(\"-KILL\")
+                                    .arg(&__pgid)
+                                    .stdout(std::process::Stdio::null())
+                                    .stderr(std::process::Stdio::null())
+                                    .status()
+                                    .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                            }
+                            #[cfg(not(unix))]
+                            {
+                                __child.kill().map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+                            }"
+                            .to_string(),
+                        )),
                         RustStmt::Assign {
                             target: RustExpr::Ident("__timed_out".to_string()),
                             value: bool_lit(true),
@@ -557,6 +576,13 @@ pub(crate) fn lower_process_output_timeout(args: &[RustExpr]) -> Option<RustExpr
     }
     let mut stmts = normal_command_setup(args);
     stmts.extend(output_setup_stmts());
+    stmts.push(RustStmt::Expr(RustExpr::Ident(
+        "#[cfg(unix)]
+        {
+            std::os::unix::process::CommandExt::process_group(&mut __cmd, 0);
+        }"
+        .to_string(),
+    )));
     stmts.push(spawn_child_stmt());
     stmts.push(write_stdin_stmt(arg_expr(args, 5), arg_expr(args, 6)));
     stmts.extend(timeout_poll_stmts());
@@ -625,6 +651,13 @@ pub(crate) fn lower_process_shell_output_timeout(args: &[RustExpr]) -> Option<Ru
     }
     let mut stmts = shell_command_setup(args);
     stmts.extend(output_setup_stmts());
+    stmts.push(RustStmt::Expr(RustExpr::Ident(
+        "#[cfg(unix)]
+        {
+            std::os::unix::process::CommandExt::process_group(&mut __cmd, 0);
+        }"
+        .to_string(),
+    )));
     stmts.push(spawn_child_stmt());
     stmts.push(write_stdin_stmt(arg_expr(args, 1), arg_expr(args, 2)));
     stmts.extend(timeout_poll_stmts());

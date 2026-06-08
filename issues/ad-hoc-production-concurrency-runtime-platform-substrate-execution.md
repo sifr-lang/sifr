@@ -436,6 +436,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 subprocess strict text encoding: https://github.com/sifr-lang/sifr/pull/2390
 - M4 async shell process APIs: https://github.com/sifr-lang/sifr/pull/2393
 - M4 scoped process supervision: https://github.com/sifr-lang/sifr/pull/2392
+- M4 timeout process-group cleanup: in progress.
+- M4: in progress.
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -1200,6 +1202,22 @@ M4 sync process terminate review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-process-terminate-review-pass-1.md`: `PASS`; reviewer verified the public top-level and method-form APIs, `_sifr.process.process_terminate` metadata, child-lifecycle lowerer split, generated cfg-gated `__sifr_process_terminate` helper, child-table handle preservation for later `wait`, typed non-Unix unsupported `ProcessError`, prelude filtering, fixtures, manifests, host matrix, traceability, and file-size guardrails. Non-blocking follow-ups remain for narrowing the child-table mutex hold around the host signal request and replacing the host `kill` command with a reviewed Rust host-signal dependency or shim in a later lifecycle hardening wave.
 - Merged as PR #2367 (`3db5c05e923c2a414a18992cb919923088600bbb`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`625.99s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=25/27`, `report_signature=5e93ca9f74a9781c`).
+
+M4 timeout process-group cleanup targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2212 files checked pre-rebase and 2213 files checked post-rebase, 900-line limit.
+- `git diff --check` -> PASS.
+- `cargo test -p sifr_codegen lowers_process_timeout_intrinsics_via_registry` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_timeout_group_cleanup.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_timeout_group_cleanup.sifr` -> PASS.
+- Existing timeout regressions `process_timeout_status`, `process_async_run_timeout`, `process_async_output_timeout`, and `process_async_shell_exec` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS before rebase; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`112 passed`, `0 failed`, `cache_hits=22/30`, `report_signature=5a56bd55dcf7d12c`).
+- Post-`origin/main` rebase rerun after the scoped process supervision merge: `cargo test -p sifr_codegen lowers_process_timeout_intrinsics_via_registry`, `process_timeout_group_cleanup`, `process_async_timeout_group_cleanup`, `process_scoped_spawn_handle`, and `process_async_output_timeout` -> PASS; `scripts/run_all_tests.sh --profile create-pr` -> PASS. Rebased report included platform golden (`pass=6`, `skip=1`) and create-pr e2e pass suite (`113 passed`, `0 failed`, `cache_hits=20/30`, `report_signature=5cbbb189c83d1068`); advisories: warm wall-time budget exceeded and warm-cache hit rate below advisory target.
+
+M4 timeout process-group cleanup review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-timeout-group-cleanup-review-pass-1.md`: `PASS`; reviewer verified per-spawn Unix process groups, TERM-to-KILL process-group escalation, immediate-child reaping, suppressed helper command output, descendant-leak fixtures, manifest coverage, and honest non-Unix traceability. Non-blocking notes remain for stripped Unix hosts without `kill(1)`, optional argv descendant fixture expansion, escaped sessions/nohup as future hardening boundaries, and optional comments around async pipe drops on timeout.
 
 M0 targeted local validation:
 

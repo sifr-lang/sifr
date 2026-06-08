@@ -129,8 +129,11 @@ pub(crate) fn lowers_process_timeout_intrinsics_via_registry() {
     assert!(rendered.contains("std::time::Duration::try_from_secs_f64(__timeout_seconds)"));
     assert!(rendered.contains(".checked_add("));
     assert!(rendered.contains("process timeout is too large for this host clock"));
+    assert!(rendered.contains("CommandExt::process_group(&mut __cmd, 0)"));
     assert!(rendered.contains("__child.try_wait()"));
     assert!(rendered.contains("__child.kill()"));
+    assert!(rendered.contains(".arg(\"-TERM\")"));
+    assert!(rendered.contains(".arg(\"-KILL\")"));
     assert!(rendered.contains("__output.stdout"));
     assert!(rendered.contains("__output.stderr"));
     assert!(rendered.contains("__timed_out"));
