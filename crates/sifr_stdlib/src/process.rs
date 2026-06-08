@@ -340,6 +340,13 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "process_handle_wait".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            Type::Awaitable(Box::new(process_status_object_result())),
+        ),
+    );
+    functions.insert(
         "process_async_kill".to_string(),
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],

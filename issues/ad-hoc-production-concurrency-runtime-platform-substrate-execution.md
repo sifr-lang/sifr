@@ -435,7 +435,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async wait cancellation-safe observation: https://github.com/sifr-lang/sifr/pull/2386
 - M4 subprocess strict text encoding: https://github.com/sifr-lang/sifr/pull/2390
 - M4 async shell process APIs: https://github.com/sifr-lang/sifr/pull/2393
-- M4: in progress.
+- M4 scoped process supervision: in progress.
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -448,6 +448,20 @@ M4 async wait cancellation-safe observation merge ledger:
 
 - Merged as PR #2386 (`d54d2c11497e54ca5db3061d8e026ee2afb09154`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`134.60s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`108 passed`, `0 failed`, `cache_hits=26/27`, `report_signature=df97adcd1a958b0c`).
+
+M4 scoped process supervision implementation:
+
+- Added `sifr.process.ProcessHandle`, with `wait()`, `kill()`, `terminate()`, `stdin()`, `stdout()`, and `stderr()` methods backed by the existing Tokio async child/pipe handle tables.
+- Added `scope.spawn_process(command)` / `TaskGroup.spawn_process(command)` lowering to a generated `__SifrTaskScope` method returning `Result[ProcessHandle, ProcessError]`.
+- Added delayed scope-exit process observation: scoped process observers start only during scope cleanup so owned pipe extraction remains available inside the scope body. Explicit `ProcessHandle.wait()` marks the process as observed; unobserved successful processes are joined by scope cleanup; TaskGroup fail-fast cancellation triggers a process kill hook and keeps the observer alive to reap.
+- Split async process preamble needs so `ProcessHandle` pipe/wait users emit child table and pipe helpers without requiring the public `AsyncChild` spawn function.
+- Added `process_scoped_spawn_handle` fixture coverage to create-pr and merge manifests.
+- Updated M4 process traceability and supported-host matrix with scoped process supervision evidence and host-limited Windows status.
+
+M4 scoped process supervision targeted local validation:
+
+- `cargo check -q -p sifr_codegen -p sifr_lowering -p sifr_stdlib` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_scoped_spawn_handle.sifr` -> PASS.
 
 M3 first-wave targeted local validation:
 

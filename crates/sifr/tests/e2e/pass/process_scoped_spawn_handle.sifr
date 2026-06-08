@@ -1,0 +1,93 @@
+from sifr.process import AsyncPipeReader, AsyncPipeWriter, Command, ProcessError, ProcessHandle, Status, Stdio
+from sifr.io import exists
+from sifr.os import getpid, remove_file
+
+
+def shell_command(script: str) -> Command:
+    command: Command = Command("sh")
+    command.arg("-c")
+    command.arg(script)
+    return command
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_process_scoped_spawn_handle_" + str(getpid()) + ".txt"
+
+
+async def fail_scoped_process_group() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("scoped process sibling failed")
+
+
+async def main() -> Result[None, Error]:
+    pipe: Stdio = Stdio("pipe")
+    actual: list[bool] = []
+    path: str = marker_path()
+
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    try:
+        async with task.scope() as scope:
+            pipe_command: Command = shell_command("cat; printf scoped-err >&2")
+            pipe_command.stdin(pipe)
+            pipe_command.stdout(pipe)
+            pipe_command.stderr(pipe)
+
+            handle: ProcessHandle = scope.spawn_process(pipe_command)
+            stdin: AsyncPipeWriter = handle.stdin()
+            stdout: AsyncPipeReader = handle.stdout()
+            stderr: AsyncPipeReader = handle.stderr()
+
+            _write: None = await stdin.write_all(b"scoped-process")
+            _closed: None = stdin.close()
+
+            stdout_bytes: bytes = await stdout.read_all()
+            stderr_bytes: bytes = await stderr.read_all()
+            actual.append(stdout_bytes == b"scoped-process")
+            actual.append(stderr_bytes == b"scoped-err")
+
+            status: Status = await handle.wait()
+            actual.append(status.success)
+
+            second_wait_rejected: bool = False
+            try:
+                _second: Status = await handle.wait()
+            except ProcessError as e:
+                second_wait_rejected = "closed or unknown" in e.message
+            actual.append(second_wait_rejected)
+
+        async with task.TaskGroup() as group:
+            nonzero_command: Command = shell_command("exit 7")
+            observed: ProcessHandle = group.spawn_process(nonzero_command)
+            observed_status: Status = await observed.wait()
+            actual.append(not observed_status.success)
+            actual.append(observed_status.code == 7)
+
+        async with task.scope() as scope:
+            quiet_command: Command = shell_command("exit 0")
+            _unobserved: ProcessHandle = scope.spawn_process(quiet_command)
+            actual.append(True)
+
+        async with task.TaskGroup() as group:
+            leaking_command: Command = shell_command("sleep 1; printf not-stopped > " + path)
+            _process: ProcessHandle = group.spawn_process(leaking_command)
+            failing = group.spawn(fail_scoped_process_group())
+            _result = await failing
+
+        await task.sleep(1.20)
+        actual.append(not exists(path))
+    except Error as e:
+        actual.append(False)
+
+    if exists(path):
+        try:
+            _removed: None = remove_file(path)
+        except IOError as e:
+            _remove_message: str = str(e.message)
+
+    assert actual == [True, True, True, True, True, True, True, True]
+    return None

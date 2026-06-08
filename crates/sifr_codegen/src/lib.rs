@@ -16,7 +16,8 @@ mod lib_join_set_needs;
 pub(crate) use lib_join_set_needs::module_uses_join_set_spawn_cpu;
 mod lib_task_scope_offload_needs;
 pub(crate) use lib_task_scope_offload_needs::{
-    module_uses_task_scope_offload, module_uses_task_scope_spawn_cpu,
+    module_uses_task_scope_offload, module_uses_task_scope_process,
+    module_uses_task_scope_spawn_cpu,
 };
 mod lib_project_codegen;
 pub use lib_project_codegen::*;

@@ -7,6 +7,7 @@ use super::process_async_child_runtime::{
     process_async_pipe_reader_close_item, process_async_pipe_write_all_item,
     process_async_spawn_body, process_async_spawn_insert_body, process_async_spawn_params,
     process_async_terminate_body, process_async_wait_body, process_async_wait_params,
+    process_handle_wait_body,
 };
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Visibility};
 
@@ -233,9 +234,11 @@ pub(crate) fn build_process_async_items(
     needs_output: bool,
     needs_output_timeout: bool,
     needs_spawn: bool,
+    needs_spawn_function: bool,
     needs_wait: bool,
     needs_kill: bool,
     needs_terminate: bool,
+    needs_handle_wait: bool,
 ) -> Vec<RustItem> {
     let mut run_body = vec![process_async_stdin_mode_guard()];
     run_body.extend(process_async_command_setup());
@@ -487,6 +490,7 @@ pub(crate) fn build_process_async_items(
     spawn_body.push(process_async_spawn_insert_body());
 
     let wait_body = process_async_wait_body();
+    let handle_wait_body = process_handle_wait_body();
     let kill_body = process_async_kill_body();
     let terminate_body = process_async_terminate_body();
 
@@ -664,6 +668,8 @@ pub(crate) fn build_process_async_items(
         items.push(process_async_pipe_reader_close_item());
         items.push(process_async_pipe_write_all_item());
         items.push(process_async_pipe_close_item());
+    }
+    if needs_spawn_function {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_spawn".to_string(),
             visibility: Visibility::Private,
@@ -682,6 +688,17 @@ pub(crate) fn build_process_async_items(
             params: process_async_wait_params(),
             ret: Some(process_async_ret("Status")),
             body: wait_body,
+            is_async: true,
+        });
+    }
+    if needs_handle_wait {
+        items.push(RustItem::Fn {
+            name: "__sifr_process_handle_wait".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: process_async_wait_params(),
+            ret: Some(process_async_ret("Status")),
+            body: handle_wait_body,
             is_async: true,
         });
     }

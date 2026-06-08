@@ -9,6 +9,10 @@ pub(crate) fn module_uses_task_scope_spawn_cpu(module: &HirModule) -> bool {
     module_uses_method(module, is_task_scope_cpu_method)
 }
 
+pub(crate) fn module_uses_task_scope_process(module: &HirModule) -> bool {
+    module_uses_method(module, |method| method == "__sifr_scope_spawn_process")
+}
+
 fn module_uses_method(module: &HirModule, predicate: fn(&str) -> bool) -> bool {
     for func in &module.functions {
         if body_uses_method(&func.body, predicate) {

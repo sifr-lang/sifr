@@ -6,14 +6,14 @@ use super::{
     build_join_set_cpu_items, build_join_set_items, build_logging_items, build_process_async_items,
     build_process_child_items, build_process_status_items, build_random_module_state_items,
     build_task_scope_cpu_offload_items, build_task_scope_items, build_task_scope_offload_items,
-    build_timeout_result_type_items, build_worker_panic_hook_items,
+    build_task_scope_process_items, build_timeout_result_type_items, build_worker_panic_hook_items,
     module_uses_async_exit_cause_type, module_uses_async_generator_type,
     module_uses_cancellation_error_type, module_uses_failure_type, module_uses_join_set,
     module_uses_join_set_spawn_cpu, module_uses_spawn_cpu, module_uses_task_scope,
-    module_uses_task_scope_offload, module_uses_task_scope_spawn_cpu, module_uses_task_sleep,
-    module_uses_timeout_result_type, replace_parallel_runtime_items,
-    replace_sync_channel_runtime_items, sifr_type_to_rust_type, sync_channel_runtime_needed,
-    Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
+    module_uses_task_scope_offload, module_uses_task_scope_process,
+    module_uses_task_scope_spawn_cpu, module_uses_task_sleep, module_uses_timeout_result_type,
+    replace_parallel_runtime_items, replace_sync_channel_runtime_items, sifr_type_to_rust_type,
+    sync_channel_runtime_needed, Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
 };
 use crate::error_refs::collect_referenced_builtin_error_classes;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
@@ -396,12 +396,16 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         prepared.shared_needs.process_async.needs_output_timeout;
                     stdlib_needs_process_async.needs_spawn |=
                         prepared.shared_needs.process_async.needs_spawn;
+                    stdlib_needs_process_async.needs_spawn_function |=
+                        prepared.shared_needs.process_async.needs_spawn_function;
                     stdlib_needs_process_async.needs_wait |=
                         prepared.shared_needs.process_async.needs_wait;
                     stdlib_needs_process_async.needs_kill |=
                         prepared.shared_needs.process_async.needs_kill;
                     stdlib_needs_process_async.needs_terminate |=
                         prepared.shared_needs.process_async.needs_terminate;
+                    stdlib_needs_process_async.needs_handle_wait |=
+                        prepared.shared_needs.process_async.needs_handle_wait;
                     stdlib_needs_process_children |= prepared
                         .shared_needs
                         .process_children
@@ -427,6 +431,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
+    let uses_task_scope_process = module_uses_task_scope_process(module);
     let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
     let needs_process_async = stdlib_needs_process_async.needs_run
         || stdlib_needs_process_async.needs_run_timeout
@@ -435,7 +440,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         || stdlib_needs_process_async.needs_spawn
         || stdlib_needs_process_async.needs_wait
         || stdlib_needs_process_async.needs_kill
-        || stdlib_needs_process_async.needs_terminate;
+        || stdlib_needs_process_async.needs_terminate
+        || stdlib_needs_process_async.needs_handle_wait
+        || uses_task_scope_process;
     let needs_process_status = stdlib_needs_process_status || needs_process_async;
     let needs_process_children = stdlib_needs_process_children;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
@@ -611,10 +618,14 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             stdlib_needs_process_async.needs_run_timeout,
             stdlib_needs_process_async.needs_output,
             stdlib_needs_process_async.needs_output_timeout,
-            stdlib_needs_process_async.needs_spawn,
-            stdlib_needs_process_async.needs_wait,
+            stdlib_needs_process_async.needs_spawn || uses_task_scope_process,
+            stdlib_needs_process_async.needs_spawn_function,
+            stdlib_needs_process_async.needs_wait
+                || stdlib_needs_process_async.needs_handle_wait
+                || uses_task_scope_process,
             stdlib_needs_process_async.needs_kill,
             stdlib_needs_process_async.needs_terminate,
+            stdlib_needs_process_async.needs_handle_wait,
         ));
     }
     if needs_process_children {
@@ -633,6 +644,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     if uses_task_scope_offload {
         preamble_items.extend(build_task_scope_offload_items());
+    }
+    if uses_task_scope_process {
+        preamble_items.extend(build_task_scope_process_items());
     }
     if uses_task_scope_spawn_cpu {
         preamble_items.extend(build_task_scope_cpu_offload_items());

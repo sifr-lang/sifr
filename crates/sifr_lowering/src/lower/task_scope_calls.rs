@@ -428,6 +428,7 @@ fn process_handle_type_label_by_name(name: &str) -> Option<&'static str> {
         "PipeWriter" => Some("process pipe writer handle"),
         "AsyncPipeReader" => Some("process pipe reader handle for async subprocesses"),
         "AsyncPipeWriter" => Some("process pipe writer handle for async subprocesses"),
+        "ProcessHandle" => Some("scoped process handle"),
         _ => None,
     }
 }
@@ -455,6 +456,7 @@ pub(in crate::lower) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String>
             | "__sifr_scope_spawn_blocking_result"
             | "__sifr_scope_spawn_cpu_infallible"
             | "__sifr_scope_spawn_cpu_result"
+            | "__sifr_scope_spawn_process"
     ) {
         return None;
     }
