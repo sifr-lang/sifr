@@ -360,49 +360,34 @@ fn output_timeout_tuple_expr() -> RustExpr {
     ])
 }
 
-fn output_text_tuple_expr() -> RustExpr {
-    RustExpr::Block {
-        stmts: vec![
-            RustStmt::Let {
+fn decode_output_field(field: &str) -> RustExpr {
+    RustExpr::Try(Box::new(process_map_err(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "sifr_runtime".to_string(),
+            "encoding".to_string(),
+            "decode_text".to_string(),
+        ])),
+        args: vec![
+            RustExpr::Ref {
                 mutable: false,
-                name: "__stdout".to_string(),
-                ty: None,
-                value: RustExpr::Try(Box::new(process_map_err(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "String".to_string(),
-                        "from_utf8".to_string(),
-                    ])),
-                    args: vec![RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident("__output".to_string())),
-                        field: "stdout".to_string(),
-                    }],
-                }))),
+                expr: Box::new(RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("__output".to_string())),
+                    field: field.to_string(),
+                }),
             },
-            RustStmt::Let {
+            RustExpr::Ref {
                 mutable: false,
-                name: "__stderr".to_string(),
-                ty: None,
-                value: RustExpr::Try(Box::new(process_map_err(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "String".to_string(),
-                        "from_utf8".to_string(),
-                    ])),
-                    args: vec![RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident("__output".to_string())),
-                        field: "stderr".to_string(),
-                    }],
-                }))),
+                expr: Box::new(RustExpr::Ident("__encoding".to_string())),
+            },
+            RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(string_lit("strict")),
             },
         ],
-        expr: Some(Box::new(RustExpr::Tuple(vec![
-            RustExpr::Ident("__stdout".to_string()),
-            RustExpr::Ident("__stderr".to_string()),
-            command_status_tuple("__output"),
-        ]))),
-    }
+    })))
 }
 
-fn utf8_encoding_guard(encoding: RustExpr, success: RustExpr) -> RustExpr {
+fn output_text_tuple_expr(encoding: RustExpr) -> RustExpr {
     RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
@@ -413,41 +398,22 @@ fn utf8_encoding_guard(encoding: RustExpr, success: RustExpr) -> RustExpr {
             },
             RustStmt::Let {
                 mutable: false,
-                name: "__encoding_lower".to_string(),
+                name: "__stdout".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__encoding".to_string())),
-                    method: "to_ascii_lowercase".to_string(),
-                    args: vec![],
-                },
+                value: decode_output_field("stdout"),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__stderr".to_string(),
+                ty: None,
+                value: decode_output_field("stderr"),
             },
         ],
-        expr: Some(Box::new(RustExpr::If {
-            cond: Box::new(RustExpr::BinOp {
-                left: Box::new(RustExpr::BinOp {
-                    left: Box::new(RustExpr::Ident("__encoding_lower".to_string())),
-                    op: "!=".to_string(),
-                    right: Box::new(string_lit("utf-8")),
-                }),
-                op: "&&".to_string(),
-                right: Box::new(RustExpr::BinOp {
-                    left: Box::new(RustExpr::Ident("__encoding_lower".to_string())),
-                    op: "!=".to_string(),
-                    right: Box::new(string_lit("utf8")),
-                }),
-            }),
-            then_expr: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-                args: vec![process_error_expr(RustExpr::FormatMacro {
-                    name: "format".to_string(),
-                    format_str:
-                        "process text output currently supports only UTF-8 encoding, got {}"
-                            .to_string(),
-                    args: vec![RustExpr::Ident("__encoding".to_string())],
-                })],
-            }),
-            else_expr: Some(Box::new(success)),
-        })),
+        expr: Some(Box::new(RustExpr::Tuple(vec![
+            RustExpr::Ident("__stdout".to_string()),
+            RustExpr::Ident("__stderr".to_string()),
+            command_status_tuple("__output"),
+        ]))),
     }
 }
 
@@ -611,13 +577,10 @@ pub(crate) fn lower_process_output_text(args: &[RustExpr]) -> Option<RustExpr> {
     let mut stmts = normal_command_setup(args);
     stmts.extend(output_setup_stmts());
     stmts.extend(spawn_output_stmts(arg_expr(args, 5), arg_expr(args, 6)));
-    Some(utf8_encoding_guard(
-        arg_expr(args, 7),
-        RustExpr::Block {
-            stmts,
-            expr: Some(Box::new(ok_expr(output_text_tuple_expr()))),
-        },
-    ))
+    Some(RustExpr::Block {
+        stmts,
+        expr: Some(Box::new(ok_expr(output_text_tuple_expr(arg_expr(args, 7))))),
+    })
 }
 
 pub(crate) fn lower_process_shell_run(args: &[RustExpr]) -> Option<RustExpr> {
@@ -682,11 +645,8 @@ pub(crate) fn lower_process_shell_output_text(args: &[RustExpr]) -> Option<RustE
     let mut stmts = shell_command_setup(args);
     stmts.extend(output_setup_stmts());
     stmts.extend(spawn_output_stmts(arg_expr(args, 1), arg_expr(args, 2)));
-    Some(utf8_encoding_guard(
-        arg_expr(args, 3),
-        RustExpr::Block {
-            stmts,
-            expr: Some(Box::new(ok_expr(output_text_tuple_expr()))),
-        },
-    ))
+    Some(RustExpr::Block {
+        stmts,
+        expr: Some(Box::new(ok_expr(output_text_tuple_expr(arg_expr(args, 3))))),
+    })
 }

@@ -425,6 +425,25 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
     .expect("decode_utf8_with_encoding");
     assert!(render_expr(&dec_with_codec.expr).contains("sifr_runtime::encoding::decode_text"));
 
+    let process_text = lower_intrinsic(
+        "process_output_text",
+        &[
+            "program".to_string(),
+            "args".to_string(),
+            "env".to_string(),
+            "cwd".to_string(),
+            "has_cwd".to_string(),
+            "stdin".to_string(),
+            "has_stdin".to_string(),
+            "encoding".to_string(),
+        ],
+    )
+    .expect("process_output_text");
+    assert!(render_expr(&process_text.expr).contains("sifr_runtime::encoding::decode_text"));
+    assert!(process_text
+        .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::EncodingRs));
+
     let with_size =
         lower_intrinsic("bytes_with_size", &["n".to_string()]).expect("bytes_with_size");
     let with_size_rendered = render_expr(&with_size.expr);

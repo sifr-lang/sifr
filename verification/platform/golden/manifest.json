@@ -120,10 +120,7 @@
         "milestone_concurrency_runtime_4"
       ],
       "must_not_depend_on": [],
-      "blocked_until": [
-        "milestone_text_i18n_1",
-        "milestone_concurrency_runtime_4"
-      ],
+      "blocked_until": [],
       "checks": [
         "subprocess text mode consumes explicit encoding substrate"
       ]

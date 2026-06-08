@@ -98,6 +98,7 @@
     "parallel_pool_map_basic",
     "parallel_default_pool_reused",
     "process_sync_output_text",
+    "process_text_explicit_encoding",
     "process_sync_bytes_env_cwd_stdin",
     "process_shell_exec_output",
     "process_timeout_status",
