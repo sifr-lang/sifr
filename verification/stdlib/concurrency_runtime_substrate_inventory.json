@@ -293,7 +293,7 @@
       "terminal_state": "production-public"
     },
     {
-      "notes": "Explicit propagation only; no contextvars parity or implicit dynamic mutation.",
+      "notes": "Value-model foundation is importable; explicit propagation remains M5 work with no contextvars parity or implicit dynamic mutation.",
       "owner_milestone": "milestone_concurrency_runtime_5",
       "stability": "stable-public-api",
       "support_tier": "production-public",

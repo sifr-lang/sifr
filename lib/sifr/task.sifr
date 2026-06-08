@@ -1,0 +1,19 @@
+# sifr.task - Structured task context value model
+
+
+class Context:
+    def __str__(self) -> str:
+        return "Context"
+
+
+class ContextKey[T]:
+    name: str
+    default: T
+
+    def __init__(self, name: str, own default: T):
+        self.name = name
+        self.default = default
+
+
+def empty_context() -> Context:
+    return Context()

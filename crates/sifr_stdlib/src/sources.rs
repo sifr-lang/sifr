@@ -75,6 +75,10 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
         source: include_str!("../../../lib/sifr/sync.sifr"),
     },
     StdlibSource {
+        module: "sifr.task",
+        source: include_str!("../../../lib/sifr/task.sifr"),
+    },
+    StdlibSource {
         module: "sifr.parallel",
         source: include_str!("../../../lib/sifr/parallel.sifr"),
     },

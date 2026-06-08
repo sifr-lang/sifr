@@ -1,0 +1,10 @@
+from sifr.task import Context, ContextKey, empty_context
+
+
+def main():
+    ctx: Context = empty_context()
+    key: ContextKey[int] = ContextKey("request_id", 0)
+
+    assert str(ctx) == "Context"
+    assert key.name == "request_id"
+    assert key.default == 0

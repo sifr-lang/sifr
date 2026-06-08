@@ -27,7 +27,7 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | sifr.process Command/Child/ProcessHandle/owned pipes | milestone_concurrency_runtime_4 | production-public | stable-public-api | M0 chooses distinct ProcessHandle for scoped process supervision while preserving pipe access. |
 | sifr.signal structured shutdown streams | milestone_concurrency_runtime_5 | production-public | stable-public-api | Structured streams for supported signals; arbitrary signal.signal handlers are unsupported. |
 | sifr.resource ExitStack/AsyncExitStack/closing/aclosing/nullcontext | milestone_concurrency_runtime_5 | production-public | stable-public-api | Deterministic cleanup scopes independent of generator decorator compatibility. |
-| sifr.task.Context/ContextKey[T] | milestone_concurrency_runtime_5 | production-public | stable-public-api | Explicit propagation only; no contextvars parity or implicit dynamic mutation. |
+| sifr.task.Context/ContextKey[T] | milestone_concurrency_runtime_5 | production-public | stable-public-api | Value-model foundation is importable; explicit propagation remains M5 work with no contextvars parity or implicit dynamic mutation. |
 | sifr.ipc typed frame protocol | milestone_concurrency_runtime_6 | production-substrate | stable-production-substrate | Typed, versioned IPC over accepted process pipes; no pickle-style arbitrary object transport. |
 
 ## Legacy Python-Shaped Surface Disposition

@@ -655,6 +655,29 @@ M5 signal `strsignal` value-helper merge ledger:
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`152.76s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`117 passed`, `0 failed`, `cache_hits=30/32`, `report_signature=ded105ad58090608`).
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-strsignal-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2412 merge commit/date, final validation metrics and advisory wording, lane-step coverage, in-progress M5 status convention, docs-only scope, and no overclaim beyond the `strsignal` value-helper slice.
 
+M5 task context value-model foundation implementation:
+
+- Added the embedded `sifr.task` value-model module with `Context`, `ContextKey[T]`, and `empty_context()` without changing compiler-recognized `task.TaskGroup`, `task.scope`, or `task.spawn_scoped` lowering.
+- `ContextKey[T]` carries a typed default marker so the key's value type is represented in generated code without adding dynamic Python `contextvars` behavior.
+- Added `task_context_value_model_basic` pass coverage and create-pr/merge manifest entries.
+- Added `task_context_propagation_rejected` fail coverage to pin non-`None` `ctx` rejection until explicit task propagation semantics are implemented.
+- Updated the M5 shutdown traceability artifact and supported-host matrix to mark task context values as host-independent support while keeping propagation and request handoff in progress.
+
+M5 task context value-model foundation targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json`, `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json`, and `python3 -m json.tool verification/stdlib/concurrency_runtime_substrate_inventory.json` -> PASS.
+- `cargo test -p sifr_stdlib stdlib_source_inventory_contains_user_modules -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/task_context_value_model_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/task_context_propagation_rejected.sifr` -> expected `SIFR-TYPE-0002`.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail suite reported `447 fail tests completed`.
+- `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`205.84s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`118 passed`, `0 failed`, `cache_hits=24/33`, `report_signature=8826f5b3144352b0`).
+
+M5 task context value-model foundation review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-task-context-foundation-review-pass-1.md`: `FAIL`; reviewer could not verify the untracked new `sifr.task` source or pass/fail fixture contents from the initial patch packet.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-task-context-foundation-review-pass-2.md`: `PASS`; reviewer verified the `sifr.task` value model, typed `ContextKey[T]` default marker, pass/fail fixture boundary, create-pr/merge manifest entries, in-progress propagation/request-handoff status, no `contextvars` overclaim, and recorded local validation evidence.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
