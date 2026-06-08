@@ -425,7 +425,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process output timeout: https://github.com/sifr-lang/sifr/pull/2362
 - M4 async stdin-byte communicate: https://github.com/sifr-lang/sifr/pull/2365
 - M4 sync process terminate: https://github.com/sifr-lang/sifr/pull/2367
-- M4 async process spawn/wait: in progress.
+- M4 async process spawn/wait: https://github.com/sifr-lang/sifr/pull/2369
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -983,6 +983,8 @@ M4 async process spawn/wait review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-2.md`: `PASS`; reviewer confirmed the unused `AsyncChild._waited` field was removed from the public class and stdlib type metadata, the added `stdout(Stdio("pipe"))` typed deferral assertion is correct, refreshed create-pr validation evidence matches the tree, and no new blockers or scope/documentation mismatches were introduced.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-3.md`: `CHANGES_REQUESTED`; post-`origin/main` merge reviewer verified the branch preserved PR #2367 sync terminate evidence and the pass-2 async spawn/wait implementation, but found a duplicate `M4 async process spawn/wait: in progress` line in the implementation PR list.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-4.md`: `PASS`; reviewer confirmed the duplicate PR-list entry was collapsed to a single in-progress spawn/wait row after PR #2367, conflict markers remained absent, `git diff --check` stayed clean, and no new blocker was introduced.
+- Merged as PR #2369 (`2acbcec324571381b7d5099041402bb7461c77b5`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`255.22s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`103 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=2593463768412da4`).
 
 M4 sync process terminate implementation:
 
