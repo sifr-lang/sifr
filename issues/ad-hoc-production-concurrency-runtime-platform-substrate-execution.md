@@ -623,6 +623,14 @@ M5 resource nullcontext foundation review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-nullcontext-review-pass-1.md`: `PASS`; reviewer verified `sifr.resource` registration, no-value `nullcontext()` with the synchronous `with` protocol, missing-member diagnostics for rejected CPython contextlib helpers, manifest entries, traceability and supported-host matrix honesty, and validation evidence. Non-blocking feedback requested removing the premature unexercised `ResourceError` symbol.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-nullcontext-review-pass-2.md`: `PASS`; reviewer verified the `ResourceError` cleanup, final validation metrics, and absence of overclaims for `ResourceError`, `ExitStack`, `AsyncExitStack`, `closing`/`aclosing`, generic value-carrying nullcontext, or async cleanup.
 
+M5 resource nullcontext foundation merge ledger:
+
+- Merged as PR #2409 (`5001b0985838a240a7adeb01adf6fa343970cb36`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`132.53s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`116 passed`, `0 failed`, `cache_hits=31/32`, `report_signature=6dd646fdf4fc2cb4`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-ledger-review-pass-1.md`: `FAIL`; reviewer found the top-level M5 status block had been promoted from `in progress.` to the PR URL, inconsistent with the accepted M5 foundation-slice ledger convention. The status line was restored before the second review pass.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-ledger-review-pass-2.md`: `PASS`; reviewer verified the status-block convention fix, PR #2409 merge commit/date, validation metrics and advisories, lane-step coverage, and no overclaim beyond the no-value `nullcontext()` slice.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-ledger-review-pass-3.md`: `PASS`; reviewer verified the final create-pr rerun metrics, single advisory, status-block convention, review-loop bullets, branch scope, and no overclaim beyond the no-value `nullcontext()` slice.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
