@@ -1,0 +1,46 @@
+from sifr.process import Command, Child, PipeReader, PipeWriter, ProcessError, Status, Stdio, spawn
+
+
+def main() -> None:
+    command: Command = Command("sh")
+    command.arg("-c")
+    command.arg("cat; printf err >&2")
+    pipe: Stdio = Stdio("pipe")
+    command.stdin(pipe)
+    command.stdout(pipe)
+    command.stderr(pipe)
+
+    try:
+        child: Child = spawn(command)
+        stdin: PipeWriter = child.stdin()
+        stdout: PipeReader = child.stdout()
+        stderr: PipeReader = child.stderr()
+
+        _first_write: None = stdin.write_all(b"pipe-")
+        _second_write: None = stdin.write_all(b"writer")
+        _closed: None = stdin.close()
+
+        stdout_bytes: bytes = stdout.read_all()
+        stderr_bytes: bytes = stderr.read_all()
+        assert stdout_bytes == b"pipe-writer"
+        assert stderr_bytes == b"err"
+
+        write_after_close_rejected: bool = False
+        try:
+            _after_close: None = stdin.write_all(b"late")
+        except ProcessError as e:
+            write_after_close_rejected = "closed" in e.message
+        assert write_after_close_rejected
+
+        child_stdin_again_rejected: bool = False
+        try:
+            _taken: PipeWriter = child.stdin()
+        except ProcessError as e:
+            child_stdin_again_rejected = "already taken" in e.message
+        assert child_stdin_again_rejected
+
+        status: Status = child.wait()
+        assert status.success
+        assert status.kind == "success"
+    except ProcessError as e:
+        assert False
