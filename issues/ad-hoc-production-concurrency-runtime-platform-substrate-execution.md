@@ -944,6 +944,14 @@ M6 typed IPC dependency metadata review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-dependency-metadata-review-pass-1.md`: `PASS`; reviewer verified the change is limited to Ring 4 typed IPC dependency metadata and grouped e2e Cargo.toml inference, locked Postcard/Serde specs match the approved design, IPC does not pull `serde_json`, runtime diagnostics wiring is unchanged, file-size guardrails are respected, and the ledger does not overclaim M6 completion.
 
+M6 typed IPC dependency metadata merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2439
+- Merge commit: `5d00e813691b7cae62f2ef7fc280b3bb0c6ebd2d`
+- Merged at: `2026-06-08T22:59:11Z`
+- Scope: internal typed IPC stdlib feature metadata, locked Postcard/Serde dependency specs, `sifr.ipc` / `_sifr.ipc` / `ipc` / `postcard` requirement mapping, grouped e2e generated Cargo.toml inference, validation evidence, and reviewer artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
