@@ -1,0 +1,53 @@
+from sifr.process import AsyncChild, Command, ProcessError, Status, Stdio, async_spawn, async_wait
+
+
+async def main() -> None:
+    actual: list[bool] = []
+
+    try:
+        command: Command = Command("sh")
+        command.args(["-c", "exit 6"])
+        child: AsyncChild = await async_spawn(command)
+        status: Status = await async_wait(child)
+        actual.append(status.code == 6)
+        actual.append(not status.success)
+        actual.append(status.kind == "nonzero")
+
+        ok_command: Command = Command("true")
+        method_child: AsyncChild = await async_spawn(ok_command)
+        method_status: Status = await method_child.wait()
+        actual.append(method_status.success)
+
+        try:
+            method_second: Status = await method_child.wait()
+            actual.append(method_second.success)
+        except ProcessError as e:
+            actual.append("closed or unknown" in e.message)
+
+        stdin_bytes_cmd: Command = Command("cat")
+        stdin_bytes_cmd.stdin_bytes(b"ignored")
+        try:
+            _stdin_child: AsyncChild = await async_spawn(stdin_bytes_cmd)
+            actual.append(False)
+        except ProcessError as e:
+            actual.append("stdin_bytes" in e.message)
+
+        pipe_cmd: Command = Command("cat")
+        pipe_cmd.stdin(Stdio("pipe"))
+        try:
+            _pipe_child: AsyncChild = await async_spawn(pipe_cmd)
+            actual.append(False)
+        except ProcessError as e:
+            actual.append("owned pipe" in e.message)
+
+        stdout_pipe_cmd: Command = Command("true")
+        stdout_pipe_cmd.stdout(Stdio("pipe"))
+        try:
+            _stdout_child: AsyncChild = await async_spawn(stdout_pipe_cmd)
+            actual.append(False)
+        except ProcessError as e:
+            actual.append("owned pipe" in e.message)
+    except ProcessError as e:
+        actual.append(False)
+
+    assert actual == [True, True, True, True, True, True, True, True]

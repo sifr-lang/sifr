@@ -425,6 +425,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process output timeout: https://github.com/sifr-lang/sifr/pull/2362
 - M4 async stdin-byte communicate: https://github.com/sifr-lang/sifr/pull/2365
 - M4 sync process terminate: https://github.com/sifr-lang/sifr/pull/2367
+- M4 async process spawn/wait: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -949,6 +950,39 @@ M4 async stdin-byte communicate review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-communicate-stdin-review-pass-2.md`: `PASS`; reviewer verified the supported-host matrix docs nit was closed, no public async pipe/spawn/wait/cancellation/scoped/text/Windows overclaim was introduced, implementation files remained unchanged from the pass-1 review, and refreshed create-pr validation evidence was sufficient.
 - Merged as PR #2365 (`0c4c4a68411628d0f4ad137f9bdf4bdec004522b`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`245.69s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=22/26`, `report_signature=9212e77abfa82acc`).
+
+M4 async process spawn/wait implementation:
+
+- Added `AsyncChild`, `async_spawn(...)`, and `async_wait(...)` to `sifr.process` as the first native async child lifecycle surface. Top-level `async_wait(own child)` consumes the handle; method-form `AsyncChild.wait()` delegates to the same generated async wait helper.
+- Added `_sifr.process.process_async_spawn` and `process_async_wait` intrinsic metadata and lowerers, plus generated Tokio helper emission with a private async-child handle table. `async_wait` removes the child from the table before awaiting so each async child is observed at most once.
+- Kept public async owned pipes out of scope: `async_spawn` rejects `Command.stdin_bytes(...)` and explicit `stdin/stdout/stderr` stdio modes with typed `ProcessError` evidence until async pipe handles land.
+- Added `process_async_spawn_wait` fixture coverage to create-pr and merge manifests for nonzero async wait status, method-form wait, one-shot wait errors, stdin-byte rejection, and explicit stdio-mode deferral.
+
+M4 async process spawn/wait targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_output_timeout.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_timeout.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_spawn_wait.sifr` -> PASS; validates async spawn/wait status, one-shot wait, stdin-byte rejection, and explicit stdio-mode deferral.
+- Emission checks for `process_async_spawn_wait` -> PASS; generated code includes `__SIFR_PROCESS_ASYNC_CHILDREN`, `tokio::process::Child`, `__sifr_process_async_spawn`, `__sifr_process_async_wait`, `AsyncChild::new`, and table-level closed/unknown wait errors.
+- Emission checks for `process_async_run_timeout` and `process_async_run_output` -> PASS; those fixtures do not emit async spawn/wait helper state.
+- `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2189 files checked.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; 423 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS after post-review cleanup; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`282.19s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=22/26`, `report_signature=5e93ca9f74a9781c`).
+- Post-`origin/main` merge rerun after preserving PR #2367 sync terminate evidence: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`225.06s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`103 passed`, `0 failed`, `cache_hits=25/27`, `report_signature=2593463768412da4`).
+
+M4 async process spawn/wait review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-1.md`: `PASS`; reviewer verified the narrow async child lifecycle wave, inherited-stdio-only spawn scope, typed `stdin_bytes` and stdio-mode deferrals, one-shot table-backed async wait without a mutex guard across await, generated-helper gating, honest traceability/host-matrix/manifests, and no user-triggerable panic path. Non-blocking notes covered the then-unused `AsyncChild._waited` field, dead shared-prelude collector branches mirroring sync spawn/wait, signal-status coverage remaining sync-only, the async process runtime file nearing the guardrail, and possible stdout/stderr deferral fixture coverage.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-2.md`: `PASS`; reviewer confirmed the unused `AsyncChild._waited` field was removed from the public class and stdlib type metadata, the added `stdout(Stdio("pipe"))` typed deferral assertion is correct, refreshed create-pr validation evidence matches the tree, and no new blockers or scope/documentation mismatches were introduced.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-3.md`: `CHANGES_REQUESTED`; post-`origin/main` merge reviewer verified the branch preserved PR #2367 sync terminate evidence and the pass-2 async spawn/wait implementation, but found a duplicate `M4 async process spawn/wait: in progress` line in the implementation PR list.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-4.md`: `PASS`; reviewer confirmed the duplicate PR-list entry was collapsed to a single in-progress spawn/wait row after PR #2367, conflict markers remained absent, `git diff --check` stayed clean, and no new blocker was introduced.
 
 M4 sync process terminate implementation:
 

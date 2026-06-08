@@ -16,6 +16,8 @@ from _sifr.process import (
     process_output_timeout,
     process_async_run,
     process_async_run_timeout,
+    process_async_spawn,
+    process_async_wait,
     process_async_output,
     process_async_output_timeout,
     process_shell_run,
@@ -160,6 +162,16 @@ class Child:
             return PipeWriter(handle)
         except ProcessError as e:
             raise e
+
+
+class AsyncChild:
+    _handle: int
+
+    def __init__(self, handle: int):
+        self._handle = handle
+
+    def wait(self) -> Awaitable[Result[Status, ProcessError]]:
+        return process_async_wait(self._handle)
 
 
 class TextOutput:
@@ -399,6 +411,24 @@ def async_run_timeout(own command: Command, seconds: float) -> Awaitable[Result[
         command.stdin_mode,
         seconds,
     )
+
+
+def async_spawn(own command: Command) -> Awaitable[Result[AsyncChild, ProcessError]]:
+    return process_async_spawn(
+        command.program,
+        command.arguments,
+        command.env_vars,
+        command.working_dir,
+        command.has_working_dir,
+        command.stdin_mode,
+        command.stdout_mode,
+        command.stderr_mode,
+        command.has_stdin_data,
+    )
+
+
+def async_wait(own child: AsyncChild) -> Awaitable[Result[Status, ProcessError]]:
+    return process_async_wait(child._handle)
 
 
 def async_output(own command: Command) -> Awaitable[Result[Output, ProcessError]]:

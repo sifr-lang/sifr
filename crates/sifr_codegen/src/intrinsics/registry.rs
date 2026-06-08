@@ -625,6 +625,14 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             process_async::lower_process_async_output_timeout(args),
             Some(StdlibFeature::Tokio),
         ),
+        "process_async_spawn" => (
+            process_async::lower_process_async_spawn(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_wait" => (
+            process_async::lower_process_async_wait(args),
+            Some(StdlibFeature::Tokio),
+        ),
         "process_shell_run" => (process::lower_process_shell_run(args), None),
         "process_shell_output" => (process::lower_process_shell_output(args), None),
         "process_shell_output_text" => (process::lower_process_shell_output_text(args), None),

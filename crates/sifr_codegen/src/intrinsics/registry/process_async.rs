@@ -78,3 +78,27 @@ pub(crate) fn lower_process_async_output_timeout(args: &[RustExpr]) -> Option<Ru
         owned_args,
     ))
 }
+
+pub(crate) fn lower_process_async_spawn(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 9 {
+        return None;
+    }
+    let mut owned_args = async_process_owned_args(args);
+    owned_args.push(RustExpr::Clone(Box::new(arg_expr(args, 6))));
+    owned_args.push(RustExpr::Clone(Box::new(arg_expr(args, 7))));
+    owned_args.push(arg_expr(args, 8));
+    Some(boxed_async_process_helper_call(
+        "__sifr_process_async_spawn",
+        owned_args,
+    ))
+}
+
+pub(crate) fn lower_process_async_wait(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(boxed_async_process_helper_call(
+        "__sifr_process_async_wait",
+        vec![arg_expr(args, 0)],
+    ))
+}
