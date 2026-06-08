@@ -1,0 +1,13 @@
+# expect-error: SIFR-TYPE-0002
+from sifr.process import Child
+
+
+@cpu_heavy
+def build_child() -> Child:
+    return Child(0)
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_cpu(build_child)
+    await task.sleep(0.0)
+    return None

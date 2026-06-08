@@ -1,0 +1,14 @@
+# expect-error: SIFR-OWN-0010
+from sifr.process import AsyncPipeReader
+
+
+async def drain(own reader: AsyncPipeReader) -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    reader: AsyncPipeReader = AsyncPipeReader(0)
+    async with task.scope() as scope:
+        handle = scope.spawn(drain(reader))
+    return None

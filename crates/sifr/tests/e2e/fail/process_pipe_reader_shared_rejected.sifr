@@ -1,0 +1,8 @@
+# expect-error: SIFR-OWN-0012
+from sifr.process import PipeReader
+from sifr.sync import Shared
+
+
+def main() -> None:
+    reader: PipeReader = PipeReader(0)
+    shared: Shared[PipeReader] = Shared(reader)

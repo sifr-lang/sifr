@@ -1,0 +1,14 @@
+# expect-error: SIFR-OWN-0010
+from sifr.process import AsyncChild
+
+
+async def observe(own child: AsyncChild) -> int:
+    await task.sleep(0.0)
+    return 1
+
+
+async def main() -> Result[None, ScopeFailure]:
+    child: AsyncChild = AsyncChild(0)
+    async with task.scope() as scope:
+        handle = scope.spawn(observe(child))
+    return None
