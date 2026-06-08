@@ -249,6 +249,8 @@ def _status_from(exit_status: tuple[int, int | None], timed_out: bool) -> Status
 
 @blocking_io
 def spawn(command: Command) -> Result[Child, ProcessError]:
+    if command.has_stdin_data:
+        raise ProcessError("process spawn does not consume Command.stdin_bytes; use stdin(Stdio(\"pipe\")) and Child.stdin()")
     try:
         handle: int = process_spawn(
             command.program,
@@ -372,6 +374,7 @@ def async_run(own command: Command) -> Awaitable[Result[Status, ProcessError]]:
         command.env_vars,
         command.working_dir,
         command.has_working_dir,
+        command.stdin_mode,
     )
 
 
@@ -382,6 +385,7 @@ def async_run_timeout(own command: Command, seconds: float) -> Awaitable[Result[
         command.env_vars,
         command.working_dir,
         command.has_working_dir,
+        command.stdin_mode,
         seconds,
     )
 
@@ -393,6 +397,7 @@ def async_output(own command: Command) -> Awaitable[Result[Output, ProcessError]
         command.env_vars,
         command.working_dir,
         command.has_working_dir,
+        command.stdin_mode,
         command.has_stdin_data,
     )
 
