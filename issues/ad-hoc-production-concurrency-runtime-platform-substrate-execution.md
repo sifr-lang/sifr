@@ -430,7 +430,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process runtime split: https://github.com/sifr-lang/sifr/pull/2375
 - M4 sync PipeReader streaming reads: https://github.com/sifr-lang/sifr/pull/2377
 - M4 top-level async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2378
-- M4 async owned process pipes: in progress.
+- M4 async owned process pipes: https://github.com/sifr-lang/sifr/pull/2381
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1114,6 +1114,9 @@ M4 async owned process pipes targeted local validation:
 M4 async owned process pipes review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-owned-pipes-review-pass-1.md`: `PASS`; reviewer verified no mutex guard is held across awaits, async pipe handle ownership and typed closed-handle behavior, `async_spawn` stdio mode semantics versus one-shot async output guards, generated prelude gating/dedup wiring, fixture/manifests/docs honesty, and no new user-triggerable panic path. Non-blocking notes covered read-error versus write-error handle survival asymmetry, EOF-then-close coverage, shared async handle id diagnostics, and future large-pipe deadlock stress coverage; EOF-then-close coverage was added to `process_async_spawn_pipes`.
+- Merged as PR #2381 (`a3ecf108720c73f31b7ae6c7067fd9bbdbbb82b4`) on 2026-06-08.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-owned-pipes-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2381 merge record, merge SHA/date, create-pr validation evidence, implementation PR list, and traceability wording around `async_spawn(...)` public async pipe I/O versus one-shot async output pipe-mode deferrals.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`212.71s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`107 passed`, `0 failed`, `cache_hits=23/27`, `report_signature=640c40bcdf03a864`).
 
 M4 sync process terminate implementation:
 
