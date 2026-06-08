@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_5`
 
-Status: In progress; signal value-model foundation started with portable `sifr.signal.Signal`, `sigint()`, `sigterm()`, and `strsignal(signal)` evidence, the first deterministic cleanup helper is covered by no-value `sifr.resource.nullcontext()`, and task context value types are importable through `sifr.task.Context` / `ContextKey[T]`. Structured signal constants, signal streams, cleanup stacks, explicit task context propagation, and structured runtime diagnostics remain M5 work.
+Status: In progress; signal value-model foundation covers portable `sifr.signal.Signal`, `sigint()`, `sigterm()`, `SIGINT`, `SIGTERM`, and `strsignal(signal)` evidence, the first deterministic cleanup helper is covered by no-value `sifr.resource.nullcontext()`, and task context value types are importable through `sifr.task.Context` / `ContextKey[T]`. Structured signal streams, cleanup stacks, explicit task context propagation, and structured runtime diagnostics remain M5 work.
 
 ## Production Surface Traceability
 
@@ -10,9 +10,9 @@ Status: In progress; signal value-model foundation started with portable `sifr.s
 | --- | --- | --- |
 | `sifr.signal.Signal` | `signal_value_model_basic` | `Signal` is a Sifr-owned value with `name` and `number` fields. It is not CPython's `Signals` enum and does not expose raw host signal-handler mutation. |
 | `sifr.signal.SignalError` | foundation symbol | Reserved for later structured shutdown stream and diagnostic surfaces; this wave does not raise it. |
-| `sifr.signal.sigint()`, `sifr.signal.sigterm()` | `signal_value_model_basic` | The first accepted signal values are portable shutdown targets. Importable module-level constants remain follow-up work because current stdlib export collection does not expose object-valued constants. Unix-only values such as `SIGHUP` remain host-limited until a deterministic host row and fixture are added. |
+| `sifr.signal.sigint()`, `sifr.signal.sigterm()` | `signal_value_model_basic` | The first accepted signal factory helpers are portable shutdown targets. Unix-only values such as `SIGHUP` remain host-limited until a deterministic host row and fixture are added. |
 | `sifr.signal.strsignal(signal)` | `signal_strsignal_basic` | Pure Sifr value helper returning the owned signal name. It does not consult process-global host signal state and does not claim stream delivery. |
-| `sifr.signal.SIGINT`, `sifr.signal.SIGTERM` | planned M5 follow-up | True module-level signal constants require object-valued stdlib constant export support or another explicit enum-like representation before they can be exposed honestly. |
+| `sifr.signal.SIGINT`, `sifr.signal.SIGTERM` | `signal_constants_basic` | Portable module-level constants are importable Sifr-owned `Signal` values. They follow normal ownership rules and do not claim signal-stream delivery or process-global handler state. |
 | `sifr.signal.ctrl_c`, `sifr.signal.terminate`, `sifr.signal.shutdown_stream` | planned M5 follow-up | These structured shutdown APIs are not exposed by the value-helper wave. They must use Tokio signal APIs or a documented host-limited design and must not leak Tokio handles. |
 | `sifr.signal.pause`, `signal.signal`, `getsignal`, `raise_signal`, `pthread_sigmask` | `signal_pause_unsupported`; `signal_handler_registration_unsupported`; `signal_getsignal_unsupported`; `signal_raise_signal_unsupported`; `signal_pthread_sigmask_host_limited` | Unsafe arbitrary handler registration, process-global signal wakeup, and mask mutation are not production APIs. Current evidence pins stable missing-member diagnostics on `sifr.signal` imports until a future explicitly supported surface is designed. |
 | `sifr.resource.NullContext`, `sifr.resource.nullcontext()` | `resource_nullcontext_basic` | No-value `nullcontext()` is the first Sifr-owned deterministic cleanup helper. It participates in the existing synchronous `with` protocol and performs no cleanup side effects. Value-carrying generic nullcontext remains follow-up until generic class context managers preserve type arguments in generated guards. |
@@ -29,7 +29,7 @@ Status: In progress; signal value-model foundation started with portable `sifr.s
 | `sigint()` value | supported | supported | supported | Portable interrupt shutdown target; fixture validates the Sifr value model. |
 | `sigterm()` value | supported | supported | supported | Portable termination shutdown target; fixture validates the Sifr value model. |
 | `strsignal(signal)` | supported | supported | supported | Host-independent value helper returning the Sifr-owned `Signal.name`; no signal delivery behavior. |
-| `SIGINT` / `SIGTERM` module constants | planned | planned | planned | Await object-valued stdlib constant export support or another explicit enum-like representation. |
+| `SIGINT` / `SIGTERM` module constants | supported | supported | supported | Host-independent Sifr-owned values validated by `signal_constants_basic`; no signal delivery behavior. |
 | Unix-only constants such as `SIGHUP` | host-limited | host-limited | host-limited | Not exposed until the exact host contract and deterministic fixture are recorded. |
 | `ctrl_c` stream | planned | planned | planned | Must be fixture-backed before supported. |
 | `terminate` stream | planned | planned | host-limited | Non-Unix termination semantics require host-specific evidence before support. |
@@ -42,14 +42,13 @@ Status: In progress; signal value-model foundation started with portable `sifr.s
 
 | Lane | Representative entries |
 | --- | --- |
-| Create PR | `signal_value_model_basic`; `signal_strsignal_basic`; `task_context_value_model_basic`; `resource_nullcontext_basic` |
-| Merge | `signal_value_model_basic`; `signal_strsignal_basic`; `task_context_value_model_basic`; `resource_nullcontext_basic` |
+| Create PR | `signal_value_model_basic`; `signal_strsignal_basic`; `signal_constants_basic`; `task_context_value_model_basic`; `resource_nullcontext_basic` |
+| Merge | `signal_value_model_basic`; `signal_strsignal_basic`; `signal_constants_basic`; `task_context_value_model_basic`; `resource_nullcontext_basic` |
 | Fail suite | `signal_pause_unsupported`, `signal_handler_registration_unsupported`, `signal_getsignal_unsupported`, `signal_raise_signal_unsupported`, `signal_pthread_sigmask_host_limited`; `task_context_propagation_rejected`; `warnings_filter_global_rejected`; `resource_redirect_stdout_unsupported`, `resource_redirect_stderr_unsupported`, `resource_chdir_unsupported`, `resource_suppress_unsupported`, `resource_contextmanager_unsupported`, `resource_asynccontextmanager_unsupported`; existing `bare_cpython_signal_import`; existing `bare_cpython_contextlib_import`; existing `bare_cpython_warnings_import`; existing `legacy_sifr_contextlib_removed`; existing `legacy_sifr_warnings_removed` |
 
 ## Follow-up Boundaries
 
-- `sigint()`, `sigterm()`, and `strsignal(signal)` are value-model evidence only; they do not claim stream delivery or host signal subscription.
-- Importable `SIGINT` and `SIGTERM` constants remain M5 follow-up work; this foundation does not depend on private stdlib export behavior that currently only handles importable object classes/functions and integer constants.
+- `sigint()`, `sigterm()`, `SIGINT`, `SIGTERM`, and `strsignal(signal)` are value-model evidence only; they do not claim stream delivery or host signal subscription.
 - Unsupported signal APIs are intentionally absent from `sifr.signal` so static imports produce stable diagnostics instead of runtime surprises.
 - `pthread_sigmask` is grouped with unsupported signal APIs in the current fixture set because no safe mask-mutation surface exists; it remains host-limited for any future explicitly designed Unix-only API.
 - `nullcontext()` is supported as a no-op cleanup helper; value-carrying generic nullcontext, cleanup stacks, owned closing helpers, task context propagation, and structured diagnostics/tracing remain separate M5 waves.

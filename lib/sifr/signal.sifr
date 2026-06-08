@@ -27,3 +27,6 @@ def sigterm() -> Signal:
 
 def strsignal(signal: Signal) -> str:
     return str(signal)
+
+SIGINT: Signal = Signal("SIGINT", 2)
+SIGTERM: Signal = Signal("SIGTERM", 15)
