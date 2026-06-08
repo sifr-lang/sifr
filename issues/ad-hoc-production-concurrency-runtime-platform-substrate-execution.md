@@ -443,6 +443,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 closeout: https://github.com/sifr-lang/sifr/pull/2403
 - M4: complete.
 - M5 signal value-model foundation: in progress.
+- M5 warnings global-filter rejection: in progress.
 - M6: pending.
 - M7: pending.
 
@@ -575,6 +576,23 @@ M5 signal value-model foundation merge ledger:
 - Merged as PR #2405 (`98d858f0057e3bab9cab74a1d90e45f3c278566b`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`231.98s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`115 passed`, `0 failed`, `cache_hits=23/31`, `report_signature=fa75f7f525acd21c`).
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2405 merge commit, foundation-only scope wording, validation metrics, advisory wording, guardrails, and lane-step coverage for this docs-only merge-ledger PR.
+
+M5 warnings global-filter rejection implementation:
+
+- Added `warnings_filter_global_rejected` to pin Python `warnings.filterwarnings` global filter parity as a static unsupported CPython import diagnostic.
+- Updated the M5 shutdown traceability artifact to close the warning-global rejection surface while keeping structured diagnostics/tracing runtime work separate.
+
+M5 warnings global-filter rejection targeted local validation:
+
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/warnings_filter_global_rejected.sifr` -> expected `SIFR-IMPORT-0009`.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail suite reported `440 fail tests completed`.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`138.24s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`115 passed`, `0 failed`, `cache_hits=31/31`, `report_signature=fa75f7f525acd21c`).
+
+M5 warnings global-filter rejection review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-warnings-filter-review-pass-1.md`: `PASS`; reviewer verified the `filterwarnings` fixture pins the legacy `sifr.warnings` rejection path, the traceability artifact closes only warning-filter parity while keeping diagnostics/tracing runtime work open, the ledger keeps M5 in progress, and the validation evidence is accurate.
 
 M3 first-wave targeted local validation:
 
