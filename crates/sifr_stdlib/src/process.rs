@@ -84,6 +84,10 @@ fn process_async_child_object_result() -> Type {
     result_ty(process_async_child_class(), "ProcessError")
 }
 
+fn process_async_pipe_read_result() -> Type {
+    result_ty(Type::Bytes, "ProcessError")
+}
+
 /// _sifr.process — Native process execution intrinsics.
 pub(super) fn intrinsic_process() -> IntrinsicModule {
     let mut functions = HashMap::new();
@@ -347,6 +351,68 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],
             Type::Awaitable(Box::new(result_ty(Type::None, "ProcessError"))),
+        ),
+    );
+    functions.insert(
+        "process_async_child_stdin".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::Int, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_async_child_stdout".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::Int, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_async_child_stderr".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::Int, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_async_pipe_read_all".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            Type::Awaitable(Box::new(process_async_pipe_read_result())),
+        ),
+    );
+    functions.insert(
+        "process_async_pipe_read".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("max_bytes".to_string(), Type::Int),
+            ],
+            Type::Awaitable(Box::new(process_async_pipe_read_result())),
+        ),
+    );
+    functions.insert(
+        "process_async_pipe_reader_close".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::None, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_async_pipe_write_all".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("data".to_string(), Type::Bytes),
+            ],
+            Type::Awaitable(Box::new(result_ty(Type::None, "ProcessError"))),
+        ),
+    );
+    functions.insert(
+        "process_async_pipe_close".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::None, "ProcessError"),
         ),
     );
     functions.insert(

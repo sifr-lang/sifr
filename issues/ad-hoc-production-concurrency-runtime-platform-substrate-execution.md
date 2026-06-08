@@ -430,6 +430,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process runtime split: https://github.com/sifr-lang/sifr/pull/2375
 - M4 sync PipeReader streaming reads: https://github.com/sifr-lang/sifr/pull/2377
 - M4 top-level async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2378
+- M4 async owned process pipes: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1092,6 +1093,27 @@ M4 top-level async child kill/terminate review loop:
 - Merged as PR #2378 (`a064cf3e5074ab81a61da455233369bafe340dc1`) on 2026-06-08.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-top-level-kill-terminate-ledger-review-pass-1.md`: `PASS`; reviewer verified the merged PR #2378 link/status, merge SHA/date, ledger validation evidence, remaining-work wording, and docs-only PR readiness.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`203.29s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`106 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=dc7d767be4dbcf7c`).
+
+M4 async owned process pipes implementation:
+
+- Added public `AsyncPipeReader` and `AsyncPipeWriter` handles, plus `AsyncChild.stdin()`, `AsyncChild.stdout()`, and `AsyncChild.stderr()` transfer methods for `async_spawn` children spawned with `Stdio("pipe")`.
+- Added async pipe read/write helpers backed by private Tokio pipe handle tables. `AsyncPipeReader.read_all()` consumes the reader, `read(max_bytes)` preserves the handle across partial reads and closes on EOF, and `close()` explicitly releases a reader. `AsyncPipeWriter.write_all(...)` supports repeated async writes and `close()` removes the writer so the child observes EOF.
+- Updated `async_spawn` to configure `stdin/stdout/stderr` modes through Tokio `Stdio`, while continuing to reject `Command.stdin_bytes(...)` for spawn so one-shot communicate input remains on `async_output(...)`.
+- Added `process_async_spawn_pipes` coverage and retired the old `process_async_spawn_wait` assertions that expected explicit pipe modes to be deferred.
+
+M4 async owned process pipes targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_spawn_pipes.sifr` -> PASS; validates async stdin/stdout/stderr pipe transfer, repeated async writes, explicit writer close/EOF, `read_all`, bounded `read`, EOF close, explicit reader close, one-shot extraction errors, and closed-handle typed errors.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_spawn_wait.sifr` -> PASS; validates adjacent async spawn/wait behavior after pipe modes became supported.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_top_level_kill_terminate.sifr` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_async_spawn_pipes.sifr | rg -n "AsyncPipeReader|AsyncPipeWriter|__sifr_process_async_child_stdout|__sifr_process_async_child_stdin|__sifr_process_async_pipe_read|__sifr_process_async_pipe_write_all|AsyncReadExt|AsyncWriteExt|Stdio::piped|read_to_end|write_all" -C 2` -> PASS; emitted Rust includes the async pipe handle types, Tokio pipe helpers, `Stdio::piped()`, and async read/write extension use.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`255.36s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`107 passed`, `0 failed`, `cache_hits=25/27`, `report_signature=640c40bcdf03a864`).
+
+M4 async owned process pipes review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-owned-pipes-review-pass-1.md`: `PASS`; reviewer verified no mutex guard is held across awaits, async pipe handle ownership and typed closed-handle behavior, `async_spawn` stdio mode semantics versus one-shot async output guards, generated prelude gating/dedup wiring, fixture/manifests/docs honesty, and no new user-triggerable panic path. Non-blocking notes covered read-error versus write-error handle survival asymmetry, EOF-then-close coverage, shared async handle id diagnostics, and future large-pipe deadlock stress coverage; EOF-then-close coverage was added to `process_async_spawn_pipes`.
 
 M4 sync process terminate implementation:
 

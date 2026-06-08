@@ -122,3 +122,86 @@ pub(crate) fn lower_process_async_terminate(args: &[RustExpr]) -> Option<RustExp
         vec![arg_expr(args, 0)],
     ))
 }
+
+pub(crate) fn lower_process_async_child_stdin(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(path_call(
+        &["__sifr_process_async_child_stdin"],
+        vec![arg_expr(args, 0)],
+    ))
+}
+
+pub(crate) fn lower_process_async_child_stdout(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(path_call(
+        &["__sifr_process_async_child_stdout"],
+        vec![arg_expr(args, 0)],
+    ))
+}
+
+pub(crate) fn lower_process_async_child_stderr(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(path_call(
+        &["__sifr_process_async_child_stderr"],
+        vec![arg_expr(args, 0)],
+    ))
+}
+
+pub(crate) fn lower_process_async_pipe_read_all(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(boxed_async_process_helper_call(
+        "__sifr_process_async_pipe_read_all",
+        vec![arg_expr(args, 0)],
+    ))
+}
+
+pub(crate) fn lower_process_async_pipe_read(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(boxed_async_process_helper_call(
+        "__sifr_process_async_pipe_read",
+        vec![arg_expr(args, 0), arg_expr(args, 1)],
+    ))
+}
+
+pub(crate) fn lower_process_async_pipe_reader_close(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(path_call(
+        &["__sifr_process_async_pipe_reader_close"],
+        vec![arg_expr(args, 0)],
+    ))
+}
+
+pub(crate) fn lower_process_async_pipe_write_all(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(boxed_async_process_helper_call(
+        "__sifr_process_async_pipe_write_all",
+        vec![
+            arg_expr(args, 0),
+            RustExpr::Clone(Box::new(arg_expr(args, 1))),
+        ],
+    ))
+}
+
+pub(crate) fn lower_process_async_pipe_close(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(path_call(
+        &["__sifr_process_async_pipe_close"],
+        vec![arg_expr(args, 0)],
+    ))
+}

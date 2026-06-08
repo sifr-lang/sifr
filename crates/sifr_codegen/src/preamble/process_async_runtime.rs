@@ -1,9 +1,12 @@
 //! Runtime support for generated async process helpers.
 
 use super::process_async_child_runtime::{
-    process_async_child_table_items, process_async_kill_body, process_async_spawn_body,
-    process_async_spawn_insert_body, process_async_spawn_params, process_async_terminate_body,
-    process_async_wait_body, process_async_wait_params,
+    process_async_child_pipe_reader_item, process_async_child_pipe_writer_item,
+    process_async_child_table_items, process_async_kill_body, process_async_pipe_close_item,
+    process_async_pipe_read_all_item, process_async_pipe_read_item,
+    process_async_pipe_reader_close_item, process_async_pipe_write_all_item,
+    process_async_spawn_body, process_async_spawn_insert_body, process_async_spawn_params,
+    process_async_terminate_body, process_async_wait_body, process_async_wait_params,
 };
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Visibility};
 
@@ -645,6 +648,22 @@ pub(crate) fn build_process_async_items(
         });
     }
     if needs_spawn {
+        items.push(process_async_child_pipe_writer_item(
+            "__sifr_process_async_child_stdin",
+        ));
+        items.push(process_async_child_pipe_reader_item(
+            "__sifr_process_async_child_stdout",
+            "stdout",
+        ));
+        items.push(process_async_child_pipe_reader_item(
+            "__sifr_process_async_child_stderr",
+            "stderr",
+        ));
+        items.push(process_async_pipe_read_all_item());
+        items.push(process_async_pipe_read_item());
+        items.push(process_async_pipe_reader_close_item());
+        items.push(process_async_pipe_write_all_item());
+        items.push(process_async_pipe_close_item());
         items.push(RustItem::Fn {
             name: "__sifr_process_async_spawn".to_string(),
             visibility: Visibility::Private,
