@@ -1,0 +1,40 @@
+from sifr.process import Command, Child, PipeReader, ProcessError, Status, Stdio, spawn
+
+
+def main() -> None:
+    command: Command = Command("sh")
+    command.arg("-c")
+    command.arg("printf out; printf err >&2")
+    pipe: Stdio = Stdio("pipe")
+    command.stdout(pipe)
+    command.stderr(pipe)
+
+    try:
+        child: Child = spawn(command)
+        stdout: PipeReader = child.stdout()
+        stderr: PipeReader = child.stderr()
+
+        stdout_bytes: bytes = stdout.read_all()
+        stderr_bytes: bytes = stderr.read_all()
+        assert stdout_bytes == b"out"
+        assert stderr_bytes == b"err"
+
+        stdout_again_rejected: bool = False
+        try:
+            _again: bytes = stdout.read_all()
+        except ProcessError as e:
+            stdout_again_rejected = "closed" in e.message
+        assert stdout_again_rejected
+
+        child_stdout_again_rejected: bool = False
+        try:
+            _taken: PipeReader = child.stdout()
+        except ProcessError as e:
+            child_stdout_again_rejected = "already taken" in e.message
+        assert child_stdout_again_rejected
+
+        status: Status = child.wait()
+        assert status.success
+        assert status.kind == "success"
+    except ProcessError as e:
+        assert False
