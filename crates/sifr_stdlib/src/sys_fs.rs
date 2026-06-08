@@ -90,37 +90,6 @@ pub(super) fn intrinsic_sys() -> IntrinsicModule {
         FunctionType::all_borrow(vec![], Type::Int),
     );
 
-    // subprocess_run(cmd: str) -> Result[str, IOError]
-    functions.insert(
-        "subprocess_run".to_string(),
-        FunctionType::all_borrow(
-            vec![("cmd".to_string(), Type::Str)],
-            result_ty(Type::Str, "IOError"),
-        ),
-    );
-
-    // subprocess_run_with_input(cmd: str, stdin: str) -> Result[str, IOError]
-    functions.insert(
-        "subprocess_run_with_input".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("cmd".to_string(), Type::Str),
-                ("stdin_data".to_string(), Type::Str),
-            ],
-            result_ty(Type::Str, "IOError"),
-        ),
-    );
-
-    // subprocess_run_structured(cmd: str) -> Result[list[str], IOError]
-    // Returns [stdout, stderr, returncode_str] as a list[str].
-    functions.insert(
-        "subprocess_run_structured".to_string(),
-        FunctionType::all_borrow(
-            vec![("cmd".to_string(), Type::Str)],
-            result_ty(Type::List(Box::new(Type::Str)), "IOError"),
-        ),
-    );
-
     IntrinsicModule {
         functions,
         constants: HashMap::new(),

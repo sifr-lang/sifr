@@ -48,5 +48,4 @@ Intentional remaining M4 work after this foundation wave:
 - Full subprocess text mode closeout beyond UTF-8-only text output, consuming the text/i18n M1 evidence explicitly.
 - Dropping an unwaited sync `Child` keeps the private `std::process::Child` table entry for the process lifetime and may leave host child reaping to a later lifecycle wave; termination, timeout, cancellation, and drop cleanup semantics remain M4 follow-up work.
 - Decide whether repeated `Command.stdin_bytes(...)` calls append or replace payload data when the spawn/pipe wave finalizes stdin ownership semantics.
-- Delete the unused legacy `_sifr.sys.subprocess_*` intrinsic registry paths once no test or diagnostic still needs them as M4 cleanup.
 - If a future stdlib module re-exports a workload-annotated callable, mirror project-module re-export workload metadata in stdlib bootstrap export collection before relying on that shape.

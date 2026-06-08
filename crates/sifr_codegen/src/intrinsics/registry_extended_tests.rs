@@ -1,5 +1,20 @@
 use super::registry_core_tests::lower_intrinsic;
 use crate::{render_expr, RustExpr};
+
+#[test]
+pub(crate) fn legacy_subprocess_intrinsics_are_not_lowered() {
+    for removed in [
+        "subprocess_run",
+        "subprocess_run_with_input",
+        "subprocess_run_structured",
+    ] {
+        assert!(
+            lower_intrinsic(removed, &["cmd".to_string()]).is_none(),
+            "{removed} must stay removed; use process_* intrinsics instead"
+        );
+    }
+}
+
 #[test]
 pub(crate) fn lowers_uuid_intrinsic_via_registry() {
     let uuid = lower_intrinsic("uuid4", &[]).expect("uuid4");
@@ -89,27 +104,6 @@ pub(crate) fn lowers_sys_intrinsics_via_registry() {
 
     let maxsize = lower_intrinsic("sys_maxsize", &[]).expect("sys_maxsize");
     assert_eq!(render_expr(&maxsize.expr), "i64::MAX");
-}
-
-#[test]
-pub(crate) fn lowers_subprocess_intrinsics_via_registry() {
-    let run = lower_intrinsic("subprocess_run", &["cmd".to_string()]).expect("subprocess_run");
-    assert!(render_expr(&run.expr).contains("Command::new(\"sh\".to_string())"));
-    assert!(render_expr(&run.expr).contains(".arg(\"-c\".to_string())"));
-    assert!(render_expr(&run.expr).contains("String::from_utf8_lossy"));
-
-    let with_input = lower_intrinsic(
-        "subprocess_run_with_input",
-        &["cmd".to_string(), "stdin_data".to_string()],
-    )
-    .expect("subprocess_run_with_input");
-    assert!(render_expr(&with_input.expr).contains("std::io::Write::write_all"));
-    assert!(render_expr(&with_input.expr).contains("__child.stdin.take()"));
-
-    let structured = lower_intrinsic("subprocess_run_structured", &["cmd".to_string()])
-        .expect("subprocess_run_structured");
-    assert!(render_expr(&structured.expr).contains("__output.status.code().unwrap_or(-1)"));
-    assert!(render_expr(&structured.expr).contains("vec![__stdout, __stderr, __returncode]"));
 }
 
 #[test]
