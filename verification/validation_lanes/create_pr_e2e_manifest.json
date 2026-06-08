@@ -116,6 +116,7 @@
     "signal_stream_delivery_unix",
     "resource_nullcontext_basic",
     "runtime_diagnostics_tracing",
+    "ipc_value_model_basic",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",

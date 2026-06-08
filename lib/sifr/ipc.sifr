@@ -1,0 +1,81 @@
+# sifr.ipc - Typed IPC schema and protocol value model
+
+
+class IpcError(Error):
+    message: str
+
+
+class SchemaId:
+    name: str
+    version: int
+    hash: str
+
+    def __init__(self, name: str, version: int, hash: str):
+        self.name = name
+        self.version = version
+        self.hash = hash
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class ProtocolVersion:
+    minimum: int
+    maximum: int
+
+    def __init__(self, minimum: int, maximum: int):
+        self.minimum = minimum
+        self.maximum = maximum
+
+
+class FrameKind:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class BackpressurePolicy:
+    max_in_flight: int
+    max_frame_bytes: int
+
+    def __init__(self, max_in_flight: int, max_frame_bytes: int):
+        self.max_in_flight = max_in_flight
+        self.max_frame_bytes = max_frame_bytes
+
+
+HELLO: FrameKind = FrameKind("Hello")
+READY: FrameKind = FrameKind("Ready")
+REJECT: FrameKind = FrameKind("Reject")
+RUN: FrameKind = FrameKind("Run")
+STARTED: FrameKind = FrameKind("Started")
+COMPLETED: FrameKind = FrameKind("Completed")
+FAILED: FrameKind = FrameKind("Failed")
+CANCEL: FrameKind = FrameKind("Cancel")
+SHUTDOWN: FrameKind = FrameKind("Shutdown")
+TERMINATING: FrameKind = FrameKind("Terminating")
+HEARTBEAT: FrameKind = FrameKind("Heartbeat")
+WORKER_STATUS: FrameKind = FrameKind("WorkerStatus")
+MALFORMED_FRAME: FrameKind = FrameKind("MalformedFrame")
+UNSUPPORTED_VERSION: FrameKind = FrameKind("UnsupportedVersion")
+UNSUPPORTED_SCHEMA: FrameKind = FrameKind("UnsupportedSchema")
+UNSUPPORTED_PAYLOAD: FrameKind = FrameKind("UnsupportedPayload")
+
+
+def schema_id(name: str, version: int, hash: str) -> SchemaId:
+    return SchemaId(name, version, hash)
+
+
+def protocol_version(minimum: int, maximum: int) -> ProtocolVersion:
+    return ProtocolVersion(minimum, maximum)
+
+
+def default_backpressure() -> BackpressurePolicy:
+    return BackpressurePolicy(64, 16777216)
+
+
+def schemas_match(left: SchemaId, right: SchemaId) -> bool:
+    return left.name == right.name and left.version == right.version and left.hash == right.hash
