@@ -39,6 +39,18 @@ pub(crate) fn lower_process_async_run(args: &[RustExpr]) -> Option<RustExpr> {
     ))
 }
 
+pub(crate) fn lower_process_async_run_timeout(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 6 {
+        return None;
+    }
+    let mut owned_args = async_process_owned_args(args);
+    owned_args.push(arg_expr(args, 5));
+    Some(boxed_async_process_helper_call(
+        "__sifr_process_async_run_timeout",
+        owned_args,
+    ))
+}
+
 pub(crate) fn lower_process_async_output(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 6 {
         return None;

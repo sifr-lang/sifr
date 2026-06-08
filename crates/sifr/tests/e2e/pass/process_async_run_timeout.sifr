@@ -1,0 +1,33 @@
+from sifr.process import Command, ProcessError, Status, async_run_timeout
+
+
+async def main() -> None:
+    try:
+        fast: Command = Command("true")
+        status: Status = await async_run_timeout(fast, 2.0)
+        assert status.success
+        assert status.kind == "success"
+        assert not status.timed_out
+
+        slow: Command = Command("sh")
+        slow.args(["-c", "sleep 1"])
+        timed_out: Status = await async_run_timeout(slow, 0.01)
+        assert timed_out.timed_out
+        assert timed_out.kind == "timeout"
+        assert not timed_out.success
+
+        invalid: Command = Command("true")
+        try:
+            _invalid: Status = await async_run_timeout(invalid, -1.0)
+            assert False
+        except ProcessError as e:
+            assert len(e.message) > 0
+
+        overflow: Command = Command("true")
+        try:
+            _overflow: Status = await async_run_timeout(overflow, 1e30)
+            assert False
+        except ProcessError as e:
+            assert len(e.message) > 0
+    except ProcessError as e:
+        assert e.message == ""

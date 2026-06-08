@@ -50,7 +50,9 @@ pub(crate) struct SharedPreludeProcessStatusNeeds {
 
 #[derive(Debug, Default, Clone, Copy)]
 pub(crate) struct SharedPreludeProcessAsyncNeeds {
-    pub(crate) needs_process_async: bool,
+    pub(crate) needs_run: bool,
+    pub(crate) needs_run_timeout: bool,
+    pub(crate) needs_output: bool,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -318,8 +320,9 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
             needs_process_status: code.contains("__sifr_process_exit_signal"),
         },
         process_async: SharedPreludeProcessAsyncNeeds {
-            needs_process_async: code.contains("__sifr_process_async_run")
-                || code.contains("__sifr_process_async_output"),
+            needs_run: code.contains("__sifr_process_async_run("),
+            needs_run_timeout: code.contains("__sifr_process_async_run_timeout"),
+            needs_output: code.contains("__sifr_process_async_output"),
         },
     }
 }
@@ -350,8 +353,14 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 "__sifr_process_exit_signal" => {
                     self.shared_needs.process_status.needs_process_status = true;
                 }
-                "__sifr_process_async_run" | "__sifr_process_async_output" => {
-                    self.shared_needs.process_async.needs_process_async = true;
+                "__sifr_process_async_run" => {
+                    self.shared_needs.process_async.needs_run = true;
+                }
+                "__sifr_process_async_run_timeout" => {
+                    self.shared_needs.process_async.needs_run_timeout = true;
+                }
+                "__sifr_process_async_output" => {
+                    self.shared_needs.process_async.needs_output = true;
                 }
                 _ => {}
             }
@@ -376,6 +385,7 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
                 || item_fn.sig.ident == "__sifr_next_process_child_id"
                 || item_fn.sig.ident == "__sifr_process_exit_signal"
                 || item_fn.sig.ident == "__sifr_process_async_run"
+                || item_fn.sig.ident == "__sifr_process_async_run_timeout"
                 || item_fn.sig.ident == "__sifr_process_async_output"
         }
         _ => false,

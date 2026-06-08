@@ -21,6 +21,7 @@ use crate::ir_optimize::remove_trivial_clones_in_items;
 use crate::ir_validate::validate_items;
 use crate::stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
+    SharedPreludeProcessAsyncNeeds,
 };
 use sifr_ir::HirModule;
 use sifr_stdlib::StdlibFeature;
@@ -323,7 +324,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut transitive_dependency_modules: HashSet<String> = HashSet::new();
     let mut stdlib_needs_file_handles = false;
     let mut stdlib_needs_process_status = false;
-    let mut stdlib_needs_process_async = false;
+    let mut stdlib_needs_process_async = SharedPreludeProcessAsyncNeeds::default();
     let mut stdlib_needs_process_children = false;
     let mut stdlib_provides_file_handle_struct = false;
     for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
@@ -385,8 +386,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         prepared.shared_needs.file_handles.needs_file_handles;
                     stdlib_needs_process_status |=
                         prepared.shared_needs.process_status.needs_process_status;
-                    stdlib_needs_process_async |=
-                        prepared.shared_needs.process_async.needs_process_async;
+                    stdlib_needs_process_async.needs_run |=
+                        prepared.shared_needs.process_async.needs_run;
+                    stdlib_needs_process_async.needs_run_timeout |=
+                        prepared.shared_needs.process_async.needs_run_timeout;
+                    stdlib_needs_process_async.needs_output |=
+                        prepared.shared_needs.process_async.needs_output;
                     stdlib_needs_process_children |= prepared
                         .shared_needs
                         .process_children
@@ -413,8 +418,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
 
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
     let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
-    let needs_process_status = stdlib_needs_process_status || stdlib_needs_process_async;
-    let needs_process_async = stdlib_needs_process_async;
+    let needs_process_async = stdlib_needs_process_async.needs_run
+        || stdlib_needs_process_async.needs_run_timeout
+        || stdlib_needs_process_async.needs_output;
+    let needs_process_status = stdlib_needs_process_status || needs_process_async;
     let needs_process_children = stdlib_needs_process_children;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
@@ -584,7 +591,11 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         preamble_items.extend(build_process_status_items());
     }
     if needs_process_async {
-        preamble_items.extend(build_process_async_items());
+        preamble_items.extend(build_process_async_items(
+            stdlib_needs_process_async.needs_run,
+            stdlib_needs_process_async.needs_run_timeout,
+            stdlib_needs_process_async.needs_output,
+        ));
     }
     if needs_process_children {
         preamble_items.extend(build_process_child_items());
