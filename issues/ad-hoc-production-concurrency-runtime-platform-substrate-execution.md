@@ -712,6 +712,25 @@ M4 legacy subprocess intrinsic cleanup review loop:
 - Merged as PR #2344: https://github.com/sifr-lang/sifr/pull/2344 (`6f4c0fe56cc7c9f7348bf73a0d8c6349df99b9b8`).
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`340.13s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`96 passed`, `0 failed`, `cache_hits=25/25`, `report_signature=f84374f7aa32a96e`).
 
+M4 stdin append semantics evidence wave implementation:
+
+- Closed the repeated-`Command.stdin_bytes(...)` decision by treating each call as an append in call order.
+- Extended `process_sync_bytes_env_cwd_stdin` to write stdin through two calls (`b"pipe-"`, then `b"bytes"`) and assert the child receives the concatenated `b"pipe-bytes"` payload.
+- Updated M4 process traceability to document append semantics and removed the follow-up boundary for deciding append vs replace behavior.
+
+M4 stdin append semantics evidence targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_sync_bytes_env_cwd_stdin.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_sync_output_text.sifr` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2176 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`290.39s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`96 passed`, `0 failed`, `cache_hits=24/25`, `report_signature=f84374f7aa32a96e`).
+
+M4 stdin append semantics evidence review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-stdin-append-semantics-review-pass-1.md`: `PASS`; reviewer verified the two-call fixture uniquely distinguishes append-in-call-order from replace-with-first or replace-with-last semantics, traceability honestly closes only the stdin append decision, no out-of-scope process lifecycle APIs are introduced, and the validation set is sufficient for this evidence slice.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

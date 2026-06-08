@@ -6,7 +6,8 @@ from sifr.tempfile import mktemp_path
 def main():
     try:
         stdin_cmd: Command = Command("cat")
-        stdin_cmd.stdin_bytes(b"pipe-bytes")
+        stdin_cmd.stdin_bytes(b"pipe-")
+        stdin_cmd.stdin_bytes(b"bytes")
         bytes_out: Output = output(stdin_cmd)
         assert bytes_out.stdout == b"pipe-bytes"
         assert bytes_out.stderr == b""
