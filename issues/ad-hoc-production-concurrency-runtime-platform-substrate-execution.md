@@ -450,6 +450,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 signal constants: https://github.com/sifr-lang/sifr/pull/2416
 - M5 resource value-carrying nullcontext: https://github.com/sifr-lang/sifr/pull/2419
 - M5 signal stream shape and lowering: https://github.com/sifr-lang/sifr/pull/2418
+- M5 resource cleanup helper diagnostics: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -619,7 +620,7 @@ M5 signal stream shape and lowering review loop:
 M5 signal stream shape and lowering merge ledger:
 
 - Merged as PR #2418 (`abdd8674b9a51dc88260782283b6f47c4c7791ff`) on 2026-06-08.
-- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`571.40s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`120 passed`, `0 failed`, `cache_hits=34/34`, `report_signature=293aaf3695dc42f8`).
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`1373.86s`, warm target `<=2m`) and warm-cache hit rate below advisory target (`53%`, target `>=90%`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`120 passed`, `0 failed`, `cache_hits=18/34`, `report_signature=293aaf3695dc42f8`).
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-ledger-review-pass-2.md`: `PASS`; reviewer verified PR #2418 metadata, merge SHA/date, final validation metrics and advisory wording, review artifact references, branch hygiene, and no overclaim beyond stream shape/lowering.
 
 M5 warnings global-filter rejection implementation:
@@ -703,6 +704,26 @@ M5 resource value-carrying nullcontext merge ledger:
 - Merged as PR #2419 (`4c67a99ecdba74d4d8693b1643b9c98a9e823de7`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`142.67s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`119 passed`, `0 failed`, `cache_hits=33/33`, `report_signature=0df4819d3daf7aa4`).
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-nullcontext-value-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2419, merge SHA/date, validation metrics and single advisory, status-block convention, cache-hit advisory removal after the fully warm rerun, and no overclaim beyond no-value plus value-carrying generic `nullcontext(...)`.
+
+M5 resource cleanup helper diagnostics implementation:
+
+- Added negative fixtures for `sifr.resource.ExitStack`, `AsyncExitStack`, `closing`, and `aclosing`, pinning each unsupported helper to the stable missing-member diagnostic.
+- Updated M5 shutdown traceability, supported-host matrix, and substrate inventory docs to close cleanup stacks and owned closing helpers as diagnostics for this phase while preserving `nullcontext(...)` support.
+- Recorded the implementation blocker for future support: cleanup stacks need typed cleanup-error aggregation, and `closing`/`aclosing` require an owned-close protocol that can honestly preserve mutating and fallible close behavior.
+
+M5 resource cleanup helper diagnostics targeted local validation:
+
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/resource_exitstack_unsupported.sifr` -> expected `SIFR-NAME-0004` for missing member `ExitStack`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/resource_async_exitstack_unsupported.sifr` -> expected `SIFR-NAME-0004` for missing member `AsyncExitStack`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/resource_closing_unsupported.sifr` -> expected `SIFR-NAME-0004` for missing member `closing`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/resource_aclosing_unsupported.sifr` -> expected `SIFR-NAME-0004` for missing member `aclosing`.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; `451 fail tests completed` and harness result `1 passed`, `0 failed`. Two pre-existing fail-suite ICE diagnostic captures were printed by the harness and did not fail the suite.
+- `python3 -m json.tool verification/stdlib/concurrency_runtime_substrate_inventory.json`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`339.84s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`120 passed`, `0 failed`, `cache_hits=34/34`, `report_signature=293aaf3695dc42f8`).
+
+M5 resource cleanup helper diagnostics review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-cleanup-diagnostics-review-pass-1.md`: `PASS`; reviewer verified the four unsupported fixtures, true missing-member behavior from the `sifr.resource` surface, preserved `nullcontext(...)` scope, future blockers for typed cleanup-error aggregation and owned-close protocol support, host-matrix and traceability consistency, and the targeted validation evidence.
 
 M5 signal `strsignal` value-helper implementation:
 
