@@ -90,6 +90,7 @@
     "process_async_run_output",
     "process_async_run_timeout",
     "process_spawn_wait_status",
+    "process_spawn_pipe_readers",
     "process_child_kill_wait",
     "stdlib_json_consolidated",
     "stdlib_tomllib",

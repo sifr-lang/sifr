@@ -105,6 +105,7 @@
     "process_async_run_output",
     "process_async_run_timeout",
     "process_spawn_wait_status",
+    "process_spawn_pipe_readers",
     "process_child_kill_wait",
     "text_i18n_encoding_io",
     "text_i18n_unicode_core",
