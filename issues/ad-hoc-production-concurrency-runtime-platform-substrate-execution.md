@@ -750,6 +750,7 @@ M4 stdin append semantics evidence targeted local validation:
 - `python3 scripts/check_file_size_guardrails.py` -> PASS; 2176 files checked, 900-line limit.
 - `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`290.39s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`96 passed`, `0 failed`, `cache_hits=24/25`, `report_signature=f84374f7aa32a96e`).
+- Post-`origin/main` merge rerun over the async process output wave: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`361.07s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`97 passed`, `0 failed`, `cache_hits=24/26`, `report_signature=36054c952f8fafec`).
 
 M4 stdin append semantics evidence review loop:
 
