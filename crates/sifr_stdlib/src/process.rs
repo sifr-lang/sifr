@@ -416,6 +416,36 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "process_async_shell_run".to_string(),
+        FunctionType::all_borrow(
+            vec![("script".to_string(), Type::Str)],
+            Type::Awaitable(Box::new(process_status_object_result())),
+        ),
+    );
+    functions.insert(
+        "process_async_shell_output".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("script".to_string(), Type::Str),
+                ("stdin".to_string(), Type::Bytes),
+                ("has_stdin".to_string(), Type::Bool),
+            ],
+            Type::Awaitable(Box::new(process_output_object_result())),
+        ),
+    );
+    functions.insert(
+        "process_async_shell_output_timeout".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("script".to_string(), Type::Str),
+                ("stdin".to_string(), Type::Bytes),
+                ("has_stdin".to_string(), Type::Bool),
+                ("timeout_seconds".to_string(), Type::Float),
+            ],
+            Type::Awaitable(Box::new(process_output_object_result())),
+        ),
+    );
+    functions.insert(
         "process_shell_run".to_string(),
         FunctionType::all_borrow(
             vec![("script".to_string(), Type::Str)],

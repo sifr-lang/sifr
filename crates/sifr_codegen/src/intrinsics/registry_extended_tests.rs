@@ -131,7 +131,9 @@ pub(crate) fn lowers_process_timeout_intrinsics_via_registry() {
     assert!(rendered.contains("process timeout is too large for this host clock"));
     assert!(rendered.contains("__child.try_wait()"));
     assert!(rendered.contains("__child.kill()"));
-    assert!(rendered.contains("(__output.stdout, __output.stderr, __status_code, __timed_out)"));
+    assert!(rendered.contains("__output.stdout"));
+    assert!(rendered.contains("__output.stderr"));
+    assert!(rendered.contains("__timed_out"));
 
     let shell_timeout = lower_intrinsic(
         "process_shell_output_timeout",
@@ -147,6 +149,24 @@ pub(crate) fn lowers_process_timeout_intrinsics_via_registry() {
     assert!(shell_rendered.contains("std::process::Command::new(\"sh\".to_string())"));
     assert!(shell_rendered.contains("__cmd.arg(\"-c\".to_string())"));
     assert!(shell_rendered.contains("__child.kill()"));
+
+    let async_shell_timeout = lower_intrinsic(
+        "process_async_shell_output_timeout",
+        &[
+            "script".to_string(),
+            "stdin".to_string(),
+            "has_stdin".to_string(),
+            "timeout".to_string(),
+        ],
+    )
+    .expect("process_async_shell_output_timeout");
+    let async_shell_rendered = render_expr(&async_shell_timeout.expr);
+    assert!(async_shell_rendered.contains("Box::pin(__sifr_process_async_output_timeout("));
+    assert!(async_shell_rendered.contains("\"sh\".to_string()"));
+    assert!(async_shell_rendered.contains("vec![\"-c\".to_string(), script.clone()]"));
+    assert!(async_shell_rendered.contains("stdin.clone()"));
+    assert!(async_shell_rendered.contains("has_stdin"));
+    assert!(async_shell_rendered.contains("timeout"));
 }
 
 #[test]

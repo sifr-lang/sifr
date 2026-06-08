@@ -1,0 +1,30 @@
+from sifr.process import Output, ProcessError, Status, async_output_shell, async_output_shell_timeout, async_run_shell
+
+
+async def main() -> None:
+    try:
+        status: Status = await async_run_shell("exit 4")
+        assert not status.success
+        assert status.code == 4
+        assert status.kind == "nonzero"
+
+        out: Output = await async_output_shell("printf async-shell-out; printf async-shell-err >&2")
+        assert out.stdout == b"async-shell-out"
+        assert out.stderr == b"async-shell-err"
+        assert out.status.success
+
+        stdin_out: Output = await async_output_shell("cat", b"async-shell-stdin")
+        assert stdin_out.stdout == b"async-shell-stdin"
+        assert stdin_out.stderr == b""
+        assert stdin_out.status.success
+
+        fast: Output = await async_output_shell_timeout("printf async-shell-fast", 2.0)
+        assert fast.stdout == b"async-shell-fast"
+        assert fast.status.success
+
+        timed_out: Output = await async_output_shell_timeout("sleep 1; printf late", 0.01)
+        assert not timed_out.status.success
+        assert timed_out.status.kind == "timeout"
+        assert timed_out.status.timed_out
+    except ProcessError as e:
+        assert e.message == ""
