@@ -103,6 +103,7 @@
     "process_timeout_status",
     "process_signal_status",
     "process_async_child_kill_terminate",
+    "process_async_top_level_kill_terminate",
     "process_async_run_output",
     "process_async_run_timeout",
     "process_async_output_timeout",

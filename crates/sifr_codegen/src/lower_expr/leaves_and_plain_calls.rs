@@ -416,6 +416,8 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             let lowered_value = if let HirExpr::Call { func, args, .. } = value.as_ref() {
                 if func == "__sifr_task_sleep" {
                     try_lower_task_sleep_call_expr(args)?
+                } else if await_call_needs_convention_aware_lowering(args) {
+                    return None;
                 } else {
                     let lowered_args = args
                         .iter()
@@ -692,6 +694,11 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
         func: Box::new(RustExpr::Ident(func.to_string())),
         args: lowered_args,
     })
+}
+
+fn await_call_needs_convention_aware_lowering(args: &[HirExpr]) -> bool {
+    args.iter()
+        .any(|arg| !crate::helpers::is_copy_type_for_codegen(arg.ty()))
 }
 
 pub(super) fn try_lower_task_sleep_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
