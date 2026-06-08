@@ -998,6 +998,14 @@ M6 typed IPC schema hash review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-hash-review-pass-1.md`: `PASS` with minor advisories; reviewer verified the internal-only schema descriptor/hash scope, deterministic canonical rendering, dependency-free FNV-1a-128 hash, traceability framing, and file-size guardrail, while asking to strengthen the sensitivity test and refresh stale line counts.
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-hash-review-pass-2.md`: `PASS`; reviewer verified the sensitivity test now mutates an actual request-record field type, ledger line counts match current files, scope remains internal-only, traceability still leaves compiler integration as follow-up work, and validation stayed green.
 
+M6 typed IPC schema hash merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2443
+- Merge commit: `f5a03ee0b646b2e04624cc0377066ad20f8913b4`
+- Merged at: `2026-06-08T23:28:56Z`
+- Scope: internal IPC schema descriptor types, canonical descriptor rendering, dependency-free FNV-1a-128 schema hash v1 helpers, schema hash tests, M6 traceability, validation evidence, and two review artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
