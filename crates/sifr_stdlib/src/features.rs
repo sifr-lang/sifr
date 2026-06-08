@@ -15,6 +15,7 @@ pub enum StdlibFeature {
     IcuDecimal,
     IcuLocale,
     IcuPlurals,
+    Ipc,
     Md5,
     Metrics,
     NumBigint,
@@ -53,6 +54,7 @@ impl StdlibFeature {
             Self::IcuDecimal => "icu_decimal",
             Self::IcuLocale => "icu_locale",
             Self::IcuPlurals => "icu_plurals",
+            Self::Ipc => "ipc",
             Self::Md5 => "md5",
             Self::Metrics => "metrics",
             Self::NumBigint => "num-bigint",
@@ -134,6 +136,17 @@ const ICU_PLURALS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency
     package: "icu_plurals",
     spec: "icu_plurals = \"2.2.0\"",
 }];
+const IPC_DEPS: &[GeneratedCargoDependency] = &[
+    GeneratedCargoDependency {
+        package: "postcard",
+        spec:
+            "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }",
+    },
+    GeneratedCargoDependency {
+        package: "serde",
+        spec: "serde = { version = \"1.0.228\", features = [\"derive\"] }",
+    },
+];
 const MD5_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "md5",
     spec: "md5 = \"0.8.0\"",
@@ -271,6 +284,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: ICU_PLURALS_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Ipc,
+        cargo_dependencies: IPC_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Md5,
         cargo_dependencies: MD5_DEPS,
     },
@@ -370,6 +387,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "icu_decimal" | "icu-decimal" => Some(StdlibFeature::IcuDecimal),
         "icu_locale" | "icu-locale" => Some(StdlibFeature::IcuLocale),
         "icu_plurals" | "icu-plurals" => Some(StdlibFeature::IcuPlurals),
+        "ipc" | "postcard" => Some(StdlibFeature::Ipc),
         "md5" => Some(StdlibFeature::Md5),
         "metrics" => Some(StdlibFeature::Metrics),
         "num-bigint" => Some(StdlibFeature::NumBigint),
@@ -431,6 +449,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::IcuPlurals,
         ],
         "sifr.base64" => &[StdlibFeature::Base64],
+        "sifr.ipc" | "_sifr.ipc" => &[StdlibFeature::Ipc],
         "sifr.parallel" => &[StdlibFeature::Rayon],
         "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
@@ -604,7 +623,7 @@ fn compile_time_sifr_runtime_path() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::{generated_cargo_dependencies, StdlibFeature};
+    use super::{feature_for_codegen_requirement, generated_cargo_dependencies, StdlibFeature};
     use std::collections::HashSet;
 
     fn normalize_runtime_dependency(dependency: &str) -> String {
@@ -667,6 +686,31 @@ mod tests {
             .iter()
             .any(|dep| dep.starts_with("sifr_runtime = ") && !dep.contains("features")));
         assert!(deps.iter().any(|dep| dep.starts_with("tokio = ")));
+    }
+
+    #[test]
+    fn ipc_feature_renders_locked_postcard_specs_without_json() {
+        let deps = generated_cargo_dependencies(
+            &HashSet::from(["sifr.ipc".to_string(), "_sifr.ipc".to_string()]),
+            &HashSet::from([StdlibFeature::Ipc]),
+        );
+
+        assert_eq!(
+            deps,
+            vec![
+                "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }",
+                "serde = { version = \"1.0.228\", features = [\"derive\"] }",
+            ]
+        );
+        assert!(!deps.iter().any(|dep| dep.starts_with("serde_json = ")));
+        assert_eq!(
+            feature_for_codegen_requirement("ipc"),
+            Some(StdlibFeature::Ipc)
+        );
+        assert_eq!(
+            feature_for_codegen_requirement("postcard"),
+            Some(StdlibFeature::Ipc)
+        );
     }
 
     #[test]

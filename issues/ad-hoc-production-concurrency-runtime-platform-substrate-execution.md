@@ -926,6 +926,24 @@ M6 typed IPC design gate merge ledger:
 - Scope: named M6 typed IPC design artifact, process-pipe layering, wire format, schema/version negotiation, frame families, payload eligibility, backpressure, cancellation/close, malformed-frame behavior, CPython-shaped API classification, host-matrix boundary, validation evidence, and reviewer artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
+M6 typed IPC dependency metadata implementation:
+
+- Added the internal `StdlibFeature::Ipc` feature that emits the locked Ring 4 typed-IPC dependencies: `postcard = { version = "1.1.3", default-features = false, features = ["use-std"] }` plus `serde = { version = "1.0.228", features = ["derive"] }`.
+- Mapped `sifr.ipc`, `_sifr.ipc`, and explicit `ipc` / `postcard` codegen requirements to the IPC feature without adding public process-worker APIs.
+- Updated grouped e2e generated Cargo.toml dependency inference so generated Rust containing `postcard::` receives the locked IPC dependency pair, and so `sifr.ipc` module metadata uses Postcard/Serde without pulling `serde_json`.
+- Kept `crates/sifr/tests/e2e_support/fixture_compilation.rs` at the 900-line file-size cap after the change.
+
+M6 typed IPC dependency metadata targeted local validation:
+
+- `cargo test -p sifr_stdlib ipc_feature_renders_locked_postcard_specs_without_json -- --nocapture` -> PASS.
+- `cargo test -p sifr --test e2e test_generate_cargo_toml_ipc_uses_locked_postcard_specs -- --nocapture` -> PASS.
+- `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2246 files` and the `900` line limit.
+- Touched file line counts after formatting: `crates/sifr_stdlib/src/features.rs` `894`, `crates/sifr/tests/e2e_support/fixture_compilation.rs` `900`, `crates/sifr/tests/e2e_support/harness_model.rs` `790`, and `crates/sifr/tests/e2e_support/harness_contract_tests.rs` `872`.
+
+M6 typed IPC dependency metadata review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-dependency-metadata-review-pass-1.md`: `PASS`; reviewer verified the change is limited to Ring 4 typed IPC dependency metadata and grouped e2e Cargo.toml inference, locked Postcard/Serde specs match the approved design, IPC does not pull `serde_json`, runtime diagnostics wiring is unchanged, file-size guardrails are respected, and the ledger does not overclaim M6 completion.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.

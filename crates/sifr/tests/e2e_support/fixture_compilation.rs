@@ -1,4 +1,12 @@
 use super::*;
+const POSTCARD_DEP: &str =
+    "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }";
+const SERDE_DEP: &str = "serde = { version = \"1.0.228\", features = [\"derive\"] }";
+const SERDE_JSON_DEP: &str =
+    "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }";
+const TRACING_DEP: &str =
+    "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }";
+
 pub(crate) fn failure_matches_expectation(
     failure: &CompiledFailure,
     expectation: &CompileFailureExpectation,
@@ -253,13 +261,8 @@ pub(crate) fn generate_cargo_toml(
     for module_name in stdlib_modules {
         match module_name.as_str() {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
-                deps.insert(
-                    "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
-                        .to_string(),
-                );
-                deps.insert(
-                    "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
-                );
+                deps.insert(SERDE_JSON_DEP.to_string());
+                deps.insert(SERDE_DEP.to_string());
             }
             "sifr.time" | "_sifr.time" | "sifr.datetime" | "_sifr.datetime" => {
                 deps.insert("chrono = \"0.4.44\"".to_string());
@@ -306,10 +309,11 @@ pub(crate) fn generate_cargo_toml(
             }
             "sifr.runtime" | "_sifr.runtime" => {
                 deps.insert("metrics = \"0.24.6\"".to_string());
-                deps.insert(
-                    "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
-                        .to_string(),
-                );
+                deps.insert(TRACING_DEP.to_string());
+            }
+            "sifr.ipc" | "_sifr.ipc" => {
+                deps.insert(POSTCARD_DEP.to_string());
+                deps.insert(SERDE_DEP.to_string());
             }
             "sifr.tomllib" | "_sifr.toml" => {
                 deps.insert(
@@ -345,13 +349,12 @@ pub(crate) fn generate_cargo_toml(
     for crate_name in required_crates {
         match crate_name.as_str() {
             "serde_json" => {
-                deps.insert(
-                    "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
-                        .to_string(),
-                );
-                deps.insert(
-                    "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
-                );
+                deps.insert(SERDE_JSON_DEP.to_string());
+                deps.insert(SERDE_DEP.to_string());
+            }
+            "postcard" | "ipc" => {
+                deps.insert(POSTCARD_DEP.to_string());
+                deps.insert(SERDE_DEP.to_string());
             }
             "chrono" => {
                 deps.insert("chrono = \"0.4.44\"".to_string());
@@ -430,10 +433,7 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert("metrics = \"0.24.6\"".to_string());
             }
             "tracing" => {
-                deps.insert(
-                    "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
-                        .to_string(),
-                );
+                deps.insert(TRACING_DEP.to_string());
             }
             _ => {}
         }
