@@ -1,0 +1,23 @@
+from sifr.process import Command, ProcessError, TextOutput, output_shell_text, output_text
+
+
+def latin1_byte_command() -> Command:
+    command: Command = Command("sh")
+    command.args(["-c", "printf '\\351'"])
+    return command
+
+
+def main() -> None:
+    try:
+        command_out: TextOutput = output_text(latin1_byte_command(), "latin-1")
+        shell_out: TextOutput = output_shell_text("printf '\\351'", None, "iso8859-1")
+
+        assert command_out.stdout == "é"
+        assert command_out.stderr == ""
+        assert command_out.status.success
+        assert shell_out.stdout == "é"
+        assert shell_out.status.success
+
+        print("platform-golden: pass")
+    except ProcessError as e:
+        assert e.message == ""

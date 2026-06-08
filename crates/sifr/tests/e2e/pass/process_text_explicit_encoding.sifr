@@ -1,0 +1,33 @@
+from sifr.process import Command, ProcessError, TextOutput, output_shell_text, output_text
+
+
+def latin1_byte_command() -> Command:
+    command: Command = Command("sh")
+    command.args(["-c", "printf '\\351'"])
+    return command
+
+
+def main() -> None:
+    actual: list[bool] = []
+
+    try:
+        latin_out: TextOutput = output_text(latin1_byte_command(), "latin-1")
+        actual.append(latin_out.stdout == "é")
+        actual.append(latin_out.stderr == "")
+        actual.append(latin_out.status.success)
+        actual.append(latin_out.encoding == "latin-1")
+
+        shell_out: TextOutput = output_shell_text("printf '\\351'", None, "iso8859-1")
+        actual.append(shell_out.stdout == "é")
+        actual.append(shell_out.status.success)
+        actual.append(shell_out.encoding == "iso8859-1")
+
+        try:
+            _ascii_fail: TextOutput = output_text(latin1_byte_command(), "ascii")
+            actual.append(False)
+        except ProcessError as e:
+            actual.append("ascii byte out of range" in e.message)
+    except ProcessError as e:
+        actual.append(False)
+
+    assert actual == [True, True, True, True, True, True, True, True]

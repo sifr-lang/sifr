@@ -66,7 +66,9 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "str_encode_utf8_result"
         | "str_encode_utf8_result_with_encoding"
         | "decode_utf8"
-        | "decode_utf8_with_encoding" => &[StdlibFeature::EncodingRs],
+        | "decode_utf8_with_encoding"
+        | "process_output_text"
+        | "process_shell_output_text" => &[StdlibFeature::EncodingRs],
         "unicode_data_version"
         | "unicode_normalize"
         | "unicode_is_normalized"
