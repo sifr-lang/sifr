@@ -12,6 +12,7 @@ mod crypto_regex_uuid;
 mod features;
 mod i18n_core;
 mod io_json;
+mod ipc_frame;
 mod ipc_schema;
 mod math_test;
 mod platform_misc;
@@ -32,6 +33,11 @@ pub use features::{
 };
 use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
+pub use ipc_frame::{
+    decode_frame, encode_frame, IpcEnvelope, IpcFrameError, IpcMalformedKind, IpcRejectReason,
+    IpcShutdownMode, IpcTerminationReason, IpcWireFrameKind, IpcWireSchema, IpcWorkerState,
+    IPC_DEFAULT_MAX_FRAME_BYTES, IPC_LENGTH_PREFIX_BYTES,
+};
 pub use ipc_schema::{
     canonical_schema_descriptor, fnv1a_128, schema_hash_hex_v1, schema_hash_v1,
     IpcSchemaDescriptor, IpcSchemaField, IpcSchemaType, IpcSchemaVariant,
