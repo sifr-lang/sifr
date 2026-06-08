@@ -1,0 +1,6 @@
+# expect-error: SIFR-IMPORT-0009
+from sifr.warnings import filterwarnings
+
+
+def main():
+    pass

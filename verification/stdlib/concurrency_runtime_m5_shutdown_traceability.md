@@ -16,7 +16,7 @@ Status: In progress; signal value-model foundation started with portable `sifr.s
 | `sifr.signal.pause`, `signal.signal`, `getsignal`, `raise_signal`, `pthread_sigmask` | `signal_pause_unsupported`; `signal_handler_registration_unsupported`; `signal_getsignal_unsupported`; `signal_raise_signal_unsupported`; `signal_pthread_sigmask_host_limited` | Unsafe arbitrary handler registration, process-global signal wakeup, and mask mutation are not production APIs. Current evidence pins stable missing-member diagnostics on `sifr.signal` imports until a future explicitly supported surface is designed. |
 | `sifr.resource.ExitStack`, `sifr.resource.AsyncExitStack`, `closing`, `aclosing`, `nullcontext` | planned M5 follow-up | Deterministic cleanup scopes must report cleanup failures under cancellation without hiding the initiating failure. |
 | `sifr.task.Context`, `sifr.task.ContextKey[T]` | planned M5 follow-up | M1 reserved `ctx=None` call shapes. M5 must implement explicit opt-in propagation without Python `contextvars` implicit dynamic mutation. |
-| Python global `warnings` filter model | M0/M0a negative import fixtures; planned M5 warning-global rejection fixture | Python warning filters remain rejected. Runtime warning-style events, if needed, must be structured diagnostics or tracing events. |
+| Python global `warnings` filter model | `warnings_filter_global_rejected`; M0/M0a negative import fixtures | Python warning filters remain rejected. Runtime warning-style events, if needed, must be structured diagnostics or tracing events. This closes the global-filter parity surface without introducing a `warnings` adapter. |
 
 ## Signal Host Matrix
 
@@ -36,7 +36,7 @@ Status: In progress; signal value-model foundation started with portable `sifr.s
 | --- | --- |
 | Create PR | `signal_value_model_basic` |
 | Merge | `signal_value_model_basic` |
-| Fail suite | `signal_pause_unsupported`, `signal_handler_registration_unsupported`, `signal_getsignal_unsupported`, `signal_raise_signal_unsupported`, `signal_pthread_sigmask_host_limited`; existing `bare_cpython_signal_import`; existing `bare_cpython_contextlib_import`; existing `bare_cpython_warnings_import`; existing `legacy_sifr_contextlib_removed`; existing `legacy_sifr_warnings_removed` |
+| Fail suite | `signal_pause_unsupported`, `signal_handler_registration_unsupported`, `signal_getsignal_unsupported`, `signal_raise_signal_unsupported`, `signal_pthread_sigmask_host_limited`; `warnings_filter_global_rejected`; existing `bare_cpython_signal_import`; existing `bare_cpython_contextlib_import`; existing `bare_cpython_warnings_import`; existing `legacy_sifr_contextlib_removed`; existing `legacy_sifr_warnings_removed` |
 
 ## Follow-up Boundaries
 
@@ -44,4 +44,4 @@ Status: In progress; signal value-model foundation started with portable `sifr.s
 - Importable `SIGINT` and `SIGTERM` constants remain M5 follow-up work; this foundation does not depend on private stdlib export behavior that currently only handles importable object classes/functions and integer constants.
 - Unsupported signal APIs are intentionally absent from `sifr.signal` so static imports produce stable diagnostics instead of runtime surprises.
 - `pthread_sigmask` is grouped with unsupported signal APIs in the current fixture set because no safe mask-mutation surface exists; it remains host-limited for any future explicitly designed Unix-only API.
-- Cleanup stacks, task context propagation, diagnostics/tracing, and warning-global rejection remain separate M5 waves.
+- Cleanup stacks, task context propagation, and structured diagnostics/tracing remain separate M5 waves.
