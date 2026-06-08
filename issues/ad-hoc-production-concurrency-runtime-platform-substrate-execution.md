@@ -421,6 +421,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process run/output loopback: https://github.com/sifr-lang/sifr/pull/2345
 - M4 sync stdout/stderr pipe readers: https://github.com/sifr-lang/sifr/pull/2352
 - M4 async process run timeout: https://github.com/sifr-lang/sifr/pull/2354
+- M4 sync stdin pipe writer: https://github.com/sifr-lang/sifr/pull/2357
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -834,6 +835,29 @@ M4 async process run timeout review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-run-timeout-review-pass-1.md`: `PASS`; reviewer verified public `sifr.process.async_run_timeout`, stdlib metadata, lowering, generated Tokio process timeout behavior, typed invalid-timeout errors, kill-and-reap timeout status evidence, helper emission gating, manifests, and traceability. Non-blocking notes covered redundant timeout `success = false`, NaN fixture coverage, and the existing raw multi-line Rust expression pattern.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-run-timeout-review-pass-2.md`: `PASS`; post-`origin/main` merge reviewer verified the async preamble split was behavior-preserving, pipe-reader behavior from PR #2352 was preserved, timeout-only helper emission stayed minimal, no user-triggerable panic path was introduced, and the post-merge create-pr validation (`99 passed`, `0 failed`, `report_signature=42aaf1077a936d74`) was sufficient.
 - Merged as PR #2354: https://github.com/sifr-lang/sifr/pull/2354 (`dd24a7c3234df280a437acf0f5f5c394bdbc5f56`).
+
+M4 sync stdin pipe writer targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2187 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_pipe_writer.sifr` -> PASS; sync child stdin `PIPE` extraction supports repeated byte writes and explicit close/EOF.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_pipe_readers.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_wait_status.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_child_kill_wait.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_sync_output_text.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/process_pipe_writer_method_direct_async_rejected.sifr` -> expected FAIL with `SIFR-ASYNC-0003`.
+- Emission check for `process_spawn_pipe_writer` -> PASS; emitted Rust includes the child table, writer table, child stdin extraction, pipe write/close helpers, and `std::io::Write::write_all`.
+- Emission check for `process_sync_output_text` -> PASS; ordinary sync output emits no process child or pipe-writer helper tables.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 423 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`422.39s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`100 passed`, `0 failed`, `cache_hits=22/26`, `report_signature=458ad42c8c1b262c`).
+
+M4 sync stdin pipe writer review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-writer-review-pass-1.md`: `PASS`; reviewer verified typed `PipeWriter.write_all`/`close` behavior, one-shot child stdin extraction, repeated writes before close, spawn stdio mode arity/order across all layers, no generated runtime panic path, symmetric preamble gating, file-size guardrail compliance, honest docs/manifests, and accepted the table-wide writer mutex during sync blocking writes as non-blocking for this slice.
+- Merged as PR #2357: https://github.com/sifr-lang/sifr/pull/2357 (`81eb29e671c8ac0b79928f4825c1daaf6bcfbf7a`).
 
 M0 targeted local validation:
 
