@@ -285,7 +285,7 @@
       "terminal_state": "production-public"
     },
     {
-      "notes": "Deterministic cleanup scopes independent of generator decorator compatibility.",
+      "notes": "Deterministic cleanup scopes independent of generator decorator compatibility; nullcontext(...) covers no-value and value-carrying generic helper evidence, while ExitStack/AsyncExitStack/closing/aclosing are closed as unsupported diagnostics until cleanup-error and owned-close protocols are implemented.",
       "owner_milestone": "milestone_concurrency_runtime_5",
       "stability": "stable-public-api",
       "support_tier": "production-public",
