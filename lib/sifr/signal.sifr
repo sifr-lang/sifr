@@ -23,3 +23,7 @@ def sigint() -> Signal:
 
 def sigterm() -> Signal:
     return Signal("SIGTERM", 15)
+
+
+def strsignal(signal: Signal) -> str:
+    return str(signal)

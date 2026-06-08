@@ -108,6 +108,7 @@
     "process_child_kill_wait",
     "process_child_terminate_wait",
     "signal_value_model_basic",
+    "signal_strsignal_basic",
     "resource_nullcontext_basic",
     "stdlib_json_consolidated",
     "stdlib_tomllib",

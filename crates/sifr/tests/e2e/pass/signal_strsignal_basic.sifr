@@ -1,0 +1,9 @@
+from sifr.signal import Signal, sigint, sigterm, strsignal
+
+
+def main():
+    interrupt: Signal = sigint()
+    terminate: Signal = sigterm()
+
+    assert strsignal(interrupt) == "SIGINT"
+    assert strsignal(terminate) == "SIGTERM"
