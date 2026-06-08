@@ -971,6 +971,14 @@ M6 typed IPC value model review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-value-model-review-pass-1.md`: `PASS`; reviewer verified the new `sifr.ipc` module is limited to host-independent schema/frame/backpressure values and helpers, reuses prior dependency metadata, covers value behavior and CPython-shaped missing-member diagnostics, updates both e2e manifests, keeps frame transport blocked, and does not overclaim M6 completion.
 
+M6 typed IPC value model merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2441
+- Merge commit: `d696146d0ccad063e0e5c4213bec7b3e25f4709d`
+- Merged at: `2026-06-08T23:12:23Z`
+- Scope: `sifr.ipc` schema/frame/backpressure value model, stdlib source registration, pass/fail fixtures, create-pr/merge manifest entries, M6 traceability, supported-host matrix, validation evidence, and reviewer artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
