@@ -1046,6 +1046,28 @@ M4 process handle boundary diagnostics review loop:
 - Merged as PR #2382 (`c9576ee61b38947bbfdda53c797f0659c2889dca`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; no advisories. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`107 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=640c40bcdf03a864`).
 
+M4 async wait cancellation-safe observation implementation:
+
+- Replaced the generated async child table value with a private `SifrProcessAsyncChildState` enum. A running child transitions into a waiting state backed by a shared completion slot and a background Tokio wait task on first `process_async_wait(...)`.
+- Preserved one-shot observation on successful wait while allowing a method-form `AsyncChild.wait()` cancelled by `async with task.timeout(...)` to be retried later on the same handle and observe the final status.
+- Updated async child pipe extraction, kill, and terminate helpers to return typed `ProcessError` when a child handle is already in the waiting state instead of reaching into a moved child.
+- Set generated Tokio async process commands to `kill_on_drop(true)` as a cleanup backstop for dropped child futures without changing the public API surface.
+- Added `process_async_wait_timeout_retry` to the create-pr and merge manifests and to M4 traceability.
+
+M4 async wait cancellation-safe observation targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `cargo check -p sifr_codegen -p sifr --quiet` -> PASS.
+- `git diff --check` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_wait_timeout_retry.sifr` -> PASS; validates timeout cancellation of `AsyncChild.wait()`, later retry observation of exit status `7`, and one-shot closed-handle behavior after successful observation.
+- Emission check for `process_async_wait_timeout_retry` -> PASS; emitted Rust includes `SifrProcessAsyncChildState`, `SifrProcessAsyncWaitSlot`, `tokio::spawn`, `kill_on_drop(true)`, and typed waiting-state errors.
+- Neighbor async process fixtures -> PASS: `process_async_spawn_wait`, `process_async_spawn_pipes`, `process_async_child_kill_terminate`, and `process_async_top_level_kill_terminate`.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`124.14s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`108 passed`, `0 failed`, `cache_hits=26/27`, `report_signature=df97adcd1a958b0c`).
+
+M4 async wait cancellation-safe observation review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-wait-cancellation-review-pass-2.md`: `PASS`; reviewer verified cancellation safety is real, the first wait moves the child into a waiting state without holding a mutex across await, timeout cancellation leaves the background wait task and completion slot intact for later observation, one-shot cleanup is preserved after successful observation, pipe/kill/terminate during waiting return typed `ProcessError`, `kill_on_drop(true)` is only a cleanup backstop, fixture/manifests/docs are honest, and no file-size or generated-runtime panic issue exists. Reviewer requested only the create-pr validation lane before PR.
+
 M4 method-form async child kill/terminate implementation:
 
 - Added method-form `AsyncChild.kill()` and `AsyncChild.terminate()` to `sifr.process`, backed by private `_sifr.process.process_async_kill` and `process_async_terminate` intrinsics returning typed awaitable `Result[None, ProcessError]`.

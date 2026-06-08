@@ -1,0 +1,39 @@
+from sifr.process import AsyncChild, Command, ProcessError, Status, async_spawn
+
+
+def delayed_exit_command() -> Command:
+    command: Command = Command("sh")
+    command.args(["-c", "sleep 0.2; exit 7"])
+    return command
+
+
+async def main() -> Result[None, Error]:
+    actual: list[bool] = []
+
+    try:
+        child: AsyncChild = await async_spawn(delayed_exit_command())
+        timed_out: bool = False
+
+        try:
+            async with task.timeout(0.01):
+                _cancelled_status: Status = await child.wait()
+        except TimeoutError:
+            timed_out = True
+        except ProcessError as e:
+            actual.append(False)
+
+        final_status: Status = await child.wait()
+        actual.append(timed_out)
+        actual.append(final_status.code == 7)
+        actual.append(final_status.kind == "nonzero")
+
+        try:
+            _second_wait: Status = await child.wait()
+            actual.append(False)
+        except ProcessError as e:
+            actual.append("closed or unknown" in e.message)
+    except ProcessError as e:
+        actual.append(False)
+
+    assert actual == [True, True, True, True]
+    return None
