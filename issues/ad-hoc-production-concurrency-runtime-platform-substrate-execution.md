@@ -453,6 +453,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 resource cleanup helper diagnostics: https://github.com/sifr-lang/sifr/pull/2423
 - M5 signal stream Unix delivery harness: https://github.com/sifr-lang/sifr/pull/2426
 - M5 structured runtime diagnostics: https://github.com/sifr-lang/sifr/pull/2428
+- M5 explicit task context propagation: https://github.com/sifr-lang/sifr/pull/2431
 - M6: pending.
 - M7: pending.
 
@@ -804,6 +805,39 @@ M5 structured runtime diagnostics merge ledger:
 M5 structured runtime diagnostics merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-runtime-diagnostics-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2428 URL, merge commit/date, implementation summary, validation evidence, review-loop citations, docs-only scope, and no overclaim of metrics emission or M5 closure.
+
+M5 explicit task context propagation implementation:
+
+- Added `sifr.task.current_context()` backed by the `_sifr.task.task_current_context` intrinsic and a generated Tokio task-local label helper.
+- Changed `sifr.task.Context` from a marker value to a Sifr-owned value with `name: str`, default `"Context"`, and `__str__` returning the label.
+- Extended `task.TaskGroup(ctx=Context(...))` lowering, HIR, and codegen so group-spawned children inherit the explicit context label.
+- Extended `task.spawn_scoped(..., ctx=Context(...))` lowering and runtime helpers so the child gets an explicit override while the active group context is restored for later spawns.
+- Kept `ctx=None` valid and changed invalid non-`Context` values to a stable `SIFR-TYPE-0002` diagnostic.
+- Added `task_context_propagation_basic` pass coverage, updated `task_context_propagation_rejected`, and listed the pass fixture in create-pr and merge E2E manifests.
+- Updated the M5 shutdown traceability artifact and supported-host matrix to mark explicit task context propagation supported while continuing to reject Python `contextvars` dynamic mutation semantics.
+
+M5 explicit task context propagation targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_lowering task_runtime_m1 -- --nocapture` -> PASS; `11 passed`.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/task_context_propagation_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/task_context_value_model_basic.sifr` -> PASS.
+- `! cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/task_context_propagation_rejected.sifr` -> PASS by expected `SIFR-TYPE-0002`.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2246 files`, `900` line limit, and touched `task_runtime.rs` remained at `892` lines.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`483.76s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`123 passed`, `0 failed`, `cache_hits=0/36`, `report_signature=4a74179bcdf2ba0c`).
+
+M5 explicit task context propagation review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-context-propagation-review-pass-1.md`: `PASS`; reviewer verified HIR/walker coverage for `TaskGroup { context }`, duplicate task-local/helper emission gates, honest structural context checking for the current type-system shape, runtime override restoration, tests, manifests, traceability, and the absence of Python `contextvars` overclaim.
+
+M5 explicit task context propagation merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2431
+- Merge commit: `262c052c9c5c2215f9df20d10ee3f85ff5e79fa3`
+- Merged at: `2026-06-08T21:28:58Z`.
+- Scope: explicit `sifr.task.Context` propagation for `TaskGroup(ctx=...)` and `task.spawn_scoped(..., ctx=...)`, `current_context()` intrinsic/runtime support, fixtures, lane manifests, review artifact, and M5 traceability updates.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS.
 
 M5 signal `strsignal` value-helper implementation:
 
