@@ -979,6 +979,25 @@ M6 typed IPC value model merge ledger:
 - Scope: `sifr.ipc` schema/frame/backpressure value model, stdlib source registration, pass/fail fixtures, create-pr/merge manifest entries, M6 traceability, supported-host matrix, validation evidence, and reviewer artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
+M6 typed IPC schema hash implementation:
+
+- Added internal `sifr_stdlib::ipc_schema` descriptor types for generated IPC schemas, fields, variants, and eligible type shapes.
+- Added deterministic canonical descriptor rendering for module path, schema name, compatible version range, request/response/error types, record fields, enum variants, and nested container types.
+- Added dependency-free FNV-1a-128 schema hash v1 helpers (`schema_hash_v1`, `schema_hash_hex_v1`) for compatibility evidence, not cryptographic trust.
+- Updated M6 typed IPC traceability to record schema descriptor/hash evidence while keeping compiler integration and generated schema extraction as follow-up work.
+
+M6 typed IPC schema hash targeted local validation:
+
+- `cargo test -p sifr_stdlib ipc_schema -- --nocapture` -> PASS.
+- `cargo fmt` and `cargo fmt --check` -> PASS.
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2250 files` and the `900` line limit.
+- Touched file line counts after formatting: `crates/sifr_stdlib/src/ipc_schema.rs` `265`, `crates/sifr_stdlib/src/lib.rs` `430`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `243`, and this ledger `1964`.
+
+M6 typed IPC schema hash review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-hash-review-pass-1.md`: `PASS` with minor advisories; reviewer verified the internal-only schema descriptor/hash scope, deterministic canonical rendering, dependency-free FNV-1a-128 hash, traceability framing, and file-size guardrail, while asking to strengthen the sensitivity test and refresh stale line counts.
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-hash-review-pass-2.md`: `PASS`; reviewer verified the sensitivity test now mutates an actual request-record field type, ledger line counts match current files, scope remains internal-only, traceability still leaves compiler integration as follow-up work, and validation stayed green.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.

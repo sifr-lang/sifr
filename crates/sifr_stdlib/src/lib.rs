@@ -12,6 +12,7 @@ mod crypto_regex_uuid;
 mod features;
 mod i18n_core;
 mod io_json;
+mod ipc_schema;
 mod math_test;
 mod platform_misc;
 mod process;
@@ -31,6 +32,10 @@ pub use features::{
 };
 use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
+pub use ipc_schema::{
+    canonical_schema_descriptor, fnv1a_128, schema_hash_hex_v1, schema_hash_v1,
+    IpcSchemaDescriptor, IpcSchemaField, IpcSchemaType, IpcSchemaVariant,
+};
 use math_test::{intrinsic_math, intrinsic_test};
 use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_logging,

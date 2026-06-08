@@ -27,6 +27,7 @@ This design does not ship a public process-worker pool. A future worker API rema
 | `sifr.ipc.ProtocolVersion` / `protocol_version(...)` | `ipc_value_model_basic` | Host-independent value model for negotiated protocol version bounds. |
 | `sifr.ipc.FrameKind` and frame-family constants | `ipc_value_model_basic` | Covers bootstrap, work, control, health, and protocol-error frame names as values. It does not encode or decode wire frames yet. |
 | `sifr.ipc.BackpressurePolicy` / `default_backpressure()` | `ipc_value_model_basic` | Pins the default in-flight request window (`64`) and default max frame bytes (`16777216`) from the design. Runtime backpressure enforcement remains follow-up work. |
+| Internal schema descriptor and hash v1 | `cargo test -p sifr_stdlib ipc_schema -- --nocapture` | `sifr_stdlib::ipc_schema` renders canonical schema descriptors and stable FNV-1a-128 schema hashes without adding a new hash dependency. Compiler integration and generated schema extraction remain follow-up work. |
 | `ProcessPoolExecutor` and `Process` under `sifr.ipc` | `ipc_process_pool_executor_unsupported`; `ipc_multiprocessing_process_unsupported` | Missing-member diagnostics keep CPython-shaped process-pool and multiprocessing names out of the native IPC module. |
 
 ## Transport Boundary
