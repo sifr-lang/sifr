@@ -478,7 +478,7 @@ fn sifr_runtime_dependency_spec_with_features(features: &[&str]) -> String {
 }
 
 pub(crate) fn tokio_dependency_spec() -> String {
-    "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"sync\", \"time\"] }"
+    "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
         .to_string()
 }
 

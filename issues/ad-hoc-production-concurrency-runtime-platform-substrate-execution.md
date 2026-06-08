@@ -442,10 +442,14 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 scoped parent cancellation evidence: https://github.com/sifr-lang/sifr/pull/2400
 - M4 closeout: https://github.com/sifr-lang/sifr/pull/2403
 - M4: complete.
-- M5 signal value-model foundation: in progress.
-- M5 warnings global-filter rejection: in progress.
-- M5 resource nullcontext foundation: in progress.
-- M5 resource value-carrying nullcontext: in progress.
+- M5 signal value-model foundation: https://github.com/sifr-lang/sifr/pull/2405
+- M5 warnings global-filter rejection: https://github.com/sifr-lang/sifr/pull/2407
+- M5 resource nullcontext foundation: https://github.com/sifr-lang/sifr/pull/2409
+- M5 signal `strsignal` value-helper: https://github.com/sifr-lang/sifr/pull/2412
+- M5 task context value-model foundation: https://github.com/sifr-lang/sifr/pull/2414
+- M5 signal constants: https://github.com/sifr-lang/sifr/pull/2416
+- M5 resource value-carrying nullcontext: https://github.com/sifr-lang/sifr/pull/2419
+- M5 signal stream shape and lowering: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -578,6 +582,37 @@ M5 signal value-model foundation merge ledger:
 - Merged as PR #2405 (`98d858f0057e3bab9cab74a1d90e45f3c278566b`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`231.98s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`115 passed`, `0 failed`, `cache_hits=23/31`, `report_signature=fa75f7f525acd21c`).
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2405 merge commit, foundation-only scope wording, validation metrics, advisory wording, guardrails, and lane-step coverage for this docs-only merge-ledger PR.
+
+M5 signal stream shape and lowering implementation:
+
+- Added `_sifr.signal` intrinsic typing and codegen lowering for awaitable `signal_ctrl_c`, `signal_terminate`, and `signal_shutdown` backed by Tokio signal APIs.
+- Extended public `sifr.signal` with `strsignal(...)`, `ctrl_c()`, `terminate()`, `ShutdownStream.next()`, and `shutdown_stream()` while preserving the existing `Signal(name, number)` value model.
+- Added Tokio's `signal` feature to the generated Tokio dependency bundle so signal-backed awaitables compile in generated projects.
+- Added `signal_stream_shape_strsignal` pass coverage for `strsignal(...)` and the public awaitable stream shapes without polling host signals, plus codegen registry coverage for the actual Tokio Ctrl-C/SIGTERM lowerings.
+- Updated M5 shutdown traceability and the supported-host matrix to keep deterministic external signal delivery as follow-up while marking stream shape/lowering in progress on macOS/Linux and host-limited for Windows SIGTERM.
+
+M5 signal stream shape and lowering targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo check -q -p sifr_stdlib -p sifr_codegen` -> PASS.
+- `cargo test -p sifr_codegen lowers_signal_intrinsics_via_registry -- --nocapture` -> PASS.
+- `cargo test -p sifr_stdlib stdlib_source_inventory_contains_user_modules -- --nocapture` -> PASS.
+- `cargo test -p sifr_driver test_generate_test_runner_cargo_toml_includes_required_features -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_stream_shape_strsignal.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_value_model_basic.sifr` -> PASS.
+- Emission check for `signal_stream_shape_strsignal` -> PASS; emitted Rust includes `ShutdownStream`, public `ctrl_c()` / `terminate()` wrappers, `tokio::signal::ctrl_c().await`, Unix `tokio::signal::unix::SignalKind::terminate()`, and typed non-Unix `SIGTERM is unsupported on this host`.
+- Post-review blocker remediation updated the grouped e2e harness Tokio dependency spec and matching assertions to include Tokio's `signal` feature, matching the generated dependency bundle used by normal project/run paths.
+- Post-remediation `cargo test -p sifr_codegen test_generate_project_emits_tokio_dependency_when_required -- --nocapture` -> PASS.
+- Post-remediation `cargo test -p sifr test_generate_cargo_toml_required_tokio_uses_runtime_features -- --nocapture` -> PASS.
+- Post-remediation `scripts/run_e2e_pass.sh --profile create-pr` -> PASS; create-pr e2e pass suite covered `117` fixtures with `117 passed`, `0 failed`, `cache_hits=3/26`, `report_signature=ded105ad58090608`.
+- Broad non-profiled probe `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` still exposed unrelated existing text/I/O and bytes conversion failures (`cpython_io_subset`, `stdlib_io_consolidated`, `open_context_manager`, `open_read`, `open_readline`, `open_write`, `bytes_conversion_errors`) and is not the accepted gate for this wave; the authoritative profiled create-pr e2e lane above passed.
+- Post-remediation `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; e2e pass suite `117 passed`, `0 failed`, `cache_hits=22/33`, `report_signature=ded105ad58090608`; platform golden `pass=6`, `skip=1`. Advisories: warm wall-time budget exceeded (`1041.25s`, warm target `<=2m`) and warm-cache hit rate below advisory target (`67%`, target `>=90%`).
+
+M5 signal stream shape and lowering review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-review-pass-1.md`: `FAIL`; reviewer verified the API/lowering shape and host semantics but blocked the PR because the grouped e2e harness and two assertions still hard-coded Tokio without the `signal` feature. The blocker was remediated by updating the harness dependency spec, harness contract assertion, and codegen dependency assertion; the shape-only fixture also now documents that signal futures are intentionally not awaited.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-review-pass-2.md`: `PASS`; reviewer verified the Tokio `signal` feature rollout is now consistent across generated projects, grouped e2e harness Cargo generation, harness contract tests, and codegen dependency tests, and that the full create-pr lane passed with the new signal fixture.
 
 M5 warnings global-filter rejection implementation:
 

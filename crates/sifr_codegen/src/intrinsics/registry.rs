@@ -27,6 +27,7 @@ mod process_child_lifecycle;
 mod process_pipes;
 mod random;
 mod re;
+mod signal;
 mod sys;
 mod test;
 mod time;
@@ -697,6 +698,18 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "process_shell_output" => (process::lower_process_shell_output(args), None),
         "process_shell_output_text" => (process::lower_process_shell_output_text(args), None),
         "process_shell_output_timeout" => (process::lower_process_shell_output_timeout(args), None),
+        "signal_ctrl_c" => (
+            signal::lower_signal_ctrl_c(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "signal_terminate" => (
+            signal::lower_signal_terminate(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "signal_shutdown" => (
+            signal::lower_signal_shutdown(args),
+            Some(StdlibFeature::Tokio),
+        ),
         "html_escape" => (html::lower_html_escape(args), None),
         "html_unescape" => (html::lower_html_unescape(args), None),
         "calendar_isleap" => (calendar::lower_calendar_isleap(args), None),

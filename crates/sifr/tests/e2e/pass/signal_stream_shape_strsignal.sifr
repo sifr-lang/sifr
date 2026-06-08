@@ -1,0 +1,26 @@
+from sifr.signal import (
+    SIGINT,
+    SIGTERM,
+    Signal,
+    SignalError,
+    ctrl_c,
+    shutdown_stream,
+    strsignal,
+    terminate,
+)
+
+
+def main():
+    interrupt: Signal = SIGINT
+    interrupt_label: str = strsignal(interrupt)
+    assert interrupt_label == "SIGINT"
+
+    termination: Signal = SIGTERM
+    termination_label: str = strsignal(termination)
+    assert termination_label == "SIGTERM"
+
+    # Shape pin only: these futures are intentionally not awaited because
+    # deterministic external signal delivery belongs to a later M5 harness.
+    _ctrl_c_wait: Awaitable[Result[Signal, SignalError]] = ctrl_c()
+    _terminate_wait: Awaitable[Result[Signal, SignalError]] = terminate()
+    _shutdown_wait: Awaitable[Result[Signal, SignalError]] = shutdown_stream().next()

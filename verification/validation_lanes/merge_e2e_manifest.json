@@ -126,6 +126,7 @@
     "signal_value_model_basic",
     "signal_strsignal_basic",
     "signal_constants_basic",
+    "signal_stream_shape_strsignal",
     "resource_nullcontext_basic",
     "text_i18n_encoding_io",
     "text_i18n_unicode_core",
