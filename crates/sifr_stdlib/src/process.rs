@@ -63,12 +63,25 @@ fn process_output_class() -> Type {
     }
 }
 
+fn process_async_child_class() -> Type {
+    Type::Class {
+        name: "AsyncChild".to_string(),
+        fields: vec![("_handle".to_string(), Type::Int)],
+        methods: vec![],
+        parent_class: None,
+    }
+}
+
 fn process_status_object_result() -> Type {
     result_ty(process_status_class(), "ProcessError")
 }
 
 fn process_output_object_result() -> Type {
     result_ty(process_output_class(), "ProcessError")
+}
+
+fn process_async_child_object_result() -> Type {
+    result_ty(process_async_child_class(), "ProcessError")
 }
 
 /// _sifr.process — Native process execution intrinsics.
@@ -271,6 +284,30 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("stdin_mode".to_string(), Type::Str),
                 ("timeout_seconds".to_string(), Type::Float),
             ],
+            Type::Awaitable(Box::new(process_status_object_result())),
+        ),
+    );
+    functions.insert(
+        "process_async_spawn".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("program".to_string(), Type::Str),
+                ("args".to_string(), Type::List(Box::new(Type::Str))),
+                ("env".to_string(), Type::List(Box::new(Type::Str))),
+                ("cwd".to_string(), Type::Str),
+                ("has_cwd".to_string(), Type::Bool),
+                ("stdin_mode".to_string(), Type::Str),
+                ("stdout_mode".to_string(), Type::Str),
+                ("stderr_mode".to_string(), Type::Str),
+                ("has_stdin".to_string(), Type::Bool),
+            ],
+            Type::Awaitable(Box::new(process_async_child_object_result())),
+        ),
+    );
+    functions.insert(
+        "process_async_wait".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
             Type::Awaitable(Box::new(process_status_object_result())),
         ),
     );
