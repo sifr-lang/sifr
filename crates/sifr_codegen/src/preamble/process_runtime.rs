@@ -4,7 +4,8 @@ use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Visi
 
 use super::process_child_pipes::{
     process_child_pipe_item, process_child_pipe_writer_item, process_pipe_close_item,
-    process_pipe_read_all_item, process_pipe_write_all_item,
+    process_pipe_read_all_item, process_pipe_read_item, process_pipe_reader_close_item,
+    process_pipe_write_all_item,
 };
 
 pub(crate) fn build_process_status_items() -> Vec<RustItem> {
@@ -693,6 +694,8 @@ pub(crate) fn build_process_child_items() -> Vec<RustItem> {
         process_child_pipe_item("__sifr_process_child_stdout", "stdout"),
         process_child_pipe_item("__sifr_process_child_stderr", "stderr"),
         process_pipe_read_all_item(),
+        process_pipe_read_item(),
+        process_pipe_reader_close_item(),
         process_pipe_write_all_item(),
         process_pipe_close_item(),
     ]

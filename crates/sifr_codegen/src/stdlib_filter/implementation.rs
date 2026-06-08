@@ -328,6 +328,8 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
                 || code.contains("__sifr_process_child_stdout")
                 || code.contains("__sifr_process_child_stderr")
                 || code.contains("__sifr_process_pipe_read_all")
+                || code.contains("__sifr_process_pipe_read(")
+                || code.contains("__sifr_process_pipe_reader_close")
                 || code.contains("__sifr_process_pipe_write_all")
                 || code.contains("__sifr_process_pipe_close")
                 || code.contains("__sifr_process_stdio_from_mode"),
@@ -377,6 +379,8 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 | "__sifr_process_child_stdout"
                 | "__sifr_process_child_stderr"
                 | "__sifr_process_pipe_read_all"
+                | "__sifr_process_pipe_read"
+                | "__sifr_process_pipe_reader_close"
                 | "__sifr_process_pipe_write_all"
                 | "__sifr_process_pipe_close"
                 | "__sifr_process_stdio_from_mode" => {
@@ -443,6 +447,8 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
                 || item_fn.sig.ident == "__sifr_process_child_stdout"
                 || item_fn.sig.ident == "__sifr_process_child_stderr"
                 || item_fn.sig.ident == "__sifr_process_pipe_read_all"
+                || item_fn.sig.ident == "__sifr_process_pipe_read"
+                || item_fn.sig.ident == "__sifr_process_pipe_reader_close"
                 || item_fn.sig.ident == "__sifr_process_pipe_write_all"
                 || item_fn.sig.ident == "__sifr_process_pipe_close"
                 || item_fn.sig.ident == "__sifr_process_stdio_from_mode"

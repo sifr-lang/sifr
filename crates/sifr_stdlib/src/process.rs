@@ -148,6 +148,23 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "process_pipe_read".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("max_bytes".to_string(), Type::Int),
+            ],
+            result_ty(Type::Bytes, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_pipe_reader_close".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::None, "ProcessError"),
+        ),
+    );
+    functions.insert(
         "process_pipe_write_all".to_string(),
         FunctionType::all_borrow(
             vec![

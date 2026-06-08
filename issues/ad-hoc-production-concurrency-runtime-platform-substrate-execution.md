@@ -427,6 +427,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync process terminate: https://github.com/sifr-lang/sifr/pull/2367
 - M4 async process spawn/wait: https://github.com/sifr-lang/sifr/pull/2369
 - M4 method-form async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2372
+- M4 sync PipeReader streaming reads: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -986,6 +987,32 @@ M4 async process spawn/wait review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-4.md`: `PASS`; reviewer confirmed the duplicate PR-list entry was collapsed to a single in-progress spawn/wait row after PR #2367, conflict markers remained absent, `git diff --check` stayed clean, and no new blocker was introduced.
 - Merged as PR #2369 (`2acbcec324571381b7d5099041402bb7461c77b5`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`255.22s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`103 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=2593463768412da4`).
+
+M4 sync PipeReader streaming reads implementation:
+
+- Added `PipeReader.read(max_bytes)` and `PipeReader.close()` to `sifr.process` as `@blocking_io` sync pipe-reader APIs returning typed `Result[..., ProcessError]`.
+- Added private `_sifr.process.process_pipe_read` and `process_pipe_reader_close` metadata, intrinsic lowering, generated helpers, and prelude filtering.
+- `process_pipe_read` validates positive bounded read sizes, caps one read at 1 MiB, maps host I/O failures to typed `ProcessError`, preserves the reader handle after partial chunks, and removes the private reader handle at EOF. `process_pipe_reader_close` explicitly removes a partially-read handle.
+- Kept async pipes, sendability/shareability checks, process supervision, and text-mode pipe decoding out of this slice.
+- Added `process_pipe_reader_streaming` fixture coverage to create-pr and merge manifests, plus M4 traceability and supported-host matrix updates.
+
+M4 sync PipeReader streaming reads targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo fmt` and `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2195 files checked, 900-line limit. Touched hand-maintained files remain below the cap, including `crates/sifr_codegen/src/stdlib_filter/implementation.rs` at 789 lines and `crates/sifr_codegen/src/preamble/process_child_pipes.rs` at 563 lines.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_pipe_reader_streaming.sifr` -> PASS; bounded sync reads return ordered chunks, invalid sizes produce typed `ProcessError`, EOF closes the reader, and explicit close rejects later reads.
+- Adjacent pipe regressions `process_spawn_pipe_readers` and `process_spawn_pipe_writer` -> PASS.
+- Emission check for `process_pipe_reader_streaming` -> PASS; emitted Rust includes `__SIFR_PROCESS_PIPE_READERS`, `__sifr_process_pipe_read`, `__sifr_process_pipe_reader_close`, `__sifr_process_pipe_read_all`, and the 1 MiB per-read guard without emitting async process child state.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 425 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`461.65s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`105 passed`, `0 failed`, `cache_hits=22/27`, `report_signature=d08ce200366c588c`).
+
+M4 sync PipeReader streaming reads review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-reader-streaming-review-pass-1.md`: `PASS`; reviewer verified the public `PipeReader.read(max_bytes)` / `PipeReader.close()` surface preserves typed `ProcessError`, stdlib metadata/lowerers/registry/helper signatures agree, bounded reads validate positive sizes and cap one read at 1 MiB, partial reads preserve the private reader handle, EOF and explicit close remove it, prelude filtering emits sync pipe state without async child state, fixture/manifests/traceability/host matrix/ledger are honest about async pipes/sendability/supervision/text-mode deferrals, and file-size guardrails remain under 900 lines. Non-blocking follow-ups were recorded for PR hygiene around unrelated network/http files, future structured helper construction cleanup, later lock-scope hardening before concurrent sync readers matter, and optional direct-async rejection fixture coverage.
 
 M4 method-form async child kill/terminate implementation:
 

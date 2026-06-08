@@ -8,7 +8,9 @@ from _sifr.process import (
     process_child_stdin,
     process_child_stdout,
     process_child_stderr,
+    process_pipe_read,
     process_pipe_read_all,
+    process_pipe_reader_close,
     process_pipe_write_all,
     process_pipe_close,
     process_output,
@@ -85,11 +87,30 @@ class PipeReader:
         self._closed = False
 
     @blocking_io
+    def read(self, max_bytes: int) -> Result[bytes, ProcessError]:
+        if self._closed:
+            raise ProcessError("process pipe reader is already closed")
+        try:
+            chunk: bytes = process_pipe_read(self._handle, max_bytes)
+            if len(chunk) == 0:
+                self._closed = True
+            return chunk
+        except ProcessError as e:
+            raise e
+
+    @blocking_io
     def read_all(self) -> Result[bytes, ProcessError]:
         if self._closed:
             raise ProcessError("process pipe reader is already closed")
         self._closed = True
         return process_pipe_read_all(self._handle)
+
+    @blocking_io
+    def close(self) -> Result[None, ProcessError]:
+        if self._closed:
+            raise ProcessError("process pipe reader is already closed")
+        self._closed = True
+        return process_pipe_reader_close(self._handle)
 
 
 class PipeWriter:

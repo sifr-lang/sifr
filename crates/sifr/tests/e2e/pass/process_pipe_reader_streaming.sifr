@@ -1,0 +1,64 @@
+from sifr.process import Child, Command, PipeReader, ProcessError, Status, Stdio, spawn
+
+
+def main() -> None:
+    pipe: Stdio = Stdio("pipe")
+
+    try:
+        command: Command = Command("sh")
+        command.arg("-c")
+        command.arg("printf abcdef")
+        command.stdout(pipe)
+
+        child: Child = spawn(command)
+        reader: PipeReader = child.stdout()
+
+        invalid_size_rejected: bool = False
+        try:
+            _invalid: bytes = reader.read(0)
+        except ProcessError as e:
+            invalid_size_rejected = "positive" in e.message
+        assert invalid_size_rejected
+
+        first: bytes = reader.read(2)
+        second: bytes = reader.read(3)
+        third: bytes = reader.read(10)
+        eof: bytes = reader.read(1)
+        assert first == b"ab"
+        assert second == b"cde"
+        assert third == b"f"
+        assert eof == b""
+
+        read_after_eof_rejected: bool = False
+        try:
+            _after_eof: bytes = reader.read(1)
+        except ProcessError as e:
+            read_after_eof_rejected = "closed" in e.message
+        assert read_after_eof_rejected
+
+        status: Status = child.wait()
+        assert status.success
+
+        close_command: Command = Command("sh")
+        close_command.arg("-c")
+        close_command.arg("printf xyz")
+        close_command.stdout(pipe)
+
+        close_child: Child = spawn(close_command)
+        close_reader: PipeReader = close_child.stdout()
+        close_first: bytes = close_reader.read(1)
+        assert close_first == b"x"
+
+        closed: None = close_reader.close()
+
+        read_after_close_rejected: bool = False
+        try:
+            _after_close: bytes = close_reader.read_all()
+        except ProcessError as e:
+            read_after_close_rejected = "closed" in e.message
+        assert read_after_close_rejected
+
+        close_status: Status = close_child.wait()
+        assert close_status.success
+    except ProcessError as e:
+        assert False
