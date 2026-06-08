@@ -781,6 +781,8 @@ M4 method-form blocking workload diagnostics targeted local validation:
 M4 method-form blocking workload diagnostics review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-process-method-workloads-review-pass-1.md`: `PASS`; reviewer verified qualified class-method workload collection, stdlib/project import propagation, method-call async diagnostics, bounded false-positive risk, new fail fixtures, and traceability honesty. Non-blocking note: keep unrelated network-phase files out of this PR.
+- Merged as PR #2350: https://github.com/sifr-lang/sifr/pull/2350 (`cdfca07b19a6675463113c881525df620fa6eb44`).
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`343.95s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`97 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=36054c952f8fafec`).
 
 M0 targeted local validation:
 
