@@ -42,5 +42,13 @@ def main() -> None:
         status: Status = child.wait()
         assert status.success
         assert status.kind == "success"
+
+        stdin_bytes_cmd: Command = Command("cat")
+        stdin_bytes_cmd.stdin_bytes(b"ignored")
+        try:
+            _ignored_child: Child = spawn(stdin_bytes_cmd)
+            assert False
+        except ProcessError as e:
+            assert "stdin_bytes" in e.message
     except ProcessError as e:
         assert False

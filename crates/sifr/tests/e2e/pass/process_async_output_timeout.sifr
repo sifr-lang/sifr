@@ -1,4 +1,4 @@
-from sifr.process import Command, Output, ProcessError, async_output_timeout
+from sifr.process import Command, Output, ProcessError, Stdio, async_output_timeout
 
 
 async def main() -> None:
@@ -35,5 +35,13 @@ async def main() -> None:
             assert False
         except ProcessError as e:
             assert "owned pipe" in e.message
+
+        pipe_cmd: Command = Command("cat")
+        pipe_cmd.stdin(Stdio("pipe"))
+        try:
+            _pipe: Output = await async_output_timeout(pipe_cmd, 2.0)
+            assert False
+        except ProcessError as e:
+            assert "stdin mode" in e.message
     except ProcessError as e:
         assert e.message == ""

@@ -58,6 +58,10 @@ fn process_async_params(include_stdin: bool) -> Vec<RustParam> {
             name: "has_cwd".to_string(),
             ty: RustType::Bool,
         },
+        RustParam::Named {
+            name: "stdin_mode".to_string(),
+            ty: string_ty(),
+        },
     ];
     if include_stdin {
         params.push(RustParam::Named {
@@ -66,6 +70,23 @@ fn process_async_params(include_stdin: bool) -> Vec<RustParam> {
         });
     }
     params
+}
+
+fn process_async_stdin_mode_guard() -> RustStmt {
+    RustStmt::If {
+        cond: RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("stdin_mode".to_string())),
+            op: "!=".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Str("inherit".to_string()))),
+        },
+        then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+            args: vec![process_error_expr(RustExpr::Literal(RustLiteral::Str(
+                "async process stdin mode requires owned pipe support".to_string(),
+            )))],
+        }))],
+        else_body: None,
+    }
 }
 
 fn process_async_command_setup() -> Vec<RustStmt> {
@@ -200,7 +221,8 @@ pub(crate) fn build_process_async_items(
     needs_output: bool,
     needs_output_timeout: bool,
 ) -> Vec<RustItem> {
-    let mut run_body = process_async_command_setup();
+    let mut run_body = vec![process_async_stdin_mode_guard()];
+    run_body.extend(process_async_command_setup());
     run_body.push(RustStmt::Let {
         mutable: false,
         name: "__status".to_string(),
@@ -221,33 +243,37 @@ pub(crate) fn build_process_async_items(
         )],
     })));
 
-    let mut run_timeout_body = vec![RustStmt::If {
-        cond: RustExpr::BinOp {
-            left: Box::new(RustExpr::UnaryOp {
-                op: "!".to_string(),
-                operand: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("timeout_seconds".to_string())),
-                    method: "is_finite".to_string(),
-                    args: vec![],
+    let mut run_timeout_body = vec![
+        process_async_stdin_mode_guard(),
+        RustStmt::If {
+            cond: RustExpr::BinOp {
+                left: Box::new(RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("timeout_seconds".to_string())),
+                        method: "is_finite".to_string(),
+                        args: vec![],
+                    }),
                 }),
-            }),
-            op: "||".to_string(),
-            right: Box::new(RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("timeout_seconds".to_string())),
-                op: "<".to_string(),
-                right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
-            }),
+                op: "||".to_string(),
+                right: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("timeout_seconds".to_string())),
+                    op: "<".to_string(),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                }),
+            },
+            then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                args: vec![process_error_expr(RustExpr::FormatMacro {
+                    name: "format".to_string(),
+                    format_str: "process timeout must be finite and non-negative, got {}"
+                        .to_string(),
+                    args: vec![RustExpr::Ident("timeout_seconds".to_string())],
+                })],
+            }))],
+            else_body: None,
         },
-        then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-            args: vec![process_error_expr(RustExpr::FormatMacro {
-                name: "format".to_string(),
-                format_str: "process timeout must be finite and non-negative, got {}".to_string(),
-                args: vec![RustExpr::Ident("timeout_seconds".to_string())],
-            })],
-        }))],
-        else_body: None,
-    }];
+    ];
     run_timeout_body.push(RustStmt::Let {
         mutable: false,
         name: "__duration".to_string(),
@@ -285,16 +311,19 @@ pub(crate) fn build_process_async_items(
         .to_string(),
     )));
 
-    let mut output_body = vec![RustStmt::If {
-        cond: RustExpr::Ident("has_stdin".to_string()),
-        then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-            args: vec![process_error_expr(RustExpr::Literal(RustLiteral::Str(
-                "async process stdin bytes require owned pipe support".to_string(),
-            )))],
-        }))],
-        else_body: None,
-    }];
+    let mut output_body = vec![
+        process_async_stdin_mode_guard(),
+        RustStmt::If {
+            cond: RustExpr::Ident("has_stdin".to_string()),
+            then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                args: vec![process_error_expr(RustExpr::Literal(RustLiteral::Str(
+                    "async process stdin bytes require owned pipe support".to_string(),
+                )))],
+            }))],
+            else_body: None,
+        },
+    ];
     output_body.extend(process_async_command_setup());
     output_body.push(RustStmt::Let {
         mutable: false,
@@ -338,16 +367,19 @@ pub(crate) fn build_process_async_items(
         }],
     })));
 
-    let mut output_timeout_body = vec![RustStmt::If {
-        cond: RustExpr::Ident("has_stdin".to_string()),
-        then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-            args: vec![process_error_expr(RustExpr::Literal(RustLiteral::Str(
-                "async process stdin bytes require owned pipe support".to_string(),
-            )))],
-        }))],
-        else_body: None,
-    }];
+    let mut output_timeout_body = vec![
+        process_async_stdin_mode_guard(),
+        RustStmt::If {
+            cond: RustExpr::Ident("has_stdin".to_string()),
+            then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                args: vec![process_error_expr(RustExpr::Literal(RustLiteral::Str(
+                    "async process stdin bytes require owned pipe support".to_string(),
+                )))],
+            }))],
+            else_body: None,
+        },
+    ];
     output_timeout_body.push(RustStmt::If {
         cond: RustExpr::BinOp {
             left: Box::new(RustExpr::UnaryOp {
