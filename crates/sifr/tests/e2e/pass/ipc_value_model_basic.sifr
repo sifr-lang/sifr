@@ -1,0 +1,63 @@
+from sifr.ipc import (
+    CANCEL,
+    COMPLETED,
+    HELLO,
+    MALFORMED_FRAME,
+    RUN,
+    UNSUPPORTED_PAYLOAD,
+    BackpressurePolicy,
+    FrameKind,
+    ProtocolVersion,
+    SchemaId,
+    default_backpressure,
+    protocol_version,
+    schema_id,
+    schemas_match,
+)
+
+
+def main():
+    schema: SchemaId = schema_id("demo.RequestResponse", 1, "0123456789abcdef")
+    same: SchemaId = schema_id("demo.RequestResponse", 1, "0123456789abcdef")
+    changed: SchemaId = schema_id("demo.RequestResponse", 2, "fedcba9876543210")
+    version: ProtocolVersion = protocol_version(1, 1)
+    policy: BackpressurePolicy = default_backpressure()
+    custom: BackpressurePolicy = BackpressurePolicy(4, 1024)
+    run_kind: FrameKind = RUN
+    actual: list[bool] = []
+
+    actual.append(schema.name == "demo.RequestResponse")
+    actual.append(schema.version == 1)
+    actual.append(schema.hash == "0123456789abcdef")
+    actual.append(str(schema) == "demo.RequestResponse")
+    actual.append(schemas_match(schema, same))
+    actual.append(not schemas_match(schema, changed))
+    actual.append(version.minimum == 1 and version.maximum == 1)
+    actual.append(policy.max_in_flight == 64)
+    actual.append(policy.max_frame_bytes == 16777216)
+    actual.append(custom.max_in_flight == 4 and custom.max_frame_bytes == 1024)
+    actual.append(run_kind.name == "Run")
+    actual.append(str(HELLO) == "Hello")
+    actual.append(str(CANCEL) == "Cancel")
+    actual.append(str(COMPLETED) == "Completed")
+    actual.append(str(MALFORMED_FRAME) == "MalformedFrame")
+    actual.append(str(UNSUPPORTED_PAYLOAD) == "UnsupportedPayload")
+
+    assert actual == [
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    ]

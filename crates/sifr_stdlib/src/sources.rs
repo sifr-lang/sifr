@@ -99,6 +99,10 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
         source: include_str!("../../../lib/sifr/runtime.sifr"),
     },
     StdlibSource {
+        module: "sifr.ipc",
+        source: include_str!("../../../lib/sifr/ipc.sifr"),
+    },
+    StdlibSource {
         module: "sifr.string",
         source: include_str!("../../../lib/sifr/string.sifr"),
     },

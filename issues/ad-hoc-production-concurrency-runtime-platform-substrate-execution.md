@@ -952,6 +952,25 @@ M6 typed IPC dependency metadata merge ledger:
 - Scope: internal typed IPC stdlib feature metadata, locked Postcard/Serde dependency specs, `sifr.ipc` / `_sifr.ipc` / `ipc` / `postcard` requirement mapping, grouped e2e generated Cargo.toml inference, validation evidence, and reviewer artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
+M6 typed IPC value model implementation:
+
+- Added the public `sifr.ipc` value-model module with `SchemaId`, `ProtocolVersion`, `FrameKind`, frame-family constants, `BackpressurePolicy`, and helpers for schema ids, protocol version bounds, default backpressure, and exact schema matching.
+- Added `ipc_value_model_basic` pass coverage and create-pr/merge manifest entries for the host-independent value model.
+- Added `ipc_process_pool_executor_unsupported` and `ipc_multiprocessing_process_unsupported` fail fixtures to pin missing-member diagnostics for CPython-shaped process-pool and multiprocessing names under the native IPC module.
+- Updated M6 typed IPC traceability and the supported-host matrix to mark only the schema/frame/backpressure value model as supported; frame encoding, process-pipe transport, runtime backpressure, payload eligibility enforcement, cancellation, close, and malformed-frame behavior remain M6 follow-up work.
+
+M6 typed IPC value model targeted local validation:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/ipc_value_model_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/ipc_process_pool_executor_unsupported.sifr` -> produced expected `SIFR-NAME-0004` at column `22`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/ipc_multiprocessing_process_unsupported.sifr` -> produced expected `SIFR-NAME-0004` at column `22`.
+- `cargo test -p sifr_stdlib stdlib_source_inventory_contains_user_modules -- --nocapture` -> PASS.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; the fail harness reported `453` fail tests completed and still prints existing unrelated internal-compiler-error lines for expected-fail cases.
+
+M6 typed IPC value model review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-value-model-review-pass-1.md`: `PASS`; reviewer verified the new `sifr.ipc` module is limited to host-independent schema/frame/backpressure values and helpers, reuses prior dependency metadata, covers value behavior and CPython-shaped missing-member diagnostics, updates both e2e manifests, keeps frame transport blocked, and does not overclaim M6 completion.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.

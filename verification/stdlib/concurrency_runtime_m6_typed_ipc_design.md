@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_6`
 
-Status: Design gate artifact. This document approves the M6 typed IPC protocol shape before any serialization dependency is wired into generated projects or runtime code. Implementation PRs may consume the locked Ring 4 `serde` plus `postcard` decision from the phase document after this artifact is reviewed and recorded in the execution ledger.
+Status: In progress. The design gate is approved, dependency metadata is wired, and `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model. Runtime frame encoding, process-pipe transport, malformed-frame behavior, cancellation, close, backpressure, and payload eligibility diagnostics remain M6 implementation work.
 
 ## Scope
 
@@ -18,6 +18,16 @@ The accepted substrate is:
 - stable diagnostics for unsupported CPython-shaped process-pool and multiprocessing APIs.
 
 This design does not ship a public process-worker pool. A future worker API remains `deferred-to-phase-X` and must be built on `sifr.process` plus this `sifr.ipc` substrate.
+
+## Current Evidence
+
+| Surface | Evidence | Notes |
+| --- | --- | --- |
+| `sifr.ipc.SchemaId` / `schema_id(...)` | `ipc_value_model_basic` | Host-independent value model for generated schema identity records. This does not yet compute compiler-generated schema hashes. |
+| `sifr.ipc.ProtocolVersion` / `protocol_version(...)` | `ipc_value_model_basic` | Host-independent value model for negotiated protocol version bounds. |
+| `sifr.ipc.FrameKind` and frame-family constants | `ipc_value_model_basic` | Covers bootstrap, work, control, health, and protocol-error frame names as values. It does not encode or decode wire frames yet. |
+| `sifr.ipc.BackpressurePolicy` / `default_backpressure()` | `ipc_value_model_basic` | Pins the default in-flight request window (`64`) and default max frame bytes (`16777216`) from the design. Runtime backpressure enforcement remains follow-up work. |
+| `ProcessPoolExecutor` and `Process` under `sifr.ipc` | `ipc_process_pool_executor_unsupported`; `ipc_multiprocessing_process_unsupported` | Missing-member diagnostics keep CPython-shaped process-pool and multiprocessing names out of the native IPC module. |
 
 ## Transport Boundary
 
