@@ -1,0 +1,55 @@
+from sifr.process import Command, Child, PipeReader, PipeWriter, ProcessError, Status, Stdio, spawn
+
+
+def main() -> None:
+    pipe: Stdio = Stdio("pipe")
+
+    command: Command = Command("sh")
+    command.arg("-c")
+    command.arg("cat")
+    command.stdin(pipe)
+    command.stdout(pipe)
+
+    try:
+        child: Child = spawn(command)
+        stdin: PipeWriter = child.stdin()
+        stdout: PipeReader = child.stdout()
+
+        _write_first: None = stdin.write_all(b"pipe-")
+        _write_second: None = stdin.write_all(b"writer")
+        _closed: None = stdin.close()
+
+        output: bytes = stdout.read_all()
+        assert output == b"pipe-writer"
+
+        stdin_close_again_rejected: bool = False
+        try:
+            _closed_again: None = stdin.close()
+        except ProcessError as e:
+            stdin_close_again_rejected = "closed" in e.message
+        assert stdin_close_again_rejected
+
+        child_stdin_again_rejected: bool = False
+        try:
+            _taken: PipeWriter = child.stdin()
+        except ProcessError as e:
+            child_stdin_again_rejected = "already taken" in e.message
+        assert child_stdin_again_rejected
+
+        status: Status = child.wait()
+        assert status.success
+        assert status.kind == "success"
+    except ProcessError as e:
+        assert False
+
+    rejected_command: Command = Command("sh")
+    rejected_command.arg("-c")
+    rejected_command.arg("cat")
+    rejected_command.stdin_bytes(b"ignored")
+
+    spawn_rejected: bool = False
+    try:
+        _rejected_child: Child = spawn(rejected_command)
+    except ProcessError as e:
+        spawn_rejected = "stdin_bytes" in e.message
+    assert spawn_rejected

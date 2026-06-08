@@ -421,6 +421,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process run/output loopback: https://github.com/sifr-lang/sifr/pull/2345
 - M4 sync stdout/stderr pipe readers: https://github.com/sifr-lang/sifr/pull/2352
 - M4 async process run timeout: https://github.com/sifr-lang/sifr/pull/2354
+- M4 sync stdin pipe writer: https://github.com/sifr-lang/sifr/pull/2356
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -834,6 +835,36 @@ M4 async process run timeout review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-run-timeout-review-pass-1.md`: `PASS`; reviewer verified public `sifr.process.async_run_timeout`, stdlib metadata, lowering, generated Tokio process timeout behavior, typed invalid-timeout errors, kill-and-reap timeout status evidence, helper emission gating, manifests, and traceability. Non-blocking notes covered redundant timeout `success = false`, NaN fixture coverage, and the existing raw multi-line Rust expression pattern.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-run-timeout-review-pass-2.md`: `PASS`; post-`origin/main` merge reviewer verified the async preamble split was behavior-preserving, pipe-reader behavior from PR #2352 was preserved, timeout-only helper emission stayed minimal, no user-triggerable panic path was introduced, and the post-merge create-pr validation (`99 passed`, `0 failed`, `report_signature=42aaf1077a936d74`) was sufficient.
 - Merged as PR #2354: https://github.com/sifr-lang/sifr/pull/2354 (`dd24a7c3234df280a437acf0f5f5c394bdbc5f56`).
+
+M4 sync stdin pipe writer implementation:
+
+- Split process child/pipe intrinsic shims into `crates/sifr_codegen/src/intrinsics/registry/process_handles.rs` so `registry/process.rs` stays below the 900-line guardrail before adding stdin writer support.
+- Preserved the async process preamble split from PR #2354 while adding stdin-mode deferral guards to async run/output/timeout helpers.
+- Added `Command.stdin(Stdio)` for sync spawn stdin configuration, defaulting to inherit and sharing the same `Stdio("pipe")` / `Stdio("inherit")` / `Stdio("null")` mode validation as stdout/stderr.
+- Added `PipeWriter` plus `Child.stdin()` transfer for owned child stdin pipes. `PipeWriter.write_all(...)` allows repeated byte writes until `PipeWriter.close()`; double close, missing handles, and repeated child stdin extraction return typed `ProcessError`.
+- Changed sync `spawn(command)` to reject `Command.stdin_bytes(...)` with a typed `ProcessError` instead of silently ignoring one-shot output stdin bytes.
+- Tightened async process deferral so `async_run(...)`, `async_run_timeout(...)`, and `async_output(...)` return typed owned-pipe deferral errors for non-inherit `Command.stdin(...)` modes rather than silently ignoring them before the async pipe/communicate wave.
+- Added `process_spawn_pipe_writer` to create-pr and merge e2e manifests and updated M4 traceability / supported-host documentation without claiming streaming reads, async pipes, async communicate, cancellation, scoped supervision, or Windows support.
+
+M4 sync stdin pipe writer targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_pipe_writer.sifr` -> PASS; sync `spawn` with stdin/stdout `Stdio("pipe")` transfers a one-shot `PipeWriter`, supports repeated writes before explicit close, reports typed double-close / repeated-stdin-extraction errors, and rejects `Command.stdin_bytes(...)` on sync `spawn`.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS; async run/output still work and now reject non-inherit `Command.stdin(...)` modes with a typed owned-pipe deferral error.
+- Existing process regressions `process_spawn_pipe_readers`, `process_spawn_wait_status`, `process_child_kill_wait`, `process_async_run_output`, `process_sync_output_text`, `process_timeout_status`, and `process_signal_status` -> PASS.
+- Emission check for `process_spawn_pipe_writer` -> PASS; emitted Rust includes `__SIFR_PROCESS_PIPE_WRITERS`, `__sifr_process_child_stdin`, `__sifr_process_pipe_write_all`, `__sifr_process_pipe_close`, and `std::io::Write::write_all`.
+- Emission check for `process_sync_output_text` -> PASS; ordinary sync output emits no child pipe reader/writer tables or pipe helper functions.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2185 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 422 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`167.29s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`99 passed`, `0 failed`, `cache_hits=25/26`, `report_signature=42aaf1077a936d74`).
+
+M4 sync stdin pipe writer review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-writer-review-pass-1.md`: `PASS`; reviewer verified sync stdin pipe writer correctness, typed errors, generated writer table/helper behavior, prelude gating, file-size guardrail status, fixture/manifests, and documentation boundaries. Non-blocking async stdin-mode silent-ignore feedback was remediated before PR by returning typed owned-pipe deferral errors from async process helpers and adding fixture coverage.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-writer-review-pass-2.md`: `PASS`; reviewer verified the async deferral remediation is the correct awaited `Result` shape, stdlib/lowering/helper arities align, the `process_async_runtime.rs` split preserves helper ordering and gating, generated runtime paths remain typed-error based, docs/manifests remain honest, and latest create-pr validation evidence is sufficient for PR readiness.
 
 M0 targeted local validation:
 

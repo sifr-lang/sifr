@@ -314,12 +314,16 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
         process_children: SharedPreludeProcessChildNeeds {
             needs_process_children: code.contains("__SIFR_PROCESS_CHILDREN")
                 || code.contains("__SIFR_PROCESS_PIPE_READERS")
+                || code.contains("__SIFR_PROCESS_PIPE_WRITERS")
                 || code.contains("__SIFR_NEXT_PROCESS_CHILD_ID")
                 || code.contains("__sifr_next_process_child_id")
                 || code.contains("__sifr_process_spawn")
+                || code.contains("__sifr_process_child_stdin")
                 || code.contains("__sifr_process_child_stdout")
                 || code.contains("__sifr_process_child_stderr")
                 || code.contains("__sifr_process_pipe_read_all")
+                || code.contains("__sifr_process_pipe_write_all")
+                || code.contains("__sifr_process_pipe_close")
                 || code.contains("__sifr_process_stdio_from_mode"),
         },
         process_status: SharedPreludeProcessStatusNeeds {
@@ -353,12 +357,16 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 }
                 "__SIFR_PROCESS_CHILDREN"
                 | "__SIFR_PROCESS_PIPE_READERS"
+                | "__SIFR_PROCESS_PIPE_WRITERS"
                 | "__SIFR_NEXT_PROCESS_CHILD_ID"
                 | "__sifr_next_process_child_id"
                 | "__sifr_process_spawn"
+                | "__sifr_process_child_stdin"
                 | "__sifr_process_child_stdout"
                 | "__sifr_process_child_stderr"
                 | "__sifr_process_pipe_read_all"
+                | "__sifr_process_pipe_write_all"
+                | "__sifr_process_pipe_close"
                 | "__sifr_process_stdio_from_mode" => {
                     self.shared_needs.process_children.needs_process_children = true;
                 }
@@ -390,6 +398,7 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
                 || item_static.ident == "__SIFR_NEXT_FILE_HANDLE_ID"
                 || item_static.ident == "__SIFR_PROCESS_CHILDREN"
                 || item_static.ident == "__SIFR_PROCESS_PIPE_READERS"
+                || item_static.ident == "__SIFR_PROCESS_PIPE_WRITERS"
                 || item_static.ident == "__SIFR_NEXT_PROCESS_CHILD_ID"
                 || item_static.ident == "__SIFR_GLOBAL_LOG_LEVEL"
         }
@@ -397,9 +406,12 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
             item_fn.sig.ident == "__sifr_next_file_handle_id"
                 || item_fn.sig.ident == "__sifr_next_process_child_id"
                 || item_fn.sig.ident == "__sifr_process_spawn"
+                || item_fn.sig.ident == "__sifr_process_child_stdin"
                 || item_fn.sig.ident == "__sifr_process_child_stdout"
                 || item_fn.sig.ident == "__sifr_process_child_stderr"
                 || item_fn.sig.ident == "__sifr_process_pipe_read_all"
+                || item_fn.sig.ident == "__sifr_process_pipe_write_all"
+                || item_fn.sig.ident == "__sifr_process_pipe_close"
                 || item_fn.sig.ident == "__sifr_process_stdio_from_mode"
                 || item_fn.sig.ident == "__sifr_process_exit_signal"
                 || item_fn.sig.ident == "__sifr_process_async_run"

@@ -23,6 +23,7 @@ mod pathlib;
 mod platform;
 mod process;
 mod process_async;
+mod process_handles;
 mod random;
 mod re;
 mod sys;
@@ -594,12 +595,15 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "sys_platform" => (sys::lower_sys_platform(args), None),
         "sys_maxsize" => (sys::lower_sys_maxsize(args), None),
         "process_run" => (process::lower_process_run(args), None),
-        "process_spawn" => (process::lower_process_spawn(args), None),
+        "process_spawn" => (process_handles::lower_process_spawn(args), None),
         "process_kill" => (process::lower_process_kill(args), None),
         "process_wait" => (process::lower_process_wait(args), None),
-        "process_child_stdout" => (process::lower_process_child_stdout(args), None),
-        "process_child_stderr" => (process::lower_process_child_stderr(args), None),
-        "process_pipe_read_all" => (process::lower_process_pipe_read_all(args), None),
+        "process_child_stdin" => (process_handles::lower_process_child_stdin(args), None),
+        "process_child_stdout" => (process_handles::lower_process_child_stdout(args), None),
+        "process_child_stderr" => (process_handles::lower_process_child_stderr(args), None),
+        "process_pipe_read_all" => (process_handles::lower_process_pipe_read_all(args), None),
+        "process_pipe_write_all" => (process_handles::lower_process_pipe_write_all(args), None),
+        "process_pipe_close" => (process_handles::lower_process_pipe_close(args), None),
         "process_output" => (process::lower_process_output(args), None),
         "process_output_text" => (process::lower_process_output_text(args), None),
         "process_output_timeout" => (process::lower_process_output_timeout(args), None),

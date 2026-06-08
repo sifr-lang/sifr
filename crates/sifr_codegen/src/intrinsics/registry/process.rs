@@ -611,54 +611,6 @@ pub(crate) fn lower_process_run(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(crate) fn lower_process_spawn(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 7 {
-        return None;
-    }
-    Some(path_call(
-        &["__sifr_process_spawn"],
-        vec![
-            clone_arg(args, 0),
-            clone_arg(args, 1),
-            clone_arg(args, 2),
-            clone_arg(args, 3),
-            arg_expr(args, 4),
-            clone_arg(args, 5),
-            clone_arg(args, 6),
-        ],
-    ))
-}
-
-pub(crate) fn lower_process_child_stdout(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(path_call(
-        &["__sifr_process_child_stdout"],
-        vec![arg_expr(args, 0)],
-    ))
-}
-
-pub(crate) fn lower_process_child_stderr(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(path_call(
-        &["__sifr_process_child_stderr"],
-        vec![arg_expr(args, 0)],
-    ))
-}
-
-pub(crate) fn lower_process_pipe_read_all(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(path_call(
-        &["__sifr_process_pipe_read_all"],
-        vec![arg_expr(args, 0)],
-    ))
-}
-
 pub(crate) fn lower_process_wait(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;

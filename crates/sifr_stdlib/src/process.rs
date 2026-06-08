@@ -101,7 +101,15 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("has_cwd".to_string(), Type::Bool),
                 ("stdout_mode".to_string(), Type::Str),
                 ("stderr_mode".to_string(), Type::Str),
+                ("stdin_mode".to_string(), Type::Str),
             ],
+            result_ty(Type::Int, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_child_stdin".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
             result_ty(Type::Int, "ProcessError"),
         ),
     );
@@ -124,6 +132,23 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],
             result_ty(Type::Bytes, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_pipe_write_all".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("data".to_string(), Type::Bytes),
+            ],
+            result_ty(Type::None, "ProcessError"),
+        ),
+    );
+    functions.insert(
+        "process_pipe_close".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::None, "ProcessError"),
         ),
     );
     functions.insert(
@@ -196,6 +221,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("env".to_string(), Type::List(Box::new(Type::Str))),
                 ("cwd".to_string(), Type::Str),
                 ("has_cwd".to_string(), Type::Bool),
+                ("stdin_mode".to_string(), Type::Str),
             ],
             Type::Awaitable(Box::new(process_status_object_result())),
         ),
@@ -209,6 +235,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("env".to_string(), Type::List(Box::new(Type::Str))),
                 ("cwd".to_string(), Type::Str),
                 ("has_cwd".to_string(), Type::Bool),
+                ("stdin_mode".to_string(), Type::Str),
                 ("has_stdin".to_string(), Type::Bool),
             ],
             Type::Awaitable(Box::new(process_output_object_result())),
@@ -223,6 +250,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("env".to_string(), Type::List(Box::new(Type::Str))),
                 ("cwd".to_string(), Type::Str),
                 ("has_cwd".to_string(), Type::Bool),
+                ("stdin_mode".to_string(), Type::Str),
                 ("timeout_seconds".to_string(), Type::Float),
             ],
             Type::Awaitable(Box::new(process_status_object_result())),
