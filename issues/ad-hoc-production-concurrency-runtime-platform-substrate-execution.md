@@ -426,6 +426,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async stdin-byte communicate: https://github.com/sifr-lang/sifr/pull/2365
 - M4 sync process terminate: https://github.com/sifr-lang/sifr/pull/2367
 - M4 async process spawn/wait: https://github.com/sifr-lang/sifr/pull/2369
+- M4 method-form async child kill/terminate: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -985,6 +986,32 @@ M4 async process spawn/wait review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-spawn-wait-review-pass-4.md`: `PASS`; reviewer confirmed the duplicate PR-list entry was collapsed to a single in-progress spawn/wait row after PR #2367, conflict markers remained absent, `git diff --check` stayed clean, and no new blocker was introduced.
 - Merged as PR #2369 (`2acbcec324571381b7d5099041402bb7461c77b5`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`255.22s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`103 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=2593463768412da4`).
+
+M4 method-form async child kill/terminate implementation:
+
+- Added method-form `AsyncChild.kill()` and `AsyncChild.terminate()` to `sifr.process`, backed by private `_sifr.process.process_async_kill` and `process_async_terminate` intrinsics returning typed awaitable `Result[None, ProcessError]`.
+- Added gated generated Tokio helpers for async child lifecycle mutation. `AsyncChild.kill()` uses `tokio::process::Child::start_kill()` so the child handle remains waitable; `AsyncChild.terminate()` requests Unix SIGTERM through a Tokio child-process command, preserves the handle for later wait observation, and returns a typed unsupported `ProcessError` on non-Unix hosts.
+- Kept top-level async kill/terminate helper shape, public async owned pipes, cancellation-safe observation, scoped process supervision, and async shell APIs out of scope for this wave.
+- Added `process_async_child_kill_terminate` fixture coverage to create-pr and merge manifests for method-form async kill, method-form async terminate, subsequent wait status observation, and closed-handle typed errors.
+
+M4 method-form async child kill/terminate targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_child_kill_terminate.sifr` -> PASS; validates method-form async kill/terminate, subsequent wait observation, and closed-handle typed errors.
+- Emission checks for `process_async_child_kill_terminate` -> PASS; generated code includes `__sifr_process_async_kill`, `__sifr_process_async_terminate`, `start_kill`, Tokio-backed Unix `kill -TERM`, and typed non-Unix unsupported errors.
+- Emission checks for `process_async_run_output` -> PASS; async run/output users that do not import `AsyncChild` do not emit async child table, spawn, wait, kill, or terminate helper state.
+- `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2194 files checked.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; 425 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`262.18s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`104 passed`, `0 failed`, `cache_hits=25/27`, `report_signature=c0cb8434172d790c`).
+
+M4 method-form async child kill/terminate review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-child-kill-terminate-review-pass-1.md`: `PASS`; reviewer verified method-form `AsyncChild.kill()` / `AsyncChild.terminate()` surface, typed awaitable private intrinsics, non-consuming `start_kill()` behavior, Unix-only async SIGTERM with typed non-Unix fallback, wait removal before await, helper gating for non-`AsyncChild` async run/output users, fixture/manifests/docs/host matrix honesty, and file-size guardrail compliance.
 
 M4 sync process terminate implementation:
 

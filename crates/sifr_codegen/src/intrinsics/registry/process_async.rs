@@ -102,3 +102,23 @@ pub(crate) fn lower_process_async_wait(args: &[RustExpr]) -> Option<RustExpr> {
         vec![arg_expr(args, 0)],
     ))
 }
+
+pub(crate) fn lower_process_async_kill(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(boxed_async_process_helper_call(
+        "__sifr_process_async_kill",
+        vec![arg_expr(args, 0)],
+    ))
+}
+
+pub(crate) fn lower_process_async_terminate(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(boxed_async_process_helper_call(
+        "__sifr_process_async_terminate",
+        vec![arg_expr(args, 0)],
+    ))
+}
