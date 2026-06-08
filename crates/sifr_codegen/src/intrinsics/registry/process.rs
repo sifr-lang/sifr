@@ -115,7 +115,11 @@ fn missing_child_error_expr() -> RustExpr {
 }
 
 fn command_new(program: RustExpr) -> RustExpr {
-    path_call(&["std", "process", "Command", "new"], vec![program])
+    command_new_with_path(&["std", "process", "Command", "new"], program)
+}
+
+fn command_new_with_path(path: &[&str], program: RustExpr) -> RustExpr {
+    path_call(path, vec![program])
 }
 
 fn piped_stdio() -> RustExpr {
@@ -200,12 +204,16 @@ fn status_signal(status_expr: RustExpr) -> RustExpr {
 }
 
 fn normal_command_setup(args: &[RustExpr]) -> Vec<RustStmt> {
+    command_setup(args, command_new(ref_arg(args, 0)))
+}
+
+fn command_setup(args: &[RustExpr], new_command: RustExpr) -> Vec<RustStmt> {
     vec![
         RustStmt::Let {
             mutable: true,
             name: "__cmd".to_string(),
             ty: None,
-            value: command_new(ref_arg(args, 0)),
+            value: new_command,
         },
         RustStmt::Expr(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("__cmd".to_string())),

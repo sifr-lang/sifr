@@ -71,6 +71,382 @@ pub(crate) fn build_process_status_items() -> Vec<RustItem> {
     ]
 }
 
+fn string_ty() -> RustType {
+    RustType::String_
+}
+
+fn string_vec_ty() -> RustType {
+    RustType::Vec(Box::new(string_ty()))
+}
+
+fn process_error_expr(message: RustExpr) -> RustExpr {
+    RustExpr::StructInit {
+        name: "ProcessError".to_string(),
+        fields: vec![("message".to_string(), message)],
+    }
+}
+
+fn process_map_err(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "__sifr_process_error".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(process_error_expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__sifr_process_error".to_string())),
+                method: "to_string".to_string(),
+                args: vec![],
+            })),
+            is_move: false,
+        }],
+    }
+}
+
+fn process_async_params(include_stdin: bool) -> Vec<RustParam> {
+    let mut params = vec![
+        RustParam::Named {
+            name: "program".to_string(),
+            ty: string_ty(),
+        },
+        RustParam::Named {
+            name: "args".to_string(),
+            ty: string_vec_ty(),
+        },
+        RustParam::Named {
+            name: "env".to_string(),
+            ty: string_vec_ty(),
+        },
+        RustParam::Named {
+            name: "cwd".to_string(),
+            ty: string_ty(),
+        },
+        RustParam::Named {
+            name: "has_cwd".to_string(),
+            ty: RustType::Bool,
+        },
+    ];
+    if include_stdin {
+        params.push(RustParam::Named {
+            name: "has_stdin".to_string(),
+            ty: RustType::Bool,
+        });
+    }
+    params
+}
+
+fn process_async_command_setup() -> Vec<RustStmt> {
+    vec![
+        RustStmt::Let {
+            mutable: true,
+            name: "__cmd".to_string(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "tokio".to_string(),
+                    "process".to_string(),
+                    "Command".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident("program".to_string())),
+                }],
+            },
+        },
+        RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
+            method: "args".to_string(),
+            args: vec![RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("args".to_string())),
+                method: "iter".to_string(),
+                args: vec![],
+            }],
+        }),
+        RustStmt::For {
+            var: "__sifr_process_env".to_string(),
+            iter: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("env".to_string())),
+                method: "iter".to_string(),
+                args: vec![],
+            },
+            body: vec![RustStmt::IfLet {
+                pattern: "Some((__sifr_process_env_key, __sifr_process_env_value))".to_string(),
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__sifr_process_env".to_string())),
+                    method: "split_once".to_string(),
+                    args: vec![RustExpr::Literal(RustLiteral::Char('='))],
+                },
+                then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
+                    method: "env".to_string(),
+                    args: vec![
+                        RustExpr::Ident("__sifr_process_env_key".to_string()),
+                        RustExpr::Ident("__sifr_process_env_value".to_string()),
+                    ],
+                })],
+                else_body: None,
+            }],
+        },
+        RustStmt::If {
+            cond: RustExpr::Ident("has_cwd".to_string()),
+            then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
+                method: "current_dir".to_string(),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident("cwd".to_string())),
+                }],
+            })],
+            else_body: None,
+        },
+    ]
+}
+
+fn status_code_expr(status: RustExpr) -> RustExpr {
+    RustExpr::Cast {
+        expr: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(status),
+                method: "code".to_string(),
+                args: vec![],
+            }),
+            method: "unwrap_or".to_string(),
+            args: vec![RustExpr::Literal(RustLiteral::Int(-1))],
+        }),
+        ty: RustType::I64,
+    }
+}
+
+fn status_signal_expr(status: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "__sifr_process_exit_signal".to_string()
+        ])),
+        args: vec![RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(status),
+        }],
+    }
+}
+
+fn process_status_from_parts(code: RustExpr, signal: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "__sifr_process_status_from_exit".to_string()
+        ])),
+        args: vec![code, signal],
+    }
+}
+
+fn process_async_ret(name: &str) -> RustType {
+    RustType::Named(format!("Result<{name}, ProcessError>"))
+}
+
+pub(crate) fn build_process_async_items() -> Vec<RustItem> {
+    let mut run_body = process_async_command_setup();
+    run_body.push(RustStmt::Let {
+        mutable: false,
+        name: "__status".to_string(),
+        ty: None,
+        value: RustExpr::Try(Box::new(process_map_err(RustExpr::Await(Box::new(
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
+                method: "status".to_string(),
+                args: vec![],
+            },
+        ))))),
+    });
+    run_body.push(RustStmt::Return(Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+        args: vec![process_status_from_parts(
+            status_code_expr(RustExpr::Ident("__status".to_string())),
+            status_signal_expr(RustExpr::Ident("__status".to_string())),
+        )],
+    })));
+
+    let mut output_body = vec![RustStmt::If {
+        cond: RustExpr::Ident("has_stdin".to_string()),
+        then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+            args: vec![process_error_expr(RustExpr::Literal(RustLiteral::Str(
+                "async process stdin bytes require owned pipe support".to_string(),
+            )))],
+        }))],
+        else_body: None,
+    }];
+    output_body.extend(process_async_command_setup());
+    output_body.push(RustStmt::Let {
+        mutable: false,
+        name: "__output".to_string(),
+        ty: None,
+        value: RustExpr::Try(Box::new(process_map_err(RustExpr::Await(Box::new(
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
+                method: "output".to_string(),
+                args: vec![],
+            },
+        ))))),
+    });
+    output_body.push(RustStmt::Return(Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+        args: vec![RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "Output".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![
+                RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("__output".to_string())),
+                    field: "stdout".to_string(),
+                },
+                RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("__output".to_string())),
+                    field: "stderr".to_string(),
+                },
+                process_status_from_parts(
+                    status_code_expr(RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident("__output".to_string())),
+                        field: "status".to_string(),
+                    }),
+                    status_signal_expr(RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident("__output".to_string())),
+                        field: "status".to_string(),
+                    }),
+                ),
+            ],
+        }],
+    })));
+
+    vec![
+        RustItem::Fn {
+            name: "__sifr_process_status_from_exit".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![
+                RustParam::Named {
+                    name: "code".to_string(),
+                    ty: RustType::I64,
+                },
+                RustParam::Named {
+                    name: "signal".to_string(),
+                    ty: RustType::Option(Box::new(RustType::I64)),
+                },
+            ],
+            ret: Some(RustType::Named("Status".to_string())),
+            body: vec![
+                RustStmt::IfLet {
+                    pattern: "Some(__signal)".to_string(),
+                    expr: RustExpr::Ident("signal".to_string()),
+                    then_body: vec![
+                        RustStmt::Let {
+                            mutable: true,
+                            name: "__status".to_string(),
+                            ty: Some(RustType::Named("Status".to_string())),
+                            value: RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "Status".to_string(),
+                                    "new".to_string(),
+                                ])),
+                                args: vec![
+                                    RustExpr::Ident("code".to_string()),
+                                    RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Literal(RustLiteral::Str(
+                                            "signal".to_string(),
+                                        ))),
+                                        method: "to_string".to_string(),
+                                        args: vec![],
+                                    },
+                                ],
+                            },
+                        },
+                        RustStmt::Assign {
+                            target: RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("__status".to_string())),
+                                field: "success".to_string(),
+                            },
+                            value: RustExpr::Literal(RustLiteral::Bool(false)),
+                        },
+                        RustStmt::Assign {
+                            target: RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("__status".to_string())),
+                                field: "signal".to_string(),
+                            },
+                            value: RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                                args: vec![RustExpr::Ident("__signal".to_string())],
+                            },
+                        },
+                        RustStmt::Return(Some(RustExpr::Ident("__status".to_string()))),
+                    ],
+                    else_body: None,
+                },
+                RustStmt::If {
+                    cond: RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("code".to_string())),
+                        op: "==".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                    },
+                    then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "Status".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![
+                            RustExpr::Ident("code".to_string()),
+                            RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Literal(RustLiteral::Str(
+                                    "success".to_string(),
+                                ))),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            },
+                        ],
+                    }))],
+                    else_body: None,
+                },
+                RustStmt::Return(Some(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "Status".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![
+                        RustExpr::Ident("code".to_string()),
+                        RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(
+                                "nonzero".to_string(),
+                            ))),
+                            method: "to_string".to_string(),
+                            args: vec![],
+                        },
+                    ],
+                })),
+            ],
+            is_async: false,
+        },
+        RustItem::Fn {
+            name: "__sifr_process_async_run".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: process_async_params(false),
+            ret: Some(process_async_ret("Status")),
+            body: run_body,
+            is_async: true,
+        },
+        RustItem::Fn {
+            name: "__sifr_process_async_output".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: process_async_params(true),
+            ret: Some(process_async_ret("Output")),
+            body: output_body,
+            is_async: true,
+        },
+    ]
+}
+
 pub(crate) fn build_process_child_items() -> Vec<RustItem> {
     vec![
         RustItem::Static {

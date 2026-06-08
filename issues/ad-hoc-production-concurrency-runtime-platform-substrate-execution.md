@@ -418,6 +418,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 timeout status evidence: https://github.com/sifr-lang/sifr/pull/2336
 - M4 sync child kill: https://github.com/sifr-lang/sifr/pull/2337
 - M4 signal status evidence: https://github.com/sifr-lang/sifr/pull/2341
+- M4 async process run/output loopback: https://github.com/sifr-lang/sifr/pull/2345
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -711,6 +712,29 @@ M4 legacy subprocess intrinsic cleanup review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-legacy-subprocess-intrinsic-cleanup-review-pass-1.md`: `PASS`; reviewer verified the cleanup is surgical, no live consumer of the removed private intrinsic names remains outside negative guards and historical notes, public `sifr.subprocess` / bare `subprocess` diagnostics still point to `sifr.process`, production `process_*` dispatch is untouched, and the full create-pr gate passed. Non-blocking note: keep unrelated network-phase files out of this PR.
 - Merged as PR #2344: https://github.com/sifr-lang/sifr/pull/2344 (`6f4c0fe56cc7c9f7348bf73a0d8c6349df99b9b8`).
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`340.13s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`96 passed`, `0 failed`, `cache_hits=25/25`, `report_signature=f84374f7aa32a96e`).
+
+M4 async process run/output targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS; `async_run` and `async_output` return typed process `Status`/`Output` through `Awaitable[Result[...]]`, and async output with stdin bytes returns typed `ProcessError` while owned pipe support remains deferred.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_async_run_output.sifr | rg "__sifr_process_async_run|__sifr_process_async_output|tokio::process::Command|Box::pin|std::process::Command|__SIFR_PROCESS_CHILDREN|__sifr_process_status_from_exit"` -> PASS; emitted code includes boxed owned async futures, the Tokio process helper, and the private status conversion helper, with no sync child table.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_sync_output_text.sifr | rg "__sifr_process_async_run|tokio::process::Command|std::process::Command|__SIFR_PROCESS_CHILDREN"` -> PASS; ordinary sync output emits `std::process::Command` and no async helper or child table.
+- Existing M4 regressions `process_sync_output_text`, `process_spawn_wait_status`, `process_timeout_status`, `process_signal_status`, and `process_child_kill_wait` -> PASS.
+- Expected async diagnostics `process_blocking_direct_async_rejected`, `process_shell_timeout_direct_async_rejected`, and `process_kill_direct_async_rejected` -> expected FAIL with `SIFR-ASYNC-0003` / `SIFR-ASYNC-0007` / `SIFR-ASYNC-0003`.
+- `cargo test -p sifr_codegen test_generate_project_emits_tokio_dependency_when_required -- --nocapture` -> PASS.
+- `cargo test -p sifr test_generate_cargo_toml_required_tokio_uses_runtime_features -- --nocapture` -> PASS; generated e2e harness Cargo specs include Tokio `process`.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2178 files checked, 900-line limit after rebasing over the legacy subprocess intrinsic cleanup wave.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 420 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS after rebasing over the legacy subprocess intrinsic cleanup wave and current `origin/main`; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`201.89s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`97 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=36054c952f8fafec`).
+- Broad non-lane probe `cargo test -p sifr test_e2e_pass -- --nocapture` failed in unrelated existing I/O/encoding fixtures (`cpython_io_subset`, `stdlib_io_consolidated`, `open_*`, `bytes_conversion_errors`) with no subprocess or async-process failures; the authoritative create-pr lane above passed after adding Tokio `process` to the generated harness dependency spec.
+
+M4 async process run/output review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-process-review-pass-1.md`: `PASS`; reviewer verified the wave is scoped to async argv run/output loopback, public APIs consume `Command` and return typed awaitables, generated futures own cloned command fields, Tokio `process` is wired through generated projects and grouped e2e harnesses, stdin bytes are rejected with a typed owned-pipe deferral error, sync process paths and child-table gating are not regressed, and traceability/host matrix/manifests do not overclaim spawn/wait/communicate, pipes, timeout, cancellation, shell async APIs, scoped supervision, or Windows support.
+- Merged as PR #2345: https://github.com/sifr-lang/sifr/pull/2345 (`8fce5ab17ab993903937d1be8588285606d61c84`).
 
 M4 stdin append semantics evidence wave implementation:
 

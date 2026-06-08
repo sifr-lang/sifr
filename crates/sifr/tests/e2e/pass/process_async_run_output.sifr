@@ -1,0 +1,33 @@
+from sifr.process import Command, Output, ProcessError, Status, async_output, async_run
+
+
+async def main() -> None:
+    try:
+        ok: Command = Command("true")
+        status: Status = await async_run(ok)
+        assert status.success
+        assert status.kind == "success"
+
+        nonzero: Command = Command("sh")
+        nonzero.args(["-c", "exit 9"])
+        nonzero_status: Status = await async_run(nonzero)
+        assert not nonzero_status.success
+        assert nonzero_status.code == 9
+        assert nonzero_status.kind == "nonzero"
+
+        out_cmd: Command = Command("sh")
+        out_cmd.args(["-c", "printf async-out; printf async-err >&2"])
+        out: Output = await async_output(out_cmd)
+        assert out.stdout == b"async-out"
+        assert out.stderr == b"async-err"
+        assert out.status.success
+
+        stdin_cmd: Command = Command("cat")
+        stdin_cmd.stdin_bytes(b"deferred")
+        try:
+            rejected: Output = await async_output(stdin_cmd)
+            assert rejected.status.success == False
+        except ProcessError as e:
+            assert "owned pipe" in e.message
+    except ProcessError as e:
+        assert e.message == ""
