@@ -542,6 +542,26 @@ pub(crate) fn test_generate_cargo_toml_runtime_diagnostics_use_locked_observabil
     assert!(from_required_crate.contains(tracing_spec));
 }
 
+#[test]
+pub(crate) fn test_generate_cargo_toml_ipc_uses_locked_postcard_specs() {
+    let ipc_modules = normalize_dependency_set(vec!["sifr.ipc".to_string()].into_iter());
+    let no_required_crates = BTreeSet::new();
+    let from_module = generate_cargo_toml(&ipc_modules, &no_required_crates, "sifr_output");
+    let postcard_spec =
+        "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }";
+    let serde_spec = "serde = { version = \"1.0.228\", features = [\"derive\"] }";
+    assert!(from_module.contains(postcard_spec));
+    assert!(from_module.contains(serde_spec));
+    assert!(!from_module.contains("serde_json = "));
+
+    let no_modules = BTreeSet::new();
+    let required_crates = normalize_dependency_set(vec!["postcard".to_string()]);
+    let from_required_crate = generate_cargo_toml(&no_modules, &required_crates, "sifr_output");
+    assert!(from_required_crate.contains(postcard_spec));
+    assert!(from_required_crate.contains(serde_spec));
+    assert!(!from_required_crate.contains("serde_json = "));
+}
+
 pub(crate) fn sample_cache_entry(
     group: &BatchGroup,
     toolchain: &ToolchainInfo,

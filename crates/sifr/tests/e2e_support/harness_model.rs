@@ -460,6 +460,9 @@ pub(crate) fn infer_dependencies(
     if rust_source.contains("metrics::") || rust_source.contains("use metrics") {
         crates.insert("metrics".to_string());
     }
+    if rust_source.contains("postcard::") || rust_source.contains("use postcard") {
+        crates.insert("postcard".to_string());
+    }
 
     (modules, crates)
 }
