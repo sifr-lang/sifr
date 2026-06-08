@@ -852,19 +852,22 @@ M4 sync stdin pipe writer targeted local validation:
 - `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_pipe_writer.sifr` -> PASS; sync `spawn` with stdin/stdout `Stdio("pipe")` transfers a one-shot `PipeWriter`, supports repeated writes before explicit close, reports typed double-close / repeated-stdin-extraction errors, and rejects `Command.stdin_bytes(...)` on sync `spawn`.
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS; async run/output still work and now reject non-inherit `Command.stdin(...)` modes with a typed owned-pipe deferral error.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_timeout.sifr` -> PASS; async timeout status evidence still works and now rejects non-inherit `Command.stdin(...)` modes with the same typed owned-pipe deferral error.
 - Existing process regressions `process_spawn_pipe_readers`, `process_spawn_wait_status`, `process_child_kill_wait`, `process_async_run_output`, `process_sync_output_text`, `process_timeout_status`, and `process_signal_status` -> PASS.
 - Emission check for `process_spawn_pipe_writer` -> PASS; emitted Rust includes `__SIFR_PROCESS_PIPE_WRITERS`, `__sifr_process_child_stdin`, `__sifr_process_pipe_write_all`, `__sifr_process_pipe_close`, and `std::io::Write::write_all`.
 - Emission check for `process_sync_output_text` -> PASS; ordinary sync output emits no child pipe reader/writer tables or pipe helper functions.
 - `cargo fmt --check` -> PASS.
-- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2185 files checked, 900-line limit.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2186 files checked, 900-line limit after rebasing over PR #2354 / PR #2355.
 - `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
 - `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 422 fail tests completed.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`167.29s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`99 passed`, `0 failed`, `cache_hits=25/26`, `report_signature=42aaf1077a936d74`).
+- Post-`origin/main` rebase rerun over PR #2354 / PR #2355: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`391.55s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`100 passed`, `0 failed`, `cache_hits=4/26`, `report_signature=458ad42c8c1b262c`).
 
 M4 sync stdin pipe writer review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-writer-review-pass-1.md`: `PASS`; reviewer verified sync stdin pipe writer correctness, typed errors, generated writer table/helper behavior, prelude gating, file-size guardrail status, fixture/manifests, and documentation boundaries. Non-blocking async stdin-mode silent-ignore feedback was remediated before PR by returning typed owned-pipe deferral errors from async process helpers and adding fixture coverage.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-writer-review-pass-2.md`: `PASS`; reviewer verified the async deferral remediation is the correct awaited `Result` shape, stdlib/lowering/helper arities align, the `process_async_runtime.rs` split preserves helper ordering and gating, generated runtime paths remain typed-error based, docs/manifests remain honest, and latest create-pr validation evidence is sufficient for PR readiness.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-writer-review-pass-3.md`: `PASS`; post-rebase reviewer verified the branch over PR #2354 / PR #2355 preserved public `stdin_mode` threading through `async_run`, `async_run_timeout`, and `async_output`, aligned stdlib/codegen arities and timeout argument ordering, kept async helper gating and typed owned-pipe deferral errors, preserved sync `PipeWriter` typed-error behavior, kept docs/manifests honest, and confirmed the latest post-rebase create-pr validation (`100 passed`, `0 failed`, `report_signature=458ad42c8c1b262c`) was sufficient.
 
 M0 targeted local validation:
 
