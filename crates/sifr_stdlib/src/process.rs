@@ -50,6 +50,15 @@ fn process_status_class() -> Type {
     }
 }
 
+fn process_async_child_class() -> Type {
+    Type::Class {
+        name: "AsyncChild".to_string(),
+        fields: vec![("_handle".to_string(), Type::Int)],
+        methods: vec![],
+        parent_class: None,
+    }
+}
+
 fn process_output_class() -> Type {
     Type::Class {
         name: "Output".to_string(),
@@ -230,6 +239,33 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
                 ("has_cwd".to_string(), Type::Bool),
                 ("stdin_mode".to_string(), Type::Str),
             ],
+            Type::Awaitable(Box::new(process_status_object_result())),
+        ),
+    );
+    functions.insert(
+        "process_async_spawn".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("program".to_string(), Type::Str),
+                ("args".to_string(), Type::List(Box::new(Type::Str))),
+                ("env".to_string(), Type::List(Box::new(Type::Str))),
+                ("cwd".to_string(), Type::Str),
+                ("has_cwd".to_string(), Type::Bool),
+                ("stdin_mode".to_string(), Type::Str),
+                ("has_stdin".to_string(), Type::Bool),
+                ("stdout_mode".to_string(), Type::Str),
+                ("stderr_mode".to_string(), Type::Str),
+            ],
+            Type::Awaitable(Box::new(result_ty(
+                process_async_child_class(),
+                "ProcessError",
+            ))),
+        ),
+    );
+    functions.insert(
+        "process_async_wait".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
             Type::Awaitable(Box::new(process_status_object_result())),
         ),
     );

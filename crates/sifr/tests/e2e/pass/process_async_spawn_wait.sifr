@@ -1,0 +1,48 @@
+from sifr.process import AsyncChild, Command, ProcessError, Status, Stdio, async_spawn, async_wait
+
+
+async def main() -> None:
+    try:
+        command: Command = Command("sh")
+        command.args(["-c", "exit 6"])
+        child: AsyncChild = await async_spawn(command)
+        status: Status = await async_wait(child)
+        assert status.code == 6
+        assert not status.success
+        assert status.kind == "nonzero"
+
+        method_command: Command = Command("true")
+        method_child: AsyncChild = await async_spawn(method_command)
+        method_status: Status = await method_child.wait()
+        assert method_status.success
+
+        try:
+            _method_second: Status = await method_child.wait()
+            assert False
+        except ProcessError as e:
+            assert "closed or unknown" in e.message
+
+        null_command: Command = Command("sh")
+        null_command.args(["-c", "printf hidden"])
+        null_command.stdout(Stdio("null"))
+        null_child: AsyncChild = await async_spawn(null_command)
+        null_status: Status = await null_child.wait()
+        assert null_status.success
+
+        pipe_command: Command = Command("cat")
+        pipe_command.stdout(Stdio("pipe"))
+        try:
+            _pipe_child: AsyncChild = await async_spawn(pipe_command)
+            assert False
+        except ProcessError as e:
+            assert "async pipe support" in e.message
+
+        stdin_command: Command = Command("cat")
+        stdin_command.stdin_bytes(b"not-consumed")
+        try:
+            _stdin_child: AsyncChild = await async_spawn(stdin_command)
+            assert False
+        except ProcessError as e:
+            assert "stdin_bytes" in e.message
+    except ProcessError as e:
+        assert e.message == ""
