@@ -451,7 +451,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 resource value-carrying nullcontext: https://github.com/sifr-lang/sifr/pull/2419
 - M5 signal stream shape and lowering: https://github.com/sifr-lang/sifr/pull/2418
 - M5 resource cleanup helper diagnostics: https://github.com/sifr-lang/sifr/pull/2423
-- M5 signal stream Unix delivery harness: pending PR.
+- M5 signal stream Unix delivery harness: https://github.com/sifr-lang/sifr/pull/2426
 - M6: pending.
 - M7: pending.
 
@@ -755,6 +755,18 @@ M5 signal stream Unix delivery harness targeted local validation:
 M5 signal stream Unix delivery harness review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-delivery-review-pass-1.md`: `PASS`; reviewer verified deterministic child-sent Unix signal delivery for `ctrl_c()`, `terminate()`, and `shutdown_stream().next()`, Windows gating, child wait observation, traceability/host-matrix honesty, no public API addition, and no overclaim for Unix-only constants or non-Unix semantics.
+
+M5 signal stream Unix delivery harness merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2426
+- Merge commit: `1f04c697dccd358384de73eeb09aceda7417563e`
+- Merged at: `2026-06-08T20:14:56Z`
+- Scope: deterministic Unix signal delivery pass coverage for `ctrl_c()`, `terminate()`, and `shutdown_stream().next()`, with Windows host gating and updated traceability/host-matrix boundaries.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS.
+
+M5 signal stream Unix delivery harness merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-delivery-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2426 URL, merge commit/date, review-loop citation, local validation evidence, Windows host gating, and no scope overclaim for Unix-only constants or non-Unix delivery semantics.
 
 M5 signal `strsignal` value-helper implementation:
 
