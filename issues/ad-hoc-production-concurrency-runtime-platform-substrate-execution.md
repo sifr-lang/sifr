@@ -755,6 +755,7 @@ M4 stdin append semantics evidence targeted local validation:
 M4 stdin append semantics evidence review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-stdin-append-semantics-review-pass-1.md`: `PASS`; reviewer verified the two-call fixture uniquely distinguishes append-in-call-order from replace-with-first or replace-with-last semantics, traceability honestly closes only the stdin append decision, no out-of-scope process lifecycle APIs are introduced, and the validation set is sufficient for this evidence slice.
+- Merged as PR #2348: https://github.com/sifr-lang/sifr/pull/2348 (`afffaa3f8e40b9af0bbdffe13bafb61e053afb03`).
 
 M0 targeted local validation:
 
