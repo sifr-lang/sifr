@@ -32,7 +32,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] `milestone_concurrency_runtime_1`: Structured Async Runtime
 - [x] `milestone_concurrency_runtime_2`: Synchronization, Channels, And Backpressure
 - [x] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
-- [ ] `milestone_concurrency_runtime_4`: Process Runtime
+- [x] `milestone_concurrency_runtime_4`: Process Runtime
 - [ ] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
 - [ ] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
 - [ ] `milestone_concurrency_runtime_7`: Integration, Documentation, And Production Gate
@@ -254,6 +254,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - M3 scoped owner offload implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-scoped-offload-review-pass-1.md`; PR #2323 is merged.
 - M3 default parallel pool closure review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-default-pool-review-pass-1.md`; PR #2326 is merged.
 - M3 closeout implementation review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-4.md`; PR #2325 is merged and no strict M3 closure blockers remain.
+- M4 closeout classification review is complete: `PASS` in `reviews/ad-hoc-production-concurrency-runtime-m4-closeout-review-pass-1.md`; M4 is locally validated and ready to PR/merge.
 
 ## M1 Implementation Ledger
 
@@ -439,6 +440,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 timeout process-group cleanup: https://github.com/sifr-lang/sifr/pull/2396
 - M4 sync child drop cleanup: https://github.com/sifr-lang/sifr/pull/2398
 - M4 scoped parent cancellation evidence: https://github.com/sifr-lang/sifr/pull/2400
+- M4 closeout: in progress.
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -504,7 +506,7 @@ M4 scoped parent cancellation evidence implementation:
 
 - Added `process_scoped_parent_cancel` fixture coverage for `TaskGroup.spawn_process(...)` fail-fast cancellation stopping a scoped child before delayed marker side effects can escape.
 - Added the fixture to create-pr and merge e2e manifests.
-- Updated M4 process traceability and supported-host matrix to close the parent-cancellation evidence follow-up while preserving non-Unix status/termination semantics as remaining M4 work.
+- Updated M4 process traceability and supported-host matrix to close the parent-cancellation evidence follow-up while preserving non-Unix status/termination semantics as intentionally host-limited.
 
 M4 scoped parent cancellation evidence targeted local validation:
 
@@ -521,6 +523,23 @@ M4 scoped parent cancellation evidence merge ledger:
 
 - Merged as PR #2400 (`13e98095d2b35d5a91259b3667285a7af0c208f3`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`173.75s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`114 passed`, `0 failed`, `cache_hits=25/30`, `report_signature=b11e218d104a7820`).
+
+M4 closeout classification implementation:
+
+- Marked `milestone_concurrency_runtime_4` complete in this ledger.
+- Closed the M4 process traceability document by replacing stale pending lifecycle wording with supported macOS/Linux evidence and explicit host-limited non-Unix/Windows classification.
+- Promoted the supported-host matrix subprocess umbrella row to `supported` on macOS/Linux while preserving Windows as `host-limited` and pointing to the dedicated process rows.
+- Kept post-M4 future work limited to optional strict-text error-handler expansion, future stdlib re-export workload metadata, and explicitly host-limited non-Unix status/termination fixture work.
+
+M4 closeout classification targeted local validation:
+
+- `git diff --check` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`145.47s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`114 passed`, `0 failed`, `cache_hits=28/30`, `report_signature=b11e218d104a7820`).
+
+M4 closeout classification review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-closeout-audit-pass-1.md`: `PASS`; reviewer verified all blocking M4 DoD items have merged runtime and test evidence on macOS/Linux, and identified stale docs-only status/classification wording to remediate before closeout.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-closeout-review-pass-1.md`: `PASS`; reviewer verified the docs-only closeout diff correctly closes M4, removes stale pending lifecycle wording from active M4 surfaces, keeps non-Unix/Windows semantics host-limited, records validation evidence, and leaves M5 as the next pending entry.
 
 M3 first-wave targeted local validation:
 
