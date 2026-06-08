@@ -114,6 +114,7 @@
     "process_async_wait_cancel_safe",
     "process_async_spawn_pipes",
     "process_scoped_spawn_handle",
+    "process_scoped_parent_cancel",
     "process_async_spawn_wait",
     "process_spawn_wait_status",
     "process_spawn_pipe_readers",
