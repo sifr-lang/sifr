@@ -26,6 +26,12 @@ pub(crate) fn lower_runtime_emit_diagnostic(args: &[RustExpr]) -> Option<RustExp
                         diagnostic_name = __sifr_diagnostic_name,
                         diagnostic_message = __sifr_diagnostic_message
                     );
+                    metrics::counter!(
+                        "sifr.runtime.diagnostic.emitted",
+                        "level" => "trace",
+                        "surface" => "runtime"
+                    )
+                    .increment(1);
                     Ok(())
                 }}
                 "debug" => {{
@@ -36,6 +42,12 @@ pub(crate) fn lower_runtime_emit_diagnostic(args: &[RustExpr]) -> Option<RustExp
                         diagnostic_name = __sifr_diagnostic_name,
                         diagnostic_message = __sifr_diagnostic_message
                     );
+                    metrics::counter!(
+                        "sifr.runtime.diagnostic.emitted",
+                        "level" => "debug",
+                        "surface" => "runtime"
+                    )
+                    .increment(1);
                     Ok(())
                 }}
                 "info" => {{
@@ -46,6 +58,12 @@ pub(crate) fn lower_runtime_emit_diagnostic(args: &[RustExpr]) -> Option<RustExp
                         diagnostic_name = __sifr_diagnostic_name,
                         diagnostic_message = __sifr_diagnostic_message
                     );
+                    metrics::counter!(
+                        "sifr.runtime.diagnostic.emitted",
+                        "level" => "info",
+                        "surface" => "runtime"
+                    )
+                    .increment(1);
                     Ok(())
                 }}
                 "warn" => {{
@@ -56,6 +74,12 @@ pub(crate) fn lower_runtime_emit_diagnostic(args: &[RustExpr]) -> Option<RustExp
                         diagnostic_name = __sifr_diagnostic_name,
                         diagnostic_message = __sifr_diagnostic_message
                     );
+                    metrics::counter!(
+                        "sifr.runtime.diagnostic.emitted",
+                        "level" => "warn",
+                        "surface" => "runtime"
+                    )
+                    .increment(1);
                     Ok(())
                 }}
                 "error" => {{
@@ -66,12 +90,26 @@ pub(crate) fn lower_runtime_emit_diagnostic(args: &[RustExpr]) -> Option<RustExp
                         diagnostic_name = __sifr_diagnostic_name,
                         diagnostic_message = __sifr_diagnostic_message
                     );
+                    metrics::counter!(
+                        "sifr.runtime.diagnostic.emitted",
+                        "level" => "error",
+                        "surface" => "runtime"
+                    )
+                    .increment(1);
                     Ok(())
                 }}
-                _ => Err(DiagnosticError::new(format!(
-                    "unsupported diagnostic level: {{}}",
-                    __sifr_diagnostic_level
-                ))),
+                _ => {{
+                    metrics::counter!(
+                        "sifr.runtime.diagnostic.rejected",
+                        "reason" => "unsupported_level",
+                        "surface" => "runtime"
+                    )
+                    .increment(1);
+                    Err(DiagnosticError::new(format!(
+                        "unsupported diagnostic level: {{}}",
+                        __sifr_diagnostic_level
+                    )))
+                }}
             }}
         }}"#,
         level = level,

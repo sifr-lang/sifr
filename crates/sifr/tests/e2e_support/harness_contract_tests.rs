@@ -524,17 +524,21 @@ pub(crate) fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
 }
 
 #[test]
-pub(crate) fn test_generate_cargo_toml_runtime_diagnostics_use_locked_tracing_spec() {
+pub(crate) fn test_generate_cargo_toml_runtime_diagnostics_use_locked_observability_specs() {
     let runtime_modules = normalize_dependency_set(vec!["sifr.runtime".to_string()].into_iter());
     let no_required_crates = BTreeSet::new();
     let from_module = generate_cargo_toml(&runtime_modules, &no_required_crates, "sifr_output");
+    let metrics_spec = "metrics = \"0.24.6\"";
     let tracing_spec =
         "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }";
+    assert!(from_module.contains(metrics_spec));
     assert!(from_module.contains(tracing_spec));
 
     let no_modules = BTreeSet::new();
-    let required_crates = normalize_dependency_set(vec!["tracing".to_string()]);
+    let required_crates =
+        normalize_dependency_set(vec!["metrics".to_string(), "tracing".to_string()]);
     let from_required_crate = generate_cargo_toml(&no_modules, &required_crates, "sifr_output");
+    assert!(from_required_crate.contains(metrics_spec));
     assert!(from_required_crate.contains(tracing_spec));
 }
 

@@ -98,7 +98,7 @@ pub(crate) fn lowers_json_intrinsics_with_dependency_metadata() {
 }
 
 #[test]
-pub(crate) fn lowers_runtime_diagnostic_intrinsic_with_tracing_metadata() {
+pub(crate) fn lowers_runtime_diagnostic_intrinsic_with_observability_metadata() {
     let lowered = lower_intrinsic(
         "runtime_emit_diagnostic",
         &[
@@ -113,11 +113,19 @@ pub(crate) fn lowers_runtime_diagnostic_intrinsic_with_tracing_metadata() {
     assert_eq!(lowered.required_feature, None);
     assert!(lowered
         .additional_required_features
+        .contains(&sifr_stdlib::StdlibFeature::Metrics));
+    assert!(lowered
+        .additional_required_features
         .contains(&sifr_stdlib::StdlibFeature::Tracing));
     let rendered = render_expr(&lowered.expr);
     assert!(rendered.contains("tracing::event!"));
+    assert!(rendered.contains("metrics::counter!"));
     assert!(rendered.contains("target: \"sifr.runtime\""));
     assert!(rendered.contains("diagnostic_target = __sifr_diagnostic_target"));
+    assert!(rendered.contains("\"sifr.runtime.diagnostic.emitted\""));
+    assert!(rendered.contains("\"sifr.runtime.diagnostic.rejected\""));
+    assert!(rendered.contains("\"reason\" => \"unsupported_level\""));
+    assert!(rendered.contains("\"surface\" => \"runtime\""));
     assert!(rendered.contains("tracing::Level::INFO"));
     assert!(rendered.contains("DiagnosticError::new"));
     assert!(rendered.contains("unsupported diagnostic level"));
@@ -133,7 +141,7 @@ pub(crate) fn runtime_diagnostic_intrinsic_rejects_wrong_arity() {
 }
 
 #[test]
-pub(crate) fn runtime_module_dependency_metadata_includes_tracing_only() {
+pub(crate) fn runtime_module_dependency_metadata_includes_observability_facades() {
     let deps = sifr_stdlib::generated_cargo_dependencies(
         &std::collections::HashSet::from(["sifr.runtime".to_string()]),
         &std::collections::HashSet::new(),
@@ -142,6 +150,7 @@ pub(crate) fn runtime_module_dependency_metadata_includes_tracing_only() {
     assert_eq!(
         deps,
         vec![
+            "metrics = \"0.24.6\"".to_string(),
             "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
                 .to_string()
         ]
