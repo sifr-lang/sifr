@@ -7,6 +7,83 @@ use sifr_ir::{HirClass, HirFunction, HirModule};
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    fn is_current_process_resource_class(&self, class_name: &str) -> bool {
+        self.current_module_name.as_deref() == Some("sifr.process")
+            && matches!(
+                class_name,
+                "Child"
+                    | "AsyncChild"
+                    | "ProcessHandle"
+                    | "PipeReader"
+                    | "PipeWriter"
+                    | "AsyncPipeReader"
+                    | "AsyncPipeWriter"
+            )
+    }
+
+    fn process_child_drop_impl() -> RustItem {
+        RustItem::Impl {
+            target: "Child".to_string(),
+            type_params: vec![],
+            trait_: Some("Drop".to_string()),
+            items: vec![RustItem::Fn {
+                name: "drop".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![RustParam::SelfParam { mutable: true }],
+                ret: None,
+                body: vec![RustStmt::If {
+                    cond: RustExpr::UnaryOp {
+                        op: "!".to_string(),
+                        operand: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field: "_waited".to_string(),
+                        }),
+                    },
+                    then_body: vec![RustStmt::Let {
+                        mutable: false,
+                        name: "_".to_string(),
+                        ty: None,
+                        value: RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident(
+                                        "__SIFR_PROCESS_CHILDREN".to_string(),
+                                    )),
+                                    method: "lock".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "unwrap_or_else".to_string(),
+                                args: vec![RustExpr::Closure {
+                                    params: vec![RustParam::Named {
+                                        name: "__err".to_string(),
+                                        ty: RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("__err".to_string())),
+                                        method: "into_inner".to_string(),
+                                        args: vec![],
+                                    }),
+                                    is_move: false,
+                                }],
+                            }),
+                            method: "remove".to_string(),
+                            args: vec![RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(RustExpr::Field {
+                                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                                    field: "_handle".to_string(),
+                                }),
+                            }],
+                        },
+                    }],
+                    else_body: None,
+                }],
+                is_async: false,
+            }],
+        }
+    }
+
     pub(crate) fn auto_display_format_spec_for_field(&self, field_ty: &Type) -> &'static str {
         match field_ty.resolve_alias() {
             Type::Int
@@ -329,7 +406,9 @@ impl RustEmitter {
             .any(|(_, ty)| matches!(ty, Type::Callable(..)));
         let has_auto_display =
             !class.fields.is_empty() && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
-        let derives = if has_callable_field {
+        let derives = if self.is_current_process_resource_class(&class.name) {
+            vec!["Debug".to_string()]
+        } else if has_callable_field {
             Vec::new()
         } else if has_custom_eq {
             vec!["Debug".to_string(), "Clone".to_string()]
@@ -379,6 +458,10 @@ impl RustEmitter {
             trait_: None,
             items: impl_items,
         });
+
+        if self.current_module_name.as_deref() == Some("sifr.process") && class.name == "Child" {
+            self.body_items.push(Self::process_child_drop_impl());
+        }
 
         self.emit_operator_impls(class);
 

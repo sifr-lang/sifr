@@ -223,6 +223,15 @@ pub(super) fn module_class_fields(module: &HirModule) -> HashMap<String, Vec<(St
 
 /// Generate Rust source code from a HIR module with compiled stdlib code.
 pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
+    generate_rust_with_stdlib_for_module(module, stdlib_code, None)
+}
+
+/// Generate Rust source code from a named HIR module with compiled stdlib code.
+pub fn generate_rust_with_stdlib_for_module(
+    module: &HirModule,
+    stdlib_code: &StdlibCode,
+    module_name: Option<&str>,
+) -> CodegenResult {
     let mut emitter = RustEmitter::new();
     emitter
         .stdlib_intrinsic_names
@@ -304,7 +313,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     emitter.generate_enum_definitions();
 
     // Second pass: emit the actual code
-    emitter.emit_module(module, false, false);
+    emitter.emit_named_module(module, false, false, module_name);
 
     // Build stdlib preamble first so we can check for error type references
     let mut stdlib_preamble = String::new();

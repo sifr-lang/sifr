@@ -81,6 +81,45 @@ def main():\n\
 }
 
 #[test]
+fn process_child_resource_derives_are_module_scoped() {
+    let module = HirModule {
+        functions: vec![],
+        classes: vec![HirClass {
+            name: "Child".to_string(),
+            fields: vec![
+                ("_handle".to_string(), Type::Int),
+                ("_waited".to_string(), Type::Bool),
+            ],
+            methods: vec![],
+            is_error_type: false,
+            is_hashable: true,
+            operator_impls: vec![],
+            type_params: vec![],
+            newtype_inner: None,
+            implements_protocols: vec![],
+            enum_variants: vec![],
+            kind: HirClassKind::Regular,
+            parent_class: None,
+        }],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let user_rust = generate_rust(&module);
+    assert!(user_rust.contains("#[derive(Debug, Clone, PartialEq, Eq, Hash)]\nstruct Child"));
+
+    let process_rust =
+        generate_rust_with_stdlib_for_module(&module, &StdlibCode::default(), Some("sifr.process"))
+            .rust_source;
+    assert!(process_rust.contains("#[derive(Debug)]\nstruct Child"));
+    assert!(process_rust.contains("impl Drop for Child"));
+    assert!(process_rust.contains("__SIFR_PROCESS_CHILDREN"));
+    assert!(!process_rust.contains("#[derive(Debug, Clone"));
+}
+
+#[test]
 fn test_class_to_string_method_does_not_emit_generated_allow() {
     let module = HirModule {
         functions: vec![],

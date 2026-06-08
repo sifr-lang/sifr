@@ -220,7 +220,13 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 format!(
                     "internal compiler panic during stdlib code generation for '{module_name}'"
                 ),
-                || sifr_codegen::generate_rust_with_stdlib(&result.module, &codegen_stdlib),
+                || {
+                    sifr_codegen::generate_rust_with_stdlib_for_module(
+                        &result.module,
+                        &codegen_stdlib,
+                        Some(module_name),
+                    )
+                },
             )
             .map_err(|e| {
                 let mut diagnostic = *e;
