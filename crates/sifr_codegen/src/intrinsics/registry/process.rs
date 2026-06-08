@@ -182,6 +182,12 @@ fn status_code(status_expr: RustExpr) -> RustExpr {
     }
 }
 
+fn status_signal(status_ident: &str) -> RustExpr {
+    RustExpr::Ident(format!(
+        "{{ #[cfg(unix)] {{ std::os::unix::process::ExitStatusExt::signal(&{status_ident}).unwrap_or(-1) as i64 }} #[cfg(not(unix))] {{ -1i64 }} }}"
+    ))
+}
+
 fn normal_command_setup(args: &[RustExpr]) -> Vec<RustStmt> {
     vec![
         RustStmt::Let {
@@ -696,9 +702,10 @@ pub(crate) fn lower_process_wait(args: &[RustExpr]) -> Option<RustExpr> {
     ];
     Some(RustExpr::Block {
         stmts,
-        expr: Some(Box::new(ok_expr(status_code(RustExpr::Ident(
-            "__status".to_string(),
-        ))))),
+        expr: Some(Box::new(ok_expr(RustExpr::Tuple(vec![
+            status_code(RustExpr::Ident("__status".to_string())),
+            status_signal("__status"),
+        ])))),
     })
 }
 

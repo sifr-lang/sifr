@@ -14,6 +14,10 @@ fn process_text_output_tuple() -> Type {
     Type::Tuple(vec![Type::Str, Type::Str, Type::Int])
 }
 
+fn process_status_signal_tuple() -> Type {
+    Type::Tuple(vec![Type::Int, Type::Int])
+}
+
 /// _sifr.process — Native process execution intrinsics.
 pub(super) fn intrinsic_process() -> IntrinsicModule {
     let mut functions = HashMap::new();
@@ -50,7 +54,7 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         "process_wait".to_string(),
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::Int, "ProcessError"),
+            result_ty(process_status_signal_tuple(), "ProcessError"),
         ),
     );
     functions.insert(

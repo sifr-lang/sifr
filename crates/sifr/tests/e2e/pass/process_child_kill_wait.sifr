@@ -15,12 +15,23 @@ def main():
         _killed: None = kill(child)
         status: Status = wait(child)
         actual.append(not status.success)
-        actual.append(status.kind == "nonzero")
+        if status.code == -1:
+            actual.append(status.kind == "signal")
+            actual.append(status.signal is not None)
+        else:
+            actual.append(status.kind == "nonzero")
+            actual.append(status.signal is None)
 
         method_child: Child = spawn(sleeping_command())
         _method_killed: None = method_child.kill()
         method_status: Status = method_child.wait()
         actual.append(not method_status.success)
+        if method_status.code == -1:
+            actual.append(method_status.kind == "signal")
+            actual.append(method_status.signal is not None)
+        else:
+            actual.append(method_status.kind == "nonzero")
+            actual.append(method_status.signal is None)
 
         try:
             _after_wait_kill: None = kill(child)
@@ -30,4 +41,4 @@ def main():
     except ProcessError as e:
         actual.append(False)
 
-    assert actual == [True, True, True, True]
+    assert actual == [True, True, True, True, True, True, True]

@@ -38,10 +38,10 @@ class Status:
     cancelled: bool
     kind: str
 
-    def __init__(self, code: int, kind: str):
+    def __init__(self, code: int, kind: str, signal: int | None = None):
         self.code = code
         self.success = code == 0
-        self.signal = None
+        self.signal = signal
         self.timed_out = False
         self.cancelled = False
         self.kind = kind
@@ -79,8 +79,8 @@ class Child:
             raise ProcessError("process child has already been waited")
         self._waited = True
         try:
-            code: int = process_wait(self._handle)
-            return _status(code)
+            raw: tuple[int, int] = process_wait(self._handle)
+            return _status_from_wait(raw[0], raw[1])
         except ProcessError as e:
             raise e
 
@@ -150,6 +150,14 @@ def _status_from(code: int, timed_out: bool) -> Status:
     return _status(code)
 
 
+def _status_from_wait(code: int, signal: int) -> Status:
+    if signal >= 0:
+        status: Status = Status(code, "signal", signal)
+        status.success = False
+        return status
+    return _status(code)
+
+
 @blocking_io
 def spawn(command: Command) -> Result[Child, ProcessError]:
     try:
@@ -173,8 +181,8 @@ def kill(child: Child) -> Result[None, ProcessError]:
 @blocking_io
 def wait(child: Child) -> Result[Status, ProcessError]:
     try:
-        code: int = process_wait(child._handle)
-        return _status(code)
+        raw: tuple[int, int] = process_wait(child._handle)
+        return _status_from_wait(raw[0], raw[1])
     except ProcessError as e:
         raise e
 

@@ -666,6 +666,31 @@ M4 sync child kill review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-child-kill-review-pass-1.md`: `PASS`; reviewer verified the wave is an honest sync forceful-kill slice, `process_kill` returns typed `ProcessError` for closed/unknown handles without data-dependent panics, kill preserves the child handle for later `wait`, top-level `kill(child)` triggers `SIFR-ASYNC-0003`, process-child runtime gating remains intact, and docs do not overclaim graceful termination, timeout escalation, structured cancellation, or signal evidence. Non-blocking feedback was applied before PR by changing the fixture from `sh -c "sleep 5"` to direct `sleep 30`, documenting that kill targets only the immediate child handle, and tracking method-form `@blocking_io` enforcement for `Child.wait()` / `Child.kill()` as later compiler work.
 - Merged as PR #2337: https://github.com/sifr-lang/sifr/pull/2337 (`2c6addfc2d67cc3fca15aa88d3e3956218fd106d`).
 
+M4 wait signal status evidence wave implementation:
+
+- Changed `_sifr.process.process_wait` to return `(status_code, signal)` instead of only status code while preserving the public `wait(child) -> Result[Status, ProcessError]` and `Child.wait() -> Result[Status, ProcessError]` surface.
+- `wait` maps `signal >= 0` to `Status.kind == "signal"` with `signal is not None`; otherwise it preserves the existing success/nonzero mapping.
+- Generated Rust extracts Unix signal evidence with a `#[cfg(unix)]` branch and returns a non-Unix `-1` sentinel so generated process code remains cross-platform compilable.
+- Extended `process_child_kill_wait` to cover signal status evidence after forceful kill while preserving the existing non-Unix fallback path.
+
+M4 wait signal status evidence wave targeted local validation:
+
+- `cargo fmt --check && cargo test -p sifr_codegen lowers_process_wait_signal_tuple_via_registry -- --nocapture` -> PASS.
+- `cargo check -p sifr_stdlib -p sifr_codegen -p sifr --quiet` -> PASS.
+- Post-review collateral-regression check after reverting `process_run` to a plain status code: `cargo check -p sifr_stdlib -p sifr_codegen -p sifr --quiet`, `cargo fmt --check && cargo test -p sifr_codegen lowers_process_wait_signal_tuple_via_registry -- --nocapture`, `process_sync_output_text`, `process_sync_bytes_env_cwd_stdin`, `process_child_kill_wait`, and `process_spawn_wait_status` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_child_kill_wait.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_wait_status.sifr` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 420 fail tests completed.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2176 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_child_kill_wait.sifr | rg "cfg\\(unix\\)|cfg\\(not\\(unix\\)\\)|ExitStatusExt::signal|kind.*signal|signal\\.is_some|process child"` -> PASS; emitted wait paths include platform-gated signal extraction and the fixture observes signal-kind status on supported hosts.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`295.38s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`95 passed`, `0 failed`, `cache_hits=19/25`, `report_signature=d8d730bd5475756c`).
+
+M4 wait signal status evidence wave review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-wait-signal-status-review-pass-1.md`: `CHANGES_REQUESTED`; reviewer found a collateral `process_run` lowering regression that returned `(status_code, signal)` while the public `run()` surface still expects `int`, and required the full create-pr validation gate. The lowering regression was fixed so only `process_wait` returns signal tuples, and the full create-pr gate passed on the fixed diff.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-wait-signal-status-review-pass-2.md`: `PASS`; reviewer verified the `process_run` regression is fixed, `process_wait` is the only tuple-returning intrinsic, the full create-pr gate was run on the fixed diff, signal/sentinel mapping has no generated data-dependent panics, public wait surfaces remain unchanged, and docs honestly preserve async/pipes/terminate/cancellation follow-ups.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

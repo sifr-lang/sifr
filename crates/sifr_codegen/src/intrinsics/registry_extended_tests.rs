@@ -156,6 +156,19 @@ pub(crate) fn lowers_process_timeout_intrinsics_via_registry() {
 }
 
 #[test]
+pub(crate) fn lowers_process_wait_signal_tuple_via_registry() {
+    let wait = lower_intrinsic("process_wait", &["handle".to_string()]).expect("process_wait");
+    let rendered = render_expr(&wait.expr);
+    assert!(rendered.contains("__children.remove(&__handle)"));
+    assert!(rendered.contains("__child.wait()"));
+    assert!(rendered.contains("#[cfg(unix)]"));
+    assert!(rendered.contains("std::os::unix::process::ExitStatusExt::signal(&__status)"));
+    assert!(rendered.contains("#[cfg(not(unix))]"));
+    assert!(rendered.contains("-1i64"));
+    assert!(rendered.contains("(__status.code().unwrap_or(-1) as i64"));
+}
+
+#[test]
 pub(crate) fn lowers_html_intrinsics_via_registry() {
     let esc = lower_intrinsic("html_escape", &["s".to_string()]).expect("html_escape");
     assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\")"));
