@@ -442,7 +442,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 scoped parent cancellation evidence: https://github.com/sifr-lang/sifr/pull/2400
 - M4 closeout: https://github.com/sifr-lang/sifr/pull/2403
 - M4: complete.
-- M5: pending.
+- M5 signal/shutdown foundation: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -546,6 +546,39 @@ M4 closeout classification merge ledger:
 
 - Merged as PR #2403 (`3f4512625a3eec3206276b8e96bd7bf915f0b172`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`123.41s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`114 passed`, `0 failed`, `cache_hits=28/30`, `report_signature=b11e218d104a7820`).
+
+M5 signal/shutdown foundation implementation:
+
+- Added public `sifr.signal` with `Signal`, `SignalError`, `sigint()`, `sigterm()`, `strsignal(...)`, awaitable `ctrl_c()`, awaitable Unix `terminate()`, and `shutdown_stream().next()`.
+- Added private `_sifr.signal` intrinsic typing and Rust lowering backed by Tokio signal APIs. Generated Tokio dependencies now include the `signal` feature. `sigterm().supported` uses a target cfg probe, and non-Unix `terminate()` returns typed unsupported `SignalError` rather than claiming portable SIGTERM semantics.
+- Added pass coverage for signal value mapping and negative diagnostics for Python-shaped handler/control APIs: `signal.signal`, `pause`, `getsignal`, `raise_signal`, and `pthread_sigmask`.
+- Created `verification/stdlib/concurrency_runtime_m5_ergonomics_traceability.md` and updated the supported-host matrix signal row to mark M5 signal work in progress with host-limited Windows SIGTERM semantics.
+
+M5 signal/shutdown foundation targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `cargo check -q -p sifr_stdlib -p sifr_codegen` -> PASS.
+- `cargo test -p sifr_stdlib -- --nocapture` -> PASS.
+- `cargo test -p sifr_driver test_generate_test_runner_cargo_toml_includes_required_features -- --nocapture` -> PASS.
+- `cargo test -p sifr_driver test_generate_test_runner_cargo_toml_preserves_stdlib_deps -- --nocapture` -> PASS.
+- `cargo test -p sifr_codegen lowers_signal_intrinsics_via_registry -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_constants_strsignal.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/signal_handler_registration_unsupported.sifr` -> expected FAIL with `SIFR-NAME-0002` and `SIFR-NAME-0004`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/signal_pause_unsupported.sifr`, `signal_getsignal_unsupported.sifr`, `signal_raise_signal_unsupported.sifr`, and `signal_pthread_sigmask_unsupported.sifr` -> expected FAIL with `SIFR-NAME-0002` and `SIFR-NAME-0004`.
+- Polish rerun after review: `cargo fmt --check`, `cargo test -p sifr_codegen lowers_signal_intrinsics_via_registry -- --nocapture`, `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_constants_strsignal.sifr`, and `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS. The pass fixture no longer asserts Unix-only `sigterm().supported`, fail fixtures now include explicit `expect-error` markers, and the non-Unix `terminate()` diagnostic says `SIGTERM is unsupported on this host`.
+
+M5 signal/shutdown foundation review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-foundation-review-pass-1.md`: `PASS`; reviewer verified scope honesty, sync wrappers returning awaitables under the existing stdlib model, host-honest SIGTERM support probing, typed non-Unix unsupported behavior, Tokio feature gating, no-panic lowering, and focused validation coverage. Non-blocking polish around host-independent fixture assertions, explicit fail-fixture markers, and non-Unix terminate wording was applied and revalidated.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-foundation-review-pass-2.md`: `PASS`; reviewer verified the polish preserved pass-1 conclusions, improved host honesty and diagnostic wording, and introduced no blocker.
+
+M5 signal/shutdown foundation create-pr validation:
+
+- `git diff --check` -> PASS for the scoped M5 diff.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS (`2222 files`, limit `900` lines).
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; e2e pass suite `115 passed`, `0 failed`, `cache_hits=27/31`, `report_signature=fa75f7f525acd21c`; platform golden `pass=6`, `skip=1`. Advisories: warm wall-time budget exceeded (`1141.09s`, warm target `<=2m`) and warm-cache hit rate below advisory target (`87%`, target `>=90%`).
 
 M3 first-wave targeted local validation:
 

@@ -1,0 +1,24 @@
+from sifr.signal import Signal, SignalError, sigint, sigterm, strsignal
+
+
+def main() -> Result[None, SignalError]:
+    try:
+        interrupt_signal: Signal = sigint()
+        assert interrupt_signal.number == 2
+        assert interrupt_signal.name == "SIGINT"
+        assert interrupt_signal.supported
+        interrupt_label: str = strsignal(interrupt_signal)
+        assert interrupt_label == "Interrupt"
+
+        terminate_signal: Signal = sigterm()
+        assert terminate_signal.number == 15
+        assert terminate_signal.name == "SIGTERM"
+        terminate_label: str = strsignal(terminate_signal)
+        assert terminate_label == "Terminated"
+
+        custom: Signal = Signal(2, "INTERRUPT", True)
+        custom_label: str = strsignal(custom)
+        assert custom_label == "Interrupt"
+    except SignalError as e:
+        assert e.message == ""
+    return None

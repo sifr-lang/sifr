@@ -269,6 +269,41 @@ pub(crate) fn lowers_os_intrinsics_via_registry() {
 }
 
 #[test]
+pub(crate) fn lowers_signal_intrinsics_via_registry() {
+    let ctrl_c = lower_intrinsic("signal_ctrl_c", &[]).expect("signal_ctrl_c");
+    assert_eq!(
+        ctrl_c.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Tokio)
+    );
+    let ctrl_c_rendered = render_expr(&ctrl_c.expr);
+    assert!(ctrl_c_rendered.contains("tokio::signal::ctrl_c().await"));
+    assert!(ctrl_c_rendered.contains("SIGINT"));
+
+    let sigterm_supported =
+        lower_intrinsic("signal_sigterm_supported", &[]).expect("signal_sigterm_supported");
+    assert!(sigterm_supported.required_feature.is_none());
+    assert_eq!(render_expr(&sigterm_supported.expr), "cfg!(unix)");
+
+    let terminate = lower_intrinsic("signal_terminate", &[]).expect("signal_terminate");
+    assert_eq!(
+        terminate.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Tokio)
+    );
+    let terminate_rendered = render_expr(&terminate.expr);
+    assert!(terminate_rendered.contains("SignalKind::terminate"));
+    assert!(terminate_rendered.contains("SIGTERM is unsupported"));
+
+    let shutdown = lower_intrinsic("signal_shutdown", &[]).expect("signal_shutdown");
+    assert_eq!(
+        shutdown.required_feature,
+        Some(sifr_stdlib::StdlibFeature::Tokio)
+    );
+    let shutdown_rendered = render_expr(&shutdown.expr);
+    assert!(shutdown_rendered.contains("tokio::select!"));
+    assert!(shutdown_rendered.contains("tokio::signal::ctrl_c().await"));
+}
+
+#[test]
 pub(crate) fn lowers_io_intrinsics_via_registry() {
     let read = lower_intrinsic("read_text", &["path".to_string()]).expect("read_text lowers");
     assert!(render_expr(&read.expr).contains("std::fs::read_to_string"));

@@ -15,6 +15,7 @@ mod io_json;
 mod math_test;
 mod platform_misc;
 mod process;
+mod signal;
 mod sources;
 mod sys_fs;
 mod text_encoding;
@@ -34,6 +35,7 @@ use platform_misc::{
     intrinsic_platform, intrinsic_toml,
 };
 use process::intrinsic_process;
+use signal::intrinsic_signal;
 pub use sources::{StdlibSource, STDLIB_SOURCES};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 use text_encoding::intrinsic_encoding;
@@ -101,6 +103,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.process" => Some(intrinsic_process()),
+        "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.toml" => Some(intrinsic_toml()),
         "_sifr.datetime" => Some(intrinsic_datetime()),
         "_sifr.html" => Some(intrinsic_html()),

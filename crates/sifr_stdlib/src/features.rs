@@ -186,7 +186,7 @@ const SIFR_RUNTIME_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependenc
 }];
 const TOKIO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "tokio",
-    spec: "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"sync\", \"time\"] }",
+    spec: "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
 }];
 const TOML_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "toml",
@@ -410,6 +410,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         ],
         "sifr.base64" => &[StdlibFeature::Base64],
         "sifr.parallel" => &[StdlibFeature::Rayon],
+        "sifr.signal" | "_sifr.signal" => &[StdlibFeature::Tokio],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
         "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {

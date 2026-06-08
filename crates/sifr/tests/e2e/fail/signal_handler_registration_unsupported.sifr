@@ -1,0 +1,11 @@
+# expect-error: SIFR-NAME-0004
+# expect-error: SIFR-NAME-0002
+from sifr.signal import signal
+
+
+def handler(number: int) -> None:
+    return None
+
+
+def main() -> None:
+    signal(2, handler)

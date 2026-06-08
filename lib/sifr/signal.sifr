@@ -1,0 +1,55 @@
+# sifr.signal - structured shutdown signal streams
+from _sifr.signal import (
+    signal_ctrl_c,
+    signal_shutdown,
+    signal_sigterm_supported,
+    signal_terminate,
+)
+
+
+class SignalError(Error):
+    message: str
+
+
+class Signal:
+    number: int
+    name: str
+    supported: bool
+
+    def __init__(self, number: int, name: str, supported: bool):
+        self.number = number
+        self.name = name
+        self.supported = supported
+
+
+def sigint() -> Signal:
+    return Signal(2, "SIGINT", True)
+
+
+def sigterm() -> Signal:
+    return Signal(15, "SIGTERM", signal_sigterm_supported())
+
+
+def strsignal(signal: Signal) -> Result[str, SignalError]:
+    if signal.number == 2:
+        return "Interrupt"
+    if signal.number == 15:
+        return "Terminated"
+    raise SignalError("unsupported signal")
+
+
+def ctrl_c() -> Awaitable[Result[Signal, SignalError]]:
+    return signal_ctrl_c()
+
+
+def terminate() -> Awaitable[Result[Signal, SignalError]]:
+    return signal_terminate()
+
+
+class ShutdownStream:
+    def next(self) -> Awaitable[Result[Signal, SignalError]]:
+        return signal_shutdown()
+
+
+def shutdown_stream() -> ShutdownStream:
+    return ShutdownStream()

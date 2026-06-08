@@ -1,0 +1,7 @@
+# expect-error: SIFR-NAME-0004
+# expect-error: SIFR-NAME-0002
+from sifr.signal import pthread_sigmask
+
+
+def main() -> None:
+    pthread_sigmask(0, [])
