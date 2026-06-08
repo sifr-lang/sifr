@@ -602,7 +602,15 @@ where
                         return TraversalControl::Stop;
                     }
                 }
-                sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup => {}
+                sifr_ir::HirAsyncWithKind::TaskGroup {
+                    context: Some(context),
+                } => {
+                    if matches!(walk_expr_until(context, on_expr), TraversalControl::Stop) {
+                        return TraversalControl::Stop;
+                    }
+                }
+                sifr_ir::HirAsyncWithKind::TaskScope
+                | sifr_ir::HirAsyncWithKind::TaskGroup { context: None } => {}
             }
             if matches!(
                 walk_stmts_until(body, config, on_stmt, on_expr),

@@ -1,15 +1,18 @@
+use super::expressions::lower_expr;
 use super::LowerCtx;
+use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprCall};
+use sifr_type_system::Type;
 
-pub(in crate::lower) fn validate_reserved_task_context_keyword(
+pub(in crate::lower) fn lower_task_context_keyword(
     ctx: &mut LowerCtx,
     call: &ExprCall,
     callable_name: &str,
-) -> Option<()> {
+) -> Option<Option<HirExpr>> {
     if call.arguments.keywords.is_empty() {
-        return Some(());
+        return Some(None);
     }
     if call.arguments.keywords.len() != 1 {
         ctx.error_with_code_at(
@@ -36,15 +39,28 @@ pub(in crate::lower) fn validate_reserved_task_context_keyword(
         );
         return None;
     }
-    if !matches!(keyword.value, Expr::NoneLiteral(_)) {
+    if matches!(keyword.value, Expr::NoneLiteral(_)) {
+        return Some(None);
+    }
+    let context = lower_expr(&keyword.value, ctx)?;
+    let is_context = matches!(
+        context.ty().resolve_alias(),
+        Type::Class { name, fields, .. }
+            if name == "Context"
+                && fields
+                    .iter()
+                    .any(|(field_name, field_ty)| field_name == "name" && matches!(field_ty, Type::Str))
+    );
+    if !is_context {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
             format!(
-                "{callable_name} ctx must be None until sifr.task.Context propagation lands in M5"
+                "{callable_name} ctx must be sifr.task.Context or None, got '{}'",
+                context.ty().display_name()
             ),
             keyword.value.range(),
         );
         return None;
     }
-    Some(())
+    Some(Some(context))
 }

@@ -163,10 +163,19 @@ impl RustEmitter {
             return Ok(None);
         };
         if let Some(target) = target {
-            let constructor = if matches!(kind, sifr_ir::HirAsyncWithKind::TaskGroup) {
-                "new_task_group"
-            } else {
-                "new"
+            let (constructor, constructor_args) = match kind {
+                sifr_ir::HirAsyncWithKind::TaskGroup {
+                    context: Some(context),
+                } => {
+                    let Some(context) = crate::try_lower_leaf_or_name_expr_result(context)? else {
+                        return Ok(None);
+                    };
+                    ("new_task_group_with_context", vec![context])
+                }
+                sifr_ir::HirAsyncWithKind::TaskGroup { context: None } => {
+                    ("new_task_group", vec![])
+                }
+                _ => ("new", vec![]),
             };
             lowered_body.insert(
                 0,
@@ -179,7 +188,7 @@ impl RustEmitter {
                             "__SifrTaskScope".to_string(),
                             constructor.to_string(),
                         ])),
-                        args: vec![],
+                        args: constructor_args,
                     },
                 },
             );
@@ -187,7 +196,7 @@ impl RustEmitter {
         if let (true, Some(target)) = (
             matches!(
                 kind,
-                sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup
+                sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup { .. }
             ),
             target,
         ) {

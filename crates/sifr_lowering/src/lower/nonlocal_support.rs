@@ -198,8 +198,11 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
                 crate::hir_nodes::HirAsyncWithKind::UserDefined { context, .. } => {
                     hir_expr_calls_function(context, func_name)
                 }
+                crate::hir_nodes::HirAsyncWithKind::TaskGroup {
+                    context: Some(context),
+                } => hir_expr_calls_function(context, func_name),
                 crate::hir_nodes::HirAsyncWithKind::TaskScope
-                | crate::hir_nodes::HirAsyncWithKind::TaskGroup => false,
+                | crate::hir_nodes::HirAsyncWithKind::TaskGroup { context: None } => false,
             };
             context_calls || hir_body_calls_function(body, func_name)
         }

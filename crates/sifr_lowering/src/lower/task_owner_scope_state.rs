@@ -37,7 +37,7 @@ pub(in crate::lower) fn enter_task_owner_scope(
 ) -> ActiveTaskOwnerSnapshot {
     let target_name = matches!(
         kind,
-        HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup
+        HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup { .. }
     )
     .then(|| target.cloned())
     .flatten();
@@ -57,13 +57,13 @@ pub(in crate::lower) fn enter_task_owner_scope(
     };
     if matches!(
         kind,
-        HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup
+        HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup { .. }
     ) {
         ctx.active_task_owner_depth = ctx.active_task_owner_depth.saturating_add(1);
         if let Some(name) = target {
             let owner_ty = match kind {
                 HirAsyncWithKind::TaskScope => task_scope_type(),
-                HirAsyncWithKind::TaskGroup => task_group_type(),
+                HirAsyncWithKind::TaskGroup { .. } => task_group_type(),
                 _ => unreachable!("task owner kind checked above"),
             };
             ctx.active_task_owner_bindings

@@ -1,7 +1,7 @@
 use super::expressions::lower_expr;
 use super::statement_diagnostics;
 use super::statements::lower_stmts;
-use super::task_context_keywords::validate_reserved_task_context_keyword;
+use super::task_context_keywords::lower_task_context_keyword;
 use super::task_owner_scope_state::{
     enter_task_owner_scope, exit_task_owner_scope, task_group_type, task_scope_type,
 };
@@ -338,7 +338,10 @@ fn expr_contains_task_spawn(expr: &crate::hir_nodes::HirExpr) -> bool {
 
     match expr {
         HirExpr::MethodCall { method, .. }
-            if method == "__sifr_spawn_infallible" || method == "__sifr_spawn_result" =>
+            if method == "__sifr_spawn_infallible"
+                || method == "__sifr_spawn_infallible_with_context"
+                || method == "__sifr_spawn_result"
+                || method == "__sifr_spawn_result_with_context" =>
         {
             true
         }
@@ -755,7 +758,7 @@ pub(in crate::lower) fn lower_async_with(
                 (HirAsyncWithKind::TaskScope, target)
             }
             "TaskGroup" => {
-                validate_reserved_task_context_keyword(ctx, call, "task.TaskGroup()")?;
+                let context = lower_task_context_keyword(ctx, call, "task.TaskGroup()")?;
                 if !call.arguments.args.is_empty() {
                     ctx.error_with_code_at(
                         DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
@@ -768,7 +771,7 @@ pub(in crate::lower) fn lower_async_with(
                 if let Some(name) = &target {
                     ctx.scope.define(name.clone(), task_group_type());
                 }
-                (HirAsyncWithKind::TaskGroup, target)
+                (HirAsyncWithKind::TaskGroup { context }, target)
             }
             "timeout" => {
                 if !call.arguments.keywords.is_empty() {
@@ -836,7 +839,10 @@ pub(in crate::lower) fn lower_async_with(
             );
             return None;
         }
-        if matches!(kind, HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup)
+        if matches!(
+            kind,
+            HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup { .. }
+        )
             && body.iter().any(stmt_contains_task_spawn)
             && !return_type_accepts_scope_failure(&func_type.return_type)
         {
@@ -848,7 +854,10 @@ pub(in crate::lower) fn lower_async_with(
             );
             return None;
         }
-        if matches!(kind, HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup)
+        if matches!(
+            kind,
+            HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup { .. }
+        )
             && body.iter().any(stmt_contains_task_spawn)
             && body.iter().any(stmt_contains_scope_early_exit)
         {

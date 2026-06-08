@@ -645,7 +645,8 @@ pub(crate) fn module_uses_task_scope(module: &HirModule) -> bool {
         matches!(
             stmt,
             HirStmt::AsyncWith {
-                kind: sifr_ir::HirAsyncWithKind::TaskScope | sifr_ir::HirAsyncWithKind::TaskGroup,
+                kind: sifr_ir::HirAsyncWithKind::TaskScope
+                    | sifr_ir::HirAsyncWithKind::TaskGroup { .. },
                 ..
             }
         )

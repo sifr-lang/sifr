@@ -105,7 +105,9 @@ pub struct HirFunction {
 #[derive(Debug, Clone)]
 pub enum HirAsyncWithKind {
     TaskScope,
-    TaskGroup,
+    TaskGroup {
+        context: Option<HirExpr>,
+    },
     TaskTimeout {
         duration: HirExpr,
     },

@@ -249,7 +249,10 @@ pub(super) fn stmt_effects(stmt: &HirStmt) -> Vec<FlowEffect> {
                 HirAsyncWithKind::UserDefined { context, .. } => {
                     expr_effects(context, &mut effects);
                 }
-                HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup => {}
+                HirAsyncWithKind::TaskGroup {
+                    context: Some(context),
+                } => expr_effects(context, &mut effects),
+                HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup { context: None } => {}
             }
         }
         HirStmt::Match { subject, .. } => expr_effects(subject, &mut effects),
