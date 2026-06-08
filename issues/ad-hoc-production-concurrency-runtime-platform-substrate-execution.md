@@ -422,6 +422,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync stdout/stderr pipe readers: https://github.com/sifr-lang/sifr/pull/2352
 - M4 async process run timeout: https://github.com/sifr-lang/sifr/pull/2354
 - M4 sync stdin pipe writer: https://github.com/sifr-lang/sifr/pull/2357
+- M4 async process output timeout: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -887,6 +888,32 @@ M4 stdin guardrails review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-stdin-guardrails-review-pass-1.md`: `PASS`; reviewer verified sync `spawn(...)` now rejects `stdin_bytes(...)` before spawning, async run/output/timeout thread `stdin_mode` through public wrappers, stdlib metadata, lowerers, and generated helper signatures in the correct order, all async helpers return typed owned-pipe deferral errors for non-inherit stdin modes, fixtures cover the new guardrails, docs do not overclaim future async pipe/communicate work, file-size guardrails remain under 900 lines, and the create-pr lane evidence is sufficient.
 - Merged as PR #2359: https://github.com/sifr-lang/sifr/pull/2359 (`408368be330fd0399ba6eeaf6cb060661a1104c8`).
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`214.95s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`100 passed`, `0 failed`, `cache_hits=24/26`, `report_signature=458ad42c8c1b262c`).
+
+M4 async process output timeout implementation:
+
+- Added public `sifr.process.async_output_timeout(command, seconds)` returning `Awaitable[Result[Output, ProcessError]]`.
+- Added stdlib intrinsic metadata and lowering for `process_async_output_timeout` with the same owned command argument ordering as async output plus explicit `has_stdin` and timeout arguments.
+- Added a generated Tokio helper that validates finite non-negative timeout values, rejects unsupported async stdin modes with typed `ProcessError`s, drains stdout/stderr asynchronously on normal completion, and kills then waits for timed-out children before returning timeout `Output` evidence.
+- Added the Tokio `io-util` dependency feature required by async stdout/stderr drains across both generated projects and grouped e2e harness crates, and kept helper gating independent from plain async output.
+- Added `process_async_output_timeout` fixture coverage to create-pr and merge manifests, process traceability, and the supported-host matrix without claiming async spawn/wait/communicate, public async pipes, cancellation, scoped supervision, or Windows support.
+
+M4 async process output timeout targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo test -p sifr_codegen test_generate_project_emits_tokio_dependency_when_required --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_output_timeout.sifr` -> PASS; async output timeout captures stdout/stderr on normal completion, returns typed timeout `Output` evidence after kill/wait, and rejects invalid timeout and unsupported stdin shapes.
+- Adjacent process regressions `process_async_run_output`, `process_async_run_timeout`, and `process_spawn_pipe_writer` -> PASS.
+- Emission checks for `process_async_output_timeout` -> PASS; generated Rust includes `__sifr_process_async_output_timeout`, `tokio::select`, `AsyncReadExt`, stdout/stderr `read_to_end`, child kill/wait on timeout, and timeout `Status` construction.
+- Emission check for `process_async_run_timeout` -> PASS; timeout-only status usage does not emit `__sifr_process_async_output_timeout` or the plain async output helper.
+- Initial create-pr lane exposed the grouped e2e harness still rendering Tokio without `io-util`; fixed the harness dependency renderer and contract test so grouped fixture crates match generated project dependencies.
+- `cargo test -p sifr test_generate_cargo_toml_required_tokio_uses_runtime_features --quiet` -> PASS after the harness dependency fix.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS after the harness dependency fix; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`184.51s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=25/26`, `report_signature=9212e77abfa82acc`).
+
+M4 async process output timeout review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-output-timeout-review-pass-1.md`: `PASS`; reviewer verified the public wrapper, stdlib metadata, intrinsic lowering, and generated helper agree on 8-argument ordering; async output timeout validates timeout values, rejects unsupported stdin modes with typed `ProcessError`s, drains stdout/stderr asynchronously on normal completion, kills and waits on timeout, returns typed timeout `Output` evidence, gates independently from plain async output, propagates Tokio `io-util` through generated projects and grouped e2e harness crates, and keeps docs honest about remaining async spawn/wait/communicate, public async pipes, cancellation, scoped supervision, text-mode, and Windows follow-ups.
 
 M0 targeted local validation:
 

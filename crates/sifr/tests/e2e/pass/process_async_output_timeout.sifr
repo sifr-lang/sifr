@@ -1,0 +1,46 @@
+from sifr.process import Command, Output, ProcessError, Stdio, async_output_timeout
+
+
+async def main() -> None:
+    try:
+        fast: Command = Command("sh")
+        fast.args(["-c", "printf async-timeout-out; printf async-timeout-err >&2"])
+        output: Output = await async_output_timeout(fast, 2.0)
+        assert output.stdout == b"async-timeout-out"
+        assert output.stderr == b"async-timeout-err"
+        assert output.status.success
+        assert output.status.kind == "success"
+
+        slow: Command = Command("sh")
+        slow.args(["-c", "sleep 1; printf late"])
+        timed_out: Output = await async_output_timeout(slow, 0.01)
+        assert timed_out.status.timed_out
+        assert timed_out.status.kind == "timeout"
+        assert not timed_out.status.success
+        assert timed_out.stdout == b""
+        assert timed_out.stderr == b""
+
+        invalid: Command = Command("true")
+        try:
+            _invalid: Output = await async_output_timeout(invalid, -1.0)
+            assert False
+        except ProcessError as e:
+            assert "finite" in e.message
+
+        stdin_cmd: Command = Command("cat")
+        stdin_cmd.stdin_bytes(b"deferred")
+        try:
+            _stdin_output: Output = await async_output_timeout(stdin_cmd, 2.0)
+            assert False
+        except ProcessError as e:
+            assert "owned pipe" in e.message
+
+        pipe_cmd: Command = Command("cat")
+        pipe_cmd.stdin(Stdio("pipe"))
+        try:
+            _pipe_output: Output = await async_output_timeout(pipe_cmd, 2.0)
+            assert False
+        except ProcessError as e:
+            assert "owned pipe" in e.message
+    except ProcessError as e:
+        assert e.message == ""
