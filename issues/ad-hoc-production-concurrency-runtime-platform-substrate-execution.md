@@ -431,7 +431,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync PipeReader streaming reads: https://github.com/sifr-lang/sifr/pull/2377
 - M4 top-level async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2378
 - M4 async owned process pipes: https://github.com/sifr-lang/sifr/pull/2381
-- M4 process handle boundary diagnostics: in progress.
+- M4 process handle boundary diagnostics: https://github.com/sifr-lang/sifr/pull/2382
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1043,6 +1043,8 @@ M4 process handle boundary diagnostics review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-process-handle-boundaries-review-pass-1.md`: `PASS`; reviewer verified the central non-send/non-share-safe classifier hook for process-owned handles, the task/offload/channel fail fixtures, the absence of generated-runtime panic paths, and scope honesty. Follow-up notes requested staging hygiene around unrelated network/HTTP files, a populated review artifact, share-safety fixture coverage, and refreshed validation evidence.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-process-handle-boundaries-review-pass-2.md`: `PASS`; reviewer verified the pass-1 artifact is populated, `process_pipe_reader_shared_rejected.sifr` closes the share-safety coverage gap, all six fail fixtures emit the intended diagnostics, create-pr validation evidence is refreshed, traceability remains honest about remaining M4 work, and no new panic or file-size issue exists. The only remaining PR requirement is to keep unrelated network/HTTP files out of the staged commit.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-process-handle-boundaries-review-pass-3.md`: `PASS`; post-rebase reviewer verified current `origin/main` process work is preserved, `AsyncPipeReader` and `AsyncPipeWriter` are included in the process-handle classifier, all nine fail fixtures pin the intended diagnostics, traceability removes only the now-closed pipe sendability/shareability follow-up while preserving later M4 cancellation/supervision/termination/text follow-ups, and no conflict markers, panic paths, file-size issue, or out-of-scope PR files remain. Reviewer requested only a fresh post-rebase create-pr lane before merge.
+- Merged as PR #2382 (`c9576ee61b38947bbfdda53c797f0659c2889dca`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; no advisories. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`107 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=640c40bcdf03a864`).
 
 M4 method-form async child kill/terminate implementation:
 
