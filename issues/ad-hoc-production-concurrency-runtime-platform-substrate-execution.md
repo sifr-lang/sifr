@@ -450,7 +450,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 signal constants: https://github.com/sifr-lang/sifr/pull/2416
 - M5 resource value-carrying nullcontext: https://github.com/sifr-lang/sifr/pull/2419
 - M5 signal stream shape and lowering: https://github.com/sifr-lang/sifr/pull/2418
-- M5 resource cleanup helper diagnostics: pending PR.
+- M5 resource cleanup helper diagnostics: https://github.com/sifr-lang/sifr/pull/2423
 - M6: pending.
 - M7: pending.
 
@@ -621,7 +621,9 @@ M5 signal stream shape and lowering merge ledger:
 
 - Merged as PR #2418 (`abdd8674b9a51dc88260782283b6f47c4c7791ff`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`1373.86s`, warm target `<=2m`) and warm-cache hit rate below advisory target (`53%`, target `>=90%`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`120 passed`, `0 failed`, `cache_hits=18/34`, `report_signature=293aaf3695dc42f8`).
-- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-ledger-review-pass-2.md`: `PASS`; reviewer verified PR #2418 metadata, merge SHA/date, final validation metrics and advisory wording, review artifact references, branch hygiene, and no overclaim beyond stream shape/lowering.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-ledger-review-pass-2.md`: `PASS`; reviewer verified PR #2418 metadata, merge SHA/date, the earlier warm-cache validation snapshot, review artifact references, branch hygiene, and no overclaim beyond stream shape/lowering.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-ledger-review-pass-3.md`: `FAIL`; reviewer verified the corrected validation metrics and PR metadata but blocked because the pass-2 ledger bullet still claimed to verify the final metrics after the final cache-hit/advisory wording changed. This bullet was corrected before the next review pass.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-ledger-review-pass-4.md`: `PASS`; reviewer verified the pass-2 overclaim correction, honest pass-3 failure record, corrected validation metrics, and no new signal-stream scope overclaim.
 
 M5 warnings global-filter rejection implementation:
 
@@ -724,6 +726,14 @@ M5 resource cleanup helper diagnostics targeted local validation:
 M5 resource cleanup helper diagnostics review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-cleanup-diagnostics-review-pass-1.md`: `PASS`; reviewer verified the four unsupported fixtures, true missing-member behavior from the `sifr.resource` surface, preserved `nullcontext(...)` scope, future blockers for typed cleanup-error aggregation and owned-close protocol support, host-matrix and traceability consistency, and the targeted validation evidence.
+
+M5 resource cleanup helper diagnostics merge ledger:
+
+- Merged as PR #2423 (`efaf92ed58bc85e92a7f4f6aef2ed4488ae59e47`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`339.84s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`120 passed`, `0 failed`, `cache_hits=34/34`, `report_signature=293aaf3695dc42f8`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-cleanup-diagnostics-ledger-review-pass-1.md`: `FAIL`; reviewer verified PR #2423 metadata and scope but blocked because the merge-ledger validation row copied PR #2418 cache-hit/advisory metrics instead of the cited PR #2423 report.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-cleanup-diagnostics-ledger-review-pass-2.md`: `FAIL`; reviewer verified the same blocker remained after the first attempted correction targeted the wrong row.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-resource-cleanup-diagnostics-ledger-review-pass-3.md`: `PASS`; reviewer verified the corrected PR #2423 validation metrics, merge SHA/date, honest failure history, and no scope overclaim beyond diagnostic closure for unsupported cleanup helpers.
 
 M5 signal `strsignal` value-helper implementation:
 
