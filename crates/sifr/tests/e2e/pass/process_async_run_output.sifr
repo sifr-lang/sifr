@@ -23,10 +23,18 @@ async def main() -> None:
         assert out.status.success
 
         stdin_cmd: Command = Command("cat")
-        stdin_cmd.stdin_bytes(b"deferred")
+        stdin_cmd.stdin_bytes(b"async-")
+        stdin_cmd.stdin_bytes(b"stdin")
+        stdin_out: Output = await async_output(stdin_cmd)
+        assert stdin_out.stdout == b"async-stdin"
+        assert stdin_out.stderr == b""
+        assert stdin_out.status.success
+
+        pipe_output_cmd: Command = Command("cat")
+        pipe_output_cmd.stdin(Stdio("pipe"))
         try:
-            rejected: Output = await async_output(stdin_cmd)
-            assert rejected.status.success == False
+            _pipe_output: Output = await async_output(pipe_output_cmd)
+            assert False
         except ProcessError as e:
             assert "owned pipe" in e.message
 

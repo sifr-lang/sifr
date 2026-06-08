@@ -399,6 +399,7 @@ def async_output(own command: Command) -> Awaitable[Result[Output, ProcessError]
         command.working_dir,
         command.has_working_dir,
         command.stdin_mode,
+        command.stdin_data,
         command.has_stdin_data,
     )
 
@@ -411,6 +412,7 @@ def async_output_timeout(own command: Command, seconds: float) -> Awaitable[Resu
         command.working_dir,
         command.has_working_dir,
         command.stdin_mode,
+        command.stdin_data,
         command.has_stdin_data,
         seconds,
     )

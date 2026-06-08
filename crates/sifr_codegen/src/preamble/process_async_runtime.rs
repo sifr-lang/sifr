@@ -65,6 +65,10 @@ fn process_async_params(include_stdin: bool) -> Vec<RustParam> {
     ];
     if include_stdin {
         params.push(RustParam::Named {
+            name: "stdin".to_string(),
+            ty: RustType::Vec(Box::new(RustType::Named("u8".to_string()))),
+        });
+        params.push(RustParam::Named {
             name: "has_stdin".to_string(),
             ty: RustType::Bool,
         });
@@ -311,74 +315,56 @@ pub(crate) fn build_process_async_items(
         .to_string(),
     )));
 
-    let mut output_body = vec![
-        process_async_stdin_mode_guard(),
-        RustStmt::If {
-            cond: RustExpr::Ident("has_stdin".to_string()),
-            then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-                args: vec![process_error_expr(RustExpr::Literal(RustLiteral::Str(
-                    "async process stdin bytes require owned pipe support".to_string(),
-                )))],
-            }))],
-            else_body: None,
-        },
-    ];
+    let mut output_body = vec![process_async_stdin_mode_guard()];
     output_body.extend(process_async_command_setup());
-    output_body.push(RustStmt::Let {
-        mutable: false,
-        name: "__output".to_string(),
-        ty: None,
-        value: RustExpr::Try(Box::new(process_map_err(RustExpr::Await(Box::new(
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
-                method: "output".to_string(),
-                args: vec![],
-            },
-        ))))),
-    });
-    output_body.push(RustStmt::Return(Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-        args: vec![RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "Output".to_string(),
-                "new".to_string(),
-            ])),
-            args: vec![
-                RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident("__output".to_string())),
-                    field: "stdout".to_string(),
-                },
-                RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident("__output".to_string())),
-                    field: "stderr".to_string(),
-                },
-                process_status_from_parts(
-                    status_code_expr(RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident("__output".to_string())),
-                        field: "status".to_string(),
-                    }),
-                    status_signal_expr(RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident("__output".to_string())),
-                        field: "status".to_string(),
-                    }),
-                ),
-            ],
-        }],
-    })));
+    output_body.push(RustStmt::Expr(RustExpr::Ident(
+        "use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        __cmd.stdout(std::process::Stdio::piped());
+        __cmd.stderr(std::process::Stdio::piped());
+        if has_stdin {
+            __cmd.stdin(std::process::Stdio::piped());
+        }
+        let mut __child = __cmd.spawn().map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+        let mut __stdin = __child.stdin.take();
+        let mut __stdout = __child.stdout.take();
+        let mut __stderr = __child.stderr.take();
+        let mut __stdout_bytes = Vec::new();
+        let mut __stderr_bytes = Vec::new();
+        let __stdin_write = async {
+            if has_stdin {
+                if let Some(mut __pipe) = __stdin.take() {
+                    __pipe.write_all(&stdin).await?;
+                }
+            }
+            Ok::<(), std::io::Error>(())
+        };
+        let __stdout_read = async {
+            if let Some(__pipe) = __stdout.as_mut() {
+                __pipe.read_to_end(&mut __stdout_bytes).await?;
+            }
+            Ok::<(), std::io::Error>(())
+        };
+        let __stderr_read = async {
+            if let Some(__pipe) = __stderr.as_mut() {
+                __pipe.read_to_end(&mut __stderr_bytes).await?;
+            }
+            Ok::<(), std::io::Error>(())
+        };
+        let (__status, _, _, _) = tokio::try_join!(__child.wait(), __stdin_write, __stdout_read, __stderr_read)
+            .map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+        return Ok(Output::new(
+            __stdout_bytes,
+            __stderr_bytes,
+            __sifr_process_status_from_exit(
+                __status.code().unwrap_or(-1) as i64,
+                __sifr_process_exit_signal(&__status),
+            ),
+        ));"
+        .to_string(),
+    )));
 
     let mut output_timeout_body = vec![
         process_async_stdin_mode_guard(),
-        RustStmt::If {
-            cond: RustExpr::Ident("has_stdin".to_string()),
-            then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-                args: vec![process_error_expr(RustExpr::Literal(RustLiteral::Str(
-                    "async process stdin bytes require owned pipe support".to_string(),
-                )))],
-            }))],
-            else_body: None,
-        },
         RustStmt::If {
             cond: RustExpr::BinOp {
                 left: Box::new(RustExpr::UnaryOp {
@@ -424,10 +410,14 @@ pub(crate) fn build_process_async_items(
     ];
     output_timeout_body.extend(process_async_command_setup());
     output_timeout_body.push(RustStmt::Expr(RustExpr::Ident(
-        "use tokio::io::AsyncReadExt;
+        "use tokio::io::{AsyncReadExt, AsyncWriteExt};
         __cmd.stdout(std::process::Stdio::piped());
         __cmd.stderr(std::process::Stdio::piped());
+        if has_stdin {
+            __cmd.stdin(std::process::Stdio::piped());
+        }
         let mut __child = __cmd.spawn().map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
+        let mut __stdin = __child.stdin.take();
         let mut __stdout = __child.stdout.take();
         let mut __stderr = __child.stderr.take();
         let mut __stdout_bytes = Vec::new();
@@ -435,6 +425,14 @@ pub(crate) fn build_process_async_items(
         return tokio::select! {
             biased;
             __completed = async {
+                let __stdin_write = async {
+                    if has_stdin {
+                        if let Some(mut __pipe) = __stdin.take() {
+                            __pipe.write_all(&stdin).await?;
+                        }
+                    }
+                    Ok::<(), std::io::Error>(())
+                };
                 let __stdout_read = async {
                     if let Some(__pipe) = __stdout.as_mut() {
                         __pipe.read_to_end(&mut __stdout_bytes).await?;
@@ -447,7 +445,7 @@ pub(crate) fn build_process_async_items(
                     }
                     Ok::<(), std::io::Error>(())
                 };
-                let (__status, _, _) = tokio::try_join!(__child.wait(), __stdout_read, __stderr_read)?;
+                let (__status, _, _, _) = tokio::try_join!(__child.wait(), __stdin_write, __stdout_read, __stderr_read)?;
                 Ok::<(std::process::ExitStatus, Vec<u8>, Vec<u8>), std::io::Error>((__status, __stdout_bytes, __stderr_bytes))
             } => {
                 let (__status, __stdout_done, __stderr_done) = __completed.map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;

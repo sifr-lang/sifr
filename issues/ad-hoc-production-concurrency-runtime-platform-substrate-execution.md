@@ -423,6 +423,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process run timeout: https://github.com/sifr-lang/sifr/pull/2354
 - M4 sync stdin pipe writer: https://github.com/sifr-lang/sifr/pull/2357
 - M4 async process output timeout: https://github.com/sifr-lang/sifr/pull/2362
+- M4 async stdin-byte communicate: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -916,6 +917,35 @@ M4 async process output timeout review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-output-timeout-review-pass-1.md`: `PASS`; reviewer verified the public wrapper, stdlib metadata, intrinsic lowering, and generated helper agree on 8-argument ordering; async output timeout validates timeout values, rejects unsupported stdin modes with typed `ProcessError`s, drains stdout/stderr asynchronously on normal completion, kills and waits on timeout, returns typed timeout `Output` evidence, gates independently from plain async output, propagates Tokio `io-util` through generated projects and grouped e2e harness crates, and keeps docs honest about remaining async spawn/wait/communicate, public async pipes, cancellation, scoped supervision, text-mode, and Windows follow-ups.
 - Merged as PR #2362: https://github.com/sifr-lang/sifr/pull/2362 (`2a3cefce45ea1a4ed7ab3eb414affc42471f3844`).
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`183.33s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=25/26`, `report_signature=9212e77abfa82acc`).
+
+M4 async stdin-byte communicate implementation:
+
+- Threaded `Command.stdin_data` through `async_output(...)` and `async_output_timeout(...)` into stdlib intrinsic metadata, async intrinsic lowerers, and generated helper signatures while preserving typed rejection for non-inherit `Command.stdin(...)` modes.
+- Replaced the plain async output helper's `Command.output()` path with explicit Tokio child spawning, conditional stdin piping, concurrent stdin write, stdout/stderr drains, and child wait so `Command.stdin_bytes(...)` is consumed as one-shot communicate input.
+- Updated the async output-timeout helper to use the same concurrent stdin write and stdout/stderr drains inside the timeout race; the timeout arm still kills and waits/reaps the child before returning typed timeout `Output` evidence.
+- Extended `process_async_run_output` and `process_async_output_timeout` fixtures to prove appended stdin bytes are delivered in order and that `Stdio("pipe")` remains a typed owned-pipe deferral until public async pipes land.
+
+M4 async stdin-byte communicate targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS; async output now echoes appended stdin bytes and still rejects `Stdio("pipe")`.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_output_timeout.sifr` -> PASS; async output timeout now echoes appended stdin bytes and still returns timeout evidence.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_timeout.sifr` -> PASS.
+- Emission checks for `process_async_run_output` and `process_async_output_timeout` -> PASS; generated helpers include `stdin: Vec<u8>`, `AsyncWriteExt`, stdin `write_all`, and `__stdin.take()` so EOF is observed after one-shot input.
+- Emission check for `process_async_run_timeout` -> PASS; status-only timeout usage still emits only `__sifr_process_async_run_timeout` and no async output/output-timeout helpers.
+- `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2188 files checked.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; 423 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`192.32s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=25/26`, `report_signature=9212e77abfa82acc`).
+- Post-review docs-nit rerun: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`154.89s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=9212e77abfa82acc`).
+
+M4 async stdin-byte communicate review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-communicate-stdin-review-pass-1.md`: `PASS`; reviewer verified wrapper/stdlib/lowerer/helper argument order, deadlock-free concurrent Tokio stdin/stdout/stderr/wait orchestration with `__stdin.take()` EOF, typed non-inherit stdin guardrails, timeout kill/wait reaping, helper gating, tests, scope-honest docs, and panic/lifecycle boundaries. Non-blocking docs nit: supported-host output-timeout row under-reported stdin-byte communicate coverage.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-communicate-stdin-review-pass-2.md`: `PASS`; reviewer verified the supported-host matrix docs nit was closed, no public async pipe/spawn/wait/cancellation/scoped/text/Windows overclaim was introduced, implementation files remained unchanged from the pass-1 review, and refreshed create-pr validation evidence was sufficient.
 
 M0 targeted local validation:
 
