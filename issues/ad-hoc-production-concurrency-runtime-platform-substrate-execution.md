@@ -422,7 +422,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync stdout/stderr pipe readers: https://github.com/sifr-lang/sifr/pull/2352
 - M4 async process run timeout: https://github.com/sifr-lang/sifr/pull/2354
 - M4 sync stdin pipe writer: https://github.com/sifr-lang/sifr/pull/2357
-- M4 async process output timeout: in progress.
+- M4 async process output timeout: https://github.com/sifr-lang/sifr/pull/2362
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -914,6 +914,8 @@ M4 async process output timeout targeted local validation:
 M4 async process output timeout review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-output-timeout-review-pass-1.md`: `PASS`; reviewer verified the public wrapper, stdlib metadata, intrinsic lowering, and generated helper agree on 8-argument ordering; async output timeout validates timeout values, rejects unsupported stdin modes with typed `ProcessError`s, drains stdout/stderr asynchronously on normal completion, kills and waits on timeout, returns typed timeout `Output` evidence, gates independently from plain async output, propagates Tokio `io-util` through generated projects and grouped e2e harness crates, and keeps docs honest about remaining async spawn/wait/communicate, public async pipes, cancellation, scoped supervision, text-mode, and Windows follow-ups.
+- Merged as PR #2362: https://github.com/sifr-lang/sifr/pull/2362 (`2a3cefce45ea1a4ed7ab3eb414affc42471f3844`).
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`183.33s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=25/26`, `report_signature=9212e77abfa82acc`).
 
 M0 targeted local validation:
 
