@@ -293,6 +293,9 @@ fn non_share_safe_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Opt
             parent_class,
             ..
         } => {
+            if let Some(label) = process_handle_type_label_by_name(name) {
+                return Some(format!("`{}` is a {label}", public_type_name(name)));
+            }
             if is_share_safe_sync_wrapper(name) {
                 return None;
             }
@@ -347,6 +350,9 @@ fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<St
             parent_class,
             ..
         } => {
+            if let Some(label) = process_handle_type_label_by_name(name) {
+                return Some(format!("`{}` is a {label}", public_type_name(name)));
+            }
             if let Some(label) = sync_guard_type_label_by_name(name) {
                 return Some(format!("`{}` is a {label}", public_type_name(name)));
             }
@@ -412,6 +418,18 @@ fn sync_guard_type_label_by_name(name: &str) -> Option<&'static str> {
     )
     .then_some("lock guard")
     .or_else(|| (public_type_name(name) == "SemaphorePermit").then_some("semaphore permit"))
+}
+
+fn process_handle_type_label_by_name(name: &str) -> Option<&'static str> {
+    match public_type_name(name) {
+        "Child" => Some("process child handle for sync subprocesses"),
+        "AsyncChild" => Some("process child handle for async subprocesses"),
+        "PipeReader" => Some("process pipe reader handle"),
+        "PipeWriter" => Some("process pipe writer handle"),
+        "AsyncPipeReader" => Some("process pipe reader handle for async subprocesses"),
+        "AsyncPipeWriter" => Some("process pipe writer handle for async subprocesses"),
+        _ => None,
+    }
 }
 
 fn is_share_safe_sync_wrapper(name: &str) -> bool {

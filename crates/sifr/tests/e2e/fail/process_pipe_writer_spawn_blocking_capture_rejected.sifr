@@ -1,0 +1,15 @@
+# expect-error: SIFR-OWN-0010
+from sifr.process import PipeWriter
+
+
+async def main() -> Result[None, ScopeFailure]:
+    writer: PipeWriter = PipeWriter(0)
+
+    @blocking_io
+    def use_writer() -> int:
+        assert writer is not None
+        return 1
+
+    handle = task.spawn_blocking(use_writer)
+    await task.sleep(0.0)
+    return None
