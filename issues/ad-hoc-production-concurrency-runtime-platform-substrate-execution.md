@@ -438,7 +438,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 scoped process supervision: https://github.com/sifr-lang/sifr/pull/2392
 - M4 timeout process-group cleanup: https://github.com/sifr-lang/sifr/pull/2396
 - M4 sync child drop cleanup: https://github.com/sifr-lang/sifr/pull/2398
-- M4 scoped parent cancellation evidence: in progress.
+- M4 scoped parent cancellation evidence: https://github.com/sifr-lang/sifr/pull/2400
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -516,6 +516,11 @@ M4 scoped parent cancellation evidence targeted local validation:
 M4 scoped parent cancellation evidence review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-parent-cancel-review-pass-3.md`: `PASS`; reviewer verified the dedicated fixture's PID-scoped marker cleanup, fail-fast `TaskGroup.spawn_process(...)` cancellation evidence, Unix shell timing guard, manifest entries, validation evidence, and documentation honesty around immediate-child cancellation only. Non-Unix signal/status/termination and process-group/descendant claims remain intentionally open.
+
+M4 scoped parent cancellation evidence merge ledger:
+
+- Merged as PR #2400 (`13e98095d2b35d5a91259b3667285a7af0c208f3`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`173.75s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`114 passed`, `0 failed`, `cache_hits=25/30`, `report_signature=b11e218d104a7820`).
 
 M3 first-wave targeted local validation:
 
