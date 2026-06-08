@@ -186,7 +186,7 @@ const SIFR_RUNTIME_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependenc
 }];
 const TOKIO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "tokio",
-    spec: "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"sync\", \"time\"] }",
+    spec: "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
 }];
 const TOML_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "toml",
