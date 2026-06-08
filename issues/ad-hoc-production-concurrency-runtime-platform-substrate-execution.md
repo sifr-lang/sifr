@@ -452,6 +452,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 signal stream shape and lowering: https://github.com/sifr-lang/sifr/pull/2418
 - M5 resource cleanup helper diagnostics: https://github.com/sifr-lang/sifr/pull/2423
 - M5 signal stream Unix delivery harness: https://github.com/sifr-lang/sifr/pull/2426
+- M5 structured runtime diagnostics: https://github.com/sifr-lang/sifr/pull/2428
 - M6: pending.
 - M7: pending.
 
@@ -767,6 +768,42 @@ M5 signal stream Unix delivery harness merge ledger:
 M5 signal stream Unix delivery harness merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-delivery-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2426 URL, merge commit/date, review-loop citation, local validation evidence, Windows host gating, and no scope overclaim for Unix-only constants or non-Unix delivery semantics.
+
+M5 structured runtime diagnostics implementation:
+
+- Added public `sifr.runtime` diagnostic value types: `DiagnosticLevel`, `DiagnosticEvent`, and `DiagnosticError`, plus `diagnostic_event(...)` and `emit_diagnostic(...) -> Result[None, DiagnosticError]`.
+- Added `_sifr.runtime.runtime_emit_diagnostic(...)` intrinsic typing and codegen lowering to structured `tracing::event!` calls with fixed internal target `sifr.runtime` and structured `diagnostic_target`, `diagnostic_name`, and `diagnostic_message` fields.
+- Added locked `tracing = { version = "0.1.44", default-features = false, features = ["std"] }` dependency wiring for generated projects and grouped e2e batch crates without exposing tracing types in Sifr source.
+- Added `runtime_diagnostics_tracing` pass coverage to create-pr and merge manifests, plus codegen and grouped Cargo.toml contract tests.
+- Updated M5 shutdown traceability to close structured runtime diagnostic events while deferring metrics until concrete metric names, label/cardinality policy, emission points, redaction policy, and deterministic tests are approved.
+
+M5 structured runtime diagnostics targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_codegen runtime_diagnostic -- --nocapture` -> PASS.
+- `cargo test -p sifr_codegen runtime_module_dependency_metadata_includes_tracing_only -- --nocapture` -> PASS.
+- `cargo test -p sifr_stdlib runtime -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/runtime_diagnostics_tracing.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/runtime_diagnostics_tracing.sifr` -> PASS.
+- `SIFR_E2E_FIXTURE_MANIFEST=/tmp/sifr-m5-diagnostics-next/verification/validation_lanes/create_pr_e2e_manifest.json cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` -> PASS; `121` pass tests completed, `0` failed, `report_signature=d760194c89dbc954`.
+- Post-review and post-rebase `scripts/run_all_tests.sh --profile create-pr` on the final PR base -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`136.44s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`122 passed`, `0 failed`, `cache_hits=36/36`, `report_signature=e04a8b6c2c420820`). The final total is one fixture higher than the mid-review manifest rerun because PR #2426's `signal_stream_delivery_unix` fixture landed on `main` before the final rebase.
+
+M5 structured runtime diagnostics review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-runtime-diagnostics-review-pass-1.md`: `FAIL`; reviewer found the traceability document claimed `runtime_diagnostics_tracing` coverage in create-pr and merge lanes before the fixture was listed in either lane manifest. The blocker was remediated by adding the fixture to both manifests and rerunning the lane.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-runtime-diagnostics-review-pass-2.md`: `PASS`; reviewer verified the manifest blocker was fixed, the grouped e2e batch Cargo.toml `tracing` dependency gap was closed with inference/spec/contract coverage, the public diagnostic value surface stays Sifr-owned, lowering is panic-free, and docs truthfully defer metrics policy.
+
+M5 structured runtime diagnostics merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2428
+- Merge commit: `134963a2b27359a624346dcf357e33519e18156e`
+- Merged at: `2026-06-08T20:24:48Z`
+- Scope: Sifr-owned runtime diagnostic events, tracing-backed lowering, generated-project and grouped-e2e dependency metadata, lane coverage, and M5 traceability updates.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS.
+
+M5 structured runtime diagnostics merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-runtime-diagnostics-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2428 URL, merge commit/date, implementation summary, validation evidence, review-loop citations, docs-only scope, and no overclaim of metrics emission or M5 closure.
 
 M5 signal `strsignal` value-helper implementation:
 
