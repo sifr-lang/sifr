@@ -918,6 +918,14 @@ M6 typed IPC design gate review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-design-review-pass-1.md`: `PASS`; reviewer verified the named design artifact is sufficient for the M6 entry gate, covers typed payload eligibility, serialization format, schema/version negotiation, process-pipe layering, bootstrap, result/error frames, cancellation, backpressure, close, malformed-frame behavior, CPython-shaped API classification, and makes no implementation-support, dependency-wiring, or process-worker pool overclaim.
 
+M6 typed IPC design gate merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2437
+- Merge commit: `624248d058f166562148749243f5140358cde4e1`
+- Merged at: `2026-06-08T22:46:03Z`
+- Scope: named M6 typed IPC design artifact, process-pipe layering, wire format, schema/version negotiation, frame families, payload eligibility, backpressure, cancellation/close, malformed-frame behavior, CPython-shaped API classification, host-matrix boundary, validation evidence, and reviewer artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
