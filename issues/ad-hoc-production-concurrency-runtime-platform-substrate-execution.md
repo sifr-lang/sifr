@@ -435,7 +435,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async wait cancellation-safe observation: https://github.com/sifr-lang/sifr/pull/2386
 - M4 subprocess strict text encoding: https://github.com/sifr-lang/sifr/pull/2390
 - M4 async shell process APIs: https://github.com/sifr-lang/sifr/pull/2393
-- M4 scoped process supervision: in progress.
+- M4 scoped process supervision: https://github.com/sifr-lang/sifr/pull/2392
 - M5: pending.
 - M6: pending.
 - M7: pending.
@@ -462,6 +462,11 @@ M4 scoped process supervision targeted local validation:
 
 - `cargo check -q -p sifr_codegen -p sifr_lowering -p sifr_stdlib` -> PASS.
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_scoped_spawn_handle.sifr` -> PASS.
+
+M4 scoped process supervision merge ledger:
+
+- Merged as PR #2392 (`db1872c550be86ad35cf8050f0ed0286ad5cfa62`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`230.49s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`111 passed`, `0 failed`, `cache_hits=22/29`, `report_signature=7564a7fcb0791ad4`).
 
 M3 first-wave targeted local validation:
 
