@@ -420,6 +420,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 signal status evidence: https://github.com/sifr-lang/sifr/pull/2341
 - M4 async process run/output loopback: https://github.com/sifr-lang/sifr/pull/2345
 - M4 sync stdout/stderr pipe readers: https://github.com/sifr-lang/sifr/pull/2352
+- M4 async process run timeout: https://github.com/sifr-lang/sifr/pull/2354
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -811,6 +812,28 @@ M4 sync stdout/stderr pipe readers review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-readers-review-pass-4.md`: `PASS`; final reviewer verified the pass-3 blocker was fixed by preserving the PR #2350 merge-link and merge-ledger validation from PR #2351 before the pipe-reader block, rechecked traceability for both method-form diagnostics fixtures plus `process_spawn_pipe_readers`, confirmed the sync-only pipe-reader implementation and typed-error/panic-freedom invariants, confirmed helper gating and documentation boundaries, and verified the latest create-pr evidence (`98 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=559a90cf856fe902`).
 - Merged as PR #2352: https://github.com/sifr-lang/sifr/pull/2352 (`cdd33ba0fd0469f65a0f4f26bf5fdcf8555e2bfd`).
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`160.57s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`98 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=559a90cf856fe902`).
+
+M4 async process run timeout targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr --quiet` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2181 files checked before the `origin/main` merge, then 2184 files checked after splitting async process preamble helpers from `process_runtime.rs`.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_timeout.sifr` -> PASS; `async_run_timeout` returns typed success and timeout `Status` evidence through `Awaitable[Result[Status, ProcessError]]`.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_timeout_status.sifr` -> PASS.
+- Emission check for `process_async_run_timeout` -> PASS; timeout-only usage emits `__sifr_process_async_run_timeout` and the shared status helper without emitting the async output helper.
+- Post-`origin/main` merge checks for `process_async_run_timeout.sifr` and `process_spawn_pipe_readers.sifr` -> PASS, proving the async timeout wave coexists with the sync pipe-reader merge.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS before merging `origin/main`; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`391.68s`, warm target `<=2m`). Included create-pr e2e pass suite (`98 passed`, `0 failed`, `report_signature=559a90cf856fe902`).
+- Post-`origin/main` merge and async-preamble split rerun: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`571.32s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`99 passed`, `0 failed`, `cache_hits=7/26`, `report_signature=42aaf1077a936d74`).
+- Broad non-lane probe `cargo test -p sifr_codegen --quiet` exposed unrelated stale/generated-code test failures and produced no accepted gate signal; the authoritative create-pr lane above passed after the focused checks.
+
+M4 async process run timeout review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-run-timeout-review-pass-1.md`: `PASS`; reviewer verified public `sifr.process.async_run_timeout`, stdlib metadata, lowering, generated Tokio process timeout behavior, typed invalid-timeout errors, kill-and-reap timeout status evidence, helper emission gating, manifests, and traceability. Non-blocking notes covered redundant timeout `success = false`, NaN fixture coverage, and the existing raw multi-line Rust expression pattern.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-run-timeout-review-pass-2.md`: `PASS`; post-`origin/main` merge reviewer verified the async preamble split was behavior-preserving, pipe-reader behavior from PR #2352 was preserved, timeout-only helper emission stayed minimal, no user-triggerable panic path was introduced, and the post-merge create-pr validation (`99 passed`, `0 failed`, `report_signature=42aaf1077a936d74`) was sufficient.
+- Merged as PR #2354: https://github.com/sifr-lang/sifr/pull/2354 (`dd24a7c3234df280a437acf0f5f5c394bdbc5f56`).
 
 M0 targeted local validation:
 
