@@ -72,7 +72,7 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "decode_utf8_with_encoding"
         | "process_output_text"
         | "process_shell_output_text" => &[StdlibFeature::EncodingRs],
-        "runtime_emit_diagnostic" => &[StdlibFeature::Tracing],
+        "runtime_emit_diagnostic" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "unicode_data_version"
         | "unicode_normalize"
         | "unicode_is_normalized"

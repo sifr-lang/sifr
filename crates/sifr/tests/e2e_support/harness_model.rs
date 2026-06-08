@@ -457,6 +457,9 @@ pub(crate) fn infer_dependencies(
     if rust_source.contains("tracing::") || rust_source.contains("use tracing") {
         crates.insert("tracing".to_string());
     }
+    if rust_source.contains("metrics::") || rust_source.contains("use metrics") {
+        crates.insert("metrics".to_string());
+    }
 
     (modules, crates)
 }

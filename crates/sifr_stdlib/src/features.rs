@@ -16,6 +16,7 @@ pub enum StdlibFeature {
     IcuLocale,
     IcuPlurals,
     Md5,
+    Metrics,
     NumBigint,
     NumTraits,
     Rand,
@@ -53,6 +54,7 @@ impl StdlibFeature {
             Self::IcuLocale => "icu_locale",
             Self::IcuPlurals => "icu_plurals",
             Self::Md5 => "md5",
+            Self::Metrics => "metrics",
             Self::NumBigint => "num-bigint",
             Self::NumTraits => "num-traits",
             Self::Rand => "rand",
@@ -135,6 +137,10 @@ const ICU_PLURALS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency
 const MD5_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "md5",
     spec: "md5 = \"0.8.0\"",
+}];
+const METRICS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "metrics",
+    spec: "metrics = \"0.24.6\"",
 }];
 const NUM_BIGINT_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "num-bigint",
@@ -269,6 +275,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: MD5_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Metrics,
+        cargo_dependencies: METRICS_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::NumBigint,
         cargo_dependencies: NUM_BIGINT_DEPS,
     },
@@ -361,6 +371,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "icu_locale" | "icu-locale" => Some(StdlibFeature::IcuLocale),
         "icu_plurals" | "icu-plurals" => Some(StdlibFeature::IcuPlurals),
         "md5" => Some(StdlibFeature::Md5),
+        "metrics" => Some(StdlibFeature::Metrics),
         "num-bigint" => Some(StdlibFeature::NumBigint),
         "num-traits" => Some(StdlibFeature::NumTraits),
         "rand" => Some(StdlibFeature::Rand),
@@ -421,7 +432,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         ],
         "sifr.base64" => &[StdlibFeature::Base64],
         "sifr.parallel" => &[StdlibFeature::Rayon],
-        "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Tracing],
+        "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
         "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {

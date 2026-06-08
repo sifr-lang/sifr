@@ -249,7 +249,6 @@ pub(crate) fn generate_cargo_toml(
     let mut contents = format!(
         "[package]\nname = \"{package_name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n"
     );
-
     let mut deps = BTreeSet::new();
     for module_name in stdlib_modules {
         match module_name.as_str() {
@@ -306,6 +305,7 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert("rayon = \"1.12.0\"".to_string());
             }
             "sifr.runtime" | "_sifr.runtime" => {
+                deps.insert("metrics = \"0.24.6\"".to_string());
                 deps.insert(
                     "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
                         .to_string(),
@@ -425,6 +425,9 @@ pub(crate) fn generate_cargo_toml(
             }
             "tokio" => {
                 deps.insert(tokio_dependency_spec());
+            }
+            "metrics" => {
+                deps.insert("metrics = \"0.24.6\"".to_string());
             }
             "tracing" => {
                 deps.insert(
