@@ -1,7 +1,7 @@
 use crate::{
     generate_project_with_deps_and_crates, generate_rust, generate_rust_multi,
     generate_rust_multi_with_metadata, generate_rust_test, generate_rust_with_metadata,
-    RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
+    generate_rust_with_stdlib_for_module, RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
 };
 use sifr_ir::{
     HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFunction, HirImport, HirMatchArm,

@@ -35,6 +35,8 @@ pub struct RustEmitter {
     pub(crate) parent_fields: HashMap<String, (String, HashSet<String>)>,
     /// The class currently being emitted (for field access resolution)
     pub(crate) current_class_name: Option<String>,
+    /// The source module currently being emitted, when known.
+    pub(crate) current_module_name: Option<String>,
     /// Set of stdlib/intrinsic modules used (for Cargo dependency injection)
     pub used_stdlib_modules: HashSet<String>,
     /// Set of intrinsic function names (for codegen dispatch)
@@ -208,6 +210,7 @@ impl RustEmitter {
             display_classes: HashSet::new(),
             parent_fields: HashMap::new(),
             current_class_name: None,
+            current_module_name: None,
             used_stdlib_modules: HashSet::new(),
             intrinsic_functions: HashSet::new(),
             intrinsic_registry_features: HashSet::new(),
@@ -304,6 +307,19 @@ impl RustEmitter {
     }
 
     pub(crate) fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
+        self.emit_named_module(module, module_public, test_mode, None);
+    }
+
+    pub(crate) fn emit_named_module(
+        &mut self,
+        module: &HirModule,
+        module_public: bool,
+        test_mode: bool,
+        module_name: Option<&str>,
+    ) {
+        let saved_module_name = self.current_module_name.clone();
+        self.current_module_name = module_name.map(str::to_string);
+
         // Pre-scan: detect bigint usage
         if module_uses_bigint(module) {
             self.runtime_needs.require(RuntimeNeed::BigInt);
@@ -314,6 +330,8 @@ impl RustEmitter {
         self.emit_module_constants(module, module_public);
         self.register_sifr_int_function_returns(module);
         self.emit_module_body(module, module_public, test_mode);
+
+        self.current_module_name = saved_module_name;
     }
 
     pub(crate) fn try_lower_structured_stmt(
