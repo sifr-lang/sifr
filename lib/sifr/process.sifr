@@ -3,6 +3,7 @@ from _sifr.process import (
     process_run,
     process_spawn,
     process_kill,
+    process_terminate,
     process_wait,
     process_child_stdin,
     process_child_stdout,
@@ -120,6 +121,10 @@ class Child:
     @blocking_io
     def kill(self) -> Result[None, ProcessError]:
         return process_kill(self._handle)
+
+    @blocking_io
+    def terminate(self) -> Result[None, ProcessError]:
+        return process_terminate(self._handle)
 
     @blocking_io
     def wait(self) -> Result[Status, ProcessError]:
@@ -271,6 +276,11 @@ def spawn(command: Command) -> Result[Child, ProcessError]:
 @blocking_io
 def kill(child: Child) -> Result[None, ProcessError]:
     return process_kill(child._handle)
+
+
+@blocking_io
+def terminate(child: Child) -> Result[None, ProcessError]:
+    return process_terminate(child._handle)
 
 
 @blocking_io

@@ -166,6 +166,13 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "process_terminate".to_string(),
+        FunctionType::all_borrow(
+            vec![("handle".to_string(), Type::Int)],
+            result_ty(Type::None, "ProcessError"),
+        ),
+    );
+    functions.insert(
         "process_output".to_string(),
         FunctionType::all_borrow(
             vec![
