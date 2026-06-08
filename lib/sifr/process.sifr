@@ -32,6 +32,9 @@ from _sifr.process import (
     process_async_pipe_close,
     process_async_output,
     process_async_output_timeout,
+    process_async_shell_run,
+    process_async_shell_output,
+    process_async_shell_output_timeout,
     process_shell_run,
     process_shell_output,
     process_shell_output_text,
@@ -551,6 +554,26 @@ def async_output_timeout(own command: Command, seconds: float) -> Awaitable[Resu
         command.has_stdin_data,
         seconds,
     )
+
+
+def async_run_shell(script: str) -> Awaitable[Result[Status, ProcessError]]:
+    return process_async_shell_run(script)
+
+
+def async_output_shell(script: str, stdin: bytes | None = None) -> Awaitable[Result[Output, ProcessError]]:
+    if stdin is None:
+        return process_async_shell_output(script, b"", False)
+    return process_async_shell_output(script, stdin, True)
+
+
+def async_output_shell_timeout(
+    script: str,
+    seconds: float,
+    stdin: bytes | None = None,
+) -> Awaitable[Result[Output, ProcessError]]:
+    if stdin is None:
+        return process_async_shell_output_timeout(script, b"", False, seconds)
+    return process_async_shell_output_timeout(script, stdin, True, seconds)
 
 
 @blocking_io
