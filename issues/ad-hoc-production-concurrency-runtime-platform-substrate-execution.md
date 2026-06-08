@@ -449,7 +449,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 task context value-model foundation: https://github.com/sifr-lang/sifr/pull/2414
 - M5 signal constants: https://github.com/sifr-lang/sifr/pull/2416
 - M5 resource value-carrying nullcontext: https://github.com/sifr-lang/sifr/pull/2419
-- M5 signal stream shape and lowering: pending PR.
+- M5 signal stream shape and lowering: https://github.com/sifr-lang/sifr/pull/2418
 - M6: pending.
 - M7: pending.
 
@@ -608,11 +608,18 @@ M5 signal stream shape and lowering targeted local validation:
 - Post-remediation `scripts/run_e2e_pass.sh --profile create-pr` -> PASS; create-pr e2e pass suite covered `117` fixtures with `117 passed`, `0 failed`, `cache_hits=3/26`, `report_signature=ded105ad58090608`.
 - Broad non-profiled probe `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` still exposed unrelated existing text/I/O and bytes conversion failures (`cpython_io_subset`, `stdlib_io_consolidated`, `open_context_manager`, `open_read`, `open_readline`, `open_write`, `bytes_conversion_errors`) and is not the accepted gate for this wave; the authoritative profiled create-pr e2e lane above passed.
 - Post-remediation `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; e2e pass suite `117 passed`, `0 failed`, `cache_hits=22/33`, `report_signature=ded105ad58090608`; platform golden `pass=6`, `skip=1`. Advisories: warm wall-time budget exceeded (`1041.25s`, warm target `<=2m`) and warm-cache hit rate below advisory target (`67%`, target `>=90%`).
+- Post-rebase `scripts/run_all_tests.sh --profile create-pr` -> PASS after resolving docs against PR #2419; report `target/validation_lane_reports/create-pr.latest.json`; e2e pass suite `120 passed`, `0 failed`, `cache_hits=27/34`, `report_signature=293aaf3695dc42f8`; platform golden `pass=6`, `skip=1`. Advisories: warm wall-time budget exceeded (`959.65s`, warm target `<=2m`) and warm-cache hit rate below advisory target (`79%`, target `>=90%`).
 
 M5 signal stream shape and lowering review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-review-pass-1.md`: `FAIL`; reviewer verified the API/lowering shape and host semantics but blocked the PR because the grouped e2e harness and two assertions still hard-coded Tokio without the `signal` feature. The blocker was remediated by updating the harness dependency spec, harness contract assertion, and codegen dependency assertion; the shape-only fixture also now documents that signal futures are intentionally not awaited.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-review-pass-2.md`: `PASS`; reviewer verified the Tokio `signal` feature rollout is now consistent across generated projects, grouped e2e harness Cargo generation, harness contract tests, and codegen dependency tests, and that the full create-pr lane passed with the new signal fixture.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-stream-review-pass-3.md`: `PASS`; post-rebase reviewer verified PR #2418's merged code, the conflict-resolved docs against PR #2419, the post-rebase create-pr validation metrics, generated Tokio `signal` feature consistency, typed `SignalError` host paths, and no overclaim beyond stream shape/lowering.
+
+M5 signal stream shape and lowering merge ledger:
+
+- Merged as PR #2418 (`abdd8674b9a51dc88260782283b6f47c4c7791ff`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`571.40s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`120 passed`, `0 failed`, `cache_hits=34/34`, `report_signature=293aaf3695dc42f8`).
 
 M5 warnings global-filter rejection implementation:
 
