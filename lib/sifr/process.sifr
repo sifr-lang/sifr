@@ -460,6 +460,14 @@ def async_wait(own child: AsyncChild) -> Awaitable[Result[Status, ProcessError]]
     return process_async_wait(child._handle)
 
 
+def async_kill(child: AsyncChild) -> Awaitable[Result[None, ProcessError]]:
+    return process_async_kill(child._handle)
+
+
+def async_terminate(child: AsyncChild) -> Awaitable[Result[None, ProcessError]]:
+    return process_async_terminate(child._handle)
+
+
 def async_output(own command: Command) -> Awaitable[Result[Output, ProcessError]]:
     return process_async_output(
         command.program,

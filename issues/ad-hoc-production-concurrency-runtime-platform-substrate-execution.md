@@ -429,6 +429,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 method-form async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2372
 - M4 async process runtime split: https://github.com/sifr-lang/sifr/pull/2375
 - M4 sync PipeReader streaming reads: https://github.com/sifr-lang/sifr/pull/2377
+- M4 top-level async child kill/terminate: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1066,6 +1067,28 @@ M4 async process runtime split review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-runtime-split-review-pass-1.md`: `PASS`; reviewer verified behavior-preserving split, identical async spawn parameter order, verbatim child table and spawn/wait/kill/terminate body movement, private sibling-module visibility, no stale call sites, file-size guardrail headroom, and honest docs. Non-blocking notes covered duplicated private `string_ty()` helpers and mixed single-statement/vector builder return shapes.
 - Merged as PR #2375 (`53001f2055574e8d0136acbe7d0ae308097bb1bf`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`191.15s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`104 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=c0cb8434172d790c`).
+
+M4 top-level async child kill/terminate implementation:
+
+- Added public `sifr.process.async_kill(child)` and `sifr.process.async_terminate(child)` wrappers that borrow `AsyncChild` and preserve the handle for subsequent `AsyncChild.wait()` observation.
+- Tightened awaited plain-call lowering so non-copy awaited arguments are routed through signature-aware call adaptation instead of the leaf fast path, preserving borrowed top-level helper calls such as `async_kill(&child).await?`.
+- Added `process_async_top_level_kill_terminate` to cover top-level async kill, top-level async terminate, later wait observation, and typed closed-handle errors.
+
+M4 top-level async child kill/terminate targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_async_top_level_kill_terminate.sifr | rg -n "fn async_kill\\(|let _kill|let _terminate|let _again|async_kill\\(|async_terminate\\(" -C 2` -> PASS; emitted calls borrow `&killed_child` / `&terminated_child`.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_top_level_kill_terminate.sifr` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_child_kill_terminate.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_spawn_wait.sifr` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo fmt --check`, `git diff --check`, `python3 scripts/check_file_size_guardrails.py`, and `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- Post-rebase `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`184.34s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`106 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=dc7d767be4dbcf7c`).
+
+M4 top-level async child kill/terminate review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-top-level-kill-terminate-review-pass-1.md`: `PASS`; reviewer verified borrowed top-level async child lifecycle helpers, generic non-copy awaited-call convention routing, method/top-level semantic parity, fixture/manifests/docs honesty, host-limited Windows wording, file-size guardrails, and no user-triggerable panic path. Non-blocking notes covered optional comments/wording only.
 
 M4 sync process terminate implementation:
 
