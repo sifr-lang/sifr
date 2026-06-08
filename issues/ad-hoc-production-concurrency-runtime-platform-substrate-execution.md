@@ -1028,6 +1028,14 @@ M6 typed IPC frame codec review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-frame-codec-review-pass-1.md`: `PASS`; reviewer verified the Ring 4 Postcard/Serde dependency scope, internal-only frame helper surface, length-prefix encode/decode correctness, oversize-before-decode handling, typed malformed-frame errors, redacted error text, no runtime unwrap/expect/panic path for malformed input, frame-family test coverage, host-matrix and traceability honesty, and no overclaim beyond host-independent codec helpers.
 
+M6 typed IPC frame codec merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2445
+- Merge commit: `fb06126a0ad1239a54bfbc73125b7b04b77510a7`
+- Merged at: `2026-06-08T23:57:31Z`
+- Scope: Ring 4 workspace Postcard dependency, `sifr_stdlib` Serde/Postcard dependency wiring, internal IPC envelope and length-prefixed Postcard encode/decode helpers, malformed-frame tests, M6 traceability, supported-host matrix, validation evidence, and reviewer artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
