@@ -1006,6 +1006,28 @@ M6 typed IPC schema hash merge ledger:
 - Scope: internal IPC schema descriptor types, canonical descriptor rendering, dependency-free FNV-1a-128 schema hash v1 helpers, schema hash tests, M6 traceability, validation evidence, and two review artifacts.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
+M6 typed IPC frame codec implementation:
+
+- Added `postcard = 1.1.3` to workspace dependencies with `default-features = false` and `use-std`, matching the M6 Ring 4 dependency decision; `sifr_stdlib` now depends on workspace `serde` and `postcard` for internal IPC frame helpers.
+- Added internal `sifr_stdlib::ipc_frame` envelope, schema, frame-kind, shutdown, worker-status, protocol-error, and encode/decode helpers for the M6 `u32` little-endian length-prefixed Postcard wire format.
+- Added typed `IpcFrameError` outcomes for encode/decode failures, truncated length prefixes, truncated payloads, oversize frames, unsupported lengths, and trailing bytes without rendering payload bytes in error text.
+- Added unit coverage for bootstrap/work/control/health/protocol-error frame-family round trips plus malformed-frame cases. This wave does not claim process-pipe transport, connection-state handling, payload eligibility enforcement, cancellation, close, or runtime backpressure support.
+- Updated M6 typed IPC traceability and the supported-host matrix to mark only host-independent frame codec helpers as supported; `Typed IPC frames over process pipes` remains blocked on follow-up M6 transport evidence.
+
+M6 typed IPC frame codec targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_stdlib ipc_frame -- --nocapture` -> PASS; 9 frame codec tests covered bootstrap round trip, all frame-family round trips, negotiated max-frame enforcement, truncated length prefixes, truncated payloads, oversize frames, Postcard decode errors, trailing bytes, and redacted error text.
+- `cargo clippy -p sifr_stdlib -- -D warnings` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2251 files` and the `900` line limit.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`612.60s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`124 passed`, `0 failed`, `cache_hits=0/37`, `report_signature=530c89bb7012eeb0`).
+- Touched file line counts after formatting: `crates/sifr_stdlib/src/ipc_frame.rs` `487`, `crates/sifr_stdlib/src/lib.rs` `436`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `244`, and this ledger `1999`.
+
+M6 typed IPC frame codec review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-frame-codec-review-pass-1.md`: `PASS`; reviewer verified the Ring 4 Postcard/Serde dependency scope, internal-only frame helper surface, length-prefix encode/decode correctness, oversize-before-decode handling, typed malformed-frame errors, redacted error text, no runtime unwrap/expect/panic path for malformed input, frame-family test coverage, host-matrix and traceability honesty, and no overclaim beyond host-independent codec helpers.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
