@@ -427,6 +427,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync process terminate: https://github.com/sifr-lang/sifr/pull/2367
 - M4 async process spawn/wait: https://github.com/sifr-lang/sifr/pull/2369
 - M4 method-form async child kill/terminate: https://github.com/sifr-lang/sifr/pull/2372
+- M4 async process runtime split: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1014,6 +1015,25 @@ M4 method-form async child kill/terminate review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-child-kill-terminate-review-pass-1.md`: `PASS`; reviewer verified method-form `AsyncChild.kill()` / `AsyncChild.terminate()` surface, typed awaitable private intrinsics, non-consuming `start_kill()` behavior, Unix-only async SIGTERM with typed non-Unix fallback, wait removal before await, helper gating for non-`AsyncChild` async run/output users, fixture/manifests/docs/host matrix honesty, and file-size guardrail compliance.
 - Merged as PR #2372 (`b634ee26e6115158cea08740b347237ae094a86b`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`247.52s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`104 passed`, `0 failed`, `cache_hits=27/27`, `report_signature=c0cb8434172d790c`).
+
+M4 async process runtime split implementation:
+
+- Split async child-process helper builders out of `process_async_runtime.rs` into `process_async_child_runtime.rs`, keeping child table, child id allocation, async spawn body assembly, async wait, async kill, and async terminate builders together.
+- Preserved the existing `build_process_async_items(...)` public prelude builder contract and generated helper names, leaving process behavior unchanged.
+- Reduced `process_async_runtime.rs` from 875 lines to 693 lines and kept the new child module at 236 lines, creating room for later public async pipe and cancellation work under the 900-line guardrail.
+
+M4 async process runtime split targeted local validation:
+
+- `cargo fmt` -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_spawn_wait.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_child_kill_terminate.sifr` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_output_timeout.sifr` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`289.08s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`104 passed`, `0 failed`, `cache_hits=23/27`, `report_signature=c0cb8434172d790c`).
+
+M4 async process runtime split review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-runtime-split-review-pass-1.md`: `PASS`; reviewer verified behavior-preserving split, identical async spawn parameter order, verbatim child table and spawn/wait/kill/terminate body movement, private sibling-module visibility, no stale call sites, file-size guardrail headroom, and honest docs. Non-blocking notes covered duplicated private `string_ty()` helpers and mixed single-statement/vector builder return shapes.
 
 M4 sync process terminate implementation:
 
