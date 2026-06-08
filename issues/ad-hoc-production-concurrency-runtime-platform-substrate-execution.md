@@ -703,6 +703,12 @@ M5 signal constants review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-constants-review-pass-1.md`: `PASS`; reviewer verified the constructor-only object constant lowering, private factory codegen, portable `SIGINT`/`SIGTERM` value-model scope, ownership-aware fixture, symmetric manifests, no stream/delivery overclaim, and recorded validation metrics.
 
+M5 signal constants merge ledger:
+
+- Merged as PR #2416 (`634a552f6e6bdf23a8a358544d45d571562dfbb7`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`143.66s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`119 passed`, `0 failed`, `cache_hits=32/33`, `report_signature=0df4819d3daf7aa4`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-constants-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2416 merge commit/date, merge-ledger validation metrics, docs-only scope, and no overclaim beyond the portable `SIGINT`/`SIGTERM` constants wave.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
