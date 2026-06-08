@@ -423,7 +423,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async process run timeout: https://github.com/sifr-lang/sifr/pull/2354
 - M4 sync stdin pipe writer: https://github.com/sifr-lang/sifr/pull/2357
 - M4 async process output timeout: https://github.com/sifr-lang/sifr/pull/2362
-- M4 async stdin-byte communicate: in progress.
+- M4 async stdin-byte communicate: https://github.com/sifr-lang/sifr/pull/2365
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -946,6 +946,8 @@ M4 async stdin-byte communicate review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-communicate-stdin-review-pass-1.md`: `PASS`; reviewer verified wrapper/stdlib/lowerer/helper argument order, deadlock-free concurrent Tokio stdin/stdout/stderr/wait orchestration with `__stdin.take()` EOF, typed non-inherit stdin guardrails, timeout kill/wait reaping, helper gating, tests, scope-honest docs, and panic/lifecycle boundaries. Non-blocking docs nit: supported-host output-timeout row under-reported stdin-byte communicate coverage.
 - `reviews/ad-hoc-production-concurrency-runtime-m4-async-communicate-stdin-review-pass-2.md`: `PASS`; reviewer verified the supported-host matrix docs nit was closed, no public async pipe/spawn/wait/cancellation/scoped/text/Windows overclaim was introduced, implementation files remained unchanged from the pass-1 review, and refreshed create-pr validation evidence was sufficient.
+- Merged as PR #2365 (`0c4c4a68411628d0f4ad137f9bdf4bdec004522b`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`245.69s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`101 passed`, `0 failed`, `cache_hits=22/26`, `report_signature=9212e77abfa82acc`).
 
 M0 targeted local validation:
 
