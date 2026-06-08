@@ -631,6 +631,24 @@ M5 resource nullcontext foundation merge ledger:
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-ledger-review-pass-2.md`: `PASS`; reviewer verified the status-block convention fix, PR #2409 merge commit/date, validation metrics and advisories, lane-step coverage, and no overclaim beyond the no-value `nullcontext()` slice.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-ledger-review-pass-3.md`: `PASS`; reviewer verified the final create-pr rerun metrics, single advisory, status-block convention, review-loop bullets, branch scope, and no overclaim beyond the no-value `nullcontext()` slice.
 
+M5 signal `strsignal` value-helper implementation:
+
+- Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
+- Added `signal_strsignal_basic` pass coverage and create-pr/merge manifest entries.
+- Updated the M5 shutdown traceability artifact and supported-host matrix to mark `strsignal(signal)` as host-independent value-model support while keeping `ctrl_c`, `terminate`, `shutdown_stream`, importable constants, Unix-only constants, and signal delivery semantics in progress.
+
+M5 signal `strsignal` value-helper targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo test -p sifr_stdlib stdlib_source_inventory_contains_user_modules -- --nocapture` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_strsignal_basic.sifr` -> PASS.
+- `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`177.28s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`117 passed`, `0 failed`, `cache_hits=29/32`, `report_signature=ded105ad58090608`).
+
+M5 signal `strsignal` value-helper review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-strsignal-review-pass-1.md`: `PASS`; reviewer verified the panic-free value-helper implementation, public fixture coverage, symmetric manifest entries, traceability and host-matrix scope boundaries, validation metrics, and in-progress M5 status discipline. Non-blocking follow-ups remain for repeated-use ownership coverage and future stream/constants work.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
