@@ -859,6 +859,33 @@ M4 sync stdin pipe writer review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-writer-review-pass-1.md`: `PASS`; reviewer verified typed `PipeWriter.write_all`/`close` behavior, one-shot child stdin extraction, repeated writes before close, spawn stdio mode arity/order across all layers, no generated runtime panic path, symmetric preamble gating, file-size guardrail compliance, honest docs/manifests, and accepted the table-wide writer mutex during sync blocking writes as non-blocking for this slice.
 - Merged as PR #2357: https://github.com/sifr-lang/sifr/pull/2357 (`81eb29e671c8ac0b79928f4825c1daaf6bcfbf7a`).
 
+M4 stdin guardrails follow-up:
+
+- Closed stale duplicate PR #2356 after PR #2357 / PR #2358 landed the sync pipe-writer implementation and merge ledger from a different branch.
+- Added a typed `ProcessError` in sync `spawn(command)` when `Command.stdin_bytes(...)` was configured, so one-shot output stdin payloads cannot be silently ignored by child-handle spawn.
+- Threaded `Command.stdin_mode` through `async_run(...)`, `async_run_timeout(...)`, and `async_output(...)` into stdlib intrinsic metadata, async lowerers, and generated async process helpers.
+- Added generated typed owned-pipe deferral errors for non-inherit `Command.stdin(...)` modes across async run/output/timeout, matching the existing async `stdin_bytes(...)` deferral until async owned pipes/communicate land.
+- Extended `process_spawn_pipe_writer`, `process_async_run_output`, and `process_async_run_timeout` fixture coverage and tightened M4 traceability wording.
+
+M4 stdin guardrails targeted local validation:
+
+- `cargo fmt` and `python3 -m json.tool` for create-pr / merge e2e manifests -> PASS.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_pipe_writer.sifr` -> PASS; now covers sync `spawn` rejecting `Command.stdin_bytes(...)` with a typed error.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_output.sifr` -> PASS; async run/output still work and reject both `stdin_bytes(...)` and non-inherit stdin modes with typed owned-pipe deferral errors.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_run_timeout.sifr` -> PASS; async timeout still returns success/timeout status evidence and rejects non-inherit stdin modes with typed owned-pipe deferral errors.
+- Emission checks for `process_async_run_output`, `process_async_run_timeout`, and `process_spawn_pipe_writer` -> PASS; generated Rust includes the new async stdin-mode guards, 6/7-arg async helper signatures, timeout validation, sync spawn `stdin_bytes` typed error, and existing pipe-writer helpers.
+- `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2187 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 423 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`232.35s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`100 passed`, `0 failed`, `cache_hits=24/26`, `report_signature=458ad42c8c1b262c`).
+
+M4 stdin guardrails review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-stdin-guardrails-review-pass-1.md`: `PASS`; reviewer verified sync `spawn(...)` now rejects `stdin_bytes(...)` before spawning, async run/output/timeout thread `stdin_mode` through public wrappers, stdlib metadata, lowerers, and generated helper signatures in the correct order, all async helpers return typed owned-pipe deferral errors for non-inherit stdin modes, fixtures cover the new guardrails, docs do not overclaim future async pipe/communicate work, file-size guardrails remain under 900 lines, and the create-pr lane evidence is sufficient.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

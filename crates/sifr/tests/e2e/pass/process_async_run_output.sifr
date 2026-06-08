@@ -1,4 +1,4 @@
-from sifr.process import Command, Output, ProcessError, Status, async_output, async_run
+from sifr.process import Command, Output, ProcessError, Status, Stdio, async_output, async_run
 
 
 async def main() -> None:
@@ -27,6 +27,14 @@ async def main() -> None:
         try:
             rejected: Output = await async_output(stdin_cmd)
             assert rejected.status.success == False
+        except ProcessError as e:
+            assert "owned pipe" in e.message
+
+        pipe_cmd: Command = Command("cat")
+        pipe_cmd.stdin(Stdio("pipe"))
+        try:
+            pipe_status: Status = await async_run(pipe_cmd)
+            assert pipe_status.success == False
         except ProcessError as e:
             assert "owned pipe" in e.message
     except ProcessError as e:
