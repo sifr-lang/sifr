@@ -649,6 +649,12 @@ M5 signal `strsignal` value-helper review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m5-signal-strsignal-review-pass-1.md`: `PASS`; reviewer verified the panic-free value-helper implementation, public fixture coverage, symmetric manifest entries, traceability and host-matrix scope boundaries, validation metrics, and in-progress M5 status discipline. Non-blocking follow-ups remain for repeated-use ownership coverage and future stream/constants work.
 
+M5 signal `strsignal` value-helper merge ledger:
+
+- Merged as PR #2412 (`d5b618199f38762a90ab988f5c20aee296d5120b`) on 2026-06-08.
+- Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`152.76s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`117 passed`, `0 failed`, `cache_hits=30/32`, `report_signature=ded105ad58090608`).
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-strsignal-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR #2412 merge commit/date, final validation metrics and advisory wording, lane-step coverage, in-progress M5 status convention, docs-only scope, and no overclaim beyond the `strsignal` value-helper slice.
+
 M3 first-wave targeted local validation:
 
 - `cargo fmt --check` -> PASS.
