@@ -1,0 +1,61 @@
+from sifr.os import getpid
+from sifr.platform import system
+from sifr.process import AsyncChild, Command, ProcessError, Status, async_spawn
+from sifr.signal import Signal, SignalError, ctrl_c, shutdown_stream, strsignal, terminate
+
+
+def signal_command(signal_name: str) -> Command:
+    command: Command = Command("sh")
+    command.args(["-c", "sleep 0.10; kill -" + signal_name + " " + str(getpid())])
+    return command
+
+
+async def expect_ctrl_c_delivery() -> None:
+    try:
+        child: AsyncChild = await async_spawn(signal_command("INT"))
+        try:
+            received: Signal = await ctrl_c()
+            assert strsignal(received) == "SIGINT"
+        except SignalError as e:
+            assert e.message == ""
+        status: Status = await child.wait()
+        assert status.success
+    except ProcessError as e:
+        assert e.message == ""
+
+
+async def expect_terminate_delivery() -> None:
+    try:
+        child: AsyncChild = await async_spawn(signal_command("TERM"))
+        try:
+            received: Signal = await terminate()
+            assert strsignal(received) == "SIGTERM"
+        except SignalError as e:
+            assert e.message == ""
+        status: Status = await child.wait()
+        assert status.success
+    except ProcessError as e:
+        assert e.message == ""
+
+
+async def expect_shutdown_delivery() -> None:
+    try:
+        child: AsyncChild = await async_spawn(signal_command("TERM"))
+        try:
+            received: Signal = await shutdown_stream().next()
+            assert strsignal(received) == "SIGTERM"
+        except SignalError as e:
+            assert e.message == ""
+        status: Status = await child.wait()
+        assert status.success
+    except ProcessError as e:
+        assert e.message == ""
+
+
+async def main() -> None:
+    if system() == "Windows":
+        return
+
+    await expect_ctrl_c_delivery()
+    await expect_terminate_delivery()
+    await expect_shutdown_delivery()

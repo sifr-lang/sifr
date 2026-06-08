@@ -451,6 +451,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 resource value-carrying nullcontext: https://github.com/sifr-lang/sifr/pull/2419
 - M5 signal stream shape and lowering: https://github.com/sifr-lang/sifr/pull/2418
 - M5 resource cleanup helper diagnostics: https://github.com/sifr-lang/sifr/pull/2423
+- M5 signal stream Unix delivery harness: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -735,6 +736,25 @@ M5 resource cleanup helper diagnostics merge ledger:
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-cleanup-diagnostics-ledger-review-pass-2.md`: `FAIL`; reviewer verified the same blocker remained after the first attempted correction targeted the wrong row.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-cleanup-diagnostics-ledger-review-pass-3.md`: `PASS`; reviewer verified the corrected PR #2423 validation metrics, merge SHA/date, honest failure history, and no scope overclaim beyond diagnostic closure for unsupported cleanup helpers.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-resource-cleanup-diagnostics-ledger-review-pass-4.md`: `PASS`; reviewer verified the post-rerun PR #2423 validation metrics, dual advisory, `cache_hits=23/34`, `report_signature=293aaf3695dc42f8`, merge SHA/date, honest failure history, and no scope overclaim beyond diagnostic closure for unsupported cleanup helpers.
+
+M5 signal stream Unix delivery harness implementation:
+
+- Added `signal_stream_delivery_unix` pass coverage for deterministic child-sent signal delivery to the current Sifr process.
+- The fixture awaits `ctrl_c()`, `terminate()`, and `shutdown_stream().next()` while a delayed child shell sends `SIGINT` or `SIGTERM`, then waits for the child command to exit successfully.
+- The fixture is explicitly host-gated with `sifr.platform.system() == "Windows"` so Windows does not claim Unix signal delivery semantics.
+- Updated M5 shutdown traceability and the supported-host matrix to mark Unix signal stream delivery supported on macOS/Linux while keeping non-Unix delivery and Unix-only constants host-limited.
+
+M5 signal stream Unix delivery harness targeted local validation:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/signal_stream_delivery_unix.sifr` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_e2e_pass.sh --profile create-pr` -> PASS; create-pr e2e pass suite covered `121` fixtures with `121 passed`, `0 failed`, `cache_hits=23/28`, `report_signature=d760194c89dbc954`.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded and warm-cache hit rate below target. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`121 passed`, `0 failed`, `cache_hits=28/35`, `report_signature=d760194c89dbc954`). Wall time was `1699.18s`; slowest step was `crate_tests` at `1265945ms`.
+
+M5 signal stream Unix delivery harness review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-signal-delivery-review-pass-1.md`: `PASS`; reviewer verified deterministic child-sent Unix signal delivery for `ctrl_c()`, `terminate()`, and `shutdown_stream().next()`, Windows gating, child wait observation, traceability/host-matrix honesty, no public API addition, and no overclaim for Unix-only constants or non-Unix semantics.
 
 M5 signal `strsignal` value-helper implementation:
 
