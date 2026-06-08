@@ -455,6 +455,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 structured runtime diagnostics: https://github.com/sifr-lang/sifr/pull/2428
 - M5 explicit task context propagation: https://github.com/sifr-lang/sifr/pull/2431
 - M5 runtime diagnostic metrics policy: https://github.com/sifr-lang/sifr/pull/2433
+- M5 cancellation cleanup traceability addendum: pending PR.
 - M5: complete.
 - M6 typed IPC design gate: in progress.
 - M6: pending.
@@ -899,6 +900,29 @@ M5 closeout classification merge ledger:
 - Merged at: `2026-06-08T22:36:25Z`
 - Scope: M5 completion classification, signal codegen cfg-branch evidence, non-Unix host-limited signal delivery boundary, cleanup-scope support classification, closeout validation evidence, and reviewer artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M5 cancellation cleanup traceability addendum implementation:
+
+- Credited the existing `cancellation_cleanup_runs` pass fixture as M5 cleanup-ordering evidence: timeout cancellation runs Sifr `finally` cleanup before the timeout error is observed.
+- Added `cancellation_cleanup_runs` to the merge e2e manifest so cancellation cleanup evidence remains covered in both create-pr and merge lanes after M5 closeout.
+- Updated closed M5 shutdown traceability and the supported-host matrix to record deterministic language cleanup scope evidence without reopening M5 or changing the unsupported diagnostics for `ExitStack`, `AsyncExitStack`, `closing`, and `aclosing`.
+
+M5 cancellation cleanup traceability addendum targeted local validation:
+
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cancellation_cleanup_runs.sifr` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2253 files` and the `900` line limit.
+- Post-`origin/main` rebase rerun after the M6 IPC stream helpers merge: `scripts/run_e2e_pass.sh --profile merge` -> PASS; merge e2e pass suite covered `136` fixtures with `136 passed`, `0 failed`, `cache_hits=41/41`, `report_signature=dc77a4a9bb841f30`.
+- Post-`origin/main` rebase rerun after the M6 IPC stream helpers merge: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`143.52s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`124 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=530c89bb7012eeb0`). Slowest step was `platform_golden` at `39543ms`.
+
+M5 cancellation cleanup traceability addendum review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-1.md`: `PASS`; reviewer verified `cancellation_cleanup_runs` honestly proves timeout-cancellation `finally` cleanup ordering before timeout observation, merge-manifest inclusion, host-matrix and traceability wording, unsupported cleanup helper diagnostics, and targeted validation metrics. Non-blocking follow-up for the full create-pr gate was completed above.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-2.md`: `PASS`; reviewer verified the post-closeout addendum preserves closed M5 status, records `cancellation_cleanup_runs` as merge-lane traceability evidence, keeps unsupported cleanup helper diagnostics bounded, and cites the final post-closeout validation metrics accurately.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-3.md`: `PASS`; reviewer verified the latest M6-base addendum keeps M5 closed, preserves the M6 sections already on main, records `cancellation_cleanup_runs` honestly in create-pr and merge evidence, keeps unsupported cleanup helpers as unsupported diagnostics, and matches the final post-M6 validation metrics.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-4.md`: `FAIL`; reviewer found the branch had fallen behind the latest M6 frame-codec merge ledger and that the committed validation metrics were stale versus the refreshed post-rebase runs. Addressed by rebasing onto the M6 IPC stream helpers merge and committing refreshed validation metrics before the next review pass.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-5.md`: `FAIL`; reviewer found the branch had fallen behind the M6 IPC stream-helper merge ledger after the previous rebase. Addressed by rebasing onto the stream-helper merge ledger commit before the next review pass.
+- `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-6.md`: `PASS`; reviewer verified the branch is rebased onto the latest M6 stream-helper merge ledger, M5 remains closed, M6 docs and ledgers from main are preserved, `cancellation_cleanup_runs` is honestly recorded, unsupported cleanup helpers remain diagnostic-only, final validation metrics match the committed ledger, and pass-4/pass-5 failures are documented as addressed.
 
 M6 typed IPC design gate implementation:
 
