@@ -1,0 +1,109 @@
+from sifr.process import AsyncChild, AsyncPipeReader, AsyncPipeWriter, Command, ProcessError, Status, Stdio, async_spawn
+
+
+async def main() -> None:
+    pipe: Stdio = Stdio("pipe")
+
+    try:
+        command: Command = Command("sh")
+        command.arg("-c")
+        command.arg("cat; printf err >&2")
+        command.stdin(pipe)
+        command.stdout(pipe)
+        command.stderr(pipe)
+
+        child: AsyncChild = await async_spawn(command)
+        stdin: AsyncPipeWriter = child.stdin()
+        stdout: AsyncPipeReader = child.stdout()
+        stderr: AsyncPipeReader = child.stderr()
+
+        _first_write: None = await stdin.write_all(b"async-")
+        _second_write: None = await stdin.write_all(b"pipes")
+        _closed: None = stdin.close()
+
+        stdout_bytes: bytes = await stdout.read_all()
+        stderr_bytes: bytes = await stderr.read_all()
+        assert stdout_bytes == b"async-pipes"
+        assert stderr_bytes == b"err"
+
+        write_after_close_rejected: bool = False
+        try:
+            _after_close: None = await stdin.write_all(b"late")
+        except ProcessError as e:
+            write_after_close_rejected = "closed" in e.message
+        assert write_after_close_rejected
+
+        child_stdin_again_rejected: bool = False
+        try:
+            _taken: AsyncPipeWriter = child.stdin()
+        except ProcessError as e:
+            child_stdin_again_rejected = "already taken" in e.message
+        assert child_stdin_again_rejected
+
+        status: Status = await child.wait()
+        assert status.success
+
+        stream_command: Command = Command("sh")
+        stream_command.arg("-c")
+        stream_command.arg("printf abcdef")
+        stream_command.stdout(pipe)
+
+        stream_child: AsyncChild = await async_spawn(stream_command)
+        reader: AsyncPipeReader = stream_child.stdout()
+
+        invalid_size_rejected: bool = False
+        try:
+            _invalid: bytes = await reader.read(0)
+        except ProcessError as e:
+            invalid_size_rejected = "positive" in e.message
+        assert invalid_size_rejected
+
+        first: bytes = await reader.read(2)
+        second: bytes = await reader.read(3)
+        third: bytes = await reader.read(10)
+        eof: bytes = await reader.read(1)
+        assert first == b"ab"
+        assert second == b"cde"
+        assert third == b"f"
+        assert eof == b""
+
+        read_after_eof_rejected: bool = False
+        try:
+            _after_eof: bytes = await reader.read(1)
+        except ProcessError as e:
+            read_after_eof_rejected = "closed" in e.message
+        assert read_after_eof_rejected
+
+        close_after_eof_rejected: bool = False
+        try:
+            _close_after_eof: None = reader.close()
+        except ProcessError as e:
+            close_after_eof_rejected = "closed" in e.message
+        assert close_after_eof_rejected
+
+        stream_status: Status = await stream_child.wait()
+        assert stream_status.success
+
+        close_command: Command = Command("sh")
+        close_command.arg("-c")
+        close_command.arg("printf xyz")
+        close_command.stdout(pipe)
+
+        close_child: AsyncChild = await async_spawn(close_command)
+        close_reader: AsyncPipeReader = close_child.stdout()
+        close_first: bytes = await close_reader.read(1)
+        assert close_first == b"x"
+
+        close_result: None = close_reader.close()
+
+        read_after_close_rejected: bool = False
+        try:
+            _after_close_read: bytes = await close_reader.read_all()
+        except ProcessError as e:
+            read_after_close_rejected = "closed" in e.message
+        assert read_after_close_rejected
+
+        close_status: Status = await close_child.wait()
+        assert close_status.success
+    except ProcessError as e:
+        assert False

@@ -1,4 +1,4 @@
-from sifr.process import AsyncChild, Command, ProcessError, Status, Stdio, async_spawn, async_wait
+from sifr.process import AsyncChild, Command, ProcessError, Status, async_spawn, async_wait
 
 
 async def main() -> None:
@@ -32,22 +32,7 @@ async def main() -> None:
         except ProcessError as e:
             actual.append("stdin_bytes" in e.message)
 
-        pipe_cmd: Command = Command("cat")
-        pipe_cmd.stdin(Stdio("pipe"))
-        try:
-            _pipe_child: AsyncChild = await async_spawn(pipe_cmd)
-            actual.append(False)
-        except ProcessError as e:
-            actual.append("owned pipe" in e.message)
-
-        stdout_pipe_cmd: Command = Command("true")
-        stdout_pipe_cmd.stdout(Stdio("pipe"))
-        try:
-            _stdout_child: AsyncChild = await async_spawn(stdout_pipe_cmd)
-            actual.append(False)
-        except ProcessError as e:
-            actual.append("owned pipe" in e.message)
     except ProcessError as e:
         actual.append(False)
 
-    assert actual == [True, True, True, True, True, True, True, True]
+    assert actual == [True, True, True, True, True, True]

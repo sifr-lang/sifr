@@ -643,6 +643,38 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             process_async::lower_process_async_terminate(args),
             Some(StdlibFeature::Tokio),
         ),
+        "process_async_child_stdin" => (
+            process_async::lower_process_async_child_stdin(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_child_stdout" => (
+            process_async::lower_process_async_child_stdout(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_child_stderr" => (
+            process_async::lower_process_async_child_stderr(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_pipe_read_all" => (
+            process_async::lower_process_async_pipe_read_all(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_pipe_read" => (
+            process_async::lower_process_async_pipe_read(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_pipe_reader_close" => (
+            process_async::lower_process_async_pipe_reader_close(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_pipe_write_all" => (
+            process_async::lower_process_async_pipe_write_all(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        "process_async_pipe_close" => (
+            process_async::lower_process_async_pipe_close(args),
+            Some(StdlibFeature::Tokio),
+        ),
         "process_shell_run" => (process::lower_process_shell_run(args), None),
         "process_shell_output" => (process::lower_process_shell_output(args), None),
         "process_shell_output_text" => (process::lower_process_shell_output_text(args), None),

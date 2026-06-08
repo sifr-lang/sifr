@@ -342,7 +342,15 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
             needs_run_timeout: code.contains("__sifr_process_async_run_timeout"),
             needs_output: code.contains("__sifr_process_async_output("),
             needs_output_timeout: code.contains("__sifr_process_async_output_timeout"),
-            needs_spawn: code.contains("__sifr_process_async_spawn("),
+            needs_spawn: code.contains("__sifr_process_async_spawn(")
+                || code.contains("__sifr_process_async_child_stdin")
+                || code.contains("__sifr_process_async_child_stdout")
+                || code.contains("__sifr_process_async_child_stderr")
+                || code.contains("__sifr_process_async_pipe_read_all")
+                || code.contains("__sifr_process_async_pipe_read(")
+                || code.contains("__sifr_process_async_pipe_reader_close")
+                || code.contains("__sifr_process_async_pipe_write_all")
+                || code.contains("__sifr_process_async_pipe_close"),
             needs_wait: code.contains("__sifr_process_async_wait("),
             needs_kill: code.contains("__sifr_process_async_kill("),
             needs_terminate: code.contains("__sifr_process_async_terminate("),
@@ -402,9 +410,19 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                     self.shared_needs.process_async.needs_output_timeout = true;
                 }
                 "__SIFR_PROCESS_ASYNC_CHILDREN"
+                | "__SIFR_PROCESS_ASYNC_PIPE_READERS"
+                | "__SIFR_PROCESS_ASYNC_PIPE_WRITERS"
                 | "__SIFR_NEXT_PROCESS_ASYNC_CHILD_ID"
                 | "__sifr_next_process_async_child_id"
-                | "__sifr_process_async_spawn" => {
+                | "__sifr_process_async_spawn"
+                | "__sifr_process_async_child_stdin"
+                | "__sifr_process_async_child_stdout"
+                | "__sifr_process_async_child_stderr"
+                | "__sifr_process_async_pipe_read_all"
+                | "__sifr_process_async_pipe_read"
+                | "__sifr_process_async_pipe_reader_close"
+                | "__sifr_process_async_pipe_write_all"
+                | "__sifr_process_async_pipe_close" => {
                     self.shared_needs.process_async.needs_spawn = true;
                 }
                 "__sifr_process_async_wait" => {
@@ -435,6 +453,8 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
                 || item_static.ident == "__SIFR_PROCESS_PIPE_WRITERS"
                 || item_static.ident == "__SIFR_NEXT_PROCESS_CHILD_ID"
                 || item_static.ident == "__SIFR_PROCESS_ASYNC_CHILDREN"
+                || item_static.ident == "__SIFR_PROCESS_ASYNC_PIPE_READERS"
+                || item_static.ident == "__SIFR_PROCESS_ASYNC_PIPE_WRITERS"
                 || item_static.ident == "__SIFR_NEXT_PROCESS_ASYNC_CHILD_ID"
                 || item_static.ident == "__SIFR_GLOBAL_LOG_LEVEL"
         }
@@ -459,6 +479,14 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
                 || item_fn.sig.ident == "__sifr_process_async_output_timeout"
                 || item_fn.sig.ident == "__sifr_next_process_async_child_id"
                 || item_fn.sig.ident == "__sifr_process_async_spawn"
+                || item_fn.sig.ident == "__sifr_process_async_child_stdin"
+                || item_fn.sig.ident == "__sifr_process_async_child_stdout"
+                || item_fn.sig.ident == "__sifr_process_async_child_stderr"
+                || item_fn.sig.ident == "__sifr_process_async_pipe_read_all"
+                || item_fn.sig.ident == "__sifr_process_async_pipe_read"
+                || item_fn.sig.ident == "__sifr_process_async_pipe_reader_close"
+                || item_fn.sig.ident == "__sifr_process_async_pipe_write_all"
+                || item_fn.sig.ident == "__sifr_process_async_pipe_close"
                 || item_fn.sig.ident == "__sifr_process_async_wait"
                 || item_fn.sig.ident == "__sifr_process_async_kill"
                 || item_fn.sig.ident == "__sifr_process_async_terminate"
