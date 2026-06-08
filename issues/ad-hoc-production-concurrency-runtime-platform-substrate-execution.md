@@ -972,6 +972,7 @@ M4 sync process terminate targeted local validation:
 - Emission check for `process_child_terminate_wait` -> PASS; emitted Rust includes `__sifr_process_terminate`, cfg-gated Unix/non-Unix helpers, host `kill` invocation with `-TERM`, and typed non-Unix unsupported `ProcessError`.
 - `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 425 fail tests completed.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`404.86s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=23/27`, `report_signature=5e93ca9f74a9781c`).
+- Post-`origin/main` rebase rerun after the async stdin-byte communicate ledger merge: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`606.36s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=26/27`, `report_signature=5e93ca9f74a9781c`).
 
 M4 sync process terminate review loop:
 
