@@ -757,6 +757,31 @@ M4 stdin append semantics evidence review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-stdin-append-semantics-review-pass-1.md`: `PASS`; reviewer verified the two-call fixture uniquely distinguishes append-in-call-order from replace-with-first or replace-with-last semantics, traceability honestly closes only the stdin append decision, no out-of-scope process lifecycle APIs are introduced, and the validation set is sufficient for this evidence slice.
 - Merged as PR #2348: https://github.com/sifr-lang/sifr/pull/2348 (`afffaa3f8e40b9af0bbdffe13bafb61e053afb03`).
 
+M4 method-form blocking workload diagnostics implementation:
+
+- Extended workload annotation collection to record class method annotations as qualified names such as `Child.wait` and `Child.kill`.
+- Preserved qualified class-method workload metadata through stdlib bootstrap and external class imports, mirroring existing class-method default/vararg propagation.
+- Checked method calls in async contexts against the qualified workload metadata, so imported stdlib process methods now trigger the same direct-async diagnostics as top-level workload functions.
+- Added fail fixtures for `child.wait()` and `child.kill()` inside async functions.
+- Updated M4 process traceability to close the method-form `@blocking_io` enforcement follow-up.
+
+M4 method-form blocking workload diagnostics targeted local validation:
+
+- `cargo check -p sifr_lowering -p sifr_driver -p sifr --quiet` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/process_child_wait_method_direct_async_rejected.sifr` -> expected FAIL with `SIFR-ASYNC-0003` at `child.wait()`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/process_child_kill_method_direct_async_rejected.sifr` -> expected FAIL with `SIFR-ASYNC-0003` at `child.kill()`.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_wait_status.sifr` -> PASS; sync `Child.wait()` remains accepted outside async contexts.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_child_kill_wait.sifr` -> PASS; sync `Child.kill()` remains accepted outside async contexts.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2180 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 422 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`417.65s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`97 passed`, `0 failed`, `cache_hits=24/26`, `report_signature=36054c952f8fafec`).
+
+M4 method-form blocking workload diagnostics review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-process-method-workloads-review-pass-1.md`: `PASS`; reviewer verified qualified class-method workload collection, stdlib/project import propagation, method-call async diagnostics, bounded false-positive risk, new fail fixtures, and traceability honesty. Non-blocking note: keep unrelated network-phase files out of this PR.
+
 M0 targeted local validation:
 
 - `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS; generated 135 CPython evidence entries from the phase source-of-truth list.

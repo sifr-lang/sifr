@@ -449,6 +449,16 @@ pub(in crate::lower) fn lower_module_impl(
                                                 &local,
                                             );
                                         }
+                                        if let Some(module_workloads) =
+                                            externals.function_workloads.get(&stdlib_module_key)
+                                        {
+                                            imported_defaults::import_class_method_workloads(
+                                                &mut ctx,
+                                                module_workloads,
+                                                name,
+                                                &local,
+                                            );
+                                        }
                                     }
                                     // Import class type parameter bounds
                                     if let Some(module_bounds) =
@@ -632,6 +642,16 @@ pub(in crate::lower) fn lower_module_impl(
                                     imported_defaults::import_class_method_varargs(
                                         &mut ctx,
                                         module_varargs,
+                                        name,
+                                        &local,
+                                    );
+                                }
+                                if let Some(module_workloads) =
+                                    externals.function_workloads.get(&module_name)
+                                {
+                                    imported_defaults::import_class_method_workloads(
+                                        &mut ctx,
+                                        module_workloads,
                                         name,
                                         &local,
                                     );

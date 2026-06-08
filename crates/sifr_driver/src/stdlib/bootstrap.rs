@@ -104,6 +104,14 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 }
             }
         }
+        for (callable_name, label) in &result.function_workloads {
+            let Some((owner_name, _)) = callable_name.split_once('.') else {
+                continue;
+            };
+            if should_export_callable(module_name, owner_name) {
+                workload_exports.insert(callable_name.clone(), label.clone());
+            }
+        }
 
         for (callable_name, defaults) in &result.function_defaults {
             if should_export_callable(module_name, callable_name) {

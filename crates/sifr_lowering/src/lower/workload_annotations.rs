@@ -2,6 +2,7 @@ use super::LowerCtx;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, StmtFunctionDef};
+use sifr_type_system::Type;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(in crate::lower) enum WorkloadKind {
@@ -113,6 +114,19 @@ pub(in crate::lower) fn reject_async_direct_call(
         ),
         range,
     );
+}
+
+pub(in crate::lower) fn reject_async_direct_method_call(
+    ctx: &mut LowerCtx,
+    object_ty: &Type,
+    method: &str,
+    range: TextRange,
+) {
+    let qualified = match object_ty.resolve_alias() {
+        Type::Class { name, .. } | Type::Protocol { name, .. } => format!("{name}.{method}"),
+        _ => return,
+    };
+    reject_async_direct_call(ctx, &qualified, range);
 }
 
 pub(in crate::lower) fn reject_unclassified_offload_target(
