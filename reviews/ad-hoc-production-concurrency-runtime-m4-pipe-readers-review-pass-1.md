@@ -1,0 +1,49 @@
+# M4 Sync stdout/stderr Pipe Readers — Review Pass 1
+
+Verdict: **PASS**
+
+Scope under review: sync-only `Command.stdout(Stdio)` / `Command.stderr(Stdio)` configuration, `Child.stdout()` / `Child.stderr()` one-shot transfer to `PipeReader`, and `PipeReader.read_all()` blocking read for the Sifr concurrency-runtime substrate. Working-tree diff against `main` on branch `codex/concurrency-runtime-m4-owned-pipes`.
+
+## What was verified
+
+- Public Sifr surface in `lib/sifr/process.sifr`:
+  - `Stdio` class (`mode: str`) with `PIPE`/`INHERIT`/`NULL` module constants left in place; fixtures construct `Stdio("pipe")` directly because constant re-export is a separate compiler surface, which matches the wave's stated boundary.
+  - `Command.stdout(mode: Stdio)` / `Command.stderr(mode: Stdio)` store `mode.mode + ""` into new `stdout_mode` / `stderr_mode` string fields. Defaults are `"inherit"` so unchanged callers keep prior behavior.
+  - `Child.stdout()` / `Child.stderr()` are `@blocking_io` and return `Result[PipeReader, ProcessError]` via `process_child_stdout` / `process_child_stderr`.
+  - `PipeReader.read_all()` is `@blocking_io`, returns `Result[bytes, ProcessError]`, sets `_closed = True` before delegating so a second read raises typed `"process pipe reader is already closed"`.
+- Generated runtime in `crates/sifr_codegen/src/preamble/process_runtime.rs` + new `process_child_pipes.rs`:
+  - `__sifr_process_stdio_from_mode(mode: String)` accepts `"pipe"` / `"inherit"` / `"null"` and returns a typed `ProcessError { message: "unsupported process stdio mode: …" }` for anything else (no `panic!`/`unreachable!`).
+  - `__sifr_process_spawn(program, args, env, cwd, has_cwd, stdout_mode, stderr_mode)` configures `std::process::Command` exactly once, applies stdout/stderr stdio via the mode helper, spawns, and inserts the `std::process::Child` into `__SIFR_PROCESS_CHILDREN` keyed by the existing atomic id allocator.
+  - `__sifr_process_child_stdout` / `__sifr_process_child_stderr` (one body, parameterized by field name) lock the children map, `get_mut` the child with the existing `"process child handle is closed or unknown"` message, `take()` the optional `ChildStdout` / `ChildStderr` with `"process … pipe is not available or already taken for child handle"`, box the reader behind `Box<dyn std::io::Read + Send>` and insert into `__SIFR_PROCESS_PIPE_READERS` under a fresh id.
+  - `__sifr_process_pipe_read_all(handle)` removes the boxed reader from the pipe-readers map inside a tightly scoped lock block (mutex guard dropped before the IO call), returns `"process pipe reader handle is closed or unknown"` on miss, and uses `std::io::Read::read_to_end` with `map_err` into `ProcessError` — no data-dependent `.unwrap()/.expect()` and no `panic!`.
+  - `__SIFR_PROCESS_PIPE_READERS: LazyLock<Mutex<HashMap<i64, Box<dyn std::io::Read + Send>>>>` is declared in `build_process_child_items()` alongside the existing child handle and id statics, and both static names are reachable through the same single shared prelude bundle so they cannot drift.
+- Lowering wiring in `crates/sifr_codegen/src/intrinsics/registry.rs` and `crates/sifr_codegen/src/intrinsics/registry/process.rs`:
+  - `process_spawn` arity bumped to 7, lowered to a direct call into the generated `__sifr_process_spawn` with cloned `program`/`args`/`env`/`cwd`/`stdout_mode`/`stderr_mode` and an unboxed `has_cwd` bool — consistent with how the other handle-table helpers are invoked.
+  - `process_child_stdout`, `process_child_stderr`, and `process_pipe_read_all` are registered private intrinsics that lower to single function calls. Each lowerer enforces `args.len() == 1`.
+  - Stdlib filter (`crates/sifr_codegen/src/stdlib_filter/implementation.rs`) gates the new helpers in three places — text scan, syn visitor, and shared-item check — so generated programs that touch `__sifr_process_spawn` / `__SIFR_PROCESS_PIPE_READERS` / etc. correctly opt into the shared process child needs bundle.
+- Stdlib registration (`crates/sifr_stdlib/src/process.rs`):
+  - `process_spawn` declares the two new `Type::Str` parameters; `process_child_stdout`, `process_child_stderr`, and `process_pipe_read_all` are added with `result_ty(Type::Int, …)` / `result_ty(Type::Bytes, …)`.
+- File-size guardrail: `process_runtime.rs` is 853 lines and `process_child_pipes.rs` is 263 lines, both well under the 900-line cap. `registry/process.rs` sits at 897 lines (see follow-up note below).
+- Emission and run checks reproduced locally:
+  - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_spawn_pipe_readers.sifr` renders `__sifr_process_stdio_from_mode`, `__sifr_process_spawn`, `__sifr_process_child_stdout`, `__sifr_process_child_stderr`, `__sifr_process_pipe_read_all` with the expected typed-error texts and `std::io::Read::read_to_end` call.
+  - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/process_sync_output_text.sifr` does **not** emit `__SIFR_PROCESS_PIPE_READERS`, `__sifr_process_child_stdout`, `__sifr_process_child_stderr`, `__sifr_process_pipe_read_all`, `__sifr_process_stdio_from_mode`, or `__sifr_process_spawn`, confirming `Command.output()`-only programs stay free of child/pipe-table helpers.
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_pipe_readers.sifr` exits 0 (all assertions pass: `out`/`err` payloads, `"already closed"` double-read, `"already taken"` double-extraction, `Status(kind="success")`).
+- Documentation precision:
+  - `verification/platform/supported_host_matrix.md` adds a single row "Sync subprocess stdout/stderr pipe readers" marking Linux/macOS `supported` and Windows `host-limited` pending a deterministic Windows fixture — consistent with prior process rows.
+  - `verification/stdlib/concurrency_runtime_m4_process_traceability.md` adds `PipeReader` to the traceability table, retargets the existing follow-up to "PipeWriter, owned stdin pipe lifecycle, streaming `PipeReader` reads beyond one-shot `read_all`, and handle sendability/shareability checks". Async pipes, async communicate, timeout/cancellation, scoped supervision, and Windows remain explicitly open.
+  - `issues/ad-hoc-production-concurrency-runtime-platform-substrate-execution.md` records the wave's local validation precisely (PR pending, `report_signature=559a90cf856fe902`, advisories called out).
+  - Validation manifests `verification/validation_lanes/create_pr_e2e_manifest.json` and `merge_e2e_manifest.json` both include `process_spawn_pipe_readers`. JSON parses clean.
+
+## Non-blocking notes (do not block this PR)
+
+1. **Helper duplication across three files.** `process_error_expr`, `process_map_err`, `process_child_handles_lock_expr`, `next_process_id_expr`, `ok_expr`, `process_handle_error` are now defined in `crates/sifr_codegen/src/preamble/process_child_pipes.rs:5,12,54,62,71,78` *in addition to* the existing definitions in `crates/sifr_codegen/src/preamble/process_runtime.rs:84,91,250,296,305,319` and `crates/sifr_codegen/src/intrinsics/registry/process.rs:45,52,71,94,108`. The new file actually introduces a nicer parameterized `poisoned_lock_expr(static_name)` (`process_child_pipes.rs:31`) that the other two files would benefit from. Worth consolidating into a shared `crates/sifr_codegen/src/preamble/process_shared.rs` (or similar) in a follow-up so a future edit to `process_map_err`/the poisoned-lock recovery doesn't have to be repeated three times. Not part of this wave's scope.
+2. **`registry/process.rs` is at 897 / 900 lines.** Any future intrinsic added here will push it over the 900-line cap, so the next process-intrinsic wave should plan for a responsibility split before adding code. No action required for this PR.
+3. **`Command.stdin_bytes(...)` is silently inert for `spawn`.** `has_stdin_data`/`stdin_data` are still populated by `Command.stdin_bytes(...)` but `__sifr_process_spawn` does not receive them and does not configure `std::process::Stdio::piped()` for stdin. This is by design for this wave (stdin pipe writers are explicitly future work in the follow-up bullet), but a user could be surprised that `spawn` ignores prior `stdin_bytes` calls without diagnostic. A later wave that introduces `PipeWriter` should either reject `has_stdin_data` on `spawn` until `stdin(Stdio)` is added, or wire it through. Out of scope here.
+4. **`Stdio` mode validation deferred to spawn.** Constructing `Stdio("garbage")` succeeds; the typed `"unsupported process stdio mode: garbage"` error only surfaces from `spawn`. Acceptable — `__sifr_process_stdio_from_mode` is the single normalization point and the error path is typed — but a small follow-up could constrain `Stdio.__init__` to the known modes if/when the constants are re-exported as a separate surface. Out of scope.
+5. **Pipe table emitted for any `Child`-using program.** Because `Child.stdout()` / `Child.stderr()` are now methods on `Child`, any fixture that imports `sifr.process` and uses `spawn` pulls the `PipeReader` struct, `__SIFR_PROCESS_PIPE_READERS`, and the four new helpers into the shared prelude (verified with `process_spawn_wait_status.sifr`). This is dead code in fixtures that don't call `.stdout()` / `.stderr()` / `.read_all()` and is harmless (private items, optimised away by rustc), but worth noting if generated-binary size advisories become a concern.
+
+## Coverage attestation
+
+No correctness, generated-code-safety, ownership, lifecycle, panic-freedom, public API consistency, helper-emission regression, validation coverage, or doc-overclaim issues identified. The wave is precisely scoped to sync stdout/stderr pipe readers, and the docs are careful not to claim PipeWriter / streaming reads / async pipes / async communicate / timeout / cancellation / scoped supervision / Windows support.
+
+**PASS** — ready to merge as the M4 sync stdout/stderr pipe readers wave.

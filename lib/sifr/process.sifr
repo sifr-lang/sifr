@@ -4,6 +4,9 @@ from _sifr.process import (
     process_spawn,
     process_kill,
     process_wait,
+    process_child_stdout,
+    process_child_stderr,
+    process_pipe_read_all,
     process_output,
     process_output_text,
     process_output_timeout,
@@ -63,6 +66,22 @@ class Output:
         self.status = status
 
 
+class PipeReader:
+    _handle: int
+    _closed: bool
+
+    def __init__(self, handle: int):
+        self._handle = handle
+        self._closed = False
+
+    @blocking_io
+    def read_all(self) -> Result[bytes, ProcessError]:
+        if self._closed:
+            raise ProcessError("process pipe reader is already closed")
+        self._closed = True
+        return process_pipe_read_all(self._handle)
+
+
 class Child:
     _handle: int
     _waited: bool
@@ -83,6 +102,22 @@ class Child:
         try:
             exit_status: tuple[int, int | None] = process_wait(self._handle)
             return _status_from_exit(exit_status)
+        except ProcessError as e:
+            raise e
+
+    @blocking_io
+    def stdout(self) -> Result[PipeReader, ProcessError]:
+        try:
+            handle: int = process_child_stdout(self._handle)
+            return PipeReader(handle)
+        except ProcessError as e:
+            raise e
+
+    @blocking_io
+    def stderr(self) -> Result[PipeReader, ProcessError]:
+        try:
+            handle: int = process_child_stderr(self._handle)
+            return PipeReader(handle)
         except ProcessError as e:
             raise e
 
@@ -108,6 +143,8 @@ class Command:
     has_working_dir: bool
     stdin_data: bytes
     has_stdin_data: bool
+    stdout_mode: str
+    stderr_mode: str
 
     def __init__(self, program: str):
         self.program = program
@@ -117,6 +154,8 @@ class Command:
         self.has_working_dir = False
         self.stdin_data = b""
         self.has_stdin_data = False
+        self.stdout_mode = "inherit"
+        self.stderr_mode = "inherit"
 
     def arg(self, value: str) -> None:
         self.arguments.append(value)
@@ -135,6 +174,12 @@ class Command:
     def stdin_bytes(self, data: bytes) -> None:
         self.stdin_data = self.stdin_data + data
         self.has_stdin_data = True
+
+    def stdout(self, mode: Stdio) -> None:
+        self.stdout_mode = mode.mode + ""
+
+    def stderr(self, mode: Stdio) -> None:
+        self.stderr_mode = mode.mode + ""
 
 
 def _status(code: int) -> Status:
@@ -172,6 +217,8 @@ def spawn(command: Command) -> Result[Child, ProcessError]:
             command.env_vars,
             command.working_dir,
             command.has_working_dir,
+            command.stdout_mode,
+            command.stderr_mode,
         )
         return Child(handle)
     except ProcessError as e:

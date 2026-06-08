@@ -419,6 +419,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 sync child kill: https://github.com/sifr-lang/sifr/pull/2337
 - M4 signal status evidence: https://github.com/sifr-lang/sifr/pull/2341
 - M4 async process run/output loopback: https://github.com/sifr-lang/sifr/pull/2345
+- M4 sync stdout/stderr pipe readers: pending PR.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -783,6 +784,31 @@ M4 method-form blocking workload diagnostics review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-process-method-workloads-review-pass-1.md`: `PASS`; reviewer verified qualified class-method workload collection, stdlib/project import propagation, method-call async diagnostics, bounded false-positive risk, new fail fixtures, and traceability honesty. Non-blocking note: keep unrelated network-phase files out of this PR.
 - Merged as PR #2350: https://github.com/sifr-lang/sifr/pull/2350 (`cdfca07b19a6675463113c881525df620fa6eb44`).
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`343.95s`, warm target `<=2m`). Included guardrails, diagnostic contracts, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`97 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=36054c952f8fafec`).
+
+M4 sync stdout/stderr pipe readers targeted local validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_spawn_pipe_readers.sifr` -> PASS; sync `spawn` with stdout/stderr `Stdio("pipe")` exposes one-shot `PipeReader.read_all()` handles and typed double-read / double-extraction errors.
+- Existing process regressions `process_sync_output_text`, `process_spawn_wait_status`, `process_timeout_status`, `process_signal_status`, `process_child_kill_wait`, and `process_async_run_output` -> PASS.
+- Expected async diagnostics `process_blocking_direct_async_rejected`, `process_shell_timeout_direct_async_rejected`, and `process_kill_direct_async_rejected` -> expected FAIL with `SIFR-ASYNC-0003` / `SIFR-ASYNC-0007` / `SIFR-ASYNC-0003`.
+- Emission check for `process_spawn_pipe_readers` -> PASS; emitted Rust includes `__SIFR_PROCESS_CHILDREN`, `__SIFR_PROCESS_PIPE_READERS`, `__sifr_process_child_stdout`, `__sifr_process_pipe_read_all`, and `std::io::Read::read_to_end`.
+- Emission check for `process_sync_output_text` -> PASS; ordinary output emits `std::process::Command` without `__SIFR_PROCESS_CHILDREN`, `__SIFR_PROCESS_PIPE_READERS`, or pipe helper functions.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2180 files checked, 900-line limit.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 420 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`321.21s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`98 passed`, `0 failed`, `cache_hits=2/26`, `report_signature=559a90cf856fe902`).
+- Post-`origin/main` rebase rerun after the stdin append semantics ledger merge: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`232.37s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`98 passed`, `0 failed`, `cache_hits=25/26`, `report_signature=559a90cf856fe902`).
+- Post-`origin/main` rebase rerun after the method-form blocking diagnostics merge: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`206.64s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`98 passed`, `0 failed`, `cache_hits=24/26`, `report_signature=559a90cf856fe902`).
+- Post-`origin/main` rebase rerun after the method-form blocking diagnostics ledger merge: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`177.84s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`98 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=559a90cf856fe902`).
+
+M4 sync stdout/stderr pipe readers review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-readers-review-pass-1.md`: `PASS`; reviewer verified the wave is limited to sync stdout/stderr pipe readers, `Command.stdout` / `Command.stderr` default to inherit and accept typed `Stdio` modes, `Child.stdout` / `Child.stderr` transfer one-shot `PipeReader` handles, `PipeReader.read_all()` returns bytes or typed `ProcessError` without data-dependent panics, generated spawn/pipe helpers are gated to child/pipe users and ordinary output does not emit pipe tables, file-size guardrails remain under 900 lines after the split, manifests include the new fixture, and docs do not overclaim stdin `PipeWriter`, streaming reads, async pipes/communicate, timeout/cancellation/scoped supervision, or Windows support.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-readers-review-pass-2.md`: `PASS`; post-rebase reviewer verified the branch preserved PR #2348 stdin append semantics, kept the pipe-reader wave after that evidence without conflict markers or stale claims, revalidated the original sync-only pipe-reader invariants, reproduced targeted checks, confirmed the post-rebase create-pr report (`98 passed`, `0 failed`, platform golden `pass=5`, `skip=2`, `report_signature=559a90cf856fe902`), and found no blocking correctness, generated-code-safety, lifecycle, panic-freedom, gating, validation, or documentation issues.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-readers-review-pass-3.md`: `CHANGES_REQUESTED`; post-PR #2350 reviewer revalidated the original pipe-reader invariants but found the branch was still behind PR #2351 and would drop the method-form diagnostics merge-link and merge-ledger validation lines. The next revision rebases onto current `origin/main` and preserves those method diagnostics evidence lines before the pipe-reader block.
+- `reviews/ad-hoc-production-concurrency-runtime-m4-pipe-readers-review-pass-4.md`: `PASS`; final reviewer verified the pass-3 blocker was fixed by preserving the PR #2350 merge-link and merge-ledger validation from PR #2351 before the pipe-reader block, rechecked traceability for both method-form diagnostics fixtures plus `process_spawn_pipe_readers`, confirmed the sync-only pipe-reader implementation and typed-error/panic-freedom invariants, confirmed helper gating and documentation boundaries, and verified the latest create-pr evidence (`98 passed`, `0 failed`, `cache_hits=26/26`, `report_signature=559a90cf856fe902`).
 
 M0 targeted local validation:
 

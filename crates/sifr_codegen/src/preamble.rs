@@ -14,6 +14,7 @@ mod join_set_runtime;
 pub use join_set_runtime::*;
 mod parallel_runtime;
 pub(crate) use parallel_runtime::*;
+mod process_child_pipes;
 mod process_runtime;
 pub(crate) use process_runtime::*;
 mod io_logging_random;

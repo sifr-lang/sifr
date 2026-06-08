@@ -17,6 +17,14 @@ fn ref_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     ref_expr(arg_expr(args, idx))
 }
 
+fn clone_arg(args: &[RustExpr], idx: usize) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(arg_expr(args, idx)),
+        method: "clone".to_string(),
+        args: vec![],
+    }
+}
+
 fn string_lit(value: &str) -> RustExpr {
     RustExpr::Literal(RustLiteral::Str(value.to_string()))
 }
@@ -94,15 +102,6 @@ fn err_expr(expr: RustExpr) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
         args: vec![expr],
-    }
-}
-
-fn next_child_handle_id_expr() -> RustExpr {
-    RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "__sifr_next_process_child_id".to_string()
-        ])),
-        args: vec![],
     }
 }
 
@@ -613,40 +612,51 @@ pub(crate) fn lower_process_run(args: &[RustExpr]) -> Option<RustExpr> {
 }
 
 pub(crate) fn lower_process_spawn(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 5 {
+    if args.len() != 7 {
         return None;
     }
-    let mut stmts = normal_command_setup(args);
-    stmts.extend([
-        RustStmt::Let {
-            mutable: false,
-            name: "__child".to_string(),
-            ty: None,
-            value: RustExpr::Try(Box::new(process_map_err(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__cmd".to_string())),
-                method: "spawn".to_string(),
-                args: vec![],
-            }))),
-        },
-        RustStmt::Let {
-            mutable: false,
-            name: "__handle".to_string(),
-            ty: None,
-            value: next_child_handle_id_expr(),
-        },
-        RustStmt::Expr(RustExpr::MethodCall {
-            receiver: Box::new(process_child_handles_lock_expr()),
-            method: "insert".to_string(),
-            args: vec![
-                RustExpr::Ident("__handle".to_string()),
-                RustExpr::Ident("__child".to_string()),
-            ],
-        }),
-    ]);
-    Some(RustExpr::Block {
-        stmts,
-        expr: Some(Box::new(ok_expr(RustExpr::Ident("__handle".to_string())))),
-    })
+    Some(path_call(
+        &["__sifr_process_spawn"],
+        vec![
+            clone_arg(args, 0),
+            clone_arg(args, 1),
+            clone_arg(args, 2),
+            clone_arg(args, 3),
+            arg_expr(args, 4),
+            clone_arg(args, 5),
+            clone_arg(args, 6),
+        ],
+    ))
+}
+
+pub(crate) fn lower_process_child_stdout(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(path_call(
+        &["__sifr_process_child_stdout"],
+        vec![arg_expr(args, 0)],
+    ))
+}
+
+pub(crate) fn lower_process_child_stderr(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(path_call(
+        &["__sifr_process_child_stderr"],
+        vec![arg_expr(args, 0)],
+    ))
+}
+
+pub(crate) fn lower_process_pipe_read_all(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(path_call(
+        &["__sifr_process_pipe_read_all"],
+        vec![arg_expr(args, 0)],
+    ))
 }
 
 pub(crate) fn lower_process_wait(args: &[RustExpr]) -> Option<RustExpr> {
