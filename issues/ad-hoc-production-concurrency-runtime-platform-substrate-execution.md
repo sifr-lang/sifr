@@ -436,7 +436,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 subprocess strict text encoding: https://github.com/sifr-lang/sifr/pull/2390
 - M4 async shell process APIs: https://github.com/sifr-lang/sifr/pull/2393
 - M4 scoped process supervision: https://github.com/sifr-lang/sifr/pull/2392
-- M4 timeout process-group cleanup: in progress.
+- M4 timeout process-group cleanup: https://github.com/sifr-lang/sifr/pull/2396
 - M4: in progress.
 - M5: pending.
 - M6: pending.
