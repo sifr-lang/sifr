@@ -1,0 +1,34 @@
+from sifr.process import AsyncChild, Command, ProcessError, Status, async_spawn, async_wait
+
+
+async def main() -> None:
+    actual: list[bool] = []
+
+    try:
+        command: Command = Command("sleep")
+        command.arg("5")
+        child: AsyncChild = await async_spawn(command)
+        killed: None = await child.kill()
+        status: Status = await async_wait(child)
+        actual.append(not status.success)
+        actual.append(status.kind == "signal")
+        actual.append(status.signal is not None)
+
+        method_command: Command = Command("sleep")
+        method_command.arg("5")
+        method_child: AsyncChild = await async_spawn(method_command)
+        method_killed: None = await method_child.kill()
+        method_status: Status = await method_child.wait()
+        actual.append(not method_status.success)
+        actual.append(method_status.kind == "signal")
+        actual.append(method_status.signal is not None)
+
+        try:
+            second_kill: None = await method_child.kill()
+            actual.append(False)
+        except ProcessError as e:
+            actual.append("closed or unknown" in e.message)
+    except ProcessError as e:
+        actual.append(False)
+
+    assert actual == [True, True, True, True, True, True, True]

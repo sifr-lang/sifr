@@ -55,6 +55,7 @@ pub(crate) struct SharedPreludeProcessAsyncNeeds {
     pub(crate) needs_output: bool,
     pub(crate) needs_output_timeout: bool,
     pub(crate) needs_spawn: bool,
+    pub(crate) needs_kill: bool,
     pub(crate) needs_wait: bool,
 }
 
@@ -339,6 +340,7 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
             needs_output: code.contains("__sifr_process_async_output("),
             needs_output_timeout: code.contains("__sifr_process_async_output_timeout"),
             needs_spawn: code.contains("__sifr_process_async_spawn("),
+            needs_kill: code.contains("__sifr_process_async_kill("),
             needs_wait: code.contains("__sifr_process_async_wait("),
         },
     }
@@ -399,6 +401,9 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 | "__sifr_process_async_spawn" => {
                     self.shared_needs.process_async.needs_spawn = true;
                 }
+                "__sifr_process_async_kill" => {
+                    self.shared_needs.process_async.needs_kill = true;
+                }
                 "__sifr_process_async_wait" => {
                     self.shared_needs.process_async.needs_wait = true;
                 }
@@ -443,6 +448,7 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
                 || item_fn.sig.ident == "__sifr_process_async_output_timeout"
                 || item_fn.sig.ident == "__sifr_next_process_async_child_id"
                 || item_fn.sig.ident == "__sifr_process_async_spawn"
+                || item_fn.sig.ident == "__sifr_process_async_kill"
                 || item_fn.sig.ident == "__sifr_process_async_wait"
         }
         _ => false,

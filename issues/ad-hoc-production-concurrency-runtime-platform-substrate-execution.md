@@ -426,6 +426,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M4 async stdin-byte communicate: https://github.com/sifr-lang/sifr/pull/2365
 - M4 sync process terminate: https://github.com/sifr-lang/sifr/pull/2367
 - M4 async process spawn/wait: https://github.com/sifr-lang/sifr/pull/2369
+- M4 async child kill: in progress.
 - M4: in progress.
 - M5: pending.
 - M6: pending.
@@ -1015,6 +1016,32 @@ M4 sync process terminate review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m4-process-terminate-review-pass-1.md`: `PASS`; reviewer verified the public top-level and method-form APIs, `_sifr.process.process_terminate` metadata, child-lifecycle lowerer split, generated cfg-gated `__sifr_process_terminate` helper, child-table handle preservation for later `wait`, typed non-Unix unsupported `ProcessError`, prelude filtering, fixtures, manifests, host matrix, traceability, and file-size guardrails. Non-blocking follow-ups remain for narrowing the child-table mutex hold around the host signal request and replacing the host `kill` command with a reviewed Rust host-signal dependency or shim in a later lifecycle hardening wave.
 - Merged as PR #2367 (`3db5c05e923c2a414a18992cb919923088600bbb`) on 2026-06-08.
 - Merge-ledger validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`625.99s`, warm target `<=2m`). Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`102 passed`, `0 failed`, `cache_hits=25/27`, `report_signature=5e93ca9f74a9781c`).
+
+M4 async child kill implementation:
+
+- Added public `sifr.process.AsyncChild.kill()` as a native async lifecycle API returning typed `Result[None, ProcessError]` through `Awaitable`.
+- Added `_sifr.process.process_async_kill` metadata and intrinsic lowering that boxes the generated async helper consistently with `process_async_wait`.
+- Added generated `__sifr_process_async_kill` support that mutably looks up the private `tokio::process::Child`, requests forceful immediate-child termination with `start_kill`, and preserves the child handle for later `async_wait` / `AsyncChild.wait()` status observation.
+- Kept public async graceful terminate, public async owned pipes, cancellation-safe observation, process-group supervision, and Windows status mapping out of this slice.
+- Added `process_async_child_kill_wait`, create-pr/merge manifest entries, M4 traceability updates, and a supported-host matrix row for async child kill.
+
+M4 async child kill targeted local validation:
+
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo fmt` and `cargo fmt --check` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; 2194 files checked, 900-line limit. Touched hand-maintained files remain below the cap, including `crates/sifr_codegen/src/preamble/process_async_runtime.rs` at 830 lines.
+- `cargo check -p sifr_codegen -p sifr_stdlib -p sifr_driver -p sifr --quiet` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/process_async_child_kill_wait.sifr` -> PASS; method-form async kill requests forceful termination and both top-level `async_wait(child)` and method-form `AsyncChild.wait()` observe Unix signal status afterward.
+- Adjacent process regressions `process_async_spawn_wait`, `process_child_kill_wait`, and `process_async_output_timeout` -> PASS.
+- Emission check for `process_async_child_kill_wait` -> PASS; emitted Rust includes `__SIFR_PROCESS_ASYNC_CHILDREN`, `__sifr_process_async_kill`, `__sifr_process_async_wait`, and `start_kill` without emitting the sync `__SIFR_PROCESS_CHILDREN` table.
+- `cargo test -p sifr test_e2e_fail -- --nocapture` -> PASS; fail suite reported 425 fail tests completed.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisories: warm wall-time budget exceeded (`609.20s`, warm target `<=2m`) and warm-cache hit rate below advisory target. Included guardrails, diagnostic contracts, developer tooling, performance budgets, generated-code quality, crate tests, platform golden (`pass=5`, `skip=2`), and create-pr e2e pass suite (`104 passed`, `0 failed`, `cache_hits=10/27`, `report_signature=c0cb8434172d790c`).
+
+M4 async child kill review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m4-async-child-kill-review-pass-1.md`: `PASS`; reviewer verified the method-only public `AsyncChild.kill()` surface avoids Tokio/Rust process type leakage and avoids a broken borrowed top-level async wrapper, metadata/lowerer/helper signatures agree, generated `__sifr_process_async_kill` uses `start_kill` without removing the child from the async table, no mutex guard crosses an await, missing/closed handles and host errors map to typed `ProcessError`, async helper/table gating stays independent from sync child tables, manifests/docs/host matrix are honest about remaining async terminate/pipes/cancellation/scoped supervision/Windows/text follow-ups, and file-size guardrails remain below 900 lines.
 
 M0 targeted local validation:
 

@@ -396,6 +396,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         prepared.shared_needs.process_async.needs_output_timeout;
                     stdlib_needs_process_async.needs_spawn |=
                         prepared.shared_needs.process_async.needs_spawn;
+                    stdlib_needs_process_async.needs_kill |=
+                        prepared.shared_needs.process_async.needs_kill;
                     stdlib_needs_process_async.needs_wait |=
                         prepared.shared_needs.process_async.needs_wait;
                     stdlib_needs_process_children |= prepared
@@ -429,6 +431,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         || stdlib_needs_process_async.needs_output
         || stdlib_needs_process_async.needs_output_timeout
         || stdlib_needs_process_async.needs_spawn
+        || stdlib_needs_process_async.needs_kill
         || stdlib_needs_process_async.needs_wait;
     let needs_process_status = stdlib_needs_process_status || needs_process_async;
     let needs_process_children = stdlib_needs_process_children;
@@ -606,6 +609,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             stdlib_needs_process_async.needs_output,
             stdlib_needs_process_async.needs_output_timeout,
             stdlib_needs_process_async.needs_spawn,
+            stdlib_needs_process_async.needs_kill,
             stdlib_needs_process_async.needs_wait,
         ));
     }

@@ -91,6 +91,7 @@
     "process_async_run_timeout",
     "process_async_output_timeout",
     "process_async_spawn_wait",
+    "process_async_child_kill_wait",
     "process_spawn_wait_status",
     "process_spawn_pipe_readers",
     "process_spawn_pipe_writer",
