@@ -455,7 +455,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M5 structured runtime diagnostics: https://github.com/sifr-lang/sifr/pull/2428
 - M5 explicit task context propagation: https://github.com/sifr-lang/sifr/pull/2431
 - M5 runtime diagnostic metrics policy: https://github.com/sifr-lang/sifr/pull/2433
-- M5 cancellation cleanup traceability addendum: pending PR.
+- M5 cancellation cleanup traceability addendum: https://github.com/sifr-lang/sifr/pull/2430
 - M5: complete.
 - M6 typed IPC design gate: in progress.
 - M6: pending.
@@ -923,6 +923,16 @@ M5 cancellation cleanup traceability addendum review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-4.md`: `FAIL`; reviewer found the branch had fallen behind the latest M6 frame-codec merge ledger and that the committed validation metrics were stale versus the refreshed post-rebase runs. Addressed by rebasing onto the M6 IPC stream helpers merge and committing refreshed validation metrics before the next review pass.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-5.md`: `FAIL`; reviewer found the branch had fallen behind the M6 IPC stream-helper merge ledger after the previous rebase. Addressed by rebasing onto the stream-helper merge ledger commit before the next review pass.
 - `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-review-pass-6.md`: `PASS`; reviewer verified the branch is rebased onto the latest M6 stream-helper merge ledger, M5 remains closed, M6 docs and ledgers from main are preserved, `cancellation_cleanup_runs` is honestly recorded, unsupported cleanup helpers remain diagnostic-only, final validation metrics match the committed ledger, and pass-4/pass-5 failures are documented as addressed.
+
+M5 cancellation cleanup traceability addendum merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2430
+- Merge commit: `41e376fc27963e4e3bfd0550487e213a9647f293`
+- Merged at: `2026-06-09T00:35:01Z`
+- Scope: cancellation cleanup traceability addendum, merge-lane fixture coverage, closed M5 traceability/host-matrix wording, and reviewer artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- Merge-ledger review: `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-ledger-review-pass-1.md` -> `PASS`; reviewer verified the PR link, merge commit, merged timestamp, scope, docs-only validation claim, and unchanged M5/M6 status.
+- Merge-ledger review: `reviews/ad-hoc-production-concurrency-runtime-m5-cancellation-cleanup-traceability-ledger-review-pass-2.md` -> `PASS`; reviewer verified the current ledger diff, expanded validation line, review artifact link, and unchanged M5/M6 status.
 
 M6 typed IPC design gate implementation:
 
