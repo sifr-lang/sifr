@@ -470,6 +470,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC process-pipe backpressure and unsupported-payload evidence: https://github.com/sifr-lang/sifr/pull/2458
 - M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
 - M6 typed IPC CPython-shaped multiprocessing diagnostics: https://github.com/sifr-lang/sifr/pull/2462
+- M6 typed IPC compiler-internal schema extraction: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -1334,6 +1335,27 @@ M6 typed IPC CPython-shaped multiprocessing diagnostics merge ledger:
 M6 typed IPC CPython-shaped multiprocessing diagnostics merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-cpython-shape-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, M6 pending status, docs-only diff scope, validation claims, and scope summary for the merge-ledger packet.
+
+M6 typed IPC compiler-internal schema extraction implementation:
+
+- Added a lowering-owned `ipc_schema_extraction` helper that maps accepted concrete Sifr payload type graphs into `sifr_stdlib::IpcSchemaType` descriptors for the initial primitive, `None`, option, list, `dict[str, T]`, tuple, record/class, enum, and `Result[T, E]` families.
+- Kept rejected concrete payload evidence explicit by mapping process-local or otherwise unsupported type graphs to `IpcSchemaType::Unsupported { type_name }`, without treating `unsupported(...)` as a wire-compatible payload.
+- Wired the compiler-erased `sifr.ipc.require_serializable(...)` marker path to compute the schema type after payload eligibility succeeds, while preserving the marker's erased runtime behavior and without adding public worker/connection APIs.
+- Updated M6 typed IPC traceability and the supported-host matrix to mark compiler-internal schema extraction as supported while keeping generated worker integration, public connection/worker APIs, runtime peer schema exchange, and Windows process-pipe fixtures as follow-up work.
+
+M6 typed IPC compiler-internal schema extraction targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_lowering ipc_schema_extraction -- --nocapture` -> PASS; 2 tests covered accepted schema-family extraction and unsupported payload evidence.
+- `cargo test -p sifr_lowering ipc_payload_calls -- --nocapture` -> PASS; 2 tests verified the existing payload marker eligibility behavior after schema extraction wiring.
+- `cargo clippy -p sifr_lowering -- -D warnings` -> PASS.
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail covered `2269` files after rebasing on the M6 CPython-shaped diagnostics slice.
+- Rebased final branch validation: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`173.46s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=50edc954137c87b4`). Slowest step was `crate_tests` at `63804ms`.
+
+M6 typed IPC compiler-internal schema extraction review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-review-pass-1.md`: `PASS`; reviewer found no blocking issues, verified the compiler-internal scope, and confirmed the docs honestly exclude public worker/connection APIs, generated worker integration, runtime peer schema exchange, and Windows process-pipe fixture support.
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-review-pass-2.md`: `PASS`; reviewer verified the final rebased diff preserves the M6 CPython-shaped diagnostics merge ledger, introduces no scope drift, and keeps schema-extraction claims honest.
 
 M5 signal `strsignal` value-helper implementation:
 
