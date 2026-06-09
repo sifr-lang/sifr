@@ -1224,6 +1224,14 @@ M6 typed IPC Unix process-pipe fixture review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-process-pipe-fixture-review-pass-1.md`: `PASS`; reviewer verified the fixture worker is gated behind the internal `__test_fixture` feature, ordinary `cargo build -p sifr_stdlib` does not build a production worker binary, tests use real Unix child stdin/stdout pipes plus existing IPC helpers, coverage includes bootstrap, completion, cancellation, shutdown close, and malformed truncated-frame reporting, docs honestly scope support to Unix process-pipe evidence, and touched files remain below the guardrail.
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-process-pipe-fixture-review-pass-2.md`: `PASS`; post-`origin/main` merge reviewer verified payload eligibility evidence was preserved, process-pipe evidence remains after it, design and host matrix honestly combine payload validation plus Unix pipe support, fixture gating and Unix coverage remain intact, final create-pr metrics match the conflict-resolved branch, and all touched files remain below the guardrail.
 
+M6 typed IPC Unix process-pipe fixture merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2455
+- Merge commit: `ed3fe513ece009e326d6b2a94aadc7ac1f8ce778`
+- Merged at: `2026-06-09T02:10:57Z`
+- Scope: internal test-gated Unix child-process pipe fixture worker, real stdin/stdout IPC frame transport, bootstrap/request completion/cancellation/shutdown/malformed evidence, M6 traceability, supported-host matrix, validation evidence, and two reviewer artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
