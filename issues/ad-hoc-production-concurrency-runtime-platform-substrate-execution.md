@@ -470,6 +470,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC process-pipe backpressure and unsupported-payload evidence: https://github.com/sifr-lang/sifr/pull/2458
 - M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
 - M6 typed IPC CPython-shaped multiprocessing diagnostics: https://github.com/sifr-lang/sifr/pull/2462
+- M6 typed IPC compiler schema extraction: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -1334,6 +1335,25 @@ M6 typed IPC CPython-shaped multiprocessing diagnostics merge ledger:
 M6 typed IPC CPython-shaped multiprocessing diagnostics merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-cpython-shape-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, M6 pending status, docs-only diff scope, validation claims, and scope summary for the merge-ledger packet.
+
+M6 typed IPC compiler schema extraction implementation:
+
+- Added `sifr_lowering::lower::ipc_schema_extraction` to convert concrete Sifr `Type` graphs into canonical internal `IpcSchemaDescriptor` values for records, enums, newtypes, options, results, tuples, lists, `dict[str, T]`, and primitive/literal families.
+- Wired the extractor into the existing compiler-erased `sifr.ipc.require_serializable(...)` marker so accepted representative payloads prove descriptor extraction before marker erasure, while existing `SIFR-OWN-0013` diagnostics keep precise process-local/resource wording.
+- Rejected schema-less, dynamic, unordered, process-local, and non-`str` dict-key payload shapes before they can be treated as wire-compatible generated peer schemas.
+- Updated M6 typed IPC design and supported-host matrix evidence so generated schema extraction is no longer listed as missing; generated worker integration and Windows process-pipe fixture evidence remain M6/host-limited follow-up work.
+
+M6 typed IPC compiler schema extraction targeted local validation:
+
+- `cargo test -p sifr_lowering ipc_schema_extraction -- --nocapture` -> PASS; 4 tests covered stable descriptor extraction from Sifr type graphs, newtype and payloadless enum extraction, process-local resource rejection inside generated records, and schema-less/dynamic/unordered payload rejection.
+- `cargo test -p sifr_lowering ipc_payload_calls -- --nocapture` -> PASS; existing marker diagnostics stayed stable after extractor wiring.
+- `cargo clippy -p sifr_lowering -p sifr_stdlib -- -D warnings` -> PASS.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/ipc_payload_require_serializable_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/ipc_payload_process_resource_rejected.sifr` -> expected `SIFR-OWN-0013` for `PipeReader`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/ipc_payload_sync_endpoint_rejected.sifr` -> expected `SIFR-OWN-0013` for `ChannelSender`.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`449.74s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=0/37`, `report_signature=50edc954137c87b4`).
+- Reviewer pass 1: `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-review-pass-1.md` -> PASS; reviewer verified real compiler-side type-graph extraction, pre-wire unsupported payload rejection, precise existing `SIFR-OWN-0013` diagnostics, and no overclaiming of public worker APIs.
+- Touched file line counts after formatting: `crates/sifr_lowering/src/lower/ipc_schema_extraction.rs` `341`, `crates/sifr_lowering/src/lower/ipc_payload_calls.rs` `248`, `crates/sifr_lowering/src/lower/mod.rs` `164`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `256`, `verification/platform/supported_host_matrix.md` `49`, `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-review-pass-1.md` `38`, and this ledger `2326`.
 
 M5 signal `strsignal` value-helper implementation:
 

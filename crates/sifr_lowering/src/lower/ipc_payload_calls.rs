@@ -1,4 +1,6 @@
-use super::{ownership_diagnostics, task_scope_calls, ExprCall, HirExpr, LowerCtx};
+use super::{
+    ipc_schema_extraction, ownership_diagnostics, task_scope_calls, ExprCall, HirExpr, LowerCtx,
+};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_type_system::Type;
 use std::collections::HashSet;
@@ -16,7 +18,17 @@ pub(in crate::lower) fn validate_require_serializable_call(
     let Some(arg) = args.first() else {
         return;
     };
-    let Some(reason) = non_ipc_serializable_reason(arg.ty()) else {
+    let schema_extraction_error = ipc_schema_extraction::ipc_schema_descriptor_from_types(
+        "__sifr.ipc",
+        "RequireSerializablePayload",
+        arg.ty(),
+        &Type::None,
+        &Type::None,
+    )
+    .err();
+    let Some(reason) = non_ipc_serializable_reason(arg.ty())
+        .or_else(|| schema_extraction_error.map(|err| err.reason()))
+    else {
         return;
     };
     ownership_diagnostics::non_ipc_serializable_payload(
