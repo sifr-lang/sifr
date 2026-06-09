@@ -34,7 +34,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] `milestone_concurrency_runtime_3`: Blocking And CPU Offload
 - [x] `milestone_concurrency_runtime_4`: Process Runtime
 - [x] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
-- [ ] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
+- [x] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
 - [ ] `milestone_concurrency_runtime_7`: Integration, Documentation, And Production Gate
 
 ## Planning Reviews
@@ -471,7 +471,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
 - M6 typed IPC CPython-shaped multiprocessing diagnostics: https://github.com/sifr-lang/sifr/pull/2462
 - M6 typed IPC compiler-internal schema extraction: https://github.com/sifr-lang/sifr/pull/2464
-- M6: pending.
+- M6 closeout: pending PR.
+- M6: complete.
 - M7: pending.
 
 ## Validation Evidence
@@ -1368,6 +1369,23 @@ M6 typed IPC compiler-internal schema extraction merge ledger:
 M6 typed IPC compiler-internal schema extraction merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, pending M6 status, and no overclaim of generated worker integration or Windows process-pipe fixture support.
+
+M6 closeout classification implementation:
+
+- Marked `milestone_concurrency_runtime_6` complete after the typed IPC substrate waves and schema-extraction ledger merged.
+- Closed stale M6 design wording by classifying public worker-pool APIs and generated worker integration as `deferred-to-phase-X` over the M6 substrate rather than remaining M6 implementation work.
+- Preserved Windows process-pipe fixture evidence as host-limited future work; the M6 DoD is satisfied by host-independent typed IPC helpers plus Unix real-process pipe fixture evidence.
+- Updated the supported-host matrix so generated worker integration is future deferred work and not an M6-owned follow-up blocker.
+
+M6 closeout classification targeted local validation:
+
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`135.84s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=50edc954137c87b4`; slowest step `crate_tests` `49190ms`).
+
+M6 closeout classification review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-closeout-readiness-review-pass-1.md`: `FAIL`; reviewer found the substantive M6 DoD met but identified docs-only blockers in stale design/host wording that still claimed generated worker integration was M6 implementation work. This closeout slice addresses those blockers.
+- `reviews/ad-hoc-production-concurrency-runtime-m6-closeout-review-pass-1.md`: `PASS`; reviewer verified the stale M6 design and host-matrix blockers are resolved, generated worker/public worker APIs are consistently `deferred-to-phase-X`, Windows process-pipe fixture evidence remains host-limited, validation evidence is recorded, M6 can be considered closed, and M7 remains pending.
 
 M5 signal `strsignal` value-helper implementation:
 

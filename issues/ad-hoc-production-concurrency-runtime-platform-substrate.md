@@ -781,6 +781,8 @@ Definition of done:
 - Python-shaped process pools remain `rejected` or `unsupported-with-diagnostic` by design in this phase.
 - Any later accepted process-worker API exists for isolation/supervision/interop, not as Sifr's default CPU parallelism story.
 
+Closeout note: M6 typed IPC substrate is complete in the execution ledger. Public process-worker pools and generated worker integration remain `deferred-to-phase-X` over this substrate, and Windows process-pipe fixture evidence remains host-limited future work rather than an M6 closure blocker.
+
 ### milestone_concurrency_runtime_7: Integration, Documentation, And Production Gate
 
 Scope:
