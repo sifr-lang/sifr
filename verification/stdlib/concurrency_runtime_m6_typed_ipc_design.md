@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_6`
 
-Status: In progress. The design gate is approved, dependency metadata is wired, `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model, and internal `sifr_stdlib` helpers now encode/decode the length-prefixed Postcard envelope with malformed-frame tests. Process-pipe transport, connection-state malformed-frame behavior, cancellation, close, backpressure, and payload eligibility diagnostics remain M6 implementation work.
+Status: In progress. The design gate is approved, dependency metadata is wired, `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model, and internal `sifr_stdlib` helpers now encode/decode the length-prefixed Postcard envelope plus read/write it over pipe-shaped byte streams with malformed-frame tests. Child-process fixture transport, connection-state malformed-frame behavior, cancellation, close, backpressure, and payload eligibility diagnostics remain M6 implementation work.
 
 ## Scope
 
@@ -29,6 +29,7 @@ This design does not ship a public process-worker pool. A future worker API rema
 | `sifr.ipc.BackpressurePolicy` / `default_backpressure()` | `ipc_value_model_basic` | Pins the default in-flight request window (`64`) and default max frame bytes (`16777216`) from the design. Runtime backpressure enforcement remains follow-up work. |
 | Internal schema descriptor and hash v1 | `cargo test -p sifr_stdlib ipc_schema -- --nocapture` | `sifr_stdlib::ipc_schema` renders canonical schema descriptors and stable FNV-1a-128 schema hashes without adding a new hash dependency. Compiler integration and generated schema extraction remain follow-up work. |
 | Internal length-prefixed Postcard frame codec | `cargo test -p sifr_stdlib ipc_frame -- --nocapture` | `sifr_stdlib::ipc_frame` encodes and decodes the M6 envelope families with a `u32` little-endian payload length prefix, the default 16 MiB maximum, typed malformed-frame errors for truncated prefixes/payloads, oversize frames, decode failures, and trailing bytes, and no data-dependent unwrap/expect path. Process-pipe transport and connection-state handling remain follow-up work. |
+| Internal stream read/write helpers | `cargo test -p sifr_stdlib ipc_transport -- --nocapture` | `sifr_stdlib::ipc_transport` writes and reads the length-prefixed Postcard envelope over `std::io::Write`/`Read` pipe-shaped byte streams, treats clean EOF before a prefix as close evidence, maps partial prefixes/payloads and oversize lengths to typed errors, and drops raw I/O error details so payload bytes and host paths are not rendered. Child-process fixtures and connection-state handling remain follow-up work. |
 | `ProcessPoolExecutor` and `Process` under `sifr.ipc` | `ipc_process_pool_executor_unsupported`; `ipc_multiprocessing_process_unsupported` | Missing-member diagnostics keep CPython-shaped process-pool and multiprocessing names out of the native IPC module. |
 
 ## Transport Boundary
