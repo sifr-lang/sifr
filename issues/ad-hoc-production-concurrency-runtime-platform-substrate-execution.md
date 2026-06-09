@@ -475,6 +475,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC closeout classification: https://github.com/sifr-lang/sifr/pull/2467
 - M6: complete.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
+- M7 public documentation: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
@@ -1456,6 +1457,21 @@ M7 traceability scaffold merge ledger:
 M7 traceability scaffold merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-traceability-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, and M7 in-progress status without phase-completion overclaim.
+
+M7 public documentation implementation:
+
+- Added `docs/concurrency_runtime.md` as the public M7 docs entry for `sifr.task`, `sifr.sync`, `sifr.runtime`, `sifr.parallel`, `sifr.process`, `sifr.signal`, `sifr.resource`, and `sifr.ipc`.
+- Documented accepted API families, ownership/sendability/shareability boundaries, typed error surfaces, process/signal host limits, IPC schema/frame substrate boundaries, and intentional divergences from CPython event-loop, queue/threading, subprocess, signal-handler, cleanup-stack, multiprocessing, and process-pool APIs.
+- Updated `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` so every public-doc gate points at the new public docs artifact as `pending-pr` while preserving M7 as open/in-progress until the remaining internal architecture, demos, generated dependency/panic-scan, validation inventory, and final review gates close.
+
+M7 public documentation targeted local validation:
+
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- Touched file line counts: `docs/concurrency_runtime.md` `240`, `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` `65`, and this ledger `2444`.
+
+M7 public documentation review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-public-docs-review-pass-1.md`: `PASS`; reviewer verified public docs coverage for all eight modules, intentional CPython divergence and public API boundaries, M7 in-progress status, non-public-doc gates left open, validation claims, and touched-file line counts.
 
 M5 signal `strsignal` value-helper implementation:
 
