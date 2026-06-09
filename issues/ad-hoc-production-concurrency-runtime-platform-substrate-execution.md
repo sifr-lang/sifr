@@ -479,7 +479,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
 - M7 demo closure: https://github.com/sifr-lang/sifr/pull/2479
 - M7 generated dependency and panic-scan evidence: https://github.com/sifr-lang/sifr/pull/2482
-- M7 validation lane and inventory closure: pending PR.
+- M7 validation lane and inventory closure: https://github.com/sifr-lang/sifr/pull/2485
 - M7: in progress.
 
 ## Validation Evidence
@@ -1610,6 +1610,20 @@ M7 validation lane and inventory closure review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-closure-review-pass-1.md`: `FINDINGS`; reviewer found that regenerating inventory artifacts reverted closed M2 semaphore-permit policy, M3 workload evidence rows, and M5 production-surface notes.
 - `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-closure-review-pass-2.md`: `PASS`; reviewer verified the generator and regenerated artifacts now preserve the M2 semaphore policy, M3 `spawn_cpu`/scoped-offload/`JoinSet`/parallel workload evidence, and M5 signal/resource/context notes; validation lanes, inventory audit, traceability, and ledger remain scoped with final review still open.
+
+M7 validation lane and inventory closure merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2485
+- Merge commit: `525f5695075ac42c2b71ac90d754ac750284ee56`
+- Merged at: `2026-06-09T06:12:51Z`
+- Scope: M7 inventory closure audit for validation lanes, inventory, platform golden, supported-host rows, and waiver/quarantine state; direct `spawn_blocking_basic` merge-lane coverage; generator and regenerated inventory artifacts updated to M7 inventory-audited status while preserving M2/M3/M5 closed evidence; M7 traceability for validation lane and inventory closure; validation evidence; and Opus review artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M7 validation lane and inventory closure merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2485, merge commit `525f5695075ac42c2b71ac90d754ac750284ee56`, merge timestamp `2026-06-09T06:12:51Z`, validation PASS evidence, closed validation-lane/inventory traceability rows, and preservation of the final open/pending M7 gates with no phase overclaim.
+- `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-ledger-review-pass-2.md`: `FINDINGS`; reviewer verified the ledger semantics but flagged the live pass-2 output file as an unrelated empty untracked artifact while the review command was still writing it, requiring a follow-up review after recording the artifact trail.
+- `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-ledger-review-pass-3.md`: `PASS`; reviewer verified the final ledger state, pass-1/pass-2 artifact trail, closed validation-lane/inventory traceability rows, and preservation of all final open/pending M7 gates with no phase overclaim.
 
 M5 signal `strsignal` value-helper implementation:
 
