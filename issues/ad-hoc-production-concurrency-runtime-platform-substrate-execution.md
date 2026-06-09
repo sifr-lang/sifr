@@ -471,7 +471,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
 - M6 typed IPC CPython-shaped multiprocessing diagnostics: https://github.com/sifr-lang/sifr/pull/2462
 - M6 typed IPC compiler-internal schema extraction: https://github.com/sifr-lang/sifr/pull/2464
-- M6 closeout: pending PR.
+- M6 typed IPC closeout classification: https://github.com/sifr-lang/sifr/pull/2467
 - M6: complete.
 - M7: pending.
 
@@ -1386,6 +1386,18 @@ M6 closeout classification review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-closeout-readiness-review-pass-1.md`: `FAIL`; reviewer found the substantive M6 DoD met but identified docs-only blockers in stale design/host wording that still claimed generated worker integration was M6 implementation work. This closeout slice addresses those blockers.
 - `reviews/ad-hoc-production-concurrency-runtime-m6-closeout-review-pass-1.md`: `PASS`; reviewer verified the stale M6 design and host-matrix blockers are resolved, generated worker/public worker APIs are consistently `deferred-to-phase-X`, Windows process-pipe fixture evidence remains host-limited, validation evidence is recorded, M6 can be considered closed, and M7 remains pending.
+
+M6 typed IPC closeout classification merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2467
+- Merge commit: `1606e5d0817af1cb6c0f05b56bf4e5636dfd7775`
+- Merged at: `2026-06-09T04:11:16Z`
+- Scope: docs-only M6 closeout classification, stale generated-worker wording cleanup, host-matrix classification update, roadmap/phase issue status update, validation evidence, and Opus closeout review artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC closeout classification merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-closeout-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp with expected one-second GitHub/commit timestamp skew, docs-only scope, validation claim, and M6 complete/M7 pending status.
 
 M5 signal `strsignal` value-helper implementation:
 
