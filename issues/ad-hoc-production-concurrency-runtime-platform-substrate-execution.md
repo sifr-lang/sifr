@@ -477,7 +477,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
 - M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
 - M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
-- M7 demo closure: pending PR.
+- M7 demo closure: https://github.com/sifr-lang/sifr/pull/2479
 - M7: in progress.
 
 ## Validation Evidence
@@ -1535,6 +1535,19 @@ M7 demo closure targeted local validation:
 M7 demo closure review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-demo-closure-review-pass-1.md`: `PASS`; reviewer verified all seven required demo categories have concrete evidence, new demos are valid and scoped, M7 remains open/in progress, non-demo gates remain unclosed, and validation claims and line counts are plausible.
+
+M7 demo closure merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2479
+- Merge commit: `040dfa81138b2e4a8ccf97a7e825dd894c93eead`
+- Merged at: `2026-06-09T05:00:20Z`
+- Scope: four new concurrency runtime demos for CPU parallel map, async subprocess pipeline, structured shutdown, and cleanup under cancellation; validation of existing structured task group, producer/consumer channel pipeline, and blocking offload demos; M7 traceability demo gate marked complete after merge; validation evidence; and Opus demo-closure review artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M7 demo closure merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-demo-ledger-review-pass-1.md`: `PASS`; reviewer verified the ledger does not overclaim M7 or phase completion, only closes the demo gate, keeps non-demo gates open or partial as appropriate, and records the PR URL, merge commit, timestamp, and scope clearly enough for phase closeout traceability.
+- `reviews/ad-hoc-production-concurrency-runtime-m7-demo-ledger-review-pass-2.md`: `PASS`; reviewer verified the cleaned-up ledger records final PASS validation evidence, references the populated pass-1 review, matches the merge commit timestamp exactly, and needs no further review rounds before commit.
 
 M5 signal `strsignal` value-helper implementation:
 
