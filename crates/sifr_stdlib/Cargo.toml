@@ -12,6 +12,7 @@ serde = { workspace = true }
 sifr_type_system = { workspace = true }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 
 [features]
 __test_fixture = []

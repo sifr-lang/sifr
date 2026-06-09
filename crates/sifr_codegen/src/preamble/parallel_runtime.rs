@@ -138,12 +138,12 @@ fn __sifr_parallel_map<T: Send, U: Send, F: Fn(T) -> U + Send + Sync>(
     });
 }
 
-fn __sifr_parallel_try_map<T: Send, U: Send, E: Send, F: Fn(T) -> Result<U, E> + Send + Sync>(
+fn __sifr_parallel_try_map<T: Send, U: Send, E, F: Fn(T) -> Result<U, E> + Send + Sync>(
     items: Vec<T>,
     worker: F,
 ) -> Result<Vec<U>, WorkerError>
 where
-    E: std::fmt::Display,
+    E: Send + std::fmt::Display,
 {
     use rayon::prelude::{IntoParallelIterator, ParallelIterator};
     let pool = __sifr_default_parallel_pool().map_err(__sifr_worker_error_from_runtime)?;
@@ -192,13 +192,13 @@ fn __sifr_pool_map<T: Send, U: Send, F: Fn(T) -> U + Send + Sync>(
     });
 }
 
-fn __sifr_pool_try_map<T: Send, U: Send, E: Send, F: Fn(T) -> Result<U, E> + Send + Sync>(
+fn __sifr_pool_try_map<T: Send, U: Send, E, F: Fn(T) -> Result<U, E> + Send + Sync>(
     pool: &Pool,
     items: Vec<T>,
     worker: F,
 ) -> Result<Vec<U>, WorkerError>
 where
-    E: std::fmt::Display,
+    E: Send + std::fmt::Display,
 {
     use rayon::prelude::{IntoParallelIterator, ParallelIterator};
     let Some(worker_pool) = pool._pool.as_ref() else {
