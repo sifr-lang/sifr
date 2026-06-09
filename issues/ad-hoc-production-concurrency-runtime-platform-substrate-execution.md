@@ -470,7 +470,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC process-pipe backpressure and unsupported-payload evidence: https://github.com/sifr-lang/sifr/pull/2458
 - M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
 - M6 typed IPC CPython-shaped multiprocessing diagnostics: https://github.com/sifr-lang/sifr/pull/2462
-- M6 typed IPC compiler-internal schema extraction: pending PR.
+- M6 typed IPC compiler-internal schema extraction: https://github.com/sifr-lang/sifr/pull/2464
 - M6: pending.
 - M7: pending.
 
@@ -1356,6 +1356,18 @@ M6 typed IPC compiler-internal schema extraction review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-review-pass-1.md`: `PASS`; reviewer found no blocking issues, verified the compiler-internal scope, and confirmed the docs honestly exclude public worker/connection APIs, generated worker integration, runtime peer schema exchange, and Windows process-pipe fixture support.
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-review-pass-2.md`: `PASS`; reviewer verified the final rebased diff preserves the M6 CPython-shaped diagnostics merge ledger, introduces no scope drift, and keeps schema-extraction claims honest.
+
+M6 typed IPC compiler-internal schema extraction merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2464
+- Merge commit: `08e0a3b821a165e072eabd5dbe8330c21f3b056b`
+- Merged at: `2026-06-09T03:53:24Z`
+- Scope: lowering-owned IPC schema type extraction into `IpcSchemaType`, erased `sifr.ipc.require_serializable(...)` marker-path schema computation after eligibility succeeds, M6 traceability and supported-host matrix updates, rebased create-pr validation evidence, and two reviewer artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC compiler-internal schema extraction merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, pending M6 status, and no overclaim of generated worker integration or Windows process-pipe fixture support.
 
 M5 signal `strsignal` value-helper implementation:
 
