@@ -1,4 +1,6 @@
-use super::{ownership_diagnostics, task_scope_calls, ExprCall, HirExpr, LowerCtx};
+use super::{
+    ipc_schema_extraction, ownership_diagnostics, task_scope_calls, ExprCall, HirExpr, LowerCtx,
+};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_type_system::Type;
 use std::collections::HashSet;
@@ -17,6 +19,7 @@ pub(in crate::lower) fn validate_require_serializable_call(
         return;
     };
     let Some(reason) = non_ipc_serializable_reason(arg.ty()) else {
+        let _schema = ipc_schema_extraction::extract_ipc_schema_type(arg.ty());
         return;
     };
     ownership_diagnostics::non_ipc_serializable_payload(
@@ -40,7 +43,7 @@ fn payload_arg_label(expr: &HirExpr) -> String {
     }
 }
 
-fn non_ipc_serializable_reason(ty: &Type) -> Option<String> {
+pub(in crate::lower) fn non_ipc_serializable_reason(ty: &Type) -> Option<String> {
     non_ipc_serializable_reason_inner(ty.resolve_alias(), &mut HashSet::new())
 }
 
