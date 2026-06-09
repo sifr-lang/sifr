@@ -823,6 +823,8 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - `milestone_async_7a`: implement user-defined async context managers, `AsyncIterator[T, E]`, and `async for` over protocol-conforming streams.
 - `milestone_async_7b`: implement `AsyncGenerator[T, E]`, async generator lifecycle/cleanup, and list/set/dict async comprehensions.
 
+**M7 production runtime closeout:** the terminal architecture audit for the production concurrency/runtime substrate lives in [structured_runtime_work_model.md](./structured_runtime_work_model.md#m7-production-closure-audit). It locks the task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability rules, task/request context model, diagnostics/signal global-state policy, and rejected CPython-shaped surface index without reopening the Phase 32 async syntax contract.
+
 ### 9. Destruction and Cleanup Semantics
 
 Sifr compiles to Rust, which has deterministic destruction (RAII). This contract defines when and how values are cleaned up.

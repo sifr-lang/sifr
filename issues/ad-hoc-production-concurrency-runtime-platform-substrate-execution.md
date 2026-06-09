@@ -476,6 +476,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6: complete.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
 - M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
+- M7 internal architecture audit: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
@@ -1484,6 +1485,21 @@ M7 public documentation merge ledger:
 M7 public documentation merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-public-docs-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, public-doc gates closed, remaining M7 gates still open/partial/pending, and no M7 completion overclaim.
+
+M7 internal architecture audit implementation:
+
+- Added the M7 Production Closure Audit table to `internal_docs/structured_runtime_work_model.md`, locking terminal contracts for task ownership, process ownership, channels/synchronization, blocking and CPU offload, sendability/shareability, task/request context, diagnostics and signal global state, typed IPC policy, and the rejected CPython-shaped surface index.
+- Added an `internal_docs/architecture.md` concurrency-safety pointer to the M7 audit so the main architecture contract references the terminal production runtime closeout surface.
+- Updated `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` so the internal architecture docs gate and required PR-slice row point at the audit as `pending-pr` while leaving demos, generated dependency/panic-scan, validation inventory, and final review gates open.
+
+M7 internal architecture audit targeted local validation:
+
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- Touched file line counts: `internal_docs/structured_runtime_work_model.md` `266`, `internal_docs/architecture.md` `1361`, `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` `65`, and this ledger `2472`.
+
+M7 internal architecture audit review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-architecture-audit-review-pass-1.md`: `PASS`; reviewer verified coverage of task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability, task/request context, diagnostics/signal global-state policy, rejected CPython-shaped surface index, M7 open/in-progress status, remaining non-architecture gates left open, validation claims, and touched-file line counts.
 
 M5 signal `strsignal` value-helper implementation:
 

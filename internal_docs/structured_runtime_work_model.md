@@ -226,6 +226,22 @@ Public Sifr APIs must not expose Tokio, Futures, Rayon, Crossbeam, Rustix, traci
 
 General dependency-ring rules live in [dependency_policy.md](./dependency_policy.md). The accepted Rust implementation crate set for the concurrency/runtime substrate is locked in [ad-hoc-production-concurrency-runtime-platform-substrate.md](../issues/ad-hoc-production-concurrency-runtime-platform-substrate.md#rust-ecosystem-decisions). This model document does not reopen dependency choices; implementation uses that phase table and changes it only through an explicit issue/phase amendment before implementation work starts.
 
+## M7 Production Closure Audit
+
+M7 closes the internal architecture gate by treating the production runtime model as one integrated substrate. Earlier sections preserve the design history; this table is the terminal audit surface for implementation and future maintenance.
+
+| Boundary | Terminal M7 contract | Evidence |
+| --- | --- | --- |
+| Task ownership | Child async work is owned by `sifr.task` scopes/groups; handles are affine and must be observed, cancelled, joined, or consumed by an accepted collection. Detached ambient tasks remain rejected. | M1 traceability plus `docs/concurrency_runtime.md` `sifr.task` section. |
+| Process ownership | `sifr.process` owns sync/async subprocess execution, explicit shell effects, owned pipes, timeout/cancel/kill/terminate, and status/output evidence. Legacy `sifr.subprocess` and CPython `Popen` parity are not production APIs. | M4 process traceability, supported-host matrix, public docs. |
+| Channels and synchronization | Same-process communication uses `sifr.sync` typed channels, close/drain, bounded backpressure, cancellation, locks, semaphores, notifications, and explicit `Shared[T]`. Guards and permits are scoped resources and cannot cross invalid await/work boundaries. | M2 sync traceability, architecture concurrency safety section. |
+| Blocking and CPU offload | Blocking I/O and CPU-heavy work require explicit annotations/offload. `sifr.runtime`, `sifr.parallel`, `task.spawn_blocking`, CPU spawn, and `JoinSet` evidence form the accepted offload model; direct async-context calls are diagnostics. | M3 offload traceability and generated-code panic-boundary evidence. |
+| Sendability and shareability | Task/thread/offload boundaries require owned sendable values. Shared immutable values require `ShareSafe`; shared mutable state requires explicit sync wrappers. The compiler never inserts hidden thread-safe wrappers. | `internal_docs/architecture.md` concurrency safety contract and M1-M3 diagnostics. |
+| Task and request context | Task context is explicit through `sifr.task.Context`, `ContextKey[T]`, `empty_context`, `current_context`, and accepted propagation APIs. Implicit CPython `contextvars` copying and global task-local mutation are rejected. | M5 task-context traceability and public docs. |
+| Diagnostics and signal global state | Runtime diagnostics are structured events with redaction rules. Signal APIs expose values and structured shutdown streams; global handler mutation, warning filters as runtime control, and host process-global signal mutation are rejected. | M5 shutdown/diagnostics traceability, supported-host matrix, public docs. |
+| Typed IPC policy | `sifr.ipc` is the typed schema/frame substrate over accepted process transports. It includes schema identity, protocol negotiation, frame codec, request tracking, payload eligibility diagnostics, Unix fixture-worker composition proof, and host-limited Windows fixture follow-up. Public worker pools and public `ipc.Connection` remain deferred. | M6 typed IPC design, host matrix, public docs. |
+| Rejected CPython-shaped surface index | `sifr.asyncio`, `sifr.threading`, `sifr.concurrent.futures`, `sifr.subprocess`, `sifr.multiprocessing`, CPython queues, raw event-loop policy, global signal handlers, cleanup stacks, process pools, and multiprocessing shared memory are rejected, unsupported, evidence-only, or deferred according to the inventory. They are not fallback paths. | `verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md` and substrate inventory. |
+
 ## Non-Goals
 
 This model does not include:
