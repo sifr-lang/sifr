@@ -66,6 +66,14 @@
     {"id": "e2e-054-text-i18n-locale-formatting", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr", "expected_command": "build", "evidence_category": "text-i18n-locale"},
     {"id": "e2e-055-text-i18n-translation-bundles", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_translation_bundles.sifr", "expected_command": "build", "evidence_category": "text-i18n-translation"},
 
+    {"id": "m7-001-async-subprocess-pipeline-demo", "group": "concurrency-runtime-m7", "source_path": "demos/async_subprocess_pipeline_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-process"},
+    {"id": "m7-002-blocking-offload-demo", "group": "concurrency-runtime-m7", "source_path": "demos/blocking_offload_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-offload"},
+    {"id": "m7-003-cancellation-cleanup-demo", "group": "concurrency-runtime-m7", "source_path": "demos/cancellation_cleanup_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-cleanup"},
+    {"id": "m7-004-parallel-map-demo", "group": "concurrency-runtime-m7", "source_path": "demos/parallel_map_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-parallel"},
+    {"id": "m7-005-structured-concurrency-demo", "group": "concurrency-runtime-m7", "source_path": "demos/structured_concurrency_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-task"},
+    {"id": "m7-006-structured-shutdown-demo", "group": "concurrency-runtime-m7", "source_path": "demos/structured_shutdown_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-signal"},
+    {"id": "m7-007-sync-channel-demo", "group": "concurrency-runtime-m7", "source_path": "demos/sync_channel_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-sync"},
+
     {"id": "multi-001-additional-modules", "group": "multi-module-projects", "source_path": "demos/additional_modules/main.sifr", "expected_command": "build", "evidence_category": "project-imports"},
     {"id": "multi-002-branch-paths", "group": "multi-module-projects", "source_path": "demos/branch_paths/main.sifr", "expected_command": "build", "evidence_category": "project-imports"},
     {"id": "multi-003-cargo-manifest", "group": "multi-module-projects", "source_path": "demos/cargo_manifest/main.sifr", "expected_command": "build", "evidence_category": "project-manifest"},

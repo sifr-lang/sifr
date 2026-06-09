@@ -478,6 +478,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
 - M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
 - M7 demo closure: https://github.com/sifr-lang/sifr/pull/2479
+- M7 generated dependency and panic-scan evidence: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
@@ -1548,6 +1549,31 @@ M7 demo closure merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-demo-ledger-review-pass-1.md`: `PASS`; reviewer verified the ledger does not overclaim M7 or phase completion, only closes the demo gate, keeps non-demo gates open or partial as appropriate, and records the PR URL, merge commit, timestamp, and scope clearly enough for phase closeout traceability.
 - `reviews/ad-hoc-production-concurrency-runtime-m7-demo-ledger-review-pass-2.md`: `PASS`; reviewer verified the cleaned-up ledger records final PASS validation evidence, references the populated pass-1 review, matches the merge commit timestamp exactly, and needs no further review rounds before commit.
+
+M7 generated dependency and panic-scan evidence implementation:
+
+- Added `verification/stdlib/concurrency_runtime_dependency_snapshots.json` as the resolver-backed dependency snapshot artifact for accepted concurrency/runtime feature combinations: Tokio task/sync/process/signal/offload, Rayon parallel map, runtime diagnostics metrics/tracing, IPC Postcard/Serde serialization, and `sifr_runtime` path emission where generated code requires runtime helpers.
+- Added `crates/sifr_stdlib/tests/concurrency_runtime_dependency_snapshots.rs` to parse the snapshot artifact and compare every row against `sifr_stdlib::generated_cargo_dependencies(...)`, including normalized `sifr_runtime` path placeholders and sorted unique snapshot ids.
+- Extended `verification/generated_code_quality/manifest.json` with a dedicated `concurrency-runtime-m7` group covering the seven required M7 demos, and updated `verification/generated_code_quality/generated_code_quality.py` so manifest loading fails if any M7 demo entry is missing.
+- Updated M7 closeout traceability to mark generated dependency snapshots and generated-code panic/emitted-code quality coverage as `pending-pr`, leaving validation lanes, inventory closure, final review, M7, and the phase open.
+
+M7 generated dependency and panic-scan evidence validation:
+
+- `cargo check -p sifr_codegen -p sifr_stdlib` -> PASS.
+- `cargo test -p sifr_stdlib concurrency_runtime_dependency_snapshots -- --nocapture` -> PASS (`1` integration test passed).
+- `cargo run -q -p sifr -- run demos/parallel_map_demo/main.sifr` -> PASS.
+- `SIFR_GCQ_SHARED_ROOT=target/sifr_m7_gcq python3 verification/generated_code_quality/generated_code_quality.py corpus --group concurrency-runtime-m7` -> PASS; evidence `target/sifr_generated_code_quality/evidence/corpus-1780982450-70347.json`.
+- `SIFR_GCQ_SHARED_ROOT=target/sifr_m7_gcq python3 verification/generated_code_quality/generated_code_quality.py panic-scan --group concurrency-runtime-m7` -> PASS; evidence `target/sifr_generated_code_quality/evidence/panic-scan-1780982529-75206.json`.
+- `SIFR_GCQ_SHARED_ROOT=target/sifr_m7_gcq python3 verification/generated_code_quality/generated_code_quality.py rustfmt --group concurrency-runtime-m7` -> PASS; evidence `target/sifr_generated_code_quality/evidence/rustfmt-1780982529-75244.json`.
+- `SIFR_GCQ_SHARED_ROOT=target/sifr_m7_gcq python3 verification/generated_code_quality/generated_code_quality.py clippy --group concurrency-runtime-m7` -> PASS; evidence `target/sifr_generated_code_quality/evidence/clippy-1780982531-75768.json`.
+- `SIFR_GCQ_SHARED_ROOT=target/sifr_m7_gcq python3 verification/generated_code_quality/generated_code_quality.py determinism --group concurrency-runtime-m7` -> PASS; evidence `target/sifr_generated_code_quality/evidence/determinism-1780982533-69991.json`.
+- `python3 -m json.tool verification/stdlib/concurrency_runtime_dependency_snapshots.json` and `python3 -m json.tool verification/generated_code_quality/manifest.json` -> PASS.
+- `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- Touched file line counts: `crates/sifr_codegen/src/preamble/parallel_runtime.rs` `234`, `crates/sifr_stdlib/tests/concurrency_runtime_dependency_snapshots.rs` `82`, `verification/generated_code_quality/generated_code_quality.py` `797`, `verification/generated_code_quality/manifest.json` `100`, `verification/stdlib/concurrency_runtime_dependency_snapshots.json` `90`, `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` `65`, and this ledger `2546`.
+
+M7 generated dependency and panic-scan evidence review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-generated-evidence-review-pass-1.md`: `PASS`; reviewer verified the dependency snapshot schema and resolver equivalence, the M7 generated-code quality manifest group and harness enforcement, the generated parallel `try_map` bound fix, scoped `pending-pr` traceability, local validation evidence shape, and no overclaim of M7 or phase completion.
 
 M5 signal `strsignal` value-helper implementation:
 

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "status": "m7-pending-pr",
+  "source": "sifr_stdlib::generated_cargo_dependencies",
+  "runtime_path_placeholder": "<sifr_runtime_path>",
+  "snapshots": [
+    {
+      "id": "async-process-and-signal",
+      "coverage": ["sifr.process async subprocess", "sifr.signal structured shutdown"],
+      "source_paths": [
+        "demos/async_subprocess_pipeline_demo/main.sifr",
+        "demos/structured_shutdown_demo/main.sifr"
+      ],
+      "stdlib_modules": [],
+      "required_features": ["tokio"],
+      "dependencies": [
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+      ]
+    },
+    {
+      "id": "blocking-offload",
+      "coverage": ["task.spawn_blocking", "blocking_io/cpu_heavy workload markers"],
+      "source_paths": ["demos/blocking_offload_demo/main.sifr"],
+      "stdlib_modules": [],
+      "required_features": ["tokio"],
+      "dependencies": [
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+      ]
+    },
+    {
+      "id": "ipc-serialization",
+      "coverage": ["sifr.ipc payload eligibility and Postcard frame substrate"],
+      "source_paths": [
+        "crates/sifr/tests/e2e/pass/ipc_payload_require_serializable_basic.sifr"
+      ],
+      "stdlib_modules": ["sifr.ipc"],
+      "required_features": ["ipc"],
+      "dependencies": [
+        "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }",
+        "serde = { version = \"1.0.228\", features = [\"derive\"] }"
+      ]
+    },
+    {
+      "id": "parallel-map",
+      "coverage": ["sifr.parallel map/try_map", "configured Rayon pools"],
+      "source_paths": ["demos/parallel_map_demo/main.sifr"],
+      "stdlib_modules": ["sifr.parallel"],
+      "required_features": ["rayon"],
+      "dependencies": [
+        "rayon = \"1.12.0\""
+      ]
+    },
+    {
+      "id": "runtime-diagnostics",
+      "coverage": ["sifr.runtime structured diagnostics"],
+      "source_paths": ["crates/sifr/tests/e2e/pass/runtime_diagnostics_tracing.sifr"],
+      "stdlib_modules": ["sifr.runtime"],
+      "required_features": [],
+      "dependencies": [
+        "metrics = \"0.24.6\"",
+        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+      ]
+    },
+    {
+      "id": "structured-task-and-cleanup",
+      "coverage": ["task scope", "TaskGroup", "timeout cancellation", "cleanup under cancellation"],
+      "source_paths": [
+        "demos/cancellation_cleanup_demo/main.sifr",
+        "demos/structured_concurrency_demo/main.sifr"
+      ],
+      "stdlib_modules": [],
+      "required_features": ["encoding_rs", "sifr_runtime", "tokio"],
+      "dependencies": [
+        "encoding_rs = \"0.8.35\"",
+        "sifr_runtime = { path = \"<sifr_runtime_path>\" }",
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+      ]
+    },
+    {
+      "id": "sync-channel",
+      "coverage": ["sifr.sync channels", "locks", "semaphores", "notifications"],
+      "source_paths": ["demos/sync_channel_demo/main.sifr"],
+      "stdlib_modules": [],
+      "required_features": ["tokio"],
+      "dependencies": [
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+      ]
+    }
+  ]
+}
