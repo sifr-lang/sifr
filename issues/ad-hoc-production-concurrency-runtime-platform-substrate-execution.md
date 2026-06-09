@@ -477,6 +477,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
 - M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
 - M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
+- M7 demo closure: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
@@ -1512,6 +1513,28 @@ M7 internal architecture audit merge ledger:
 M7 internal architecture audit merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-architecture-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, architecture gate closed, remaining gates still open/partial/pending, and no M7 completion overclaim.
+
+M7 demo closure implementation:
+
+- Added `demos/parallel_map_demo/main.sifr`, `demos/async_subprocess_pipeline_demo/main.sifr`, `demos/structured_shutdown_demo/main.sifr`, and `demos/cancellation_cleanup_demo/main.sifr` for the remaining required M7 demo categories.
+- Reused existing `demos/structured_concurrency_demo/main.sifr`, `demos/sync_channel_demo/main.sifr`, and `demos/blocking_offload_demo/main.sifr` for structured task group, producer/consumer channel pipeline, and blocking offload coverage.
+- Updated `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` so the required demos gate and demo-closure slice point at all seven demo commands as `pending-pr` while leaving generated dependency/panic-scan, validation inventory, and final review gates open.
+
+M7 demo closure targeted local validation:
+
+- `cargo run -q -p sifr -- run demos/structured_concurrency_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/sync_channel_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/blocking_offload_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/parallel_map_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/async_subprocess_pipeline_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/structured_shutdown_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/cancellation_cleanup_demo/main.sifr` -> PASS.
+- `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- Touched file line counts: `demos/parallel_map_demo/main.sifr` `36`, `demos/async_subprocess_pipeline_demo/main.sifr` `33`, `demos/structured_shutdown_demo/main.sifr` `49`, `demos/cancellation_cleanup_demo/main.sifr` `37`, `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` `65`, and this ledger `2507`.
+
+M7 demo closure review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-demo-closure-review-pass-1.md`: `PASS`; reviewer verified all seven required demo categories have concrete evidence, new demos are valid and scoped, M7 remains open/in progress, non-demo gates remain unclosed, and validation claims and line counts are plausible.
 
 M5 signal `strsignal` value-helper implementation:
 

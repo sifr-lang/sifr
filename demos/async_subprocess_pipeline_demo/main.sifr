@@ -1,0 +1,33 @@
+from sifr.process import AsyncChild, AsyncPipeReader, AsyncPipeWriter, Command, ProcessError, Status, Stdio, async_spawn
+
+
+async def main() -> None:
+    # Spawn a child with owned async stdin/stdout/stderr pipes.
+    pipe: Stdio = Stdio("pipe")
+    command: Command = Command("sh")
+    command.arg("-c")
+    command.arg("cat; printf pipeline-err >&2")
+    command.stdin(pipe)
+    command.stdout(pipe)
+    command.stderr(pipe)
+
+    try:
+        child: AsyncChild = await async_spawn(command)
+        stdin: AsyncPipeWriter = child.stdin()
+        stdout: AsyncPipeReader = child.stdout()
+        stderr: AsyncPipeReader = child.stderr()
+
+        # The writer is explicitly closed so the child can finish reading.
+        _first_write: None = await stdin.write_all(b"async-")
+        _second_write: None = await stdin.write_all(b"pipeline")
+        _closed: None = stdin.close()
+
+        stdout_bytes: bytes = await stdout.read_all()
+        stderr_bytes: bytes = await stderr.read_all()
+        assert stdout_bytes == b"async-pipeline"
+        assert stderr_bytes == b"pipeline-err"
+
+        status: Status = await child.wait()
+        assert status.success
+    except ProcessError as e:
+        assert e.message == ""
