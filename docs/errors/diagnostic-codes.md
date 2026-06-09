@@ -114,6 +114,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-OWN-0010`](SIFR-OWN-0010.md) | Error | Non-sendable value crosses a spawned task boundary. |
 | [`SIFR-OWN-0011`](SIFR-OWN-0011.md) | Error | Non-sendable value is sent through a channel. |
 | [`SIFR-OWN-0012`](SIFR-OWN-0012.md) | Error | Non-share-safe value is wrapped in sync.Shared. |
+| [`SIFR-OWN-0013`](SIFR-OWN-0013.md) | Error | Non-IPC-serializable value is used as a typed IPC payload. |
 | [`SIFR-FLOW-0001`](SIFR-FLOW-0001.md) | Error | Break outside a loop. |
 | [`SIFR-FLOW-0002`](SIFR-FLOW-0002.md) | Error | Continue outside a loop. |
 | [`SIFR-FLOW-0003`](SIFR-FLOW-0003.md) | Error | Invalid nonlocal or nested-function flow. |

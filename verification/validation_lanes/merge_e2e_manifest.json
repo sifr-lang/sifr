@@ -133,6 +133,7 @@
     "resource_nullcontext_basic",
     "runtime_diagnostics_tracing",
     "ipc_value_model_basic",
+    "ipc_payload_require_serializable_basic",
     "text_i18n_encoding_io",
     "text_i18n_unicode_core",
     "text_i18n_unicode_segmentation",

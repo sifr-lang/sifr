@@ -189,10 +189,10 @@ fn collect_referenced_names_in_expr(expr: &Expr, names: &mut HashSet<String>) {
             }
         }
         Expr::ListComp(comp) => {
-            collect_comprehension_names(&comp.generators, names, Some(&comp.elt))
+            collect_comprehension_names(&comp.generators, names, Some(&comp.elt));
         }
         Expr::SetComp(comp) => {
-            collect_comprehension_names(&comp.generators, names, Some(&comp.elt))
+            collect_comprehension_names(&comp.generators, names, Some(&comp.elt));
         }
         Expr::DictComp(comp) => {
             collect_comprehension_names(&comp.generators, names, Some(&comp.key));
@@ -200,7 +200,7 @@ fn collect_referenced_names_in_expr(expr: &Expr, names: &mut HashSet<String>) {
         }
         Expr::Generator(gen) => collect_comprehension_names(&gen.generators, names, Some(&gen.elt)),
         Expr::Await(await_expr) => {
-            collect_referenced_names_in_expr(await_expr.value.as_ref(), names)
+            collect_referenced_names_in_expr(await_expr.value.as_ref(), names);
         }
         _ => {}
     }

@@ -110,6 +110,7 @@ impl DiagnosticCode {
     pub const OWN_NON_SEND_TASK_CAPTURE: Self = Self::new("SIFR-OWN-0010", Severity::Error);
     pub const OWN_NON_SEND_CHANNEL_ELEMENT: Self = Self::new("SIFR-OWN-0011", Severity::Error);
     pub const OWN_NON_SHARE_SAFE_SHARED_VALUE: Self = Self::new("SIFR-OWN-0012", Severity::Error);
+    pub const OWN_NON_IPC_SERIALIZABLE_PAYLOAD: Self = Self::new("SIFR-OWN-0013", Severity::Error);
 
     pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
@@ -603,6 +604,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::OWN_NON_SEND_TASK_CAPTURE,
     DiagnosticCode::OWN_NON_SEND_CHANNEL_ELEMENT,
     DiagnosticCode::OWN_NON_SHARE_SAFE_SHARED_VALUE,
+    DiagnosticCode::OWN_NON_IPC_SERIALIZABLE_PAYLOAD,
     DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,

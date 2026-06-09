@@ -117,6 +117,7 @@
     "resource_nullcontext_basic",
     "runtime_diagnostics_tracing",
     "ipc_value_model_basic",
+    "ipc_payload_require_serializable_basic",
     "stdlib_json_consolidated",
     "stdlib_tomllib",
     "stdlib_random",

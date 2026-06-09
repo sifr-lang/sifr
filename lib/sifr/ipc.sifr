@@ -79,3 +79,7 @@ def default_backpressure() -> BackpressurePolicy:
 
 def schemas_match(left: SchemaId, right: SchemaId) -> bool:
     return left.name == right.name and left.version == right.version and left.hash == right.hash
+
+
+def require_serializable[T](value: T) -> None:
+    return None

@@ -1,0 +1,26 @@
+from sifr.ipc import require_serializable
+
+
+class EchoRequest:
+    message: str
+    attempts: int
+    tags: list[str]
+
+
+def main():
+    request: EchoRequest = EchoRequest("hello", 2, ["ipc", "typed"])
+    optional_count: int | None = 1
+    payload_map: dict[str, int] = {"attempts": 2}
+    payload_tuple: tuple[int, str, bytes] = (7, "ok", b"wire")
+
+    require_serializable(True)
+    require_serializable(42)
+    require_serializable(3.5)
+    require_serializable("text")
+    require_serializable(b"bytes")
+    require_serializable(None)
+    require_serializable(optional_count)
+    require_serializable([1, 2, 3])
+    require_serializable(payload_map)
+    require_serializable(payload_tuple)
+    require_serializable(request)

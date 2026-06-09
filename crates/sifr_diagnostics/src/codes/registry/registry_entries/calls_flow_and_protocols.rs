@@ -201,6 +201,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["value", "type_name", "reason"]
         ),
     active_entry!(
+            "SIFR-OWN-0013",
+            "OWN",
+            "Non-IPC-serializable value is used as a typed IPC payload.",
+            Severity::Error,
+            "crates/sifr/tests/e2e/fail/ipc_payload_process_resource_rejected.sifr",
+            "typed IPC payload cannot transfer {value} of type {type_name}",
+            "sifr_lowering::lower::ipc_payload_calls",
+            [arg!("value"), arg!("type_name"), json_arg!("reason")],
+            ["value", "type_name", "reason"]
+        ),
+    active_entry!(
             "SIFR-FLOW-0001",
             "FLOW",
             "Break outside a loop.",
