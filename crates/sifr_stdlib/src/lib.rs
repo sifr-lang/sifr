@@ -13,6 +13,7 @@ mod features;
 mod i18n_core;
 mod io_json;
 mod ipc_frame;
+mod ipc_request_tracker;
 mod ipc_schema;
 mod ipc_transport;
 mod math_test;
@@ -39,6 +40,7 @@ pub use ipc_frame::{
     IpcShutdownMode, IpcTerminationReason, IpcWireFrameKind, IpcWireSchema, IpcWorkerState,
     IPC_DEFAULT_MAX_FRAME_BYTES, IPC_LENGTH_PREFIX_BYTES,
 };
+pub use ipc_request_tracker::{IpcRequestTracker, IpcRequestTrackerError, IpcRequestTrackerState};
 pub use ipc_schema::{
     canonical_schema_descriptor, fnv1a_128, schema_hash_hex_v1, schema_hash_v1,
     IpcSchemaDescriptor, IpcSchemaField, IpcSchemaType, IpcSchemaVariant,
