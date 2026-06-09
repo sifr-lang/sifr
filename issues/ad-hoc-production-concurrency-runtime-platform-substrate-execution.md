@@ -479,6 +479,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
 - M7 demo closure: https://github.com/sifr-lang/sifr/pull/2479
 - M7 generated dependency and panic-scan evidence: https://github.com/sifr-lang/sifr/pull/2482
+- M7 validation lane and inventory closure: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
@@ -1587,6 +1588,28 @@ M7 generated dependency and panic-scan evidence merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-generated-ledger-review-pass-1.md`: `PASS`; reviewer verified the ledger does not overclaim M7 or phase completion, only closes the generated dependency snapshot and panic/emitted-code quality coverage gates, keeps validation lane manifests partial and inventory closure plus final external review open, records the PR URL, merge commit, timestamp, scope, and docs-only `git diff --check` plus `python3 scripts/check_file_size_guardrails.py` PASS evidence accurately for phase closeout traceability.
 - `reviews/ad-hoc-production-concurrency-runtime-m7-generated-ledger-review-pass-2.md`: `PASS`; reviewer verified the final ledger references the populated pass-1 artifact, closes only the generated-evidence gates, keeps remaining M7 gates open or partial, and needs no further review rounds before commit.
+
+M7 validation lane and inventory closure implementation:
+
+- Added `verification/stdlib/concurrency_runtime_m7_inventory_closure.md` to audit create-pr and merge validation lane coverage across task, sync, offload, parallel, process, signal/resource/runtime, and IPC families.
+- Added direct `spawn_blocking_basic` to `verification/validation_lanes/merge_e2e_manifest.json` so both create-pr and merge lanes carry direct blocking-offload evidence in addition to existing `join_set_spawn_blocking` coverage.
+- Updated `scripts/generate_concurrency_runtime_inventory.py` so regenerated inventory, CPython evidence, and workload artifacts carry M7 inventory-audited status text instead of stale M0/M3 active labels.
+- Regenerated `verification/stdlib/concurrency_runtime_substrate_inventory.md`, `concurrency_runtime_substrate_inventory.json`, `concurrency_runtime_cpython_evidence_matrix.md`, and `concurrency_runtime_workload_database.md`.
+- Updated M7 closeout traceability to mark validation lane manifests and inventory closure as `pending-pr`, leaving final external review and final merge-gate validation pending and M7/phase open.
+
+M7 validation lane and inventory closure validation:
+
+- `python3 scripts/generate_concurrency_runtime_inventory.py` -> PASS (`generated 135 CPython evidence entries`).
+- `python3 -m json.tool verification/stdlib/concurrency_runtime_substrate_inventory.json`, `verification/validation_lanes/create_pr_e2e_manifest.json`, `verification/validation_lanes/merge_e2e_manifest.json`, `verification/platform/golden/manifest.json`, and `verification/platform/platform_contract.json` -> PASS.
+- Validation-lane and inventory audit assertions -> PASS: create-pr lane has `125` fixtures, merge lane has `138` fixtures, both lanes cover task, sync, offload, parallel, process, signal/resource/runtime, and IPC fixture families; inventory status is `milestone_concurrency_runtime_7-inventory-audited`; every legacy Python-shaped surface has a revisit rule; M2 semaphore permit policy is preserved as guard-like and await/return-forbidden; M3 `spawn_cpu`, scoped offload, `JoinSet`, and `parallel.map/try_map` workload rows remain present.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/spawn_blocking_basic.sifr` -> PASS.
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- Touched hand-maintained file line counts: `scripts/generate_concurrency_runtime_inventory.py` `749`, `verification/stdlib/concurrency_runtime_substrate_inventory.md` `76`, `verification/stdlib/concurrency_runtime_workload_database.md` `27`, `verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md` `147`, `verification/stdlib/concurrency_runtime_m7_inventory_closure.md` `62`, `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` `65`, `verification/validation_lanes/merge_e2e_manifest.json` `144`, and this ledger `2582`; generated `verification/stdlib/concurrency_runtime_substrate_inventory.json` is excluded from the 900-line hand-maintained guardrail.
+
+M7 validation lane and inventory closure review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-closure-review-pass-1.md`: `FINDINGS`; reviewer found that regenerating inventory artifacts reverted closed M2 semaphore-permit policy, M3 workload evidence rows, and M5 production-surface notes.
+- `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-closure-review-pass-2.md`: `PASS`; reviewer verified the generator and regenerated artifacts now preserve the M2 semaphore policy, M3 `spawn_cpu`/scoped-offload/`JoinSet`/parallel workload evidence, and M5 signal/resource/context notes; validation lanes, inventory audit, traceability, and ledger remain scoped with final review still open.
 
 M5 signal `strsignal` value-helper implementation:
 

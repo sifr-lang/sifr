@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate M0 concurrency/runtime CPython evidence and Sifr inventory artifacts."""
+"""Generate concurrency/runtime CPython evidence and Sifr inventory artifacts."""
 
 from __future__ import annotations
 
@@ -140,7 +140,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Structured streams for supported signals; arbitrary signal.signal handlers are unsupported.",
+        "notes": "Portable `Signal`, `SIGINT`, `SIGTERM`, and `strsignal` value-model evidence is importable; structured streams remain M5 work and arbitrary signal.signal handlers are unsupported.",
     },
     {
         "surface": "sifr.resource ExitStack/AsyncExitStack/closing/aclosing/nullcontext",
@@ -148,7 +148,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Deterministic cleanup scopes independent of generator decorator compatibility.",
+        "notes": "`nullcontext(...)` covers no-value and value-carrying generic helper evidence; ExitStack/AsyncExitStack/closing/aclosing are closed as unsupported diagnostics until cleanup-error and owned-close protocols are implemented.",
     },
     {
         "surface": "sifr.task.Context/ContextKey[T]",
@@ -156,7 +156,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Explicit propagation only; no contextvars parity or implicit dynamic mutation.",
+        "notes": "Value-model foundation is importable; explicit propagation remains M5 work with no contextvars parity or implicit dynamic mutation.",
     },
     {
         "surface": "sifr.ipc typed frame protocol",
@@ -281,8 +281,8 @@ M0_DECISIONS: list[dict[str, str]] = [
     },
     {
         "decision": "lock/permit await policy",
-        "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in M2 unless a specific guard is marked await-safe. Owned semaphore permits may cross await; borrowed permits may not.",
-        "evidence": "Prevents hidden shared mutable state while allowing normal async semaphore critical sections.",
+        "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in M2 unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns.",
+        "evidence": "Prevents hidden shared mutable state and unbounded permit retention across suspension points.",
     },
     {
         "decision": "Barrier and Once",
@@ -351,8 +351,10 @@ WORKLOAD_ROWS: list[dict[str, str]] = [
     {"api": "sifr.sync.Mutex/RwLock sync lock", "owner": "M2", "classification": "@blocking_io-equivalent sync wait", "validation": "lock direct async diagnostic fixture"},
     {"api": "sifr.sync.AsyncMutex/AsyncRwLock/Semaphore/Event", "owner": "M2", "classification": "async-suspension", "validation": "async sync primitive fixtures"},
     {"api": "sifr.runtime.spawn_blocking", "owner": "M3", "classification": "@blocking_io offload boundary", "validation": "spawn_blocking typed WorkerError fixture"},
-    {"api": "sifr.runtime.spawn_cpu", "owner": "M3", "classification": "@cpu_heavy offload boundary", "validation": "spawn_cpu typed WorkerError fixture"},
-    {"api": "sifr.parallel.map/try_map", "owner": "M3", "classification": "@cpu_heavy synchronous", "validation": "async direct-call diagnostic fixture"},
+    {"api": "sifr.task.spawn_cpu", "owner": "M3", "classification": "@cpu_heavy offload boundary with typed runtime/worker evidence", "validation": "`spawn_cpu_basic`, `spawn_cpu_user_error_typed`, `spawn_cpu_worker_panic_typed`, `spawn_cpu_unannotated_rejected`, `spawn_cpu_blocking_io_rejected`, `spawn_cpu_non_send_rejected`"},
+    {"api": "sifr.task.TaskScope/TaskGroup scoped offload", "owner": "M3", "classification": "@blocking_io/@cpu_heavy scoped owner offload with typed task evidence", "validation": "`task_scope_spawn_blocking`, `task_group_spawn_cpu`, `task_group_spawn_cpu_user_error`, `task_scope_spawn_cpu_unannotated_rejected`, `task_group_spawn_blocking_error_mismatch_rejected`"},
+    {"api": "sifr.task.JoinSet", "owner": "M3", "classification": "homogeneous task/offload collection with explicit observation/cancellation", "validation": "`join_set_add_task_join_all`, `join_set_spawn_cpu_join_all_ordered`, `join_set_cancel_all_evidence`, `join_set_cancel_all_task_cancelled`, `join_set_spawn_blocking`, `join_set_bound_terminal_await`, `join_set_reassign_live_rejected`, `join_set_unconsumed_rejected`, `join_set_terminal_must_be_awaited_rejected`"},
+    {"api": "sifr.parallel.map/try_map", "owner": "M3", "classification": "@cpu_heavy synchronous, typed worker-runtime boundary", "validation": "`parallel_map_basic`, `parallel_try_map_basic`, `parallel_map_worker_panic_typed`, `parallel_try_map_user_error_typed`, async direct-call diagnostic fixture"},
     {"api": "sifr.process.run/output/wait sync", "owner": "M4", "classification": "@blocking_io plus optional @shell_exec", "validation": "process blocking-in-async and shell-effect fixtures"},
     {"api": "sifr.process async spawn/wait/communicate", "owner": "M4", "classification": "async-suspension plus optional @shell_exec", "validation": "async process loopback fixture"},
     {"api": "sifr.signal.shutdown_stream/ctrl_c/terminate", "owner": "M5", "classification": "async-suspension host-limited", "validation": "signal host matrix fixture"},
@@ -590,7 +592,7 @@ def aggregate_domains(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def write_inventory_json(files: list[dict[str, Any]], commit: str) -> None:
     data = {
         "schema_version": 1,
-        "status": "milestone_concurrency_runtime_0-active",
+        "status": "milestone_concurrency_runtime_7-inventory-audited",
         "platform_contract": "verification/platform/platform_contract.json",
         "cpython_checkout": {"path": str(CPYTHON_ROOT), "commit": commit},
         "source_patterns": SOURCE_GROUPS,
@@ -638,7 +640,7 @@ def write_inventory_md(files: list[dict[str, Any]], commit: str) -> None:
         "\n\n".join(
             [
                 "# Concurrency Runtime Substrate Inventory",
-                "Status: M0 active; generated by `scripts/generate_concurrency_runtime_inventory.py`.",
+                "Status: M7 inventory audited; generated by `scripts/generate_concurrency_runtime_inventory.py`.",
                 f"CPython checkout: `{CPYTHON_ROOT}` at `{commit}`.",
                 "Platform contract: [platform_contract.md](../platform/platform_contract.md).",
                 "## Scan Summary\n\n"
@@ -678,7 +680,7 @@ def write_evidence_md(files: list[dict[str, Any]], commit: str) -> None:
         "\n\n".join(
             [
                 "# Concurrency Runtime CPython Evidence Matrix",
-                "Status: M0 active; generated from the phase source-of-truth list.",
+                "Status: M7 inventory audited; generated from the phase source-of-truth list.",
                 f"CPython checkout: `{CPYTHON_ROOT}` at `{commit}`.",
                 md_table(["Reference", "Domain", "Native mapping", "Evidence state", "Extracted signal"], rows),
                 "## Notes\n\nCPython module shapes are evidence only. Production Sifr APIs are native `sifr.*` surfaces, and CPython-shaped imports are rejected or diagnosed according to the inventory.",
@@ -695,7 +697,7 @@ def write_workload_md() -> None:
         "\n\n".join(
             [
                 "# Concurrency Runtime Workload Database",
-                "Status: M0 active; implementation milestones must update validation evidence as APIs land.",
+                "Status: M7 inventory audited; implementation milestones have recorded validation evidence for accepted concurrency/runtime surfaces.",
                 md_table(["API", "Owner", "Workload/effect classification", "Validation"], rows),
                 "## Rules\n\nSync APIs that can wait on channels, locks, processes, pipes, or external runtime state are classified as blocking and remain invalid in `async def` unless explicitly offloaded. CPU-heavy APIs use `@cpu_heavy` and must route through `spawn_cpu` in async contexts. Shell subprocess APIs carry `@shell_exec` in addition to blocking or async suspension classification.",
             ]
