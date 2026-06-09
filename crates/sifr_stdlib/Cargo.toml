@@ -13,5 +13,15 @@ sifr_type_system = { workspace = true }
 
 [dev-dependencies]
 
+[features]
+__test_fixture = []
+
+[[bin]]
+name = "sifr-stdlib-ipc-pipe-fixture-worker"
+path = "tests/fixtures/ipc_pipe_fixture_worker.rs"
+required-features = ["__test_fixture"]
+test = false
+bench = false
+
 [lints]
 workspace = true
