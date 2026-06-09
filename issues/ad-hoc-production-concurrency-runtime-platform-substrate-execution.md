@@ -474,6 +474,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC closeout classification: https://github.com/sifr-lang/sifr/pull/2467
 - M6: complete.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
+- M7 public concurrency/runtime docs: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
@@ -1426,6 +1427,22 @@ M7 traceability scaffold merge ledger:
 M7 traceability scaffold merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-traceability-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, and M7 in-progress status without phase-completion overclaim.
+
+M7 public concurrency/runtime docs implementation:
+
+- Added `docs/concurrency_runtime.md` as the public documentation surface for `sifr.task`, `sifr.sync`, `sifr.runtime`, `sifr.parallel`, `sifr.process`, `sifr.signal`, `sifr.resource`, and `sifr.ipc`.
+- Documented the intentional CPython-shaped divergences for `asyncio`, `queue`, `threading`, `subprocess`, `concurrent.futures`, `multiprocessing`, Python `signal`, Python `contextlib`, and Python `warnings`.
+- Linked the new public doc from `docs/stdlib_imports.md`.
+- Updated the M7 traceability artifact to mark the public-docs rows covered by this PR while leaving architecture, demos, generated dependency snapshots, generated-code quality coverage, validation lane audit, inventory closure, and final review open.
+
+M7 public concurrency/runtime docs targeted local validation:
+
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; no advisories (`116.33s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=50edc954137c87b4`; slowest step `crate_tests` `33938ms`).
+
+M7 public concurrency/runtime docs review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-public-docs-review-pass-2.md`: `PASS`; reviewer verified the public docs cover all eight required `sifr.*` namespaces, divergence wording is honest, unsupported/deferred/host-limited surfaces are not overclaimed, validation evidence is recorded, and M7 remains in progress.
 
 M5 signal `strsignal` value-helper implementation:
 

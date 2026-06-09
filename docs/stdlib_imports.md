@@ -32,3 +32,5 @@ from sifr.json import dumps
 `import sifr.math` is also unsupported for now because Sifr does not yet support module-object imports. Import the symbols you need from the module instead.
 
 Text, Unicode, encoding, and i18n surfaces are documented in [text_i18n.md](./text_i18n.md).
+
+Concurrency and runtime surfaces are documented in [concurrency_runtime.md](./concurrency_runtime.md).

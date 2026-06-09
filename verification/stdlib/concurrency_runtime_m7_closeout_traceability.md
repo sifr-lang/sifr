@@ -8,14 +8,14 @@ Status: Open. This M7 artifact is the closeout audit surface for docs, demos, va
 
 | Gate | State | Evidence or required closure |
 | --- | --- | --- |
-| Public docs for `sifr.task` | open | Add public docs covering `TaskHandle`, `TaskGroup`, scoped spawn, timeout/deadline/cancel helpers, join/race/select, explicit task context, cancellation evidence, and unsupported event-loop compatibility boundaries. |
-| Public docs for `sifr.sync` | open | Add public docs covering channels, backpressure, close/drain, cancellation behavior, locks, semaphores, events, sendability/shareability, and unsupported queue/threading parity boundaries. |
-| Public docs for `sifr.runtime` | open | Add public docs covering blocking/CPU offload helpers, `JoinSet`, structured diagnostic events, workload annotations, and direct-call diagnostics. |
-| Public docs for `sifr.parallel` | open | Add public docs covering ordered `map`/`try_map`, private default/configured pools, typed worker errors, panic-to-error behavior, and async direct-call rejection. |
-| Public docs for `sifr.process` | open | Add public docs covering sync/async command execution, owned pipes, process handles, timeout/cancel/kill/terminate behavior, shell execution effects, text encoding, and task-boundary ownership diagnostics. |
-| Public docs for `sifr.signal` | open | Add public docs covering portable signal values, structured shutdown streams, Unix delivery evidence, non-Unix host-limited behavior, `strsignal`, and rejected global handler APIs. |
-| Public docs for `sifr.resource` | open | Add public docs covering `nullcontext(...)`, language cleanup under cancellation, and unsupported cleanup-stack/owned-closing helpers. |
-| Public docs for `sifr.ipc` | open | Add public docs covering typed schema/frame substrate, payload eligibility diagnostics, version negotiation, process-pipe layering, unsupported CPython multiprocessing names, and `deferred-to-phase-X` worker APIs. |
+| Public docs for `sifr.task` | covered by this PR | `docs/concurrency_runtime.md` documents `TaskHandle`, `TaskGroup`, scoped spawn, timeout/deadline/cancel helpers, join/race/select, explicit task context, cancellation evidence, and unsupported event-loop compatibility boundaries. |
+| Public docs for `sifr.sync` | covered by this PR | `docs/concurrency_runtime.md` documents channels, backpressure, close/drain, cancellation behavior, locks, semaphores, events, sendability/shareability, and unsupported queue/threading parity boundaries. |
+| Public docs for `sifr.runtime` | covered by this PR | `docs/concurrency_runtime.md` documents blocking/CPU offload helpers, `JoinSet`, structured diagnostic events, workload annotations, and direct-call diagnostics. |
+| Public docs for `sifr.parallel` | covered by this PR | `docs/concurrency_runtime.md` documents ordered `map`/`try_map`, private default/configured pools, typed worker errors, panic-to-error behavior, and async direct-call rejection. |
+| Public docs for `sifr.process` | covered by this PR | `docs/concurrency_runtime.md` documents sync/async command execution, owned pipes, process handles, timeout/cancel/kill/terminate behavior, shell execution effects, text encoding, and task-boundary ownership diagnostics. |
+| Public docs for `sifr.signal` | covered by this PR | `docs/concurrency_runtime.md` documents portable signal values, structured shutdown streams, Unix delivery evidence, non-Unix host-limited behavior, `strsignal`, and rejected global handler APIs. |
+| Public docs for `sifr.resource` | covered by this PR | `docs/concurrency_runtime.md` documents `nullcontext(...)`, language cleanup under cancellation, and unsupported cleanup-stack/owned-closing helpers. |
+| Public docs for `sifr.ipc` | covered by this PR | `docs/concurrency_runtime.md` documents typed schema/frame substrate, payload eligibility diagnostics, version negotiation, process-pipe layering, unsupported CPython multiprocessing names, and `deferred-to-phase-X` worker APIs. |
 | Internal architecture docs | partial | `internal_docs/structured_runtime_work_model.md`, `internal_docs/async_concurrency_model.md`, and `internal_docs/architecture.md` already contain substantial model material. M7 must audit and update task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability, task/request context, diagnostics/signal global-state policy, and the rejected CPython-shaped surface index. |
 | Required demos | partial | Existing demos include `demos/task_core_demo/main.sifr`, `demos/sync_channel_demo/main.sifr`, `demos/blocking_offload_demo/main.sifr`, `demos/structured_concurrency_demo/main.sifr`, and `demos/subprocess/main.sifr`. M7 must add or validate all required demos: structured task group, producer/consumer channel pipeline, blocking offload, CPU parallel map, async subprocess pipeline, structured shutdown, and cleanup under cancellation. |
 | Generated Cargo dependency snapshots | open | Add generated-project dependency evidence for the accepted feature combinations that pull runtime dependencies such as Tokio, Rayon, tracing, metrics, process support, signal support, and IPC serialization. |
@@ -41,7 +41,7 @@ Status: Open. This M7 artifact is the closeout audit surface for docs, demos, va
 | Slice | Required output | Status |
 | --- | --- | --- |
 | Traceability scaffold | Create this artifact and record the M7 audit plan in the execution ledger. | in progress |
-| Public documentation | Add docs for all accepted production APIs and intentional divergences. | pending |
+| Public documentation | Add docs for all accepted production APIs and intentional divergences. | in progress |
 | Internal architecture audit | Update architecture docs and rejected-surface index. | pending |
 | Demo closure | Add or validate the seven required demos and record commands. | pending |
 | Generated dependency and panic-scan evidence | Add generated Cargo dependency snapshots and generated-code quality coverage for concurrency paths. | pending |
