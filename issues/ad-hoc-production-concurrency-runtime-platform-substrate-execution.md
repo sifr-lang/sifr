@@ -476,7 +476,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6: complete.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
 - M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
-- M7 internal architecture audit: pending PR.
+- M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
 - M7: in progress.
 
 ## Validation Evidence
@@ -1500,6 +1500,18 @@ M7 internal architecture audit targeted local validation:
 M7 internal architecture audit review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-architecture-audit-review-pass-1.md`: `PASS`; reviewer verified coverage of task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability, task/request context, diagnostics/signal global-state policy, rejected CPython-shaped surface index, M7 open/in-progress status, remaining non-architecture gates left open, validation claims, and touched-file line counts.
+
+M7 internal architecture audit merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2476
+- Merge commit: `d21d4da4e4e05c227fc0165ac719bde94ba3c0ec`
+- Merged at: `2026-06-09T04:48:39Z`
+- Scope: M7 production closure audit table in `internal_docs/structured_runtime_work_model.md`, main architecture pointer in `internal_docs/architecture.md`, M7 traceability architecture gate marked complete after merge, validation evidence, and Opus architecture-audit review artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M7 internal architecture audit merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-architecture-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, architecture gate closed, remaining gates still open/partial/pending, and no M7 completion overclaim.
 
 M5 signal `strsignal` value-helper implementation:
 
