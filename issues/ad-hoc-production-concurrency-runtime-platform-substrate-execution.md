@@ -1058,6 +1058,14 @@ M6 typed IPC stream read/write review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-transport-review-pass-1.md`: `PASS`; reviewer verified clean EOF versus partial-prefix behavior, oversize-prefix rejection before payload allocation, truncated-payload handling, opaque read/write I/O error mapping, write/flush error mapping, no unwrap/expect/panic path, stream helper scope discipline, and traceability/host-matrix honesty. Non-blocking follow-ups remain for read-error, flush-error, interrupted-read, zero-length-frame, multi-frame-stream, copy-avoidance, `Display`/`Error`, and unreachable length-sentinel hardening.
 
+M6 typed IPC stream read/write merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2447
+- Merge commit: `019fd05a55dd5c1631021086aad50f89842c39a0`
+- Merged at: `2026-06-09T00:22:23Z`
+- Scope: internal `sifr_stdlib::ipc_transport` read/write helpers over `std::io::Read`/`Write` pipe-shaped byte streams, typed clean-EOF/truncated-prefix/truncated-payload/oversize/read/write error handling, M6 traceability, supported-host matrix, validation evidence, and reviewer artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
