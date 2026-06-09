@@ -480,6 +480,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 demo closure: https://github.com/sifr-lang/sifr/pull/2479
 - M7 generated dependency and panic-scan evidence: https://github.com/sifr-lang/sifr/pull/2482
 - M7 validation lane and inventory closure: https://github.com/sifr-lang/sifr/pull/2485
+- M7 final review and validation gate: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
@@ -1624,6 +1625,33 @@ M7 validation lane and inventory closure merge-ledger review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2485, merge commit `525f5695075ac42c2b71ac90d754ac750284ee56`, merge timestamp `2026-06-09T06:12:51Z`, validation PASS evidence, closed validation-lane/inventory traceability rows, and preservation of the final open/pending M7 gates with no phase overclaim.
 - `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-ledger-review-pass-2.md`: `FINDINGS`; reviewer verified the ledger semantics but flagged the live pass-2 output file as an unrelated empty untracked artifact while the review command was still writing it, requiring a follow-up review after recording the artifact trail.
 - `reviews/ad-hoc-production-concurrency-runtime-m7-inventory-ledger-review-pass-3.md`: `PASS`; reviewer verified the final ledger state, pass-1/pass-2 artifact trail, closed validation-lane/inventory traceability rows, and preservation of all final open/pending M7 gates with no phase overclaim.
+
+M7 final review and validation gate implementation:
+
+- Reworked generated process-async preamble plumbing so codegen passes the existing `SharedPreludeProcessAsyncNeeds` struct through `build_process_async_items(...)` instead of ten boolean parameters, and grouped child-table booleans into `ProcessAsyncChildTableNeeds`.
+- Removed redundant named `format!` arguments in runtime diagnostic intrinsic lowering so workspace clippy stays clean under `-D warnings`.
+- Fixed `verification/performance/run_benchmarks.py` command benchmarks to build `target/debug/sifr` once and invoke that binary directly instead of measuring Cargo front-end overhead in every sample.
+- Reused the same build output directory for build-mode command benchmark samples so performance budgets measure representative warm rebuild behavior instead of forcing a fresh project build for each measured sample.
+- Updated M7 closeout traceability to mark the final review and merge gate as `pending-pr`, leaving final completion and roadmap closure for the post-merge ledger PR.
+
+M7 final review and validation gate validation:
+
+- Initial `scripts/run_all_tests.sh` on this branch failed only in `performance_budget_checks`; a pristine `origin/main` probe showed the same command-benchmark failure shape, with `check-single-file-001-arithmetic` median `1951.153ms` versus threshold `1334.139ms` and p95 `2487.280ms` versus threshold `1419.542ms`, proving the failing budget was pre-existing benchmark harness overhead rather than this branch's codegen cleanup.
+- After the benchmark harness fix, representative performance probes passed.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS (`2273` files under the 900-line hand-maintained source limit).
+- `cargo clippy -p sifr_codegen -p sifr_stdlib -- -D warnings` -> PASS after the process-async and runtime diagnostic codegen cleanup.
+- `cargo clippy --workspace -- -D warnings` -> PASS.
+- `cargo test -p sifr_stdlib` -> PASS; stdlib unit tests, concurrency runtime dependency snapshot tests, and IPC process-pipe fixtures passed.
+- `cargo test -p sifr -- stdlib` -> PASS.
+- `scripts/run_e2e_pass.sh` -> PASS; merge profile reported `138` passed, `0` failed, `report_signature=4ede7c71d86f381c`.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; create-pr profile reported `125` e2e pass fixtures, `0` failed, platform golden `pass=6`, `skip=1`, and `report_signature=50edc954137c87b4`; advisory: warm wall-time exceeded the create-pr target.
+- `scripts/run_all_tests.sh` -> PASS; merge profile reported `wall_time=853.82s`, `budget_ok=yes`, `138` e2e pass fixtures, `0` failed, `report_signature=4ede7c71d86f381c`, platform golden `pass=6`, `skip=1`, hardening `variants=34`, `failures=0`, and advisory-only group skew.
+
+M7 final review and validation gate review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-final-closeout-review-pass-1.md`: `PASS`; reviewer verified the process-async preamble struct cleanup, runtime diagnostic `format!` cleanup, benchmark harness correction, M7 traceability status discipline, validation evidence, file-size guardrail, and no phase-completion overclaim. Final closeout implementation is ready to PR/merge, with M7 and roadmap completion left for the post-merge ledger PR.
 
 M5 signal `strsignal` value-helper implementation:
 

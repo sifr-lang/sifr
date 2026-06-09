@@ -22,7 +22,7 @@ Status: Open. This M7 artifact is the closeout audit surface for docs, demos, va
 | Panic scan and emitted-code quality coverage | closed | `verification/generated_code_quality/manifest.json` now has a dedicated `concurrency-runtime-m7` group for the seven required M7 demos, and `verification/generated_code_quality/generated_code_quality.py` requires those entries so the existing corpus, panic-scan, rustfmt, and clippy modes cover task, sync, offload, parallel, process, signal, and cleanup generated code. |
 | Validation lane manifests | closed | `verification/stdlib/concurrency_runtime_m7_inventory_closure.md` audits create-pr and merge lane coverage across task, sync, offload, parallel, process, signal/resource/runtime, and IPC families; `verification/validation_lanes/merge_e2e_manifest.json` now includes direct `spawn_blocking_basic` coverage in addition to existing `join_set_spawn_blocking` coverage. |
 | Inventory closure | closed | `verification/stdlib/concurrency_runtime_m7_inventory_closure.md` audits regenerated inventory status, production and legacy terminal states, CPython evidence, workload classifications, platform golden entries, supported-host rows, and waiver/quarantine state. |
-| Final external review | open | Final phase completion requires a reviewer `PASS` on the closed inventory and implementation, or the documented five-working-day fallback procedure with no unresolved blocking questions. |
+| Final external review | pending-pr | Final phase completion requires a reviewer `PASS` on the closed inventory and implementation, or the documented five-working-day fallback procedure with no unresolved blocking questions. Final review is being recorded in the final validation-gate PR. |
 
 ## M0-M6 Closure Inputs
 
@@ -40,13 +40,13 @@ Status: Open. This M7 artifact is the closeout audit surface for docs, demos, va
 
 | Slice | Required output | Status |
 | --- | --- | --- |
-| Traceability scaffold | Create this artifact and record the M7 audit plan in the execution ledger. | in progress |
+| Traceability scaffold | Create this artifact and record the M7 audit plan in the execution ledger. | complete |
 | Public documentation | Add docs for all accepted production APIs and intentional divergences. | complete |
 | Internal architecture audit | Update architecture docs and rejected-surface index. | complete |
 | Demo closure | Add or validate the seven required demos and record commands. | complete |
 | Generated dependency and panic-scan evidence | Add generated Cargo dependency snapshots and generated-code quality coverage for concurrency paths. | complete |
 | Validation lane and inventory closure | Audit manifests, platform golden entries, waivers, host-limited rows, workload database, CPython evidence matrix, and inventory. | complete |
-| Final review and merge gate | Run external review rounds until satisfied, then run `scripts/run_all_tests.sh` and close the phase. | pending |
+| Final review and merge gate | Run external review rounds until satisfied, then run `scripts/run_all_tests.sh` and close the phase. | pending-pr |
 
 ## Validation Plan
 

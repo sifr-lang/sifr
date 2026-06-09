@@ -54,13 +54,16 @@ pub(super) fn process_async_wait_params() -> Vec<RustParam> {
     }]
 }
 
-pub(super) fn process_async_child_table_items(
-    needs_spawn: bool,
-    needs_wait: bool,
-    needs_kill: bool,
-    needs_terminate: bool,
-) -> Vec<RustItem> {
-    if !needs_spawn && !needs_wait && !needs_kill && !needs_terminate {
+#[derive(Clone, Copy)]
+pub(super) struct ProcessAsyncChildTableNeeds {
+    pub(super) spawn: bool,
+    pub(super) wait: bool,
+    pub(super) kill: bool,
+    pub(super) terminate: bool,
+}
+
+pub(super) fn process_async_child_table_items(needs: ProcessAsyncChildTableNeeds) -> Vec<RustItem> {
+    if !needs.spawn && !needs.wait && !needs.kill && !needs.terminate {
         return Vec::new();
     }
     let mut items = vec![RustItem::Static {
@@ -138,7 +141,7 @@ pub(super) fn process_async_child_table_items(
         },
     }];
 
-    if needs_spawn {
+    if needs.spawn {
         items.push(RustItem::Static {
             name: "__SIFR_PROCESS_ASYNC_PIPE_READERS".to_string(),
             visibility: Visibility::Private,

@@ -627,20 +627,14 @@ pub fn generate_rust_with_stdlib_for_module(
         preamble_items.extend(build_process_status_items());
     }
     if needs_process_async {
-        preamble_items.extend(build_process_async_items(
-            stdlib_needs_process_async.needs_run,
-            stdlib_needs_process_async.needs_run_timeout,
-            stdlib_needs_process_async.needs_output,
-            stdlib_needs_process_async.needs_output_timeout,
-            stdlib_needs_process_async.needs_spawn || uses_task_scope_process,
-            stdlib_needs_process_async.needs_spawn_function,
-            stdlib_needs_process_async.needs_wait
+        let process_async_preamble_needs = SharedPreludeProcessAsyncNeeds {
+            needs_spawn: stdlib_needs_process_async.needs_spawn || uses_task_scope_process,
+            needs_wait: stdlib_needs_process_async.needs_wait
                 || stdlib_needs_process_async.needs_handle_wait
                 || uses_task_scope_process,
-            stdlib_needs_process_async.needs_kill,
-            stdlib_needs_process_async.needs_terminate,
-            stdlib_needs_process_async.needs_handle_wait,
-        ));
+            ..stdlib_needs_process_async
+        };
+        preamble_items.extend(build_process_async_items(process_async_preamble_needs));
     }
     if needs_process_children {
         preamble_items.extend(build_process_child_items());

@@ -111,10 +111,6 @@ pub(crate) fn lower_runtime_emit_diagnostic(args: &[RustExpr]) -> Option<RustExp
                     )))
                 }}
             }}
-        }}"#,
-        level = level,
-        target = target,
-        name = name,
-        message = message,
+        }}"#
     )))
 }
