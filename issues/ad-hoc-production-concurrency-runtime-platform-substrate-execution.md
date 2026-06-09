@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-concurrency-runtime-platform-substrate.md](./ad-hoc-production-concurrency-runtime-platform-substrate.md)
 
-Status: active
+Status: completed on 2026-06-09
 
 ## Scope Split
 
@@ -35,7 +35,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - [x] `milestone_concurrency_runtime_4`: Process Runtime
 - [x] `milestone_concurrency_runtime_5`: Shutdown, Signals, Cleanup, Context, And Diagnostics
 - [x] `milestone_concurrency_runtime_6`: Typed IPC And Future Process Workers
-- [ ] `milestone_concurrency_runtime_7`: Integration, Documentation, And Production Gate
+- [x] `milestone_concurrency_runtime_7`: Integration, Documentation, And Production Gate
 
 ## Planning Reviews
 
@@ -480,8 +480,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 demo closure: https://github.com/sifr-lang/sifr/pull/2479
 - M7 generated dependency and panic-scan evidence: https://github.com/sifr-lang/sifr/pull/2482
 - M7 validation lane and inventory closure: https://github.com/sifr-lang/sifr/pull/2485
-- M7 final review and validation gate: pending PR.
-- M7: in progress.
+- M7 final review and validation gate: https://github.com/sifr-lang/sifr/pull/2488
+- M7: complete.
 
 ## Validation Evidence
 
@@ -1652,6 +1652,18 @@ M7 final review and validation gate validation:
 M7 final review and validation gate review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-final-closeout-review-pass-1.md`: `PASS`; reviewer verified the process-async preamble struct cleanup, runtime diagnostic `format!` cleanup, benchmark harness correction, M7 traceability status discipline, validation evidence, file-size guardrail, and no phase-completion overclaim. Final closeout implementation is ready to PR/merge, with M7 and roadmap completion left for the post-merge ledger PR.
+
+M7 final review and validation gate merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2488
+- Merge commit: `9a271d64b1e62b36a5365f0831cb990d83f8d4e9`
+- Merged at: `2026-06-09T07:29:51Z`
+- Scope: final generated process-async preamble and runtime diagnostic clippy cleanup, performance benchmark harness correction for direct `sifr` binary measurement and warm build-mode samples, full create-pr and merge validation evidence, final Opus implementation review `PASS`, and M7 closeout traceability final-gate status.
+- Merge-ledger validation: docs-only final ledger update; `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS (`2273` files under the 900-line hand-maintained source limit).
+
+M7 final phase ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-final-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2488's merge commit and timestamp, final implementation Opus `PASS` evidence, docs-only validation scope, M7 and roadmap completion status flips, closed final external review and merge-gate traceability rows, and no stale status contradiction. Final ledger is ready to PR/merge, and phase 36.4 is complete and audited once this ledger PR merges.
 
 M5 signal `strsignal` value-helper implementation:
 
