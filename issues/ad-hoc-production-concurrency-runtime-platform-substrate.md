@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Production Concurrency, Process, And Runtime Substrate
 
-Status: draft
+Status: completed on 2026-06-09
 Phase placement: second implementation phase in the split production-stdlib substrate sequence, after the text/Unicode/encoding/i18n runtime phase and before the network/HTTP platform substrate phase.
 Phase owner: runtime/stdlib implementation with compiler effect, ownership, import, and codegen support
 
