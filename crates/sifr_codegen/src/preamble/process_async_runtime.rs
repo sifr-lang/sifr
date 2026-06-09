@@ -7,8 +7,9 @@ use super::process_async_child_runtime::{
     process_async_pipe_reader_close_item, process_async_pipe_write_all_item,
     process_async_spawn_body, process_async_spawn_insert_body, process_async_spawn_params,
     process_async_terminate_body, process_async_wait_body, process_async_wait_params,
-    process_handle_wait_body,
+    process_handle_wait_body, ProcessAsyncChildTableNeeds,
 };
+use crate::stdlib_filter::SharedPreludeProcessAsyncNeeds;
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Visibility};
 
 fn string_ty() -> RustType {
@@ -228,18 +229,7 @@ fn process_async_output_timeout_params() -> Vec<RustParam> {
     params
 }
 
-pub(crate) fn build_process_async_items(
-    needs_run: bool,
-    needs_run_timeout: bool,
-    needs_output: bool,
-    needs_output_timeout: bool,
-    needs_spawn: bool,
-    needs_spawn_function: bool,
-    needs_wait: bool,
-    needs_kill: bool,
-    needs_terminate: bool,
-    needs_handle_wait: bool,
-) -> Vec<RustItem> {
+pub(crate) fn build_process_async_items(needs: SharedPreludeProcessAsyncNeeds) -> Vec<RustItem> {
     let mut run_body = vec![process_async_stdin_mode_guard()];
     run_body.extend(process_async_command_setup());
     run_body.push(RustStmt::Let {
@@ -666,13 +656,15 @@ pub(crate) fn build_process_async_items(
     }];
 
     items.extend(process_async_child_table_items(
-        needs_spawn,
-        needs_wait,
-        needs_kill,
-        needs_terminate,
+        ProcessAsyncChildTableNeeds {
+            spawn: needs.needs_spawn,
+            wait: needs.needs_wait,
+            kill: needs.needs_kill,
+            terminate: needs.needs_terminate,
+        },
     ));
 
-    if needs_run {
+    if needs.needs_run {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_run".to_string(),
             visibility: Visibility::Private,
@@ -683,7 +675,7 @@ pub(crate) fn build_process_async_items(
             is_async: true,
         });
     }
-    if needs_run_timeout {
+    if needs.needs_run_timeout {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_run_timeout".to_string(),
             visibility: Visibility::Private,
@@ -694,7 +686,7 @@ pub(crate) fn build_process_async_items(
             is_async: true,
         });
     }
-    if needs_output {
+    if needs.needs_output {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_output".to_string(),
             visibility: Visibility::Private,
@@ -705,7 +697,7 @@ pub(crate) fn build_process_async_items(
             is_async: true,
         });
     }
-    if needs_output_timeout {
+    if needs.needs_output_timeout {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_output_timeout".to_string(),
             visibility: Visibility::Private,
@@ -716,7 +708,7 @@ pub(crate) fn build_process_async_items(
             is_async: true,
         });
     }
-    if needs_spawn {
+    if needs.needs_spawn {
         items.push(process_async_child_pipe_writer_item(
             "__sifr_process_async_child_stdin",
         ));
@@ -734,7 +726,7 @@ pub(crate) fn build_process_async_items(
         items.push(process_async_pipe_write_all_item());
         items.push(process_async_pipe_close_item());
     }
-    if needs_spawn_function {
+    if needs.needs_spawn_function {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_spawn".to_string(),
             visibility: Visibility::Private,
@@ -745,7 +737,7 @@ pub(crate) fn build_process_async_items(
             is_async: true,
         });
     }
-    if needs_wait {
+    if needs.needs_wait {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_wait".to_string(),
             visibility: Visibility::Private,
@@ -756,7 +748,7 @@ pub(crate) fn build_process_async_items(
             is_async: true,
         });
     }
-    if needs_handle_wait {
+    if needs.needs_handle_wait {
         items.push(RustItem::Fn {
             name: "__sifr_process_handle_wait".to_string(),
             visibility: Visibility::Private,
@@ -767,7 +759,7 @@ pub(crate) fn build_process_async_items(
             is_async: true,
         });
     }
-    if needs_kill {
+    if needs.needs_kill {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_kill".to_string(),
             visibility: Visibility::Private,
@@ -778,7 +770,7 @@ pub(crate) fn build_process_async_items(
             is_async: true,
         });
     }
-    if needs_terminate {
+    if needs.needs_terminate {
         items.push(RustItem::Fn {
             name: "__sifr_process_async_terminate".to_string(),
             visibility: Visibility::Private,

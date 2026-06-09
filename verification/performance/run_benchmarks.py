@@ -28,7 +28,9 @@ RUNNER_VERSION = 1
 COMMAND_KINDS = {"command", "frontend-query", "lsp-query"}
 COMMAND_MODES = {"check", "build", "fmt-check"}
 FRONTEND_BENCH_BINARY = REPO_ROOT / "target" / "debug" / "frontend_query_bench"
+SIFR_BINARY = REPO_ROOT / "target" / "debug" / f"sifr{'.exe' if platform.system() == 'Windows' else ''}"
 _FRONTEND_BENCH_READY = False
+_SIFR_BINARY_READY = False
 
 
 class BenchmarkError(Exception):
@@ -284,10 +286,12 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
     if case.kind == "lsp-query":
         return run_lsp_query_case(case, measured)
 
+    ensure_sifr_binary()
     samples = []
     peak_rss_values = []
     for sample_index in range(warmups + measured):
-        command = command_for_case(case, run_root / "artifacts" / case.id / str(sample_index))
+        output_suffix = "shared-build" if case.raw.get("mode") == "build" else str(sample_index)
+        command = command_for_case(case, run_root / "artifacts" / case.id / output_suffix)
         result = run_subprocess(command, case.timeout_ms)
         if sample_index < warmups:
             continue
@@ -419,9 +423,23 @@ def ensure_frontend_query_bench() -> None:
     _FRONTEND_BENCH_READY = True
 
 
+def ensure_sifr_binary() -> None:
+    global _SIFR_BINARY_READY
+    if _SIFR_BINARY_READY and SIFR_BINARY.exists():
+        return
+    result = run_subprocess(["cargo", "build", "-q", "-p", "sifr"], 180000)
+    if result["timed_out"]:
+        raise BenchmarkError("building sifr benchmark binary timed out")
+    if result["exit_code"] != 0:
+        raise BenchmarkError(f"failed to build sifr benchmark binary: {result['stderr_tail']}")
+    if not SIFR_BINARY.exists():
+        raise BenchmarkError(f"sifr benchmark binary was not built at {SIFR_BINARY}")
+    _SIFR_BINARY_READY = True
+
+
 def command_for_case(case: BenchmarkCase, output_dir: Path) -> list[str]:
     source = str(REPO_ROOT / case.raw["source_path"])
-    command = ["cargo", "run", "-q", "-p", "sifr", "--"]
+    command = [str(SIFR_BINARY)]
     command.extend(case.raw.get("global_args", []))
     if case.raw["mode"] == "fmt-check":
         command.extend(["fmt", "--check", "--no-cache", source])
