@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "status": "pending-pr",
+  "source": "sifr_stdlib::generated_cargo_dependencies",
+  "runtime_path_placeholder": "<sifr_runtime_path>",
+  "snapshots": [
+    {
+      "id": "tokio-runtime",
+      "stdlib_modules": [],
+      "required_features": ["sifr_runtime", "tokio"],
+      "dependencies": [
+        "sifr_runtime = { path = \"<sifr_runtime_path>\" }",
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+      ]
+    },
+    {
+      "id": "parallel",
+      "stdlib_modules": ["sifr.parallel"],
+      "required_features": [],
+      "dependencies": [
+        "rayon = \"1.12.0\""
+      ]
+    },
+    {
+      "id": "runtime-diagnostics",
+      "stdlib_modules": ["sifr.runtime"],
+      "required_features": [],
+      "dependencies": [
+        "metrics = \"0.24.6\"",
+        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+      ]
+    },
+    {
+      "id": "ipc",
+      "stdlib_modules": ["sifr.ipc"],
+      "required_features": [],
+      "dependencies": [
+        "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }",
+        "serde = { version = \"1.0.228\", features = [\"derive\"] }"
+      ]
+    },
+    {
+      "id": "full-concurrency-runtime",
+      "stdlib_modules": ["sifr.ipc", "sifr.parallel", "sifr.runtime"],
+      "required_features": ["sifr_runtime", "tokio"],
+      "dependencies": [
+        "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }",
+        "serde = { version = \"1.0.228\", features = [\"derive\"] }",
+        "rayon = \"1.12.0\"",
+        "metrics = \"0.24.6\"",
+        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }",
+        "sifr_runtime = { path = \"<sifr_runtime_path>\" }",
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+      ]
+    }
+  ]
+}

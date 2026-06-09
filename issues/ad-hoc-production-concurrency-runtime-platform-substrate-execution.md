@@ -478,11 +478,34 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
 - M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
 - M7 demo closure: https://github.com/sifr-lang/sifr/pull/2479
+- M7 generated dependency and panic-scan evidence: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
 
 Record local validation for each milestone before opening its PR.
+
+M7 generated dependency and panic-scan evidence implementation:
+
+- Added `verification/stdlib/concurrency_runtime_dependency_snapshots.json` with generated dependency snapshots for Tokio/runtime, Rayon parallelism, tracing/metrics diagnostics, Postcard/Serde IPC serialization, and the combined concurrency/runtime dependency set.
+- Added `crates/sifr_stdlib/tests/concurrency_dependency_snapshots.rs` so those dependency combinations are validated directly against `sifr_stdlib::generated_cargo_dependencies` without growing `crates/sifr_stdlib/src/features.rs` past the file-size guardrail.
+- Extended `verification/generated_code_quality/manifest.json` with M7 concurrency/runtime entries for JoinSet CPU offload, `sifr.parallel`, async process pipes, `sifr.resource`, runtime diagnostics, signal stream shape, and typed IPC.
+- Updated `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` so generated dependency snapshots and panic-scan/emitted-code quality coverage are `pending PR`; validation/inventory closure and final external review remain open or pending.
+
+M7 generated dependency and panic-scan evidence targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `python3 -m json.tool verification/stdlib/concurrency_runtime_dependency_snapshots.json` -> PASS.
+- `python3 -m json.tool verification/generated_code_quality/manifest.json` -> PASS.
+- `cargo test -p sifr_stdlib concurrency_runtime_dependency_snapshots_cover_m7_feature_combinations -- --nocapture` -> PASS.
+- `python3 verification/generated_code_quality/generated_code_quality.py corpus --group e2e-pass-representative` -> PASS; evidence `target/sifr_generated_code_quality/evidence/corpus-1780983192-18946.json`.
+- `python3 verification/generated_code_quality/generated_code_quality.py panic-scan --group e2e-pass-representative` -> PASS; evidence `target/sifr_generated_code_quality/evidence/panic-scan-1780983800-61056.json`.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; `2274` files checked, `900` line limit.
+
+M7 generated dependency and panic-scan evidence review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-generated-quality-review-pass-1.md`: `PASS`; reviewer verified generated Cargo dependency snapshot coverage for Tokio/runtime, Rayon, tracing/metrics, Postcard/Serde IPC, and the combined runtime set; the stdlib integration test wiring; generated-code quality manifest coverage for task/offload, parallel, process, resource, runtime diagnostics, signal shape, and IPC; validation evidence paths; M7 open/in-progress state; remaining validation/inventory/final-review gates; and no CPython-shaped or public worker overclaim.
 
 M4 async wait cancellation-safe observation merge ledger:
 
