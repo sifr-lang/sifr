@@ -1201,6 +1201,29 @@ M6 typed IPC payload eligibility merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-eligibility-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, GitHub merged-at timestamp, status-list replacement, docs-only validation evidence, and no M6 completion or deferred-surface overclaim.
 
+M6 typed IPC Unix process-pipe fixture implementation:
+
+- Added an internal `sifr_stdlib` fixture worker binary gated behind the `__test_fixture` feature so normal workspace builds do not build a public or production worker executable.
+- Added Unix integration coverage that spawns the fixture worker as a real child process and exchanges length-prefixed Postcard IPC frames over child stdin/stdout using the existing transport, connection-state, and request-tracker helpers.
+- The fixture covers parent `Hello` / worker `Ready` bootstrap, `Run` / `Started` / `Completed` request completion, in-flight `Cancel` producing a typed `Failed` terminal frame, `Shutdown` / `Terminating` close, and truncated-frame reporting through a redacted `MalformedFrame` protocol error.
+- Updated M6 typed IPC traceability and the supported-host matrix to mark Unix child-process pipe transport evidence as supported while keeping Windows fixtures, compiler diagnostics for payload eligibility/generated extraction, and generated worker integration as follow-up work.
+
+M6 typed IPC Unix process-pipe fixture targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo build -p sifr_stdlib` -> PASS; verifies the fixture worker remains gated out of ordinary `sifr_stdlib` builds.
+- `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` -> PASS; 3 Unix child-process pipe tests covered request completion plus shutdown, in-flight cancellation plus shutdown, and malformed truncated-frame reporting over real child stdin/stdout pipes.
+- `cargo clippy -p sifr_stdlib -- -D warnings` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2257 files` and the `900` line limit on the final branch after merging `origin/main`.
+- Touched file line counts after formatting on the final branch: `crates/sifr_stdlib/Cargo.toml` `27`, `crates/sifr_stdlib/tests/fixtures/ipc_pipe_fixture_worker.rs` `134`, `crates/sifr_stdlib/tests/ipc_process_pipe_fixture.rs` `248`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `254`, `verification/platform/supported_host_matrix.md` `47`, and this ledger `2195`.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS on the conflict-resolved final branch; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`139.46s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests including the Unix process-pipe integration fixture, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`124 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=530c89bb7012eeb0`; slowest step `crate_tests` `39271ms`).
+
+M6 typed IPC Unix process-pipe fixture review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-process-pipe-fixture-review-pass-1.md`: `PASS`; reviewer verified the fixture worker is gated behind the internal `__test_fixture` feature, ordinary `cargo build -p sifr_stdlib` does not build a production worker binary, tests use real Unix child stdin/stdout pipes plus existing IPC helpers, coverage includes bootstrap, completion, cancellation, shutdown close, and malformed truncated-frame reporting, docs honestly scope support to Unix process-pipe evidence, and touched files remain below the guardrail.
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-process-pipe-fixture-review-pass-2.md`: `PASS`; post-`origin/main` merge reviewer verified payload eligibility evidence was preserved, process-pipe evidence remains after it, design and host matrix honestly combine payload validation plus Unix pipe support, fixture gating and Unix coverage remain intact, final create-pr metrics match the conflict-resolved branch, and all touched files remain below the guardrail.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
