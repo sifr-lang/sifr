@@ -465,7 +465,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC stream read/write: https://github.com/sifr-lang/sifr/pull/2447
 - M6 typed IPC request tracker: https://github.com/sifr-lang/sifr/pull/2450
 - M6 typed IPC connection state: https://github.com/sifr-lang/sifr/pull/2452
-- M6 typed IPC payload eligibility: pending PR.
+- M6 typed IPC payload eligibility: https://github.com/sifr-lang/sifr/pull/2454
 - M6: pending.
 - M7: pending.
 
@@ -1189,6 +1189,18 @@ M6 typed IPC payload eligibility review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-eligibility-review-pass-2.md`: `PASS`; reviewer verified the post-pass-1 polish addressed every non-blocking item without changing the validator contract or overclaiming compiler diagnostics, generated schema extraction, child-process transport, public APIs, or wire-compatible `unsupported(...)` payloads.
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-eligibility-review-pass-3.md`: `PASS`; reviewer verified the final rebase preserved both connection-state and payload-eligibility traceability, kept deferred compiler diagnostics, generated schema extraction, child-process fixture transport, and public worker/connection APIs honest, and matched final-base validation metrics exactly.
 
+M6 typed IPC payload eligibility merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2454
+- Merge commit: `ff71edd1f81fa7cb49a9c407434390d261e7a7ef`
+- Merged at: `2026-06-09T01:50:32Z`
+- Scope: internal `sifr_stdlib::ipc_payload` host-independent payload eligibility validator, explicit `IpcSchemaType::Unsupported` rejected-type evidence sentinel, recursive unsupported payload coverage, M6 traceability, supported-host matrix, final-base validation evidence, and three reviewer artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC payload eligibility merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-eligibility-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, GitHub merged-at timestamp, status-list replacement, docs-only validation evidence, and no M6 completion or deferred-surface overclaim.
+
 M6 typed IPC Unix process-pipe fixture implementation:
 
 - Added an internal `sifr_stdlib` fixture worker binary gated behind the `__test_fixture` feature so normal workspace builds do not build a public or production worker executable.
@@ -1204,7 +1216,7 @@ M6 typed IPC Unix process-pipe fixture targeted local validation:
 - `cargo clippy -p sifr_stdlib -- -D warnings` -> PASS.
 - `git diff --check` -> PASS.
 - `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2257 files` and the `900` line limit on the final branch after merging `origin/main`.
-- Touched file line counts after formatting on the final branch: `crates/sifr_stdlib/Cargo.toml` `27`, `crates/sifr_stdlib/tests/fixtures/ipc_pipe_fixture_worker.rs` `134`, `crates/sifr_stdlib/tests/ipc_process_pipe_fixture.rs` `248`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `254`, `verification/platform/supported_host_matrix.md` `47`, and this ledger `2183`.
+- Touched file line counts after formatting on the final branch: `crates/sifr_stdlib/Cargo.toml` `27`, `crates/sifr_stdlib/tests/fixtures/ipc_pipe_fixture_worker.rs` `134`, `crates/sifr_stdlib/tests/ipc_process_pipe_fixture.rs` `248`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `254`, `verification/platform/supported_host_matrix.md` `47`, and this ledger `2195`.
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS on the conflict-resolved final branch; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`139.46s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests including the Unix process-pipe integration fixture, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`124 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=530c89bb7012eeb0`; slowest step `crate_tests` `39271ms`).
 
 M6 typed IPC Unix process-pipe fixture review loop:
