@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_6`
 
-Status: In progress. The design gate is approved, dependency metadata is wired, `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model, and internal `sifr_stdlib` helpers now encode/decode/read/write length-prefixed Postcard envelopes plus track request IDs and bounded in-flight windows with malformed-frame tests. Child-process fixture transport, full connection-state handling, payload eligibility diagnostics, and generated worker integration remain M6 implementation work.
+Status: In progress. The design gate is approved, dependency metadata is wired, `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model, and internal `sifr_stdlib` helpers now encode/decode/read/write length-prefixed Postcard envelopes, track request IDs and bounded in-flight windows, and validate bootstrap/established-frame connection state. Child-process fixture transport, payload eligibility diagnostics, and generated worker integration remain M6 implementation work.
 
 ## Scope
 
@@ -31,6 +31,7 @@ This design does not ship a public process-worker pool. A future worker API rema
 | Internal length-prefixed Postcard frame codec | `cargo test -p sifr_stdlib ipc_frame -- --nocapture` | `sifr_stdlib::ipc_frame` encodes and decodes the M6 envelope families with a `u32` little-endian payload length prefix, the default 16 MiB maximum, typed malformed-frame errors for truncated prefixes/payloads, oversize frames, decode failures, and trailing bytes, and no data-dependent unwrap/expect path. Process-pipe transport and connection-state handling remain follow-up work. |
 | Internal stream read/write helpers | `cargo test -p sifr_stdlib ipc_transport -- --nocapture` | `sifr_stdlib::ipc_transport` writes and reads the length-prefixed Postcard envelope over `std::io::Write`/`Read` pipe-shaped byte streams, treats clean EOF before a prefix as close evidence, maps partial prefixes/payloads and oversize lengths to typed errors, and drops raw I/O error details so payload bytes and host paths are not rendered. Child-process fixtures and connection-state handling remain follow-up work. |
 | Internal request tracker and bounded in-flight window | `cargo test -p sifr_stdlib ipc_request_tracker -- --nocapture` | `sifr_stdlib::ipc_request_tracker` validates duplicate request IDs, unknown terminal/cancel IDs, bounded in-flight capacity, completion/failure capacity release, shutdown drain/cancel-in-flight transitions, and terminating-frame close evidence without rendering payload bytes. Child-process fixtures, full connection negotiation, and generated worker integration remain follow-up work. |
+| Internal connection state and bootstrap negotiation | `cargo test -p sifr_stdlib ipc_connection -- --nocapture` | `sifr_stdlib::ipc_connection` validates parent `Hello`, worker `Ready`/`Reject`, protocol overlap selection, exact schema identity/range checks, negotiated max-frame limits, established-frame phase gating, request-tracker integration, shutdown drain transition, protocol-error close, and terminating close without rendering payload bytes. Child-process fixtures, payload eligibility diagnostics, and generated worker integration remain follow-up work. |
 | `ProcessPoolExecutor` and `Process` under `sifr.ipc` | `ipc_process_pool_executor_unsupported`; `ipc_multiprocessing_process_unsupported` | Missing-member diagnostics keep CPython-shaped process-pool and multiprocessing names out of the native IPC module. |
 
 ## Transport Boundary
@@ -240,7 +241,8 @@ After this design is reviewed and recorded, M6 implementation should proceed in 
 2. Add compiler-known `sifr.ipc` value model and diagnostics for unsupported CPython-shaped process-pool and multiprocessing APIs.
 3. Add internal schema descriptor and schema-hash generation with unit tests.
 4. Add frame encode/decode helpers with malformed-frame tests and no data-dependent panics.
-5. Add process-pipe fixture coverage for bootstrap, request completion, cancellation, close, backpressure, malformed frame, and unsupported payload diagnostics.
-6. Update CPython evidence matrices, host matrix, and execution ledger after each merged PR.
+5. Add internal connection-state and bootstrap negotiation helpers with state-machine tests.
+6. Add process-pipe fixture coverage for bootstrap, request completion, cancellation, close, backpressure, malformed frame, and unsupported payload diagnostics.
+7. Update CPython evidence matrices, host matrix, and execution ledger after each merged PR.
 
 M6 closes only when the definition of done in the phase issue is met. A public process-worker pool is not part of M6 closure.
