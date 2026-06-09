@@ -467,7 +467,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC connection state: https://github.com/sifr-lang/sifr/pull/2452
 - M6 typed IPC payload eligibility: https://github.com/sifr-lang/sifr/pull/2454
 - M6 typed IPC Unix process-pipe fixture: https://github.com/sifr-lang/sifr/pull/2455
-- M6 typed IPC process-pipe backpressure and unsupported-payload evidence: pending PR.
+- M6 typed IPC process-pipe backpressure and unsupported-payload evidence: https://github.com/sifr-lang/sifr/pull/2458
 - M6: pending.
 - M7: pending.
 
@@ -1257,6 +1257,18 @@ M6 typed IPC process-pipe backpressure and unsupported-payload evidence targeted
 M6 typed IPC process-pipe backpressure and unsupported-payload evidence review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-process-pipe-edge-evidence-review-pass-1.md`: `PASS`; reviewer verified the internal fixture-worker gate, real Unix child-process pipe backpressure evidence, redacted `MalformedFrame(RequestId, "backpressure_full")` reporting, unsupported-payload type-name-only evidence, parent/worker connection-state symmetry, honest Unix-only host-matrix/docs scope, validation evidence, and touched source/test file sizes. Non-blocking follow-ups remain for a future invalid UTF-8 unsupported sentinel fixture case and future symmetric parent-side pre-wire backpressure coverage.
+
+M6 typed IPC process-pipe backpressure and unsupported-payload evidence merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2458
+- Merge commit: `4af2e423cdee04499b93a3c6948d9bd78f330c2b`
+- Merged at: `2026-06-09T03:02:21Z`
+- Scope: internal Unix child-process pipe fixture edge evidence for bounded backpressure and unsupported payloads, fixture-worker redacted connection-error reporting, type-name-only unsupported-payload evidence, M6 traceability, supported-host matrix, validation evidence, and reviewer artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC process-pipe backpressure and unsupported-payload evidence merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-process-pipe-edge-evidence-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged-at timestamp, one-line pending-status replacement, docs-only validation evidence, diff containment, and no M6 completion or deferred-surface overclaim.
 
 M5 signal `strsignal` value-helper implementation:
 
