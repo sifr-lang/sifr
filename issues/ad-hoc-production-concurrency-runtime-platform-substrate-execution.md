@@ -471,6 +471,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
 - M6 typed IPC CPython-shaped multiprocessing diagnostics: https://github.com/sifr-lang/sifr/pull/2462
 - M6 typed IPC compiler-internal schema extraction: https://github.com/sifr-lang/sifr/pull/2464
+- M6 typed IPC generated worker-boundary compose proof: pending PR.
 - M6 typed IPC closeout classification: https://github.com/sifr-lang/sifr/pull/2467
 - M6: complete.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
@@ -1370,6 +1371,23 @@ M6 typed IPC compiler-internal schema extraction merge ledger:
 M6 typed IPC compiler-internal schema extraction merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-schema-extraction-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, pending M6 status, and no overclaim of generated worker integration or Windows process-pipe fixture support.
+
+M6 typed IPC generated worker-boundary compose proof implementation:
+
+- Extended the internal Unix IPC fixture worker to accept a test-provided schema name and schema hash through environment variables while preserving the existing hard-coded default schema for all current process-pipe fixture tests.
+- Added a lowering-owned Unix compose test that builds a representative compiler-internal IPC schema from concrete Sifr `Type` graphs, computes the stable schema hash through `sifr_stdlib::schema_hash_v1`, passes that identity to the fixture worker, completes `Hello`/`Ready` bootstrap over child stdin/stdout, round-trips `Run`/`Completed`, and closes with `Shutdown`/`Terminating`.
+- Updated M6 typed IPC traceability and the supported-host matrix so compiler-extracted schema identity is proven over the Unix fixture worker without exposing a public worker pool or public `ipc.Connection` API. Windows process-pipe fixture evidence remains host-limited follow-up work, and public generated worker integration remains `deferred-to-phase-X`.
+
+M6 typed IPC generated worker-boundary compose proof targeted local validation:
+
+- `cargo test -p sifr_lowering generated_schema_drives_unix_fixture_worker_bootstrap_and_round_trip -- --nocapture` -> PASS.
+- `cargo test -p sifr_lowering ipc_schema_extraction -- --nocapture` -> PASS; 3 tests covered accepted schema-family extraction, unsupported payload evidence, and generated-schema worker-boundary composition.
+- `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` -> PASS; 5 existing Unix process-pipe fixture tests stayed stable with the default fixture schema.
+- `cargo clippy -p sifr_lowering -p sifr_stdlib -- -D warnings` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS after rebase onto current `origin/main`; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`122.43s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=50edc954137c87b4`; slowest step `crate_tests` `32511ms`).
+- Scope review: `reviews/ad-hoc-production-concurrency-runtime-m6-remaining-scope-review-pass-1.md` -> FAIL-on-closeout without this compose proof; reviewer confirmed generated worker-boundary composition is a true M6 blocker, but not a public process-worker API requirement.
+- Reviewer pass 1: `reviews/ad-hoc-production-concurrency-runtime-m6-generated-worker-boundary-review-pass-1.md` -> PASS; reviewer verified the real compose proof, existing fixture compatibility, no public API overclaim, fixture-only panic surface, and docs/status accuracy.
+- Touched file line counts after formatting: `crates/sifr_lowering/src/lower/ipc_schema_extraction.rs` `359`, `crates/sifr_stdlib/tests/fixtures/ipc_pipe_fixture_worker.rs` `201`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `257`, `verification/platform/supported_host_matrix.md` `50`, `reviews/ad-hoc-production-concurrency-runtime-m6-remaining-scope-review-pass-1.md` `46`, `reviews/ad-hoc-production-concurrency-runtime-m6-generated-worker-boundary-review-pass-1.md` `13`, and this ledger `2404`.
 
 M6 closeout classification implementation:
 

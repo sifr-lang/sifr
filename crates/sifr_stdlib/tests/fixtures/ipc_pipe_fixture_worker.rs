@@ -3,9 +3,11 @@ use sifr_stdlib::{
     IpcEnvelope, IpcHandshakeDecision, IpcMalformedKind, IpcRequestTrackerError, IpcShutdownMode,
     IpcTerminationReason, IpcWireSchema, IPC_DEFAULT_MAX_FRAME_BYTES,
 };
+use std::env;
 use std::io::{stdin, stdout, StdinLock, StdoutLock};
 
 const UNSUPPORTED_PREFIX: &[u8] = b"unsupported:";
+const DEFAULT_SCHEMA_HASH: [u8; 16] = 0x4733_c89f_b23a_40ec_b5f3_bcda_99fb_34da_u128.to_be_bytes();
 
 fn main() -> std::process::ExitCode {
     match run_worker() {
@@ -174,10 +176,26 @@ fn unsupported_type_name(payload: &[u8]) -> Option<String> {
 
 fn sample_schema() -> IpcWireSchema {
     IpcWireSchema {
-        name: "demo.worker.Echo".to_string(),
+        name: env::var("SIFR_IPC_FIXTURE_SCHEMA_NAME")
+            .unwrap_or_else(|_| "demo.worker.Echo".to_string()),
         version: 1,
-        hash: 0x4733_c89f_b23a_40ec_b5f3_bcda_99fb_34da_u128.to_be_bytes(),
+        hash: env_schema_hash().unwrap_or(DEFAULT_SCHEMA_HASH),
         compatible_version_min: 1,
         compatible_version_max: 1,
     }
+}
+
+fn env_schema_hash() -> Option<[u8; 16]> {
+    let encoded = env::var("SIFR_IPC_FIXTURE_SCHEMA_HASH").ok()?;
+    if encoded.len() != 32 {
+        return None;
+    }
+    let mut hash = [0_u8; 16];
+    for (index, slot) in hash.iter_mut().enumerate() {
+        let start = index * 2;
+        let end = start + 2;
+        let byte = u8::from_str_radix(encoded.get(start..end)?, 16).ok()?;
+        *slot = byte;
+    }
+    Some(hash)
 }
