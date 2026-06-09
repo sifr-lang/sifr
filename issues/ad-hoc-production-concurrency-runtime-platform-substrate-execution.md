@@ -1123,6 +1123,14 @@ M6 typed IPC request tracker review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-request-tracker-review-pass-1.md`: `PASS`; reviewer verified request-id lifecycle dispatch, duplicate-before-capacity evidence ordering, unknown request-id handling, started/cancel non-terminal behavior, drain versus cancel-in-flight shutdown, terminating close, redacted error text, re-export wiring, and traceability/host-matrix honesty. Non-blocking hardening requested closed-state terminal behavior and additional dispatch-boundary tests.
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-request-tracker-review-pass-2.md`: `PASS`; reviewer verified `begin_shutdown(...)` now preserves `Closed`, `shutdown_after_terminating_keeps_tracker_closed`, `Run` dispatch through `apply_frame`, non-request frame pass-through coverage, reconciled validation evidence and line counts, and no new blockers.
 
+M6 typed IPC request tracker merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2450
+- Merge commit: `5bba51a72acf7ab264035c9a6a4e68dddcae31d0`
+- Merged at: `2026-06-09T00:47:12Z`
+- Scope: internal `sifr_stdlib::ipc_request_tracker` request-id lifecycle state machine, bounded in-flight backpressure, typed duplicate/unknown/full/draining/closed errors, M6 traceability, supported-host matrix, validation evidence, and two reviewer artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
