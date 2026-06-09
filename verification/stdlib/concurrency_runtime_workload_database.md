@@ -1,6 +1,6 @@
 # Concurrency Runtime Workload Database
 
-Status: M3 active; implementation milestones update validation evidence as APIs land.
+Status: M7 inventory audited; implementation milestones have recorded validation evidence for accepted concurrency/runtime surfaces.
 
 | API | Owner | Workload/effect classification | Validation |
 | --- | --- | --- | --- |

@@ -74,6 +74,7 @@
     "task_race_cancels_losers",
     "task_select_first_completion",
     "task_spawn_fallible_result",
+    "spawn_blocking_basic",
     "spawn_cpu_basic",
     "spawn_cpu_user_error_typed",
     "spawn_cpu_worker_panic_typed",

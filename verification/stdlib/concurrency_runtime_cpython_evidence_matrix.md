@@ -1,6 +1,6 @@
 # Concurrency Runtime CPython Evidence Matrix
 
-Status: M0 active; generated from the phase source-of-truth list.
+Status: M7 inventory audited; generated from the phase source-of-truth list.
 
 CPython checkout: `/Users/yaseralnajjar/work/sifr/cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 

@@ -159,7 +159,7 @@
     },
     {
       "decision": "lock/permit await policy",
-      "evidence": "Prevents hidden shared mutable state while allowing normal async semaphore critical sections.",
+      "evidence": "Prevents hidden shared mutable state and unbounded permit retention across suspension points.",
       "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in M2 unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns."
     },
     {
@@ -277,7 +277,7 @@
       "terminal_state": "production-public"
     },
     {
-      "notes": "Portable Signal, SIGINT, SIGTERM, and strsignal value-model evidence is importable; structured streams remain M5 work and arbitrary signal.signal handlers are unsupported.",
+      "notes": "Portable `Signal`, `SIGINT`, `SIGTERM`, and `strsignal` value-model evidence is importable; structured streams remain M5 work and arbitrary signal.signal handlers are unsupported.",
       "owner_milestone": "milestone_concurrency_runtime_5",
       "stability": "stable-public-api",
       "support_tier": "production-public",
@@ -285,7 +285,7 @@
       "terminal_state": "production-public"
     },
     {
-      "notes": "Deterministic cleanup scopes independent of generator decorator compatibility; nullcontext(...) covers no-value and value-carrying generic helper evidence, while ExitStack/AsyncExitStack/closing/aclosing are closed as unsupported diagnostics until cleanup-error and owned-close protocols are implemented.",
+      "notes": "`nullcontext(...)` covers no-value and value-carrying generic helper evidence; ExitStack/AsyncExitStack/closing/aclosing are closed as unsupported diagnostics until cleanup-error and owned-close protocols are implemented.",
       "owner_milestone": "milestone_concurrency_runtime_5",
       "stability": "stable-public-api",
       "support_tier": "production-public",
@@ -11055,7 +11055,7 @@
       "Modules/clinic/_posixsubprocess.c.h"
     ]
   },
-  "status": "milestone_concurrency_runtime_0-active",
+  "status": "milestone_concurrency_runtime_7-inventory-audited",
   "workload_database": [
     {
       "api": "sifr.task.sleep",
@@ -11106,16 +11106,28 @@
       "validation": "spawn_blocking typed WorkerError fixture"
     },
     {
-      "api": "sifr.runtime.spawn_cpu",
-      "classification": "@cpu_heavy offload boundary",
+      "api": "sifr.task.spawn_cpu",
+      "classification": "@cpu_heavy offload boundary with typed runtime/worker evidence",
       "owner": "M3",
-      "validation": "spawn_cpu typed WorkerError fixture"
+      "validation": "`spawn_cpu_basic`, `spawn_cpu_user_error_typed`, `spawn_cpu_worker_panic_typed`, `spawn_cpu_unannotated_rejected`, `spawn_cpu_blocking_io_rejected`, `spawn_cpu_non_send_rejected`"
+    },
+    {
+      "api": "sifr.task.TaskScope/TaskGroup scoped offload",
+      "classification": "@blocking_io/@cpu_heavy scoped owner offload with typed task evidence",
+      "owner": "M3",
+      "validation": "`task_scope_spawn_blocking`, `task_group_spawn_cpu`, `task_group_spawn_cpu_user_error`, `task_scope_spawn_cpu_unannotated_rejected`, `task_group_spawn_blocking_error_mismatch_rejected`"
+    },
+    {
+      "api": "sifr.task.JoinSet",
+      "classification": "homogeneous task/offload collection with explicit observation/cancellation",
+      "owner": "M3",
+      "validation": "`join_set_add_task_join_all`, `join_set_spawn_cpu_join_all_ordered`, `join_set_cancel_all_evidence`, `join_set_cancel_all_task_cancelled`, `join_set_spawn_blocking`, `join_set_bound_terminal_await`, `join_set_reassign_live_rejected`, `join_set_unconsumed_rejected`, `join_set_terminal_must_be_awaited_rejected`"
     },
     {
       "api": "sifr.parallel.map/try_map",
-      "classification": "@cpu_heavy synchronous",
+      "classification": "@cpu_heavy synchronous, typed worker-runtime boundary",
       "owner": "M3",
-      "validation": "async direct-call diagnostic fixture"
+      "validation": "`parallel_map_basic`, `parallel_try_map_basic`, `parallel_map_worker_panic_typed`, `parallel_try_map_user_error_typed`, async direct-call diagnostic fixture"
     },
     {
       "api": "sifr.process.run/output/wait sync",
